@@ -1,20 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+:root {
+  /* Context7 MCP - 초등 하이틴/키즈 따뜻한 팔레트 */
+  --primary-color: #87CEEB;
+  /* Sky Blue - 희망찬 느낌 */
+  --primary-hover: #70c4e8;
+  --secondary-color: #FFD700;
+  /* Gold - 활발한 느낌 */
+  --secondary-hover: #fcd100;
+  --accent-color: #FFA07A;
+  /* Light Salmon - 친근함 */
+
+  --bg-primary: #F8F8F8;
+  /* Off-White - 눈이 편안한 배경 */
+  --bg-secondary: #E0FFFF;
+  /* Light Cyan - 포인트 배경 */
+  --card-bg: #FFFFFF;
+
+  --text-primary: #333333;
+  /* 부드러운 검정 */
+  --text-secondary: #666666;
+  /* 차분한 회색 */
+
+  --border-radius-lg: 24px;
+  /* 둥글둥글한 모서리 */
+  --border-radius-md: 16px;
+  --border-radius-sm: 8px;
+
+  --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-normal: 0 8px 30px rgba(0, 0, 0, 0.08);
+
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Noto Sans KR', 'Pretendard', system-ui, sans-serif;
+  min-height: 100vh;
+  word-break: keep-all;
+}
+
 .container {
   width: 100%;
 }
 
-.add-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
-.add-btn:hover {
-  transform: scale(1.02);
-}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
 
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: 1fr !important;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
