@@ -1,0 +1,20 @@
+.container {
+  width: 100%;
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+.add-btn:hover {
+  transform: scale(1.02);
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
