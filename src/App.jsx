@@ -4,6 +4,7 @@ import './App.css'
 import Layout from './components/common/Layout'
 import Card from './components/common/Card'
 import Button from './components/common/Button'
+import ClassManager from './components/ClassManager'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -161,14 +162,20 @@ function App() {
             </p>
           </div>
 
+          {profile.role === 'TEACHER' && (
+            <div style={{ marginBottom: '24px' }}>
+              <ClassManager userId={session.user.id} />
+            </div>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <Button variant="primary" style={{ height: '100px', flexDirection: 'column' }}>
-              <span style={{ fontSize: '1.5rem' }}>🏫</span>
-              우리 클래스
-            </Button>
-            <Button variant="secondary" style={{ height: '100px', flexDirection: 'column' }}>
+            <Button variant="secondary" style={{ height: '100px', flexDirection: 'column', width: '100%' }}>
               <span style={{ fontSize: '1.5rem' }}>📝</span>
               글쓰기 주제
+            </Button>
+            <Button variant="ghost" style={{ height: '100px', flexDirection: 'column', width: '100%' }} disabled>
+              <span style={{ fontSize: '1.5rem' }}>🏆</span>
+              우리 반 랭킹
             </Button>
           </div>
         </Card>
