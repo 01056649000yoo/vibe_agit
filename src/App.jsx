@@ -73,75 +73,17 @@ function App() {
     else alert('역할 저장 중 오류가 발생했습니다: ' + error.message)
   }
 
-  if (loading) return (
-    <Layout>
-      <div style={{ textAlign: 'center' }}>
-        <h2 style={{ fontSize: '2rem', animation: 'float 2s infinite ease-in-out' }}>🎈</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: '500' }}>
-          아지트 문을 열고 있어요. 잠시만요!
-        </p>
-      </div>
-    </Layout>
-  )
-
   return (
     <Layout>
-      {!session ? (
-        /* [조건 1] 로그인이 안 된 경우: 로그인 화면 */
-        <Card style={{ textAlign: 'center' }}>
-          <h1 style={{
-            fontSize: '2.8rem',
-            marginBottom: '1rem',
-            color: 'var(--primary-color)',
-            fontWeight: '800'
-          }}>
-            ✍️ 끄적끄적 아지트
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '2.5rem', lineHeight: '1.6' }}>
-            우리의 소중한 생각들이 무럭무럭 자라나는<br />
-            <strong>따뜻한 글쓰기 공간</strong>에 오신 걸 환영해요!
+      {loading ? (
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ fontSize: '2rem', animation: 'float 2s infinite ease-in-out' }}>🎈</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: '500' }}>
+            아지트 문을 열고 있어요. 잠시만요!
           </p>
-          <Button
-            onClick={() => supabase.auth.signInWithOAuth({
-              provider: 'google',
-              options: { redirectTo: window.location.origin }
-            })}
-            style={{ width: '100%', background: '#FFFFFF', color: '#757575', border: '1px solid #ddd', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style={{ width: '18px', marginRight: '10px' }} />
-            선생님 구글 로그인
-          </Button>
-
-          <div style={{ margin: '20px 0', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-            <Button
-              variant="secondary"
-              size="lg"
-              style={{ width: '100%', background: '#FBC02D' }}
-              onClick={() => setIsStudentLoginMode(true)}
-            >
-              🎒 학생 로그인 (코드 입력)
-            </Button>
-          </div>
-
-          <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#aaa' }}>
-            나만의 글쓰기 아지트로 입장해요 🏠
-          </p>
-        </Card>
-      ) : isStudentLoginMode ? (
-        <StudentLogin
-          onLoginSuccess={(data) => {
-            setStudentSession({
-              id: data.id,
-              name: data.name,
-              code: data.student_code,
-              role: 'STUDENT'
-            });
-            setIsStudentLoginMode(false);
-          }}
-          onBack={() => setIsStudentLoginMode(false)}
-        />
+        </div>
       ) : studentSession ? (
-        /* [조건 4] 학생 로그인 성공 시 화면 */
+        /* [1순위] 학생 코드 세션이 있는 경우 */
         <Card style={{ maxWidth: '600px', background: '#FFFDF7', border: '2px solid #FFE082' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
             <div style={{
@@ -180,7 +122,6 @@ function App() {
                 boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
               }}
               onClick={() => alert('선생님이 내주신 주제를 보러 가요! 📝')}
-              className="student-card-hover"
             >
               <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📝</div>
               <h3 style={{ margin: 0, color: '#5D4037' }}>글쓰기 미션</h3>
@@ -194,7 +135,6 @@ function App() {
                 boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
               }}
               onClick={() => alert('친구들의 글을 구경하러 가요! 👀')}
-              className="student-card-hover"
             >
               <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👀</div>
               <h3 style={{ margin: 0, color: '#5D4037' }}>친구 아지트</h3>
@@ -210,6 +150,63 @@ function App() {
               🚩 오늘의 목표: 멋진 글 한 편 완성하기!
             </p>
           </div>
+        </Card>
+      ) : isStudentLoginMode ? (
+        /* [2순위] 학생 로그인 코드 입력 모드 */
+        <StudentLogin
+          onLoginSuccess={(data) => {
+            const sessionData = {
+              id: data.id,
+              name: data.name,
+              code: data.student_code,
+              className: data.classes?.name,
+              role: 'STUDENT'
+            };
+            setStudentSession(sessionData);
+            setIsStudentLoginMode(false);
+          }}
+          onBack={() => setIsStudentLoginMode(false)}
+        />
+      ) : !session ? (
+        /* [3순위] 아예 로그인이 안 된 경우 (초기 화면) */
+        <Card style={{ textAlign: 'center' }}>
+          <h1 style={{
+            fontSize: '2.8rem',
+            marginBottom: '1rem',
+            color: 'var(--primary-color)',
+            fontWeight: '800'
+          }}>
+            ✍️ 끄적끄적 아지트
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '2.5rem', lineHeight: '1.6' }}>
+            우리의 소중한 생각들이 무럭무럭 자라나는<br />
+            <strong>따뜻한 글쓰기 공간</strong>에 오신 걸 환영해요!
+          </p>
+          <Button
+            onClick={() => supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: { redirectTo: window.location.origin }
+            })}
+            style={{ width: '100%', background: '#FFFFFF', color: '#757575', border: '1px solid #ddd', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style={{ width: '18px', marginRight: '10px' }} />
+            선생님 구글 로그인
+          </Button>
+
+          <div style={{ margin: '20px 0', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+            <Button
+              variant="secondary"
+              size="lg"
+              style={{ width: '100%', background: '#FBC02D' }}
+              onClick={() => setIsStudentLoginMode(true)}
+            >
+              🎒 학생 로그인 (코드 입력)
+            </Button>
+          </div>
+
+          <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#aaa' }}>
+            나만의 글쓰기 아지트로 입장해요 🏠
+          </p>
         </Card>
       ) : !profile ? (
         /* [조건 2] 로그인은 됐지만 프로필이 없는 경우: 역할 선택 */
