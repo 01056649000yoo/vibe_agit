@@ -63,13 +63,20 @@ const StudentManager = ({ classId }) => {
         setIsAdding(false);
     };
 
-    // 포인트 지급 로직
+    // 포인트 지급 로직 (낙관적 업데이트 적용)
     const handleGivePoints = async (student, amount) => {
-        setUpdatingId(student.id);
+        // 1. 낙관적 업데이트: 서버 응답을 기다리지 않고 로컬 상태를 즉시 변경
+        const previousStudents = [...students];
         const newTotal = (student.total_points || 0) + amount;
 
+        setStudents(prev => prev.map(s =>
+            s.id === student.id ? { ...s, total_points: newTotal } : s
+        ));
+
+        setUpdatingId(student.id);
+
         try {
-            // 1. 학생 포인트 업데이트
+            // 2. 서버 업데이트 시도
             const { error: updateError } = await supabase
                 .from('students')
                 .update({ total_points: newTotal })
@@ -77,7 +84,7 @@ const StudentManager = ({ classId }) => {
 
             if (updateError) throw updateError;
 
-            // 2. 포인트 로그 저장 (테이블이 없을 경우 대비하여 try-catch)
+            // 3. 포인트 로그 저장 (선택 사항)
             const { error: logError } = await supabase
                 .from('point_logs')
                 .insert({
@@ -86,11 +93,13 @@ const StudentManager = ({ classId }) => {
                     reason: '선생님 칭찬 포인트'
                 });
 
-            // 로그 저장은 실패해도 포인트 반영은 완료된 것으로 간주 (알림만 표시)
             if (logError) console.warn('포인트 로그 저장 실패:', logError.message);
 
-            await fetchStudents();
+            // 최종 성공 후 추가 데이터 동기화가 필요하다면 여기서 fetch 가능
+            // (이미 낙관적으로 업데이트했으므로 생략 가능하나 필요시 추가)
         } catch (error) {
+            // 4. 실패 시 원래 상태로 롤백
+            setStudents(previousStudents);
             alert('포인트 지급 중 오류가 발생했습니다: ' + error.message);
         } finally {
             setUpdatingId(null);
@@ -164,8 +173,9 @@ const StudentManager = ({ classId }) => {
                                 <td style={{ padding: '12px' }}>
                                     <motion.span
                                         key={s.total_points}
-                                        initial={{ scale: 1 }}
-                                        animate={{ scale: [1, 1.3, 1] }}
+                                        initial={{ y: 0 }}
+                                        animate={{ y: [0, -10, 0], scale: [1, 1.2, 1] }}
+                                        transition={{ duration: 0.3 }}
                                         style={{ fontWeight: 'bold', color: 'var(--primary-color)', display: 'inline-block' }}
                                     >
                                         ✨ {s.total_points || 0}
