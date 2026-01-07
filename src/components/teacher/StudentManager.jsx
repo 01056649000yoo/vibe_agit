@@ -192,8 +192,8 @@ const StudentManager = ({ classId }) => {
             {/* [슬림 2열 그리드 학생 목록] */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                gap: '10px',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '12px',
                 paddingBottom: '40px'
             }}>
                 {students.map((s, index) => (
