@@ -130,128 +130,127 @@ const StudentManager = ({ classId }) => {
 
     return (
         <div style={{ marginTop: '4px', textAlign: 'left' }}>
-            {/* [상단 컨트롤 바 - 중앙 정렬 및 정돈된 2줄 구성] */}
+            {/* [상단 컨트롤 바 - 정밀 튜닝 버전] */}
             <div style={{
                 position: 'sticky',
                 top: 0,
                 zIndex: 100,
-                background: '#FDFEFE',
-                padding: '16px',
+                background: '#FFFFFF',
+                padding: '20px',
                 borderRadius: '16px',
-                marginBottom: '20px',
-                boxShadow: '0 8px 16px rgba(0,0,0,0.06)',
-                border: '1px solid #E5E8E8',
+                marginBottom: '24px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
+                border: '1px solid #EAECEE',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center', // 전체 중앙 정렬
-                gap: '16px'
+                alignItems: 'center',
+                gap: '12px'
             }}>
-                {/* 1행: 학생 추가 영역 (중앙 정렬) */}
-                <div style={{
-                    display: 'flex',
-                    gap: '10px',
-                    width: '100%',
-                    maxWidth: '600px', // 너무 퍼지지 않게 너비 제한
-                    justifyContent: 'center'
-                }}>
-                    <input
-                        type="text"
-                        placeholder="새로운 친구의 이름을 입력하세요 🎒"
-                        value={studentName}
-                        onChange={(e) => setStudentName(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleAddStudent()}
-                        style={{
-                            flex: 1,
-                            padding: '12px 18px',
-                            borderRadius: '12px',
-                            border: '1px solid #D5DBDB',
-                            outline: 'none',
-                            fontSize: '1rem',
-                            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
-                        }}
-                    />
-                    <Button
-                        onClick={handleAddStudent}
-                        disabled={isAdding}
-                        style={{
-                            padding: '0 24px',
-                            fontWeight: 'bold',
-                            borderRadius: '12px',
-                            minWidth: '120px'
-                        }}
-                    >
-                        명단에 추가 ✨
-                    </Button>
-                </div>
+                {/* 컨트롤바 통합 컨테이너 (너비 동기화) */}
+                <div style={{ width: '100%', maxWidth: '650px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-                {/* 2행: 포인트 및 코드 관리 영역 (중앙 정렬) */}
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '12px',
-                    width: '100%',
-                    maxWidth: '600px',
-                    flexWrap: 'wrap'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <label style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '0.85rem',
-                            color: '#566573',
-                            cursor: 'pointer',
-                            background: '#F8F9F9',
-                            padding: '8px 14px',
-                            borderRadius: '10px',
-                            border: '1px solid #D5DBDB',
-                            fontWeight: 'bold',
-                            whiteSpace: 'nowrap',
-                            transition: 'all 0.2s'
-                        }}>
-                            <input type="checkbox" checked={students.length > 0 && selectedIds.length === students.length} onChange={toggleSelectAll} style={{ width: '16px', height: '16px' }} />
-                            전체
-                        </label>
-                        <Button
-                            onClick={() => setIsPointModalOpen(true)}
-                            size="sm"
-                            disabled={selectedIds.length === 0}
+                    {/* 1행: 학생 추가 영역 */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <input
+                            type="text"
+                            placeholder="추가할 학생의 이름을 입력하세요 🎒"
+                            value={studentName}
+                            onChange={(e) => setStudentName(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleAddStudent()}
                             style={{
-                                background: selectedIds.length > 0 ? '#3498DB' : '#EBEDEF',
-                                color: selectedIds.length > 0 ? 'white' : '#ABB2B9',
-                                height: '40px',
-                                padding: '0 18px',
+                                flex: 1,
+                                padding: '12px 16px',
+                                borderRadius: '12px',
+                                border: '2px solid #F2F4F4',
+                                outline: 'none',
+                                fontSize: '1rem',
+                                background: '#F8F9F9',
+                                transition: 'all 0.2s'
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
+                            onBlur={(e) => e.target.style.borderColor = '#F2F4F4'}
+                        />
+                        <Button
+                            onClick={handleAddStudent}
+                            disabled={isAdding}
+                            style={{
+                                padding: '0 24px',
                                 fontWeight: 'bold',
-                                whiteSpace: 'nowrap',
-                                borderRadius: '10px',
+                                borderRadius: '12px',
+                                background: 'var(--primary-color)',
+                                color: 'white',
                                 border: 'none',
-                                boxShadow: selectedIds.length > 0 ? '0 4px 6px rgba(52,152,219,0.2)' : 'none'
+                                boxShadow: '0 4px 12px rgba(74, 144, 226, 0.2)'
                             }}
                         >
-                            ⚡ 점수 주기 {selectedIds.length > 0 && `(${selectedIds.length})`}
+                            명단에 추가 ✨
                         </Button>
                     </div>
 
-                    <div style={{ width: '2px', height: '20px', background: '#E5E8E8' }} /> {/* 구분선 */}
+                    {/* 2행: 도구 영역 */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        background: '#FDFEFE',
+                        padding: '8px 12px',
+                        borderRadius: '12px',
+                        border: '1px solid #F2F4F4'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <label style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '0.9rem',
+                                color: '#2C3E50',
+                                cursor: 'pointer',
+                                padding: '6px 10px',
+                                fontWeight: 'bold'
+                            }}>
+                                <input type="checkbox" checked={students.length > 0 && selectedIds.length === students.length} onChange={toggleSelectAll} style={{ width: '18px', height: '18px' }} />
+                                전체 선택
+                            </label>
 
-                    <Button
-                        onClick={() => setIsCodeModalOpen(true)}
-                        variant="ghost"
-                        size="sm"
-                        style={{
-                            background: '#FFFDE7',
-                            border: '1px solid #FFE082',
-                            color: '#7E5109',
-                            fontWeight: 'bold',
-                            height: '40px',
-                            padding: '0 18px',
-                            whiteSpace: 'nowrap',
-                            borderRadius: '10px'
-                        }}
-                    >
-                        🔑 접속코드 확인 / 인쇄
-                    </Button>
+                            <div style={{ width: '1px', height: '20px', background: '#D5DBDB', margin: '0 4px' }} />
+
+                            <Button
+                                onClick={() => setIsPointModalOpen(true)}
+                                size="sm"
+                                disabled={selectedIds.length === 0}
+                                style={{
+                                    background: selectedIds.length > 0 ? '#3498DB' : '#EBEDEF',
+                                    color: selectedIds.length > 0 ? 'white' : '#95A5A6',
+                                    height: '38px',
+                                    padding: '0 16px',
+                                    fontWeight: 'bold',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    transition: 'all 0.2s',
+                                    boxShadow: selectedIds.length > 0 ? '0 4px 10px rgba(52,152,219,0.25)' : 'none'
+                                }}
+                            >
+                                ⚡ 점수 주기 {selectedIds.length > 0 && `(${selectedIds.length})`}
+                            </Button>
+                        </div>
+
+                        <Button
+                            onClick={() => setIsCodeModalOpen(true)}
+                            variant="ghost"
+                            size="sm"
+                            style={{
+                                background: '#FFF9C4',
+                                border: '1px solid #F7DC6F',
+                                color: '#7D6608',
+                                fontWeight: 'bold',
+                                height: '38px',
+                                padding: '0 16px',
+                                borderRadius: '10px'
+                            }}
+                        >
+                            🔑 접속코드 확인 / 인쇄
+                        </Button>
+                    </div>
                 </div>
             </div>
 
