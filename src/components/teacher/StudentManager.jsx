@@ -156,11 +156,11 @@ const StudentManager = ({ classId }) => {
                 </div>
 
                 {/* 2행: 포인트 및 코드 관리 영역 */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', color: '#5D6D7E', cursor: 'pointer', background: '#F8F9F9', padding: '6px 12px', borderRadius: '8px', border: '1px solid #D5DBDB', fontWeight: 'bold' }}>
-                            <input type="checkbox" checked={students.length > 0 && selectedIds.length === students.length} onChange={toggleSelectAll} style={{ width: '16px', height: '16px' }} />
-                            전체 선택
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: '#566573', cursor: 'pointer', background: '#F8F9F9', padding: '6px 10px', borderRadius: '8px', border: '1px solid #D5DBDB', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                            <input type="checkbox" checked={students.length > 0 && selectedIds.length === students.length} onChange={toggleSelectAll} style={{ width: '15px', height: '15px' }} />
+                            전체
                         </label>
                         <Button
                             onClick={() => setIsPointModalOpen(true)}
@@ -170,11 +170,13 @@ const StudentManager = ({ classId }) => {
                                 background: selectedIds.length > 0 ? '#3498DB' : '#D5DBDB',
                                 color: 'white',
                                 height: '36px',
-                                padding: '0 16px',
-                                fontWeight: 'bold'
+                                padding: '0 12px',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0
                             }}
                         >
-                            ⚡ 선택한 학생 포인트 관리 {selectedIds.length > 0 && `(${selectedIds.length})`}
+                            ⚡ 점수 주기 {selectedIds.length > 0 && `(${selectedIds.length})`}
                         </Button>
                     </div>
 
@@ -182,9 +184,17 @@ const StudentManager = ({ classId }) => {
                         onClick={() => setIsCodeModalOpen(true)}
                         variant="ghost"
                         size="sm"
-                        style={{ background: '#FFF9C4', border: '1px solid #FFE082', color: '#7E5109', fontWeight: 'bold', height: '36px' }}
+                        style={{
+                            background: '#FFF9C4',
+                            border: '1px solid #FFE082',
+                            color: '#7E5109',
+                            fontWeight: 'bold',
+                            height: '36px',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0
+                        }}
                     >
-                        🔑 접속코드 크게 보기 / 인쇄
+                        🔑 접속코드 확인 / 인쇄
                     </Button>
                 </div>
             </div>
