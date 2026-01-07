@@ -364,12 +364,11 @@ const StudentManager = ({ classId }) => {
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <Button variant="ghost" style={{ flex: 1 }} onClick={() => setIsPointModalOpen(false)}>취소</Button>
                                 <Button onClick={handleBulkProcessPoints} style={{ flex: 1.5, background: pointFormData.type === 'give' ? '#3498DB' : '#E74C3C', color: 'white' }}>반영하기</Button>
-                            </div>
                         </Card>
                     </div>
                 )}
 
-                {/* 접속 코드 (인쇄용 - 25명씩 4열 레이아웃 적용) */}
+                {/* 접속 코드 (인쇄용 - 인쇄 엔진 최적화 튜닝 버전) */}
                 {isCodeModalOpen && (
                     <div style={{
                         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -382,53 +381,79 @@ const StudentManager = ({ classId }) => {
                             borderBottom: '1px solid #eee', zIndex: 2100
                         }}>
                             <div>
-                                <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50' }}>🔑 학생 접속 코드 명단 (25인용/4열)</h2>
-                                <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#7F8C8D' }}>한 페이지에 25명씩 4열로 출력됩니다.</p>
+                                <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#2C3E50' }}>🔑 학생 접속 코드 인쇄 명단</h2>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>명단이 많으면 자동으로 다음 장으로 연결됩니다. ✨</p>
                             </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <Button onClick={() => window.print()} variant="primary" size="sm">🖨️ 인쇄하기</Button>
-                                <Button onClick={() => setIsCodeModalOpen(false)} variant="ghost" size="sm">닫기</Button>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <Button onClick={() => window.print()} variant="primary">🖨️ 명단 인쇄하기</Button>
+                                <Button onClick={() => setIsCodeModalOpen(false)} variant="ghost">닫기</Button>
                             </div>
                         </div>
 
-                        {/* 인쇄용 콘텐츠 */}
-                        <div style={{ padding: '0' }} className="print-content-wrapper">
+                        {/* 인쇄 전용 스타일 및 레이아웃 */}
+                        <div style={{ padding: '0' }} className="print-view-wrapper">
                             <style>
                                 {`
                                     @media print {
+                                        /* 1. 기본 배경 및 스크롤 설정 해제 */
                                         .no-print { display: none !important; }
-                                        .print-modal-container {
-                                            position: absolute !important;
-                                            top: 0 !important;
-                                            left: 0 !important;
-                                            width: 100% !important;
+                                        html, body {
+                                            margin: 0 !important;
+                                            padding: 0 !important;
                                             height: auto !important;
+                                            min-height: auto !important;
                                             overflow: visible !important;
+                                            background: white !important;
+                                        }
+
+                                        /* 2. 인쇄 모달 컨테이너 최적화 (Fixed -> Static 흐름) */
+                                        .print-modal-container {
+                                            position: static !important;
+                                            width: 100% !important;
+                                            max-width: 100% !important;
+                                            overflow: visible !important;
+                                            background: white !important;
                                             display: block !important;
                                         }
-                                        html, body {
-                                            height: auto !important;
-                                            overflow: visible !important;
+
+                                        /* 3. A4 페이지 설정 및 여백 (1cm) */
+                                        @page {
+                                            size: A4;
+                                            margin: 1cm !important;
                                         }
+
+                                        /* 4. 개별 페이지 레이아웃 (25명 단위) */
                                         .print-page {
                                             display: flex !important;
                                             flex-direction: column !important;
+                                            width: 100% !important;
+                                            height: 100% !important;
+                                            min-height: 270mm !important; /* 여백 제외 A4 높이 권장 */
                                             page-break-after: always !important;
                                             break-after: page !important;
-                                            width: 210mm !important;
-                                            height: 296mm !important;
-                                            padding: 20mm !important; /* 사방 여백 확대 (잘림 방지) */
-                                            margin: 0 auto !important;
-                                            box-sizing: border-box !important;
-                                            background: white !important;
+                                            padding: 0 !important;
+                                            border: none !important;
+                                            box-shadow: none !important;
                                         }
-                                        @page { size: A4; margin: 0; }
+
+                                        /* 5. 학생 카드 잘림 방지 */
+                                        .student-print-card {
+                                            page-break-inside: avoid !important;
+                                            break-inside: avoid !important;
+                                        }
+
+                                        /* 인쇄 시 스크롤바 숨김 */
+                                        ::-webkit-scrollbar { display: none !important; }
                                     }
+
+                                    /* 화면 확인용 모드 (Shadow 효과) */
                                     .print-page {
                                         background: white;
-                                        margin: 0 auto 30px auto;
-                                        border: 1px solid #eee;
-                                        max-width: 210mm;
+                                        width: 210mm;
+                                        margin: 20px auto;
+                                        padding: 20mm;
+                                        border: 1px solid #ddd;
+                                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
                                     }
                                 `}
                             </style>
