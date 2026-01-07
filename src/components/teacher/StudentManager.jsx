@@ -42,13 +42,25 @@ const StudentManager = ({ classId }) => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
 
+    // 페이지에 들어올 때마다 최신 명단으로 깨끗하게 업데이트합니다!
     useEffect(() => {
-        if (classId) fetchStudents();
+        if (classId) {
+            fetchStudents();
+        }
+
+        // 다른 페이지로 이동할 때는 명단을 잠시 비워둬서 데이터가 꼬이지 않게 해요 (Cleanup)
+        return () => {
+            setStudents([]);
+            setSelectedIds([]);
+        };
     }, [classId]);
 
     // 명단이 겹치지 않게 깨끗이 정리하며 데이터를 불러와요!
     const fetchStudents = async () => {
         if (!classId) return;
+
+        // 데이터를 가져오기 전, 혹시 남아있을지 모를 옛날 데이터를 비워줘요.
+        setStudents([]);
 
         const { data, error } = await supabase
             .from('students')
@@ -185,10 +197,10 @@ const StudentManager = ({ classId }) => {
 
             if (error) throw error;
 
-            // 성공하면 목록에서 즉시 제거
-            setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
-            setSelectedIds(prev => prev.filter(id => id !== deleteTarget.id));
+            // 성공하면 안내를 띄우고 명단을 다시 불러와서 DB와 100% 맞게 동기화해요!
             alert(`${deleteTarget.name} 학생의 정보를 정리했습니다. 🧹`);
+            fetchStudents();
+            setSelectedIds(prev => prev.filter(id => id !== deleteTarget.id));
         } catch (error) {
             alert('학생 삭제 중 오류가 생겼어요: ' + error.message);
         } finally {
