@@ -5,8 +5,8 @@ import Card from '../common/Card';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /**
- * 역할: 선생님 - 학급 내 학생 명단 관리 (슬림 리스트 대시보드 버전)
- * 출석부를 보듯 편안하고 정확하게 아이들을 관리할 수 있는 최적화된 UI입니다. ✨
+ * 역할: 선생님 - 학급 내 학생 명단 관리 (2열 종대 슬림 그리드 버전)
+ * 마우스 휠을 거의 쓰지 않고도 20~25명의 학생을 한눈에 관리할 수 있습니다. ✨
  */
 const StudentManager = ({ classId }) => {
     const [studentName, setStudentName] = useState('');
@@ -129,117 +129,131 @@ const StudentManager = ({ classId }) => {
     };
 
     return (
-        <div style={{ marginTop: '16px', textAlign: 'left' }}>
-            {/* [슬림 고정 헤더] */}
+        <div style={{ marginTop: '8px', textAlign: 'left' }}>
+            {/* [슬림 고정 상단바] */}
             <div style={{
                 position: 'sticky',
                 top: 0,
                 zIndex: 100,
                 background: '#FDFEFE',
-                padding: '12px 16px',
-                borderRadius: '12px',
-                marginBottom: '16px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                padding: '8px 12px',
+                borderRadius: '10px',
+                marginBottom: '12px',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
                 display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
                 border: '1px solid #E5E8E8'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <h3 style={{ fontSize: '1.1rem', color: '#2C3E50', margin: 0, fontWeight: '800' }}>📋 출석부 식 명단</h3>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: '#566573', cursor: 'pointer', background: '#F8F9F9', padding: '4px 8px', borderRadius: '8px', border: '1px solid #D5DBDB' }}>
-                            <input type="checkbox" checked={students.length > 0 && selectedIds.length === students.length} onChange={toggleSelectAll} style={{ width: '14px', height: '14px' }} />
-                            전체 선택
-                        </label>
-                    </div>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                        <Button
-                            onClick={() => setIsPointModalOpen(true)}
-                            size="sm"
-                            disabled={selectedIds.length === 0}
-                            style={{ background: selectedIds.length > 0 ? '#2ECC71' : '#D5DBDB', color: 'white' }}
-                        >
-                            ⚡ 포인트 일괄 부여 {selectedIds.length > 0 && `(${selectedIds.length}명)`}
-                        </Button>
-                        <Button onClick={() => setIsCodeModalOpen(true)} variant="ghost" size="sm" style={{ border: '1px solid #D5DBDB' }}>🔑 코드 확인</Button>
-                    </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h3 style={{ fontSize: '1rem', color: '#2C3E50', margin: 0, fontWeight: '900' }}>👦 리스트</h3>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: '#566573', cursor: 'pointer', background: '#F8F9F9', padding: '3px 8px', borderRadius: '6px', border: '1px solid #D5DBDB' }}>
+                        <input type="checkbox" checked={students.length > 0 && selectedIds.length === students.length} onChange={toggleSelectAll} style={{ width: '13px', height: '13px' }} />
+                        전체
+                    </label>
                 </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
+
+                <div style={{ flex: 1, display: 'flex', gap: '6px' }}>
                     <input
                         type="text"
-                        placeholder="새 학생 이름"
+                        placeholder="이름 입력 후 엔터"
                         value={studentName}
                         onChange={(e) => setStudentName(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleAddStudent()}
-                        style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid #D5DBDB', outline: 'none', fontSize: '0.9rem' }}
+                        style={{ flex: 1, padding: '6px 10px', borderRadius: '6px', border: '1px solid #D5DBDB', outline: 'none', fontSize: '0.85rem' }}
                     />
-                    <Button onClick={handleAddStudent} disabled={isAdding} size="sm">추가</Button>
+                    <Button onClick={handleAddStudent} disabled={isAdding} size="sm" style={{ padding: '0 10px', height: '32px' }}>추가</Button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '6px' }}>
+                    <Button
+                        onClick={() => setIsPointModalOpen(true)}
+                        size="sm"
+                        disabled={selectedIds.length === 0}
+                        style={{
+                            background: selectedIds.length > 0 ? '#3498DB' : '#D5DBDB',
+                            color: 'white',
+                            height: '32px',
+                            minWidth: '80px',
+                            fontSize: '0.8rem'
+                        }}
+                    >
+                        ⚡ 점수주기 {selectedIds.length > 0 && `(${selectedIds.length})`}
+                    </Button>
+                    <button
+                        onClick={() => setIsCodeModalOpen(true)}
+                        style={{ border: 'none', background: '#F4D03F', color: '#7E5109', borderRadius: '6px', padding: '0 8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', height: '32px' }}
+                    >
+                        🔑 코드
+                    </button>
                 </div>
             </div>
 
-            {/* [슬림 리스트 영역] */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {/* [2열 종대 멀티 그리드 목록] */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '8px',
+                maxHeight: 'calc(100vh - 160px)',
+                overflowY: 'auto',
+                paddingRight: '4px'
+            }}>
                 {students.map((s, index) => (
                     <motion.div
                         key={s.id}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ scale: 1.005, backgroundColor: '#FBFCFC' }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        whileHover={{ backgroundColor: '#F4F6F7' }}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
-                            padding: '8px 16px',
-                            background: selectedIds.includes(s.id) ? '#F4F6F7' : 'white',
-                            border: `1px solid ${selectedIds.includes(s.id) ? '#BDC3C7' : '#FBFCFC'}`,
-                            borderRadius: '10px',
+                            padding: '6px 12px',
+                            background: selectedIds.includes(s.id) ? '#E3F2FD' : 'white',
+                            border: `1.5px solid ${selectedIds.includes(s.id) ? '#3498DB' : '#EBEDEF'}`,
+                            borderRadius: '8px',
                             cursor: 'pointer',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-                            transition: 'all 0.2s'
+                            transition: 'all 0.1s',
+                            position: 'relative'
                         }}
                         onClick={() => setSelectedIds(prev => prev.includes(s.id) ? prev.filter(id => id !== s.id) : [...prev, s.id])}
                     >
                         {/* 번호 및 체크박스 */}
-                        <div style={{ width: '60px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <input type="checkbox" checked={selectedIds.includes(s.id)} readOnly style={{ width: '15px', height: '15px' }} />
-                            <span style={{ fontSize: '0.85rem', color: '#95A5A6', fontWeight: 'bold' }}>{String(index + 1).padStart(2, '0')}</span>
+                        <div style={{ width: '45px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <input type="checkbox" checked={selectedIds.includes(s.id)} readOnly style={{ width: '13px', height: '13px' }} />
+                            <span style={{ fontSize: '0.75rem', color: '#95A5A6', fontWeight: 'bold' }}>{index + 1}</span>
                         </div>
 
-                        {/* 이름 */}
-                        <div style={{ flex: 1.5, fontWeight: '700', color: '#2C3E50', fontSize: '1rem' }}>
+                        {/* 이름 (가장 강조) */}
+                        <div style={{ flex: 1, fontWeight: '800', color: '#2C3E50', fontSize: '0.95rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {s.name}
                         </div>
 
-                        {/* 접속 코드 (슬림하게 배치) */}
-                        <div style={{ flex: 1, fontSize: '0.8rem', color: '#BDC3C7', fontFamily: 'monospace' }}>
-                            <span className="code-text" style={{ transition: 'color 0.2s' }}>{s.student_code}</span>
-                            <style>{`div:hover .code-text { color: #566573; }`}</style>
-                        </div>
-
-                        {/* 현재 포인트 */}
-                        <div style={{ flex: 1.2, textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#ABB2B9' }}>보유:</span>
+                        {/* 포인트 (강조) */}
+                        <div style={{ padding: '0 10px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                            <span style={{ fontSize: '0.7rem', color: '#7F8C8D' }}>✨</span>
                             <motion.span
                                 key={s.total_points}
-                                animate={{ scale: [1, 1.2, 1] }}
-                                style={{ fontWeight: '800', color: '#2980B9', fontSize: '1.1rem' }}
+                                animate={{ scale: [1, 1.3, 1] }}
+                                style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1rem' }}
                             >
-                                {s.total_points || 0} P
+                                {s.total_points || 0}
                             </motion.span>
                         </div>
 
-                        {/* 관리 버튼들 */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '20px' }}>
+                        {/* 관리 버튼 (작고 슬림하게) */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <button
                                 onClick={(e) => { e.stopPropagation(); openHistoryModal(s); }}
-                                style={{ border: 'none', background: '#ECF0F1', color: '#7F8C8D', padding: '5px 10px', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                style={{ border: '1px solid #D5DBDB', background: 'white', color: '#7F8C8D', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}
+                                title="활동 내역"
                             >
-                                📜 기록
+                                📜
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); setDeleteTarget(s); setIsDeleteModalOpen(true); }}
-                                style={{ border: 'none', background: '#FDEDEC', color: '#E74C3C', padding: '5px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                title="학생 삭제"
+                                style={{ border: 'none', background: '#FADBD8', color: '#E74C3C', width: '24px', height: '24px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}
+                                title="삭제"
                             >
                                 🗑️
                             </button>
@@ -248,50 +262,48 @@ const StudentManager = ({ classId }) => {
                 ))}
             </div>
 
-            {/* [모달 영역 - 최적화] */}
+            {/* [모달 공통 - 디자인 유지] */}
             <AnimatePresence>
                 {/* 포인트 부여 모달 */}
                 {isPointModalOpen && (
                     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(44, 62, 80, 0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(2px)' }}>
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                            <Card style={{ width: '360px', padding: '24px' }}>
-                                <h2 style={{ fontSize: '1.2rem', color: '#2C3E50', marginBottom: '20px', textAlign: 'center' }}>⚡ {selectedIds.length}명 포인트 관리</h2>
-                                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                                    <button onClick={() => setPointFormData(p => ({ ...p, type: 'give' }))} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: pointFormData.type === 'give' ? '#2ECC71' : '#F4F6F7', color: pointFormData.type === 'give' ? 'white' : '#95A5A6', fontWeight: 'bold' }}>(+) 주기</button>
-                                    <button onClick={() => setPointFormData(p => ({ ...p, type: 'take' }))} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: pointFormData.type === 'take' ? '#E74C3C' : '#F4F6F7', color: pointFormData.type === 'take' ? 'white' : '#95A5A6', fontWeight: 'bold' }}>(-) 빼기</button>
-                                </div>
-                                <div style={{ marginBottom: '16px' }}>
-                                    <label style={{ fontSize: '0.8rem', color: '#7F8C8D', display: 'block', marginBottom: '4px' }}>점수</label>
-                                    <input type="number" value={pointFormData.amount} onChange={(e) => setPointFormData(p => ({ ...p, amount: parseInt(e.target.value) || 0 }))} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D5DBDB' }} />
-                                </div>
-                                <div style={{ marginBottom: '24px' }}>
-                                    <label style={{ fontSize: '0.8rem', color: '#7F8C8D', display: 'block', marginBottom: '4px' }}>활동 사유 ✍️</label>
-                                    <input type="text" value={pointFormData.reason} onChange={(e) => setPointFormData(p => ({ ...p, reason: e.target.value }))} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #D5DBDB' }} />
-                                </div>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <Button variant="ghost" style={{ flex: 1 }} onClick={() => setIsPointModalOpen(false)}>취소</Button>
-                                    <Button onClick={handleBulkProcessPoints} style={{ flex: 1.5, background: pointFormData.type === 'give' ? '#2ECC71' : '#E74C3C', color: 'white' }}>반영하기</Button>
-                                </div>
-                            </Card>
-                        </motion.div>
+                        <Card style={{ width: '340px', padding: '20px' }}>
+                            <h2 style={{ fontSize: '1.1rem', color: '#2C3E50', marginBottom: '16px', textAlign: 'center' }}>⚡ {selectedIds.length}명 포인트 관리</h2>
+                            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                                <button onClick={() => setPointFormData(p => ({ ...p, type: 'give' }))} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', background: pointFormData.type === 'give' ? '#3498DB' : '#F4F6F7', color: pointFormData.type === 'give' ? 'white' : '#95A5A6', fontWeight: 'bold', fontSize: '0.85rem' }}>(+) 주기</button>
+                                <button onClick={() => setPointFormData(p => ({ ...p, type: 'take' }))} style={{ flex: 1, padding: '8px', borderRadius: '6px', border: 'none', background: pointFormData.type === 'take' ? '#E74C3C' : '#F4F6F7', color: pointFormData.type === 'take' ? 'white' : '#95A5A6', fontWeight: 'bold', fontSize: '0.85rem' }}>(-) 빼기</button>
+                            </div>
+                            <div style={{ marginBottom: '12px' }}>
+                                <label style={{ fontSize: '0.75rem', color: '#7F8C8D', display: 'block', marginBottom: '4px' }}>점수</label>
+                                <input type="number" value={pointFormData.amount} onChange={(e) => setPointFormData(p => ({ ...p, amount: parseInt(e.target.value) || 0 }))} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #D5DBDB' }} />
+                            </div>
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{ fontSize: '0.75rem', color: '#7F8C8D', display: 'block', marginBottom: '4px' }}>활동 사유</label>
+                                <input type="text" value={pointFormData.reason} onChange={(e) => setPointFormData(p => ({ ...p, reason: e.target.value }))} placeholder="이유를 입력해주세요" style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #D5DBDB' }} />
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                <Button variant="ghost" style={{ flex: 1 }} onClick={() => setIsPointModalOpen(false)}>취소</Button>
+                                <Button onClick={handleBulkProcessPoints} style={{ flex: 1.5, background: pointFormData.type === 'give' ? '#3498DB' : '#E74C3C', color: 'white' }}>반영하기</Button>
+                            </div>
+                        </Card>
                     </div>
                 )}
 
-                {/* 접속 코드 인쇄 */}
+                {/* 접속 코드 (인쇄용 기구축 기능 유지) */}
                 {isCodeModalOpen && (
                     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'white', zIndex: 2000, padding: '40px', overflowY: 'auto' }}>
-                        <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                            <h2 style={{ color: '#2C3E50', margin: 0 }}>🔑 학생별 접속 코드</h2>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <Button onClick={() => window.print()} variant="primary" style={{ background: '#34495E' }}>🖨️ 인쇄하기</Button>
-                                <Button onClick={() => setIsCodeModalOpen(false)} variant="ghost">닫기</Button>
+                        <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h2 style={{ fontSize: '1.2rem' }}>🔑 코드 명단</h2>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <Button onClick={() => window.print()} variant="primary" size="sm">🖨️ 인쇄</Button>
+                                <Button onClick={() => setIsCodeModalOpen(false)} variant="ghost" size="sm">닫기</Button>
                             </div>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
                             {students.map(s => (
-                                <div key={s.id} style={{ border: '1px solid #D5DBDB', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
-                                    <div style={{ fontWeight: 'bold', fontSize: '1rem', color: '#2C3E50', marginBottom: '8px' }}>{s.name}</div>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: '800', color: '#2980B9', fontFamily: 'monospace' }}>{s.student_code}</div>
+                                <div key={s.id} style={{ border: '1px solid #eee', borderRadius: '10px', padding: '15px', textAlign: 'center' }}>
+                                    <div style={{ fontWeight: 'bold' }}>{s.name}</div>
+                                    <div style={{ fontSize: '1.2rem', color: '#FF8F00', fontWeight: '800' }}>{s.student_code}</div>
                                 </div>
                             ))}
                         </div>
@@ -301,22 +313,22 @@ const StudentManager = ({ classId }) => {
                 {/* 포인트 내역 */}
                 {isHistoryModalOpen && (
                     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100 }}>
-                        <Card style={{ width: '400px', maxHeight: '70vh', display: 'flex', flexDirection: 'column', padding: '20px' }}>
-                            <h3 style={{ margin: '0 0 15px 0', borderBottom: '2px solid #F4F6F7', paddingBottom: '10px', fontSize: '1.1rem', color: '#2C3E50' }}>📜 {historyStudent?.name} 활동 기록</h3>
+                        <Card style={{ width: '380px', maxHeight: '60vh', display: 'flex', flexDirection: 'column', padding: '20px' }}>
+                            <h3 style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#2C3E50' }}>📜 {historyStudent?.name} 기록</h3>
                             <div style={{ flex: 1, overflowY: 'auto' }}>
-                                {loadingHistory ? <p>데이터를 찾는 중...</p> : historyLogs.map(l => (
-                                    <div key={l.id} style={{ padding: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #FDFEFE' }}>
+                                {loadingHistory ? <p>로딩 중...</p> : historyLogs.map(l => (
+                                    <div key={l.id} style={{ padding: '8px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F8F9F9' }}>
                                         <div>
-                                            <div style={{ fontWeight: '600', color: '#34495E', fontSize: '0.9rem' }}>{l.reason}</div>
-                                            <div style={{ fontSize: '0.7rem', color: '#BDC3C7' }}>{new Date(l.created_at).toLocaleDateString()}</div>
+                                            <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>{l.reason}</div>
+                                            <div style={{ fontSize: '0.7rem', color: '#ABB2B9' }}>{new Date(l.created_at).toLocaleDateString()}</div>
                                         </div>
-                                        <div style={{ fontWeight: 'bold', color: l.amount > 0 ? '#27AE60' : '#E74C3C', fontSize: '0.95rem' }}>
+                                        <div style={{ fontWeight: 'bold', color: l.amount > 0 ? '#27AE60' : '#E74C3C' }}>
                                             {l.amount > 0 ? `+${l.amount}` : l.amount}
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                            <Button variant="ghost" onClick={() => setIsHistoryModalOpen(false)} style={{ marginTop: '15px' }}>닫기</Button>
+                            <Button variant="ghost" onClick={() => setIsHistoryModalOpen(false)} style={{ marginTop: '10px' }}>닫기</Button>
                         </Card>
                     </div>
                 )}
@@ -324,13 +336,12 @@ const StudentManager = ({ classId }) => {
                 {/* 삭제 모달 */}
                 {isDeleteModalOpen && (
                     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1200 }}>
-                        <Card style={{ padding: '30px', textAlign: 'center', borderTop: '4px solid #E74C3C' }}>
-                            <div style={{ fontSize: '2rem', marginBottom: '10px' }}>⚠️</div>
-                            <h2 style={{ fontSize: '1.2rem', marginBottom: '8px', color: '#2C3E50' }}>정말 삭제하시나요?</h2>
-                            <p style={{ color: '#7F8C8D', fontSize: '0.9rem' }}>{deleteTarget?.name} 학생의 포인트와 기록이 소멸됩니다.</p>
-                            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                        <Card style={{ width: '320px', padding: '24px', textAlign: 'center' }}>
+                            <h2 style={{ fontSize: '1.1rem', marginBottom: '8px' }}>정말 삭제하시나요?</h2>
+                            <p style={{ color: '#7F8C8D', fontSize: '0.85rem' }}>{deleteTarget?.name} 학생의 기록이 모두 사라집니다.</p>
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
                                 <Button variant="ghost" onClick={() => setIsDeleteModalOpen(false)} style={{ flex: 1 }}>취소</Button>
-                                <Button onClick={handleDeleteStudent} style={{ flex: 1, background: '#E74C3C', color: 'white' }}>삭제하기</Button>
+                                <Button onClick={handleDeleteStudent} style={{ flex: 1, background: '#E74C3C', color: 'white' }}>삭제</Button>
                             </div>
                         </Card>
                     </div>
