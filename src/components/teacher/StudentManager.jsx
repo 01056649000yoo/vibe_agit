@@ -369,7 +369,7 @@ const StudentManager = ({ classId }) => {
                     </div>
                 )}
 
-                {/* 접속 코드 (인쇄용 - 페이지네이션 적용) */}
+                {/* 접속 코드 (인쇄용 - 10명씩 대형 폰트 적용) */}
                 {isCodeModalOpen && (
                     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'white', zIndex: 2000, overflowY: 'auto' }}>
                         {/* 닫기 및 인쇄 제어바 (화면에서만 보임) */}
@@ -379,18 +379,17 @@ const StudentManager = ({ classId }) => {
                             borderBottom: '1px solid #eee', zIndex: 2100
                         }}>
                             <div>
-                                <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#2C3E50' }}>🔑 학생 접속 코드 명단</h2>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#7F8C8D' }}>한 페이지에 20명씩 인쇄됩니다. (총 {Math.ceil(students.length / 20)}페이지)</p>
+                                <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#2C3E50' }}>🔑 학생 접속 코드 명단 (대형)</h2>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#7F8C8D' }}>한 페이지에 10명씩 크게 인쇄됩니다. (총 {Math.ceil(students.length / 10)}페이지)</p>
                             </div>
                             <div style={{ display: 'flex', gap: '10px' }}>
-                                <Button onClick={() => window.print()} variant="primary">🖨️ 명단 인쇄하기</Button>
+                                <Button onClick={() => window.print()} variant="primary">🖨️ 크게 인쇄하기</Button>
                                 <Button onClick={() => setIsCodeModalOpen(false)} variant="ghost">닫기</Button>
                             </div>
                         </div>
 
                         {/* 인쇄용 콘텐츠 */}
-                        <div style={{ padding: '40px' }}>
-                            {/* CSS for printing */}
+                        <div style={{ padding: '20px 40px' }}>
                             <style>
                                 {`
                                     @media print {
@@ -398,48 +397,64 @@ const StudentManager = ({ classId }) => {
                                         .print-page { 
                                             page-break-after: always; 
                                             break-after: page;
-                                            margin-bottom: 0;
+                                            height: 297mm; /* A4 정사이즈 */
+                                            padding: 10mm;
+                                            box-sizing: border-box;
                                         }
                                         body { margin: 0; padding: 0; }
                                     }
                                 `}
                             </style>
 
-                            {/* 20명씩 청크로 나누어 출력 */}
-                            {Array.from({ length: Math.ceil(students.length / 20) }).map((_, pageIdx) => (
+                            {/* 10명씩 청크로 나누어 출력 */}
+                            {Array.from({ length: Math.ceil(students.length / 10) }).map((_, pageIdx) => (
                                 <div key={pageIdx} className="print-page" style={{
-                                    minHeight: '290mm', // A4 높이 근사값
                                     display: 'flex',
-                                    flexDirection: 'column'
+                                    flexDirection: 'column',
+                                    border: '1px solid #eee', // 화면 확인용
+                                    marginBottom: '20px'
                                 }}>
-                                    <h3 style={{ borderBottom: '2px solid #333', paddingBottom: '10px', marginBottom: '20px' }}>
-                                        학급 접속 코드 명단 ({pageIdx + 1} / {Math.ceil(students.length / 20)} 페이지)
-                                    </h3>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '3px solid #000', paddingBottom: '10px', marginBottom: '30px' }}>
+                                        <h3 style={{ margin: 0, fontSize: '1.8rem' }}>접속 코드 명단</h3>
+                                        <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{pageIdx + 1} / {Math.ceil(students.length / 10)} Page</span>
+                                    </div>
 
                                     <div style={{
                                         display: 'grid',
-                                        gridTemplateColumns: 'repeat(4, 1fr)', // 출력 시 4열이 안정적
-                                        gap: '15px'
+                                        gridTemplateColumns: 'repeat(2, 1fr)', // 2열 구성 (가로가 넓어짐)
+                                        gridTemplateRows: 'repeat(5, 1fr)',    // 5행 구성 (세로가 길어짐)
+                                        gap: '20px',
+                                        flex: 1
                                     }}>
-                                        {students.slice(pageIdx * 20, (pageIdx + 1) * 20).map((s, idx) => (
+                                        {students.slice(pageIdx * 10, (pageIdx + 1) * 10).map((s, idx) => (
                                             <div key={s.id} style={{
-                                                border: '1px solid #333',
-                                                borderRadius: '8px',
-                                                padding: '15px 10px',
-                                                textAlign: 'center'
+                                                border: '2px solid #000',
+                                                borderRadius: '15px',
+                                                padding: '20px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                background: '#fff'
                                             }}>
-                                                <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '5px' }}>
-                                                    {pageIdx * 20 + idx + 1}번
+                                                <div style={{ fontSize: '1.2rem', color: '#444', marginBottom: '10px', fontWeight: 'bold' }}>
+                                                    {pageIdx * 10 + idx + 1}번
                                                 </div>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '8px' }}>
+                                                <div style={{ fontWeight: '900', fontSize: '2.2rem', marginBottom: '15px', color: '#000' }}>
                                                     {s.name}
                                                 </div>
                                                 <div style={{
-                                                    fontSize: '1.4rem',
+                                                    background: '#F8F9F9',
+                                                    width: '100%',
+                                                    padding: '15px 0',
+                                                    textAlign: 'center',
+                                                    borderRadius: '10px',
+                                                    fontSize: '2.8rem',
                                                     fontWeight: '900',
                                                     color: '#000',
-                                                    letterSpacing: '1px',
-                                                    fontFamily: 'monospace'
+                                                    letterSpacing: '4px',
+                                                    fontFamily: " 'Courier New', Courier, monospace ",
+                                                    border: '1px solid #eee'
                                                 }}>
                                                     {s.student_code}
                                                 </div>
@@ -447,9 +462,8 @@ const StudentManager = ({ classId }) => {
                                         ))}
                                     </div>
 
-                                    {/* 하단 여백 (A4 꽉 채우기용) */}
-                                    <div style={{ marginTop: 'auto', textAlign: 'right', fontSize: '0.8rem', color: '#999', padding: '20px 0' }}>
-                                        Powered by VIBE
+                                    <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '1rem', color: '#666', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                                        우리 반 아이들의 소중한 정보를 소중히 다뤄주세요. ✨
                                     </div>
                                 </div>
                             ))}
