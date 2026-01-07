@@ -491,6 +491,7 @@ const StudentManager = ({ classId }) => {
                             ))}
                         </div>
                     </div>
+                )}
 
                 {/* 활동 내역 */}
                 {isHistoryModalOpen && (
