@@ -12,6 +12,8 @@ const StudentLogin = lazy(() => import('./components/student/StudentLogin'))
 const StudentDashboard = lazy(() => import('./components/student/StudentDashboard'))
 const TeacherProfileSetup = lazy(() => import('./components/teacher/TeacherProfileSetup'))
 const TeacherDashboard = lazy(() => import('./components/teacher/TeacherDashboard'))
+const StudentWriting = lazy(() => import('./components/student/StudentWriting'))
+const MissionList = lazy(() => import('./components/student/MissionList'))
 
 /**
  * 역할: 전역 상태 관리 및 라우팅 (메인 진입점)
@@ -28,6 +30,7 @@ function App() {
   const [studentSession, setStudentSession] = useState(null)
   const [currentClassId, setCurrentClassId] = useState(null)
   const [isStudentLoginMode, setIsStudentLoginMode] = useState(false)
+  const [internalPage, setInternalPage] = useState({ name: 'main', params: {} }) // { name, params }
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -98,10 +101,29 @@ function App() {
           <Loading />
         ) : studentSession ? (
           /* [1순위] 학생 모드 */
-          <StudentDashboard
-            studentSession={studentSession}
-            onLogout={handleStudentLogout}
-          />
+          <>
+            {internalPage.name === 'main' && (
+              <StudentDashboard
+                studentSession={studentSession}
+                onLogout={handleStudentLogout}
+                onNavigate={(page, params) => setInternalPage({ name: page, params })}
+              />
+            )}
+            {internalPage.name === 'mission_list' && (
+              <MissionList
+                studentSession={studentSession}
+                onBack={() => setInternalPage({ name: 'main', params: {} })}
+                onNavigate={(page, params) => setInternalPage({ name: page, params })}
+              />
+            )}
+            {internalPage.name === 'writing' && (
+              <StudentWriting
+                studentSession={studentSession}
+                missionId={internalPage.params.missionId}
+                onBack={() => setInternalPage({ name: 'mission_list', params: {} })}
+              />
+            )}
+          </>
         ) : isStudentLoginMode ? (
           /* [2순위] 학생 로그인 화면 */
           <StudentLogin
@@ -110,11 +132,13 @@ function App() {
                 id: data.id,
                 name: data.name,
                 code: data.student_code,
+                classId: data.class_id,
                 className: data.classes?.name,
                 role: 'STUDENT'
               };
               setStudentSession(sessionData);
               setIsStudentLoginMode(false);
+              setInternalPage({ name: 'main', params: {} });
             }}
             onBack={() => setIsStudentLoginMode(false)}
           />
@@ -134,6 +158,9 @@ function App() {
             session={session}
             currentClassId={currentClassId}
             setCurrentClassId={setCurrentClassId}
+            onNavigate={(page, params) => setInternalPage({ name: page, params })}
+            internalPage={internalPage}
+            setInternalPage={setInternalPage}
           />
         )}
       </Suspense>

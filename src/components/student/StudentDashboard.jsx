@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
  *  - studentSession: 학생 세션 정보 (id, name, className 등)
  *  - onLogout: 로그아웃 처리 함수
  */
-const StudentDashboard = ({ studentSession, onLogout }) => {
+const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [points, setPoints] = useState(0);
 
     useEffect(() => {
@@ -104,7 +104,7 @@ const StudentDashboard = ({ studentSession, onLogout }) => {
                         textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s',
                         boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
                     }}
-                    onClick={() => alert('선생님이 내주신 주제를 보러 가요! 📝')}
+                    onClick={() => onNavigate('mission_list')}
                 >
                     <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📝</div>
                     <h3 style={{ margin: 0, color: '#5D4037' }}>글쓰기 미션</h3>
