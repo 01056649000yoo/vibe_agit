@@ -256,73 +256,128 @@ const MissionManager = ({ classId }) => {
                 )}
             </AnimatePresence>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '24px',
+                width: '100%',
+                boxSizing: 'border-box'
+            }}>
                 {loading ? (
-                    <p style={{ textAlign: 'center', color: '#95A5A6', padding: '20px' }}>미션을 불러오는 중... 🔍</p>
+                    <p style={{ textAlign: 'center', color: '#95A5A6', padding: '20px', gridColumn: '1 / -1' }}>미션을 불러오는 중... 🔍</p>
                 ) : missions.length === 0 ? (
-                    <div style={{ padding: '60px 40px', textAlign: 'center', background: '#F8F9F9', borderRadius: '20px', border: '2px dashed #D5DBDB' }}>
+                    <div style={{
+                        padding: '60px 40px', textAlign: 'center', background: '#F8F9F9',
+                        borderRadius: '20px', border: '2px dashed #D5DBDB', gridColumn: '1 / -1'
+                    }}>
                         <p style={{ color: '#7F8C8D', fontSize: '1.1rem', margin: 0 }}>등록된 미션이 없습니다.<br />새로운 미션을 등록해 아이들의 글쓰기를 독려해보세요! 🎈</p>
                     </div>
                 ) : (
                     missions.map(mission => (
-                        <Card key={mission.id} style={{ maxWidth: '100%', padding: '24px', margin: 0, border: '1px solid #ECEFF1', transition: 'transform 0.2s' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                                        <span style={{
-                                            padding: '4px 10px',
-                                            background: '#E3F2FD',
-                                            color: '#1976D2',
-                                            borderRadius: '8px',
-                                            fontSize: '0.8rem',
-                                            fontWeight: 'bold'
-                                        }}>{mission.genre}</span>
-                                        <h4 style={{ margin: 0, fontSize: '1.2rem', color: '#2C3E50', fontWeight: '800' }}>{mission.title}</h4>
-                                    </div>
-                                    <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem', color: '#607D8B', lineHeight: '1.6' }}>
-                                        {mission.guide.length > 120 ? mission.guide.substring(0, 120) + '...' : mission.guide}
-                                    </p>
+                        <motion.div
+                            key={mission.id}
+                            whileHover={{ y: -5 }}
+                            style={{
+                                background: 'white',
+                                borderRadius: '24px',
+                                border: '1px solid #ECEFF1',
+                                boxShadow: '0 8px 20px rgba(0,0,0,0.06)',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                height: '100%',
+                                boxSizing: 'border-box',
+                                transition: 'box-shadow 0.3s'
+                            }}
+                        >
+                            {/* 카드 상단: 헤더 및 삭제 버튼 */}
+                            <div style={{ padding: '24px 24px 16px 24px', position: 'relative' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                    <span style={{
+                                        padding: '4px 12px',
+                                        background: '#E3F2FD',
+                                        color: '#1976D2',
+                                        borderRadius: '12px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: '900',
+                                        letterSpacing: '0.5px'
+                                    }}>{mission.genre}</span>
 
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '0.85rem' }}>
-                                        <span style={{ background: '#F5F5F5', padding: '6px 12px', borderRadius: '8px', color: '#455A64', border: '1px solid #CFD8DC' }}>📏 최소 {mission.min_chars}자 / {mission.min_paragraphs}문단</span>
-                                        <span style={{
-                                            background: '#FFF9C4',
-                                            padding: '6px 12px',
-                                            borderRadius: '8px',
-                                            color: '#F57F17',
-                                            fontWeight: 'bold',
-                                            border: '1px solid #FFE082',
-                                            boxShadow: '0 2px 4px rgba(245, 127, 23, 0.1)'
-                                        }}>
-                                            � 제출 시 {mission.base_reward}P 지급
-                                        </span>
-                                        {mission.bonus_reward > 0 && (
-                                            <span style={{ background: '#E8F5E9', padding: '6px 12px', borderRadius: '8px', color: '#2E7D32', fontWeight: 'bold', border: '1px solid #C8E6C9' }}>🔥 {mission.bonus_threshold}자 이상 +{mission.bonus_reward}P</span>
-                                        )}
-                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            if (window.confirm('정말 이 미션을 삭제하시겠습니까?')) {
+                                                const { error } = await supabase.from('writing_missions').delete().eq('id', mission.id);
+                                                if (!error) fetchMissions();
+                                                else alert('삭제 실패: ' + error.message);
+                                            }
+                                        }}
+                                        style={{
+                                            background: '#FFF5F5', border: 'none', color: '#FF5252',
+                                            cursor: 'pointer', padding: '6px', borderRadius: '10px',
+                                            fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            transition: 'background 0.2s'
+                                        }}
+                                        title="미션 삭제"
+                                    >
+                                        🗑️
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={async () => {
-                                        if (window.confirm('정말 이 미션을 삭제하시겠습니까?')) {
-                                            const { error } = await supabase.from('writing_missions').delete().eq('id', mission.id);
-                                            if (!error) fetchMissions();
-                                            else alert('삭제 실패: ' + error.message);
-                                        }
-                                    }}
-                                    style={{
-                                        background: '#FFEBEE',
-                                        border: 'none',
-                                        color: '#D32F2F',
-                                        cursor: 'pointer',
-                                        padding: '8px',
-                                        borderRadius: '8px',
-                                        marginLeft: '10px'
-                                    }}
-                                >
-                                    🗑️
-                                </button>
+                                <h4 style={{
+                                    margin: 0, fontSize: '1.25rem', color: '#263238',
+                                    fontWeight: '900', lineHeight: '1.4',
+                                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden'
+                                }}>
+                                    {mission.title}
+                                </h4>
                             </div>
-                        </Card>
+
+                            {/* 카드 중앙: 안내 문구 (말줄임표) */}
+                            <div style={{ padding: '0 24px', flex: 1 }}>
+                                <p style={{
+                                    margin: 0, fontSize: '0.9rem', color: '#78909C', lineHeight: '1.6',
+                                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden', minHeight: '2.8em'
+                                }}>
+                                    {mission.guide}
+                                </p>
+                            </div>
+
+                            {/* 카드 하단: 수치 배지 섹션 */}
+                            <div style={{
+                                padding: '20px 24px 24px 24px',
+                                background: '#FAFAFA',
+                                borderTop: '1px solid #F5F5F5',
+                                marginTop: '16px'
+                            }}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    <div style={{
+                                        background: 'white', padding: '6px 12px', borderRadius: '10px',
+                                        color: '#546E7A', border: '1px solid #ECEFF1', fontSize: '0.8rem',
+                                        fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px'
+                                    }}>
+                                        📏 {mission.min_chars}자 / {mission.min_paragraphs}문단
+                                    </div>
+                                    <div style={{
+                                        background: '#FFF9C4', padding: '6px 12px', borderRadius: '10px',
+                                        color: '#AFB42B', border: '1px solid #FFF176', fontSize: '0.8rem',
+                                        fontWeight: '900', display: 'flex', alignItems: 'center', gap: '4px',
+                                        boxShadow: '0 2px 4px rgba(255, 241, 118, 0.2)'
+                                    }}>
+                                        💰 {mission.base_reward}P 지급
+                                    </div>
+                                    {mission.bonus_reward > 0 && (
+                                        <div style={{
+                                            background: '#E8F5E9', padding: '6px 12px', borderRadius: '10px',
+                                            color: '#2E7D32', border: '1px solid #C8E6C9', fontSize: '0.8rem',
+                                            fontWeight: '900', display: 'flex', alignItems: 'center', gap: '4px'
+                                        }}>
+                                            🔥 보너스 +{mission.bonus_reward}P
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
                     ))
                 )}
             </div>
