@@ -16,7 +16,7 @@ const MissionManager = ({ classId }) => {
     const [formData, setFormData] = useState({
         title: '',
         guide: '',
-        genre: '수필',
+        genre: '일기',
         min_chars: 100,
         min_paragraphs: 2,
         base_reward: 100,
@@ -24,7 +24,12 @@ const MissionManager = ({ classId }) => {
         bonus_reward: 10
     });
 
-    const genres = ['시', '수필', '일기', '논설문', '설명문'];
+    const genreCategories = [
+        { label: '❤️ 마음을 표현하는 글', genres: ['일기', '생활문', '편지'] },
+        { label: '🔍 사실을 전달하는 글', genres: ['설명문', '보고서(관찰 기록문)', '기사문'] },
+        { label: '💡 생각을 주장하는 글', genres: ['논설문', '제안하는 글', '독후감(서평)'] },
+        { label: '🌈 상상을 담은 글', genres: ['동시', '동화(소설)'] }
+    ];
 
     useEffect(() => {
         if (classId) fetchMissions();
@@ -149,7 +154,7 @@ const MissionManager = ({ classId }) => {
 
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
                                         <div style={{ flex: 1, minWidth: '250px' }}>
-                                            <label style={{ display: 'block', fontSize: '0.9rem', color: '#455A64', marginBottom: '8px', fontWeight: 'bold' }}>미션 주제</label>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', color: '#455A64', marginBottom: '8px', fontWeight: 'bold' }}>글쓰기 미션 주제</label>
                                             <input
                                                 type="text"
                                                 value={formData.title}
@@ -162,7 +167,7 @@ const MissionManager = ({ classId }) => {
                                                 }}
                                             />
                                         </div>
-                                        <div style={{ width: '160px' }}>
+                                        <div style={{ width: '220px' }}>
                                             <label style={{ display: 'block', fontSize: '0.9rem', color: '#455A64', marginBottom: '8px', fontWeight: 'bold' }}>글 종류</label>
                                             <select
                                                 value={formData.genre}
@@ -173,7 +178,11 @@ const MissionManager = ({ classId }) => {
                                                     boxSizing: 'border-box', cursor: 'pointer'
                                                 }}
                                             >
-                                                {genres.map(g => <option key={g} value={g}>{g}</option>)}
+                                                {genreCategories.map(cat => (
+                                                    <optgroup key={cat.label} label={cat.label}>
+                                                        {cat.genres.map(g => <option key={g} value={g}>{g}</option>)}
+                                                    </optgroup>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
