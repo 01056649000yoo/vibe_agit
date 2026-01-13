@@ -64,7 +64,25 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
             return;
         }
 
-        console.log("🚀 글 제출 시작 - 학생 ID:", studentSession?.id, "미션 ID:", missionId);
+        // [방어 코드] 세션 데이터 최종 점검
+        let currentStudentId = studentSession?.id;
+
+        // 만약 prop으로 받은 세션이 유실되었다면 로컬 스토리지에서 다시 시도
+        if (!currentStudentId) {
+            const saved = localStorage.getItem('student_session');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                currentStudentId = parsed.id;
+            }
+        }
+
+        if (!currentStudentId) {
+            alert('로그인 정보가 유실되었습니다. 😢\n다시 로그인한 후에 제출을 시도해 주세요.');
+            console.error('❌ 제출 중단: studentSession.id가 없습니다.');
+            return;
+        }
+
+        console.log("🚀 글 제출 시작 - 학생 ID(UUID):", currentStudentId, "미션 ID:", missionId);
 
         setSubmitting(true);
         try {
@@ -85,7 +103,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
             const { error: postError } = await supabase
                 .from('student_posts')
                 .insert({
-                    student_id: studentSession.id,
+                    student_id: currentStudentId, // 검증된 ID 사용
                     mission_id: missionId,
                     title: title.trim(),
                     content: content,
@@ -100,21 +118,23 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
             }
 
             // 3. 학생 총점 업데이트 (students)
-            // 현재 점수를 가져와서 더하는 안전한 방식 (또는 increment 사용 가능하지만 여기선 가져와서 처리)
             const { data: studentData, error: studentFetchError } = await supabase
                 .from('students')
                 .select('total_points')
-                .eq('id', studentSession.id)
+                .eq('id', currentStudentId)
                 .single();
 
-            if (studentFetchError) throw studentFetchError;
+            if (studentFetchError) {
+                console.error('❌ 학생 정보 조회 실패 (FK 오류 가능성):', studentFetchError);
+                throw new Error('학생 정보를 데이터베이스에서 찾을 수 없습니다.');
+            }
 
             const newTotalPoints = (studentData.total_points || 0) + totalPointsToGive;
 
             const { error: pointUpdateError } = await supabase
                 .from('students')
                 .update({ total_points: newTotalPoints })
-                .eq('id', studentSession.id);
+                .eq('id', currentStudentId);
 
             if (pointUpdateError) throw pointUpdateError;
 
@@ -122,7 +142,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
             const { error: logError } = await supabase
                 .from('point_logs')
                 .insert({
-                    student_id: studentSession.id,
+                    student_id: currentStudentId,
                     amount: totalPointsToGive,
                     reason: `글쓰기 제출 보상: ${mission.title}${isBonusAchieved ? ' (보너스 달성! 🔥)' : ''}`
                 });
@@ -148,7 +168,11 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
 
         } catch (err) {
             console.error('❌ 최종 제출 실패 상세 정보:', err);
-            alert(`글을 저장하는 중에 오류가 발생했어요. 😢\n원인: ${err.message || '알 수 없는 오류'}`);
+            if (err.message?.includes('foreign key')) {
+                alert('로그인 정보가 유효하지 않습니다. 다시 로그인한 후 작성해 주세요. 😢');
+            } else {
+                alert(`글을 저장하는 중에 오류가 발생했어요. 😢\n원인: ${err.message || '알 수 없는 오류'}`);
+            }
         } finally {
             setSubmitting(false);
         }
