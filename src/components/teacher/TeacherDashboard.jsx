@@ -56,12 +56,14 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
         }
     };
 
-    // [보완] 활성 학급이 유효하지 않을 때 첫 번째 학급 자동 선택 가드
+    // [보완] 활성 학급이 유효하지 않을 때 첫 번째 학급 자동 선택 가드 (삭제 직후 유연한 전이)
     useEffect(() => {
-        if (!loadingClasses && classes.length > 0 && !activeClass) {
+        // 로딩 중이 아니고 학급은 있는데 선택된 게 없는 찰나에만 첫 학급 활성화
+        if (!loadingClasses && classes.length > 0 && activeClass === null) {
+            console.log("🔄 TeacherDashboard: 다음 학급으로 자동 전환합니다.");
             setActiveClass(classes[0]);
         }
-    }, [loadingClasses, classes, activeClass, setActiveClass]);
+    }, [loadingClasses, classes.length, activeClass, setActiveClass]);
 
     if (loadingClasses) {
         return (
@@ -143,41 +145,64 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                         </div>
                     ) : (
                         currentTab === 'dashboard' ? (
-                            <div style={{ display: 'flex', gap: '24px', height: '100%', maxWidth: '1400px', margin: '0 auto' }}>
-                                {/* 왼쪽: 글쓰기 미션 관리 (넓게 - 1.6) */}
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: '6.5fr 3.5fr',
+                                gap: '24px',
+                                height: 'calc(100vh - 160px)', // 헤더+탭 높이 제외
+                                width: '100%',
+                                maxWidth: '1600px',
+                                margin: '0 auto',
+                                overflow: 'hidden'
+                            }}>
+                                {/* 왼쪽: 글쓰기 미션 관리 (6.5 비율) */}
                                 <section style={{
-                                    flex: 1.6, background: 'white', borderRadius: '20px',
+                                    background: 'white', borderRadius: '24px',
                                     border: '1px solid #E9ECEF', display: 'flex', flexDirection: 'column',
-                                    overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+                                    overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.03)'
                                 }}>
-                                    <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+                                    <div style={{ flex: 1, overflowY: 'auto', padding: '24px', boxSizing: 'border-box' }}>
                                         <MissionManager activeClass={activeClass} isDashboardMode={true} />
                                     </div>
                                 </section>
 
-                                {/* 오른쪽: 명예의 전당 및 활동 (좁게 - 1) */}
+                                {/* 오른쪽: 명예의 전당 및 활동 (3.5 비율) */}
                                 <aside style={{
-                                    flex: 1, display: 'flex', flexDirection: 'column', gap: '24px',
-                                    overflowY: 'auto', paddingRight: '4px'
+                                    display: 'flex', flexDirection: 'column', gap: '24px',
+                                    height: '100%', overflow: 'hidden'
                                 }}>
+                                    {/* 상단: 명예의 전당 (유동적 높이, 내부 스크롤) */}
                                     <section style={{
-                                        background: 'white', borderRadius: '20px', padding: '20px',
-                                        border: '1px solid #E9ECEF', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+                                        flex: 2, background: 'white', borderRadius: '24px', padding: '24px',
+                                        border: '1px solid #E9ECEF', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+                                        overflowY: 'auto', boxSizing: 'border-box'
                                     }}>
                                         <StudentManager classId={activeClass?.id} isDashboardMode={true} />
                                     </section>
+
+                                    {/* 하단: 최근 활동 (고정 혹은 유동, 내부 스크롤) */}
                                     <section style={{
-                                        background: 'white', borderRadius: '20px', padding: '20px',
-                                        border: '1px solid #E9ECEF', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+                                        flex: 1, background: 'white', borderRadius: '24px', padding: '24px',
+                                        border: '1px solid #E9ECEF', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+                                        overflowY: 'auto', boxSizing: 'border-box'
                                     }}>
                                         <RecentActivity classId={activeClass?.id} />
                                     </section>
                                 </aside>
                             </div>
                         ) : (
-                            <div style={{ display: 'flex', gap: '24px', height: '100%', maxWidth: '1400px', margin: '0 auto' }}>
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: '4fr 6fr',
+                                gap: '24px',
+                                height: 'calc(100vh - 160px)',
+                                width: '100%',
+                                maxWidth: '1600px',
+                                margin: '0 auto',
+                                overflow: 'hidden'
+                            }}>
                                 {/* 왼쪽: 학급 정보 (40%) */}
-                                <aside style={{ flex: 1 }}>
+                                <aside style={{ flex: 1, height: '100%', overflowY: 'auto', background: 'white', borderRadius: '24px', padding: '24px', border: '1px solid #E9ECEF', boxSizing: 'border-box' }}>
                                     <ClassManager
                                         userId={session.user.id}
                                         classes={classes}
@@ -191,8 +216,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                 {/* 오른쪽: 학생 명단 및 계정 관리 (60%) */}
                                 {activeClass && (
                                     <section style={{
-                                        flex: 1.5, background: 'white', borderRadius: '20px', padding: '24px',
-                                        border: '1px solid #E9ECEF', overflowY: 'auto'
+                                        height: '100%', overflowY: 'auto', background: 'white', borderRadius: '24px', padding: '24px',
+                                        border: '1px solid #E9ECEF', boxSizing: 'border-box', boxShadow: '0 2px 12px rgba(0,0,0,0.03)'
                                     }}>
                                         <StudentManager classId={activeClass.id} isDashboardMode={false} />
                                     </section>

@@ -95,7 +95,7 @@ function App() {
   }
 
   return (
-    <Layout>
+    <Layout full={!!studentSession || (!!session && !!profile)}>
       <Suspense fallback={<Loading />}>
         {loading ? (
           <Loading />

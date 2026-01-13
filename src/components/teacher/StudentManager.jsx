@@ -132,12 +132,19 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
 
         return (
             <div style={{ width: '100%' }}>
-                {/* Sticky Header for Controls */}
                 <div style={{
-                    position: 'sticky', top: '-1px', zIndex: 10, background: 'white', paddingBottom: '16px',
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                    position: 'sticky',
+                    top: '-24px',
+                    zIndex: 10,
+                    background: 'white',
+                    padding: '4px 0 16px 0',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderBottom: '1px solid #F1F3F5',
+                    marginBottom: '16px'
                 }}>
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>🏆 대시보드 명예의 전당</h3>
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>🏆 명예의 전당</h3>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <Button
                             onClick={toggleSelectAll}
@@ -212,8 +219,19 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
     }
 
     return (
-        <div style={{ width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ width: '100%', boxSizing: 'border-box' }}>
+            <div style={{
+                position: 'sticky',
+                top: '-24px',
+                zIndex: 10,
+                background: 'white',
+                padding: '4px 0 16px 0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderBottom: '1px solid #F1F3F5',
+                marginBottom: '16px'
+            }}>
                 <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>🎒 학생 명단 및 계정 관리</h3>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <input

@@ -96,14 +96,26 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
     };
 
     return (
-        <div style={{ width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.4rem', color: '#2C3E50', fontWeight: '900' }}>
+        <div style={{ width: '100%', boxSizing: 'border-box' }}>
+            {/* Sticky Header 영역 */}
+            <div style={{
+                position: 'sticky',
+                top: '-24px', // 부모 패딩 상쇄
+                zIndex: 10,
+                background: 'white',
+                padding: '4px 0 16px 0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderBottom: '1px solid #F1F3F5',
+                marginBottom: '16px' // Changed from 20px to 16px
+            }}>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>
                     {isDashboardMode ? '✍️ 진행 중인 미션' : '✍️ 미션 목록 관리'}
                 </h3>
                 <Button
                     onClick={() => setIsFormOpen(!isFormOpen)}
-                    style={{ background: isFormOpen ? '#FF5252' : 'var(--primary-color)', color: 'white', padding: '8px 16px', fontSize: '0.85rem' }}
+                    style={{ background: isFormOpen ? '#FF5252' : '#3498DB', color: 'white', padding: '8px 16px', fontSize: '0.85rem' }}
                 >
                     {isFormOpen ? '✖ 닫기' : '➕ 새 미션 등록'}
                 </Button>

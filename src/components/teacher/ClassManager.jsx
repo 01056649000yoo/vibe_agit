@@ -70,7 +70,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
         if (!targetId) return;
 
         // 1. 사용자 확인 (window.confirm)
-        if (!window.confirm(`정말 [${targetName}] 학급을 완전히 삭제하시겠습니까?\n모든 데이터가 사라지며 복구할 수 없습니다.`)) {
+        if (!window.confirm(`정말 [${targetName}] 학급을 완전히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며 모든 데이터가 삭제됩니다.`)) {
             return;
         }
 
@@ -83,32 +83,32 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                 .eq('id', targetId);
 
             if (error) {
-                // 외래키 제약 조건 에러 처리 (학생이 있는 경우 등)
+                // 외래키 제약 조건 에러 처리
                 if (error.code === '23503') {
                     alert('학급에 학생이 남아있습니다. 학생 명단을 먼저 삭제해야 합니다. ⚠️');
                 } else {
-                    alert(`삭제 중 오류가 발생했습니다: ${error.message}`);
+                    alert(`삭제 권한이 없거나 오류가 발생했습니다: ${error.message}`);
                 }
                 return;
             }
 
-            // 3. 상태 동기화 (즉시 반영 ✨)
-            // (1) 목록에서 제거
+            // 3. 상태 업데이트 순서 조정 (성공 시 즉시 반영)
+            // (1) 목록에서 즉시 제거
             if (setClasses) {
                 setClasses(prev => prev.filter(c => c.id !== targetId));
             }
-            // (2) 현재 선택된 학급이 삭제된 학급이라면 비우기
+            // (2) 현재 선택된 학급 정보 비우기
             if (activeClass && activeClass.id === targetId && setActiveClass) {
                 setActiveClass(null);
             }
 
             alert(`[${targetName}] 학급이 삭제되었습니다. ✨`);
 
-            // (4) 필요한 경우 상층부 알림
+            // (3) 콜백 호출로 데이터 재정렬
             if (onClassDeleted) await onClassDeleted();
         } catch (error) {
-            console.error('❌ ClassManager: 학급 삭제 실패:', error);
-            alert('학급 삭제 중 예상치 못한 오류가 발생했습니다.');
+            console.error('❌ ClassManager: 삭제 처리 실패:', error);
+            alert('삭제 중 예상치 못한 오류가 발생했습니다.');
         } finally {
             setIsSaving(false);
         }
@@ -226,10 +226,10 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                         <Button
                             variant="ghost"
                             style={{ flex: 1, background: '#FDEDEC', border: '1px solid #FADBD8', color: '#E74C3C', height: '54px', fontWeight: 'bold' }}
-                            onClick={() => handleDeleteClass(activeClass.id, activeClass.name)}
-                            disabled={isSaving}
+                            onClick={() => activeClass && handleDeleteClass(activeClass.id, activeClass.name)}
+                            disabled={!activeClass || isSaving}
                         >
-                            🗑️ 학급 삭제
+                            {isSaving ? '삭제 중...' : '🗑️ 학급 삭제'}
                         </Button>
                     </div>
                 </div>
