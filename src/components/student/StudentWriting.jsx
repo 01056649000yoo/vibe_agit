@@ -15,6 +15,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [isReturned, setIsReturned] = useState(false); // 선생님이 다시 쓰기를 요청했는지 여부
+    const [isConfirmed, setIsConfirmed] = useState(false); // 선생님이 승인하여 포인트가 지급되었는지 여부
+    const [isSubmitted, setIsSubmitted] = useState(false); // 제출 여부
 
     useEffect(() => {
         if (missionId) {
@@ -49,10 +51,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                     setTitle(postData.title || '');
                     setContent(postData.content || '');
                     setIsReturned(postData.is_returned || false);
-
-                    // 만약 이미 제출된 글이라면 (그리고 다시 쓰기 요청 상태가 아니라면) 
-                    // 학생은 이 페이지에서 수정할 수 없어야 하지만, 
-                    // 여기서는 'is_submitted: false'인 경우(임시저장/반려)에만 수정을 허용하는 로직이 필요할 수 있습니다.
+                    setIsConfirmed(postData.is_confirmed || false);
+                    setIsSubmitted(postData.is_submitted || false);
                 }
             }
         } catch (err) {
@@ -140,15 +140,6 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
             const finalCharCount = content.length;
             const finalParagraphCount = content.split('\n').filter(p => p.trim().length > 0).length;
 
-            // 1. 포인트 계산
-            let totalPointsToGive = mission.base_reward || 0;
-            let isBonusAchieved = false;
-
-            if (mission.bonus_threshold && charCount >= mission.bonus_threshold) {
-                totalPointsToGive += (mission.bonus_reward || 0);
-                isBonusAchieved = true;
-            }
-
             // 2. 글 저장 (student_posts) - upsert 사용
             const { error: postError } = await supabase
                 .from('student_posts')
@@ -160,45 +151,14 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                     char_count: finalCharCount,
                     paragraph_count: finalParagraphCount,
                     is_submitted: true,
-                    is_returned: false // 제출 시 다시 쓰기 요청 상태 해제
+                    is_returned: false, // 제출 시 다시 쓰기 요청 상태 해제
+                    is_confirmed: false // 제출 시 승인 대기 상태로 설정
                 }, { onConflict: 'student_id,mission_id' });
 
             if (postError) {
                 console.error('❌ student_posts 저장 실패:', postError.message, postError.details);
                 throw postError;
             }
-
-            // 3. 학생 총점 업데이트 (students)
-            const { data: studentData, error: studentFetchError } = await supabase
-                .from('students')
-                .select('total_points')
-                .eq('id', currentStudentId)
-                .single();
-
-            if (studentFetchError) {
-                console.error('❌ 학생 정보 조회 실패 (FK 오류 가능성):', studentFetchError);
-                throw new Error('학생 정보를 데이터베이스에서 찾을 수 없습니다.');
-            }
-
-            const newTotalPoints = (studentData.total_points || 0) + totalPointsToGive;
-
-            const { error: pointUpdateError } = await supabase
-                .from('students')
-                .update({ total_points: newTotalPoints })
-                .eq('id', currentStudentId);
-
-            if (pointUpdateError) throw pointUpdateError;
-
-            // 4. 포인트 내역 저장 (point_logs)
-            const { error: logError } = await supabase
-                .from('point_logs')
-                .insert({
-                    student_id: currentStudentId,
-                    amount: totalPointsToGive,
-                    reason: `글쓰기 제출 보상: ${mission.title}${isBonusAchieved ? ' (보너스 달성! 🔥)' : ''}`
-                });
-
-            if (logError) throw logError;
 
             // 5. 성공 피드백 (폭죽 효과)
             confetti({
@@ -208,7 +168,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                 colors: ['#FFD700', '#FFA500', '#FF4500', '#ADFF2F', '#00BFFF']
             });
 
-            alert(`🎉 제출 성공! ${totalPointsToGive} 포인트를 받았어요!\n${isBonusAchieved ? '와우! 보너스 조건까지 달성했네요! 대단해요! 🏆' : '정말 멋진 글이에요!'}`);
+            alert(`🎉 제출 성공! 선생님이 확인하신 후 포인트가 지급될 거예요!`);
 
             // 6. 대시보드로 이동
             if (onNavigate) {
@@ -256,9 +216,53 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                 </div>
             </div>
 
-            {/* 선생님 피드백/다시쓰기 안내 */}
+            {/* 선생님 피드백/다시쓰기 안내 및 상태 표시 */}
             <AnimatePresence>
-                {isReturned && (
+                {isConfirmed ? (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        style={{
+                            background: '#E8F5E9',
+                            padding: '16px 20px',
+                            borderRadius: '16px',
+                            marginBottom: '24px',
+                            border: '1px solid #C8E6C9',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <span style={{ fontSize: '1.5rem' }}>✅</span>
+                        <div>
+                            <div style={{ fontWeight: '900', color: '#2E7D32', fontSize: '1rem' }}>포인트 지급 완료!</div>
+                            <div style={{ fontSize: '0.85rem', color: '#388E3C' }}>선생님이 글을 승인하고 포인트를 선물하셨어요. 축하해요! 🌟</div>
+                        </div>
+                    </motion.div>
+                ) : isSubmitted ? (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        style={{
+                            background: '#E3F2FD',
+                            padding: '16px 20px',
+                            borderRadius: '16px',
+                            marginBottom: '24px',
+                            border: '1px solid #BBDEFB',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <span style={{ fontSize: '1.5rem' }}>⏳</span>
+                        <div>
+                            <div style={{ fontWeight: '900', color: '#1565C0', fontSize: '1rem' }}>선생님이 확인 중이에요</div>
+                            <div style={{ fontSize: '0.85rem', color: '#1976D2' }}>글을 멋지게 제출했어요! 조금만 기다려주세요. ✨</div>
+                        </div>
+                    </motion.div>
+                ) : isReturned && (
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
@@ -421,7 +425,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                 <Button
                     size="lg"
                     onClick={handleSubmit}
-                    disabled={submitting}
+                    disabled={submitting || isConfirmed || (isSubmitted && !isReturned)}
                     style={{
                         flex: 2,
                         height: '64px',
@@ -431,10 +435,11 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                         color: 'white',
                         border: 'none',
                         boxShadow: '0 8px 25px rgba(135, 206, 235, 0.4)',
-                        transition: 'all 0.2s'
+                        transition: 'all 0.2s',
+                        opacity: (isConfirmed || (isSubmitted && !isReturned)) ? 0.6 : 1
                     }}
                 >
-                    {submitting ? '제출 중...' : '멋지게 제출하기! 🚀'}
+                    {submitting ? '제출 중...' : isConfirmed ? '승인 완료 ✨' : (isSubmitted && !isReturned) ? '확인 대기 중...' : '멋지게 제출하기! 🚀'}
                 </Button>
             </div>
         </Card>

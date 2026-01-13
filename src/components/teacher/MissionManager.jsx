@@ -156,6 +156,68 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
         }
     };
 
+    // 승인 및 포인트 지급 처리
+    const handleApprovePost = async (post) => {
+        if (!confirm(`${post.students?.name} 학생의 글을 승인하고 포인트를 지급하시겠습니까? 🎁`)) return;
+
+        try {
+            setLoadingPosts(true);
+
+            // 1. 포인트 계산
+            let totalPointsToGive = selectedMission.base_reward || 0;
+            let isBonusAchieved = false;
+            if (selectedMission.bonus_threshold && post.char_count >= selectedMission.bonus_threshold) {
+                totalPointsToGive += (selectedMission.bonus_reward || 0);
+                isBonusAchieved = true;
+            }
+
+            // 2. 글 승인 상태 업데이트
+            const { error: postError } = await supabase
+                .from('student_posts')
+                .update({ is_confirmed: true })
+                .eq('id', post.id);
+
+            if (postError) throw postError;
+
+            // 3. 학생 총점 업데이트
+            const { data: studentData, error: studentFetchError } = await supabase
+                .from('students')
+                .select('total_points')
+                .eq('id', post.student_id)
+                .single();
+
+            if (studentFetchError) throw studentFetchError;
+
+            const newTotalPoints = (studentData.total_points || 0) + totalPointsToGive;
+            const { error: pointUpdateError } = await supabase
+                .from('students')
+                .update({ total_points: newTotalPoints })
+                .eq('id', post.student_id);
+
+            if (pointUpdateError) throw pointUpdateError;
+
+            // 4. 포인트 내역 저장
+            const { error: logError } = await supabase
+                .from('point_logs')
+                .insert({
+                    student_id: post.student_id,
+                    amount: totalPointsToGive,
+                    reason: `글쓰기 승인 보상: ${selectedMission.title}${isBonusAchieved ? ' (보너스 달성! 🔥)' : ''}`
+                });
+
+            if (logError) throw logError;
+
+            alert(`✅ ${totalPointsToGive}포인트가 성공적으로 지급되었습니다!`);
+            setSelectedPost(null);
+            fetchPostsForMission(selectedMission);
+        } catch (err) {
+            console.error('승인 처리 실패:', err.message);
+            alert('승인 중 오류가 발생했습니다: ' + err.message);
+        } finally {
+            setLoadingPosts(false);
+        }
+    };
+
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
             {/* Sticky Header 영역 */}
@@ -425,12 +487,14 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                                 <div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                                         <span style={{ fontWeight: '900', color: '#2C3E50' }}>{post.students?.name}</span>
-                                                        {post.is_submitted ? (
-                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E8F5E9', color: '#2E7D32', borderRadius: '4px', fontWeight: 'bold' }}>제출 완료</span>
+                                                        {post.is_confirmed ? (
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E8F5E9', color: '#2E7D32', borderRadius: '4px', fontWeight: 'bold' }}>✅ 지급 완료</span>
+                                                        ) : post.is_submitted ? (
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E3F2FD', color: '#1565C0', borderRadius: '4px', fontWeight: 'bold' }}>⏳ 승인 대기</span>
                                                         ) : post.is_returned ? (
-                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#FFF3E0', color: '#E65100', borderRadius: '4px', fontWeight: 'bold' }}>다시 쓰기 중</span>
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#FFF3E0', color: '#E65100', borderRadius: '4px', fontWeight: 'bold' }}>♻️ 다시 쓰기 중</span>
                                                         ) : (
-                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#F1F3F5', color: '#6C757D', borderRadius: '4px', fontWeight: 'bold' }}>작성 중</span>
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#F1F3F5', color: '#6C757D', borderRadius: '4px', fontWeight: 'bold' }}>📝 작성 중</span>
                                                         )}
                                                     </div>
                                                     <div style={{ fontSize: '0.8rem', color: '#95A5A6' }}>
@@ -483,16 +547,32 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                 <div style={{ fontSize: '1rem', color: '#2C3E50', fontWeight: '900' }}>{selectedPost.students?.name} 학생의 글</div>
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                {selectedPost.is_submitted && (
-                                    <Button
-                                        onClick={() => handleRequestRewrite(selectedPost)}
-                                        style={{
-                                            background: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2',
-                                            padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
-                                        }}
-                                    >
-                                        ♻️ 다시 쓰기 요청
-                                    </Button>
+                                {selectedPost.is_submitted && !selectedPost.is_confirmed && (
+                                    <>
+                                        <Button
+                                            onClick={() => handleRequestRewrite(selectedPost)}
+                                            style={{
+                                                background: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2',
+                                                padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
+                                            }}
+                                        >
+                                            ♻️ 다시 쓰기 요청
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleApprovePost(selectedPost)}
+                                            style={{
+                                                background: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9',
+                                                padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
+                                            }}
+                                        >
+                                            ✅ 승인 및 포인트 지급
+                                        </Button>
+                                    </>
+                                )}
+                                {selectedPost.is_confirmed && (
+                                    <span style={{ color: '#2E7D32', fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        ✅ 포인트 지급 완료
+                                    </span>
                                 )}
                             </div>
                         </header>
