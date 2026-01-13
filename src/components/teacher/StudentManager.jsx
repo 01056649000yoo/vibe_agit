@@ -17,7 +17,21 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
         window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+
+        // 스크롤바 커스텀 스타일 주입
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .ranking-scroll::-webkit-scrollbar { width: 5px; }
+            .ranking-scroll::-webkit-scrollbar-track { background: transparent; }
+            .ranking-scroll::-webkit-scrollbar-thumb { background: #DEE2E6; border-radius: 10px; }
+            .ranking-scroll::-webkit-scrollbar-thumb:hover { background: #ADB5BD; }
+        `;
+        document.head.appendChild(style);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            document.head.removeChild(style);
+        };
     }, []);
 
     // 선택 및 모달 상태
@@ -175,49 +189,81 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                     </div>
                 </div>
 
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fill, minmax(280px, 1fr))',
-                    gap: isMobile ? '8px' : '10px'
-                }}>
-                    {students.map((s, idx) => (
-                        <motion.div
-                            key={s.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.03 }}
-                            onClick={() => setSelectedIds(prev => prev.includes(s.id) ? prev.filter(id => id !== s.id) : [...prev, s.id])}
-                            style={{
-                                display: 'flex', alignItems: 'center', padding: '10px 14px',
-                                background: selectedIds.includes(s.id) ? '#EBF5FB' : '#FDFEFE',
-                                border: `1px solid ${selectedIds.includes(s.id) ? '#3498DB' : '#F1F3F5'}`,
-                                borderRadius: '12px', cursor: 'pointer', transition: 'all 0.15s',
-                                fontSize: '0.9rem', width: '100%', boxSizing: 'border-box',
-                                wordBreak: 'keep-all', overflowWrap: 'break-word'
-                            }}
-                        >
-                            <div style={{ width: '30px', fontWeight: '900', color: idx < 3 ? '#F1C40F' : '#ADB5BD', fontSize: '1.1rem' }}>
-                                {idx < 3 ? ['🥇', '🥈', '🥉'][idx] : idx + 1}
-                            </div>
-                            <div style={{ flex: 1, fontWeight: '700', color: '#495057' }}>{s.name}</div>
+                <div style={{ position: 'relative', width: '100%' }}>
+                    <div
+                        className="ranking-scroll"
+                        style={{
+                            maxHeight: isMobile ? '340px' : '440px', // 약 5~6명 분량
+                            overflowY: 'auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: isMobile ? '6px' : '8px',
+                            paddingRight: '4px',
+                            paddingBottom: '20px', // 그라데이션 겹침 방지
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        {students.map((s, idx) => {
+                            const isTop3 = idx < 3;
+                            const topColors = ['#FFF9C4', '#F8F9FA', '#FFF3E0']; // 금, 은, 동 배경색
+                            const topBorders = ['#F7DC6F', '#D5D8DC', '#E59866']; // 금, 은, 동 테두리
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div style={{ textAlign: 'right' }}>
-                                    <span style={{ fontWeight: '900', color: '#212529' }}>{s.total_points || 0}</span>
-                                    <span style={{ fontSize: '0.7rem', color: '#ADB5BD', marginLeft: '2px' }}>P</span>
-                                </div>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); openHistoryModal(s); }}
+                            return (
+                                <motion.div
+                                    key={s.id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.03 }}
+                                    onClick={() => setSelectedIds(prev => prev.includes(s.id) ? prev.filter(id => id !== s.id) : [...prev, s.id])}
                                     style={{
-                                        background: 'transparent', border: 'none', cursor: 'pointer',
-                                        padding: '4px', fontSize: '0.8rem', color: '#ADB5BD'
+                                        display: 'flex', alignItems: 'center',
+                                        padding: isMobile ? '8px 12px' : '10px 14px',
+                                        background: selectedIds.includes(s.id) ? '#EBF5FB' : (isTop3 ? topColors[idx] : '#FDFEFE'),
+                                        border: `1px solid ${selectedIds.includes(s.id) ? '#3498DB' : (isTop3 ? topBorders[idx] : '#F1F3F5')}`,
+                                        borderRadius: '16px', cursor: 'pointer', transition: 'all 0.15s',
+                                        fontSize: isMobile ? '0.85rem' : '0.9rem', width: '100%', boxSizing: 'border-box',
+                                        wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                        boxShadow: isTop3 ? '0 2px 8px rgba(0,0,0,0.05)' : 'none'
                                     }}
                                 >
-                                    📜
-                                </button>
-                            </div>
-                        </motion.div>
-                    ))}
+                                    <div style={{
+                                        width: isMobile ? '28px' : '32px',
+                                        fontWeight: '900',
+                                        color: isTop3 ? topBorders[idx] : '#ADB5BD',
+                                        fontSize: isMobile ? '1rem' : '1.1rem',
+                                        display: 'flex', justifyContent: 'center'
+                                    }}>
+                                        {idx < 3 ? ['🥇', '🥈', '🥉'][idx] : idx + 1}
+                                    </div>
+                                    <div style={{ flex: 1, fontWeight: '700', color: '#495057' }}>{s.name}</div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <span style={{ fontWeight: '900', color: '#212529' }}>{s.total_points || 0}</span>
+                                            <span style={{ fontSize: '0.7rem', color: '#ADB5BD', marginLeft: '2px' }}>P</span>
+                                        </div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); openHistoryModal(s); }}
+                                            style={{
+                                                background: 'transparent', border: 'none', cursor: 'pointer',
+                                                padding: '4px', fontSize: '1rem', color: '#ADB5BD'
+                                            }}
+                                        >
+                                            📜
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                    {/* 하단 내용 더 있음 암시 그라데이션 */}
+                    {students.length > 5 && (
+                        <div style={{
+                            position: 'absolute', bottom: 0, left: 0, right: 0, height: '40px',
+                            background: 'linear-gradient(to top, rgba(255,255,255,0.95), transparent)',
+                            pointerEvents: 'none', borderRadius: '0 0 24px 24px'
+                        }} />
+                    )}
                 </div>
 
                 <CommonModals
