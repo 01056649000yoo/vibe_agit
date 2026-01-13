@@ -39,6 +39,9 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
     const [isPointModalOpen, setIsPointModalOpen] = useState(false);
     const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isCodeZoomModalOpen, setIsCodeZoomModalOpen] = useState(false); // 개별 코드 확대
+    const [isAllCodesModalOpen, setIsAllCodesModalOpen] = useState(false); // 전원 코드 확인
+    const [selectedStudentForCode, setSelectedStudentForCode] = useState(null);
 
     // 포인트 통합 모달 데이터
     const [pointFormData, setPointFormData] = useState({
@@ -272,6 +275,10 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                     handleBulkProcessPoints={handleBulkProcessPoints}
                     isHistoryModalOpen={isHistoryModalOpen} setIsHistoryModalOpen={setIsHistoryModalOpen}
                     historyStudent={historyStudent} historyLogs={historyLogs} loadingHistory={loadingHistory}
+                    isCodeZoomModalOpen={isCodeZoomModalOpen} setIsCodeZoomModalOpen={setIsCodeZoomModalOpen}
+                    isAllCodesModalOpen={isAllCodesModalOpen} setIsAllCodesModalOpen={setIsAllCodesModalOpen}
+                    selectedStudentForCode={selectedStudentForCode}
+                    students={students}
                 />
             </div>
         );
@@ -292,16 +299,26 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                 marginBottom: '16px'
             }}>
                 <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>🎒 학생 명단 및 계정 관리</h3>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                        type="text"
-                        placeholder="이름 입력"
-                        value={studentName}
-                        onChange={(e) => setStudentName(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleAddStudent()}
-                        style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #DEE2E6', fontSize: '0.9rem', width: '120px' }}
-                    />
-                    <Button onClick={handleAddStudent} disabled={isAdding} size="sm">추가</Button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                        <input
+                            type="text"
+                            placeholder="이름 입력"
+                            value={studentName}
+                            onChange={(e) => setStudentName(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleAddStudent()}
+                            style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #DEE2E6', fontSize: '0.9rem', width: '100px' }}
+                        />
+                        <Button onClick={handleAddStudent} disabled={isAdding} size="sm">추가</Button>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsAllCodesModalOpen(true)}
+                        style={{ background: '#FDFCF0', border: '1px solid #F7DC6F', color: '#B7950B', fontWeight: 'bold' }}
+                    >
+                        🔑 전원 코드 확인
+                    </Button>
                 </div>
             </div>
 
@@ -314,24 +331,34 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ fontWeight: 'bold' }}>{s.name}</div>
-                            <code style={{ fontSize: '0.7rem', color: '#6C757D', background: 'white', padding: '2px 6px', borderRadius: '4px', border: '1px solid #E9ECEF' }}>
+                            <code style={{ fontSize: '0.75rem', color: '#34495E', background: 'white', padding: '2px 8px', borderRadius: '4px', border: '1px solid #D5DBDB', fontFamily: 'monospace', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                                 {s.student_code}
                             </code>
                         </div>
-                        <div style={{ display: 'flex', gap: '4px' }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                onClick={() => {
+                                    setSelectedStudentForCode(s);
+                                    setIsCodeZoomModalOpen(true);
+                                }}
+                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
+                                title="크게 보기"
+                            >
+                                🔍
+                            </button>
                             <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(s.student_code);
                                     alert('복사됨! ✅');
                                 }}
-                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
+                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
                                 title="코드 복사"
                             >
                                 📋
                             </button>
                             <button
                                 onClick={() => { setDeleteTarget(s); setIsDeleteModalOpen(true); }}
-                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
+                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
                                 title="학생 삭제"
                             >
                                 🗑️
@@ -344,6 +371,10 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
             <CommonModals
                 isDeleteModalOpen={isDeleteModalOpen} setIsDeleteModalOpen={setIsDeleteModalOpen}
                 deleteTarget={deleteTarget} handleDeleteStudent={handleDeleteStudent}
+                isCodeZoomModalOpen={isCodeZoomModalOpen} setIsCodeZoomModalOpen={setIsCodeZoomModalOpen}
+                isAllCodesModalOpen={isAllCodesModalOpen} setIsAllCodesModalOpen={setIsAllCodesModalOpen}
+                selectedStudentForCode={selectedStudentForCode}
+                students={students}
             />
         </div>
     );
@@ -352,7 +383,9 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
 const CommonModals = ({
     isPointModalOpen, setIsPointModalOpen, pointFormData, setPointFormData, handleBulkProcessPoints,
     isHistoryModalOpen, setIsHistoryModalOpen, historyStudent, historyLogs, loadingHistory,
-    isDeleteModalOpen, setIsDeleteModalOpen, deleteTarget, handleDeleteStudent
+    isDeleteModalOpen, setIsDeleteModalOpen, deleteTarget, handleDeleteStudent,
+    isCodeZoomModalOpen, setIsCodeZoomModalOpen, isAllCodesModalOpen, setIsAllCodesModalOpen,
+    selectedStudentForCode, students
 }) => {
     return (
         <AnimatePresence>
@@ -403,6 +436,38 @@ const CommonModals = ({
                         <div style={{ display: 'flex', gap: '8px' }}>
                             <Button variant="ghost" style={{ flex: 1 }} onClick={() => setIsDeleteModalOpen(false)}>취소</Button>
                             <Button style={{ flex: 1, background: '#E74C3C', color: 'white', fontWeight: 'bold' }} onClick={handleDeleteStudent}>삭제</Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
+            {isCodeZoomModalOpen && selectedStudentForCode && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.98)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', zIndex: 3000, backdropFilter: 'blur(10px)' }}>
+                    <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ textAlign: 'center' }}>
+                        <span style={{ fontSize: '1.5rem', color: '#7F8C8D', fontWeight: 'bold', display: 'block', marginBottom: '20px' }}>{selectedStudentForCode.name} 학생의 접속 코드</span>
+                        <h1 style={{ fontSize: '8rem', letterSpacing: '20px', margin: '40px 0', color: '#2C3E50', fontFamily: 'monospace', fontWeight: '900' }}>
+                            {selectedStudentForCode.student_code}
+                        </h1>
+                        <Button style={{ padding: '20px 60px', fontSize: '1.5rem', borderRadius: '20px' }} onClick={() => setIsCodeZoomModalOpen(false)}>닫기</Button>
+                    </motion.div>
+                </div>
+            )}
+            {isAllCodesModalOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000, backdropFilter: 'blur(4px)' }}>
+                    <Card style={{ width: '90%', maxWidth: '1000px', maxHeight: '90vh', padding: '40px', borderRadius: '32px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                            <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#2C3E50', fontWeight: '900' }}>🔑 우리 반 접속 코드 전체 확인</h2>
+                            <Button variant="ghost" onClick={() => setIsAllCodesModalOpen(false)}>닫기</Button>
+                        </div>
+                        <div style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', padding: '10px' }}>
+                            {students.map(s => (
+                                <div key={s.id} style={{ padding: '16px', borderRadius: '16px', background: '#F8F9FA', border: '1px solid #E9ECEF', textAlign: 'center' }}>
+                                    <div style={{ fontWeight: 'bold', color: '#7F8C8D', fontSize: '0.9rem', marginBottom: '8px' }}>{s.name}</div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#3498DB', fontFamily: 'monospace', letterSpacing: '1px' }}>{s.student_code}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ marginTop: '20px', textAlign: 'center', color: '#95A5A6', fontSize: '0.9rem' }}>
+                            화면을 캡처하거나 크게 띄워 아이들에게 안내해 주세요. ✨
                         </div>
                     </Card>
                 </div>
