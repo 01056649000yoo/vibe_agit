@@ -35,7 +35,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
             const classList = data || [];
             setClasses(classList);
 
-            // [핵심 수정] 학급이 하나도 없으면 activeClass를 null로 초기화
+            // 학급이 하나도 없으면 activeClass를 null로 초기화
             if (classList.length === 0) {
                 setActiveClass(null);
             } else {
@@ -48,17 +48,30 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
             }
         } catch (err) {
             console.error('❌ TeacherDashboard: 학급 목록 불러오기 실패:', err.message);
+            alert('학급 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요. 🔄');
         } finally {
             setLoadingClasses(false);
         }
     };
 
+    // [보완] 학급은 있는데 선택된 학급이 없는 경우(삭제 직후 등) 첫 번째 학급 강제 선택
+    useEffect(() => {
+        if (!loadingClasses && classes.length > 0 && !activeClass) {
+            setActiveClass(classes[0]);
+        }
+    }, [loadingClasses, classes, activeClass, setActiveClass]);
+
     if (loadingClasses) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#F8F9FA' }}>
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔔</div>
-                    <p style={{ color: '#7F8C8D', fontWeight: 'bold' }}>학급 정보를 연결하는 중...</p>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#F8F9FA' }}>
+                <header style={{ padding: '12px 24px', background: 'white', borderBottom: '1px solid #E9ECEF' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>불러오는 중...</h2>
+                </header>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔔</div>
+                        <p style={{ color: '#7F8C8D', fontWeight: 'bold' }}>학급 정보를 연결하는 중...</p>
+                    </div>
                 </div>
             </div>
         );
@@ -129,9 +142,9 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                             />
                         </div>
                     ) : !activeClass ? (
+                        /* 학급이 있는데 아직 로딩 중이거나 선택 전인 경우 가벼운 폴백 */
                         <div style={{ textAlign: 'center', padding: '100px 20px' }}>
-                            <h2 style={{ color: '#2C3E50', fontWeight: '900' }}>데이터 확인 중... 🔍</h2>
-                            <p style={{ color: '#7F8C8D' }}>잠시만 기다려주세요.</p>
+                            <h2 style={{ color: '#2C3E50', fontWeight: '900' }}>학급을 선택해주세요 🏫</h2>
                         </div>
                     ) : (
                         currentTab === 'dashboard' ? (
