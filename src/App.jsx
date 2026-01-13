@@ -121,6 +121,7 @@ function App() {
                 studentSession={studentSession}
                 missionId={internalPage.params.missionId}
                 onBack={() => setInternalPage({ name: 'mission_list', params: {} })}
+                onNavigate={(page, params) => setInternalPage({ name: page, params })}
               />
             )}
           </>
