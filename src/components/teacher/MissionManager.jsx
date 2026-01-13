@@ -14,6 +14,12 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
     const [loading, setLoading] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
+    // 새롭게 추가된 상태들
+    const [selectedMission, setSelectedMission] = useState(null); // 현재 확인 중인 미션
+    const [posts, setPosts] = useState([]); // 해당 미션의 학생 글 목록
+    const [selectedPost, setSelectedPost] = useState(null); // 상세보기용 선택된 글
+    const [loadingPosts, setLoadingPosts] = useState(false);
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
         window.addEventListener('resize', handleResize);
@@ -99,6 +105,31 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
             fetchMissions();
         } catch (error) {
             alert('글쓰기 미션 등록 실패: ' + error.message);
+        }
+    };
+
+    // 학생 글 목록 불러오기
+    const fetchPostsForMission = async (mission) => {
+        setLoadingPosts(true);
+        setSelectedMission(mission);
+        try {
+            const { data, error } = await supabase
+                .from('student_posts')
+                .select(`
+                    *,
+                    students!inner(name, class_id)
+                `)
+                .eq('mission_id', mission.id)
+                .eq('students.class_id', activeClass.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setPosts(data || []);
+        } catch (err) {
+            console.error('학생 글 불러오기 실패:', err.message);
+            alert('글을 불러오는 도중 오류가 발생했습니다.');
+        } finally {
+            setLoadingPosts(false);
         }
     };
 
@@ -295,9 +326,164 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                 ✍️ {submissionCounts[mission.id] || 0}명 완료
                             </div>
                         </div>
+                        <Button
+                            onClick={() => fetchPostsForMission(mission)}
+                            variant="secondary"
+                            style={{
+                                width: '100%',
+                                marginTop: '4px',
+                                background: '#F8F9FA',
+                                color: '#495057',
+                                border: '1px solid #E9ECEF',
+                                fontSize: '0.85rem'
+                            }}
+                        >
+                            📝 학생 글 확인
+                        </Button>
                     </motion.div>
                 ))}
             </div>
+
+            {/* 학생 제출 현황 모달 */}
+            <AnimatePresence>
+                {selectedMission && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.5)', zIndex: 1000,
+                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            padding: '20px', boxSizing: 'border-box'
+                        }}
+                        onClick={() => setSelectedMission(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            style={{
+                                background: 'white', borderRadius: '24px',
+                                width: '100%', maxWidth: '600px', maxHeight: '80vh',
+                                display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                                boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)'
+                            }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div style={{ padding: '24px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <span style={{ fontSize: '0.8rem', color: '#1976D2', background: '#E3F2FD', padding: '2px 8px', borderRadius: '6px', fontWeight: 'bold' }}>{selectedMission.genre}</span>
+                                    <h4 style={{ margin: '8px 0 0 0', fontSize: '1.2rem', color: '#2C3E50', fontWeight: '900' }}>{selectedMission.title}</h4>
+                                </div>
+                                <button onClick={() => setSelectedMission(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ADB5BD' }}>✕</button>
+                            </div>
+
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+                                {loadingPosts ? (
+                                    <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>데이터를 불러오는 중...</div>
+                                ) : posts.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>아직 제출한 학생이 없습니다. 🐥</div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        {posts.map(post => (
+                                            <div
+                                                key={post.id}
+                                                onClick={() => setSelectedPost(post)}
+                                                style={{
+                                                    padding: '16px', borderRadius: '16px', background: '#F8F9FA',
+                                                    border: '1px solid #E9ECEF', cursor: 'pointer',
+                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#F1F3F5'}
+                                                onMouseLeave={e => e.currentTarget.style.background = '#F8F9FA'}
+                                            >
+                                                <div>
+                                                    <div style={{ fontWeight: '900', color: '#2C3E50', marginBottom: '4px' }}>{post.students?.name}</div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#95A5A6' }}>
+                                                        {post.char_count}자 · {new Date(post.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                </div>
+                                                <div style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.85rem' }}>읽어보기 ➔</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 글 상세보기 (Viewer) */}
+            <AnimatePresence>
+                {selectedPost && (
+                    <motion.div
+                        initial={{ opacity: 0, x: '100%' }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        style={{
+                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'white', zIndex: 1100,
+                            display: 'flex', flexDirection: 'column',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <header style={{
+                            padding: '16px 20px', borderBottom: '1px solid #F1F3F5',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            flexShrink: 0
+                        }}>
+                            <button
+                                onClick={() => setSelectedPost(null)}
+                                style={{
+                                    background: '#F8F9FA', border: 'none', padding: '8px 16px',
+                                    borderRadius: '12px', fontSize: '0.9rem', fontWeight: 'bold',
+                                    color: '#495057', cursor: 'pointer'
+                                }}
+                            >
+                                ← 뒤로가기
+                            </button>
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '0.8rem', color: '#95A5A6', fontWeight: 'bold' }}>{selectedMission?.title}</div>
+                                <div style={{ fontSize: '1rem', color: '#2C3E50', fontWeight: '900' }}>{selectedPost.students?.name} 학생의 글</div>
+                            </div>
+                            <div style={{ width: '80px' }}></div> {/* 균형용 */}
+                        </header>
+
+                        <main style={{
+                            flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '40px',
+                            maxWidth: '800px', margin: '0 auto', width: '100%', boxSizing: 'border-box'
+                        }}>
+                            <h2 style={{
+                                fontSize: isMobile ? '1.5rem' : '2rem',
+                                color: '#2C3E50', fontWeight: '900',
+                                marginBottom: '24px', lineHeight: '1.4',
+                                borderLeft: '6px solid #FBC02D', paddingLeft: '20px'
+                            }}>
+                                {selectedPost.title || '제목 없음'}
+                            </h2>
+                            <div style={{
+                                fontSize: isMobile ? '1.1rem' : '1.25rem',
+                                color: '#444', lineHeight: '1.8',
+                                whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                                paddingBottom: '100px'
+                            }}>
+                                {selectedPost.content}
+                            </div>
+                        </main>
+
+                        <footer style={{
+                            padding: '20px', borderTop: '1px solid #F1F3F5',
+                            textAlign: 'center', color: '#95A5A6', fontSize: '0.85rem'
+                        }}>
+                            글자 수: {selectedPost.char_count}자 | 제출 시간: {new Date(selectedPost.created_at).toLocaleString()}
+                        </footer>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
