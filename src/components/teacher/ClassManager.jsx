@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * - classes 테이블은 ON DELETE CASCADE 설정이 되어 있어야 합니다.
  *   (학급 삭제 시 student, writing_missions 등 관련 데이터가 자동 삭제됨)
  */
-const ClassManager = ({ userId, activeClass, setActiveClass, setClasses, onClassDeleted }) => {
+const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted }) => {
     const [className, setClassName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isZoomModalOpen, setIsZoomModalOpen] = useState(false); // 초대 코드 크게 보기 모달
@@ -66,14 +66,11 @@ const ClassManager = ({ userId, activeClass, setActiveClass, setClasses, onClass
         }
     };
 
-    const handleDeleteClass = async () => {
-        if (!activeClass) return;
-
-        const targetId = activeClass.id;
-        const targetName = activeClass.name;
+    const handleDeleteClass = async (targetId, targetName) => {
+        if (!targetId) return;
 
         // 1. 사용자 확인 (window.confirm)
-        if (!window.confirm(`정말 [${targetName}] 학급을 삭제하시겠습니까?\n학급에 소속된 모든 데이터(학생, 미션 등)가 삭제되며 복구할 수 없습니다.`)) {
+        if (!window.confirm(`정말 [${targetName}] 학급을 완전히 삭제하시겠습니까?\n모든 데이터가 사라지며 복구할 수 없습니다.`)) {
             return;
         }
 
@@ -86,17 +83,22 @@ const ClassManager = ({ userId, activeClass, setActiveClass, setClasses, onClass
                 .eq('id', targetId);
 
             if (error) {
-                alert(`삭제 중 오류가 발생했습니다: ${error.message}`);
+                // 외래키 제약 조건 에러 처리 (학생이 있는 경우 등)
+                if (error.code === '23503') {
+                    alert('학급에 학생이 남아있습니다. 학생 명단을 먼저 삭제해야 합니다. ⚠️');
+                } else {
+                    alert(`삭제 중 오류가 발생했습니다: ${error.message}`);
+                }
                 return;
             }
 
-            // 3. 상태 동기화 (마법처럼 즉시 반영 ✨)
+            // 3. 상태 동기화 (즉시 반영 ✨)
             // (1) 목록에서 제거
             if (setClasses) {
                 setClasses(prev => prev.filter(c => c.id !== targetId));
             }
-            // (2) 현재 선택된 학급 비우기
-            if (setActiveClass) {
+            // (2) 현재 선택된 학급이 삭제된 학급이라면 비우기
+            if (activeClass && activeClass.id === targetId && setActiveClass) {
                 setActiveClass(null);
             }
 
@@ -115,19 +117,58 @@ const ClassManager = ({ userId, activeClass, setActiveClass, setClasses, onClass
     return (
         <div style={{ width: '100%' }}>
             {!activeClass ? (
-                <Card style={{ textAlign: 'center', padding: '60px 40px', background: 'white', borderRadius: '32px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-                    <div style={{ fontSize: '4rem', marginBottom: '24px' }}>🏢</div>
-                    <h2 style={{ fontSize: '1.8rem', color: '#2C3E50', fontWeight: '900', marginBottom: '12px' }}>아직 운영 중인 학급이 없네요!</h2>
-                    <p style={{ color: '#7F8C8D', marginBottom: '32px', fontSize: '1.1rem' }}>첫 번째 학급을 만들고 학생들을 초대해볼까요? ✨</p>
-                    <Button
-                        variant="primary"
-                        size="lg"
-                        style={{ width: '100%', height: '70px', fontSize: '1.3rem', borderRadius: '20px', fontWeight: 'bold' }}
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        🏫 우리 학급 만들기
-                    </Button>
-                </Card>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <Card style={{ textAlign: 'center', padding: '40px', background: 'white', borderRadius: '32px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏢</div>
+                        <h2 style={{ fontSize: '1.5rem', color: '#2C3E50', fontWeight: '900', marginBottom: '8px' }}>선택된 학급이 없습니다.</h2>
+                        <p style={{ color: '#7F8C8D', marginBottom: '24px', fontSize: '1rem' }}>아래 목록에서 선택하거나 새로운 학급을 만들어보세요!</p>
+                        <Button
+                            variant="primary"
+                            style={{ width: '100%', height: '60px', fontSize: '1.1rem', borderRadius: '16px', fontWeight: 'bold' }}
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            ➕ 새 학급 만들기
+                        </Button>
+                    </Card>
+
+                    {classes.length > 0 && (
+                        <div style={{ background: 'white', borderRadius: '24px', padding: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>나의 학급 목록</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {classes.map((cls) => (
+                                    <div
+                                        key={cls.id}
+                                        onClick={() => setActiveClass(cls)}
+                                        style={{
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                            padding: '16px 20px', borderRadius: '16px', background: '#F8F9FA',
+                                            cursor: 'pointer', border: '1px solid #F1F3F5', transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = '#F1F8FF'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = '#F8F9FA'}
+                                    >
+                                        <span style={{ fontWeight: 'bold', color: '#2C3E50' }}>🏫 {cls.name}</span>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteClass(cls.id, cls.name);
+                                            }}
+                                            style={{
+                                                background: 'none', border: 'none', cursor: 'pointer',
+                                                fontSize: '1.2rem', padding: '4px', borderRadius: '8px',
+                                                transition: 'background 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = '#FDEDEC'}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{
@@ -185,7 +226,7 @@ const ClassManager = ({ userId, activeClass, setActiveClass, setClasses, onClass
                         <Button
                             variant="ghost"
                             style={{ flex: 1, background: '#FDEDEC', border: '1px solid #FADBD8', color: '#E74C3C', height: '54px', fontWeight: 'bold' }}
-                            onClick={handleDeleteClass}
+                            onClick={() => handleDeleteClass(activeClass.id, activeClass.name)}
                             disabled={isSaving}
                         >
                             🗑️ 학급 삭제

@@ -134,6 +134,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                         <div style={{ maxWidth: '600px', margin: '40px auto' }}>
                             <ClassManager
                                 userId={session.user.id}
+                                classes={classes}
                                 activeClass={activeClass}
                                 setActiveClass={setActiveClass}
                                 setClasses={setClasses}
@@ -179,6 +180,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                 <aside style={{ flex: 1 }}>
                                     <ClassManager
                                         userId={session.user.id}
+                                        classes={classes}
                                         activeClass={activeClass}
                                         setActiveClass={setActiveClass}
                                         setClasses={setClasses}
