@@ -32,13 +32,18 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setClasses(data || []);
+            const classList = data || [];
+            setClasses(classList);
 
-            // 강제 자동 선택: 학급 목록이 있고 현재 선택된 학급이 실제 목록에 없는 경우 첫 번째 선택
-            if (data && data.length > 0) {
-                const isCurrentValid = activeClass && data.some(c => c.id === activeClass.id);
+            // [핵심 수정] 학급이 하나도 없으면 activeClass를 null로 초기화
+            if (classList.length === 0) {
+                setActiveClass(null);
+            } else {
+                // 현재 선택된 학급이 실제 목록에 여전히 존재하는지 확인
+                const isCurrentValid = activeClass && classList.some(c => c.id === activeClass.id);
+                // 존재하지 않거나(삭제된 경우) 선택된 게 없으면 첫 번째 학급 자동 선택
                 if (!isCurrentValid) {
-                    setActiveClass(data[0]);
+                    setActiveClass(classList[0]);
                 }
             }
         } catch (err) {
@@ -158,10 +163,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                     <ClassManager
                                         userId={session.user.id}
                                         activeClass={activeClass}
-                                        onClassFound={(cls) => {
-                                            setClasses(prev => prev.some(c => c.id === cls.id) ? prev : [cls, ...prev]);
-                                            setActiveClass(cls);
-                                        }}
+                                        onClassFound={fetchAllClasses}
                                         onClassDeleted={fetchAllClasses}
                                     />
                                 </aside>
