@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * 역할: 선생님 - 학급 생성, 초대 코드 관리 및 학생 명단 통합 관리
  * 최적화된 레이아웃과 초대 코드 크게 보기 기능을 제공합니다. ✨
  */
-const ClassManager = ({ userId, activeClass, onClassFound, onClassDeleted }) => {
+const ClassManager = ({ userId, activeClass, setActiveClass, setClasses, onClassDeleted }) => {
     const [className, setClassName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isZoomModalOpen, setIsZoomModalOpen] = useState(false); // 초대 코드 크게 보기 모달
@@ -48,7 +48,10 @@ const ClassManager = ({ userId, activeClass, onClassFound, onClassDeleted }) => 
             if (error) throw error;
 
             console.log("✅ ClassManager: Class created successfully!");
-            if (onClassFound) onClassFound(data);
+            // 로컬 상태 즉시 반영
+            if (setClasses) setClasses(prev => [data, ...prev]);
+            if (setActiveClass) setActiveClass(data);
+
             setIsModalOpen(false);
             setClassName('');
         } catch (error) {
@@ -62,23 +65,35 @@ const ClassManager = ({ userId, activeClass, onClassFound, onClassDeleted }) => 
     const handleDeleteClass = async () => {
         if (!activeClass) return;
 
-        const confirmMsg = `정말 [${activeClass.name}] 학급을 삭제하시겠습니까?\n학급에 소속된 학생 정보와 모든 데이터가 삭제되며 복구할 수 없습니다.`;
+        const targetId = activeClass.id;
+        const targetName = activeClass.name;
+
+        const confirmMsg = `정말 [${targetName}] 학급을 삭제하시겠습니까?\n학급에 소속된 학생 정보와 모든 데이터가 삭제되며 복구할 수 없습니다.`;
         if (!confirm(confirmMsg)) return;
 
         setIsSaving(true);
         try {
+            // 1. DB 삭제 요청
             const { error } = await supabase
                 .from('classes')
                 .delete()
-                .eq('id', activeClass.id);
+                .eq('id', targetId);
 
-            if (error) throw error;
+            if (error) {
+                throw new Error(`데이터베이스 연결 오류로 삭제하지 못했습니다: ${error.message}`);
+            }
 
-            alert('학급이 삭제되었습니다. 🗑️');
+            // 2. 상위 상태 즉시 비우기 (지연 방지)
+            if (setActiveClass) setActiveClass(null);
+            if (setClasses) setClasses(prev => prev.filter(c => c.id !== targetId));
+
+            alert(`[${targetName}] 학급이 깔끔하게 삭제되었습니다. 🗑️`);
+
+            // 3. 콜백 실행 (필요 시 전체 갱신)
             if (onClassDeleted) onClassDeleted();
         } catch (error) {
             console.error('❌ ClassManager: 학급 삭제 실패:', error.message);
-            alert('학급 삭제 중 오류가 발생했습니다: ' + error.message);
+            alert(error.message);
         } finally {
             setIsSaving(false);
         }

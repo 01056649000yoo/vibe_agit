@@ -121,7 +121,17 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                 <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px' }}>데이터를 불러오는 중... ✨</div>}>
                     {hasZeroClasses ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-                            <ClassManager userId={session.user.id} onClassFound={fetchAllClasses} onClassDeleted={fetchAllClasses} />
+                            <ClassManager
+                                userId={session.user.id}
+                                setActiveClass={setActiveClass}
+                                setClasses={setClasses}
+                                onClassDeleted={fetchAllClasses}
+                            />
+                        </div>
+                    ) : !activeClass ? (
+                        <div style={{ textAlign: 'center', padding: '100px 20px' }}>
+                            <h2 style={{ color: '#2C3E50', fontWeight: '900' }}>데이터 확인 중... 🔍</h2>
+                            <p style={{ color: '#7F8C8D' }}>잠시만 기다려주세요.</p>
                         </div>
                     ) : (
                         currentTab === 'dashboard' ? (
@@ -163,7 +173,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                     <ClassManager
                                         userId={session.user.id}
                                         activeClass={activeClass}
-                                        onClassFound={fetchAllClasses}
+                                        setActiveClass={setActiveClass}
+                                        setClasses={setClasses}
                                         onClassDeleted={fetchAllClasses}
                                     />
                                 </aside>
