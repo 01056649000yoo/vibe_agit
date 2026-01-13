@@ -172,14 +172,19 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <div style={{
-                        padding: '24px 32px',
+                        padding: isMobile ? '16px 20px' : '24px 32px',
                         background: 'linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%)',
                         borderRadius: '24px',
                         border: '1px solid #FFE082',
                         display: 'flex',
+                        flexDirection: isMobile ? 'column' : 'row',
                         justifyContent: 'space-between',
-                        alignItems: 'center',
-                        boxShadow: '0 4px 15px rgba(255, 236, 179, 0.4)'
+                        alignItems: isMobile ? 'flex-start' : 'center',
+                        gap: isMobile ? '16px' : '20px',
+                        boxShadow: '0 4px 15px rgba(255, 236, 179, 0.4)',
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        overflow: 'hidden'
                     }}>
                         <div>
                             <span style={{ fontSize: '0.85rem', color: '#795548', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '4px' }}>Active Class</span>
@@ -196,11 +201,13 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                             padding: '12px 24px',
                             borderRadius: '20px',
                             border: '1px solid rgba(255, 224, 130, 0.5)',
-                            boxShadow: '0 4px 10px rgba(0,0,0,0.03)'
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.03)',
+                            width: isMobile ? '100%' : 'auto',
+                            boxSizing: 'border-box'
                         }}>
-                            <div>
+                            <div style={{ flex: 1 }}>
                                 <p style={{ margin: 0, fontSize: '0.8rem', color: '#95A5A6', fontWeight: 'bold' }}>초대 코드</p>
-                                <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#3498DB', letterSpacing: '2px', fontFamily: 'monospace' }}>
+                                <p style={{ margin: 0, fontSize: isMobile ? '1.2rem' : '1.5rem', fontWeight: '900', color: '#3498DB', letterSpacing: '2px', fontFamily: 'monospace' }}>
                                     {activeClass.invite_code}
                                 </p>
                             </div>

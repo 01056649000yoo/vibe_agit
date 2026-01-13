@@ -312,7 +312,7 @@ const CommonModals = ({
         <AnimatePresence>
             {isPointModalOpen && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000, backdropFilter: 'blur(4px)' }}>
-                    <Card style={{ width: '340px', padding: '24px', borderRadius: '24px' }}>
+                    <Card style={{ width: '90%', maxWidth: '340px', padding: '24px', borderRadius: '24px', boxSizing: 'border-box', overflow: 'hidden' }}>
                         <h3 style={{ margin: '0 0 20px 0', textAlign: 'center', color: '#212529' }}>⚡ 포인트 지급/차감</h3>
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
                             <button onClick={() => setPointFormData(p => ({ ...p, type: 'give' }))} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: pointFormData.type === 'give' ? '#3498DB' : '#F8F9FA', color: pointFormData.type === 'give' ? 'white' : '#ADB5BD', fontWeight: 'bold', cursor: 'pointer' }}>+ 주기</button>
@@ -331,7 +331,7 @@ const CommonModals = ({
             )}
             {isHistoryModalOpen && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000, backdropFilter: 'blur(4px)' }}>
-                    <Card style={{ width: '380px', maxHeight: '70vh', padding: '24px', borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <Card style={{ width: '90%', maxWidth: '380px', maxHeight: '70vh', padding: '24px', borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
                         <h3 style={{ margin: '0 0 16px 0', borderBottom: '1px solid #F1F3F5', paddingBottom: '12px' }}>📜 {historyStudent?.name}님의 활동 기록</h3>
                         <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
                             {loadingHistory ? <p style={{ textAlign: 'center', color: '#ADB5BD' }}>로딩 중...</p> : historyLogs.length === 0 ? <p style={{ textAlign: 'center', color: '#ADB5BD' }}>기록이 없습니다.</p> : historyLogs.map(l => (

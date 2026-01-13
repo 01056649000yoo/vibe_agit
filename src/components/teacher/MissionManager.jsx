@@ -137,7 +137,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
             <AnimatePresence>
                 {isFormOpen && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden', marginBottom: '24px' }}>
-                        <Card style={{ padding: isMobile ? '16px' : '24px', border: '2px solid #3498DB' }}>
+                        <Card style={{ padding: isMobile ? '16px' : '24px', border: '2px solid #3498DB', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
                             <form onSubmit={handleCreateMission} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px' }}>
                                     <input type="text" placeholder="미션 주제" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} style={{ flex: 2, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '1rem', minHeight: '48px' }} />
@@ -149,7 +149,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                         ))}
                                     </select>
                                 </div>
-                                <textarea placeholder="안내 가이드" value={formData.guide} onChange={e => setFormData({ ...formData, guide: e.target.value })} style={{ padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '120px', fontSize: '1rem' }} />
+                                <textarea placeholder="안내 가이드" value={formData.guide} onChange={e => setFormData({ ...formData, guide: e.target.value })} style={{ padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '120px', fontSize: '1rem', width: '100%', boxSizing: 'border-box' }} />
                                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                                     <div style={{ flex: 1, minWidth: isMobile ? '100%' : '150px' }}>
                                         <label style={{ fontSize: '0.8rem', color: '#7FB3D5', fontWeight: 'bold' }}>📏 최소 글자 / 최소 문단</label>

@@ -5,7 +5,7 @@ import React from 'react';
  */
 const Layout = ({ children, fullHeight = true, full = false }) => {
     const layoutStyle = full ? {
-        width: '100vw',
+        width: '100%',
         height: '100vh',
         boxSizing: 'border-box',
         background: '#F8F9FA',
