@@ -197,7 +197,9 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                     <motion.div key={mission.id} whileHover={isMobile ? {} : { y: -4 }} style={{
                         background: 'white', padding: isMobile ? '16px' : '20px',
                         borderRadius: '20px', border: '1px solid #ECEFF1',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '12px'
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '12px',
+                        width: '100%', boxSizing: 'border-box', // 상자 크기 고정
+                        wordBreak: 'keep-all', overflowWrap: 'break-word' // 줄바꿈 정책
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <span style={{ padding: '4px 10px', background: '#E3F2FD', color: '#1976D2', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900' }}>{mission.genre}</span>

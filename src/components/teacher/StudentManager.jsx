@@ -192,7 +192,8 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                 background: selectedIds.includes(s.id) ? '#EBF5FB' : '#FDFEFE',
                                 border: `1px solid ${selectedIds.includes(s.id) ? '#3498DB' : '#F1F3F5'}`,
                                 borderRadius: '12px', cursor: 'pointer', transition: 'all 0.15s',
-                                fontSize: '0.9rem'
+                                fontSize: '0.9rem', width: '100%', boxSizing: 'border-box',
+                                wordBreak: 'keep-all', overflowWrap: 'break-word'
                             }}
                         >
                             <div style={{ width: '30px', fontWeight: '900', color: idx < 3 ? '#F1C40F' : '#ADB5BD', fontSize: '1.1rem' }}>
