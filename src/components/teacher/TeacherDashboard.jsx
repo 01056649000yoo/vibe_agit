@@ -17,7 +17,7 @@ const MissionManager = lazy(() => import('./MissionManager'));
  *  - currentClassId: 현재 선택된 학급 ID
  *  - setCurrentClassId: 학급 ID 변경 함수
  */
-const TeacherDashboard = ({ profile, session, currentClassId, setCurrentClassId }) => {
+const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => {
     const [currentTab, setCurrentTab] = useState('home'); // 'home', 'class', 'mission'
 
     return (
@@ -71,11 +71,11 @@ const TeacherDashboard = ({ profile, session, currentClassId, setCurrentClassId 
 
                 {currentTab === 'class' && (
                     <div style={{ marginBottom: '24px' }}>
-                        <ClassManager userId={session.user.id} onClassFound={(id) => setCurrentClassId(id)} />
+                        <ClassManager userId={session.user.id} onClassFound={(cls) => setActiveClass(cls)} />
                     </div>
                 )}
                 {currentTab === 'mission' && (
-                    <MissionManager classId={currentClassId} />
+                    <MissionManager activeClass={activeClass} />
                 )}
             </Suspense>
         </Card>

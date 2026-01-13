@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 /**
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 미션 마스터 시스템) ✨
  */
-const MissionManager = ({ classId }) => {
+const MissionManager = ({ activeClass }) => {
     const [missions, setMissions] = useState([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -32,16 +32,23 @@ const MissionManager = ({ classId }) => {
     ];
 
     useEffect(() => {
-        if (classId) fetchMissions();
-    }, [classId]);
+        if (activeClass?.id) {
+            fetchMissions();
+        }
+    }, [activeClass]);
 
     const fetchMissions = async () => {
+        if (!activeClass?.id) {
+            console.warn('학급 정보가 없어 미션을 불러올 수 없습니다.');
+            return;
+        }
+
         setLoading(true);
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
                 .select('*')
-                .eq('class_id', classId)
+                .eq('class_id', activeClass.id)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -56,15 +63,12 @@ const MissionManager = ({ classId }) => {
     const handleCreateMission = async (e) => {
         e.preventDefault();
 
-        // [요구사항] 데이터 수집 확인용 console.log
-        console.log("📝 수집된 미션 데이터:", formData);
-
         if (!formData.title.trim() || !formData.guide.trim()) {
             alert('주제와 안내 내용을 입력해주세요! ✍️');
             return;
         }
 
-        if (!classId) {
+        if (!activeClass?.id) {
             alert('먼저 클래스 탭에서 클래스를 생성하거나 선택해주세요! 🏫');
             return;
         }
@@ -74,17 +78,17 @@ const MissionManager = ({ classId }) => {
                 .from('writing_missions')
                 .insert({
                     ...formData,
-                    class_id: classId
+                    class_id: activeClass.id
                 });
 
             if (error) throw error;
 
-            alert('새로운 미션이 등록되었습니다! 🚀');
+            alert('새로운 미션이 공개되었습니다! 🚀');
             setIsFormOpen(false);
             setFormData({
                 title: '',
                 guide: '',
-                genre: '수필',
+                genre: '일기',
                 min_chars: 100,
                 min_paragraphs: 2,
                 base_reward: 100,

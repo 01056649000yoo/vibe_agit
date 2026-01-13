@@ -31,7 +31,7 @@ const ClassManager = ({ userId, onClassFound }) => {
 
         if (data) {
             setMyClass(data);
-            if (onClassFound) onClassFound(data.id);
+            if (onClassFound) onClassFound(data);
         }
         setLoading(false);
     };
@@ -68,7 +68,7 @@ const ClassManager = ({ userId, onClassFound }) => {
             alert('학급 생성 중 오류가 생겼어요: ' + error.message);
         } else {
             setMyClass(data);
-            if (onClassFound) onClassFound(data.id);
+            if (onClassFound) onClassFound(data);
             setIsModalOpen(false);
         }
         setIsSaving(false);

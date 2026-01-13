@@ -28,7 +28,7 @@ function App() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [studentSession, setStudentSession] = useState(null)
-  const [currentClassId, setCurrentClassId] = useState(null)
+  const [activeClass, setActiveClass] = useState(null)
   const [isStudentLoginMode, setIsStudentLoginMode] = useState(false)
   const [internalPage, setInternalPage] = useState({ name: 'main', params: {} }) // { name, params }
   const [loading, setLoading] = useState(true)
@@ -157,8 +157,8 @@ function App() {
           <TeacherDashboard
             profile={profile}
             session={session}
-            currentClassId={currentClassId}
-            setCurrentClassId={setCurrentClassId}
+            activeClass={activeClass}
+            setActiveClass={setActiveClass}
             onNavigate={(page, params) => setInternalPage({ name: page, params })}
             internalPage={internalPage}
             setInternalPage={setInternalPage}
