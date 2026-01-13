@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * 역할: 선생님 - 학급 생성, 초대 코드 관리 및 학생 명단 통합 관리
  * 최적화된 레이아웃과 초대 코드 크게 보기 기능을 제공합니다. ✨
  */
-const ClassManager = ({ userId, activeClass, onClassFound }) => {
+const ClassManager = ({ userId, activeClass, onClassFound, onClassDeleted }) => {
     const [className, setClassName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isZoomModalOpen, setIsZoomModalOpen] = useState(false); // 초대 코드 크게 보기 모달
@@ -54,6 +54,31 @@ const ClassManager = ({ userId, activeClass, onClassFound }) => {
         } catch (error) {
             console.error('❌ ClassManager: 학급 생성 실패:', error.message);
             alert('학급 생성 중 오류가 생겼어요: ' + error.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteClass = async () => {
+        if (!activeClass) return;
+
+        const confirmMsg = `정말 [${activeClass.name}] 학급을 삭제하시겠습니까?\n학급에 소속된 학생 정보와 모든 데이터가 삭제되며 복구할 수 없습니다.`;
+        if (!confirm(confirmMsg)) return;
+
+        setIsSaving(true);
+        try {
+            const { error } = await supabase
+                .from('classes')
+                .delete()
+                .eq('id', activeClass.id);
+
+            if (error) throw error;
+
+            alert('학급이 삭제되었습니다. 🗑️');
+            if (onClassDeleted) onClassDeleted();
+        } catch (error) {
+            console.error('❌ ClassManager: 학급 삭제 실패:', error.message);
+            alert('학급 삭제 중 오류가 발생했습니다: ' + error.message);
         } finally {
             setIsSaving(false);
         }
@@ -124,10 +149,18 @@ const ClassManager = ({ userId, activeClass, onClassFound }) => {
                     <div style={{ display: 'flex', gap: '12px' }}>
                         <Button
                             variant="ghost"
-                            style={{ flex: 1, background: 'white', border: '1px solid #ECEFF1', color: '#7F8C8D', height: '50px' }}
+                            style={{ flex: 2, background: 'white', border: '1px solid #ECEFF1', color: '#2C3E50', height: '54px', fontWeight: 'bold' }}
                             onClick={() => setIsModalOpen(true)}
                         >
-                            ➕ 다른 학급 추가하기
+                            ➕ 다른 학급 추가
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            style={{ flex: 1, background: '#FDEDEC', border: '1px solid #FADBD8', color: '#E74C3C', height: '54px', fontWeight: 'bold' }}
+                            onClick={handleDeleteClass}
+                            disabled={isSaving}
+                        >
+                            🗑️ 학급 삭제
                         </Button>
                     </div>
                 </div>

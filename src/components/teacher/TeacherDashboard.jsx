@@ -116,7 +116,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                 <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px' }}>데이터를 불러오는 중... ✨</div>}>
                     {hasZeroClasses ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-                            <ClassManager userId={session.user.id} onClassFound={fetchAllClasses} />
+                            <ClassManager userId={session.user.id} onClassFound={fetchAllClasses} onClassDeleted={fetchAllClasses} />
                         </div>
                     ) : (
                         currentTab === 'dashboard' ? (
@@ -155,10 +155,15 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                             <div style={{ display: 'flex', gap: '24px', height: '100%', maxWidth: '1400px', margin: '0 auto' }}>
                                 {/* 왼쪽: 학급 정보 (40%) */}
                                 <aside style={{ flex: 1 }}>
-                                    <ClassManager userId={session.user.id} activeClass={activeClass} onClassFound={(cls) => {
-                                        setClasses(prev => prev.some(c => c.id === cls.id) ? prev : [cls, ...prev]);
-                                        setActiveClass(cls);
-                                    }} />
+                                    <ClassManager
+                                        userId={session.user.id}
+                                        activeClass={activeClass}
+                                        onClassFound={(cls) => {
+                                            setClasses(prev => prev.some(c => c.id === cls.id) ? prev : [cls, ...prev]);
+                                            setActiveClass(cls);
+                                        }}
+                                        onClassDeleted={fetchAllClasses}
+                                    />
                                 </aside>
 
                                 {/* 오른쪽: 학생 명단 및 계정 관리 (60%) */}
