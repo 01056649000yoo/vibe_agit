@@ -133,6 +133,29 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
         }
     };
 
+    // 다시 쓰기 요청 처리
+    const handleRequestRewrite = async (post) => {
+        if (!confirm('학생에게 이 글을 돌려보내고 다시 쓰기를 요청할까요? ♻️\n학생의 화면에 안내 문구가 표시됩니다.')) return;
+
+        try {
+            const { error } = await supabase
+                .from('student_posts')
+                .update({
+                    is_submitted: false,
+                    is_returned: true
+                })
+                .eq('id', post.id);
+
+            if (error) throw error;
+
+            alert('다시 쓰기 요청을 전달했습니다! 📤');
+            setSelectedPost(null); // 상세보기 닫기
+            fetchPostsForMission(selectedMission); // 목록 새로고침
+        } catch (err) {
+            alert('요청 중 오류 발생: ' + err.message);
+        }
+    };
+
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
             {/* Sticky Header 영역 */}
@@ -400,7 +423,16 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                                 onMouseLeave={e => e.currentTarget.style.background = '#F8F9FA'}
                                             >
                                                 <div>
-                                                    <div style={{ fontWeight: '900', color: '#2C3E50', marginBottom: '4px' }}>{post.students?.name}</div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                                        <span style={{ fontWeight: '900', color: '#2C3E50' }}>{post.students?.name}</span>
+                                                        {post.is_submitted ? (
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E8F5E9', color: '#2E7D32', borderRadius: '4px', fontWeight: 'bold' }}>제출 완료</span>
+                                                        ) : post.is_returned ? (
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#FFF3E0', color: '#E65100', borderRadius: '4px', fontWeight: 'bold' }}>다시 쓰기 중</span>
+                                                        ) : (
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#F1F3F5', color: '#6C757D', borderRadius: '4px', fontWeight: 'bold' }}>작성 중</span>
+                                                        )}
+                                                    </div>
                                                     <div style={{ fontSize: '0.8rem', color: '#95A5A6' }}>
                                                         {post.char_count}자 · {new Date(post.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                     </div>
@@ -450,7 +482,19 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                 <div style={{ fontSize: '0.8rem', color: '#95A5A6', fontWeight: 'bold' }}>{selectedMission?.title}</div>
                                 <div style={{ fontSize: '1rem', color: '#2C3E50', fontWeight: '900' }}>{selectedPost.students?.name} 학생의 글</div>
                             </div>
-                            <div style={{ width: '80px' }}></div> {/* 균형용 */}
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {selectedPost.is_submitted && (
+                                    <Button
+                                        onClick={() => handleRequestRewrite(selectedPost)}
+                                        style={{
+                                            background: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2',
+                                            padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
+                                        }}
+                                    >
+                                        ♻️ 다시 쓰기 요청
+                                    </Button>
+                                )}
+                            </div>
                         </header>
 
                         <main style={{

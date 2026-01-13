@@ -14,6 +14,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
     const [content, setContent] = useState('');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [isReturned, setIsReturned] = useState(false); // 선생님이 다시 쓰기를 요청했는지 여부
 
     useEffect(() => {
         if (missionId) {
@@ -24,16 +25,38 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
     const fetchMission = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            // 1. 미션 정보 가져오기
+            const { data: missionData, error: missionError } = await supabase
                 .from('writing_missions')
                 .select('*')
                 .eq('id', missionId)
                 .single();
 
-            if (error) throw error;
-            setMission(data);
+            if (missionError) throw missionError;
+            setMission(missionData);
+
+            // 2. 이미 작성 중인 글(임시 저장 또는 제출된 글)이 있는지 확인
+            const currentStudentId = studentSession?.id || JSON.parse(localStorage.getItem('student_session'))?.id;
+            if (currentStudentId) {
+                const { data: postData, error: postError } = await supabase
+                    .from('student_posts')
+                    .select('*')
+                    .eq('mission_id', missionId)
+                    .eq('student_id', currentStudentId)
+                    .maybeSingle();
+
+                if (!postError && postData) {
+                    setTitle(postData.title || '');
+                    setContent(postData.content || '');
+                    setIsReturned(postData.is_returned || false);
+
+                    // 만약 이미 제출된 글이라면 (그리고 다시 쓰기 요청 상태가 아니라면) 
+                    // 학생은 이 페이지에서 수정할 수 없어야 하지만, 
+                    // 여기서는 'is_submitted: false'인 경우(임시저장/반려)에만 수정을 허용하는 로직이 필요할 수 있습니다.
+                }
+            }
         } catch (err) {
-            console.error('글쓰기 미션 로드 실패:', err.message);
+            console.error('데이터 로드 실패:', err.message);
         } finally {
             setLoading(false);
         }
@@ -42,6 +65,33 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
     // 통계 계산
     const charCount = content.length;
     const paragraphCount = content.split(/\n+/).filter(p => p.trim().length > 0).length;
+
+    // 임시 저장 처리
+    const handleSave = async (showMsg = true) => {
+        let currentStudentId = studentSession?.id || JSON.parse(localStorage.getItem('student_session'))?.id;
+        if (!currentStudentId) return;
+
+        try {
+            const { error } = await supabase
+                .from('student_posts')
+                .upsert({
+                    student_id: currentStudentId,
+                    mission_id: missionId,
+                    title: title.trim(),
+                    content: content,
+                    char_count: content.length,
+                    paragraph_count: content.split(/\n+/).filter(p => p.trim().length > 0).length,
+                    is_submitted: false,
+                    // is_returned 상태는 유지하거나 필요시 처리
+                }, { onConflict: 'student_id,mission_id' });
+
+            if (error) throw error;
+            if (showMsg) alert('안전하게 임시 저장되었습니다! 💾');
+        } catch (err) {
+            console.error('임시 저장 실패:', err.message);
+            if (showMsg) alert('저장 중 오류가 발생했습니다.');
+        }
+    };
 
     // 제출 전 유효성 검사 및 포인트 처리
     const handleSubmit = async () => {
@@ -99,18 +149,19 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                 isBonusAchieved = true;
             }
 
-            // 2. 글 저장 (student_posts)
+            // 2. 글 저장 (student_posts) - upsert 사용
             const { error: postError } = await supabase
                 .from('student_posts')
-                .insert({
+                .upsert({
                     student_id: currentStudentId, // 검증된 ID 사용
                     mission_id: missionId,
                     title: title.trim(),
                     content: content,
                     char_count: finalCharCount,
                     paragraph_count: finalParagraphCount,
-                    is_submitted: true // 제출 상태 명시
-                });
+                    is_submitted: true,
+                    is_returned: false // 제출 시 다시 쓰기 요청 상태 해제
+                }, { onConflict: 'student_id,mission_id' });
 
             if (postError) {
                 console.error('❌ student_posts 저장 실패:', postError.message, postError.details);
@@ -204,6 +255,33 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                     <h2 style={{ margin: 0, color: '#263238', fontSize: '1.8rem', fontWeight: '900' }}>{mission.title}</h2>
                 </div>
             </div>
+
+            {/* 선생님 피드백/다시쓰기 안내 */}
+            <AnimatePresence>
+                {isReturned && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        style={{
+                            background: '#FFF3E0',
+                            padding: '16px 20px',
+                            borderRadius: '16px',
+                            marginBottom: '24px',
+                            border: '1px solid #FFE0B2',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <span style={{ fontSize: '1.5rem' }}>♻️</span>
+                        <div>
+                            <div style={{ fontWeight: '900', color: '#E65100', fontSize: '1rem' }}>선생님이 다시 쓰기를 요청하셨습니다.</div>
+                            <div style={{ fontSize: '0.85rem', color: '#EF6C00' }}>내용을 보완해서 다시 한번 멋진 글을 완성해볼까요?</div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* 가이드 박스 */}
             <div style={{
@@ -322,24 +400,43 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                 </div>
             </div>
 
-            <Button
-                size="lg"
-                onClick={handleSubmit}
-                disabled={submitting}
-                style={{
-                    width: '100%',
-                    height: '64px',
-                    fontSize: '1.3rem',
-                    fontWeight: '900',
-                    background: 'var(--primary-color)',
-                    color: 'white',
-                    border: 'none',
-                    boxShadow: '0 8px 25px rgba(135, 206, 235, 0.4)',
-                    transition: 'all 0.2s'
-                }}
-            >
-                {submitting ? '제출 중...' : '멋지게 제출하고 포인트 받기! 🚀'}
-            </Button>
+            <div style={{ display: 'flex', gap: '12px' }}>
+                <Button
+                    size="lg"
+                    onClick={() => handleSave(true)}
+                    disabled={submitting}
+                    style={{
+                        flex: 1,
+                        height: '64px',
+                        fontSize: '1.2rem',
+                        fontWeight: '800',
+                        background: '#ECEFF1',
+                        color: '#455A64',
+                        border: 'none',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                    }}
+                >
+                    임시 저장 💾
+                </Button>
+                <Button
+                    size="lg"
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    style={{
+                        flex: 2,
+                        height: '64px',
+                        fontSize: '1.3rem',
+                        fontWeight: '900',
+                        background: 'var(--primary-color)',
+                        color: 'white',
+                        border: 'none',
+                        boxShadow: '0 8px 25px rgba(135, 206, 235, 0.4)',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    {submitting ? '제출 중...' : '멋지게 제출하기! 🚀'}
+                </Button>
+            </div>
         </Card>
     );
 };
