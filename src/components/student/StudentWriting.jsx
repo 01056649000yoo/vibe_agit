@@ -33,7 +33,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
             if (error) throw error;
             setMission(data);
         } catch (err) {
-            console.error('미션 로드 실패:', err.message);
+            console.error('글쓰기 미션 로드 실패:', err.message);
         } finally {
             setLoading(false);
         }
@@ -145,7 +145,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
     };
 
     if (loading) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 도구를 준비하는 중... ✍️</p></Card>;
-    if (!mission) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>미션을 찾을 수 없습니다.</p><Button onClick={onBack}>돌아가기</Button></Card>;
+    if (!mission) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 미션을 찾을 수 없습니다.</p><Button onClick={onBack}>돌아가기</Button></Card>;
 
     return (
         <Card style={{ maxWidth: '850px', padding: '32px', border: 'none', background: '#FFFFFF', boxShadow: '0 15px 40px rgba(0,0,0,0.08)' }}>

@@ -5,7 +5,7 @@ import Card from '../common/Card';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /**
- * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 미션 마스터 시스템) ✨
+ * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
 const MissionManager = ({ activeClass, isDashboardMode = true }) => {
     const [missions, setMissions] = useState([]);
@@ -49,7 +49,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
         if (!activeClass?.id) return;
         setLoading(true);
         try {
-            // 1. 미션 목록 가져오기
+            // 1. 글쓰기 미션 목록 가져오기
             const { data, error } = await supabase
                 .from('writing_missions')
                 .select('*')
@@ -76,7 +76,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                 }
             }
         } catch (err) {
-            console.error('미션 로드 실패:', err.message);
+            console.error('글쓰기 미션 로드 실패:', err.message);
         } finally {
             setLoading(false);
         }
@@ -93,12 +93,12 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
             const { error } = await supabase.from('writing_missions').insert({ ...formData, class_id: activeClass.id });
             if (error) throw error;
 
-            alert('새로운 미션이 공개되었습니다! 🚀');
+            alert('새로운 글쓰기 미션이 공개되었습니다! 🚀');
             setIsFormOpen(false);
             setFormData({ title: '', guide: '', genre: '일기', min_chars: 100, min_paragraphs: 2, base_reward: 100, bonus_threshold: 100, bonus_reward: 10 });
             fetchMissions();
         } catch (error) {
-            alert('미션 등록 실패: ' + error.message);
+            alert('글쓰기 미션 등록 실패: ' + error.message);
         }
     };
 
@@ -118,7 +118,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                 marginBottom: '16px'
             }}>
                 <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.3rem', color: '#2C3E50', fontWeight: '900' }}>
-                    {isDashboardMode ? '✍️ 미션 현황' : '✍️ 미션 관리'}
+                    {isDashboardMode ? '✍️ 글쓰기 미션 현황' : '✍️ 글쓰기 미션 관리'}
                 </h3>
                 <Button
                     onClick={() => setIsFormOpen(!isFormOpen)}
@@ -137,11 +137,34 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
             <AnimatePresence>
                 {isFormOpen && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden', marginBottom: '24px' }}>
-                        <Card style={{ padding: isMobile ? '16px' : '24px', border: '2px solid #3498DB', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+                        <Card style={{
+                            padding: isMobile ? '16px' : '24px',
+                            border: '2px solid #3498DB',
+                            width: '100%',
+                            maxWidth: 'none', // 너비 제한 해제
+                            margin: '0 0 24px 0', // 리스트와 정렬 맞춤
+                            boxSizing: 'border-box',
+                            overflow: 'hidden'
+                        }}>
                             <form onSubmit={handleCreateMission} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px' }}>
-                                    <input type="text" placeholder="미션 주제" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} style={{ flex: 2, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '1rem', minHeight: '48px' }} />
-                                    <select value={formData.genre} onChange={e => setFormData({ ...formData, genre: e.target.value })} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="글쓰기 주제"
+                                        value={formData.title}
+                                        onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                        style={{
+                                            flex: 2,
+                                            padding: '14px',
+                                            borderRadius: '12px',
+                                            border: '1px solid #ddd',
+                                            fontSize: '1rem',
+                                            minHeight: '48px',
+                                            width: '100%',
+                                            boxSizing: 'border-box'
+                                        }}
+                                    />
+                                    <select value={formData.genre} onChange={e => setFormData({ ...formData, genre: e.target.value })} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}>
                                         {genreCategories.map(cat => (
                                             <optgroup key={cat.label} label={cat.label}>
                                                 {cat.genres.map(g => <option key={g} value={g}>{g}</option>)}
@@ -173,7 +196,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <Button type="submit" style={{ background: '#3498DB', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}>미션 공개하기 🚀</Button>
+                                <Button type="submit" style={{ background: '#3498DB', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}>글쓰기 미션 공개하기 🚀</Button>
                             </form>
                         </Card>
                     </motion.div>
@@ -188,10 +211,10 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>로딩 중...</div>
                 ) : missions.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '60px 20px', background: '#F8F9FA', borderRadius: '24px', border: '2px dashed #E9ECEF' }}>
+                    <div style={{ textAlign: 'center', padding: '60px 20px', background: '#F8F9FA', borderRadius: '24px', border: '2px dashed #E9ECEF', width: '100%', boxSizing: 'border-box' }}>
                         <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📖</div>
-                        <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>아직 등록된 미션이 없습니다.</p>
-                        <p style={{ color: '#BDC3C7', fontSize: '0.9rem' }}>새로운 미션을 등록해 아이들과 소통해보세요! ✨</p>
+                        <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>아직 등록된 글쓰기 미션이 없습니다.</p>
+                        <p style={{ color: '#BDC3C7', fontSize: '0.9rem' }}>새로운 글쓰기 미션을 등록해 아이들과 소통해보세요! ✨</p>
                     </div>
                 ) : missions.map(mission => (
                     <motion.div key={mission.id} whileHover={isMobile ? {} : { y: -4 }} style={{
@@ -205,7 +228,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                             <span style={{ padding: '4px 10px', background: '#E3F2FD', color: '#1976D2', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900' }}>{mission.genre}</span>
                             <button onClick={async (e) => {
                                 e.stopPropagation();
-                                if (confirm('이 미션을 삭제하시겠습니까? 🗑️\n작성된 학생들의 글도 확인이 어려워질 수 있습니다.')) {
+                                if (confirm('이 글쓰기 미션을 삭제하시겠습니까? 🗑️\n작성된 학생들의 글도 확인이 어려워질 수 있습니다.')) {
                                     const { error } = await supabase.from('writing_missions').delete().eq('id', mission.id);
                                     if (!error) fetchMissions();
                                     else alert('삭제 실패: ' + error.message);

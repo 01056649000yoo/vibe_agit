@@ -17,7 +17,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
 
     const fetchMissions = async () => {
         setLoading(true);
-        console.log("🔍 미션 목록 불러오기 시작...");
+        console.log("🔍 글쓰기 미션 목록 불러오기 시작...");
 
         try {
             // [주의] 현재 DB의 writing_missions 테이블에 class_id 컬럼이 없어 필터링 없이 전체를 가져옵니다.
@@ -31,11 +31,11 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                 throw error;
             }
 
-            console.log("✅ 미션 데이터 로드 성공:", data?.length, "개");
+            console.log("✅ 글쓰기 미션 데이터 로드 성공:", data?.length, "개");
             setMissions(data || []);
         } catch (err) {
-            console.error('❌ 미션 로드 실패 전역 에러:', err.message);
-            alert('미션을 불러오는 중 문제가 발생했습니다. 관리자에게 문의해 주세요.');
+            console.error('❌ 글쓰기 미션 로드 실패 전역 에러:', err.message);
+            alert('글쓰기 미션을 불러오는 중 문제가 발생했습니다. 관리자에게 문의해 주세요.');
         } finally {
             setLoading(false);
         }
@@ -76,7 +76,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                         boxShadow: '0 4px 12px rgba(255, 224, 130, 0.1)'
                     }}>
                         <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>🎈</div>
-                        <h3 style={{ margin: '0 0 8px 0', color: '#5D4037' }}>아직 등록된 미션이 없어요!</h3>
+                        <h3 style={{ margin: '0 0 8px 0', color: '#5D4037' }}>아직 등록된 글쓰기 미션이 없어요!</h3>
                         <p style={{ color: '#9E9E9E', fontSize: '0.95rem' }}>선생님이 새로운 주제를 주실 때까지 조금만 기다려볼까요?</p>
                     </div>
                 ) : (
