@@ -121,30 +121,30 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                     ) : (
                         currentTab === 'dashboard' ? (
                             <div style={{ display: 'flex', gap: '24px', height: '100%', maxWidth: '1400px', margin: '0 auto' }}>
-                                {/* 왼쪽: 학생 명단 및 포인트 관리 (60%) */}
+                                {/* 왼쪽: 글쓰기 미션 관리 (넓게 - 1.6) */}
                                 <section style={{
-                                    flex: 1.5, background: 'white', borderRadius: '20px',
+                                    flex: 1.6, background: 'white', borderRadius: '20px',
                                     border: '1px solid #E9ECEF', display: 'flex', flexDirection: 'column',
                                     overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
                                 }}>
-                                    <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
-                                        <StudentManager classId={activeClass?.id} isDashboardMode={true} />
+                                    <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+                                        <MissionManager activeClass={activeClass} isDashboardMode={true} />
                                     </div>
                                 </section>
 
-                                {/* 오른쪽: 미션 요약 및 활동 (40%) */}
+                                {/* 오른쪽: 명예의 전당 및 활동 (좁게 - 1) */}
                                 <aside style={{
                                     flex: 1, display: 'flex', flexDirection: 'column', gap: '24px',
                                     overflowY: 'auto', paddingRight: '4px'
                                 }}>
                                     <section style={{
-                                        background: 'white', borderRadius: '20px', padding: '24px',
+                                        background: 'white', borderRadius: '20px', padding: '20px',
                                         border: '1px solid #E9ECEF', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
                                     }}>
-                                        <MissionManager activeClass={activeClass} isDashboardMode={true} />
+                                        <StudentManager classId={activeClass?.id} isDashboardMode={true} />
                                     </section>
                                     <section style={{
-                                        background: 'white', borderRadius: '20px', padding: '24px',
+                                        background: 'white', borderRadius: '20px', padding: '20px',
                                         border: '1px solid #E9ECEF', boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
                                     }}>
                                         <RecentActivity classId={activeClass?.id} />

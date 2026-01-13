@@ -156,14 +156,16 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <span style={{ padding: '4px 10px', background: '#E3F2FD', color: '#1976D2', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900' }}>{mission.genre}</span>
-                            {!isDashboardMode && (
-                                <button onClick={async () => {
-                                    if (confirm('삭제하시겠습니까?')) {
-                                        await supabase.from('writing_missions').delete().eq('id', mission.id);
-                                        fetchMissions();
-                                    }
-                                }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF5252' }}>🗑️</button>
-                            )}
+                            <button onClick={async (e) => {
+                                e.stopPropagation();
+                                if (confirm('이 미션을 삭제하시겠습니까? 🗑️\n작성된 학생들의 글도 확인이 어려워질 수 있습니다.')) {
+                                    const { error } = await supabase.from('writing_missions').delete().eq('id', mission.id);
+                                    if (!error) fetchMissions();
+                                    else alert('삭제 실패: ' + error.message);
+                                }
+                            }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF5252', fontSize: '1.1rem', padding: '4px' }}>
+                                🗑️
+                            </button>
                         </div>
                         <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
