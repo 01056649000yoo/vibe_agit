@@ -56,10 +56,11 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
 
     // [보완] 학급은 있는데 선택된 학급이 없는 경우(삭제 직후 등) 첫 번째 학급 강제 선택
     useEffect(() => {
-        if (!loadingClasses && classes.length > 0 && !activeClass) {
+        if (!loadingClasses && classes.length > 0 && activeClass === null) {
+            console.log("🔄 TeacherDashboard: 다음 학급을 자동으로 활성화합니다.");
             setActiveClass(classes[0]);
         }
-    }, [loadingClasses, classes, activeClass, setActiveClass]);
+    }, [loadingClasses, classes.length, activeClass, setActiveClass]);
 
     if (loadingClasses) {
         return (

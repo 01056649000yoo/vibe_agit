@@ -73,33 +73,29 @@ const ClassManager = ({ userId, activeClass, setActiveClass, setClasses, onClass
 
         setIsSaving(true);
         try {
-            // 1. DB 삭제 요청 및 결과 확인
-            const { error, count } = await supabase
+            // 1. DB 삭제 요청 (CASCADE가 설정되어 있으므로 classes 테이블만 삭제 시도)
+            const { error } = await supabase
                 .from('classes')
-                .delete({ count: 'exact' })
-                .eq('id', targetId)
-                .select();
+                .delete()
+                .eq('id', targetId);
 
             if (error) {
-                throw new Error(`데이터베이스 오류로 삭제하지 못했습니다: ${error.message}`);
+                throw new Error(`데이터베이스 연결 오류: ${error.message}`);
             }
 
-            if (count === 0) {
-                throw new Error('삭제 권한이 없거나 이미 삭제된 학급입니다.');
-            }
-
-            // 2. 상위 상태 즉시 비우기 (UI 반영)
-            // fetchAllClasses가 호출되기 전까지는 로컬 필터링으로 즉시 대응
+            // 2. 상위 상태 즉시 갱신 (서버 응답 성공 시 즉시 화면 반영)
             if (setClasses) setClasses(prev => prev.filter(c => c.id !== targetId));
             if (setActiveClass) setActiveClass(null);
 
-            alert(`[${targetName}] 학급이 삭제되었습니다. 🗑️`);
+            alert(`[${targetName}] 학급이 성공적으로 삭제되었습니다. 🗑️`);
 
-            // 3. 전체 목록 갱신 및 첫 학급 자동 선택 유도
-            if (onClassDeleted) await onClassDeleted();
+            // 3. 부모 컴포넌트의 전체 데이터 갱신 함수 호출
+            if (onClassDeleted) {
+                await onClassDeleted();
+            }
         } catch (error) {
             console.error('❌ ClassManager: 학급 삭제 실패:', error.message);
-            alert(`학급 삭제 실패: ${error.message}\n(잠시 후 다시 시도하거나 관리자에게 문의해주세요.)`);
+            alert(`학급 삭제 중 오류가 발생했습니다.\n${error.message}`);
         } finally {
             setIsSaving(false);
         }
