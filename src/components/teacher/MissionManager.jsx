@@ -36,7 +36,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
         if (activeClass?.id) {
             fetchMissions();
         }
-    }, [activeClass]);
+    }, [activeClass?.id]);
 
     const fetchMissions = async () => {
         if (!activeClass?.id) return;
