@@ -34,6 +34,7 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
                 id: data.id,
                 name: data.name,
                 code: data.student_code,
+                classId: data.class_id,
                 className: data.classes?.name,
                 role: 'STUDENT'
             }));

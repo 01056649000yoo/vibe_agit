@@ -12,18 +12,24 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (studentSession?.classId) {
+        if (studentSession?.classId || studentSession?.class_id) {
             fetchMissions();
         }
     }, [studentSession]);
 
     const fetchMissions = async () => {
         setLoading(true);
+        const targetClassId = studentSession?.classId || studentSession?.class_id;
+        if (!targetClassId) {
+            setLoading(false);
+            return;
+        }
+
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
                 .select('*')
-                .eq('class_id', studentSession.classId)
+                .eq('class_id', targetClassId)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
