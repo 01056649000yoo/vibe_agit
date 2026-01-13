@@ -64,8 +64,14 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
             return;
         }
 
+        console.log("🚀 글 제출 시작 - 학생 ID:", studentSession?.id, "미션 ID:", missionId);
+
         setSubmitting(true);
         try {
+            // 제출 전 최신 데이터로 다시 계산 (동기화 보장)
+            const finalCharCount = content.length;
+            const finalParagraphCount = content.split('\n').filter(p => p.trim().length > 0).length;
+
             // 1. 포인트 계산
             let totalPointsToGive = mission.base_reward || 0;
             let isBonusAchieved = false;
@@ -83,11 +89,15 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                     mission_id: missionId,
                     title: title.trim(),
                     content: content,
-                    char_count: charCount,
-                    paragraph_count: paragraphCount
+                    char_count: finalCharCount,
+                    paragraph_count: finalParagraphCount,
+                    is_submitted: true // 제출 상태 명시
                 });
 
-            if (postError) throw postError;
+            if (postError) {
+                console.error('❌ student_posts 저장 실패:', postError.message, postError.details);
+                throw postError;
+            }
 
             // 3. 학생 총점 업데이트 (students)
             // 현재 점수를 가져와서 더하는 안전한 방식 (또는 increment 사용 가능하지만 여기선 가져와서 처리)
@@ -137,8 +147,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
             }
 
         } catch (err) {
-            console.error('제출 중 오류:', err.message);
-            alert('글을 저장하는 중에 오류가 발생했어요. 다시 시도해볼까요? 😢');
+            console.error('❌ 최종 제출 실패 상세 정보:', err);
+            alert(`글을 저장하는 중에 오류가 발생했어요. 😢\n원인: ${err.message || '알 수 없는 오류'}`);
         } finally {
             setSubmitting(false);
         }
