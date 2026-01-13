@@ -8,6 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 /**
  * 역할: 선생님 - 학급 생성, 초대 코드 관리 및 학생 명단 통합 관리
  * 최적화된 레이아웃과 초대 코드 크게 보기 기능을 제공합니다. ✨
+ * 
+ * [DB 보안 알림]
+ * - classes 테이블은 ON DELETE CASCADE 설정이 되어 있어야 합니다.
+ *   (학급 삭제 시 student, writing_missions 등 관련 데이터가 자동 삭제됨)
  */
 const ClassManager = ({ userId, activeClass, setActiveClass, setClasses, onClassDeleted }) => {
     const [className, setClassName] = useState('');
@@ -68,38 +72,41 @@ const ClassManager = ({ userId, activeClass, setActiveClass, setClasses, onClass
         const targetId = activeClass.id;
         const targetName = activeClass.name;
 
-        if (!confirm(`정말 [${targetName}] 학급을 삭제하시겠습니까?\n모든 학생 정보와 활동 데이터가 영구적으로 삭제됩니다.`)) return;
+        // 1. 사용자 확인 (window.confirm)
+        if (!window.confirm(`정말 [${targetName}] 학급을 삭제하시겠습니까?\n학급에 소속된 모든 데이터(학생, 미션 등)가 삭제되며 복구할 수 없습니다.`)) {
+            return;
+        }
 
         setIsSaving(true);
         try {
-            // 1. DB 삭제 및 즉시 확인 (.select()를 사용해 삭제된 행 확인)
-            const { data, error } = await supabase
+            // 2. DB 삭제 실행
+            const { error } = await supabase
                 .from('classes')
                 .delete()
-                .eq('id', targetId)
-                .select();
+                .eq('id', targetId);
 
-            if (error) throw new Error(`DB 삭제 실패: ${error.message}`);
-
-            // 삭제된 행이 없다면 권한 문제이거나 이미 삭제된 것임
-            if (!data || data.length === 0) {
-                console.warn("⚠️ 삭제된 행이 없습니다. 이미 삭제되었거나 권한이 없을 수 있습니다.");
+            if (error) {
+                alert(`삭제 중 오류가 발생했습니다: ${error.message}`);
+                return;
             }
 
-            // 2. [가장 중요] 상위 상태를 즉각적으로 강제 비우기
-            // filter를 통해 목록에서 확실히 제거하고, activeClass를 완전히 비웁니다.
-            if (setClasses) setClasses(prev => prev.filter(c => c.id !== targetId));
-            if (setActiveClass) setActiveClass(null);
+            // 3. 상태 동기화 (마법처럼 즉시 반영 ✨)
+            // (1) 목록에서 제거
+            if (setClasses) {
+                setClasses(prev => prev.filter(c => c.id !== targetId));
+            }
+            // (2) 현재 선택된 학급 비우기
+            if (setActiveClass) {
+                setActiveClass(null);
+            }
 
             alert(`[${targetName}] 학급이 삭제되었습니다. ✨`);
 
-            // 3. 콜백을 통해 전체 목록 한번 더 동기화 (필요 시)
-            if (onClassDeleted) {
-                await onClassDeleted();
-            }
+            // (4) 필요한 경우 상층부 알림
+            if (onClassDeleted) await onClassDeleted();
         } catch (error) {
-            console.error('❌ ClassManager: 삭제 오류:', error);
-            alert(`학급 삭제 중 오류가 발생했습니다: ${error.message}`);
+            console.error('❌ ClassManager: 학급 삭제 실패:', error);
+            alert('학급 삭제 중 예상치 못한 오류가 발생했습니다.');
         } finally {
             setIsSaving(false);
         }

@@ -56,24 +56,19 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
         }
     };
 
-    // 학급 목록이 있는데 활성 학급이 비어있는 경우를 방지하는 가드
+    // [보완] 활성 학급이 유효하지 않을 때 첫 번째 학급 자동 선택 가드
     useEffect(() => {
-        if (!loadingClasses && classes.length > 0 && activeClass === null) {
+        if (!loadingClasses && classes.length > 0 && !activeClass) {
             setActiveClass(classes[0]);
         }
-    }, [loadingClasses, classes.length, activeClass, setActiveClass]);
+    }, [loadingClasses, classes, activeClass, setActiveClass]);
 
     if (loadingClasses) {
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#F8F9FA' }}>
-                <header style={{ padding: '12px 24px', background: 'white', borderBottom: '1px solid #E9ECEF' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>불러오는 중...</h2>
-                </header>
-                <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔔</div>
-                        <p style={{ color: '#7F8C8D', fontWeight: 'bold' }}>학급 정보를 연결하는 중...</p>
-                    </div>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#F8F9FA' }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔔</div>
+                    <p style={{ color: '#7F8C8D', fontWeight: 'bold' }}>학급 정보를 불러오고 있습니다...</p>
                 </div>
             </div>
         );
@@ -90,7 +85,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>
-                        {activeClass ? `🏫 ${activeClass.name}` : '시작하기'}
+                        {activeClass ? `🏫 ${activeClass.name}` : '학급 관리'}
                     </h2>
                     {classes.length > 1 && (
                         <select
@@ -131,22 +126,19 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                 ))}
             </nav>
 
-            {/* 메인 콘텐츠 영역 (독립 스크롤 구조) */}
+            {/* 메인 콘텐츠 영역 */}
             <main style={{ flex: 1, padding: '24px', overflow: 'hidden', boxSizing: 'border-box' }}>
-                <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px' }}>데이터를 불러오는 중... ✨</div>}>
-                    {hasZeroClasses ? (
-                        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+                <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px' }}>로딩 중... ✨</div>}>
+                    {(!activeClass || hasZeroClasses) ? (
+                        /* 학급이 없거나 선택되지 않은 경우: 학급 생성/관리 화면으로 전환 */
+                        <div style={{ maxWidth: '600px', margin: '40px auto' }}>
                             <ClassManager
                                 userId={session.user.id}
+                                activeClass={activeClass}
                                 setActiveClass={setActiveClass}
                                 setClasses={setClasses}
                                 onClassDeleted={fetchAllClasses}
                             />
-                        </div>
-                    ) : !activeClass ? (
-                        /* 학급이 있는데 아직 로딩 중이거나 선택 전인 경우 가벼운 폴백 */
-                        <div style={{ textAlign: 'center', padding: '100px 20px' }}>
-                            <h2 style={{ color: '#2C3E50', fontWeight: '900' }}>학급을 선택해주세요 🏫</h2>
                         </div>
                     ) : (
                         currentTab === 'dashboard' ? (
