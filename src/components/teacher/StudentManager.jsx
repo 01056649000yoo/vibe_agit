@@ -12,6 +12,13 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
     const [studentName, setStudentName] = useState('');
     const [students, setStudents] = useState([]);
     const [isAdding, setIsAdding] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // 선택 및 모달 상태
     const [selectedIds, setSelectedIds] = useState([]);
@@ -131,26 +138,26 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
         const maxPoints = students.length > 0 ? Math.max(...students.map(s => s.total_points || 0)) : 100;
 
         return (
-            <div style={{ width: '100%' }}>
+            <div style={{ width: '100%', boxSizing: 'border-box' }}>
                 <div style={{
                     position: 'sticky',
-                    top: '-24px',
+                    top: isMobile ? '88px' : '-24px',
                     zIndex: 10,
                     background: 'white',
-                    padding: '4px 0 16px 0',
+                    padding: '8px 0 16px 0',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     borderBottom: '1px solid #F1F3F5',
                     marginBottom: '16px'
                 }}>
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>🏆 명예의 전당</h3>
+                    <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.2rem', color: '#212529', fontWeight: '900' }}>🏆 명예의 전당</h3>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <Button
                             onClick={toggleSelectAll}
                             variant="ghost"
                             size="sm"
-                            style={{ fontSize: '0.75rem', color: '#6C757D', padding: '4px 8px' }}
+                            style={{ fontSize: '0.75rem', color: '#6C757D', padding: '4px 8px', minHeight: '36px' }}
                         >
                             {selectedIds.length === students.length ? '전체 해제' : '전체 선택'}
                         </Button>
@@ -158,8 +165,9 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                             onClick={() => setIsPointModalOpen(true)}
                             disabled={selectedIds.length === 0}
                             style={{
-                                background: '#3498DB', color: 'white', padding: '6px 12px',
-                                fontSize: '0.8rem', fontWeight: 'bold', borderRadius: '8px'
+                                background: '#3498DB', color: 'white', padding: isMobile ? '6px 10px' : '6px 12px',
+                                fontSize: '0.8rem', fontWeight: 'bold', borderRadius: '10px',
+                                minHeight: '36px'
                             }}
                         >
                             ⚡ 포인트 {selectedIds.length > 0 && `(${selectedIds.length})`}
@@ -167,7 +175,11 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fill, minmax(280px, 1fr))',
+                    gap: isMobile ? '8px' : '10px'
+                }}>
                     {students.map((s, idx) => (
                         <motion.div
                             key={s.id}

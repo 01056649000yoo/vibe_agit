@@ -12,6 +12,13 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
     const [submissionCounts, setSubmissionCounts] = useState({});
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // 미션 등록 폼 상태
     const [formData, setFormData] = useState({
@@ -100,35 +107,41 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
             {/* Sticky Header 영역 */}
             <div style={{
                 position: 'sticky',
-                top: '-24px', // 부모 패딩 상쇄
+                top: isMobile ? '88px' : '-24px', // 대시보드 헤더(48) + 탭(40) 고려
                 zIndex: 10,
                 background: 'white',
-                padding: '4px 0 16px 0',
+                padding: '8px 0 16px 0',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 borderBottom: '1px solid #F1F3F5',
-                marginBottom: '16px' // Changed from 20px to 16px
+                marginBottom: '16px'
             }}>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>
-                    {isDashboardMode ? '✍️ 진행 중인 미션' : '✍️ 미션 목록 관리'}
+                <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.3rem', color: '#2C3E50', fontWeight: '900' }}>
+                    {isDashboardMode ? '✍️ 미션 현황' : '✍️ 미션 관리'}
                 </h3>
                 <Button
                     onClick={() => setIsFormOpen(!isFormOpen)}
-                    style={{ background: isFormOpen ? '#FF5252' : '#3498DB', color: 'white', padding: '8px 16px', fontSize: '0.85rem' }}
+                    style={{
+                        background: isFormOpen ? '#FF5252' : '#3498DB',
+                        color: 'white', padding: isMobile ? '8px 16px' : '10px 20px',
+                        fontSize: '0.9rem',
+                        minHeight: '44px',
+                        fontWeight: 'bold'
+                    }}
                 >
-                    {isFormOpen ? '✖ 닫기' : '➕ 새 미션 등록'}
+                    {isFormOpen ? '✖ 닫기' : '➕ 등록'}
                 </Button>
             </div>
 
             <AnimatePresence>
                 {isFormOpen && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden', marginBottom: '24px' }}>
-                        <Card style={{ padding: '24px', border: '2px solid var(--primary-color)' }}>
-                            <form onSubmit={handleCreateMission} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <input type="text" placeholder="미션 주제" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} style={{ flex: 2, padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }} />
-                                    <select value={formData.genre} onChange={e => setFormData({ ...formData, genre: e.target.value })} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}>
+                        <Card style={{ padding: isMobile ? '16px' : '24px', border: '2px solid #3498DB' }}>
+                            <form onSubmit={handleCreateMission} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px' }}>
+                                    <input type="text" placeholder="미션 주제" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} style={{ flex: 2, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '1rem', minHeight: '48px' }} />
+                                    <select value={formData.genre} onChange={e => setFormData({ ...formData, genre: e.target.value })} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px' }}>
                                         {genreCategories.map(cat => (
                                             <optgroup key={cat.label} label={cat.label}>
                                                 {cat.genres.map(g => <option key={g} value={g}>{g}</option>)}
@@ -136,34 +149,54 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                         ))}
                                     </select>
                                 </div>
-                                <textarea placeholder="안내 가이드" value={formData.guide} onChange={e => setFormData({ ...formData, guide: e.target.value })} style={{ padding: '12px', borderRadius: '10px', border: '1px solid #ddd', minHeight: '100px' }} />
+                                <textarea placeholder="안내 가이드" value={formData.guide} onChange={e => setFormData({ ...formData, guide: e.target.value })} style={{ padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '120px', fontSize: '1rem' }} />
                                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={{ fontSize: '0.8rem', color: '#7FB3D5' }}>최소 글자수 / 문단수</label>
-                                        <div style={{ display: 'flex', gap: '4px' }}>
-                                            <input type="number" step="100" value={formData.min_chars} onChange={e => setFormData({ ...formData, min_chars: parseInt(e.target.value) || 0 })} style={{ width: '70px', padding: '8px', borderRadius: '8px', border: '1px solid #ddd' }} />
-                                            <input type="number" value={formData.min_paragraphs} onChange={e => setFormData({ ...formData, min_paragraphs: parseInt(e.target.value) || 0 })} style={{ width: '50px', padding: '8px', borderRadius: '8px', border: '1px solid #ddd' }} />
+                                    <div style={{ flex: 1, minWidth: isMobile ? '100%' : '150px' }}>
+                                        <label style={{ fontSize: '0.8rem', color: '#7FB3D5', fontWeight: 'bold' }}>📏 최소 글자 / 최소 문단</label>
+                                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                                            <input type="number" step="100" placeholder="최소 글자" value={formData.min_chars} onChange={e => setFormData({ ...formData, min_chars: parseInt(e.target.value) || 0 })} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px' }} />
+                                            <input type="number" placeholder="최소 문단" value={formData.min_paragraphs} onChange={e => setFormData({ ...formData, min_paragraphs: parseInt(e.target.value) || 0 })} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px' }} />
                                         </div>
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={{ fontSize: '0.8rem', color: '#F7DC6F' }}>보상(기본/보너스)</label>
-                                        <div style={{ display: 'flex', gap: '4px' }}>
-                                            <input type="number" step="100" value={formData.base_reward} onChange={e => setFormData({ ...formData, base_reward: parseInt(e.target.value) || 0 })} style={{ width: '70px', padding: '8px', borderRadius: '8px', border: '1px solid #ddd' }} />
-                                            <input type="number" step="10" value={formData.bonus_reward} onChange={e => setFormData({ ...formData, bonus_reward: parseInt(e.target.value) || 0 })} style={{ width: '60px', padding: '8px', borderRadius: '8px', border: '1px solid #ddd' }} />
+                                    <div style={{ flex: 1, minWidth: isMobile ? '100%' : '150px' }}>
+                                        <label style={{ fontSize: '0.8rem', color: '#F7DC6F', fontWeight: 'bold' }}>💰 기본 보상 포인트</label>
+                                        <div style={{ marginTop: '4px' }}>
+                                            <input type="number" step="100" value={formData.base_reward} onChange={e => setFormData({ ...formData, base_reward: parseInt(e.target.value) || 0 })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px', boxSizing: 'border-box' }} />
+                                        </div>
+                                    </div>
+                                    <div style={{ flex: 1.5, minWidth: isMobile ? '100%' : '200px', background: '#FDFCF0', padding: '12px', borderRadius: '16px', border: '1px dashed #F7DC6F' }}>
+                                        <label style={{ fontSize: '0.8rem', color: '#B7950B', fontWeight: 'bold' }}>⚡ 보너스: [글자수 초과] 시 [추가 포인트]</label>
+                                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px', alignItems: 'center' }}>
+                                            <input type="number" step="100" placeholder="글자수 초과 기준" value={formData.bonus_threshold} onChange={e => setFormData({ ...formData, bonus_threshold: parseInt(e.target.value) || 0 })} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px' }} />
+                                            <span style={{ fontWeight: 'bold' }}>→</span>
+                                            <input type="number" step="10" placeholder="추가 포인트" value={formData.bonus_reward} onChange={e => setFormData({ ...formData, bonus_reward: parseInt(e.target.value) || 0 })} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px' }} />
                                         </div>
                                     </div>
                                 </div>
-                                <Button type="submit" style={{ background: 'var(--primary-color)', color: 'white', fontWeight: 'bold' }}>미션 공개하기 🚀</Button>
+                                <Button type="submit" style={{ background: '#3498DB', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}>미션 공개하기 🚀</Button>
                             </form>
                         </Card>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-                {missions.map(mission => (
-                    <motion.div key={mission.id} whileHover={{ y: -4 }} style={{
-                        background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #ECEFF1',
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: missions.length === 0 ? '1fr' : (isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))'),
+                gap: '16px'
+            }}>
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>로딩 중...</div>
+                ) : missions.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '60px 20px', background: '#F8F9FA', borderRadius: '24px', border: '2px dashed #E9ECEF' }}>
+                        <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📖</div>
+                        <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>아직 등록된 미션이 없습니다.</p>
+                        <p style={{ color: '#BDC3C7', fontSize: '0.9rem' }}>새로운 미션을 등록해 아이들과 소통해보세요! ✨</p>
+                    </div>
+                ) : missions.map(mission => (
+                    <motion.div key={mission.id} whileHover={isMobile ? {} : { y: -4 }} style={{
+                        background: 'white', padding: isMobile ? '16px' : '20px',
+                        borderRadius: '20px', border: '1px solid #ECEFF1',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '12px'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -175,17 +208,17 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                     if (!error) fetchMissions();
                                     else alert('삭제 실패: ' + error.message);
                                 }
-                            }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF5252', fontSize: '1.1rem', padding: '4px' }}>
+                            }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF5252', fontSize: '1.2rem', padding: '8px' }}>
                                 🗑️
                             </button>
                         </div>
-                        <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
+                        <h4 style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.1rem', color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ flex: 1, height: '6px', background: '#F8F9F9', borderRadius: '3px' }}>
-                                {/* 전체 학생 수 대비 제출 수 프로그레스 바는 학급 인원수 연동이 필요함. 여기서는 간단히 카운트만 표시 */}
+                            <div style={{ flex: 1, height: '8px', background: '#F8F9F9', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div style={{ width: `${Math.min((submissionCounts[mission.id] || 0) * 10, 100)}%`, height: '100%', background: '#2E7D32', borderRadius: '4px' }} />
                             </div>
-                            <div style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 12px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                                ✍️ {submissionCounts[mission.id] || 0}명 제출 완료
+                            <div style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                ✍️ {submissionCounts[mission.id] || 0}명 완료
                             </div>
                         </div>
                     </motion.div>

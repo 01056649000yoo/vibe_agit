@@ -15,6 +15,13 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
     const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'settings'
     const [classes, setClasses] = useState([]);
     const [loadingClasses, setLoadingClasses] = useState(true);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024); // 태블릿/모바일 기준
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         if (session?.user?.id) {
@@ -79,23 +86,33 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
     const hasZeroClasses = classes.length === 0;
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#F8F9FA', overflow: 'hidden' }}>
-            {/* 상단 슬림 헤더 */}
+        <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: isMobile ? 'auto' : '100vh',
+            minHeight: '100vh',
+            background: '#F8F9FA',
+            overflowX: 'hidden',
+            overflowY: isMobile ? 'auto' : 'hidden'
+        }}>
+            {/* 상단 슬림 헤더 (고정) */}
             <header style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '12px 24px', background: 'white', borderBottom: '1px solid #E9ECEF'
+                padding: isMobile ? '8px 16px' : '12px 24px',
+                background: 'white', borderBottom: '1px solid #E9ECEF',
+                position: 'sticky', top: 0, zIndex: 100
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>
-                        {activeClass ? `🏫 ${activeClass.name}` : '학급 관리'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
+                    <h2 style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.2rem', color: '#212529', fontWeight: '900' }}>
+                        {activeClass ? (isMobile ? activeClass.name : `🏫 ${activeClass.name}`) : '학급 관리'}
                     </h2>
                     {classes.length > 1 && (
                         <select
                             value={activeClass?.id || ''}
                             onChange={(e) => setActiveClass(classes.find(c => c.id === e.target.value))}
                             style={{
-                                padding: '4px 8px', borderRadius: '8px', border: '1px solid #DEE2E6',
-                                background: '#F8F9FA', color: '#495057', fontSize: '0.85rem', fontWeight: 'bold'
+                                padding: '4px 6px', borderRadius: '8px', border: '1px solid #DEE2E6',
+                                background: '#F8F9FA', color: '#495057', fontSize: '0.8rem', fontWeight: 'bold'
                             }}
                         >
                             {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -103,37 +120,46 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                     )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '0.85rem', color: '#6C757D' }}>{profile?.full_name} 선생님</span>
+                    {!isMobile && <span style={{ fontSize: '0.85rem', color: '#6C757D' }}>{profile?.full_name} 선생님</span>}
                     <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()} style={{ fontSize: '0.8rem', color: '#DC3545' }}>
                         로그아웃
                     </Button>
                 </div>
             </header>
 
-            {/* 탭 네비게이션 */}
-            <nav style={{ display: 'flex', background: 'white', borderBottom: '1px solid #E9ECEF', padding: '0 24px' }}>
+            {/* 탭 네비게이션 (고정) */}
+            <nav style={{
+                display: 'flex', background: 'white', borderBottom: '1px solid #E9ECEF',
+                padding: isMobile ? '0 12px' : '0 24px',
+                position: 'sticky', top: isMobile ? '47px' : '55px', zIndex: 99
+            }}>
                 {['dashboard', 'settings'].map((tabId) => (
                     <button
                         key={tabId}
                         onClick={() => setCurrentTab(tabId)}
                         style={{
-                            padding: '12px 20px', border: 'none', background: 'transparent',
+                            padding: isMobile ? '10px 14px' : '12px 20px', border: 'none', background: 'transparent',
                             borderBottom: currentTab === tabId ? '3px solid #3498DB' : '3px solid transparent',
                             color: currentTab === tabId ? '#3498DB' : '#ADB5BD',
-                            fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.95rem'
+                            fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '📊 학급 대시보드' : '⚙️ 클래스 설정'}
+                        {tabId === 'dashboard' ? '📊 학급 현황' : '⚙️ 관리 설정'}
                     </button>
                 ))}
             </nav>
 
             {/* 메인 콘텐츠 영역 */}
-            <main style={{ flex: 1, padding: '24px', overflow: 'hidden', boxSizing: 'border-box' }}>
+            <main style={{
+                flex: 1,
+                padding: isMobile ? '16px' : '24px',
+                overflow: isMobile ? 'visible' : 'hidden',
+                boxSizing: 'border-box'
+            }}>
                 <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px' }}>로딩 중... ✨</div>}>
                     {(!activeClass || hasZeroClasses) ? (
                         /* 학급이 없거나 선택되지 않은 경우: 학급 생성/관리 화면으로 전환 */
-                        <div style={{ maxWidth: '600px', margin: '40px auto' }}>
+                        <div style={{ maxWidth: '600px', margin: isMobile ? '20px auto' : '40px auto' }}>
                             <ClassManager
                                 userId={session.user.id}
                                 classes={classes}
@@ -146,45 +172,55 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                     ) : (
                         currentTab === 'dashboard' ? (
                             <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: '6.5fr 3.5fr',
-                                gap: '24px',
-                                height: 'calc(100vh - 160px)', // 헤더+탭 높이 제외
+                                display: isMobile ? 'flex' : 'grid',
+                                flexDirection: isMobile ? 'column' : 'initial',
+                                gridTemplateColumns: isMobile ? 'initial' : '6.5fr 3.5fr',
+                                gap: isMobile ? '16px' : '24px',
+                                height: isMobile ? 'auto' : 'calc(100vh - 150px)', // 헤더+탭 높이 제외
                                 width: '100%',
                                 maxWidth: '1600px',
                                 margin: '0 auto',
-                                overflow: 'hidden'
+                                overflow: isMobile ? 'visible' : 'hidden'
                             }}>
                                 {/* 왼쪽: 글쓰기 미션 관리 (6.5 비율) */}
                                 <section style={{
                                     background: 'white', borderRadius: '24px',
                                     border: '1px solid #E9ECEF', display: 'flex', flexDirection: 'column',
-                                    overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.03)'
+                                    overflow: isMobile ? 'visible' : 'hidden',
+                                    boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+                                    minHeight: isMobile ? '400px' : 'auto'
                                 }}>
-                                    <div style={{ flex: 1, overflowY: 'auto', padding: '24px', boxSizing: 'border-box' }}>
+                                    <div style={{
+                                        flex: 1,
+                                        overflowY: isMobile ? 'visible' : 'auto',
+                                        padding: isMobile ? '16px' : '24px',
+                                        boxSizing: 'border-box'
+                                    }}>
                                         <MissionManager activeClass={activeClass} isDashboardMode={true} />
                                     </div>
                                 </section>
 
                                 {/* 오른쪽: 명예의 전당 및 활동 (3.5 비율) */}
                                 <aside style={{
-                                    display: 'flex', flexDirection: 'column', gap: '24px',
-                                    height: '100%', overflow: 'hidden'
+                                    display: 'flex', flexDirection: 'column', gap: isMobile ? '16px' : '24px',
+                                    height: isMobile ? 'auto' : '100%', overflow: isMobile ? 'visible' : 'hidden'
                                 }}>
                                     {/* 상단: 명예의 전당 (유동적 높이, 내부 스크롤) */}
                                     <section style={{
-                                        flex: 2, background: 'white', borderRadius: '24px', padding: '24px',
+                                        flex: isMobile ? 'initial' : 2,
+                                        background: 'white', borderRadius: '24px', padding: isMobile ? '16px' : '24px',
                                         border: '1px solid #E9ECEF', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
-                                        overflowY: 'auto', boxSizing: 'border-box'
+                                        overflowY: isMobile ? 'visible' : 'auto', boxSizing: 'border-box'
                                     }}>
                                         <StudentManager classId={activeClass?.id} isDashboardMode={true} />
                                     </section>
 
                                     {/* 하단: 최근 활동 (고정 혹은 유동, 내부 스크롤) */}
                                     <section style={{
-                                        flex: 1, background: 'white', borderRadius: '24px', padding: '24px',
+                                        flex: isMobile ? 'initial' : 1,
+                                        background: 'white', borderRadius: '24px', padding: isMobile ? '16px' : '24px',
                                         border: '1px solid #E9ECEF', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
-                                        overflowY: 'auto', boxSizing: 'border-box'
+                                        overflowY: isMobile ? 'visible' : 'auto', boxSizing: 'border-box'
                                     }}>
                                         <RecentActivity classId={activeClass?.id} />
                                     </section>
@@ -192,17 +228,23 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                             </div>
                         ) : (
                             <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: '4fr 6fr',
-                                gap: '24px',
-                                height: 'calc(100vh - 160px)',
+                                display: isMobile ? 'flex' : 'grid',
+                                flexDirection: isMobile ? 'column' : 'initial',
+                                gridTemplateColumns: isMobile ? 'initial' : '4fr 6fr',
+                                gap: isMobile ? '16px' : '24px',
+                                height: isMobile ? 'auto' : 'calc(100vh - 150px)',
                                 width: '100%',
                                 maxWidth: '1600px',
                                 margin: '0 auto',
-                                overflow: 'hidden'
+                                overflow: isMobile ? 'visible' : 'hidden'
                             }}>
                                 {/* 왼쪽: 학급 정보 (40%) */}
-                                <aside style={{ flex: 1, height: '100%', overflowY: 'auto', background: 'white', borderRadius: '24px', padding: '24px', border: '1px solid #E9ECEF', boxSizing: 'border-box' }}>
+                                <aside style={{
+                                    flex: 1, height: isMobile ? 'auto' : '100%',
+                                    overflowY: isMobile ? 'visible' : 'auto',
+                                    background: 'white', borderRadius: '24px', padding: isMobile ? '16px' : '24px',
+                                    border: '1px solid #E9ECEF', boxSizing: 'border-box'
+                                }}>
                                     <ClassManager
                                         userId={session.user.id}
                                         classes={classes}
@@ -216,7 +258,9 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                 {/* 오른쪽: 학생 명단 및 계정 관리 (60%) */}
                                 {activeClass && (
                                     <section style={{
-                                        height: '100%', overflowY: 'auto', background: 'white', borderRadius: '24px', padding: '24px',
+                                        height: isMobile ? 'auto' : '100%',
+                                        overflowY: isMobile ? 'visible' : 'auto',
+                                        background: 'white', borderRadius: '24px', padding: isMobile ? '16px' : '24px',
                                         border: '1px solid #E9ECEF', boxSizing: 'border-box', boxShadow: '0 2px 12px rgba(0,0,0,0.03)'
                                     }}>
                                         <StudentManager classId={activeClass.id} isDashboardMode={false} />
