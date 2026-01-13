@@ -33,31 +33,32 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
 
             if (error) throw error;
             const classList = data || [];
+
+            // 1. 학급 목록 업데이트
             setClasses(classList);
 
-            // 학급이 하나도 없으면 activeClass를 null로 초기화
+            // 2. 현재 선택된 학급이 유효한지 체크
             if (classList.length === 0) {
-                setActiveClass(null);
+                if (activeClass !== null) setActiveClass(null);
             } else {
-                // 현재 선택된 학급이 실제 목록에 여전히 존재하는지 확인
                 const isCurrentValid = activeClass && classList.some(c => c.id === activeClass.id);
-                // 존재하지 않거나(삭제된 경우) 선택된 게 없으면 첫 번째 학급 자동 선택
+                // 유효하지 않으면 (삭제되었거나 처음인 경우) 첫 번째 학급 자동 활성화
                 if (!isCurrentValid) {
+                    console.log("✏️ TeacherDashboard: 활성 학급이 유효하지 않아 첫 번째 학급을 선택합니다.");
                     setActiveClass(classList[0]);
                 }
             }
         } catch (err) {
-            console.error('❌ TeacherDashboard: 학급 목록 불러오기 실패:', err.message);
-            alert('학급 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요. 🔄');
+            console.error('❌ TeacherDashboard: 학급 불러오기 실패:', err.message);
+            alert('정보를 불러오지 못했습니다. 🔄');
         } finally {
             setLoadingClasses(false);
         }
     };
 
-    // [보완] 학급은 있는데 선택된 학급이 없는 경우(삭제 직후 등) 첫 번째 학급 강제 선택
+    // 학급 목록이 있는데 활성 학급이 비어있는 경우를 방지하는 가드
     useEffect(() => {
         if (!loadingClasses && classes.length > 0 && activeClass === null) {
-            console.log("🔄 TeacherDashboard: 다음 학급을 자동으로 활성화합니다.");
             setActiveClass(classes[0]);
         }
     }, [loadingClasses, classes.length, activeClass, setActiveClass]);

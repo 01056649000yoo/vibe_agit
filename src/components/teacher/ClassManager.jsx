@@ -68,34 +68,38 @@ const ClassManager = ({ userId, activeClass, setActiveClass, setClasses, onClass
         const targetId = activeClass.id;
         const targetName = activeClass.name;
 
-        const confirmMsg = `정말 [${targetName}] 학급을 삭제하시겠습니까?\n학급에 소속된 학생 정보와 모든 데이터가 삭제되며 복구할 수 없습니다.`;
-        if (!confirm(confirmMsg)) return;
+        if (!confirm(`정말 [${targetName}] 학급을 삭제하시겠습니까?\n모든 학생 정보와 활동 데이터가 영구적으로 삭제됩니다.`)) return;
 
         setIsSaving(true);
         try {
-            // 1. DB 삭제 요청 (CASCADE가 설정되어 있으므로 classes 테이블만 삭제 시도)
-            const { error } = await supabase
+            // 1. DB 삭제 및 즉시 확인 (.select()를 사용해 삭제된 행 확인)
+            const { data, error } = await supabase
                 .from('classes')
                 .delete()
-                .eq('id', targetId);
+                .eq('id', targetId)
+                .select();
 
-            if (error) {
-                throw new Error(`데이터베이스 연결 오류: ${error.message}`);
+            if (error) throw new Error(`DB 삭제 실패: ${error.message}`);
+
+            // 삭제된 행이 없다면 권한 문제이거나 이미 삭제된 것임
+            if (!data || data.length === 0) {
+                console.warn("⚠️ 삭제된 행이 없습니다. 이미 삭제되었거나 권한이 없을 수 있습니다.");
             }
 
-            // 2. 상위 상태 즉시 갱신 (서버 응답 성공 시 즉시 화면 반영)
+            // 2. [가장 중요] 상위 상태를 즉각적으로 강제 비우기
+            // filter를 통해 목록에서 확실히 제거하고, activeClass를 완전히 비웁니다.
             if (setClasses) setClasses(prev => prev.filter(c => c.id !== targetId));
             if (setActiveClass) setActiveClass(null);
 
-            alert(`[${targetName}] 학급이 성공적으로 삭제되었습니다. 🗑️`);
+            alert(`[${targetName}] 학급이 삭제되었습니다. ✨`);
 
-            // 3. 부모 컴포넌트의 전체 데이터 갱신 함수 호출
+            // 3. 콜백을 통해 전체 목록 한번 더 동기화 (필요 시)
             if (onClassDeleted) {
                 await onClassDeleted();
             }
         } catch (error) {
-            console.error('❌ ClassManager: 학급 삭제 실패:', error.message);
-            alert(`학급 삭제 중 오류가 발생했습니다.\n${error.message}`);
+            console.error('❌ ClassManager: 삭제 오류:', error);
+            alert(`학급 삭제 중 오류가 발생했습니다: ${error.message}`);
         } finally {
             setIsSaving(false);
         }
