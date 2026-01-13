@@ -171,6 +171,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                 setActiveClass={setActiveClass}
                                 setClasses={setClasses}
                                 onClassDeleted={fetchAllClasses}
+                                isMobile={isMobile}
                             />
                         </div>
                     ) : (
@@ -243,6 +244,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                         setActiveClass={setActiveClass}
                                         setClasses={setClasses}
                                         onClassDeleted={fetchAllClasses}
+                                        isMobile={isMobile}
                                     />
                                 </aside>
 

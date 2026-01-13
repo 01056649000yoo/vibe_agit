@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * - classes 테이블은 ON DELETE CASCADE 설정이 되어 있어야 합니다.
  *   (학급 삭제 시 student, writing_missions 등 관련 데이터가 자동 삭제됨)
  */
-const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted }) => {
+const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted, isMobile }) => {
     const [className, setClassName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isZoomModalOpen, setIsZoomModalOpen] = useState(false); // 초대 코드 크게 보기 모달
@@ -189,7 +189,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                         <div>
                             <span style={{ fontSize: '0.85rem', color: '#795548', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '4px' }}>Active Class</span>
                             <h3 style={{ margin: 0, fontSize: '1.6rem', color: '#2C3E50', fontWeight: '900' }}>
-                                {activeClass.name}
+                                {activeClass?.name}
                             </h3>
                         </div>
 
@@ -208,7 +208,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                             <div style={{ flex: 1 }}>
                                 <p style={{ margin: 0, fontSize: '0.8rem', color: '#95A5A6', fontWeight: 'bold' }}>초대 코드</p>
                                 <p style={{ margin: 0, fontSize: isMobile ? '1.2rem' : '1.5rem', fontWeight: '900', color: '#3498DB', letterSpacing: '2px', fontFamily: 'monospace' }}>
-                                    {activeClass.invite_code}
+                                    {activeClass?.invite_code}
                                 </p>
                             </div>
                             <Button
