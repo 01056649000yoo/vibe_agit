@@ -173,26 +173,55 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                     </select>
                                 </div>
                                 <textarea placeholder="안내 가이드" value={formData.guide} onChange={e => setFormData({ ...formData, guide: e.target.value })} style={{ padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '120px', fontSize: '1rem', width: '100%', boxSizing: 'border-box' }} />
-                                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                    <div style={{ flex: 1, minWidth: isMobile ? '100%' : '150px' }}>
-                                        <label style={{ fontSize: '0.8rem', color: '#7FB3D5', fontWeight: 'bold' }}>📏 최소 글자 / 최소 문단</label>
-                                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                                            <input type="number" step="100" placeholder="최소 글자" value={formData.min_chars} onChange={e => setFormData({ ...formData, min_chars: parseInt(e.target.value) || 0 })} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px' }} />
-                                            <input type="number" placeholder="최소 문단" value={formData.min_paragraphs} onChange={e => setFormData({ ...formData, min_paragraphs: parseInt(e.target.value) || 0 })} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px' }} />
+                                {/* 설정 섹션: 가로 한 줄 배치 (PC 기준) */}
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: isMobile ? 'column' : 'row',
+                                    gap: isMobile ? '16px' : '20px',
+                                    alignItems: isMobile ? 'stretch' : 'flex-end',
+                                    width: '100%',
+                                    boxSizing: 'border-box',
+                                    padding: isMobile ? '0' : '8px 4px',
+                                    background: '#F8F9FA',
+                                    borderRadius: '16px',
+                                    border: '1px solid #E9ECEF'
+                                }}>
+                                    {/* (1) 분량 제한 섹션 */}
+                                    <div style={{ flex: isMobile ? 'none' : '0 0 auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '0.75rem', color: '#7FB3D5', fontWeight: 'bold', marginLeft: '4px' }}>📏 분량 제한 (글자 / 문단)</label>
+                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                            <input type="number" step="100" placeholder="글자" value={formData.min_chars} onChange={e => setFormData({ ...formData, min_chars: parseInt(e.target.value) || 0 })} style={{ width: '80px', padding: '12px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '0.9rem', textAlign: 'center' }} title="최소 글자 수" />
+                                            <input type="number" placeholder="문단" value={formData.min_paragraphs} onChange={e => setFormData({ ...formData, min_paragraphs: parseInt(e.target.value) || 0 })} style={{ width: '60px', padding: '12px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '0.9rem', textAlign: 'center' }} title="최소 문단 수" />
                                         </div>
                                     </div>
-                                    <div style={{ flex: 1, minWidth: isMobile ? '100%' : '150px' }}>
-                                        <label style={{ fontSize: '0.8rem', color: '#F7DC6F', fontWeight: 'bold' }}>💰 기본 보상 포인트</label>
-                                        <div style={{ marginTop: '4px' }}>
-                                            <input type="number" step="100" value={formData.base_reward} onChange={e => setFormData({ ...formData, base_reward: parseInt(e.target.value) || 0 })} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px', boxSizing: 'border-box' }} />
+
+                                    {/* (2) 기본 보상 섹션 */}
+                                    <div style={{ flex: isMobile ? 'none' : '0 0 auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '0.75rem', color: '#F7DC6F', fontWeight: 'bold', marginLeft: '4px' }}>💰 기본 보상</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <input type="number" step="100" value={formData.base_reward} onChange={e => setFormData({ ...formData, base_reward: parseInt(e.target.value) || 0 })} style={{ width: '90px', padding: '12px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '0.9rem', textAlign: 'center' }} />
+                                            <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#B7950B' }}>P</span>
                                         </div>
                                     </div>
-                                    <div style={{ flex: 1.5, minWidth: isMobile ? '100%' : '200px', background: '#FDFCF0', padding: '12px', borderRadius: '16px', border: '1px dashed #F7DC6F' }}>
-                                        <label style={{ fontSize: '0.8rem', color: '#B7950B', fontWeight: 'bold' }}>⚡ 보너스: [글자수 초과] 시 [추가 포인트]</label>
-                                        <div style={{ display: 'flex', gap: '8px', marginTop: '4px', alignItems: 'center' }}>
-                                            <input type="number" step="100" placeholder="글자수 초과 기준" value={formData.bonus_threshold} onChange={e => setFormData({ ...formData, bonus_threshold: parseInt(e.target.value) || 0 })} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px' }} />
-                                            <span style={{ fontWeight: 'bold' }}>→</span>
-                                            <input type="number" step="10" placeholder="추가 포인트" value={formData.bonus_reward} onChange={e => setFormData({ ...formData, bonus_reward: parseInt(e.target.value) || 0 })} style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px' }} />
+
+                                    {/* (3) 보너스 설정 섹션 (남은 공간 모두 차지) */}
+                                    <div style={{
+                                        flex: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '6px',
+                                        background: 'white',
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        border: '1px dashed #F7DC6F'
+                                    }}>
+                                        <label style={{ fontSize: '0.75rem', color: '#B7950B', fontWeight: 'bold' }}>⚡ 보너스: [글자수 초과] 시 [추가 포인트]</label>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <input type="number" step="100" placeholder="글자수" value={formData.bonus_threshold} onChange={e => setFormData({ ...formData, bonus_threshold: parseInt(e.target.value) || 0 })} style={{ width: '85px', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' }} />
+                                            <span style={{ fontWeight: 'bold', color: '#D4AC0D' }}>자 넘기면</span>
+                                            <span style={{ fontWeight: 'bold' }}>+</span>
+                                            <input type="number" step="10" placeholder="포인트" value={formData.bonus_reward} onChange={e => setFormData({ ...formData, bonus_reward: parseInt(e.target.value) || 0 })} style={{ width: '70px', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' }} />
+                                            <span style={{ fontWeight: 'bold', color: '#D4AC0D' }}>P 추가</span>
                                         </div>
                                     </div>
                                 </div>
