@@ -9,33 +9,46 @@ import { motion } from 'framer-motion';
  */
 const MissionList = ({ studentSession, onBack, onNavigate }) => {
     const [missions, setMissions] = useState([]);
+    const [posts, setPosts] = useState({}); // missionId -> post 객체
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchMissions();
+        fetchData();
     }, []);
 
-    const fetchMissions = async () => {
+    const fetchData = async () => {
         setLoading(true);
-        console.log("🔍 글쓰기 미션 목록 불러오기 시작...");
+        const currentStudent = studentSession || JSON.parse(localStorage.getItem('student_session'));
+        if (!currentStudent) return;
 
         try {
-            // [주의] 현재 DB의 writing_missions 테이블에 class_id 컬럼이 없어 필터링 없이 전체를 가져옵니다.
-            const { data, error } = await supabase
+            // 1. 미션 목록 가져오기 (학생 소속 반 기준)
+            const { data: mData, error: mError } = await supabase
                 .from('writing_missions')
                 .select('*')
+                .eq('class_id', currentStudent.class_id)
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('❌ Supabase 쿼리 에러:', error.message, error.details);
-                throw error;
-            }
+            if (mError) throw mError;
+            setMissions(mData || []);
 
-            console.log("✅ 글쓰기 미션 데이터 로드 성공:", data?.length, "개");
-            setMissions(data || []);
+            // 2. 학생의 해당 미션들에 대한 제출물 현황 가져오기
+            const { data: pData, error: pError } = await supabase
+                .from('student_posts')
+                .select('*')
+                .eq('student_id', currentStudent.id);
+
+            if (pError) throw pError;
+
+            // mission_id를 키로 하는 맵 생성
+            const postMap = {};
+            if (pData) {
+                pData.forEach(p => postMap[p.mission_id] = p);
+            }
+            setPosts(postMap);
+
         } catch (err) {
-            console.error('❌ 글쓰기 미션 로드 실패 전역 에러:', err.message);
-            alert('글쓰기 미션을 불러오는 중 문제가 발생했습니다. 관리자에게 문의해 주세요.');
+            console.error('데이터 로드 실패:', err.message);
         } finally {
             setLoading(false);
         }
@@ -80,57 +93,106 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                         <p style={{ color: '#9E9E9E', fontSize: '0.95rem' }}>선생님이 새로운 주제를 주실 때까지 조금만 기다려볼까요?</p>
                     </div>
                 ) : (
-                    missions.map(mission => (
-                        <motion.div
-                            key={mission.id}
-                            whileHover={{ y: -5, boxShadow: '0 12px 24px rgba(255, 213, 79, 0.2)' }}
-                            whileTap={{ scale: 0.98 }}
-                            style={{
-                                cursor: 'pointer',
-                                background: 'white',
-                                padding: '24px',
-                                borderRadius: '24px',
-                                border: '2px solid #FFECB3',
-                                boxShadow: '0 4px 10px rgba(0,0,0,0.02)',
-                                transition: 'all 0.2s ease'
-                            }}
-                            onClick={() => handleMissionClick(mission.id)}
-                        >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                                <div style={{
-                                    display: 'inline-block',
-                                    padding: '4px 12px',
-                                    background: '#E1F5FE',
-                                    color: '#0288D1',
-                                    borderRadius: '12px',
-                                    fontSize: '0.75rem',
-                                    fontWeight: '900'
-                                }}>
-                                    {mission.genre}
+                    missions.map(mission => {
+                        const post = posts[mission.id];
+                        let statusBadge = null;
+                        let borderColor = '#FFECB3';
+                        let buttonText = '글쓰기 ✍️';
+
+                        if (post?.is_returned) {
+                            statusBadge = (
+                                <div style={{ background: '#FFEBEE', color: '#D32F2F', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #FFCDD2' }}>
+                                    ♻️ 다시 쓰기 필요
                                 </div>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    background: '#FFFDE7',
-                                    padding: '4px 10px',
-                                    borderRadius: '10px',
-                                    border: '1px solid #FFF59D',
-                                    fontSize: '0.8rem',
-                                    fontWeight: '900',
-                                    color: '#F57F17'
-                                }}>
-                                    ✨ {mission.base_reward}P
+                            );
+                            borderColor = '#FFCDD2';
+                            buttonText = '다시 쓰기 ✍️';
+                        } else if (post?.is_submitted) {
+                            statusBadge = (
+                                <div style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #C8E6C9' }}>
+                                    ✅ 제출 완료
                                 </div>
-                            </div>
-                            <h4 style={{ margin: '0 0 10px 0', color: '#2C3E50', fontSize: '1.2rem', fontWeight: '900' }}>
-                                {mission.title}
-                            </h4>
-                            <p style={{ fontSize: '0.95rem', color: '#607D8B', margin: 0, lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                {mission.guide}
-                            </p>
-                        </motion.div>
-                    ))
+                            );
+                            borderColor = '#C8E6C9';
+                            buttonText = '내 글 보기 📖';
+                        } else if (post) {
+                            statusBadge = (
+                                <div style={{ background: '#FFF3E0', color: '#EF6C00', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #FFE0B2' }}>
+                                    📝 작성 중
+                                </div>
+                            );
+                            borderColor = '#FFE0B2';
+                            buttonText = '계속 쓰기 ✍️';
+                        } else {
+                            statusBadge = (
+                                <div style={{ background: '#F5F5F5', color: '#9E9E9E', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #E0E0E0' }}>
+                                    작성 전
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <motion.div
+                                key={mission.id}
+                                whileHover={{ y: -5, boxShadow: '0 12px 24px rgba(0,0,0,0.05)' }}
+                                whileTap={{ scale: 0.98 }}
+                                style={{
+                                    cursor: 'pointer',
+                                    background: 'white',
+                                    padding: '24px',
+                                    borderRadius: '24px',
+                                    border: `2px solid ${borderColor}`,
+                                    boxShadow: '0 4px 10px rgba(0,0,0,0.02)',
+                                    transition: 'all 0.2s ease',
+                                    position: 'relative',
+                                    overflow: 'hidden'
+                                }}
+                                onClick={() => handleMissionClick(mission.id)}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <div style={{
+                                            padding: '4px 12px',
+                                            background: '#E1F5FE',
+                                            color: '#0288D1',
+                                            borderRadius: '12px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '900'
+                                        }}>
+                                            {mission.genre}
+                                        </div>
+                                        {statusBadge}
+                                    </div>
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        background: '#FFFDE7',
+                                        padding: '4px 10px',
+                                        borderRadius: '10px',
+                                        border: '1px solid #FFF59D',
+                                        fontSize: '0.8rem',
+                                        fontWeight: '900',
+                                        color: '#F57F17'
+                                    }}>
+                                        ✨ {mission.base_reward}P
+                                    </div>
+                                </div>
+                                <h4 style={{ margin: '0 0 10px 0', color: '#2C3E50', fontSize: '1.2rem', fontWeight: '900' }}>
+                                    {mission.title}
+                                </h4>
+                                <p style={{ fontSize: '0.95rem', color: '#607D8B', margin: '0 0 20px 0', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                    {mission.guide}
+                                </p>
+                                <Button
+                                    variant={post?.is_submitted && !post?.is_returned ? "secondary" : "primary"}
+                                    style={{ width: '100%', borderRadius: '14px', fontWeight: '900' }}
+                                >
+                                    {buttonText}
+                                </Button>
+                            </motion.div>
+                        );
+                    })
                 )}
             </div>
         </Card>
