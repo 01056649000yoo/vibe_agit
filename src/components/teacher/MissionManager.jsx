@@ -169,12 +169,18 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 `;
 
         try {
-            // [정밀 수정] 404 오류 해결을 위해 v1beta 경로로 복구하고 모델 경로 확인
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            // [최종 수정] 404 오류 해결을 위해 v1 안정화 엔드포인트 사용
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
+                    contents: [
+                        {
+                            parts: [
+                                { text: prompt }
+                            ]
+                        }
+                    ]
                 })
             });
 
