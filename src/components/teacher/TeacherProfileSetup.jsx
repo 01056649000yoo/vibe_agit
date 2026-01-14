@@ -11,6 +11,7 @@ import { supabase } from '../../lib/supabaseClient';
  */
 const TeacherProfileSetup = ({ email, onTeacherStart }) => {
     const [apiKey, setApiKey] = useState('');
+    const [promptTemplate, setPromptTemplate] = useState('');
     const [loading, setLoading] = useState(false);
     const [testingKey, setTestingKey] = useState(false);
 
@@ -23,10 +24,11 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
         if (user) {
             const { data } = await supabase
                 .from('profiles')
-                .select('gemini_api_key')
+                .select('gemini_api_key, ai_prompt_template')
                 .eq('id', user.id)
                 .single();
             if (data?.gemini_api_key) setApiKey(data.gemini_api_key);
+            if (data?.ai_prompt_template) setPromptTemplate(data.ai_prompt_template);
         }
     };
 
@@ -75,13 +77,14 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('로그인이 필요합니다.');
 
-            // API 키 저장 (프로필 upsert와 통합해도 되지만, 여기서는 명시적으로 저장)
+            // API 키 및 프롬프트 템플릿 저장
             const { error } = await supabase
                 .from('profiles')
                 .upsert({
                     id: user.id,
                     gemini_api_key: apiKey.trim(),
-                    role: 'TEACHER' // 역할 설정도 함께 보장
+                    ai_prompt_template: promptTemplate.trim(),
+                    role: 'TEACHER'
                 });
 
             if (error) throw error;
@@ -108,44 +111,73 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
             </p>
             <p style={{ marginBottom: '2.5rem', fontSize: '1.1rem' }}>아지트에서 어떤 보람찬 일을 해볼까요?</p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '2.5rem', maxWidth: '400px', margin: '0 auto 2.5rem auto' }}>
-                <div style={{ textAlign: 'left', background: '#F8F9FA', padding: '20px', borderRadius: '16px', border: '1px solid #E9ECEF' }}>
-                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#607D8B', fontWeight: 'bold', marginBottom: '8px' }}>
-                        Gemini API Key (선택 사항)
-                    </label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <input
-                            type="password"
-                            value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            placeholder="AI 기능을 위한 키를 입력하세요"
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '2.5rem', maxWidth: '500px', margin: '0 auto 2.5rem auto' }}>
+                <div style={{ textAlign: 'left', background: '#F8F9FA', padding: '24px', borderRadius: '20px', border: '1px solid #E9ECEF' }}>
+
+                    {/* API 키 섹션 */}
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', fontSize: '0.9rem', color: '#607D8B', fontWeight: 'bold', marginBottom: '8px' }}>
+                            Gemini API Key (선택 사항)
+                        </label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <input
+                                type="password"
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                                placeholder="AI 기능을 위한 키를 입력하세요"
+                                style={{
+                                    flex: 2,
+                                    padding: '12px 16px',
+                                    borderRadius: '12px',
+                                    border: '1px solid #DEE2E6',
+                                    outline: 'none',
+                                    fontSize: '0.9rem',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                            <button
+                                onClick={handleTestGeminiKey}
+                                disabled={testingKey}
+                                style={{
+                                    flex: 1,
+                                    background: '#E8F5E9',
+                                    color: '#2E7D32',
+                                    border: '1px solid #C8E6C9',
+                                    borderRadius: '12px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {testingKey ? '확인 중' : '연결 테스트'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* AI 프롬프트 템플릿 섹션 */}
+                    <div style={{ marginBottom: '8px' }}>
+                        <label style={{ display: 'block', fontSize: '0.9rem', color: '#607D8B', fontWeight: 'bold', marginBottom: '8px' }}>
+                            AI 피드백 프롬프트 설정 (선택 사항)
+                        </label>
+                        <textarea
+                            value={promptTemplate}
+                            onChange={(e) => setPromptTemplate(e.target.value)}
+                            placeholder="선생님만의 피드백 규칙을 정해주세요. (예: 다정한 말투로 칭찬 1개, 보완점 1개 써줘. 어려운 단어는 [해설]을 붙여줘.)"
                             style={{
-                                flex: 2,
-                                padding: '12px 16px',
+                                width: '100%',
+                                minHeight: '120px',
+                                padding: '14px',
                                 borderRadius: '12px',
                                 border: '1px solid #DEE2E6',
                                 outline: 'none',
                                 fontSize: '0.9rem',
-                                boxSizing: 'border-box'
+                                lineHeight: '1.6',
+                                resize: 'none',
+                                boxSizing: 'border-box',
+                                fontFamily: 'inherit'
                             }}
                         />
-                        <button
-                            onClick={handleTestGeminiKey}
-                            disabled={testingKey}
-                            style={{
-                                flex: 1,
-                                background: '#E8F5E9',
-                                color: '#2E7D32',
-                                border: '1px solid #C8E6C9',
-                                borderRadius: '12px',
-                                fontSize: '0.8rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            {testingKey ? '확인 중' : '연결 테스트'}
-                        </button>
                     </div>
                     <p style={{ margin: '8px 0 0 0', fontSize: '0.75rem', color: '#90A4AE', lineHeight: '1.4' }}>
                         * 나중에 설정 메뉴에서도 등록할 수 있습니다.

@@ -150,24 +150,20 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         const { data: { user } } = await supabase.auth.getUser();
         const { data: profileData } = await supabase
             .from('profiles')
-            .select('gemini_api_key')
+            .select('gemini_api_key, ai_prompt_template')
             .eq('id', user?.id)
             .single();
 
         const apiKey = profileData?.gemini_api_key?.trim();
+        const customTemplate = profileData?.ai_prompt_template?.trim();
 
         if (!apiKey) {
             alert('Gemini API 키가 등록되지 않았습니다. [설정] 메뉴에서 키를 먼저 등록해주세요! 🔐');
             return null;
         }
 
-        // [프롬프트 고도화] 선생님 요청 사항 반영: 구조화된 피드백 형식
-        const prompt = `
-너는 초등학생의 글쓰기 성장을 돕는 다정한 보조 선생님이야. 아래 학생의 글을 읽고 정해진 형식에 맞춰 피드백을 작성해줘.
-
-글 제목: "${postTitle}"
-글 내용:
-"${postContent}"
+        // [프롬프트 동적 구성] 선생님이 설정한 템플릿이 있으면 사용, 없으면 기본값 사용
+        const defaultTemplate = `너는 초등학생의 글쓰기 성장을 돕는 다정한 보조 선생님이야. 아래 학생의 글을 읽고 정해진 형식에 맞춰 피드백을 작성해줘.
 
 [피드백 작성 규칙]
 1. 말투는 항상 다정하고 따뜻하게 작성해줘.
@@ -178,14 +174,23 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 안녕! 선생님이야 😊 네 글을 정말 잘 읽었어.
 
 [맞춤법 교정]
-(여기에 틀린 부분과 이유를 초등학생 눈높이에서 친절하게 설명해줘)
+(틀린 부분과 이유를 초등학생 눈높이에서 친절하게 설명)
 
 [글의 강점]
-(참신한 표현이나 감동적인 부분 등 칭찬할 점을 구체적으로 적어줘)
+(참신한 표현이나 감동적인 부분 등 칭찬할 점)
 
 [보완할점]
-(내용을 더 풍성하게 만들 질문이나 아이디어를 하나만 제안해줘)
-`;
+(내용을 더 풍성하게 만들 질문이나 아이디어를 하나만 제안)`;
+
+        const basePrompt = customTemplate || defaultTemplate;
+
+        const prompt = `${basePrompt}
+
+---
+[학생의 글 정보]
+글 제목: "${postTitle}"
+글 내용:
+"${postContent}"`;
 
         try {
             // [최종 해결 시도] 구글 AI 스튜디오 최신 공식 주소 및 모델 사용 (gemini-3-flash-preview)
@@ -320,9 +325,11 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 
             alert('다시 쓰기 요청을 전달했습니다! 📤');
             setSelectedPost(null);
-            fetchPostsForMission(selectedMission);
+            if (selectedMission) fetchPostsForMission(selectedMission);
         } catch (err) {
-            alert('요청 중 오류 발생: ' + err.message);
+            console.error('다시 쓰기 요청 실패:', err.message);
+            const isColumnError = err.message.includes('ai_feedback') || err.message.includes('column');
+            alert(`요청 중 오류 발생: ${err.message}${isColumnError ? '\n\n💡 데이터베이스에 ai_feedback 컬럼이 있는지 확인해주세요.' : ''}`);
         }
     };
 
@@ -350,7 +357,11 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 })
                 .eq('id', post.id);
 
-            if (postError) throw postError;
+            if (postError) {
+                console.error('글 상태 업데이트 실패:', postError.message);
+                const isColumnError = postError.message.includes('ai_feedback') || postError.message.includes('column');
+                throw new Error(`글 승인 업데이트 실패: ${postError.message}${isColumnError ? '\n(ai_feedback 컬럼 확인 필요)' : ''}`);
+            }
 
             // 3. 학생 총점 업데이트
             const { data: studentData, error: studentFetchError } = await supabase
@@ -1010,15 +1021,18 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                         onChange={(e) => setTempFeedback(e.target.value)}
                                         placeholder="AI 선생님의 도움을 받거나 직접 따뜻한 조언을 남겨주세요..."
                                         style={{
-                                            width: '100%', minHeight: '150px', padding: '20px',
-                                            borderRadius: '16px', border: '1px solid #DEE2E6',
-                                            fontSize: '1.05rem', lineHeight: '1.8', outline: 'none',
+                                            width: '100%', minHeight: '150px', padding: '24px',
+                                            borderRadius: '20px', border: '1px solid #E0E4E8',
+                                            fontSize: '1.1rem', lineHeight: '2', outline: 'none',
                                             resize: 'none', transition: 'all 0.1s', color: '#2C3E50',
                                             backgroundColor: '#fff',
-                                            overflow: 'hidden'
+                                            overflow: 'hidden',
+                                            fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif",
+                                            letterSpacing: '-0.01em',
+                                            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
                                         }}
                                         onFocus={e => e.target.style.borderColor = '#3498DB'}
-                                        onBlur={e => e.target.style.borderColor = '#DEE2E6'}
+                                        onBlur={e => e.target.style.borderColor = '#E0E4E8'}
                                     />
                                     <p style={{ margin: '12px 0 0 0', fontSize: '0.8rem', color: '#95A5A6', textAlign: 'center' }}>
                                         * 피드백은 [다시 쓰기] 또는 [승인] 요청 시 학생에게 전달됩니다.

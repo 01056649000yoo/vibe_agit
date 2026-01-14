@@ -18,9 +18,11 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024); // 태블릿/모바일 기준
     const [selectedActivityPost, setSelectedActivityPost] = useState(null); // 최근 활동 클릭 시 상세보기
 
-    // Gemini API Key 관련 상태
+    // Gemini API Key 및 AI 프롬프트 관련 상태
     const [geminiKey, setGeminiKey] = useState('');
     const [originalKey, setOriginalKey] = useState('');
+    const [promptTemplate, setPromptTemplate] = useState('');
+    const [originalPrompt, setOriginalPrompt] = useState('');
     const [isKeyVisible, setIsKeyVisible] = useState(false);
     const [savingKey, setSavingKey] = useState(false);
     const [testingKey, setTestingKey] = useState(false); // [추가] 연결 테스트 상태
@@ -41,30 +43,39 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
     const fetchGeminiKey = async () => {
         const { data, error } = await supabase
             .from('profiles')
-            .select('gemini_api_key')
+            .select('gemini_api_key, ai_prompt_template')
             .eq('id', session.user.id)
             .single();
 
-        if (data?.gemini_api_key) {
-            setOriginalKey(data.gemini_api_key);
-            setGeminiKey(data.gemini_api_key);
+        if (data) {
+            if (data.gemini_api_key) {
+                setOriginalKey(data.gemini_api_key);
+                setGeminiKey(data.gemini_api_key);
+            }
+            if (data.ai_prompt_template) {
+                setOriginalPrompt(data.ai_prompt_template);
+                setPromptTemplate(data.ai_prompt_template);
+            }
         }
     };
 
-    const handleSaveGeminiKey = async () => {
-        if (!geminiKey.trim()) return;
+    const handleSaveTeacherSettings = async () => {
         setSavingKey(true);
         try {
             const { error } = await supabase
                 .from('profiles')
-                .update({ gemini_api_key: geminiKey.trim() })
+                .update({
+                    gemini_api_key: geminiKey.trim(),
+                    ai_prompt_template: promptTemplate.trim()
+                })
                 .eq('id', session.user.id);
 
             if (error) throw error;
             setOriginalKey(geminiKey.trim());
-            alert('Gemini API 키가 안전하게 저장되었습니다! 🔐');
+            setOriginalPrompt(promptTemplate.trim());
+            alert('설정이 안전하게 저장되었습니다! ✨');
         } catch (err) {
-            console.error('키 저장 실패:', err.message);
+            console.error('설정 저장 실패:', err.message);
             alert('저장 중 오류가 발생했습니다.');
         } finally {
             setSavingKey(false);
@@ -389,13 +400,6 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                                         </button>
                                                     </div>
                                                     <Button
-                                                        onClick={handleSaveGeminiKey}
-                                                        disabled={savingKey || testingKey || geminiKey === originalKey}
-                                                        style={{ borderRadius: '12px', minWidth: '80px' }}
-                                                    >
-                                                        {savingKey ? '저장 중' : '저장'}
-                                                    </Button>
-                                                    <Button
                                                         variant="secondary"
                                                         onClick={handleTestGeminiKey}
                                                         disabled={savingKey || testingKey}
@@ -409,9 +413,44 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                                         현재 저장된 키: <code style={{ background: '#F8F9FA', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{maskKey(originalKey)}</code>
                                                     </p>
                                                 )}
-                                                <p style={{ marginTop: '16px', fontSize: '0.8rem', color: '#7F8C8D', lineHeight: '1.5' }}>
-                                                    * 입력하신 키는 학생들의 글에 대한 **AI 자동 피드백** 생성에 사용됩니다.<br />
-                                                    * 암호화되어 안전하게 보관되며, 언제든 수정하실 수 있습니다.
+
+                                                {/* [추가] AI 프롬프트 템플릿 설정 */}
+                                                <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px dashed #DEE2E6' }}>
+                                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold', marginBottom: '10px' }}>
+                                                        AI 피드백 프롬프트 설정
+                                                    </label>
+                                                    <textarea
+                                                        value={promptTemplate}
+                                                        onChange={(e) => setPromptTemplate(e.target.value)}
+                                                        placeholder="선생님만의 피드백 규칙을 정해주세요. (예: 다정한 말투로 칭찬 1개, 보완점 1개 써줘. 어려운 단어는 [해설]을 붙여줘.)"
+                                                        style={{
+                                                            width: '100%',
+                                                            minHeight: '150px',
+                                                            padding: '16px',
+                                                            borderRadius: '12px',
+                                                            border: '1px solid #DEE2E6',
+                                                            outline: 'none',
+                                                            fontSize: '0.9rem',
+                                                            lineHeight: '1.6',
+                                                            color: '#2C3E50',
+                                                            resize: 'vertical',
+                                                            boxSizing: 'border-box',
+                                                            fontFamily: 'inherit'
+                                                        }}
+                                                    />
+                                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                                                        <Button
+                                                            onClick={handleSaveTeacherSettings}
+                                                            disabled={savingKey || (geminiKey === originalKey && promptTemplate === originalPrompt)}
+                                                            style={{ borderRadius: '12px', padding: '10px 24px' }}
+                                                        >
+                                                            {savingKey ? '저장 중...' : '전체 설정 저장'}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+
+                                                <p style={{ marginTop: '24px', fontSize: '0.8rem', color: '#7F8C8D', lineHeight: '1.6', background: '#F8F9FA', padding: '16px', borderRadius: '12px' }}>
+                                                    💡 **프롬프트 팁**: "칭찬은 구체적으로", "맞춤법 위주로 봐줘" 같은 교육 철학을 입력해보세요. AI가 선생님의 마음을 담아 피드백을 생성합니다.
                                                 </p>
                                             </div>
                                         </section>
