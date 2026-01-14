@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 
 /**
  * 역할: 학생 - 친구들의 글을 읽고 반응/댓글 남기기 (친구 글 아지트) 🌈
@@ -208,10 +209,15 @@ const PostDetailModal = ({ post, studentSession, onClose, reactionIcons, isMobil
     const [submittingComment, setSubmittingComment] = useState(false);
 
     useEffect(() => {
+        // 모달 오픈 시 배경 스크롤 방지
+        document.body.style.overflow = 'hidden';
         if (post?.id) {
             fetchReactions();
             fetchComments();
         }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
     }, [post?.id]);
 
     const fetchReactions = async () => {
@@ -297,42 +303,46 @@ const PostDetailModal = ({ post, studentSession, onClose, reactionIcons, isMobil
 
     const getReactionCount = (type) => reactions.filter(r => r.reaction_type === type).length;
 
-    return (
+    // 포탈(Portal)을 사용하여 document.body 바로 아래에 렌더링
+    return createPortal(
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={{
-                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                position: 'fixed',
+                top: 0, left: 0, width: '100vw', height: '100vh',
                 background: 'rgba(0,0,0,0.6)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                zIndex: 2000,
-                display: 'flex', justifyContent: 'center', alignItems: isMobile ? 'flex-end' : 'center',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                zIndex: 3000, // 최상단 배치
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: isMobile ? 'flex-end' : 'center',
                 padding: isMobile ? '0' : '20px'
             }}
             onClick={onClose}
         >
             <motion.div
-                initial={{ y: isMobile ? '100%' : 50, scale: isMobile ? 1 : 0.95, opacity: isMobile ? 1 : 0 }}
+                initial={{ y: isMobile ? '100%' : 80, scale: isMobile ? 1 : 0.9, opacity: isMobile ? 1 : 0 }}
                 animate={{ y: 0, scale: 1, opacity: 1 }}
-                exit={{ y: isMobile ? '100%' : 50, scale: isMobile ? 1 : 0.95, opacity: isMobile ? 1 : 0 }}
-                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                exit={{ y: isMobile ? '100%' : 80, scale: isMobile ? 1 : 0.9, opacity: isMobile ? 1 : 0 }}
+                transition={{ type: 'spring', damping: 30, stiffness: 250 }}
                 style={{
                     background: 'white',
-                    borderRadius: isMobile ? '32px 32px 0 0' : '32px',
-                    width: isMobile ? '100%' : '95%',
-                    maxWidth: '800px',
-                    maxHeight: '90vh',
+                    borderRadius: isMobile ? '32px 32px 0 0' : '40px',
+                    width: isMobile ? '100%' : '90%',
+                    maxWidth: '850px',
+                    maxHeight: isMobile ? '95vh' : '90vh',
                     display: 'flex', flexDirection: 'column',
                     overflow: 'hidden',
-                    boxShadow: '0 40px 100px rgba(0,0,0,0.4)',
-                    margin: isMobile ? '0' : '0 auto'
+                    boxShadow: '0 50px 120px rgba(0,0,0,0.5)',
+                    position: 'relative'
                 }}
                 onClick={e => e.stopPropagation()}
             >
                 <header style={{
-                    padding: isMobile ? '16px 20px' : '20px 32px',
+                    padding: isMobile ? '20px' : '28px 40px',
                     borderBottom: '1px solid #F1F3F5',
                     display: 'flex',
                     alignItems: 'center',
@@ -343,7 +353,7 @@ const PostDetailModal = ({ post, studentSession, onClose, reactionIcons, isMobil
                         onClick={onClose}
                         style={{
                             background: '#F8F9FA', border: 'none',
-                            width: '40px', height: '40px', borderRadius: '12px',
+                            width: '44px', height: '44px', borderRadius: '14px',
                             fontSize: '1.2rem', cursor: 'pointer', color: '#636E72',
                             display: 'flex', justifyContent: 'center', alignItems: 'center',
                             transition: 'all 0.2s'
@@ -351,103 +361,106 @@ const PostDetailModal = ({ post, studentSession, onClose, reactionIcons, isMobil
                     >
                         ⬅️
                     </button>
-                    <div style={{ flex: 1, textAlign: 'center', padding: '0 10px' }}>
-                        <div style={{ fontSize: '0.8rem', color: '#ADB5BD', fontWeight: 'bold', marginBottom: '2px' }}>
-                            {post.students?.name} 학생의 글
+                    <div style={{ flex: 1, textAlign: 'center', padding: '0 20px' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#3498DB', fontWeight: '900', marginBottom: '4px' }}>
+                            {post.students?.name} 학생의 소중한 이야기 ✍️
                         </div>
                         <h3 style={{
                             margin: 0, fontWeight: '900', color: '#2D3436',
-                            fontSize: isMobile ? '1rem' : '1.2rem',
+                            fontSize: isMobile ? '1.1rem' : '1.5rem',
                             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                         }}>
                             {post.title}
                         </h3>
                     </div>
-                    <div style={{ width: '40px' }} />
+                    <div style={{ width: '44px' }} />
                 </header>
 
-                <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px 60px 20px' : '40px 50px 80px 50px', scrollbarWidth: 'thin' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '28px 20px 80px 20px' : '48px 60px 100px 60px', scrollbarWidth: 'thin' }}>
                     <div style={{
-                        fontSize: isMobile ? '1.05rem' : '1.2rem',
-                        lineHeight: '1.8',
+                        fontSize: isMobile ? '1.1rem' : '1.3rem',
+                        lineHeight: '1.9',
                         whiteSpace: 'pre-wrap',
                         color: '#2D3436',
-                        marginBottom: '60px',
-                        letterSpacing: '-0.01em'
+                        marginBottom: '80px',
+                        letterSpacing: '-0.02em',
+                        wordBreak: 'break-word'
                     }}>
                         {post.content}
                     </div>
 
                     {/* 반응 바 */}
                     <div style={{
-                        display: 'flex', justifyContent: 'center', gap: isMobile ? '8px' : '15px',
-                        padding: '24px', background: '#F8F9FA', borderRadius: '24px',
-                        marginBottom: '40px', border: '1px solid #F1F3F5'
+                        display: 'flex', justifyContent: 'center', gap: isMobile ? '10px' : '18px',
+                        padding: '28px', background: '#F8F9FA', borderRadius: '28px',
+                        marginBottom: '48px', border: '1px solid #F1F3F5'
                     }}>
                         {reactionIcons.map(icon => (
                             <button
                                 key={icon.type}
                                 onClick={() => handleReaction(icon.type)}
                                 style={{
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-                                    padding: isMobile ? '8px 10px' : '10px 16px', border: 'none', background: 'white',
-                                    borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.03)',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                                    padding: isMobile ? '10px 12px' : '12px 20px', border: 'none', background: 'white',
+                                    borderRadius: '20px', boxShadow: '0 6px 12px rgba(0,0,0,0.05)',
                                     cursor: 'pointer', transition: 'all 0.2s'
                                 }}
                             >
-                                <span style={{ fontSize: isMobile ? '1.4rem' : '1.8rem' }}>{icon.emoji}</span>
-                                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#B2BEC3' }}>
+                                <span style={{ fontSize: isMobile ? '1.6rem' : '2.1rem' }}>{icon.emoji}</span>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#636E72' }}>
                                     {getReactionCount(icon.type)}
                                 </span>
                             </button>
                         ))}
                     </div>
 
-                    <div style={{ borderTop: '1px solid #F1F3F5', paddingTop: '40px' }}>
-                        <h4 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', fontWeight: '900', color: '#2D3436' }}>
+                    <div style={{ borderTop: '2px solid #F1F3F5', paddingTop: '48px' }}>
+                        <h4 style={{ margin: '0 0 24px 0', fontSize: '1.25rem', fontWeight: '900', color: '#2D3436' }}>
                             💬 친구들의 따뜻한 한마디
                         </h4>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '32px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '40px' }}>
                             {comments.length === 0 ? (
-                                <div style={{ textAlign: 'center', color: '#B2BEC3', fontSize: '0.95rem', padding: '40px', background: '#FDFDFD', borderRadius: '20px', border: '1px dashed #F1F3F5' }}>
-                                    첫 번째 응원을 남겨보세요! ✍️
+                                <div style={{ textAlign: 'center', color: '#B2BEC3', fontSize: '1rem', padding: '50px', background: '#FDFDFD', borderRadius: '24px', border: '2px dashed #F1F3F5' }}>
+                                    첫 번째 응원의 주인공이 되어보세요! ✨
                                 </div>
                             ) : (
                                 comments.map(c => (
                                     <div key={c.id} style={{
-                                        padding: '16px 20px', background: '#F8F9FA', borderRadius: '20px',
+                                        padding: '20px 24px', background: '#F8F9FA', borderRadius: '24px',
                                         border: '1px solid #F1F3F5'
                                     }}>
-                                        <div style={{ fontWeight: '900', fontSize: '0.85rem', color: '#3498DB', marginBottom: '6px' }}>{c.students?.name}</div>
-                                        <div style={{ fontSize: '1rem', color: '#2D3436', lineHeight: '1.6' }}>{c.content}</div>
+                                        <div style={{ fontWeight: '900', fontSize: '0.9rem', color: '#3498DB', marginBottom: '8px' }}>{c.students?.name}</div>
+                                        <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7' }}>{c.content}</div>
                                     </div>
                                 ))
                             )}
                         </div>
 
                         <form onSubmit={handleCommentSubmit} style={{
-                            display: 'flex', gap: '12px', background: 'white',
-                            padding: '8px', borderRadius: '18px', border: '2px solid #F1F3F5'
+                            display: 'flex', gap: '14px', background: 'white',
+                            padding: '10px', borderRadius: '22px', border: '2px solid #F1F3F5',
+                            boxShadow: '0 8px 16px rgba(0,0,0,0.04)'
                         }}>
                             <input
                                 type="text"
                                 value={commentInput}
                                 onChange={e => setCommentInput(e.target.value)}
-                                placeholder="따뜻한 응원을 남겨주세요... (5P!) ✨"
+                                placeholder="따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨"
                                 style={{
-                                    flex: 1, padding: '12px 16px', border: 'none', outline: 'none',
-                                    fontSize: '1rem'
+                                    flex: 1, padding: '14px 20px', border: 'none', outline: 'none',
+                                    fontSize: '1.05rem', color: '#2D3436'
                                 }}
                             />
-                            <Button type="submit" size="sm" style={{ borderRadius: '12px' }} disabled={submittingComment}>
+                            <Button type="submit" size="sm" style={{ borderRadius: '16px', padding: '0 24px', fontWeight: '900' }} disabled={submittingComment}>
                                 보내기
                             </Button>
                         </form>
                     </div>
                 </div>
             </motion.div>
-        </motion.div>
+        </motion.div>,
+        document.body
     );
 };
 
