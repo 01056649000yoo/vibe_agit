@@ -128,6 +128,7 @@ function App() {
             {internalPage.name === 'friends_hideout' && (
               <FriendsHideout
                 studentSession={studentSession}
+                params={internalPage.params}
                 onBack={() => setInternalPage({ name: 'main', params: {} })}
               />
             )}

@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 /**
  * 역할: 학생 - 친구들의 글을 읽고 반응/댓글 남기기 (친구 글 아지트) 🌈
  */
-const FriendsHideout = ({ studentSession, onBack }) => {
+const FriendsHideout = ({ studentSession, onBack, params }) => {
     const [missions, setMissions] = useState([]);
     const [selectedMission, setSelectedMission] = useState(null);
     const [posts, setPosts] = useState([]);
@@ -33,7 +33,25 @@ const FriendsHideout = ({ studentSession, onBack }) => {
 
     useEffect(() => {
         fetchMissions();
-    }, []);
+        if (params?.initialPostId) {
+            handleInitialPost(params.initialPostId);
+        }
+    }, [params]);
+
+    const handleInitialPost = async (postId) => {
+        try {
+            const { data, error } = await supabase
+                .from('student_posts')
+                .select('*, students(name)')
+                .eq('id', postId)
+                .single();
+
+            if (error) throw error;
+            if (data) setViewingPost(data);
+        } catch (err) {
+            console.error('초기 포스트 로드 실패:', err.message);
+        }
+    };
 
     const fetchMissions = async () => {
         setLoading(true);
