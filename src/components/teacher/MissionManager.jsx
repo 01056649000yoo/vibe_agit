@@ -169,7 +169,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 `;
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            // [수정] v1beta 대신 v1 안정화 버전을 사용하고 경로 재점검
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -182,10 +183,15 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 console.error('Gemini API Error Status:', response.status);
                 console.error('Gemini API Error Details:', errorData);
 
-                if (response.status === 400) throw new Error('잘못된 요청입니다. 입력 내용을 확인해주세요.');
-                if (response.status === 403) throw new Error('API 키가 올바르지 않거나 권한이 없습니다.');
-                if (response.status === 429) throw new Error('요청 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요.');
-                throw new Error(`AI 서비스 오류 (상태 코드: ${response.status})`);
+                // 구체적인 에러 사유 추출
+                const errorMsg = errorData?.error?.message || '알 수 없는 서비스 오류';
+
+                if (response.status === 400) throw new Error(`잘못된 요청입니다: ${errorMsg}`);
+                if (response.status === 403) throw new Error(`API 키 권한 오류: ${errorMsg}`);
+                if (response.status === 404) throw new Error('API 주소를 찾을 수 없습니다. 경로를 확인해주세요. (404)');
+                if (response.status === 429) throw new Error('AI 서비스 요청 횟수가 초과되었습니다.');
+
+                throw new Error(`AI 서비스 오류 (${response.status}): ${errorMsg}`);
             }
 
             const data = await response.json();
