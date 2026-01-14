@@ -334,6 +334,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                         color: '#2C3E50'
                     }}
                     disabled={submitting}
+                    spellCheck="true"
                 />
 
                 <textarea
@@ -353,6 +354,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                         background: 'transparent'
                     }}
                     disabled={submitting}
+                    spellCheck="true"
                 />
             </div>
 
