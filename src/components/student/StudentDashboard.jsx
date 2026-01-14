@@ -12,10 +12,12 @@ import { motion } from 'framer-motion';
  */
 const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [points, setPoints] = useState(0);
+    const [hasActivity, setHasActivity] = useState(false);
 
     useEffect(() => {
         if (studentSession?.id) {
             fetchMyPoints();
+            checkActivity();
         }
     }, [studentSession]);
 
@@ -28,6 +30,38 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
         if (data) {
             setPoints(data.total_points || 0);
+        }
+    };
+
+    const checkActivity = async () => {
+        try {
+            // 내 글들의 ID 목록 가져오기
+            const { data: myPosts } = await supabase
+                .from('student_posts')
+                .select('id')
+                .eq('student_id', studentSession.id);
+
+            if (!myPosts || myPosts.length === 0) return;
+
+            const postIds = myPosts.map(p => p.id);
+
+            // 1. 내 글에 달린 반응 확인
+            const { count: reactionCount } = await supabase
+                .from('post_reactions')
+                .select('*', { count: 'exact', head: true })
+                .in('post_id', postIds)
+                .neq('user_id', studentSession.id);
+
+            // 2. 내 글에 달린 댓글 확인
+            const { count: commentCount } = await supabase
+                .from('post_comments')
+                .select('*', { count: 'exact', head: true })
+                .in('post_id', postIds)
+                .neq('author_id', studentSession.id);
+
+            setHasActivity((reactionCount || 0) + (commentCount || 0) > 0);
+        } catch (err) {
+            console.error('활동 확인 실패:', err.message);
         }
     };
 
@@ -101,7 +135,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     whileTap={{ scale: 0.95 }}
                     style={{
                         background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #FFE082',
-                        textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s',
+                        textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
                         boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
                     }}
                     onClick={() => onNavigate('mission_list')}
@@ -116,11 +150,19 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     whileTap={{ scale: 0.95 }}
                     style={{
                         background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #FFE082',
-                        textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s',
+                        textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
                         boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
                     }}
-                    onClick={() => alert('친구들의 글을 구경하러 가요! 👀')}
+                    onClick={() => onNavigate('friends_hideout')}
                 >
+                    {hasActivity && (
+                        <div style={{
+                            position: 'absolute', top: '15px', right: '15px',
+                            width: '12px', height: '12px', background: '#FF5252',
+                            borderRadius: '50%', border: '2px solid white',
+                            boxShadow: '0 0 10px rgba(255, 82, 82, 0.5)'
+                        }} />
+                    )}
                     <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👀</div>
                     <h3 style={{ margin: 0, color: '#5D4037' }}>친구 아지트</h3>
                     <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>친구들의 글 읽기</p>

@@ -14,6 +14,7 @@ const TeacherProfileSetup = lazy(() => import('./components/teacher/TeacherProfi
 const TeacherDashboard = lazy(() => import('./components/teacher/TeacherDashboard'))
 const StudentWriting = lazy(() => import('./components/student/StudentWriting'))
 const MissionList = lazy(() => import('./components/student/MissionList'))
+const FriendsHideout = lazy(() => import('./components/student/FriendsHideout'))
 
 /**
  * 역할: 전역 상태 관리 및 라우팅 (메인 진입점)
@@ -122,6 +123,12 @@ function App() {
                 missionId={internalPage.params.missionId}
                 onBack={() => setInternalPage({ name: 'mission_list', params: {} })}
                 onNavigate={(page, params) => setInternalPage({ name: page, params })}
+              />
+            )}
+            {internalPage.name === 'friends_hideout' && (
+              <FriendsHideout
+                studentSession={studentSession}
+                onBack={() => setInternalPage({ name: 'main', params: {} })}
               />
             )}
           </>
