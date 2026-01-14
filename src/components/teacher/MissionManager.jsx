@@ -145,7 +145,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
             .eq('id', user?.id)
             .single();
 
-        const apiKey = profileData?.gemini_api_key;
+        const apiKey = profileData?.gemini_api_key?.trim();
 
         if (!apiKey) {
             alert('Gemini API 키가 등록되지 않았습니다. [설정] 메뉴에서 키를 먼저 등록해주세요! 🔐');
@@ -170,8 +170,11 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 `;
 
         try {
-            // [최종 해결] 404 오류 해결을 위한 공식 문서 표준 엔드포인트(v1) 및 본문 구조 고정
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            // [최종 해결 시도] 공식 문서 REST 예시를 따라 v1beta 엔드포인트 사용
+            // 참고: https://ai.google.dev/gemini-api/docs/api-key?hl=ko
+            const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+            const response = await fetch(`${baseUrl}?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -190,7 +193,9 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 
                 if (response.status === 400) throw new Error(`잘못된 요청입니다: ${errorMsg}`);
                 if (response.status === 403) throw new Error(`API 키 권한 오류: ${errorMsg}`);
-                if (response.status === 404) throw new Error('API 주소를 찾을 수 없습니다. 경로를 확인해주세요. (404)');
+                if (response.status === 404) {
+                    throw new Error(`API 엔드포인트를 찾을 수 없습니다(404).\n시도한 경로: ${baseUrl}\n구글 AI 스튜디오의 공식 주소를 확인해주세요.`);
+                }
                 if (response.status === 429) throw new Error('AI 서비스 요청 횟수가 초과되었습니다.');
 
                 throw new Error(`AI 서비스 오류 (${response.status}): ${errorMsg}`);
