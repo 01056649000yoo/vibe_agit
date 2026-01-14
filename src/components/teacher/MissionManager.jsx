@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import Card from '../common/Card';
@@ -21,6 +21,15 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false); // AI 생성 중 상태
     const [tempFeedback, setTempFeedback] = useState(''); // 편집 중인 피드백
+    const textareaRef = useRef(null);
+
+    // [추가] 피드백 입력창 자동 높이 조절
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+        }
+    }, [tempFeedback, selectedPost]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -168,16 +177,14 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 ---
 안녕! 선생님이야 😊 네 글을 정말 잘 읽었어.
 
-📍 [1. 맞춤법 및 띄어쓰기 점검]
+[맞춤법 교정]
 (여기에 틀린 부분과 이유를 초등학생 눈높이에서 친절하게 설명해줘)
 
-🌟 [2. 너의 글에서 빛나는 점]
+[글의 강점]
 (참신한 표현이나 감동적인 부분 등 칭찬할 점을 구체적으로 적어줘)
 
-💡 [3. 이렇게 고쳐보면 어떨까?]
+[보완할점]
 (내용을 더 풍성하게 만들 질문이나 아이디어를 하나만 제안해줘)
-
-(마지막으로 어려운 단어가 있었다면 '[단어: 설명]' 형태로 짧게 덧붙여줘)
 `;
 
         try {
@@ -227,13 +234,32 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const handleGenerateSingleAI = async () => {
         if (!selectedPost) return;
         setIsGenerating(true);
-        const feedback = await fetchAIFeedback(selectedPost.title, selectedPost.content);
-        if (feedback) {
-            setTempFeedback(feedback);
-        } else {
-            alert('AI 피드백을 생성하지 못했습니다. API 키를 확인해 주세요.');
+        try {
+            const feedback = await fetchAIFeedback(selectedPost.title, selectedPost.content);
+            if (feedback) {
+                // [persistence] 생성 즉시 DB에 저장
+                const { error } = await supabase
+                    .from('student_posts')
+                    .update({ ai_feedback: feedback })
+                    .eq('id', selectedPost.id);
+
+                if (error) throw error;
+
+                setTempFeedback(feedback);
+                // [Sync] 목록 데이터와 현재 글 데이터 동기화
+                setPosts(prev => prev.map(p => p.id === selectedPost.id ? { ...p, ai_feedback: feedback } : p));
+                setSelectedPost(prev => ({ ...prev, ai_feedback: feedback }));
+
+                console.log('✅ AI 피드백이 생성 및 자동 저장되었습니다.');
+            } else {
+                alert('AI 피드백을 생성하지 못했습니다. API 키를 확인해 주세요.');
+            }
+        } catch (err) {
+            console.error('피드백 저장 실패:', err.message);
+            alert('피드백을 저장하는 중 오류가 발생했습니다.');
+        } finally {
+            setIsGenerating(false);
         }
-        setIsGenerating(false);
     };
 
     const handleBulkAIAction = async () => {
@@ -855,15 +881,17 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                         </Button>
                                     </div>
                                     <textarea
+                                        ref={textareaRef}
                                         value={tempFeedback}
                                         onChange={(e) => setTempFeedback(e.target.value)}
                                         placeholder="AI 선생님의 도움을 받거나 직접 따뜻한 조언을 남겨주세요..."
                                         style={{
-                                            width: '100%', minHeight: '300px', padding: '20px',
+                                            width: '100%', minHeight: '150px', padding: '20px',
                                             borderRadius: '16px', border: '1px solid #DEE2E6',
                                             fontSize: '1.05rem', lineHeight: '1.8', outline: 'none',
-                                            resize: 'none', transition: 'all 0.2s', color: '#2C3E50',
-                                            backgroundColor: '#fff'
+                                            resize: 'none', transition: 'all 0.1s', color: '#2C3E50',
+                                            backgroundColor: '#fff',
+                                            overflow: 'hidden'
                                         }}
                                         onFocus={e => e.target.style.borderColor = '#3498DB'}
                                         onBlur={e => e.target.style.borderColor = '#DEE2E6'}

@@ -294,8 +294,6 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                                     whiteSpace: 'pre-wrap',
                                     lineHeight: '1.8',
                                     border: '1px solid rgba(230, 81, 0, 0.2)',
-                                    maxHeight: '350px',
-                                    overflowY: 'auto',
                                     boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.03)'
                                 }}>
                                     {aiFeedback}
