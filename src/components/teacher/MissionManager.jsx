@@ -382,10 +382,48 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 
             alert(`✅ ${totalPointsToGive}포인트가 성공적으로 지급되었습니다!`);
             setSelectedPost(null);
-            fetchPostsForMission(selectedMission);
+            if (selectedMission) fetchPostsForMission(selectedMission);
+            if (typeof fetchMissions === 'function') fetchMissions();
         } catch (err) {
             console.error('승인 처리 실패:', err.message);
             alert('승인 중 오류가 발생했습니다: ' + err.message);
+        } finally {
+            setLoadingPosts(false);
+        }
+    };
+
+    // [추가] 일괄 승인 처리 (그냥 지나쳤던 수동 일괄 승인도 보강)
+    const handleBulkApprove = async () => {
+        const toApprove = posts.filter(p => p.is_submitted && !p.is_confirmed);
+        if (toApprove.length === 0) {
+            alert('승인 대기 중인 글이 없습니다.');
+            return;
+        }
+
+        if (!confirm(`제출된 ${toApprove.length}개의 글을 모두 승인하고 포인트를 지급하시겠습니까? 🎁`)) return;
+
+        setLoadingPosts(true);
+        try {
+            for (const post of toApprove) {
+                let amount = selectedMission.base_reward || 0;
+                let isBonus = (selectedMission.bonus_threshold && post.char_count >= selectedMission.bonus_threshold);
+                if (isBonus) amount += (selectedMission.bonus_reward || 0);
+
+                await supabase.from('student_posts').update({ is_confirmed: true }).eq('id', post.id);
+                const { data: st } = await supabase.from('students').select('total_points').eq('id', post.student_id).single();
+                await supabase.from('students').update({ total_points: (st?.total_points || 0) + amount }).eq('id', post.student_id);
+                await supabase.from('point_logs').insert({
+                    student_id: post.student_id,
+                    amount: amount,
+                    reason: `일괄 승인 보상: ${selectedMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`
+                });
+            }
+            alert(`🎉 ${toApprove.length}건 일괄 승인 완료!`);
+            fetchPostsForMission(selectedMission);
+            if (typeof fetchMissions === 'function') fetchMissions();
+        } catch (err) {
+            console.error('일괄 승인 실패:', err.message);
+            alert('일괄 처리 중 오류가 발생했습니다.');
         } finally {
             setLoadingPosts(false);
         }
@@ -442,8 +480,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 
             alert(`✅ ${amountToRecover}포인트 회수 및 승인 취소가 완료되었습니다.`);
             setSelectedPost(null);
-            fetchPostsForMission(selectedMission);
-            fetchMissions();
+            if (selectedMission) fetchPostsForMission(selectedMission);
+            if (typeof fetchMissions === 'function') fetchMissions();
         } catch (err) {
             console.error('회수 실패:', err.message);
             alert('회수 처리 중 오류가 발생했습니다.');
@@ -489,8 +527,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 }
             }
             alert('일괄 회수 처리가 원활하게 완료되었습니다.');
-            fetchPostsForMission(selectedMission);
-            fetchMissions();
+            if (selectedMission) fetchPostsForMission(selectedMission);
+            if (typeof fetchMissions === 'function') fetchMissions();
         } catch (err) {
             console.error('일괄 회수 실패:', err.message);
             alert('일괄 회수 중 오류가 발생했습니다.');
