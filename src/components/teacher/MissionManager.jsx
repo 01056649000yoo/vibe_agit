@@ -253,28 +253,6 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         }
     };
 
-    const saveFeedbackAndAction = async (post, isApproval = false) => {
-        try {
-            setLoadingPosts(true);
-            const { error } = await supabase
-                .from('student_posts')
-                .update({ ai_feedback: tempFeedback })
-                .eq('id', post.id);
-
-            if (error) throw error;
-
-            if (isApproval) {
-                await handleApprovePost(post);
-            } else {
-                await handleRequestRewrite(post);
-            }
-        } catch (err) {
-            alert('저장 중 오류 발생: ' + err.message);
-        } finally {
-            setLoadingPosts(false);
-        }
-    };
-
     // 다시 쓰기 요청 처리
     const handleRequestRewrite = async (post) => {
         if (!confirm('학생에게 이 글을 돌려보내고 다시 쓰기를 요청할까요? ♻️\n학생의 화면에 안내 문구가 표시됩니다.')) return;
@@ -314,10 +292,13 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 isBonusAchieved = true;
             }
 
-            // 2. 글 승인 상태 업데이트
+            // 2. 글 승인 상태 및 피드백 업데이트
             const { error: postError } = await supabase
                 .from('student_posts')
-                .update({ is_confirmed: true })
+                .update({
+                    is_confirmed: true,
+                    ai_feedback: tempFeedback // 수정한 피드백도 함께 저장
+                })
                 .eq('id', post.id);
 
             if (postError) throw postError;
