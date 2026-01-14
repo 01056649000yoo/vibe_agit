@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 /**
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
-const MissionManager = ({ activeClass, isDashboardMode = true }) => {
+const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const [missions, setMissions] = useState([]);
     const [submissionCounts, setSubmissionCounts] = useState({});
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -19,6 +19,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
     const [posts, setPosts] = useState([]); // 해당 미션의 학생 글 목록
     const [selectedPost, setSelectedPost] = useState(null); // 상세보기용 선택된 글
     const [loadingPosts, setLoadingPosts] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false); // AI 생성 중 상태
+    const [tempFeedback, setTempFeedback] = useState(''); // 편집 중인 피드백
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -133,6 +135,113 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
         }
     };
 
+    // AI 피드백 생성 함수
+    const fetchAIFeedback = async (postTitle, postContent) => {
+        const apiKey = profile?.gemini_api_key;
+        if (!apiKey) {
+            alert('대시보드 관리 설정에서 Gemini API 키를 먼저 등록해 주세요! 🔐');
+            return null;
+        }
+
+        const prompt = `
+너는 초등학생의 글쓰기 실력을 길러주는 다정한 인공지능 보조 선생님이야. 아래 규칙에 따라 학생의 글을 분석해서 피드백을 작성해줘:
+
+글 제목: "${postTitle}"
+글 내용:
+"${postContent}"
+
+[피드백 작성 규칙]
+1. [맞춤법 및 띄어쓰기]: 가장 눈에 띄는 오류 2~3개를 골라 '어떻게 고쳐야 하는지'와 '그 이유'를 초등학생 눈높이에서 설명해줘.
+2. [글의 강점]: 학생이 사용한 좋은 단어, 참신한 표현, 혹은 논리적인 흐름 중 하나를 구체적으로 칭찬해줘.
+3. [보완할 점]: 글의 내용을 더 풍성하게 만들기 위해 추가하면 좋을 아이디어나 질문을 하나 던져줘.
+4. [전문용어 해설]: 피드백 중 어려운 단어가 있다면 반드시 [단어: 설명] 형태로 해설을 붙여줘.
+
+답변은 항상 '안녕! 선생님이 네 글을 읽어보았어 😊'로 시작하고 따뜻한 격려의 말투를 사용해줘. 마크다운 형식을 사용하지 말고 읽기 편하게 줄바꿈을 적절히 섞어줘.
+`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+
+            const data = await response.json();
+            if (data.candidates && data.candidates[0].content.parts[0].text) {
+                return data.candidates[0].content.parts[0].text;
+            }
+            throw new Error('AI 응답 형식이 올바르지 않습니다.');
+        } catch (err) {
+            console.error('AI 피드백 요청 실패:', err);
+            return null;
+        }
+    };
+
+    const handleGenerateSingleAI = async () => {
+        if (!selectedPost) return;
+        setIsGenerating(true);
+        const feedback = await fetchAIFeedback(selectedPost.title, selectedPost.content);
+        if (feedback) {
+            setTempFeedback(feedback);
+        } else {
+            alert('AI 피드백을 생성하지 못했습니다. API 키를 확인해 주세요.');
+        }
+        setIsGenerating(false);
+    };
+
+    const handleBulkAIAction = async () => {
+        const targetPosts = posts.filter(p => p.is_submitted && !p.ai_feedback && !p.is_confirmed);
+        if (targetPosts.length === 0) {
+            alert('피드백이 필요한 새로운 글이 없습니다.');
+            return;
+        }
+
+        if (!confirm(`${targetPosts.length}개의 글에 대해 AI 피드백을 일괄 생성하시겠습니까? 🤖\n잠시 시간이 걸릴 수 있습니다.`)) return;
+
+        setIsGenerating(true);
+        try {
+            for (const post of targetPosts) {
+                const feedback = await fetchAIFeedback(post.title, post.content);
+                if (feedback) {
+                    await supabase
+                        .from('student_posts')
+                        .update({ ai_feedback: feedback })
+                        .eq('id', post.id);
+                }
+            }
+            alert('모든 글에 대한 AI 피드백 생성이 완료되었습니다! ✨');
+            fetchPostsForMission(selectedMission);
+        } catch (err) {
+            alert('일괄 처리 중 오류가 발생했습니다.');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const saveFeedbackAndAction = async (post, isApproval = false) => {
+        try {
+            setLoadingPosts(true);
+            const { error } = await supabase
+                .from('student_posts')
+                .update({ ai_feedback: tempFeedback })
+                .eq('id', post.id);
+
+            if (error) throw error;
+
+            if (isApproval) {
+                await handleApprovePost(post);
+            } else {
+                await handleRequestRewrite(post);
+            }
+        } catch (err) {
+            alert('저장 중 오류 발생: ' + err.message);
+        } finally {
+            setLoadingPosts(false);
+        }
+    };
+
     // 다시 쓰기 요청 처리
     const handleRequestRewrite = async (post) => {
         if (!confirm('학생에게 이 글을 돌려보내고 다시 쓰기를 요청할까요? ♻️\n학생의 화면에 안내 문구가 표시됩니다.')) return;
@@ -142,15 +251,16 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                 .from('student_posts')
                 .update({
                     is_submitted: false,
-                    is_returned: true
+                    is_returned: true,
+                    ai_feedback: tempFeedback // 수정한 피드백 함께 저장
                 })
                 .eq('id', post.id);
 
             if (error) throw error;
 
             alert('다시 쓰기 요청을 전달했습니다! 📤');
-            setSelectedPost(null); // 상세보기 닫기
-            fetchPostsForMission(selectedMission); // 목록 새로고침
+            setSelectedPost(null);
+            fetchPostsForMission(selectedMission);
         } catch (err) {
             alert('요청 중 오류 발생: ' + err.message);
         }
@@ -520,30 +630,48 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                     <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>아직 제출한 학생이 없습니다. 🐥</div>
                                 ) : (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        {/* 일괄 승인 버튼 영역 */}
-                                        {posts.some(p => p.is_submitted && !p.is_confirmed) && (
-                                            <div style={{ padding: '0 0 16px 0', borderBottom: '1px dashed #EEE', marginBottom: '8px' }}>
+                                        {/* 일괄 동작 영역 */}
+                                        <div style={{ display: 'flex', gap: '10px', padding: '0 0 16px 0', borderBottom: '1px dashed #EEE', marginBottom: '8px' }}>
+                                            <Button
+                                                onClick={handleBulkAIAction}
+                                                disabled={isGenerating || loadingPosts}
+                                                style={{
+                                                    flex: 1,
+                                                    background: '#F3E5F5',
+                                                    color: '#7B1FA2',
+                                                    border: '2px solid #E1BEE7',
+                                                    fontWeight: '900',
+                                                    fontSize: '0.9rem'
+                                                }}
+                                            >
+                                                {isGenerating ? '🤖 피드백 생성 중...' : '🤖 미확인 글 일괄 AI 피드백'}
+                                            </Button>
+
+                                            {posts.some(p => p.is_submitted && !p.is_confirmed) && (
                                                 <Button
                                                     onClick={handleBulkApprove}
-                                                    disabled={loadingPosts}
+                                                    disabled={isGenerating || loadingPosts}
                                                     style={{
-                                                        width: '100%',
+                                                        flex: 1,
                                                         background: '#E8F5E9',
                                                         color: '#2E7D32',
                                                         border: '2px solid #C8E6C9',
                                                         fontWeight: '900',
-                                                        fontSize: '0.95rem'
+                                                        fontSize: '0.9rem'
                                                     }}
                                                 >
-                                                    ✅ 제출된 모든 글 일괄 승인하기
+                                                    ✅ 제출글 일괄 승인
                                                 </Button>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
 
                                         {posts.map(post => (
                                             <div
                                                 key={post.id}
-                                                onClick={() => setSelectedPost(post)}
+                                                onClick={() => {
+                                                    setSelectedPost(post);
+                                                    setTempFeedback(post.ai_feedback || '');
+                                                }}
                                                 style={{
                                                     padding: '16px', borderRadius: '16px', background: '#F8F9FA',
                                                     border: '1px solid #E9ECEF', cursor: 'pointer',
@@ -648,24 +776,69 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
 
                         <main style={{
                             flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '40px',
-                            maxWidth: '800px', margin: '0 auto', width: '100%', boxSizing: 'border-box'
+                            maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box',
+                            display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '6fr 4fr', gap: '40px'
                         }}>
-                            <h2 style={{
-                                fontSize: isMobile ? '1.5rem' : '2rem',
-                                color: '#2C3E50', fontWeight: '900',
-                                marginBottom: '24px', lineHeight: '1.4',
-                                borderLeft: '6px solid #FBC02D', paddingLeft: '20px'
-                            }}>
-                                {selectedPost.title || '제목 없음'}
-                            </h2>
-                            <div style={{
-                                fontSize: isMobile ? '1.1rem' : '1.25rem',
-                                color: '#444', lineHeight: '1.8',
-                                whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                                paddingBottom: '100px'
-                            }}>
-                                {selectedPost.content}
+                            <div>
+                                <h2 style={{
+                                    fontSize: isMobile ? '1.5rem' : '2rem',
+                                    color: '#2C3E50', fontWeight: '900',
+                                    marginBottom: '24px', lineHeight: '1.4',
+                                    borderLeft: '6px solid #FBC02D', paddingLeft: '20px'
+                                }}>
+                                    {selectedPost.title || '제목 없음'}
+                                </h2>
+                                <div style={{
+                                    fontSize: isMobile ? '1.1rem' : '1.25rem',
+                                    color: '#444', lineHeight: '1.8',
+                                    whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                                    paddingBottom: '40px'
+                                }}>
+                                    {selectedPost.content}
+                                </div>
                             </div>
+
+                            {/* 피드백 에디터 섹션 */}
+                            <aside style={{
+                                display: 'flex', flexDirection: 'column', gap: '20px'
+                            }}>
+                                <div style={{
+                                    background: '#F8F9FA', borderRadius: '24px', padding: '24px',
+                                    border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                        <h4 style={{ margin: 0, color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            📝 선생님의 피드백
+                                        </h4>
+                                        <Button
+                                            onClick={handleGenerateSingleAI}
+                                            disabled={isGenerating}
+                                            style={{
+                                                background: '#3498DB', color: 'white', padding: '6px 12px',
+                                                fontSize: '0.8rem', borderRadius: '10px'
+                                            }}
+                                        >
+                                            {isGenerating ? '✨ 분석 중...' : '✨ AI 피드백 생성'}
+                                        </Button>
+                                    </div>
+                                    <textarea
+                                        value={tempFeedback}
+                                        onChange={(e) => setTempFeedback(e.target.value)}
+                                        placeholder="AI 선생님의 도움을 받거나 직접 따뜻한 조언을 남겨주세요..."
+                                        style={{
+                                            width: '100%', minHeight: '300px', padding: '16px',
+                                            borderRadius: '16px', border: '1px solid #DEE2E6',
+                                            fontSize: '0.95rem', lineHeight: '1.6', outline: 'none',
+                                            resize: 'none', transition: 'all 0.2s', color: '#2C3E50'
+                                        }}
+                                        onFocus={e => e.target.style.borderColor = '#3498DB'}
+                                        onBlur={e => e.target.style.borderColor = '#DEE2E6'}
+                                    />
+                                    <p style={{ margin: '12px 0 0 0', fontSize: '0.8rem', color: '#95A5A6', textAlign: 'center' }}>
+                                        * 피드백은 [다시 쓰기] 또는 [승인] 요청 시 학생에게 전달됩니다.
+                                    </p>
+                                </div>
+                            </aside>
                         </main>
 
                         <footer style={{

@@ -17,6 +17,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
     const [isReturned, setIsReturned] = useState(false); // 선생님이 다시 쓰기를 요청했는지 여부
     const [isConfirmed, setIsConfirmed] = useState(false); // 선생님이 승인하여 포인트가 지급되었는지 여부
     const [isSubmitted, setIsSubmitted] = useState(false); // 제출 여부
+    const [aiFeedback, setAiFeedback] = useState(''); // 상시 피드백 내용
 
     useEffect(() => {
         if (missionId) {
@@ -53,6 +54,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                     setIsReturned(postData.is_returned || false);
                     setIsConfirmed(postData.is_confirmed || false);
                     setIsSubmitted(postData.is_submitted || false);
+                    setAiFeedback(postData.ai_feedback || '');
                 }
             }
         } catch (err) {
@@ -281,7 +283,21 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                         <span style={{ fontSize: '1.5rem' }}>♻️</span>
                         <div>
                             <div style={{ fontWeight: '900', color: '#E65100', fontSize: '1rem' }}>선생님이 다시 쓰기를 요청하셨습니다.</div>
-                            <div style={{ fontSize: '0.85rem', color: '#EF6C00' }}>내용을 보완해서 다시 한번 멋진 글을 완성해볼까요?</div>
+                            <div style={{ fontSize: '0.85rem', color: '#EF6C00', marginBottom: aiFeedback ? '8px' : '0' }}>내용을 보완해서 다시 한번 멋진 글을 완성해볼까요?</div>
+                            {aiFeedback && (
+                                <div style={{
+                                    background: 'rgba(255,255,255,0.5)',
+                                    padding: '12px',
+                                    borderRadius: '12px',
+                                    fontSize: '0.9rem',
+                                    color: '#444',
+                                    whiteSpace: 'pre-wrap',
+                                    lineHeight: '1.6',
+                                    border: '1px solid rgba(230, 81, 0, 0.1)'
+                                }}>
+                                    {aiFeedback}
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 )}
