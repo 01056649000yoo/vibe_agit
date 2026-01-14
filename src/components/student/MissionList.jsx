@@ -18,25 +18,49 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
 
     const fetchData = async () => {
         setLoading(true);
-        const currentStudent = studentSession || JSON.parse(localStorage.getItem('student_session'));
-        if (!currentStudent) return;
+        console.log("🔍 [MissionList] 데이터 로딩 시작...");
+
+        // 1. 세션 정보 확인 (prop 우선, 없으면 localStorage)
+        let currentStudent = studentSession;
+        if (!currentStudent) {
+            const saved = localStorage.getItem('student_session');
+            if (saved) {
+                currentStudent = JSON.parse(saved);
+            }
+        }
+
+        console.log("👤 [MissionList] 현재 학생 정보:", currentStudent);
+
+        if (!currentStudent || (!currentStudent.classId && !currentStudent.class_id)) {
+            console.error("❌ [MissionList] 유효한 학생 세션이 없습니다.");
+            alert('로그인 정보가 올바르지 않습니다. 다시 로그인해 주세요! 🎒');
+            if (onBack) onBack();
+            setLoading(false); // Ensure loading state is reset even on early exit
+            return;
+        }
+
+        const classId = currentStudent.classId || currentStudent.class_id;
+        const studentId = currentStudent.id;
 
         try {
-            // 1. 미션 목록 가져오기 (학생 소속 반 기준)
+            // 2. 미션 목록 가져오기 (학생 소속 반 기준)
+            console.log(`📡 [MissionList] 미션 조회 중... (반 ID: ${classId})`);
             const { data: mData, error: mError } = await supabase
                 .from('writing_missions')
                 .select('*')
-                .eq('class_id', currentStudent.class_id)
+                .eq('class_id', classId)
                 .order('created_at', { ascending: false });
 
             if (mError) throw mError;
+            console.log(`✅ [MissionList] 미션 로드 성공: ${mData?.length || 0}건`);
             setMissions(mData || []);
 
-            // 2. 학생의 해당 미션들에 대한 제출물 현황 가져오기
+            // 3. 학생의 해당 미션들에 대한 제출물 현황 가져오기
+            console.log(`📡 [MissionList] 학생 제출물 조회 중... (학생 ID: ${studentId})`);
             const { data: pData, error: pError } = await supabase
                 .from('student_posts')
                 .select('*')
-                .eq('student_id', currentStudent.id);
+                .eq('student_id', studentId);
 
             if (pError) throw pError;
 
@@ -46,11 +70,14 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                 pData.forEach(p => postMap[p.mission_id] = p);
             }
             setPosts(postMap);
+            console.log(`✅ [MissionList] 제출 현황 로드 성공`);
 
         } catch (err) {
-            console.error('데이터 로드 실패:', err.message);
+            console.error('❌ [MissionList] 데이터 로드 중 치명적 오류:', err.message);
+            alert('데이터를 불러오는데 실패했습니다. 😢');
         } finally {
             setLoading(false);
+            console.log("🏁 [MissionList] 데이터 로딩 종료");
         }
     };
 
