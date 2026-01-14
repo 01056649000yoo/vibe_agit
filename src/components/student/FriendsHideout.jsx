@@ -13,6 +13,13 @@ const FriendsHideout = ({ studentSession, onBack }) => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [viewingPost, setViewingPost] = useState(null);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // 반응 아이콘 설정
     const reactionIcons = [
@@ -186,6 +193,7 @@ const FriendsHideout = ({ studentSession, onBack }) => {
                         studentSession={studentSession}
                         onClose={() => setViewingPost(null)}
                         reactionIcons={reactionIcons}
+                        isMobile={isMobile}
                     />
                 )}
             </AnimatePresence>
@@ -193,7 +201,7 @@ const FriendsHideout = ({ studentSession, onBack }) => {
     );
 };
 
-const PostDetailModal = ({ post, studentSession, onClose, reactionIcons }) => {
+const PostDetailModal = ({ post, studentSession, onClose, reactionIcons, isMobile }) => {
     const [reactions, setReactions] = useState([]);
     const [comments, setComments] = useState([]);
     const [commentInput, setCommentInput] = useState('');
@@ -307,23 +315,25 @@ const PostDetailModal = ({ post, studentSession, onClose, reactionIcons }) => {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 50, opacity: 0 }}
                 style={{
-                    background: 'white', borderRadius: '32px',
-                    width: '100%', maxWidth: '700px', maxHeight: '90vh',
+                    background: 'white', borderRadius: isMobile ? '24px 24px 0 0' : '32px',
+                    width: '100%', maxWidth: '800px',
+                    maxHeight: isMobile ? '95vh' : '85vh',
                     display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+                    boxShadow: '0 30px 60px rgba(0,0,0,0.12)',
+                    margin: isMobile ? 'auto 0 0 0' : '0 auto'
                 }}
                 onClick={e => e.stopPropagation()}
             >
-                <header style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between' }}>
+                <header style={{ padding: isMobile ? '16px 20px' : '24px 32px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                     <div>
-                        <span style={{ fontSize: '0.9rem', color: '#3498DB', fontWeight: 'bold' }}>{post.students?.name} 학생의 글</span>
-                        <h3 style={{ margin: '4px 0 0 0', fontWeight: '900', color: '#2C3E50' }}>{post.title}</h3>
+                        <span style={{ fontSize: '0.9rem', color: '#3498DB', fontWeight: 'bold', background: '#E3F2FD', padding: '2px 8px', borderRadius: '6px' }}>{post.students?.name} 학생의 글</span>
+                        <h3 style={{ margin: '8px 0 0 0', fontWeight: '900', color: '#2C3E50', fontSize: '1.4rem' }}>{post.title}</h3>
                     </div>
-                    <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ADB5BD' }}>✕</button>
+                    <button onClick={onClose} style={{ background: '#F8F9FA', border: 'none', width: '40px', height: '40px', borderRadius: '50%', fontSize: '1.2rem', cursor: 'pointer', color: '#ADB5BD', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'all 0.2s' }}>✕</button>
                 </header>
 
-                <div style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
-                    <div style={{ fontSize: '1.15rem', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: '#444', marginBottom: '40px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px 20px 40px 20px' : '32px 32px 40px 32px', scrollbarWidth: 'thin' }}>
+                    <div style={{ fontSize: isMobile ? '1rem' : '1.15rem', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: '#444', marginBottom: '40px' }}>
                         {post.content}
                     </div>
 
