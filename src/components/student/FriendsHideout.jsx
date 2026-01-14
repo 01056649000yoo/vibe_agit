@@ -304,36 +304,98 @@ const PostDetailModal = ({ post, studentSession, onClose, reactionIcons, isMobil
             exit={{ opacity: 0 }}
             style={{
                 position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                background: 'rgba(0,0,0,0.6)', zIndex: 1000,
+                background: 'rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                zIndex: 2000,
                 display: 'flex', justifyContent: 'center', alignItems: 'center',
-                padding: '20px'
+                padding: isMobile ? '0' : '20px'
             }}
             onClick={onClose}
         >
             <motion.div
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 50, opacity: 0 }}
+                initial={{ y: 50, scale: 0.95, opacity: 0 }}
+                animate={{ y: 0, scale: 1, opacity: 1 }}
+                exit={{ y: 50, scale: 0.95, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 style={{
-                    background: 'white', borderRadius: isMobile ? '24px 24px 0 0' : '32px',
-                    width: '100%', maxWidth: '800px',
-                    maxHeight: isMobile ? '95vh' : '85vh',
-                    display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                    boxShadow: '0 30px 60px rgba(0,0,0,0.12)',
+                    background: 'white',
+                    borderRadius: isMobile ? '24px 24px 0 0' : '32px',
+                    width: isMobile ? '100%' : '95%',
+                    maxWidth: '800px',
+                    maxHeight: isMobile ? '95vh' : '90vh',
+                    display: 'flex', flexDirection: 'column',
+                    overflow: 'hidden',
+                    boxShadow: '0 40px 100px rgba(0,0,0,0.3)',
                     margin: isMobile ? 'auto 0 0 0' : '0 auto'
                 }}
                 onClick={e => e.stopPropagation()}
             >
-                <header style={{ padding: isMobile ? '16px 20px' : '24px 32px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-                    <div>
-                        <span style={{ fontSize: '0.9rem', color: '#3498DB', fontWeight: 'bold', background: '#E3F2FD', padding: '2px 8px', borderRadius: '6px' }}>{post.students?.name} 학생의 글</span>
-                        <h3 style={{ margin: '8px 0 0 0', fontWeight: '900', color: '#2C3E50', fontSize: '1.4rem' }}>{post.title}</h3>
+                <header style={{
+                    padding: isMobile ? '20px' : '28px 40px',
+                    borderBottom: '1px solid #F1F3F5',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexShrink: 0
+                }}>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                            <span style={{
+                                fontSize: '0.85rem',
+                                color: '#3498DB',
+                                fontWeight: '900',
+                                background: '#E3F2FD',
+                                padding: '4px 10px',
+                                borderRadius: '8px'
+                            }}>
+                                ✍️ {post.students?.name}
+                            </span>
+                            <span style={{ fontSize: '0.8rem', color: '#ADB5BD' }}>친구의 소중한 글</span>
+                        </div>
+                        <h3 style={{
+                            margin: 0,
+                            fontWeight: '900',
+                            color: '#2C3E50',
+                            fontSize: isMobile ? '1.25rem' : '1.6rem',
+                            lineHeight: '1.3'
+                        }}>
+                            {post.title}
+                        </h3>
                     </div>
-                    <button onClick={onClose} style={{ background: '#F8F9FA', border: 'none', width: '40px', height: '40px', borderRadius: '50%', fontSize: '1.2rem', cursor: 'pointer', color: '#ADB5BD', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'all 0.2s' }}>✕</button>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            background: '#F8F9FA',
+                            border: 'none',
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '50%',
+                            fontSize: '1.4rem',
+                            cursor: 'pointer',
+                            color: '#ADB5BD',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            transition: 'all 0.2s',
+                            marginLeft: '16px'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#F1F3F5'}
+                        onMouseLeave={e => e.currentTarget.style.background = '#F8F9FA'}
+                    >
+                        ✕
+                    </button>
                 </header>
 
-                <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px 20px 40px 20px' : '32px 32px 40px 32px', scrollbarWidth: 'thin' }}>
-                    <div style={{ fontSize: isMobile ? '1rem' : '1.15rem', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: '#444', marginBottom: '40px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px 60px 20px' : '40px 40px 80px 40px', scrollbarWidth: 'thin' }}>
+                    <div style={{
+                        fontSize: isMobile ? '1.1rem' : '1.25rem',
+                        lineHeight: '1.9',
+                        whiteSpace: 'pre-wrap',
+                        color: '#34495E',
+                        marginBottom: '60px',
+                        letterSpacing: '-0.01em'
+                    }}>
                         {post.content}
                     </div>
 
