@@ -23,13 +23,11 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const [tempFeedback, setTempFeedback] = useState(''); // 편집 중인 피드백
     const textareaRef = useRef(null);
 
-    // [추가] 피드백 입력창 자동 높이 조절 (최대 높이 제한 추가)
+    // [추가] 피드백 입력창 자동 높이 조절 (스티키 레이아웃에 맞게 높이는 Flex로 제어하도록 변경 가능성 고려하여 auto-height 유지)
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
-            const nextHeight = textareaRef.current.scrollHeight;
-            // 최대 500px까지만 늘어나고 그 이후는 내부 스크롤
-            textareaRef.current.style.height = Math.min(nextHeight, 500) + 'px';
+            textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
         }
     }, [tempFeedback, selectedPost]);
 
@@ -994,16 +992,19 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                 </div>
                             </div>
 
-                            {/* 피드백 에디터 섹션: 데스크탑에서 스티키 적용 */}
+                            {/* 피드백 에디터 섹션: 데스크탑에서 스티키 적용 및 보기 창 높이에 맞춤 */}
                             <aside style={{
-                                display: 'flex', flexDirection: 'column', gap: '20px',
+                                display: 'flex', flexDirection: 'column',
                                 position: isMobile ? 'static' : 'sticky',
-                                top: '0',
-                                height: 'fit-content'
+                                top: '20px', // 헤더 하단 여백 반영
+                                height: isMobile ? 'auto' : 'calc(100vh - 180px)', // 헤더+푸터 여백 고려
+                                minHeight: isMobile ? '400px' : '0'
                             }}>
                                 <div style={{
                                     background: '#F8F9FA', borderRadius: '24px', padding: '24px',
-                                    border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+                                    border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                                    display: 'flex', flexDirection: 'column', flex: 1, // 내부 꽉 채우기
+                                    overflow: 'hidden'
                                 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                         <h4 style={{ margin: 0, color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1026,7 +1027,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                         onChange={(e) => setTempFeedback(e.target.value)}
                                         placeholder="AI 선생님의 도움을 받거나 직접 따뜻한 조언을 남겨주세요..."
                                         style={{
-                                            width: '100%', minHeight: '150px', maxHeight: '500px', padding: '24px',
+                                            width: '100%', flex: 1, minHeight: '150px', padding: '24px',
                                             borderRadius: '20px', border: '1px solid #E0E4E8',
                                             fontSize: '1.1rem', lineHeight: '2', outline: 'none',
                                             resize: 'none', transition: 'all 0.1s', color: '#2C3E50',
