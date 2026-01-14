@@ -20,6 +20,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const [selectedPost, setSelectedPost] = useState(null); // 상세보기용 선택된 글
     const [loadingPosts, setLoadingPosts] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false); // AI 생성 중 상태
+    const [showCompleteToast, setShowCompleteToast] = useState(false); // 완료 알림 상태
     const [tempFeedback, setTempFeedback] = useState(''); // 편집 중인 피드백
     const textareaRef = useRef(null);
 
@@ -256,6 +257,10 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 setSelectedPost(prev => ({ ...prev, ai_feedback: feedback }));
 
                 console.log('✅ AI 피드백이 생성 및 자동 저장되었습니다.');
+
+                // 완료 알림 표시
+                setShowCompleteToast(true);
+                setTimeout(() => setShowCompleteToast(false), 3000);
             } else {
                 alert('AI 피드백을 생성하지 못했습니다. API 키를 확인해 주세요.');
             }
@@ -291,6 +296,10 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                         .eq('id', post.id);
                 }
             }
+            // 완료 알림 표시
+            setShowCompleteToast(true);
+            setTimeout(() => setShowCompleteToast(false), 3000);
+
             alert('모든 글에 대한 AI 피드백 생성 및 다시 쓰기 요청이 완료되었습니다! ✨');
             fetchPostsForMission(selectedMission);
         } catch (err) {
@@ -1021,25 +1030,95 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                             {isGenerating ? '✨ 분석 중...' : '✨ AI 피드백 생성'}
                                         </Button>
                                     </div>
-                                    <textarea
-                                        ref={textareaRef}
-                                        value={tempFeedback}
-                                        onChange={(e) => setTempFeedback(e.target.value)}
-                                        placeholder="AI 선생님의 도움을 받거나 직접 따뜻한 조언을 남겨주세요..."
-                                        style={{
-                                            width: '100%', flex: 1, minHeight: '150px', padding: '24px',
-                                            borderRadius: '20px', border: '1px solid #E0E4E8',
-                                            fontSize: '1.1rem', lineHeight: '2', outline: 'none',
-                                            resize: 'none', transition: 'all 0.1s', color: '#2C3E50',
-                                            backgroundColor: '#fff',
-                                            overflowY: 'auto',
-                                            fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif",
-                                            letterSpacing: '-0.01em',
-                                            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
-                                        }}
-                                        onFocus={e => e.target.style.borderColor = '#3498DB'}
-                                        onBlur={e => e.target.style.borderColor = '#E0E4E8'}
-                                    />
+                                    <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                        <textarea
+                                            ref={textareaRef}
+                                            value={tempFeedback}
+                                            onChange={(e) => setTempFeedback(e.target.value)}
+                                            placeholder="AI 선생님의 도움을 받거나 직접 따뜻한 조언을 남겨주세요..."
+                                            style={{
+                                                width: '100%', flex: 1, minHeight: '150px', padding: '24px',
+                                                borderRadius: '20px', border: '1px solid #E0E4E8',
+                                                fontSize: '1.1rem', lineHeight: '2', outline: 'none',
+                                                resize: 'none', transition: 'all 0.1s', color: '#2C3E50',
+                                                backgroundColor: '#fff',
+                                                overflowY: 'auto',
+                                                fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif",
+                                                letterSpacing: '-0.01em',
+                                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                                            }}
+                                            onFocus={e => e.target.style.borderColor = '#3498DB'}
+                                            onBlur={e => e.target.style.borderColor = '#E0E4E8'}
+                                        />
+
+                                        {/* AI 생성 중 오버레이 */}
+                                        <AnimatePresence>
+                                            {isGenerating && (
+                                                <motion.div
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                    style={{
+                                                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                                        background: 'rgba(255, 255, 255, 0.85)',
+                                                        backdropFilter: 'blur(4px)',
+                                                        display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                                                        borderRadius: '20px', zIndex: 10, textAlign: 'center', padding: '20px'
+                                                    }}
+                                                >
+                                                    <motion.div
+                                                        animate={{
+                                                            scale: [1, 1.2, 1],
+                                                            rotate: [0, 10, -10, 0]
+                                                        }}
+                                                        transition={{ duration: 2, repeat: Infinity }}
+                                                        style={{ fontSize: '3rem', marginBottom: '20px' }}
+                                                    >
+                                                        🤖
+                                                    </motion.div>
+                                                    <h3 style={{ margin: '0 0 10px 0', color: '#2C3E50', fontWeight: '900', fontSize: '1.2rem' }}>
+                                                        AI 선생님이 분석 중입니다...
+                                                    </h3>
+                                                    <p style={{ margin: 0, color: '#64748B', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                                                        문맥과 맞춤법을 꼼꼼히 읽고 있어요.<br />
+                                                        잠시만 기다려주세요! (약 10~15초 소요)
+                                                    </p>
+                                                    <motion.div
+                                                        style={{
+                                                            marginTop: '20px', width: '100px', height: '4px',
+                                                            background: '#E2E8F0', borderRadius: '2px', overflow: 'hidden'
+                                                        }}
+                                                    >
+                                                        <motion.div
+                                                            animate={{ x: [-100, 100] }}
+                                                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                                                            style={{ width: '40px', height: '100%', background: '#3498DB' }}
+                                                        />
+                                                    </motion.div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        {/* 완료 토스트 알림 */}
+                                        <AnimatePresence>
+                                            {showCompleteToast && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: -20 }}
+                                                    style={{
+                                                        position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+                                                        background: '#2D3436', color: 'white', padding: '12px 24px',
+                                                        borderRadius: '30px', fontWeight: 'bold', fontSize: '0.9rem',
+                                                        display: 'flex', alignItems: 'center', gap: '8px', zIndex: 20,
+                                                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                                                    }}
+                                                >
+                                                    <span>✅ AI 피드백이 완료되었습니다!</span>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                     <p style={{ margin: '12px 0 0 0', fontSize: '0.8rem', color: '#95A5A6', textAlign: 'center' }}>
                                         * 피드백은 [다시 쓰기] 또는 [승인] 요청 시 학생에게 전달됩니다.
                                     </p>

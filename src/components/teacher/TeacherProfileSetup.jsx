@@ -163,7 +163,7 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
                         <textarea
                             value={promptTemplate}
                             onChange={(e) => setPromptTemplate(e.target.value)}
-                            placeholder="선생님만의 피드백 규칙을 정해주세요. (예: 다정한 말투로 칭찬 1개, 보완점 1개 써줘. 어려운 단어는 [해설]을 붙여줘.)"
+                            placeholder="선생님만의 피드백 규칙을 정해주세요. (예: 다정한 말투로 칭찬 1개, 보완점 1개 써줘. 글자수는 300자 이내로 작성해줘.)"
                             style={{
                                 width: '100%',
                                 minHeight: '120px',
