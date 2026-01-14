@@ -18,6 +18,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024); // 태블릿/모바일 기준
     const [selectedActivityPost, setSelectedActivityPost] = useState(null); // 최근 활동 클릭 시 상세보기
 
+    // Gemini API Key 관련 상태
+    const [geminiKey, setGeminiKey] = useState('');
+    const [originalKey, setOriginalKey] = useState('');
+    const [isKeyVisible, setIsKeyVisible] = useState(false);
+    const [savingKey, setSavingKey] = useState(false);
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
         window.addEventListener('resize', handleResize);
@@ -27,8 +33,48 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
     useEffect(() => {
         if (session?.user?.id) {
             fetchAllClasses();
+            fetchGeminiKey();
         }
     }, [session?.user?.id]);
+
+    const fetchGeminiKey = async () => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('gemini_api_key')
+            .eq('id', session.user.id)
+            .single();
+
+        if (data?.gemini_api_key) {
+            setOriginalKey(data.gemini_api_key);
+            setGeminiKey(data.gemini_api_key);
+        }
+    };
+
+    const handleSaveGeminiKey = async () => {
+        if (!geminiKey.trim()) return;
+        setSavingKey(true);
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ gemini_api_key: geminiKey.trim() })
+                .eq('id', session.user.id);
+
+            if (error) throw error;
+            setOriginalKey(geminiKey.trim());
+            alert('Gemini API 키가 안전하게 저장되었습니다! 🔐');
+        } catch (err) {
+            console.error('키 저장 실패:', err.message);
+            alert('저장 중 오류가 발생했습니다.');
+        } finally {
+            setSavingKey(false);
+        }
+    };
+
+    const maskKey = (key) => {
+        if (!key) return '';
+        if (key.length <= 4) return '****';
+        return `${key.slice(0, 2)}...${key.slice(-2)}`;
+    };
 
     const fetchAllClasses = async () => {
         setLoadingClasses(true);
@@ -253,13 +299,74 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                 </aside>
 
                                 {activeClass && (
-                                    <section style={{
-                                        overflow: 'hidden',
-                                        background: 'white', borderRadius: '24px', padding: isMobile ? '16px' : '24px',
-                                        border: '1px solid #E9ECEF', boxSizing: 'border-box', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
-                                        width: '100%'
-                                    }}>
-                                        <StudentManager classId={activeClass.id} isDashboardMode={false} />
+                                    <section style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        <section style={{
+                                            overflow: 'hidden',
+                                            background: 'white', borderRadius: '24px', padding: isMobile ? '16px' : '24px',
+                                            border: '1px solid #E9ECEF', boxSizing: 'border-box', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+                                            width: '100%'
+                                        }}>
+                                            <StudentManager classId={activeClass.id} isDashboardMode={false} />
+                                        </section>
+
+                                        {/* Gemini API Key 설정 영역 */}
+                                        <section style={{
+                                            background: 'linear-gradient(135deg, #FFFFFF 0%, #F0F4F8 100%)',
+                                            borderRadius: '24px', padding: isMobile ? '20px' : '28px',
+                                            border: '1px solid #D1D9E6', boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+                                            width: '100%', boxSizing: 'border-box'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                                                <span style={{ fontSize: '1.5rem' }}>🔐</span>
+                                                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>AI 자동 피드백 보안 센터</h3>
+                                            </div>
+
+                                            <div style={{ background: 'white', padding: '20px', borderRadius: '18px', border: '1px solid #E9ECEF' }}>
+                                                <label style={{ display: 'block', fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold', marginBottom: '10px' }}>
+                                                    Gemini API Key
+                                                </label>
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    <div style={{ position: 'relative', flex: 1 }}>
+                                                        <input
+                                                            type={isKeyVisible ? "text" : "password"}
+                                                            value={geminiKey}
+                                                            onChange={(e) => setGeminiKey(e.target.value)}
+                                                            placeholder="키를 입력해 주세요 (AI...)"
+                                                            style={{
+                                                                width: '100%', padding: '12px 16px', borderRadius: '12px',
+                                                                border: '1px solid #DEE2E6', outline: 'none', transition: 'all 0.2s',
+                                                                fontSize: '0.9rem', color: '#2C3E50'
+                                                            }}
+                                                        />
+                                                        <button
+                                                            onClick={() => setIsKeyVisible(!isKeyVisible)}
+                                                            style={{
+                                                                position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                                                                background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem'
+                                                            }}
+                                                        >
+                                                            {isKeyVisible ? '🙈' : '👁️'}
+                                                        </button>
+                                                    </div>
+                                                    <Button
+                                                        onClick={handleSaveGeminiKey}
+                                                        disabled={savingKey || geminiKey === originalKey}
+                                                        style={{ borderRadius: '12px', minWidth: '80px' }}
+                                                    >
+                                                        {savingKey ? '저장 중' : '저장'}
+                                                    </Button>
+                                                </div>
+                                                {originalKey && (
+                                                    <p style={{ marginTop: '12px', fontSize: '0.8rem', color: '#95A5A6', margin: '12px 0 0 0' }}>
+                                                        현재 저장된 키: <code style={{ background: '#F8F9FA', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{maskKey(originalKey)}</code>
+                                                    </p>
+                                                )}
+                                                <p style={{ marginTop: '16px', fontSize: '0.8rem', color: '#7F8C8D', lineHeight: '1.5' }}>
+                                                    * 입력하신 키는 학생들의 글에 대한 **AI 자동 피드백** 생성에 사용됩니다.<br />
+                                                    * 암호화되어 안전하게 보관되며, 언제든 수정하실 수 있습니다.
+                                                </p>
+                                            </div>
+                                        </section>
                                     </section>
                                 )}
                             </div>
