@@ -218,6 +218,55 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
         }
     };
 
+    // 일괄 승인 처리
+    const handleBulkApprove = async () => {
+        const toApprove = posts.filter(p => p.is_submitted && !p.is_confirmed);
+
+        if (toApprove.length === 0) {
+            alert('승인 대기 중인 글이 없습니다.');
+            return;
+        }
+
+        if (!confirm(`제출된 ${toApprove.length}개의 글을 모두 승인하고 포인트를 지급하시겠습니까? 🎁\n승인 후에는 취소할 수 없습니다.`)) return;
+
+        setLoadingPosts(true);
+        try {
+            for (const post of toApprove) {
+                // 1. 포인트 계산
+                let amount = selectedMission.base_reward || 0;
+                let isBonus = false;
+                if (selectedMission.bonus_threshold && post.char_count >= selectedMission.bonus_threshold) {
+                    amount += (selectedMission.bonus_reward || 0);
+                    isBonus = true;
+                }
+
+                // 2. 글 승인 상태 업데이트
+                await supabase.from('student_posts').update({ is_confirmed: true }).eq('id', post.id);
+
+                // 3. 학생 총점 업데이트
+                const { data: stData } = await supabase.from('students').select('total_points').eq('id', post.student_id).single();
+                const newPoints = (stData?.total_points || 0) + amount;
+                await supabase.from('students').update({ total_points: newPoints }).eq('id', post.student_id);
+
+                // 4. 포인트 내역 저장
+                await supabase.from('point_logs').insert({
+                    student_id: post.student_id,
+                    amount: amount,
+                    reason: `미션 일괄 승인 보상: ${selectedMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`
+                });
+            }
+
+            alert(`🎉 ${toApprove.length}건의 제출물이 모두 승인되었습니다!`);
+            fetchPostsForMission(selectedMission);
+            fetchMissions(); // 메인 화면 통계도 갱신
+        } catch (err) {
+            console.error('일괄 승인 실패:', err.message);
+            alert('처리 중 오류가 발생했습니다.');
+        } finally {
+            setLoadingPosts(false);
+        }
+    };
+
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
             {/* Sticky Header 영역 */}
@@ -471,6 +520,26 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                                     <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>아직 제출한 학생이 없습니다. 🐥</div>
                                 ) : (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        {/* 일괄 승인 버튼 영역 */}
+                                        {posts.some(p => p.is_submitted && !p.is_confirmed) && (
+                                            <div style={{ padding: '0 0 16px 0', borderBottom: '1px dashed #EEE', marginBottom: '8px' }}>
+                                                <Button
+                                                    onClick={handleBulkApprove}
+                                                    disabled={loadingPosts}
+                                                    style={{
+                                                        width: '100%',
+                                                        background: '#E8F5E9',
+                                                        color: '#2E7D32',
+                                                        border: '2px solid #C8E6C9',
+                                                        fontWeight: '900',
+                                                        fontSize: '0.95rem'
+                                                    }}
+                                                >
+                                                    ✅ 제출된 모든 글 일괄 승인하기
+                                                </Button>
+                                            </div>
+                                        )}
+
                                         {posts.map(post => (
                                             <div
                                                 key={post.id}
