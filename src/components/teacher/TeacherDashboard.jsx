@@ -23,6 +23,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
     const [originalKey, setOriginalKey] = useState('');
     const [isKeyVisible, setIsKeyVisible] = useState(false);
     const [savingKey, setSavingKey] = useState(false);
+    const [testingKey, setTestingKey] = useState(false); // [추가] 연결 테스트 상태
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -67,6 +68,45 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
             alert('저장 중 오류가 발생했습니다.');
         } finally {
             setSavingKey(false);
+        }
+    };
+
+    // [추가] API 연결 테스트 함수
+    const handleTestGeminiKey = async () => {
+        if (!geminiKey.trim()) {
+            alert('테스트할 API 키를 먼저 입력해주세요! 🔑');
+            return;
+        }
+        setTestingKey(true);
+        try {
+            const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+            const response = await fetch(`${baseUrl}?key=${geminiKey.trim()}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: "정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘."
+                        }]
+                    }]
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '응답 없음';
+                alert(`✅ 연결 성공!\nAI 응답: ${aiResponse}`);
+            } else {
+                const errorData = await response.json();
+                const status = response.status;
+                const msg = errorData?.error?.message || '알 수 없는 오류';
+                throw new Error(`[Status ${status}] ${msg}`);
+            }
+        } catch (err) {
+            console.error('API 테스트 실패:', err.message);
+            alert(`❌ 연결 실패: ${err.message}\n\n키가 올바른지, 혹은 모델(gemini-3-flash-preview) 권한이 있는지 확인해 주세요.`);
+        } finally {
+            setTestingKey(false);
         }
     };
 
@@ -350,10 +390,18 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                                     </div>
                                                     <Button
                                                         onClick={handleSaveGeminiKey}
-                                                        disabled={savingKey || geminiKey === originalKey}
+                                                        disabled={savingKey || testingKey || geminiKey === originalKey}
                                                         style={{ borderRadius: '12px', minWidth: '80px' }}
                                                     >
                                                         {savingKey ? '저장 중' : '저장'}
+                                                    </Button>
+                                                    <Button
+                                                        variant="secondary"
+                                                        onClick={handleTestGeminiKey}
+                                                        disabled={savingKey || testingKey}
+                                                        style={{ borderRadius: '12px', minWidth: '100px', background: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9' }}
+                                                    >
+                                                        {testingKey ? '확인 중...' : '연결 테스트'}
                                                     </Button>
                                                 </div>
                                                 {originalKey && (

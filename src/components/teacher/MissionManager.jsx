@@ -170,9 +170,9 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 `;
 
         try {
-            // [최종 해결 시도] 공식 문서 REST 예시를 따라 v1beta 엔드포인트 사용
-            // 참고: https://ai.google.dev/gemini-api/docs/api-key?hl=ko
-            const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+            // [최종 해결 시도] 구글 AI 스튜디오 최신 공식 주소 및 모델 사용 (gemini-3-flash-preview)
+            // 참고: https://ai.google.dev/gemini-api/docs
+            const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
 
             const response = await fetch(`${baseUrl}?key=${apiKey}`, {
                 method: 'POST',
