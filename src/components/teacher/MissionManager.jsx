@@ -265,11 +265,11 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const handleBulkAIAction = async () => {
         const targetPosts = posts.filter(p => p.is_submitted && !p.ai_feedback && !p.is_confirmed);
         if (targetPosts.length === 0) {
-            alert('피드백이 필요한 새로운 글이 없습니다.');
+            alert('피드백이 필요한 새로운 미확인 글이 없습니다.');
             return;
         }
 
-        if (!confirm(`${targetPosts.length}개의 글에 대해 AI 피드백을 일괄 생성하시겠습니까? 🤖\n잠시 시간이 걸릴 수 있습니다.`)) return;
+        if (!confirm(`${targetPosts.length}개의 글에 대해 AI 피드백을 생성하고, 동시에 '다시 쓰기'를 일괄 요청하시겠습니까? 🤖♻️\n학생들에게 자동으로 피드백이 전달됩니다.`)) return;
 
         setIsGenerating(true);
         try {
@@ -278,11 +278,15 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 if (feedback) {
                     await supabase
                         .from('student_posts')
-                        .update({ ai_feedback: feedback })
+                        .update({
+                            ai_feedback: feedback,
+                            is_submitted: false,  // 다시 쓰기를 위해 미제출 상태로 전환
+                            is_returned: true     // 다시 쓰기 요청 상태 활성화
+                        })
                         .eq('id', post.id);
                 }
             }
-            alert('모든 글에 대한 AI 피드백 생성이 완료되었습니다! ✨');
+            alert('모든 글에 대한 AI 피드백 생성 및 다시 쓰기 요청이 완료되었습니다! ✨');
             fetchPostsForMission(selectedMission);
         } catch (err) {
             alert('일괄 처리 중 오류가 발생했습니다.');
