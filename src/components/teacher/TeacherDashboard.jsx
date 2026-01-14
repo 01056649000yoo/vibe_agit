@@ -16,6 +16,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
     const [classes, setClasses] = useState([]);
     const [loadingClasses, setLoadingClasses] = useState(true);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024); // 태블릿/모바일 기준
+    const [selectedActivityPost, setSelectedActivityPost] = useState(null); // 최근 활동 클릭 시 상세보기
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -220,7 +221,10 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                         overflow: 'hidden',
                                         width: '100%', boxSizing: 'border-box'
                                     }}>
-                                        <RecentActivity classId={activeClass?.id} />
+                                        <RecentActivity
+                                            classId={activeClass?.id}
+                                            onPostClick={(post) => setSelectedActivityPost(post)}
+                                        />
                                     </section>
                                 </aside>
                             </div>
@@ -263,12 +267,41 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                     )}
                 </Suspense>
             </main>
+
+            {/* 최근 활동 상세보기 모달 (선생님용) */}
+            {selectedActivityPost && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.7)', zIndex: 2000,
+                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    padding: '20px'
+                }} onClick={() => setSelectedActivityPost(null)}>
+                    <div style={{
+                        background: 'white', borderRadius: '24px', width: '100%', maxWidth: '800px',
+                        maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden'
+                    }} onClick={e => e.stopPropagation()}>
+                        <header style={{ padding: '20px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <span style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.9rem' }}>{selectedActivityPost.students?.name} 학생의 글</span>
+                                <h3 style={{ margin: '4px 0 0 0', color: '#2C3E50', fontWeight: '900' }}>{selectedActivityPost.title}</h3>
+                            </div>
+                            <button onClick={() => setSelectedActivityPost(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ADB5BD' }}>✕</button>
+                        </header>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '32px', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: '#444', fontSize: '1.1rem' }}>
+                            {selectedActivityPost.content}
+                        </div>
+                        <footer style={{ padding: '20px', borderTop: '1px solid #EEE', textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem' }}>
+                            미션: {selectedActivityPost.writing_missions?.title} | 글자 수: {selectedActivityPost.char_count}자
+                        </footer>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
 // 최근 활동 요약 컴포넌트
-const RecentActivity = ({ classId }) => {
+const RecentActivity = ({ classId, onPostClick }) => {
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -282,12 +315,13 @@ const RecentActivity = ({ classId }) => {
             const { data, error } = await supabase
                 .from('student_posts')
                 .select(`
-                    id, created_at, mission_id, student_id,
-                    students!inner(name, class_id)
+                    id, created_at, title, content, char_count, is_confirmed,
+                    students!inner(name, class_id),
+                    writing_missions!inner(title)
                 `)
                 .eq('students.class_id', classId)
                 .order('created_at', { ascending: false })
-                .limit(4);
+                .limit(20);
 
             if (error) throw error;
             setActivities(data || []);
@@ -298,28 +332,73 @@ const RecentActivity = ({ classId }) => {
         }
     };
 
+    const timeAgo = (date) => {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        if (seconds < 60) return '방금 전';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}분 전`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}시간 전`;
+        return new Date(date).toLocaleDateString([], { month: '2-digit', day: '2-digit' });
+    };
+
     return (
         <div style={{ width: '100%' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: '#212529', fontWeight: '900' }}>🔔 최근 작성된 글</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: '#212529', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🔔 최근 활동
+            </h3>
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                gap: '8px',
+                paddingRight: '4px', // 스크롤바 공간
+                scrollbarWidth: 'thin'
+            }}>
                 {loading ? (
-                    <p style={{ textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem' }}>로딩 중...</p>
+                    <p style={{ textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem', padding: '20px' }}>로딩 중...</p>
                 ) : activities.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem', padding: '20px' }}>아직 등록된 글이 없어요. ✍️</p>
+                    <p style={{ textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem', padding: '40px' }}>아직 활동 내용이 없어요. ✍️</p>
                 ) : (
                     activities.map((act) => (
-                        <div key={act.id} style={{
-                            padding: '12px 16px', borderRadius: '12px', background: '#F8F9FA',
-                            border: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            width: '100%', boxSizing: 'border-box', wordBreak: 'keep-all', overflowWrap: 'break-word'
-                        }}>
-                            <div>
-                                <span style={{ fontWeight: 'bold', color: '#3498DB', fontSize: '0.9rem' }}>{act.students?.name}</span>
-                                <span style={{ fontSize: '0.85rem', color: '#495057', marginLeft: '8px' }}>새 글 등록</span>
+                        <div
+                            key={act.id}
+                            onClick={() => onPostClick && onPostClick(act)}
+                            style={{
+                                padding: '12px 14px',
+                                borderRadius: '12px',
+                                background: '#FFFFFF',
+                                border: '1px solid #F1F3F5',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                boxSizing: 'border-box'
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.background = '#F8F9FA';
+                                e.currentTarget.style.transform = 'translateX(4px)';
+                                e.currentTarget.style.borderColor = '#3498DB';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.background = '#FFFFFF';
+                                e.currentTarget.style.transform = 'translateX(0)';
+                                e.currentTarget.style.borderColor = '#F1F3F5';
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                                <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '0.9rem' }}>{act.students?.name}</span>
+                                <span style={{ fontSize: '0.75rem', color: '#ADB5BD', fontWeight: 'bold' }}>{timeAgo(act.created_at)}</span>
                             </div>
-                            <span style={{ fontSize: '0.75rem', color: '#ADB5BD' }}>
-                                {new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                            <div style={{
+                                fontSize: '0.85rem',
+                                color: '#7F8C8D',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                width: '100%'
+                            }}>
+                                {act.title || '제목 없는 글'}
+                            </div>
                         </div>
                     ))
                 )}
