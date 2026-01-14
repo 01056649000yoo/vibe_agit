@@ -23,11 +23,13 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const [tempFeedback, setTempFeedback] = useState(''); // 편집 중인 피드백
     const textareaRef = useRef(null);
 
-    // [추가] 피드백 입력창 자동 높이 조절
+    // [추가] 피드백 입력창 자동 높이 조절 (최대 높이 제한 추가)
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+            const nextHeight = textareaRef.current.scrollHeight;
+            // 최대 500px까지만 늘어나고 그 이후는 내부 스크롤
+            textareaRef.current.style.height = Math.min(nextHeight, 500) + 'px';
         }
     }, [tempFeedback, selectedPost]);
 
@@ -992,9 +994,12 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                 </div>
                             </div>
 
-                            {/* 피드백 에디터 섹션 */}
+                            {/* 피드백 에디터 섹션: 데스크탑에서 스티키 적용 */}
                             <aside style={{
-                                display: 'flex', flexDirection: 'column', gap: '20px'
+                                display: 'flex', flexDirection: 'column', gap: '20px',
+                                position: isMobile ? 'static' : 'sticky',
+                                top: '0',
+                                height: 'fit-content'
                             }}>
                                 <div style={{
                                     background: '#F8F9FA', borderRadius: '24px', padding: '24px',
@@ -1021,12 +1026,12 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                         onChange={(e) => setTempFeedback(e.target.value)}
                                         placeholder="AI 선생님의 도움을 받거나 직접 따뜻한 조언을 남겨주세요..."
                                         style={{
-                                            width: '100%', minHeight: '150px', padding: '24px',
+                                            width: '100%', minHeight: '150px', maxHeight: '500px', padding: '24px',
                                             borderRadius: '20px', border: '1px solid #E0E4E8',
                                             fontSize: '1.1rem', lineHeight: '2', outline: 'none',
                                             resize: 'none', transition: 'all 0.1s', color: '#2C3E50',
                                             backgroundColor: '#fff',
-                                            overflow: 'hidden',
+                                            overflowY: 'auto',
                                             fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif",
                                             letterSpacing: '-0.01em',
                                             boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
