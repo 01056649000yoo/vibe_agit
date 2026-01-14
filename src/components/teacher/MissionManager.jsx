@@ -391,50 +391,109 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         }
     };
 
-    // 일괄 승인 처리
-    const handleBulkApprove = async () => {
-        const toApprove = posts.filter(p => p.is_submitted && !p.is_confirmed);
-
-        if (toApprove.length === 0) {
-            alert('승인 대기 중인 글이 없습니다.');
-            return;
-        }
-
-        if (!confirm(`제출된 ${toApprove.length}개의 글을 모두 승인하고 포인트를 지급하시겠습니까? 🎁\n승인 후에는 취소할 수 없습니다.`)) return;
+    // [추가] 승인 취소 및 포인트 회수 처리 (실수 방어)
+    const handleRecovery = async (post) => {
+        if (!confirm('승인을 취소하고 지급된 포인트를 회수하시겠습니까? ⚠️\n학생의 총점에서 해당 포인트가 차감됩니다.')) return;
 
         setLoadingPosts(true);
         try {
-            for (const post of toApprove) {
-                // 1. 포인트 계산
-                let amount = selectedMission.base_reward || 0;
-                let isBonus = false;
-                if (selectedMission.bonus_threshold && post.char_count >= selectedMission.bonus_threshold) {
-                    amount += (selectedMission.bonus_reward || 0);
-                    isBonus = true;
-                }
+            // 1. 해당 글의 지급 내역 확인 (로그에서 미션 제목으로 검색)
+            const { data: logs, error: logFetchError } = await supabase
+                .from('point_logs')
+                .select('*')
+                .eq('student_id', post.student_id)
+                .ilike('reason', `%${selectedMission.title}%`)
+                .order('created_at', { ascending: false })
+                .limit(1);
 
-                // 2. 글 승인 상태 업데이트
-                await supabase.from('student_posts').update({ is_confirmed: true }).eq('id', post.id);
+            if (logFetchError) throw logFetchError;
 
-                // 3. 학생 총점 업데이트
-                const { data: stData } = await supabase.from('students').select('total_points').eq('id', post.student_id).single();
-                const newPoints = (stData?.total_points || 0) + amount;
-                await supabase.from('students').update({ total_points: newPoints }).eq('id', post.student_id);
-
-                // 4. 포인트 내역 저장
-                await supabase.from('point_logs').insert({
-                    student_id: post.student_id,
-                    amount: amount,
-                    reason: `미션 일괄 승인 보상: ${selectedMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`
-                });
+            if (!logs || logs.length === 0) {
+                alert('해당 글에 대한 지급 내역을 찾을 수 없어 회수가 불가능합니다.');
+                return;
             }
 
-            alert(`🎉 ${toApprove.length}건의 제출물이 모두 승인되었습니다!`);
+            const amountToRecover = logs[0].amount;
+
+            // 2. 글 승인 상태 원복 (is_confirmed: false, 다시 제출된 상태로)
+            const { error: postUpdateError } = await supabase
+                .from('student_posts')
+                .update({ is_confirmed: false, is_submitted: true })
+                .eq('id', post.id);
+
+            if (postUpdateError) throw postUpdateError;
+
+            // 3. 학생 총점 차감
+            const { data: stData } = await supabase
+                .from('students')
+                .select('total_points')
+                .eq('id', post.student_id)
+                .single();
+
+            const newPoints = Math.max(0, (stData?.total_points || 0) - amountToRecover);
+            await supabase.from('students').update({ total_points: newPoints }).eq('id', post.student_id);
+
+            // 4. 회수 내역 저장 (음수 금액으로 저장)
+            await supabase.from('point_logs').insert({
+                student_id: post.student_id,
+                amount: -amountToRecover,
+                reason: `[회수] 글쓰기 승인 취소: ${selectedMission.title}`
+            });
+
+            alert(`✅ ${amountToRecover}포인트 회수 및 승인 취소가 완료되었습니다.`);
+            setSelectedPost(null);
             fetchPostsForMission(selectedMission);
-            fetchMissions(); // 메인 화면 통계도 갱신
+            fetchMissions();
         } catch (err) {
-            console.error('일괄 승인 실패:', err.message);
-            alert('처리 중 오류가 발생했습니다.');
+            console.error('회수 실패:', err.message);
+            alert('회수 처리 중 오류가 발생했습니다.');
+        } finally {
+            setLoadingPosts(false);
+        }
+    };
+
+    // [추가] 일괄 승인 취소 및 포인트 회수
+    const handleBulkRecovery = async () => {
+        const toRecover = posts.filter(p => p.is_confirmed);
+        if (toRecover.length === 0) {
+            alert('회수 가능한(승인 완료된) 글이 없습니다.');
+            return;
+        }
+
+        if (!confirm(`${toRecover.length}개의 글에 대해 승인을 취소하고 포인트를 일괄 회수하시겠습니까? ⚠️\n지급되었던 포인트가 모두 차감됩니다.`)) return;
+
+        setLoadingPosts(true);
+        try {
+            for (const post of toRecover) {
+                // 회수 로직 반복
+                const { data: logs } = await supabase
+                    .from('point_logs')
+                    .select('amount')
+                    .eq('student_id', post.student_id)
+                    .ilike('reason', `%${selectedMission.title}%`)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (logs && logs.length > 0) {
+                    const amount = logs[0].amount;
+                    if (amount > 0) {
+                        await supabase.from('student_posts').update({ is_confirmed: false, is_submitted: true }).eq('id', post.id);
+                        const { data: st } = await supabase.from('students').select('total_points').eq('id', post.student_id).single();
+                        await supabase.from('students').update({ total_points: Math.max(0, (st?.total_points || 0) - amount) }).eq('id', post.student_id);
+                        await supabase.from('point_logs').insert({
+                            student_id: post.student_id,
+                            amount: -amount,
+                            reason: `[일괄 회수] 승인 취소: ${selectedMission.title}`
+                        });
+                    }
+                }
+            }
+            alert('일괄 회수 처리가 원활하게 완료되었습니다.');
+            fetchPostsForMission(selectedMission);
+            fetchMissions();
+        } catch (err) {
+            console.error('일괄 회수 실패:', err.message);
+            alert('일괄 회수 중 오류가 발생했습니다.');
         } finally {
             setLoadingPosts(false);
         }
@@ -726,6 +785,23 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                                     ✅ 제출글 일괄 승인
                                                 </Button>
                                             )}
+
+                                            {posts.some(p => p.is_confirmed) && (
+                                                <Button
+                                                    onClick={handleBulkRecovery}
+                                                    disabled={isGenerating || loadingPosts}
+                                                    style={{
+                                                        flex: 1,
+                                                        background: '#FFEBEE',
+                                                        color: '#C62828',
+                                                        border: '2px solid #FFCDD2',
+                                                        fontWeight: '900',
+                                                        fontSize: '0.9rem'
+                                                    }}
+                                                >
+                                                    ⚠️ 일괄 승인 취소/회수
+                                                </Button>
+                                            )}
                                         </div>
 
                                         {posts.map(post => (
@@ -830,9 +906,15 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                     </>
                                 )}
                                 {selectedPost.is_confirmed && (
-                                    <span style={{ color: '#2E7D32', fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        ✅ 포인트 지급 완료
-                                    </span>
+                                    <Button
+                                        onClick={() => handleRecovery(selectedPost)}
+                                        style={{
+                                            background: '#FFEBEE', color: '#C62828', border: '1px solid #FFCDD2',
+                                            padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
+                                        }}
+                                    >
+                                        ⚠️ 승인 취소 & 포인트 회수
+                                    </Button>
                                 )}
                             </div>
                         </header>
