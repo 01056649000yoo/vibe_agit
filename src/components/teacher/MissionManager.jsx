@@ -137,27 +137,18 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 
     // AI 피드백 생성 함수
     const fetchAIFeedback = async (postTitle, postContent) => {
-        let apiKey = profile?.gemini_api_key;
+        // [강화] Props에 의존하지 않고 항상 DB에서 최신 API 키 직접 조회
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: profileData } = await supabase
+            .from('profiles')
+            .select('gemini_api_key')
+            .eq('id', user?.id)
+            .single();
 
-        // [수정] prop에 키가 없으면 DB에서 직접 다시 조회 (실시간성 확보)
-        if (!apiKey) {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const { data } = await supabase
-                        .from('profiles')
-                        .select('gemini_api_key')
-                        .eq('id', user.id)
-                        .single();
-                    apiKey = data?.gemini_api_key;
-                }
-            } catch (err) {
-                console.error('API 키 조회 실패:', err);
-            }
-        }
+        const apiKey = profileData?.gemini_api_key;
 
         if (!apiKey) {
-            alert('대시보드 관리 설정에서 Gemini API 키를 먼저 등록해 주세요! 🔐');
+            alert('Gemini API 키가 등록되지 않았습니다. [설정] 메뉴에서 키를 먼저 등록해주세요! 🔐');
             return null;
         }
 
