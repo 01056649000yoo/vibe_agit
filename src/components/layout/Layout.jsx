@@ -6,10 +6,10 @@ import React from 'react';
 const Layout = ({ children, fullHeight = true, full = false }) => {
     const layoutStyle = full ? {
         width: '100%',
-        height: '100vh',
+        minHeight: '100vh',
         boxSizing: 'border-box',
         background: '#F8F9FA',
-        overflow: 'hidden'
+        overflowY: 'auto'
     } : {
         display: 'flex',
         flexDirection: 'column',

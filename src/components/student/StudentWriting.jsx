@@ -195,7 +195,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
     if (!mission) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 미션을 찾을 수 없습니다.</p><Button onClick={onBack}>돌아가기</Button></Card>;
 
     return (
-        <Card style={{ maxWidth: '850px', padding: '32px', border: 'none', background: '#FFFFFF', boxShadow: '0 15px 40px rgba(0,0,0,0.08)' }}>
+        <Card style={{ maxWidth: '850px', padding: '32px', border: 'none', background: '#FFFFFF', boxShadow: '0 15px 40px rgba(0,0,0,0.08)', margin: '20px auto 40px auto' }}>
             {/* 상단 헤더 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
                 <Button variant="ghost" size="sm" onClick={onBack} disabled={submitting}>
@@ -286,14 +286,17 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
                             <div style={{ fontSize: '0.85rem', color: '#EF6C00', marginBottom: aiFeedback ? '8px' : '0' }}>내용을 보완해서 다시 한번 멋진 글을 완성해볼까요?</div>
                             {aiFeedback && (
                                 <div style={{
-                                    background: 'rgba(255,255,255,0.5)',
-                                    padding: '12px',
-                                    borderRadius: '12px',
-                                    fontSize: '0.9rem',
+                                    background: 'rgba(255,255,255,0.7)',
+                                    padding: '20px',
+                                    borderRadius: '16px',
+                                    fontSize: '1rem',
                                     color: '#444',
                                     whiteSpace: 'pre-wrap',
-                                    lineHeight: '1.6',
-                                    border: '1px solid rgba(230, 81, 0, 0.1)'
+                                    lineHeight: '1.8',
+                                    border: '1px solid rgba(230, 81, 0, 0.2)',
+                                    maxHeight: '350px',
+                                    overflowY: 'auto',
+                                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.03)'
                                 }}>
                                     {aiFeedback}
                                 </div>
