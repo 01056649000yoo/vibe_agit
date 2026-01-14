@@ -76,14 +76,23 @@ function App() {
   const handleTeacherStart = async () => {
     if (!session) return
 
+    // 1. 기존 프로필 정보가 있는지 먼저 확인 (기존 필드 보존을 위해)
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+
     const { error } = await supabase
       .from('profiles')
       .upsert({
         id: session.user.id,
         role: 'TEACHER',
         email: session.user.email,
-        full_name: session.user.user_metadata.full_name
-      })
+        full_name: session.user.user_metadata.full_name,
+        // 기존 데이터가 있다면 보존하고, 없으면 NULL
+        gemini_api_key: existingProfile?.gemini_api_key || null
+      });
 
     if (!error) fetchProfile(session.user.id)
     else alert('역할 저장 중 오류가 발생했습니다: ' + error.message)

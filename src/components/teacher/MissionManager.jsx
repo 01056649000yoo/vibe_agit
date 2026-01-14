@@ -177,13 +177,25 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 })
             });
 
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Gemini API Error Status:', response.status);
+                console.error('Gemini API Error Details:', errorData);
+
+                if (response.status === 400) throw new Error('잘못된 요청입니다. 입력 내용을 확인해주세요.');
+                if (response.status === 403) throw new Error('API 키가 올바르지 않거나 권한이 없습니다.');
+                if (response.status === 429) throw new Error('요청 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요.');
+                throw new Error(`AI 서비스 오류 (상태 코드: ${response.status})`);
+            }
+
             const data = await response.json();
             if (data.candidates && data.candidates[0].content.parts[0].text) {
                 return data.candidates[0].content.parts[0].text;
             }
             throw new Error('AI 응답 형식이 올바르지 않습니다.');
         } catch (err) {
-            console.error('AI 피드백 요청 실패:', err);
+            console.error('AI 피드백 생성 실패 원인:', err.message);
+            alert(`피드백 생성 중 문제가 발생했습니다: ${err.message}`);
             return null;
         }
     };

@@ -47,7 +47,10 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
             if (error) throw error;
 
             // App.jsx의 다음 단계 로직 실행
-            onTeacherStart();
+            await onTeacherStart();
+
+            // [추가] 상태 강제 갱신을 위해 페이지 새로고침 (API 키 인식 보장)
+            window.location.reload();
         } catch (err) {
             console.error('설정 저장 실패:', err.message);
             alert('설정 저장 중 오류가 발생했습니다: ' + err.message);
