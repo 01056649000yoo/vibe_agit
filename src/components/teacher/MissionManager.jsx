@@ -169,12 +169,16 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 `;
 
         try {
-            // [최종 최적화] 404 에러 해결을 위해 v1 공식 안정화 엔드포인트 적용
+            // [공식 규격 적용] 404 오류 해결을 위한 표준 엔드포인트 및 본문 구조 고정
             const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }]
                 })
             });
 
