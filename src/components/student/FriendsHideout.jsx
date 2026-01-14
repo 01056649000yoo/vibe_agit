@@ -210,7 +210,14 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                     <PostDetailModal
                         post={viewingPost}
                         studentSession={studentSession}
-                        onClose={() => setViewingPost(null)}
+                        onClose={() => {
+                            if (params?.initialPostId) {
+                                // 소식 알림을 통해 들어온 경우, 글을 닫으면 바로 대시보드로 돌아가기
+                                onBack();
+                            } else {
+                                setViewingPost(null);
+                            }
+                        }}
                         reactionIcons={reactionIcons}
                         isMobile={isMobile}
                     />
