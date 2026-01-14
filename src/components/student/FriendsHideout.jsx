@@ -263,19 +263,40 @@ const PostDetailModal = ({ post, studentSession, onClose, reactionIcons, isMobil
     };
 
     const handleReaction = async (type) => {
-        try {
-            const { error } = await supabase
-                .from('post_reactions')
-                .upsert({
-                    post_id: post.id,
-                    user_id: studentSession.id,
-                    reaction_type: type
-                }, { onConflict: 'post_id,user_id,reaction_type' });
+        const myReactions = reactions.filter(r => r.user_id === studentSession.id);
+        const alreadyHasThis = myReactions.find(r => r.reaction_type === type);
 
-            if (error) throw error;
+        try {
+            if (alreadyHasThis) {
+                // 이미 남긴 반응이면 취소(삭제) 처리
+                const { error } = await supabase
+                    .from('post_reactions')
+                    .delete()
+                    .eq('post_id', post.id)
+                    .eq('user_id', studentSession.id)
+                    .eq('reaction_type', type);
+
+                if (error) throw error;
+            } else {
+                // 새로운 반응을 남기려는 경우
+                if (myReactions.length >= 2) {
+                    alert('이모티콘은 최대 2개까지만 선택할 수 있어요! ✌️\n신중하게 마음을 표현해 주세요. ✨');
+                    return;
+                }
+
+                const { error } = await supabase
+                    .from('post_reactions')
+                    .insert({
+                        post_id: post.id,
+                        user_id: studentSession.id,
+                        reaction_type: type
+                    });
+
+                if (error) throw error;
+            }
             fetchReactions();
         } catch (err) {
-            console.error('반응 저장 실패:', err.message);
+            console.error('반응 처리 실패:', err.message);
         }
     };
 
@@ -420,23 +441,30 @@ const PostDetailModal = ({ post, studentSession, onClose, reactionIcons, isMobil
                         padding: '28px', background: '#F8F9FA', borderRadius: '28px',
                         marginBottom: '48px', border: '1px solid #F1F3F5'
                     }}>
-                        {reactionIcons.map(icon => (
-                            <button
-                                key={icon.type}
-                                onClick={() => handleReaction(icon.type)}
-                                style={{
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-                                    padding: isMobile ? '10px 12px' : '12px 20px', border: 'none', background: 'white',
-                                    borderRadius: '20px', boxShadow: '0 6px 12px rgba(0,0,0,0.05)',
-                                    cursor: 'pointer', transition: 'all 0.2s'
-                                }}
-                            >
-                                <span style={{ fontSize: isMobile ? '1.6rem' : '2.1rem' }}>{icon.emoji}</span>
-                                <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#636E72' }}>
-                                    {getReactionCount(icon.type)}
-                                </span>
-                            </button>
-                        ))}
+                        {reactionIcons.map(icon => {
+                            const isMine = reactions.some(r => r.user_id === studentSession.id && r.reaction_type === icon.type);
+                            return (
+                                <button
+                                    key={icon.type}
+                                    onClick={() => handleReaction(icon.type)}
+                                    style={{
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                                        padding: isMobile ? '10px 12px' : '12px 20px',
+                                        border: isMine ? '2px solid #3498DB' : '2px solid transparent',
+                                        background: isMine ? '#E3F2FD' : 'white',
+                                        borderRadius: '20px',
+                                        boxShadow: isMine ? '0 4px 12px rgba(52, 152, 219, 0.2)' : '0 6px 12px rgba(0,0,0,0.05)',
+                                        cursor: 'pointer', transition: 'all 0.2s',
+                                        transform: isMine ? 'scale(1.05)' : 'scale(1)'
+                                    }}
+                                >
+                                    <span style={{ fontSize: isMobile ? '1.6rem' : '2.1rem' }}>{icon.emoji}</span>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#3498DB' : '#636E72' }}>
+                                        {getReactionCount(icon.type)}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
 
                     <div style={{ borderTop: '2px solid #F1F3F5', paddingTop: '48px' }}>
