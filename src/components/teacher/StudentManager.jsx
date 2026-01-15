@@ -327,19 +327,19 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         style={{
-                            display: 'flex', alignItems: 'center', padding: '12px 16px',
-                            background: 'white', border: '1px solid #E9ECEF', borderRadius: '18px',
+                            display: 'flex', alignItems: 'center', padding: '10px 12px',
+                            background: 'white', border: '1px solid #E9ECEF', borderRadius: '14px',
                             justifyContent: 'space-between',
-                            minHeight: '74px',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
+                            minHeight: '64px',
+                            boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
                             transition: 'all 0.2s ease'
                         }}
                     >
                         {/* 좌측 그룹: 번호 + 이름 */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: '0 0 100px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ color: '#ADB5BD', fontWeight: 'bold', fontSize: '0.8rem' }}>{idx + 1}</span>
-                                <span style={{ fontWeight: '900', color: '#34495E', fontSize: '1.2rem', letterSpacing: '-0.5px' }}>{s.name}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', flex: '0 0 80px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ color: '#ADB5BD', fontWeight: 'bold', fontSize: '0.7rem' }}>{idx + 1}</span>
+                                <span style={{ fontWeight: '800', color: '#34495E', fontSize: '1rem', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</span>
                             </div>
                         </div>
 
@@ -347,18 +347,18 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                         <div style={{
                             flex: 1,
                             textAlign: 'center',
-                            fontSize: '1.8rem',
+                            fontSize: '1.4rem',
                             color: '#3498DB',
                             fontWeight: '900',
                             fontFamily: 'monospace',
-                            letterSpacing: '4px',
-                            textShadow: '0 2px 8px rgba(52, 152, 219, 0.1)'
+                            letterSpacing: '2px',
+                            textShadow: '0 1px 4px rgba(52, 152, 219, 0.1)'
                         }}>
                             {s.student_code}
                         </div>
 
                         {/* 우측: 관리 도구 아이콘 그룹 */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
                             <button
                                 onClick={() => {
                                     setSelectedStudentForCode(s);
@@ -366,9 +366,9 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                 }}
                                 style={{
                                     background: '#F8F9FA', border: 'none', cursor: 'pointer',
-                                    width: '38px', height: '38px', borderRadius: '12px',
+                                    width: '32px', height: '32px', borderRadius: '8px',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '1.1rem', transition: 'all 0.2s'
+                                    fontSize: '0.9rem', transition: 'all 0.2s'
                                 }}
                                 title="크게 보기"
                             >
@@ -384,9 +384,9 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                     }}
                                     style={{
                                         background: '#FDFCF0', border: '1px solid #F7DC6F', cursor: 'pointer',
-                                        width: '38px', height: '38px', borderRadius: '12px',
+                                        width: '32px', height: '32px', borderRadius: '8px',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: '1.1rem', transition: 'all 0.2s'
+                                        fontSize: '0.9rem', transition: 'all 0.2s'
                                     }}
                                     title="코드 복사"
                                 >
@@ -415,9 +415,9 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                 onClick={() => { setDeleteTarget(s); setIsDeleteModalOpen(true); }}
                                 style={{
                                     background: '#FFF5F5', border: 'none', cursor: 'pointer',
-                                    width: '38px', height: '38px', borderRadius: '12px',
+                                    width: '32px', height: '32px', borderRadius: '8px',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '1.1rem', transition: 'all 0.2s'
+                                    fontSize: '0.9rem', transition: 'all 0.2s'
                                 }}
                                 title="학생 삭제"
                             >
