@@ -42,7 +42,9 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63', glow: 'rgba(255, 241, 118, 0.3)' },
         volcano: { id: 'volcano', name: '🌋 화산 동굴', color: 'linear-gradient(135deg, #4A0000 0%, #8B0000 100%)', border: '#FF5722', textColor: 'white', subColor: '#FFCCBC', price: 300, glow: 'rgba(255, 87, 34, 0.4)' },
         sky: { id: 'sky', name: '☁️ 천상 전당', color: 'linear-gradient(135deg, #B3E5FC 0%, #E1F5FE 100%)', border: '#4FC3F7', textColor: '#01579B', subColor: '#0288D1', price: 500, glow: 'rgba(79, 195, 247, 0.3)' },
-        crystal: { id: 'crystal', name: '💎 수정 궁전', color: 'linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%)', border: '#BA68C8', textColor: 'white', subColor: '#E1BEE7', price: 1000, glow: 'rgba(186, 104, 200, 0.4)' }
+        crystal: { id: 'crystal', name: '💎 수정 궁전', color: 'linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%)', border: '#BA68C8', textColor: 'white', subColor: '#E1BEE7', price: 1000, glow: 'rgba(186, 104, 200, 0.4)' },
+        storm: { id: 'storm', name: '🌩️ 번개 폭풍', color: 'linear-gradient(135deg, #1A237E 0%, #000000 100%)', border: '#7986CB', textColor: 'white', subColor: '#C5CAE9', price: 700, glow: 'rgba(121, 134, 203, 0.5)' },
+        galaxy: { id: 'galaxy', name: '🌌 달빛 은하수', color: 'linear-gradient(135deg, #0D47A1 0%, #000000 100%)', border: '#90CAF9', textColor: 'white', subColor: '#E3F2FD', price: 500, glow: 'rgba(144, 202, 249, 0.4)' }
     };
 
     useEffect(() => {
@@ -540,6 +542,54 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                     </motion.span>
                                                 ))}
                                             </AnimatePresence>
+                                        )}
+                                        {petData.background === 'storm' && (
+                                            <>
+                                                <motion.div
+                                                    animate={{ opacity: [0, 0, 0.3, 0, 0.5, 0, 0, 0] }}
+                                                    transition={{ repeat: Infinity, duration: 5, times: [0, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8, 1] }}
+                                                    style={{ position: 'absolute', inset: 0, background: 'white', pointerEvents: 'none', zIndex: 0 }}
+                                                />
+                                                <div style={{ position: 'absolute', inset: 0, opacity: 0.3, background: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")', pointerEvents: 'none' }} />
+                                                {[...Array(3)].map((_, i) => (
+                                                    <motion.span
+                                                        key={`bolt-${i}`}
+                                                        animate={{ opacity: [0, 1, 0], y: [0, 10, 0] }}
+                                                        transition={{ repeat: Infinity, duration: 5, delay: 3.5 + (i * 0.1) }}
+                                                        style={{ position: 'absolute', top: '15%', left: `${20 + i * 30}%`, fontSize: '2rem', filter: 'drop-shadow(0 0 15px #7986CB)', pointerEvents: 'none', zIndex: 0 }}
+                                                    >
+                                                        ⚡
+                                                    </motion.span>
+                                                ))}
+                                            </>
+                                        )}
+                                        {petData.background === 'galaxy' && (
+                                            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                                                {[...Array(20)].map((_, i) => (
+                                                    <motion.div
+                                                        key={`star-${i}`}
+                                                        animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.2, 1] }}
+                                                        transition={{ repeat: Infinity, duration: 2 + Math.random() * 3, delay: Math.random() * 5 }}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            top: `${Math.random() * 100}%`,
+                                                            left: `${Math.random() * 100}%`,
+                                                            width: '2px',
+                                                            height: '2px',
+                                                            background: 'white',
+                                                            borderRadius: '50%',
+                                                            boxShadow: '0 0 5px white'
+                                                        }}
+                                                    />
+                                                ))}
+                                                <motion.span
+                                                    animate={{ y: [0, -5, 0], opacity: [0.6, 0.9, 0.6] }}
+                                                    transition={{ repeat: Infinity, duration: 4 }}
+                                                    style={{ position: 'absolute', top: '10%', right: '15%', fontSize: '2.5rem', filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.4))' }}
+                                                >
+                                                    🌙
+                                                </motion.span>
+                                            </div>
                                         )}
                                         {/* 레벨 5 전용 황금 파티클 효과 */}
                                         {petData.level >= 5 && (
