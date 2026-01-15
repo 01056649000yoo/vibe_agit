@@ -460,7 +460,14 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                         transform: isMine ? 'scale(1.05)' : 'scale(1)'
                                     }}
                                 >
-                                    <span style={{ fontSize: isMobile ? '1.6rem' : '2.1rem' }}>{icon.emoji}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ fontSize: isMobile ? '1.4rem' : '1.8rem' }}>{icon.emoji}</span>
+                                        {!isMobile && (
+                                            <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: isMine ? '#3498DB' : '#636E72' }}>
+                                                {icon.label}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#3498DB' : '#636E72' }}>
                                         {getReactionCount(icon.type)}
                                     </span>
@@ -485,7 +492,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                 fontWeight: 'bold'
                             }}>
                                 <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '8px' }}>🔒</span>
-                                이 미션은 댓글 쓰기가 제한되었습니다.
+                                선생님이 댓글창을 닫아두셨어요. 🔒
                             </div>
                         ) : (
                             <>
