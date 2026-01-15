@@ -18,6 +18,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [loadingFeedback, setLoadingFeedback] = useState(false);
     const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 }); // [추가] 성장 통계
     const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', icon: '🌱', nextGoal: 1000 }); // [추가] 레벨 정보
+    const [selectedItems, setSelectedItems] = useState({ wall: 'old', desk: 'old', chair: 'old', decos: [] });
 
     useEffect(() => {
         if (studentSession?.id) {
@@ -190,6 +191,65 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 <Button variant="ghost" size="sm" onClick={onLogout}>
                     로그아웃 🚪
                 </Button>
+            </div>
+
+            {/* 서재 컨테이너 (The Stage) */}
+            <div
+                className="relative w-full h-[280px] rounded-t-3xl overflow-hidden mb-8"
+                style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '280px',
+                    borderTopLeftRadius: '1.5rem',
+                    borderTopRightRadius: '1.5rem',
+                    overflow: 'hidden',
+                    marginBottom: '2rem'
+                }}
+            >
+                {/* 벽 (상단 75%, 배경색 #D7CCC8) */}
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '75%',
+                    backgroundColor: '#D7CCC8'
+                }} />
+
+                {/* 바닥 (하단 25%, 배경색 #8D6E63) */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '25%',
+                    backgroundColor: '#8D6E63'
+                }} />
+
+                {/* 기본 가구 배치 */}
+                {/* 낡은 의자 (🪑) */}
+                <div style={{
+                    position: 'absolute',
+                    left: '20%',
+                    bottom: '12%',
+                    zIndex: 10,
+                    fontSize: '4rem',
+                    filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))'
+                }}>
+                    🪑
+                </div>
+
+                {/* 낡은 책상 (🏚️) */}
+                <div style={{
+                    position: 'absolute',
+                    left: '32%',
+                    bottom: '8%',
+                    zIndex: 20,
+                    fontSize: '5rem',
+                    filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.2))'
+                }}>
+                    🏚️
+                </div>
             </div>
 
             <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
