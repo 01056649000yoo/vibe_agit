@@ -319,38 +319,40 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {students.map((s, idx) => (
                     <motion.div
                         key={s.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         style={{
-                            display: 'flex', alignItems: 'center', padding: '16px 20px',
-                            background: 'white', border: '1px solid #E9ECEF', borderRadius: '20px',
-                            justifyContent: 'space-between', fontSize: '0.9rem',
-                            minHeight: '84px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                            display: 'flex', alignItems: 'center', padding: '12px 24px',
+                            background: 'white', border: '1px solid #E9ECEF', borderRadius: '18px',
+                            justifyContent: 'space-between',
+                            minHeight: '80px',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
                             transition: 'all 0.2s ease'
                         }}
                     >
-                        {/* 좌측: 학생 정보 (이름 + 대형 코드) */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ color: '#ADB5BD', fontWeight: 'bold', fontSize: '0.8rem' }}>{idx + 1}</span>
-                                <span style={{ fontWeight: '800', color: '#495057', fontSize: '1rem' }}>{s.name}</span>
-                            </div>
-                            <div style={{
-                                fontSize: '1.8rem',
-                                color: '#3498DB',
-                                fontWeight: '900',
-                                fontFamily: 'monospace',
-                                letterSpacing: '4px',
-                                textShadow: '0 2px 4px rgba(52, 152, 219, 0.1)'
-                            }}>
-                                {s.student_code}
-                            </div>
+                        {/* 좌측 그룹: 번호 + 이름 */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '0 0 200px' }}>
+                            <span style={{ color: '#ADB5BD', fontWeight: 'bold', fontSize: '1.1rem', minWidth: '30px' }}>{idx + 1}</span>
+                            <span style={{ fontWeight: '900', color: '#34495E', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>{s.name}</span>
+                        </div>
+
+                        {/* 중앙 그룹: 접속코드 (압도적 시인성) */}
+                        <div style={{
+                            flex: 1,
+                            textAlign: 'center',
+                            fontSize: '2.4rem',
+                            color: '#3498DB',
+                            fontWeight: '900',
+                            fontFamily: 'monospace',
+                            letterSpacing: '8px',
+                            textShadow: '0 2px 10px rgba(52, 152, 219, 0.15)'
+                        }}>
+                            {s.student_code}
                         </div>
 
                         {/* 우측: 관리 도구 아이콘 그룹 */}
