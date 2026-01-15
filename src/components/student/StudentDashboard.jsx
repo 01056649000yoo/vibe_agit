@@ -24,8 +24,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         level: 1,
         exp: 0,
         lastFed: new Date().toISOString().split('T')[0],
-        ownedItems: [], // 구매한 아이템 ID 목록
-        equippedItems: [] // 장착 중인 아이템 ID 목록
+        ownedItems: [],
+        background: 'default' // [신규] 아지트 배경
     });
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
@@ -37,21 +37,12 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // [추가] 액세서리 목록 정의
-    const ACCESSORIES = [
-        { id: 'crown', name: '작은 왕관', price: 300, emoji: '👑', fontSize: '2.5rem' },
-        { id: 'sunglasses', name: '멋진 선글라스', price: 200, emoji: '🕶️', fontSize: '2rem' },
-        { id: 'flame', name: '불꽃 오라', price: 1000, emoji: '🔥', fontSize: '6rem', zIndex: -1, filter: 'blur(2px) opacity(0.7)', pos: { top: '0', left: '0' } },
-        { id: 'star', name: '반짝이 별', price: 150, emoji: '⭐', fontSize: '1.5rem', pos: { top: '-10%', left: '60%' } },
-    ];
-
-    // [최종] 드래곤 진화 단계별 액세서리 좌표 매핑 시스템
-    const PET_POSITIONS = {
-        1: { crown: { top: '-15px', left: '50%' }, sunglasses: { top: '25px', left: '50%' } },
-        2: { crown: { top: '-25px', left: '40%' }, sunglasses: { top: '15px', left: '40%' } },
-        3: { crown: { top: '0px', left: '65%' }, sunglasses: { top: '35px', left: '65%' } },
-        4: { crown: { top: '-10px', left: '70%' }, sunglasses: { top: '20px', left: '70%' } },
-        5: { crown: { top: '-20px', left: '55%' }, sunglasses: { top: '15px', left: '55%' } }
+    // [신규] 드래곤 아지트 배경 목록
+    const HIDEOUT_BACKGROUNDS = {
+        default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63' },
+        volcano: { id: 'volcano', name: '🔥 화산 용암지대', color: 'linear-gradient(135deg, #D84315 0%, #BF360C 100%)', border: '#FF7043', textColor: 'white', subColor: '#FFCCBC', price: 500, deco: '💨' },
+        sky: { id: 'sky', name: '☁️ 천상전당', color: 'linear-gradient(135deg, #E3F2FD 0%, #90CAF9 100%)', border: '#1E88E5', textColor: '#0D47A1', subColor: '#1565C0', price: 800, deco: '☁️' },
+        crystal: { id: 'crystal', name: '💎 수정동굴', color: 'linear-gradient(135deg, #7B1FA2 0%, #4A148C 100%)', border: '#E1BEE7', textColor: 'white', subColor: '#F3E5F5', price: 1200, deco: '✨' }
     };
 
     useEffect(() => {
@@ -88,11 +79,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     // [추가] 단계별 드래곤 정보
     const getDragonStage = (level) => {
-        if (level >= 5) return { name: '전설의 신룡', emoji: '✨🐲' };
-        if (level === 4) return { name: '날개 드래곤', emoji: '🐉' };
-        if (level === 3) return { name: '어린 드래곤', emoji: '🐲' };
-        if (level === 2) return { name: '아기 드래곤', emoji: '🐣' };
-        return { name: '비밀의 알', emoji: '🥚' };
+        if (level >= 5) return { name: '전설의 수호신룡', emoji: '👑🐲✨' };
+        if (level === 4) return { name: '불을 내뿜는 성장한 용', emoji: '🐉🔥' };
+        if (level === 3) return { name: '푸른 빛의 어린 용', emoji: '🦎✨' };
+        if (level === 2) return { name: '갓 태어난 용', emoji: '🐲' };
+        return { name: '신비로운 알', emoji: '🥚' };
     };
 
     const dragonInfo = getDragonStage(petData.level);
@@ -161,15 +152,13 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         }
     };
 
-    // [추가] 액세서리 구매/장착 로직
+    // [신규] 아지트 배경 구매/적용 로직
     const handleBuyItem = async (item) => {
-        // [점검] 로딩 중이거나 포인트 정보가 유효하지 않으면 실행 방지
         if (isLoading) {
             alert('데이터를 불러오는 중입니다. 잠시만 기다려 주세요! ⏳');
             return;
         }
 
-        // [안전장치] 포인트 정보가 undefined거나 null이면 중단
         if (points === undefined || points === null) return;
 
         if (points < item.price) {
@@ -180,10 +169,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         if (petData.ownedItems.includes(item.id)) return;
 
         const newPoints = points - item.price;
-        if (newPoints < 0) {
-            alert('작업을 완료할 수 없습니다. 포인트가 유효하지 않습니다.');
-            return;
-        }
         const newOwned = [...petData.ownedItems, item.id];
         const newPetData = { ...petData, ownedItems: newOwned };
 
@@ -200,25 +185,15 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
             setPoints(newPoints);
             setPetData(newPetData);
-            alert(`[${item.name}] 구매 성공! '장착하기'를 눌러 드래곤을 꾸며보세요. ✨`);
+            alert(`[${item.name}] 구매 성공! 리스트에서 '적용하기'를 눌러보세요. ✨`);
         } catch (err) {
-            console.error('아이템 구매 실패:', err.message);
+            console.error('배경 구매 실패:', err.message);
         }
     };
 
-    const handleToggleEquip = async (itemId) => {
-        if (isLoading) return; // [점검] 로딩 중 작업 방지
-        const isEquipped = petData.equippedItems.includes(itemId);
-        let newEquipped;
-
-        if (isEquipped) {
-            newEquipped = petData.equippedItems.filter(id => id !== itemId);
-        } else {
-            // 같은 부위 아이템 처리 등은 생략하고 자유롭게 중첩 가능하게 구현
-            newEquipped = [...petData.equippedItems, itemId];
-        }
-
-        const newPetData = { ...petData, equippedItems: newEquipped };
+    const handleToggleEquip = async (bgId) => {
+        if (isLoading) return;
+        const newPetData = { ...petData, background: bgId };
 
         try {
             const { error } = await supabase
@@ -229,7 +204,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             if (error) throw error;
             setPetData(newPetData);
         } catch (err) {
-            console.error('장착 상태 업데이트 실패:', err.message);
+            console.error('배경 변경 실패:', err.message);
         }
     };
 
@@ -463,15 +438,16 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             exit={{ y: isMobile ? '100%' : 50, opacity: 0 }}
                             onClick={e => e.stopPropagation()}
                             style={{
-                                background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
+                                background: HIDEOUT_BACKGROUNDS[petData.background]?.color || HIDEOUT_BACKGROUNDS.default.color,
                                 borderRadius: isMobile ? '32px 32px 0 0' : '32px',
                                 width: '100%', maxWidth: '600px',
                                 padding: '32px',
-                                border: '2px solid #FFF176',
-                                boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+                                border: petData.level >= 5 ? '4px solid #FFD700' : `3px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || HIDEOUT_BACKGROUNDS.default.border}`,
+                                boxShadow: petData.level >= 5 ? '0 0 30px rgba(255, 215, 0, 0.4)' : '0 20px 50px rgba(0,0,0,0.3)',
                                 position: 'relative',
                                 maxHeight: isMobile ? '90vh' : 'auto',
-                                overflowY: 'auto'
+                                overflowY: 'auto',
+                                transition: 'all 0.5s ease'
                             }}
                         >
                             <button
@@ -487,14 +463,89 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             </button>
 
                             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                                <h2 style={{ margin: 0, color: '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 드래곤 아지트</h2>
-                                <p style={{ margin: '4px 0 0 0', color: '#8D6E63', fontSize: '0.9rem' }}>나의 소중한 드래곤 파트너와 함께하는 공간</p>
+                                <h2 style={{ margin: 0, color: HIDEOUT_BACKGROUNDS[petData.background]?.textColor || '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 드래곤 아지트</h2>
+                                <p style={{ margin: '4px 0 0 0', color: HIDEOUT_BACKGROUNDS[petData.background]?.subColor || '#8D6E63', fontSize: '0.9rem' }}>나의 소중한 드래곤 파트너와 함께하는 공간</p>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', background: 'rgba(255,255,255,0.4)', padding: '20px', borderRadius: '24px' }}>
-                                    <div style={{ position: 'relative' }}>
-                                        {/* [Step 2] 드래곤 + 액세서리 통합 애니메이션 그룹 */}
+                                    <div style={{ position: 'relative', padding: '40px' }}>
+                                        {/* 배경 장식 요소들 */}
+                                        {petData.background === 'volcano' && (
+                                            <AnimatePresence>
+                                                {[...Array(6)].map((_, i) => (
+                                                    <motion.span
+                                                        key={`smoke-${i}`}
+                                                        initial={{ y: 20, opacity: 0, scale: 0.5 }}
+                                                        animate={{ y: -100, opacity: [0, 0.5, 0], scale: [0.5, 1.5, 2] }}
+                                                        transition={{ repeat: Infinity, duration: 3 + i, delay: i * 0.5 }}
+                                                        style={{ position: 'absolute', bottom: '20%', left: `${15 + i * 15}%`, fontSize: '2rem', filter: 'grayscale(1) blur(2px)', pointerEvents: 'none' }}
+                                                    >
+                                                        💨
+                                                    </motion.span>
+                                                ))}
+                                            </AnimatePresence>
+                                        )}
+                                        {petData.background === 'sky' && (
+                                            <AnimatePresence>
+                                                {[...Array(4)].map((_, i) => (
+                                                    <motion.span
+                                                        key={`cloud-${i}`}
+                                                        animate={{ x: i % 2 === 0 ? [0, 20, 0] : [0, -20, 0] }}
+                                                        transition={{ repeat: Infinity, duration: 4 + i, ease: "easeInOut" }}
+                                                        style={{ position: 'absolute', top: `${10 + i * 20}%`, left: `${10 + i * 25}%`, fontSize: '2.5rem', opacity: 0.6, pointerEvents: 'none' }}
+                                                    >
+                                                        ☁️
+                                                    </motion.span>
+                                                ))}
+                                            </AnimatePresence>
+                                        )}
+                                        {petData.background === 'crystal' && (
+                                            <AnimatePresence>
+                                                {[...Array(8)].map((_, i) => (
+                                                    <motion.span
+                                                        key={`sparkle-${i}`}
+                                                        animate={{ scale: [0, 1, 0], opacity: [0, 1, 0] }}
+                                                        transition={{ repeat: Infinity, duration: 2 + Math.random() * 2, delay: Math.random() * 2 }}
+                                                        style={{ position: 'absolute', top: `${Math.random() * 80}%`, left: `${Math.random() * 80}%`, fontSize: '1.2rem', color: '#E1BEE7', pointerEvents: 'none' }}
+                                                    >
+                                                        ✨
+                                                    </motion.span>
+                                                ))}
+                                            </AnimatePresence>
+                                        )}
+                                        {/* 레벨 5 전용 황금 파티클 효과 */}
+                                        {petData.level >= 5 && (
+                                            <AnimatePresence>
+                                                {[...Array(10)].map((_, i) => (
+                                                    <motion.span
+                                                        key={`gold-${i}`}
+                                                        animate={{
+                                                            y: [0, -50, 0],
+                                                            opacity: [0, 1, 0],
+                                                            rotate: [0, 180, 360]
+                                                        }}
+                                                        transition={{
+                                                            repeat: Infinity,
+                                                            duration: 2 + Math.random() * 2,
+                                                            delay: Math.random() * 2
+                                                        }}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            top: `${Math.random() * 100}%`,
+                                                            left: `${Math.random() * 100}%`,
+                                                            fontSize: '1rem',
+                                                            color: '#FFD700',
+                                                            pointerEvents: 'none',
+                                                            zIndex: 0
+                                                        }}
+                                                    >
+                                                        ✨
+                                                    </motion.span>
+                                                ))}
+                                            </AnimatePresence>
+                                        )}
+                                        {/* [Step 2] 드래곤 통합 애니메이션 그룹 */}
                                         <motion.div
                                             key={petData.level}
                                             initial={{ scale: 0.5, rotate: -20, opacity: 0 }}
@@ -502,7 +553,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 scale: 1,
                                                 rotate: 0,
                                                 opacity: 1,
-                                                y: [0, -8, 0] // 숨쉬듯 들썩거리는 효과
+                                                y: [0, -8, 0]
                                             }}
                                             transition={{
                                                 y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
@@ -525,38 +576,9 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
                                         >
-                                            <span style={{ zIndex: 1 }}>{dragonInfo.emoji}</span>
-
-                                            {/* 장착된 액세서리 레이어 (부모와 함께 요동침) */}
-                                            {petData.equippedItems.map(itemId => {
-                                                const item = ACCESSORIES.find(a => a.id === itemId);
-                                                if (!item) return null;
-
-                                                const levelPos = PET_POSITIONS[petData.level]?.[item.id];
-                                                const finalPos = levelPos || item.pos || { top: '0', left: '0' };
-
-                                                return (
-                                                    <motion.div
-                                                        key={item.id}
-                                                        initial={{ scale: 0 }}
-                                                        animate={{ scale: 1 }}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            ...finalPos,
-                                                            fontSize: item.fontSize,
-                                                            zIndex: item.zIndex || 2,
-                                                            filter: item.filter || 'none',
-                                                            transform: 'translate(-50%, -50%)', // 좌표 중앙 보정
-                                                            pointerEvents: 'none',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                        }}
-                                                    >
-                                                        {item.emoji}
-                                                    </motion.div>
-                                                );
-                                            })}
+                                            <span style={{ zIndex: 1, filter: petData.level >= 5 ? 'drop-shadow(0 0 10px rgba(255,215,0,0.5))' : 'none' }}>
+                                                {dragonInfo.emoji}
+                                            </span>
                                         </motion.div>
                                         {petData.level > 1 && (
                                             <motion.span
@@ -1008,29 +1030,34 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                         >
                             <div style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8F9FA' }}>
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2C3E50', fontWeight: '900' }}>🛍️ 드래곤 액세서리 상점</h3>
+                                    <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2C3E50', fontWeight: '900' }}>🏡 아지트 배경 상점</h3>
                                     <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#7F8C8D' }}>남은 포인트: <b>{points.toLocaleString()}P</b></p>
                                 </div>
                                 <button onClick={() => setIsShopOpen(false)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
                             </div>
 
                             <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                {ACCESSORIES.map(item => {
-                                    const isOwned = petData.ownedItems.includes(item.id);
-                                    const isEquipped = petData.equippedItems.includes(item.id);
+                                {Object.values(HIDEOUT_BACKGROUNDS).map(item => {
+                                    const isOwned = item.id === 'default' || petData.ownedItems.includes(item.id);
+                                    const isEquipped = petData.background === item.id;
 
                                     return (
                                         <div key={item.id} style={{
-                                            border: `2px solid ${isEquipped ? '#3498DB' : '#F1F3F5'}`,
+                                            border: `2px solid ${isEquipped ? item.border : '#F1F3F5'}`,
                                             borderRadius: '24px',
                                             padding: '16px',
                                             textAlign: 'center',
-                                            background: isEquipped ? '#EBF5FB' : 'white',
-                                            transition: 'all 0.2s'
+                                            background: isEquipped ? item.color : 'white',
+                                            transition: 'all 0.2s',
+                                            opacity: isEquipped ? 1 : 0.8
                                         }}>
-                                            <div style={{ fontSize: '3rem', marginBottom: '10px' }}>{item.emoji}</div>
+                                            <div style={{
+                                                width: '100%', height: '60px', borderRadius: '12px',
+                                                background: item.color, marginBottom: '10px',
+                                                border: `1px solid ${item.border}`
+                                            }} />
                                             <div style={{ fontWeight: 'bold', fontSize: '1rem', color: '#2C3E50', marginBottom: '4px' }}>{item.name}</div>
-                                            <div style={{ fontSize: '0.85rem', color: '#F39C12', fontWeight: 'bold', marginBottom: '12px' }}>
+                                            <div style={{ fontSize: '0.85rem', color: item.textColor, fontWeight: 'bold', marginBottom: '12px' }}>
                                                 {isOwned ? '보유 중' : `${item.price.toLocaleString()}P`}
                                             </div>
 
@@ -1048,13 +1075,13 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                     variant={isEquipped ? 'primary' : 'ghost'}
                                                     style={{
                                                         width: '100%',
-                                                        background: isEquipped ? '#3498DB' : '#F8F9FA',
+                                                        background: isEquipped ? item.accent : '#F8F9FA',
                                                         color: isEquipped ? 'white' : '#7F8C8D',
                                                         border: isEquipped ? 'none' : '1px solid #DEE2E6'
                                                     }}
                                                     onClick={() => handleToggleEquip(item.id)}
                                                 >
-                                                    {isEquipped ? '장착 해제' : '장착하기'}
+                                                    {isEquipped ? '사용 중' : '적용하기'}
                                                 </Button>
                                             )}
                                         </div>
@@ -1062,7 +1089,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 })}
                             </div>
                             <div style={{ padding: '20px', textAlign: 'center', background: '#FDFCF0' }}>
-                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#9E9E9E' }}>액세서리는 여러 개를 겹쳐서 착용할 수 있어요! 🌈</p>
+                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#9E9E9E' }}>멋진 배경으로 나만의 드래곤 아지트를 꾸며보세요! 🌈</p>
                             </div>
                         </motion.div>
                     </div>
