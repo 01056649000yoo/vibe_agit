@@ -468,13 +468,13 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
             </main>
 
             {/* 최근 활동 상세보기 모달 (선생님용) */}
-            <div style={{
-                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                background: 'rgba(0,0,0,0.7)', zIndex: 2000,
-                display: 'flex', justifyContent: 'center', alignItems: 'center',
-                padding: '20px'
-            }} onClick={() => setSelectedActivityPost(null)}>
-                {!selectedActivityPost ? null : (
+            {selectedActivityPost && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.7)', zIndex: 2000,
+                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    padding: '20px'
+                }} onClick={() => setSelectedActivityPost(null)}>
                     <div style={{
                         background: 'white', borderRadius: '24px', width: '100%', maxWidth: '800px',
                         maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden'
@@ -493,8 +493,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                             미션: {selectedActivityPost?.writing_missions?.title || (Array.isArray(selectedActivityPost?.writing_missions) ? selectedActivityPost?.writing_missions[0]?.title : '정보 없음')} | 글자 수: {selectedActivityPost?.char_count || 0}자
                         </footer>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -660,15 +660,16 @@ const ClassAnalysis = ({ classId, isMobile }) => {
 
             // 미제출자 파악 (가장 최근 미션 기준)
             let notSubmittedStudents = [];
-            if (missions?.length > 0) {
+            if (missions && missions.length > 0) {
                 const latestMissionId = missions[0].id;
-                const submittedIds = new Set(posts?.filter(p => p.mission_id === latestMissionId && p.is_submitted).map(p => p.student_id));
+                const submittedPosts = posts ? posts.filter(p => p.mission_id === latestMissionId && p.is_submitted) : [];
+                const submittedIds = new Set(submittedPosts.map(p => p.student_id));
                 notSubmittedStudents = students.filter(s => !submittedIds.has(s.id)).map(s => s.name);
             }
 
             // 오늘 제출 확률
             const today = new Date().toISOString().split('T')[0];
-            const todaySubmittedCount = posts?.filter(p => p.is_submitted && p.created_at.startsWith(today)).length || 0;
+            const todaySubmittedCount = posts ? posts.filter(p => p.is_submitted && p.created_at?.startsWith(today)).length : 0;
             const todayRate = students.length > 0 ? Math.round((todaySubmittedCount / students.length) * 100) : 0;
 
             // 제출 트렌드 (최근 7일)
@@ -676,7 +677,7 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                 const d = new Date();
                 d.setDate(d.getDate() - i);
                 const dayStr = d.toISOString().split('T')[0];
-                const count = posts?.filter(p => p.is_submitted && p.created_at.startsWith(dayStr)).length || 0;
+                const count = posts ? posts.filter(p => p.is_submitted && p.created_at?.startsWith(dayStr)).length : 0;
                 return { date: dayStr, count };
             }).reverse();
 
