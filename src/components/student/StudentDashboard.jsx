@@ -28,6 +28,13 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         equippedItems: [] // 장착 중인 아이템 ID 목록
     });
     const [isShopOpen, setIsShopOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // [추가] 액세서리 목록 정의 (종류, 가격, 이모지, 위치 정보 등)
     const ACCESSORIES = [
