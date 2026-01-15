@@ -319,38 +319,40 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '12px' }}>
                 {students.map((s, idx) => (
                     <motion.div
                         key={s.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         style={{
-                            display: 'flex', alignItems: 'center', padding: '12px 24px',
+                            display: 'flex', alignItems: 'center', padding: '12px 16px',
                             background: 'white', border: '1px solid #E9ECEF', borderRadius: '18px',
                             justifyContent: 'space-between',
-                            minHeight: '80px',
+                            minHeight: '74px',
                             boxShadow: '0 4px 15px rgba(0,0,0,0.02)',
                             transition: 'all 0.2s ease'
                         }}
                     >
                         {/* 좌측 그룹: 번호 + 이름 */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '0 0 200px' }}>
-                            <span style={{ color: '#ADB5BD', fontWeight: 'bold', fontSize: '1.1rem', minWidth: '30px' }}>{idx + 1}</span>
-                            <span style={{ fontWeight: '900', color: '#34495E', fontSize: '1.4rem', letterSpacing: '-0.5px' }}>{s.name}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: '0 0 100px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ color: '#ADB5BD', fontWeight: 'bold', fontSize: '0.8rem' }}>{idx + 1}</span>
+                                <span style={{ fontWeight: '900', color: '#34495E', fontSize: '1.2rem', letterSpacing: '-0.5px' }}>{s.name}</span>
+                            </div>
                         </div>
 
-                        {/* 중앙 그룹: 접속코드 (압도적 시인성) */}
+                        {/* 중앙 그룹: 접속코드 */}
                         <div style={{
                             flex: 1,
                             textAlign: 'center',
-                            fontSize: '2.4rem',
+                            fontSize: '1.8rem',
                             color: '#3498DB',
                             fontWeight: '900',
                             fontFamily: 'monospace',
-                            letterSpacing: '8px',
-                            textShadow: '0 2px 10px rgba(52, 152, 219, 0.15)'
+                            letterSpacing: '4px',
+                            textShadow: '0 2px 8px rgba(52, 152, 219, 0.1)'
                         }}>
                             {s.student_code}
                         </div>
