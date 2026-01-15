@@ -39,10 +39,10 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     // [신규] 드래곤 아지트 배경 목록
     const HIDEOUT_BACKGROUNDS = {
-        default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63' },
-        volcano: { id: 'volcano', name: '🌋 화산 동굴', color: 'linear-gradient(135deg, #4A0000 0%, #8B0000 100%)', border: '#FF5722', textColor: 'white', subColor: '#FFCCBC', price: 300, deco: '🔥' },
-        sky: { id: 'sky', name: '☁️ 천상 전당', color: 'linear-gradient(135deg, #B3E5FC 0%, #E1F5FE 100%)', border: '#4FC3F7', textColor: '#01579B', subColor: '#0288D1', price: 500, deco: '☁️' },
-        crystal: { id: 'crystal', name: '💎 수정 궁전', color: 'linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%)', border: '#BA68C8', textColor: 'white', subColor: '#E1BEE7', price: 1000, deco: '✨' }
+        default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63', glow: 'rgba(255, 241, 118, 0.3)' },
+        volcano: { id: 'volcano', name: '🌋 화산 동굴', color: 'linear-gradient(135deg, #4A0000 0%, #8B0000 100%)', border: '#FF5722', textColor: 'white', subColor: '#FFCCBC', price: 300, glow: 'rgba(255, 87, 34, 0.4)' },
+        sky: { id: 'sky', name: '☁️ 천상 전당', color: 'linear-gradient(135deg, #B3E5FC 0%, #E1F5FE 100%)', border: '#4FC3F7', textColor: '#01579B', subColor: '#0288D1', price: 500, glow: 'rgba(79, 195, 247, 0.3)' },
+        crystal: { id: 'crystal', name: '💎 수정 궁전', color: 'linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%)', border: '#BA68C8', textColor: 'white', subColor: '#E1BEE7', price: 1000, glow: 'rgba(186, 104, 200, 0.4)' }
     };
 
     useEffect(() => {
@@ -80,10 +80,10 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     // [추가] 단계별 드래곤 정보 (이미지 기반)
     const getDragonStage = (level) => {
         const basePath = '/assets/dragons';
-        if (level >= 5) return { name: '전설의 수호신룡', image: `${basePath}/dragon_stage_5.jpg`, isPlaceholder: false };
+        if (level >= 5) return { name: '전설의 수호신룡', image: `${basePath}/dragon_stage_5.png`, isPlaceholder: false };
         if (level === 4) return { name: '불을 내뿜는 성장한 용', image: `${basePath}/dragon_stage_4.png`, isPlaceholder: false };
-        if (level === 3) return { name: '푸른 빛의 어린 용', image: `${basePath}/dragon_stage_3.jpg`, isPlaceholder: false };
-        if (level === 2) return { name: '갓 태어난 용', image: `${basePath}/dragon_stage_2.jpg`, isPlaceholder: false };
+        if (level === 3) return { name: '푸른 빛의 어린 용', image: `${basePath}/dragon_stage_3.png`, isPlaceholder: false };
+        if (level === 2) return { name: '갓 태어난 용', image: `${basePath}/dragon_stage_2.png`, isPlaceholder: false };
         return { name: '신비로운 알', image: `${basePath}/dragon_stage_1.png`, isPlaceholder: false };
     };
 
@@ -483,16 +483,18 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                         border: petData.level >= 5 ? '4px solid #FFD700' : `2px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || '#DDD'}`,
                                         boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.08)'
                                     }}>
-                                        {/* 배경 장식 요소들 */}
+                                        {/* 후경 장식 (드래곤 뒤쪽) */}
+                                        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.2) 100%)', pointerEvents: 'none' }} />
+
                                         {petData.background === 'volcano' && (
                                             <AnimatePresence>
                                                 {[...Array(8)].map((_, i) => (
                                                     <motion.span
                                                         key={`fire-${i}`}
                                                         initial={{ y: 20, opacity: 0, scale: 0.5 }}
-                                                        animate={{ y: -60, opacity: [0, 0.8, 0], scale: [0.8, 1.2, 0.5] }}
-                                                        transition={{ repeat: Infinity, duration: 2 + i * 0.3, delay: i * 0.2 }}
-                                                        style={{ position: 'absolute', bottom: '15%', left: `${10 + i * 12}%`, fontSize: '1.8rem', filter: 'drop-shadow(0 0 5px #FF5722)', pointerEvents: 'none' }}
+                                                        animate={{ y: -80, opacity: [0, 0.8, 0], scale: [0.8, 1.4, 0.6] }}
+                                                        transition={{ repeat: Infinity, duration: 1.5 + i * 0.2, delay: i * 0.1 }}
+                                                        style={{ position: 'absolute', bottom: '10%', left: `${5 + i * 12}%`, fontSize: '2rem', filter: 'drop-shadow(0 0 8px #FF5722)', pointerEvents: 'none', zIndex: 0 }}
                                                     >
                                                         🔥
                                                     </motion.span>
@@ -570,7 +572,23 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 ))}
                                             </AnimatePresence>
                                         )}
-                                        {/* [Step 2] 드래곤 통합 애니메이션 그룹 */}
+                                        {/* 바닥 그림자 및 효과 */}
+                                        <motion.div
+                                            animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+                                            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                                            style={{
+                                                position: 'absolute',
+                                                bottom: '20%',
+                                                width: '140px',
+                                                height: '30px',
+                                                background: 'rgba(0,0,0,0.2)',
+                                                borderRadius: '50%',
+                                                filter: 'blur(8px)',
+                                                zIndex: 0
+                                            }}
+                                        />
+
+                                        {/* 드래곤 이미지 본체 */}
                                         <motion.div
                                             key={petData.level}
                                             initial={{ scale: 0.5, rotate: -20, opacity: 0 }}
@@ -578,14 +596,14 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 scale: 1,
                                                 rotate: 0,
                                                 opacity: 1,
-                                                y: [0, -10, 0]
+                                                y: [0, -12, 0]
                                             }}
                                             transition={{
                                                 y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
                                                 default: { type: "spring", stiffness: 260, damping: 20 }
                                             }}
                                             style={{
-                                                width: '220px', // 크기를 조금 더 키움
+                                                width: '220px',
                                                 height: '220px',
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -593,7 +611,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 position: 'relative',
                                                 zIndex: 1,
                                                 cursor: 'pointer',
-                                                background: 'transparent' // 완전 투명
+                                                background: 'transparent'
                                             }}
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
@@ -610,7 +628,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                         width: '100%',
                                                         height: '100%',
                                                         objectFit: 'contain',
-                                                        filter: petData.level >= 5 ? 'drop-shadow(0 0 10px rgba(255,215,0,0.5))' : 'none'
+                                                        filter: `drop-shadow(0 0 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.2)'}) ${petData.level >= 5 ? 'drop-shadow(0 0 15px rgba(255,215,0,0.6))' : ''}`
                                                     }}
                                                 />
                                             )}
