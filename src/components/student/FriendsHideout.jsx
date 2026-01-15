@@ -24,11 +24,11 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 
     // 반응 아이콘 설정
     const reactionIcons = [
-        { type: 'heart', label: '감동이에요', emoji: '❤️' },
+        { type: 'heart', label: '좋아요', emoji: '❤️' },
         { type: 'laugh', label: '재밌어요', emoji: '😂' },
         { type: 'wow', label: '멋져요', emoji: '👏' },
         { type: 'bulb', label: '배우고 가요', emoji: '💡' },
-        { type: 'star', label: '반짝여요', emoji: '✨' }
+        { type: 'star', label: '최고예요', emoji: '✨' }
     ];
 
     useEffect(() => {
@@ -437,38 +437,63 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                         {post.content}
                     </div>
 
-                    {/* 반응 바 */}
+                    {/* 반응 바 - 2열 그리드 배치 */}
                     <div style={{
-                        display: 'flex', justifyContent: 'center', gap: isMobile ? '10px' : '18px',
-                        padding: '28px', background: '#F8F9FA', borderRadius: '28px',
-                        marginBottom: '48px', border: '1px solid #F1F3F5'
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: '12px',
+                        padding: isMobile ? '16px' : '24px',
+                        background: '#F8F9FA',
+                        borderRadius: '28px',
+                        marginBottom: '48px',
+                        border: '1px solid #F1F3F5'
                     }}>
-                        {reactionIcons.map(icon => {
+                        {reactionIcons.map((icon, index) => {
                             const isMine = reactions.some(r => r.user_id === studentSession.id && r.reaction_type === icon.type);
+                            // 5번째 아이콘은 2칸을 차지하게 하여 균형을 맞춤 (선택 사항)
+                            const isLast = index === reactionIcons.length - 1;
+
                             return (
                                 <button
                                     key={icon.type}
                                     onClick={() => handleReaction(icon.type)}
                                     style={{
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-                                        padding: isMobile ? '10px 12px' : '12px 20px',
-                                        border: isMine ? '2px solid #3498DB' : '2px solid transparent',
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: isMobile ? '12px 16px' : '16px 20px',
+                                        border: isMine ? '2px solid #3498DB' : '1px solid #ECEFF1',
                                         background: isMine ? '#E3F2FD' : 'white',
-                                        borderRadius: '20px',
-                                        boxShadow: isMine ? '0 4px 12px rgba(52, 152, 219, 0.2)' : '0 6px 12px rgba(0,0,0,0.05)',
-                                        cursor: 'pointer', transition: 'all 0.2s',
-                                        transform: isMine ? 'scale(1.05)' : 'scale(1)'
+                                        borderRadius: '18px',
+                                        boxShadow: isMine ? '0 4px 12px rgba(52, 152, 219, 0.15)' : '0 2px 6px rgba(0,0,0,0.04)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease',
+                                        gridColumn: isLast ? 'span 2' : 'span 1',
+                                        minHeight: '56px'
+                                    }}
+                                    onMouseEnter={e => {
+                                        if (!isMine) e.currentTarget.style.background = '#F0F7FF';
+                                    }}
+                                    onMouseLeave={e => {
+                                        if (!isMine) e.currentTarget.style.background = 'white';
                                     }}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ fontSize: isMobile ? '1.4rem' : '1.8rem' }}>{icon.emoji}</span>
-                                        {!isMobile && (
-                                            <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: isMine ? '#3498DB' : '#636E72' }}>
-                                                {icon.label}
-                                            </span>
-                                        )}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span style={{ fontSize: isMobile ? '1.3rem' : '1.5rem' }}>{icon.emoji}</span>
+                                        <span style={{
+                                            fontSize: isMobile ? '0.85rem' : '0.95rem',
+                                            fontWeight: 'bold',
+                                            color: isMine ? '#2980B9' : '#455A64'
+                                        }}>
+                                            {icon.label}
+                                        </span>
                                     </div>
-                                    <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#3498DB' : '#636E72' }}>
+                                    <span style={{
+                                        fontSize: '0.9rem',
+                                        fontWeight: '900',
+                                        color: isMine ? '#3498DB' : '#ADB5BD'
+                                    }}>
                                         {getReactionCount(icon.type)}
                                     </span>
                                 </button>
