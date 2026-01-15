@@ -4,6 +4,7 @@ import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import StudentGuideModal from './StudentGuideModal';
 
 /**
  * 역할: 학생 메인 대시보드 - 포인트 표시 및 활동 메뉴
@@ -32,6 +33,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [isEvolving, setIsEvolving] = useState(false); // [추가] 진화 애니메이션 상태
     const [isFlashing, setIsFlashing] = useState(false); // [추가] 박스 내 섬광 상태
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
+    const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     useEffect(() => {
@@ -421,879 +423,918 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     };
 
     return (
-        <Card style={{ maxWidth: '600px', background: '#FFFDF7', border: '2px solid #FFE082' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <div style={{
-                        background: '#FFE082',
-                        color: '#795548',
-                        padding: '6px 16px',
-                        borderRadius: '20px',
-                        fontSize: '0.9rem',
-                        fontWeight: 'bold',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                    }}>
-                        🎒 {studentSession.className || '우리 반'} 친구
-                    </div>
-                    {hasActivity && (
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={openFeedback}
-                            style={{
-                                background: '#FF5252',
-                                color: 'white',
-                                border: 'none',
-                                padding: '6px 12px',
-                                borderRadius: '20px',
-                                fontSize: '0.8rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 10px rgba(255, 82, 82, 0.3)'
-                            }}
-                        >
-                            🔔 내 글 소식
-                        </motion.button>
-                    )}
-                </div>
-                <Button variant="ghost" size="sm" onClick={onLogout}>
-                    로그아웃 🚪
-                </Button>
-            </div>
-
-
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '5px' }}>🌟</div>
-                <h1 style={{ fontSize: '2rem', color: '#5D4037', marginBottom: '0.4rem' }}>
-                    안녕, <span style={{ color: '#FBC02D' }}>{studentSession.name}</span>!
-                </h1>
-                <p style={{ color: '#8D6E63', fontSize: '1rem' }}>벌써 이만큼이나 성장했어! 🚀</p>
-            </div>
-
-
-
-            {/* [멀티모달] 드래곤 아지트 */}
-            <AnimatePresence>
-                {isDragonModalOpen && (
-                    <div style={{
-                        position: 'fixed',
-                        inset: 0,
-                        width: '100%',
-                        height: '100%',
-                        background: 'rgba(0,0,0,0.6)',
-                        backdropFilter: 'blur(8px)',
-                        zIndex: 2000,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: isMobile ? 'flex-end' : 'center',
-                    }} onClick={() => setIsDragonModalOpen(false)}>
-                        <motion.div
-                            initial={{ y: isMobile ? '100%' : 50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: isMobile ? '100%' : 50, opacity: 0 }}
-                            onClick={e => e.stopPropagation()}
-                            style={{
-                                background: '#FFFFFF',
-                                borderRadius: isMobile ? '32px 32px 0 0' : '32px',
-                                width: '100%', maxWidth: '600px',
-                                padding: '32px',
-                                border: 'none',
-                                boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
-                                position: 'relative',
-                                maxHeight: isMobile ? '90vh' : 'auto',
-                                overflowY: 'auto',
-                                transition: 'all 0.5s ease'
-                            }}
-                        >
-                            {/* [제거] 기존 전역 섬광 레이어 */}
-                            <button
-                                onClick={() => setIsDragonModalOpen(false)}
+        <>
+            <StudentGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+            <Card style={{ maxWidth: '600px', background: '#FFFDF7', border: '2px solid #FFE082' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div style={{
+                            background: '#FFE082',
+                            color: '#795548',
+                            padding: '6px 16px',
+                            borderRadius: '20px',
+                            fontSize: '0.9rem',
+                            fontWeight: 'bold',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                        }}>
+                            🎒 {studentSession.className || '우리 반'} 친구
+                        </div>
+                        {hasActivity && (
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={openFeedback}
                                 style={{
-                                    position: 'absolute', top: '20px', right: '20px',
-                                    background: 'rgba(255,255,255,0.7)', border: 'none',
-                                    width: '36px', height: '36px', borderRadius: '50%',
-                                    fontSize: '1.2rem', cursor: 'pointer', zIndex: 10
+                                    background: '#FF5252',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '6px 12px',
+                                    borderRadius: '20px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 10px rgba(255, 82, 82, 0.3)'
                                 }}
                             >
-                                ✕
-                            </button>
-
-                            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                                <h2 style={{ margin: 0, color: '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 드래곤 아지트</h2>
-                                <p style={{ margin: '4px 0 0 0', color: '#8D6E63', fontSize: '0.9rem' }}>나의 소중한 드래곤 파트너와 함께하는 공간</p>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '24px', background: '#F9F9F9', padding: '24px', borderRadius: '24px', border: '1px solid #EEE' }}>
-                                    <div style={{
-                                        position: 'relative',
-                                        width: '280px', // 영역 확대
-                                        height: '280px',
-                                        background: HIDEOUT_BACKGROUNDS[petData.background]?.color || HIDEOUT_BACKGROUNDS.default.color,
-                                        borderRadius: '24px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        overflow: 'hidden',
-                                        border: petData.level >= 5 ? '4px solid #FFD700' : `2px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || '#DDD'}`,
-                                        boxShadow: 'none' // 내부 그림자 제거하여 투명도 명확히 함
-                                    }}>
-                                        {/* 후경 장식 (드래곤 뒤쪽) */}
-                                        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.2) 100%)', pointerEvents: 'none' }} />
-
-                                        {petData.background === 'volcano' && (
-                                            <AnimatePresence>
-                                                {[...Array(8)].map((_, i) => (
-                                                    <motion.span
-                                                        key={`fire-${i}`}
-                                                        initial={{ y: 20, opacity: 0, scale: 0.5 }}
-                                                        animate={{ y: -80, opacity: [0, 0.8, 0], scale: [0.8, 1.4, 0.6] }}
-                                                        transition={{ repeat: Infinity, duration: 1.5 + i * 0.2, delay: i * 0.1 }}
-                                                        style={{ position: 'absolute', bottom: '10%', left: `${5 + i * 12}%`, fontSize: '2rem', filter: 'drop-shadow(0 0 8px #FF5722)', pointerEvents: 'none', zIndex: 0 }}
-                                                    >
-                                                        🔥
-                                                    </motion.span>
-                                                ))}
-                                            </AnimatePresence>
-                                        )}
-                                        {petData.background === 'sky' && (
-                                            <AnimatePresence>
-                                                {[...Array(4)].map((_, i) => (
-                                                    <motion.span
-                                                        key={`cloud-${i}`}
-                                                        animate={{ x: i % 2 === 0 ? [0, 20, 0] : [0, -20, 0] }}
-                                                        transition={{ repeat: Infinity, duration: 4 + i, ease: "easeInOut" }}
-                                                        style={{ position: 'absolute', top: `${10 + i * 20}%`, left: `${10 + i * 25}%`, fontSize: '2.5rem', opacity: 0.6, pointerEvents: 'none' }}
-                                                    >
-                                                        ☁️
-                                                    </motion.span>
-                                                ))}
-                                            </AnimatePresence>
-                                        )}
-                                        {petData.background === 'crystal' && (
-                                            <AnimatePresence>
-                                                {[...Array(12)].map((_, i) => (
-                                                    <motion.span
-                                                        key={`gem-${i}`}
-                                                        animate={{
-                                                            scale: [0.5, 1.2, 0.5],
-                                                            opacity: [0.3, 1, 0.3],
-                                                            filter: ['brightness(1)', 'brightness(1.5)', 'brightness(1)']
-                                                        }}
-                                                        transition={{ repeat: Infinity, duration: 3 + Math.random() * 2, delay: Math.random() * 2 }}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: `${Math.random() * 90}%`,
-                                                            left: `${Math.random() * 90}%`,
-                                                            fontSize: i % 2 === 0 ? '1.5rem' : '1rem',
-                                                            color: '#E1BEE7',
-                                                            pointerEvents: 'none',
-                                                            textShadow: '0 0 10px rgba(255,255,255,0.8)'
-                                                        }}
-                                                    >
-                                                        {i % 3 === 0 ? '💎' : '✨'}
-                                                    </motion.span>
-                                                ))}
-                                            </AnimatePresence>
-                                        )}
-                                        {petData.background === 'storm' && (
-                                            <>
-                                                <motion.div
-                                                    animate={{ opacity: [0, 0, 0.3, 0, 0.5, 0, 0, 0] }}
-                                                    transition={{ repeat: Infinity, duration: 5, times: [0, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8, 1] }}
-                                                    style={{ position: 'absolute', inset: 0, background: 'white', pointerEvents: 'none', zIndex: 0 }}
-                                                />
-                                                <div style={{ position: 'absolute', inset: 0, opacity: 0.3, background: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")', pointerEvents: 'none' }} />
-                                                {[...Array(3)].map((_, i) => (
-                                                    <motion.span
-                                                        key={`bolt-${i}`}
-                                                        animate={{ opacity: [0, 1, 0], y: [0, 10, 0] }}
-                                                        transition={{ repeat: Infinity, duration: 5, delay: 3.5 + (i * 0.1) }}
-                                                        style={{ position: 'absolute', top: '15%', left: `${20 + i * 30}%`, fontSize: '2rem', filter: 'drop-shadow(0 0 15px #7986CB)', pointerEvents: 'none', zIndex: 0 }}
-                                                    >
-                                                        ⚡
-                                                    </motion.span>
-                                                ))}
-                                            </>
-                                        )}
-                                        {petData.background === 'galaxy' && (
-                                            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-                                                {[...Array(20)].map((_, i) => (
-                                                    <motion.div
-                                                        key={`star-${i}`}
-                                                        animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.2, 1] }}
-                                                        transition={{ repeat: Infinity, duration: 2 + Math.random() * 3, delay: Math.random() * 5 }}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: `${Math.random() * 100}%`,
-                                                            left: `${Math.random() * 100}%`,
-                                                            width: '2px',
-                                                            height: '2px',
-                                                            background: 'white',
-                                                            borderRadius: '50%',
-                                                            boxShadow: '0 0 5px white'
-                                                        }}
-                                                    />
-                                                ))}
-                                                <motion.span
-                                                    animate={{ y: [0, -5, 0], opacity: [0.6, 0.9, 0.6] }}
-                                                    transition={{ repeat: Infinity, duration: 4 }}
-                                                    style={{ position: 'absolute', top: '10%', right: '15%', fontSize: '2.5rem', filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.4))' }}
-                                                >
-                                                    🌙
-                                                </motion.span>
-                                            </div>
-                                        )}
-                                        {/* 레벨 5 전용 황금 파티클 효과 */}
-                                        {petData.level >= 5 && (
-                                            <AnimatePresence>
-                                                {[...Array(10)].map((_, i) => (
-                                                    <motion.span
-                                                        key={`gold-${i}`}
-                                                        animate={{
-                                                            y: [0, -50, 0],
-                                                            opacity: [0, 1, 0],
-                                                            rotate: [0, 180, 360]
-                                                        }}
-                                                        transition={{
-                                                            repeat: Infinity,
-                                                            duration: 2 + Math.random() * 2,
-                                                            delay: Math.random() * 2
-                                                        }}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            top: `${Math.random() * 100}%`,
-                                                            left: `${Math.random() * 100}%`,
-                                                            fontSize: '1rem',
-                                                            color: '#FFD700',
-                                                            pointerEvents: 'none',
-                                                            zIndex: 0
-                                                        }}
-                                                    >
-                                                        ✨
-                                                    </motion.span>
-                                                ))}
-                                            </AnimatePresence>
-                                        )}
-                                        {/* 바닥 그림자 및 효과 */}
-                                        <motion.div
-                                            animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
-                                            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                                            style={{
-                                                position: 'absolute',
-                                                bottom: '20%',
-                                                width: '140px',
-                                                height: '30px',
-                                                background: 'rgba(0,0,0,0.2)',
-                                                borderRadius: '50%',
-                                                filter: 'blur(8px)',
-                                                zIndex: 0
-                                            }}
-                                        />
-
-                                        {/* 진화 섬광 효과 레이어 (박스 내부) */}
-                                        <AnimatePresence>
-                                            {isFlashing && (
-                                                <motion.div
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: [0, 1, 0] }}
-                                                    exit={{ opacity: 0 }}
-                                                    transition={{ duration: 0.3 }}
-                                                    style={{
-                                                        position: 'absolute',
-                                                        inset: 0,
-                                                        background: 'white',
-                                                        zIndex: 50,
-                                                        pointerEvents: 'none'
-                                                    }}
-                                                />
-                                            )}
-                                        </AnimatePresence>
-
-                                        {/* 드래곤 이미지 본체 */}
-                                        <motion.div
-                                            key={petData.level}
-                                            animate={isEvolving ? {
-                                                x: [-3, 3, -3, 3, 0],
-                                                filter: ["brightness(1)", "brightness(1.8)", "brightness(1)"]
-                                            } : {
-                                                scale: [0.8, 1.15, 1], // 등장 스프링 효과
-                                                y: [0, -12, 0]
-                                            }}
-                                            transition={isEvolving ? {
-                                                x: { repeat: Infinity, duration: 0.05 },
-                                                filter: { repeat: Infinity, duration: 0.5 }
-                                            } : {
-                                                scale: { type: "spring", stiffness: 300, damping: 12 },
-                                                y: { repeat: Infinity, duration: 3, ease: "easeInOut" }
-                                            }}
-                                            style={{
-                                                width: (petData.level === 3 || petData.level === 4) ? '264px' : '220px', // 3, 4단계 20% 확대
-                                                height: (petData.level === 3 || petData.level === 4) ? '264px' : '220px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                position: 'relative',
-                                                zIndex: 1,
-                                                cursor: 'pointer',
-                                                background: 'transparent',
-                                                backgroundColor: 'transparent',
-                                                border: 'none',
-                                                boxShadow: 'none'
-                                            }}
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                        >
-                                            {dragonInfo.isPlaceholder ? (
-                                                <div style={{ color: 'white', fontSize: '0.8rem', textAlign: 'center', padding: '10px' }}>
-                                                    진화 중...<br />(이미지 대기)
-                                                </div>
-                                            ) : (
-                                                <img
-                                                    src={dragonInfo.image}
-                                                    alt={dragonInfo.name}
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        objectFit: 'contain',
-                                                        background: 'transparent',
-                                                        backgroundColor: 'transparent',
-                                                        filter: `drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 5 ? 'drop-shadow(0 0 15px rgba(255,215,0,0.7))' : ''}`
-                                                    }}
-                                                />
-                                            )}
-                                        </motion.div>
-                                        {petData.level > 1 && (
-                                            <motion.span
-                                                animate={{ opacity: [0, 1, 0] }}
-                                                transition={{ repeat: Infinity, duration: 2 }}
-                                                style={{ position: 'absolute', top: -10, right: -10, fontSize: '1.5rem', zIndex: 5 }}
-                                            >
-                                                ✨
-                                            </motion.span>
-                                        )}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
-                                            <div>
-                                                <span style={{ fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.name}</span>
-                                                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
-                                            </div>
-                                            <span style={{ fontSize: '1rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
-                                        </div>
-                                        {/* 드래곤 경험치 바 */}
-                                        <div style={{ height: '14px', background: 'rgba(0,0,0,0.05)', borderRadius: '7px', overflow: 'hidden' }}>
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${petData.exp}%` }}
-                                                style={{
-                                                    height: '100%',
-                                                    background: 'linear-gradient(90deg, #FFB300, #FBC02D)',
-                                                    borderRadius: '7px'
-                                                }}
-                                            />
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-                                            <span style={{ fontSize: '0.8rem', color: '#8D6E63' }}>
-                                                식사 후 {daysSinceLastFed}일 경과
-                                            </span>
-                                            <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold' }}>
-                                                {petData.level < 5 ? `${100 - petData.exp}% 남음` : '최고 단계! 🌈'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <div style={{ background: '#FFFDE7', padding: '16px', borderRadius: '18px', border: '1px solid #FFF9C4' }}>
-                                        <div style={{ fontSize: '0.9rem', color: '#795548', lineHeight: '1.5' }}>
-                                            <span style={{ fontWeight: 'bold' }}>💡 드래곤 돌보기 팁</span><br />
-                                            글을 써서 모은 포인트로 맛있는 먹이를 줄 수 있어요. 30일 동안 돌보지 않으면 드래곤이 지쳐서 레벨이 내려갈 수 있으니 주의하세요!
-                                        </div>
-                                    </div>
-
-                                    <div style={{ display: 'flex', gap: '12px' }}>
-                                        <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={handleFeed}
-                                            style={{
-                                                flex: 1,
-                                                background: '#FF8A65',
-                                                color: 'white',
-                                                border: 'none',
-                                                padding: '16px',
-                                                borderRadius: '20px',
-                                                fontSize: '1rem',
-                                                fontWeight: 'bold',
-                                                cursor: 'pointer',
-                                                boxShadow: '0 6px 0 #E64A19',
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                gap: '10px'
-                                            }}
-                                        >
-                                            🍖 먹이 주기 (50P)
-                                        </motion.button>
-                                        <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => setIsShopOpen(true)}
-                                            style={{
-                                                flex: 1,
-                                                background: '#3498DB',
-                                                color: 'white',
-                                                border: 'none',
-                                                padding: '16px',
-                                                borderRadius: '20px',
-                                                fontSize: '1rem',
-                                                fontWeight: 'bold',
-                                                cursor: 'pointer',
-                                                boxShadow: '0 6px 0 #2980B9',
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                gap: '10px'
-                                            }}
-                                        >
-                                            🛍️ 상점/꾸미기
-                                        </motion.button>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '40px' }}>
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
-                >
-                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📝</div>
-                    <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>쓴 글자 수</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.totalChars.toLocaleString()}자</div>
-                </motion.div>
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
-                >
-                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🚀</div>
-                    <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>완료 미션</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.completedMissions}개</div>
-                </motion.div>
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
-                >
-                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📅</div>
-                    <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>이달의 활동</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.monthlyPosts}회</div>
-                </motion.div>
-            </div>
-
-            {/* 포인트 및 레벨 표시 영역 */}
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                style={{
-                    background: 'linear-gradient(135deg, #FFFDF7 0%, #FFFFFF 100%)',
-                    padding: '20px 24px',
-                    borderRadius: '24px',
-                    border: '1px solid #FFE082',
-                    marginBottom: '1.5rem',
-                    boxShadow: '0 4px 15px rgba(255, 213, 79, 0.1)',
-                    position: 'relative',
-                    overflow: 'hidden'
-                }}
-            >
-                {isLoading && (
-                    <div style={{
-                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                        background: 'rgba(255,255,255,0.8)', zIndex: 10,
-                        display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold'
-                    }}>
-                        로딩 중... ✨
-                    </div>
-                )}
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#8D6E63', fontWeight: 'bold' }}>보유 포인트 ✨</div>
-                        <motion.div
-                            key={points}
-                            initial={{ y: 5, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            style={{
-                                fontSize: '2.2rem',
-                                fontWeight: '900',
-                                color: '#FBC02D',
-                                display: 'flex',
-                                alignItems: 'baseline',
-                                gap: '4px'
-                            }}
-                        >
-                            {points.toLocaleString()}
-                            <span style={{ fontSize: '1rem', color: '#8D6E63', fontWeight: 'bold' }}>점</span>
-                        </motion.div>
-                    </div>
-
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#8D6E63', fontWeight: 'bold', marginBottom: '4px' }}>
-                            {levelInfo.emoji} {levelInfo.name}
-                        </div>
-                        <div style={{
-                            background: '#FDFCF0',
-                            padding: '4px 10px',
-                            borderRadius: '10px',
-                            fontSize: '0.75rem',
-                            color: '#FBC02D',
-                            fontWeight: 'bold',
-                            border: '1px solid #FFF9C4',
-                            display: 'inline-block'
-                        }}>
-                            LV. {levelInfo.level}
-                        </div>
-                    </div>
-                </div>
-
-                {/* 프로그레스 바 영역 */}
-                <div style={{ padding: '0 2px' }}>
-                    <div style={{ height: '8px', background: '#F1F3F5', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${levelInfo.next ? Math.min(100, (stats.totalChars / levelInfo.next) * 100) : 100}%` }}
-                            transition={{ duration: 1, ease: "easeOut" }}
-                            style={{
-                                height: '100%',
-                                background: 'linear-gradient(90deg, #FBC02D, #FFD54F)',
-                                borderRadius: '4px'
-                            }}
-                        />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
-                        {levelInfo.next && (
-                            <span style={{ fontSize: '0.7rem', color: '#ADB5BD', fontWeight: 'bold' }}>
-                                다음 목표까지 {Math.max(0, levelInfo.next - stats.totalChars).toLocaleString()}자 남음
-                            </span>
+                                🔔 내 글 소식
+                            </motion.button>
                         )}
                     </div>
-                </div>
-            </motion.div>
-
-            {/* 주요 활동 메뉴 */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                        background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #FFE082',
-                        textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
-                        boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
-                    }}
-                    onClick={() => onNavigate('mission_list')}
-                >
-                    <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📝</div>
-                    <h3 style={{ margin: 0, color: '#5D4037' }}>글쓰기 미션</h3>
-                    <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>선생님의 주제 확인</p>
-                </motion.div>
-
-                <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                        background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #FFE082',
-                        textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
-                        boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
-                    }}
-                    onClick={() => onNavigate('friends_hideout')}
-                >
-                    {hasActivity && (
-                        <div style={{
-                            position: 'absolute', top: '15px', right: '15px',
-                            width: '12px', height: '12px', background: '#FF5252',
-                            borderRadius: '50%', border: '2px solid white',
-                            boxShadow: '0 0 10px rgba(255, 82, 82, 0.5)'
-                        }} />
-                    )}
-                    <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👀</div>
-                    <h3 style={{ margin: 0, color: '#5D4037' }}>친구 아지트</h3>
-                    <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>친구들의 글 읽기</p>
-                </motion.div>
-            </div>
-
-            {/* [신규] 메인 메뉴 카드 (드래곤/어휘) */}
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px', marginTop: '24px' }}>
-                <motion.div
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setIsDragonModalOpen(true)}
-                    style={{
-                        background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
-                        borderRadius: '24px',
-                        padding: '30px 24px',
-                        cursor: 'pointer',
-                        border: '2px solid #FFF176',
-                        boxShadow: '0 8px 24px rgba(255, 241, 118, 0.2)',
-                        textAlign: 'center',
-                        position: 'relative',
-                        overflow: 'hidden'
-                    }}
-                >
-                    <div style={{ fontSize: '3.5rem', marginBottom: '15px' }}>🐉</div>
-                    <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#5D4037', marginBottom: '6px' }}>나의 드래곤 파트너</div>
-                    <div style={{ fontSize: '0.9rem', color: '#FBC02D', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>나의 드래곤 아지트 가기</div>
-                </motion.div>
-
-                <motion.div
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => alert('🏰 어휘의 탑은 준비 중입니다! 조금만 기다려주세요! ✨')}
-                    style={{
-                        background: 'linear-gradient(135deg, #E3F2FD 0%, #F0F4F8 100%)',
-                        borderRadius: '24px',
-                        padding: '30px 24px',
-                        cursor: 'pointer',
-                        border: '2px solid #90CAF9',
-                        boxShadow: '0 8px 24px rgba(144, 202, 249, 0.2)',
-                        textAlign: 'center',
-                        position: 'relative',
-                        overflow: 'hidden'
-                    }}
-                >
-                    <div style={{ fontSize: '3.5rem', marginBottom: '15px' }}>🏰</div>
-                    <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#1565C0', marginBottom: '6px' }}>어휘력 챌린지</div>
-                    <div style={{ fontSize: '0.9rem', color: '#2196F3', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>어휘의 탑 도전하기</div>
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#FF7043', color: 'white', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold' }}>COMING SOON</div>
-                </motion.div>
-            </div>
-
-            <div style={{
-                marginTop: '24px', padding: '20px', background: '#FDFCF0',
-                borderRadius: '20px', textAlign: 'center', border: '1px dashed #FFE082'
-            }}>
-                <p style={{ margin: 0, color: '#9E9E9E', fontSize: '0.9rem' }}>
-                    🚩 오늘의 목표: 멋진 글 완성하고 포인트 더 받기!
-                </p>
-            </div>
-
-            {/* 피드백 모아보기 모달 */}
-            {
-                showFeedback && (
-                    <div style={{
-                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                        background: 'rgba(0,0,0,0.5)', zIndex: 2000,
-                        display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        padding: '20px'
-                    }} onClick={() => setShowFeedback(false)}>
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <motion.button
+                            whileHover={{ scale: 1.1, rotate: 10 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => setIsGuideOpen(true)}
                             style={{
-                                background: 'white',
-                                width: '100%',
-                                maxWidth: '500px',
-                                maxHeight: '80vh',
-                                borderRadius: '32px',
+                                width: '42px',
+                                height: '42px',
+                                borderRadius: '50%',
+                                background: '#FFF9C4',
+                                border: '3px solid #FBC02D',
                                 display: 'flex',
-                                flexDirection: 'column',
-                                overflow: 'hidden',
-                                boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                fontSize: '1.2rem',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 0 #F9A825',
+                                transition: 'all 0.2s'
                             }}
-                            onClick={e => e.stopPropagation()}
+                            title="사용법 가이드"
                         >
-                            <div style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#5D4037' }}>🔔 내 글 소식</h3>
-                                <button onClick={() => setShowFeedback(false)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-                            </div>
-                            <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-                                {loadingFeedback ? (
-                                    <div style={{ textAlign: 'center', padding: '40px', color: '#9E9E9E' }}>소식을 가져오고 있어요... 🏃‍♂️</div>
-                                ) : feedbacks.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '60px', color: '#9E9E9E' }}>
-                                        <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</div>
-                                        아직 새로운 소식이 없어요.
-                                    </div>
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        {feedbacks.map((f, idx) => (
-                                            <div
-                                                key={f.id || idx}
-                                                style={{
-                                                    padding: '16px',
-                                                    background: '#F9F9F9',
-                                                    borderRadius: '20px',
-                                                    border: '1px solid #F1F1F1',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s'
-                                                }}
-                                                onClick={() => {
-                                                    setShowFeedback(false);
-                                                    onNavigate('friends_hideout', { initialPostId: f.post_id || f.student_posts?.id });
-                                                }}
-                                                onMouseEnter={e => {
-                                                    e.currentTarget.style.background = '#F0F7FF';
-                                                    e.currentTarget.style.borderColor = '#D0E1F9';
-                                                }}
-                                                onMouseLeave={e => {
-                                                    e.currentTarget.style.background = '#F9F9F9';
-                                                    e.currentTarget.style.borderColor = '#F1F1F1';
-                                                }}
-                                            >
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                                                    <span style={{ fontSize: '1.2rem' }}>
-                                                        {f.type === 'reaction' ? (
-                                                            f.reaction_type === 'heart' ? '❤️' :
-                                                                f.reaction_type === 'laugh' ? '😂' :
-                                                                    f.reaction_type === 'wow' ? '👏' :
-                                                                        f.reaction_type === 'bulb' ? '💡' : '✨'
-                                                        ) : '💬'}
-                                                    </span>
-                                                    <span style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem' }}>
-                                                        {f.students?.name} 친구가 {f.type === 'reaction' ? '리액션을 남겼어요!' : '댓글을 남겼어요!'}
-                                                    </span>
-                                                </div>
-                                                <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
-                                                    글 제목: "{f.student_posts?.title}"
-                                                </div>
-                                                {f.type === 'comment' && (
-                                                    <div style={{
-                                                        fontSize: '0.9rem', color: '#795548', background: 'white',
-                                                        padding: '8px 12px', borderRadius: '12px', marginTop: '6px',
-                                                        border: '1px solid #EEE'
-                                                    }}>
-                                                        {f.content}
-                                                    </div>
-                                                )}
-                                                <div style={{ fontSize: '0.75rem', color: '#BDBDBD', marginTop: '8px', textAlign: 'right' }}>
-                                                    {new Date(f.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
+                            ❓
+                        </motion.button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={onLogout}
+                            style={{
+                                color: '#8D6E63',
+                                fontWeight: 'bold',
+                                background: '#EFEBE9',
+                                borderRadius: '15px',
+                                padding: '6px 12px'
+                            }}
+                        >
+                            로그아웃 🚪
+                        </Button>
                     </div>
-                )
-            }
-            {/* 액세서리 상점 모달 */}
-            {
-                isShopOpen && (
-                    <div style={{
-                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                        background: 'rgba(0,0,0,0.6)', zIndex: 3000,
-                        display: 'flex', justifyContent: 'center', alignItems: 'center',
-                        padding: '20px'
-                    }} onClick={() => setIsShopOpen(false)}>
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            style={{
-                                background: 'white',
-                                width: '100%',
-                                maxWidth: '450px',
-                                maxHeight: '85vh',
-                                borderRadius: '32px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                overflow: 'hidden',
-                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-                            }}
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <div style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8F9FA' }}>
-                                <div>
-                                    <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2C3E50', fontWeight: '900' }}>🏡 아지트 배경 상점</h3>
-                                    <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#7F8C8D' }}>남은 포인트: <b>{points.toLocaleString()}P</b></p>
+                </div>
+
+
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '5px' }}>🌟</div>
+                    <h1 style={{ fontSize: '2rem', color: '#5D4037', marginBottom: '0.4rem' }}>
+                        안녕, <span style={{ color: '#FBC02D' }}>{studentSession.name}</span>!
+                    </h1>
+                    <p style={{ color: '#8D6E63', fontSize: '1rem' }}>벌써 이만큼이나 성장했어! 🚀</p>
+                </div>
+
+
+
+                {/* [멀티모달] 드래곤 아지트 */}
+                <AnimatePresence>
+                    {isDragonModalOpen && (
+                        <div style={{
+                            position: 'fixed',
+                            inset: 0,
+                            width: '100%',
+                            height: '100%',
+                            background: 'rgba(0,0,0,0.6)',
+                            backdropFilter: 'blur(8px)',
+                            zIndex: 2000,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: isMobile ? 'flex-end' : 'center',
+                        }} onClick={() => setIsDragonModalOpen(false)}>
+                            <motion.div
+                                initial={{ y: isMobile ? '100%' : 50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: isMobile ? '100%' : 50, opacity: 0 }}
+                                onClick={e => e.stopPropagation()}
+                                style={{
+                                    background: '#FFFFFF',
+                                    borderRadius: isMobile ? '32px 32px 0 0' : '32px',
+                                    width: '100%', maxWidth: '600px',
+                                    padding: '32px',
+                                    border: 'none',
+                                    boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
+                                    position: 'relative',
+                                    maxHeight: isMobile ? '90vh' : 'auto',
+                                    overflowY: 'auto',
+                                    transition: 'all 0.5s ease'
+                                }}
+                            >
+                                {/* [제거] 기존 전역 섬광 레이어 */}
+                                <button
+                                    onClick={() => setIsDragonModalOpen(false)}
+                                    style={{
+                                        position: 'absolute', top: '20px', right: '20px',
+                                        background: 'rgba(255,255,255,0.7)', border: 'none',
+                                        width: '36px', height: '36px', borderRadius: '50%',
+                                        fontSize: '1.2rem', cursor: 'pointer', zIndex: 10
+                                    }}
+                                >
+                                    ✕
+                                </button>
+
+                                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                                    <h2 style={{ margin: 0, color: '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 드래곤 아지트</h2>
+                                    <p style={{ margin: '4px 0 0 0', color: '#8D6E63', fontSize: '0.9rem' }}>나의 소중한 드래곤 파트너와 함께하는 공간</p>
                                 </div>
-                                <button onClick={() => setIsShopOpen(false)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-                            </div>
 
-                            <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                {Object.values(HIDEOUT_BACKGROUNDS).map(item => {
-                                    const isOwned = item.id === 'default' || petData.ownedItems.includes(item.id);
-                                    const isEquipped = petData.background === item.id;
-
-                                    return (
-                                        <div key={item.id} style={{
-                                            border: `2px solid ${isEquipped ? item.border : '#F1F3F5'}`,
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '24px', background: '#F9F9F9', padding: '24px', borderRadius: '24px', border: '1px solid #EEE' }}>
+                                        <div style={{
+                                            position: 'relative',
+                                            width: '280px', // 영역 확대
+                                            height: '280px',
+                                            background: HIDEOUT_BACKGROUNDS[petData.background]?.color || HIDEOUT_BACKGROUNDS.default.color,
                                             borderRadius: '24px',
-                                            padding: '16px',
-                                            textAlign: 'center',
-                                            background: isEquipped ? item.color : 'white',
-                                            transition: 'all 0.2s',
-                                            opacity: isEquipped ? 1 : 0.8
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            overflow: 'hidden',
+                                            border: petData.level >= 5 ? '4px solid #FFD700' : `2px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || '#DDD'}`,
+                                            boxShadow: 'none' // 내부 그림자 제거하여 투명도 명확히 함
                                         }}>
-                                            <div style={{
-                                                width: '100%', height: '60px', borderRadius: '12px',
-                                                background: item.color, marginBottom: '10px',
-                                                border: `1px solid ${item.border}`
-                                            }} />
-                                            <div style={{ fontWeight: 'bold', fontSize: '1rem', color: isEquipped ? (item.textColor || '#2C3E50') : '#2C3E50', marginBottom: '6px' }}>{item.name}</div>
+                                            {/* 후경 장식 (드래곤 뒤쪽) */}
+                                            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.2) 100%)', pointerEvents: 'none' }} />
 
-                                            {/* 가격/상태 표시 배지 */}
-                                            <div style={{
-                                                display: 'inline-block',
-                                                padding: '4px 12px',
-                                                borderRadius: '12px',
-                                                fontSize: '0.85rem',
-                                                fontWeight: '900',
-                                                marginBottom: '14px',
-                                                background: isOwned ? (isEquipped ? 'rgba(255,255,255,0.2)' : '#F1F3F5') : '#FFF9C4',
-                                                color: isOwned ? (isEquipped ? 'white' : '#95A5A6') : '#FBC02D',
-                                                border: isOwned ? 'none' : '1px solid #FFE082'
-                                            }}>
-                                                {isOwned ? (
-                                                    <span>{isEquipped ? '✨ 사용 중' : '✅ 보유 중'}</span>
-                                                ) : (
-                                                    <span>💰 {item.price?.toLocaleString()}P</span>
+                                            {petData.background === 'volcano' && (
+                                                <AnimatePresence>
+                                                    {[...Array(8)].map((_, i) => (
+                                                        <motion.span
+                                                            key={`fire-${i}`}
+                                                            initial={{ y: 20, opacity: 0, scale: 0.5 }}
+                                                            animate={{ y: -80, opacity: [0, 0.8, 0], scale: [0.8, 1.4, 0.6] }}
+                                                            transition={{ repeat: Infinity, duration: 1.5 + i * 0.2, delay: i * 0.1 }}
+                                                            style={{ position: 'absolute', bottom: '10%', left: `${5 + i * 12}%`, fontSize: '2rem', filter: 'drop-shadow(0 0 8px #FF5722)', pointerEvents: 'none', zIndex: 0 }}
+                                                        >
+                                                            🔥
+                                                        </motion.span>
+                                                    ))}
+                                                </AnimatePresence>
+                                            )}
+                                            {petData.background === 'sky' && (
+                                                <AnimatePresence>
+                                                    {[...Array(4)].map((_, i) => (
+                                                        <motion.span
+                                                            key={`cloud-${i}`}
+                                                            animate={{ x: i % 2 === 0 ? [0, 20, 0] : [0, -20, 0] }}
+                                                            transition={{ repeat: Infinity, duration: 4 + i, ease: "easeInOut" }}
+                                                            style={{ position: 'absolute', top: `${10 + i * 20}%`, left: `${10 + i * 25}%`, fontSize: '2.5rem', opacity: 0.6, pointerEvents: 'none' }}
+                                                        >
+                                                            ☁️
+                                                        </motion.span>
+                                                    ))}
+                                                </AnimatePresence>
+                                            )}
+                                            {petData.background === 'crystal' && (
+                                                <AnimatePresence>
+                                                    {[...Array(12)].map((_, i) => (
+                                                        <motion.span
+                                                            key={`gem-${i}`}
+                                                            animate={{
+                                                                scale: [0.5, 1.2, 0.5],
+                                                                opacity: [0.3, 1, 0.3],
+                                                                filter: ['brightness(1)', 'brightness(1.5)', 'brightness(1)']
+                                                            }}
+                                                            transition={{ repeat: Infinity, duration: 3 + Math.random() * 2, delay: Math.random() * 2 }}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: `${Math.random() * 90}%`,
+                                                                left: `${Math.random() * 90}%`,
+                                                                fontSize: i % 2 === 0 ? '1.5rem' : '1rem',
+                                                                color: '#E1BEE7',
+                                                                pointerEvents: 'none',
+                                                                textShadow: '0 0 10px rgba(255,255,255,0.8)'
+                                                            }}
+                                                        >
+                                                            {i % 3 === 0 ? '💎' : '✨'}
+                                                        </motion.span>
+                                                    ))}
+                                                </AnimatePresence>
+                                            )}
+                                            {petData.background === 'storm' && (
+                                                <>
+                                                    <motion.div
+                                                        animate={{ opacity: [0, 0, 0.3, 0, 0.5, 0, 0, 0] }}
+                                                        transition={{ repeat: Infinity, duration: 5, times: [0, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8, 1] }}
+                                                        style={{ position: 'absolute', inset: 0, background: 'white', pointerEvents: 'none', zIndex: 0 }}
+                                                    />
+                                                    <div style={{ position: 'absolute', inset: 0, opacity: 0.3, background: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")', pointerEvents: 'none' }} />
+                                                    {[...Array(3)].map((_, i) => (
+                                                        <motion.span
+                                                            key={`bolt-${i}`}
+                                                            animate={{ opacity: [0, 1, 0], y: [0, 10, 0] }}
+                                                            transition={{ repeat: Infinity, duration: 5, delay: 3.5 + (i * 0.1) }}
+                                                            style={{ position: 'absolute', top: '15%', left: `${20 + i * 30}%`, fontSize: '2rem', filter: 'drop-shadow(0 0 15px #7986CB)', pointerEvents: 'none', zIndex: 0 }}
+                                                        >
+                                                            ⚡
+                                                        </motion.span>
+                                                    ))}
+                                                </>
+                                            )}
+                                            {petData.background === 'galaxy' && (
+                                                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                                                    {[...Array(20)].map((_, i) => (
+                                                        <motion.div
+                                                            key={`star-${i}`}
+                                                            animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.2, 1] }}
+                                                            transition={{ repeat: Infinity, duration: 2 + Math.random() * 3, delay: Math.random() * 5 }}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: `${Math.random() * 100}%`,
+                                                                left: `${Math.random() * 100}%`,
+                                                                width: '2px',
+                                                                height: '2px',
+                                                                background: 'white',
+                                                                borderRadius: '50%',
+                                                                boxShadow: '0 0 5px white'
+                                                            }}
+                                                        />
+                                                    ))}
+                                                    <motion.span
+                                                        animate={{ y: [0, -5, 0], opacity: [0.6, 0.9, 0.6] }}
+                                                        transition={{ repeat: Infinity, duration: 4 }}
+                                                        style={{ position: 'absolute', top: '10%', right: '15%', fontSize: '2.5rem', filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.4))' }}
+                                                    >
+                                                        🌙
+                                                    </motion.span>
+                                                </div>
+                                            )}
+                                            {/* 레벨 5 전용 황금 파티클 효과 */}
+                                            {petData.level >= 5 && (
+                                                <AnimatePresence>
+                                                    {[...Array(10)].map((_, i) => (
+                                                        <motion.span
+                                                            key={`gold-${i}`}
+                                                            animate={{
+                                                                y: [0, -50, 0],
+                                                                opacity: [0, 1, 0],
+                                                                rotate: [0, 180, 360]
+                                                            }}
+                                                            transition={{
+                                                                repeat: Infinity,
+                                                                duration: 2 + Math.random() * 2,
+                                                                delay: Math.random() * 2
+                                                            }}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: `${Math.random() * 100}%`,
+                                                                left: `${Math.random() * 100}%`,
+                                                                fontSize: '1rem',
+                                                                color: '#FFD700',
+                                                                pointerEvents: 'none',
+                                                                zIndex: 0
+                                                            }}
+                                                        >
+                                                            ✨
+                                                        </motion.span>
+                                                    ))}
+                                                </AnimatePresence>
+                                            )}
+                                            {/* 바닥 그림자 및 효과 */}
+                                            <motion.div
+                                                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+                                                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                                                style={{
+                                                    position: 'absolute',
+                                                    bottom: '20%',
+                                                    width: '140px',
+                                                    height: '30px',
+                                                    background: 'rgba(0,0,0,0.2)',
+                                                    borderRadius: '50%',
+                                                    filter: 'blur(8px)',
+                                                    zIndex: 0
+                                                }}
+                                            />
+
+                                            {/* 진화 섬광 효과 레이어 (박스 내부) */}
+                                            <AnimatePresence>
+                                                {isFlashing && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: [0, 1, 0] }}
+                                                        exit={{ opacity: 0 }}
+                                                        transition={{ duration: 0.3 }}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            inset: 0,
+                                                            background: 'white',
+                                                            zIndex: 50,
+                                                            pointerEvents: 'none'
+                                                        }}
+                                                    />
                                                 )}
-                                            </div>
+                                            </AnimatePresence>
 
-                                            {!isOwned ? (
-                                                <Button
-                                                    size="sm"
-                                                    style={{ width: '100%', background: '#FBC02D', color: '#795548', fontWeight: 'bold' }}
-                                                    onClick={() => handleBuyItem(item)}
+                                            {/* 드래곤 이미지 본체 */}
+                                            <motion.div
+                                                key={petData.level}
+                                                animate={isEvolving ? {
+                                                    x: [-3, 3, -3, 3, 0],
+                                                    filter: ["brightness(1)", "brightness(1.8)", "brightness(1)"]
+                                                } : {
+                                                    scale: [0.8, 1.15, 1], // 등장 스프링 효과
+                                                    y: [0, -12, 0]
+                                                }}
+                                                transition={isEvolving ? {
+                                                    x: { repeat: Infinity, duration: 0.05 },
+                                                    filter: { repeat: Infinity, duration: 0.5 }
+                                                } : {
+                                                    scale: { type: "spring", stiffness: 300, damping: 12 },
+                                                    y: { repeat: Infinity, duration: 3, ease: "easeInOut" }
+                                                }}
+                                                style={{
+                                                    width: (petData.level === 3 || petData.level === 4) ? '264px' : '220px', // 3, 4단계 20% 확대
+                                                    height: (petData.level === 3 || petData.level === 4) ? '264px' : '220px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    position: 'relative',
+                                                    zIndex: 1,
+                                                    cursor: 'pointer',
+                                                    background: 'transparent',
+                                                    backgroundColor: 'transparent',
+                                                    border: 'none',
+                                                    boxShadow: 'none'
+                                                }}
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                {dragonInfo.isPlaceholder ? (
+                                                    <div style={{ color: 'white', fontSize: '0.8rem', textAlign: 'center', padding: '10px' }}>
+                                                        진화 중...<br />(이미지 대기)
+                                                    </div>
+                                                ) : (
+                                                    <img
+                                                        src={dragonInfo.image}
+                                                        alt={dragonInfo.name}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            objectFit: 'contain',
+                                                            background: 'transparent',
+                                                            backgroundColor: 'transparent',
+                                                            filter: `drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 5 ? 'drop-shadow(0 0 15px rgba(255,215,0,0.7))' : ''}`
+                                                        }}
+                                                    />
+                                                )}
+                                            </motion.div>
+                                            {petData.level > 1 && (
+                                                <motion.span
+                                                    animate={{ opacity: [0, 1, 0] }}
+                                                    transition={{ repeat: Infinity, duration: 2 }}
+                                                    style={{ position: 'absolute', top: -10, right: -10, fontSize: '1.5rem', zIndex: 5 }}
                                                 >
-                                                    구매하기
-                                                </Button>
-                                            ) : (
-                                                <Button
-                                                    size="sm"
-                                                    variant={isEquipped ? 'primary' : 'ghost'}
-                                                    style={{
-                                                        width: '100%',
-                                                        background: isEquipped ? item.accent : '#F8F9FA',
-                                                        color: isEquipped ? 'white' : '#7F8C8D',
-                                                        border: isEquipped ? 'none' : '1px solid #DEE2E6'
-                                                    }}
-                                                    onClick={() => handleToggleEquip(item.id)}
-                                                >
-                                                    {isEquipped ? '사용 중' : '적용하기'}
-                                                </Button>
+                                                    ✨
+                                                </motion.span>
                                             )}
                                         </div>
-                                    );
-                                })}
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
+                                                <div>
+                                                    <span style={{ fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.name}</span>
+                                                    <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
+                                                </div>
+                                                <span style={{ fontSize: '1rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
+                                            </div>
+                                            {/* 드래곤 경험치 바 */}
+                                            <div style={{ height: '14px', background: 'rgba(0,0,0,0.05)', borderRadius: '7px', overflow: 'hidden' }}>
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${petData.exp}%` }}
+                                                    style={{
+                                                        height: '100%',
+                                                        background: 'linear-gradient(90deg, #FFB300, #FBC02D)',
+                                                        borderRadius: '7px'
+                                                    }}
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+                                                <span style={{ fontSize: '0.8rem', color: '#8D6E63' }}>
+                                                    식사 후 {daysSinceLastFed}일 경과
+                                                </span>
+                                                <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold' }}>
+                                                    {petData.level < 5 ? `${100 - petData.exp}% 남음` : '최고 단계! 🌈'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div style={{ background: '#FFFDE7', padding: '16px', borderRadius: '18px', border: '1px solid #FFF9C4' }}>
+                                            <div style={{ fontSize: '0.9rem', color: '#795548', lineHeight: '1.5' }}>
+                                                <span style={{ fontWeight: 'bold' }}>💡 드래곤 돌보기 팁</span><br />
+                                                글을 써서 모은 포인트로 맛있는 먹이를 줄 수 있어요. 30일 동안 돌보지 않으면 드래곤이 지쳐서 레벨이 내려갈 수 있으니 주의하세요!
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '12px' }}>
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={handleFeed}
+                                                style={{
+                                                    flex: 1,
+                                                    background: '#FF8A65',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    padding: '16px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '1rem',
+                                                    fontWeight: 'bold',
+                                                    cursor: 'pointer',
+                                                    boxShadow: '0 6px 0 #E64A19',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    gap: '10px'
+                                                }}
+                                            >
+                                                🍖 먹이 주기 (50P)
+                                            </motion.button>
+                                            <motion.button
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => setIsShopOpen(true)}
+                                                style={{
+                                                    flex: 1,
+                                                    background: '#3498DB',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    padding: '16px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '1rem',
+                                                    fontWeight: 'bold',
+                                                    cursor: 'pointer',
+                                                    boxShadow: '0 6px 0 #2980B9',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    gap: '10px'
+                                                }}
+                                            >
+                                                🛍️ 상점/꾸미기
+                                            </motion.button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '40px' }}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
+                    >
+                        <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📝</div>
+                        <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>쓴 글자 수</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.totalChars.toLocaleString()}자</div>
+                    </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
+                    >
+                        <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🚀</div>
+                        <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>완료 미션</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.completedMissions}개</div>
+                    </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
+                    >
+                        <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📅</div>
+                        <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>이달의 활동</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.monthlyPosts}회</div>
+                    </motion.div>
+                </div>
+
+                {/* 포인트 및 레벨 표시 영역 */}
+                <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    style={{
+                        background: 'linear-gradient(135deg, #FFFDF7 0%, #FFFFFF 100%)',
+                        padding: '20px 24px',
+                        borderRadius: '24px',
+                        border: '1px solid #FFE082',
+                        marginBottom: '1.5rem',
+                        boxShadow: '0 4px 15px rgba(255, 213, 79, 0.1)',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}
+                >
+                    {isLoading && (
+                        <div style={{
+                            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(255,255,255,0.8)', zIndex: 10,
+                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold'
+                        }}>
+                            로딩 중... ✨
+                        </div>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <div style={{ textAlign: 'left' }}>
+                            <div style={{ fontSize: '0.85rem', color: '#8D6E63', fontWeight: 'bold' }}>보유 포인트 ✨</div>
+                            <motion.div
+                                key={points}
+                                initial={{ y: 5, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                style={{
+                                    fontSize: '2.2rem',
+                                    fontWeight: '900',
+                                    color: '#FBC02D',
+                                    display: 'flex',
+                                    alignItems: 'baseline',
+                                    gap: '4px'
+                                }}
+                            >
+                                {points.toLocaleString()}
+                                <span style={{ fontSize: '1rem', color: '#8D6E63', fontWeight: 'bold' }}>점</span>
+                            </motion.div>
+                        </div>
+
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.85rem', color: '#8D6E63', fontWeight: 'bold', marginBottom: '4px' }}>
+                                {levelInfo.emoji} {levelInfo.name}
                             </div>
-                            <div style={{ padding: '20px', textAlign: 'center', background: '#FDFCF0' }}>
-                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#9E9E9E' }}>멋진 배경으로 나만의 드래곤 아지트를 꾸며보세요! 🌈</p>
+                            <div style={{
+                                background: '#FDFCF0',
+                                padding: '4px 10px',
+                                borderRadius: '10px',
+                                fontSize: '0.75rem',
+                                color: '#FBC02D',
+                                fontWeight: 'bold',
+                                border: '1px solid #FFF9C4',
+                                display: 'inline-block'
+                            }}>
+                                LV. {levelInfo.level}
                             </div>
-                        </motion.div>
+                        </div>
                     </div>
-                )}
-        </Card>
+
+                    {/* 프로그레스 바 영역 */}
+                    <div style={{ padding: '0 2px' }}>
+                        <div style={{ height: '8px', background: '#F1F3F5', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${levelInfo.next ? Math.min(100, (stats.totalChars / levelInfo.next) * 100) : 100}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                                style={{
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, #FBC02D, #FFD54F)',
+                                    borderRadius: '4px'
+                                }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+                            {levelInfo.next && (
+                                <span style={{ fontSize: '0.7rem', color: '#ADB5BD', fontWeight: 'bold' }}>
+                                    다음 목표까지 {Math.max(0, levelInfo.next - stats.totalChars).toLocaleString()}자 남음
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* 주요 활동 메뉴 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{
+                            background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #FFE082',
+                            textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
+                            boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
+                        }}
+                        onClick={() => onNavigate('mission_list')}
+                    >
+                        <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📝</div>
+                        <h3 style={{ margin: 0, color: '#5D4037' }}>글쓰기 미션</h3>
+                        <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>선생님의 주제 확인</p>
+                    </motion.div>
+
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{
+                            background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #FFE082',
+                            textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
+                            boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
+                        }}
+                        onClick={() => onNavigate('friends_hideout')}
+                    >
+                        {hasActivity && (
+                            <div style={{
+                                position: 'absolute', top: '15px', right: '15px',
+                                width: '12px', height: '12px', background: '#FF5252',
+                                borderRadius: '50%', border: '2px solid white',
+                                boxShadow: '0 0 10px rgba(255, 82, 82, 0.5)'
+                            }} />
+                        )}
+                        <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👀</div>
+                        <h3 style={{ margin: 0, color: '#5D4037' }}>친구 아지트</h3>
+                        <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>친구들의 글 읽기</p>
+                    </motion.div>
+                </div>
+
+                {/* [신규] 메인 메뉴 카드 (드래곤/어휘) */}
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px', marginTop: '24px' }}>
+                    <motion.div
+                        whileHover={{ scale: 1.02, y: -5 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setIsDragonModalOpen(true)}
+                        style={{
+                            background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
+                            borderRadius: '24px',
+                            padding: '30px 24px',
+                            cursor: 'pointer',
+                            border: '2px solid #FFF176',
+                            boxShadow: '0 8px 24px rgba(255, 241, 118, 0.2)',
+                            textAlign: 'center',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{ fontSize: '3.5rem', marginBottom: '15px' }}>🐉</div>
+                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#5D4037', marginBottom: '6px' }}>나의 드래곤 파트너</div>
+                        <div style={{ fontSize: '0.9rem', color: '#FBC02D', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>나의 드래곤 아지트 가기</div>
+                    </motion.div>
+
+                    <motion.div
+                        whileHover={{ scale: 1.02, y: -5 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => alert('🏰 어휘의 탑은 준비 중입니다! 조금만 기다려주세요! ✨')}
+                        style={{
+                            background: 'linear-gradient(135deg, #E3F2FD 0%, #F0F4F8 100%)',
+                            borderRadius: '24px',
+                            padding: '30px 24px',
+                            cursor: 'pointer',
+                            border: '2px solid #90CAF9',
+                            boxShadow: '0 8px 24px rgba(144, 202, 249, 0.2)',
+                            textAlign: 'center',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{ fontSize: '3.5rem', marginBottom: '15px' }}>🏰</div>
+                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#1565C0', marginBottom: '6px' }}>어휘력 챌린지</div>
+                        <div style={{ fontSize: '0.9rem', color: '#2196F3', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>어휘의 탑 도전하기</div>
+                        <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#FF7043', color: 'white', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold' }}>COMING SOON</div>
+                    </motion.div>
+                </div>
+
+                <div style={{
+                    marginTop: '24px', padding: '20px', background: '#FDFCF0',
+                    borderRadius: '20px', textAlign: 'center', border: '1px dashed #FFE082'
+                }}>
+                    <p style={{ margin: 0, color: '#9E9E9E', fontSize: '0.9rem' }}>
+                        🚩 오늘의 목표: 멋진 글 완성하고 포인트 더 받기!
+                    </p>
+                </div>
+
+                {/* 피드백 모아보기 모달 */}
+                {
+                    showFeedback && (
+                        <div style={{
+                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.5)', zIndex: 2000,
+                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            padding: '20px'
+                        }} onClick={() => setShowFeedback(false)}>
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                style={{
+                                    background: 'white',
+                                    width: '100%',
+                                    maxWidth: '500px',
+                                    maxHeight: '80vh',
+                                    borderRadius: '32px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    overflow: 'hidden',
+                                    boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+                                }}
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <div style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#5D4037' }}>🔔 내 글 소식</h3>
+                                    <button onClick={() => setShowFeedback(false)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+                                </div>
+                                <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+                                    {loadingFeedback ? (
+                                        <div style={{ textAlign: 'center', padding: '40px', color: '#9E9E9E' }}>소식을 가져오고 있어요... 🏃‍♂️</div>
+                                    ) : feedbacks.length === 0 ? (
+                                        <div style={{ textAlign: 'center', padding: '60px', color: '#9E9E9E' }}>
+                                            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</div>
+                                            아직 새로운 소식이 없어요.
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            {feedbacks.map((f, idx) => (
+                                                <div
+                                                    key={f.id || idx}
+                                                    style={{
+                                                        padding: '16px',
+                                                        background: '#F9F9F9',
+                                                        borderRadius: '20px',
+                                                        border: '1px solid #F1F1F1',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onClick={() => {
+                                                        setShowFeedback(false);
+                                                        onNavigate('friends_hideout', { initialPostId: f.post_id || f.student_posts?.id });
+                                                    }}
+                                                    onMouseEnter={e => {
+                                                        e.currentTarget.style.background = '#F0F7FF';
+                                                        e.currentTarget.style.borderColor = '#D0E1F9';
+                                                    }}
+                                                    onMouseLeave={e => {
+                                                        e.currentTarget.style.background = '#F9F9F9';
+                                                        e.currentTarget.style.borderColor = '#F1F1F1';
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                                                        <span style={{ fontSize: '1.2rem' }}>
+                                                            {f.type === 'reaction' ? (
+                                                                f.reaction_type === 'heart' ? '❤️' :
+                                                                    f.reaction_type === 'laugh' ? '😂' :
+                                                                        f.reaction_type === 'wow' ? '👏' :
+                                                                            f.reaction_type === 'bulb' ? '💡' : '✨'
+                                                            ) : '💬'}
+                                                        </span>
+                                                        <span style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem' }}>
+                                                            {f.students?.name} 친구가 {f.type === 'reaction' ? '리액션을 남겼어요!' : '댓글을 남겼어요!'}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
+                                                        글 제목: "{f.student_posts?.title}"
+                                                    </div>
+                                                    {f.type === 'comment' && (
+                                                        <div style={{
+                                                            fontSize: '0.9rem', color: '#795548', background: 'white',
+                                                            padding: '8px 12px', borderRadius: '12px', marginTop: '6px',
+                                                            border: '1px solid #EEE'
+                                                        }}>
+                                                            {f.content}
+                                                        </div>
+                                                    )}
+                                                    <div style={{ fontSize: '0.75rem', color: '#BDBDBD', marginTop: '8px', textAlign: 'right' }}>
+                                                        {new Date(f.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        </div>
+                    )
+                }
+                {/* 액세서리 상점 모달 */}
+                {
+                    isShopOpen && (
+                        <div style={{
+                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.6)', zIndex: 3000,
+                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            padding: '20px'
+                        }} onClick={() => setIsShopOpen(false)}>
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                style={{
+                                    background: 'white',
+                                    width: '100%',
+                                    maxWidth: '450px',
+                                    maxHeight: '85vh',
+                                    borderRadius: '32px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    overflow: 'hidden',
+                                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+                                }}
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <div style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8F9FA' }}>
+                                    <div>
+                                        <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2C3E50', fontWeight: '900' }}>🏡 아지트 배경 상점</h3>
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#7F8C8D' }}>남은 포인트: <b>{points.toLocaleString()}P</b></p>
+                                    </div>
+                                    <button onClick={() => setIsShopOpen(false)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+                                </div>
+
+                                <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    {Object.values(HIDEOUT_BACKGROUNDS).map(item => {
+                                        const isOwned = item.id === 'default' || petData.ownedItems.includes(item.id);
+                                        const isEquipped = petData.background === item.id;
+
+                                        return (
+                                            <div key={item.id} style={{
+                                                border: `2px solid ${isEquipped ? item.border : '#F1F3F5'}`,
+                                                borderRadius: '24px',
+                                                padding: '16px',
+                                                textAlign: 'center',
+                                                background: isEquipped ? item.color : 'white',
+                                                transition: 'all 0.2s',
+                                                opacity: isEquipped ? 1 : 0.8
+                                            }}>
+                                                <div style={{
+                                                    width: '100%', height: '60px', borderRadius: '12px',
+                                                    background: item.color, marginBottom: '10px',
+                                                    border: `1px solid ${item.border}`
+                                                }} />
+                                                <div style={{ fontWeight: 'bold', fontSize: '1rem', color: isEquipped ? (item.textColor || '#2C3E50') : '#2C3E50', marginBottom: '6px' }}>{item.name}</div>
+
+                                                {/* 가격/상태 표시 배지 */}
+                                                <div style={{
+                                                    display: 'inline-block',
+                                                    padding: '4px 12px',
+                                                    borderRadius: '12px',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: '900',
+                                                    marginBottom: '14px',
+                                                    background: isOwned ? (isEquipped ? 'rgba(255,255,255,0.2)' : '#F1F3F5') : '#FFF9C4',
+                                                    color: isOwned ? (isEquipped ? 'white' : '#95A5A6') : '#FBC02D',
+                                                    border: isOwned ? 'none' : '1px solid #FFE082'
+                                                }}>
+                                                    {isOwned ? (
+                                                        <span>{isEquipped ? '✨ 사용 중' : '✅ 보유 중'}</span>
+                                                    ) : (
+                                                        <span>💰 {item.price?.toLocaleString()}P</span>
+                                                    )}
+                                                </div>
+
+                                                {!isOwned ? (
+                                                    <Button
+                                                        size="sm"
+                                                        style={{ width: '100%', background: '#FBC02D', color: '#795548', fontWeight: 'bold' }}
+                                                        onClick={() => handleBuyItem(item)}
+                                                    >
+                                                        구매하기
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        size="sm"
+                                                        variant={isEquipped ? 'primary' : 'ghost'}
+                                                        style={{
+                                                            width: '100%',
+                                                            background: isEquipped ? item.accent : '#F8F9FA',
+                                                            color: isEquipped ? 'white' : '#7F8C8D',
+                                                            border: isEquipped ? 'none' : '1px solid #DEE2E6'
+                                                        }}
+                                                        onClick={() => handleToggleEquip(item.id)}
+                                                    >
+                                                        {isEquipped ? '사용 중' : '적용하기'}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div style={{ padding: '20px', textAlign: 'center', background: '#FDFCF0' }}>
+                                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#9E9E9E' }}>멋진 배경으로 나만의 드래곤 아지트를 꾸며보세요! 🌈</p>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+            </AnimatePresence>
+        </Card >
+        </>
     );
 };
 

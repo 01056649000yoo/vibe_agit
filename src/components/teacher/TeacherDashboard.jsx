@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const ClassManager = lazy(() => import('./ClassManager'));
 const StudentManager = lazy(() => import('./StudentManager'));
 const MissionManager = lazy(() => import('./MissionManager'));
+const UsageGuide = lazy(() => import('./UsageGuide'));
 
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
@@ -264,7 +265,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 flexShrink: 0, zIndex: 99,
                 width: '100%', boxSizing: 'border-box'
             }}>
-                {['dashboard', 'settings'].map((tabId) => (
+                {['dashboard', 'settings', 'guide'].map((tabId) => (
                     <button
                         key={tabId}
                         onClick={() => setCurrentTab(tabId)}
@@ -275,7 +276,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '📊 학급 현황' : '⚙️ 관리 설정'}
+                        {tabId === 'dashboard' ? '📊 학급 현황' : tabId === 'settings' ? '⚙️ 관리 설정' : '📖 앱 사용법'}
                     </button>
                 ))}
             </nav>
@@ -291,7 +292,9 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 overflowY: 'auto' // 내부 콘텐츠 스크롤
             }}>
                 <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px' }}>로딩 중... ✨</div>}>
-                    {(!activeClass || hasZeroClasses) ? (
+                    {currentTab === 'guide' ? (
+                        <UsageGuide isMobile={isMobile} />
+                    ) : (!activeClass || hasZeroClasses) ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
                             <ClassManager
                                 userId={session.user.id}
