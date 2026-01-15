@@ -1239,9 +1239,25 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 background: item.color, marginBottom: '10px',
                                                 border: `1px solid ${item.border}`
                                             }} />
-                                            <div style={{ fontWeight: 'bold', fontSize: '1rem', color: '#2C3E50', marginBottom: '4px' }}>{item.name}</div>
-                                            <div style={{ fontSize: '0.85rem', color: item.textColor, fontWeight: 'bold', marginBottom: '12px' }}>
-                                                {isOwned ? '보유 중' : `${item.price.toLocaleString()}P`}
+                                            <div style={{ fontWeight: 'bold', fontSize: '1rem', color: isEquipped ? (item.textColor || '#2C3E50') : '#2C3E50', marginBottom: '6px' }}>{item.name}</div>
+
+                                            {/* 가격/상태 표시 배지 */}
+                                            <div style={{
+                                                display: 'inline-block',
+                                                padding: '4px 12px',
+                                                borderRadius: '12px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: '900',
+                                                marginBottom: '14px',
+                                                background: isOwned ? (isEquipped ? 'rgba(255,255,255,0.2)' : '#F1F3F5') : '#FFF9C4',
+                                                color: isOwned ? (isEquipped ? 'white' : '#95A5A6') : '#FBC02D',
+                                                border: isOwned ? 'none' : '1px solid #FFE082'
+                                            }}>
+                                                {isOwned ? (
+                                                    <span>{isEquipped ? '✨ 사용 중' : '✅ 보유 중'}</span>
+                                                ) : (
+                                                    <span>💰 {item.price?.toLocaleString()}P</span>
+                                                )}
                                             </div>
 
                                             {!isOwned ? (

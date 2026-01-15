@@ -71,7 +71,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
             .from('students')
             .select('*')
             .eq('class_id', classId)
-            .order('total_points', { ascending: false }); // [수정] 포인트 높은 순(랭킹)으로 정렬
+            .order('created_at', { ascending: true }); // [수정] 기본 데이터는 등록 순(번호)으로 정렬하여 가져옴
 
         if (!error && data) setStudents(data);
     };
@@ -87,14 +87,12 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
         const previousStudents = [...students];
 
         setStudents(prev => {
-            const up = prev.map(s => {
+            return prev.map(s => {
                 if (selectedIds.includes(s.id)) {
                     return { ...s, total_points: (s.total_points || 0) + actualAmount };
                 }
                 return s;
             });
-            // 포인트 변동 즉시 재정렬 (내림차순)
-            return [...up].sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
         });
         setIsPointModalOpen(false);
 
@@ -145,7 +143,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
         const code = Math.random().toString(36).substring(2, 10).toUpperCase();
         const { data, error } = await supabase.from('students').insert({ class_id: classId, name: studentName, student_code: code, total_points: 0 }).select();
         if (!error && data[0]) {
-            setStudents(prev => [...prev, data[0]].sort((a, b) => (b.total_points || 0) - (a.total_points || 0)));
+            setStudents(prev => [...prev, data[0]]);
             setStudentName('');
         }
         setIsAdding(false);
@@ -156,8 +154,15 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
         else setSelectedIds(students.map(s => s.id));
     };
 
+    // [중요] 용도에 따른 정렬 로직 분리
+    // 1. Dashboard Mode (랭킹): 포인트 높은 순
+    // 2. Management Mode (관리): 등록 순(created_at)
+    const displayStudents = isDashboardMode
+        ? [...students].sort((a, b) => (b.total_points || 0) - (a.total_points || 0))
+        : [...students].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
     if (isDashboardMode) {
-        const maxPoints = students.length > 0 ? Math.max(...students.map(s => s.total_points || 0)) : 0;
+        const maxPoints = displayStudents.length > 0 ? Math.max(...displayStudents.map(s => s.total_points || 0)) : 0;
 
         return (
             <div style={{ width: '100%', boxSizing: 'border-box' }}>
@@ -211,7 +216,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                             boxSizing: 'border-box'
                         }}
                     >
-                        {students.map((s, idx) => {
+                        {displayStudents.map((s, idx) => {
                             const isFirst = idx === 0;
                             const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}위`;
 
@@ -314,7 +319,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                         })}
                     </div>
                     {/* 하단 내용 더 있음 암시 그라데이션 */}
-                    {students.length > 5 && (
+                    {displayStudents.length > 5 && (
                         <div style={{
                             position: 'absolute', bottom: 0, left: 0, right: 0, height: '40px',
                             background: 'linear-gradient(to top, rgba(255,255,255,0.95), transparent)',
@@ -387,9 +392,8 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                     paddingRight: '6px'
                 }}
             >
-                {students.map((s, idx) => {
-                    const isFirst = idx === 0;
-                    const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}위`;
+                {displayStudents.map((s, idx) => {
+                    const studentNo = idx + 1; // 계정 관리 모드에서는 '학생 번호'
 
                     return (
                         <motion.div
@@ -399,22 +403,22 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                             transition={{ delay: idx * 0.05 }}
                             style={{
                                 display: 'flex', alignItems: 'center', padding: '12px 16px',
-                                background: isFirst ? '#FFFDE7' : 'white',
-                                border: `1px solid ${isFirst ? '#F7DC6F' : '#E9ECEF'}`,
+                                background: 'white',
+                                border: '1px solid #E9ECEF',
                                 borderRadius: '20px',
                                 justifyContent: 'space-between',
                                 minHeight: '70px',
-                                boxShadow: isFirst ? '0 4px 15px rgba(247, 220, 111, 0.15)' : '0 2px 10px rgba(0,0,0,0.02)',
+                                boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
                                 transition: 'all 0.2s ease'
                             }}
                         >
-                            {/* 좌측 그룹: 랭킹 + 이름 */}
+                            {/* 좌측 그룹: 번호 + 이름 */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '0 0 150px' }}>
                                 <div style={{
-                                    width: '40px', fontWeight: '900', color: isFirst ? '#F39C12' : '#ADB5BD',
-                                    fontSize: isFirst ? '1.4rem' : '1rem', display: 'flex', justifyContent: 'center'
+                                    width: '40px', fontWeight: '900', color: '#ADB5BD',
+                                    fontSize: '1rem', display: 'flex', justifyContent: 'center'
                                 }}>
-                                    {rankIcon}
+                                    {studentNo}
                                 </div>
                                 <span style={{ fontWeight: '800', color: '#34495E', fontSize: '1.1rem', letterSpacing: '-0.3px' }}>{s.name}</span>
                             </div>
@@ -439,10 +443,10 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                             {/* 우측 그룹: 포인트 + 관리 버튼 */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <div style={{ textAlign: 'right', minWidth: '80px' }}>
-                                    <span style={{ fontWeight: '900', color: isFirst ? '#F39C12' : '#2C3E50', fontSize: '1.3rem' }}>
+                                    <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.3rem' }}>
                                         {(s.total_points || 0).toLocaleString()}
                                     </span>
-                                    <span style={{ fontSize: '0.8rem', color: isFirst ? '#F39C12' : '#ADB5BD', marginLeft: '3px', fontWeight: 'bold' }}>P</span>
+                                    <span style={{ fontSize: '0.8rem', color: '#ADB5BD', marginLeft: '3px', fontWeight: 'bold' }}>P</span>
                                 </div>
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
