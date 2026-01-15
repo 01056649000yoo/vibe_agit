@@ -18,7 +18,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [loadingFeedback, setLoadingFeedback] = useState(false);
     const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 }); // [추가] 성장 통계
     const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', icon: '🌱', nextGoal: 1000 }); // [추가] 레벨 정보
-    const [selectedItems, setSelectedItems] = useState({ wall: 'old', desk: 'old', chair: 'old', decos: [] });
     const [petData, setPetData] = useState({
         name: '나의 드래곤',
         level: 1,
@@ -230,101 +229,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 </Button>
             </div>
 
-            {/* 서재 컨테이너 (The Stage) */}
-            <div
-                className="relative w-full h-[300px] rounded-xl overflow-hidden mb-8"
-                style={{
-                    position: 'relative',
-                    width: '100%',
-                    height: '300px',
-                    borderRadius: '1rem',
-                    overflow: 'hidden',
-                    marginBottom: '2rem',
-                    boxShadow: 'inset 0 4px 15px rgba(0,0,0,0.2)',
-                    background: '#C6B6AD' // 약간 어두운 베이지색 벽
-                }}
-            >
-                {/* 벽 (상단 70%) */}
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '70%',
-                    backgroundColor: '#C6B6AD'
-                }} />
-
-                {/* 바닥 (하단 30%, 아이소메트릭 효과를 위해 skew 적용) */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: '-20%',
-                    width: '140%',
-                    height: '30%',
-                    backgroundColor: '#826A5C',
-                    transform: 'skewX(-15deg)', // 안쪽으로 깊어지는 효과
-                    zIndex: 5,
-                    boxShadow: '0 -10px 20px rgba(0,0,0,0.1)'
-                }} />
-
-                {/* 가구 배치 (레이어링 및 그림자 포함) */}
-
-                {/* 의자 (🪑) - 뒤쪽 레이어 */}
-                <div style={{
-                    position: 'absolute',
-                    left: '25%',
-                    bottom: '15%',
-                    zIndex: 10,
-                    transform: 'scale(1.1)'
-                }}>
-                    {/* 의자 그림자 */}
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '-5px',
-                        left: '0px',
-                        width: '80px',
-                        height: '16px',
-                        background: 'rgba(0,0,0,0.2)',
-                        borderRadius: '100%',
-                        filter: 'blur(12px)',
-                    }} />
-                    <div style={{
-                        fontSize: '4.5rem',
-                        filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
-                        position: 'relative'
-                    }}>
-                        🪑
-                    </div>
-                </div>
-
-                {/* 책상 (🏚️) - 앞쪽 레이어 */}
-                <div style={{
-                    position: 'absolute',
-                    left: '35%',
-                    bottom: '10%',
-                    zIndex: 20,
-                    transform: 'scale(1.25)'
-                }}>
-                    {/* 책상 그림자 */}
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '-10px',
-                        left: '0px',
-                        width: '100px',
-                        height: '16px',
-                        background: 'rgba(0,0,0,0.2)',
-                        borderRadius: '100%',
-                        filter: 'blur(12px)',
-                    }} />
-                    <div style={{
-                        fontSize: '5.5rem',
-                        filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.15))',
-                        position: 'relative'
-                    }}>
-                        🏚️
-                    </div>
-                </div>
-            </div>
 
             <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
                 <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🌟</div>
