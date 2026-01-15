@@ -472,8 +472,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '24px', background: '#F9F9F9', padding: '24px', borderRadius: '24px', border: '1px solid #EEE' }}>
                                     <div style={{
                                         position: 'relative',
-                                        width: '260px',
-                                        height: '260px',
+                                        width: '280px', // 영역 확대
+                                        height: '280px',
                                         background: HIDEOUT_BACKGROUNDS[petData.background]?.color || HIDEOUT_BACKGROUNDS.default.color,
                                         borderRadius: '24px',
                                         display: 'flex',
@@ -603,8 +603,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 default: { type: "spring", stiffness: 260, damping: 20 }
                                             }}
                                             style={{
-                                                width: '220px',
-                                                height: '220px',
+                                                width: (petData.level === 3 || petData.level === 4) ? '264px' : '220px', // 3, 4단계 20% 확대
+                                                height: (petData.level === 3 || petData.level === 4) ? '264px' : '220px',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
