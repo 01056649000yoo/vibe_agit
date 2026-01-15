@@ -47,7 +47,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         min_paragraphs: 2,
         base_reward: 100,
         bonus_threshold: 100,
-        bonus_reward: 10
+        bonus_reward: 10,
+        allow_comments: true
     });
 
     const genreCategories = [
@@ -113,7 +114,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
 
             alert('새로운 글쓰기 미션이 공개되었습니다! 🚀');
             setIsFormOpen(false);
-            setFormData({ title: '', guide: '', genre: '일기', min_chars: 100, min_paragraphs: 2, base_reward: 100, bonus_threshold: 100, bonus_reward: 10 });
+            setFormData({ title: '', guide: '', genre: '일기', min_chars: 100, min_paragraphs: 2, base_reward: 100, bonus_threshold: 100, bonus_reward: 10, allow_comments: true });
             fetchMissions();
         } catch (error) {
             alert('글쓰기 미션 등록 실패: ' + error.message);
@@ -696,6 +697,29 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                                 <span style={{ fontWeight: 'bold' }}>+</span>
                                                 <input type="number" step="10" placeholder="점수" value={formData.bonus_reward} onChange={e => setFormData({ ...formData, bonus_reward: parseInt(e.target.value) || 0 })} style={{ width: '50px', padding: '6px', borderRadius: '6px', border: '1px solid #F9E79F', fontSize: '0.8rem' }} />
                                                 <span style={{ fontWeight: 'bold', color: '#D35400' }}>P</span>
+                                            </div>
+                                            {/* 댓글 허용 설정 추가 */}
+                                            <div style={{
+                                                marginTop: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                background: formData.allow_comments ? 'rgba(52, 152, 219, 0.1)' : 'rgba(189, 195, 199, 0.2)',
+                                                padding: '8px 12px',
+                                                borderRadius: '10px',
+                                                cursor: 'pointer',
+                                                border: formData.allow_comments ? '1px solid #3498DB' : '1px solid #BDC3C7',
+                                                transition: 'all 0.2s'
+                                            }} onClick={() => setFormData({ ...formData, allow_comments: !formData.allow_comments })}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.allow_comments}
+                                                    onChange={() => { }} // 상위 div의 onClick으로 제어
+                                                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                                                />
+                                                <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: formData.allow_comments ? '#2980B9' : '#7F8C8D' }}>
+                                                    {formData.allow_comments ? '💬 댓글 허용됨' : '🔒 댓글 잠금'}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

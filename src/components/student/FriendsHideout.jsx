@@ -42,7 +42,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
         try {
             const { data, error } = await supabase
                 .from('student_posts')
-                .select('*, students(name)')
+                .select('*, students(name), writing_missions(allow_comments)')
                 .eq('id', postId)
                 .single();
 
@@ -83,7 +83,8 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                 .from('student_posts')
                 .select(`
                     *,
-                    students!inner(name, class_id)
+                    students!inner(name, class_id),
+                    writing_missions(allow_comments)
                 `)
                 .eq('mission_id', missionId)
                 .eq('is_submitted', true)
@@ -209,6 +210,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                 {viewingPost && (
                     <PostDetailModal
                         post={viewingPost}
+                        mission={selectedMission || viewingPost?.writing_missions}
                         studentSession={studentSession}
                         onClose={() => {
                             if (params?.initialPostId) {
@@ -227,7 +229,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
     );
 };
 
-const PostDetailModal = ({ post, studentSession, onClose, reactionIcons, isMobile }) => {
+const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons, isMobile }) => {
     const [reactions, setReactions] = useState([]);
     const [comments, setComments] = useState([]);
     const [commentInput, setCommentInput] = useState('');
@@ -472,43 +474,60 @@ const PostDetailModal = ({ post, studentSession, onClose, reactionIcons, isMobil
                             💬 친구들의 따뜻한 한마디
                         </h4>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '40px' }}>
-                            {comments.length === 0 ? (
-                                <div style={{ textAlign: 'center', color: '#B2BEC3', fontSize: '1rem', padding: '50px', background: '#FDFDFD', borderRadius: '24px', border: '2px dashed #F1F3F5' }}>
-                                    첫 번째 응원의 주인공이 되어보세요! ✨
+                        {mission?.allow_comments === false ? (
+                            <div style={{
+                                textAlign: 'center',
+                                padding: '40px',
+                                background: '#F8F9FA',
+                                borderRadius: '24px',
+                                border: '1px solid #E9ECEF',
+                                color: '#95A5A6',
+                                fontWeight: 'bold'
+                            }}>
+                                <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '8px' }}>🔒</span>
+                                이 미션은 댓글 쓰기가 제한되었습니다.
+                            </div>
+                        ) : (
+                            <>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '40px' }}>
+                                    {comments.length === 0 ? (
+                                        <div style={{ textAlign: 'center', color: '#B2BEC3', fontSize: '1rem', padding: '50px', background: '#FDFDFD', borderRadius: '24px', border: '2px dashed #F1F3F5' }}>
+                                            첫 번째 응원의 주인공이 되어보세요! ✨
+                                        </div>
+                                    ) : (
+                                        comments.map(c => (
+                                            <div key={c.id} style={{
+                                                padding: '20px 24px', background: '#F8F9FA', borderRadius: '24px',
+                                                border: '1px solid #F1F3F5'
+                                            }}>
+                                                <div style={{ fontWeight: '900', fontSize: '0.9rem', color: '#3498DB', marginBottom: '8px' }}>{c.students?.name}</div>
+                                                <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7' }}>{c.content}</div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
-                            ) : (
-                                comments.map(c => (
-                                    <div key={c.id} style={{
-                                        padding: '20px 24px', background: '#F8F9FA', borderRadius: '24px',
-                                        border: '1px solid #F1F3F5'
-                                    }}>
-                                        <div style={{ fontWeight: '900', fontSize: '0.9rem', color: '#3498DB', marginBottom: '8px' }}>{c.students?.name}</div>
-                                        <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7' }}>{c.content}</div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
 
-                        <form onSubmit={handleCommentSubmit} style={{
-                            display: 'flex', gap: '14px', background: 'white',
-                            padding: '10px', borderRadius: '22px', border: '2px solid #F1F3F5',
-                            boxShadow: '0 8px 16px rgba(0,0,0,0.04)'
-                        }}>
-                            <input
-                                type="text"
-                                value={commentInput}
-                                onChange={e => setCommentInput(e.target.value)}
-                                placeholder="따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨"
-                                style={{
-                                    flex: 1, padding: '14px 20px', border: 'none', outline: 'none',
-                                    fontSize: '1.05rem', color: '#2D3436'
-                                }}
-                            />
-                            <Button type="submit" size="sm" style={{ borderRadius: '16px', padding: '0 24px', fontWeight: '900' }} disabled={submittingComment}>
-                                보내기
-                            </Button>
-                        </form>
+                                <form onSubmit={handleCommentSubmit} style={{
+                                    display: 'flex', gap: '14px', background: 'white',
+                                    padding: '10px', borderRadius: '22px', border: '2px solid #F1F3F5',
+                                    boxShadow: '0 8px 16px rgba(0,0,0,0.04)'
+                                }}>
+                                    <input
+                                        type="text"
+                                        value={commentInput}
+                                        onChange={e => setCommentInput(e.target.value)}
+                                        placeholder="따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨"
+                                        style={{
+                                            flex: 1, padding: '14px 20px', border: 'none', outline: 'none',
+                                            fontSize: '1.05rem', color: '#2D3436'
+                                        }}
+                                    />
+                                    <Button type="submit" size="sm" style={{ borderRadius: '16px', padding: '0 24px', fontWeight: '900' }} disabled={submittingComment}>
+                                        보내기
+                                    </Button>
+                                </form>
+                            </>
+                        )}
                     </div>
                 </div>
             </motion.div>
