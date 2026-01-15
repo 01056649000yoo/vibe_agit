@@ -42,6 +42,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
     const [isCodeZoomModalOpen, setIsCodeZoomModalOpen] = useState(false); // 개별 코드 확대
     const [isAllCodesModalOpen, setIsAllCodesModalOpen] = useState(false); // 전원 코드 확인
     const [selectedStudentForCode, setSelectedStudentForCode] = useState(null);
+    const [copiedId, setCopiedId] = useState(null); // [추가] 복사 완료 툴팁 상태
 
     // 포인트 통합 모달 데이터
     const [pointFormData, setPointFormData] = useState({
@@ -318,50 +319,108 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '12px' }}>
                 {students.map((s, idx) => (
-                    <div key={s.id} style={{
-                        display: 'flex', alignItems: 'center', padding: '10px 14px',
-                        background: '#F8F9FA', border: '1px solid #E9ECEF', borderRadius: '12px',
-                        justifyContent: 'space-between', fontSize: '0.9rem'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ color: '#ADB5BD', fontWeight: 'bold', width: '24px' }}>{idx + 1}</div>
-                            <div style={{ fontWeight: 'bold' }}>{s.name}</div>
-                            <code style={{ fontSize: '0.75rem', color: '#34495E', background: 'white', padding: '2px 8px', borderRadius: '4px', border: '1px solid #D5DBDB', fontFamily: 'monospace', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                    <motion.div
+                        key={s.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        style={{
+                            display: 'flex', alignItems: 'center', padding: '16px 20px',
+                            background: 'white', border: '1px solid #E9ECEF', borderRadius: '20px',
+                            justifyContent: 'space-between', fontSize: '0.9rem',
+                            minHeight: '84px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        {/* 좌측: 학생 정보 (이름 + 대형 코드) */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ color: '#ADB5BD', fontWeight: 'bold', fontSize: '0.8rem' }}>{idx + 1}</span>
+                                <span style={{ fontWeight: '800', color: '#495057', fontSize: '1rem' }}>{s.name}</span>
+                            </div>
+                            <div style={{
+                                fontSize: '1.8rem',
+                                color: '#3498DB',
+                                fontWeight: '900',
+                                fontFamily: 'monospace',
+                                letterSpacing: '4px',
+                                textShadow: '0 2px 4px rgba(52, 152, 219, 0.1)'
+                            }}>
                                 {s.student_code}
-                            </code>
+                            </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+
+                        {/* 우측: 관리 도구 아이콘 그룹 */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
                             <button
                                 onClick={() => {
                                     setSelectedStudentForCode(s);
                                     setIsCodeZoomModalOpen(true);
                                 }}
-                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
+                                style={{
+                                    background: '#F8F9FA', border: 'none', cursor: 'pointer',
+                                    width: '38px', height: '38px', borderRadius: '12px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '1.1rem', transition: 'all 0.2s'
+                                }}
                                 title="크게 보기"
                             >
                                 🔍
                             </button>
-                            <button
-                                onClick={() => {
-                                    navigator.clipboard.writeText(s.student_code);
-                                    alert('복사됨! ✅');
-                                }}
-                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
-                                title="코드 복사"
-                            >
-                                📋
-                            </button>
+
+                            <div style={{ position: 'relative' }}>
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(s.student_code);
+                                        setCopiedId(s.id);
+                                        setTimeout(() => setCopiedId(null), 1500);
+                                    }}
+                                    style={{
+                                        background: '#FDFCF0', border: '1px solid #F7DC6F', cursor: 'pointer',
+                                        width: '38px', height: '38px', borderRadius: '12px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '1.1rem', transition: 'all 0.2s'
+                                    }}
+                                    title="코드 복사"
+                                >
+                                    📋
+                                </button>
+                                <AnimatePresence>
+                                    {copiedId === s.id && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                                            animate={{ opacity: 1, y: -45, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.8 }}
+                                            style={{
+                                                position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+                                                background: '#2ECC71', color: 'white', padding: '4px 10px',
+                                                borderRadius: '8px', fontSize: '0.7rem', fontWeight: 'bold',
+                                                whiteSpace: 'nowrap', zIndex: 10, boxShadow: '0 4px 10px rgba(46, 204, 113, 0.3)'
+                                            }}
+                                        >
+                                            복사됨! ✅
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
                             <button
                                 onClick={() => { setDeleteTarget(s); setIsDeleteModalOpen(true); }}
-                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
+                                style={{
+                                    background: '#FFF5F5', border: 'none', cursor: 'pointer',
+                                    width: '38px', height: '38px', borderRadius: '12px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '1.1rem', transition: 'all 0.2s'
+                                }}
                                 title="학생 삭제"
                             >
                                 🗑️
                             </button>
                         </div>
-                    </div>
+                    </motion.div>
                 ))}
             </div>
 
