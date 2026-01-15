@@ -383,7 +383,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     return (
         <Card style={{ maxWidth: '600px', background: '#FFFDF7', border: '2px solid #FFE082' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <div style={{
                         background: '#FFE082',
@@ -423,12 +423,12 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             </div>
 
 
-            <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                <div style={{ fontSize: '4rem', marginBottom: '10px' }}>🌟</div>
-                <h1 style={{ fontSize: '2.4rem', color: '#5D4037', marginBottom: '0.5rem' }}>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '5px' }}>🌟</div>
+                <h1 style={{ fontSize: '2rem', color: '#5D4037', marginBottom: '0.4rem' }}>
                     안녕, <span style={{ color: '#FBC02D' }}>{studentSession.name}</span>!
                 </h1>
-                <p style={{ color: '#8D6E63', fontSize: '1.1rem' }}>벌써 이만큼이나 성장했어! 🚀</p>
+                <p style={{ color: '#8D6E63', fontSize: '1rem' }}>벌써 이만큼이나 성장했어! 🚀</p>
             </div>
 
 
@@ -437,10 +437,16 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             <AnimatePresence>
                 {isDragonModalOpen && (
                     <div style={{
-                        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-                        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
-                        zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: isMobile ? 'flex-end' : 'center',
-                        padding: isMobile ? '0' : '20px'
+                        position: 'fixed',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        background: 'rgba(0,0,0,0.6)',
+                        backdropFilter: 'blur(8px)',
+                        zIndex: 2000,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: isMobile ? 'flex-end' : 'center',
                     }} onClick={() => setIsDragonModalOpen(false)}>
                         <motion.div
                             initial={{ y: isMobile ? '100%' : 50, opacity: 0 }}
