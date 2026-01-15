@@ -3,6 +3,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
 /**
  * 역할: 학생 메인 대시보드 - 포인트 표시 및 활동 메뉴
@@ -28,6 +29,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         background: 'default' // [신규] 아지트 배경
     });
     const [isShopOpen, setIsShopOpen] = useState(false);
+    const [isEvolving, setIsEvolving] = useState(false); // [추가] 진화 애니메이션 상태
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -126,7 +128,16 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
         const today = new Date().toISOString().split('T')[0];
 
+        const isLevelUp = newLevel > petData.level;
+
         try {
+            // [진화 연출 시작]
+            if (isLevelUp) {
+                setIsEvolving(true);
+                // 진화 사운드 (구조 제공)
+                playEvolutionSound();
+            }
+
             const { error } = await supabase
                 .from('students')
                 .update({
@@ -141,6 +152,19 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .eq('id', studentSession.id);
 
             if (error) throw error;
+
+            if (isLevelUp) {
+                // 파티클 폭발 효과
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#FFD700', '#FFA500', '#FF4500']
+                });
+
+                // 연출 지속 시간 후 상태 해제
+                setTimeout(() => setIsEvolving(false), 2000);
+            }
 
             setPoints(newPoints);
             setPetData(prev => ({
@@ -209,6 +233,13 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         } catch (err) {
             console.error('배경 변경 실패:', err.message);
         }
+    };
+
+    // [신규] 진화 효과음 플레이어 (샘플 구조)
+    const playEvolutionSound = () => {
+        // const audio = new Audio('/assets/sounds/evolution_success.mp3');
+        // audio.play().catch(e => console.log('사운드 재생 실패:', e));
+        console.log('🎵 진화 사운드 재생: 두구두구두구~ 짠!');
     };
 
     // [추가] 마지막 식사 후 경과 일수 계산
@@ -437,8 +468,12 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     }} onClick={() => setIsDragonModalOpen(false)}>
                         <motion.div
                             initial={{ y: isMobile ? '100%' : 50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
+                            animate={isEvolving ? {
+                                y: 0, opacity: 1,
+                                x: [-2, 2, -1, 1, 0], // 화면 흔들림 발동
+                            } : { y: 0, opacity: 1 }}
                             exit={{ y: isMobile ? '100%' : 50, opacity: 0 }}
+                            transition={isEvolving ? { x: { repeat: 10, duration: 0.1 } } : {}}
                             onClick={e => e.stopPropagation()}
                             style={{
                                 background: '#FFFFFF',
@@ -453,6 +488,25 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 transition: 'all 0.5s ease'
                             }}
                         >
+                            {/* 진화 섬광 효과 레이어 */}
+                            <AnimatePresence>
+                                {isEvolving && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.3, times: [0, 0.5, 1] }}
+                                        style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            background: 'white',
+                                            zIndex: 100,
+                                            pointerEvents: 'none',
+                                            borderRadius: 'inherit'
+                                        }}
+                                    />
+                                )}
+                            </AnimatePresence>
                             <button
                                 onClick={() => setIsDragonModalOpen(false)}
                                 style={{
@@ -641,14 +695,23 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                         {/* 드래곤 이미지 본체 */}
                                         <motion.div
                                             key={petData.level}
-                                            initial={{ scale: 0.5, rotate: -20, opacity: 0 }}
-                                            animate={{
+                                            initial={isEvolving ? { scale: 0, y: 50, opacity: 0 } : { scale: 0.5, rotate: -20, opacity: 0 }}
+                                            animate={isEvolving ? {
+                                                scale: [0, 1.3, 1],
+                                                y: [50, -20, 0],
+                                                opacity: 1,
+                                                rotate: [0, 360, 0]
+                                            } : {
                                                 scale: 1,
                                                 rotate: 0,
                                                 opacity: 1,
                                                 y: [0, -12, 0]
                                             }}
-                                            transition={{
+                                            transition={isEvolving ? {
+                                                duration: 1,
+                                                times: [0, 0.7, 1],
+                                                ease: "easeOut"
+                                            } : {
                                                 y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
                                                 default: { type: "spring", stiffness: 260, damping: 20 }
                                             }}
