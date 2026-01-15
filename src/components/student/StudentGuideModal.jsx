@@ -112,7 +112,7 @@ const StudentGuideModal = ({ isOpen, onClose }) => {
                                 📖
                             </motion.div>
                             <h1 style={{ margin: 0, color: '#5D4037', fontWeight: '900', fontSize: '2rem', textShadow: '2px 2px 0 white' }}>
-                                재미있는 바이브 가이드
+                                끄적끄적 아지트 가이드
                             </h1>
                             <p style={{ color: '#8D6E63', fontWeight: '700', fontSize: '1.1rem', marginTop: '5px' }}>
                                 친구들과 함께 드래곤을 키워볼까요? ✨
