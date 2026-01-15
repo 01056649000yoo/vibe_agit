@@ -757,37 +757,20 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                     </div>
                 </div>
 
-                {/* 3. 주의 깊게 볼 내용 */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div style={{ background: '#FFEBEE', padding: '20px', borderRadius: '24px', border: '1px solid #FFCDD2', flex: 1 }}>
-                        <h4 style={{ margin: '0 0 12px 0', fontSize: '0.9rem', color: '#D32F2F', fontWeight: '900' }}>⚠️ 미제출 알림 (최근 미션)</h4>
-                        <div style={{ fontSize: '0.85rem', color: '#C62828', lineHeight: '1.6' }}>
-                            {stats.notSubmitted.length > 0 ? (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                    {stats.notSubmitted.slice(0, 10).map(name => (
-                                        <span key={name} style={{ background: 'white', padding: '2px 8px', borderRadius: '6px', border: '1px solid #FFCDD2' }}>{name}</span>
-                                    ))}
-                                    {stats.notSubmitted.length > 10 && <span>외 {stats.notSubmitted.length - 10}명</span>}
-                                </div>
-                            ) : (
-                                "모든 학생이 제출했습니다! 👏"
-                            )}
-                        </div>
-                    </div>
-
-                    <div style={{ padding: '0 10px' }}>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold' }}>📈 최근 7일 제출 트렌드</h4>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '40px' }}>
-                            {stats.trendData.map((d, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ height: 0 }}
-                                    animate={{ height: `${Math.min(100, (d.count / (stats.studentCount || 1)) * 100)}%` }}
-                                    style={{ flex: 1, background: '#3498DB', borderRadius: '2px 2px 0 0', minHeight: '2px' }}
-                                    title={`${d.date}: ${d.count}건`}
-                                />
-                            ))}
-                        </div>
+                {/* 3. 주의 깊게 볼 내용 (미제출 알림) */}
+                <div style={{ background: '#FFEBEE', padding: '20px', borderRadius: '24px', border: '1px solid #FFCDD2' }}>
+                    <h4 style={{ margin: '0 0 16px 0', fontSize: '0.95rem', color: '#D32F2F', fontWeight: '900' }}>⚠️ 미제출 알림 (최근 미션)</h4>
+                    <div style={{ fontSize: '0.85rem', color: '#C62828', lineHeight: '1.6' }}>
+                        {stats.notSubmitted.length > 0 ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {stats.notSubmitted.slice(0, 15).map(name => (
+                                    <span key={name} style={{ background: 'white', padding: '4px 10px', borderRadius: '10px', border: '1px solid #FFCDD2', fontWeight: 'bold' }}>{name}</span>
+                                ))}
+                                {stats.notSubmitted.length > 15 && <span style={{ padding: '4px', fontWeight: 'bold' }}>외 {stats.notSubmitted.length - 15}명</span>}
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '20px', fontSize: '1rem' }}>모든 학생이 제출했습니다! 👏</div>
+                        )}
                     </div>
                 </div>
             </div>
