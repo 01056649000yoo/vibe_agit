@@ -37,13 +37,37 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // [추가] 액세서리 목록 정의 (종류, 가격, 이모지, 위치 정보 등)
+    // [추가] 액세서리 목록 정의
     const ACCESSORIES = [
-        { id: 'crown', name: '작은 왕관', price: 300, emoji: '👑', pos: { top: '-25%', left: '25%', fontSize: '2.5rem' } },
-        { id: 'sunglasses', name: '멋진 선글라스', price: 200, emoji: '🕶️', pos: { top: '15%', left: '15%', fontSize: '2rem' } },
-        { id: 'flame', name: '불꽃 오라', price: 1000, emoji: '🔥', pos: { top: '0', left: '0', fontSize: '6rem', zIndex: -1, filter: 'blur(2px) opacity(0.7)' } },
-        { id: 'star', name: '반짝이 별', price: 150, emoji: '⭐', pos: { top: '-10%', left: '60%', fontSize: '1.5rem' } },
+        { id: 'crown', name: '작은 왕관', price: 300, emoji: '👑', fontSize: '2.5rem' },
+        { id: 'sunglasses', name: '멋진 선글라스', price: 200, emoji: '🕶️', fontSize: '2rem' },
+        { id: 'flame', name: '불꽃 오라', price: 1000, emoji: '🔥', fontSize: '6rem', zIndex: -1, filter: 'blur(2px) opacity(0.7)', pos: { top: '0', left: '0' } },
+        { id: 'star', name: '반짝이 별', price: 150, emoji: '⭐', fontSize: '1.5rem', pos: { top: '-10%', left: '60%' } },
     ];
+
+    // [Step 1] 드래곤 진화 단계별 액세서리 좌표 매핑 시스템
+    const ACCESSORY_POSITIONS = {
+        1: { // 🥚
+            crown: { top: '-10%', left: '50%' },
+            sunglasses: { top: '40%', left: '50%' }
+        },
+        2: { // 🐣
+            crown: { top: '-20%', left: '45%' },
+            sunglasses: { top: '30%', left: '45%' }
+        },
+        3: { // 🐲
+            crown: { top: '5%', left: '55%' },
+            sunglasses: { top: '35%', left: '55%' }
+        },
+        4: { // 🐉
+            crown: { top: '0%', left: '60%' },
+            sunglasses: { top: '30%', left: '60%' }
+        },
+        5: { // ✨🐲
+            crown: { top: '-5%', left: '50%' },
+            sunglasses: { top: '25%', left: '50%' }
+        }
+    };
 
     useEffect(() => {
         if (studentSession?.id) {
@@ -485,10 +509,20 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', background: 'rgba(255,255,255,0.4)', padding: '20px', borderRadius: '24px' }}>
                                     <div style={{ position: 'relative' }}>
+                                        {/* [Step 2] 드래곤 + 액세서리 통합 애니메이션 그룹 */}
                                         <motion.div
                                             key={petData.level}
-                                            initial={{ scale: 0.5, rotate: -20 }}
-                                            animate={{ scale: 1, rotate: 0 }}
+                                            initial={{ scale: 0.5, rotate: -20, opacity: 0 }}
+                                            animate={{
+                                                scale: 1,
+                                                rotate: 0,
+                                                opacity: 1,
+                                                y: [0, -8, 0] // 숨쉬듯 들썩거리는 효과
+                                            }}
+                                            transition={{
+                                                y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
+                                                default: { type: "spring", stiffness: 260, damping: 20 }
+                                            }}
                                             style={{
                                                 fontSize: '5rem',
                                                 background: 'white',
@@ -500,15 +534,22 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 borderRadius: '24px',
                                                 boxShadow: '0 8px 16px rgba(0,0,0,0.05)',
                                                 position: 'relative',
-                                                zIndex: 1
+                                                zIndex: 1,
+                                                cursor: 'pointer'
                                             }}
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
                                         >
-                                            {dragonInfo.emoji}
+                                            <span style={{ zIndex: 1 }}>{dragonInfo.emoji}</span>
 
-                                            {/* 장착된 액세서리 레이어 */}
+                                            {/* 장착된 액세서리 레이어 (부모와 함께 요동침) */}
                                             {petData.equippedItems.map(itemId => {
                                                 const item = ACCESSORIES.find(a => a.id === itemId);
                                                 if (!item) return null;
+
+                                                const levelPos = ACCESSORY_POSITIONS[petData.level]?.[item.id];
+                                                const finalPos = levelPos || item.pos || { top: '0', left: '0' };
+
                                                 return (
                                                     <motion.div
                                                         key={item.id}
@@ -516,7 +557,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                         animate={{ scale: 1 }}
                                                         style={{
                                                             position: 'absolute',
-                                                            ...item.pos,
+                                                            ...finalPos,
+                                                            fontSize: item.fontSize,
+                                                            zIndex: item.zIndex || 2,
+                                                            filter: item.filter || 'none',
+                                                            transform: 'translate(-50%, -50%)', // 좌표 중앙 보정
                                                             pointerEvents: 'none',
                                                             display: 'flex',
                                                             alignItems: 'center',
