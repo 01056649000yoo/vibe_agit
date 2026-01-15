@@ -163,12 +163,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
 
     // [보완] 활성 학급이 유효하지 않을 때 첫 번째 학급 자동 선택 가드 (삭제 직후 유연한 전이)
     useEffect(() => {
-        // 로딩 중이 아니고 학급은 있는데 선택된 게 없는 찰나에만 첫 학급 활성화
-        if (!loadingClasses && classes.length > 0 && activeClass === null) {
-            console.log("🔄 TeacherDashboard: 다음 학급으로 자동 전환합니다.");
+        // 로딩 완료 후 학급은 있는데 선택된 게 없을 때만 실행
+        if (!loadingClasses && classes.length > 0 && !activeClass) {
+            console.log("🔄 TeacherDashboard: 새 학급으로 자동 전환합니다.");
             setActiveClass(classes[0]);
         }
-    }, [loadingClasses, classes.length, activeClass, setActiveClass]);
+    }, [loadingClasses, classes, activeClass]);
 
     if (loadingClasses) {
         return (
@@ -481,16 +481,16 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                     }} onClick={e => e.stopPropagation()}>
                         <header style={{ padding: '20px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
-                                <span style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.9rem' }}>{selectedActivityPost.students?.name} 학생의 글</span>
-                                <h3 style={{ margin: '4px 0 0 0', color: '#2C3E50', fontWeight: '900' }}>{selectedActivityPost.title}</h3>
+                                <span style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.9rem' }}>{selectedActivityPost?.students?.name || '학생'}의 글</span>
+                                <h3 style={{ margin: '4px 0 0 0', color: '#2C3E50', fontWeight: '900' }}>{selectedActivityPost?.title || '제목 없음'}</h3>
                             </div>
                             <button onClick={() => setSelectedActivityPost(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ADB5BD' }}>✕</button>
                         </header>
                         <div style={{ flex: 1, overflowY: 'auto', padding: '32px', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: '#444', fontSize: '1.1rem' }}>
-                            {selectedActivityPost.content}
+                            {selectedActivityPost?.content || '내용이 없습니다.'}
                         </div>
                         <footer style={{ padding: '20px', borderTop: '1px solid #EEE', textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem' }}>
-                            미션: {selectedActivityPost.writing_missions?.title} | 글자 수: {selectedActivityPost.char_count}자
+                            미션: {selectedActivityPost?.writing_missions?.title || '정보 없음'} | 글자 수: {selectedActivityPost?.char_count || 0}자
                         </footer>
                     </div>
                 </div>
@@ -585,7 +585,7 @@ const RecentActivity = ({ classId, onPostClick }) => {
                             }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                                <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '0.9rem' }}>{act.students?.name}</span>
+                                <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '0.9rem' }}>{act.students?.name || '알 수 없음'}</span>
                                 <span style={{ fontSize: '0.75rem', color: '#ADB5BD', fontWeight: 'bold' }}>{timeAgo(act.created_at)}</span>
                             </div>
                             <div style={{
@@ -597,6 +597,9 @@ const RecentActivity = ({ classId, onPostClick }) => {
                                 width: '100%'
                             }}>
                                 {act.title || '제목 없는 글'}
+                            </div>
+                            <div style={{ fontSize: '0.7rem', color: '#3498DB', marginTop: '2px' }}>
+                                미션: {act.writing_missions?.title || '정보 없음'}
                             </div>
                         </div>
                     ))
@@ -627,17 +630,20 @@ const ClassAnalysis = ({ classId, isMobile }) => {
         setLoading(true);
         try {
             // 1. 기초 데이터 로드 (학생, 미션, 제출물)
+            const { data: students, error: sErr } = await supabase.from('students').select('id, name').eq('class_id', classId);
+            if (sErr || !students || students.length === 0) {
+                setStats(prev => ({ ...prev, studentCount: 0 }));
+                setLoading(false);
+                return;
+            }
+
             const [
-                { data: students },
                 { data: missions },
                 { data: posts }
             ] = await Promise.all([
-                supabase.from('students').select('id, name').eq('class_id', classId),
                 supabase.from('writing_missions').select('id, title, created_at').eq('class_id', classId).order('created_at', { ascending: false }),
-                supabase.from('student_posts').select('*').in('student_id', (await supabase.from('students').select('id').eq('class_id', classId)).data.map(s => s.id))
+                supabase.from('student_posts').select('*').in('student_id', students.map(s => s.id))
             ]);
-
-            if (!students) return;
 
             // 2. 통계 계산
             const totalChars = posts?.reduce((sum, p) => sum + (p.char_count || 0), 0) || 0;

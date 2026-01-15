@@ -152,13 +152,14 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
     };
 
     if (isDashboardMode) {
-        const maxPoints = students.length > 0 ? Math.max(...students.map(s => s.total_points || 0)) : 100;
+        // students가 비어있을 때 Math.max(...[]) 에러 방지 및 기본값 설정
+        const maxPoints = students.length > 0 ? Math.max(...students.map(s => s.total_points || 0), 1) : 100;
 
         return (
             <div style={{ width: '100%', boxSizing: 'border-box' }}>
                 <div style={{
                     position: 'sticky',
-                    top: isMobile ? '88px' : '-24px',
+                    top: '-24px', // 대시보드 내부 스크롤이므로 상단 슬림 헤더와 겹치지 않게 조정
                     zIndex: 10,
                     background: 'white',
                     padding: '8px 0 16px 0',
