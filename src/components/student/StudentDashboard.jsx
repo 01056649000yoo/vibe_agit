@@ -481,7 +481,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                         justifyContent: 'center',
                                         overflow: 'hidden',
                                         border: petData.level >= 5 ? '4px solid #FFD700' : `2px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || '#DDD'}`,
-                                        boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.08)'
+                                        boxShadow: 'none' // 내부 그림자 제거하여 투명도 명확히 함
                                     }}>
                                         {/* 후경 장식 (드래곤 뒤쪽) */}
                                         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.2) 100%)', pointerEvents: 'none' }} />
@@ -611,7 +611,10 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 position: 'relative',
                                                 zIndex: 1,
                                                 cursor: 'pointer',
-                                                background: 'transparent'
+                                                background: 'transparent',
+                                                backgroundColor: 'transparent',
+                                                border: 'none',
+                                                boxShadow: 'none'
                                             }}
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
@@ -628,7 +631,9 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                         width: '100%',
                                                         height: '100%',
                                                         objectFit: 'contain',
-                                                        filter: `drop-shadow(0 0 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.2)'}) ${petData.level >= 5 ? 'drop-shadow(0 0 15px rgba(255,215,0,0.6))' : ''}`
+                                                        background: 'transparent',
+                                                        backgroundColor: 'transparent',
+                                                        filter: `drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 5 ? 'drop-shadow(0 0 15px rgba(255,215,0,0.7))' : ''}`
                                                     }}
                                                 />
                                             )}
