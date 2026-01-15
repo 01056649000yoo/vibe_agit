@@ -171,29 +171,34 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    {/* 학급 정보 및 초대 코드 섹션 */}
                     <div style={{
-                        padding: isMobile ? '16px 20px' : '24px 32px',
+                        padding: isMobile ? '20px' : '32px 40px',
                         background: 'linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%)',
-                        borderRadius: '24px',
+                        borderRadius: '32px',
                         border: '1px solid #FFE082',
                         display: 'flex',
                         flexDirection: isMobile ? 'column' : 'row',
-                        justifyContent: 'space-between',
-                        alignItems: isMobile ? 'flex-start' : 'center',
-                        gap: isMobile ? '16px' : '20px',
-                        boxShadow: '0 4px 15px rgba(255, 236, 179, 0.4)',
+                        justifyContent: 'center', // [수정] 좌우로 치우치지 않게 중앙 정렬
+                        alignItems: 'center',
+                        gap: isMobile ? '24px' : '60px', // [수정] 적절한 간격 확보
+                        boxShadow: '0 10px 25px rgba(255, 236, 179, 0.4)',
                         width: '100%',
                         boxSizing: 'border-box',
                         overflow: 'hidden'
                     }}>
-                        <div>
-                            <span style={{ fontSize: '0.9rem', color: '#8D6E63', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'block', marginBottom: '6px' }}>현재 관리 중인 학급</span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                                <h3 style={{ margin: 0, fontSize: '2.2rem', color: '#2C3E50', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {/* 학급 이름 섹션 */}
+                        <div style={{
+                            textAlign: isMobile ? 'center' : 'left',
+                            flex: isMobile ? 'none' : '0 1 auto'
+                        }}>
+                            <span style={{ fontSize: '0.9rem', color: '#8D6E63', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'block', marginBottom: '8px' }}>현재 관리 중인 학급</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'center' : 'flex-start', gap: '12px' }}>
+                                <h3 style={{ margin: 0, fontSize: isMobile ? '1.8rem' : '2.4rem', color: '#2C3E50', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '8px', lineHeight: 1.2 }}>
                                     🏫 {activeClass?.name}
                                 </h3>
                                 {activeClass?.id === primaryClassId ? (
-                                    <div style={{ background: '#FFD700', color: '#8B4513', padding: '6px 12px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)' }}>
+                                    <div style={{ background: '#FFD700', color: '#8B4513', padding: '6px 14px', borderRadius: '14px', fontSize: '0.85rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)' }}>
                                         ⭐ 주 학급
                                     </div>
                                 ) : (
@@ -201,9 +206,10 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                                         onClick={() => onSetPrimaryClass && onSetPrimaryClass(activeClass.id)}
                                         style={{
                                             background: 'white', border: '1px solid #FFD700', color: '#DAA520',
-                                            padding: '6px 12px', borderRadius: '12px', fontSize: '0.8rem',
+                                            padding: '8px 16px', borderRadius: '14px', fontSize: '0.85rem',
                                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s',
-                                            display: 'flex', alignItems: 'center', gap: '4px'
+                                            display: 'flex', alignItems: 'center', gap: '4px',
+                                            boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
                                         }}
                                         onMouseEnter={e => {
                                             e.currentTarget.style.background = '#FFFDE7';
@@ -220,21 +226,26 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                             </div>
                         </div>
 
+                        {/* 구분선 (데스크탑용) */}
+                        {!isMobile && <div style={{ width: '2px', height: '60px', background: 'rgba(141, 110, 99, 0.1)', borderRadius: '2px' }} />}
+
+                        {/* 초대 코드 섹션 */}
                         <div style={{
                             display: 'flex',
+                            flexDirection: 'column',
                             alignItems: 'center',
-                            gap: '20px',
+                            gap: '12px',
                             background: 'white',
-                            padding: '12px 24px',
-                            borderRadius: '20px',
+                            padding: '20px 32px',
+                            borderRadius: '24px',
                             border: '1px solid rgba(255, 224, 130, 0.5)',
-                            boxShadow: '0 4px 10px rgba(0,0,0,0.03)',
-                            width: isMobile ? '100%' : 'auto',
+                            boxShadow: '0 8px 16px rgba(0,0,0,0.04)',
+                            minWidth: isMobile ? '100%' : '240px',
                             boxSizing: 'border-box'
                         }}>
-                            <div style={{ flex: 1 }}>
-                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#95A5A6', fontWeight: 'bold' }}>초대 코드</p>
-                                <p style={{ margin: 0, fontSize: isMobile ? '1.2rem' : '1.5rem', fontWeight: '900', color: '#3498DB', letterSpacing: '2px', fontFamily: 'monospace' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <p style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: '#95A5A6', fontWeight: 'bold' }}>학급 초대 코드</p>
+                                <p style={{ margin: 0, fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '900', color: '#3498DB', letterSpacing: '4px', fontFamily: 'monospace' }}>
                                     {activeClass?.invite_code}
                                 </p>
                             </div>
@@ -242,7 +253,16 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setIsZoomModalOpen(true)}
-                                style={{ background: '#EBF5FB', color: '#1976D2', border: 'none', padding: '10px 16px', fontWeight: 'bold', borderRadius: '12px' }}
+                                style={{
+                                    background: '#F0F7FF',
+                                    color: '#3498DB',
+                                    border: '1px solid #D6EAF8',
+                                    padding: '8px 20px',
+                                    fontWeight: '900',
+                                    borderRadius: '12px',
+                                    fontSize: '0.85rem',
+                                    width: '100%'
+                                }}
                             >
                                 🔍 크게 보기
                             </Button>

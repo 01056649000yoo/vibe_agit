@@ -173,7 +173,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                     borderBottom: '1px solid #F1F3F5',
                     marginBottom: '16px'
                 }}>
-                    <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.2rem', color: '#212529', fontWeight: '900' }}>👥 우리 반 학생 명단</h3>
+                    <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.2rem', color: '#212529', fontWeight: '900' }}>👥 포인트 랭킹</h3>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <Button
                             onClick={toggleSelectAll}
