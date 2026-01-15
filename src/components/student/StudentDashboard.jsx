@@ -40,9 +40,9 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     // [신규] 드래곤 아지트 배경 목록
     const HIDEOUT_BACKGROUNDS = {
         default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63' },
-        volcano: { id: 'volcano', name: '🔥 화산 용암지대', color: 'linear-gradient(135deg, #D84315 0%, #BF360C 100%)', border: '#FF7043', textColor: 'white', subColor: '#FFCCBC', price: 500, deco: '💨' },
-        sky: { id: 'sky', name: '☁️ 천상전당', color: 'linear-gradient(135deg, #E3F2FD 0%, #90CAF9 100%)', border: '#1E88E5', textColor: '#0D47A1', subColor: '#1565C0', price: 800, deco: '☁️' },
-        crystal: { id: 'crystal', name: '💎 수정동굴', color: 'linear-gradient(135deg, #7B1FA2 0%, #4A148C 100%)', border: '#E1BEE7', textColor: 'white', subColor: '#F3E5F5', price: 1200, deco: '✨' }
+        volcano: { id: 'volcano', name: '🌋 화산 동굴', color: 'linear-gradient(135deg, #4A0000 0%, #8B0000 100%)', border: '#FF5722', textColor: 'white', subColor: '#FFCCBC', price: 300, deco: '🔥' },
+        sky: { id: 'sky', name: '☁️ 천상 전당', color: 'linear-gradient(135deg, #B3E5FC 0%, #E1F5FE 100%)', border: '#4FC3F7', textColor: '#01579B', subColor: '#0288D1', price: 500, deco: '☁️' },
+        crystal: { id: 'crystal', name: '💎 수정 궁전', color: 'linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%)', border: '#BA68C8', textColor: 'white', subColor: '#E1BEE7', price: 1000, deco: '✨' }
     };
 
     useEffect(() => {
@@ -77,13 +77,14 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         }
     };
 
-    // [추가] 단계별 드래곤 정보
+    // [추가] 단계별 드래곤 정보 (이미지 기반)
     const getDragonStage = (level) => {
-        if (level >= 5) return { name: '전설의 수호신룡', emoji: '👑🐲✨' };
-        if (level === 4) return { name: '불을 내뿜는 성장한 용', emoji: '🐉🔥' };
-        if (level === 3) return { name: '푸른 빛의 어린 용', emoji: '🦎✨' };
-        if (level === 2) return { name: '갓 태어난 용', emoji: '🐲' };
-        return { name: '신비로운 알', emoji: '🥚' };
+        const basePath = '/assets/dragons';
+        if (level >= 5) return { name: '전설의 수호신룡', image: `${basePath}/dragon_stage_5.jpg`, isPlaceholder: false };
+        if (level === 4) return { name: '불을 내뿜는 성장한 용', image: `${basePath}/dragon_stage_4.png`, isPlaceholder: false };
+        if (level === 3) return { name: '푸른 빛의 어린 용', image: `${basePath}/dragon_stage_3.jpg`, isPlaceholder: false };
+        if (level === 2) return { name: '갓 태어난 용', image: `${basePath}/dragon_stage_2.jpg`, isPlaceholder: false };
+        return { name: '신비로운 알', image: `${basePath}/dragon_stage_1.jpg`, isPlaceholder: false };
     };
 
     const dragonInfo = getDragonStage(petData.level);
@@ -473,15 +474,15 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                         {/* 배경 장식 요소들 */}
                                         {petData.background === 'volcano' && (
                                             <AnimatePresence>
-                                                {[...Array(6)].map((_, i) => (
+                                                {[...Array(8)].map((_, i) => (
                                                     <motion.span
-                                                        key={`smoke-${i}`}
+                                                        key={`fire-${i}`}
                                                         initial={{ y: 20, opacity: 0, scale: 0.5 }}
-                                                        animate={{ y: -100, opacity: [0, 0.5, 0], scale: [0.5, 1.5, 2] }}
-                                                        transition={{ repeat: Infinity, duration: 3 + i, delay: i * 0.5 }}
-                                                        style={{ position: 'absolute', bottom: '20%', left: `${15 + i * 15}%`, fontSize: '2rem', filter: 'grayscale(1) blur(2px)', pointerEvents: 'none' }}
+                                                        animate={{ y: -60, opacity: [0, 0.8, 0], scale: [0.8, 1.2, 0.5] }}
+                                                        transition={{ repeat: Infinity, duration: 2 + i * 0.3, delay: i * 0.2 }}
+                                                        style={{ position: 'absolute', bottom: '15%', left: `${10 + i * 12}%`, fontSize: '1.8rem', filter: 'drop-shadow(0 0 5px #FF5722)', pointerEvents: 'none' }}
                                                     >
-                                                        💨
+                                                        🔥
                                                     </motion.span>
                                                 ))}
                                             </AnimatePresence>
@@ -502,14 +503,26 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                         )}
                                         {petData.background === 'crystal' && (
                                             <AnimatePresence>
-                                                {[...Array(8)].map((_, i) => (
+                                                {[...Array(12)].map((_, i) => (
                                                     <motion.span
-                                                        key={`sparkle-${i}`}
-                                                        animate={{ scale: [0, 1, 0], opacity: [0, 1, 0] }}
-                                                        transition={{ repeat: Infinity, duration: 2 + Math.random() * 2, delay: Math.random() * 2 }}
-                                                        style={{ position: 'absolute', top: `${Math.random() * 80}%`, left: `${Math.random() * 80}%`, fontSize: '1.2rem', color: '#E1BEE7', pointerEvents: 'none' }}
+                                                        key={`gem-${i}`}
+                                                        animate={{
+                                                            scale: [0.5, 1.2, 0.5],
+                                                            opacity: [0.3, 1, 0.3],
+                                                            filter: ['brightness(1)', 'brightness(1.5)', 'brightness(1)']
+                                                        }}
+                                                        transition={{ repeat: Infinity, duration: 3 + Math.random() * 2, delay: Math.random() * 2 }}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            top: `${Math.random() * 90}%`,
+                                                            left: `${Math.random() * 90}%`,
+                                                            fontSize: i % 2 === 0 ? '1.5rem' : '1rem',
+                                                            color: '#E1BEE7',
+                                                            pointerEvents: 'none',
+                                                            textShadow: '0 0 10px rgba(255,255,255,0.8)'
+                                                        }}
                                                     >
-                                                        ✨
+                                                        {i % 3 === 0 ? '💎' : '✨'}
                                                     </motion.span>
                                                 ))}
                                             </AnimatePresence>
@@ -560,25 +573,38 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 default: { type: "spring", stiffness: 260, damping: 20 }
                                             }}
                                             style={{
-                                                fontSize: '5rem',
-                                                background: 'white',
                                                 width: '120px',
                                                 height: '120px',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 borderRadius: '24px',
-                                                boxShadow: '0 8px 16px rgba(0,0,0,0.05)',
+                                                boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
                                                 position: 'relative',
                                                 zIndex: 1,
-                                                cursor: 'pointer'
+                                                cursor: 'pointer',
+                                                overflow: 'hidden',
+                                                background: 'black' // 이미지 배경 처리
                                             }}
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
                                         >
-                                            <span style={{ zIndex: 1, filter: petData.level >= 5 ? 'drop-shadow(0 0 10px rgba(255,215,0,0.5))' : 'none' }}>
-                                                {dragonInfo.emoji}
-                                            </span>
+                                            {dragonInfo.isPlaceholder ? (
+                                                <div style={{ color: 'white', fontSize: '0.8rem', textAlign: 'center', padding: '10px' }}>
+                                                    진화 중...<br />(이미지 대기)
+                                                </div>
+                                            ) : (
+                                                <img
+                                                    src={dragonInfo.image}
+                                                    alt={dragonInfo.name}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'cover',
+                                                        filter: petData.level >= 5 ? 'drop-shadow(0 0 10px rgba(255,215,0,0.5))' : 'none'
+                                                    }}
+                                                />
+                                            )}
                                         </motion.div>
                                         {petData.level > 1 && (
                                             <motion.span
