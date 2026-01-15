@@ -22,6 +22,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const [isGenerating, setIsGenerating] = useState(false); // AI 생성 중 상태
     const [showCompleteToast, setShowCompleteToast] = useState(false); // 완료 알림 상태
     const [tempFeedback, setTempFeedback] = useState(''); // 편집 중인 피드백
+    const [postReactions, setPostReactions] = useState([]); // [추가] 상세보기 글의 반응들
+    const [postComments, setPostComments] = useState([]); // [추가] 상세보기 글의 댓글들
     const textareaRef = useRef(null);
 
     // [추가] 피드백 입력창 자동 높이 조절 (스티키 레이아웃에 맞게 높이는 Flex로 제어하도록 변경 가능성 고려하여 auto-height 유지)
@@ -56,6 +58,14 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         { label: '🔍 사실을 전달하는 글', genres: ['설명문', '보고서(관찰 기록문)', '기사문'] },
         { label: '💡 생각을 주장하는 글', genres: ['논설문', '제안하는 글', '독후감(서평)'] },
         { label: '🌈 상상을 담은 글', genres: ['동시', '동화(소설)'] }
+    ];
+
+    const reactionIcons = [
+        { type: 'heart', label: '좋아요', emoji: '❤️' },
+        { type: 'laugh', label: '재밌어요', emoji: '😂' },
+        { type: 'wow', label: '멋져요', emoji: '👏' },
+        { type: 'bulb', label: '배워요', emoji: '💡' },
+        { type: 'star', label: '최고야', emoji: '✨' }
     ];
 
     useEffect(() => {
@@ -120,6 +130,38 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
             alert('글쓰기 미션 등록 실패: ' + error.message);
         }
     };
+
+    // [추가] 특정 글의 반응과 댓글 가져오기
+    const fetchReactionsAndComments = async (postId) => {
+        if (!postId) return;
+        try {
+            // 반응 가져오기
+            const { data: reactions, error: rxError } = await supabase
+                .from('post_reactions')
+                .select('*')
+                .eq('post_id', postId);
+            if (!rxError) setPostReactions(reactions || []);
+
+            // 댓글 가져오기 (작성자 이름 포함)
+            const { data: comments, error: cmError } = await supabase
+                .from('post_comments')
+                .select('*, students(name)')
+                .eq('post_id', postId)
+                .order('created_at', { ascending: true });
+            if (!cmError) setPostComments(comments || []);
+        } catch (err) {
+            console.error('반응/댓글 로드 실패:', err.message);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedPost) {
+            fetchReactionsAndComments(selectedPost.id);
+        } else {
+            setPostReactions([]);
+            setPostComments([]);
+        }
+    }, [selectedPost]);
 
     // 학생 글 목록 불러오기
     const fetchPostsForMission = async (mission) => {
@@ -1022,6 +1064,56 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                     paddingBottom: '40px'
                                 }}>
                                     {selectedPost.content}
+                                </div>
+
+                                {/* [신규] 반응 및 댓글 섹션 */}
+                                <div style={{ borderTop: '2px solid #F1F3F5', paddingTop: '40px', marginTop: '20px' }}>
+                                    {/* 반응 현황 */}
+                                    <div style={{ marginBottom: '48px' }}>
+                                        <h4 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#2C3E50', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            🌈 친구들의 반응 현황
+                                        </h4>
+                                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                            {reactionIcons.map(icon => {
+                                                const count = postReactions.filter(r => r.reaction_type === icon.type).length;
+                                                return (
+                                                    <div key={icon.type} style={{
+                                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                                        padding: '10px 20px', background: '#F8F9FA', borderRadius: '16px',
+                                                        border: '1px solid #ECEFF1', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                                                    }}>
+                                                        <span style={{ fontSize: '1.4rem' }}>{icon.emoji}</span>
+                                                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#546E7A' }}>{icon.label}</span>
+                                                        <span style={{ fontSize: '1rem', fontWeight: '900', color: '#3498DB' }}>{count}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* 댓글 목록 */}
+                                    <div>
+                                        <h4 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#2C3E50', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            💬 친구들의 따뜻한 응원 ({postComments.length})
+                                        </h4>
+                                        {postComments.length === 0 ? (
+                                            <div style={{ padding: '40px', textAlign: 'center', color: '#94A3B8', background: '#F8F9FA', borderRadius: '24px', border: '2px dashed #E2E8F0' }}>
+                                                아직 작성된 댓글이 없습니다.
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                                {postComments.map(comment => (
+                                                    <div key={comment.id} style={{ padding: '20px 24px', background: '#F8F9FA', borderRadius: '24px', border: '1px solid #F1F3F5' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                            <span style={{ fontWeight: '900', fontSize: '1rem', color: '#3498DB' }}>{comment.students?.name}</span>
+                                                            <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>{new Date(comment.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '1.05rem', color: '#334155', lineHeight: '1.7' }}>{comment.content}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
