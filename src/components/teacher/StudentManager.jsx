@@ -71,7 +71,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
             .from('students')
             .select('*')
             .eq('class_id', classId)
-            .order('created_at', { ascending: true }); // [수정] 랭킹 순이 아닌 등록 순(번호)으로 고정
+            .order('total_points', { ascending: false }); // [수정] 포인트 높은 순(랭킹)으로 정렬
 
         if (!error && data) setStudents(data);
     };
@@ -86,12 +86,16 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
         const targets = students.filter(s => selectedIds.includes(s.id));
         const previousStudents = [...students];
 
-        setStudents(prev => prev.map(s => {
-            if (selectedIds.includes(s.id)) {
-                return { ...s, total_points: (s.total_points || 0) + actualAmount };
-            }
-            return s;
-        }));
+        setStudents(prev => {
+            const up = prev.map(s => {
+                if (selectedIds.includes(s.id)) {
+                    return { ...s, total_points: (s.total_points || 0) + actualAmount };
+                }
+                return s;
+            });
+            // 포인트 변동 즉시 재정렬 (내림차순)
+            return [...up].sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
+        });
         setIsPointModalOpen(false);
 
         try {
@@ -141,7 +145,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
         const code = Math.random().toString(36).substring(2, 10).toUpperCase();
         const { data, error } = await supabase.from('students').insert({ class_id: classId, name: studentName, student_code: code, total_points: 0 }).select();
         if (!error && data[0]) {
-            setStudents(prev => [...prev, data[0]]);
+            setStudents(prev => [...prev, data[0]].sort((a, b) => (b.total_points || 0) - (a.total_points || 0)));
             setStudentName('');
         }
         setIsAdding(false);
@@ -208,6 +212,9 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                         }}
                     >
                         {students.map((s, idx) => {
+                            const isFirst = idx === 0;
+                            const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}위`;
+
                             return (
                                 <motion.div
                                     key={s.id}
@@ -217,39 +224,89 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                     onClick={() => setSelectedIds(prev => prev.includes(s.id) ? prev.filter(id => id !== s.id) : [...prev, s.id])}
                                     style={{
                                         display: 'flex', alignItems: 'center',
-                                        padding: isMobile ? '8px 12px' : '10px 14px',
-                                        background: selectedIds.includes(s.id) ? '#EBF5FB' : '#FDFEFE',
-                                        border: `1px solid ${selectedIds.includes(s.id) ? '#3498DB' : '#F1F3F5'}`,
-                                        borderRadius: '16px', cursor: 'pointer', transition: 'all 0.15s',
-                                        fontSize: isMobile ? '0.85rem' : '0.9rem', width: '100%', boxSizing: 'border-box',
-                                        wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                        boxShadow: 'none'
+                                        padding: isMobile ? '10px 14px' : '12px 16px',
+                                        background: isFirst ? '#FFFDE7' : (selectedIds.includes(s.id) ? '#EBF5FB' : '#FDFEFE'),
+                                        border: `1px solid ${isFirst ? '#F7DC6F' : (selectedIds.includes(s.id) ? '#3498DB' : '#F1F3F5')}`,
+                                        borderRadius: '20px', cursor: 'pointer', transition: 'all 0.15s',
+                                        fontSize: isMobile ? '0.85rem' : '0.95rem', width: '100%', boxSizing: 'border-box',
+                                        boxShadow: isFirst ? '0 4px 12px rgba(247, 220, 111, 0.2)' : 'none'
                                     }}
                                 >
+                                    {/* 랭킹 표시 */}
                                     <div style={{
-                                        width: isMobile ? '28px' : '32px',
+                                        width: isMobile ? '35px' : '45px',
                                         fontWeight: '900',
-                                        color: '#ADB5BD',
-                                        fontSize: isMobile ? '1rem' : '1.1rem',
+                                        color: isFirst ? '#F39C12' : '#ADB5BD',
+                                        fontSize: isFirst ? '1.4rem' : '1rem',
                                         display: 'flex', justifyContent: 'center'
                                     }}>
-                                        {idx + 1}
+                                        {rankIcon}
                                     </div>
-                                    <div style={{ flex: 1, fontWeight: '700', color: '#495057' }}>{s.name}</div>
 
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <span style={{ fontWeight: '900', color: '#212529' }}>{s.total_points || 0}</span>
-                                            <span style={{ fontSize: '0.7rem', color: '#ADB5BD', marginLeft: '2px' }}>P</span>
-                                        </div>
+                                    {/* 이름 */}
+                                    <div style={{ flex: 1, fontWeight: '800', color: '#34495E', fontSize: '1rem' }}>{s.name}</div>
+
+                                    {/* 포인트 강조 표시 */}
+                                    <div style={{ marginRight: '12px', textAlign: 'right' }}>
+                                        <span style={{
+                                            fontWeight: '900',
+                                            color: isFirst ? '#F39C12' : '#212529',
+                                            fontSize: '1.2rem',
+                                            fontFamily: 'Outfit, sans-serif'
+                                        }}>
+                                            {(s.total_points || 0).toLocaleString()}
+                                        </span>
+                                        <span style={{ fontSize: '0.8rem', color: isFirst ? '#F39C12' : '#ADB5BD', marginLeft: '2px', fontWeight: 'bold' }}>P</span>
+                                    </div>
+
+                                    {/* 관리 버튼 그룹 (우측 정렬) */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedStudentForCode(s);
+                                                setIsCodeZoomModalOpen(true);
+                                            }}
+                                            style={{ background: 'white', border: '1px solid #EEE', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
+                                            title="코드 크게보기"
+                                        >
+                                            🔍
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigator.clipboard.writeText(s.student_code);
+                                                setCopiedId(s.id);
+                                                setTimeout(() => setCopiedId(null), 1500);
+                                            }}
+                                            style={{ background: 'white', border: '1px solid #EEE', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', position: 'relative' }}
+                                            title="코드 복사"
+                                        >
+                                            📋
+                                            <AnimatePresence>
+                                                {copiedId === s.id && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: -35 }} exit={{ opacity: 0 }}
+                                                        style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', background: '#2ECC71', color: 'white', padding: '4px 8px', borderRadius: '6px', fontSize: '0.65rem', fontWeight: 'bold', whiteSpace: 'nowrap', zIndex: 10 }}
+                                                    >
+                                                        복사됨! ✅
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); openHistoryModal(s); }}
-                                            style={{
-                                                background: 'transparent', border: 'none', cursor: 'pointer',
-                                                padding: '4px', fontSize: '1rem', color: '#ADB5BD'
-                                            }}
+                                            style={{ background: 'white', border: '1px solid #EEE', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
+                                            title="포인트 기록"
                                         >
                                             📜
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(s); setIsDeleteModalOpen(true); }}
+                                            style={{ background: '#FFF5F5', border: '1px solid #FFDada', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
+                                            title="학생 삭제"
+                                        >
+                                            �️
                                         </button>
                                     </div>
                                 </motion.div>
@@ -314,118 +371,110 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                         onClick={() => setIsAllCodesModalOpen(true)}
                         style={{ background: '#FDFCF0', border: '1px solid #F7DC6F', color: '#B7950B', fontWeight: 'bold' }}
                     >
-                        🔑 전원 코드 확인
+                        🔑 전원 코드 확대
                     </Button>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '12px' }}>
-                {students.map((s, idx) => (
-                    <motion.div
-                        key={s.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        style={{
-                            display: 'flex', alignItems: 'center', padding: '10px 12px',
-                            background: 'white', border: '1px solid #E9ECEF', borderRadius: '14px',
-                            justifyContent: 'space-between',
-                            minHeight: '64px',
-                            boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        {/* 좌측 그룹: 번호 + 이름 */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', flex: '0 0 80px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ color: '#ADB5BD', fontWeight: 'bold', fontSize: '0.7rem' }}>{idx + 1}</span>
-                                <span style={{ fontWeight: '800', color: '#34495E', fontSize: '1rem', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</span>
-                            </div>
-                        </div>
+            <div
+                className="ranking-scroll"
+                style={{
+                    maxHeight: isMobile ? 'calc(100vh - 300px)' : '600px',
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    paddingRight: '6px'
+                }}
+            >
+                {students.map((s, idx) => {
+                    const isFirst = idx === 0;
+                    const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}위`;
 
-                        {/* 중앙 그룹: 접속코드 */}
-                        <div style={{
-                            flex: 1,
-                            textAlign: 'center',
-                            fontSize: '1.4rem',
-                            color: '#3498DB',
-                            fontWeight: '900',
-                            fontFamily: 'monospace',
-                            letterSpacing: '2px',
-                            textShadow: '0 1px 4px rgba(52, 152, 219, 0.1)'
-                        }}>
-                            {s.student_code}
-                        </div>
-
-                        {/* 우측: 관리 도구 아이콘 그룹 */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
-                            <button
-                                onClick={() => {
-                                    setSelectedStudentForCode(s);
-                                    setIsCodeZoomModalOpen(true);
-                                }}
-                                style={{
-                                    background: '#F8F9FA', border: 'none', cursor: 'pointer',
-                                    width: '32px', height: '32px', borderRadius: '8px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '0.9rem', transition: 'all 0.2s'
-                                }}
-                                title="크게 보기"
-                            >
-                                🔍
-                            </button>
-
-                            <div style={{ position: 'relative' }}>
-                                <button
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(s.student_code);
-                                        setCopiedId(s.id);
-                                        setTimeout(() => setCopiedId(null), 1500);
-                                    }}
-                                    style={{
-                                        background: '#FDFCF0', border: '1px solid #F7DC6F', cursor: 'pointer',
-                                        width: '32px', height: '32px', borderRadius: '8px',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: '0.9rem', transition: 'all 0.2s'
-                                    }}
-                                    title="코드 복사"
-                                >
-                                    📋
-                                </button>
-                                <AnimatePresence>
-                                    {copiedId === s.id && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                                            animate={{ opacity: 1, y: -45, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.8 }}
-                                            style={{
-                                                position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-                                                background: '#2ECC71', color: 'white', padding: '4px 10px',
-                                                borderRadius: '8px', fontSize: '0.7rem', fontWeight: 'bold',
-                                                whiteSpace: 'nowrap', zIndex: 10, boxShadow: '0 4px 10px rgba(46, 204, 113, 0.3)'
-                                            }}
-                                        >
-                                            복사됨! ✅
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                    return (
+                        <motion.div
+                            key={s.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            style={{
+                                display: 'flex', alignItems: 'center', padding: '12px 16px',
+                                background: isFirst ? '#FFFDE7' : 'white',
+                                border: `1px solid ${isFirst ? '#F7DC6F' : '#E9ECEF'}`,
+                                borderRadius: '20px',
+                                justifyContent: 'space-between',
+                                minHeight: '70px',
+                                boxShadow: isFirst ? '0 4px 15px rgba(247, 220, 111, 0.15)' : '0 2px 10px rgba(0,0,0,0.02)',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            {/* 좌측 그룹: 랭킹 + 이름 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '0 0 150px' }}>
+                                <div style={{
+                                    width: '40px', fontWeight: '900', color: isFirst ? '#F39C12' : '#ADB5BD',
+                                    fontSize: isFirst ? '1.4rem' : '1rem', display: 'flex', justifyContent: 'center'
+                                }}>
+                                    {rankIcon}
+                                </div>
+                                <span style={{ fontWeight: '800', color: '#34495E', fontSize: '1.1rem', letterSpacing: '-0.3px' }}>{s.name}</span>
                             </div>
 
-                            <button
-                                onClick={() => { setDeleteTarget(s); setIsDeleteModalOpen(true); }}
-                                style={{
-                                    background: '#FFF5F5', border: 'none', cursor: 'pointer',
-                                    width: '32px', height: '32px', borderRadius: '8px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '0.9rem', transition: 'all 0.2s'
-                                }}
-                                title="학생 삭제"
-                            >
-                                🗑️
-                            </button>
-                        </div>
-                    </motion.div>
-                ))}
+                            {/* 중앙 그룹: 접속코드 (관리용) */}
+                            <div style={{
+                                flex: 1,
+                                textAlign: 'center',
+                                fontSize: '1.5rem',
+                                color: '#3498DB',
+                                fontWeight: '900',
+                                fontFamily: 'monospace',
+                                letterSpacing: '3px',
+                                background: '#F8F9FA',
+                                padding: '4px 12px',
+                                borderRadius: '10px',
+                                margin: '0 20px'
+                            }}>
+                                {s.student_code}
+                            </div>
+
+                            {/* 우측 그룹: 포인트 + 관리 버튼 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <div style={{ textAlign: 'right', minWidth: '80px' }}>
+                                    <span style={{ fontWeight: '900', color: isFirst ? '#F39C12' : '#2C3E50', fontSize: '1.3rem' }}>
+                                        {(s.total_points || 0).toLocaleString()}
+                                    </span>
+                                    <span style={{ fontSize: '0.8rem', color: isFirst ? '#F39C12' : '#ADB5BD', marginLeft: '3px', fontWeight: 'bold' }}>P</span>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <button
+                                        onClick={() => { setSelectedStudentForCode(s); setIsCodeZoomModalOpen(true); }}
+                                        style={{ background: '#F8F9FA', border: '1px solid #E9ECEF', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', transition: 'all 0.2s' }}
+                                        title="크게 보기" > 🔍 </button>
+
+                                    <div style={{ position: 'relative' }}>
+                                        <button
+                                            onClick={() => { navigator.clipboard.writeText(s.student_code); setCopiedId(s.id); setTimeout(() => setCopiedId(null), 1500); }}
+                                            style={{ background: '#FDFCF0', border: '1px solid #F7DC6F', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', transition: 'all 0.2s' }}
+                                            title="코드 복사" > 📋 </button>
+                                        <AnimatePresence>
+                                            {copiedId === s.id && (
+                                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: -40 }} exit={{ opacity: 0 }}
+                                                    style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', background: '#2ECC71', color: 'white', padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 'bold', whiteSpace: 'nowrap', zIndex: 10, boxShadow: '0 4px 10px rgba(46, 204, 113, 0.3)' }} >
+                                                    복사됨! ✅
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    <button
+                                        onClick={() => { setDeleteTarget(s); setIsDeleteModalOpen(true); }}
+                                        style={{ background: '#FFF5F5', border: '1px solid #FFDada', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', transition: 'all 0.2s' }}
+                                        title="학생 삭제" > 🗑️ </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    );
+                })}
             </div>
 
             <CommonModals
