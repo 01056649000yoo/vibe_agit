@@ -64,6 +64,60 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     const dragonInfo = getDragonStage(petData.level);
 
+    // [추가] 먹이 주기 기능
+    const handleFeed = async () => {
+        if (points < 50) {
+            alert('포인트가 부족해요! 글을 써서 포인트를 모아보세요. ✍️');
+            return;
+        }
+
+        const newPoints = points - 50;
+        let newExp = petData.exp + 20;
+        let newLevel = petData.level;
+
+        if (newExp >= 100) {
+            if (newLevel < 5) {
+                newLevel += 1;
+                newExp = newExp % 100;
+            } else {
+                newExp = 100;
+            }
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+
+        try {
+            // 포인트 DB 업데이트
+            const { error } = await supabase
+                .from('students')
+                .update({ total_points: newPoints })
+                .eq('id', studentSession.id);
+
+            if (error) throw error;
+
+            setPoints(newPoints);
+            setPetData(prev => ({
+                ...prev,
+                level: newLevel,
+                exp: newExp,
+                lastFed: today
+            }));
+        } catch (err) {
+            console.error('포인트 업데이트 실패:', err.message);
+            alert('포인트 사용에 실패했습니다. 다시 시도해 주세요!');
+        }
+    };
+
+    // [추가] 마지막 식사 후 경과 일수 계산
+    const getDaysSinceLastFed = () => {
+        const lastFedDate = new Date(petData.lastFed);
+        const today = new Date();
+        const diffTime = Math.abs(today - lastFedDate);
+        return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    };
+
+    const daysSinceLastFed = getDaysSinceLastFed();
+
     // [수정] 누적 글자 수 기준 5단계 레벨 시스템
     const getLevelInfo = (totalChars) => {
         if (totalChars >= 14001) return { level: 5, name: '전설의 작가', emoji: '✨', next: null };
@@ -245,51 +299,100 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 style={{
                     background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
                     borderRadius: '24px',
-                    padding: '20px',
+                    padding: '24px',
                     marginBottom: '32px',
                     border: '2px solid #FFF176',
                     boxShadow: '0 8px 24px rgba(255, 241, 118, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '20px'
                 }}
             >
-                <div style={{
-                    fontSize: '4.5rem',
-                    background: 'white',
-                    width: '100px',
-                    height: '100px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '20px',
-                    boxShadow: 'inner 0 4px 8px rgba(0,0,0,0.05)'
-                }}>
-                    {dragonInfo.emoji}
-                </div>
-                <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
-                        <div>
-                            <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.name}</span>
-                            <span style={{ fontSize: '1.2rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px' }}>
+                    <motion.div
+                        key={petData.level}
+                        initial={{ scale: 0.5, rotate: -20, filter: 'brightness(2)' }}
+                        animate={{ scale: 1, rotate: 0, filter: 'brightness(1)' }}
+                        transition={{ type: 'spring', stiffness: 200 }}
+                        style={{
+                            fontSize: '4.5rem',
+                            background: 'white',
+                            width: '100px',
+                            height: '100px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '20px',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.05)',
+                            position: 'relative'
+                        }}
+                    >
+                        {dragonInfo.emoji}
+                        {petData.level > 1 && (
+                            <motion.span
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: [0, 1, 0] }}
+                                transition={{ repeat: Infinity, duration: 2 }}
+                                style={{ position: 'absolute', top: -10, right: -10, fontSize: '1.5rem' }}
+                            >
+                                ✨
+                            </motion.span>
+                        )}
+                    </motion.div>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
+                            <div>
+                                <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.name}</span>
+                                <span style={{ fontSize: '1.2rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
+                            </div>
+                            <span style={{ fontSize: '0.9rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
                         </div>
-                        <span style={{ fontSize: '0.9rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
+                        {/* 드래곤 경험치 바 */}
+                        <div style={{ height: '12px', background: 'rgba(0,0,0,0.05)', borderRadius: '6px', overflow: 'hidden' }}>
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${petData.exp}%` }}
+                                style={{
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, #FFB300, #FBC02D)',
+                                    borderRadius: '6px'
+                                }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                            <span style={{ fontSize: '0.75rem', color: '#8D6E63' }}>
+                                마지막 식사 후 {daysSinceLastFed}일 경과
+                            </span>
+                            <span style={{ fontSize: '0.75rem', color: '#FBC02D', fontWeight: 'bold' }}>
+                                {petData.level < 5 ? `진화까지 ${100 - petData.exp} EXP` : '최고 단계 도달! 🌈'}
+                            </span>
+                        </div>
                     </div>
-                    {/* 드래곤 경험치 바 */}
-                    <div style={{ height: '10px', background: 'rgba(0,0,0,0.05)', borderRadius: '5px', overflow: 'hidden' }}>
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${petData.exp}%` }}
-                            style={{
-                                height: '100%',
-                                background: 'linear-gradient(90deg, #FFB300, #FBC02D)',
-                                borderRadius: '5px'
-                            }}
-                        />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.5)', padding: '12px 16px', borderRadius: '16px' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#795548' }}>
+                        <span style={{ fontWeight: 'bold' }}>드래곤을 돌봐주세요!</span><br />
+                        30일이 지나면 레벨이 낮아져요.
                     </div>
-                    <p style={{ fontSize: '0.75rem', color: '#9E9E9E', marginTop: '6px', textAlign: 'right' }}>
-                        진화까지 경험치 {100 - petData.exp} 남음!
-                    </p>
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleFeed}
+                        style={{
+                            background: '#FF8A65',
+                            color: 'white',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '12px',
+                            fontSize: '0.9rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 0 #E64A19',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}
+                    >
+                        🍖 맛있는 고기 (50P)
+                    </motion.button>
                 </div>
             </motion.div>
 
