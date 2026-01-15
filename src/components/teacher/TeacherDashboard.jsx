@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // 지연 로딩 적용
 const ClassManager = lazy(() => import('./ClassManager'));
