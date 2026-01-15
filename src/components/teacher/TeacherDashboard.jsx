@@ -468,13 +468,13 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
             </main>
 
             {/* 최근 활동 상세보기 모달 (선생님용) */}
-            {selectedActivityPost && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.7)', zIndex: 2000,
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    padding: '20px'
-                }} onClick={() => setSelectedActivityPost(null)}>
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.7)', zIndex: 2000,
+                display: 'flex', justifyContent: 'center', alignItems: 'center',
+                padding: '20px'
+            }} onClick={() => setSelectedActivityPost(null)}>
+                {!selectedActivityPost ? null : (
                     <div style={{
                         background: 'white', borderRadius: '24px', width: '100%', maxWidth: '800px',
                         maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden'
@@ -490,11 +490,11 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                             {selectedActivityPost?.content || '내용이 없습니다.'}
                         </div>
                         <footer style={{ padding: '20px', borderTop: '1px solid #EEE', textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem' }}>
-                            미션: {selectedActivityPost?.writing_missions?.title || '정보 없음'} | 글자 수: {selectedActivityPost?.char_count || 0}자
+                            미션: {selectedActivityPost?.writing_missions?.title || (Array.isArray(selectedActivityPost?.writing_missions) ? selectedActivityPost?.writing_missions[0]?.title : '정보 없음')} | 글자 수: {selectedActivityPost?.char_count || 0}자
                         </footer>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };
@@ -599,7 +599,7 @@ const RecentActivity = ({ classId, onPostClick }) => {
                                 {act.title || '제목 없는 글'}
                             </div>
                             <div style={{ fontSize: '0.7rem', color: '#3498DB', marginTop: '2px' }}>
-                                미션: {act.writing_missions?.title || '정보 없음'}
+                                미션: {act.writing_missions?.title || (Array.isArray(act.writing_missions) ? act.writing_missions[0]?.title : '정보 없음')}
                             </div>
                         </div>
                     ))
