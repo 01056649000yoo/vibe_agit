@@ -585,18 +585,15 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 default: { type: "spring", stiffness: 260, damping: 20 }
                                             }}
                                             style={{
-                                                width: '180px',
-                                                height: '180px',
+                                                width: '220px', // 크기를 조금 더 키움
+                                                height: '220px',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                borderRadius: '32px',
-                                                boxShadow: '0 12px 32px rgba(0,0,0,0.25)',
                                                 position: 'relative',
                                                 zIndex: 1,
                                                 cursor: 'pointer',
-                                                overflow: 'hidden',
-                                                background: 'transparent' // PNG 투명 배경 적용
+                                                background: 'transparent' // 완전 투명
                                             }}
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
