@@ -439,12 +439,12 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             exit={{ y: isMobile ? '100%' : 50, opacity: 0 }}
                             onClick={e => e.stopPropagation()}
                             style={{
-                                background: HIDEOUT_BACKGROUNDS[petData.background]?.color || HIDEOUT_BACKGROUNDS.default.color,
+                                background: '#FFFFFF',
                                 borderRadius: isMobile ? '32px 32px 0 0' : '32px',
                                 width: '100%', maxWidth: '600px',
                                 padding: '32px',
-                                border: petData.level >= 5 ? '4px solid #FFD700' : `3px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || HIDEOUT_BACKGROUNDS.default.border}`,
-                                boxShadow: petData.level >= 5 ? '0 0 30px rgba(255, 215, 0, 0.4)' : '0 20px 50px rgba(0,0,0,0.3)',
+                                border: 'none',
+                                boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
                                 position: 'relative',
                                 maxHeight: isMobile ? '90vh' : 'auto',
                                 overflowY: 'auto',
@@ -464,13 +464,25 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             </button>
 
                             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                                <h2 style={{ margin: 0, color: HIDEOUT_BACKGROUNDS[petData.background]?.textColor || '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 드래곤 아지트</h2>
-                                <p style={{ margin: '4px 0 0 0', color: HIDEOUT_BACKGROUNDS[petData.background]?.subColor || '#8D6E63', fontSize: '0.9rem' }}>나의 소중한 드래곤 파트너와 함께하는 공간</p>
+                                <h2 style={{ margin: 0, color: '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 드래곤 아지트</h2>
+                                <p style={{ margin: '4px 0 0 0', color: '#8D6E63', fontSize: '0.9rem' }}>나의 소중한 드래곤 파트너와 함께하는 공간</p>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', background: 'rgba(255,255,255,0.4)', padding: '20px', borderRadius: '24px' }}>
-                                    <div style={{ position: 'relative', padding: '40px' }}>
+                                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '24px', background: '#F9F9F9', padding: '24px', borderRadius: '24px', border: '1px solid #EEE' }}>
+                                    <div style={{
+                                        position: 'relative',
+                                        width: '260px',
+                                        height: '260px',
+                                        background: HIDEOUT_BACKGROUNDS[petData.background]?.color || HIDEOUT_BACKGROUNDS.default.color,
+                                        borderRadius: '24px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        overflow: 'hidden',
+                                        border: petData.level >= 5 ? '4px solid #FFD700' : `2px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || '#DDD'}`,
+                                        boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.08)'
+                                    }}>
                                         {/* 배경 장식 요소들 */}
                                         {petData.background === 'volcano' && (
                                             <AnimatePresence>
@@ -566,28 +578,28 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 scale: 1,
                                                 rotate: 0,
                                                 opacity: 1,
-                                                y: [0, -8, 0]
+                                                y: [0, -10, 0]
                                             }}
                                             transition={{
                                                 y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
                                                 default: { type: "spring", stiffness: 260, damping: 20 }
                                             }}
                                             style={{
-                                                width: '120px',
-                                                height: '120px',
+                                                width: '180px',
+                                                height: '180px',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                borderRadius: '24px',
-                                                boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                                                borderRadius: '32px',
+                                                boxShadow: '0 12px 32px rgba(0,0,0,0.25)',
                                                 position: 'relative',
                                                 zIndex: 1,
                                                 cursor: 'pointer',
                                                 overflow: 'hidden',
-                                                background: 'black' // 이미지 배경 처리
+                                                background: 'black'
                                             }}
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
                                         >
                                             {dragonInfo.isPlaceholder ? (
                                                 <div style={{ color: 'white', fontSize: '0.8rem', textAlign: 'center', padding: '10px' }}>
