@@ -45,28 +45,13 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         { id: 'star', name: '반짝이 별', price: 150, emoji: '⭐', fontSize: '1.5rem', pos: { top: '-10%', left: '60%' } },
     ];
 
-    // [Step 1] 드래곤 진화 단계별 액세서리 좌표 매핑 시스템
-    const ACCESSORY_POSITIONS = {
-        1: { // 🥚
-            crown: { top: '-10%', left: '50%' },
-            sunglasses: { top: '40%', left: '50%' }
-        },
-        2: { // 🐣
-            crown: { top: '-20%', left: '45%' },
-            sunglasses: { top: '30%', left: '45%' }
-        },
-        3: { // 🐲
-            crown: { top: '5%', left: '55%' },
-            sunglasses: { top: '35%', left: '55%' }
-        },
-        4: { // 🐉
-            crown: { top: '0%', left: '60%' },
-            sunglasses: { top: '30%', left: '60%' }
-        },
-        5: { // ✨🐲
-            crown: { top: '-5%', left: '50%' },
-            sunglasses: { top: '25%', left: '50%' }
-        }
+    // [최종] 드래곤 진화 단계별 액세서리 좌표 매핑 시스템
+    const PET_POSITIONS = {
+        1: { crown: { top: '-15px', left: '50%' }, sunglasses: { top: '25px', left: '50%' } },
+        2: { crown: { top: '-25px', left: '40%' }, sunglasses: { top: '15px', left: '40%' } },
+        3: { crown: { top: '0px', left: '65%' }, sunglasses: { top: '35px', left: '65%' } },
+        4: { crown: { top: '-10px', left: '70%' }, sunglasses: { top: '20px', left: '70%' } },
+        5: { crown: { top: '-20px', left: '55%' }, sunglasses: { top: '15px', left: '55%' } }
     };
 
     useEffect(() => {
@@ -547,7 +532,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 const item = ACCESSORIES.find(a => a.id === itemId);
                                                 if (!item) return null;
 
-                                                const levelPos = ACCESSORY_POSITIONS[petData.level]?.[item.id];
+                                                const levelPos = PET_POSITIONS[petData.level]?.[item.id];
                                                 const finalPos = levelPos || item.pos || { top: '0', left: '0' };
 
                                                 return (
