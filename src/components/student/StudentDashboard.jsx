@@ -18,6 +18,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [loadingFeedback, setLoadingFeedback] = useState(false);
     const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 }); // [추가] 성장 통계
     const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', icon: '🌱', nextGoal: 1000 }); // [추가] 레벨 정보
+    const [isLoading, setIsLoading] = useState(true); // [긴급 점검] 데이터 로딩 상태 관리 추가
     const [petData, setPetData] = useState({
         name: '나의 드래곤',
         level: 1,
@@ -38,12 +39,17 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     useEffect(() => {
         if (studentSession?.id) {
-            fetchMyPoints();
+            loadInitialData();
             checkActivity();
             fetchStats();
-            checkPetDegeneration();
         }
     }, [studentSession]);
+
+    const loadInitialData = async () => {
+        await fetchMyPoints();
+        // [점검] 데이터 로드가 완료된 후에 퇴화 로직 체크
+        checkPetDegeneration();
+    };
 
     // [추가] 드래곤 퇴화 로직 (30일 미접속/미관리 시)
     const checkPetDegeneration = () => {
@@ -76,12 +82,22 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     // [추가] 먹이 주기 기능
     const handleFeed = async () => {
+        // [점검] 로딩 중이거나 포인트 정보가 유효하지 않으면 실행 방지
+        if (isLoading) {
+            alert('데이터를 불러오는 중입니다. 잠시만 기다려 주세요! ⏳');
+            return;
+        }
+
         if (points < 50) {
             alert('포인트가 부족해요! 글을 써서 포인트를 모아보세요. ✍️');
             return;
         }
 
         const newPoints = points - 50;
+        if (newPoints < 0) {
+            alert('작업을 완료할 수 없습니다. 포인트가 유효하지 않습니다.');
+            return;
+        }
         let newExp = petData.exp + 20;
         let newLevel = petData.level;
 
@@ -127,6 +143,12 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     // [추가] 액세서리 구매/장착 로직
     const handleBuyItem = async (item) => {
+        // [점검] 로딩 중이거나 포인트 정보가 유효하지 않으면 실행 방지
+        if (isLoading) {
+            alert('데이터를 불러오는 중입니다. 잠시만 기다려 주세요! ⏳');
+            return;
+        }
+
         if (points < item.price) {
             alert('포인트가 부족해요! 꾸준히 글을 써 보세요. ✍️');
             return;
@@ -135,6 +157,10 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         if (petData.ownedItems.includes(item.id)) return;
 
         const newPoints = points - item.price;
+        if (newPoints < 0) {
+            alert('작업을 완료할 수 없습니다. 포인트가 유효하지 않습니다.');
+            return;
+        }
         const newOwned = [...petData.ownedItems, item.id];
         const newPetData = { ...petData, ownedItems: newOwned };
 
@@ -158,6 +184,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     };
 
     const handleToggleEquip = async (itemId) => {
+        if (isLoading) return; // [점검] 로딩 중 작업 방지
         const isEquipped = petData.equippedItems.includes(itemId);
         let newEquipped;
 
@@ -232,23 +259,37 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     };
 
     const fetchMyPoints = async () => {
-        const { data, error } = await supabase
-            .from('students')
-            .select('total_points, pet_data')
-            .eq('id', studentSession.id)
-            .single();
+        try {
+            const { data, error } = await supabase
+                .from('students')
+                .select('total_points, pet_data')
+                .eq('id', studentSession.id)
+                .single();
 
-        if (data) {
-            setPoints(data.total_points || 0);
-            if (data.pet_data) {
-                // 기존 데이터에 새 필드가 없을 경우를 대비해 병합
-                setPetData(prev => ({
-                    ...prev,
-                    ...data.pet_data,
-                    ownedItems: data.pet_data.ownedItems || prev.ownedItems,
-                    equippedItems: data.pet_data.equippedItems || prev.equippedItems
-                }));
+            if (error) throw error;
+
+            if (data) {
+                // [안전장치] DB에서 가져온 값이 유효할 때만 상태 업데이트
+                // 만약 DB에서 가져온 값이 null이나 undefined면 기존 값을 유지하거나 에러 처리
+                if (data.total_points !== null && data.total_points !== undefined) {
+                    setPoints(data.total_points);
+                }
+
+                if (data.pet_data) {
+                    setPetData(prev => ({
+                        ...prev,
+                        ...data.pet_data,
+                        ownedItems: data.pet_data.ownedItems || prev.ownedItems,
+                        equippedItems: data.pet_data.equippedItems || prev.equippedItems
+                    }));
+                }
             }
+        } catch (err) {
+            console.error('포인트 로드 실패:', err.message);
+            alert('데이터를 불러오는 중 문제가 발생했습니다. 페이지를 다시 불러와주세요! 🔄');
+            // 에러 시 isLoading을 false로 바꾸지 않고 멈춰버리거나, 알림 후 유지
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -577,9 +618,25 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     border: '3px solid #FFECB3',
                     marginBottom: '2.5rem',
                     boxShadow: '0 10px 20px rgba(255, 213, 79, 0.15)',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}
             >
+                {isLoading && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        style={{
+                            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(255,255,255,0.8)', zIndex: 10,
+                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            fontSize: '0.9rem', color: '#FBC02D', fontWeight: 'bold'
+                        }}
+                    >
+                        데이터를 불러오는 중... ✨
+                    </motion.div>
+                )}
                 <div style={{ fontSize: '1.1rem', color: '#8D6E63', fontWeight: 'bold', marginBottom: '8px' }}>
                     반짝이는 포인트가 ✨
                 </div>
