@@ -585,7 +585,7 @@ const RecentActivity = ({ classId, onPostClick }) => {
                             }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                                <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '0.9rem' }}>{act.students?.name || '알 수 없음'}</span>
+                                <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '0.9rem' }}>{(act.students?.name || '학생 이름 없음')}</span>
                                 <span style={{ fontSize: '0.75rem', color: '#ADB5BD', fontWeight: 'bold' }}>{timeAgo(act.created_at)}</span>
                             </div>
                             <div style={{
@@ -599,7 +599,7 @@ const RecentActivity = ({ classId, onPostClick }) => {
                                 {act.title || '제목 없는 글'}
                             </div>
                             <div style={{ fontSize: '0.7rem', color: '#3498DB', marginTop: '2px' }}>
-                                미션: {act.writing_missions?.title || (Array.isArray(act.writing_missions) ? act.writing_missions[0]?.title : '정보 없음')}
+                                미션: {(act.writing_missions?.title || act.writing_missions?.[0]?.title || '미션 정보 없음')}
                             </div>
                         </div>
                     ))
