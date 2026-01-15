@@ -1332,8 +1332,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             </motion.div>
                         </div>
                     )}
-            </AnimatePresence>
-        </Card >
+            </Card >
         </>
     );
 };
