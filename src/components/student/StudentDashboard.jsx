@@ -195,17 +195,16 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
             {/* 서재 컨테이너 (The Stage) */}
             <div
-                className="relative w-full h-[300px] rounded-t-3xl overflow-hidden mb-8"
+                className="relative w-full h-[300px] rounded-xl overflow-hidden mb-8"
                 style={{
                     position: 'relative',
                     width: '100%',
                     height: '300px',
-                    borderTopLeftRadius: '1.5rem',
-                    borderTopRightRadius: '1.5rem',
+                    borderRadius: '1rem',
                     overflow: 'hidden',
                     marginBottom: '2rem',
                     boxShadow: 'inset 0 4px 15px rgba(0,0,0,0.2)',
-                    background: '#D7CCC8' // 기본 벽지 배경색
+                    background: '#C6B6AD' // 약간 어두운 베이지색 벽
                 }}
             >
                 {/* 벽 (상단 70%) */}
@@ -215,19 +214,18 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     left: 0,
                     width: '100%',
                     height: '70%',
-                    backgroundColor: '#D7CCC8'
+                    backgroundColor: '#C6B6AD'
                 }} />
 
-                {/* 바닥 (하단 30%, 원근감을 위해 약간 변형) */}
+                {/* 바닥 (하단 30%, 아이소메트릭 효과를 위해 skew 적용) */}
                 <div style={{
                     position: 'absolute',
                     bottom: 0,
-                    left: '-10%',
-                    width: '120%',
-                    height: '35%',
-                    backgroundColor: '#8D6E63',
-                    transform: 'perspective(500px) rotateX(25deg)',
-                    transformOrigin: 'bottom',
+                    left: '-20%',
+                    width: '140%',
+                    height: '30%',
+                    backgroundColor: '#826A5C',
+                    transform: 'skewX(-15deg)', // 안쪽으로 깊어지는 효과
                     zIndex: 5,
                     boxShadow: '0 -10px 20px rgba(0,0,0,0.1)'
                 }} />
@@ -235,18 +233,23 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 {/* 가구 배치 (레이어링 및 그림자 포함) */}
 
                 {/* 의자 (🪑) - 뒤쪽 레이어 */}
-                <div style={{ position: 'absolute', left: '22%', bottom: '12%', zIndex: 10 }}>
+                <div style={{
+                    position: 'absolute',
+                    left: '25%',
+                    bottom: '15%',
+                    zIndex: 10,
+                    transform: 'scale(1.1)'
+                }}>
                     {/* 의자 그림자 */}
                     <div style={{
                         position: 'absolute',
                         bottom: '-5px',
-                        left: '10px',
-                        width: '60px',
-                        height: '20px',
+                        left: '0px',
+                        width: '80px',
+                        height: '16px',
                         background: 'rgba(0,0,0,0.2)',
-                        borderRadius: '50%',
-                        filter: 'blur(5px)',
-                        transform: 'scaleX(1.2)'
+                        borderRadius: '100%',
+                        filter: 'blur(12px)',
                     }} />
                     <div style={{
                         fontSize: '4.5rem',
@@ -258,18 +261,23 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 </div>
 
                 {/* 책상 (🏚️) - 앞쪽 레이어 */}
-                <div style={{ position: 'absolute', left: '35%', bottom: '8%', zIndex: 20 }}>
+                <div style={{
+                    position: 'absolute',
+                    left: '35%',
+                    bottom: '10%',
+                    zIndex: 20,
+                    transform: 'scale(1.25)'
+                }}>
                     {/* 책상 그림자 */}
                     <div style={{
                         position: 'absolute',
                         bottom: '-10px',
-                        left: '10px',
+                        left: '0px',
                         width: '100px',
-                        height: '25px',
-                        background: 'rgba(0,0,0,0.25)',
-                        borderRadius: '50%',
-                        filter: 'blur(7px)',
-                        transform: 'scaleX(1.1)'
+                        height: '16px',
+                        background: 'rgba(0,0,0,0.2)',
+                        borderRadius: '100%',
+                        filter: 'blur(12px)',
                     }} />
                     <div style={{
                         fontSize: '5.5rem',
