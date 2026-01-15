@@ -70,7 +70,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
             .from('students')
             .select('*')
             .eq('class_id', classId)
-            .order('total_points', { ascending: false });
+            .order('created_at', { ascending: true }); // [수정] 랭킹 순이 아닌 등록 순(번호)으로 고정
 
         if (!error && data) setStudents(data);
     };
@@ -168,7 +168,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                     borderBottom: '1px solid #F1F3F5',
                     marginBottom: '16px'
                 }}>
-                    <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.2rem', color: '#212529', fontWeight: '900' }}>🏆 명예의 전당</h3>
+                    <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.2rem', color: '#212529', fontWeight: '900' }}>👥 우리 반 학생 명단</h3>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <Button
                             onClick={toggleSelectAll}
@@ -207,10 +207,6 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                         }}
                     >
                         {students.map((s, idx) => {
-                            const isTop3 = idx < 3;
-                            const topColors = ['#FFF9C4', '#F8F9FA', '#FFF3E0']; // 금, 은, 동 배경색
-                            const topBorders = ['#F7DC6F', '#D5D8DC', '#E59866']; // 금, 은, 동 테두리
-
                             return (
                                 <motion.div
                                     key={s.id}
@@ -221,22 +217,22 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                     style={{
                                         display: 'flex', alignItems: 'center',
                                         padding: isMobile ? '8px 12px' : '10px 14px',
-                                        background: selectedIds.includes(s.id) ? '#EBF5FB' : (isTop3 ? topColors[idx] : '#FDFEFE'),
-                                        border: `1px solid ${selectedIds.includes(s.id) ? '#3498DB' : (isTop3 ? topBorders[idx] : '#F1F3F5')}`,
+                                        background: selectedIds.includes(s.id) ? '#EBF5FB' : '#FDFEFE',
+                                        border: `1px solid ${selectedIds.includes(s.id) ? '#3498DB' : '#F1F3F5'}`,
                                         borderRadius: '16px', cursor: 'pointer', transition: 'all 0.15s',
                                         fontSize: isMobile ? '0.85rem' : '0.9rem', width: '100%', boxSizing: 'border-box',
                                         wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                        boxShadow: isTop3 ? '0 2px 8px rgba(0,0,0,0.05)' : 'none'
+                                        boxShadow: 'none'
                                     }}
                                 >
                                     <div style={{
                                         width: isMobile ? '28px' : '32px',
                                         fontWeight: '900',
-                                        color: isTop3 ? topBorders[idx] : '#ADB5BD',
+                                        color: '#ADB5BD',
                                         fontSize: isMobile ? '1rem' : '1.1rem',
                                         display: 'flex', justifyContent: 'center'
                                     }}>
-                                        {idx < 3 ? ['🥇', '🥈', '🥉'][idx] : idx + 1}
+                                        {idx + 1}
                                     </div>
                                     <div style={{ flex: 1, fontWeight: '700', color: '#495057' }}>{s.name}</div>
 
@@ -323,13 +319,14 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '8px' }}>
-                {students.map((s) => (
+                {students.map((s, idx) => (
                     <div key={s.id} style={{
                         display: 'flex', alignItems: 'center', padding: '10px 14px',
                         background: '#F8F9FA', border: '1px solid #E9ECEF', borderRadius: '12px',
                         justifyContent: 'space-between', fontSize: '0.9rem'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ color: '#ADB5BD', fontWeight: 'bold', width: '24px' }}>{idx + 1}</div>
                             <div style={{ fontWeight: 'bold' }}>{s.name}</div>
                             <code style={{ fontSize: '0.75rem', color: '#34495E', background: 'white', padding: '2px 8px', borderRadius: '4px', border: '1px solid #D5DBDB', fontFamily: 'monospace', fontWeight: 'bold', letterSpacing: '0.5px' }}>
                                 {s.student_code}
@@ -376,7 +373,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                 selectedStudentForCode={selectedStudentForCode}
                 students={students}
             />
-        </div>
+        </div >
     );
 };
 
