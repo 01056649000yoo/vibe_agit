@@ -176,6 +176,7 @@ function App() {
             session={session}
             activeClass={activeClass}
             setActiveClass={setActiveClass}
+            onProfileUpdate={() => fetchProfile(session.user.id)}
             onNavigate={(page, params) => setInternalPage({ name: page, params })}
             internalPage={internalPage}
             setInternalPage={setInternalPage}

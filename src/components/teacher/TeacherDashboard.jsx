@@ -12,7 +12,7 @@ const MissionManager = lazy(() => import('./MissionManager'));
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
  */
-const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => {
+const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onProfileUpdate }) => {
     const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'settings'
     const [classes, setClasses] = useState([]);
     const [loadingClasses, setLoadingClasses] = useState(true);
@@ -140,19 +140,28 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
             if (error) throw error;
             const classList = data || [];
 
+            // 🆕 주 학급 정보 확인 로직 강화
+            let autoSelectedClass = null;
+            if (classList.length > 0) {
+                // 1순위: 주 학급이 설정되어 있는가? (profile prop 활용)
+                const primaryId = profile?.primary_class_id;
+                const primaryClass = classList.find(c => c.id === primaryId);
+
+                if (primaryClass) {
+                    autoSelectedClass = primaryClass;
+                } else {
+                    autoSelectedClass = classList[0];
+                }
+            }
+
             // 1. 학급 목록 업데이트
             setClasses(classList);
 
-            // 2. 현재 선택된 학급이 유효한지 체크
-            if (classList.length === 0) {
-                if (activeClass !== null) setActiveClass(null);
-            } else {
-                const isCurrentValid = activeClass && classList.some(c => c.id === activeClass.id);
-                // 유효하지 않으면 (삭제되었거나 처음인 경우) 첫 번째 학급 자동 활성화
-                if (!isCurrentValid) {
-                    console.log("✏️ TeacherDashboard: 활성 학급이 유효하지 않아 첫 번째 학급을 선택합니다.");
-                    setActiveClass(classList[0]);
-                }
+            // 2. 현재 선택된 학급이 유효한지 체크 및 자동 선택
+            const isCurrentValid = activeClass && classList.some(c => c.id === activeClass.id);
+            if (!isCurrentValid && autoSelectedClass) {
+                console.log("✏️ TeacherDashboard: 주 학급 또는 기본 학급으로 자동 설정합니다.");
+                setActiveClass(autoSelectedClass);
             }
         } catch (err) {
             console.error('❌ TeacherDashboard: 학급 불러오기 실패:', err.message);
@@ -166,10 +175,31 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
     useEffect(() => {
         // 로딩 완료 후 학급은 있는데 선택된 게 없을 때만 실행
         if (!loadingClasses && classes.length > 0 && !activeClass) {
+            const primaryId = profile?.primary_class_id;
+            const primary = classes.find(c => c.id === primaryId);
             console.log("🔄 TeacherDashboard: 새 학급으로 자동 전환합니다.");
-            setActiveClass(classes[0]);
+            setActiveClass(primary || classes[0]);
         }
-    }, [loadingClasses, classes, activeClass]);
+    }, [loadingClasses, classes, activeClass, profile]);
+
+    // [추가] 주 학급 설정 기능
+    const handleSetPrimaryClass = async (classId) => {
+        if (!classId) return;
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ primary_class_id: classId })
+                .eq('id', session.user.id);
+
+            if (error) throw error;
+
+            if (onProfileUpdate) await onProfileUpdate();
+            alert('이 학급이 주 학급(기본)으로 설정되었습니다! ⭐');
+        } catch (err) {
+            console.error('주 학급 설정 실패:', err.message);
+            alert('주 학급 설정 중 오류가 발생했습니다. (DB 컬럼 확인 필요)');
+        }
+    };
 
     if (loadingClasses) {
         return (
@@ -347,6 +377,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                         setClasses={setClasses}
                                         onClassDeleted={fetchAllClasses}
                                         isMobile={isMobile}
+                                        primaryClassId={profile?.primary_class_id}
+                                        onSetPrimaryClass={handleSetPrimaryClass}
                                     />
                                 </section>
 
@@ -362,13 +394,15 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                         <section style={{
                                             background: 'white', borderRadius: '24px', padding: isMobile ? '20px' : '28px',
                                             border: '1px solid #E9ECEF', boxSizing: 'border-box', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
-                                            width: '100%'
+                                            width: '100%', display: 'flex', flexDirection: 'column'
                                         }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                                                 <span style={{ fontSize: '1.5rem' }}>👥</span>
                                                 <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>학생 명단 및 계정 관리</h3>
                                             </div>
-                                            <StudentManager classId={activeClass.id} isDashboardMode={false} />
+                                            <div style={{ flex: 1 }}>
+                                                <StudentManager classId={activeClass.id} isDashboardMode={false} />
+                                            </div>
                                         </section>
 
                                         {/* 3. 우측: AI 자동 피드백 보안 센터 */}
@@ -376,14 +410,18 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                             background: 'linear-gradient(135deg, #FFFFFF 0%, #F0F4F8 100%)',
                                             borderRadius: '24px', padding: isMobile ? '20px' : '28px',
                                             border: '1px solid #D1D9E6', boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-                                            width: '100%', boxSizing: 'border-box'
+                                            width: '100%', boxSizing: 'border-box',
+                                            display: 'flex', flexDirection: 'column'
                                         }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                                                 <span style={{ fontSize: '1.5rem' }}>🔐</span>
                                                 <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>AI 자동 피드백 보안 센터</h3>
                                             </div>
 
-                                            <div style={{ background: 'white', padding: '20px', borderRadius: '18px', border: '1px solid #E9ECEF' }}>
+                                            <div style={{
+                                                background: 'white', padding: '20px', borderRadius: '18px', border: '1px solid #E9ECEF',
+                                                flex: 1, display: 'flex', flexDirection: 'column'
+                                            }}>
                                                 <label style={{ display: 'block', fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold', marginBottom: '10px' }}>
                                                     Gemini API Key
                                                 </label>
@@ -425,7 +463,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                                     </p>
                                                 )}
 
-                                                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #DEE2E6' }}>
+                                                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #DEE2E6', flex: 1, display: 'flex', flexDirection: 'column' }}>
                                                     <label style={{ display: 'block', fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold', marginBottom: '8px' }}>
                                                         AI 피드백 프롬프트
                                                     </label>
@@ -434,7 +472,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                                                         onChange={(e) => setPromptTemplate(e.target.value)}
                                                         placeholder="선생님만의 피드백 규칙을 입력하세요."
                                                         style={{
-                                                            width: '100%', minHeight: '100px', padding: '12px', borderRadius: '12px',
+                                                            width: '100%', flex: 1, minHeight: '100px', padding: '12px', borderRadius: '12px',
                                                             border: '1px solid #DEE2E6', fontSize: '0.85rem', lineHeight: '1.5',
                                                             color: '#2C3E50', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit'
                                                         }}

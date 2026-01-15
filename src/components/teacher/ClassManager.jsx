@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * - classes 테이블은 ON DELETE CASCADE 설정이 되어 있어야 합니다.
  *   (학급 삭제 시 student, writing_missions 등 관련 데이터가 자동 삭제됨)
  */
-const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted, isMobile }) => {
+const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted, isMobile, primaryClassId, onSetPrimaryClass }) => {
     const [className, setClassName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isZoomModalOpen, setIsZoomModalOpen] = useState(false); // 초대 코드 크게 보기 모달
@@ -187,10 +187,37 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                         overflow: 'hidden'
                     }}>
                         <div>
-                            <span style={{ fontSize: '0.85rem', color: '#795548', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '4px' }}>Active Class</span>
-                            <h3 style={{ margin: 0, fontSize: '1.6rem', color: '#2C3E50', fontWeight: '900' }}>
-                                {activeClass?.name}
-                            </h3>
+                            <span style={{ fontSize: '0.9rem', color: '#8D6E63', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'block', marginBottom: '6px' }}>현재 관리 중인 학급</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                <h3 style={{ margin: 0, fontSize: '2.2rem', color: '#2C3E50', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    🏫 {activeClass?.name}
+                                </h3>
+                                {activeClass?.id === primaryClassId ? (
+                                    <div style={{ background: '#FFD700', color: '#8B4513', padding: '6px 12px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)' }}>
+                                        ⭐ 주 학급
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => onSetPrimaryClass && onSetPrimaryClass(activeClass.id)}
+                                        style={{
+                                            background: 'white', border: '1px solid #FFD700', color: '#DAA520',
+                                            padding: '6px 12px', borderRadius: '12px', fontSize: '0.8rem',
+                                            fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s',
+                                            display: 'flex', alignItems: 'center', gap: '4px'
+                                        }}
+                                        onMouseEnter={e => {
+                                            e.currentTarget.style.background = '#FFFDE7';
+                                            e.currentTarget.style.transform = 'translateY(-2px)';
+                                        }}
+                                        onMouseLeave={e => {
+                                            e.currentTarget.style.background = 'white';
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                        }}
+                                    >
+                                        ⭐ 주 학급으로 설정
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         <div style={{
