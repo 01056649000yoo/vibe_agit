@@ -396,10 +396,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                             border: '1px solid #E9ECEF', boxSizing: 'border-box', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
                                             width: '100%', display: 'flex', flexDirection: 'column'
                                         }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                                                <span style={{ fontSize: '1.5rem' }}>👥</span>
-                                                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>학생 명단 및 계정 관리</h3>
-                                            </div>
+
                                             <div style={{ flex: 1 }}>
                                                 <StudentManager classId={activeClass.id} isDashboardMode={false} />
                                             </div>
