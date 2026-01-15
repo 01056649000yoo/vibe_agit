@@ -152,8 +152,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
     };
 
     if (isDashboardMode) {
-        // students가 비어있을 때 Math.max(...[]) 에러 방지 및 기본값 설정
-        const maxPoints = students.length > 0 ? Math.max(...students.map(s => s.total_points || 0), 1) : 100;
+        const maxPoints = students.length > 0 ? Math.max(...students.map(s => s.total_points || 0)) : 0;
 
         return (
             <div style={{ width: '100%', boxSizing: 'border-box' }}>
