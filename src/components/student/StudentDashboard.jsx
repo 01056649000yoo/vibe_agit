@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * 역할: 학생 메인 대시보드 - 포인트 표시 및 활동 메뉴
@@ -28,6 +28,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         equippedItems: [] // 장착 중인 아이템 ID 목록
     });
     const [isShopOpen, setIsShopOpen] = useState(false);
+    const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
     useEffect(() => {
@@ -435,7 +436,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 <motion.div
                     whileHover={{ scale: 1.02, y: -5 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => document.getElementById('dragon-hideout')?.scrollIntoView({ behavior: 'smooth' })}
+                    onClick={() => setIsDragonModalOpen(true)}
                     style={{
                         background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
                         borderRadius: '24px',
@@ -476,161 +477,198 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 </motion.div>
             </div>
 
-            {/* [추가] 드래곤 아지트 (Dragon's Hideout) */}
-            <motion.div
-                id="dragon-hideout"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                style={{
-                    background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
-                    borderRadius: '24px',
-                    padding: '24px',
-                    marginBottom: '32px',
-                    border: '2px solid #FFF176',
-                    boxShadow: '0 8px 24px rgba(255, 241, 118, 0.2)',
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px' }}>
-                    <div style={{ position: 'relative' }}>
+            {/* [멀티모달] 드래곤 아지트 */}
+            <AnimatePresence>
+                {isDragonModalOpen && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+                        zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: isMobile ? 'flex-end' : 'center',
+                        padding: isMobile ? '0' : '20px'
+                    }} onClick={() => setIsDragonModalOpen(false)}>
                         <motion.div
-                            key={petData.level}
-                            initial={{ scale: 0.5, rotate: -20, filter: 'brightness(2)' }}
-                            animate={{ scale: 1, rotate: 0, filter: 'brightness(1)' }}
-                            transition={{ type: 'spring', stiffness: 200 }}
+                            initial={{ y: isMobile ? '100%' : 50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: isMobile ? '100%' : 50, opacity: 0 }}
+                            onClick={e => e.stopPropagation()}
                             style={{
-                                fontSize: '4.5rem',
-                                background: 'white',
-                                width: '100px',
-                                height: '100px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                borderRadius: '20px',
-                                boxShadow: '0 4px 8px rgba(0,0,0,0.05)',
+                                background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
+                                borderRadius: isMobile ? '32px 32px 0 0' : '32px',
+                                width: '100%', maxWidth: '600px',
+                                padding: '32px',
+                                border: '2px solid #FFF176',
+                                boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
                                 position: 'relative',
-                                zIndex: 1
+                                maxHeight: isMobile ? '90vh' : 'auto',
+                                overflowY: 'auto'
                             }}
                         >
-                            {dragonInfo.emoji}
-
-                            {/* 장착된 액세서리 레이어 */}
-                            {petData.equippedItems.map(itemId => {
-                                const item = ACCESSORIES.find(a => a.id === itemId);
-                                if (!item) return null;
-                                return (
-                                    <motion.div
-                                        key={item.id}
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        style={{
-                                            position: 'absolute',
-                                            ...item.pos,
-                                            pointerEvents: 'none',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        {item.emoji}
-                                    </motion.div>
-                                );
-                            })}
-                        </motion.div>
-                        {petData.level > 1 && (
-                            <motion.span
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: [0, 1, 0] }}
-                                transition={{ repeat: Infinity, duration: 2 }}
-                                style={{ position: 'absolute', top: -10, right: -10, fontSize: '1.5rem', zIndex: 5 }}
-                            >
-                                ✨
-                            </motion.span>
-                        )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
-                            <div>
-                                <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.name}</span>
-                                <span style={{ fontSize: '1.2rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
-                            </div>
-                            <span style={{ fontSize: '0.9rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
-                        </div>
-                        {/* 드래곤 경험치 바 */}
-                        <div style={{ height: '12px', background: 'rgba(0,0,0,0.05)', borderRadius: '6px', overflow: 'hidden' }}>
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${petData.exp}%` }}
+                            <button
+                                onClick={() => setIsDragonModalOpen(false)}
                                 style={{
-                                    height: '100%',
-                                    background: 'linear-gradient(90deg, #FFB300, #FBC02D)',
-                                    borderRadius: '6px'
+                                    position: 'absolute', top: '20px', right: '20px',
+                                    background: 'rgba(255,255,255,0.7)', border: 'none',
+                                    width: '36px', height: '36px', borderRadius: '50%',
+                                    fontSize: '1.2rem', cursor: 'pointer', zIndex: 10
                                 }}
-                            />
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                            <span style={{ fontSize: '0.75rem', color: '#8D6E63' }}>
-                                마지막 식사 후 {daysSinceLastFed}일 경과
-                            </span>
-                            <span style={{ fontSize: '0.75rem', color: '#FBC02D', fontWeight: 'bold' }}>
-                                {petData.level < 5 ? `진화까지 ${100 - petData.exp} EXP` : '최고 단계 도달! 🌈'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                            >
+                                ✕
+                            </button>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.5)', padding: '12px 16px', borderRadius: '16px' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#795548' }}>
-                            <span style={{ fontWeight: 'bold' }}>드래곤을 돌봐주세요!</span><br />
-                            30일이 지나면 레벨이 낮아져요.
-                        </div>
+                            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                                <h2 style={{ margin: 0, color: '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 드래곤 아지트</h2>
+                                <p style={{ margin: '4px 0 0 0', color: '#8D6E63', fontSize: '0.9rem' }}>나의 소중한 드래곤 파트너와 함께하는 공간</p>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', background: 'rgba(255,255,255,0.4)', padding: '20px', borderRadius: '24px' }}>
+                                    <div style={{ position: 'relative' }}>
+                                        <motion.div
+                                            key={petData.level}
+                                            initial={{ scale: 0.5, rotate: -20 }}
+                                            animate={{ scale: 1, rotate: 0 }}
+                                            style={{
+                                                fontSize: '5rem',
+                                                background: 'white',
+                                                width: '120px',
+                                                height: '120px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                borderRadius: '24px',
+                                                boxShadow: '0 8px 16px rgba(0,0,0,0.05)',
+                                                position: 'relative',
+                                                zIndex: 1
+                                            }}
+                                        >
+                                            {dragonInfo.emoji}
+
+                                            {/* 장착된 액세서리 레이어 */}
+                                            {petData.equippedItems.map(itemId => {
+                                                const item = ACCESSORIES.find(a => a.id === itemId);
+                                                if (!item) return null;
+                                                return (
+                                                    <motion.div
+                                                        key={item.id}
+                                                        initial={{ scale: 0 }}
+                                                        animate={{ scale: 1 }}
+                                                        style={{
+                                                            position: 'absolute',
+                                                            ...item.pos,
+                                                            pointerEvents: 'none',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                        }}
+                                                    >
+                                                        {item.emoji}
+                                                    </motion.div>
+                                                );
+                                            })}
+                                        </motion.div>
+                                        {petData.level > 1 && (
+                                            <motion.span
+                                                animate={{ opacity: [0, 1, 0] }}
+                                                transition={{ repeat: Infinity, duration: 2 }}
+                                                style={{ position: 'absolute', top: -10, right: -10, fontSize: '1.5rem', zIndex: 5 }}
+                                            >
+                                                ✨
+                                            </motion.span>
+                                        )}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
+                                            <div>
+                                                <span style={{ fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.name}</span>
+                                                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
+                                            </div>
+                                            <span style={{ fontSize: '1rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
+                                        </div>
+                                        {/* 드래곤 경험치 바 */}
+                                        <div style={{ height: '14px', background: 'rgba(0,0,0,0.05)', borderRadius: '7px', overflow: 'hidden' }}>
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${petData.exp}%` }}
+                                                style={{
+                                                    height: '100%',
+                                                    background: 'linear-gradient(90deg, #FFB300, #FBC02D)',
+                                                    borderRadius: '7px'
+                                                }}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+                                            <span style={{ fontSize: '0.8rem', color: '#8D6E63' }}>
+                                                식사 후 {daysSinceLastFed}일 경과
+                                            </span>
+                                            <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold' }}>
+                                                {petData.level < 5 ? `${100 - petData.exp}% 남음` : '최고 단계! 🌈'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <div style={{ background: '#FFFDE7', padding: '16px', borderRadius: '18px', border: '1px solid #FFF9C4' }}>
+                                        <div style={{ fontSize: '0.9rem', color: '#795548', lineHeight: '1.5' }}>
+                                            <span style={{ fontWeight: 'bold' }}>💡 드래곤 돌보기 팁</span><br />
+                                            글을 써서 모은 포인트로 맛있는 먹이를 줄 수 있어요. 30일 동안 돌보지 않으면 드래곤이 지쳐서 레벨이 내려갈 수 있으니 주의하세요!
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={handleFeed}
+                                            style={{
+                                                flex: 1,
+                                                background: '#FF8A65',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '16px',
+                                                borderRadius: '20px',
+                                                fontSize: '1rem',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                boxShadow: '0 6px 0 #E64A19',
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                gap: '10px'
+                                            }}
+                                        >
+                                            🍖 먹이 주기 (50P)
+                                        </motion.button>
+                                        <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => setIsShopOpen(true)}
+                                            style={{
+                                                flex: 1,
+                                                background: '#3498DB',
+                                                color: 'white',
+                                                border: 'none',
+                                                padding: '16px',
+                                                borderRadius: '20px',
+                                                fontSize: '1rem',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                boxShadow: '0 6px 0 #2980B9',
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                gap: '10px'
+                                            }}
+                                        >
+                                            🛍️ 상점/꾸미기
+                                        </motion.button>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleFeed}
-                            style={{
-                                background: '#FF8A65',
-                                color: 'white',
-                                border: 'none',
-                                padding: '8px 16px',
-                                borderRadius: '12px',
-                                fontSize: '0.9rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 0 #E64A19',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}
-                        >
-                            🍖 먹이 주기 (50P)
-                        </motion.button>
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setIsShopOpen(true)}
-                            style={{
-                                background: '#3498DB',
-                                color: 'white',
-                                border: 'none',
-                                padding: '8px 16px',
-                                borderRadius: '12px',
-                                fontSize: '0.9rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 0 #2980B9',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}
-                        >
-                            🛍️ 상점/꾸미기
-                        </motion.button>
-                    </div>
-                </div>
-            </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* [신규] 성장 통계 카드 섹션 */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '40px' }}>
