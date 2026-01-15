@@ -19,14 +19,51 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 }); // [추가] 성장 통계
     const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', icon: '🌱', nextGoal: 1000 }); // [추가] 레벨 정보
     const [selectedItems, setSelectedItems] = useState({ wall: 'old', desk: 'old', chair: 'old', decos: [] });
+    const [petData, setPetData] = useState({
+        name: '나의 드래곤',
+        level: 1,
+        exp: 0,
+        lastFed: '2026-01-15',
+        accessories: []
+    });
 
     useEffect(() => {
         if (studentSession?.id) {
             fetchMyPoints();
             checkActivity();
             fetchStats();
+            checkPetDegeneration();
         }
     }, [studentSession]);
+
+    // [추가] 드래곤 퇴화 로직 (30일 미접속/미관리 시)
+    const checkPetDegeneration = () => {
+        const lastFedDate = new Date(petData.lastFed);
+        const today = new Date();
+        const diffTime = Math.abs(today - lastFedDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= 30 && petData.level > 1) {
+            setPetData(prev => ({
+                ...prev,
+                level: Math.max(1, prev.level - 1),
+                exp: 0,
+                lastFed: today.toISOString().split('T')[0]
+            }));
+            alert('드래곤을 너무 오래 돌보지 않아 레벨이 떨어졌어요! 다시 열심히 키워봐요! 😢');
+        }
+    };
+
+    // [추가] 단계별 드래곤 정보
+    const getDragonStage = (level) => {
+        if (level >= 5) return { name: '전설의 신룡', emoji: '✨🐲' };
+        if (level === 4) return { name: '날개 드래곤', emoji: '🐉' };
+        if (level === 3) return { name: '어린 드래곤', emoji: '🐲' };
+        if (level === 2) return { name: '아기 드래곤', emoji: '🐣' };
+        return { name: '비밀의 알', emoji: '🥚' };
+    };
+
+    const dragonInfo = getDragonStage(petData.level);
 
     // [수정] 누적 글자 수 기준 5단계 레벨 시스템
     const getLevelInfo = (totalChars) => {
@@ -296,6 +333,61 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 </h1>
                 <p style={{ color: '#8D6E63', fontSize: '1.1rem' }}>벌써 이만큼이나 성장했어! 🚀</p>
             </div>
+
+            {/* [추가] 드래곤 아지트 (Dragon's Hideout) */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                style={{
+                    background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
+                    borderRadius: '24px',
+                    padding: '20px',
+                    marginBottom: '32px',
+                    border: '2px solid #FFF176',
+                    boxShadow: '0 8px 24px rgba(255, 241, 118, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '20px'
+                }}
+            >
+                <div style={{
+                    fontSize: '4.5rem',
+                    background: 'white',
+                    width: '100px',
+                    height: '100px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '20px',
+                    boxShadow: 'inner 0 4px 8px rgba(0,0,0,0.05)'
+                }}>
+                    {dragonInfo.emoji}
+                </div>
+                <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
+                        <div>
+                            <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.name}</span>
+                            <span style={{ fontSize: '1.2rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
+                        </div>
+                        <span style={{ fontSize: '0.9rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
+                    </div>
+                    {/* 드래곤 경험치 바 */}
+                    <div style={{ height: '10px', background: 'rgba(0,0,0,0.05)', borderRadius: '5px', overflow: 'hidden' }}>
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${petData.exp}%` }}
+                            style={{
+                                height: '100%',
+                                background: 'linear-gradient(90deg, #FFB300, #FBC02D)',
+                                borderRadius: '5px'
+                            }}
+                        />
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: '#9E9E9E', marginTop: '6px', textAlign: 'right' }}>
+                        진화까지 경험치 {100 - petData.exp} 남음!
+                    </p>
+                </div>
+            </motion.div>
 
             {/* [신규] 성장 통계 카드 섹션 */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '40px' }}>
