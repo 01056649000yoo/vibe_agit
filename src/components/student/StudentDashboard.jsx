@@ -16,13 +16,54 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [showFeedback, setShowFeedback] = useState(false);
     const [feedbacks, setFeedbacks] = useState([]);
     const [loadingFeedback, setLoadingFeedback] = useState(false);
+    const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 }); // [추가] 성장 통계
+    const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', icon: '🌱', nextGoal: 1000 }); // [추가] 레벨 정보
 
     useEffect(() => {
         if (studentSession?.id) {
             fetchMyPoints();
             checkActivity();
+            fetchStats();
         }
     }, [studentSession]);
+
+    // [수정] 누적 글자 수 기준 5단계 레벨 시스템
+    const getLevelInfo = (totalChars) => {
+        if (totalChars >= 14001) return { level: 5, name: '전설의 작가', emoji: '✨', next: null };
+        if (totalChars >= 8401) return { level: 4, name: '대문호', emoji: '👑', next: 14001 };
+        if (totalChars >= 4201) return { level: 3, name: '숙련 작가', emoji: '🌳', next: 8401 };
+        if (totalChars >= 1401) return { level: 2, name: '초보 작가', emoji: '🌿', next: 4201 };
+        return { level: 1, name: '새싹 작가', emoji: '🌱', next: 1401 };
+    };
+
+    const fetchStats = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('student_posts')
+                .select('char_count, created_at, is_submitted')
+                .eq('student_id', studentSession.id);
+
+            if (error) throw error;
+
+            if (data) {
+                const totalChars = data.reduce((sum, post) => sum + (post.char_count || 0), 0);
+                const completedMissions = data.filter(p => p.is_submitted).length;
+
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+                const monthlyPosts = data.filter(p => {
+                    const postDate = new Date(p.created_at);
+                    return postDate.getMonth() === currentMonth && postDate.getFullYear() === currentYear;
+                }).length;
+
+                setStats({ totalChars, completedMissions, monthlyPosts });
+                setLevelInfo(getLevelInfo(totalChars));
+            }
+        } catch (err) {
+            console.error('글쓰기 통계 로드 실패:', err.message);
+        }
+    };
 
     const fetchMyPoints = async () => {
         const { data, error } = await supabase
@@ -156,7 +197,41 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 <h1 style={{ fontSize: '2.4rem', color: '#5D4037', marginBottom: '0.5rem' }}>
                     안녕, <span style={{ color: '#FBC02D' }}>{studentSession.name}</span>!
                 </h1>
-                <p style={{ color: '#8D6E63', fontSize: '1.1rem' }}>어서와요, 오늘 어떤 이야기를 들려줄 건가요?</p>
+                <p style={{ color: '#8D6E63', fontSize: '1.1rem' }}>벌써 이만큼이나 성장했어! 🚀</p>
+            </div>
+
+            {/* [신규] 성장 통계 카드 섹션 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '40px' }}>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
+                >
+                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📝</div>
+                    <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>쓴 글자 수</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.totalChars.toLocaleString()}자</div>
+                </motion.div>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
+                >
+                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🚀</div>
+                    <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>완료 미션</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.completedMissions}개</div>
+                </motion.div>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
+                >
+                    <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📅</div>
+                    <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>이달의 활동</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.monthlyPosts}회</div>
+                </motion.div>
             </div>
 
             {/* 포인트 표시 영역 */}
@@ -192,6 +267,32 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 </motion.div>
                 <div style={{ fontSize: '1.1rem', color: '#8D6E63', fontWeight: 'bold', marginTop: '8px' }}>
                     모였어!
+                </div>
+
+                {/* [신규] 레벨 프로그레스 바 */}
+                <div style={{ marginTop: '24px', padding: '0 10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#795548' }}>
+                            {levelInfo.emoji} {levelInfo.name} (LV.{levelInfo.level})
+                        </span>
+                        {levelInfo.next && (
+                            <span style={{ fontSize: '0.8rem', color: '#8D6E63' }}>
+                                다음 목표까지 {Math.max(0, levelInfo.next - stats.totalChars).toLocaleString()}자
+                            </span>
+                        )}
+                    </div>
+                    <div style={{ height: '12px', background: '#F1F3F5', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${levelInfo.next ? Math.min(100, (stats.totalChars / levelInfo.next) * 100) : 100}%` }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            style={{
+                                height: '100%',
+                                background: 'linear-gradient(90deg, #FBC02D, #FFD54F)',
+                                borderRadius: '10px'
+                            }}
+                        />
+                    </div>
                 </div>
             </motion.div>
 
