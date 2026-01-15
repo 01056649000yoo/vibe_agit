@@ -195,61 +195,89 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
             {/* 서재 컨테이너 (The Stage) */}
             <div
-                className="relative w-full h-[280px] rounded-t-3xl overflow-hidden mb-8"
+                className="relative w-full h-[300px] rounded-t-3xl overflow-hidden mb-8"
                 style={{
                     position: 'relative',
                     width: '100%',
-                    height: '280px',
+                    height: '300px',
                     borderTopLeftRadius: '1.5rem',
                     borderTopRightRadius: '1.5rem',
                     overflow: 'hidden',
                     marginBottom: '2rem',
-                    boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.15)'
+                    boxShadow: 'inset 0 4px 15px rgba(0,0,0,0.2)',
+                    background: '#D7CCC8' // 기본 벽지 배경색
                 }}
             >
-                {/* 벽 (상단 75%, 배경색 #D7CCC8) */}
+                {/* 벽 (상단 70%) */}
                 <div style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     width: '100%',
-                    height: '75%',
+                    height: '70%',
                     backgroundColor: '#D7CCC8'
                 }} />
 
-                {/* 바닥 (하단 25%, 배경색 #8D6E63) */}
+                {/* 바닥 (하단 30%, 원근감을 위해 약간 변형) */}
                 <div style={{
                     position: 'absolute',
                     bottom: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '25%',
-                    backgroundColor: '#8D6E63'
+                    left: '-10%',
+                    width: '120%',
+                    height: '35%',
+                    backgroundColor: '#8D6E63',
+                    transform: 'perspective(500px) rotateX(25deg)',
+                    transformOrigin: 'bottom',
+                    zIndex: 5,
+                    boxShadow: '0 -10px 20px rgba(0,0,0,0.1)'
                 }} />
 
-                {/* 기본 가구 배치 */}
-                {/* 낡은 의자 (🪑) */}
-                <div style={{
-                    position: 'absolute',
-                    left: '20%',
-                    bottom: '12%',
-                    zIndex: 10,
-                    fontSize: '4rem',
-                    filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))'
-                }}>
-                    🪑
+                {/* 가구 배치 (레이어링 및 그림자 포함) */}
+
+                {/* 의자 (🪑) - 뒤쪽 레이어 */}
+                <div style={{ position: 'absolute', left: '22%', bottom: '12%', zIndex: 10 }}>
+                    {/* 의자 그림자 */}
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '-5px',
+                        left: '10px',
+                        width: '60px',
+                        height: '20px',
+                        background: 'rgba(0,0,0,0.2)',
+                        borderRadius: '50%',
+                        filter: 'blur(5px)',
+                        transform: 'scaleX(1.2)'
+                    }} />
+                    <div style={{
+                        fontSize: '4.5rem',
+                        filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
+                        position: 'relative'
+                    }}>
+                        🪑
+                    </div>
                 </div>
 
-                {/* 낡은 책상 (🏚️) */}
-                <div style={{
-                    position: 'absolute',
-                    left: '32%',
-                    bottom: '8%',
-                    zIndex: 20,
-                    fontSize: '5rem',
-                    filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.2))'
-                }}>
-                    🏚️
+                {/* 책상 (🏚️) - 앞쪽 레이어 */}
+                <div style={{ position: 'absolute', left: '35%', bottom: '8%', zIndex: 20 }}>
+                    {/* 책상 그림자 */}
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '-10px',
+                        left: '10px',
+                        width: '100px',
+                        height: '25px',
+                        background: 'rgba(0,0,0,0.25)',
+                        borderRadius: '50%',
+                        filter: 'blur(7px)',
+                        transform: 'scaleX(1.1)'
+                    }} />
+                    <div style={{
+                        fontSize: '5.5rem',
+                        filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.15))',
+                        position: 'relative'
+                    }}>
+                        🏚️
+                    </div>
                 </div>
             </div>
 
