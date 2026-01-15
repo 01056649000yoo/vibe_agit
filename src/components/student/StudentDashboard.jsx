@@ -203,7 +203,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     borderTopLeftRadius: '1.5rem',
                     borderTopRightRadius: '1.5rem',
                     overflow: 'hidden',
-                    marginBottom: '2rem'
+                    marginBottom: '2rem',
+                    boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.15)'
                 }}
             >
                 {/* 벽 (상단 75%, 배경색 #D7CCC8) */}
