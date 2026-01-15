@@ -84,7 +84,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         if (level === 4) return { name: '불을 내뿜는 성장한 용', image: `${basePath}/dragon_stage_4.png`, isPlaceholder: false };
         if (level === 3) return { name: '푸른 빛의 어린 용', image: `${basePath}/dragon_stage_3.jpg`, isPlaceholder: false };
         if (level === 2) return { name: '갓 태어난 용', image: `${basePath}/dragon_stage_2.jpg`, isPlaceholder: false };
-        return { name: '신비로운 알', image: `${basePath}/dragon_stage_1.jpg`, isPlaceholder: false };
+        return { name: '신비로운 알', image: `${basePath}/dragon_stage_1.png`, isPlaceholder: false };
     };
 
     const dragonInfo = getDragonStage(petData.level);
@@ -596,7 +596,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                 zIndex: 1,
                                                 cursor: 'pointer',
                                                 overflow: 'hidden',
-                                                background: 'black'
+                                                background: 'transparent' // PNG 투명 배경 적용
                                             }}
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
@@ -612,7 +612,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                     style={{
                                                         width: '100%',
                                                         height: '100%',
-                                                        objectFit: 'cover',
+                                                        objectFit: 'contain',
                                                         filter: petData.level >= 5 ? 'drop-shadow(0 0 10px rgba(255,215,0,0.5))' : 'none'
                                                     }}
                                                 />
