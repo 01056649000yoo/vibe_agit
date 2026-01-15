@@ -274,56 +274,61 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass }) => 
                         </div>
                     ) : (
                         currentTab === 'dashboard' ? (
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 6.5fr) minmax(0, 3.5fr)', // 0을 시작으로 하는 minmax가 핵심
-                                gap: '20px',
-                                width: '100%',
-                                boxSizing: 'border-box'
-                            }}>
-                                <section style={{
-                                    background: 'white', borderRadius: '24px',
-                                    border: '1px solid #E9ECEF', display: 'flex', flexDirection: 'column',
-                                    overflow: 'hidden',
-                                    boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
+                                {/* 학급 종합 분석 섹션 (신규) */}
+                                <ClassAnalysis classId={activeClass.id} isMobile={isMobile} />
+
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 6.5fr) minmax(0, 3.5fr)',
+                                    gap: '20px',
                                     width: '100%',
-                                    boxSizing: 'border-box',
-                                    minHeight: isMobile ? '400px' : 'auto'
-                                }}>
-                                    <div style={{
-                                        flex: 1,
-                                        padding: isMobile ? '16px' : '24px',
-                                        boxSizing: 'border-box'
-                                    }}>
-                                        <MissionManager activeClass={activeClass} isDashboardMode={true} />
-                                    </div>
-                                </section>
-
-                                <aside style={{
-                                    display: 'flex', flexDirection: 'column', gap: '20px',
-                                    width: '100%', boxSizing: 'border-box', overflow: 'hidden'
+                                    boxSizing: 'border-box'
                                 }}>
                                     <section style={{
-                                        background: 'white', borderRadius: '24px', padding: isMobile ? '16px' : '24px',
-                                        border: '1px solid #E9ECEF', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+                                        background: 'white', borderRadius: '24px',
+                                        border: '1px solid #E9ECEF', display: 'flex', flexDirection: 'column',
                                         overflow: 'hidden',
-                                        width: '100%', boxSizing: 'border-box'
+                                        boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+                                        width: '100%',
+                                        boxSizing: 'border-box',
+                                        minHeight: isMobile ? '400px' : 'auto'
                                     }}>
-                                        <StudentManager classId={activeClass?.id} isDashboardMode={true} />
+                                        <div style={{
+                                            flex: 1,
+                                            padding: isMobile ? '16px' : '24px',
+                                            boxSizing: 'border-box'
+                                        }}>
+                                            <MissionManager activeClass={activeClass} isDashboardMode={true} />
+                                        </div>
                                     </section>
 
-                                    <section style={{
-                                        background: 'white', borderRadius: '24px', padding: isMobile ? '16px' : '24px',
-                                        border: '1px solid #E9ECEF', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
-                                        overflow: 'hidden',
-                                        width: '100%', boxSizing: 'border-box'
+                                    <aside style={{
+                                        display: 'flex', flexDirection: 'column', gap: '20px',
+                                        width: '100%', boxSizing: 'border-box', overflow: 'hidden'
                                     }}>
-                                        <RecentActivity
-                                            classId={activeClass?.id}
-                                            onPostClick={(post) => setSelectedActivityPost(post)}
-                                        />
-                                    </section>
-                                </aside>
+                                        <section style={{
+                                            background: 'white', borderRadius: '24px', padding: isMobile ? '16px' : '24px',
+                                            border: '1px solid #E9ECEF', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+                                            overflow: 'hidden',
+                                            width: '100%', boxSizing: 'border-box'
+                                        }}>
+                                            <StudentManager classId={activeClass?.id} isDashboardMode={true} />
+                                        </section>
+
+                                        <section style={{
+                                            background: 'white', borderRadius: '24px', padding: isMobile ? '16px' : '24px',
+                                            border: '1px solid #E9ECEF', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+                                            overflow: 'hidden',
+                                            width: '100%', boxSizing: 'border-box'
+                                        }}>
+                                            <RecentActivity
+                                                classId={activeClass?.id}
+                                                onPostClick={(post) => setSelectedActivityPost(post)}
+                                            />
+                                        </section>
+                                    </aside>
+                                </div>
                             </div>
                         ) : (
                             <div style={{
@@ -598,6 +603,187 @@ const RecentActivity = ({ classId, onPostClick }) => {
                 )}
             </div>
         </div>
+    );
+};
+
+// [추가] 학급 학습 현황 분석 컴포넌트
+const ClassAnalysis = ({ classId, isMobile }) => {
+    const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState({
+        studentCount: 0,
+        avgChars: 0,
+        submissionRate: 0,
+        topStudents: [],
+        notSubmitted: [],
+        trendData: [],
+        todayRate: 0
+    });
+
+    useEffect(() => {
+        if (classId) fetchAnalysisData();
+    }, [classId]);
+
+    const fetchAnalysisData = async () => {
+        setLoading(true);
+        try {
+            // 1. 기초 데이터 로드 (학생, 미션, 제출물)
+            const [
+                { data: students },
+                { data: missions },
+                { data: posts }
+            ] = await Promise.all([
+                supabase.from('students').select('id, name').eq('class_id', classId),
+                supabase.from('writing_missions').select('id, title, created_at').eq('class_id', classId).order('created_at', { ascending: false }),
+                supabase.from('student_posts').select('*').in('student_id', (await supabase.from('students').select('id').eq('class_id', classId)).data.map(s => s.id))
+            ]);
+
+            if (!students) return;
+
+            // 2. 통계 계산
+            const totalChars = posts?.reduce((sum, p) => sum + (p.char_count || 0), 0) || 0;
+            const avgChars = students.length > 0 ? Math.round(totalChars / students.length) : 0;
+
+            // 학생별 제출 현황 및 랭킹
+            const studentStats = students.map(s => {
+                const myPosts = posts?.filter(p => p.student_id === s.id && p.is_submitted) || [];
+                const myChars = myPosts.reduce((sum, p) => sum + (p.char_count || 0), 0);
+                return { name: s.name, count: myPosts.length, chars: myChars };
+            });
+
+            const topStudents = studentStats.sort((a, b) => b.chars - a.chars).slice(0, 5);
+
+            // 미제출자 파악 (가장 최근 미션 기준)
+            let notSubmittedStudents = [];
+            if (missions?.length > 0) {
+                const latestMissionId = missions[0].id;
+                const submittedIds = new Set(posts?.filter(p => p.mission_id === latestMissionId && p.is_submitted).map(p => p.student_id));
+                notSubmittedStudents = students.filter(s => !submittedIds.has(s.id)).map(s => s.name);
+            }
+
+            // 오늘 제출 확률
+            const today = new Date().toISOString().split('T')[0];
+            const todaySubmittedCount = posts?.filter(p => p.is_submitted && p.created_at.startsWith(today)).length || 0;
+            const todayRate = students.length > 0 ? Math.round((todaySubmittedCount / students.length) * 100) : 0;
+
+            // 제출 트렌드 (최근 7일)
+            const trend = Array.from({ length: 7 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dayStr = d.toISOString().split('T')[0];
+                const count = posts?.filter(p => p.is_submitted && p.created_at.startsWith(dayStr)).length || 0;
+                return { date: dayStr, count };
+            }).reverse();
+
+            setStats({
+                studentCount: students.length,
+                avgChars,
+                submissionRate: posts?.length || 0,
+                topStudents,
+                notSubmitted: notSubmittedStudents,
+                trendData: trend,
+                todayRate
+            });
+        } catch (err) {
+            console.error('분석 데이터 로드 실패:', err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div style={{ padding: '24px', background: 'white', borderRadius: '24px', border: '1px solid #E9ECEF', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
+                <div style={{ height: '24px', width: '200px', background: '#F1F3F5', borderRadius: '4px', marginBottom: '24px', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
+                    {[1, 2, 3].map(i => (
+                        <div key={i} style={{ height: '120px', background: '#F8F9FA', borderRadius: '16px', animation: 'pulse 1.5s infinite' }} />
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <section style={{
+            background: 'white', borderRadius: '24px', padding: isMobile ? '20px' : '28px',
+            border: '1px solid #E9ECEF', boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+            width: '100%', boxSizing: 'border-box'
+        }}>
+            <h3 style={{ margin: '0 0 24px 0', fontSize: '1.2rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                📊 학급 학습 활동 분석판
+            </h3>
+
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '24px' }}>
+                {/* 1. 핵심 지표 */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ background: '#E3F2FD', padding: '20px', borderRadius: '20px', border: '1px solid #BBDEFB' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#1976D2', fontWeight: 'bold', marginBottom: '8px' }}>✍️ 학급 평균 글자 수</div>
+                        <div style={{ fontSize: '1.8rem', fontWeight: '900', color: '#0D47A1' }}>{stats.avgChars.toLocaleString()}자</div>
+                    </div>
+
+                    <div style={{ background: '#F8F9FA', padding: '20px', borderRadius: '20px', border: '1px solid #E9ECEF' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'bold', marginBottom: '12px' }}>🎯 오늘 미션 완료율</div>
+                        <div style={{ height: '12px', background: '#E0E0E0', borderRadius: '10px', overflow: 'hidden', marginBottom: '8px' }}>
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${stats.todayRate}%` }}
+                                transition={{ duration: 1, ease: 'easeOut' }}
+                                style={{ height: '100%', background: 'linear-gradient(90deg, #3498DB, #5CC6FF)' }}
+                            />
+                        </div>
+                        <div style={{ textAlign: 'right', fontSize: '0.9rem', fontWeight: 'bold', color: '#3498DB' }}>{stats.todayRate}%</div>
+                    </div>
+                </div>
+
+                {/* 2. 학생 랭킹 (열정 TOP 5) */}
+                <div style={{ background: '#FDFCF0', padding: '20px', borderRadius: '24px', border: '1px solid #FFE082' }}>
+                    <h4 style={{ margin: '0 0 16px 0', fontSize: '0.95rem', color: '#795548', fontWeight: '900' }}>🔥 열정 작가 TOP 5</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {stats.topStudents.map((s, i) => (
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem' }}>
+                                <span style={{ color: '#5D4037', fontWeight: '700' }}>{i + 1}. {s.name}</span>
+                                <span style={{ color: '#FBC02D', fontWeight: '900' }}>{s.chars.toLocaleString()}자</span>
+                            </div>
+                        ))}
+                        {stats.topStudents.length === 0 && <p style={{ color: '#9E9E9E', fontSize: '0.8rem', textAlign: 'center', marginTop: '20px' }}>활동 내역이 없습니다.</p>}
+                    </div>
+                </div>
+
+                {/* 3. 주의 깊게 볼 내용 */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ background: '#FFEBEE', padding: '20px', borderRadius: '24px', border: '1px solid #FFCDD2', flex: 1 }}>
+                        <h4 style={{ margin: '0 0 12px 0', fontSize: '0.9rem', color: '#D32F2F', fontWeight: '900' }}>⚠️ 미제출 알림 (최근 미션)</h4>
+                        <div style={{ fontSize: '0.85rem', color: '#C62828', lineHeight: '1.6' }}>
+                            {stats.notSubmitted.length > 0 ? (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                    {stats.notSubmitted.slice(0, 10).map(name => (
+                                        <span key={name} style={{ background: 'white', padding: '2px 8px', borderRadius: '6px', border: '1px solid #FFCDD2' }}>{name}</span>
+                                    ))}
+                                    {stats.notSubmitted.length > 10 && <span>외 {stats.notSubmitted.length - 10}명</span>}
+                                </div>
+                            ) : (
+                                "모든 학생이 제출했습니다! 👏"
+                            )}
+                        </div>
+                    </div>
+
+                    <div style={{ padding: '0 10px' }}>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold' }}>📈 최근 7일 제출 트렌드</h4>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '40px' }}>
+                            {stats.trendData.map((d, i) => (
+                                <motion.div
+                                    key={i}
+                                    initial={{ height: 0 }}
+                                    animate={{ height: `${Math.min(100, (d.count / (stats.studentCount || 1)) * 100)}%` }}
+                                    style={{ flex: 1, background: '#3498DB', borderRadius: '2px 2px 0 0', minHeight: '2px' }}
+                                    title={`${d.date}: ${d.count}건`}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     );
 };
 
