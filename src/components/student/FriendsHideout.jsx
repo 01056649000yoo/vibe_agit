@@ -31,6 +31,13 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
         { type: 'star', label: '최고야', emoji: '✨' }
     ];
 
+    const ACCESSORIES = [
+        { id: 'crown', emoji: '👑', pos: { top: '-25%', left: '25%', fontSize: '2.5rem' } },
+        { id: 'sunglasses', emoji: '🕶️', pos: { top: '15%', left: '15%', fontSize: '2rem' } },
+        { id: 'flame', emoji: '🔥', pos: { top: '0', left: '0', fontSize: '6rem', zIndex: -1, filter: 'blur(2px) opacity(0.7)' } },
+        { id: 'star', emoji: '⭐', pos: { top: '-10%', left: '60%', fontSize: '1.5rem' } },
+    ];
+
     useEffect(() => {
         fetchMissions();
         if (params?.initialPostId) {
@@ -42,7 +49,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
         try {
             const { data, error } = await supabase
                 .from('student_posts')
-                .select('*, students(name), writing_missions(allow_comments)')
+                .select('*, students(name, pet_data), writing_missions(allow_comments)')
                 .eq('id', postId)
                 .single();
 
@@ -83,7 +90,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                 .from('student_posts')
                 .select(`
                     *,
-                    students!inner(name, class_id),
+                    students!inner(name, class_id, pet_data),
                     writing_missions(allow_comments)
                 `)
                 .eq('mission_id', missionId)
@@ -222,6 +229,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                         }}
                         reactionIcons={reactionIcons}
                         isMobile={isMobile}
+                        ACCESSORIES={ACCESSORIES}
                     />
                 )}
             </AnimatePresence>
@@ -229,7 +237,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
     );
 };
 
-const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons, isMobile }) => {
+const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons, isMobile, ACCESSORIES }) => {
     const [reactions, setReactions] = useState([]);
     const [comments, setComments] = useState([]);
     const [commentInput, setCommentInput] = useState('');
@@ -409,17 +417,39 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                     >
                         ⬅️
                     </button>
-                    <div style={{ flex: 1, textAlign: 'center', padding: '0 20px' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#3498DB', fontWeight: '900', marginBottom: '4px' }}>
-                            {post.students?.name} 학생의 소중한 이야기 ✍️
+                    <div style={{ flex: 1, textAlign: 'center', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+                        {/* 친구 드래곤 표시 */}
+                        {post.students?.pet_data && (
+                            <div style={{ position: 'relative', width: '50px', height: '50px', background: '#FFFDE7', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', border: '1px solid #FFE082' }}>
+                                {(() => {
+                                    const lvl = post.students.pet_data.level || 1;
+                                    const emoji = lvl >= 5 ? '🌈' : lvl >= 4 ? '👑' : lvl >= 3 ? '🌳' : lvl >= 2 ? '🌿' : '🌱';
+                                    return emoji;
+                                })()}
+                                {post.students.pet_data.equippedItems?.map(itemId => {
+                                    const item = ACCESSORIES.find(a => a.id === itemId);
+                                    if (!item) return null;
+                                    return (
+                                        <div key={item.id} style={{ position: 'absolute', ...item.pos, fontSize: '1rem', pointerEvents: 'none' }}>
+                                            {item.emoji}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        <div style={{ textAlign: 'left' }}>
+                            <div style={{ fontSize: '0.85rem', color: '#3498DB', fontWeight: '900', marginBottom: '2px' }}>
+                                {post.students?.name} 학생의 소중한 이야기 ✍️
+                            </div>
+                            <h3 style={{
+                                margin: 0, fontWeight: '900', color: '#2D3436',
+                                fontSize: isMobile ? '1rem' : '1.3rem',
+                                maxWidth: isMobile ? '150px' : '400px',
+                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                            }}>
+                                {post.title}
+                            </h3>
                         </div>
-                        <h3 style={{
-                            margin: 0, fontWeight: '900', color: '#2D3436',
-                            fontSize: isMobile ? '1.1rem' : '1.5rem',
-                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                        }}>
-                            {post.title}
-                        </h3>
                     </div>
                     <div style={{ width: '44px' }} />
                 </header>

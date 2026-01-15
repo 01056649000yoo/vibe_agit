@@ -22,9 +22,19 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         name: '나의 드래곤',
         level: 1,
         exp: 0,
-        lastFed: '2026-01-15',
-        accessories: []
+        lastFed: new Date().toISOString().split('T')[0],
+        ownedItems: [], // 구매한 아이템 ID 목록
+        equippedItems: [] // 장착 중인 아이템 ID 목록
     });
+    const [isShopOpen, setIsShopOpen] = useState(false);
+
+    // [추가] 액세서리 목록 정의 (종류, 가격, 이모지, 위치 정보 등)
+    const ACCESSORIES = [
+        { id: 'crown', name: '작은 왕관', price: 300, emoji: '👑', pos: { top: '-25%', left: '25%', fontSize: '2.5rem' } },
+        { id: 'sunglasses', name: '멋진 선글라스', price: 200, emoji: '🕶️', pos: { top: '15%', left: '15%', fontSize: '2rem' } },
+        { id: 'flame', name: '불꽃 오라', price: 1000, emoji: '🔥', pos: { top: '0', left: '0', fontSize: '6rem', zIndex: -1, filter: 'blur(2px) opacity(0.7)' } },
+        { id: 'star', name: '반짝이 별', price: 150, emoji: '⭐', pos: { top: '-10%', left: '60%', fontSize: '1.5rem' } },
+    ];
 
     useEffect(() => {
         if (studentSession?.id) {
@@ -87,10 +97,17 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         const today = new Date().toISOString().split('T')[0];
 
         try {
-            // 포인트 DB 업데이트
             const { error } = await supabase
                 .from('students')
-                .update({ total_points: newPoints })
+                .update({
+                    total_points: newPoints,
+                    pet_data: {
+                        ...petData,
+                        level: newLevel,
+                        exp: newExp,
+                        lastFed: today
+                    }
+                })
                 .eq('id', studentSession.id);
 
             if (error) throw error;
@@ -105,6 +122,64 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         } catch (err) {
             console.error('포인트 업데이트 실패:', err.message);
             alert('포인트 사용에 실패했습니다. 다시 시도해 주세요!');
+        }
+    };
+
+    // [추가] 액세서리 구매/장착 로직
+    const handleBuyItem = async (item) => {
+        if (points < item.price) {
+            alert('포인트가 부족해요! 꾸준히 글을 써 보세요. ✍️');
+            return;
+        }
+
+        if (petData.ownedItems.includes(item.id)) return;
+
+        const newPoints = points - item.price;
+        const newOwned = [...petData.ownedItems, item.id];
+        const newPetData = { ...petData, ownedItems: newOwned };
+
+        try {
+            const { error } = await supabase
+                .from('students')
+                .update({
+                    total_points: newPoints,
+                    pet_data: newPetData
+                })
+                .eq('id', studentSession.id);
+
+            if (error) throw error;
+
+            setPoints(newPoints);
+            setPetData(newPetData);
+            alert(`[${item.name}] 구매 성공! '장착하기'를 눌러 드래곤을 꾸며보세요. ✨`);
+        } catch (err) {
+            console.error('아이템 구매 실패:', err.message);
+        }
+    };
+
+    const handleToggleEquip = async (itemId) => {
+        const isEquipped = petData.equippedItems.includes(itemId);
+        let newEquipped;
+
+        if (isEquipped) {
+            newEquipped = petData.equippedItems.filter(id => id !== itemId);
+        } else {
+            // 같은 부위 아이템 처리 등은 생략하고 자유롭게 중첩 가능하게 구현
+            newEquipped = [...petData.equippedItems, itemId];
+        }
+
+        const newPetData = { ...petData, equippedItems: newEquipped };
+
+        try {
+            const { error } = await supabase
+                .from('students')
+                .update({ pet_data: newPetData })
+                .eq('id', studentSession.id);
+
+            if (error) throw error;
+            setPetData(newPetData);
+        } catch (err) {
+            console.error('장착 상태 업데이트 실패:', err.message);
         }
     };
 
@@ -159,12 +234,21 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const fetchMyPoints = async () => {
         const { data, error } = await supabase
             .from('students')
-            .select('total_points')
+            .select('total_points, pet_data')
             .eq('id', studentSession.id)
             .single();
 
         if (data) {
             setPoints(data.total_points || 0);
+            if (data.pet_data) {
+                // 기존 데이터에 새 필드가 없을 경우를 대비해 병합
+                setPetData(prev => ({
+                    ...prev,
+                    ...data.pet_data,
+                    ownedItems: data.pet_data.ownedItems || prev.ownedItems,
+                    equippedItems: data.pet_data.equippedItems || prev.equippedItems
+                }));
+            }
         }
     };
 
@@ -306,36 +390,62 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px' }}>
-                    <motion.div
-                        key={petData.level}
-                        initial={{ scale: 0.5, rotate: -20, filter: 'brightness(2)' }}
-                        animate={{ scale: 1, rotate: 0, filter: 'brightness(1)' }}
-                        transition={{ type: 'spring', stiffness: 200 }}
-                        style={{
-                            fontSize: '4.5rem',
-                            background: 'white',
-                            width: '100px',
-                            height: '100px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '20px',
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.05)',
-                            position: 'relative'
-                        }}
-                    >
-                        {dragonInfo.emoji}
+                    <div style={{ position: 'relative' }}>
+                        <motion.div
+                            key={petData.level}
+                            initial={{ scale: 0.5, rotate: -20, filter: 'brightness(2)' }}
+                            animate={{ scale: 1, rotate: 0, filter: 'brightness(1)' }}
+                            transition={{ type: 'spring', stiffness: 200 }}
+                            style={{
+                                fontSize: '4.5rem',
+                                background: 'white',
+                                width: '100px',
+                                height: '100px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '20px',
+                                boxShadow: '0 4px 8px rgba(0,0,0,0.05)',
+                                position: 'relative',
+                                zIndex: 1
+                            }}
+                        >
+                            {dragonInfo.emoji}
+
+                            {/* 장착된 액세서리 레이어 */}
+                            {petData.equippedItems.map(itemId => {
+                                const item = ACCESSORIES.find(a => a.id === itemId);
+                                if (!item) return null;
+                                return (
+                                    <motion.div
+                                        key={item.id}
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        style={{
+                                            position: 'absolute',
+                                            ...item.pos,
+                                            pointerEvents: 'none',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        {item.emoji}
+                                    </motion.div>
+                                );
+                            })}
+                        </motion.div>
                         {petData.level > 1 && (
                             <motion.span
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: [0, 1, 0] }}
                                 transition={{ repeat: Infinity, duration: 2 }}
-                                style={{ position: 'absolute', top: -10, right: -10, fontSize: '1.5rem' }}
+                                style={{ position: 'absolute', top: -10, right: -10, fontSize: '1.5rem', zIndex: 5 }}
                             >
                                 ✨
                             </motion.span>
                         )}
-                    </motion.div>
+                    </div>
                     <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
                             <div>
@@ -367,32 +477,57 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.5)', padding: '12px 16px', borderRadius: '16px' }}>
-                    <div style={{ fontSize: '0.85rem', color: '#795548' }}>
-                        <span style={{ fontWeight: 'bold' }}>드래곤을 돌봐주세요!</span><br />
-                        30일이 지나면 레벨이 낮아져요.
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.5)', padding: '12px 16px', borderRadius: '16px' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#795548' }}>
+                            <span style={{ fontWeight: 'bold' }}>드래곤을 돌봐주세요!</span><br />
+                            30일이 지나면 레벨이 낮아져요.
+                        </div>
                     </div>
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleFeed}
-                        style={{
-                            background: '#FF8A65',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 16px',
-                            borderRadius: '12px',
-                            fontSize: '0.9rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            boxShadow: '0 4px 0 #E64A19',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px'
-                        }}
-                    >
-                        🍖 맛있는 고기 (50P)
-                    </motion.button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleFeed}
+                            style={{
+                                background: '#FF8A65',
+                                color: 'white',
+                                border: 'none',
+                                padding: '8px 16px',
+                                borderRadius: '12px',
+                                fontSize: '0.9rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 0 #E64A19',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                        >
+                            🍖 먹이 주기 (50P)
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsShopOpen(true)}
+                            style={{
+                                background: '#3498DB',
+                                color: 'white',
+                                border: 'none',
+                                padding: '8px 16px',
+                                borderRadius: '12px',
+                                fontSize: '0.9rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 0 #2980B9',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                        >
+                            🛍️ 상점/꾸미기
+                        </motion.button>
+                    </div>
                 </div>
             </motion.div>
 
@@ -543,103 +678,191 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             </div>
 
             {/* 피드백 모아보기 모달 */}
-            {showFeedback && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.5)', zIndex: 2000,
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    padding: '20px'
-                }} onClick={() => setShowFeedback(false)}>
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        style={{
-                            background: 'white',
-                            width: '100%',
-                            maxWidth: '500px',
-                            maxHeight: '80vh',
-                            borderRadius: '32px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden',
-                            boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
-                        }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <div style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#5D4037' }}>🔔 내 글 소식</h3>
-                            <button onClick={() => setShowFeedback(false)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-                        </div>
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-                            {loadingFeedback ? (
-                                <div style={{ textAlign: 'center', padding: '40px', color: '#9E9E9E' }}>소식을 가져오고 있어요... 🏃‍♂️</div>
-                            ) : feedbacks.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '60px', color: '#9E9E9E' }}>
-                                    <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</div>
-                                    아직 새로운 소식이 없어요.
-                                </div>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    {feedbacks.map((f, idx) => (
-                                        <div
-                                            key={f.id || idx}
-                                            style={{
-                                                padding: '16px',
-                                                background: '#F9F9F9',
-                                                borderRadius: '20px',
-                                                border: '1px solid #F1F1F1',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s'
-                                            }}
-                                            onClick={() => {
-                                                setShowFeedback(false);
-                                                onNavigate('friends_hideout', { initialPostId: f.post_id || f.student_posts?.id });
-                                            }}
-                                            onMouseEnter={e => {
-                                                e.currentTarget.style.background = '#F0F7FF';
-                                                e.currentTarget.style.borderColor = '#D0E1F9';
-                                            }}
-                                            onMouseLeave={e => {
-                                                e.currentTarget.style.background = '#F9F9F9';
-                                                e.currentTarget.style.borderColor = '#F1F1F1';
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                                                <span style={{ fontSize: '1.2rem' }}>
-                                                    {f.type === 'reaction' ? (
-                                                        f.reaction_type === 'heart' ? '❤️' :
-                                                            f.reaction_type === 'laugh' ? '😂' :
-                                                                f.reaction_type === 'wow' ? '👏' :
-                                                                    f.reaction_type === 'bulb' ? '💡' : '✨'
-                                                    ) : '💬'}
-                                                </span>
-                                                <span style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem' }}>
-                                                    {f.students?.name} 친구가 {f.type === 'reaction' ? '리액션을 남겼어요!' : '댓글을 남겼어요!'}
-                                                </span>
-                                            </div>
-                                            <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
-                                                글 제목: "{f.student_posts?.title}"
-                                            </div>
-                                            {f.type === 'comment' && (
-                                                <div style={{
-                                                    fontSize: '0.9rem', color: '#795548', background: 'white',
-                                                    padding: '8px 12px', borderRadius: '12px', marginTop: '6px',
-                                                    border: '1px solid #EEE'
-                                                }}>
-                                                    {f.content}
+            {
+                showFeedback && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(0,0,0,0.5)', zIndex: 2000,
+                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        padding: '20px'
+                    }} onClick={() => setShowFeedback(false)}>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            style={{
+                                background: 'white',
+                                width: '100%',
+                                maxWidth: '500px',
+                                maxHeight: '80vh',
+                                borderRadius: '32px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                overflow: 'hidden',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+                            }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#5D4037' }}>🔔 내 글 소식</h3>
+                                <button onClick={() => setShowFeedback(false)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+                            </div>
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+                                {loadingFeedback ? (
+                                    <div style={{ textAlign: 'center', padding: '40px', color: '#9E9E9E' }}>소식을 가져오고 있어요... 🏃‍♂️</div>
+                                ) : feedbacks.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '60px', color: '#9E9E9E' }}>
+                                        <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</div>
+                                        아직 새로운 소식이 없어요.
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {feedbacks.map((f, idx) => (
+                                            <div
+                                                key={f.id || idx}
+                                                style={{
+                                                    padding: '16px',
+                                                    background: '#F9F9F9',
+                                                    borderRadius: '20px',
+                                                    border: '1px solid #F1F1F1',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onClick={() => {
+                                                    setShowFeedback(false);
+                                                    onNavigate('friends_hideout', { initialPostId: f.post_id || f.student_posts?.id });
+                                                }}
+                                                onMouseEnter={e => {
+                                                    e.currentTarget.style.background = '#F0F7FF';
+                                                    e.currentTarget.style.borderColor = '#D0E1F9';
+                                                }}
+                                                onMouseLeave={e => {
+                                                    e.currentTarget.style.background = '#F9F9F9';
+                                                    e.currentTarget.style.borderColor = '#F1F1F1';
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                                                    <span style={{ fontSize: '1.2rem' }}>
+                                                        {f.type === 'reaction' ? (
+                                                            f.reaction_type === 'heart' ? '❤️' :
+                                                                f.reaction_type === 'laugh' ? '😂' :
+                                                                    f.reaction_type === 'wow' ? '👏' :
+                                                                        f.reaction_type === 'bulb' ? '💡' : '✨'
+                                                        ) : '💬'}
+                                                    </span>
+                                                    <span style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem' }}>
+                                                        {f.students?.name} 친구가 {f.type === 'reaction' ? '리액션을 남겼어요!' : '댓글을 남겼어요!'}
+                                                    </span>
                                                 </div>
-                                            )}
-                                            <div style={{ fontSize: '0.75rem', color: '#BDBDBD', marginTop: '8px', textAlign: 'right' }}>
-                                                {new Date(f.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
+                                                    글 제목: "{f.student_posts?.title}"
+                                                </div>
+                                                {f.type === 'comment' && (
+                                                    <div style={{
+                                                        fontSize: '0.9rem', color: '#795548', background: 'white',
+                                                        padding: '8px 12px', borderRadius: '12px', marginTop: '6px',
+                                                        border: '1px solid #EEE'
+                                                    }}>
+                                                        {f.content}
+                                                    </div>
+                                                )}
+                                                <div style={{ fontSize: '0.75rem', color: '#BDBDBD', marginTop: '8px', textAlign: 'right' }}>
+                                                    {new Date(f.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )
+            }
+            {/* 액세서리 상점 모달 */}
+            {
+                isShopOpen && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(0,0,0,0.6)', zIndex: 3000,
+                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        padding: '20px'
+                    }} onClick={() => setIsShopOpen(false)}>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            style={{
+                                background: 'white',
+                                width: '100%',
+                                maxWidth: '450px',
+                                maxHeight: '85vh',
+                                borderRadius: '32px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                overflow: 'hidden',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+                            }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8F9FA' }}>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2C3E50', fontWeight: '900' }}>🛍️ 드래곤 액세서리 상점</h3>
+                                    <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#7F8C8D' }}>남은 포인트: <b>{points.toLocaleString()}P</b></p>
                                 </div>
-                            )}
-                        </div>
-                    </motion.div>
-                </div>
-            )}
+                                <button onClick={() => setIsShopOpen(false)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+                            </div>
+
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                {ACCESSORIES.map(item => {
+                                    const isOwned = petData.ownedItems.includes(item.id);
+                                    const isEquipped = petData.equippedItems.includes(item.id);
+
+                                    return (
+                                        <div key={item.id} style={{
+                                            border: `2px solid ${isEquipped ? '#3498DB' : '#F1F3F5'}`,
+                                            borderRadius: '24px',
+                                            padding: '16px',
+                                            textAlign: 'center',
+                                            background: isEquipped ? '#EBF5FB' : 'white',
+                                            transition: 'all 0.2s'
+                                        }}>
+                                            <div style={{ fontSize: '3rem', marginBottom: '10px' }}>{item.emoji}</div>
+                                            <div style={{ fontWeight: 'bold', fontSize: '1rem', color: '#2C3E50', marginBottom: '4px' }}>{item.name}</div>
+                                            <div style={{ fontSize: '0.85rem', color: '#F39C12', fontWeight: 'bold', marginBottom: '12px' }}>
+                                                {isOwned ? '보유 중' : `${item.price.toLocaleString()}P`}
+                                            </div>
+
+                                            {!isOwned ? (
+                                                <Button
+                                                    size="sm"
+                                                    style={{ width: '100%', background: '#FBC02D', color: '#795548', fontWeight: 'bold' }}
+                                                    onClick={() => handleBuyItem(item)}
+                                                >
+                                                    구매하기
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    variant={isEquipped ? 'primary' : 'ghost'}
+                                                    style={{
+                                                        width: '100%',
+                                                        background: isEquipped ? '#3498DB' : '#F8F9FA',
+                                                        color: isEquipped ? 'white' : '#7F8C8D',
+                                                        border: isEquipped ? 'none' : '1px solid #DEE2E6'
+                                                    }}
+                                                    onClick={() => handleToggleEquip(item.id)}
+                                                >
+                                                    {isEquipped ? '장착 해제' : '장착하기'}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <div style={{ padding: '20px', textAlign: 'center', background: '#FDFCF0' }}>
+                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#9E9E9E' }}>액세서리는 여러 개를 겹쳐서 착용할 수 있어요! 🌈</p>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
         </Card>
     );
 };
