@@ -30,6 +30,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     });
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isEvolving, setIsEvolving] = useState(false); // [추가] 진화 애니메이션 상태
+    const [isFlashing, setIsFlashing] = useState(false); // [추가] 박스 내 섬광 상태
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -154,25 +155,45 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             if (error) throw error;
 
             if (isLevelUp) {
-                // 파티클 폭발 효과
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#FFD700', '#FFA500', '#FF4500']
-                });
+                // [연출 1단계] 진동 및 빛 새어 나옴 (1.5초)
+                setTimeout(() => {
+                    // [연출 2단계] 섬광 및 이미지 교체
+                    setIsFlashing(true);
 
-                // 연출 지속 시간 후 상태 해제
-                setTimeout(() => setIsEvolving(false), 2000);
+                    setPetData(prev => ({
+                        ...prev,
+                        level: newLevel,
+                        exp: newExp,
+                        lastFed: today
+                    }));
+
+                    // 파티클 폭발 효과
+                    confetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#FFD700', '#FFA500', '#FF4500']
+                    });
+
+                    // [연출 3단계] 섬광 해제 및 종료
+                    setTimeout(() => {
+                        setIsFlashing(false);
+                        setIsEvolving(false);
+                    }, 500);
+                }, 1500);
+
+                // 포인트는 즉시 반영
+                setPoints(newPoints);
+            } else {
+                // 일반 업데이트
+                setPoints(newPoints);
+                setPetData(prev => ({
+                    ...prev,
+                    level: newLevel,
+                    exp: newExp,
+                    lastFed: today
+                }));
             }
-
-            setPoints(newPoints);
-            setPetData(prev => ({
-                ...prev,
-                level: newLevel,
-                exp: newExp,
-                lastFed: today
-            }));
         } catch (err) {
             console.error('포인트 업데이트 실패:', err.message);
             alert('포인트 사용에 실패했습니다. 다시 시도해 주세요!');
@@ -468,12 +489,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     }} onClick={() => setIsDragonModalOpen(false)}>
                         <motion.div
                             initial={{ y: isMobile ? '100%' : 50, opacity: 0 }}
-                            animate={isEvolving ? {
-                                y: 0, opacity: 1,
-                                x: [-2, 2, -1, 1, 0], // 화면 흔들림 발동
-                            } : { y: 0, opacity: 1 }}
+                            animate={{ y: 0, opacity: 1 }}
                             exit={{ y: isMobile ? '100%' : 50, opacity: 0 }}
-                            transition={isEvolving ? { x: { repeat: 10, duration: 0.1 } } : {}}
                             onClick={e => e.stopPropagation()}
                             style={{
                                 background: '#FFFFFF',
@@ -488,25 +505,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 transition: 'all 0.5s ease'
                             }}
                         >
-                            {/* 진화 섬광 효과 레이어 */}
-                            <AnimatePresence>
-                                {isEvolving && (
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: [0, 1, 0] }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.3, times: [0, 0.5, 1] }}
-                                        style={{
-                                            position: 'absolute',
-                                            inset: 0,
-                                            background: 'white',
-                                            zIndex: 100,
-                                            pointerEvents: 'none',
-                                            borderRadius: 'inherit'
-                                        }}
-                                    />
-                                )}
-                            </AnimatePresence>
+                            {/* [제거] 기존 전역 섬광 레이어 */}
                             <button
                                 onClick={() => setIsDragonModalOpen(false)}
                                 style={{
@@ -692,28 +691,41 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                             }}
                                         />
 
+                                        {/* 진화 섬광 효과 레이어 (박스 내부) */}
+                                        <AnimatePresence>
+                                            {isFlashing && (
+                                                <motion.div
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: [0, 1, 0] }}
+                                                    exit={{ opacity: 0 }}
+                                                    transition={{ duration: 0.3 }}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        inset: 0,
+                                                        background: 'white',
+                                                        zIndex: 50,
+                                                        pointerEvents: 'none'
+                                                    }}
+                                                />
+                                            )}
+                                        </AnimatePresence>
+
                                         {/* 드래곤 이미지 본체 */}
                                         <motion.div
                                             key={petData.level}
-                                            initial={isEvolving ? { scale: 0, y: 50, opacity: 0 } : { scale: 0.5, rotate: -20, opacity: 0 }}
                                             animate={isEvolving ? {
-                                                scale: [0, 1.3, 1],
-                                                y: [50, -20, 0],
-                                                opacity: 1,
-                                                rotate: [0, 360, 0]
+                                                x: [-3, 3, -3, 3, 0],
+                                                filter: ["brightness(1)", "brightness(1.8)", "brightness(1)"]
                                             } : {
-                                                scale: 1,
-                                                rotate: 0,
-                                                opacity: 1,
+                                                scale: [0.8, 1.15, 1], // 등장 스프링 효과
                                                 y: [0, -12, 0]
                                             }}
                                             transition={isEvolving ? {
-                                                duration: 1,
-                                                times: [0, 0.7, 1],
-                                                ease: "easeOut"
+                                                x: { repeat: Infinity, duration: 0.05 },
+                                                filter: { repeat: Infinity, duration: 0.5 }
                                             } : {
-                                                y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
-                                                default: { type: "spring", stiffness: 260, damping: 20 }
+                                                scale: { type: "spring", stiffness: 300, damping: 12 },
+                                                y: { repeat: Infinity, duration: 3, ease: "easeInOut" }
                                             }}
                                             style={{
                                                 width: (petData.level === 3 || petData.level === 4) ? '264px' : '220px', // 3, 4단계 20% 확대
