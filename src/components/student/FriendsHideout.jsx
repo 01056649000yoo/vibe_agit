@@ -27,8 +27,8 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
         { type: 'heart', label: '좋아요', emoji: '❤️' },
         { type: 'laugh', label: '재밌어요', emoji: '😂' },
         { type: 'wow', label: '멋져요', emoji: '👏' },
-        { type: 'bulb', label: '배우고 가요', emoji: '💡' },
-        { type: 'star', label: '최고예요', emoji: '✨' }
+        { type: 'bulb', label: '배워요', emoji: '💡' },
+        { type: 'star', label: '최고야', emoji: '✨' }
     ];
 
     useEffect(() => {
@@ -437,40 +437,41 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                         {post.content}
                     </div>
 
-                    {/* 반응 바 - 2열 그리드 배치 */}
+                    {/* 반응 바 - 상큼한 5종 가로 1열 배치 */}
                     <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(2, 1fr)',
-                        gap: '12px',
-                        padding: isMobile ? '16px' : '24px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: isMobile ? '8px' : '12px',
+                        padding: isMobile ? '16px 10px' : '20px',
                         background: '#F8F9FA',
-                        borderRadius: '28px',
+                        borderRadius: '24px',
                         marginBottom: '48px',
-                        border: '1px solid #F1F3F5'
+                        border: '1px solid #F1F3F5',
+                        overflowX: 'auto',
+                        scrollbarWidth: 'none'
                     }}>
-                        {reactionIcons.map((icon, index) => {
+                        {reactionIcons.map((icon) => {
                             const isMine = reactions.some(r => r.user_id === studentSession.id && r.reaction_type === icon.type);
-                            // 5번째 아이콘은 2칸을 차지하게 하여 균형을 맞춤 (선택 사항)
-                            const isLast = index === reactionIcons.length - 1;
 
                             return (
                                 <button
                                     key={icon.type}
                                     onClick={() => handleReaction(icon.type)}
                                     style={{
+                                        flex: 1,
                                         display: 'flex',
-                                        flexDirection: 'row',
+                                        flexDirection: 'column',
                                         alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        padding: isMobile ? '12px 16px' : '16px 20px',
+                                        gap: '4px',
+                                        padding: isMobile ? '8px 4px' : '12px 8px',
                                         border: isMine ? '2px solid #3498DB' : '1px solid #ECEFF1',
                                         background: isMine ? '#E3F2FD' : 'white',
-                                        borderRadius: '18px',
-                                        boxShadow: isMine ? '0 4px 12px rgba(52, 152, 219, 0.15)' : '0 2px 6px rgba(0,0,0,0.04)',
+                                        borderRadius: '16px',
+                                        boxShadow: isMine ? '0 4px 10px rgba(52, 152, 219, 0.15)' : '0 2px 4px rgba(0,0,0,0.02)',
                                         cursor: 'pointer',
                                         transition: 'all 0.2s ease',
-                                        gridColumn: isLast ? 'span 2' : 'span 1',
-                                        minHeight: '56px'
+                                        minWidth: isMobile ? '60px' : '80px',
+                                        whiteSpace: 'nowrap'
                                     }}
                                     onMouseEnter={e => {
                                         if (!isMine) e.currentTarget.style.background = '#F0F7FF';
@@ -479,20 +480,24 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                         if (!isMine) e.currentTarget.style.background = 'white';
                                     }}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <span style={{ fontSize: isMobile ? '1.3rem' : '1.5rem' }}>{icon.emoji}</span>
-                                        <span style={{
-                                            fontSize: isMobile ? '0.85rem' : '0.95rem',
-                                            fontWeight: 'bold',
-                                            color: isMine ? '#2980B9' : '#455A64'
-                                        }}>
-                                            {icon.label}
-                                        </span>
-                                    </div>
+                                    {/* 1층: 이모티콘 */}
+                                    <span style={{ fontSize: isMobile ? '1.2rem' : '1.4rem' }}>{icon.emoji}</span>
+
+                                    {/* 2층: 의미 라벨 */}
                                     <span style={{
-                                        fontSize: '0.9rem',
+                                        fontSize: '0.7rem',
+                                        fontWeight: 'bold',
+                                        color: isMine ? '#3498DB' : '#7F8C8D',
+                                        letterSpacing: '-0.03em'
+                                    }}>
+                                        {icon.label}
+                                    </span>
+
+                                    {/* 3층: 숫자 */}
+                                    <span style={{
+                                        fontSize: '0.85rem',
                                         fontWeight: '900',
-                                        color: isMine ? '#3498DB' : '#ADB5BD'
+                                        color: isMine ? '#2980B9' : '#ADB5BD'
                                     }}>
                                         {getReactionCount(icon.type)}
                                     </span>
