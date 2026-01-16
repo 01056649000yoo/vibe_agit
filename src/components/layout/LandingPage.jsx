@@ -10,42 +10,77 @@ import { supabase } from '../../lib/supabaseClient';
  */
 const LandingPage = ({ onStudentLoginClick }) => {
     return (
-        <Card style={{ textAlign: 'center' }}>
-            <h1 style={{
-                fontSize: '2.8rem',
-                marginBottom: '1rem',
-                color: 'var(--primary-color)',
-                fontWeight: '800'
+        <Card style={{
+            textAlign: 'center',
+            padding: '2.5rem',
+            maxWidth: '500px',
+            animation: 'fadeIn 0.8s ease-out'
+        }}>
+            {/* 메인 비주얼 이미지 */}
+            <div style={{
+                marginBottom: '2rem',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+                border: '4px solid white'
             }}>
-                ✍️ 끄적끄적 아지트
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '2.5rem', lineHeight: '1.6' }}>
-                우리의 소중한 생각들이 무럭무럭 자라나는<br />
-                <strong>따뜻한 글쓰기 공간</strong>에 오신 걸 환영해요!
-            </p>
-            <Button
-                onClick={() => supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: { redirectTo: window.location.origin }
-                })}
-                style={{ width: '100%', background: '#FFFFFF', color: '#757575', border: '1px solid #ddd', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-            >
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style={{ width: '18px', marginRight: '10px' }} />
-                선생님 구글 로그인
-            </Button>
+                <img
+                    src="/assets/og-image.png"
+                    alt="끄적끄적 아지트"
+                    style={{ width: '100%', display: 'block' }}
+                />
+            </div>
 
-            <div style={{ margin: '20px 0', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+            <p style={{
+                color: 'var(--text-secondary)',
+                fontSize: '1.2rem',
+                marginBottom: '2.5rem',
+                lineHeight: '1.7',
+                wordBreak: 'keep-all'
+            }}>
+                우리의 소중한 생각들이 무럭무럭 자라나는<br />
+                <strong style={{ color: 'var(--primary-color)' }}>따뜻한 글쓰기 공간</strong>에 오신 걸 환영해요!
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <Button
+                    onClick={() => supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: { redirectTo: window.location.origin }
+                    })}
+                    style={{
+                        width: '100%',
+                        background: '#FFFFFF',
+                        color: '#757575',
+                        border: '1px solid #ddd',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                        height: '56px',
+                        fontSize: '1.05rem'
+                    }}
+                >
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style={{ width: '18px', marginRight: '12px' }} />
+                    선생님 구글 로그인
+                </Button>
+
                 <Button
                     variant="secondary"
                     size="lg"
-                    style={{ width: '100%', background: '#FBC02D' }}
+                    style={{
+                        width: '100%',
+                        background: 'linear-gradient(135deg, #FBC02D 0%, #F9A825 100%)',
+                        color: 'white',
+                        height: '56px',
+                        fontSize: '1.1rem',
+                        fontWeight: '600',
+                        boxShadow: '0 4px 15px rgba(251, 192, 45, 0.3)'
+                    }}
                     onClick={onStudentLoginClick}
                 >
                     🎒 학생 로그인 (코드 입력)
                 </Button>
             </div>
 
-            <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#aaa' }}>
+            <p style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#999', fontWeight: '500' }}>
                 나만의 글쓰기 아지트로 입장해요 🏠
             </p>
         </Card>
