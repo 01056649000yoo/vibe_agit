@@ -65,35 +65,57 @@ const Layout = ({ children, fullHeight = true, full = false }) => {
 
             {/* 푸터 섹션 */}
             <footer style={{
-                padding: '30px 20px',
+                padding: '40px 24px',
                 textAlign: 'center',
                 background: full ? '#F8F9FA' : 'white',
-                borderTop: '1px solid #EEE',
+                borderTop: '1px solid #ECEFF1',
                 marginTop: 'auto'
             }}>
-                <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '8px' }}>
+                <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {/* 1열: 서비스 주요 링크 및 상호명 */}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: '24px',
+                        flexWrap: 'wrap'
+                    }}>
                         <button
                             onClick={() => setModalContent('terms')}
-                            style={{ background: 'none', border: 'none', fontSize: '0.8rem', color: '#95A5A6', cursor: 'pointer', fontWeight: 'bold' }}
+                            style={{ background: 'none', border: 'none', fontSize: '1rem', color: '#37474F', cursor: 'pointer', fontWeight: '900' }}
                         >
                             이용약관
                         </button>
+                        <span style={{ color: '#CFD8DC' }}>|</span>
                         <button
                             onClick={() => setModalContent('privacy')}
-                            style={{ background: 'none', border: 'none', fontSize: '0.8rem', color: '#95A5A6', cursor: 'pointer', fontWeight: 'bold' }}
+                            style={{ background: 'none', border: 'none', fontSize: '1rem', color: '#37474F', cursor: 'pointer', fontWeight: '900' }}
                         >
                             개인정보 처리방침
                         </button>
+                        <span style={{ color: '#CFD8DC' }}>|</span>
+                        <span style={{ fontSize: '1rem', color: '#37474F', fontWeight: '900' }}>
+                            상호명: 끄적끄적 아지트
+                        </span>
                     </div>
 
-                    <div style={{ fontSize: '0.75rem', color: '#BDC3C7', lineHeight: '1.6' }}>
-                        <p style={{ margin: 0 }}>
-                            <strong style={{ color: '#ADB5BD' }}>상호명:</strong> 끄적끄적 아지트 |
-                            <strong style={{ color: '#ADB5BD', marginLeft: '6px' }}>운영책임자:</strong> 유쌤 |
-                            <strong style={{ color: '#ADB5BD', marginLeft: '6px' }}>문의:</strong> yshgg@naver.com
-                        </p>
-                        <p style={{ margin: '4px 0 0 0' }}>© 2026 끄적끄적 아지트. All rights reserved.</p>
+                    {/* 2열: 운영자 정보 및 고객 문의 */}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: '20px',
+                        flexWrap: 'wrap',
+                        fontSize: '0.95rem',
+                        color: '#607D8B'
+                    }}>
+                        <span><strong style={{ color: '#455A64' }}>운영책임자:</strong> 유쌤</span>
+                        <span style={{ color: '#ECEFF1' }}>•</span>
+                        <span><strong style={{ color: '#455A64' }}>문의:</strong> yshgg@naver.com</span>
+                    </div>
+
+                    <div style={{ fontSize: '0.85rem', color: '#B0BEC5', marginTop: '4px' }}>
+                        © 2026 끄적끄적 아지트. All rights reserved.
                     </div>
                 </div>
             </footer>
