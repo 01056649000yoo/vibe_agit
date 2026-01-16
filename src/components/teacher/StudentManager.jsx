@@ -141,12 +141,38 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
         if (!studentName.trim()) return;
         setIsAdding(true);
         const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-        const { data, error } = await supabase.from('students').insert({ class_id: classId, name: studentName, student_code: code, total_points: 0 }).select();
-        if (!error && data[0]) {
-            setStudents(prev => [...prev, data[0]]);
-            setStudentName('');
+        try {
+            // 1. 학생 생성 (기본 100포인트 부여) ✨
+            const { data, error } = await supabase
+                .from('students')
+                .insert({
+                    class_id: classId,
+                    name: studentName,
+                    student_code: code,
+                    total_points: 100
+                })
+                .select();
+
+            if (error) throw error;
+
+            if (data && data[0]) {
+                const newStudent = data[0];
+                // 2. 포인트 로그 기록 ✨
+                await supabase.from('point_logs').insert({
+                    student_id: newStudent.id,
+                    amount: 100,
+                    reason: '신규 등록 기념 환영 포인트! 🎁'
+                });
+
+                setStudents(prev => [...prev, newStudent]);
+                setStudentName('');
+            }
+        } catch (err) {
+            console.error('학생 추가 실패:', err.message);
+            alert('학생을 추가하는 중 오류가 발생했습니다.');
+        } finally {
+            setIsAdding(false);
         }
-        setIsAdding(false);
     };
 
     const toggleSelectAll = () => {
