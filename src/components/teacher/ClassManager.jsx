@@ -19,6 +19,13 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
     const [isZoomModalOpen, setIsZoomModalOpen] = useState(false); // 초대 코드 크게 보기 모달
     const [isSaving, setIsSaving] = useState(false);
 
+    useEffect(() => {
+        // 학급이 하나도 없을 경우 자동으로 생성 모달을 띄워 유도합니다. ✨
+        if (classes.length === 0) {
+            setIsModalOpen(true);
+        }
+    }, [classes.length]);
+
     const generateInviteCode = () => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let code = '';

@@ -61,17 +61,7 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
 
             if (teacherInfoError) throw teacherInfoError;
 
-            // 3. 첫 학급 자동 생성 (백그라운드 처리)
-            const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            await supabase
-                .from('classes')
-                .insert({
-                    name: '우리 반',
-                    invite_code: inviteCode,
-                    teacher_id: user.id
-                });
-
-            // 4. 부모 컴포넌트 알림 및 새로고침
+            // 3. 부모 컴포넌트 알림 및 새로고침
             await onTeacherStart();
             window.location.reload();
         } catch (err) {
