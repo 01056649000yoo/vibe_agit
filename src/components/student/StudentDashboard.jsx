@@ -18,6 +18,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [showFeedback, setShowFeedback] = useState(false);
     const [feedbacks, setFeedbacks] = useState([]);
     const [loadingFeedback, setLoadingFeedback] = useState(false);
+    const [returnedCount, setReturnedCount] = useState(0);
     const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 }); // [추가] 성장 통계
     const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', icon: '🌱', nextGoal: 1000 }); // [추가] 레벨 정보
     const [isLoading, setIsLoading] = useState(true); // [긴급 점검] 데이터 로딩 상태 관리 추가
@@ -350,6 +351,9 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     const checkActivity = async () => {
         try {
+            if (!studentSession?.id) return;
+
+            // 내가 쓴 글 목록 가져오기
             const { data: myPosts } = await supabase
                 .from('student_posts')
                 .select('id')
@@ -358,19 +362,29 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             if (!myPosts || myPosts.length === 0) return;
             const postIds = myPosts.map(p => p.id);
 
+            // 1. 친구들의 반응(좋아요) 확인
             const { count: reactionCount } = await supabase
                 .from('post_reactions')
                 .select('*', { count: 'exact', head: true })
                 .in('post_id', postIds)
                 .neq('user_id', studentSession.id);
 
+            // 2. 친구들의 댓글 확인
             const { count: commentCount } = await supabase
                 .from('post_comments')
                 .select('*', { count: 'exact', head: true })
                 .in('post_id', postIds)
                 .neq('author_id', studentSession.id);
 
-            setHasActivity((reactionCount || 0) + (commentCount || 0) > 0);
+            // 3. 선생님의 다시 쓰기 요청 확인
+            const { count: returnedCountVal } = await supabase
+                .from('student_posts')
+                .select('*', { count: 'exact', head: true })
+                .eq('student_id', studentSession.id)
+                .eq('is_returned', true);
+
+            setReturnedCount(returnedCountVal || 0);
+            setHasActivity((reactionCount || 0) + (commentCount || 0) + (returnedCountVal || 0) > 0);
         } catch (err) {
             console.error('활동 확인 실패:', err.message);
         }
@@ -381,7 +395,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         try {
             const { data: myPosts } = await supabase
                 .from('student_posts')
-                .select('id, title')
+                .select('id, title, is_returned, ai_feedback, updated_at, mission_id')
                 .eq('student_id', studentSession.id);
 
             if (!myPosts || myPosts.length === 0) {
@@ -390,14 +404,27 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             }
             const postIds = myPosts.map(p => p.id);
 
-            // 반응 가져오기
+            // 1. 다시쓰기 요청 가져오기
+            const returnedItems = myPosts
+                .filter(p => p.is_returned === true)
+                .map(p => ({
+                    id: `return-${p.id}`,
+                    post_id: p.id,
+                    mission_id: p.mission_id,
+                    type: 'rewrite',
+                    created_at: p.updated_at,
+                    student_posts: { title: p.title, id: p.id },
+                    content: p.ai_feedback || '선생님의 자세한 피드백을 확인하고 글을 다시 써주세요!'
+                }));
+
+            // 2. 반응 가져오기
             const { data: reactions } = await supabase
                 .from('post_reactions')
                 .select('*, students(name), student_posts(title, id)')
                 .in('post_id', postIds)
                 .neq('user_id', studentSession.id);
 
-            // 댓글 가져오기
+            // 3. 댓글 가져오기
             const { data: comments } = await supabase
                 .from('post_comments')
                 .select('*, students:author_id(name), student_posts(title, id)')
@@ -405,6 +432,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .neq('author_id', studentSession.id);
 
             const combined = [
+                ...returnedItems,
                 ...(reactions || []).map(r => ({ ...r, type: 'reaction' })),
                 ...(comments || []).map(c => ({ ...c, type: 'comment' }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -501,13 +529,53 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 </div>
 
 
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                     <div style={{ fontSize: '3rem', marginBottom: '5px' }}>🌟</div>
                     <h1 style={{ fontSize: '2rem', color: '#5D4037', marginBottom: '0.4rem' }}>
                         안녕, <span style={{ color: '#FBC02D' }}>{studentSession.name}</span>!
                     </h1>
                     <p style={{ color: '#8D6E63', fontSize: '1rem' }}>벌써 이만큼이나 성장했어! 🚀</p>
                 </div>
+
+                {/* 선생님의 다시 쓰기 요청 배너 (있을 때만 표시) */}
+                <AnimatePresence>
+                    {returnedCount > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            style={{
+                                background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
+                                padding: '16px 20px',
+                                borderRadius: '24px',
+                                border: '2px solid #FFB74D',
+                                marginBottom: '24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '15px',
+                                cursor: 'pointer',
+                                boxShadow: '0 8px 16px rgba(255, 183, 77, 0.2)',
+                                textAlign: 'left'
+                            }}
+                            onClick={openFeedback}
+                        >
+                            <span style={{ fontSize: '2.5rem' }}>♻️</span>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '1.05rem', fontWeight: '900', color: '#E65100', marginBottom: '2px' }}>선생님의 다시 쓰기 요청이 있어요!</div>
+                                <div style={{ fontSize: '0.85rem', color: '#F57C00', fontWeight: 'bold' }}>지금 바로 확인하고 완벽한 글을 완성해봐요! ✨</div>
+                            </div>
+                            <div style={{
+                                width: '36px', height: '36px', background: '#FFB74D',
+                                borderRadius: '50%', display: 'flex', justifyContent: 'center',
+                                alignItems: 'center', color: 'white', fontWeight: 'bold'
+                            }}>
+                                {returnedCount}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
 
 
@@ -1177,7 +1245,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                     }}
                                                     onClick={() => {
                                                         setShowFeedback(false);
-                                                        onNavigate('friends_hideout', { initialPostId: f.post_id || f.student_posts?.id });
+                                                        if (f.type === 'rewrite') {
+                                                            onNavigate('writing', { missionId: f.mission_id });
+                                                        } else {
+                                                            onNavigate('friends_hideout', { initialPostId: f.post_id || f.student_posts?.id });
+                                                        }
                                                     }}
                                                     onMouseEnter={e => {
                                                         e.currentTarget.style.background = '#F0F7FF';
@@ -1195,22 +1267,32 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                                     f.reaction_type === 'laugh' ? '😂' :
                                                                         f.reaction_type === 'wow' ? '👏' :
                                                                             f.reaction_type === 'bulb' ? '💡' : '✨'
-                                                            ) : '💬'}
+                                                            ) : f.type === 'rewrite' ? '♻️' : '💬'}
                                                         </span>
-                                                        <span style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem' }}>
-                                                            {f.students?.name} 친구가 {f.type === 'reaction' ? '리액션을 남겼어요!' : '댓글을 남겼어요!'}
+                                                        <span style={{ fontWeight: 'bold', color: f.type === 'rewrite' ? '#E65100' : '#5D4037', fontSize: '0.95rem' }}>
+                                                            {f.type === 'reaction' ? `${f.students?.name} 친구가 리액션을 남겼어요!` :
+                                                                f.type === 'comment' ? `${f.students?.name} 친구가 댓글을 남겼어요!` :
+                                                                    '선생님의 다시 쓰기 요청이 있습니다!'}
                                                         </span>
                                                     </div>
                                                     <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
                                                         글 제목: "{f.student_posts?.title}"
                                                     </div>
-                                                    {f.type === 'comment' && (
+                                                    {(f.type === 'comment' || f.type === 'rewrite') && (
                                                         <div style={{
-                                                            fontSize: '0.9rem', color: '#795548', background: 'white',
+                                                            fontSize: '0.9rem',
+                                                            color: f.type === 'rewrite' ? '#E65100' : '#795548',
+                                                            background: f.type === 'rewrite' ? '#FFF3E0' : 'white',
                                                             padding: '8px 12px', borderRadius: '12px', marginTop: '6px',
-                                                            border: '1px solid #EEE'
+                                                            border: f.type === 'rewrite' ? '1px solid #FFE0B2' : '1px solid #EEE',
+                                                            fontWeight: f.type === 'rewrite' ? '500' : 'normal'
                                                         }}>
-                                                            {f.content}
+                                                            {f.type === 'rewrite' ? (
+                                                                <div>
+                                                                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>📌 요청 사항</div>
+                                                                    {f.content}
+                                                                </div>
+                                                            ) : f.content}
                                                         </div>
                                                     )}
                                                     <div style={{ fontSize: '0.75rem', color: '#BDBDBD', marginTop: '8px', textAlign: 'right' }}>
