@@ -35,17 +35,23 @@ function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 앱 실행 시 현재 로그인 세션 확인
+    // 앱 실행 시 현재 로그인 세션 확인 및 충돌 방지
     const checkSessions = async () => {
-      // 1. 구글 로그인 확인
+      // 1. 구글 로그인(교사) 세션 확인
       const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      if (session) await fetchProfile(session.user.id);
 
-      // 2. 학생 코드 로그인 확인 (LocalStorage)
-      const savedStudent = localStorage.getItem('student_session');
-      if (savedStudent) {
-        setStudentSession(JSON.parse(savedStudent));
+      if (session) {
+        // 교사 세션이 있으면 학생 세션 데이터 강제 초기화
+        localStorage.removeItem('student_session');
+        setStudentSession(null);
+        setSession(session);
+        await fetchProfile(session.user.id);
+      } else {
+        // 2. 학생 코드 로그인 확인 (교사 세션이 없을 때만)
+        const savedStudent = localStorage.getItem('student_session');
+        if (savedStudent) {
+          setStudentSession(JSON.parse(savedStudent));
+        }
       }
       setLoading(false);
     };
@@ -54,9 +60,16 @@ function App() {
 
     // 로그인 상태 변화를 감지
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      if (session) fetchProfile(session.user.id)
-      else setProfile(null)
+      if (session) {
+        // 교사 로그인 시 학생 데이터 즉시 폐기
+        localStorage.removeItem('student_session');
+        setStudentSession(null);
+        setSession(session);
+        fetchProfile(session.user.id);
+      } else {
+        setSession(null);
+        setProfile(null);
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -98,10 +111,21 @@ function App() {
     else alert('역할 저장 중 오류가 발생했습니다: ' + error.message)
   }
 
-  // 학생 로그아웃 처리
-  const handleStudentLogout = () => {
-    localStorage.removeItem('student_session');
+  // 로그아웃 통합 처리 (교사/학생 공용 가능하도록 강화)
+  const handleLogout = async () => {
+    // 모든 유무형 세션 데이터 초기화
+    await supabase.auth.signOut();
+    localStorage.clear();
+    setSession(null);
+    setProfile(null);
     setStudentSession(null);
+    setIsStudentLoginMode(false);
+    setInternalPage({ name: 'main', params: {} });
+  }
+
+  // 학생 로그아웃 처리 (명시적 별도 함수 유지 - UI 호출용)
+  const handleStudentLogout = () => {
+    handleLogout();
   }
 
   return (
@@ -109,8 +133,27 @@ function App() {
       <Suspense fallback={<Loading />}>
         {loading ? (
           <Loading />
+        ) : session ? (
+          /* [1순위] 교사 세션 존재 시 (프로필 미설정 포함) */
+          !profile ? (
+            <TeacherProfileSetup
+              email={session.user.email}
+              onTeacherStart={handleTeacherStart}
+            />
+          ) : (
+            <TeacherDashboard
+              profile={profile}
+              session={session}
+              activeClass={activeClass}
+              setActiveClass={setActiveClass}
+              onProfileUpdate={() => fetchProfile(session.user.id)}
+              onNavigate={(page, params) => setInternalPage({ name: page, params })}
+              internalPage={internalPage}
+              setInternalPage={setInternalPage}
+            />
+          )
         ) : studentSession ? (
-          /* [1순위] 학생 모드 */
+          /* [2순위] 학생 모드 (교사 세션이 없을 때) */
           <>
             {internalPage.name === 'main' && (
               <StudentDashboard
@@ -143,9 +186,12 @@ function App() {
             )}
           </>
         ) : isStudentLoginMode ? (
-          /* [2순위] 학생 로그인 화면 */
+          /* [3순위] 학생 로그인 화면 */
           <StudentLogin
-            onLoginSuccess={(data) => {
+            onLoginSuccess={async (data) => {
+              // 학생 로그인 시 만약 교사 세션이 남아있다면 강제 로그아웃
+              if (session) await supabase.auth.signOut();
+
               const sessionData = {
                 id: data.id,
                 name: data.name,
@@ -160,27 +206,9 @@ function App() {
             }}
             onBack={() => setIsStudentLoginMode(false)}
           />
-        ) : !session ? (
-          /* [3순위] 비로그인 (랜딩 페이지) */
-          <LandingPage onStudentLoginClick={() => setIsStudentLoginMode(true)} />
-        ) : !profile ? (
-          /* [4순위] 프로필 미설정 (역할 선택) */
-          <TeacherProfileSetup
-            email={session.user.email}
-            onTeacherStart={handleTeacherStart}
-          />
         ) : (
-          /* [5순위] 선생님 대시보드 */
-          <TeacherDashboard
-            profile={profile}
-            session={session}
-            activeClass={activeClass}
-            setActiveClass={setActiveClass}
-            onProfileUpdate={() => fetchProfile(session.user.id)}
-            onNavigate={(page, params) => setInternalPage({ name: page, params })}
-            internalPage={internalPage}
-            setInternalPage={setInternalPage}
-          />
+          /* [4순위] 비로그인 (랜딩 페이지) */
+          <LandingPage onStudentLoginClick={() => setIsStudentLoginMode(true)} />
         )}
       </Suspense>
     </Layout>
