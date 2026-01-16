@@ -61,7 +61,7 @@ const UsageGuide = ({ isMobile }) => {
                     📖 앱 사용법 가이드
                 </h1>
                 <p style={{ fontSize: '1.1rem', color: '#7F8C8D' }}>
-                    바이브(VIBE)를 통한 즐거운 글쓰기 교실, 지금 시작해보세요! ✨
+                    끄적끄적 아지트와 함께 즐거운 글쓰기 교실, 지금 시작해보세요! ✨
                 </p>
             </div>
 
