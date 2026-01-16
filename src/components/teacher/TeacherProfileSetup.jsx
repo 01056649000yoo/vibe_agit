@@ -4,18 +4,16 @@ import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
 
 /**
- * 역할: 로그인 후 선생님 필수 정보(이름, 학교) 설정 페이지 ✨
- * props:
- *  - email: 사용자 이메일
- *  - onTeacherStart: 선생님으로 시작하기 버튼 클릭 시 실행될 함수
+ * 역할: 로그인 후 선생님 필수 정보(이름, 학교, 연락처) 설정 페이지 ✨
  */
 const TeacherProfileSetup = ({ email, onTeacherStart }) => {
     const [loading, setLoading] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
-    // 선생님 필수 정보
+    // 선생님 입력 정보
     const [teacherName, setTeacherName] = useState('');
     const [schoolName, setSchoolName] = useState('');
+    const [phone, setPhone] = useState('');
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -57,12 +55,13 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
                     id: user.id,
                     name: teacherName.trim(),
                     school_name: schoolName.trim(),
+                    phone: phone.trim(),
                     email: user.email
                 });
 
             if (teacherInfoError) throw teacherInfoError;
 
-            // 3. (선택) 첫 학급 자동 생성 (대시보드 즉시 활용을 위해)
+            // 3. 첫 학급 자동 생성 (백그라운드 처리)
             const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
             await supabase
                 .from('classes')
@@ -86,27 +85,24 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
     return (
         <Card style={{ textAlign: 'center', maxWidth: '500px', padding: '2rem' }} animate={true}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✨</div>
-            <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: '#2C3E50', fontWeight: '900' }}>반갑습니다, 선생님!</h2>
+            <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: '#2C3E50', fontWeight: '900' }}>선생님, 환영합니다!</h2>
             <p style={{ color: '#7FB3D5', fontWeight: '600', marginBottom: '2rem', fontSize: '1rem' }}>
-                아지트에서 사용할 선생님의 정보를 알려주세요.
+                아지트 시작을 위한 정보를 입력해 주세요.
             </p>
 
             <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ background: '#FFFDE7', padding: '24px', borderRadius: '24px', border: '1px solid #FFF59D' }}>
-                    <h3 style={{ fontSize: '1rem', color: '#F57F17', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        👤 기본 정보 설정
-                    </h3>
-
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {/* 성명 */}
                         <div>
                             <label style={{ display: 'block', fontSize: '0.9rem', color: '#5D4037', fontWeight: 'bold', marginBottom: '8px' }}>
-                                선생님 이름 (필수)
+                                교사 성명 (필수)
                             </label>
                             <input
                                 type="text"
                                 value={teacherName}
                                 onChange={(e) => setTeacherName(e.target.value)}
-                                placeholder="실명 또는 별칭을 입력해 주세요"
+                                placeholder="성함을 입력해 주세요"
                                 style={{
                                     width: '100%', padding: '14px', borderRadius: '16px',
                                     border: '2px solid #FFE082', fontSize: '1rem', outline: 'none',
@@ -114,6 +110,8 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
                                 }}
                             />
                         </div>
+
+                        {/* 소속학교 */}
                         <div>
                             <label style={{ display: 'block', fontSize: '0.9rem', color: '#5D4037', fontWeight: 'bold', marginBottom: '8px' }}>
                                 소속 학교명 (필수)
@@ -122,7 +120,25 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
                                 type="text"
                                 value={schoolName}
                                 onChange={(e) => setSchoolName(e.target.value)}
-                                placeholder="예: 서울미래초등학교"
+                                placeholder="학교명을 입력해 주세요"
+                                style={{
+                                    width: '100%', padding: '14px', borderRadius: '16px',
+                                    border: '2px solid #FFE082', fontSize: '1rem', outline: 'none',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+
+                        {/* 전화번호 (선택) */}
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.9rem', color: '#5D4037', fontWeight: 'bold', marginBottom: '8px' }}>
+                                전화번호 (선택)
+                            </label>
+                            <input
+                                type="tel"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                placeholder="010-0000-0000"
                                 style={{
                                     width: '100%', padding: '14px', borderRadius: '16px',
                                     border: '2px solid #FFE082', fontSize: '1rem', outline: 'none',

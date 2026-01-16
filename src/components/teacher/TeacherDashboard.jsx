@@ -30,10 +30,11 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     const [testingKey, setTestingKey] = useState(false); // [추가] 연결 테스트 상태
 
     // [신규] 선생님 인적 사항 상태
-    const [teacherInfo, setTeacherInfo] = useState({ name: '', school_name: '' });
+    const [teacherInfo, setTeacherInfo] = useState({ name: '', school_name: '', phone: '' });
     const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
     const [editName, setEditName] = useState('');
     const [editSchool, setEditSchool] = useState('');
+    const [editPhone, setEditPhone] = useState('');
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -61,6 +62,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 setTeacherInfo(data);
                 setEditName(data.name || '');
                 setEditSchool(data.school_name || '');
+                setEditPhone(data.phone || '');
             }
         } catch (err) {
             console.log('선생님 정보 fetch 알림 (미등록 상태일 수 있음)');
@@ -79,11 +81,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                     id: session.user.id,
                     name: editName.trim(),
                     school_name: editSchool.trim(),
+                    phone: editPhone.trim(),
                     email: session.user.email
                 });
 
             if (error) throw error;
-            setTeacherInfo({ name: editName.trim(), school_name: editSchool.trim() });
+            setTeacherInfo({ name: editName.trim(), school_name: editSchool.trim(), phone: editPhone.trim() });
             alert('프로필 정보가 업데이트되었습니다! ✨');
             setIsEditProfileOpen(false);
         } catch (err) {
@@ -626,6 +629,19 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                             value={editSchool}
                                             onChange={(e) => setEditSchool(e.target.value)}
                                             placeholder="예: 서울미래초등학교"
+                                            style={{
+                                                width: '100%', padding: '12px', borderRadius: '12px',
+                                                border: '2px solid #ECEFF1', fontSize: '1rem', outline: 'none'
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#5D4037', fontWeight: 'bold', marginBottom: '6px' }}>전화번호 (선택)</label>
+                                        <input
+                                            type="tel"
+                                            value={editPhone}
+                                            onChange={(e) => setEditPhone(e.target.value)}
+                                            placeholder="010-0000-0000"
                                             style={{
                                                 width: '100%', padding: '12px', borderRadius: '12px',
                                                 border: '2px solid #ECEFF1', fontSize: '1rem', outline: 'none'
