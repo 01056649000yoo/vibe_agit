@@ -22,6 +22,25 @@
   <meta name="twitter:title" content="끄적끄적 아지트 : 우리 반 글쓰기 통합 플랫폼 ✍️" />
   <meta name="twitter:description" content="함께 글을 쓰고 친구들과 생각을 나누는 학급 운영 플랫폼입니다. 미션을 수행하며 나만의 드래곤도 함께 키워보세요!" />
   <meta name="twitter:image" content="https://www.xn--vz0ba242ncqcba79xhwx.site/assets/og-image.png?v=3" />
+
+  <!-- KakaoTalk In-app Browser Redirect Script -->
+  <script>
+    (function () {
+      var userAgent = navigator.userAgent.toLowerCase();
+      var isKakaoTalk = userAgent.includes('kakaotalk');
+
+      if (isKakaoTalk) {
+        // 안드로이드: 크롬 브라우저로 강제 실행 시도
+        if (userAgent.includes('android')) {
+          location.href = 'intent://' + location.host + location.pathname + location.search + '#Intent;scheme=https;package=com.android.chrome;end';
+        }
+        // 아이폰/아이패드: 외부 브라우저 실행 안내 팝업
+        else if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
+          alert("구글 로그인을 위해 외부 브라우저가 필요합니다.\n\n오른쪽 하단 '...' 버튼을 누른 뒤\n'다른 브라우저로 열기' 또는 'Safari로 열기'를 선택해주세요!");
+        }
+      }
+    })();
+  </script>
 </head>
 
 <body>
