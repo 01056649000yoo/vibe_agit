@@ -21,6 +21,10 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
     const [charStandard, setCharStandard] = useState(700);
     const [levelUpPoints, setLevelUpPoints] = useState(100);
 
+    // [신규] 선생님 인적 사항
+    const [teacherName, setTeacherName] = useState('');
+    const [schoolName, setSchoolName] = useState('');
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
         window.addEventListener('resize', handleResize);
@@ -104,6 +108,19 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
 
             if (profileError) throw profileError;
 
+            // [신규] 선생님 인적 사항 저장 (teachers 테이블)
+            if (teacherName.trim() || schoolName.trim()) {
+                const { error: teacherInfoError } = await supabase
+                    .from('teachers')
+                    .upsert({
+                        id: user.id,
+                        name: teacherName.trim(),
+                        school_name: schoolName.trim(),
+                        email: user.email
+                    });
+                if (teacherInfoError) console.log('선생님 정보 저장 알림:', teacherInfoError.message);
+            }
+
             // 2. 초기 학급 생성 (이름이 입력된 경우)
             if (className.trim()) {
                 const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -138,6 +155,46 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
             </p>
 
             <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* [신규] 선생님 기본 정보 입력 (중요) */}
+                <div style={{ background: '#FFFDE7', padding: '20px', borderRadius: '18px', border: '1px solid #FFF59D', marginBottom: '8px' }}>
+                    <h3 style={{ fontSize: '1rem', color: '#F57F17', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        👤 선생님 정보 (필수)
+                    </h3>
+                    <p style={{ fontSize: '0.85rem', color: '#795548', marginBottom: '16px' }}>
+                        * 관리자가 확인하실 수 있도록 <strong>실명</strong> 또는 <strong>별칭</strong>을 입력해주세요.
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: '#5D4037', fontWeight: 'bold', marginBottom: '6px' }}>선생님 이름 (또는 별칭)</label>
+                            <input
+                                type="text"
+                                value={teacherName}
+                                onChange={(e) => setTeacherName(e.target.value)}
+                                placeholder="예: 홍길동 선생님"
+                                style={{
+                                    width: '100%', padding: '12px', borderRadius: '12px',
+                                    border: '2px solid #FFE082', fontSize: '0.95rem', outline: 'none',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: '#5D4037', fontWeight: 'bold', marginBottom: '6px' }}>소속 학교명</label>
+                            <input
+                                type="text"
+                                value={schoolName}
+                                onChange={(e) => setSchoolName(e.target.value)}
+                                placeholder="예: 서울미래초등학교"
+                                style={{
+                                    width: '100%', padding: '12px', borderRadius: '12px',
+                                    border: '2px solid #FFE082', fontSize: '0.95rem', outline: 'none',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
                 {/* 2단 그리드 레이아웃 */}
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
 

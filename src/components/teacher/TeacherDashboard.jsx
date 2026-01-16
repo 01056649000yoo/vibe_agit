@@ -29,6 +29,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     const [savingKey, setSavingKey] = useState(false);
     const [testingKey, setTestingKey] = useState(false); // [추가] 연결 테스트 상태
 
+    // [신규] 선생님 인적 사항 상태
+    const [teacherInfo, setTeacherInfo] = useState({ name: '', school_name: '' });
+    const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+    const [editName, setEditName] = useState('');
+    const [editSchool, setEditSchool] = useState('');
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
         window.addEventListener('resize', handleResize);
@@ -39,8 +45,52 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         if (session?.user?.id) {
             fetchAllClasses();
             fetchGeminiKey();
+            fetchTeacherInfo();
         }
     }, [session?.user?.id]);
+
+    const fetchTeacherInfo = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('teachers')
+                .select('name, school_name')
+                .eq('id', session.user.id)
+                .single();
+
+            if (data) {
+                setTeacherInfo(data);
+                setEditName(data.name || '');
+                setEditSchool(data.school_name || '');
+            }
+        } catch (err) {
+            console.log('선생님 정보 fetch 알림 (미등록 상태일 수 있음)');
+        }
+    };
+
+    const handleUpdateTeacherProfile = async () => {
+        if (!editName.trim()) {
+            alert('이름(별칭)을 입력해주세요! 😊');
+            return;
+        }
+        try {
+            const { error } = await supabase
+                .from('teachers')
+                .upsert({
+                    id: session.user.id,
+                    name: editName.trim(),
+                    school_name: editSchool.trim(),
+                    email: session.user.email
+                });
+
+            if (error) throw error;
+            setTeacherInfo({ name: editName.trim(), school_name: editSchool.trim() });
+            alert('프로필 정보가 업데이트되었습니다! ✨');
+            setIsEditProfileOpen(false);
+        } catch (err) {
+            console.error('프로필 저장 실패:', err.message);
+            alert('저장 중 오류가 발생했습니다.');
+        }
+    };
 
     const fetchGeminiKey = async () => {
         const { data, error } = await supabase
@@ -251,7 +301,14 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                     )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {!isMobile && <span style={{ fontSize: '0.85rem', color: '#6C757D' }}>{profile?.full_name} 선생님</span>}
+                    {!isMobile && (
+                        <span style={{ fontSize: '0.85rem', color: '#6C757D', fontWeight: 'bold' }}>
+                            {teacherInfo.name || profile?.full_name} 선생님
+                        </span>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={() => setIsEditProfileOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
+                        ⚙️ 정보 수정
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()} style={{ fontSize: '0.8rem', color: '#DC3545' }}>
                         로그아웃
                     </Button>
@@ -526,6 +583,66 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                     </div>
                 </div>
             )}
+            {/* 선생님 정보 수정 모달 */}
+            <AnimatePresence>
+                {isEditProfileOpen && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        zIndex: 2500, backdropFilter: 'blur(4px)'
+                    }}>
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            style={{ width: '90%', maxWidth: '420px' }}
+                        >
+                            <Card style={{ padding: '32px', borderRadius: '28px', border: 'none', boxShadow: '0 20px 50px rgba(0,0,0,0.15)' }}>
+                                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>👤</div>
+                                    <h3 style={{ margin: 0, fontSize: '1.4rem', color: '#2C3E50', fontWeight: '900' }}>선생님 프로필 수정</h3>
+                                    <p style={{ margin: '4px 0 0 0', color: '#7F8C8D', fontSize: '0.9rem' }}>실명 또는 별칭을 입력해 주세요.</p>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#5D4037', fontWeight: 'bold', marginBottom: '6px' }}>이름 (또는 별칭)</label>
+                                        <input
+                                            type="text"
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            placeholder="예: 홍길동 선생님"
+                                            style={{
+                                                width: '100%', padding: '12px', borderRadius: '12px',
+                                                border: '2px solid #ECEFF1', fontSize: '1rem', outline: 'none'
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#5D4037', fontWeight: 'bold', marginBottom: '6px' }}>소속 학교명</label>
+                                        <input
+                                            type="text"
+                                            value={editSchool}
+                                            onChange={(e) => setEditSchool(e.target.value)}
+                                            placeholder="예: 서울미래초등학교"
+                                            style={{
+                                                width: '100%', padding: '12px', borderRadius: '12px',
+                                                border: '2px solid #ECEFF1', fontSize: '1rem', outline: 'none'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <Button variant="ghost" style={{ flex: 1, height: '50px', borderRadius: '14px' }} onClick={() => setIsEditProfileOpen(false)}>취소</Button>
+                                    <Button variant="primary" style={{ flex: 2, height: '50px', borderRadius: '14px', fontWeight: 'bold' }} onClick={handleUpdateTeacherProfile}>저장하기 ✨</Button>
+                                </div>
+                            </Card>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

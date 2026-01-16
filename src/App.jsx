@@ -75,14 +75,23 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // DB에서 사용자 프로필 정보 가져오기
+  // DB에서 사용자 프로필 정보 가져오기 (교사 기본 정보 포함)
   const fetchProfile = async (userId) => {
-    const { data } = await supabase
+    // 1. 기본 프로필 정보 가져오기
+    const { data: profileData } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
-    setProfile(data)
+
+    // 2. 교사 전용 정보(별칭, 학교명) 가져오기
+    const { data: teacherData } = await supabase
+      .from('teachers')
+      .select('name, school_name')
+      .eq('id', userId)
+      .single()
+
+    setProfile({ ...profileData, teacherName: teacherData?.name, schoolName: teacherData?.school_name })
   }
 
   // 역할을 'TEACHER'로 저장하는 함수
@@ -134,8 +143,8 @@ function App() {
         {loading ? (
           <Loading />
         ) : session ? (
-          /* [1순위] 교사 세션 존재 시 (프로필 미설정 포함) */
-          !profile ? (
+          /* [1순위] 교사 세션 존재 시 (프로필 또는 선생님 정보 미설정 포함) */
+          (!profile || !profile.role || !profile.teacherName || !profile.schoolName) ? (
             <TeacherProfileSetup
               email={session.user.email}
               onTeacherStart={handleTeacherStart}
