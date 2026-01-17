@@ -534,12 +534,16 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 ...(reactions || []).map(r => ({ ...r, type: 'reaction' })),
                 ...(comments || []).map(c => ({ ...c, type: 'comment' })),
                 ...(pointLogs || [])
-                    .filter(log => log.reason && !log.reason.includes('다시 쓰기'))
+                    .filter(log => {
+                        // '다시 쓰기' 관련 로그는 중복 방지를 위해 제외 (위에서 별도로 처리함)
+                        const reason = log.reason || '';
+                        return !reason.includes('다시 쓰기') && !reason.includes('♻️');
+                    })
                     .map(log => ({
                         ...log,
                         type: 'point',
-                        content: log.reason,
-                        title: log.student_posts?.title || '포인트 소식'
+                        title: log.student_posts?.title || '포인트 소식',
+                        content: log.reason || '포인트가 변동되었습니다.'
                     }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
