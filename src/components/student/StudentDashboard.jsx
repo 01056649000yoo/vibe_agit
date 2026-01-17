@@ -61,7 +61,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             checkActivity();
             fetchStats();
 
-            // [긴급 수정] 실시간 알림 구독 - 포인트 및 다시 쓰기 요청 즉시 반영 🔔
+            // [긴급 정밀 수정] 실시간 알림 구독 - 포인트 및 다시 쓰기 요청 즉시 반영 ⚡🔔
             const notificationChannel = supabase
                 .channel(`student_notif_${studentSession.id}`)
                 .on(
@@ -74,38 +74,43 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     },
                     (payload) => {
                         console.log('⚡ 실시간 알림 수신:', payload.new);
-
-                        // 1. 포인트 정보 및 활동 상태 즉시 동기화
-                        fetchMyPoints();
-
-                        // 2. 알림 리스트에 즉시 추가 (새로고침 없이 반영)
                         const log = payload.new;
-                        const isRewrite = log.reason?.includes('다시 쓰기');
+                        const isRewrite = log.reason?.includes('다시 쓰기') || log.reason?.includes('♻️');
+
+                        // 1. 포인트 및 활동 상태 즉시 동기화 (비동기)
+                        // isLoading 상태와 상관없이 데이터만 신속하게 업데이트
+                        fetchMyPoints().catch(err => console.error('포인트 동기화 실패:', err));
+                        setHasActivity(true);
 
                         if (isRewrite) {
-                            // 다시 쓰기 요청인 경우 배너(returnedCount) 업데이트를 위해 전체 체크
-                            checkActivity();
-                            fetchFeedbacks();
-                        } else {
-                            // 일반 포인트 지급/회수 알림
-                            const newPointNotif = {
+                            checkActivity().catch(err => console.error('활동 카운트 동기화 실패:', err));
+                        }
+
+                        // 2. 알림 리스트에 '즉시' 수동 추가 (네트워크 대기 없이 UI 반영)
+                        setFeedbacks(prev => {
+                            // 중복 방지 (이미 존재하는 ID면 무시)
+                            if (prev.some(f => f.id === log.id)) return prev;
+
+                            const newNotif = {
                                 ...log,
-                                type: 'point',
+                                type: isRewrite ? 'rewrite' : 'point',
                                 content: log.reason,
-                                title: '포인트 선물', // 기본값 설정
-                                created_at: log.created_at
+                                title: isRewrite ? '선생님의 보완 요청' : '포인트 선물 🎁',
+                                created_at: log.created_at || new Date().toISOString()
                             };
 
-                            setFeedbacks(prev => {
-                                // 중복 방지 체크 (이미 존재하는 ID면 무시)
-                                if (prev.some(f => f.id === log.id)) return prev;
-                                return [newPointNotif, ...prev];
-                            });
-                            setHasActivity(true);
-                        }
+                            // "다시 쓰기"의 경우 배너와 연동되어 있으므로 전체 조회가 더 정확할 수 있음
+                            if (isRewrite) {
+                                fetchFeedbacks();
+                            }
+
+                            return [newNotif, ...prev];
+                        });
                     }
                 )
-                .subscribe();
+                .subscribe((status) => {
+                    console.log(`[Subscription] Status: ${status}`);
+                });
 
             return () => {
                 supabase.removeChannel(notificationChannel);
@@ -114,9 +119,15 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     }, [studentSession?.id]);
 
     const loadInitialData = async () => {
-        await fetchMyPoints();
-        // [점검] 데이터 로드가 완료된 후에 퇴화 로직 체크
-        checkPetDegeneration();
+        try {
+            await fetchMyPoints();
+        } catch (err) {
+            console.error('초기 데이터 로드 실패:', err);
+        } finally {
+            // 어떤 경우에도 로딩은 해제
+            setIsLoading(false);
+            checkPetDegeneration();
+        }
     };
 
     // [추가] 드래곤 퇴화 로직 (30일 미접속/미관리 시)
