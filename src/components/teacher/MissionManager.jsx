@@ -83,6 +83,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 .from('writing_missions')
                 .select('*')
                 .eq('class_id', activeClass.id)
+                .eq('is_archived', false)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -818,16 +819,31 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <span style={{ padding: '4px 10px', background: '#E3F2FD', color: '#1976D2', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900' }}>{mission.genre}</span>
-                            <button onClick={async (e) => {
-                                e.stopPropagation();
-                                if (confirm('이 글쓰기 미션을 삭제하시겠습니까? 🗑️\n작성된 학생들의 글도 확인이 어려워질 수 있습니다.')) {
-                                    const { error } = await supabase.from('writing_missions').delete().eq('id', mission.id);
-                                    if (!error) fetchMissions();
-                                    else alert('삭제 실패: ' + error.message);
-                                }
-                            }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF5252', fontSize: '1.2rem', padding: '8px' }}>
-                                🗑️
-                            </button>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                                <button onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (confirm('보관하면 학생들에게 보이지 않게 됩니다. 보관할까요? 📂')) {
+                                        const { error } = await supabase
+                                            .from('writing_missions')
+                                            .update({ is_archived: true, archived_at: new Date().toISOString() })
+                                            .eq('id', mission.id);
+                                        if (!error) fetchMissions();
+                                        else alert('보관 실패: ' + error.message);
+                                    }
+                                }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3498DB', fontSize: '1.2rem', padding: '8px' }}>
+                                    📂
+                                </button>
+                                <button onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (confirm('이 글쓰기 미션을 삭제하시겠습니까? 🗑️\n작성된 학생들의 글도 확인이 어려워질 수 있습니다.')) {
+                                        const { error } = await supabase.from('writing_missions').delete().eq('id', mission.id);
+                                        if (!error) fetchMissions();
+                                        else alert('삭제 실패: ' + error.message);
+                                    }
+                                }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF5252', fontSize: '1.2rem', padding: '8px' }}>
+                                    🗑️
+                                </button>
+                            </div>
                         </div>
                         <h4 style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.1rem', color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

@@ -71,6 +71,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                 .from('writing_missions')
                 .select('*')
                 .eq('class_id', studentSession.classId || studentSession.class_id)
+                .eq('is_archived', false)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;

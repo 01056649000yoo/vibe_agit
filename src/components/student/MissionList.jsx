@@ -49,6 +49,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                 .from('writing_missions')
                 .select('*')
                 .eq('class_id', classId)
+                .eq('is_archived', false)
                 .order('created_at', { ascending: false });
 
             if (mError) throw mError;

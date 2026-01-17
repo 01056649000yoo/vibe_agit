@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const ClassManager = lazy(() => import('./ClassManager'));
 const StudentManager = lazy(() => import('./StudentManager'));
 const MissionManager = lazy(() => import('./MissionManager'));
+const ArchiveManager = lazy(() => import('./ArchiveManager'));
 const UsageGuide = lazy(() => import('./UsageGuide'));
 
 /**
@@ -325,7 +326,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 flexShrink: 0, zIndex: 99,
                 width: '100%', boxSizing: 'border-box'
             }}>
-                {['dashboard', 'settings', 'guide'].map((tabId) => (
+                {['dashboard', 'archive', 'settings', 'guide'].map((tabId) => (
                     <button
                         key={tabId}
                         onClick={() => setCurrentTab(tabId)}
@@ -336,7 +337,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '📊 학급 현황' : tabId === 'settings' ? '⚙️ 관리 설정' : '📖 앱 사용법'}
+                        {tabId === 'dashboard' ? '📊 미션 현황' : tabId === 'archive' ? '📂 글 보관함' : tabId === 'settings' ? '⚙️ 관리 설정' : '📖 앱 사용법'}
                     </button>
                 ))}
             </nav>
@@ -354,6 +355,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px' }}>로딩 중... ✨</div>}>
                     {currentTab === 'guide' ? (
                         <UsageGuide isMobile={isMobile} />
+                    ) : currentTab === 'archive' ? (
+                        <ArchiveManager activeClass={activeClass} isMobile={isMobile} />
                     ) : (!activeClass || hasZeroClasses) ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
                             <ClassManager

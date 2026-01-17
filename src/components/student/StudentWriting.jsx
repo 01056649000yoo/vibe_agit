@@ -36,6 +36,13 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 .maybeSingle();
 
             if (missionError) throw missionError;
+
+            if (missionData && missionData.is_archived) {
+                alert('보관된 미션입니다. 글을 수정하거나 제출할 수 없어요! 📂');
+                if (onBack) onBack();
+                return;
+            }
+
             setMission(missionData);
 
             // 2. 이미 작성 중인 글 확인 (postId가 있으면 id로 우선 조회, 없으면 missionId+studentId로 조회)
