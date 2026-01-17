@@ -15,36 +15,17 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
     }, [initialTab]);
 
     const handleNotificationClick = (item) => {
-        // 알림 내용(content)이나 타입에서 '다시 쓰기' 혹은 '수정' 키워드 확인
-        const isRewriteType = item.type === 'rewrite';
-        const hasRewriteKeyword = item.content?.includes('다시 쓰기') || item.content?.includes('수정');
-        const isRewriteRelated = isRewriteType || hasRewriteKeyword;
-
-        if (isRewriteRelated || item.reason?.includes('다시 쓰기')) {
-            // 다시 쓰기 페이지로 즉시 이동
-            onNavigate('writing', {
-                missionId: item.mission_id || item.student_posts?.mission_id,
-                postId: item.post_id || item.student_posts?.id,
-                mode: 'edit'
-            });
-            onClose();
-            return;
-        }
-
-        // 일반 반응/댓글 클릭 시 해당 글 보기 (친구 아지트 등의 상세 화면)
+        // 소셜 알림(리액션/댓글) 클릭 시 해당 글 보기
         if (item.type === 'reaction' || item.type === 'comment') {
             onNavigate('friends_hideout', { initialPostId: item.post_id || item.student_posts?.id });
             onClose();
         }
     };
 
-    // 탭별 필터링 데이터
+    // 탭별 필터링 데이터 (이제는 학생 간 소통만 표시)
     const filteredFeedbacks = feedbacks.filter(f => {
-        const isRewrite = f.type === 'rewrite' || f.content?.includes('다시 쓰기') || f.content?.includes('수정');
-        const isPoint = f.type === 'point';
-
-        if (activeTab === 1) return isRewrite || isPoint;
-        if (activeTab === 2) return f.type === 'reaction' || f.type === 'comment';
+        if (activeTab === 1) return f.type === 'reaction';
+        if (activeTab === 2) return f.type === 'comment';
         return true;
     });
 
@@ -84,8 +65,8 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                     <div style={{ display: 'flex', padding: '0 24px', gap: '10px', marginBottom: '10px' }}>
                         {[
                             { id: 0, label: '전체', emoji: '🌈' },
-                            { id: 1, label: '선생님 요청', emoji: '♻️' },
-                            { id: 2, label: '친구들 소식', emoji: '✨' }
+                            { id: 1, label: '친구들 반응', emoji: '❤️' },
+                            { id: 2, label: '친구들 댓글', emoji: '💬' }
                         ].map(tab => (
                             <button
                                 key={tab.id}
@@ -121,31 +102,10 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {filteredFeedbacks.map((f, idx) => {
-                                    const isRewrite = f.type === 'rewrite' || f.content?.includes('다시 쓰기') || f.content?.includes('수정');
-                                    const isPointPos = f.type === 'point' && f.amount > 0;
-                                    const isPointNeg = f.type === 'point' && f.amount < 0;
-
-                                    let bgColor = '#F9F9F9';
-                                    let borderColor = '#F1F1F1';
-                                    let hoverBg = '#F0F7FF';
-                                    let hoverBorder = '#D0E1F9';
-
-                                    if (isRewrite) {
-                                        bgColor = '#FFF8E1';
-                                        borderColor = '#FFE082';
-                                        hoverBg = '#FFF3D0';
-                                        hoverBorder = '#FFD54F';
-                                    } else if (isPointPos) {
-                                        bgColor = '#FFFDE7';
-                                        borderColor = '#FFF59D';
-                                        hoverBg = '#FFF9C4';
-                                        hoverBorder = '#FBC02D';
-                                    } else if (isPointNeg) {
-                                        bgColor = '#FFEBEE';
-                                        borderColor = '#FFCDD2';
-                                        hoverBg = '#FFDADE';
-                                        hoverBorder = '#EF9A9A';
-                                    }
+                                    const bgColor = '#F8F9FA';
+                                    const borderColor = '#F1F1F1';
+                                    const hoverBg = '#F0F7FF';
+                                    const hoverBorder = '#D0E1F9';
 
                                     return (
                                         <div
@@ -176,74 +136,32 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                                             f.reaction_type === 'laugh' ? '😂' :
                                                                 f.reaction_type === 'wow' ? '👏' :
                                                                     f.reaction_type === 'bulb' ? '💡' : '✨'
-                                                    ) : isRewrite ? '♻️' : f.type === 'point' ? (f.amount < 0 ? '⚠️' : '🎁') : '💬'}
+                                                    ) : '💬'}
                                                 </span>
-                                                <span style={{ fontWeight: 'bold', color: isRewrite ? '#E65100' : f.type === 'point' ? (f.amount < 0 ? '#D32F2F' : '#FBC02D') : '#5D4037', fontSize: '0.95rem' }}>
+                                                <span style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem' }}>
                                                     {f.type === 'reaction' ? `${f.students?.name} 친구가 리액션을 남겼어요!` :
                                                         f.type === 'comment' ? `${f.students?.name} 친구가 댓글을 남겼어요!` :
-                                                            f.type === 'point' ? (
-                                                                f.amount < 0
-                                                                    ? `⚠️ 포인트 승인이 취소되었어요.`
-                                                                    : `🎁 포인트 선물이 도착했어요!`
-                                                            ) :
-                                                                isRewrite ? '선생님의 다시 쓰기 요청이 있습니다!' : '새로운 알림이 도착했어요!'}
+                                                            '새로운 소식이 도착했어요!'}
                                                 </span>
                                             </div>
 
-                                            {f.type !== 'point' ? (
-                                                <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
-                                                    글 제목: "{f.student_posts?.title || f.title || '제목 없음'}"
-                                                </div>
-                                            ) : (
-                                                <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
-                                                    사유: {f.reason || '관리자 지급/회수'}
-                                                </div>
-                                            )}
+                                            <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
+                                                글 제목: "{f.student_posts?.title || f.title || '제목 없음'}"
+                                            </div>
 
                                             <div style={{
                                                 fontSize: '0.9rem',
-                                                color: isRewrite ? '#E65100' : '#795548',
-                                                background: isRewrite ? 'rgba(255,255,255,0.5)' : 'white',
+                                                color: '#795548',
+                                                background: 'white',
                                                 padding: '8px 12px', borderRadius: '12px', marginTop: '6px',
                                                 border: '1px solid rgba(0,0,0,0.05)',
                                                 whiteSpace: 'pre-wrap',
-                                                lineHeight: '1.6',
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center'
+                                                lineHeight: '1.6'
                                             }}>
-                                                <span>{f.content}</span>
-                                                {f.type === 'point' && (
-                                                    <span style={{
-                                                        fontWeight: '900',
-                                                        color: f.amount < 0 ? '#D32F2F' : '#FBC02D',
-                                                        marginLeft: '8px'
-                                                    }}>
-                                                        {f.amount > 0 ? `+${f.amount}` : f.amount}P
-                                                    </span>
-                                                )}
+                                                {f.content}
                                             </div>
 
-                                            {isRewrite && (
-                                                <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
-                                                    <Button
-                                                        size="sm"
-                                                        style={{
-                                                            background: '#FF9800',
-                                                            color: 'white',
-                                                            fontSize: '0.75rem',
-                                                            padding: '6px 14px',
-                                                            borderRadius: '12px',
-                                                            fontWeight: '900',
-                                                            boxShadow: '0 4px 0 #E65100'
-                                                        }}
-                                                    >
-                                                        다시 쓰러 가기 ✍️
-                                                    </Button>
-                                                </div>
-                                            )}
-
-                                            <div style={{ fontSize: '0.75rem', color: '#BDBDBD', marginTop: '8px', textAlign: 'right' }}>
+                                            <div style={{ fontSize: '0.75rem', color: '#BDBDBD', marginTop: '10px', textAlign: 'right' }}>
                                                 {new Date(f.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </div>
                                         </div>

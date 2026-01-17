@@ -20,6 +20,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [feedbacks, setFeedbacks] = useState([]);
     const [loadingFeedback, setLoadingFeedback] = useState(false);
     const [feedbackInitialTab, setFeedbackInitialTab] = useState(0); // [추가] 피드백 모달 초기 탭
+    const [teacherNotify, setTeacherNotify] = useState(null); // [신규] 교사 알림 배너 전용 (다시쓰기 + 포인트)
     const [returnedCount, setReturnedCount] = useState(0);
     const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 }); // [추가] 성장 통계
     const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', icon: '🌱', nextGoal: 1000 }); // [추가] 레벨 정보
@@ -73,38 +74,32 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     },
                     (payload) => {
                         const newLog = payload.new;
-
-                        // 1. 내 알림인지 즉시 확인 (UUID 비교)
                         if (newLog.student_id !== studentSession.id) return;
 
-                        console.log('⚡ 실시간 알림 포착!', newLog);
+                        console.log('⚡ 교사 알림/포인트 수신:', newLog);
 
-                        // 2. 즉시 포인트 정보 및 소식함 갱신 (네트워크 동기화)
+                        // 1. 포인트 정보 갱신
                         fetchMyPoints().catch(err => console.error('포인트 갱신 실패:', err));
-                        fetchFeedbacks().catch(err => console.error('소식함 갱신 실패:', err));
 
-                        // 3. 다시 쓰기 여부 판별
+                        // 2. 배너 메시지 결정
                         const isRewrite = newLog.reason?.includes('다시 쓰기') || newLog.reason?.includes('♻️');
+                        let bannerMsg = "";
 
-                        // 4. 소식함 리스트 즉시 강제 삽입 (사용자 체감 성능 향상을 위한 낙관적 업데이트)
-                        setFeedbacks(prev => {
-                            if (prev.some(f => f.id === newLog.id)) return prev;
-
-                            const formattedNotif = {
-                                ...newLog,
-                                id: newLog.id || `point-${Date.now()}-${Math.random()}`,
-                                type: isRewrite ? 'rewrite' : 'point',
-                                title: isRewrite ? '선생님의 보완 요청' : '포인트 소식 🌟',
-                                content: newLog.reason || (isRewrite ? '선생님의 자세한 피드백을 확인해주세요!' : '포인트가 변동되었습니다.'),
-                                created_at: newLog.created_at || new Date().toISOString()
-                            };
-                            return [formattedNotif, ...prev];
-                        });
-
-                        // 5. 활동 배지 활성화 및 상태 동기화
-                        setHasActivity(true);
                         if (isRewrite) {
-                            checkActivity().catch(err => console.error('활동 상태 갱신 실패:', err));
+                            bannerMsg = "♻️ 선생님의 다시 쓰기 요청이 있습니다.";
+                            checkActivity(); // 다시쓰기 카운트 갱신
+                        } else if (newLog.amount > 0) {
+                            bannerMsg = "🎉 내 글이 승인되고 포인트를 지급받았습니다!";
+                        } else if (newLog.amount < 0) {
+                            bannerMsg = "⚠️ 포인트 승인이 취소되고 회수되었습니다.";
+                        }
+
+                        if (bannerMsg) {
+                            setTeacherNotify({
+                                type: isRewrite ? 'rewrite' : 'point',
+                                message: bannerMsg,
+                                timestamp: Date.now()
+                            });
                         }
                     }
                 )
@@ -445,7 +440,9 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .eq('is_returned', true);
 
             setReturnedCount(returnedCountVal || 0);
-            setHasActivity((reactionCount || 0) + (commentCount || 0) + (returnedCountVal || 0) > 0);
+
+            // [변경] 소식함 배지는 오직 '친구들의 반응/댓글'이 있을 때만 띄움
+            setHasActivity((reactionCount || 0) + (commentCount || 0) > 0);
         } catch (err) {
             console.error('활동 확인 실패:', err.message);
         }
@@ -492,64 +489,28 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             }
             const postIds = myPosts.map(p => p.id);
 
-            // 1. 다시쓰기 요청 가져오기
-            const returnedItems = myPosts
-                .filter(p => p.is_returned === true)
-                .map(p => ({
-                    id: `return-${p.id}`,
-                    post_id: p.id,
-                    mission_id: p.mission_id,
-                    type: 'rewrite',
-                    created_at: p.created_at,
-                    student_posts: { title: p.title, id: p.id },
-                    content: p.ai_feedback || '선생님의 자세한 피드백을 확인하고 글을 다시 써주세요!'
-                }));
+            // [변경] 이제 이 모달은 '학생 간 소통(댓글, 반응)'만 담당합니다.
 
-            // 2. 반응 가져오기
+            // 1. 반응 가져오기
             const { data: reactions } = await supabase
                 .from('post_reactions')
                 .select('*, students:student_id(name), student_posts(title, id)')
                 .in('post_id', postIds)
                 .neq('student_id', studentSession.id);
 
-            // 3. 댓글 가져오기
+            // 2. 댓글 가져오기
             const { data: comments } = await supabase
                 .from('post_comments')
                 .select('*, students:student_id(name), student_posts(title, id)')
                 .in('post_id', postIds)
                 .neq('student_id', studentSession.id);
 
-            const { data: pointLogs, error: pointError } = await supabase
-                .from('point_logs')
-                .select('*, student_posts(title)')
-                .eq('student_id', studentSession.id)
-                .order('created_at', { ascending: false })
-                .limit(20);
-
-            if (pointError) {
-                console.warn('[Dashboard] 포인트 로그 로드 실패 (FK 제약조건 확인 필요):', pointError.message);
-            }
-
             const combined = [
-                ...returnedItems,
                 ...(reactions || []).map(r => ({ ...r, type: 'reaction' })),
-                ...(comments || []).map(c => ({ ...c, type: 'comment' })),
-                ...(pointLogs || [])
-                    .filter(log => {
-                        const reason = log.reason || '';
-                        return !reason.includes('다시 쓰기') && !reason.includes('♻️');
-                    })
-                    .map(log => ({
-                        ...log,
-                        id: log.id || `point-${Date.now()}-${Math.random()}`,
-                        type: 'point',
-                        created_at: log.created_at,
-                        title: '포인트 소식 🌟',
-                        content: log.reason || '포인트가 변동되었습니다.'
-                    }))
+                ...(comments || []).map(c => ({ ...c, type: 'comment' }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            console.log('[Dashboard] 피드백 데이터 취합 완료:', combined);
+            console.log('[Dashboard] 학생 소통 데이터 취합 완료:', combined);
             setFeedbacks(combined);
         } catch (err) {
             console.error('피드백 로드 실패:', err.message);
@@ -651,9 +612,9 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     <p style={{ color: '#8D6E63', fontSize: '1rem' }}>벌써 이만큼이나 성장했어! 🚀</p>
                 </div>
 
-                {/* 선생님의 다시 쓰기 요청 배너 (있을 때만 표시) */}
+                {/* [통합] 선생님의 알림 배너 (다시쓰기 + 포인트) */}
                 <AnimatePresence>
-                    {returnedCount > 0 && (
+                    {(returnedCount > 0 || teacherNotify) && (
                         <motion.div
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -673,20 +634,32 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 boxShadow: '0 8px 16px rgba(255, 183, 77, 0.2)',
                                 textAlign: 'left'
                             }}
-                            onClick={handleDirectRewriteGo}
+                            onClick={() => {
+                                // 다시쓰기 요청이 있으면 해당 글로 이동, 아니면 피드백/포인트 사유 확인
+                                if (returnedCount > 0) handleDirectRewriteGo();
+                                else setTeacherNotify(null); // 포인트 알림은 확인 시 닫기
+                            }}
                         >
-                            <span style={{ fontSize: '2.5rem' }}>♻️</span>
+                            <span style={{ fontSize: '2.5rem' }}>
+                                {teacherNotify?.type === 'point' ? '🎁' : '♻️'}
+                            </span>
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: '1.05rem', fontWeight: '900', color: '#E65100', marginBottom: '2px' }}>선생님의 다시 쓰기 요청이 있어요!</div>
-                                <div style={{ fontSize: '0.85rem', color: '#F57C00', fontWeight: 'bold' }}>지금 바로 확인하고 완벽한 글을 완성해봐요! ✨</div>
+                                <div style={{ fontSize: '1.05rem', fontWeight: '900', color: '#E65100', marginBottom: '2px' }}>
+                                    {teacherNotify?.message || "♻️ 선생님의 다시 쓰기 요청이 있습니다."}
+                                </div>
+                                <div style={{ fontSize: '0.85rem', color: '#F57C00', fontWeight: 'bold' }}>
+                                    {teacherNotify?.type === 'point' ? "포인트 내역은 상단 지갑에서 확인할 수 있어요! ✨" : "지금 바로 확인하고 완벽한 글을 완성해봐요! ✨"}
+                                </div>
                             </div>
-                            <div style={{
-                                width: '36px', height: '36px', background: '#FFB74D',
-                                borderRadius: '50%', display: 'flex', justifyContent: 'center',
-                                alignItems: 'center', color: 'white', fontWeight: 'bold'
-                            }}>
-                                {returnedCount}
-                            </div>
+                            {returnedCount > 0 && (
+                                <div style={{
+                                    width: '36px', height: '36px', background: '#FFB74D',
+                                    borderRadius: '50%', display: 'flex', justifyContent: 'center',
+                                    alignItems: 'center', color: 'white', fontWeight: 'bold'
+                                }}>
+                                    {returnedCount}
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
