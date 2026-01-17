@@ -60,8 +60,58 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             loadInitialData();
             checkActivity();
             fetchStats();
+
+            // [긴급 수정] 실시간 알림 구독 - 포인트 및 다시 쓰기 요청 즉시 반영 🔔
+            const notificationChannel = supabase
+                .channel(`student_notif_${studentSession.id}`)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'point_logs',
+                        filter: `student_id=eq.${studentSession.id}`
+                    },
+                    (payload) => {
+                        console.log('⚡ 실시간 알림 수신:', payload.new);
+
+                        // 1. 포인트 정보 및 활동 상태 즉시 동기화
+                        fetchMyPoints();
+
+                        // 2. 알림 리스트에 즉시 추가 (새로고침 없이 반영)
+                        const log = payload.new;
+                        const isRewrite = log.reason?.includes('다시 쓰기');
+
+                        if (isRewrite) {
+                            // 다시 쓰기 요청인 경우 배너(returnedCount) 업데이트를 위해 전체 체크
+                            checkActivity();
+                            fetchFeedbacks();
+                        } else {
+                            // 일반 포인트 지급/회수 알림
+                            const newPointNotif = {
+                                ...log,
+                                type: 'point',
+                                content: log.reason,
+                                title: '포인트 선물', // 기본값 설정
+                                created_at: log.created_at
+                            };
+
+                            setFeedbacks(prev => {
+                                // 중복 방지 체크 (이미 존재하는 ID면 무시)
+                                if (prev.some(f => f.id === log.id)) return prev;
+                                return [newPointNotif, ...prev];
+                            });
+                            setHasActivity(true);
+                        }
+                    }
+                )
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(notificationChannel);
+            };
         }
-    }, [studentSession]);
+    }, [studentSession?.id]);
 
     const loadInitialData = async () => {
         await fetchMyPoints();
@@ -462,7 +512,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
             const { data: pointLogs, error: pointError } = await supabase
                 .from('point_logs')
-                .select('*')
+                .select('*, student_posts(title)')
                 .eq('student_id', studentSession.id)
                 .order('created_at', { ascending: false })
                 .limit(20);
@@ -476,12 +526,12 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 ...(reactions || []).map(r => ({ ...r, type: 'reaction' })),
                 ...(comments || []).map(c => ({ ...c, type: 'comment' })),
                 ...(pointLogs || [])
-                    .filter(log => log.reason && !log.reason.includes('다시 쓰기')) // 다시 쓰기는 위에서 별도로 처리함
+                    .filter(log => log.reason && !log.reason.includes('다시 쓰기'))
                     .map(log => ({
                         ...log,
                         type: 'point',
                         content: log.reason,
-                        title: log.student_posts?.title
+                        title: log.student_posts?.title || '포인트 소식'
                     }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 

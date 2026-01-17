@@ -570,6 +570,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
             // 4. 회수 내역 저장 (음수 금액으로 저장)
             await supabase.from('point_logs').insert({
                 student_id: post.student_id,
+                post_id: post.id,
+                mission_id: post.mission_id,
                 amount: -amountToRecover,
                 reason: `승인 취소로 인한 포인트 회수`
             });
@@ -616,6 +618,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                         await supabase.from('students').update({ total_points: Math.max(0, (st?.total_points || 0) - amount) }).eq('id', post.student_id);
                         await supabase.from('point_logs').insert({
                             student_id: post.student_id,
+                            post_id: post.id,
+                            mission_id: post.mission_id,
                             amount: -amount,
                             reason: `[일괄 회수] 승인 취소: ${selectedMission.title}`
                         });
