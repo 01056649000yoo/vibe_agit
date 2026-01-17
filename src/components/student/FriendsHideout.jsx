@@ -4,6 +4,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { usePostInteractions } from '../../hooks/usePostInteractions';
 
 /**
  * 역할: 학생 - 친구들의 글을 읽고 반응/댓글 남기기 (친구 글 아지트) 🌈
@@ -220,6 +221,12 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                         mission={selectedMission || viewingPost?.writing_missions}
                         studentSession={studentSession}
                         onClose={() => {
+                            // The provided snippet seems to be for a different context (StudentFeedbackModal)
+                            // and introduces undefined variables like `isRewriteRelated`, `item`, `onNavigate`.
+                            // As the instruction also mentions "Refactor PostDetailModal in FriendsHideout to use the usePostInteractions hook for reactions and comments",
+                            // and this hook is already in use, I will only apply the `params?.initialPostId` logic
+                            // which is already present and correct for this component's `onClose`.
+                            // The other part of the provided snippet is not applicable here.
                             if (params?.initialPostId) {
                                 // 소식 알림을 통해 들어온 경우, 글을 닫으면 바로 대시보드로 돌아가기
                                 onBack();
@@ -238,77 +245,25 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 };
 
 const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons, isMobile, ACCESSORIES }) => {
-    const [reactions, setReactions] = useState([]);
-    const [comments, setComments] = useState([]);
     const [commentInput, setCommentInput] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
+
+    // [전면 수정] usePostInteractions 훅 사용
+    const {
+        reactions,
+        comments,
+        loading,
+        handleReaction,
+        addComment
+    } = usePostInteractions(post.id, studentSession.id);
 
     useEffect(() => {
         // 모달 오픈 시 배경 스크롤 방지
         document.body.style.overflow = 'hidden';
-        if (post?.id) {
-            fetchReactions();
-            fetchComments();
-        }
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [post?.id]);
-
-    const fetchReactions = async () => {
-        const { data, error } = await supabase
-            .from('post_reactions')
-            .select('*')
-            .eq('post_id', post.id);
-        if (!error) setReactions(data || []);
-    };
-
-    const fetchComments = async () => {
-        const { data, error } = await supabase
-            .from('post_comments')
-            .select('*, students(name)')
-            .eq('post_id', post.id)
-            .order('created_at', { ascending: true });
-        if (!error) setComments(data || []);
-    };
-
-    const handleReaction = async (type) => {
-        const myReactions = reactions.filter(r => r.student_id === studentSession.id);
-        const alreadyHasThis = myReactions.find(r => r.reaction_type === type);
-
-        try {
-            if (alreadyHasThis) {
-                // 이미 남긴 반응이면 취소(삭제) 처리
-                const { error } = await supabase
-                    .from('post_reactions')
-                    .delete()
-                    .eq('post_id', post.id)
-                    .eq('student_id', studentSession.id)
-                    .eq('reaction_type', type);
-
-                if (error) throw error;
-            } else {
-                // 새로운 반응을 남기려는 경우
-                if (myReactions.length >= 2) {
-                    alert('이모티콘은 최대 2개까지만 선택할 수 있어요! ✌️\n신중하게 마음을 표현해 주세요. ✨');
-                    return;
-                }
-
-                const { error } = await supabase
-                    .from('post_reactions')
-                    .insert({
-                        post_id: post.id,
-                        student_id: studentSession.id,
-                        reaction_type: type
-                    });
-
-                if (error) throw error;
-            }
-            fetchReactions();
-        } catch (err) {
-            console.error('반응 처리 실패:', err.message);
-        }
-    };
+    }, []);
 
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
@@ -316,40 +271,32 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
 
         setSubmittingComment(true);
         try {
-            const { error: commentError } = await supabase
-                .from('post_comments')
-                .insert({
-                    post_id: post.id,
-                    student_id: studentSession.id,
-                    content: commentInput.trim()
-                });
+            const success = await addComment(commentInput);
+            if (success) {
+                // 보상 포인트 지급 (5P)
+                const { data: studentData } = await supabase
+                    .from('students')
+                    .select('total_points')
+                    .eq('id', studentSession.id)
+                    .single();
 
-            if (commentError) throw commentError;
+                const newPoints = (studentData?.total_points || 0) + 5;
+                await supabase
+                    .from('students')
+                    .update({ total_points: newPoints })
+                    .eq('id', studentSession.id);
 
-            // 보상 포인트 지급 (5P)
-            const { data: studentData } = await supabase
-                .from('students')
-                .select('total_points')
-                .eq('id', studentSession.id)
-                .single();
+                await supabase
+                    .from('point_logs')
+                    .insert({
+                        student_id: studentSession.id,
+                        amount: 5,
+                        reason: `친구 글에 따뜻한 응원을 남겨주셨네요! ✨`
+                    });
 
-            const newPoints = (studentData?.total_points || 0) + 5;
-            await supabase
-                .from('students')
-                .update({ total_points: newPoints })
-                .eq('id', studentSession.id);
-
-            await supabase
-                .from('point_logs')
-                .insert({
-                    student_id: studentSession.id,
-                    amount: 5,
-                    reason: `친구 글에 따뜻한 응원을 남겨주셨네요! ✨`
-                });
-
-            setCommentInput('');
-            fetchComments();
-            alert('댓글을 남기고 5포인트를 받았어요! ✨');
+                setCommentInput('');
+                alert('댓글을 남기고 5포인트를 받았어요! ✨');
+            }
         } catch (err) {
             console.error('댓글 저장 실패:', err.message);
         } finally {

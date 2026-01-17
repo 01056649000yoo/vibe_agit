@@ -20,7 +20,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
         const hasRewriteKeyword = item.content?.includes('다시 쓰기') || item.content?.includes('수정');
         const isRewriteRelated = isRewriteType || hasRewriteKeyword;
 
-        if (isRewriteRelated) {
+        if (isRewriteRelated || item.reason?.includes('다시 쓰기')) {
             // 다시 쓰기 페이지로 즉시 이동
             onNavigate('writing', {
                 missionId: item.mission_id || item.student_posts?.mission_id,

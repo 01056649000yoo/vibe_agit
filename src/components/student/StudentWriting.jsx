@@ -52,12 +52,15 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 const { data: postData, error: postError } = await query.maybeSingle();
 
                 if (!postError && postData) {
+                    console.log(`[StudentWriting] 기존 글 로드 성공 (ID: ${postData.id}, Title: ${postData.title})`);
                     setTitle(postData.title || '');
                     setContent(postData.content || '');
                     setIsReturned(postData.is_returned || false);
                     setIsConfirmed(postData.is_confirmed || false);
                     setIsSubmitted(postData.is_submitted || false);
                     setAiFeedback(postData.ai_feedback || '');
+                } else if (params?.postId) {
+                    console.warn(`[StudentWriting] postId(${params.postId})에 해당하는 글을 찾을 수 없습니다.`);
                 }
             }
         } catch (err) {
