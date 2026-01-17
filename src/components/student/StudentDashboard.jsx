@@ -61,54 +61,53 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             checkActivity();
             fetchStats();
 
-            // [긴급 안정화] 실시간 알림 구독 - 필터 제거 후 클라이언트 측 검증으로 변경 ⚡🔔
+            // [알림 시스템 단일화] 필터 없이 모든 로그를 수신하여 클라이언트에서 정밀 필터링 ⚡🔔
             const notificationChannel = supabase
-                .channel(`global_student_logs_${studentSession.id}`)
+                .channel(`student_realtime_v3_${studentSession.id}`)
                 .on(
                     'postgres_changes',
                     {
                         event: 'INSERT',
                         schema: 'public',
                         table: 'point_logs'
-                        // filter: `student_id=eq.${studentSession.id}` // 필터 제거 (안정성 확보)
                     },
                     (payload) => {
-                        const log = payload.new;
+                        const newLog = payload.new;
 
-                        // 내 정보만 필터링
-                        if (log.student_id !== studentSession.id) return;
+                        // 1. 내 알림인지 즉시 확인 (UUID 비교)
+                        if (newLog.student_id !== studentSession.id) return;
 
-                        console.log('⚡ 내 포인트 알림 수신:', log);
-                        const isRewrite = log.reason?.includes('다시 쓰기') || log.reason?.includes('♻️');
+                        console.log('⚡ 실시간 알림 포착!', newLog);
 
-                        // 1. 포인트 및 활동 상태 최우선 갱신
-                        fetchMyPoints().catch(err => console.error('포인트 동기화 실패:', err));
+                        // 2. 즉시 포인트 정보 갱신 (화면 상단 숫자)
+                        fetchMyPoints().catch(err => console.error('포인트 갱신 실패:', err));
 
-                        if (isRewrite) {
-                            checkActivity().catch(err => console.error('활동 카운트 동기화 실패:', err));
-                            fetchFeedbacks(); // 다시쓰기는 전체 조회가 정확함
-                        }
+                        // 3. 다시 쓰기 여부 판별
+                        const isRewrite = newLog.reason?.includes('다시 쓰기') || newLog.reason?.includes('♻️');
 
-                        // 2. 알림 리스트 즉시 강제 업데이트
+                        // 4. 소식함 리스트 즉시 강제 삽입 (새로고침 없이)
                         setFeedbacks(prev => {
-                            if (prev.some(f => f.id === log.id)) return prev;
+                            // 중복 방지
+                            if (prev.some(f => f.id === newLog.id)) return prev;
 
-                            const newNotif = {
-                                ...log,
-                                type: isRewrite ? 'rewrite' : 'point',
-                                content: log.reason,
+                            const formattedNotif = {
+                                ...newLog,
+                                type: isRewrite ? 'rewrite' : 'point', // 타입 확실히 지정
+                                content: newLog.reason,
                                 title: isRewrite ? '선생님의 보완 요청' : '포인트 선물 🎁',
-                                created_at: log.created_at || new Date().toISOString()
+                                created_at: newLog.created_at || new Date().toISOString()
                             };
-
-                            return [newNotif, ...prev];
+                            return [formattedNotif, ...prev];
                         });
+
+                        // 5. 활동 배지 활성화 및 상태 동기화
                         setHasActivity(true);
+                        if (isRewrite) {
+                            checkActivity().catch(err => console.error('활동 상태 갱신 실패:', err));
+                        }
                     }
                 )
-                .subscribe((status) => {
-                    console.log(`[Realtime] Subscription status for student ${studentSession.id}: ${status}`);
-                });
+                .subscribe();
 
             return () => {
                 supabase.removeChannel(notificationChannel);
