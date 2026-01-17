@@ -400,7 +400,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .select('id, mission_id')
                 .eq('student_id', studentSession.id)
                 .eq('is_returned', true)
-                .order('updated_at', { ascending: false })
+                .order('created_at', { ascending: false })
                 .limit(1)
                 .single();
 
@@ -424,7 +424,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         try {
             const { data: myPosts } = await supabase
                 .from('student_posts')
-                .select('id, title, is_returned, ai_feedback, updated_at, mission_id')
+                .select('id, title, is_returned, ai_feedback, created_at, mission_id')
                 .eq('student_id', studentSession.id);
 
             if (!myPosts || myPosts.length === 0) {
@@ -441,7 +441,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     post_id: p.id,
                     mission_id: p.mission_id,
                     type: 'rewrite',
-                    created_at: p.updated_at,
+                    created_at: p.created_at,
                     student_posts: { title: p.title, id: p.id },
                     content: p.ai_feedback || '선생님의 자세한 피드백을 확인하고 글을 다시 써주세요!'
                 }));
@@ -482,6 +482,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+            console.log('[Dashboard] 피드백 데이터 취합 완료:', combined);
             setFeedbacks(combined);
         } catch (err) {
             console.error('피드백 로드 실패:', err.message);

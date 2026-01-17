@@ -50,12 +50,15 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
         try {
             const { data, error } = await supabase
                 .from('student_posts')
-                .select('*, students(name, pet_data), writing_missions(allow_comments)')
+                .select('*, students:student_id(name, pet_data), writing_missions(allow_comments)')
                 .eq('id', postId)
                 .single();
 
             if (error) throw error;
-            if (data) setViewingPost(data);
+            if (data) {
+                console.log('[FriendsHideout] 초기 포스트 로드 성공:', data);
+                setViewingPost(data);
+            }
         } catch (err) {
             console.error('초기 포스트 로드 실패:', err.message);
         }
@@ -86,12 +89,11 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
     const fetchPosts = async (missionId) => {
         setLoading(true);
         try {
-            // 본인 글을 제외한 친구들의 글만 가져오기 (제출 완료된 글만)
             const { data, error } = await supabase
                 .from('student_posts')
                 .select(`
                     *,
-                    students!inner(name, class_id, pet_data),
+                    students:student_id!inner(name, class_id, pet_data),
                     writing_missions(allow_comments)
                 `)
                 .eq('mission_id', missionId)
@@ -100,6 +102,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
+            console.log(`[FriendsHideout] 미션(${missionId}) 포스트 로드 성공:`, data);
             setPosts(data || []);
         } catch (err) {
             console.error('친구 글 로드 실패:', err.message);
