@@ -24,6 +24,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const [tempFeedback, setTempFeedback] = useState(''); // 편집 중인 피드백
     const [postReactions, setPostReactions] = useState([]); // [추가] 상세보기 글의 반응들
     const [postComments, setPostComments] = useState([]); // [추가] 상세보기 글의 댓글들
+    const [totalStudentCount, setTotalStudentCount] = useState(0); // [추가] 학급 총 학생 수
+    const [archiveModal, setArchiveModal] = useState({ isOpen: false, mission: null, hasIncomplete: false }); // [추가] 보관용 커스텀 모달 상태
     const textareaRef = useRef(null);
 
     // [추가] 피드백 입력창 자동 높이 조절 (스티키 레이아웃에 맞게 높이는 Flex로 제어하도록 변경 가능성 고려하여 auto-height 유지)
@@ -105,6 +107,14 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                     setSubmissionCounts(stats);
                 }
             }
+
+            // 3. 학급 총 학생 수 가져오기 (보관 체크용)
+            const { count: studentCount, error: stError } = await supabase
+                .from('students')
+                .select('*', { count: 'exact', head: true })
+                .eq('class_id', activeClass.id);
+
+            if (!stError) setTotalStudentCount(studentCount || 0);
         } catch (err) {
             console.error('글쓰기 미션 로드 실패:', err.message);
         } finally {
@@ -459,7 +469,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                     post_id: post.id,
                     mission_id: post.mission_id,
                     amount: totalPointsToGive,
-                    reason: `글쓰기 승인 보상: ${selectedMission.title}${isBonusAchieved ? ' (보너스 달성! 🔥)' : ''}`
+                    reason: `글쓰기 미션 승인 보상 ${isBonusAchieved ? '(보너스 포함! 🔥)' : ''}`
                 });
 
             if (logError) throw logError;
@@ -561,7 +571,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
             await supabase.from('point_logs').insert({
                 student_id: post.student_id,
                 amount: -amountToRecover,
-                reason: `[회수] 글쓰기 승인 취소: ${selectedMission.title}`
+                reason: `승인 취소로 인한 포인트 회수`
             });
 
             alert(`✅ ${amountToRecover}포인트 회수 및 승인 취소가 완료되었습니다.`);
@@ -620,6 +630,26 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
             alert('일괄 회수 중 오류가 발생했습니다.');
         } finally {
             setLoadingPosts(false);
+        }
+    };
+
+    // [추가] 실제 보관 처리 함수
+    const handleFinalArchive = async () => {
+        if (!archiveModal.mission) return;
+        try {
+            const { error } = await supabase
+                .from('writing_missions')
+                .update({
+                    is_archived: true,
+                    archived_at: new Date().toISOString()
+                })
+                .eq('id', archiveModal.mission.id);
+
+            if (error) throw error;
+            setArchiveModal({ isOpen: false, mission: null, hasIncomplete: false });
+            fetchMissions();
+        } catch (err) {
+            alert('보관 처리 중 오류가 발생했습니다: ' + err.message);
         }
     };
 
@@ -820,16 +850,15 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <span style={{ padding: '4px 10px', background: '#E3F2FD', color: '#1976D2', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900' }}>{mission.genre}</span>
                             <div style={{ display: 'flex', gap: '4px' }}>
-                                <button onClick={async (e) => {
+                                <button onClick={(e) => {
                                     e.stopPropagation();
-                                    if (confirm('보관하면 학생들에게 보이지 않게 됩니다. 보관할까요? 📂')) {
-                                        const { error } = await supabase
-                                            .from('writing_missions')
-                                            .update({ is_archived: true, archived_at: new Date().toISOString() })
-                                            .eq('id', mission.id);
-                                        if (!error) fetchMissions();
-                                        else alert('보관 실패: ' + error.message);
-                                    }
+                                    const completedCount = submissionCounts[mission.id] || 0;
+                                    const hasIncomplete = completedCount < totalStudentCount;
+                                    setArchiveModal({
+                                        isOpen: true,
+                                        mission: mission,
+                                        hasIncomplete: hasIncomplete
+                                    });
                                 }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3498DB', fontSize: '1.2rem', padding: '8px' }}>
                                     📂
                                 </button>
@@ -1286,6 +1315,58 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                         }}>
                             글자 수: {selectedPost.char_count}자 | 제출 시간: {new Date(selectedPost.created_at).toLocaleString()}
                         </footer>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            {/* 보관 확인 커스텀 모달 */}
+            <AnimatePresence>
+                {archiveModal.isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                            zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            padding: '20px'
+                        }}
+                        onClick={() => setArchiveModal({ isOpen: false, mission: null, hasIncomplete: false })}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                            animate={{ scale: 1, y: 0, opacity: 1 }}
+                            exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                            style={{
+                                background: 'white', borderRadius: '30px', width: '100%', maxWidth: '420px',
+                                padding: '32px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
+                            }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div style={{ fontSize: '4rem', marginBottom: '20px' }}>
+                                {archiveModal.hasIncomplete ? '⚠️' : '📂'}
+                            </div>
+                            <h3 style={{ margin: '0 0 12px 0', fontSize: '1.4rem', color: '#2C3E50', fontWeight: '900' }}>
+                                {archiveModal.hasIncomplete ? '아직 미완료 학생이 있어요!' : '미션을 보관할까요?'}
+                            </h3>
+                            <p style={{ margin: '0 0 24px 0', color: '#7F8C8D', lineHeight: '1.6', fontSize: '0.95rem' }}>
+                                {archiveModal.hasIncomplete
+                                    ? '아직 글을 제출하지 않은 학생이 있습니다. 그래도 보관하시겠습니까? (제출된 글만 보관함으로 이동하고, 학생들에게는 더 이상 보이지 않게 됩니다.)'
+                                    : '보관하면 학생들의 대시보드에서 미션이 사라지고 보관함으로 이동합니다.'}
+                            </p>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <Button
+                                    onClick={() => setArchiveModal({ isOpen: false, mission: null, hasIncomplete: false })}
+                                    style={{ flex: 1, background: '#F1F3F5', color: '#495057', border: 'none', fontWeight: 'bold' }}>
+                                    취소
+                                </Button>
+                                <Button
+                                    onClick={handleFinalArchive}
+                                    style={{ flex: 1, background: archiveModal.hasIncomplete ? '#FF5252' : '#3498DB', color: 'white', border: 'none', fontWeight: 'bold' }}>
+                                    {archiveModal.hasIncomplete ? '네, 보관합니다' : '네, 보관할게요'} 📂
+                                </Button>
+                            </div>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>

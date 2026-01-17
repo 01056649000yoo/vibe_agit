@@ -183,8 +183,8 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                                         f.type === 'comment' ? `${f.students?.name} 친구가 댓글을 남겼어요!` :
                                                             f.type === 'point' ? (
                                                                 f.amount < 0
-                                                                    ? `⚠️ 포인트 승인이 취소되었어요. (${f.amount}점)`
-                                                                    : `🎁 포인트 선물이 도착했어요! (+${f.amount}점)`
+                                                                    ? `⚠️ 포인트 승인이 취소되었어요.`
+                                                                    : `🎁 포인트 선물이 도착했어요!`
                                                             ) :
                                                                 isRewrite ? '선생님의 다시 쓰기 요청이 있습니다!' : '새로운 알림이 도착했어요!'}
                                                 </span>
@@ -203,9 +203,21 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                                 padding: '8px 12px', borderRadius: '12px', marginTop: '6px',
                                                 border: '1px solid rgba(0,0,0,0.05)',
                                                 whiteSpace: 'pre-wrap',
-                                                lineHeight: '1.6'
+                                                lineHeight: '1.6',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
                                             }}>
-                                                {f.content}
+                                                <span>{f.content}</span>
+                                                {f.type === 'point' && (
+                                                    <span style={{
+                                                        fontWeight: '900',
+                                                        color: f.amount < 0 ? '#D32F2F' : '#FBC02D',
+                                                        marginLeft: '8px'
+                                                    }}>
+                                                        {f.amount > 0 ? `+${f.amount}` : f.amount}P
+                                                    </span>
+                                                )}
                                             </div>
 
                                             {isRewrite && (

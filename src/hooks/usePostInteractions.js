@@ -50,23 +50,30 @@ export const usePostInteractions = (postId, studentId) => {
     const handleReaction = async (type) => {
         if (!studentId || !postId) return;
 
-        const myReactions = reactions.filter(r => r.student_id === studentId);
-        const existing = myReactions.find(r => r.reaction_type === type);
+        // 현재 학생의 기존 반응이 있는지 확인
+        const myReaction = reactions.find(r => r.student_id === studentId);
 
         try {
-            if (existing) {
-                const { error } = await supabase
-                    .from('post_reactions')
-                    .delete()
-                    .eq('post_id', postId)
-                    .eq('student_id', studentId)
-                    .eq('reaction_type', type);
-                if (error) throw error;
-            } else {
-                if (myReactions.length >= 2) {
-                    alert('이모티콘은 최대 2개까지만 선택할 수 있어요! ✌️');
-                    return;
+            if (myReaction) {
+                if (myReaction.reaction_type === type) {
+                    // 동일한 반응을 클릭하면 삭제 (토글 오프)
+                    const { error } = await supabase
+                        .from('post_reactions')
+                        .delete()
+                        .eq('post_id', postId)
+                        .eq('student_id', studentId);
+                    if (error) throw error;
+                } else {
+                    // 다른 반응을 클릭하면 기존 반응을 새로운 것으로 교체 (1개 유지)
+                    const { error } = await supabase
+                        .from('post_reactions')
+                        .update({ reaction_type: type })
+                        .eq('post_id', postId)
+                        .eq('student_id', studentId);
+                    if (error) throw error;
                 }
+            } else {
+                // 기존 반응이 없으면 새로 추가
                 const { error } = await supabase
                     .from('post_reactions')
                     .insert({
