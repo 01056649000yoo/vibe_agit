@@ -429,19 +429,21 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             if (!myPosts || myPosts.length === 0) return;
             const postIds = myPosts.map(p => p.id);
 
-            // 2. 친구들의 반응(좋아요) 확인
+            // 1. 친구들의 반응(좋아요) 확인
             const { count: reactionCount } = await supabase
                 .from('post_reactions')
                 .select('*', { count: 'exact', head: true })
                 .in('post_id', postIds)
-                .neq('student_id', studentSession.id);
+                .neq('student_id', studentSession.id)
+                .gt('created_at', localStorage.getItem('lastFeedbackCheck') || '1970-01-01T00:00:00.000Z');
 
-            // 3. 친구들의 댓글 확인
+            // 2. 친구들의 댓글 확인
             const { count: commentCount } = await supabase
                 .from('post_comments')
                 .select('*', { count: 'exact', head: true })
                 .in('post_id', postIds)
-                .neq('student_id', studentSession.id);
+                .neq('student_id', studentSession.id)
+                .gt('created_at', localStorage.getItem('lastFeedbackCheck') || '1970-01-01T00:00:00.000Z');
 
             // 3. 선생님의 다시 쓰기 요청 확인
             const { count: returnedCountVal } = await supabase
@@ -457,6 +459,14 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         } catch (err) {
             console.error('활동 확인 실패:', err.message);
         }
+    };
+
+    // [신규] 알림 내역 초기화 (모달에서 '비우기' 클릭 시)
+    const handleClearFeedback = () => {
+        const now = new Date().toISOString();
+        localStorage.setItem('lastFeedbackCheck', now);
+        setFeedbacks([]);
+        setHasActivity(false);
     };
 
     const handleDirectRewriteGo = async () => {
@@ -521,8 +531,12 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 ...(comments || []).map(c => ({ ...c, type: 'comment' }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            console.log('[Dashboard] 학생 소통 데이터 취합 완료:', combined);
-            setFeedbacks(combined);
+            // [필터링] 사용자가 마지막으로 확인한 시간 이후의 것만 보여줌
+            const lastCheck = localStorage.getItem('lastFeedbackCheck') || '1970-01-01T00:00:00.000Z';
+            const newFeedbacks = combined.filter(f => new Date(f.created_at) > new Date(lastCheck));
+
+            console.log('[Dashboard] 학생 소통 데이터 취합(필터됨):', newFeedbacks);
+            setFeedbacks(newFeedbacks);
         } catch (err) {
             console.error('피드백 로드 실패:', err.message);
         } finally {
@@ -553,26 +567,42 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                         }}>
                             🎒 {studentSession.className || '우리 반'} 친구
                         </div>
-                        {hasActivity && (
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => openFeedback(0)}
-                                style={{
+
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => openFeedback(0)}
+                            style={{
+                                background: 'white',
+                                color: '#5D4037',
+                                border: '2px solid #FFECB3',
+                                padding: '6px 12px',
+                                borderRadius: '20px',
+                                fontSize: '0.8rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                position: 'relative'
+                            }}
+                        >
+                            🔔 내 글 소식
+                            {hasActivity && (
+                                <span style={{
+                                    width: '8px',
+                                    height: '8px',
                                     background: '#FF5252',
-                                    color: 'white',
-                                    border: 'none',
-                                    padding: '6px 12px',
-                                    borderRadius: '20px',
-                                    fontSize: '0.8rem',
-                                    fontWeight: 'bold',
-                                    cursor: 'pointer',
-                                    boxShadow: '0 4px 10px rgba(255, 82, 82, 0.3)'
-                                }}
-                            >
-                                🔔 내 글 소식
-                            </motion.button>
-                        )}
+                                    borderRadius: '50%',
+                                    position: 'absolute',
+                                    top: '0px',
+                                    right: '0px',
+                                    border: '2px solid white'
+                                }}></span>
+                            )}
+                        </motion.button>
+
                     </div>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <motion.button
@@ -1308,6 +1338,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     loading={loadingFeedback}
                     onNavigate={onNavigate}
                     initialTab={feedbackInitialTab}
+                    onClear={handleClearFeedback}
                 />
                 {/* 액세서리 상점 모달 */}
                 {

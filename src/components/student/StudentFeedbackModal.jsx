@@ -6,7 +6,7 @@ import Button from '../common/Button';
  * 역할: 학생 - 내 글 소식(알림) 모달 🔔
  * 선생님의 피드백, 친구들의 반응/댓글을 한눈에 확인하고 바로 이동합니다.
  */
-const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate, initialTab = 0 }) => {
+const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate, initialTab = 0, onClear }) => {
     const [activeTab, setActiveTab] = React.useState(initialTab);
 
     // 탭 변경 시 상태 업데이트 (initialTab이 바뀌면 동기화)
@@ -58,7 +58,21 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                 >
                     <div style={{ padding: '24px 32px 10px 32px', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#2C3E50' }}>🔔 내 글 소식</h2>
-                        <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#BDC3C7' }}>✕</button>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                    if (window.confirm('모든 소식을 읽음 처리하고 목록을 비울까요?')) {
+                                        onClear();
+                                    }
+                                }}
+                                style={{ fontSize: '0.8rem', color: '#95A5A6' }}
+                            >
+                                🗑️ 비우기
+                            </Button>
+                            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#BDC3C7' }}>✕</button>
+                        </div>
                     </div>
 
                     {/* 탭 메뉴 */}
