@@ -362,19 +362,19 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             if (!myPosts || myPosts.length === 0) return;
             const postIds = myPosts.map(p => p.id);
 
-            // 1. 친구들의 반응(좋아요) 확인
+            // 2. 친구들의 반응(좋아요) 확인
             const { count: reactionCount } = await supabase
                 .from('post_reactions')
                 .select('*', { count: 'exact', head: true })
                 .in('post_id', postIds)
-                .neq('user_id', studentSession.id);
+                .neq('student_id', studentSession.id);
 
-            // 2. 친구들의 댓글 확인
+            // 3. 친구들의 댓글 확인
             const { count: commentCount } = await supabase
                 .from('post_comments')
                 .select('*', { count: 'exact', head: true })
                 .in('post_id', postIds)
-                .neq('author_id', studentSession.id);
+                .neq('student_id', studentSession.id);
 
             // 3. 선생님의 다시 쓰기 요청 확인
             const { count: returnedCountVal } = await supabase
@@ -422,14 +422,14 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .from('post_reactions')
                 .select('*, students(name), student_posts(title, id)')
                 .in('post_id', postIds)
-                .neq('user_id', studentSession.id);
+                .neq('student_id', studentSession.id);
 
             // 3. 댓글 가져오기
             const { data: comments } = await supabase
                 .from('post_comments')
-                .select('*, students:author_id(name), student_posts(title, id)')
+                .select('*, students:student_id(name), student_posts(title, id)')
                 .in('post_id', postIds)
-                .neq('author_id', studentSession.id);
+                .neq('student_id', studentSession.id);
 
             const combined = [
                 ...returnedItems,

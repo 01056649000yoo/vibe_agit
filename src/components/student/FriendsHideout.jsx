@@ -273,7 +273,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
     };
 
     const handleReaction = async (type) => {
-        const myReactions = reactions.filter(r => r.user_id === studentSession.id);
+        const myReactions = reactions.filter(r => r.student_id === studentSession.id);
         const alreadyHasThis = myReactions.find(r => r.reaction_type === type);
 
         try {
@@ -283,7 +283,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                     .from('post_reactions')
                     .delete()
                     .eq('post_id', post.id)
-                    .eq('user_id', studentSession.id)
+                    .eq('student_id', studentSession.id)
                     .eq('reaction_type', type);
 
                 if (error) throw error;
@@ -298,7 +298,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                     .from('post_reactions')
                     .insert({
                         post_id: post.id,
-                        user_id: studentSession.id,
+                        student_id: studentSession.id,
                         reaction_type: type
                     });
 
@@ -320,7 +320,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                 .from('post_comments')
                 .insert({
                     post_id: post.id,
-                    author_id: studentSession.id,
+                    student_id: studentSession.id,
                     content: commentInput.trim()
                 });
 
@@ -481,7 +481,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                         scrollbarWidth: 'none'
                     }}>
                         {reactionIcons.map((icon) => {
-                            const isMine = reactions.some(r => r.user_id === studentSession.id && r.reaction_type === icon.type);
+                            const isMine = reactions.some(r => r.student_id === studentSession.id && r.reaction_type === icon.type);
 
                             return (
                                 <button
