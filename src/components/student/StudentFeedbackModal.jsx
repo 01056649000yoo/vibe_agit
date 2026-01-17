@@ -67,9 +67,19 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                         onClear();
                                     }
                                 }}
-                                style={{ fontSize: '0.8rem', color: '#95A5A6' }}
+                                style={{
+                                    fontSize: '0.8rem',
+                                    color: '#90A4AE',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    padding: '6px 12px',
+                                    background: '#F5F7F8',
+                                    borderRadius: '20px',
+                                    border: '1px solid #ECEFF1'
+                                }}
                             >
-                                🗑️ 비우기
+                                <span style={{ fontSize: '1rem' }}>🗑️</span> 비우기
                             </Button>
                             <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#BDC3C7' }}>✕</button>
                         </div>
