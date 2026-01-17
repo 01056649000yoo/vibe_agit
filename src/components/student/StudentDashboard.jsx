@@ -92,9 +92,10 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
                             const formattedNotif = {
                                 ...newLog,
-                                type: isRewrite ? 'rewrite' : 'point', // 타입 확실히 지정
-                                content: newLog.reason,
+                                id: newLog.id || `point-${Date.now()}-${Math.random()}`,
+                                type: isRewrite ? 'rewrite' : 'point',
                                 title: isRewrite ? '선생님의 보완 요청' : '포인트 선물 🎁',
+                                content: newLog.reason || (isRewrite ? '선생님의 자세한 피드백을 확인해주세요!' : '포인트가 지급되었습니다.'),
                                 created_at: newLog.created_at || new Date().toISOString()
                             };
                             return [formattedNotif, ...prev];
@@ -541,9 +542,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     })
                     .map(log => ({
                         ...log,
+                        id: log.id || `point-${Date.now()}-${Math.random()}`,
                         type: 'point',
-                        title: log.student_posts?.title || '포인트 소식',
-                        content: log.reason || '포인트가 변동되었습니다.'
+                        created_at: log.created_at,
+                        title: log.student_posts?.title || '포인트 소식 🌟',
+                        content: log.reason || '포인트가 지급되었습니다.'
                     }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
