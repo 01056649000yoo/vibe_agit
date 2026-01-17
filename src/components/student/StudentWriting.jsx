@@ -38,15 +38,18 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             if (missionError) throw missionError;
             setMission(missionData);
 
-            // 2. 이미 작성 중인 글(임시 저장 또는 제출된 글)이 있는지 확인
+            // 2. 이미 작성 중인 글 확인 (postId가 있으면 id로 우선 조회, 없으면 missionId+studentId로 조회)
             const currentStudentId = studentSession?.id || JSON.parse(localStorage.getItem('student_session'))?.id;
             if (currentStudentId) {
-                const { data: postData, error: postError } = await supabase
-                    .from('student_posts')
-                    .select('*')
-                    .eq('mission_id', missionId)
-                    .eq('student_id', currentStudentId)
-                    .maybeSingle();
+                let query = supabase.from('student_posts').select('*');
+
+                if (params?.postId) {
+                    query = query.eq('id', params.postId);
+                } else {
+                    query = query.eq('mission_id', missionId).eq('student_id', currentStudentId);
+                }
+
+                const { data: postData, error: postError } = await query.maybeSingle();
 
                 if (!postError && postData) {
                     setTitle(postData.title || '');
@@ -458,7 +461,16 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         opacity: (isConfirmed || (isSubmitted && !isReturned)) ? 0.6 : 1
                     }}
                 >
-                    {submitting ? '제출 중...' : isConfirmed ? '승인 완료 ✨' : (isSubmitted && !isReturned) ? '확인 대기 중...' : '멋지게 제출하기! 🚀'}
+                    {submitting
+                        ? '제출 중...'
+                        : isConfirmed
+                            ? '승인 완료 ✨'
+                            : (params?.mode === 'edit' || (isSubmitted && isReturned))
+                                ? '수정 완료! ✨'
+                                : (isSubmitted && !isReturned)
+                                    ? '확인 대기 중...'
+                                    : '멋지게 제출하기! 🚀'
+                    }
                 </Button>
             </div>
         </Card>

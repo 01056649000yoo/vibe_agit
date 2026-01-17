@@ -182,6 +182,7 @@ function App() {
               <StudentWriting
                 studentSession={studentSession}
                 missionId={internalPage.params.missionId}
+                params={internalPage.params}
                 onBack={() => setInternalPage({ name: 'mission_list', params: {} })}
                 onNavigate={(page, params) => setInternalPage({ name: page, params })}
               />
