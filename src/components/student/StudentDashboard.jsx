@@ -1246,7 +1246,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                     onClick={() => {
                                                         setShowFeedback(false);
                                                         if (f.type === 'rewrite') {
-                                                            onNavigate('writing', { missionId: f.mission_id });
+                                                            onNavigate('writing', {
+                                                                missionId: f.mission_id,
+                                                                postId: f.post_id,
+                                                                mode: 'edit'
+                                                            });
                                                         } else {
                                                             onNavigate('friends_hideout', { initialPostId: f.post_id || f.student_posts?.id });
                                                         }

@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 /**
  * 역할: 학생 - 글쓰기 에디터 (포인트 연동 기능 포함) ✨
  */
-const StudentWriting = ({ studentSession, missionId, onBack, onNavigate }) => {
+const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params }) => {
     const [mission, setMission] = useState(null);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
