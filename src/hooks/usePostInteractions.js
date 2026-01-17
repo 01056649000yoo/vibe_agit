@@ -104,12 +104,47 @@ export const usePostInteractions = (postId, studentId) => {
         }
     };
 
+    // 댓글 수정 핸들러
+    const updateComment = async (commentId, newContent) => {
+        if (!newContent.trim() || !studentId) return;
+        try {
+            const { error } = await supabase
+                .from('post_comments')
+                .update({ content: newContent.trim() })
+                .eq('id', commentId);
+            if (error) throw error;
+            fetchInteractions();
+            return true;
+        } catch (err) {
+            console.error('댓글 수정 오류:', err.message);
+            return false;
+        }
+    };
+
+    // 댓글 삭제 핸들러
+    const deleteComment = async (commentId) => {
+        try {
+            const { error } = await supabase
+                .from('post_comments')
+                .delete()
+                .eq('id', commentId);
+            if (error) throw error;
+            fetchInteractions();
+            return true;
+        } catch (err) {
+            console.error('댓글 삭제 오류:', err.message);
+            return false;
+        }
+    };
+
     return {
         reactions,
         comments,
         loading,
         handleReaction,
         addComment,
+        updateComment,
+        deleteComment,
         refresh: fetchInteractions
     };
 }; 

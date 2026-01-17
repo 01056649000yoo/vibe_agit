@@ -250,6 +250,8 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons, isMobile, ACCESSORIES }) => {
     const [commentInput, setCommentInput] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
+    const [editingCommentId, setEditingCommentId] = useState(null);
+    const [isTeacher, setIsTeacher] = useState(false);
 
     // [전면 수정] usePostInteractions 훅 사용
     const {
@@ -257,8 +259,18 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
         comments,
         loading,
         handleReaction,
-        addComment
-    } = usePostInteractions(post.id, studentSession.id);
+        addComment,
+        updateComment,
+        deleteComment
+    } = usePostInteractions(post.id, studentSession?.id);
+
+    useEffect(() => {
+        const checkTeacher = async () => {
+            const { data } = await supabase.auth.getSession();
+            if (data?.session?.user?.user_metadata?.user_type === 'teacher') setIsTeacher(true);
+        };
+        checkTeacher();
+    }, []);
 
     useEffect(() => {
         // 모달 오픈 시 배경 스크롤 방지
@@ -274,37 +286,79 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
 
         setSubmittingComment(true);
         try {
-            const success = await addComment(commentInput);
-            if (success) {
-                // 보상 포인트 지급 (5P)
-                const { data: studentData } = await supabase
-                    .from('students')
-                    .select('total_points')
-                    .eq('id', studentSession.id)
-                    .maybeSingle();
+            if (editingCommentId) {
+                // 수정 모드
+                const success = await updateComment(editingCommentId, commentInput);
+                if (success) {
+                    setEditingCommentId(null);
+                    setCommentInput('');
+                    alert('댓글이 수정되었습니다! ✨');
+                }
+            } else {
+                // 신규 작성 (1인 1댓글 제약 확인)
+                const alreadyCommented = comments.some(c => c.student_id === studentSession?.id);
+                if (alreadyCommented) {
+                    alert('댓글은 하나만 작성할 수 있어요! 기존 댓글을 수정해 주세요! ✍️');
+                    setSubmittingComment(false);
+                    return;
+                }
 
-                const newPoints = (studentData?.total_points || 0) + 5;
-                await supabase
-                    .from('students')
-                    .update({ total_points: newPoints })
-                    .eq('id', studentSession.id);
+                const success = await addComment(commentInput);
+                if (success) {
+                    // 보상 포인트 지급 (5P)
+                    if (studentSession?.id) {
+                        const { data: studentData } = await supabase
+                            .from('students')
+                            .select('total_points')
+                            .eq('id', studentSession.id)
+                            .maybeSingle();
 
-                await supabase
-                    .from('point_logs')
-                    .insert({
-                        student_id: studentSession.id,
-                        amount: 5,
-                        reason: `친구 글에 따뜻한 응원을 남겨주셨네요! ✨`
-                    });
+                        const newPoints = (studentData?.total_points || 0) + 5;
+                        await supabase
+                            .from('students')
+                            .update({ total_points: newPoints })
+                            .eq('id', studentSession.id);
 
-                setCommentInput('');
-                alert('댓글을 남기고 5포인트를 받았어요! ✨');
+                        await supabase
+                            .from('point_logs')
+                            .insert({
+                                student_id: studentSession.id,
+                                amount: 5,
+                                reason: `친구 글에 따뜻한 응원을 남겨주셨네요! ✨`
+                            });
+                    }
+
+                    setCommentInput('');
+                    alert('댓글을 남기고 5포인트를 받았어요! ✨');
+                }
             }
         } catch (err) {
-            console.error('댓글 저장 실패:', err.message);
+            console.error('댓글 작업 실패:', err.message);
         } finally {
             setSubmittingComment(false);
         }
+    };
+
+    const handleEditComment = (comment) => {
+        setEditingCommentId(comment.id);
+        setCommentInput(comment.content);
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        if (!confirm('정말 이 댓글을 삭제할까요?')) return;
+        const success = await deleteComment(commentId);
+        if (success) {
+            alert('댓글이 삭제되었습니다.');
+            if (editingCommentId === commentId) {
+                setEditingCommentId(null);
+                setCommentInput('');
+            }
+        }
+    };
+
+    const cancelEdit = () => {
+        setEditingCommentId(null);
+        setCommentInput('');
     };
 
     const getReactionCount = (type) => reactions.filter(r => r.reaction_type === type).length;
@@ -512,35 +566,70 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                             첫 번째 응원의 주인공이 되어보세요! ✨
                                         </div>
                                     ) : (
-                                        comments.map(c => (
-                                            <div key={c.id} style={{
-                                                padding: '20px 24px', background: '#F8F9FA', borderRadius: '24px',
-                                                border: '1px solid #F1F3F5'
-                                            }}>
-                                                <div style={{ fontWeight: '900', fontSize: '0.9rem', color: '#3498DB', marginBottom: '8px' }}>{c.students?.name}</div>
-                                                <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7' }}>{c.content}</div>
-                                            </div>
-                                        ))
+                                        comments.map(c => {
+                                            const isMyComment = c.student_id === studentSession?.id;
+                                            const canDelete = isMyComment || isTeacher;
+
+                                            return (
+                                                <div key={c.id} style={{
+                                                    padding: '20px 24px',
+                                                    background: isMyComment ? '#E3F2FD' : '#F8F9FA',
+                                                    borderRadius: '24px',
+                                                    border: isMyComment ? '1px solid #BBDEFB' : '1px solid #F1F3F5',
+                                                    position: 'relative'
+                                                }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                        <div style={{ fontWeight: '900', fontSize: '0.9rem', color: isMyComment ? '#1976D2' : '#3498DB' }}>
+                                                            {c.students?.name} {isMyComment && '(나)'}
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                            {isMyComment && (
+                                                                <button
+                                                                    onClick={() => handleEditComment(c)}
+                                                                    style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}
+                                                                >
+                                                                    수정
+                                                                </button>
+                                                            )}
+                                                            {canDelete && (
+                                                                <button
+                                                                    onClick={() => handleDeleteComment(c.id)}
+                                                                    style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}
+                                                                >
+                                                                    삭제
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7' }}>{c.content}</div>
+                                                </div>
+                                            );
+                                        })
                                     )}
                                 </div>
 
                                 <form onSubmit={handleCommentSubmit} style={{
                                     display: 'flex', gap: '14px', background: 'white',
-                                    padding: '10px', borderRadius: '22px', border: '2px solid #F1F3F5',
+                                    padding: '10px', borderRadius: '22px', border: editingCommentId ? '2px solid #3498DB' : '2px solid #F1F3F5',
                                     boxShadow: '0 8px 16px rgba(0,0,0,0.04)'
                                 }}>
                                     <input
                                         type="text"
                                         value={commentInput}
                                         onChange={e => setCommentInput(e.target.value)}
-                                        placeholder="따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨"
+                                        placeholder={editingCommentId ? "댓글을 수정하고 있어요..." : "따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨"}
                                         style={{
                                             flex: 1, padding: '14px 20px', border: 'none', outline: 'none',
                                             fontSize: '1.05rem', color: '#2D3436'
                                         }}
                                     />
-                                    <Button type="submit" size="sm" style={{ borderRadius: '16px', padding: '0 24px', fontWeight: '900' }} disabled={submittingComment}>
-                                        보내기
+                                    {editingCommentId && (
+                                        <Button type="button" variant="ghost" size="sm" onClick={cancelEdit} style={{ borderRadius: '16px', fontWeight: 'bold' }}>
+                                            취소
+                                        </Button>
+                                    )}
+                                    <Button type="submit" size="sm" style={{ borderRadius: '16px', padding: editingCommentId ? '0 20px' : '0 24px', fontWeight: '900' }} disabled={submittingComment}>
+                                        {editingCommentId ? '수정' : '보내기'}
                                     </Button>
                                 </form>
                             </>
