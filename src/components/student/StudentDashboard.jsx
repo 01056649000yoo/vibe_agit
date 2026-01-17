@@ -94,8 +94,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 ...newLog,
                                 id: newLog.id || `point-${Date.now()}-${Math.random()}`,
                                 type: isRewrite ? 'rewrite' : 'point',
-                                title: isRewrite ? '선생님의 보완 요청' : '포인트 선물 🎁',
-                                content: newLog.reason || (isRewrite ? '선생님의 자세한 피드백을 확인해주세요!' : '선생님이 포인트를 선물하셨어요!'),
+                                title: isRewrite ? '선생님의 보완 요청' : '포인트 소식 🌟',
+                                content: newLog.reason || (isRewrite ? '선생님의 자세한 피드백을 확인해주세요!' : '포인트가 변동되었습니다.'),
                                 created_at: newLog.created_at || new Date().toISOString()
                             };
                             return [formattedNotif, ...prev];
@@ -544,9 +544,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                         id: log.id || `point-${Date.now()}-${Math.random()}`,
                         type: 'point',
                         created_at: log.created_at,
-                        // 제목이 없어도 소식함에서 증발하지 않도록 방어적 매핑
-                        title: log.student_posts?.title || '포인트 소식 🌟',
-                        content: log.reason || '선생님이 포인트를 선물하셨어요!'
+                        title: '포인트 소식 🌟',
+                        content: log.reason || '포인트가 변동되었습니다.'
                     }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
