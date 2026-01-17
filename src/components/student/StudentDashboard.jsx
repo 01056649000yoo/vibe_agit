@@ -463,7 +463,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             // 4. 포인트/시스템 알림 가져오기 (추가)
             const { data: pointLogs } = await supabase
                 .from('point_logs')
-                .select('*, student_posts(title, id)')
+                .select('*, students:student_id(name), student_posts(title, id)')
                 .eq('student_id', studentSession.id)
                 .order('created_at', { ascending: false })
                 .limit(20);
