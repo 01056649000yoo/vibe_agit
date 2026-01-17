@@ -52,7 +52,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                 .from('student_posts')
                 .select('*, students:student_id(name, pet_data), writing_missions(allow_comments)')
                 .eq('id', postId)
-                .single();
+                .maybeSingle();
 
             if (error) throw error;
             if (data) {
@@ -281,7 +281,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                     .from('students')
                     .select('total_points')
                     .eq('id', studentSession.id)
-                    .single();
+                    .maybeSingle();
 
                 const newPoints = (studentData?.total_points || 0) + 5;
                 await supabase

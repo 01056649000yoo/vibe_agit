@@ -33,7 +33,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 .from('writing_missions')
                 .select('*')
                 .eq('id', missionId)
-                .single();
+                .maybeSingle();
 
             if (missionError) throw missionError;
             setMission(missionData);

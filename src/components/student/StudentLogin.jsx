@@ -24,7 +24,7 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
             .from('students')
             .select('*, classes(name)')
             .eq('student_code', code.toUpperCase())
-            .single();
+            .maybeSingle();
 
         if (error || !data) {
             alert('코드가 일치하는 학생을 찾을 수 없어요. 다시 확인해볼까요? 🔍');

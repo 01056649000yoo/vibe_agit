@@ -322,7 +322,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .from('students')
                 .select('total_points, pet_data')
                 .eq('id', studentSession.id)
-                .single();
+                .maybeSingle();
 
             if (error) throw error;
 
@@ -402,7 +402,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .eq('is_returned', true)
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             if (error) throw error;
             if (data) {
@@ -460,13 +460,16 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .in('post_id', postIds)
                 .neq('student_id', studentSession.id);
 
-            // 4. 포인트/시스템 알림 가져오기 (추가)
-            const { data: pointLogs } = await supabase
+            const { data: pointLogs, error: pointError } = await supabase
                 .from('point_logs')
-                .select('*, students:student_id(name), student_posts(title, id)')
+                .select('*')
                 .eq('student_id', studentSession.id)
                 .order('created_at', { ascending: false })
                 .limit(20);
+
+            if (pointError) {
+                console.warn('[Dashboard] 포인트 로그 로드 실패 (FK 제약조건 확인 필요):', pointError.message);
+            }
 
             const combined = [
                 ...returnedItems,
