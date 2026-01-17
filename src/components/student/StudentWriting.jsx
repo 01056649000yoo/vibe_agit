@@ -22,6 +22,29 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     useEffect(() => {
         if (missionId) {
             fetchMission();
+
+            // [실시간 연동] 선생님이 미션 수정 시 즉시 반영
+            const channel = supabase
+                .channel(`mission_updates_${missionId}`)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'writing_missions',
+                        filter: `id=eq.${missionId}`
+                    },
+                    (payload) => {
+                        console.log('🔔 실시간 미션 정보 업데이트됨:', payload.new);
+                        setMission(prev => ({ ...prev, ...payload.new }));
+                        alert('📢 선생님이 미션 내용을 수정하셨어요! 바뀐 기준을 확인해주세요.');
+                    }
+                )
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
         }
     }, [missionId, params]);
 

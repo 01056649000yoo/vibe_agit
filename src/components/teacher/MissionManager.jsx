@@ -26,6 +26,10 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const [postComments, setPostComments] = useState([]); // [추가] 상세보기 글의 댓글들
     const [totalStudentCount, setTotalStudentCount] = useState(0); // [추가] 학급 총 학생 수
     const [archiveModal, setArchiveModal] = useState({ isOpen: false, mission: null, hasIncomplete: false }); // [추가] 보관용 커스텀 모달 상태
+
+    // [수정 기능 구현] 수정 모드 상태
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingMissionId, setEditingMissionId] = useState(null);
     const textareaRef = useRef(null);
 
     // [추가] 피드백 입력창 자동 높이 조절 (스티키 레이아웃에 맞게 높이는 Flex로 제어하도록 변경 가능성 고려하여 auto-height 유지)
@@ -122,7 +126,36 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         }
     };
 
-    const handleCreateMission = async (e) => {
+    // 수정 버튼 클릭 핸들러
+    const handleEditClick = (mission) => {
+        setFormData({
+            title: mission.title,
+            guide: mission.guide,
+            genre: mission.genre,
+            min_chars: mission.min_chars,
+            min_paragraphs: mission.min_paragraphs,
+            base_reward: mission.base_reward,
+            bonus_threshold: mission.bonus_threshold,
+            bonus_reward: mission.bonus_reward,
+            allow_comments: mission.allow_comments
+        });
+        setEditingMissionId(mission.id);
+        setIsEditing(true);
+        setIsFormOpen(true);
+
+        // 폼 위치로 스크롤 이동
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // 수정 취소 핸들러
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditingMissionId(null);
+        setFormData({ title: '', guide: '', genre: '일기', min_chars: 100, min_paragraphs: 2, base_reward: 100, bonus_threshold: 100, bonus_reward: 10, allow_comments: true });
+        setIsFormOpen(false);
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.title.trim() || !formData.guide.trim()) {
             alert('주제와 안내 내용을 입력해주세요! ✍️');
@@ -130,15 +163,27 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         }
 
         try {
-            const { error } = await supabase.from('writing_missions').insert({ ...formData, class_id: activeClass.id });
-            if (error) throw error;
+            if (isEditing) {
+                // 수정 로직 (UPDATE)
+                const { error } = await supabase
+                    .from('writing_missions')
+                    .update({ ...formData })
+                    .eq('id', editingMissionId);
 
-            alert('새로운 글쓰기 미션이 공개되었습니다! 🚀');
-            setIsFormOpen(false);
-            setFormData({ title: '', guide: '', genre: '일기', min_chars: 100, min_paragraphs: 2, base_reward: 100, bonus_threshold: 100, bonus_reward: 10, allow_comments: true });
+                if (error) throw error;
+                alert('글쓰기 미션이 성공적으로 수정되었습니다! ✏️');
+            } else {
+                // 등록 로직 (INSERT)
+                const { error } = await supabase.from('writing_missions').insert({ ...formData, class_id: activeClass.id });
+                if (error) throw error;
+                alert('새로운 글쓰기 미션이 공개되었습니다! 🚀');
+            }
+
+            // 초기화 및 목록 갱신
+            handleCancelEdit(); // 폼 닫기 및 초기화 사용
             fetchMissions();
         } catch (error) {
-            alert('글쓰기 미션 등록 실패: ' + error.message);
+            alert('글쓰기 미션 저장 실패: ' + error.message);
         }
     };
 
@@ -676,7 +721,10 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                     {isDashboardMode ? '✍️ 글쓰기 미션 현황' : '✍️ 글쓰기 미션 관리'}
                 </h3>
                 <Button
-                    onClick={() => setIsFormOpen(!isFormOpen)}
+                    onClick={() => {
+                        if (isFormOpen) handleCancelEdit();
+                        else setIsFormOpen(true);
+                    }}
                     style={{
                         background: isFormOpen ? '#FF5252' : '#3498DB',
                         color: 'white', padding: isMobile ? '8px 16px' : '10px 20px',
@@ -701,7 +749,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                             boxSizing: 'border-box',
                             overflow: 'hidden'
                         }}>
-                            <form onSubmit={handleCreateMission} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px' }}>
                                     <input
                                         type="text"
@@ -823,7 +871,20 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                         </div>
                                     </div>
                                 </div>
-                                <Button type="submit" style={{ background: '#3498DB', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}>글쓰기 미션 공개하기 🚀</Button>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    {isEditing && (
+                                        <Button
+                                            type="button"
+                                            onClick={handleCancelEdit}
+                                            style={{ flex: 1, background: '#95A5A6', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}
+                                        >
+                                            취소하기
+                                        </Button>
+                                    )}
+                                    <Button type="submit" style={{ flex: 2, background: isEditing ? '#F39C12' : '#3498DB', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}>
+                                        {isEditing ? '수정 완료 ✏️' : '글쓰기 미션 공개하기 🚀'}
+                                    </Button>
+                                </div>
                             </form>
                         </Card>
                     </motion.div>
@@ -854,6 +915,12 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <span style={{ padding: '4px 10px', background: '#E3F2FD', color: '#1976D2', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900' }}>{mission.genre}</span>
                             <div style={{ display: 'flex', gap: '4px' }}>
+                                <button onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditClick(mission);
+                                }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F39C12', fontSize: '1.2rem', padding: '8px' }} title="수정">
+                                    ✏️
+                                </button>
                                 <button onClick={(e) => {
                                     e.stopPropagation();
                                     const completedCount = submissionCounts[mission.id] || 0;

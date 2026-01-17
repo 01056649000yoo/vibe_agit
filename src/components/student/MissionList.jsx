@@ -14,6 +14,32 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
 
     useEffect(() => {
         fetchData();
+
+        // [실시간 연동] 미션 목록 변경 감지 (추가/수정/삭제)
+        const getSessionClassId = () => {
+            const s = studentSession || JSON.parse(localStorage.getItem('student_session'));
+            return s?.classId || s?.class_id;
+        };
+        const classId = getSessionClassId();
+
+        if (classId) {
+            const channel = supabase
+                .channel(`mission_list_changes_${classId}`)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'writing_missions',
+                    filter: `class_id=eq.${classId}`
+                }, (payload) => {
+                    console.log('📢 미션 목록 변경 감지:', payload);
+                    fetchData();
+                })
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
+        }
     }, []);
 
     const fetchData = async () => {
