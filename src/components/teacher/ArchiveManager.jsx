@@ -114,104 +114,138 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                     <p style={{ fontSize: '1.1rem' }}>아직 보관된 미션이 없습니다.</p>
                 </Card>
             ) : (
-                <Card style={{ padding: 0, overflow: 'hidden', border: '1px solid #E9ECEF', borderRadius: '16px', background: 'white' }}>
-                    {/* 테이블 헤더 */}
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'minmax(200px, 2fr) 100px 120px 120px 150px 100px 180px',
-                        background: '#F8F9FA',
-                        borderBottom: '1px solid #E9ECEF',
-                        fontSize: '0.85rem',
-                        fontWeight: 'bold',
-                        color: '#7F8C8D',
-                        overflowX: 'auto'
-                    }}>
-                        <div style={{ padding: '16px 20px' }}>글쓰기 주제</div>
-                        <div style={{ padding: '16px', textAlign: 'center' }}>종류</div>
-                        <div style={{ padding: '16px', textAlign: 'center' }}>보관 날짜</div>
-                        <div style={{ padding: '16px', textAlign: 'center' }}>제출 현황</div>
-                        <div style={{ padding: '16px', textAlign: 'center' }}>제출 분량</div>
-                        <div style={{ padding: '16px', textAlign: 'center' }}>댓글 허용</div>
-                        <div style={{ padding: '16px', textAlign: 'center' }}>관리</div>
-                    </div>
-
-                    {/* 데이터 리스트 */}
-                    <div style={{ overflowX: 'auto' }}>
-                        {archivedMissions.map((mission) => (
-                            <motion.div
-                                key={mission.id}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                whileHover={{ backgroundColor: '#F1F8E9' }}
-                                style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'minmax(200px, 2fr) 100px 120px 120px 150px 100px 180px',
-                                    borderBottom: '1px solid #F1F3F5',
-                                    fontSize: '0.9rem',
-                                    color: '#2C3E50',
-                                    alignItems: 'center',
-                                    transition: 'background 0.1s'
-                                }}
-                            >
-                                <div style={{ padding: '16px 20px', fontWeight: 'bold' }}>
-                                    <div style={{
-                                        whiteSpace: 'nowrap',
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                    gap: '20px'
+                }}>
+                    {archivedMissions.map((mission) => (
+                        <motion.div
+                            key={mission.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ y: -4, borderColor: '#3498DB', boxShadow: '0 8px 16px rgba(0,0,0,0.08)' }}
+                            style={{
+                                background: 'white',
+                                border: '1px solid #E9ECEF',
+                                borderRadius: '20px',
+                                padding: '20px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                                transition: 'all 0.2s ease',
+                                height: '100%',
+                                boxSizing: 'border-box',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                            }}
+                        >
+                            {/* 헤더: 제목 및 날짜 */}
+                            <div style={{ marginBottom: '16px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                                    <h4 style={{
+                                        margin: 0,
+                                        fontSize: '1.15rem',
+                                        color: '#2C3E50',
+                                        fontWeight: '800',
+                                        lineHeight: '1.4',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 1,
+                                        WebkitBoxOrient: 'vertical',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
-                                        maxWidth: '100%'
+                                        flex: 1,
+                                        marginRight: '12px'
                                     }} title={mission.title}>
                                         {mission.title}
-                                    </div>
+                                    </h4>
+                                    <span style={{ fontSize: '0.75rem', color: '#BDC3C7', whiteSpace: 'nowrap', paddingTop: '4px' }}>
+                                        {mission.archived_at ? new Date(mission.archived_at).toLocaleDateString() : '-'}
+                                    </span>
                                 </div>
-                                <div style={{ padding: '12px', textAlign: 'center' }}>
+
+                                {/* 뱃지 그룹 */}
+                                <div style={{ display: 'flex', gap: '6px' }}>
                                     <span style={{
                                         padding: '4px 8px',
                                         background: '#E3F2FD',
                                         color: '#1976D2',
-                                        borderRadius: '6px',
+                                        borderRadius: '8px',
                                         fontSize: '0.75rem',
                                         fontWeight: 'bold'
                                     }}>
                                         {mission.genre}
                                     </span>
-                                </div>
-                                <div style={{ padding: '12px', textAlign: 'center', color: '#95A5A6', fontSize: '0.85rem' }}>
-                                    {mission.archived_at ? new Date(mission.archived_at).toLocaleDateString() : '-'}
-                                </div>
-                                <div style={{ padding: '12px', textAlign: 'center' }}>
-                                    <span style={{ fontWeight: 'bold', color: mission.submittedCount > 0 ? '#2196F3' : '#B0BEC5' }}>
-                                        {mission.submittedCount}명
+                                    <span style={{
+                                        padding: '4px 8px',
+                                        background: mission.allow_comments ? '#E8F5E9' : '#FFEBEE',
+                                        color: mission.allow_comments ? '#2E7D32' : '#C62828',
+                                        borderRadius: '8px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        {mission.allow_comments ? '💬 댓글 ON' : '🔒 댓글 OFF'}
                                     </span>
-                                    <span style={{ fontSize: '0.8rem', color: '#B0BEC5' }}> / {mission.totalStudents}명</span>
                                 </div>
-                                <div style={{ padding: '12px', textAlign: 'center', fontSize: '0.85rem', color: '#546E7A' }}>
-                                    {mission.min_chars}~{mission.max_chars}자
+                            </div>
+
+                            {/* 바디: 통계 정보 */}
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                background: '#F8F9FA',
+                                padding: '12px 16px',
+                                borderRadius: '12px',
+                                marginBottom: '16px'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ fontSize: '1.2rem' }}>👥</span>
+                                    <div>
+                                        <div style={{ fontSize: '0.7rem', color: '#95A5A6' }}>제출</div>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#2C3E50' }}>
+                                            {mission.submittedCount}<span style={{ color: '#ADB5BD', fontWeight: 'normal' }}>/{mission.totalStudents}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style={{ padding: '12px', textAlign: 'center', fontSize: '1.2rem' }}>
-                                    {mission.allow_comments ? '✅' : '🔒'}
+                                <div style={{ width: '1px', background: '#E9ECEF' }}></div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ fontSize: '1.2rem' }}>✍️</span>
+                                    <div>
+                                        <div style={{ fontSize: '0.7rem', color: '#95A5A6' }}>분량</div>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#2C3E50' }}>{mission.min_chars}~{mission.max_chars}</div>
+                                    </div>
                                 </div>
-                                <div style={{ padding: '12px', textAlign: 'center', display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                                    <Button
-                                        size="sm"
-                                        variant="secondary"
-                                        onClick={() => fetchPostsForMission(mission)}
-                                        style={{ fontSize: '0.75rem', padding: '6px 10px', height: 'auto' }}
-                                    >
-                                        모아보기
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => handleRestoreMission(mission.id)}
-                                        style={{ fontSize: '0.75rem', padding: '6px 10px', height: 'auto', border: '1px solid #ECEFF1' }}
-                                    >
-                                        복구
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </Card>
+                            </div>
+
+                            {/* 푸터: 액션 버튼 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                <Button
+                                    size="sm"
+                                    onClick={() => fetchPostsForMission(mission)}
+                                    style={{
+                                        width: '100%',
+                                        background: '#F1F3F5',
+                                        color: '#495057',
+                                        border: 'none'
+                                    }}
+                                >
+                                    📖 보기
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    onClick={() => handleRestoreMission(mission.id)}
+                                    style={{
+                                        width: '100%',
+                                        background: '#E8F5E9',
+                                        color: '#2E7D32',
+                                        border: 'none'
+                                    }}
+                                >
+                                    ♻️ 복구
+                                </Button>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
             )}
 
             {/* 글 모아보기 모달 */}
