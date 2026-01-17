@@ -23,7 +23,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         if (missionId) {
             fetchMission();
         }
-    }, [missionId]);
+    }, [missionId, params]);
 
     const fetchMission = async () => {
         setLoading(true);

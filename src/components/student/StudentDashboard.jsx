@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import StudentGuideModal from './StudentGuideModal';
+import StudentFeedbackModal from './StudentFeedbackModal';
 
 /**
  * 역할: 학생 메인 대시보드 - 포인트 표시 및 활동 메뉴
@@ -18,6 +19,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [showFeedback, setShowFeedback] = useState(false);
     const [feedbacks, setFeedbacks] = useState([]);
     const [loadingFeedback, setLoadingFeedback] = useState(false);
+    const [feedbackInitialTab, setFeedbackInitialTab] = useState(0); // [추가] 피드백 모달 초기 탭
     const [returnedCount, setReturnedCount] = useState(0);
     const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 }); // [추가] 성장 통계
     const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', icon: '🌱', nextGoal: 1000 }); // [추가] 레벨 정보
@@ -472,7 +474,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         }
     };
 
-    const openFeedback = () => {
+    const openFeedback = (tabIndex = 0) => {
+        setFeedbackInitialTab(tabIndex);
         setShowFeedback(true);
         fetchFeedbacks();
     };
@@ -498,7 +501,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={openFeedback}
+                                onClick={() => openFeedback(0)}
                                 style={{
                                     background: '#FF5252',
                                     color: 'white',
@@ -1221,123 +1224,14 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 </div>
 
                 {/* 피드백 모아보기 모달 */}
-                {
-                    showFeedback && (
-                        <div style={{
-                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                            background: 'rgba(0,0,0,0.5)', zIndex: 2000,
-                            display: 'flex', justifyContent: 'center', alignItems: 'center',
-                            padding: '20px'
-                        }} onClick={() => setShowFeedback(false)}>
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                style={{
-                                    background: 'white',
-                                    width: '100%',
-                                    maxWidth: '500px',
-                                    maxHeight: '80vh',
-                                    borderRadius: '32px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    overflow: 'hidden',
-                                    boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
-                                }}
-                                onClick={e => e.stopPropagation()}
-                            >
-                                <div style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#5D4037' }}>🔔 내 글 소식</h3>
-                                    <button onClick={() => setShowFeedback(false)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-                                </div>
-                                <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-                                    {loadingFeedback ? (
-                                        <div style={{ textAlign: 'center', padding: '40px', color: '#9E9E9E' }}>소식을 가져오고 있어요... 🏃‍♂️</div>
-                                    ) : feedbacks.length === 0 ? (
-                                        <div style={{ textAlign: 'center', padding: '60px', color: '#9E9E9E' }}>
-                                            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📭</div>
-                                            아직 새로운 소식이 없어요.
-                                        </div>
-                                    ) : (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                            {feedbacks.map((f, idx) => (
-                                                <div
-                                                    key={f.id || idx}
-                                                    style={{
-                                                        padding: '16px',
-                                                        background: '#F9F9F9',
-                                                        borderRadius: '20px',
-                                                        border: '1px solid #F1F1F1',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                    onClick={() => {
-                                                        setShowFeedback(false);
-                                                        if (f.type === 'rewrite') {
-                                                            onNavigate('writing', {
-                                                                missionId: f.mission_id,
-                                                                postId: f.post_id,
-                                                                mode: 'edit'
-                                                            });
-                                                        } else {
-                                                            onNavigate('friends_hideout', { initialPostId: f.post_id || f.student_posts?.id });
-                                                        }
-                                                    }}
-                                                    onMouseEnter={e => {
-                                                        e.currentTarget.style.background = '#F0F7FF';
-                                                        e.currentTarget.style.borderColor = '#D0E1F9';
-                                                    }}
-                                                    onMouseLeave={e => {
-                                                        e.currentTarget.style.background = '#F9F9F9';
-                                                        e.currentTarget.style.borderColor = '#F1F1F1';
-                                                    }}
-                                                >
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                                                        <span style={{ fontSize: '1.2rem' }}>
-                                                            {f.type === 'reaction' ? (
-                                                                f.reaction_type === 'heart' ? '❤️' :
-                                                                    f.reaction_type === 'laugh' ? '😂' :
-                                                                        f.reaction_type === 'wow' ? '👏' :
-                                                                            f.reaction_type === 'bulb' ? '💡' : '✨'
-                                                            ) : f.type === 'rewrite' ? '♻️' : '💬'}
-                                                        </span>
-                                                        <span style={{ fontWeight: 'bold', color: f.type === 'rewrite' ? '#E65100' : '#5D4037', fontSize: '0.95rem' }}>
-                                                            {f.type === 'reaction' ? `${f.students?.name} 친구가 리액션을 남겼어요!` :
-                                                                f.type === 'comment' ? `${f.students?.name} 친구가 댓글을 남겼어요!` :
-                                                                    '선생님의 다시 쓰기 요청이 있습니다!'}
-                                                        </span>
-                                                    </div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
-                                                        글 제목: "{f.student_posts?.title}"
-                                                    </div>
-                                                    {(f.type === 'comment' || f.type === 'rewrite') && (
-                                                        <div style={{
-                                                            fontSize: '0.9rem',
-                                                            color: f.type === 'rewrite' ? '#E65100' : '#795548',
-                                                            background: f.type === 'rewrite' ? '#FFF3E0' : 'white',
-                                                            padding: '8px 12px', borderRadius: '12px', marginTop: '6px',
-                                                            border: f.type === 'rewrite' ? '1px solid #FFE0B2' : '1px solid #EEE',
-                                                            fontWeight: f.type === 'rewrite' ? '500' : 'normal'
-                                                        }}>
-                                                            {f.type === 'rewrite' ? (
-                                                                <div>
-                                                                    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>📌 요청 사항</div>
-                                                                    {f.content}
-                                                                </div>
-                                                            ) : f.content}
-                                                        </div>
-                                                    )}
-                                                    <div style={{ fontSize: '0.75rem', color: '#BDBDBD', marginTop: '8px', textAlign: 'right' }}>
-                                                        {new Date(f.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        </div>
-                    )
-                }
+                <StudentFeedbackModal
+                    isOpen={showFeedback}
+                    onClose={() => setShowFeedback(false)}
+                    feedbacks={feedbacks}
+                    loading={loadingFeedback}
+                    onNavigate={onNavigate}
+                    initialTab={feedbackInitialTab}
+                />
                 {/* 액세서리 상점 모달 */}
                 {
                     isShopOpen && (
