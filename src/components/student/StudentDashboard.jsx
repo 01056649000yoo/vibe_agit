@@ -78,26 +78,37 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
                         console.log('⚡ 교사 알림/포인트 수신:', newLog);
 
-                        // 1. 포인트 정보 갱신
+                        // 1. 포인트 정보 즉시 반영 및 갱신
+                        if (newLog.amount !== 0) {
+                            setPoints(prev => (prev || 0) + newLog.amount);
+                        }
                         fetchMyPoints().catch(err => console.error('포인트 갱신 실패:', err));
 
                         // 2. 배너 메시지 결정
                         const isRewrite = newLog.reason?.includes('다시 쓰기') || newLog.reason?.includes('♻️');
                         let bannerMsg = "";
+                        let bannerIcon = "🎁";
 
                         if (isRewrite) {
                             bannerMsg = "♻️ 선생님의 다시 쓰기 요청이 있습니다.";
+                            bannerIcon = "♻️";
                             checkActivity(); // 다시쓰기 카운트 갱신
-                        } else if (newLog.amount > 0) {
-                            bannerMsg = "🎉 내 글이 승인되고 포인트를 지급받았습니다!";
                         } else if (newLog.amount < 0) {
-                            bannerMsg = "⚠️ 포인트 승인이 취소되고 회수되었습니다.";
+                            bannerMsg = `⚠️ ${newLog.reason} (${newLog.amount}P)`;
+                            bannerIcon = "⚠️";
+                        } else if (newLog.reason?.includes('승인')) {
+                            bannerMsg = `🎉 글이 승인되어 +${newLog.amount}P를 받았어요!`;
+                            bannerIcon = "🎉";
+                        } else if (newLog.amount > 0) {
+                            bannerMsg = `🎁 ${newLog.reason} (+${newLog.amount}P)`;
+                            bannerIcon = "🎁";
                         }
 
                         if (bannerMsg) {
                             setTeacherNotify({
                                 type: isRewrite ? 'rewrite' : 'point',
                                 message: bannerMsg,
+                                icon: bannerIcon,
                                 timestamp: Date.now()
                             });
                         }
@@ -632,7 +643,9 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 gap: '15px',
                                 cursor: 'pointer',
                                 boxShadow: '0 8px 16px rgba(255, 183, 77, 0.2)',
-                                textAlign: 'left'
+                                textAlign: 'left',
+                                width: '100%',
+                                boxSizing: 'border-box'
                             }}
                             onClick={() => {
                                 // 다시쓰기 요청이 있으면 해당 글로 이동, 아니면 피드백/포인트 사유 확인
@@ -641,14 +654,21 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             }}
                         >
                             <span style={{ fontSize: '2.5rem' }}>
-                                {teacherNotify?.type === 'point' ? '🎁' : '♻️'}
+                                {teacherNotify?.icon || (teacherNotify?.type === 'point' ? '🎁' : '♻️')}
                             </span>
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: '1.05rem', fontWeight: '900', color: '#E65100', marginBottom: '2px' }}>
+                                <div style={{
+                                    fontSize: '1.05rem',
+                                    fontWeight: '900',
+                                    color: '#E65100',
+                                    marginBottom: '2px',
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'keep-all'
+                                }}>
                                     {teacherNotify?.message || "♻️ 선생님의 다시 쓰기 요청이 있습니다."}
                                 </div>
                                 <div style={{ fontSize: '0.85rem', color: '#F57C00', fontWeight: 'bold' }}>
-                                    {teacherNotify?.type === 'point' ? "포인트 내역은 상단 지갑에서 확인할 수 있어요! ✨" : "지금 바로 확인하고 완벽한 글을 완성해봐요! ✨"}
+                                    {teacherNotify?.type === 'point' ? "포인트 내역은 상단 지갑(P)을 눌러 확인할 수 있어요! ✨" : "지금 바로 확인하고 완벽한 글을 완성해봐요! ✨"}
                                 </div>
                             </div>
                             {returnedCount > 0 && (
