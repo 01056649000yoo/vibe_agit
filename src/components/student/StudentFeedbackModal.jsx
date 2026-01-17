@@ -41,7 +41,9 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
     // 탭별 필터링 데이터
     const filteredFeedbacks = feedbacks.filter(f => {
         const isRewrite = f.type === 'rewrite' || f.content?.includes('다시 쓰기') || f.content?.includes('수정');
-        if (activeTab === 1) return isRewrite;
+        const isPoint = f.type === 'point';
+
+        if (activeTab === 1) return isRewrite || isPoint;
         if (activeTab === 2) return f.type === 'reaction' || f.type === 'comment';
         return true;
     });
@@ -150,12 +152,13 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                                             f.reaction_type === 'laugh' ? '😂' :
                                                                 f.reaction_type === 'wow' ? '👏' :
                                                                     f.reaction_type === 'bulb' ? '💡' : '✨'
-                                                    ) : isRewrite ? '♻️' : '💬'}
+                                                    ) : isRewrite ? '♻️' : f.type === 'point' ? '💰' : '💬'}
                                                 </span>
-                                                <span style={{ fontWeight: 'bold', color: isRewrite ? '#E65100' : '#5D4037', fontSize: '0.95rem' }}>
+                                                <span style={{ fontWeight: 'bold', color: (isRewrite || f.type === 'point') ? '#E65100' : '#5D4037', fontSize: '0.95rem' }}>
                                                     {f.type === 'reaction' ? `${f.students?.name} 친구가 리액션을 남겼어요!` :
                                                         f.type === 'comment' ? `${f.students?.name} 친구가 댓글을 남겼어요!` :
-                                                            isRewrite ? '선생님의 다시 쓰기 요청이 있습니다!' : '새로운 알림이 도착했어요!'}
+                                                            f.type === 'point' ? '포인트 선물이 도착했어요!' :
+                                                                isRewrite ? '선생님의 다시 쓰기 요청이 있습니다!' : '새로운 알림이 도착했어요!'}
                                                 </span>
                                             </div>
 

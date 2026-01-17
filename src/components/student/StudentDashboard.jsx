@@ -460,10 +460,26 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .in('post_id', postIds)
                 .neq('student_id', studentSession.id);
 
+            // 4. 포인트/시스템 알림 가져오기 (추가)
+            const { data: pointLogs } = await supabase
+                .from('point_logs')
+                .select('*, student_posts(title, id)')
+                .eq('student_id', studentSession.id)
+                .order('created_at', { ascending: false })
+                .limit(20);
+
             const combined = [
                 ...returnedItems,
                 ...(reactions || []).map(r => ({ ...r, type: 'reaction' })),
-                ...(comments || []).map(c => ({ ...c, type: 'comment' }))
+                ...(comments || []).map(c => ({ ...c, type: 'comment' })),
+                ...(pointLogs || [])
+                    .filter(log => log.reason && !log.reason.includes('다시 쓰기')) // 다시 쓰기는 위에서 별도로 처리함
+                    .map(log => ({
+                        ...log,
+                        type: 'point',
+                        content: log.reason,
+                        title: log.student_posts?.title
+                    }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             setFeedbacks(combined);
