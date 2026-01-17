@@ -337,6 +337,15 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                             is_returned: true     // 다시 쓰기 요청 상태 활성화
                         })
                         .eq('id', post.id);
+
+                    // [추가] 다시 쓰기 요청 알림 로그 생성
+                    await supabase.from('point_logs').insert({
+                        student_id: post.student_id,
+                        post_id: post.id,
+                        mission_id: post.mission_id,
+                        amount: 0,
+                        reason: `[AI 요청] '${post.title}' 글에 대한 다시 쓰기 요청이 도착했습니다. ♻️`
+                    });
                 }
             }
             // 완료 알림 표시
@@ -374,6 +383,15 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 .eq('id', post.id);
 
             if (error) throw error;
+
+            // [추가] 다시 쓰기 요청 알림 로그 생성
+            await supabase.from('point_logs').insert({
+                student_id: post.student_id,
+                post_id: post.id,
+                mission_id: post.mission_id,
+                amount: 0,
+                reason: `선생님께서 '${post.title}' 글에 대한 다시 쓰기를 요청하셨습니다. ♻️`
+            });
 
             alert('다시 쓰기 요청을 전달했습니다! 📤');
             setSelectedPost(null);
@@ -437,6 +455,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 .from('point_logs')
                 .insert({
                     student_id: post.student_id,
+                    post_id: post.id,
+                    mission_id: post.mission_id,
                     amount: totalPointsToGive,
                     reason: `글쓰기 승인 보상: ${selectedMission.title}${isBonusAchieved ? ' (보너스 달성! 🔥)' : ''}`
                 });
@@ -477,6 +497,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 await supabase.from('students').update({ total_points: (st?.total_points || 0) + amount }).eq('id', post.student_id);
                 await supabase.from('point_logs').insert({
                     student_id: post.student_id,
+                    post_id: post.id,
+                    mission_id: post.mission_id,
                     amount: amount,
                     reason: `일괄 승인 보상: ${selectedMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`
                 });

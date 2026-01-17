@@ -449,7 +449,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             // 2. 반응 가져오기
             const { data: reactions } = await supabase
                 .from('post_reactions')
-                .select('*, students(name), student_posts(title, id)')
+                .select('*, students:student_id(name), student_posts(title, id)')
                 .in('post_id', postIds)
                 .neq('student_id', studentSession.id);
 
