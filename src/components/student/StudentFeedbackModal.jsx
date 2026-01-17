@@ -122,27 +122,51 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {filteredFeedbacks.map((f, idx) => {
                                     const isRewrite = f.type === 'rewrite' || f.content?.includes('다시 쓰기') || f.content?.includes('수정');
+                                    const isPointPos = f.type === 'point' && f.amount > 0;
+                                    const isPointNeg = f.type === 'point' && f.amount < 0;
+
+                                    let bgColor = '#F9F9F9';
+                                    let borderColor = '#F1F1F1';
+                                    let hoverBg = '#F0F7FF';
+                                    let hoverBorder = '#D0E1F9';
+
+                                    if (isRewrite) {
+                                        bgColor = '#FFF8E1';
+                                        borderColor = '#FFE082';
+                                        hoverBg = '#FFF3D0';
+                                        hoverBorder = '#FFD54F';
+                                    } else if (isPointPos) {
+                                        bgColor = '#FFFDE7';
+                                        borderColor = '#FFF59D';
+                                        hoverBg = '#FFF9C4';
+                                        hoverBorder = '#FBC02D';
+                                    } else if (isPointNeg) {
+                                        bgColor = '#FFEBEE';
+                                        borderColor = '#FFCDD2';
+                                        hoverBg = '#FFDADE';
+                                        hoverBorder = '#EF9A9A';
+                                    }
 
                                     return (
                                         <div
                                             key={f.id || idx}
                                             style={{
                                                 padding: '16px',
-                                                background: isRewrite ? '#FFF8E1' : '#F9F9F9',
+                                                background: bgColor,
                                                 borderRadius: '20px',
-                                                border: isRewrite ? '1px solid #FFE082' : '1px solid #F1F1F1',
+                                                border: `1px solid ${borderColor}`,
                                                 cursor: 'pointer',
                                                 transition: 'all 0.2s',
                                                 position: 'relative'
                                             }}
                                             onClick={() => handleNotificationClick(f)}
                                             onMouseEnter={e => {
-                                                e.currentTarget.style.background = isRewrite ? '#FFF3D0' : '#F0F7FF';
-                                                e.currentTarget.style.borderColor = isRewrite ? '#FFD54F' : '#D0E1F9';
+                                                e.currentTarget.style.background = hoverBg;
+                                                e.currentTarget.style.borderColor = hoverBorder;
                                             }}
                                             onMouseLeave={e => {
-                                                e.currentTarget.style.background = isRewrite ? '#FFF8E1' : '#F9F9F9';
-                                                e.currentTarget.style.borderColor = isRewrite ? '#FFE082' : '#F1F1F1';
+                                                e.currentTarget.style.background = bgColor;
+                                                e.currentTarget.style.borderColor = borderColor;
                                             }}
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
@@ -152,19 +176,25 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                                             f.reaction_type === 'laugh' ? '😂' :
                                                                 f.reaction_type === 'wow' ? '👏' :
                                                                     f.reaction_type === 'bulb' ? '💡' : '✨'
-                                                    ) : isRewrite ? '♻️' : f.type === 'point' ? '💰' : '💬'}
+                                                    ) : isRewrite ? '♻️' : f.type === 'point' ? (f.amount < 0 ? '⚠️' : '🎁') : '💬'}
                                                 </span>
-                                                <span style={{ fontWeight: 'bold', color: (isRewrite || f.type === 'point') ? '#E65100' : '#5D4037', fontSize: '0.95rem' }}>
+                                                <span style={{ fontWeight: 'bold', color: isRewrite ? '#E65100' : f.type === 'point' ? (f.amount < 0 ? '#D32F2F' : '#FBC02D') : '#5D4037', fontSize: '0.95rem' }}>
                                                     {f.type === 'reaction' ? `${f.students?.name} 친구가 리액션을 남겼어요!` :
                                                         f.type === 'comment' ? `${f.students?.name} 친구가 댓글을 남겼어요!` :
-                                                            f.type === 'point' ? '포인트 선물이 도착했어요!' :
+                                                            f.type === 'point' ? (
+                                                                f.amount < 0
+                                                                    ? `⚠️ 포인트 승인이 취소되었어요. (${f.amount}점)`
+                                                                    : `🎁 포인트 선물이 도착했어요! (+${f.amount}점)`
+                                                            ) :
                                                                 isRewrite ? '선생님의 다시 쓰기 요청이 있습니다!' : '새로운 알림이 도착했어요!'}
                                                 </span>
                                             </div>
 
-                                            <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
-                                                글 제목: "{f.student_posts?.title || f.title || '제목 없음'}"
-                                            </div>
+                                            {f.type !== 'point' && (
+                                                <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
+                                                    글 제목: "{f.student_posts?.title || f.title || '제목 없음'}"
+                                                </div>
+                                            )}
 
                                             <div style={{
                                                 fontSize: '0.9rem',
