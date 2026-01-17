@@ -79,15 +79,15 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
                         console.log('⚡ 실시간 알림 포착!', newLog);
 
-                        // 2. 즉시 포인트 정보 갱신 (화면 상단 숫자)
+                        // 2. 즉시 포인트 정보 및 소식함 갱신 (네트워크 동기화)
                         fetchMyPoints().catch(err => console.error('포인트 갱신 실패:', err));
+                        fetchFeedbacks().catch(err => console.error('소식함 갱신 실패:', err));
 
                         // 3. 다시 쓰기 여부 판별
                         const isRewrite = newLog.reason?.includes('다시 쓰기') || newLog.reason?.includes('♻️');
 
-                        // 4. 소식함 리스트 즉시 강제 삽입 (새로고침 없이)
+                        // 4. 소식함 리스트 즉시 강제 삽입 (사용자 체감 성능 향상을 위한 낙관적 업데이트)
                         setFeedbacks(prev => {
-                            // 중복 방지
                             if (prev.some(f => f.id === newLog.id)) return prev;
 
                             const formattedNotif = {

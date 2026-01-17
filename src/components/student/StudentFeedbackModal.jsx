@@ -190,9 +190,13 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                                 </span>
                                             </div>
 
-                                            {f.type !== 'point' && (
+                                            {f.type !== 'point' ? (
                                                 <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
                                                     글 제목: "{f.student_posts?.title || f.title || '제목 없음'}"
+                                                </div>
+                                            ) : (
+                                                <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
+                                                    사유: {f.reason || '관리자 지급/회수'}
                                                 </div>
                                             )}
 

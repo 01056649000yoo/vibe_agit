@@ -469,7 +469,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                     post_id: post.id,
                     mission_id: post.mission_id,
                     amount: totalPointsToGive,
-                    reason: `글쓰기 미션 승인 보상 ${isBonusAchieved ? '(보너스 포함! 🔥)' : ''}`
+                    reason: `[${selectedMission.title}] 미션 승인 보상 ${isBonusAchieved ? '(보너스 포함! 🔥)' : ''}`
                 });
 
             if (logError) throw logError;
@@ -573,7 +573,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 post_id: post.id,
                 mission_id: post.mission_id,
                 amount: -amountToRecover,
-                reason: `승인 취소로 인한 포인트 회수`
+                reason: `[${selectedMission.title}] 승인 취소로 인한 포인트 회수`
             });
 
             alert(`✅ ${amountToRecover}포인트 회수 및 승인 취소가 완료되었습니다.`);
