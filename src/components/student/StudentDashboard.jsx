@@ -61,34 +61,36 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             checkActivity();
             fetchStats();
 
-            // [긴급 정밀 수정] 실시간 알림 구독 - 포인트 및 다시 쓰기 요청 즉시 반영 ⚡🔔
+            // [긴급 안정화] 실시간 알림 구독 - 필터 제거 후 클라이언트 측 검증으로 변경 ⚡🔔
             const notificationChannel = supabase
-                .channel(`student_notif_${studentSession.id}`)
+                .channel(`global_student_logs_${studentSession.id}`)
                 .on(
                     'postgres_changes',
                     {
                         event: 'INSERT',
                         schema: 'public',
-                        table: 'point_logs',
-                        filter: `student_id=eq.${studentSession.id}`
+                        table: 'point_logs'
+                        // filter: `student_id=eq.${studentSession.id}` // 필터 제거 (안정성 확보)
                     },
                     (payload) => {
-                        console.log('⚡ 실시간 알림 수신:', payload.new);
                         const log = payload.new;
+
+                        // 내 정보만 필터링
+                        if (log.student_id !== studentSession.id) return;
+
+                        console.log('⚡ 내 포인트 알림 수신:', log);
                         const isRewrite = log.reason?.includes('다시 쓰기') || log.reason?.includes('♻️');
 
-                        // 1. 포인트 및 활동 상태 즉시 동기화 (비동기)
-                        // isLoading 상태와 상관없이 데이터만 신속하게 업데이트
+                        // 1. 포인트 및 활동 상태 최우선 갱신
                         fetchMyPoints().catch(err => console.error('포인트 동기화 실패:', err));
-                        setHasActivity(true);
 
                         if (isRewrite) {
                             checkActivity().catch(err => console.error('활동 카운트 동기화 실패:', err));
+                            fetchFeedbacks(); // 다시쓰기는 전체 조회가 정확함
                         }
 
-                        // 2. 알림 리스트에 '즉시' 수동 추가 (네트워크 대기 없이 UI 반영)
+                        // 2. 알림 리스트 즉시 강제 업데이트
                         setFeedbacks(prev => {
-                            // 중복 방지 (이미 존재하는 ID면 무시)
                             if (prev.some(f => f.id === log.id)) return prev;
 
                             const newNotif = {
@@ -99,17 +101,13 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 created_at: log.created_at || new Date().toISOString()
                             };
 
-                            // "다시 쓰기"의 경우 배너와 연동되어 있으므로 전체 조회가 더 정확할 수 있음
-                            if (isRewrite) {
-                                fetchFeedbacks();
-                            }
-
                             return [newNotif, ...prev];
                         });
+                        setHasActivity(true);
                     }
                 )
                 .subscribe((status) => {
-                    console.log(`[Subscription] Status: ${status}`);
+                    console.log(`[Realtime] Subscription status for student ${studentSession.id}: ${status}`);
                 });
 
             return () => {
