@@ -390,6 +390,33 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         }
     };
 
+    const handleDirectRewriteGo = async () => {
+        try {
+            // 가장 최근의 다시 쓰기 요청 글 하나를 가져옴
+            const { data, error } = await supabase
+                .from('student_posts')
+                .select('id, mission_id')
+                .eq('student_id', studentSession.id)
+                .eq('is_returned', true)
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (error) throw error;
+            if (data) {
+                onNavigate('writing', {
+                    missionId: data.mission_id,
+                    postId: data.id,
+                    mode: 'edit'
+                });
+            }
+        } catch (err) {
+            console.error('다시 쓰기 페이지 이동 실패:', err.message);
+            // 에러 시 일반 피드백 모달이라도 열어줌
+            openFeedback();
+        }
+    };
+
     const fetchFeedbacks = async () => {
         setLoadingFeedback(true);
         try {
@@ -559,7 +586,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 boxShadow: '0 8px 16px rgba(255, 183, 77, 0.2)',
                                 textAlign: 'left'
                             }}
-                            onClick={openFeedback}
+                            onClick={handleDirectRewriteGo}
                         >
                             <span style={{ fontSize: '2.5rem' }}>♻️</span>
                             <div style={{ flex: 1 }}>
