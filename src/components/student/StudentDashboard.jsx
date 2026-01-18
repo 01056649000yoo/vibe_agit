@@ -124,31 +124,74 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     const loadInitialData = async () => {
         try {
-            await fetchMyPoints();
+            const data = await fetchMyPoints();
+            // [정밀 수리] 포인트/펫 데이터 로드 직후 퇴화 체크 수행 (state 의존성 제거)
+            if (data?.pet_data) {
+                await checkPetDegeneration(data.pet_data);
+            }
         } catch (err) {
             console.error('초기 데이터 로드 실패:', err);
         } finally {
-            // 어떤 경우에도 로딩은 해제
             setIsLoading(false);
-            checkPetDegeneration();
         }
     };
 
-    // [추가] 드래곤 퇴화 로직 (30일 미접속/미관리 시)
-    const checkPetDegeneration = () => {
-        const lastFedDate = new Date(petData.lastFed);
-        const today = new Date();
-        const diffTime = Math.abs(today - lastFedDate);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // [정밀 수리] 드래곤 퇴화 로직 (14일 미접속/미관리 시) - DB 직접 업데이트 및 안전 저장
+    const checkPetDegeneration = async (currentPetData) => {
+        if (!currentPetData?.lastFed) return;
 
-        if (diffDays >= 30 && petData.level > 1) {
-            setPetData(prev => ({
-                ...prev,
-                level: Math.max(1, prev.level - 1),
+        // 날짜 차이 계산 (로컬 시간 기준 자정으로 통일하여 정확도 향상)
+        const parseLocalrDate = (dateStr) => {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        };
+
+        const lastFedDate = parseLocalrDate(currentPetData.lastFed);
+        const now = new Date();
+        const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const diffTime = todayDate - lastFedDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        console.log(`🐉 드래곤 상태 점검: 마지막 식사 ${diffDays}일 전 (${currentPetData.lastFed})`);
+
+        // [기준 강화] 14일 이상 경과 시 퇴화
+        if (diffDays >= 14) {
+            let newLevel = currentPetData.level;
+
+            // 레벨 > 1 이면 감소, 레벨 1이면 유지. 경험치는 무조건 0 초기화
+            if (newLevel > 1) {
+                newLevel -= 1;
+            }
+
+            // DB에 저장할 새로운 데이터 객체 (스프레드 연산자로 기존 필드 보존 확인)
+            const newPetData = {
+                ...currentPetData,
+                level: newLevel,
                 exp: 0,
-                lastFed: today.toISOString().split('T')[0]
-            }));
-            alert('드래곤을 너무 오래 돌보지 않아 레벨이 떨어졌어요! 다시 열심히 키워봐요! 😢');
+                lastFed: now.toISOString().split('T')[0] // 오늘부터 다시 카운트 시작
+            };
+
+            try {
+                // [안정성 점검] 퇴화 결과 즉시 DB 저장
+                const { error } = await supabase
+                    .from('students')
+                    .update({
+                        pet_data: newPetData
+                    })
+                    .eq('id', studentSession.id);
+
+                if (error) throw error;
+
+                console.warn('📉 드래곤 퇴화 페널티 적용됨:', newPetData);
+
+                // 상태 동기화 및 알림
+                setPetData(newPetData);
+                alert('드래곤을 14일 동안 돌보지 않아 기운이 다 빠졌어요! 레벨이 내려가거나 초기화되었으니 다시 사랑으로 키워주세요! 😢');
+
+            } catch (err) {
+                console.error('❌ 드래곤 퇴화 정보 저장 실패:', err.message);
+            }
         }
     };
 
@@ -175,30 +218,34 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         // [안전장치] 포인트 정보가 undefined거나 null이면 중단
         if (points === undefined || points === null) return;
 
-        if (points < 50) {
-            alert('포인트가 부족해요! 글을 써서 포인트를 모아보세요. ✍️');
+        // [변경] 먹이 주기 비용 상향: 50 -> 80 포인트
+        const FEED_COST = 80;
+        if (points < FEED_COST) {
+            alert(`먹이를 주려면 ${FEED_COST}포인트가 필요해요! 글을 써서 포인트를 더 모아보세요. 💪`);
             return;
         }
 
-        const newPoints = points - 50;
+        const newPoints = points - FEED_COST;
         if (newPoints < 0) {
             alert('작업을 완료할 수 없습니다. 포인트가 유효하지 않습니다.');
             return;
         }
+
+        // 경험치 증가 로직 (기존 20 유지)
         let newExp = petData.exp + 20;
         let newLevel = petData.level;
 
+        // 레벨업 로직 (100 EXP 달성 시)
         if (newExp >= 100) {
             if (newLevel < 5) {
                 newLevel += 1;
                 newExp = newExp % 100;
             } else {
-                newExp = 100;
+                newExp = 100; // 만렙 시 경험치 고정
             }
         }
 
         const today = new Date().toISOString().split('T')[0];
-
         const isLevelUp = newLevel > petData.level;
 
         try {
@@ -209,16 +256,20 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 playEvolutionSound();
             }
 
+            // [데이터 저장 최적화] 포인트 차감 및 펫 데이터 업데이트를 한 번에 원자적으로 처리
+            const newPetData = {
+                ...petData,
+                level: newLevel,
+                exp: newExp,
+                lastFed: today
+            };
+
+            // DB 업데이트 요청
             const { error } = await supabase
                 .from('students')
                 .update({
                     total_points: newPoints,
-                    pet_data: {
-                        ...petData,
-                        level: newLevel,
-                        exp: newExp,
-                        lastFed: today
-                    }
+                    pet_data: newPetData
                 })
                 .eq('id', studentSession.id);
 
@@ -407,6 +458,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     }));
                 }
             }
+            return data; // [수정] 데이터 반환하여 연쇄 로직 처리가능하게 함
         } catch (err) {
             console.error('포인트 로드 실패:', err.message);
             alert('데이터를 불러오는 중 문제가 발생했습니다. 페이지를 다시 불러와주세요! 🔄');
@@ -1261,14 +1313,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                         }}
                         onClick={() => onNavigate('friends_hideout')}
                     >
-                        {hasActivity && (
-                            <div style={{
-                                position: 'absolute', top: '15px', right: '15px',
-                                width: '12px', height: '12px', background: '#FF5252',
-                                borderRadius: '50%', border: '2px solid white',
-                                boxShadow: '0 0 10px rgba(255, 82, 82, 0.5)'
-                            }} />
-                        )}
+
                         <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👀</div>
                         <h3 style={{ margin: 0, color: '#5D4037' }}>친구 아지트</h3>
                         <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>친구들의 글 읽기</p>
