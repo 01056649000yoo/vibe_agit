@@ -3,9 +3,9 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
-import confetti from 'canvas-confetti';
 import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
+import { useDragonPet } from '../../hooks/useDragonPet';
 
 /**
  * 역할: 학생 메인 대시보드 - 포인트 표시 및 활동 메뉴
@@ -25,17 +25,30 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 }); // [추가] 성장 통계
     const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', icon: '🌱', nextGoal: 1000 }); // [추가] 레벨 정보
     const [isLoading, setIsLoading] = useState(true); // [긴급 점검] 데이터 로딩 상태 관리 추가
-    const [petData, setPetData] = useState({
-        name: '나의 드래곤',
-        level: 1,
-        exp: 0,
-        lastFed: new Date().toISOString().split('T')[0],
-        ownedItems: [],
-        background: 'default' // [신규] 아지트 배경
-    });
+    // [신규] 드래곤 설정 (기본값 80, 14)
+    // [신규] 드래곤 설정 (기본값 80, 14로 초기화 - 비활성화 방지)
+    const [dragonConfig, setDragonConfig] = useState({ feedCost: 80, degenDays: 14 });
+
+    // [Refactor] 드래곤 로직 분리 (useDragonPet)
+    // config 값이 업데이트되면 훅 내부 로직도 자동 반영
+    const {
+        petData,
+        setPetData,
+        isEvolving,
+        isFlashing,
+        handleFeed,
+        checkPetDegeneration,
+        buyItem,
+        equipItem
+    } = useDragonPet(
+        studentSession?.id,
+        points,
+        setPoints,
+        dragonConfig ? dragonConfig.feedCost : 80,
+        dragonConfig ? dragonConfig.degenDays : 14
+    );
+
     const [isShopOpen, setIsShopOpen] = useState(false);
-    const [isEvolving, setIsEvolving] = useState(false); // [추가] 진화 애니메이션 상태
-    const [isFlashing, setIsFlashing] = useState(false); // [추가] 박스 내 섬광 상태
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -125,10 +138,25 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const loadInitialData = async () => {
         try {
             const data = await fetchMyPoints();
-            // [정밀 수리] 포인트/펫 데이터 로드 직후 퇴화 체크 수행 (state 의존성 제거)
-            if (data?.pet_data) {
-                await checkPetDegeneration(data.pet_data);
+            // [정밀 수리] 학급 설정 먼저 로드하여 정확한 퇴화 기준일 획득
+            let currentDegenDays = 14; // 기본값
+            const targetClassId = studentSession?.classId || studentSession?.class_id;
+            if (targetClassId) {
+                try {
+                    const classConfig = await fetchClassSettings();
+                    if (classConfig) {
+                        currentDegenDays = classConfig.degenDays;
+                    }
+                } catch (e) {
+                    console.error('설정 로드 중 에러, 기본값 유지', e);
+                }
             }
+
+            // [정밀 수리] 포인트/펫 데이터 로드 및 퇴화 체크 (DB 설정값 적용)
+            if (data?.pet_data) {
+                await checkPetDegeneration(data.pet_data, currentDegenDays);
+            }
+
             checkActivity();
         } catch (err) {
             console.error('초기 데이터 로드 실패:', err);
@@ -137,64 +165,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         }
     };
 
-    // [정밀 수리] 드래곤 퇴화 로직 (14일 미접속/미관리 시) - DB 직접 업데이트 및 안전 저장
-    const checkPetDegeneration = async (currentPetData) => {
-        if (!currentPetData?.lastFed) return;
 
-        // 날짜 차이 계산 (로컬 시간 기준 자정으로 통일하여 정확도 향상)
-        const parseLocalrDate = (dateStr) => {
-            const [y, m, d] = dateStr.split('-').map(Number);
-            return new Date(y, m - 1, d);
-        };
-
-        const lastFedDate = parseLocalrDate(currentPetData.lastFed);
-        const now = new Date();
-        const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        const diffTime = todayDate - lastFedDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        console.log(`🐉 드래곤 상태 점검: 마지막 식사 ${diffDays}일 전 (${currentPetData.lastFed})`);
-
-        // [기준 강화] 14일 이상 경과 시 퇴화
-        if (diffDays >= 14) {
-            let newLevel = currentPetData.level;
-
-            // 레벨 > 1 이면 감소, 레벨 1이면 유지. 경험치는 무조건 0 초기화
-            if (newLevel > 1) {
-                newLevel -= 1;
-            }
-
-            // DB에 저장할 새로운 데이터 객체 (스프레드 연산자로 기존 필드 보존 확인)
-            const newPetData = {
-                ...currentPetData,
-                level: newLevel,
-                exp: 0,
-                lastFed: now.toISOString().split('T')[0] // 오늘부터 다시 카운트 시작
-            };
-
-            try {
-                // [안정성 점검] 퇴화 결과 즉시 DB 저장
-                const { error } = await supabase
-                    .from('students')
-                    .update({
-                        pet_data: newPetData
-                    })
-                    .eq('id', studentSession.id);
-
-                if (error) throw error;
-
-                console.warn('📉 드래곤 퇴화 페널티 적용됨:', newPetData);
-
-                // 상태 동기화 및 알림
-                setPetData(newPetData);
-                alert('드래곤을 14일 동안 돌보지 않아 기운이 다 빠졌어요! 레벨이 내려가거나 초기화되었으니 다시 사랑으로 키워주세요! 😢');
-
-            } catch (err) {
-                console.error('❌ 드래곤 퇴화 정보 저장 실패:', err.message);
-            }
-        }
-    };
 
     // [추가] 단계별 드래곤 정보 (이미지 기반)
     const getDragonStage = (level) => {
@@ -208,182 +179,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     const dragonInfo = getDragonStage(petData.level);
 
-    // [추가] 먹이 주기 기능
-    const handleFeed = async () => {
-        // [점검] 로딩 중이거나 포인트 정보가 유효하지 않으면 실행 방지
-        if (isLoading) {
-            alert('데이터를 불러오는 중입니다. 잠시만 기다려 주세요! ⏳');
-            return;
-        }
 
-        // [안전장치] 포인트 정보가 undefined거나 null이면 중단
-        if (points === undefined || points === null) return;
-
-        // [변경] 먹이 주기 비용 상향: 50 -> 80 포인트
-        const FEED_COST = 80;
-        if (points < FEED_COST) {
-            alert(`먹이를 주려면 ${FEED_COST}포인트가 필요해요! 글을 써서 포인트를 더 모아보세요. 💪`);
-            return;
-        }
-
-        const newPoints = points - FEED_COST;
-        if (newPoints < 0) {
-            alert('작업을 완료할 수 없습니다. 포인트가 유효하지 않습니다.');
-            return;
-        }
-
-        // 경험치 증가 로직 (기존 20 유지)
-        let newExp = petData.exp + 20;
-        let newLevel = petData.level;
-
-        // 레벨업 로직 (100 EXP 달성 시)
-        if (newExp >= 100) {
-            if (newLevel < 5) {
-                newLevel += 1;
-                newExp = newExp % 100;
-            } else {
-                newExp = 100; // 만렙 시 경험치 고정
-            }
-        }
-
-        const today = new Date().toISOString().split('T')[0];
-        const isLevelUp = newLevel > petData.level;
-
-        try {
-            // [진화 연출 시작]
-            if (isLevelUp) {
-                setIsEvolving(true);
-                // 진화 사운드 (구조 제공)
-                playEvolutionSound();
-            }
-
-            // [데이터 저장 최적화] 포인트 차감 및 펫 데이터 업데이트를 한 번에 원자적으로 처리
-            const newPetData = {
-                ...petData,
-                level: newLevel,
-                exp: newExp,
-                lastFed: today
-            };
-
-            // DB 업데이트 요청
-            const { error } = await supabase
-                .from('students')
-                .update({
-                    total_points: newPoints,
-                    pet_data: newPetData
-                })
-                .eq('id', studentSession.id);
-
-            if (error) throw error;
-
-            if (isLevelUp) {
-                // [연출 1단계] 진동 및 빛 새어 나옴 (1.5초)
-                setTimeout(() => {
-                    // [연출 2단계] 섬광 및 이미지 교체
-                    setIsFlashing(true);
-
-                    setPetData(prev => ({
-                        ...prev,
-                        level: newLevel,
-                        exp: newExp,
-                        lastFed: today
-                    }));
-
-                    // 파티클 폭발 효과
-                    confetti({
-                        particleCount: 150,
-                        spread: 70,
-                        origin: { y: 0.6 },
-                        colors: ['#FFD700', '#FFA500', '#FF4500']
-                    });
-
-                    // [연출 3단계] 섬광 해제 및 종료
-                    setTimeout(() => {
-                        setIsFlashing(false);
-                        setIsEvolving(false);
-                    }, 500);
-                }, 1500);
-
-                // 포인트는 즉시 반영
-                setPoints(newPoints);
-            } else {
-                // 일반 업데이트
-                setPoints(newPoints);
-                setPetData(prev => ({
-                    ...prev,
-                    level: newLevel,
-                    exp: newExp,
-                    lastFed: today
-                }));
-            }
-        } catch (err) {
-            console.error('포인트 업데이트 실패:', err.message);
-            alert('포인트 사용에 실패했습니다. 다시 시도해 주세요!');
-        }
-    };
-
-    // [신규] 아지트 배경 구매/적용 로직
-    const handleBuyItem = async (item) => {
-        if (isLoading) {
-            alert('데이터를 불러오는 중입니다. 잠시만 기다려 주세요! ⏳');
-            return;
-        }
-
-        if (points === undefined || points === null) return;
-
-        if (points < item.price) {
-            alert('포인트가 부족해요! 꾸준히 글을 써 보세요. ✍️');
-            return;
-        }
-
-        if (petData.ownedItems.includes(item.id)) return;
-
-        const newPoints = points - item.price;
-        const newOwned = [...petData.ownedItems, item.id];
-        const newPetData = { ...petData, ownedItems: newOwned };
-
-        try {
-            const { error } = await supabase
-                .from('students')
-                .update({
-                    total_points: newPoints,
-                    pet_data: newPetData
-                })
-                .eq('id', studentSession.id);
-
-            if (error) throw error;
-
-            setPoints(newPoints);
-            setPetData(newPetData);
-            alert(`[${item.name}] 구매 성공! 리스트에서 '적용하기'를 눌러보세요. ✨`);
-        } catch (err) {
-            console.error('배경 구매 실패:', err.message);
-        }
-    };
-
-    const handleToggleEquip = async (bgId) => {
-        if (isLoading) return;
-        const newPetData = { ...petData, background: bgId };
-
-        try {
-            const { error } = await supabase
-                .from('students')
-                .update({ pet_data: newPetData })
-                .eq('id', studentSession.id);
-
-            if (error) throw error;
-            setPetData(newPetData);
-        } catch (err) {
-            console.error('배경 변경 실패:', err.message);
-        }
-    };
-
-    // [신규] 진화 효과음 플레이어 (샘플 구조)
-    const playEvolutionSound = () => {
-        // const audio = new Audio('/assets/sounds/evolution_success.mp3');
-        // audio.play().catch(e => console.log('사운드 재생 실패:', e));
-        console.log('🎵 진화 사운드 재생: 두구두구두구~ 짠!');
-    };
 
     // [추가] 마지막 식사 후 경과 일수 계산
     const getDaysSinceLastFed = () => {
@@ -470,6 +266,61 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             // 에러 시 isLoading을 false로 바꾸지 않고 멈춰버리거나, 알림 후 유지
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // [신규] 학급 드래곤 설정 로드
+    const fetchClassSettings = async () => {
+        let classId = studentSession.classId || studentSession.class_id;
+
+        // [비상구] 세션에 class_id가 없으면 DB에서 직접 조회
+        if (!classId && studentSession?.id) {
+            console.warn('⚠️ Session에 class_id 없음. DB에서 재조회 시도...');
+            const { data: studentData } = await supabase
+                .from('students')
+                .select('class_id')
+                .eq('id', studentSession.id)
+                .single();
+            if (studentData?.class_id) {
+                classId = studentData.class_id;
+                console.log('✅ DB에서 class_id 복구 성공:', classId);
+            }
+        }
+
+        console.log(`🔍 드래곤 설정 로드 시작 (ClassID: ${classId})`);
+
+        if (!classId) {
+            console.error('❌ class_id를 찾을 수 없어 설정 로드 중단');
+            return null;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from('classes')
+                .select('dragon_feed_points, dragon_degen_days')
+                .eq('id', classId)
+                .single();
+
+            if (error) {
+                console.error('❌ 드래곤 설정 로드 쿼리 에러:', error);
+                throw error;
+            }
+
+            if (data) {
+                setDragonConfig({
+                    feedCost: data.dragon_feed_points || 80,
+                    degenDays: data.dragon_degen_days || 14
+                });
+                console.log(`🐉 드래곤 설정 로드 완료 (ClassID: ${studentSession.class_id}):`, data);
+                return {
+                    feedCost: data.dragon_feed_points || 80,
+                    degenDays: data.dragon_degen_days || 14
+                };
+            }
+            console.warn('⚠️ 드래곤 설정 데이터 없음 (data is null)');
+            return null;
+        } catch (err) {
+            console.error('❌ 드래곤 설정 로드 치명적 오류:', err);
         }
     };
 
@@ -1118,7 +969,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                         <div style={{ background: '#FFFDE7', padding: '16px', borderRadius: '18px', border: '1px solid #FFF9C4' }}>
                                             <div style={{ fontSize: '0.9rem', color: '#795548', lineHeight: '1.5' }}>
                                                 <span style={{ fontWeight: 'bold' }}>💡 드래곤 돌보기 팁</span><br />
-                                                글을 써서 모은 포인트로 맛있는 먹이를 줄 수 있어요. 30일 동안 돌보지 않으면 드래곤이 지쳐서 레벨이 내려갈 수 있으니 주의하세요!
+                                                글을 써서 모은 포인트로 맛있는 먹이를 줄 수 있어요. {dragonConfig.degenDays}일 동안 돌보지 않으면 드래곤이 지쳐서 레벨이 내려갈 수 있으니 주의하세요!
                                             </div>
                                         </div>
 
@@ -1144,7 +995,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                     gap: '10px'
                                                 }}
                                             >
-                                                🍖 먹이 주기 (50P)
+                                                🍖 먹이 주기 ({dragonConfig.feedCost}P)
                                             </motion.button>
                                             <motion.button
                                                 whileHover={{ scale: 1.05 }}
@@ -1477,7 +1328,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                     <Button
                                                         size="sm"
                                                         style={{ width: '100%', background: '#FBC02D', color: '#795548', fontWeight: 'bold' }}
-                                                        onClick={() => handleBuyItem(item)}
+                                                        onClick={() => buyItem(item)}
                                                     >
                                                         구매하기
                                                     </Button>
@@ -1491,7 +1342,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                                             color: isEquipped ? 'white' : '#7F8C8D',
                                                             border: isEquipped ? 'none' : '1px solid #DEE2E6'
                                                         }}
-                                                        onClick={() => handleToggleEquip(item.id)}
+                                                        onClick={() => equipItem(item.id)}
                                                     >
                                                         {isEquipped ? '사용 중' : '적용하기'}
                                                     </Button>

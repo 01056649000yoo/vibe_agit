@@ -10,6 +10,7 @@ const StudentManager = lazy(() => import('./StudentManager'));
 const MissionManager = lazy(() => import('./MissionManager'));
 const ArchiveManager = lazy(() => import('./ArchiveManager'));
 const UsageGuide = lazy(() => import('./UsageGuide'));
+const GameManager = lazy(() => import('./GameManager')); // [신규] 아지트 놀이터 관리
 
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
@@ -326,7 +327,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 flexShrink: 0, zIndex: 99,
                 width: '100%', boxSizing: 'border-box'
             }}>
-                {['dashboard', 'archive', 'settings', 'guide'].map((tabId) => (
+                {['dashboard', 'archive', 'playground', 'settings', 'guide'].map((tabId) => (
                     <button
                         key={tabId}
                         onClick={() => setCurrentTab(tabId)}
@@ -337,7 +338,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '📊 미션 현황' : tabId === 'archive' ? '📂 글 보관함' : tabId === 'settings' ? '⚙️ 관리 설정' : '📖 앱 사용법'}
+                        {tabId === 'dashboard' ? '📊 미션 현황' : tabId === 'archive' ? '📂 글 보관함' : tabId === 'playground' ? '🎢 놀이터 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '📖 앱 사용법'}
                     </button>
                 ))}
             </nav>
@@ -357,6 +358,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         <UsageGuide isMobile={isMobile} />
                     ) : currentTab === 'archive' ? (
                         <ArchiveManager activeClass={activeClass} isMobile={isMobile} />
+                    ) : currentTab === 'playground' ? (
+                        <GameManager activeClass={activeClass} isMobile={isMobile} />
                     ) : (!activeClass || hasZeroClasses) ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
                             <ClassManager
