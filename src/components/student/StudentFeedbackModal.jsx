@@ -115,7 +115,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                         ))}
                     </div>
 
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 24px 24px' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', maxHeight: '60vh', padding: '16px 24px 24px 24px' }}>
                         {loading ? (
                             <p style={{ textAlign: 'center', color: '#95A5A6', padding: '40px' }}>소식을 불러오는 중... ✨</p>
                         ) : filteredFeedbacks.length === 0 ? (

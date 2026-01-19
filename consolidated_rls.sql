@@ -41,6 +41,7 @@ DO $$ BEGIN
     ALTER TABLE public.students ADD COLUMN IF NOT EXISTS inventory JSONB DEFAULT '[]'::jsonb;
     ALTER TABLE public.students ADD COLUMN IF NOT EXISTS selected_items JSONB DEFAULT '{"background": "default", "desk": "default"}'::jsonb;
     ALTER TABLE public.students ADD COLUMN IF NOT EXISTS pet_data JSONB DEFAULT '{"name": "드래곤", "level": 1, "exp": 0}'::jsonb;
+    ALTER TABLE public.students ADD COLUMN IF NOT EXISTS last_feedback_check TIMESTAMP WITH TIME ZONE DEFAULT '1970-01-01 00:00:00+00';
 EXCEPTION
     WHEN undefined_table THEN RAISE NOTICE 'Table students does not exist.';
 END $$;

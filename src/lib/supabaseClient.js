@@ -10,6 +10,6 @@ if (!supabaseUrl || !supabaseUrl.startsWith('http')) {
     console.error("적절한 Supabase URL이 설정되지 않았습니다. .env 파일을 확인해주세요.");
 }
 
-export const supabase = (supabaseUrl && supabaseAnonKey)
+export const supabase = (supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http'))
     ? createClient(supabaseUrl, supabaseAnonKey)
     : null;

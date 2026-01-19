@@ -37,6 +37,9 @@ function App() {
   useEffect(() => {
     // 앱 실행 시 현재 로그인 세션 확인 및 충돌 방지
     const checkSessions = async () => {
+      // [안전장치] Supabase 클라이언트가 없을 경우 중단
+      if (!supabase) return;
+
       // 1. 구글 로그인(교사) 세션 확인
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -59,20 +62,26 @@ function App() {
     checkSessions();
 
     // 로그인 상태 변화를 감지
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        // 교사 로그인 시 학생 데이터 즉시 폐기
-        localStorage.removeItem('student_session');
-        setStudentSession(null);
-        setSession(session);
-        fetchProfile(session.user.id);
-      } else {
-        setSession(null);
-        setProfile(null);
-      }
-    })
+    let subscription = null;
+    if (supabase) {
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session) {
+          // 교사 로그인 시 학생 데이터 즉시 폐기
+          localStorage.removeItem('student_session');
+          setStudentSession(null);
+          setSession(session);
+          fetchProfile(session.user.id);
+        } else {
+          setSession(null);
+          setProfile(null);
+        }
+      });
+      subscription = data.subscription;
+    }
 
-    return () => subscription.unsubscribe()
+    return () => {
+      if (subscription) subscription.unsubscribe();
+    }
   }, [])
 
   // DB에서 사용자 프로필 정보 가져오기 (교사 기본 정보 포함)
@@ -135,6 +144,26 @@ function App() {
   // 학생 로그아웃 처리 (명시적 별도 함수 유지 - UI 호출용)
   const handleStudentLogout = () => {
     handleLogout();
+  }
+
+  // Supabase 설정이 없을 경우 안내 화면 표시
+  if (!supabase) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        textAlign: 'center',
+        background: '#f8d7da',
+        color: '#721c24'
+      }}>
+        <h1>🔧 설정 오류 (Configuration Error)</h1>
+        <p>Supabase 환경 변수가 설정되지 않았습니다.</p>
+        <p>프로젝트 루트의 <code>.env</code> 파일에 <code>VITE_SUPABASE_URL</code>과 <code>VITE_SUPABASE_ANON_KEY</code>를 입력해주세요.</p>
+      </div>
+    );
   }
 
   return (

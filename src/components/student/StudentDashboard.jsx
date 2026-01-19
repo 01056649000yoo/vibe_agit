@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
@@ -39,6 +39,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const lastCheckRef = useRef('1970-01-01T00:00:00.000Z'); // [신규] 마지막 확인 시간 Ref (DB 동기화)
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -59,7 +60,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     useEffect(() => {
         if (studentSession?.id) {
             loadInitialData();
-            checkActivity();
             fetchStats();
 
             // [알림 시스템 단일화] 필터 없이 모든 로그를 수신하여 클라이언트에서 정밀 필터링 ⚡🔔
@@ -129,6 +129,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             if (data?.pet_data) {
                 await checkPetDegeneration(data.pet_data);
             }
+            checkActivity();
         } catch (err) {
             console.error('초기 데이터 로드 실패:', err);
         } finally {
@@ -436,7 +437,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         try {
             const { data, error } = await supabase
                 .from('students')
-                .select('total_points, pet_data')
+                .select('total_points, pet_data, last_feedback_check')
                 .eq('id', studentSession.id)
                 .maybeSingle();
 
@@ -456,6 +457,10 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                         ownedItems: data.pet_data.ownedItems || prev.ownedItems,
                         equippedItems: data.pet_data.equippedItems || prev.equippedItems
                     }));
+                }
+
+                if (data.last_feedback_check) {
+                    lastCheckRef.current = data.last_feedback_check;
                 }
             }
             return data; // [수정] 데이터 반환하여 연쇄 로직 처리가능하게 함
@@ -487,7 +492,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .select('*', { count: 'exact', head: true })
                 .in('post_id', postIds)
                 .neq('student_id', studentSession.id)
-                .gt('created_at', localStorage.getItem('lastFeedbackCheck') || '1970-01-01T00:00:00.000Z');
+                .gt('created_at', lastCheckRef.current || '1970-01-01T00:00:00.000Z');
 
             // 2. 친구들의 댓글 확인
             const { count: commentCount } = await supabase
@@ -495,7 +500,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 .select('*', { count: 'exact', head: true })
                 .in('post_id', postIds)
                 .neq('student_id', studentSession.id)
-                .gt('created_at', localStorage.getItem('lastFeedbackCheck') || '1970-01-01T00:00:00.000Z');
+                .gt('created_at', lastCheckRef.current || '1970-01-01T00:00:00.000Z');
 
             // 3. 선생님의 다시 쓰기 요청 확인
             const { count: returnedCountVal } = await supabase
@@ -514,11 +519,20 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     };
 
     // [신규] 알림 내역 초기화 (모달에서 '비우기' 클릭 시)
-    const handleClearFeedback = () => {
+    const handleClearFeedback = async () => {
         const now = new Date().toISOString();
-        localStorage.setItem('lastFeedbackCheck', now);
-        setFeedbacks([]);
-        setHasActivity(false);
+        try {
+            await supabase
+                .from('students')
+                .update({ last_feedback_check: now })
+                .eq('id', studentSession.id);
+
+            lastCheckRef.current = now;
+            setFeedbacks([]);
+            setHasActivity(false);
+        } catch (err) {
+            console.error('알림 확인 시간 저장 실패:', err);
+        }
     };
 
     const handleDirectRewriteGo = async () => {
@@ -584,7 +598,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             // [필터링] 사용자가 마지막으로 확인한 시간 이후의 것만 보여줌
-            const lastCheck = localStorage.getItem('lastFeedbackCheck') || '1970-01-01T00:00:00.000Z';
+            const lastCheck = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
             const newFeedbacks = combined.filter(f => new Date(f.created_at) > new Date(lastCheck));
 
             console.log('[Dashboard] 학생 소통 데이터 취합(필터됨):', newFeedbacks);
