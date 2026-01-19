@@ -147,7 +147,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         }
         setTestingKey(true);
         try {
-            const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+            const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
             const response = await fetch(`${baseUrl}?key=${geminiKey.trim()}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -811,7 +811,7 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                 { data: missions },
                 { data: posts }
             ] = await Promise.all([
-                supabase.from('writing_missions').select('id, title, created_at').eq('class_id', classId).order('created_at', { ascending: false }),
+                supabase.from('writing_missions').select('id, title, created_at').eq('class_id', classId).eq('is_archived', false).order('created_at', { ascending: false }),
                 supabase.from('student_posts').select('*').in('student_id', students.map(s => s.id))
             ]);
 
@@ -837,11 +837,6 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                 notSubmittedStudents = students.filter(s => !submittedIds.has(s.id)).map(s => s.name);
             }
 
-            // 오늘 제출 확률
-            const today = new Date().toISOString().split('T')[0];
-            const todaySubmittedCount = posts ? posts.filter(p => p.is_submitted && p.created_at?.startsWith(today)).length : 0;
-            const todayRate = students.length > 0 ? Math.round((todaySubmittedCount / students.length) * 100) : 0;
-
             // 제출 트렌드 (최근 7일)
             const trend = Array.from({ length: 7 }, (_, i) => {
                 const d = new Date();
@@ -851,6 +846,14 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                 return { date: dayStr, count };
             }).reverse();
 
+            // 최근 미션별 완료율 (상위 4개)
+            const recentMissions = missions ? missions.slice(0, 4) : [];
+            const missionRates = recentMissions.map(m => {
+                const submittedCount = posts ? posts.filter(p => p.mission_id === m.id && p.is_submitted).length : 0;
+                const rate = students.length > 0 ? Math.round((submittedCount / students.length) * 100) : 0;
+                return { id: m.id, title: m.title, rate };
+            });
+
             setStats({
                 studentCount: students.length,
                 avgChars,
@@ -858,7 +861,7 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                 topStudents,
                 notSubmitted: notSubmittedStudents,
                 trendData: trend,
-                todayRate
+                missionRates // [수정] 미션별 완료율 데이터 추가
             });
         } catch (err) {
             console.error('분석 데이터 로드 실패:', err.message);
@@ -898,17 +901,30 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                         <div style={{ fontSize: '1.8rem', fontWeight: '900', color: '#0D47A1' }}>{stats.avgChars.toLocaleString()}자</div>
                     </div>
 
-                    <div style={{ background: '#F8F9FA', padding: '20px', borderRadius: '20px', border: '1px solid #E9ECEF' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'bold', marginBottom: '12px' }}>🎯 오늘 미션 완료율</div>
-                        <div style={{ height: '12px', background: '#E0E0E0', borderRadius: '10px', overflow: 'hidden', marginBottom: '8px' }}>
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${stats.todayRate}%` }}
-                                transition={{ duration: 1, ease: 'easeOut' }}
-                                style={{ height: '100%', background: 'linear-gradient(90deg, #3498DB, #5CC6FF)' }}
-                            />
-                        </div>
-                        <div style={{ textAlign: 'right', fontSize: '0.9rem', fontWeight: 'bold', color: '#3498DB' }}>{stats.todayRate}%</div>
+                    <div style={{ background: '#F8F9FA', padding: '16px', borderRadius: '20px', border: '1px solid #E9ECEF', flex: 1, overflowY: 'auto', maxHeight: '180px' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'bold', marginBottom: '12px' }}>📝 최근 미션 완료율</div>
+                        {stats.missionRates && stats.missionRates.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {stats.missionRates.map(m => (
+                                    <div key={m.id}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '4px', color: '#495057' }}>
+                                            <span style={{ fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{m.title}</span>
+                                            <span style={{ color: '#3498DB', fontWeight: '900' }}>{m.rate}%</span>
+                                        </div>
+                                        <div style={{ height: '8px', background: '#E0E0E0', borderRadius: '10px', overflow: 'hidden' }}>
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${m.rate}%` }}
+                                                transition={{ duration: 1, ease: 'easeOut' }}
+                                                style={{ height: '100%', background: 'linear-gradient(90deg, #3498DB, #5CC6FF)' }}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', color: '#ADB5BD', fontSize: '0.8rem', marginTop: '20px' }}>미션 데이터가 없습니다.</div>
+                        )}
                     </div>
                 </div>
 

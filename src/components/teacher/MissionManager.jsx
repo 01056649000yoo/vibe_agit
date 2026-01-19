@@ -26,6 +26,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const [postComments, setPostComments] = useState([]); // [추가] 상세보기 글의 댓글들
     const [totalStudentCount, setTotalStudentCount] = useState(0); // [추가] 학급 총 학생 수
     const [archiveModal, setArchiveModal] = useState({ isOpen: false, mission: null, hasIncomplete: false }); // [추가] 보관용 커스텀 모달 상태
+    const [progress, setProgress] = useState({ current: 0, total: 0 }); // [추가] AI 생성 진행률 상태
 
     // [수정 기능 구현] 수정 모드 상태
     const [isEditing, setIsEditing] = useState(false);
@@ -52,7 +53,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         guide: '',
         genre: '일기',
         min_chars: 100,
-        min_paragraphs: 2,
+        min_paragraphs: 1,
         base_reward: 100,
         bonus_threshold: 100,
         bonus_reward: 10,
@@ -151,7 +152,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     const handleCancelEdit = () => {
         setIsEditing(false);
         setEditingMissionId(null);
-        setFormData({ title: '', guide: '', genre: '일기', min_chars: 100, min_paragraphs: 2, base_reward: 100, bonus_threshold: 100, bonus_reward: 10, allow_comments: true });
+        setFormData({ title: '', guide: '', genre: '일기', min_chars: 100, min_paragraphs: 1, base_reward: 100, bonus_threshold: 100, bonus_reward: 10, allow_comments: true });
         setIsFormOpen(false);
     };
 
@@ -295,7 +296,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         try {
             // [최종 해결 시도] 구글 AI 스튜디오 최신 공식 주소 및 모델 사용 (gemini-3-flash-preview)
             // 참고: https://ai.google.dev/gemini-api/docs
-            const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+            const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
 
             const response = await fetch(`${baseUrl}?key=${apiKey}`, {
                 method: 'POST',
@@ -372,7 +373,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
     };
 
     const handleBulkAIAction = async () => {
-        const targetPosts = posts.filter(p => p.is_submitted && !p.ai_feedback && !p.is_confirmed);
+        // [수정] 피드백 존재 유무와 상관없이 '제출됨(is_submitted)' AND '미승인(is_confirmed: false)' 상태면 모두 대상에 포함
+        const targetPosts = posts.filter(p => p.is_submitted && !p.is_confirmed);
         if (targetPosts.length === 0) {
             alert('피드백이 필요한 새로운 미확인 글이 없습니다.');
             return;
@@ -381,7 +383,10 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         if (!confirm(`${targetPosts.length}개의 글에 대해 AI 피드백을 생성하고, 동시에 '다시 쓰기'를 일괄 요청하시겠습니까? 🤖♻️\n학생들에게 자동으로 피드백이 전달됩니다.`)) return;
 
         setIsGenerating(true);
+        setProgress({ current: 0, total: targetPosts.length }); // 진행률 초기화
+
         try {
+            let processedCount = 0;
             for (const post of targetPosts) {
                 const feedback = await fetchAIFeedback(post.title, post.content);
                 if (feedback) {
@@ -403,6 +408,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                         reason: `[AI 요청] '${post.title}' 글에 대한 다시 쓰기 요청이 도착했습니다. ♻️`
                     });
                 }
+                processedCount++;
+                setProgress(prev => ({ ...prev, current: processedCount })); // 진행률 업데이트
             }
             // 완료 알림 표시
             setShowCompleteToast(true);
@@ -414,6 +421,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
             alert('일괄 처리 중 오류가 발생했습니다.');
         } finally {
             setIsGenerating(false);
+            setProgress({ current: 0, total: 0 }); // 진행률 리셋
         }
     };
 
@@ -1438,6 +1446,81 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                 </Button>
                             </div>
                         </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            {/* AI 생성 진행률 모달 */}
+            <AnimatePresence>
+                {isGenerating && progress.total > 0 && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        zIndex: 3000, backdropFilter: 'blur(4px)'
+                    }}>
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            style={{
+                                background: 'white',
+                                padding: '40px',
+                                borderRadius: '24px',
+                                boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
+                                textAlign: 'center',
+                                width: '90%',
+                                maxWidth: '400px'
+                            }}
+                        >
+                            <div style={{ fontSize: '3rem', marginBottom: '20px', animation: 'bounce 1s infinite' }}>🤖</div>
+                            <h3 style={{ margin: '0 0 10px 0', fontSize: '1.4rem', color: '#2C3E50', fontWeight: '900' }}>
+                                AI 피드백 생성 중...
+                            </h3>
+                            <p style={{ margin: '0 0 24px 0', color: '#7F8C8D', fontSize: '1rem' }}>
+                                학생들의 글을 꼼꼼히 읽고 있어요! ✍️
+                            </p>
+
+                            <div style={{ position: 'relative', height: '12px', background: '#F1F3F5', borderRadius: '10px', overflow: 'hidden', marginBottom: '12px' }}>
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${(progress.current / progress.total) * 100}%` }}
+                                    transition={{ duration: 0.5 }}
+                                    style={{ height: '100%', background: 'linear-gradient(90deg, #3498DB, #5CC6FF)' }}
+                                />
+                            </div>
+                            <div style={{ fontWeight: 'bold', color: '#3498DB', fontSize: '1.1rem' }}>
+                                {progress.current} / {progress.total}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* 완료 토스트 알림 */}
+            <AnimatePresence>
+                {showCompleteToast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 50 }}
+                        style={{
+                            position: 'fixed',
+                            bottom: '30px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: '#2ecc71',
+                            color: 'white',
+                            padding: '16px 32px',
+                            borderRadius: '50px',
+                            boxShadow: '0 10px 30px rgba(46, 204, 113, 0.4)',
+                            zIndex: 3000,
+                            fontWeight: 'bold',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px'
+                        }}
+                    >
+                        <span>✅ 작업이 완료되었습니다!</span>
                     </motion.div>
                 )}
             </AnimatePresence>

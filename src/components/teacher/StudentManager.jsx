@@ -349,6 +349,12 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                             })}
                         </div>
                         {/* 하단 내용 더 있음 암시 그라데이션 */}
+                        {displayStudents.length > 5 && (
+                            <div style={{
+                                position: 'absolute', bottom: 0, left: 0, right: 0, height: '40px',
+                                background: 'linear-gradient(to top, rgba(255,255,255,0.95), transparent)',
+                                pointerEvents: 'none', borderRadius: '0 0 24px 24px'
+                            }} />
                         )}
                     </div>
 
@@ -582,10 +588,16 @@ const CommonModals = ({
                 </div>
             )}
             {isHistoryModalOpen && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, backdropFilter: 'blur(4px)' }}>
-                    <Card style={{ width: '90%', maxWidth: '380px', maxHeight: '70vh', padding: '24px', borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+                <div
+                    onClick={() => setIsHistoryModalOpen(false)}
+                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, backdropFilter: 'blur(4px)' }}
+                >
+                    <Card
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ width: '90%', maxWidth: '380px', maxHeight: '70vh', padding: '24px', borderRadius: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
+                    >
                         <h3 style={{ margin: '0 0 16px 0', borderBottom: '1px solid #F1F3F5', paddingBottom: '12px' }}>📜 {historyStudent?.name}님의 활동 기록</h3>
-                        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
+                        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px', maxHeight: '50vh' }}>
                             {loadingHistory ? <p style={{ textAlign: 'center', color: '#ADB5BD' }}>로딩 중...</p> : historyLogs.length === 0 ? <p style={{ textAlign: 'center', color: '#ADB5BD' }}>기록이 없습니다.</p> : historyLogs.map(l => (
                                 <div key={l.id} style={{ padding: '12px 0', borderBottom: '1px solid #F8F9FA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
