@@ -112,6 +112,36 @@ const UsageGuide = ({ isMobile }) => {
                         {section.title}
                     </button>
                 ))}
+
+                {/* [추가] AI 피드백 섹션으로 바로가기 버튼 */}
+                <button
+                    onClick={() => scrollToSection('ai-feedback')}
+                    style={{
+                        textAlign: 'left',
+                        padding: '12px 20px',
+                        background: '#E8F0FE', // 구별되는 배경색
+                        border: '1px solid #4285F4',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        fontSize: '0.95rem',
+                        fontWeight: '700',
+                        color: '#4285F4', // 구글 블루
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(66, 133, 244, 0.2)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                    }}
+                >
+                    🔑 Gemini API 키 발급 방법
+                </button>
             </div>
 
             {/* 섹션 1: 학급 및 학생 관리 */}
@@ -162,7 +192,7 @@ const UsageGuide = ({ isMobile }) => {
                     <p><strong>3. 일괄 처리 기능:</strong> 글이 너무 많을 때는 '전체 선택' 후 <strong>'일괄 승인'</strong>을 하여 시간을 절약하세요.</p>
                 </div>
 
-                <div style={highlightStyle}>
+                <div id="ai-feedback" style={{ ...highlightStyle, scrollMarginTop: '100px' }}>
                     🤖 <strong>AI 피드백 활용 (PRO):</strong>
                     <br />
                     미확인 글에 대해 <strong>'AI 피드백 일괄 생성'</strong> 버튼을 누르면, 선생님이 설정한 API 키를 사용하여 AI가 모든 글을 분석하고 맞춤형 조언을 댓글로 남겨줍니다.
