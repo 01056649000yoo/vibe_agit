@@ -97,6 +97,40 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         }
     };
 
+    const handleWithdrawal = async () => {
+        if (!window.confirm('정말로 탈퇴하시겠습니까?\n\n탈퇴 시 모든 학급 데이터, 미션, 학생 정보가 영구적으로 삭제되며 복구할 수 없습니다.\n또한 Google 로그인 정보도 삭제됩니다.')) {
+            return;
+        }
+
+        try {
+            // 1. 교사 정보 삭제 (Cascade 설정에 따라 하위 데이터도 삭제될 수 있음 - DB 설정 확인 필요)
+            // 안전을 위해 명시적으로 teachers, profiles 순차 삭제 시도
+            const { error: teacherError } = await supabase
+                .from('teachers')
+                .delete()
+                .eq('id', session.user.id);
+
+            if (teacherError) throw teacherError;
+
+            // 2. 프로필 삭제 (Gemini Key 등 포함)
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', session.user.id);
+
+            if (profileError) throw profileError;
+
+            // 3. 로그아웃 처리
+            await supabase.auth.signOut();
+            alert('탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.');
+            window.location.reload();
+
+        } catch (err) {
+            console.error('탈퇴 처리 실패:', err.message);
+            alert('탈퇴 처리 중 오류가 발생했습니다: ' + err.message);
+        }
+    };
+
     const fetchGeminiKey = async () => {
         const { data, error } = await supabase
             .from('profiles')
@@ -659,6 +693,18 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     <Button variant="ghost" style={{ flex: 1, height: '50px', borderRadius: '14px' }} onClick={() => setIsEditProfileOpen(false)}>취소</Button>
                                     <Button variant="primary" style={{ flex: 2, height: '50px', borderRadius: '14px', fontWeight: 'bold' }} onClick={handleUpdateTeacherProfile}>저장하기 ✨</Button>
+                                </div>
+                                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                                    <button
+                                        onClick={handleWithdrawal}
+                                        style={{
+                                            background: 'none', border: 'none',
+                                            color: '#E74C3C', fontSize: '0.85rem', fontWeight: 'bold',
+                                            cursor: 'pointer', textDecoration: 'underline'
+                                        }}
+                                    >
+                                        회원 탈퇴하기 (계정 삭제)
+                                    </button>
                                 </div>
                             </Card>
                         </motion.div>

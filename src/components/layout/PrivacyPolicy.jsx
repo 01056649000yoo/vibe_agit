@@ -11,7 +11,7 @@ const PrivacyPolicy = () => {
             <section style={{ marginBottom: '20px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>1. 개인정보 수집 항목 및 방법</h4>
                 <ul style={{ paddingLeft: '20px', margin: 0 }}>
-                    <li><strong>교사:</strong> 구글 로그인을 통한 이메일 및 기본 프로필 정보. 관리자 식별을 위해 교사가 직접 입력한 실명 및 학교명.</li>
+                    <li><strong>교사:</strong> 구글 로그인을 통한 이메일 및 기본 프로필 정보. 관리자 식별을 위해 교사가 직접 입력한 실명 및 학교명, <strong>API 활용을 위해 교사가 직접 저장한 Gemini API 키</strong>.</li>
                     <li><strong>학생:</strong> 선생님이 등록한 학생의 실명(또는 별칭) 및 접속용 코드. 본 서비스는 학생의 전화번호, 주소, 보호자 연락처 등 추가적인 개인정보를 수집하지 않습니다.</li>
                 </ul>
             </section>
@@ -36,8 +36,9 @@ const PrivacyPolicy = () => {
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>5. 개인정보 보호 노력</h4>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>5. 개인정보 보호 노력 및 API 키 보안</h4>
                 <p>운영자는 학생의 실명 외에 민감한 정보는 일절 수집하지 않음으로써 데이터 유출 위험을 최소화합니다.</p>
+                <p style={{ marginTop: '10px' }}><strong>Gemini API 키 보호:</strong> 교사가 입력한 API 키는 본인 계정에만 종속되어 암호화 수준의 보안 정책(RLS)으로 보호되며, 제3자가 조회하거나 접근할 수 없습니다. 또한 서비스 탈퇴 시 해당 데이터는 시스템에서 즉시 영구 삭제됩니다.</p>
             </section>
         </div>
     );
