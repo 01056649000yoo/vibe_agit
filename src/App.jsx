@@ -12,6 +12,8 @@ const StudentLogin = lazy(() => import('./components/student/StudentLogin'))
 const StudentDashboard = lazy(() => import('./components/student/StudentDashboard'))
 const TeacherProfileSetup = lazy(() => import('./components/teacher/TeacherProfileSetup'))
 const TeacherDashboard = lazy(() => import('./components/teacher/TeacherDashboard'))
+const PendingApproval = lazy(() => import('./components/teacher/PendingApproval'))
+const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard')) // [추가] 관리자 대시보드
 const StudentWriting = lazy(() => import('./components/student/StudentWriting'))
 const MissionList = lazy(() => import('./components/student/MissionList'))
 const FriendsHideout = lazy(() => import('./components/student/FriendsHideout'))
@@ -86,7 +88,7 @@ function App() {
 
   // DB에서 사용자 프로필 정보 가져오기 (교사 기본 정보 포함)
   const fetchProfile = async (userId) => {
-    // 1. 기본 프로필 정보 가져오기
+    // 1. 기본 프로필 정보 가져오기 (is_approved 포함)
     const { data: profileData } = await supabase
       .from('profiles')
       .select('*')
@@ -121,7 +123,7 @@ function App() {
         role: 'TEACHER',
         email: session.user.email,
         full_name: session.user.user_metadata.full_name,
-        // 기존 데이터가 있다면 보존하고, 없으면 NULL
+        // 기존 데이터가 있다면 보존하고, 없으면 NULL (is_approved는 DB default: false를 따름)
         gemini_api_key: existingProfile?.gemini_api_key || null
       });
 
@@ -178,6 +180,10 @@ function App() {
               email={session.user.email}
               onTeacherStart={handleTeacherStart}
             />
+          ) : profile.role === 'ADMIN' ? ( /* [0순위] 관리자 확인 */
+            <AdminDashboard session={session} onLogout={handleLogout} />
+          ) : !profile.is_approved ? ( /* [1.5순위] 승인 대기 확인 */
+            <PendingApproval onLogout={handleLogout} />
           ) : (
             <TeacherDashboard
               profile={profile}

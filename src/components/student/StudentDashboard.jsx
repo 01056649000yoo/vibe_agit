@@ -13,6 +13,16 @@ import { useDragonPet } from '../../hooks/useDragonPet';
  *  - studentSession: 학생 세션 정보 (id, name, className 등)
  *  - onLogout: 로그아웃 처리 함수
  */
+// [신규] 드래곤 아지트 배경 목록 (상수 외부 이동)
+const HIDEOUT_BACKGROUNDS = {
+    default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63', glow: 'rgba(255, 241, 118, 0.3)' },
+    volcano: { id: 'volcano', name: '🌋 화산 동굴', color: 'linear-gradient(135deg, #4A0000 0%, #8B0000 100%)', border: '#FF5722', textColor: 'white', subColor: '#FFCCBC', price: 300, glow: 'rgba(255, 87, 34, 0.4)' },
+    sky: { id: 'sky', name: '☁️ 천상 전당', color: 'linear-gradient(135deg, #B3E5FC 0%, #E1F5FE 100%)', border: '#4FC3F7', textColor: '#01579B', subColor: '#0288D1', price: 500, glow: 'rgba(79, 195, 247, 0.3)' },
+    crystal: { id: 'crystal', name: '💎 수정 궁전', color: 'linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%)', border: '#BA68C8', textColor: 'white', subColor: '#E1BEE7', price: 1000, glow: 'rgba(186, 104, 200, 0.4)' },
+    storm: { id: 'storm', name: '🌩️ 번개 폭풍', color: 'linear-gradient(135deg, #1A237E 0%, #000000 100%)', border: '#7986CB', textColor: 'white', subColor: '#C5CAE9', price: 700, glow: 'rgba(121, 134, 203, 0.5)' },
+    galaxy: { id: 'galaxy', name: '🌌 달빛 은하수', color: 'linear-gradient(135deg, #0D47A1 0%, #000000 100%)', border: '#90CAF9', textColor: 'white', subColor: '#E3F2FD', price: 500, glow: 'rgba(144, 202, 249, 0.4)' }
+};
+
 const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [points, setPoints] = useState(0);
     const [hasActivity, setHasActivity] = useState(false);
@@ -60,15 +70,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // [신규] 드래곤 아지트 배경 목록
-    const HIDEOUT_BACKGROUNDS = {
-        default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63', glow: 'rgba(255, 241, 118, 0.3)' },
-        volcano: { id: 'volcano', name: '🌋 화산 동굴', color: 'linear-gradient(135deg, #4A0000 0%, #8B0000 100%)', border: '#FF5722', textColor: 'white', subColor: '#FFCCBC', price: 300, glow: 'rgba(255, 87, 34, 0.4)' },
-        sky: { id: 'sky', name: '☁️ 천상 전당', color: 'linear-gradient(135deg, #B3E5FC 0%, #E1F5FE 100%)', border: '#4FC3F7', textColor: '#01579B', subColor: '#0288D1', price: 500, glow: 'rgba(79, 195, 247, 0.3)' },
-        crystal: { id: 'crystal', name: '💎 수정 궁전', color: 'linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%)', border: '#BA68C8', textColor: 'white', subColor: '#E1BEE7', price: 1000, glow: 'rgba(186, 104, 200, 0.4)' },
-        storm: { id: 'storm', name: '🌩️ 번개 폭풍', color: 'linear-gradient(135deg, #1A237E 0%, #000000 100%)', border: '#7986CB', textColor: 'white', subColor: '#C5CAE9', price: 700, glow: 'rgba(121, 134, 203, 0.5)' },
-        galaxy: { id: 'galaxy', name: '🌌 달빛 은하수', color: 'linear-gradient(135deg, #0D47A1 0%, #000000 100%)', border: '#90CAF9', textColor: 'white', subColor: '#E3F2FD', price: 500, glow: 'rgba(144, 202, 249, 0.4)' }
-    };
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         if (studentSession?.id) {
@@ -337,33 +343,42 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             if (!myPosts || myPosts.length === 0) return;
             const postIds = myPosts.map(p => p.id);
 
-            // 1. 친구들의 반응(좋아요) 확인
-            const { count: reactionCount } = await supabase
-                .from('post_reactions')
-                .select('*', { count: 'exact', head: true })
-                .in('post_id', postIds)
-                .neq('student_id', studentSession.id)
-                .gt('created_at', lastCheckRef.current || '1970-01-01T00:00:00.000Z');
+            // [최적화] 병렬 처리 (Promise.all)
+            const lastCheckTime = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
 
-            // 2. 친구들의 댓글 확인
-            const { count: commentCount } = await supabase
-                .from('post_comments')
-                .select('*', { count: 'exact', head: true })
-                .in('post_id', postIds)
-                .neq('student_id', studentSession.id)
-                .gt('created_at', lastCheckRef.current || '1970-01-01T00:00:00.000Z');
+            const [reactionsResult, commentsResult, returnedResult] = await Promise.all([
+                // 1. 친구들의 반응(좋아요) 확인
+                supabase
+                    .from('post_reactions')
+                    .select('*', { count: 'exact', head: true })
+                    .in('post_id', postIds)
+                    .neq('student_id', studentSession.id)
+                    .gt('created_at', lastCheckTime),
 
-            // 3. 선생님의 다시 쓰기 요청 확인
-            const { count: returnedCountVal } = await supabase
-                .from('student_posts')
-                .select('*', { count: 'exact', head: true })
-                .eq('student_id', studentSession.id)
-                .eq('is_returned', true);
+                // 2. 친구들의 댓글 확인
+                supabase
+                    .from('post_comments')
+                    .select('*', { count: 'exact', head: true })
+                    .in('post_id', postIds)
+                    .neq('student_id', studentSession.id)
+                    .gt('created_at', lastCheckTime),
 
-            setReturnedCount(returnedCountVal || 0);
+                // 3. 선생님의 다시 쓰기 요청 확인
+                supabase
+                    .from('student_posts')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('student_id', studentSession.id)
+                    .eq('is_returned', true)
+            ]);
+
+            const reactionCount = reactionsResult.count || 0;
+            const commentCount = commentsResult.count || 0;
+            const returnedCountVal = returnedResult.count || 0;
+
+            setReturnedCount(returnedCountVal);
 
             // [변경] 소식함 배지는 오직 '친구들의 반응/댓글'이 있을 때만 띄움
-            setHasActivity((reactionCount || 0) + (commentCount || 0) > 0);
+            setHasActivity(reactionCount + commentCount > 0);
         } catch (err) {
             console.error('활동 확인 실패:', err.message);
         }
@@ -428,24 +443,26 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             const postIds = myPosts.map(p => p.id);
 
             // [변경] 이제 이 모달은 '학생 간 소통(댓글, 반응)'만 담당합니다.
+            // [최적화] 병렬 요청
+            const [reactionsResult, commentsResult] = await Promise.all([
+                supabase
+                    .from('post_reactions')
+                    .select('*, students:student_id(name), student_posts(title, id)')
+                    .in('post_id', postIds)
+                    .neq('student_id', studentSession.id),
+                supabase
+                    .from('post_comments')
+                    .select('*, students:student_id(name), student_posts(title, id)')
+                    .in('post_id', postIds)
+                    .neq('student_id', studentSession.id)
+            ]);
 
-            // 1. 반응 가져오기
-            const { data: reactions } = await supabase
-                .from('post_reactions')
-                .select('*, students:student_id(name), student_posts(title, id)')
-                .in('post_id', postIds)
-                .neq('student_id', studentSession.id);
-
-            // 2. 댓글 가져오기
-            const { data: comments } = await supabase
-                .from('post_comments')
-                .select('*, students:student_id(name), student_posts(title, id)')
-                .in('post_id', postIds)
-                .neq('student_id', studentSession.id);
+            const reactions = reactionsResult.data || [];
+            const comments = commentsResult.data || [];
 
             const combined = [
-                ...(reactions || []).map(r => ({ ...r, type: 'reaction' })),
-                ...(comments || []).map(c => ({ ...c, type: 'comment' }))
+                ...reactions.map(r => ({ ...r, type: 'reaction' })),
+                ...comments.map(c => ({ ...c, type: 'comment' }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             // [필터링] 사용자가 마지막으로 확인한 시간 이후의 것만 보여줌

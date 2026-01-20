@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ VIBE_TEST 성능 최적화 점검 리포트</title>
+    <style>
+        :root {
+            --primary-color: #3498DB;
+            --danger-color: #E74C3C;
+            --warning-color: #F1C40F;
+            --success-color: #2ECC71;
+            --bg-color: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --text-color: #2C3E50;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            color: var(--text-color);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border-left: 6px solid transparent;
+        }
+
+        .card.high {
+            border-left-color: var(--danger-color);
+        }
+
+        .card.medium {
+            border-left-color: var(--warning-color);
+        }
+
+        .card.low {
+            border-left-color: var(--success-color);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: white;
+        }
+
+        .tag.high {
+            background-color: var(--danger-color);
+        }
+
+        .tag.medium {
+            background-color: var(--warning-color);
+        }
+
+        .tag.low {
+            background-color: var(--success-color);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        p {
+            color: #555;
+            margin-bottom: 16px;
+        }
+
+        .code-block {
+            background: #282C34;
+            color: #ABB2BF;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            margin: 12px 0;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .code-label {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #444;
+            color: #fff;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            border-bottom-left-radius: 8px;
+        }
+
+        .file-path {
+            font-weight: bold;
+            color: var(--primary-color);
+            background: #EBF5FB;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 성능 최적화 점검 리포트</h1>
+
+        <!-- 1. MissionManager 일괄 처리 이슈 -->
+        <div class="card high">
+            <span class="tag high">매우 중요 (High Priority)</span>
+            <h2>1. 미션 관리: 일괄 처리(Bulk Actions) 병목 현상</h2>
+            <p>
+                <span class="file-path">src/components/teacher/MissionManager.jsx</span><br>
+                선생님이 <strong>'일괄 승인'</strong>, <strong>'일괄 회수'</strong>, <strong>'일괄 AI 피드백'</strong> 기능을 사용할 때,
+                반복문(loop) 안에서 DB 요청을 하나씩 순차적으로(`await`) 기다리고 있습니다. 학생 수가 많아질수록 처리 시간이 선형적으로(N배) 늘어나 치명적입니다.
+            </p>
+
+            <div class="code-block">
+                <span class="code-label">AS-IS (현재 문제 코드)</span>
+                <pre>
+for (const post of toApprove) {
+    // ❌ 한 명 처리될 때까지 다음 사람 대기
+    await supabase.from(...).update(...); 
+    await supabase.from(...).insert(...);
+}
+</pre>
+            </div>
+
+            <div class="code-block">
+                <span class="code-label">TO-BE (개선 방향)</span>
+                <pre>
+// ✅ 모든 요청을 동시에 보내 병렬로 처리 (Promise.all)
+const promises = toApprove.map(post => {
+    return Promise.all([
+        supabase.from(...).update(...),
+        supabase.from(...).insert(...)
+    ]);
+});
+await Promise.all(promises);
+</pre>
+            </div>
+            <ul>
+                <li><strong>예상 효과:</strong> 30명 일괄 처리 시 <strong>15초 → 0.5초</strong>로 단축</li>
+            </ul>
+        </div>
+
+        <!-- 2. StudentDashboard 데이터 로딩 이슈 -->
+        <div class="card high">
+            <span class="tag high">매우 중요 (High Priority)</span>
+            <h2>2. 학생 대시보드: 데이터 로딩 워터폴(Waterfall)</h2>
+            <p>
+                <span class="file-path">src/components/student/StudentDashboard.jsx</span><br>
+                학생이 로그인했을 때 실행되는 <code>checkActivity</code>, <code>fetchFeedbacks</code> 함수 내부에서 서로 의존성이 없는 API 요청들이
+                순차적으로 실행되어 초기 로딩 속도를 늦추고 있습니다.
+            </p>
+            <ul>
+                <li><strong>문제점:</strong> '반응 확인'이 끝나야 '댓글 확인'을 시작하고, 그게 끝나야 '다시쓰기 확인'을 시작함.</li>
+                <li><strong>해결책:</strong> <code>Promise.all()</code>을 사용하여 3가지 데이터를 동시에 조회해야 합니다.</li>
+            </ul>
+        </div>
+
+        <!-- 3. 불필요한 객체 생성 이슈 -->
+        <div class="card medium">
+            <span class="tag medium">중요 (Medium Priority)</span>
+            <h2>3. 렌더링 최적화: 불필요한 객체/함수 재생성</h2>
+            <p>
+                <span class="file-path">src/components/student/StudentDashboard.jsx</span><br>
+                데이터가 아닌 <strong>상수 데이터(배경 이미지 목록 등)</strong>나 <strong>순수 헬퍼 함수</strong>가 컴포넌트 내부에 선언되어 있어, 렌더링될 때마다 매번
+                새로 생성되고 메모리를 낭비합니다.
+            </p>
+            <div class="code-block">
+                <span class="code-label">AS-IS (현재 문제 코드)</span>
+                <pre>
+const StudentDashboard = () => {
+   // ❌ 렌더링 때마다 이 거대한 객체가 계속 다시 만들어짐
+   const HIDEOUT_BACKGROUNDS = { ... }; 
+   ...
+}
+</pre>
+            </div>
+            <ul>
+                <li><strong>해결책:</strong> 해당 상수와 함수들을 컴포넌트 밖(`const StudentDashboard` 위)으로 옮겨야 합니다.</li>
+            </ul>
+        </div>
+
+        <!-- 4. 인라인 스타일 이슈 -->
+        <div class="card low">
+            <span class="tag low">권장 (Low Priority)</span>
+            <h2>4. 스타일링: 인라인 스타일(Inline Styles) 과다 사용</h2>
+            <p>
+                프로젝트 전반적으로 <code>style={{ ... }}</code> 속성이 많이 사용되고 있습니다. 이는 React가 리렌더링할 때마다 "스타일이 변경되었나?"를 체크하게 만들어 성능
+                비용을 발생시킵니다.
+            </p>
+            <ul>
+                <li><strong>권장:</strong> 자주 재사용되는 스타일은 CSS 클래스(`.css`)로 분리하거나, 최소한 컴포넌트 외부의 상수로 정의하여 사용하는 것이 좋습니다.</li>
+            </ul>
+        </div>
+
+    </div>
+</body>
+
+</html>

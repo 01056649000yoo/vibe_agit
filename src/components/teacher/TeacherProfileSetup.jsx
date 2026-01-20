@@ -78,6 +78,8 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
             if (teacherInfoError) throw teacherInfoError;
 
             // 3. 부모 컴포넌트 알림 및 새로고침
+            // [수정] 즉시 승인이 아니라 대기 메시지
+            alert('선생님 정보가 안전하게 저장되었습니다! 🎉\n관리자 승인 후 서비스를 이용하실 수 있습니다.');
             await onTeacherStart();
             window.location.reload();
         } catch (err) {

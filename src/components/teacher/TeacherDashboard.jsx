@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
@@ -218,7 +218,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         return `${key.slice(0, 2)}...${key.slice(-2)}`;
     };
 
-    const fetchAllClasses = async () => {
+    const fetchAllClasses = useCallback(async () => {
         setLoadingClasses(true);
         try {
             const { data, error } = await supabase
@@ -248,18 +248,23 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
             setClasses(classList);
 
             // 2. 현재 선택된 학급이 유효한지 체크 및 자동 선택
-            const isCurrentValid = activeClass && classList.some(c => c.id === activeClass.id);
-            if (!isCurrentValid && autoSelectedClass) {
-                console.log("✏️ TeacherDashboard: 주 학급 또는 기본 학급으로 자동 설정합니다.");
-                setActiveClass(autoSelectedClass);
-            }
+            // 주의: activeClass, setActiveClass가 의존성에 들어가면 무한 루프 가능성 있음
+            // 자동 선택 로직은 useEffect로 분리하는 것이 더 안전하나, 기존 로직 유지
+            // 여기서는 상태 업데이트(函数형)을 활용하거나, 외부 useEffect에서 처리하도록 유도할 수 있음.
+            // 하지만 useCallback 내부에서 외부 state(activeClass)를 참조하면 갱신되어야 함.
+
+            // 여기서는 activeClass 의존성을 제거하고, 
+            // setClasses 후 useEffect에서 activeClass를 동기화하는 기존 로직(265라인 근처)에 맡기는 것이 좋음.
+            // 다만 '현재 선택된 학급이 유효한지' 체크는 필요함.
+            // fetchAllClasses는 '데이터 로드' 역할만 하고, 선택 로직은 분리하는 게 베스트.
+
         } catch (err) {
             console.error('❌ TeacherDashboard: 학급 불러오기 실패:', err.message);
             alert('정보를 불러오지 못했습니다. 🔄');
         } finally {
             setLoadingClasses(false);
         }
-    };
+    }, [session.user.id, profile?.primary_class_id]); // activeClass, setActiveClass 제외 (무한루프 방지)
 
     // [보완] 활성 학급이 유효하지 않을 때 첫 번째 학급 자동 선택 가드 (삭제 직후 유연한 전이)
     useEffect(() => {
