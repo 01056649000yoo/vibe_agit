@@ -31,8 +31,8 @@ const PendingApproval = ({ onLogout }) => {
                     textAlign: 'left'
                 }}>
                     <strong>💡 안내</strong><br />
-                    승인이 늦어질 경우 관리자에게 문의해주세요.<br />
-                    (현재 화면에서는 승인 상태가 실시간으로 반영되지 않습니다.)
+                    승인이 늦어질 경우 아래 메일로 문의해 주세요.<br />
+                    <span style={{ fontWeight: 'bold', display: 'block', marginTop: '4px' }}>📧 yshgg@naver.com</span>
                 </div>
 
                 <Button

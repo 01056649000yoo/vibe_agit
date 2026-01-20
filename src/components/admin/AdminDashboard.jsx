@@ -4,7 +4,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 
 // 반복되는 리스트 아이템 컴포넌트 분리
-const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke }) => {
+const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, onForceWithdrawal }) => {
     // teachers 정보 안전하게 추출
     const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
     const displayName = teacherInfo?.name || profile.full_name || '이름 없음';
@@ -36,20 +36,41 @@ const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke }) 
                     🕒 가입일: {new Date(profile.created_at).toLocaleDateString()}
                 </div>
             </div>
-            <Button
-                onClick={onAction}
-                size="sm"
-                style={{
-                    background: isRevoke ? '#FFF' : actionColor,
-                    color: isRevoke ? actionColor : 'white',
-                    border: isRevoke ? `1px solid ${actionColor}` : 'none',
-                    fontWeight: 'bold',
-                    padding: '8px 16px',
-                    borderRadius: '8px'
-                }}
-            >
-                {actionLabel}
-            </Button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+                <Button
+                    onClick={onAction}
+                    size="sm"
+                    style={{
+                        background: isRevoke ? '#FFF' : actionColor,
+                        color: isRevoke ? actionColor : 'white',
+                        border: isRevoke ? `1px solid ${actionColor}` : 'none',
+                        fontWeight: 'bold',
+                        padding: '8px 16px',
+                        borderRadius: '8px'
+                    }}
+                >
+                    {actionLabel}
+                </Button>
+
+                {/* 강제 탈퇴 버튼 (승인 취소 상태일 때도 보일 수 있게 하거나, 승인된 상태에서만 보이게 함) */}
+                {/* 여기서는 승인된 상태에서(isRevoke=true) 추가적인 관리 기능을 제공 */}
+                {isRevoke && (
+                    <Button
+                        onClick={onForceWithdrawal}
+                        size="sm"
+                        style={{
+                            background: '#C0392B',
+                            color: 'white',
+                            border: 'none',
+                            fontWeight: 'bold',
+                            padding: '8px 16px',
+                            borderRadius: '8px'
+                        }}
+                    >
+                        🗑️ 강제 탈퇴
+                    </Button>
+                )}
+            </div>
         </div>
     );
 };
@@ -123,7 +144,8 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
 
     // [추가] 승인 취소 (필요 시 사용)
     const handleRevoke = async (teacherId, teacherName) => {
-        if (!window.confirm(`'${teacherName}' 선생님의 승인을 취소하시겠습니까? (다시 대기 상태가 됩니다)`)) return;
+        const confirmMsg = `'${teacherName}' 선생님의 승인을 취소하시겠습니까?\n(승인 취소 시 다시 '승인 대기' 상태가 됩니다)`;
+        if (!window.confirm(confirmMsg)) return;
 
         try {
             const { error } = await supabase
@@ -136,6 +158,47 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
             fetchTeachers();
         } catch (err) {
             alert('처리 중 오류가 발생했습니다: ' + err.message);
+        }
+    };
+
+    // [신규] 강제 탈퇴 (데이터 영구 삭제)
+    const handleForceWithdrawal = async (teacherId, teacherName) => {
+        const confirmMsg = `🚨 경고: '${teacherName}' 선생님을 강제 탈퇴시키시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 해당 계정과 연동된 모든 학급, 학생, 게시글 데이터가 영구적으로 삭제됩니다.\n\n정말로 진행하시겠습니까?`;
+        if (!window.confirm(confirmMsg)) return;
+
+        // 2차 확인 (실수 방지)
+        if (!window.confirm(`⚠️ 마지막 확인: 정말로 '${teacherName}' 계정을 삭제합니다.\n삭제 후에는 복구가 불가능합니다.`)) return;
+
+        try {
+            // Supabase Auth Admin API는 클라이언트에서 호출 불가하므로,
+            // DB 데이터(profiles, teachers)를 삭제하여 접근을 차단하고 
+            // 로그인을 막는 방식으로 처리 (On Cascade 설정에 따라 하위 데이터 자동 삭제)
+
+            // 1. 교사 테이블 삭제 (Cascade로 연결된 학급, 학생 등 삭제)
+            const { error: teacherError } = await supabase
+                .from('teachers')
+                .delete()
+                .eq('id', teacherId);
+
+            // teachers에 데이터가 없을 수도 있으므로 에러 무시 혹은 처리
+            if (teacherError && teacherError.code !== 'PGRST116') { // PGRST116: no result
+                console.warn("Teacher record delete note:", teacherError);
+            }
+
+            // 2. 프로필 테이블 삭제 (로그인 정보 매핑 삭제)
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', teacherId);
+
+            if (profileError) throw profileError;
+
+            alert(`🗑️ '${teacherName}' 선생님이 강제 탈퇴 처리되었습니다.`);
+            fetchTeachers();
+
+        } catch (err) {
+            console.error('강제 탈퇴 처리 실패:', err);
+            alert('탈퇴 처리 중 오류가 발생했습니다: ' + err.message);
         }
     };
 
@@ -217,6 +280,7 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                                 actionLabel="승인 취소"
                                 actionColor="#C0392B"
                                 isRevoke={true}
+                                onForceWithdrawal={() => handleForceWithdrawal(profile.id, profile.teachers?.name || profile.full_name)}
                             />
                         ))}
                     </div>

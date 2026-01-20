@@ -22,9 +22,9 @@ const TermsOfService = () => {
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>제3조 (이용계약의 체결)</h4>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>제3조 (이용계약의 체결 및 승인)</h4>
                 <ol style={{ paddingLeft: '20px', margin: 0 }}>
-                    <li>교사는 구글 계정 인증을 통해 이용계약을 체결합니다.</li>
+                    <li>교사는 구글 계정 인증을 통해 가입을 신청하며, <strong>최종적인 서비스 이용은 관리자의 승인 절차 완료 후 가능합니다.</strong></li>
                     <li>학생은 선생님으로부터 부여받은 이름(별칭)과 접속코드를 입력하여 서비스를 이용함으로써 본 약관에 동의한 것으로 간주합니다.</li>
                 </ol>
             </section>
@@ -37,8 +37,10 @@ const TermsOfService = () => {
                 </ol>
             </section>
 
-            <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>제5조 (이용 제한 및 면책)</h4>
+            <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>제5조 (이용 제한, 승인 취소 및 면책)</h4>
             <ol style={{ paddingLeft: '20px', margin: 0 }}>
+                <li><strong>관리자의 권한 및 승인 취소:</strong> 약관에 위배되는 행동을 하거나, 비정상적인 사용으로 문제가 발생할 경우, <strong>관리자는 사전 통보 없이 즉시 사용 승인을 취소하거나 회원을 강제 탈퇴시킬 수 있습니다.</strong></li>
+                <li><strong>책임의 소재:</strong> 위와 같은 귀책사유로 인해 발생한 강제 탈퇴, 데이터 삭제, 서비스 이용 불가 등 <strong>모든 결과에 대한 책임은 전적으로 사용자 본인에게 있음을 명시합니다.</strong></li>
                 <li>타인 비방, 욕설, 도용 등 교육 목적에 반하는 행위 시 운영자는 게시물을 삭제하거나 이용을 제한할 수 있습니다.</li>
                 <li>운영자는 천재지변이나 기술적 결함으로 인한 일시적인 서비스 중단에 대해 고의가 없는 한 책임을 지지 않습니다.</li>
                 <li><strong>API 서비스 이용 및 책임 제한:</strong> 본 서비스에서 제공하는 AI 피드백 기능은 회원이 직접 발급받은 외부 API 키(Google Gemini API)를 연동하여 동작합니다. 회원은 개인 API 키의 보안 관리에 최선을 다해야 하며, 유료 API를 사용함으로써 발생하는 비용 부과 문제에 대해 서비스 제공자에게 책임을 물을 수 없습니다. 되도록 무료 제공 범위 내에서 안전하게 활용하시기를 권장합니다.</li>
