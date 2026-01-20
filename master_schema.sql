@@ -199,8 +199,8 @@ CREATE POLICY "Teachers can manage own data" ON teachers FOR ALL USING (auth.uid
 -- --------------------
 ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
 
--- 조회: 로그인한 누구나 가능 (학생이 학급 선택 및 정보 로드 필요)
-CREATE POLICY "anyone_can_read_classes" ON classes FOR SELECT TO authenticated USING (true);
+-- 조회: 로그인한 누구나 가능 (학생이 학급 선택 및 정보 로드 필요 - anon 포함)
+CREATE POLICY "anyone_can_read_classes" ON classes FOR SELECT USING (true);
 -- 관리: 해당 학급의 담당 선생님만
 CREATE POLICY "teachers_manage_own_classes" ON classes FOR ALL USING (auth.uid() = teacher_id);
 

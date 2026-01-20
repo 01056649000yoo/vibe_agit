@@ -104,21 +104,71 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         }
     }, [hookNotify]);
 
+    // [신규] 학급 드래곤 설정 로드 (함수 호이스팅 문제 방지)
+    const fetchClassSettings = async () => {
+        let classId = studentSession.classId || studentSession.class_id;
+
+        // [비상구] 세션에 class_id가 없으면 DB에서 직접 조회
+        if (!classId && studentSession?.id) {
+            console.warn('⚠️ Session에 class_id 없음. DB에서 재조회 시도...');
+            const { data: studentData } = await supabase
+                .from('students')
+                .select('class_id')
+                .eq('id', studentSession.id)
+                .single();
+            if (studentData?.class_id) {
+                classId = studentData.class_id;
+                console.log('✅ DB에서 class_id 복구 성공:', classId);
+            }
+        }
+
+        console.log(`🔍 드래곤 설정 로드 시작 (ClassID: ${classId})`);
+
+        if (!classId) {
+            console.error('❌ class_id를 찾을 수 없어 설정 로드 중단');
+            return null; // undefined 대신 null 반환
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from('classes')
+                .select('dragon_feed_points, dragon_degen_days')
+                .eq('id', classId)
+                .single();
+
+            if (error) {
+                console.error('❌ 드래곤 설정 로드 쿼리 에러:', error);
+                throw error;
+            }
+
+            if (data) {
+                const newConfig = {
+                    feedCost: data.dragon_feed_points || 80,
+                    degenDays: data.dragon_degen_days || 14
+                };
+                setDragonConfig(newConfig);
+                console.log(`🐉 드래곤 설정 로드 완료:`, newConfig);
+                return newConfig;
+            } else {
+                console.warn('⚠️ 드래곤 설정 데이터 없음 (data is null)');
+            }
+        } catch (err) {
+            console.error('설정 로드 실패:', err);
+        }
+        return null;
+    };
+
     const loadInitialData = async () => {
         try {
             const data = await fetchMyPoints();
+
             // [정밀 수리] 학급 설정 먼저 로드하여 정확한 퇴화 기준일 획득
-            let currentDegenDays = 14; // 기본값
-            const targetClassId = studentSession?.classId || studentSession?.class_id;
-            if (targetClassId) {
-                try {
-                    const classConfig = await fetchClassSettings();
-                    if (classConfig) {
-                        currentDegenDays = classConfig.degenDays;
-                    }
-                } catch (e) {
-                    console.error('설정 로드 중 에러, 기본값 유지', e);
-                }
+            let currentDegenDays = 14;
+
+            // 정의된 함수 안전하게 호출
+            const classConfig = await fetchClassSettings();
+            if (classConfig) {
+                currentDegenDays = classConfig.degenDays;
             }
 
             // [정밀 수리] 포인트/펫 데이터 로드 및 퇴화 체크 (DB 설정값 적용)
@@ -235,61 +285,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             // 에러 시 isLoading을 false로 바꾸지 않고 멈춰버리거나, 알림 후 유지
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    // [신규] 학급 드래곤 설정 로드
-    const fetchClassSettings = async () => {
-        let classId = studentSession.classId || studentSession.class_id;
-
-        // [비상구] 세션에 class_id가 없으면 DB에서 직접 조회
-        if (!classId && studentSession?.id) {
-            console.warn('⚠️ Session에 class_id 없음. DB에서 재조회 시도...');
-            const { data: studentData } = await supabase
-                .from('students')
-                .select('class_id')
-                .eq('id', studentSession.id)
-                .single();
-            if (studentData?.class_id) {
-                classId = studentData.class_id;
-                console.log('✅ DB에서 class_id 복구 성공:', classId);
-            }
-        }
-
-        console.log(`🔍 드래곤 설정 로드 시작 (ClassID: ${classId})`);
-
-        if (!classId) {
-            console.error('❌ class_id를 찾을 수 없어 설정 로드 중단');
-            return null;
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from('classes')
-                .select('dragon_feed_points, dragon_degen_days')
-                .eq('id', classId)
-                .single();
-
-            if (error) {
-                console.error('❌ 드래곤 설정 로드 쿼리 에러:', error);
-                throw error;
-            }
-
-            if (data) {
-                setDragonConfig({
-                    feedCost: data.dragon_feed_points || 80,
-                    degenDays: data.dragon_degen_days || 14
-                });
-                console.log(`🐉 드래곤 설정 로드 완료 (ClassID: ${studentSession.class_id}):`, data);
-                return {
-                    feedCost: data.dragon_feed_points || 80,
-                    degenDays: data.dragon_degen_days || 14
-                };
-            }
-            console.warn('⚠️ 드래곤 설정 데이터 없음 (data is null)');
-            return null;
-        } catch (err) {
-            console.error('❌ 드래곤 설정 로드 치명적 오류:', err);
         }
     };
 
