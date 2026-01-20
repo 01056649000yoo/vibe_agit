@@ -242,8 +242,8 @@ CREATE POLICY "Allow all access to reactions" ON post_reactions FOR ALL USING (t
 -- ------------------------------
 ALTER TABLE public.point_logs ENABLE ROW LEVEL SECURITY;
 
--- 조회: 인증된 사용자 전체 (선생님이 학생 로그 조회, 학생이 본인 로그 조회)
-CREATE POLICY "everyone_can_view_logs" ON point_logs FOR SELECT TO authenticated USING (true);
+-- 조회: 모든 사용자 (학생이 anon 상태일 수 있으므로 authenticated 제한 제거)
+CREATE POLICY "public_can_view_logs" ON point_logs FOR SELECT USING (true);
 -- 생성: 포인트 부여 로직 수행 시
 CREATE POLICY "Allow log creation" ON point_logs FOR INSERT WITH CHECK (true);
 

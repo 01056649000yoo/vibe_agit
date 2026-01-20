@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
 import { useDragonPet } from '../../hooks/useDragonPet';
+import { useNotifications } from '../../hooks/useNotifications';
 
 /**
  * 역할: 학생 메인 대시보드 - 포인트 표시 및 활동 메뉴
@@ -80,66 +81,28 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         if (studentSession?.id) {
             loadInitialData();
             fetchStats();
-
-            // [알림 시스템 단일화] 필터 없이 모든 로그를 수신하여 클라이언트에서 정밀 필터링 ⚡🔔
-            const notificationChannel = supabase
-                .channel(`student_realtime_v3_${studentSession.id}`)
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'point_logs'
-                    },
-                    (payload) => {
-                        const newLog = payload.new;
-                        if (newLog.student_id !== studentSession.id) return;
-
-                        console.log('⚡ 교사 알림/포인트 수신:', newLog);
-
-                        // 1. 포인트 정보 즉시 반영 및 갱신
-                        if (newLog.amount !== 0) {
-                            setPoints(prev => (prev || 0) + newLog.amount);
-                        }
-                        fetchMyPoints().catch(err => console.error('포인트 갱신 실패:', err));
-
-                        // 2. 배너 메시지 결정
-                        const isRewrite = newLog.reason?.includes('다시 쓰기') || newLog.reason?.includes('♻️');
-                        let bannerMsg = "";
-                        let bannerIcon = "🎁";
-
-                        if (isRewrite) {
-                            bannerMsg = "♻️ 선생님의 다시 쓰기 요청이 있습니다.";
-                            bannerIcon = "♻️";
-                            checkActivity(); // 다시쓰기 카운트 갱신
-                        } else if (newLog.amount < 0) {
-                            bannerMsg = `⚠️ ${newLog.reason} (${newLog.amount}P)`;
-                            bannerIcon = "⚠️";
-                        } else if (newLog.reason?.includes('승인')) {
-                            bannerMsg = `🎉 글이 승인되어 +${newLog.amount}P를 받았어요!`;
-                            bannerIcon = "🎉";
-                        } else if (newLog.amount > 0) {
-                            bannerMsg = `🎁 ${newLog.reason} (+${newLog.amount}P)`;
-                            bannerIcon = "🎁";
-                        }
-
-                        if (bannerMsg) {
-                            setTeacherNotify({
-                                type: isRewrite ? 'rewrite' : 'point',
-                                message: bannerMsg,
-                                icon: bannerIcon,
-                                timestamp: Date.now()
-                            });
-                        }
-                    }
-                )
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(notificationChannel);
-            };
         }
     }, [studentSession?.id]);
+
+    // [Refactor] 알림 시스템 훅으로 분리 ⚡
+    // 포인트 변경 시 자동 호출될 콜백 정의
+    const handlePointChange = (amount) => {
+        setPoints(prev => (prev || 0) + amount);
+        fetchMyPoints(); // DB 최신화 보장
+    };
+
+    const { teacherNotify: hookNotify, clearNotify } = useNotifications(studentSession?.id, handlePointChange);
+
+    // 훅 상태를 로컬 상태와 동기화 (배너 표출용)
+    useEffect(() => {
+        if (hookNotify) {
+            setTeacherNotify(hookNotify);
+            // 다시쓰기 요청이면 뱃지 카운트 갱신을 위해 checkActivity 실행
+            if (hookNotify.type === 'rewrite') {
+                checkActivity();
+            }
+        }
+    }, [hookNotify]);
 
     const loadInitialData = async () => {
         try {
@@ -612,9 +575,18 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 boxSizing: 'border-box'
                             }}
                             onClick={() => {
-                                // 다시쓰기 요청이 있으면 해당 글로 이동, 아니면 피드백/포인트 사유 확인
-                                if (returnedCount > 0) handleDirectRewriteGo();
-                                else setTeacherNotify(null); // 포인트 알림은 확인 시 닫기
+                                // 1. 현재 표시된 알림이 '포인트' 관련이면 -> 클릭 시 닫기 (배너 무시)
+                                if (teacherNotify?.type === 'point') {
+                                    setTeacherNotify(null);
+                                }
+                                // 2. 현재 알림이 '다시쓰기'이거나, 알림은 없지만 'returnedCount'가 있어서 배너가 떠있는 경우 -> 이동
+                                else if (returnedCount > 0 || teacherNotify?.type === 'rewrite') {
+                                    handleDirectRewriteGo();
+                                }
+                                // 3. 그 외 (예외 케이스) -> 닫기
+                                else {
+                                    setTeacherNotify(null);
+                                }
                             }}
                         >
                             <span style={{ fontSize: '2.5rem' }}>
