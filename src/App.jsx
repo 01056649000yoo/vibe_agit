@@ -35,7 +35,11 @@ function App() {
   const [isStudentLoginMode, setIsStudentLoginMode] = useState(false)
   const [internalPage, setInternalPage] = useState({ name: 'main', params: {} }) // { name, params }
   const [loading, setLoading] = useState(true)
-  const [isAdminMode, setIsAdminMode] = useState(true) // [추가] 관리자 모드 여부
+  // 관리자 모드 상태 (localStorage에서 복원, 기본값 true)
+  const [isAdminMode, setIsAdminMode] = useState(() => {
+    const savedMode = localStorage.getItem('isAdminMode');
+    return savedMode !== 'false'; // 'false'인 경우에만 false, 그 외(null 포함)는 true
+  })
 
   useEffect(() => {
     // 앱 실행 시 현재 로그인 세션 확인 및 충돌 방지
@@ -67,14 +71,18 @@ function App() {
     // 로그인 상태 변화를 감지
     let subscription = null;
     if (supabase) {
-      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
         if (session) {
           // 교사 로그인 시 학생 데이터 즉시 폐기
           localStorage.removeItem('student_session');
           setStudentSession(null);
           setSession(session);
           fetchProfile(session.user.id);
-          setIsAdminMode(true); // 로그인 시 관리자 모드 리셋
+
+          // 로그인 시에만 관리자 모드 리셋 (토큰 갱신 등으로 인한 강제 이동 방지) -> 제거 (localStorage 유지)
+          // if (event === 'SIGNED_IN') {
+          //   setIsAdminMode(true);
+          // }
         } else {
           setSession(null);
           setProfile(null);
@@ -88,21 +96,29 @@ function App() {
     }
   }, [])
 
+  // isAdminMode 변경 시 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('isAdminMode', isAdminMode);
+  }, [isAdminMode])
+
   // DB에서 사용자 프로필 정보 가져오기 (교사 기본 정보 포함)
   const fetchProfile = async (userId) => {
-    // 1. 기본 프로필 정보 가져오기 (is_approved 포함)
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
+    // 1. 프로필 정보와 교사 정보를 병렬로 가져오기 (Waterfalls 제거)
+    const [profileResult, teacherResult] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single(),
+      supabase
+        .from('teachers')
+        .select('name, school_name')
+        .eq('id', userId)
+        .single()
+    ]);
 
-    // 2. 교사 전용 정보(별칭, 학교명) 가져오기
-    const { data: teacherData } = await supabase
-      .from('teachers')
-      .select('name, school_name')
-      .eq('id', userId)
-      .single()
+    const profileData = profileResult.data;
+    const teacherData = teacherResult.data;
 
     setProfile({ ...profileData, teacherName: teacherData?.name, schoolName: teacherData?.school_name })
   }
