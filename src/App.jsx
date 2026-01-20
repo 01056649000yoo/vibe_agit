@@ -35,6 +35,7 @@ function App() {
   const [isStudentLoginMode, setIsStudentLoginMode] = useState(false)
   const [internalPage, setInternalPage] = useState({ name: 'main', params: {} }) // { name, params }
   const [loading, setLoading] = useState(true)
+  const [isAdminMode, setIsAdminMode] = useState(true) // [추가] 관리자 모드 여부
 
   useEffect(() => {
     // 앱 실행 시 현재 로그인 세션 확인 및 충돌 방지
@@ -73,6 +74,7 @@ function App() {
           setStudentSession(null);
           setSession(session);
           fetchProfile(session.user.id);
+          setIsAdminMode(true); // 로그인 시 관리자 모드 리셋
         } else {
           setSession(null);
           setProfile(null);
@@ -141,6 +143,7 @@ function App() {
     setStudentSession(null);
     setIsStudentLoginMode(false);
     setInternalPage({ name: 'main', params: {} });
+    setIsAdminMode(true);
   }
 
   // 학생 로그아웃 처리 (명시적 별도 함수 유지 - UI 호출용)
@@ -180,8 +183,12 @@ function App() {
               email={session.user.email}
               onTeacherStart={handleTeacherStart}
             />
-          ) : profile.role === 'ADMIN' ? ( /* [0순위] 관리자 확인 */
-            <AdminDashboard session={session} onLogout={handleLogout} />
+          ) : (profile.role === 'ADMIN' && isAdminMode) ? ( /* [0순위] 관리자 확인 + 관리자 모드 */
+            <AdminDashboard
+              session={session}
+              onLogout={handleLogout}
+              onSwitchToTeacherMode={() => setIsAdminMode(false)}
+            />
           ) : !profile.is_approved ? ( /* [1.5순위] 승인 대기 확인 */
             <PendingApproval onLogout={handleLogout} />
           ) : (
@@ -194,6 +201,8 @@ function App() {
               onNavigate={(page, params) => setInternalPage({ name: page, params })}
               internalPage={internalPage}
               setInternalPage={setInternalPage}
+              isAdmin={profile.role === 'ADMIN'}
+              onSwitchToAdminMode={() => setIsAdminMode(true)}
             />
           )
         ) : studentSession ? (

@@ -15,7 +15,7 @@ const GameManager = lazy(() => import('./GameManager')); // [신규] 아지트 �
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
  */
-const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onProfileUpdate }) => {
+const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onProfileUpdate, isAdmin, onSwitchToAdminMode }) => {
     const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'settings'
     const [classes, setClasses] = useState([]);
     const [loadingClasses, setLoadingClasses] = useState(true);
@@ -349,6 +349,16 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         <span style={{ fontSize: '0.85rem', color: '#6C757D', fontWeight: 'bold' }}>
                             {teacherInfo.name || profile?.full_name} 선생님
                         </span>
+                    )}
+                    {isAdmin && (
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={onSwitchToAdminMode}
+                            style={{ fontSize: '0.8rem', background: '#E67E22', border: 'none', borderRadius: '8px' }}
+                        >
+                            🛡️ 관리자
+                        </Button>
                     )}
                     <Button variant="ghost" size="sm" onClick={() => setIsEditProfileOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
                         ⚙️ 정보 수정
