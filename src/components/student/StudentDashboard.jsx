@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
 import { useDragonPet } from '../../hooks/useDragonPet';
-import { useNotifications } from '../../hooks/useNotifications';
 
 /**
  * 역할: 학생 메인 대시보드 - 포인트 표시 및 활동 메뉴
@@ -81,94 +80,82 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         if (studentSession?.id) {
             loadInitialData();
             fetchStats();
+
+            // [알림 시스템 단일화] 필터 없이 모든 로그를 수신하여 클라이언트에서 정밀 필터링 ⚡🔔
+            const notificationChannel = supabase
+                .channel(`student_realtime_v3_${studentSession.id}`)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'point_logs'
+                    },
+                    (payload) => {
+                        const newLog = payload.new;
+                        if (newLog.student_id !== studentSession.id) return;
+
+                        console.log('⚡ 교사 알림/포인트 수신:', newLog);
+
+                        // 1. 포인트 정보 즉시 반영 및 갱신
+                        if (newLog.amount !== 0) {
+                            setPoints(prev => (prev || 0) + newLog.amount);
+                        }
+                        fetchMyPoints().catch(err => console.error('포인트 갱신 실패:', err));
+
+                        // 2. 배너 메시지 결정
+                        const isRewrite = newLog.reason?.includes('다시 쓰기') || newLog.reason?.includes('♻️');
+                        let bannerMsg = "";
+                        let bannerIcon = "🎁";
+
+                        if (isRewrite) {
+                            bannerMsg = "♻️ 선생님의 다시 쓰기 요청이 있습니다.";
+                            bannerIcon = "♻️";
+                            checkActivity(); // 다시쓰기 카운트 갱신
+                        } else if (newLog.amount < 0) {
+                            bannerMsg = `⚠️ ${newLog.reason} (${newLog.amount}P)`;
+                            bannerIcon = "⚠️";
+                        } else if (newLog.reason?.includes('승인')) {
+                            bannerMsg = `🎉 글이 승인되어 +${newLog.amount}P를 받았어요!`;
+                            bannerIcon = "🎉";
+                        } else if (newLog.amount > 0) {
+                            bannerMsg = `🎁 ${newLog.reason} (+${newLog.amount}P)`;
+                            bannerIcon = "🎁";
+                        }
+
+                        if (bannerMsg) {
+                            setTeacherNotify({
+                                type: isRewrite ? 'rewrite' : 'point',
+                                message: bannerMsg,
+                                icon: bannerIcon,
+                                timestamp: Date.now()
+                            });
+                        }
+                    }
+                )
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(notificationChannel);
+            };
         }
     }, [studentSession?.id]);
-
-    // [Refactor] 알림 시스템 훅으로 분리 ⚡
-    // 포인트 변경 시 자동 호출될 콜백 정의
-    const handlePointChange = (amount) => {
-        setPoints(prev => (prev || 0) + amount);
-        fetchMyPoints(); // DB 최신화 보장
-    };
-
-    const { teacherNotify: hookNotify, clearNotify } = useNotifications(studentSession?.id, handlePointChange);
-
-    // 훅 상태를 로컬 상태와 동기화 (배너 표출용)
-    useEffect(() => {
-        if (hookNotify) {
-            setTeacherNotify(hookNotify);
-            // 다시쓰기 요청이면 뱃지 카운트 갱신을 위해 checkActivity 실행
-            if (hookNotify.type === 'rewrite') {
-                checkActivity();
-            }
-        }
-    }, [hookNotify]);
-
-    // [신규] 학급 드래곤 설정 로드 (함수 호이스팅 문제 방지)
-    const fetchClassSettings = async () => {
-        let classId = studentSession.classId || studentSession.class_id;
-
-        // [비상구] 세션에 class_id가 없으면 DB에서 직접 조회
-        if (!classId && studentSession?.id) {
-            console.warn('⚠️ Session에 class_id 없음. DB에서 재조회 시도...');
-            const { data: studentData } = await supabase
-                .from('students')
-                .select('class_id')
-                .eq('id', studentSession.id)
-                .single();
-            if (studentData?.class_id) {
-                classId = studentData.class_id;
-                console.log('✅ DB에서 class_id 복구 성공:', classId);
-            }
-        }
-
-        console.log(`🔍 드래곤 설정 로드 시작 (ClassID: ${classId})`);
-
-        if (!classId) {
-            console.error('❌ class_id를 찾을 수 없어 설정 로드 중단');
-            return null; // undefined 대신 null 반환
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from('classes')
-                .select('dragon_feed_points, dragon_degen_days')
-                .eq('id', classId)
-                .single();
-
-            if (error) {
-                console.error('❌ 드래곤 설정 로드 쿼리 에러:', error);
-                throw error;
-            }
-
-            if (data) {
-                const newConfig = {
-                    feedCost: data.dragon_feed_points || 80,
-                    degenDays: data.dragon_degen_days || 14
-                };
-                setDragonConfig(newConfig);
-                console.log(`🐉 드래곤 설정 로드 완료:`, newConfig);
-                return newConfig;
-            } else {
-                console.warn('⚠️ 드래곤 설정 데이터 없음 (data is null)');
-            }
-        } catch (err) {
-            console.error('설정 로드 실패:', err);
-        }
-        return null;
-    };
 
     const loadInitialData = async () => {
         try {
             const data = await fetchMyPoints();
-
             // [정밀 수리] 학급 설정 먼저 로드하여 정확한 퇴화 기준일 획득
-            let currentDegenDays = 14;
-
-            // 정의된 함수 안전하게 호출
-            const classConfig = await fetchClassSettings();
-            if (classConfig) {
-                currentDegenDays = classConfig.degenDays;
+            let currentDegenDays = 14; // 기본값
+            const targetClassId = studentSession?.classId || studentSession?.class_id;
+            if (targetClassId) {
+                try {
+                    const classConfig = await fetchClassSettings();
+                    if (classConfig) {
+                        currentDegenDays = classConfig.degenDays;
+                    }
+                } catch (e) {
+                    console.error('설정 로드 중 에러, 기본값 유지', e);
+                }
             }
 
             // [정밀 수리] 포인트/펫 데이터 로드 및 퇴화 체크 (DB 설정값 적용)
@@ -285,6 +272,61 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             // 에러 시 isLoading을 false로 바꾸지 않고 멈춰버리거나, 알림 후 유지
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // [신규] 학급 드래곤 설정 로드
+    const fetchClassSettings = async () => {
+        let classId = studentSession.classId || studentSession.class_id;
+
+        // [비상구] 세션에 class_id가 없으면 DB에서 직접 조회
+        if (!classId && studentSession?.id) {
+            console.warn('⚠️ Session에 class_id 없음. DB에서 재조회 시도...');
+            const { data: studentData } = await supabase
+                .from('students')
+                .select('class_id')
+                .eq('id', studentSession.id)
+                .single();
+            if (studentData?.class_id) {
+                classId = studentData.class_id;
+                console.log('✅ DB에서 class_id 복구 성공:', classId);
+            }
+        }
+
+        console.log(`🔍 드래곤 설정 로드 시작 (ClassID: ${classId})`);
+
+        if (!classId) {
+            console.error('❌ class_id를 찾을 수 없어 설정 로드 중단');
+            return null;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from('classes')
+                .select('dragon_feed_points, dragon_degen_days')
+                .eq('id', classId)
+                .single();
+
+            if (error) {
+                console.error('❌ 드래곤 설정 로드 쿼리 에러:', error);
+                throw error;
+            }
+
+            if (data) {
+                setDragonConfig({
+                    feedCost: data.dragon_feed_points || 80,
+                    degenDays: data.dragon_degen_days || 14
+                });
+                console.log(`🐉 드래곤 설정 로드 완료 (ClassID: ${studentSession.class_id}):`, data);
+                return {
+                    feedCost: data.dragon_feed_points || 80,
+                    degenDays: data.dragon_degen_days || 14
+                };
+            }
+            console.warn('⚠️ 드래곤 설정 데이터 없음 (data is null)');
+            return null;
+        } catch (err) {
+            console.error('❌ 드래곤 설정 로드 치명적 오류:', err);
         }
     };
 
@@ -570,18 +612,9 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 boxSizing: 'border-box'
                             }}
                             onClick={() => {
-                                // 1. 현재 표시된 알림이 '포인트' 관련이면 -> 클릭 시 닫기 (배너 무시)
-                                if (teacherNotify?.type === 'point') {
-                                    setTeacherNotify(null);
-                                }
-                                // 2. 현재 알림이 '다시쓰기'이거나, 알림은 없지만 'returnedCount'가 있어서 배너가 떠있는 경우 -> 이동
-                                else if (returnedCount > 0 || teacherNotify?.type === 'rewrite') {
-                                    handleDirectRewriteGo();
-                                }
-                                // 3. 그 외 (예외 케이스) -> 닫기
-                                else {
-                                    setTeacherNotify(null);
-                                }
+                                // 다시쓰기 요청이 있으면 해당 글로 이동, 아니면 피드백/포인트 사유 확인
+                                if (returnedCount > 0) handleDirectRewriteGo();
+                                else setTeacherNotify(null); // 포인트 알림은 확인 시 닫기
                             }}
                         >
                             <span style={{ fontSize: '2.5rem' }}>

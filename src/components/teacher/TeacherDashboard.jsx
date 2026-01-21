@@ -131,6 +131,24 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         }
     };
 
+    const handleSwitchGoogleAccount = async () => {
+        if (!confirm('현재 계정에서 로그아웃하고 다른 구글 계정으로 로그인하시겠습니까?')) return;
+
+        // 1. 로그아웃
+        await supabase.auth.signOut();
+
+        // 2. 계정 선택 프롬프트와 함께 다시 로그인
+        await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin,
+                queryParams: {
+                    prompt: 'select_account'
+                }
+            }
+        });
+    };
+
     const fetchGeminiKey = async () => {
         const { data, error } = await supabase
             .from('profiles')
@@ -709,7 +727,30 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                     <Button variant="ghost" style={{ flex: 1, height: '50px', borderRadius: '14px' }} onClick={() => setIsEditProfileOpen(false)}>취소</Button>
                                     <Button variant="primary" style={{ flex: 2, height: '50px', borderRadius: '14px', fontWeight: 'bold' }} onClick={handleUpdateTeacherProfile}>저장하기 ✨</Button>
                                 </div>
-                                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                                <div style={{ marginTop: '16px' }}>
+                                    <button
+                                        onClick={handleSwitchGoogleAccount}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            background: '#fff',
+                                            border: '1px solid #dee2e6',
+                                            borderRadius: '12px',
+                                            color: '#495057',
+                                            fontSize: '0.9rem',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px'
+                                        }}
+                                    >
+                                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style={{ width: '16px' }} />
+                                        다른 구글 계정으로 로그인
+                                    </button>
+                                </div>
+                                <div style={{ marginTop: '16px', textAlign: 'center' }}>
                                     <button
                                         onClick={handleWithdrawal}
                                         style={{

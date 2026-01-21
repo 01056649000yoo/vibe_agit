@@ -35,11 +35,7 @@ function App() {
   const [isStudentLoginMode, setIsStudentLoginMode] = useState(false)
   const [internalPage, setInternalPage] = useState({ name: 'main', params: {} }) // { name, params }
   const [loading, setLoading] = useState(true)
-  // 관리자 모드 상태 (localStorage에서 복원, 기본값 true)
-  const [isAdminMode, setIsAdminMode] = useState(() => {
-    const savedMode = localStorage.getItem('isAdminMode');
-    return savedMode !== 'false'; // 'false'인 경우에만 false, 그 외(null 포함)는 true
-  })
+  const [isAdminMode, setIsAdminMode] = useState(true) // [추가] 관리자 모드 여부
 
   useEffect(() => {
     // 앱 실행 시 현재 로그인 세션 확인 및 충돌 방지
@@ -71,18 +67,14 @@ function App() {
     // 로그인 상태 변화를 감지
     let subscription = null;
     if (supabase) {
-      const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
         if (session) {
           // 교사 로그인 시 학생 데이터 즉시 폐기
           localStorage.removeItem('student_session');
           setStudentSession(null);
           setSession(session);
           fetchProfile(session.user.id);
-
-          // 로그인 시에만 관리자 모드 리셋 (토큰 갱신 등으로 인한 강제 이동 방지) -> 제거 (localStorage 유지)
-          // if (event === 'SIGNED_IN') {
-          //   setIsAdminMode(true);
-          // }
+          setIsAdminMode(true); // 로그인 시 관리자 모드 리셋
         } else {
           setSession(null);
           setProfile(null);
@@ -95,11 +87,6 @@ function App() {
       if (subscription) subscription.unsubscribe();
     }
   }, [])
-
-  // isAdminMode 변경 시 localStorage에 저장
-  useEffect(() => {
-    localStorage.setItem('isAdminMode', isAdminMode);
-  }, [isAdminMode])
 
   // DB에서 사용자 프로필 정보 가져오기 (교사 기본 정보 포함)
   const fetchProfile = async (userId) => {
