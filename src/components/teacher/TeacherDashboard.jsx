@@ -345,10 +345,28 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 flexShrink: 0, zIndex: 100,
                 width: '100%', boxSizing: 'border-box'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
-                    <h2 style={{ margin: 0, fontSize: isMobile ? '1.2rem' : '1.5rem', color: '#212529', fontWeight: '900' }}>
-                        {activeClass ? (isMobile ? activeClass.name : `🏫 ${activeClass.name}`) : '학급 관리'}
-                    </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: '#EEF2FF',
+                        padding: isMobile ? '4px 12px' : '6px 16px',
+                        borderRadius: '12px',
+                        border: '1px solid #E0E7FF',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                    }}>
+                        <span style={{ fontSize: isMobile ? '1.1rem' : '1.3rem' }}>🏫</span>
+                        <h2 style={{
+                            margin: 0,
+                            fontSize: isMobile ? '1rem' : '1.2rem',
+                            color: '#4F46E5',
+                            fontWeight: '900',
+                            letterSpacing: '-0.5px'
+                        }}>
+                            {activeClass ? activeClass.name : '학급 관리'}
+                        </h2>
+                    </div>
                     {classes.length > 1 && (
                         <select
                             value={activeClass?.id || ''}

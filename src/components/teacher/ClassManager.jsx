@@ -203,9 +203,33 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                             textAlign: isMobile ? 'center' : 'left'
                         }}>
                             <div>
-                                <span style={{ fontSize: '0.8rem', color: '#8D6E63', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '2px' }}>관리 중인 학급</span>
-                                <h3 style={{ margin: 0, fontSize: isMobile ? '1.8rem' : '2.2rem', color: '#2C3E50', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '8px', lineHeight: 1.1 }}>
-                                    🏫 {activeClass?.name}
+                                <span style={{
+                                    fontSize: '0.75rem',
+                                    color: '#B26700',
+                                    background: '#FFF176',
+                                    padding: '2px 8px',
+                                    borderRadius: '6px',
+                                    fontWeight: '900',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                    display: 'inline-block',
+                                    marginBottom: '6px',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                }}>
+                                    CURRENT CLASS
+                                </span>
+                                <h3 style={{
+                                    margin: 0,
+                                    fontSize: isMobile ? '1.8rem' : '2.4rem',
+                                    color: '#2C3E50',
+                                    fontWeight: '950',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    lineHeight: 1,
+                                    textShadow: '1px 1px 0px rgba(255,255,255,0.8)'
+                                }}>
+                                    <span style={{ fontSize: '1.2em' }}>🏫</span> {activeClass?.name}
                                 </h3>
                             </div>
 
