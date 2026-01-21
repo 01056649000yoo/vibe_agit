@@ -59,19 +59,19 @@ const Layout = ({ children, fullHeight = true, full = false }) => {
                         gap: '24px',
                         flexWrap: 'wrap'
                     }}>
-                        <button
-                            onClick={() => setModalContent('terms')}
-                            style={{ background: 'none', border: 'none', fontSize: '1rem', color: '#37474F', cursor: 'pointer', fontWeight: '900' }}
+                        <a
+                            href="/terms"
+                            style={{ textDecoration: 'none', fontSize: '1rem', color: '#37474F', cursor: 'pointer', fontWeight: '900' }}
                         >
                             이용약관
-                        </button>
+                        </a>
                         <span style={{ color: '#CFD8DC' }}>|</span>
-                        <button
-                            onClick={() => setModalContent('privacy')}
-                            style={{ background: 'none', border: 'none', fontSize: '1rem', color: '#37474F', cursor: 'pointer', fontWeight: '900' }}
+                        <a
+                            href="/privacy"
+                            style={{ textDecoration: 'none', fontSize: '1rem', color: '#37474F', cursor: 'pointer', fontWeight: '900' }}
                         >
                             개인정보 처리방침
-                        </button>
+                        </a>
                         <span style={{ color: '#CFD8DC' }}>|</span>
                         <span style={{ fontSize: '1rem', color: '#37474F', fontWeight: '900' }}>
                             상호명: 끄적끄적 아지트
