@@ -154,12 +154,16 @@ export const useDataExport = () => {
         try {
             await getAccessToken();
 
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const fullTitle = `${title} (${dateStr})`;
+
             let documentId = targetDocId;
             let currentIndex = 1; // 새 문서일 경우 시작 인덱스
 
             // 1. 문서 결정 (새로 생성하거나 기존 문서 정보 가져오기)
             if (!documentId) {
-                const createResponse = await gapi.client.docs.documents.create({ title: title });
+                const createResponse = await gapi.client.docs.documents.create({ title: fullTitle });
                 documentId = createResponse.result.documentId;
                 console.log(`New Doc Created: ${documentId}`);
             } else {
@@ -173,7 +177,7 @@ export const useDataExport = () => {
 
             // 2. [주제/제목] 삽입 (새 문서일 경우만 최상단에 추가)
             if (!targetDocId) {
-                const headerText = `${title}\n\n`;
+                const headerText = `${fullTitle}\n\n`;
                 requests.push({
                     insertText: { location: { index: currentIndex }, text: headerText }
                 });
