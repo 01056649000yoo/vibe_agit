@@ -83,6 +83,19 @@ const LandingPage = ({ onStudentLoginClick }) => {
             <p style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#999', fontWeight: '500' }}>
                 나만의 글쓰기 아지트로 입장해요 🏠
             </p>
+
+            {/* 구글 브랜딩용 Footer 링크 추가 */}
+            <div style={{
+                marginTop: '1.5rem',
+                paddingTop: '1.5rem',
+                borderTop: '1px solid #F1F3F5',
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '20px'
+            }}>
+                <a href="/privacy" style={{ color: '#ADB5BD', fontSize: '0.8rem', textDecoration: 'none' }}>개인정보처리방침</a>
+                <a href="/terms" style={{ color: '#ADB5BD', fontSize: '0.8rem', textDecoration: 'none' }}>이용약관</a>
+            </div>
         </Card>
     );
 };
