@@ -480,46 +480,47 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                 }}
                             >
                                 {/* 좌측 그룹: 번호 + 이름 */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '0 0 150px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 120px' }}>
                                     <div style={{
-                                        width: '40px', fontWeight: '900', color: '#ADB5BD',
-                                        fontSize: '1rem', display: 'flex', justifyContent: 'center'
+                                        width: '30px', fontWeight: '900', color: '#ADB5BD',
+                                        fontSize: '0.9rem', display: 'flex', justifyContent: 'center'
                                     }}>
                                         {studentNo}
                                     </div>
-                                    <span style={{ fontWeight: '800', color: '#34495E', fontSize: '1.1rem', letterSpacing: '-0.3px' }}>{s.name}</span>
+                                    <span style={{ fontWeight: '800', color: '#34495E', fontSize: '1rem', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</span>
                                 </div>
 
                                 {/* 중앙 그룹: 접속코드 (관리용) */}
                                 <div style={{
-                                    flex: 1,
+                                    flex: '1 1 auto',
                                     textAlign: 'center',
-                                    fontSize: '1.5rem',
+                                    fontSize: isMobile ? '1.1rem' : '1.3rem',
                                     color: '#3498DB',
                                     fontWeight: '900',
                                     fontFamily: 'monospace',
-                                    letterSpacing: '3px',
+                                    letterSpacing: '1px',
                                     background: '#F8F9FA',
-                                    padding: '4px 12px',
+                                    padding: '4px 8px',
                                     borderRadius: '10px',
-                                    margin: '0 20px'
+                                    margin: '0 10px',
+                                    minWidth: '100px'
                                 }}>
                                     {s.student_code}
                                 </div>
 
                                 {/* 우측 그룹: 포인트 + 관리 버튼 */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <div style={{ textAlign: 'right', minWidth: '80px' }}>
-                                        <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.3rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ textAlign: 'right', minWidth: '70px' }}>
+                                        <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.1rem' }}>
                                             {(s.total_points || 0).toLocaleString()}
                                         </span>
-                                        <span style={{ fontSize: '0.8rem', color: '#ADB5BD', marginLeft: '3px', fontWeight: 'bold' }}>P</span>
+                                        <span style={{ fontSize: '0.75rem', color: '#ADB5BD', marginLeft: '2px', fontWeight: 'bold' }}>P</span>
                                     </div>
 
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <button
                                             onClick={() => { setSelectedStudentForCode(s); setIsCodeZoomModalOpen(true); }}
-                                            style={{ background: '#F8F9FA', border: '1px solid #E9ECEF', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', transition: 'all 0.2s' }}
+                                            style={{ background: '#F8F9FA', border: '1px solid #E9ECEF', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', transition: 'all 0.2s' }}
                                             title="크게 보기" > 🔍 </button>
 
                                         <button
@@ -533,13 +534,13 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                                 border: '1px solid #FFECB3',
                                                 color: '#F39C12',
                                                 cursor: 'pointer',
-                                                width: '36px',
-                                                height: '36px',
-                                                borderRadius: '10px',
+                                                width: '32px',
+                                                height: '32px',
+                                                borderRadius: '8px',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                fontSize: '1.1rem',
+                                                fontSize: '1rem',
                                                 transition: 'all 0.2s',
                                                 boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                                             }}
@@ -558,13 +559,13 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                                 border: '1px solid #C8E6C9',
                                                 color: '#2E7D32',
                                                 cursor: 'pointer',
-                                                width: '36px',
-                                                height: '36px',
-                                                borderRadius: '10px',
+                                                width: '32px',
+                                                height: '32px',
+                                                borderRadius: '8px',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                fontSize: '1.1rem',
+                                                fontSize: '1rem',
                                                 transition: 'all 0.2s',
                                                 boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                                             }}
@@ -576,7 +577,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                         <div style={{ position: 'relative' }}>
                                             <button
                                                 onClick={() => { navigator.clipboard.writeText(s.student_code); setCopiedId(s.id); setTimeout(() => setCopiedId(null), 1500); }}
-                                                style={{ background: '#FDFCF0', border: '1px solid #F7DC6F', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', transition: 'all 0.2s' }}
+                                                style={{ background: '#FDFCF0', border: '1px solid #F7DC6F', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', transition: 'all 0.2s' }}
                                                 title="코드 복사" > 📋 </button>
                                             <AnimatePresence>
                                                 {copiedId === s.id && (
@@ -590,7 +591,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
 
                                         <button
                                             onClick={() => { setDeleteTarget(s); setIsDeleteModalOpen(true); }}
-                                            style={{ background: '#FFF5F5', border: '1px solid #FFDada', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', transition: 'all 0.2s' }}
+                                            style={{ background: '#FFF5F5', border: '1px solid #FFDada', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', transition: 'all 0.2s' }}
                                             title="학생 삭제" > 🗑️ </button>
                                     </div>
                                 </div>
