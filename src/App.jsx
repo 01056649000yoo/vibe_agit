@@ -35,11 +35,35 @@ function App() {
   const [isStudentLoginMode, setIsStudentLoginMode] = useState(false)
   const [internalPage, setInternalPage] = useState({ name: 'main', params: {} }) // { name, params }
   const [loading, setLoading] = useState(true)
-  const [isAdminMode, setIsAdminMode] = useState(true) // [추가] 관리자 모드 여부
+  /* [수정] 관리자 모드 상태를 localStorage와 연동하여 유지 */
+  const [isAdminMode, setIsAdminMode] = useState(() => {
+    try {
+      // 키 변경으로 캐시/기존 값 간섭 배제
+      const saved = localStorage.getItem('app_admin_mode_v2');
+
+      if (saved === 'false') return false;
+      if (saved === 'true') return true;
+
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  // 관리자 모드 변경 시 localStorage 업데이트
+  const setAdminModeHandler = (mode) => {
+    setIsAdminMode(mode);
+    localStorage.setItem('app_admin_mode_v2', JSON.stringify(mode));
+  };
+
+  // 상태 변경 감지 로그
+  useEffect(() => {
+  }, [isAdminMode]);
 
   useEffect(() => {
     // 앱 실행 시 현재 로그인 세션 확인 및 충돌 방지
     const checkSessions = async () => {
+
       // [안전장치] Supabase 클라이언트가 없을 경우 중단
       if (!supabase) return;
 
@@ -74,7 +98,7 @@ function App() {
           setStudentSession(null);
           setSession(session);
           fetchProfile(session.user.id);
-          setIsAdminMode(true); // 로그인 시 관리자 모드 리셋
+          // setIsAdminMode(true); // 로그인 시 관리자 모드 리셋 (제거: 창 전환 시 초기화 방지)
         } else {
           setSession(null);
           setProfile(null);
@@ -146,7 +170,7 @@ function App() {
     setStudentSession(null);
     setIsStudentLoginMode(false);
     setInternalPage({ name: 'main', params: {} });
-    setIsAdminMode(true);
+    setAdminModeHandler(true);
   }
 
   // 학생 로그아웃 처리 (명시적 별도 함수 유지 - UI 호출용)
@@ -190,7 +214,7 @@ function App() {
             <AdminDashboard
               session={session}
               onLogout={handleLogout}
-              onSwitchToTeacherMode={() => setIsAdminMode(false)}
+              onSwitchToTeacherMode={() => setAdminModeHandler(false)}
             />
           ) : !profile.is_approved ? ( /* [1.5순위] 승인 대기 확인 */
             <PendingApproval onLogout={handleLogout} />
@@ -205,7 +229,7 @@ function App() {
               internalPage={internalPage}
               setInternalPage={setInternalPage}
               isAdmin={profile.role === 'ADMIN'}
-              onSwitchToAdminMode={() => setIsAdminMode(true)}
+              onSwitchToAdminMode={() => setAdminModeHandler(true)}
             />
           )
         ) : studentSession ? (

@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDataExport } from '../../hooks/useDataExport';
+import ExportSelectModal from '../common/ExportSelectModal';
 
 /**
  * 역할: 선생님 - 학급 내 학생 명단 관리 (슬림 2열 그리드 버전)
@@ -55,6 +57,37 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
     const [historyLogs, setHistoryLogs] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null);
+
+    // 엑셀 추출 훅
+    // 엑셀 추출 훅
+    const { fetchExportData, exportToExcel, exportToGoogleDoc, isGapiLoaded } = useDataExport();
+
+    // 내보내기 모달 상태
+    const [exportModalOpen, setExportModalOpen] = useState(false);
+    const [exportTarget, setExportTarget] = useState(null); // { type: 'student', id: ..., title: ... }
+
+    const handleExportClick = (student) => {
+        setExportTarget({ type: 'student', id: student.id, title: student.name });
+        setExportModalOpen(true);
+    };
+
+    const handleExportConfirm = async (format, options) => {
+        if (!exportTarget) return;
+
+        const data = await fetchExportData(exportTarget.type, exportTarget.id);
+        if (!data || data.length === 0) {
+            alert('작성된 글이 없습니다.');
+            return;
+        }
+
+        const fileName = `${exportTarget.title}_글모음`;
+
+        if (format === 'excel') {
+            exportToExcel(data, fileName);
+        } else if (format === 'googleDoc') {
+            await exportToGoogleDoc(data, fileName, options.usePageBreak);
+        }
+    };
 
     // 데이터 호출
     useEffect(() => {
@@ -515,6 +548,31 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                                             📜
                                         </button>
 
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleExportClick(s);
+                                            }}
+                                            style={{
+                                                background: '#E8F5E9',
+                                                border: '1px solid #C8E6C9',
+                                                color: '#2E7D32',
+                                                cursor: 'pointer',
+                                                width: '36px',
+                                                height: '36px',
+                                                borderRadius: '10px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '1.1rem',
+                                                transition: 'all 0.2s',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                            }}
+                                            title="데이터 내보내기"
+                                        >
+                                            📤
+                                        </button>
+
                                         <div style={{ position: 'relative' }}>
                                             <button
                                                 onClick={() => { navigator.clipboard.writeText(s.student_code); setCopiedId(s.id); setTimeout(() => setCopiedId(null), 1500); }}
@@ -582,7 +640,7 @@ const CommonModals = ({
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
                             <Button variant="ghost" style={{ flex: 1 }} onClick={() => setIsPointModalOpen(false)}>취소</Button>
-                            <Button style={{ flex: 2, background: '#3498DB', color: 'white', fontWeight: '900' }} onClick={handleBulkProcessPoints}>반영하기</Button>
+                            <Button style={{ flex: 2, backgroundColor: '#3498DB', color: 'white', fontWeight: '900' }} onClick={handleBulkProcessPoints}>반영하기</Button>
                         </div>
                     </Card>
                 </div>
@@ -620,7 +678,7 @@ const CommonModals = ({
                         <p style={{ color: '#6C757D', fontSize: '0.85rem', marginBottom: '20px' }}>{deleteTarget?.name}님의 모든 데이터가 사라집니다.</p>
                         <div style={{ display: 'flex', gap: '8px' }}>
                             <Button variant="ghost" style={{ flex: 1 }} onClick={() => setIsDeleteModalOpen(false)}>취소</Button>
-                            <Button style={{ flex: 1, background: '#E74C3C', color: 'white', fontWeight: 'bold' }} onClick={handleDeleteStudent}>삭제</Button>
+                            <Button style={{ flex: 1, backgroundColor: '#E74C3C', color: 'white', fontWeight: 'bold' }} onClick={handleDeleteStudent}>삭제</Button>
                         </div>
                     </Card>
                 </div>

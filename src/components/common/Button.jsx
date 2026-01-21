@@ -18,7 +18,7 @@ const Button = ({
     style,
     className = ''
 }) => {
-    const baseStyles = {
+    const baseDefaultStyles = {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -29,7 +29,6 @@ const Button = ({
         border: 'none',
         gap: '8px',
         boxShadow: 'var(--shadow-subtle)',
-        ...style
     };
 
     const variants = {
@@ -58,11 +57,19 @@ const Button = ({
         lg: { padding: '18px 36px', fontSize: '1.2rem', borderRadius: 'var(--border-radius-lg)' }
     };
 
+    // merging order: internal defaults -> variants -> sizes -> custom styles (prop)
     const currentStyle = {
-        ...baseStyles,
+        ...baseDefaultStyles,
         ...(variants[variant] || variants.primary),
-        ...sizes[size]
+        ...sizes[size],
+        ...style
     };
+
+    // If 'background' is provided in style, we should remove 'backgroundColor' from the final object
+    // to avoid the React warning about mixing shorthand/non-shorthand.
+    if (style?.background && currentStyle.backgroundColor) {
+        delete currentStyle.backgroundColor;
+    }
 
     return (
         <button

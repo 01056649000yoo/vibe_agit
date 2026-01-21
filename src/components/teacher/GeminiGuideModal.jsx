@@ -12,7 +12,7 @@ const GeminiGuideModal = ({ isOpen, onClose }) => {
             action: (
                 <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
                     style={{ display: 'inline-block', textDecoration: 'none' }}>
-                    <Button style={{ background: '#4285F4', color: 'white', fontWeight: 'bold' }}>
+                    <Button style={{ backgroundColor: '#4285F4', color: 'white', fontWeight: 'bold' }}>
                         🔗 Google AI Studio 바로가기
                     </Button>
                 </a>

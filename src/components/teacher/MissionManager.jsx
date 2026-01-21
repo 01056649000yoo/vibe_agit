@@ -929,12 +929,12 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                         <Button
                                             type="button"
                                             onClick={handleCancelEdit}
-                                            style={{ flex: 1, background: '#95A5A6', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}
+                                            style={{ flex: 1, backgroundColor: '#95A5A6', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}
                                         >
                                             취소하기
                                         </Button>
                                     )}
-                                    <Button type="submit" style={{ flex: 2, background: isEditing ? '#F39C12' : '#3498DB', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}>
+                                    <Button type="submit" style={{ flex: 2, backgroundColor: isEditing ? '#F39C12' : '#3498DB', color: 'white', fontWeight: 'bold', height: '54px', borderRadius: '14px' }}>
                                         {isEditing ? '수정 완료 ✏️' : '글쓰기 미션 공개하기 🚀'}
                                     </Button>
                                 </div>
@@ -1013,7 +1013,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                             style={{
                                 width: '100%',
                                 marginTop: '4px',
-                                background: '#F8F9FA',
+                                backgroundColor: '#F8F9FA',
                                 color: '#495057',
                                 border: '1px solid #E9ECEF',
                                 fontSize: '0.85rem'
@@ -1074,7 +1074,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                                 disabled={isGenerating || loadingPosts}
                                                 style={{
                                                     flex: 1,
-                                                    background: '#F3E5F5',
+                                                    backgroundColor: '#F3E5F5',
                                                     color: '#7B1FA2',
                                                     border: '2px solid #E1BEE7',
                                                     fontWeight: '900',
@@ -1090,7 +1090,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                                     disabled={isGenerating || loadingPosts}
                                                     style={{
                                                         flex: 1,
-                                                        background: '#E8F5E9',
+                                                        backgroundColor: '#E8F5E9',
                                                         color: '#2E7D32',
                                                         border: '2px solid #C8E6C9',
                                                         fontWeight: '900',
@@ -1107,7 +1107,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                                     disabled={isGenerating || loadingPosts}
                                                     style={{
                                                         flex: 1,
-                                                        background: '#FFEBEE',
+                                                        backgroundColor: '#FFEBEE',
                                                         color: '#C62828',
                                                         border: '2px solid #FFCDD2',
                                                         fontWeight: '900',
@@ -1186,7 +1186,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                             <button
                                 onClick={() => setSelectedPost(null)}
                                 style={{
-                                    background: '#F8F9FA', border: 'none', padding: '8px 16px',
+                                    backgroundColor: '#F8F9FA', border: 'none', padding: '8px 16px',
                                     borderRadius: '12px', fontSize: '0.9rem', fontWeight: 'bold',
                                     color: '#495057', cursor: 'pointer'
                                 }}
@@ -1203,7 +1203,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                         <Button
                                             onClick={() => handleRequestRewrite(selectedPost)}
                                             style={{
-                                                background: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2',
+                                                backgroundColor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2',
                                                 padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
                                             }}
                                         >
@@ -1212,7 +1212,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                         <Button
                                             onClick={() => handleApprovePost(selectedPost)}
                                             style={{
-                                                background: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9',
+                                                backgroundColor: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9',
                                                 padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
                                             }}
                                         >
@@ -1224,7 +1224,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                     <Button
                                         onClick={() => handleRecovery(selectedPost)}
                                         style={{
-                                            background: '#FFEBEE', color: '#C62828', border: '1px solid #FFCDD2',
+                                            backgroundColor: '#FFEBEE', color: '#C62828', border: '1px solid #FFCDD2',
                                             padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
                                         }}
                                     >
@@ -1330,7 +1330,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                                             onClick={handleGenerateSingleAI}
                                             disabled={isGenerating}
                                             style={{
-                                                background: '#3498DB', color: 'white', padding: '6px 12px',
+                                                backgroundColor: '#3498DB', color: 'white', padding: '6px 12px',
                                                 fontSize: '0.8rem', borderRadius: '10px'
                                             }}
                                         >

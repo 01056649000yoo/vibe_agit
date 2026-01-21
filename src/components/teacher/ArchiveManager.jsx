@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDataExport } from '../../hooks/useDataExport';
+import ExportSelectModal from '../common/ExportSelectModal';
 
 /**
  * 역할: 선생님 - 보관된 미션 관리 및 글 모아보기 📂
@@ -13,6 +15,36 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
     const [selectedMission, setSelectedMission] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(false);
+
+    // 엑셀 추출 훅
+    const { fetchExportData, exportToExcel, exportToGoogleDoc, isGapiLoaded } = useDataExport();
+
+    // 내보내기 모달 상태
+    const [exportModalOpen, setExportModalOpen] = useState(false);
+    const [exportTarget, setExportTarget] = useState(null);
+
+    const handleExportClick = (mission) => {
+        setExportTarget({ type: 'mission', id: mission.id, title: mission.title });
+        setExportModalOpen(true);
+    };
+
+    const handleExportConfirm = async (format, options) => {
+        if (!exportTarget) return;
+
+        const data = await fetchExportData(exportTarget.type, exportTarget.id);
+        if (!data || data.length === 0) {
+            alert('제출된 글이 없습니다.');
+            return;
+        }
+
+        const fileName = `${exportTarget.title}_글모음`;
+
+        if (format === 'excel') {
+            exportToExcel(data, fileName);
+        } else if (format === 'googleDoc') {
+            await exportToGoogleDoc(data, fileName, options.usePageBreak);
+        }
+    };
 
     useEffect(() => {
         if (activeClass?.id) {
@@ -242,6 +274,19 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                                 >
                                     ♻️ 복구
                                 </Button>
+                                <Button
+                                    size="sm"
+                                    onClick={() => handleExportClick(mission)}
+                                    style={{
+                                        width: '100%',
+                                        background: '#E0F7FA',
+                                        color: '#006064',
+                                        border: 'none',
+                                        gridColumn: 'span 2' // 하단에 꽉 차게 배치
+                                    }}
+                                >
+                                    📤 데이터 내보내기
+                                </Button>
                             </div>
                         </motion.div>
                     ))}
@@ -306,6 +351,14 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                     </div>
                 )}
             </AnimatePresence>
+            {/* 내보내기 모달 */}
+            <ExportSelectModal
+                isOpen={exportModalOpen}
+                onClose={() => setExportModalOpen(false)}
+                title={exportTarget?.title}
+                onConfirm={handleExportConfirm}
+                isGapiLoaded={isGapiLoaded}
+            />
         </div>
     );
 };
