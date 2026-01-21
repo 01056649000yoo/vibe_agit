@@ -346,7 +346,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 width: '100%', boxSizing: 'border-box'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
-                    <h2 style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.2rem', color: '#212529', fontWeight: '900' }}>
+                    <h2 style={{ margin: 0, fontSize: isMobile ? '1.2rem' : '1.5rem', color: '#212529', fontWeight: '900' }}>
                         {activeClass ? (isMobile ? activeClass.name : `🏫 ${activeClass.name}`) : '학급 관리'}
                     </h2>
                     {classes.length > 1 && (

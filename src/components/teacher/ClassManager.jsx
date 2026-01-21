@@ -204,7 +204,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                         }}>
                             <div>
                                 <span style={{ fontSize: '0.8rem', color: '#8D6E63', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '2px' }}>관리 중인 학급</span>
-                                <h3 style={{ margin: 0, fontSize: isMobile ? '1.5rem' : '1.8rem', color: '#2C3E50', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '8px', lineHeight: 1.1 }}>
+                                <h3 style={{ margin: 0, fontSize: isMobile ? '1.8rem' : '2.2rem', color: '#2C3E50', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '8px', lineHeight: 1.1 }}>
                                     🏫 {activeClass?.name}
                                 </h3>
                             </div>
