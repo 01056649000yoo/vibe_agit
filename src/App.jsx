@@ -17,6 +17,8 @@ const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard')) /
 const StudentWriting = lazy(() => import('./components/student/StudentWriting'))
 const MissionList = lazy(() => import('./components/student/MissionList'))
 const FriendsHideout = lazy(() => import('./components/student/FriendsHideout'))
+const PrivacyPolicy = lazy(() => import('./components/layout/PrivacyPolicy'))
+const TermsOfService = lazy(() => import('./components/layout/TermsOfService'))
 
 /**
  * 역할: 전역 상태 관리 및 라우팅 (메인 진입점)
@@ -203,6 +205,10 @@ function App() {
       <Suspense fallback={<Loading />}>
         {loading ? (
           <Loading />
+        ) : window.location.pathname === '/privacy' ? (
+          <PrivacyPolicy />
+        ) : window.location.pathname === '/terms' ? (
+          <TermsOfService />
         ) : session ? (
           /* [1순위] 교사 세션 존재 시 (프로필 또는 선생님 정보 미설정 포함) */
           (!profile || !profile.role || !profile.teacherName || !profile.schoolName) ? (
