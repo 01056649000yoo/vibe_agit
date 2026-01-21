@@ -281,7 +281,7 @@ export const useDataExport = () => {
                 console.log(`Inserted ${requests.length} operations successfully.`);
             }
 
-            alert(`구글 문서가 생성되었습니다! (ID: ${documentId})\n구글 드라이브에서 확인하세요.`);
+            alert(`'${fullTitle}' 문서가 성공적으로 생성되었습니다! ✨\n구글 드라이브에서 확인해 보세요.`);
             window.open(`https://docs.google.com/document/d/${documentId}/edit`, '_blank');
 
         } catch (error) {
