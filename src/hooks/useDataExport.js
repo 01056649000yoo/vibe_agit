@@ -31,10 +31,19 @@ export const useDataExport = () => {
         // 2. GIS (Google Identity Services) 초기화 (인증용)
         function startGis() {
             try {
+                const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+                if (!clientId) {
+                    console.error('GIS Error: VITE_GOOGLE_CLIENT_ID is missing');
+                    return;
+                }
+
                 const client = window.google.accounts.oauth2.initTokenClient({
-                    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                    client_id: clientId,
                     scope: "https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file",
-                    callback: '', // 나중에 동적으로 설정 가능
+                    callback: (response) => {
+                        // Default callback - will be overridden in getAccessToken
+                        console.log('GIS Token Response:', response);
+                    },
                 });
                 setTokenClient(client);
                 console.log('Google Auth Client Ready');
