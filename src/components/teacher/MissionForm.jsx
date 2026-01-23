@@ -107,7 +107,7 @@ const MissionForm = ({
                                     </div>
                                     <div>
                                         <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#2C3E50' }}>
-                                            🎯 AI 핵심 질문 설계 {useAIQuestions ? '(사용 중)' : '(선택)'}
+                                            🎯 핵심 질문 설계 {useAIQuestions ? '(사용 중)' : '(선택)'}
                                         </div>
                                         <div style={{ fontSize: '0.8rem', color: '#7F8C8D' }}>
                                             {useAIQuestions
@@ -121,7 +121,15 @@ const MissionForm = ({
                                         type="button"
                                         size="sm"
                                         onClick={() => setIsQuestionModalOpen(true)}
-                                        style={{ background: '#34495E', borderRadius: '10px' }}
+                                        style={{
+                                            background: 'linear-gradient(135deg, #36D1DC 0%, #5B86E0 100%)',
+                                            borderRadius: '14px',
+                                            color: 'white',
+                                            fontWeight: 'bold',
+                                            padding: '8px 16px',
+                                            border: 'none',
+                                            boxShadow: '0 4px 15px rgba(91, 134, 224, 0.3)'
+                                        }}
                                     >
                                         🪄 질문 수정/설계하기
                                     </Button>
@@ -162,7 +170,7 @@ const MissionForm = ({
                                         {/* 모달 헤더 */}
                                         <div style={{ padding: '40px 40px 24px 40px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, #F8FBFF, #FFFFFF)' }}>
                                             <div>
-                                                <h3 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '900', color: '#2C3E50' }}>🎯 AI 핵심 질문 설계</h3>
+                                                <h3 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '900', color: '#2C3E50' }}>🎯 핵심 질문 설계</h3>
                                                 <p style={{ margin: '8px 0 0 0', color: '#7F8C8D', fontSize: '1rem' }}>학생들에게 생각의 실마리를 제공하는 질문 리스트를 만듭니다.</p>
                                             </div>
                                             <button
@@ -179,10 +187,10 @@ const MissionForm = ({
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                                                     <div style={{ background: '#3498DB', color: 'white', padding: '10px 18px', borderRadius: '15px', fontWeight: 'bold' }}>AI 자동 생성</div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                        <span style={{ fontSize: '1rem', color: '#2C3E50', fontWeight: 'bold' }}>질문 개수: {formData.question_count || 5}개</span>
+                                                        <span style={{ fontSize: '1rem', color: '#2C3E50', fontWeight: 'bold' }}>질문 개수: {formData.question_count || 3}개</span>
                                                         <input
-                                                            type="range" min="3" max="8"
-                                                            value={formData.question_count || 5}
+                                                            type="range" min="1" max="5"
+                                                            value={formData.question_count || 3}
                                                             onChange={e => setFormData({ ...formData, question_count: parseInt(e.target.value) })}
                                                             style={{ width: '120px', cursor: 'pointer', accentColor: '#3498DB' }}
                                                         />
@@ -190,16 +198,21 @@ const MissionForm = ({
                                                 </div>
                                                 <Button
                                                     type="button"
-                                                    onClick={() => handleGenerateQuestions(formData.question_count || 5)}
+                                                    onClick={() => handleGenerateQuestions(formData.question_count || 3)}
                                                     disabled={isGeneratingQuestions}
                                                     style={{
-                                                        background: '#2C3E50',
+                                                        background: 'linear-gradient(135deg, #00F2FE 0%, #4FACFE 100%)',
+                                                        border: 'none',
+                                                        color: 'white',
                                                         fontSize: '1rem',
                                                         padding: '12px 28px',
-                                                        borderRadius: '16px'
+                                                        borderRadius: '16px',
+                                                        fontWeight: '900',
+                                                        boxShadow: '0 10px 20px rgba(79, 172, 254, 0.4)',
+                                                        textShadow: '0 1px 2px rgba(0,0,0,0.1)'
                                                     }}
                                                 >
-                                                    {isGeneratingQuestions ? '🪄 AI 설계 중...' : '🪄 질문 새로 만들기'}
+                                                    {isGeneratingQuestions ? '🪄 AI 설계 중...' : '🪄 AI 질문 생성하기'}
                                                 </Button>
                                             </div>
 

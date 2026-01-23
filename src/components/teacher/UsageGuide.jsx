@@ -174,12 +174,26 @@ const UsageGuide = ({ isMobile }) => {
                     {sections[1].title}
                 </h2>
                 <div style={cardStyle}>
-                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#3498DB' }}>📝 미션 관리</h3>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#3498DB' }}>📝 미션 관리 및 핵심 질문 설계</h3>
                     <p><strong>• 미션 생성:</strong> '새 미션 만들기' 버튼을 눌러 주제, 가이드 사진, 최소 글자 수, 보상 포인트를 설정합니다.</p>
-                    <p><strong>• 수정 및 삭제:</strong> 만들어진 미션 카드의 우측 상단 메뉴(⋮)를 눌러 내용을 수정하거나 삭제할 수 있습니다.</p>
-                    <p><strong>• 미션 보관(아카이빙):</strong>
+                    <p><strong>• 핵심 질문 설계 (추천):</strong>
+                        <br />미션 생성 시 <strong>[핵심 질문 설계]</strong> 기능을 활용해보세요! 학생들이 글을 쓰기 전 생각을 정리할 수 있는 질문 리스트를 미리 만들 수 있습니다.
+                        학생들은 이 질문에 답한 후 내용을 본문에 바로 삽입하여 더 풍성한 글을 쓸 수 있게 됩니다.
+                    </p>
+                    <p><strong>• AI 질문 생성:</strong>
+                        <br />직접 질문을 만들기 어렵다면 <strong>'AI 질문 생성하기'</strong> 버튼을 클릭하세요.
+                        최신 모델인 <strong>Gemini 3.0 Flash</strong>가 미션 주제에 딱 맞는 질문을 자동으로 설계해줍니다.
+                        <br /><span style={{ color: '#E67E22', fontWeight: 'bold' }}>⚠️ AI 질문 생성은 1일 5회까지 무료로 최적화되어 제공됩니다.</span>
+                    </p>
+                    <p><strong>• 미션 보관 및 데이터 내보내기:</strong>
                         <br />학기가 끝나거나 완료된 미션은 '보관함으로 이동'을 선택하세요.
-                        보관된 미션은 학생들 화면에서 사라지며, 선생님의 <strong>[글 보관함]</strong> 탭에 안전하게 저장됩니다. 나중에 언제든지 다시 꺼내볼 수 있습니다.</p>
+                        보관된 미션은 <strong>[글 보관함]</strong> 탭에서 언제든지 확인할 수 있으며, 학생들의 소중한 글을 외부 파일로 내보낼 수 있습니다.
+                    </p>
+                    <p><strong>• 엑셀(Excel) 및 구글 문서(Google Docs) 활용:</strong>
+                        <br />- <strong>엑셀 내보내기:</strong> 학생들의 글 통계와 내용을 표 형태로 한눈에 정리하여 보관할 수 있습니다.
+                        <br />- <strong>구글 문서로 책 만들기:</strong> 모든 글을 구글 문서로 전송하여 <strong>나만의 학급 문집</strong>을 만들 수 있습니다.
+                        <br />- <strong>출판 최적화 기능:</strong> '학생별 1페이지씩 정리' 또는 '주제별 글 이어붙이기' 기능을 통해 별도의 편집 없이도 즉시 책으로 출판할 수 있는 깔끔한 원고를 얻을 수 있습니다. ✨
+                    </p>
                 </div>
 
                 <div style={cardStyle}>
@@ -197,10 +211,10 @@ const UsageGuide = ({ isMobile }) => {
                     <br />
                     미확인 글에 대해 <strong>'AI 피드백 일괄 생성'</strong> 버튼을 누르면, 선생님이 설정한 API 키를 사용하여 AI가 모든 글을 분석하고 맞춤형 조언을 댓글로 남겨줍니다.
                     <br /><br />
-                    ⚠️ <strong>안정적인 서비스 운영 (Fallback 시스템):</strong><br />
-                    현재 <strong>Gemini 2.5 Flash Lite</strong>와 <strong>Gemini 2.5 Flash</strong> 두 가지 최신 전용 모델을 함께 사용합니다. <br />
-                    Lite 모델의 할당량이 초과되더라도 고성능 모델로 자동 전환되어 끊김 없는 피드백을 제공합니다. <br />
-                    사용자 정책에 따라 <strong>하루 최대 25회</strong>까지 무료 사용이 가능하니 유의해서 사용해주세요.
+                    ⚠️ <strong>안정적인 서비스 운영 (AI 모델 안내):</strong><br />
+                    현재 더욱 똑똑해진 <strong>Gemini 2.5 Flash Lite</strong> 버전과 <strong>Gemini 2.5</strong> 버전이 함께 활용되어 최적의 피드백을 제공합니다. <br />
+                    <span style={{ color: '#E67E22', fontWeight: 'bold' }}>• 제미나이 무료 API를 사용할 경우, 1일 총 25건의 AI 피드백 생성이 가능하오니 이용에 참고해 주세요.</span> <br />
+                    Lite 모델의 할당량이 초과되더라도 고성능 모델로 자동 전환되어 끊김 없는 서비스를 지원합니다.
                     <br /><br />
                     <button
                         onClick={() => setShowGeminiGuide(true)}
@@ -231,12 +245,12 @@ const UsageGuide = ({ isMobile }) => {
                 <div style={cardStyle}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#E74C3C' }}>⚙️ 드래곤 게임 난이도 설정</h3>
                     <p><strong>1. 먹이 주기 비용 (Feed Cost)</strong><br />
-                        학생들이 드래곤에게 간식을 줄 때 차감될 포인트를 설정합니다. (기본: 7포인트) <br />
+                        학생들이 드래곤에게 간식을 줄 때 차감될 포인트를 설정합니다. (기본: 50포인트) <br />
                         비용을 높이면 학생들이 포인트를 더 아껴쓰며 글쓰기 동기가 강화될 수 있습니다.</p>
                 </div>
                 <div style={cardStyle}>
                     <p><strong>2. 관심 필요 주기 (Degeneration Days)</strong><br />
-                        학생이 며칠 동안 드래곤을 돌보지 않으면 레벨이 떨어질지 설정합니다. (기본: 3일) <br />
+                        학생이 며칠 동안 드래곤을 돌보지 않으면 레벨이 떨어질지 설정합니다. (기본: 7일) <br />
                         이 기간을 짧게 설정하면 학생들이 더 자주 접속하여 활동하게 유도할 수 있습니다.</p>
                 </div>
                 <div style={highlightStyle}>
@@ -250,18 +264,26 @@ const UsageGuide = ({ isMobile }) => {
                     {sections[3].title}
                 </h2>
                 <div style={cardStyle}>
-                    <p><strong>1. 포인트 시스템</strong><br />
-                        글을 1자 쓸 때마다 1포인트가 적립(최대 1000P)되며, 미션 완료 시 추가 보너스 점수가 부여됩니다. 이 포인트는 성실함의 척도가 됩니다.</p>
+                    <p><strong>1. 즐거운 포인트 획득</strong><br />
+                        나만의 글을 남기는 모든 활동이 포인트가 됩니다!
+                        <br />• <strong>미션 완료 보상:</strong> 선생님이 각 글쓰기 미션에 걸어두신 기본 포인트와 보너스 포인트를 획득합니다.
+                        <br />• <strong>활동 포인트:</strong> 정성껏 글을 쓰고 친구들의 글에 따뜻한 댓글을 남기는 과정에서도 포인트가 차곡차곡 쌓입니다.
+                    </p>
                 </div>
                 <div style={highlightStyle}>
-                    🐉 <strong>드래곤 키우기:</strong>
+                    🐉 <strong>포인트 활용처:</strong>
                     <br />
-                    학생들은 글쓰기로 모은 포인트로 먹이를 주어 드래곤을 레벨업시킬 수 있습니다.
-                    레벨이 오르면 드래곤의 외형이 멋지게 변하며(알 ➜ 해츨링 ➜ 성체), <strong>'상점'</strong>에서 가구와 배경을 구매해 아지트를 꾸밀 수도 있습니다.
+                    모은 포인트는 학생들의 가장 친한 친구인 <strong>'드래곤'</strong>을 키우는 데 사용됩니다.
+                    먹이를 주어 레벨을 높이고 아지트를 멋지게 꾸며보세요!
+                    <br /><br />
+                    🎮 <strong>게임 센터 오픈 예정:</strong>
+                    <br />
+                    앞으로 포인트로 즐길 수 있는 재미있는 미니게임들이 계속해서 추가될 예정이니, 포인트를 미리미리 모아두는 것이 좋습니다. ✨
                 </div>
                 <div style={cardStyle}>
                     <p><strong>2. 드래곤 성장 시스템</strong><br />
-                        글을 꾸준히 쓰고 포인트를 모을수록 학생들의 드래곤은 더 멋진 모습으로 레벨업합니다. 친구들의 아지트에 방문하여 서로의 드래곤을 구경할 수도 있습니다.</p>
+                        성실하게 글을 쓸수록 학생들의 드래곤은 더 멋진 모습으로 진화합니다(드래곤은 총 5단계로 진화).
+                        친구들의 아지트에 방문하여 누구의 드래곤이 가장 멋지게 자랐는지 서로 구경하며 응원할 수 있습니다.</p>
                 </div>
             </section>
 
@@ -284,7 +306,7 @@ const UsageGuide = ({ isMobile }) => {
             </section>
 
             <footer style={{ textAlign: 'center', padding: '40px 0', borderTop: '1px solid #EEE', color: '#ADB5BD', fontSize: '0.9rem' }}>
-                &copy; 2026 VIBE - 선생님의 행복한 글쓰기 교실을 응원합니다.
+                &copy; 끄적끄적아지트-선생님의 행복한 글쓰기 교실을 응원합니다.
             </footer>
         </motion.div>
     );

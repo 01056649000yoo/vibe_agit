@@ -5,8 +5,8 @@ import Card from '../common/Card';
 
 const GameManager = ({ activeClass, isMobile }) => {
     const [config, setConfig] = useState({
-        dragon_feed_points: 80,
-        dragon_degen_days: 14
+        dragon_feed_points: 50,
+        dragon_degen_days: 7
     });
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -31,8 +31,8 @@ const GameManager = ({ activeClass, isMobile }) => {
             if (data) {
                 console.log('🎮 게임 설정 로드 성공:', data);
                 setConfig({
-                    dragon_feed_points: data.dragon_feed_points || 80,
-                    dragon_degen_days: data.dragon_degen_days || 14
+                    dragon_feed_points: data.dragon_feed_points || 50,
+                    dragon_degen_days: data.dragon_degen_days || 7
                 });
             }
         } catch (err) {

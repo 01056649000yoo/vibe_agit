@@ -32,7 +32,8 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         bonus_reward: 10,
         allow_comments: true,
         mission_type: '일기',
-        guide_questions: []
+        guide_questions: [],
+        question_count: 3
     });
     const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
 
