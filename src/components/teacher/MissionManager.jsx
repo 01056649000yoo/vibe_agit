@@ -23,7 +23,9 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery, handleRecovery: handleRecoveryFunc,
-        handleBulkRecovery, handleFinalArchive, fetchMissions
+        handleBulkRecovery,
+        handleBulkRequestRewrite,
+        handleFinalArchive, fetchMissions
     } = useMissionManager(activeClass);
 
     useEffect(() => {
@@ -116,6 +118,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 handleBulkAIAction={handleBulkAIAction}
                 handleBulkApprove={handleBulkApprove}
                 handleBulkRecovery={handleBulkRecovery}
+                handleBulkRequestRewrite={handleBulkRequestRewrite}
                 setSelectedPost={setSelectedPost}
                 setTempFeedback={setTempFeedback}
                 isGenerating={isGenerating}

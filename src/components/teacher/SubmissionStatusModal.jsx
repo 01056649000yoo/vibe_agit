@@ -5,7 +5,7 @@ import Button from '../common/Button';
 const SubmissionStatusModal = ({
     selectedMission, setSelectedMission, posts, loadingPosts,
     handleBulkAIAction, handleBulkApprove, handleBulkRecovery,
-    setSelectedPost, setTempFeedback, isGenerating
+    handleBulkRequestRewrite, setSelectedPost, setTempFeedback, isGenerating
 }) => {
     return (
         <AnimatePresence>
@@ -50,37 +50,54 @@ const SubmissionStatusModal = ({
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                     {/* 일괄 동작 영역 */}
-                                    <div style={{ display: 'flex', gap: '10px', padding: '0 0 16px 0', borderBottom: '1px dashed #EEE', marginBottom: '8px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', padding: '0 0 16px 0', borderBottom: '1px dashed #EEE', marginBottom: '8px', flexWrap: 'wrap' }}>
                                         <Button
                                             onClick={handleBulkAIAction}
                                             disabled={isGenerating || loadingPosts}
                                             style={{
-                                                flex: 1,
+                                                flex: '1 1 100%',
                                                 backgroundColor: '#F3E5F5',
                                                 color: '#7B1FA2',
                                                 border: '2px solid #E1BEE7',
                                                 fontWeight: '900',
-                                                fontSize: '0.9rem'
+                                                fontSize: '0.85rem',
+                                                marginBottom: '4px'
                                             }}
                                         >
-                                            {isGenerating ? '🤖 피드백 생성 중...' : '🤖 미확인 글 일괄 AI 피드백'}
+                                            {isGenerating ? '🤖 피드백 생성 중...' : '🤖 일괄 AI 피드백 생성 후 다시쓰기 요청'}
                                         </Button>
 
                                         {posts.some(p => p.is_submitted && !p.is_confirmed) && (
-                                            <Button
-                                                onClick={handleBulkApprove}
-                                                disabled={isGenerating || loadingPosts}
-                                                style={{
-                                                    flex: 1,
-                                                    backgroundColor: '#E8F5E9',
-                                                    color: '#2E7D32',
-                                                    border: '2px solid #C8E6C9',
-                                                    fontWeight: '900',
-                                                    fontSize: '0.9rem'
-                                                }}
-                                            >
-                                                ✅ 제출글 일괄 승인
-                                            </Button>
+                                            <>
+                                                <Button
+                                                    onClick={handleBulkRequestRewrite}
+                                                    disabled={isGenerating || loadingPosts}
+                                                    style={{
+                                                        flex: '1 1 48%',
+                                                        backgroundColor: '#FFF3E0',
+                                                        color: '#E65100',
+                                                        border: '2px solid #FFE0B2',
+                                                        fontWeight: '900',
+                                                        fontSize: '0.85rem'
+                                                    }}
+                                                >
+                                                    ♻️ 일괄 다시쓰기 요청
+                                                </Button>
+                                                <Button
+                                                    onClick={handleBulkApprove}
+                                                    disabled={isGenerating || loadingPosts}
+                                                    style={{
+                                                        flex: '1 1 48%',
+                                                        backgroundColor: '#E8F5E9',
+                                                        color: '#2E7D32',
+                                                        border: '2px solid #C8E6C9',
+                                                        fontWeight: '900',
+                                                        fontSize: '0.85rem'
+                                                    }}
+                                                >
+                                                    ✅ 일괄 승인
+                                                </Button>
+                                            </>
                                         )}
 
                                         {posts.some(p => p.is_confirmed) && (
@@ -88,12 +105,13 @@ const SubmissionStatusModal = ({
                                                 onClick={handleBulkRecovery}
                                                 disabled={isGenerating || loadingPosts}
                                                 style={{
-                                                    flex: 1,
+                                                    flex: '1 1 100%',
                                                     backgroundColor: '#FFEBEE',
                                                     color: '#C62828',
                                                     border: '2px solid #FFCDD2',
                                                     fontWeight: '900',
-                                                    fontSize: '0.9rem'
+                                                    fontSize: '0.85rem',
+                                                    marginTop: '4px'
                                                 }}
                                             >
                                                 ⚠️ 일괄 승인 취소/회수

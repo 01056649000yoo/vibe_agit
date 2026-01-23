@@ -195,7 +195,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         }
     };
 
-    const fetchAIFeedback = async (postTitle, postContent) => {
+    const fetchAIFeedback = async (postTitle, postContent, retryCount = 0) => {
         const { data: { user } } = await supabase.auth.getUser();
         const { data: profileData } = await supabase
             .from('profiles')
@@ -231,34 +231,34 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 (내용을 더 풍성하게 만들 질문이나 아이디어를 하나만 제안)`;
 
         const basePrompt = customTemplate || defaultTemplate;
-
-        const prompt = `${basePrompt}
-
----
-[학생의 글 정보]
-글 제목: "${postTitle}"
-글 내용:
-"${postContent}"`;
+        const prompt = `${basePrompt}\n\n---\n[학생의 글 정보]\n글 제목: "${postTitle}"\n글 내용:\n"${postContent}"`;
 
         try {
+            // 사용자 요청에 따라 gemini-2.5-flash-lite 모델을 사용합니다.
             const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
 
             const response = await fetch(`${baseUrl}?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: prompt
-                        }]
-                    }]
+                    contents: [{ parts: [{ text: prompt }] }]
                 })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
+                const status = response.status;
                 const errorMsg = errorData?.error?.message || '알 수 없는 서비스 오류';
-                throw new Error(`AI 서비스 오류 (${response.status}): ${errorMsg}`);
+
+                // 503(Overloaded), 429(Rate Limit), 404(Not Found) 발생 시 재시도 (최대 3회)
+                // 404가 일시적으로 발생할 수 있으므로 재시도 대상에 포함
+                if ((status === 503 || status === 429 || status === 404) && retryCount < 3) {
+                    console.log(`[AI Retry ${retryCount + 1}] 서비스 응답 문제로 재시도합니다... (${status})`);
+                    await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+                    return fetchAIFeedback(postTitle, postContent, retryCount + 1);
+                }
+
+                throw new Error(`AI 서비스 오류 (${status}): ${errorMsg}`);
             }
 
             const data = await response.json();
@@ -267,8 +267,11 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             }
             throw new Error('AI 응답 형식이 올바르지 않습니다.');
         } catch (err) {
-            console.error('AI 피드백 생성 실패 원인:', err.message);
-            alert(`피드백 생성 중 문제가 발생했습니다: ${err.message}`);
+            console.error('AI 피드백 생성 실패:', err.message);
+            // 최종 실패 시에만 에러 알림
+            if (retryCount >= 3 || !(err.message.includes('503') || err.message.includes('429'))) {
+                alert(`피드백 생성 중 문제가 발생했습니다: ${err.message}`);
+            }
             return null;
         }
     };
@@ -315,7 +318,8 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
         try {
             let processedCount = 0;
-            const aiPromises = targetPosts.map(async (post) => {
+            // [수정] Promise.all 대신 순차적 처리를 통해 API 부하 방지
+            for (const post of targetPosts) {
                 try {
                     const feedback = await fetchAIFeedback(post.title, post.content);
                     if (feedback) {
@@ -340,12 +344,16 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                     }
                     processedCount++;
                     setProgress(prev => ({ ...prev, current: processedCount }));
+
+                    // API 부하 방지를 위한 짧은 지연 시간 (0.5초)
+                    if (processedCount < targetPosts.length) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
                 } catch (innerErr) {
                     console.error(`Post ${post.id} 처리 중 에러:`, innerErr);
                 }
-            });
+            }
 
-            await Promise.all(aiPromises);
             setShowCompleteToast(true);
             setTimeout(() => setShowCompleteToast(false), 3000);
             alert('모든 글에 대한 AI 피드백 생성 및 다시 쓰기 요청이 완료되었습니다! ✨');
@@ -596,6 +604,49 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         }
     };
 
+    const handleBulkRequestRewrite = async () => {
+        const toRewrite = posts.filter(p => (p.is_submitted || p.is_confirmed) && !p.is_returned);
+        if (toRewrite.length === 0) {
+            alert('다시 쓰기를 요청할 미확인 제출글이 없습니다.');
+            return;
+        }
+
+        if (!confirm(`제출된 ${toRewrite.length}개의 글에 대해 일괄 다시 쓰기를 요청하시겠습니까? ♻️\n학생들에게 돌아가기 알림이 전송됩니다.`)) return;
+
+        setLoadingPosts(true);
+        try {
+            const rewritePromises = toRewrite.map(async (post) => {
+                await Promise.all([
+                    supabase
+                        .from('student_posts')
+                        .update({
+                            is_submitted: false,
+                            is_returned: true,
+                            is_confirmed: false
+                        })
+                        .eq('id', post.id),
+
+                    supabase.from('point_logs').insert({
+                        student_id: post.student_id,
+                        post_id: post.id,
+                        mission_id: post.mission_id,
+                        amount: 0,
+                        reason: `[일괄 요청] '${post.title}' 글에 대한 다시 쓰기 요청이 도착했습니다. ♻️`
+                    })
+                ]);
+            });
+
+            await Promise.all(rewritePromises);
+            alert(`✅ ${toRewrite.length}건 일괄 다시 쓰기 요청 완료!`);
+            if (selectedMission) fetchPostsForMission(selectedMission);
+        } catch (err) {
+            console.error('일괄 다시 쓰기 요청 실패:', err.message);
+            alert('일괄 처리 중 오류가 발생했습니다.');
+        } finally {
+            setLoadingPosts(false);
+        }
+    };
+
     const handleFinalArchive = async () => {
         if (!archiveModal.mission) return;
         try {
@@ -624,6 +675,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery, handleBulkRecovery,
+        handleBulkRequestRewrite,
         handleFinalArchive, fetchMissions
     };
 };
