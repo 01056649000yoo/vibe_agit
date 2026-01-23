@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../common/Card';
-import Button from '../common/Button';
-import { supabase } from '../../lib/supabaseClient';
-import { motion, AnimatePresence } from 'framer-motion';
 import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
 import { useDragonPet } from '../../hooks/useDragonPet';
+import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 
-/**
- * 역할: 학생 메인 대시보드 - 포인트 표시 및 활동 메뉴
- * props:
- *  - studentSession: 학생 세션 정보 (id, name, className 등)
- *  - onLogout: 로그아웃 처리 함수
- */
+// 분리된 UI 컴포넌트들
+import StudentHeader from './StudentHeader';
+import TeacherNotifyBanner from './TeacherNotifyBanner';
+import StudentStatsCards from './StudentStatsCards';
+import PointLevelCard from './PointLevelCard';
+import DashboardMenu from './DashboardMenu';
+import DragonHideoutModal from './DragonHideoutModal';
+import BackgroundShopModal from './BackgroundShopModal';
+
 // [신규] 드래곤 아지트 배경 목록 (상수 외부 이동)
 const HIDEOUT_BACKGROUNDS = {
     default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63', glow: 'rgba(255, 241, 118, 0.3)' },
@@ -24,156 +25,38 @@ const HIDEOUT_BACKGROUNDS = {
 };
 
 const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
-    const [points, setPoints] = useState(0);
-    const [hasActivity, setHasActivity] = useState(false);
-    const [showFeedback, setShowFeedback] = useState(false);
-    const [feedbacks, setFeedbacks] = useState([]);
-    const [loadingFeedback, setLoadingFeedback] = useState(false);
-    const [feedbackInitialTab, setFeedbackInitialTab] = useState(0); // [추가] 피드백 모달 초기 탭
-    const [teacherNotify, setTeacherNotify] = useState(null); // [신규] 교사 알림 배너 전용 (다시쓰기 + 포인트)
-    const [returnedCount, setReturnedCount] = useState(0);
-    const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 }); // [추가] 성장 통계
-    const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', icon: '🌱', nextGoal: 1000 }); // [추가] 레벨 정보
-    const [isLoading, setIsLoading] = useState(true); // [긴급 점검] 데이터 로딩 상태 관리 추가
-    // [신규] 드래곤 설정 (기본값 80, 14)
-    // [신규] 드래곤 설정 (기본값 80, 14로 초기화 - 비활성화 방지)
-    const [dragonConfig, setDragonConfig] = useState({ feedCost: 80, degenDays: 14 });
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [isShopOpen, setIsShopOpen] = useState(false);
+    const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
+    const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-    // [Refactor] 드래곤 로직 분리 (useDragonPet)
-    // config 값이 업데이트되면 훅 내부 로직도 자동 반영
+    // 전반적인 대시보드 데이터 및 비즈니스 로직
     const {
-        petData,
-        setPetData,
-        isEvolving,
-        isFlashing,
-        handleFeed,
-        checkPetDegeneration,
-        buyItem,
-        equipItem
+        points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
+        loadingFeedback, feedbackInitialTab, teacherNotify, setTeacherNotify,
+        returnedCount, stats, levelInfo, isLoading, dragonConfig,
+        handleClearFeedback, handleDirectRewriteGo, openFeedback
+    } = useStudentDashboard(studentSession, onNavigate);
+
+    // 드래곤 관련 상태 및 액션
+    const {
+        petData, setPetData, isEvolving, isFlashing,
+        handleFeed, buyItem, equipItem
     } = useDragonPet(
         studentSession?.id,
         points,
         setPoints,
-        dragonConfig ? dragonConfig.feedCost : 80,
-        dragonConfig ? dragonConfig.degenDays : 14
+        dragonConfig.feedCost,
+        dragonConfig.degenDays
     );
 
-    const [isShopOpen, setIsShopOpen] = useState(false);
-    const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
-    const [isGuideOpen, setIsGuideOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-    const lastCheckRef = useRef('1970-01-01T00:00:00.000Z'); // [신규] 마지막 확인 시간 Ref (DB 동기화)
-
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    useEffect(() => {
-        if (studentSession?.id) {
-            loadInitialData();
-            fetchStats();
-
-            // [알림 시스템 단일화] 필터 없이 모든 로그를 수신하여 클라이언트에서 정밀 필터링 ⚡🔔
-            const notificationChannel = supabase
-                .channel(`student_realtime_v3_${studentSession.id}`)
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'point_logs'
-                    },
-                    (payload) => {
-                        const newLog = payload.new;
-                        if (newLog.student_id !== studentSession.id) return;
-
-                        console.log('⚡ 교사 알림/포인트 수신:', newLog);
-
-                        // 1. 포인트 정보 즉시 반영 및 갱신
-                        if (newLog.amount !== 0) {
-                            setPoints(prev => (prev || 0) + newLog.amount);
-                        }
-                        fetchMyPoints().catch(err => console.error('포인트 갱신 실패:', err));
-
-                        // 2. 배너 메시지 결정
-                        const isRewrite = newLog.reason?.includes('다시 쓰기') || newLog.reason?.includes('♻️');
-                        let bannerMsg = "";
-                        let bannerIcon = "🎁";
-
-                        if (isRewrite) {
-                            bannerMsg = "♻️ 선생님의 다시 쓰기 요청이 있습니다.";
-                            bannerIcon = "♻️";
-                            checkActivity(); // 다시쓰기 카운트 갱신
-                        } else if (newLog.amount < 0) {
-                            bannerMsg = `⚠️ ${newLog.reason} (${newLog.amount}P)`;
-                            bannerIcon = "⚠️";
-                        } else if (newLog.reason?.includes('승인')) {
-                            bannerMsg = `🎉 글이 승인되어 +${newLog.amount}P를 받았어요!`;
-                            bannerIcon = "🎉";
-                        } else if (newLog.amount > 0) {
-                            bannerMsg = `🎁 ${newLog.reason} (+${newLog.amount}P)`;
-                            bannerIcon = "🎁";
-                        }
-
-                        if (bannerMsg) {
-                            setTeacherNotify({
-                                type: isRewrite ? 'rewrite' : 'point',
-                                message: bannerMsg,
-                                icon: bannerIcon,
-                                timestamp: Date.now()
-                            });
-                        }
-                    }
-                )
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(notificationChannel);
-            };
-        }
-    }, [studentSession?.id]);
-
-    const loadInitialData = async () => {
-        try {
-            const data = await fetchMyPoints();
-            // [정밀 수리] 학급 설정 먼저 로드하여 정확한 퇴화 기준일 획득
-            let currentDegenDays = 14; // 기본값
-            const targetClassId = studentSession?.classId || studentSession?.class_id;
-            if (targetClassId) {
-                try {
-                    const classConfig = await fetchClassSettings();
-                    if (classConfig) {
-                        currentDegenDays = classConfig.degenDays;
-                    }
-                } catch (e) {
-                    console.error('설정 로드 중 에러, 기본값 유지', e);
-                }
-            }
-
-            // [정밀 수리] 포인트/펫 데이터 로드 및 퇴화 체크 (DB 설정값 적용)
-            if (data?.pet_data) {
-                await checkPetDegeneration(data.pet_data, currentDegenDays);
-            }
-
-            checkActivity();
-        } catch (err) {
-            console.error('초기 데이터 로드 실패:', err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-
-
-    // [추가] 단계별 드래곤 정보 (이미지 기반)
+    // 헬퍼 함수들
     const getDragonStage = (level) => {
         const basePath = '/assets/dragons';
         if (level >= 5) return { name: '전설의 수호신룡', image: `${basePath}/dragon_stage_5.png`, isPlaceholder: false };
@@ -183,11 +66,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         return { name: '신비로운 알', image: `${basePath}/dragon_stage_1.png`, isPlaceholder: false };
     };
 
-    const dragonInfo = getDragonStage(petData.level);
-
-
-
-    // [추가] 마지막 식사 후 경과 일수 계산
     const getDaysSinceLastFed = () => {
         const lastFedDate = new Date(petData.lastFed);
         const today = new Date();
@@ -195,390 +73,24 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         return Math.floor(diffTime / (1000 * 60 * 60 * 24));
     };
 
+    const dragonInfo = getDragonStage(petData.level);
     const daysSinceLastFed = getDaysSinceLastFed();
-
-    // [수정] 누적 글자 수 기준 5단계 레벨 시스템
-    const getLevelInfo = (totalChars) => {
-        if (totalChars >= 14001) return { level: 5, name: '전설의 작가', emoji: '✨', next: null };
-        if (totalChars >= 8401) return { level: 4, name: '대문호', emoji: '👑', next: 14001 };
-        if (totalChars >= 4201) return { level: 3, name: '숙련 작가', emoji: '🌳', next: 8401 };
-        if (totalChars >= 1401) return { level: 2, name: '초보 작가', emoji: '🌿', next: 4201 };
-        return { level: 1, name: '새싹 작가', emoji: '🌱', next: 1401 };
-    };
-
-    const fetchStats = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('student_posts')
-                .select('char_count, created_at, is_submitted')
-                .eq('student_id', studentSession.id);
-
-            if (error) throw error;
-
-            if (data) {
-                const totalChars = data.reduce((sum, post) => sum + (post.char_count || 0), 0);
-                const completedMissions = data.filter(p => p.is_submitted).length;
-
-                const now = new Date();
-                const currentMonth = now.getMonth();
-                const currentYear = now.getFullYear();
-                const monthlyPosts = data.filter(p => {
-                    const postDate = new Date(p.created_at);
-                    return postDate.getMonth() === currentMonth && postDate.getFullYear() === currentYear;
-                }).length;
-
-                setStats({ totalChars, completedMissions, monthlyPosts });
-                setLevelInfo(getLevelInfo(totalChars));
-            }
-        } catch (err) {
-            console.error('글쓰기 통계 로드 실패:', err.message);
-        }
-    };
-
-    const fetchMyPoints = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('students')
-                .select('total_points, pet_data, last_feedback_check')
-                .eq('id', studentSession.id)
-                .maybeSingle();
-
-            if (error) throw error;
-
-            if (data) {
-                // [안전장치] DB에서 가져온 값이 유효할 때만 상태 업데이트
-                // 만약 DB에서 가져온 값이 null이나 undefined면 기존 값을 유지하거나 에러 처리
-                if (data.total_points !== null && data.total_points !== undefined) {
-                    setPoints(data.total_points);
-                }
-
-                if (data.pet_data) {
-                    setPetData(prev => ({
-                        ...prev,
-                        ...data.pet_data,
-                        ownedItems: data.pet_data.ownedItems || prev.ownedItems,
-                        equippedItems: data.pet_data.equippedItems || prev.equippedItems
-                    }));
-                }
-
-                if (data.last_feedback_check) {
-                    lastCheckRef.current = data.last_feedback_check;
-                }
-            }
-            return data; // [수정] 데이터 반환하여 연쇄 로직 처리가능하게 함
-        } catch (err) {
-            console.error('포인트 로드 실패:', err.message);
-            alert('데이터를 불러오는 중 문제가 발생했습니다. 페이지를 다시 불러와주세요! 🔄');
-            // 에러 시 isLoading을 false로 바꾸지 않고 멈춰버리거나, 알림 후 유지
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // [신규] 학급 드래곤 설정 로드
-    const fetchClassSettings = async () => {
-        let classId = studentSession.classId || studentSession.class_id;
-
-        // [비상구] 세션에 class_id가 없으면 DB에서 직접 조회
-        if (!classId && studentSession?.id) {
-            console.warn('⚠️ Session에 class_id 없음. DB에서 재조회 시도...');
-            const { data: studentData } = await supabase
-                .from('students')
-                .select('class_id')
-                .eq('id', studentSession.id)
-                .single();
-            if (studentData?.class_id) {
-                classId = studentData.class_id;
-                console.log('✅ DB에서 class_id 복구 성공:', classId);
-            }
-        }
-
-        console.log(`🔍 드래곤 설정 로드 시작 (ClassID: ${classId})`);
-
-        if (!classId) {
-            console.error('❌ class_id를 찾을 수 없어 설정 로드 중단');
-            return null;
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from('classes')
-                .select('dragon_feed_points, dragon_degen_days')
-                .eq('id', classId)
-                .single();
-
-            if (error) {
-                console.error('❌ 드래곤 설정 로드 쿼리 에러:', error);
-                throw error;
-            }
-
-            if (data) {
-                setDragonConfig({
-                    feedCost: data.dragon_feed_points || 80,
-                    degenDays: data.dragon_degen_days || 14
-                });
-                console.log(`🐉 드래곤 설정 로드 완료 (ClassID: ${studentSession.class_id}):`, data);
-                return {
-                    feedCost: data.dragon_feed_points || 80,
-                    degenDays: data.dragon_degen_days || 14
-                };
-            }
-            console.warn('⚠️ 드래곤 설정 데이터 없음 (data is null)');
-            return null;
-        } catch (err) {
-            console.error('❌ 드래곤 설정 로드 치명적 오류:', err);
-        }
-    };
-
-    const checkActivity = async () => {
-        try {
-            if (!studentSession?.id) return;
-
-            // 내가 쓴 글 목록 가져오기
-            const { data: myPosts } = await supabase
-                .from('student_posts')
-                .select('id')
-                .eq('student_id', studentSession.id);
-
-            if (!myPosts || myPosts.length === 0) return;
-            const postIds = myPosts.map(p => p.id);
-
-            // [최적화] 병렬 처리 (Promise.all)
-            const lastCheckTime = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
-
-            const [reactionsResult, commentsResult, returnedResult] = await Promise.all([
-                // 1. 친구들의 반응(좋아요) 확인
-                supabase
-                    .from('post_reactions')
-                    .select('*', { count: 'exact', head: true })
-                    .in('post_id', postIds)
-                    .neq('student_id', studentSession.id)
-                    .gt('created_at', lastCheckTime),
-
-                // 2. 친구들의 댓글 확인
-                supabase
-                    .from('post_comments')
-                    .select('*', { count: 'exact', head: true })
-                    .in('post_id', postIds)
-                    .neq('student_id', studentSession.id)
-                    .gt('created_at', lastCheckTime),
-
-                // 3. 선생님의 다시 쓰기 요청 확인
-                supabase
-                    .from('student_posts')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('student_id', studentSession.id)
-                    .eq('is_returned', true)
-            ]);
-
-            const reactionCount = reactionsResult.count || 0;
-            const commentCount = commentsResult.count || 0;
-            const returnedCountVal = returnedResult.count || 0;
-
-            setReturnedCount(returnedCountVal);
-
-            // [변경] 소식함 배지는 오직 '친구들의 반응/댓글'이 있을 때만 띄움
-            setHasActivity(reactionCount + commentCount > 0);
-        } catch (err) {
-            console.error('활동 확인 실패:', err.message);
-        }
-    };
-
-    // [신규] 알림 내역 초기화 (모달에서 '비우기' 클릭 시)
-    const handleClearFeedback = async () => {
-        const now = new Date().toISOString();
-        try {
-            await supabase
-                .from('students')
-                .update({ last_feedback_check: now })
-                .eq('id', studentSession.id);
-
-            lastCheckRef.current = now;
-            setFeedbacks([]);
-            setHasActivity(false);
-        } catch (err) {
-            console.error('알림 확인 시간 저장 실패:', err);
-        }
-    };
-
-    const handleDirectRewriteGo = async () => {
-        try {
-            // 가장 최근의 다시 쓰기 요청 글 하나를 가져옴
-            const { data, error } = await supabase
-                .from('student_posts')
-                .select('id, mission_id')
-                .eq('student_id', studentSession.id)
-                .eq('is_returned', true)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            if (error) throw error;
-            if (data) {
-                onNavigate('writing', {
-                    missionId: data.mission_id,
-                    postId: data.id,
-                    mode: 'edit'
-                });
-            }
-        } catch (err) {
-            console.error('다시 쓰기 페이지 이동 실패:', err.message);
-            // 에러 시 일반 피드백 모달이라도 열어줌
-            openFeedback();
-        }
-    };
-
-    const fetchFeedbacks = async () => {
-        setLoadingFeedback(true);
-        try {
-            const { data: myPosts } = await supabase
-                .from('student_posts')
-                .select('id, title, is_returned, ai_feedback, created_at, mission_id')
-                .eq('student_id', studentSession.id);
-
-            if (!myPosts || myPosts.length === 0) {
-                setFeedbacks([]);
-                return;
-            }
-            const postIds = myPosts.map(p => p.id);
-
-            // [변경] 이제 이 모달은 '학생 간 소통(댓글, 반응)'만 담당합니다.
-            // [최적화] 병렬 요청
-            const [reactionsResult, commentsResult] = await Promise.all([
-                supabase
-                    .from('post_reactions')
-                    .select('*, students:student_id(name), student_posts(title, id)')
-                    .in('post_id', postIds)
-                    .neq('student_id', studentSession.id),
-                supabase
-                    .from('post_comments')
-                    .select('*, students:student_id(name), student_posts(title, id)')
-                    .in('post_id', postIds)
-                    .neq('student_id', studentSession.id)
-            ]);
-
-            const reactions = reactionsResult.data || [];
-            const comments = commentsResult.data || [];
-
-            const combined = [
-                ...reactions.map(r => ({ ...r, type: 'reaction' })),
-                ...comments.map(c => ({ ...c, type: 'comment' }))
-            ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-            // [필터링] 사용자가 마지막으로 확인한 시간 이후의 것만 보여줌
-            const lastCheck = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
-            const newFeedbacks = combined.filter(f => new Date(f.created_at) > new Date(lastCheck));
-
-            console.log('[Dashboard] 학생 소통 데이터 취합(필터됨):', newFeedbacks);
-            setFeedbacks(newFeedbacks);
-        } catch (err) {
-            console.error('피드백 로드 실패:', err.message);
-        } finally {
-            setLoadingFeedback(false);
-        }
-    };
-
-    const openFeedback = (tabIndex = 0) => {
-        setFeedbackInitialTab(tabIndex);
-        setShowFeedback(true);
-        fetchFeedbacks();
-    };
 
     return (
         <>
             <StudentGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+
             <Card style={{ maxWidth: '600px', background: '#FFFDF7', border: '2px solid #FFE082' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <div style={{
-                            background: '#FFE082',
-                            color: '#795548',
-                            padding: '6px 16px',
-                            borderRadius: '20px',
-                            fontSize: '0.9rem',
-                            fontWeight: 'bold',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                        }}>
-                            🎒 {studentSession.className || '우리 반'} 친구
-                        </div>
+                {/* 헤더 섹션 */}
+                <StudentHeader
+                    studentSession={studentSession}
+                    hasActivity={hasActivity}
+                    openFeedback={openFeedback}
+                    setIsGuideOpen={setIsGuideOpen}
+                    onLogout={onLogout}
+                />
 
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => openFeedback(0)}
-                            style={{
-                                background: 'white',
-                                color: '#5D4037',
-                                border: '2px solid #FFECB3',
-                                padding: '6px 12px',
-                                borderRadius: '20px',
-                                fontSize: '0.8rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                position: 'relative'
-                            }}
-                        >
-                            🔔 내 글 소식
-                            {hasActivity && (
-                                <span style={{
-                                    width: '8px',
-                                    height: '8px',
-                                    background: '#FF5252',
-                                    borderRadius: '50%',
-                                    position: 'absolute',
-                                    top: '0px',
-                                    right: '0px',
-                                    border: '2px solid white'
-                                }}></span>
-                            )}
-                        </motion.button>
-
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <motion.button
-                            whileHover={{ scale: 1.1, rotate: 10 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setIsGuideOpen(true)}
-                            style={{
-                                width: '42px',
-                                height: '42px',
-                                borderRadius: '50%',
-                                background: '#FFF9C4',
-                                border: '3px solid #FBC02D',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                fontSize: '1.2rem',
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 0 #F9A825',
-                                transition: 'all 0.2s'
-                            }}
-                            title="사용법 가이드"
-                        >
-                            ❓
-                        </motion.button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={onLogout}
-                            style={{
-                                color: '#8D6E63',
-                                fontWeight: 'bold',
-                                background: '#EFEBE9',
-                                borderRadius: '15px',
-                                padding: '6px 12px'
-                            }}
-                        >
-                            로그아웃 🚪
-                        </Button>
-                    </div>
-                </div>
-
-
+                {/* 인사말 섹션 */}
                 <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                     <div style={{ fontSize: '3rem', marginBottom: '5px' }}>🌟</div>
                     <h1 style={{ fontSize: '2rem', color: '#5D4037', marginBottom: '0.4rem' }}>
@@ -587,667 +99,33 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     <p style={{ color: '#8D6E63', fontSize: '1rem' }}>벌써 이만큼이나 성장했어! 🚀</p>
                 </div>
 
-                {/* [통합] 선생님의 알림 배너 (다시쓰기 + 포인트) */}
-                <AnimatePresence>
-                    {(returnedCount > 0 || teacherNotify) && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            style={{
-                                background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)',
-                                padding: '16px 20px',
-                                borderRadius: '24px',
-                                border: '2px solid #FFB74D',
-                                marginBottom: '24px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '15px',
-                                cursor: 'pointer',
-                                boxShadow: '0 8px 16px rgba(255, 183, 77, 0.2)',
-                                textAlign: 'left',
-                                width: '100%',
-                                boxSizing: 'border-box'
-                            }}
-                            onClick={() => {
-                                // 다시쓰기 요청이 있으면 해당 글로 이동, 아니면 피드백/포인트 사유 확인
-                                if (returnedCount > 0) handleDirectRewriteGo();
-                                else setTeacherNotify(null); // 포인트 알림은 확인 시 닫기
-                            }}
-                        >
-                            <span style={{ fontSize: '2.5rem' }}>
-                                {teacherNotify?.icon || (teacherNotify?.type === 'point' ? '🎁' : '♻️')}
-                            </span>
-                            <div style={{ flex: 1 }}>
-                                <div style={{
-                                    fontSize: '1.05rem',
-                                    fontWeight: '900',
-                                    color: '#E65100',
-                                    marginBottom: '2px',
-                                    whiteSpace: 'normal',
-                                    wordBreak: 'keep-all'
-                                }}>
-                                    {teacherNotify?.message || "♻️ 선생님의 다시 쓰기 요청이 있습니다."}
-                                </div>
-                                <div style={{ fontSize: '0.85rem', color: '#F57C00', fontWeight: 'bold' }}>
-                                    {teacherNotify?.type === 'point' ? "포인트 내역은 상단 지갑(P)을 눌러 확인할 수 있어요! ✨" : "지금 바로 확인하고 완벽한 글을 완성해봐요! ✨"}
-                                </div>
-                            </div>
-                            {returnedCount > 0 && (
-                                <div style={{
-                                    width: '36px', height: '36px', background: '#FFB74D',
-                                    borderRadius: '50%', display: 'flex', justifyContent: 'center',
-                                    alignItems: 'center', color: 'white', fontWeight: 'bold'
-                                }}>
-                                    {returnedCount}
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {/* 선생님 알림 배너 */}
+                <TeacherNotifyBanner
+                    returnedCount={returnedCount}
+                    teacherNotify={teacherNotify}
+                    setTeacherNotify={setTeacherNotify}
+                    handleDirectRewriteGo={handleDirectRewriteGo}
+                />
 
+                {/* 성장 통계 카드 */}
+                <StudentStatsCards stats={stats} />
 
-
-                {/* [멀티모달] 드래곤 아지트 */}
-                <AnimatePresence>
-                    {isDragonModalOpen && (
-                        <div style={{
-                            position: 'fixed',
-                            inset: 0,
-                            width: '100%',
-                            height: '100%',
-                            background: 'rgba(0,0,0,0.6)',
-                            backdropFilter: 'blur(8px)',
-                            zIndex: 2000,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: isMobile ? 'flex-end' : 'center',
-                        }} onClick={() => setIsDragonModalOpen(false)}>
-                            <motion.div
-                                initial={{ y: isMobile ? '100%' : 50, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                exit={{ y: isMobile ? '100%' : 50, opacity: 0 }}
-                                onClick={e => e.stopPropagation()}
-                                style={{
-                                    background: '#FFFFFF',
-                                    borderRadius: isMobile ? '32px 32px 0 0' : '32px',
-                                    width: '100%', maxWidth: '600px',
-                                    padding: '32px',
-                                    border: 'none',
-                                    boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
-                                    position: 'relative',
-                                    maxHeight: isMobile ? '90vh' : 'auto',
-                                    overflowY: 'auto',
-                                    transition: 'all 0.5s ease'
-                                }}
-                            >
-                                {/* [제거] 기존 전역 섬광 레이어 */}
-                                <button
-                                    onClick={() => setIsDragonModalOpen(false)}
-                                    style={{
-                                        position: 'absolute', top: '20px', right: '20px',
-                                        background: 'rgba(255,255,255,0.7)', border: 'none',
-                                        width: '36px', height: '36px', borderRadius: '50%',
-                                        fontSize: '1.2rem', cursor: 'pointer', zIndex: 10
-                                    }}
-                                >
-                                    ✕
-                                </button>
-
-                                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                                    <h2 style={{ margin: 0, color: '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 드래곤 아지트</h2>
-                                    <p style={{ margin: '4px 0 0 0', color: '#8D6E63', fontSize: '0.9rem' }}>나의 소중한 드래곤 파트너와 함께하는 공간</p>
-                                </div>
-
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '24px', background: '#F9F9F9', padding: '24px', borderRadius: '24px', border: '1px solid #EEE' }}>
-                                        <div style={{
-                                            position: 'relative',
-                                            width: '280px', // 영역 확대
-                                            height: '280px',
-                                            background: HIDEOUT_BACKGROUNDS[petData.background]?.color || HIDEOUT_BACKGROUNDS.default.color,
-                                            borderRadius: '24px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            overflow: 'hidden',
-                                            border: petData.level >= 5 ? '4px solid #FFD700' : `2px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || '#DDD'}`,
-                                            boxShadow: 'none' // 내부 그림자 제거하여 투명도 명확히 함
-                                        }}>
-                                            {/* 후경 장식 (드래곤 뒤쪽) */}
-                                            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.2) 100%)', pointerEvents: 'none' }} />
-
-                                            {petData.background === 'volcano' && (
-                                                <AnimatePresence>
-                                                    {[...Array(8)].map((_, i) => (
-                                                        <motion.span
-                                                            key={`fire-${i}`}
-                                                            initial={{ y: 20, opacity: 0, scale: 0.5 }}
-                                                            animate={{ y: -80, opacity: [0, 0.8, 0], scale: [0.8, 1.4, 0.6] }}
-                                                            transition={{ repeat: Infinity, duration: 1.5 + i * 0.2, delay: i * 0.1 }}
-                                                            style={{ position: 'absolute', bottom: '10%', left: `${5 + i * 12}%`, fontSize: '2rem', filter: 'drop-shadow(0 0 8px #FF5722)', pointerEvents: 'none', zIndex: 0 }}
-                                                        >
-                                                            🔥
-                                                        </motion.span>
-                                                    ))}
-                                                </AnimatePresence>
-                                            )}
-                                            {petData.background === 'sky' && (
-                                                <AnimatePresence>
-                                                    {[...Array(4)].map((_, i) => (
-                                                        <motion.span
-                                                            key={`cloud-${i}`}
-                                                            animate={{ x: i % 2 === 0 ? [0, 20, 0] : [0, -20, 0] }}
-                                                            transition={{ repeat: Infinity, duration: 4 + i, ease: "easeInOut" }}
-                                                            style={{ position: 'absolute', top: `${10 + i * 20}%`, left: `${10 + i * 25}%`, fontSize: '2.5rem', opacity: 0.6, pointerEvents: 'none' }}
-                                                        >
-                                                            ☁️
-                                                        </motion.span>
-                                                    ))}
-                                                </AnimatePresence>
-                                            )}
-                                            {petData.background === 'crystal' && (
-                                                <AnimatePresence>
-                                                    {[...Array(12)].map((_, i) => (
-                                                        <motion.span
-                                                            key={`gem-${i}`}
-                                                            animate={{
-                                                                scale: [0.5, 1.2, 0.5],
-                                                                opacity: [0.3, 1, 0.3],
-                                                                filter: ['brightness(1)', 'brightness(1.5)', 'brightness(1)']
-                                                            }}
-                                                            transition={{ repeat: Infinity, duration: 3 + Math.random() * 2, delay: Math.random() * 2 }}
-                                                            style={{
-                                                                position: 'absolute',
-                                                                top: `${Math.random() * 90}%`,
-                                                                left: `${Math.random() * 90}%`,
-                                                                fontSize: i % 2 === 0 ? '1.5rem' : '1rem',
-                                                                color: '#E1BEE7',
-                                                                pointerEvents: 'none',
-                                                                textShadow: '0 0 10px rgba(255,255,255,0.8)'
-                                                            }}
-                                                        >
-                                                            {i % 3 === 0 ? '💎' : '✨'}
-                                                        </motion.span>
-                                                    ))}
-                                                </AnimatePresence>
-                                            )}
-                                            {petData.background === 'storm' && (
-                                                <>
-                                                    <motion.div
-                                                        animate={{ opacity: [0, 0, 0.3, 0, 0.5, 0, 0, 0] }}
-                                                        transition={{ repeat: Infinity, duration: 5, times: [0, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8, 1] }}
-                                                        style={{ position: 'absolute', inset: 0, background: 'white', pointerEvents: 'none', zIndex: 0 }}
-                                                    />
-                                                    <div style={{ position: 'absolute', inset: 0, opacity: 0.3, background: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")', pointerEvents: 'none' }} />
-                                                    {[...Array(3)].map((_, i) => (
-                                                        <motion.span
-                                                            key={`bolt-${i}`}
-                                                            animate={{ opacity: [0, 1, 0], y: [0, 10, 0] }}
-                                                            transition={{ repeat: Infinity, duration: 5, delay: 3.5 + (i * 0.1) }}
-                                                            style={{ position: 'absolute', top: '15%', left: `${20 + i * 30}%`, fontSize: '2rem', filter: 'drop-shadow(0 0 15px #7986CB)', pointerEvents: 'none', zIndex: 0 }}
-                                                        >
-                                                            ⚡
-                                                        </motion.span>
-                                                    ))}
-                                                </>
-                                            )}
-                                            {petData.background === 'galaxy' && (
-                                                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-                                                    {[...Array(20)].map((_, i) => (
-                                                        <motion.div
-                                                            key={`star-${i}`}
-                                                            animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.2, 1] }}
-                                                            transition={{ repeat: Infinity, duration: 2 + Math.random() * 3, delay: Math.random() * 5 }}
-                                                            style={{
-                                                                position: 'absolute',
-                                                                top: `${Math.random() * 100}%`,
-                                                                left: `${Math.random() * 100}%`,
-                                                                width: '2px',
-                                                                height: '2px',
-                                                                background: 'white',
-                                                                borderRadius: '50%',
-                                                                boxShadow: '0 0 5px white'
-                                                            }}
-                                                        />
-                                                    ))}
-                                                    <motion.span
-                                                        animate={{ y: [0, -5, 0], opacity: [0.6, 0.9, 0.6] }}
-                                                        transition={{ repeat: Infinity, duration: 4 }}
-                                                        style={{ position: 'absolute', top: '10%', right: '15%', fontSize: '2.5rem', filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.4))' }}
-                                                    >
-                                                        🌙
-                                                    </motion.span>
-                                                </div>
-                                            )}
-                                            {/* 레벨 5 전용 황금 파티클 효과 */}
-                                            {petData.level >= 5 && (
-                                                <AnimatePresence>
-                                                    {[...Array(10)].map((_, i) => (
-                                                        <motion.span
-                                                            key={`gold-${i}`}
-                                                            animate={{
-                                                                y: [0, -50, 0],
-                                                                opacity: [0, 1, 0],
-                                                                rotate: [0, 180, 360]
-                                                            }}
-                                                            transition={{
-                                                                repeat: Infinity,
-                                                                duration: 2 + Math.random() * 2,
-                                                                delay: Math.random() * 2
-                                                            }}
-                                                            style={{
-                                                                position: 'absolute',
-                                                                top: `${Math.random() * 100}%`,
-                                                                left: `${Math.random() * 100}%`,
-                                                                fontSize: '1rem',
-                                                                color: '#FFD700',
-                                                                pointerEvents: 'none',
-                                                                zIndex: 0
-                                                            }}
-                                                        >
-                                                            ✨
-                                                        </motion.span>
-                                                    ))}
-                                                </AnimatePresence>
-                                            )}
-                                            {/* 바닥 그림자 및 효과 */}
-                                            <motion.div
-                                                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
-                                                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                                                style={{
-                                                    position: 'absolute',
-                                                    bottom: '20%',
-                                                    width: '140px',
-                                                    height: '30px',
-                                                    background: 'rgba(0,0,0,0.2)',
-                                                    borderRadius: '50%',
-                                                    filter: 'blur(8px)',
-                                                    zIndex: 0
-                                                }}
-                                            />
-
-                                            {/* 진화 섬광 효과 레이어 (박스 내부) */}
-                                            <AnimatePresence>
-                                                {isFlashing && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0 }}
-                                                        animate={{ opacity: [0, 1, 0] }}
-                                                        exit={{ opacity: 0 }}
-                                                        transition={{ duration: 0.3 }}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            inset: 0,
-                                                            background: 'white',
-                                                            zIndex: 50,
-                                                            pointerEvents: 'none'
-                                                        }}
-                                                    />
-                                                )}
-                                            </AnimatePresence>
-
-                                            {/* 드래곤 이미지 본체 */}
-                                            <motion.div
-                                                key={petData.level}
-                                                animate={isEvolving ? {
-                                                    x: [-3, 3, -3, 3, 0],
-                                                    filter: ["brightness(1)", "brightness(1.8)", "brightness(1)"]
-                                                } : {
-                                                    scale: [0.8, 1.15, 1], // 등장 스프링 효과
-                                                    y: [0, -12, 0]
-                                                }}
-                                                transition={isEvolving ? {
-                                                    x: { repeat: Infinity, duration: 0.05 },
-                                                    filter: { repeat: Infinity, duration: 0.5 }
-                                                } : {
-                                                    scale: { type: "spring", stiffness: 300, damping: 12 },
-                                                    y: { repeat: Infinity, duration: 3, ease: "easeInOut" }
-                                                }}
-                                                style={{
-                                                    width: (petData.level === 3 || petData.level === 4) ? '264px' : '220px', // 3, 4단계 20% 확대
-                                                    height: (petData.level === 3 || petData.level === 4) ? '264px' : '220px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    position: 'relative',
-                                                    zIndex: 1,
-                                                    cursor: 'pointer',
-                                                    background: 'transparent',
-                                                    backgroundColor: 'transparent',
-                                                    border: 'none',
-                                                    boxShadow: 'none'
-                                                }}
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                            >
-                                                {dragonInfo.isPlaceholder ? (
-                                                    <div style={{ color: 'white', fontSize: '0.8rem', textAlign: 'center', padding: '10px' }}>
-                                                        진화 중...<br />(이미지 대기)
-                                                    </div>
-                                                ) : (
-                                                    <img
-                                                        src={dragonInfo.image}
-                                                        alt={dragonInfo.name}
-                                                        style={{
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            objectFit: 'contain',
-                                                            background: 'transparent',
-                                                            backgroundColor: 'transparent',
-                                                            filter: `drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 5 ? 'drop-shadow(0 0 15px rgba(255,215,0,0.7))' : ''}`
-                                                        }}
-                                                    />
-                                                )}
-                                            </motion.div>
-                                            {petData.level > 1 && (
-                                                <motion.span
-                                                    animate={{ opacity: [0, 1, 0] }}
-                                                    transition={{ repeat: Infinity, duration: 2 }}
-                                                    style={{ position: 'absolute', top: -10, right: -10, fontSize: '1.5rem', zIndex: 5 }}
-                                                >
-                                                    ✨
-                                                </motion.span>
-                                            )}
-                                        </div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
-                                                <div>
-                                                    <span style={{ fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.name}</span>
-                                                    <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
-                                                </div>
-                                                <span style={{ fontSize: '1rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
-                                            </div>
-                                            {/* 드래곤 경험치 바 */}
-                                            <div style={{ height: '14px', background: 'rgba(0,0,0,0.05)', borderRadius: '7px', overflow: 'hidden' }}>
-                                                <motion.div
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${petData.exp}%` }}
-                                                    style={{
-                                                        height: '100%',
-                                                        background: 'linear-gradient(90deg, #FFB300, #FBC02D)',
-                                                        borderRadius: '7px'
-                                                    }}
-                                                />
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-                                                <span style={{ fontSize: '0.8rem', color: '#8D6E63' }}>
-                                                    식사 후 {daysSinceLastFed}일 경과
-                                                </span>
-                                                <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold' }}>
-                                                    {petData.level < 5 ? `${100 - petData.exp}% 남음` : '최고 단계! 🌈'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <div style={{ background: '#FFFDE7', padding: '16px', borderRadius: '18px', border: '1px solid #FFF9C4' }}>
-                                            <div style={{ fontSize: '0.9rem', color: '#795548', lineHeight: '1.5' }}>
-                                                <span style={{ fontWeight: 'bold' }}>💡 드래곤 돌보기 팁</span><br />
-                                                글을 써서 모은 포인트로 맛있는 먹이를 줄 수 있어요. {dragonConfig.degenDays}일 동안 돌보지 않으면 드래곤이 지쳐서 레벨이 내려갈 수 있으니 주의하세요!
-                                            </div>
-                                        </div>
-
-                                        <div style={{ display: 'flex', gap: '12px' }}>
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                onClick={handleFeed}
-                                                style={{
-                                                    flex: 1,
-                                                    background: '#FF8A65',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    padding: '16px',
-                                                    borderRadius: '20px',
-                                                    fontSize: '1rem',
-                                                    fontWeight: 'bold',
-                                                    cursor: 'pointer',
-                                                    boxShadow: '0 6px 0 #E64A19',
-                                                    display: 'flex',
-                                                    justifyContent: 'center',
-                                                    alignItems: 'center',
-                                                    gap: '10px'
-                                                }}
-                                            >
-                                                🍖 먹이 주기 ({dragonConfig.feedCost}P)
-                                            </motion.button>
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                onClick={() => setIsShopOpen(true)}
-                                                style={{
-                                                    flex: 1,
-                                                    background: '#3498DB',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    padding: '16px',
-                                                    borderRadius: '20px',
-                                                    fontSize: '1rem',
-                                                    fontWeight: 'bold',
-                                                    cursor: 'pointer',
-                                                    boxShadow: '0 6px 0 #2980B9',
-                                                    display: 'flex',
-                                                    justifyContent: 'center',
-                                                    alignItems: 'center',
-                                                    gap: '10px'
-                                                }}
-                                            >
-                                                🛍️ 상점/꾸미기
-                                            </motion.button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '40px' }}>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
-                    >
-                        <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📝</div>
-                        <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>쓴 글자 수</div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.totalChars.toLocaleString()}자</div>
-                    </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
-                    >
-                        <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🚀</div>
-                        <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>완료 미션</div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.completedMissions}개</div>
-                    </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                        style={{ background: 'white', padding: '15px 10px', borderRadius: '20px', border: '1px solid #FFE082', textAlign: 'center' }}
-                    >
-                        <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📅</div>
-                        <div style={{ fontSize: '0.75rem', color: '#8D6E63', fontWeight: 'bold' }}>이달의 활동</div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#5D4037' }}>{stats.monthlyPosts}회</div>
-                    </motion.div>
-                </div>
-
-                {/* 포인트 및 레벨 표시 영역 */}
-                <motion.div
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    style={{
-                        background: 'linear-gradient(135deg, #FFFDF7 0%, #FFFFFF 100%)',
-                        padding: '20px 24px',
-                        borderRadius: '24px',
-                        border: '1px solid #FFE082',
-                        marginBottom: '1.5rem',
-                        boxShadow: '0 4px 15px rgba(255, 213, 79, 0.1)',
-                        position: 'relative',
-                        overflow: 'hidden'
-                    }}
-                >
-                    {isLoading && (
-                        <div style={{
-                            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                            background: 'rgba(255,255,255,0.8)', zIndex: 10,
-                            display: 'flex', justifyContent: 'center', alignItems: 'center',
-                            fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold'
-                        }}>
-                            로딩 중... ✨
-                        </div>
-                    )}
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <div style={{ textAlign: 'left' }}>
-                            <div style={{ fontSize: '0.85rem', color: '#8D6E63', fontWeight: 'bold' }}>보유 포인트 ✨</div>
-                            <motion.div
-                                key={points}
-                                initial={{ y: 5, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                style={{
-                                    fontSize: '2.2rem',
-                                    fontWeight: '900',
-                                    color: '#FBC02D',
-                                    display: 'flex',
-                                    alignItems: 'baseline',
-                                    gap: '4px'
-                                }}
-                            >
-                                {points.toLocaleString()}
-                                <span style={{ fontSize: '1rem', color: '#8D6E63', fontWeight: 'bold' }}>점</span>
-                            </motion.div>
-                        </div>
-
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.85rem', color: '#8D6E63', fontWeight: 'bold', marginBottom: '4px' }}>
-                                {levelInfo.emoji} {levelInfo.name}
-                            </div>
-                            <div style={{
-                                background: '#FDFCF0',
-                                padding: '4px 10px',
-                                borderRadius: '10px',
-                                fontSize: '0.75rem',
-                                color: '#FBC02D',
-                                fontWeight: 'bold',
-                                border: '1px solid #FFF9C4',
-                                display: 'inline-block'
-                            }}>
-                                LV. {levelInfo.level}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 프로그레스 바 영역 */}
-                    <div style={{ padding: '0 2px' }}>
-                        <div style={{ height: '8px', background: '#F1F3F5', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${levelInfo.next ? Math.min(100, (stats.totalChars / levelInfo.next) * 100) : 100}%` }}
-                                transition={{ duration: 1, ease: "easeOut" }}
-                                style={{
-                                    height: '100%',
-                                    background: 'linear-gradient(90deg, #FBC02D, #FFD54F)',
-                                    borderRadius: '4px'
-                                }}
-                            />
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
-                            {levelInfo.next && (
-                                <span style={{ fontSize: '0.7rem', color: '#ADB5BD', fontWeight: 'bold' }}>
-                                    다음 목표까지 {Math.max(0, levelInfo.next - stats.totalChars).toLocaleString()}자 남음
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                </motion.div>
+                {/* 포인트 및 레벨 카드 */}
+                <PointLevelCard
+                    points={points}
+                    levelInfo={levelInfo}
+                    stats={stats}
+                    isLoading={isLoading}
+                />
 
                 {/* 주요 활동 메뉴 */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{
-                            background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #FFE082',
-                            textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
-                            boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
-                        }}
-                        onClick={() => onNavigate('mission_list')}
-                    >
-                        <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📝</div>
-                        <h3 style={{ margin: 0, color: '#5D4037' }}>글쓰기 미션</h3>
-                        <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>선생님의 주제 확인</p>
-                    </motion.div>
+                <DashboardMenu
+                    onNavigate={onNavigate}
+                    setIsDragonModalOpen={setIsDragonModalOpen}
+                    isMobile={isMobile}
+                />
 
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{
-                            background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #FFE082',
-                            textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
-                            boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'
-                        }}
-                        onClick={() => onNavigate('friends_hideout')}
-                    >
-
-                        <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👀</div>
-                        <h3 style={{ margin: 0, color: '#5D4037' }}>친구 아지트</h3>
-                        <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>친구들의 글 읽기</p>
-                    </motion.div>
-                </div>
-
-                {/* [신규] 메인 메뉴 카드 (드래곤/어휘) */}
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px', marginTop: '24px' }}>
-                    <motion.div
-                        whileHover={{ scale: 1.02, y: -5 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setIsDragonModalOpen(true)}
-                        style={{
-                            background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
-                            borderRadius: '24px',
-                            padding: '30px 24px',
-                            cursor: 'pointer',
-                            border: '2px solid #FFF176',
-                            boxShadow: '0 8px 24px rgba(255, 241, 118, 0.2)',
-                            textAlign: 'center',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div style={{ fontSize: '3.5rem', marginBottom: '15px' }}>🐉</div>
-                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#5D4037', marginBottom: '6px' }}>나의 드래곤 파트너</div>
-                        <div style={{ fontSize: '0.9rem', color: '#FBC02D', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>나의 드래곤 아지트 가기</div>
-                    </motion.div>
-
-                    <motion.div
-                        whileHover={{ scale: 1.02, y: -5 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => alert('🏰 어휘의 탑은 준비 중입니다! 조금만 기다려주세요! ✨')}
-                        style={{
-                            background: 'linear-gradient(135deg, #E3F2FD 0%, #F0F4F8 100%)',
-                            borderRadius: '24px',
-                            padding: '30px 24px',
-                            cursor: 'pointer',
-                            border: '2px solid #90CAF9',
-                            boxShadow: '0 8px 24px rgba(144, 202, 249, 0.2)',
-                            textAlign: 'center',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div style={{ fontSize: '3.5rem', marginBottom: '15px' }}>🏰</div>
-                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#1565C0', marginBottom: '6px' }}>어휘력 챌린지</div>
-                        <div style={{ fontSize: '0.9rem', color: '#2196F3', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>어휘의 탑 도전하기</div>
-                        <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#FF7043', color: 'white', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold' }}>COMING SOON</div>
-                    </motion.div>
-                </div>
-
+                {/* 오늘의 목표 하단 문구 */}
                 <div style={{
                     marginTop: '24px', padding: '20px', background: '#FDFCF0',
                     borderRadius: '20px', textAlign: 'center', border: '1px dashed #FFE082'
@@ -1267,114 +145,34 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     initialTab={feedbackInitialTab}
                     onClear={handleClearFeedback}
                 />
-                {/* 액세서리 상점 모달 */}
-                {
-                    isShopOpen && (
-                        <div style={{
-                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                            background: 'rgba(0,0,0,0.6)', zIndex: 3000,
-                            display: 'flex', justifyContent: 'center', alignItems: 'center',
-                            padding: '20px'
-                        }} onClick={() => setIsShopOpen(false)}>
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                style={{
-                                    background: 'white',
-                                    width: '100%',
-                                    maxWidth: '450px',
-                                    maxHeight: '85vh',
-                                    borderRadius: '32px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    overflow: 'hidden',
-                                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-                                }}
-                                onClick={e => e.stopPropagation()}
-                            >
-                                <div style={{ padding: '24px', borderBottom: '1px solid #EEE', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8F9FA' }}>
-                                    <div>
-                                        <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2C3E50', fontWeight: '900' }}>🏡 아지트 배경 상점</h3>
-                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#7F8C8D' }}>남은 포인트: <b>{points.toLocaleString()}P</b></p>
-                                    </div>
-                                    <button onClick={() => setIsShopOpen(false)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-                                </div>
 
-                                <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                    {Object.values(HIDEOUT_BACKGROUNDS).map(item => {
-                                        const isOwned = item.id === 'default' || petData.ownedItems.includes(item.id);
-                                        const isEquipped = petData.background === item.id;
+                {/* 드래곤 아지트 모달 */}
+                <DragonHideoutModal
+                    isOpen={isDragonModalOpen}
+                    onClose={() => setIsDragonModalOpen(false)}
+                    isMobile={isMobile}
+                    petData={petData}
+                    dragonInfo={dragonInfo}
+                    HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
+                    daysSinceLastFed={daysSinceLastFed}
+                    dragonConfig={dragonConfig}
+                    handleFeed={handleFeed}
+                    setIsShopOpen={setIsShopOpen}
+                    isEvolving={isEvolving}
+                    isFlashing={isFlashing}
+                />
 
-                                        return (
-                                            <div key={item.id} style={{
-                                                border: `2px solid ${isEquipped ? item.border : '#F1F3F5'}`,
-                                                borderRadius: '24px',
-                                                padding: '16px',
-                                                textAlign: 'center',
-                                                background: isEquipped ? item.color : 'white',
-                                                transition: 'all 0.2s',
-                                                opacity: isEquipped ? 1 : 0.8
-                                            }}>
-                                                <div style={{
-                                                    width: '100%', height: '60px', borderRadius: '12px',
-                                                    background: item.color, marginBottom: '10px',
-                                                    border: `1px solid ${item.border}`
-                                                }} />
-                                                <div style={{ fontWeight: 'bold', fontSize: '1rem', color: isEquipped ? (item.textColor || '#2C3E50') : '#2C3E50', marginBottom: '6px' }}>{item.name}</div>
-
-                                                {/* 가격/상태 표시 배지 */}
-                                                <div style={{
-                                                    display: 'inline-block',
-                                                    padding: '4px 12px',
-                                                    borderRadius: '12px',
-                                                    fontSize: '0.85rem',
-                                                    fontWeight: '900',
-                                                    marginBottom: '14px',
-                                                    background: isOwned ? (isEquipped ? 'rgba(255,255,255,0.2)' : '#F1F3F5') : '#FFF9C4',
-                                                    color: isOwned ? (isEquipped ? 'white' : '#95A5A6') : '#FBC02D',
-                                                    border: isOwned ? 'none' : '1px solid #FFE082'
-                                                }}>
-                                                    {isOwned ? (
-                                                        <span>{isEquipped ? '✨ 사용 중' : '✅ 보유 중'}</span>
-                                                    ) : (
-                                                        <span>💰 {item.price?.toLocaleString()}P</span>
-                                                    )}
-                                                </div>
-
-                                                {!isOwned ? (
-                                                    <Button
-                                                        size="sm"
-                                                        style={{ width: '100%', background: '#FBC02D', color: '#795548', fontWeight: 'bold' }}
-                                                        onClick={() => buyItem(item)}
-                                                    >
-                                                        구매하기
-                                                    </Button>
-                                                ) : (
-                                                    <Button
-                                                        size="sm"
-                                                        variant={isEquipped ? 'primary' : 'ghost'}
-                                                        style={{
-                                                            width: '100%',
-                                                            background: isEquipped ? item.accent : '#F8F9FA',
-                                                            color: isEquipped ? 'white' : '#7F8C8D',
-                                                            border: isEquipped ? 'none' : '1px solid #DEE2E6'
-                                                        }}
-                                                        onClick={() => equipItem(item.id)}
-                                                    >
-                                                        {isEquipped ? '사용 중' : '적용하기'}
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                <div style={{ padding: '20px', textAlign: 'center', background: '#FDFCF0' }}>
-                                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#9E9E9E' }}>멋진 배경으로 나만의 드래곤 아지트를 꾸며보세요! 🌈</p>
-                                </div>
-                            </motion.div>
-                        </div>
-                    )}
-            </Card >
+                {/* 배경 상점 모달 */}
+                <BackgroundShopModal
+                    isOpen={isShopOpen}
+                    onClose={() => setIsShopOpen(false)}
+                    points={points}
+                    petData={petData}
+                    buyItem={buyItem}
+                    equipItem={equipItem}
+                    HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
+                />
+            </Card>
         </>
     );
 };
