@@ -99,6 +99,12 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         let currentStudentId = studentSession?.id || JSON.parse(localStorage.getItem('student_session'))?.id;
         if (!currentStudentId) return;
 
+        // [추가] 제출 상태 확인: 이미 제출되었고 다시 쓰기 요청이 없는 경우 저장 불가
+        if (isConfirmed || (isSubmitted && !isReturned)) {
+            if (showMsg) alert('이미 제출된 글은 수정할 수 없어요! ✋');
+            return;
+        }
+
         try {
             const { error } = await supabase
                 .from('student_posts')
@@ -109,8 +115,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     content: content,
                     char_count: content.length,
                     paragraph_count: content.split(/\n+/).filter(p => p.trim().length > 0).length,
-                    is_submitted: false,
-                    // is_returned 상태는 유지하거나 필요시 처리
+                    is_submitted: isSubmitted, // [수정] 기존 제출 상태 유지 (false로 고정되어 버그 발생하던 부분 해결)
+                    is_returned: isReturned
                 }, { onConflict: 'student_id,mission_id' });
 
             if (error) throw error;
@@ -123,6 +129,12 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
 
     // 제출 전 유효성 검사 및 포인트 처리
     const handleSubmit = async () => {
+        // [추가] 이미 제출된 상태인지 다시 한번 체크
+        if (isConfirmed || (isSubmitted && !isReturned)) {
+            alert('이미 제출되어 확인 중인 글입니다. ✨');
+            return;
+        }
+
         if (!title.trim()) {
             alert('멋질 글의 제목을 지어주세요! ✍️');
             return;

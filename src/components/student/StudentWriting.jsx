@@ -26,6 +26,9 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const charCount = content.length;
     const paragraphCount = content.split(/\n+/).filter(p => p.trim().length > 0).length;
 
+    // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)
+    const isLocked = isConfirmed || (isSubmitted && !isReturned);
+
     if (loading) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 도구를 준비하는 중... ✍️</p></Card>;
     if (!mission) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 미션을 찾을 수 없습니다.</p><Button onClick={onBack}>돌아가기</Button></Card>;
 
@@ -183,9 +186,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         borderBottom: '3px solid #F1F3F5',
                         marginBottom: '24px',
                         outline: 'none',
-                        color: '#2C3E50'
+                        color: isLocked ? '#95A5A6' : '#2C3E50',
+                        background: 'transparent'
                     }}
-                    disabled={submitting}
+                    disabled={submitting || isLocked}
                     spellCheck="true"
                 />
 
@@ -201,11 +205,11 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         fontSize: '1.2rem',
                         lineHeight: '2',
                         outline: 'none',
-                        color: '#34495E',
+                        color: isLocked ? '#95A5A6' : '#34495E',
                         resize: 'none',
                         background: 'transparent'
                     }}
-                    disabled={submitting}
+                    disabled={submitting || isLocked}
                     spellCheck="true"
                 />
             </div>
@@ -262,43 +266,44 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 <Button
                     size="lg"
                     onClick={() => handleSave(true)}
-                    disabled={submitting}
+                    disabled={submitting || isLocked}
                     style={{
                         flex: 1,
                         height: '64px',
                         fontSize: '1.2rem',
                         fontWeight: '800',
-                        background: '#ECEFF1',
-                        color: '#455A64',
+                        background: isLocked ? '#F1F3F5' : '#ECEFF1',
+                        color: isLocked ? '#BDC3C7' : '#455A64',
                         border: 'none',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                        boxShadow: isLocked ? 'none' : '0 4px 12px rgba(0,0,0,0.05)',
+                        cursor: isLocked ? 'not-allowed' : 'pointer'
                     }}
                 >
-                    임시 저장 💾
+                    {isLocked ? '수정 불가 🔒' : '임시 저장 💾'}
                 </Button>
                 <Button
                     size="lg"
                     onClick={handleSubmit}
-                    disabled={submitting || isConfirmed || (isSubmitted && !isReturned)}
+                    disabled={submitting || isLocked}
                     style={{
                         flex: 2,
                         height: '64px',
                         fontSize: '1.3rem',
                         fontWeight: '900',
-                        background: 'var(--primary-color)',
+                        background: isLocked ? '#B0BEC5' : 'var(--primary-color)',
                         color: 'white',
                         border: 'none',
-                        boxShadow: '0 8px 25px rgba(135, 206, 235, 0.4)',
+                        boxShadow: isLocked ? 'none' : '0 8px 25px rgba(135, 206, 235, 0.4)',
                         transition: 'all 0.2s',
-                        opacity: (isConfirmed || (isSubmitted && !isReturned)) ? 0.6 : 1
+                        opacity: isLocked ? 0.8 : 1
                     }}
                 >
                     {submitting
                         ? '제출 중...'
                         : isConfirmed
                             ? '승인 완료 ✨'
-                            : (params?.mode === 'edit' || (isSubmitted && isReturned))
-                                ? '수정 완료! ✨'
+                            : (isSubmitted && isReturned)
+                                ? '수정해서 다시 제출! 🚀'
                                 : (isSubmitted && !isReturned)
                                     ? '확인 대기 중...'
                                     : '멋지게 제출하기! 🚀'
