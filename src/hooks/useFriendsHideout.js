@@ -30,6 +30,7 @@ export const useFriendsHideout = (studentSession, params) => {
                 .from('student_posts')
                 .select(`
                     id, title, content, student_id, mission_id, created_at, char_count, is_confirmed,
+                    original_title, original_content,
                     students:student_id!inner(name, class_id, pet_data),
                     writing_missions(allow_comments)
                 `)

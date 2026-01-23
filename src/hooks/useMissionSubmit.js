@@ -12,6 +12,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const [isConfirmed, setIsConfirmed] = useState(false); // 선생님이 승인하여 포인트가 지급되었는지 여부
     const [isSubmitted, setIsSubmitted] = useState(false); // 제출 여부
     const [aiFeedback, setAiFeedback] = useState(''); // 상시 피드백 내용
+    const [originalTitle, setOriginalTitle] = useState('');
+    const [originalContent, setOriginalContent] = useState('');
 
     const fetchMission = useCallback(async () => {
         setLoading(true);
@@ -54,6 +56,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     setIsConfirmed(postData.is_confirmed || false);
                     setIsSubmitted(postData.is_submitted || false);
                     setAiFeedback(postData.ai_feedback || '');
+                    setOriginalTitle(postData.original_title || '');
+                    setOriginalContent(postData.original_content || '');
                 } else if (params?.postId) {
                     console.warn(`[useMissionSubmit] postId(${params.postId})에 해당하는 글을 찾을 수 없습니다.`);
                 }
@@ -184,19 +188,38 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             const finalParagraphCount = content.split('\n').filter(p => p.trim().length > 0).length;
 
             // 2. 글 저장 (student_posts) - upsert 사용
+            // 최초 제출 시의 데이터를 보존하기 위해 original_title, original_content를 조건부로 업데이트합니다.
+            const { data: existingPost } = await supabase
+                .from('student_posts')
+                .select('original_content')
+                .eq('student_id', currentStudentId)
+                .eq('mission_id', missionId)
+                .maybeSingle();
+
+            const isFirstTime = !existingPost || !existingPost.original_content;
+
+            const updateData = {
+                student_id: currentStudentId,
+                mission_id: missionId,
+                title: title.trim(),
+                content: content,
+                char_count: finalCharCount,
+                paragraph_count: finalParagraphCount,
+                is_submitted: true,
+                is_returned: false,
+                is_confirmed: false
+            };
+
+            // 최초 제출인 경우 원본 데이터 기록
+            if (isFirstTime) {
+                updateData.original_title = title.trim();
+                updateData.original_content = content;
+                updateData.first_submitted_at = new Date().toISOString();
+            }
+
             const { error: postError } = await supabase
                 .from('student_posts')
-                .upsert({
-                    student_id: currentStudentId, // 검증된 ID 사용
-                    mission_id: missionId,
-                    title: title.trim(),
-                    content: content,
-                    char_count: finalCharCount,
-                    paragraph_count: finalParagraphCount,
-                    is_submitted: true,
-                    is_returned: false, // 제출 시 다시 쓰기 요청 상태 해제
-                    is_confirmed: false // 제출 시 승인 대기 상태로 설정
-                }, { onConflict: 'student_id,mission_id' });
+                .upsert(updateData, { onConflict: 'student_id,mission_id' });
 
             if (postError) {
                 console.error('❌ student_posts 저장 실패:', postError.message, postError.details);
@@ -242,6 +265,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         isConfirmed,
         isSubmitted,
         aiFeedback,
+        originalTitle,
+        originalContent,
         handleSave,
         handleSubmit
     };

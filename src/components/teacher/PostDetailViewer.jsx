@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 
@@ -10,6 +10,7 @@ const PostDetailViewer = ({
     reactionIcons, isMobile
 }) => {
     const textareaRef = useRef(null);
+    const [showOriginal, setShowOriginal] = useState(false);
 
     // 자동 높이 조절
     useEffect(() => {
@@ -100,17 +101,37 @@ const PostDetailViewer = ({
                                 fontSize: isMobile ? '1.5rem' : '2rem',
                                 color: '#2C3E50', fontWeight: '900',
                                 marginBottom: '24px', lineHeight: '1.4',
-                                borderLeft: '6px solid #FBC02D', paddingLeft: '20px'
+                                borderLeft: '6px solid #FBC02D', paddingLeft: '20px',
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                             }}>
-                                {selectedPost.title || '제목 없음'}
+                                <div>
+                                    {showOriginal ? (selectedPost.original_title || selectedPost.title) : (selectedPost.title || '제목 없음')}
+                                    {showOriginal && <span style={{ fontSize: '0.9rem', color: '#E67E22', marginLeft: '12px', background: '#FFF3E0', padding: '2px 8px', borderRadius: '6px' }}>최초 제출본</span>}
+                                </div>
+                                {selectedPost.original_content && (
+                                    <button
+                                        onClick={() => setShowOriginal(!showOriginal)}
+                                        style={{
+                                            fontSize: '0.85rem', padding: '6px 12px', borderRadius: '10px',
+                                            border: showOriginal ? '2px solid #3498DB' : '1px solid #DEE2E6',
+                                            background: showOriginal ? '#EBF5FB' : 'white',
+                                            color: showOriginal ? '#3498DB' : '#7F8C8D',
+                                            fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        {showOriginal ? '✨ 최신글 보기' : '📜 최초글 비교하기'}
+                                    </button>
+                                )}
                             </h2>
                             <div style={{
                                 fontSize: isMobile ? '1.1rem' : '1.25rem',
-                                color: '#444', lineHeight: '1.8',
+                                color: showOriginal ? '#7F8C8D' : '#444',
+                                lineHeight: '1.8',
                                 whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                                paddingBottom: '40px'
+                                paddingBottom: '40px',
+                                transition: 'color 0.2s'
                             }}>
-                                {selectedPost.content}
+                                {showOriginal ? (selectedPost.original_content || '기록된 최초 내용이 없습니다.') : selectedPost.content}
                             </div>
 
                             <div style={{ borderTop: '2px solid #F1F3F5', paddingTop: '40px', marginTop: '20px' }}>
@@ -290,8 +311,9 @@ const PostDetailViewer = ({
                         글자 수: {selectedPost.char_count}자 | 제출 시간: {new Date(selectedPost.created_at).toLocaleString()}
                     </footer>
                 </motion.div>
-            )}
-        </AnimatePresence>
+            )
+            }
+        </AnimatePresence >
     );
 };
 

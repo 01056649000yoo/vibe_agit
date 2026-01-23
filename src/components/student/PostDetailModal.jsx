@@ -10,6 +10,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
     const [submittingComment, setSubmittingComment] = useState(false);
     const [editingCommentId, setEditingCommentId] = useState(null);
     const [isTeacher, setIsTeacher] = useState(false);
+    const [showOriginal, setShowOriginal] = useState(false);
 
     const {
         reactions,
@@ -194,26 +195,42 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                 margin: 0, fontWeight: '900', color: '#2D3436',
                                 fontSize: isMobile ? '1rem' : '1.3rem',
                                 maxWidth: isMobile ? '150px' : '400px',
-                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                display: 'flex', alignItems: 'center', gap: '8px'
                             }}>
-                                {post.title}
+                                {showOriginal ? (post.original_title || post.title) : post.title}
+                                {showOriginal && <span style={{ fontSize: '0.7rem', color: '#E67E22', background: '#FFF3E0', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>최초</span>}
                             </h3>
                         </div>
                     </div>
-                    <div style={{ width: '44px' }} />
+                    {post.original_content && (
+                        <button
+                            onClick={() => setShowOriginal(!showOriginal)}
+                            style={{
+                                background: showOriginal ? '#E3F2FD' : '#F8F9FA',
+                                color: showOriginal ? '#1976D2' : '#636E72',
+                                border: 'none', padding: '10px 16px', borderRadius: '14px',
+                                fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                transition: 'all 0.2s',
+                                flexShrink: 0
+                            }}
+                        >
+                            {showOriginal ? '✨ 최신' : '📜 최초'}
+                        </button>
+                    )}
+                    {!post.original_content && <div style={{ width: '44px' }} />}
                 </header>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '28px 20px 80px 20px' : '48px 60px 100px 60px', scrollbarWidth: 'thin' }}>
                     <div style={{
-                        fontSize: isMobile ? '1.1rem' : '1.3rem',
-                        lineHeight: '1.9',
-                        whiteSpace: 'pre-wrap',
-                        color: '#2D3436',
+                        color: showOriginal ? '#7F8C8D' : '#2D3436',
                         marginBottom: '80px',
                         letterSpacing: '-0.02em',
-                        wordBreak: 'break-word'
+                        wordBreak: 'break-word',
+                        transition: 'color 0.2s'
                     }}>
-                        {post.content}
+                        {showOriginal ? (post.original_content || '기록된 최초 내용이 없습니다.') : post.content}
                     </div>
 
                     {/* 반응 섹션 */}

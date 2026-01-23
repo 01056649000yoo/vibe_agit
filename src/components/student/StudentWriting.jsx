@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,9 +18,13 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         isConfirmed,
         isSubmitted,
         aiFeedback,
+        originalTitle,
+        originalContent,
         handleSave,
         handleSubmit
     } = useMissionSubmit(studentSession, missionId, params, onBack, onNavigate);
+
+    const [showOriginal, setShowOriginal] = useState(false);
 
     // 통계 계산
     const charCount = content.length;
@@ -151,27 +155,61 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 border: '1px solid #E9ECEF',
                 position: 'relative'
             }}>
-                <div style={{
-                    position: 'absolute',
-                    top: '-12px',
-                    left: '24px',
-                    background: '#FFFFFF',
-                    padding: '2px 12px',
-                    borderRadius: '10px',
-                    fontSize: '0.85rem',
-                    fontWeight: '900',
-                    color: '#607D8B',
-                    border: '1px solid #E9ECEF'
-                }}>
-                    선생님의 가이드 💡
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{
+                        background: '#FFFFFF',
+                        padding: '2px 12px',
+                        borderRadius: '10px',
+                        fontSize: '0.85rem',
+                        fontWeight: '900',
+                        color: '#607D8B',
+                        border: '1px solid #E9ECEF'
+                    }}>
+                        선생님의 가이드 💡
+                    </div>
+                    {originalContent && (
+                        <button
+                            onClick={() => setShowOriginal(!showOriginal)}
+                            style={{
+                                background: showOriginal ? '#E3F2FD' : '#F8F9FA',
+                                color: showOriginal ? '#1976D2' : '#7F8C8D',
+                                border: '1px solid #E9ECEF',
+                                padding: '6px 12px',
+                                borderRadius: '12px',
+                                fontSize: '0.8rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                            }}
+                        >
+                            {showOriginal ? '✨ 지금 나의 글' : '📜 나의 최초 글'}
+                        </button>
+                    )}
                 </div>
                 <p style={{ margin: 10, fontSize: '1.05rem', color: '#455A64', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
                     {mission.guide}
                 </p>
             </div>
 
-            {/* 글쓰기 영역 */}
-            <div style={{ marginBottom: '32px' }}>
+            <div style={{ marginBottom: '32px', position: 'relative' }}>
+                {showOriginal && (
+                    <div style={{
+                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(255,255,255,0.95)', zIndex: 5,
+                        display: 'flex', flexDirection: 'column',
+                        padding: '10px 0'
+                    }}>
+                        <div style={{ fontSize: '1.6rem', fontWeight: '800', borderBottom: '3px solid #FBC02D', marginBottom: '24px', color: '#7F8C8D', padding: '16px 0' }}>
+                            {originalTitle || '제목 없음'}
+                            <span style={{ fontSize: '0.8rem', color: '#E67E22', marginLeft: '12px', background: '#FFF3E0', padding: '2px 8px', borderRadius: '6px' }}>최초 기록</span>
+                        </div>
+                        <div style={{ fontSize: '1.2rem', lineHeight: '2', color: '#7F8C8D', whiteSpace: 'pre-wrap', flex: 1, overflowY: 'auto' }}>
+                            {originalContent || '기록된 내용이 없습니다.'}
+                        </div>
+                    </div>
+                )}
                 <input
                     type="text"
                     value={title}

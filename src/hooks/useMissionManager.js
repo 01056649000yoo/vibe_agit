@@ -179,6 +179,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                 .from('student_posts')
                 .select(`
                     id, title, content, student_id, mission_id, char_count, is_submitted, is_confirmed, is_returned, ai_feedback, created_at,
+                    original_title, original_content, first_submitted_at,
                     students!inner(name, class_id)
                 `)
                 .eq('mission_id', mission.id)
