@@ -40,23 +40,34 @@ const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipI
                     {Object.values(HIDEOUT_BACKGROUNDS).map(item => {
                         const isOwned = item.id === 'default' || (petData.ownedItems && petData.ownedItems.includes(item.id));
                         const isEquipped = petData.background === item.id;
+                        const isLegendary = item.requiresMaxLevel;
+                        const hasFullyMastered = petData.level >= 5 && petData.exp >= 100;
 
                         return (
                             <div key={item.id} style={{
-                                border: `2px solid ${isEquipped ? item.border : '#F1F3F5'}`,
+                                gridColumn: isLegendary ? '1 / -1' : 'auto',
+                                border: `2px solid ${isEquipped ? item.border : (isLegendary ? '#FFD700' : '#F1F3F5')}`,
                                 borderRadius: '24px',
-                                padding: '16px',
+                                padding: isLegendary ? '24px' : '16px',
                                 textAlign: 'center',
-                                background: isEquipped ? item.color : 'white',
+                                background: isEquipped ? item.color : (isLegendary ? 'linear-gradient(to bottom, #FFF, #FFF9C4)' : 'white'),
                                 transition: 'all 0.2s',
-                                opacity: isEquipped ? 1 : 0.8
+                                opacity: isEquipped ? 1 : 0.9,
+                                boxShadow: isLegendary ? '0 8px 20px rgba(255, 215, 0, 0.15)' : 'none',
+                                position: 'relative'
                             }}>
+                                {isLegendary && (
+                                    <div style={{ position: 'absolute', top: '12px', left: '12px', fontSize: '0.75rem', fontWeight: 'bold', color: '#FBC02D', background: 'white', padding: '2px 8px', borderRadius: '10px', border: '1px solid #FFD700' }}>ULTIMATE REWARD</div>
+                                )}
                                 <div style={{
-                                    width: '100%', height: '60px', borderRadius: '12px',
+                                    width: '100%', height: isLegendary ? '100px' : '60px', borderRadius: '12px',
                                     background: item.color, marginBottom: '10px',
-                                    border: `1px solid ${item.border}`
-                                }} />
-                                <div style={{ fontWeight: 'bold', fontSize: '1rem', color: isEquipped ? (item.textColor || '#2C3E50') : '#2C3E50', marginBottom: '6px' }}>{item.name}</div>
+                                    border: `1px solid ${item.border}`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem'
+                                }}>
+                                    {isLegendary && '🌈'}
+                                </div>
+                                <div style={{ fontWeight: 'bold', fontSize: isLegendary ? '1.2rem' : '1rem', color: isEquipped ? (item.textColor || '#2C3E50') : '#2C3E50', marginBottom: '6px' }}>{item.name}</div>
 
                                 <div style={{
                                     display: 'inline-block',
@@ -65,31 +76,44 @@ const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipI
                                     fontSize: '0.85rem',
                                     fontWeight: '900',
                                     marginBottom: '14px',
-                                    background: isOwned ? (isEquipped ? 'rgba(255,255,255,0.2)' : '#F1F3F5') : '#FFF9C4',
-                                    color: isOwned ? (isEquipped ? 'white' : '#95A5A6') : '#FBC02D',
+                                    background: isOwned ? (isEquipped ? 'rgba(255,255,255,0.2)' : '#F1F3F5') : (isLegendary && !hasFullyMastered ? '#F8F9FA' : '#FFF9C4'),
+                                    color: isOwned ? (isEquipped ? 'white' : '#95A5A6') : (isLegendary && !hasFullyMastered ? '#ADB5BD' : '#FBC02D'),
                                     border: isOwned ? 'none' : '1px solid #FFE082'
                                 }}>
                                     {isOwned ? (
                                         <span>{isEquipped ? '✨ 사용 중' : '✅ 보유 중'}</span>
                                     ) : (
-                                        <span>💰 {item.price?.toLocaleString()}P</span>
+                                        isLegendary ? (
+                                            !hasFullyMastered ? <span>🔒 5레벨 만렙(100%) 달성 시 무료!</span> : <span>🎁 드래곤 마스터 완료 기념 선물!</span>
+                                        ) : (
+                                            <span>💰 {item.price?.toLocaleString()}P</span>
+                                        )
                                     )}
                                 </div>
 
                                 {!isOwned ? (
                                     <Button
-                                        size="sm"
-                                        style={{ width: '100%', background: '#FBC02D', color: '#795548', fontWeight: 'bold' }}
-                                        onClick={() => buyItem(item)}
+                                        size={isLegendary ? 'md' : 'sm'}
+                                        style={{
+                                            width: isLegendary ? '80%' : '100%',
+                                            margin: '0 auto',
+                                            background: (isLegendary && !hasFullyMastered) ? '#EEE' : '#FBC02D',
+                                            color: (isLegendary && !hasFullyMastered) ? '#999' : '#795548',
+                                            fontWeight: 'bold',
+                                            cursor: (isLegendary && !hasFullyMastered) ? 'not-allowed' : 'pointer'
+                                        }}
+                                        onClick={() => !(isLegendary && !hasFullyMastered) && buyItem(item)}
+                                        disabled={isLegendary && !hasFullyMastered}
                                     >
-                                        구매하기
+                                        {isLegendary && !hasFullyMastered ? '잠겨있음' : '지금 받기'}
                                     </Button>
                                 ) : (
                                     <Button
                                         size="sm"
                                         variant={isEquipped ? 'primary' : 'ghost'}
                                         style={{
-                                            width: '100%',
+                                            width: isLegendary ? '80%' : '100%',
+                                            margin: '0 auto',
                                             background: isEquipped ? item.accent : '#F8F9FA',
                                             color: isEquipped ? 'white' : '#7F8C8D',
                                             border: isEquipped ? 'none' : '1px solid #DEE2E6'

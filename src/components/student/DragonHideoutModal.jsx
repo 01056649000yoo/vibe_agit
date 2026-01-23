@@ -175,16 +175,49 @@ const DragonHideoutModal = ({
                                         </div>
                                     )}
 
+                                    {/* 마스터 달성 특수 효과 (회전하는 무지개 광륜) */}
+                                    {petData.level >= 5 && petData.exp >= 100 && (
+                                        <motion.div
+                                            animate={{ rotate: 360 }}
+                                            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                                            style={{
+                                                position: 'absolute',
+                                                width: '320px',
+                                                height: '320px',
+                                                background: 'conic-gradient(from 0deg, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3, #FF0000)',
+                                                borderRadius: '50%',
+                                                filter: 'blur(40px) opacity(0.3)',
+                                                zIndex: 0
+                                            }}
+                                        />
+                                    )}
+
+                                    {/* 기존 레벨 5 이상 효과 (입자 효과 강화) */}
                                     {petData.level >= 5 && (
                                         <AnimatePresence>
-                                            {[...Array(10)].map((_, i) => (
+                                            {[...Array(petData.exp >= 100 ? 20 : 10)].map((_, i) => (
                                                 <motion.span
                                                     key={`gold-${i}`}
-                                                    animate={{ y: [0, -50, 0], opacity: [0, 1, 0], rotate: [0, 180, 360] }}
+                                                    animate={{
+                                                        y: [0, -80, 0],
+                                                        x: [0, (i % 2 === 0 ? 30 : -30), 0],
+                                                        opacity: [0, 1, 0],
+                                                        rotate: [0, 180, 360],
+                                                        scale: [1, 1.5, 1]
+                                                    }}
                                                     transition={{ repeat: Infinity, duration: 2 + Math.random() * 2, delay: Math.random() * 2 }}
-                                                    style={{ position: 'absolute', top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, fontSize: '1rem', color: '#FFD700', pointerEvents: 'none', zIndex: 0 }}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: `${Math.random() * 100}%`,
+                                                        left: `${Math.random() * 100}%`,
+                                                        fontSize: petData.exp >= 100 ? '1.5rem' : '1rem',
+                                                        color: petData.exp >= 100 ? '#FFD700' : '#FFF9C4',
+                                                        pointerEvents: 'none',
+                                                        zIndex: 2,
+                                                        filter: 'drop-shadow(0 0 10px gold)'
+                                                    }}
                                                 >
-                                                    ✨
+                                                    {petData.exp >= 100 ? (i % 2 === 0 ? '✨' : '🌈') : '✨'}
                                                 </motion.span>
                                             ))}
                                         </AnimatePresence>
@@ -209,7 +242,7 @@ const DragonHideoutModal = ({
                                         style={{ width: (petData.level === 3 || petData.level === 4) ? '264px' : '220px', height: (petData.level === 3 || petData.level === 4) ? '264px' : '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1, cursor: 'pointer', background: 'transparent' }}
                                     >
                                         {!dragonInfo.isPlaceholder && (
-                                            <img src={dragonInfo.image} alt={dragonInfo.name} style={{ width: '100%', height: '100%', objectFit: 'contain', background: 'transparent', filter: `drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 5 ? 'drop-shadow(0 0 15px rgba(255,215,0,0.7))' : ''}` }} />
+                                            <img src={dragonInfo.image} alt={dragonInfo.name} style={{ width: '100%', height: '100%', objectFit: 'contain', background: 'transparent', filter: `drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 5 ? 'drop-shadow(0 0 25px rgba(255,193,7,0.8))' : ''}` }} />
                                         )}
                                     </motion.div>
                                 </div>
@@ -220,14 +253,19 @@ const DragonHideoutModal = ({
                                             <span style={{ fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.name}</span>
                                             <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
                                         </div>
-                                        <span style={{ fontSize: '1rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
+                                        <div style={{ textAlign: 'right' }}>
+                                            {petData.level >= 5 && petData.exp >= 100 && (
+                                                <span style={{ display: 'block', fontSize: '0.7rem', background: 'linear-gradient(45deg, #FFD700, #FF5722)', color: 'white', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold', marginBottom: '4px', boxShadow: '0 2px 5px rgba(255,87,34,0.3)' }}>MASTER 🏆</span>
+                                            )}
+                                            <span style={{ fontSize: '1rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
+                                        </div>
                                     </div>
                                     <div style={{ height: '14px', background: 'rgba(0,0,0,0.05)', borderRadius: '7px', overflow: 'hidden' }}>
-                                        <motion.div initial={{ width: 0 }} animate={{ width: `${petData.exp}%` }} style={{ height: '100%', background: 'linear-gradient(90deg, #FFB300, #FBC02D)', borderRadius: '7px' }} />
+                                        <motion.div initial={{ width: 0 }} animate={{ width: `${petData.exp}%` }} style={{ height: '100%', background: petData.exp >= 100 ? 'linear-gradient(90deg, #FFD700, #FF8A65, #BA68C8, #4FC3F7)' : 'linear-gradient(90deg, #FFB300, #FBC02D)', borderRadius: '7px' }} />
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
                                         <span style={{ fontSize: '0.8rem', color: '#8D6E63' }}>식사 후 {daysSinceLastFed}일 경과</span>
-                                        <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold' }}>{petData.level < 5 ? `${100 - petData.exp}% 남음` : '최고 단계! 🌈'}</span>
+                                        <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold' }}>{petData.level < 5 || petData.exp < 100 ? `${100 - petData.exp}% 남음` : '전설의 마스터! 🌈'}</span>
                                     </div>
                                 </div>
                             </div>

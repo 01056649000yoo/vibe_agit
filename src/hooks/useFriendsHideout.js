@@ -10,10 +10,28 @@ export const useFriendsHideout = (studentSession, params) => {
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [viewingPost, setViewingPost] = useState(null);
+    const [classmates, setClassmates] = useState([]);
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
 
     const PAGE_SIZE = 10;
+
+    const fetchClassmates = useCallback(async () => {
+        try {
+            const classId = studentSession.classId || studentSession.class_id;
+            const { data, error } = await supabase
+                .from('students')
+                .select('id, name, pet_data')
+                .eq('class_id', classId)
+                .neq('id', studentSession.id)
+                .order('name');
+
+            if (error) throw error;
+            setClassmates(data || []);
+        } catch (err) {
+            console.error('반 친구 목록 로드 실패:', err.message);
+        }
+    }, [studentSession.classId, studentSession.class_id, studentSession.id]);
 
     const fetchPosts = useCallback(async (missionId, isAppend = false) => {
         if (!isAppend) {
@@ -112,10 +130,11 @@ export const useFriendsHideout = (studentSession, params) => {
 
     useEffect(() => {
         fetchMissions();
+        fetchClassmates();
         if (params?.initialPostId) {
             handleInitialPost(params.initialPostId);
         }
-    }, [params, fetchMissions, handleInitialPost]);
+    }, [params, fetchMissions, fetchClassmates, handleInitialPost]);
 
     const handleMissionChange = (mission) => {
         setSelectedMission(mission);
@@ -126,6 +145,7 @@ export const useFriendsHideout = (studentSession, params) => {
         missions,
         selectedMission,
         posts,
+        classmates,
         loading,
         loadingMore,
         hasMore,
