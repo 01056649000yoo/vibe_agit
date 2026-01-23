@@ -25,7 +25,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         handleApprovePost, handleBulkApprove, handleRecovery, handleRecovery: handleRecoveryFunc,
         handleBulkRecovery,
         handleBulkRequestRewrite,
-        handleFinalArchive, fetchMissions
+        handleFinalArchive, fetchMissions,
+        handleGenerateQuestions, isGeneratingQuestions
     } = useMissionManager(activeClass);
 
     useEffect(() => {
@@ -94,6 +95,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 handleSubmit={handleSubmit}
                 handleCancelEdit={handleCancelEdit}
                 isMobile={isMobile}
+                handleGenerateQuestions={handleGenerateQuestions}
+                isGeneratingQuestions={isGeneratingQuestions}
             />
 
             {/* 미션 리스트 */}

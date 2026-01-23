@@ -30,8 +30,11 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         base_reward: 100,
         bonus_threshold: 100,
         bonus_reward: 10,
-        allow_comments: true
+        allow_comments: true,
+        mission_type: '일기',
+        guide_questions: []
     });
+    const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
 
     const fetchMissions = useCallback(async () => {
         if (!activeClass?.id) return;
@@ -40,7 +43,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             const [missionsResult, studentCountResult] = await Promise.all([
                 supabase
                     .from('writing_missions')
-                    .select('id, title, guide, genre, min_chars, min_paragraphs, base_reward, bonus_threshold, bonus_reward, allow_comments, is_archived, created_at')
+                    .select('id, title, guide, genre, min_chars, min_paragraphs, base_reward, bonus_threshold, bonus_reward, allow_comments, is_archived, created_at, mission_type, guide_questions')
                     .eq('class_id', activeClass.id)
                     .eq('is_archived', false)
                     .order('created_at', { ascending: false }),
@@ -96,7 +99,9 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             base_reward: mission.base_reward,
             bonus_threshold: mission.bonus_threshold,
             bonus_reward: mission.bonus_reward,
-            allow_comments: mission.allow_comments
+            allow_comments: mission.allow_comments,
+            mission_type: mission.mission_type || mission.genre,
+            guide_questions: mission.guide_questions || []
         });
         setEditingMissionId(mission.id);
         setIsEditing(true);
@@ -107,8 +112,94 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const handleCancelEdit = () => {
         setIsEditing(false);
         setEditingMissionId(null);
-        setFormData({ title: '', guide: '', genre: '일기', min_chars: 100, min_paragraphs: 1, base_reward: 100, bonus_threshold: 100, bonus_reward: 10, allow_comments: true });
+        setFormData({
+            title: '',
+            guide: '',
+            genre: '일기',
+            min_chars: 100,
+            min_paragraphs: 1,
+            base_reward: 100,
+            bonus_threshold: 100,
+            bonus_reward: 10,
+            allow_comments: true,
+            mission_type: '일기',
+            guide_questions: []
+        });
         setIsFormOpen(false);
+    };
+
+    const handleGenerateQuestions = async (count = 5) => {
+        if (!formData.title.trim()) {
+            alert('주제를 먼저 입력해주세요! ✨');
+            return;
+        }
+
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: profileData } = await supabase
+            .from('profiles')
+            .select('gemini_api_key')
+            .eq('id', user.id)
+            .single();
+
+        const apiKey = profileData?.gemini_api_key;
+        if (!apiKey) {
+            alert('Gemini API 키가 설정되지 않았습니다. [설정]에서 키를 등록해주세요! 🔑');
+            return;
+        }
+
+        setIsGeneratingQuestions(true);
+        try {
+            const prompt = `
+            너는 초등학생 글쓰기 지도를 돕는 AI 선생님이야. 
+            주제: "${formData.title}"
+            글의 종류: "${formData.genre}"
+            가이드: "${formData.guide}"
+            
+            학생들이 이 주제로 글을 쓸 때, 글의 구조를 잡고 내용을 풍성하게 만들 수 있도록 돕는 '핵심 질문'을 ${count}개 만들어줘.
+            
+            [규칙]
+            1. 질문은 초등학생이 이해하기 쉬운 친절한 말투여야 해.
+            2. 질문이 너무 추상적이지 않고, 구체적인 기억이나 생각을 끌어낼 수 있어야 해.
+            3. 보기에 좋은 JSON 배열 형식으로만 답해줘. (다른 설명 없이)
+            
+            [응답 형식 예시]
+            ["질문1", "질문2", "질문3"]
+            `;
+
+            const modelName = "gemini-2.5-flash";
+            const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+
+            const response = await fetch(`${baseUrl}?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Gemini API Error details:', errorData);
+                if (response.status === 429) {
+                    throw new Error('AI 사용량이 너무 많습니다. 잠시 후 다시 시도해주세요! (Rate Limit)');
+                }
+                throw new Error(errorData.error?.message || '질문 생성 실패');
+            }
+
+            const result = await response.json();
+            const responseText = result.candidates[0].content.parts[0].text;
+
+            const jsonMatch = responseText.match(/\[.*\]/s);
+            if (jsonMatch) {
+                const questions = JSON.parse(jsonMatch[0]);
+                setFormData(prev => ({ ...prev, guide_questions: questions }));
+            }
+        } catch (err) {
+            console.error('질문 생성 오류:', err);
+            alert('질문을 생성하는 도중 오류가 발생했습니다.');
+        } finally {
+            setIsGeneratingQuestions(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -122,13 +213,13 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             if (isEditing) {
                 const { error } = await supabase
                     .from('writing_missions')
-                    .update({ ...formData })
+                    .update({ ...formData, mission_type: formData.genre })
                     .eq('id', editingMissionId);
 
                 if (error) throw error;
                 alert('글쓰기 미션이 성공적으로 수정되었습니다! ✏️');
             } else {
-                const { error } = await supabase.from('writing_missions').insert({ ...formData, class_id: activeClass.id });
+                const { error } = await supabase.from('writing_missions').insert({ ...formData, mission_type: formData.genre, class_id: activeClass.id });
                 if (error) throw error;
                 alert('새로운 글쓰기 미션이 공개되었습니다! 🚀');
             }
@@ -697,6 +788,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery, handleBulkRecovery,
         handleBulkRequestRewrite,
-        handleFinalArchive, fetchMissions
+        handleFinalArchive, fetchMissions,
+        handleGenerateQuestions, isGeneratingQuestions
     };
 };

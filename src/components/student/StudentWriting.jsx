@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMissionSubmit } from '../../hooks/useMissionSubmit';
 
 /**
- * 역할: 학생 - 글쓰기 에디터 (포인트 연동 기능 포함) ✨
+ * 역할: 학생 - 글쓰기 에디터 (단계별 답변 및 본문 삽입 기능 포함) ✨
  */
 const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params }) => {
     const {
@@ -20,11 +20,66 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         aiFeedback,
         originalTitle,
         originalContent,
+        studentAnswers,
+        setStudentAnswers,
         handleSave,
         handleSubmit
     } = useMissionSubmit(studentSession, missionId, params, onBack, onNavigate);
 
     const [showOriginal, setShowOriginal] = useState(false);
+    const editorRef = useRef(null);
+    const isMobile = window.innerWidth <= 768;
+
+    // 질문 개수가 변하면 studentAnswers 배열 초기화/유지 로직
+    useEffect(() => {
+        if (mission?.guide_questions?.length > 0) {
+            // 기존 답변이 없거나 질문 개수가 다를 때 초기화 (기본적으로 빈 배열이면 초기화)
+            if (studentAnswers.length === 0) {
+                setStudentAnswers(new Array(mission.guide_questions.length).fill(''));
+            }
+        }
+    }, [mission?.guide_questions, studentAnswers.length, setStudentAnswers]);
+
+    const handleAnswerChange = (idx, val) => {
+        const newAnswers = [...studentAnswers];
+        newAnswers[idx] = val;
+        setStudentAnswers(newAnswers);
+    };
+
+    const insertToBody = (text) => {
+        if (!text?.trim()) return;
+        const textarea = editorRef.current;
+
+        // 커서 위치에 삽입 로직
+        if (!textarea) {
+            setContent(prev => prev ? prev + '\n' + text : text);
+            return;
+        }
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const before = content.substring(0, start);
+        const after = content.substring(end);
+
+        setContent(before + text + after);
+
+        // 삽입 후 포커스 유지 및 커서 이동
+        setTimeout(() => {
+            textarea.focus();
+            const newPos = start + text.length;
+            textarea.setSelectionRange(newPos, newPos);
+        }, 0);
+    };
+
+    const insertAllToBody = () => {
+        const validAnswers = studentAnswers.filter(a => a?.trim());
+        if (validAnswers.length === 0) {
+            alert('입력된 답변이 없습니다! 질문에 먼저 답을 적어주세요. 😊');
+            return;
+        }
+        const combined = validAnswers.join('\n\n');
+        setContent(prev => prev ? prev + '\n\n' + combined : combined);
+    };
 
     // 통계 계산
     const charCount = content.length;
@@ -36,8 +91,18 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     if (loading) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 도구를 준비하는 중... ✍️</p></Card>;
     if (!mission) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 미션을 찾을 수 없습니다.</p><Button onClick={onBack}>돌아가기</Button></Card>;
 
+    const hasQuestions = mission?.guide_questions?.length > 0;
+
     return (
-        <Card style={{ maxWidth: '850px', padding: '32px', border: 'none', background: '#FFFFFF', boxShadow: '0 15px 40px rgba(0,0,0,0.08)', margin: '20px auto 40px auto' }}>
+        <Card style={{
+            maxWidth: hasQuestions ? '1200px' : '850px',
+            padding: '32px',
+            border: 'none',
+            background: '#FFFFFF',
+            boxShadow: '0 15px 40px rgba(0,0,0,0.08)',
+            margin: '20px auto 40px auto',
+            transition: 'all 0.3s ease'
+        }}>
             {/* 상단 헤더 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
                 <Button variant="ghost" size="sm" onClick={onBack} disabled={submitting}>
@@ -60,24 +125,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 </div>
             </div>
 
-            {/* 선생님 피드백/다시쓰기 안내 및 상태 표시 */}
+            {/* 선생님 피드백/상태 표시 영역 (기존 로직 유지) */}
             <AnimatePresence>
                 {isConfirmed ? (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        style={{
-                            background: '#E8F5E9',
-                            padding: '16px 20px',
-                            borderRadius: '16px',
-                            marginBottom: '24px',
-                            border: '1px solid #C8E6C9',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            overflow: 'hidden'
-                        }}
-                    >
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ background: '#E8F5E9', padding: '16px 20px', borderRadius: '16px', marginBottom: '24px', border: '1px solid #C8E6C9', display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
                         <span style={{ fontSize: '1.5rem' }}>✅</span>
                         <div>
                             <div style={{ fontWeight: '900', color: '#2E7D32', fontSize: '1rem' }}>포인트 지급 완료!</div>
@@ -85,21 +136,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         </div>
                     </motion.div>
                 ) : isSubmitted ? (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        style={{
-                            background: '#E3F2FD',
-                            padding: '16px 20px',
-                            borderRadius: '16px',
-                            marginBottom: '24px',
-                            border: '1px solid #BBDEFB',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            overflow: 'hidden'
-                        }}
-                    >
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ background: '#E3F2FD', padding: '16px 20px', borderRadius: '16px', marginBottom: '24px', border: '1px solid #BBDEFB', display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
                         <span style={{ fontSize: '1.5rem' }}>⏳</span>
                         <div>
                             <div style={{ fontWeight: '900', color: '#1565C0', fontSize: '1rem' }}>선생님이 확인 중이에요</div>
@@ -107,245 +144,231 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         </div>
                     </motion.div>
                 ) : isReturned && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        style={{
-                            background: '#FFF3E0',
-                            padding: '16px 20px',
-                            borderRadius: '16px',
-                            marginBottom: '24px',
-                            border: '1px solid #FFE0B2',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            overflow: 'hidden'
-                        }}
-                    >
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ background: '#FFF3E0', padding: '16px 20px', borderRadius: '16px', marginBottom: '24px', border: '1px solid #FFE0B2', display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
                         <span style={{ fontSize: '1.5rem' }}>♻️</span>
                         <div>
                             <div style={{ fontWeight: '900', color: '#E65100', fontSize: '1rem' }}>선생님이 다시 쓰기를 요청하셨습니다.</div>
                             <div style={{ fontSize: '0.85rem', color: '#EF6C00', marginBottom: aiFeedback ? '8px' : '0' }}>내용을 보완해서 다시 한번 멋진 글을 완성해볼까요?</div>
-                            {aiFeedback && (
-                                <div style={{
-                                    background: 'rgba(255,255,255,0.7)',
-                                    padding: '20px',
-                                    borderRadius: '16px',
-                                    fontSize: '1rem',
-                                    color: '#444',
-                                    whiteSpace: 'pre-wrap',
-                                    lineHeight: '1.8',
-                                    border: '1px solid rgba(230, 81, 0, 0.2)',
-                                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.03)'
-                                }}>
-                                    {aiFeedback}
-                                </div>
-                            )}
+                            {aiFeedback && <div style={{ background: 'rgba(255,255,255,0.7)', padding: '20px', borderRadius: '16px', fontSize: '1rem', color: '#444', whiteSpace: 'pre-wrap', lineHeight: '1.8', border: '1px solid rgba(230, 81, 0, 0.2)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.03)' }}>{aiFeedback}</div>}
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
             {/* 가이드 박스 */}
-            <div style={{
-                background: '#F8F9FA',
-                padding: '24px',
-                borderRadius: '20px',
-                marginBottom: '32px',
-                border: '1px solid #E9ECEF',
-                position: 'relative'
-            }}>
+            <div style={{ background: '#F8F9FA', padding: '24px', borderRadius: '20px', marginBottom: '32px', border: '1px solid #E9ECEF', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{
-                        background: '#FFFFFF',
-                        padding: '2px 12px',
-                        borderRadius: '10px',
-                        fontSize: '0.85rem',
-                        fontWeight: '900',
-                        color: '#607D8B',
-                        border: '1px solid #E9ECEF'
-                    }}>
-                        선생님의 가이드 💡
-                    </div>
+                    <div style={{ background: '#FFFFFF', padding: '2px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: '900', color: '#607D8B', border: '1px solid #E9ECEF' }}>선생님의 가이드 💡</div>
                     {originalContent && (
-                        <button
-                            onClick={() => setShowOriginal(!showOriginal)}
-                            style={{
-                                background: showOriginal ? '#E3F2FD' : '#F8F9FA',
-                                color: showOriginal ? '#1976D2' : '#7F8C8D',
-                                border: '1px solid #E9ECEF',
-                                padding: '6px 12px',
-                                borderRadius: '12px',
-                                fontSize: '0.8rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                            }}
-                        >
-                            {showOriginal ? '✨ 지금 나의 글' : '📜 나의 최초 글'}
+                        <button onClick={() => setShowOriginal(!showOriginal)} style={{ background: showOriginal ? '#E3F2FD' : '#F8F9FA', color: showOriginal ? '#1976D2' : '#7F8C8D', border: '1px solid #E9ECEF', padding: '6px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {showOriginal ? '📜 나의 처음 글' : '✨ 나의 마지막 글'}
                         </button>
                     )}
                 </div>
-                <p style={{ margin: 10, fontSize: '1.05rem', color: '#455A64', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
-                    {mission.guide}
-                </p>
+                <p style={{ margin: 10, fontSize: '1.05rem', color: '#455A64', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>{mission.guide}</p>
             </div>
 
-            <div style={{ marginBottom: '32px', position: 'relative' }}>
-                {showOriginal && (
-                    <div style={{
-                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                        background: 'rgba(255,255,255,0.95)', zIndex: 5,
-                        display: 'flex', flexDirection: 'column',
-                        padding: '10px 0'
-                    }}>
-                        <div style={{ fontSize: '1.6rem', fontWeight: '800', borderBottom: '3px solid #FBC02D', marginBottom: '24px', color: '#7F8C8D', padding: '16px 0' }}>
-                            {originalTitle || '제목 없음'}
-                            <span style={{ fontSize: '0.8rem', color: '#E67E22', marginLeft: '12px', background: '#FFF3E0', padding: '2px 8px', borderRadius: '6px' }}>최초 기록</span>
+            {/* 1단계: 생각 일깨우기 (질문 리스트) */}
+            {hasQuestions && (
+                <div style={{
+                    background: '#F0F7FF',
+                    padding: isMobile ? '24px 20px' : '40px',
+                    borderRadius: '28px',
+                    border: '1px solid #D6EAF8',
+                    marginBottom: '40px',
+                    boxShadow: '0 4px 15px rgba(52, 152, 219, 0.05)'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: '1.4rem', color: '#1565C0', fontWeight: '900', letterSpacing: '-0.5px' }}>🎯 생각 일깨우기</h3>
+                            <p style={{ margin: '8px 0 0 0', color: '#546E7A', fontSize: '0.95rem' }}>글을 쓰기 전, 아래 질문들에 답하며 생각을 정리해볼까요?</p>
                         </div>
-                        <div style={{ fontSize: '1.2rem', lineHeight: '2', color: '#7F8C8D', whiteSpace: 'pre-wrap', flex: 1, overflowY: 'auto' }}>
-                            {originalContent || '기록된 내용이 없습니다.'}
-                        </div>
+                        <Button size="sm" onClick={insertAllToBody} style={{ background: '#3498DB', fontWeight: 'bold', padding: '10px 20px', borderRadius: '14px' }}>답변 전체를 본문에 넣기 📥</Button>
                     </div>
-                )}
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="글의 제목을 적어주세요..."
-                    style={{
-                        width: '100%',
-                        padding: '16px 0',
-                        fontSize: '1.6rem',
-                        fontWeight: '800',
-                        border: 'none',
-                        borderBottom: '3px solid #F1F3F5',
-                        marginBottom: '24px',
-                        outline: 'none',
-                        color: isLocked ? '#95A5A6' : '#2C3E50',
-                        background: 'transparent'
-                    }}
-                    disabled={submitting || isLocked}
-                    spellCheck="true"
-                />
 
-                <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="여기에 자유롭게 이야기를 시작해보세요..."
-                    style={{
-                        width: '100%',
-                        minHeight: '400px',
-                        padding: '10px 0',
-                        border: 'none',
-                        fontSize: '1.2rem',
-                        lineHeight: '2',
-                        outline: 'none',
-                        color: isLocked ? '#95A5A6' : '#34495E',
-                        resize: 'none',
-                        background: 'transparent'
-                    }}
-                    disabled={submitting || isLocked}
-                    spellCheck="true"
-                />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                        {mission.guide_questions.map((q, idx) => (
+                            <div key={idx} style={{
+                                background: 'white',
+                                padding: isMobile ? '20px' : '32px',
+                                borderRadius: '24px',
+                                border: '1px solid #E3F2FD',
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.03)'
+                            }}>
+                                <div style={{
+                                    fontSize: isMobile ? '1.2rem' : '1.35rem',
+                                    color: '#2C3E50',
+                                    fontWeight: '900',
+                                    marginBottom: '18px',
+                                    lineHeight: '1.5',
+                                    display: 'flex',
+                                    gap: '12px'
+                                }}>
+                                    <span style={{ color: '#3498DB', minWidth: '24px' }}>{idx + 1}.</span>
+                                    <span>{q}</span>
+                                </div>
+                                <textarea
+                                    value={studentAnswers[idx] || ''}
+                                    onChange={(e) => handleAnswerChange(idx, e.target.value)}
+                                    placeholder="여기에 생각을 적어보세요..."
+                                    style={{
+                                        width: '100%',
+                                        minHeight: '120px',
+                                        padding: '20px',
+                                        borderRadius: '16px',
+                                        border: '1px solid #DEE2E6',
+                                        fontSize: '1.1rem',
+                                        lineHeight: '1.8',
+                                        resize: 'none',
+                                        background: '#FBFBFB',
+                                        outline: 'none',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onFocus={(e) => e.target.style.borderColor = '#3498DB'}
+                                    onBlur={(e) => e.target.style.borderColor = '#DEE2E6'}
+                                    disabled={isLocked}
+                                />
+                                <div style={{ textAlign: 'right', marginTop: '16px' }}>
+                                    <button
+                                        onClick={() => insertToBody(studentAnswers[idx])}
+                                        disabled={isLocked || !studentAnswers[idx]?.trim()}
+                                        style={{
+                                            background: '#E1F5FE',
+                                            color: '#0288D1',
+                                            border: 'none',
+                                            padding: '8px 20px',
+                                            borderRadius: '12px',
+                                            fontSize: '0.9rem',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            opacity: (isLocked || !studentAnswers[idx]?.trim()) ? 0.5 : 1
+                                        }}
+                                    >
+                                        이 답변만 본문에 넣기 📥
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* 2단계: 메인 글쓰기 에디터 */}
+            <div style={{
+                background: '#FFFFFF',
+                padding: isMobile ? '32px 20px' : '48px 60px',
+                borderRadius: '32px',
+                border: '2px solid #F1F3F5',
+                position: 'relative',
+                marginBottom: '40px',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.05)'
+            }}>
+                <div style={{ borderBottom: '2px solid #3498DB', width: '120px', marginBottom: '32px', paddingBottom: '8px' }}>
+                    <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.1rem' }}>✍️ 본격 글쓰기</span>
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                    {showOriginal && (
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.98)', zIndex: 10, display: 'flex', flexDirection: 'column', padding: '0' }}>
+                            <div style={{
+                                width: '100%',
+                                padding: '16px 0',
+                                fontSize: isMobile ? '1.5rem' : '2rem',
+                                fontWeight: '900',
+                                borderBottom: '2px solid #FBC02D',
+                                marginBottom: '24px',
+                                color: '#2C3E50',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                lineHeight: '1.4'
+                            }}>
+                                {originalTitle || '제목 없음'}
+                                <span style={{ fontSize: '0.9rem', color: '#E67E22', background: '#FFF3E0', padding: '4px 12px', borderRadius: '10px', fontWeight: '900' }}>나의 처음 글</span>
+                            </div>
+                            <div style={{
+                                fontSize: isMobile ? '1.1rem' : '1.25rem',
+                                lineHeight: '1.8',
+                                color: '#7F8C8D',
+                                whiteSpace: 'pre-wrap',
+                                flex: 1,
+                                overflowY: 'auto',
+                                padding: '10px 0'
+                            }}>{originalContent || '기록된 내용이 없습니다.'}</div>
+                        </div>
+                    )}
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="글의 제목을 적어주세요..."
+                        style={{
+                            width: '100%',
+                            padding: '16px 0',
+                            fontSize: isMobile ? '1.5rem' : '2rem',
+                            fontWeight: '900',
+                            border: 'none',
+                            borderBottom: '2px solid #F1F3F5',
+                            marginBottom: '24px',
+                            outline: 'none',
+                            color: isLocked ? '#546E7A' : '#2C3E50',
+                            background: 'transparent',
+                            lineHeight: '1.4'
+                        }}
+                        disabled={submitting || isLocked}
+                    />
+                    <textarea
+                        ref={editorRef}
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        placeholder="여기에 자유롭게 이야기를 시작해보세요..."
+                        style={{
+                            width: '100%',
+                            minHeight: '600px',
+                            padding: '10px 0',
+                            border: 'none',
+                            fontSize: isMobile ? '1.1rem' : '1.25rem',
+                            lineHeight: '1.8',
+                            outline: 'none',
+                            color: isLocked ? '#546E7A' : '#444',
+                            resize: 'none',
+                            background: 'transparent'
+                        }}
+                        disabled={submitting || isLocked}
+                    />
+                </div>
             </div>
 
-            {/* 실시간 정보 및 보너스 현황 */}
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '20px',
-                background: '#FFFDE7',
-                borderRadius: '20px',
-                marginBottom: '32px',
-                border: '1px solid #FFF59D'
-            }}>
+            {/* 통계 및 보너스 현황 */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: '#FFFDE7', borderRadius: '20px', marginBottom: '32px', border: '1px solid #FFF59D' }}>
                 <div style={{ display: 'flex', gap: '20px' }}>
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '0.8rem', color: '#8D6E63', marginBottom: '4px' }}>글자수</div>
-                        <div style={{
-                            fontSize: '1.2rem',
-                            fontWeight: '900',
-                            color: charCount >= mission.min_chars ? '#2E7D32' : '#F44336'
-                        }}>
-                            {charCount} / {mission.min_chars}
-                        </div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: '900', color: charCount >= mission.min_chars ? '#2E7D32' : '#F44336' }}>{charCount} / {mission.min_chars}</div>
                     </div>
                     <div style={{ width: '1px', background: '#FFE082' }} />
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '0.8rem', color: '#8D6E63', marginBottom: '4px' }}>문단수</div>
-                        <div style={{
-                            fontSize: '1.2rem',
-                            fontWeight: '900',
-                            color: paragraphCount >= mission.min_paragraphs ? '#2E7D32' : '#F44336'
-                        }}>
-                            {paragraphCount} / {mission.min_paragraphs}
-                        </div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: '900', color: paragraphCount >= mission.min_paragraphs ? '#2E7D32' : '#F44336' }}>{paragraphCount} / {mission.min_paragraphs}</div>
                     </div>
                 </div>
-
                 <div style={{ textAlign: 'right' }}>
                     {charCount >= mission.bonus_threshold ? (
-                        <div style={{ color: '#E65100', fontWeight: '900', fontSize: '1rem' }}>
-                            🔥 보너스 달성 완료! (+{mission.bonus_reward}P)
-                        </div>
+                        <div style={{ color: '#E65100', fontWeight: '900', fontSize: '1rem' }}>🔥 보너스 달성 완료! (+{mission.bonus_reward}P)</div>
                     ) : (
-                        <div style={{ color: '#795548', fontSize: '0.9rem' }}>
-                            <strong style={{ color: '#E65100' }}>{mission.bonus_threshold}자</strong>를 넘기면 보너스 점수가 있어요!
-                        </div>
+                        <div style={{ color: '#795548', fontSize: '0.9rem' }}><strong style={{ color: '#E65100' }}>{mission.bonus_threshold}자</strong>를 넘기면 보너스 점수가 있어요!</div>
                     )}
                 </div>
             </div>
 
+            {/* 저장 및 제출 버튼 */}
             <div style={{ display: 'flex', gap: '12px' }}>
-                <Button
-                    size="lg"
-                    onClick={() => handleSave(true)}
-                    disabled={submitting || isLocked}
-                    style={{
-                        flex: 1,
-                        height: '64px',
-                        fontSize: '1.2rem',
-                        fontWeight: '800',
-                        background: isLocked ? '#F1F3F5' : '#ECEFF1',
-                        color: isLocked ? '#BDC3C7' : '#455A64',
-                        border: 'none',
-                        boxShadow: isLocked ? 'none' : '0 4px 12px rgba(0,0,0,0.05)',
-                        cursor: isLocked ? 'not-allowed' : 'pointer'
-                    }}
-                >
+                <Button size="lg" onClick={() => handleSave(true)} disabled={submitting || isLocked} style={{ flex: 1, height: '64px', fontSize: '1.2rem', fontWeight: '800', background: isLocked ? '#F1F3F5' : '#ECEFF1', color: isLocked ? '#BDC3C7' : '#455A64', border: 'none' }}>
                     {isLocked ? '수정 불가 🔒' : '임시 저장 💾'}
                 </Button>
-                <Button
-                    size="lg"
-                    onClick={handleSubmit}
-                    disabled={submitting || isLocked}
-                    style={{
-                        flex: 2,
-                        height: '64px',
-                        fontSize: '1.3rem',
-                        fontWeight: '900',
-                        background: isLocked ? '#B0BEC5' : 'var(--primary-color)',
-                        color: 'white',
-                        border: 'none',
-                        boxShadow: isLocked ? 'none' : '0 8px 25px rgba(135, 206, 235, 0.4)',
-                        transition: 'all 0.2s',
-                        opacity: isLocked ? 0.8 : 1
-                    }}
-                >
-                    {submitting
-                        ? '제출 중...'
-                        : isConfirmed
-                            ? '승인 완료 ✨'
-                            : (isSubmitted && isReturned)
-                                ? '수정해서 다시 제출! 🚀'
-                                : (isSubmitted && !isReturned)
-                                    ? '확인 대기 중...'
-                                    : '멋지게 제출하기! 🚀'
-                    }
+                <Button size="lg" onClick={handleSubmit} disabled={submitting || isLocked} style={{ flex: 2, height: '64px', fontSize: '1.3rem', fontWeight: '900', background: isLocked ? '#B0BEC5' : 'var(--primary-color)', color: 'white', border: 'none' }}>
+                    {submitting ? '제출 중...' : isConfirmed ? '승인 완료 ✨' : (isSubmitted && isReturned) ? '수정해서 다시 제출! 🚀' : (isSubmitted && !isReturned) ? '확인 대기 중...' : '멋지게 제출하기! 🚀'}
                 </Button>
             </div>
         </Card>

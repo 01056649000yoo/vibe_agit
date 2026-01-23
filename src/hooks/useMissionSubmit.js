@@ -14,6 +14,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const [aiFeedback, setAiFeedback] = useState(''); // 상시 피드백 내용
     const [originalTitle, setOriginalTitle] = useState('');
     const [originalContent, setOriginalContent] = useState('');
+    const [studentAnswers, setStudentAnswers] = useState([]); // [신규] 핵심 질문에 대한 답변들
 
     const fetchMission = useCallback(async () => {
         setLoading(true);
@@ -58,6 +59,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     setAiFeedback(postData.ai_feedback || '');
                     setOriginalTitle(postData.original_title || '');
                     setOriginalContent(postData.original_content || '');
+                    setStudentAnswers(postData.student_answers || []);
                 } else if (params?.postId) {
                     console.warn(`[useMissionSubmit] postId(${params.postId})에 해당하는 글을 찾을 수 없습니다.`);
                 }
@@ -120,7 +122,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     char_count: content.length,
                     paragraph_count: content.split(/\n+/).filter(p => p.trim().length > 0).length,
                     is_submitted: isSubmitted, // [수정] 기존 제출 상태 유지 (false로 고정되어 버그 발생하던 부분 해결)
-                    is_returned: isReturned
+                    is_returned: isReturned,
+                    student_answers: studentAnswers // [신규] 답변 저장
                 }, { onConflict: 'student_id,mission_id' });
 
             if (error) throw error;
@@ -207,7 +210,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 paragraph_count: finalParagraphCount,
                 is_submitted: true,
                 is_returned: false,
-                is_confirmed: false
+                is_confirmed: false,
+                student_answers: studentAnswers // [신규] 답변 저장
             };
 
             // 최초 제출인 경우 원본 데이터 기록
@@ -267,6 +271,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         aiFeedback,
         originalTitle,
         originalContent,
+        studentAnswers,
+        setStudentAnswers,
         handleSave,
         handleSubmit
     };

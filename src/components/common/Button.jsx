@@ -13,6 +13,7 @@ const Button = ({
     size = 'md',
     loading = false,
     disabled = false,
+    type = 'submit',
     children,
     onClick,
     style,
@@ -73,6 +74,7 @@ const Button = ({
 
     return (
         <button
+            type={type}
             className={`custom-button ${className}`}
             style={currentStyle}
             onClick={!disabled && !loading ? onClick : undefined}
