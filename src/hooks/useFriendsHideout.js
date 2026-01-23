@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
+import { dataCache } from '../lib/cache';
+
 export const useFriendsHideout = (studentSession, params) => {
     const [missions, setMissions] = useState([]);
     const [selectedMission, setSelectedMission] = useState(null);
@@ -14,7 +16,7 @@ export const useFriendsHideout = (studentSession, params) => {
             const { data, error } = await supabase
                 .from('student_posts')
                 .select(`
-                    *,
+                    id, title, content, student_id, mission_id, created_at, char_count, is_confirmed,
                     students:student_id!inner(name, class_id, pet_data),
                     writing_missions(allow_comments)
                 `)
@@ -35,15 +37,20 @@ export const useFriendsHideout = (studentSession, params) => {
     const fetchMissions = useCallback(async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from('writing_missions')
-                .select('*')
-                .eq('class_id', studentSession.classId || studentSession.class_id)
-                .eq('is_archived', false)
-                .order('created_at', { ascending: false });
+            const classId = studentSession.classId || studentSession.class_id;
+            const data = await dataCache.get(`missions_${classId}`, async () => {
+                const { data, error } = await supabase
+                    .from('writing_missions')
+                    .select('id, title, class_id, genre, allow_comments, is_archived, created_at, base_reward, bonus_threshold, bonus_reward')
+                    .eq('class_id', classId)
+                    .eq('is_archived', false)
+                    .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            setMissions(data || []);
+                if (error) throw error;
+                return data || [];
+            });
+
+            setMissions(data);
             if (data?.length > 0) {
                 const initialMission = data[0];
                 setSelectedMission(initialMission);

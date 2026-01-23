@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
+import { dataCache } from '../lib/cache';
+
 export const useStudentDashboard = (studentSession, onNavigate) => {
     const [points, setPoints] = useState(0);
     const [hasActivity, setHasActivity] = useState(false);
@@ -28,12 +30,14 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const fetchStats = useCallback(async () => {
         if (!studentSession?.id) return;
         try {
-            const { data, error } = await supabase
-                .from('student_posts')
-                .select('char_count, created_at, is_submitted')
-                .eq('student_id', studentSession.id);
-
-            if (error) throw error;
+            const data = await dataCache.get(`stats_${studentSession.id}`, async () => {
+                const { data, error } = await supabase
+                    .from('student_posts')
+                    .select('char_count, created_at, is_submitted')
+                    .eq('student_id', studentSession.id);
+                if (error) throw error;
+                return data || [];
+            });
 
             if (data) {
                 const totalChars = data.reduce((sum, post) => sum + (post.char_count || 0), 0);
@@ -58,13 +62,17 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const fetchMyPoints = useCallback(async () => {
         if (!studentSession?.id) return;
         try {
-            const { data, error } = await supabase
-                .from('students')
-                .select('total_points, pet_data, last_feedback_check')
-                .eq('id', studentSession.id)
-                .maybeSingle();
+            // 포인트 정보는 캐시보다 최신성이 중요하므로 TTL을 짧게(5초) 잡거나 생략 가능하지만, 잦은 리렌더링 방지를 위해 5초 캐시 적용
+            const data = await dataCache.get(`points_${studentSession.id}`, async () => {
+                const { data, error } = await supabase
+                    .from('students')
+                    .select('total_points, pet_data, last_feedback_check')
+                    .eq('id', studentSession.id)
+                    .maybeSingle();
 
-            if (error) throw error;
+                if (error) throw error;
+                return data;
+            }, 5000);
 
             if (data) {
                 if (data.total_points !== null && data.total_points !== undefined) {
@@ -98,13 +106,15 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         if (!classId) return null;
 
         try {
-            const { data, error } = await supabase
-                .from('classes')
-                .select('dragon_feed_points, dragon_degen_days')
-                .eq('id', classId)
-                .single();
-
-            if (error) throw error;
+            const data = await dataCache.get(`class_settings_${classId}`, async () => {
+                const { data, error } = await supabase
+                    .from('classes')
+                    .select('dragon_feed_points, dragon_degen_days')
+                    .eq('id', classId)
+                    .single();
+                if (error) throw error;
+                return data;
+            });
 
             if (data) {
                 const config = {
@@ -137,19 +147,19 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             const [reactionsResult, commentsResult, returnedResult] = await Promise.all([
                 supabase
                     .from('post_reactions')
-                    .select('*', { count: 'exact', head: true })
+                    .select('id', { count: 'exact', head: true })
                     .in('post_id', postIds)
                     .neq('student_id', studentSession.id)
                     .gt('created_at', lastCheckTime),
                 supabase
                     .from('post_comments')
-                    .select('*', { count: 'exact', head: true })
+                    .select('id', { count: 'exact', head: true })
                     .in('post_id', postIds)
                     .neq('student_id', studentSession.id)
                     .gt('created_at', lastCheckTime),
                 supabase
                     .from('student_posts')
-                    .select('*', { count: 'exact', head: true })
+                    .select('id', { count: 'exact', head: true })
                     .eq('student_id', studentSession.id)
                     .eq('is_returned', true)
             ]);

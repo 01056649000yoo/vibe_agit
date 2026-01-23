@@ -40,14 +40,14 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             const [missionsResult, studentCountResult] = await Promise.all([
                 supabase
                     .from('writing_missions')
-                    .select('*')
+                    .select('id, title, guide, genre, min_chars, min_paragraphs, base_reward, bonus_threshold, bonus_reward, allow_comments, is_archived, created_at')
                     .eq('class_id', activeClass.id)
                     .eq('is_archived', false)
                     .order('created_at', { ascending: false }),
 
                 supabase
                     .from('students')
-                    .select('*', { count: 'exact', head: true })
+                    .select('id', { count: 'exact', head: true })
                     .eq('class_id', activeClass.id)
             ]);
 
@@ -145,13 +145,13 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         try {
             const { data: reactions, error: rxError } = await supabase
                 .from('post_reactions')
-                .select('*')
+                .select('id, reaction_type, student_id, created_at')
                 .eq('post_id', postId);
             if (!rxError) setPostReactions(reactions || []);
 
             const { data: comments, error: cmError } = await supabase
                 .from('post_comments')
-                .select('*, students(name)')
+                .select('id, content, student_id, created_at, students(name)')
                 .eq('post_id', postId)
                 .order('created_at', { ascending: true });
             if (!cmError) setPostComments(comments || []);
@@ -178,7 +178,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             const { data, error } = await supabase
                 .from('student_posts')
                 .select(`
-                    *,
+                    id, title, content, student_id, mission_id, char_count, is_submitted, is_confirmed, is_returned, ai_feedback, created_at,
                     students!inner(name, class_id)
                 `)
                 .eq('mission_id', mission.id)

@@ -50,6 +50,21 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         dragonConfig.degenDays
     );
 
+    // [신규] 이미지 선행 로딩 (Optimization 4)
+    useEffect(() => {
+        const imagesToPreload = [
+            '/assets/dragons/dragon_stage_1.webp',
+            '/assets/dragons/dragon_stage_2.webp',
+            '/assets/dragons/dragon_stage_3.webp',
+            '/assets/dragons/dragon_stage_4.webp',
+            '/assets/dragons/dragon_stage_5.webp'
+        ];
+        imagesToPreload.forEach(src => {
+            const img = new Image();
+            img.src = src;
+        });
+    }, []);
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         window.addEventListener('resize', handleResize);
@@ -59,11 +74,12 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     // 헬퍼 함수들
     const getDragonStage = (level) => {
         const basePath = '/assets/dragons';
-        if (level >= 5) return { name: '전설의 수호신룡', image: `${basePath}/dragon_stage_5.png`, isPlaceholder: false };
-        if (level === 4) return { name: '불을 내뿜는 성장한 용', image: `${basePath}/dragon_stage_4.png`, isPlaceholder: false };
-        if (level === 3) return { name: '푸른 빛의 어린 용', image: `${basePath}/dragon_stage_3.png`, isPlaceholder: false };
-        if (level === 2) return { name: '갓 태어난 용', image: `${basePath}/dragon_stage_2.png`, isPlaceholder: false };
-        return { name: '신비로운 알', image: `${basePath}/dragon_stage_1.png`, isPlaceholder: false };
+        // Optimization 4: WebP 포맷 사용
+        if (level >= 5) return { name: '전설의 수호신룡', image: `${basePath}/dragon_stage_5.webp`, isPlaceholder: false };
+        if (level === 4) return { name: '불을 내뿜는 성장한 용', image: `${basePath}/dragon_stage_4.webp`, isPlaceholder: false };
+        if (level === 3) return { name: '푸른 빛의 어린 용', image: `${basePath}/dragon_stage_3.webp`, isPlaceholder: false };
+        if (level === 2) return { name: '갓 태어난 용', image: `${basePath}/dragon_stage_2.webp`, isPlaceholder: false };
+        return { name: '신비로운 알', image: `${basePath}/dragon_stage_1.webp`, isPlaceholder: false };
     };
 
     const getDaysSinceLastFed = () => {

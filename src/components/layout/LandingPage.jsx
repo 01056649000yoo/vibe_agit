@@ -25,7 +25,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
                 border: '4px solid white'
             }}>
                 <img
-                    src="/assets/og-image.png"
+                    src="/assets/og-image.webp"
                     alt="끄적끄적 아지트"
                     style={{ width: '100%', display: 'block' }}
                 />
