@@ -8,10 +8,23 @@ export const useFriendsHideout = (studentSession, params) => {
     const [selectedMission, setSelectedMission] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [viewingPost, setViewingPost] = useState(null);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
 
-    const fetchPosts = useCallback(async (missionId) => {
-        setLoading(true);
+    const PAGE_SIZE = 10;
+
+    const fetchPosts = useCallback(async (missionId, isAppend = false) => {
+        if (!isAppend) {
+            setLoading(true);
+            setPage(0);
+        } else {
+            setLoadingMore(true);
+        }
+
+        const currentOffset = isAppend ? (page + 1) * PAGE_SIZE : 0;
+
         try {
             const { data, error } = await supabase
                 .from('student_posts')
@@ -23,16 +36,32 @@ export const useFriendsHideout = (studentSession, params) => {
                 .eq('mission_id', missionId)
                 .eq('is_submitted', true)
                 .neq('student_id', studentSession.id)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
             if (error) throw error;
-            setPosts(data || []);
+
+            if (isAppend) {
+                setPosts(prev => [...prev, ...(data || [])]);
+                setPage(prev => prev + 1);
+            } else {
+                setPosts(data || []);
+            }
+
+            setHasMore(data?.length === PAGE_SIZE);
         } catch (err) {
             console.error('친구 글 로드 실패:', err.message);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
         }
-    }, [studentSession.id]);
+    }, [studentSession.id, page]);
+
+    const loadMore = () => {
+        if (!loadingMore && hasMore && selectedMission) {
+            fetchPosts(selectedMission.id, true);
+        }
+    };
 
     const fetchMissions = useCallback(async () => {
         setLoading(true);
@@ -97,6 +126,9 @@ export const useFriendsHideout = (studentSession, params) => {
         selectedMission,
         posts,
         loading,
+        loadingMore,
+        hasMore,
+        loadMore,
         viewingPost,
         setViewingPost,
         handleMissionChange
