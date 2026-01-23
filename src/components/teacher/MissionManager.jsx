@@ -39,7 +39,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         { label: '❤️ 마음을 표현하는 글', genres: ['일기', '생활문', '편지'] },
         { label: '🔍 사실을 전달하는 글', genres: ['설명문', '보고서(관찰 기록문)', '기사문'] },
         { label: '💡 생각을 주장하는 글', genres: ['논설문', '제안하는 글', '독후감(서평)'] },
-        { label: '🌈 상상을 담은 글', genres: ['동시', '동화(소설)'] }
+        { label: '🌈 상상을 담은 글', genres: ['동시', '동화(소설)'] },
+        { label: '✨ 기타 활동', genres: ['기타'] }
     ];
 
     const reactionIcons = [
