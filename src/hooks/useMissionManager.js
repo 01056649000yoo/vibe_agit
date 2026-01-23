@@ -233,43 +233,63 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         const basePrompt = customTemplate || defaultTemplate;
         const prompt = `${basePrompt}\n\n---\n[학생의 글 정보]\n글 제목: "${postTitle}"\n글 내용:\n"${postContent}"`;
 
-        try {
-            // 사용자 요청에 따라 gemini-2.5-flash-lite 모델을 사용합니다.
-            const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
+        // 현재 지원되는 최신 모델 목록 (2.5 라인업)
+        const models = [
+            "gemini-2.5-flash-lite", // 기본 모델
+            "gemini-2.5-flash"      // 대체 모델 (Fallback)
+        ];
 
-            const response = await fetch(`${baseUrl}?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
-                })
-            });
+        const tryFetch = async (modelName, currentRetry = 0) => {
+            try {
+                const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
+                const response = await fetch(`${baseUrl}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                const status = response.status;
-                const errorMsg = errorData?.error?.message || '알 수 없는 서비스 오류';
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    const status = response.status;
+                    const errorMsg = errorData?.error?.message || '알 수 없는 서비스 오류';
 
-                // 503(Overloaded), 429(Rate Limit), 404(Not Found) 발생 시 재시도 (최대 3회)
-                // 404가 일시적으로 발생할 수 있으므로 재시도 대상에 포함
-                if ((status === 503 || status === 429 || status === 404) && retryCount < 3) {
-                    console.log(`[AI Retry ${retryCount + 1}] 서비스 응답 문제로 재시도합니다... (${status})`);
-                    await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
-                    return fetchAIFeedback(postTitle, postContent, retryCount + 1);
+                    // 429(Quota Exceeded) 또는 404(Model Not Found) 발생 시 다음 모델로 전환 시도
+                    if ((status === 429 || status === 404) && modelName.includes('lite')) {
+                        console.log(`[AI Fallback] ${modelName} 쿼터 초과 또는 지원 안됨. 다음 모델로 전환합니다...`);
+                        return tryFetch(models[1]);
+                    }
+
+                    // 503(Overloaded) 등 일시적 오류 시 동일 모델 재시도
+                    if ((status === 503 || status === 429) && currentRetry < 2) {
+                        console.log(`[AI Retry ${currentRetry + 1}] ${modelName} 서비스 응답 문제로 재시도합니다...`);
+                        await new Promise(resolve => setTimeout(resolve, 2000 * (currentRetry + 1)));
+                        return tryFetch(modelName, currentRetry + 1);
+                    }
+
+                    throw new Error(`AI 서비스 오류 (${status}): ${errorMsg}`);
                 }
 
-                throw new Error(`AI 서비스 오류 (${status}): ${errorMsg}`);
+                const data = await response.json();
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+                throw new Error('AI 응답 형식이 올바르지 않습니다.');
+            } catch (err) {
+                // 모델이 망가졌거나 네트워크 오류 시 다음 모델이 있다면 시도
+                if (modelName.includes('lite') && !err.message.includes('401')) {
+                    return tryFetch(models[1]);
+                }
+                throw err;
             }
+        };
 
-            const data = await response.json();
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-                return data.candidates[0].content.parts[0].text;
-            }
-            throw new Error('AI 응답 형식이 올바르지 않습니다.');
+        try {
+            return await tryFetch(models[0]);
         } catch (err) {
-            console.error('AI 피드백 생성 실패:', err.message);
-            // 최종 실패 시에만 에러 알림
-            if (retryCount >= 3 || !(err.message.includes('503') || err.message.includes('429'))) {
+            console.error('AI 피드백 생성 최종 실패:', err.message);
+            if (retryCount >= 2) {
                 alert(`피드백 생성 중 문제가 발생했습니다: ${err.message}`);
             }
             return null;

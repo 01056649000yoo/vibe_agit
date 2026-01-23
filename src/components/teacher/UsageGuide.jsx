@@ -197,10 +197,10 @@ const UsageGuide = ({ isMobile }) => {
                     <br />
                     미확인 글에 대해 <strong>'AI 피드백 일괄 생성'</strong> 버튼을 누르면, 선생님이 설정한 API 키를 사용하여 AI가 모든 글을 분석하고 맞춤형 조언을 댓글로 남겨줍니다.
                     <br /><br />
-                    ⚠️ <strong>주의사항 (사용량 제한 안내):</strong><br />
-                    현재 적용된 모델은 <strong>Gemini 2.5 Flash Lite</strong>입니다. <br />
-                    구글 정책에 따라 <strong>분당 최대 10회, 하루 최대 20회</strong>의 무료 사용량 제한이 있습니다. <br />
-                    한 번에 너무 많은 글을 처리하면 오류가 발생할 수 있으니, <strong>조금씩 나누어 진행</strong>해주세요.
+                    ⚠️ <strong>안정적인 서비스 운영 (Fallback 시스템):</strong><br />
+                    현재 <strong>Gemini 2.5 Flash Lite</strong>와 <strong>Gemini 2.5 Flash</strong> 두 가지 최신 전용 모델을 함께 사용합니다. <br />
+                    Lite 모델의 할당량이 초과되더라도 고성능 모델로 자동 전환되어 끊김 없는 피드백을 제공합니다. <br />
+                    사용자 정책에 따라 <strong>하루 최대 25회</strong>까지 무료 사용이 가능하니 유의해서 사용해주세요.
                     <br /><br />
                     <button
                         onClick={() => setShowGeminiGuide(true)}
