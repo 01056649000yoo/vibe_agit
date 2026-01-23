@@ -140,7 +140,23 @@ function App() {
   const handleTeacherStart = async () => {
     if (!session) return
 
-    // 1. 기존 프로필 정보가 있는지 먼저 확인 (기존 필드 보존을 위해)
+    // 1. 자동 승인 설정 확인
+    let autoApprove = false;
+    try {
+      const { data: settings } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'auto_approval')
+        .maybeSingle();
+
+      if (settings) {
+        autoApprove = (settings.value === true);
+      }
+    } catch (e) {
+      console.warn("시스템 설정 확인 실패 (수동 승인 기본값 적용):", e);
+    }
+
+    // 2. 기존 프로필 정보가 있는지 먼저 확인 (기존 필드 보존을 위해)
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('*')
@@ -154,7 +170,9 @@ function App() {
         role: 'TEACHER',
         email: session.user.email,
         full_name: session.user.user_metadata.full_name,
-        // 기존 데이터가 있다면 보존하고, 없으면 NULL (is_approved는 DB default: false를 따름)
+        // 자동 승인 설정이 켜져 있거나, 이미 승인된 계정인 경우 true
+        is_approved: autoApprove || existingProfile?.is_approved || false,
+        // 기존 데이터가 있다면 보존하고, 없으면 NULL
         gemini_api_key: existingProfile?.gemini_api_key || null
       });
 

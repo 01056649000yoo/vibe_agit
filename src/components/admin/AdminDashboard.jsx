@@ -78,12 +78,48 @@ const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, on
 const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
     const [pendingTeachers, setPendingTeachers] = useState([]);
     const [approvedTeachers, setApprovedTeachers] = useState([]); // [추가] 가입된(승인된) 교사 목록
+    const [autoApproval, setAutoApproval] = useState(false); // [추가] 자동 승인 설정 상태
     const [loading, setLoading] = useState(true);
+    const [settingsLoading, setSettingsLoading] = useState(false); // [추가] 설정 변경 로딩
     const [error, setError] = useState(null);
 
     useEffect(() => {
         fetchTeachers();
+        fetchSettings();
     }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('system_settings')
+                .select('*')
+                .eq('key', 'auto_approval')
+                .single();
+            if (data) {
+                setAutoApproval(data.value === true);
+            }
+        } catch (err) {
+            console.error('설정 로드 실패:', err);
+        }
+    };
+
+    const handleToggleAutoApproval = async () => {
+        setSettingsLoading(true);
+        const newValue = !autoApproval;
+        try {
+            const { error } = await supabase
+                .from('system_settings')
+                .upsert({ key: 'auto_approval', value: newValue });
+
+            if (error) throw error;
+            setAutoApproval(newValue);
+            alert(`교사 가입 방식이 ${newValue ? '자동 승인' : '관리자 직접 승인'}으로 변경되었습니다.`);
+        } catch (err) {
+            alert('설정 변경 중 오류가 발생했습니다: ' + err.message);
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
 
     const fetchTeachers = async () => {
         setLoading(true);
@@ -230,6 +266,59 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                     ⚠️ 문제가 발생했습니다: {error}
                 </div>
             )}
+
+            {/* [추가] 가입 승인 설정 섹션 */}
+            <Card style={{ padding: '20px', marginBottom: '30px', borderLeft: '5px solid #3498DB' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h3 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', color: '#2C3E50' }}>⚙️ 교사 가입 승인 방식 설정</h3>
+                        <p style={{ margin: 0, fontSize: '0.9rem', color: '#7F8C8D' }}>
+                            {autoApproval
+                                ? '현재: 신규 교사 가입 시 즉시 승인됨 (자동)'
+                                : '현재: 관리자가 목록에서 직접 승인해야 함 (수동)'}
+                        </p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <label style={{
+                            position: 'relative',
+                            display: 'inline-block',
+                            width: '50px',
+                            height: '26px',
+                            cursor: settingsLoading ? 'not-allowed' : 'pointer'
+                        }}>
+                            <input
+                                type="checkbox"
+                                checked={autoApproval}
+                                onChange={handleToggleAutoApproval}
+                                disabled={settingsLoading}
+                                style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={{
+                                position: 'absolute',
+                                cursor: 'pointer',
+                                top: 0, left: 0, right: 0, bottom: 0,
+                                backgroundColor: autoApproval ? '#2ECC71' : '#BDC3C7',
+                                transition: '.4s',
+                                borderRadius: '34px'
+                            }}>
+                                <span style={{
+                                    position: 'absolute',
+                                    content: '""',
+                                    height: '18px', width: '18px',
+                                    left: autoApproval ? '28px' : '4px',
+                                    bottom: '4px',
+                                    backgroundColor: 'white',
+                                    transition: '.4s',
+                                    borderRadius: '50%'
+                                }}></span>
+                            </span>
+                        </label>
+                        <span style={{ fontWeight: 'bold', color: autoApproval ? '#27AE60' : '#7F8C8D', fontSize: '0.9rem', minWidth: '60px' }}>
+                            {autoApproval ? '자동 승인' : '수동 승인'}
+                        </span>
+                    </div>
+                </div>
+            </Card>
 
             {/* 1. 승인 대기 목록 */}
             <Card style={{ padding: '20px', marginBottom: '30px' }}>
