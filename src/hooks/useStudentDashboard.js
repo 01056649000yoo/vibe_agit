@@ -33,20 +33,54 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             const data = await dataCache.get(`stats_${studentSession.id}`, async () => {
                 const { data, error } = await supabase
                     .from('student_posts')
-                    .select('char_count, created_at, is_submitted')
+                    .select('mission_id, char_count, created_at, is_submitted, is_confirmed')
                     .eq('student_id', studentSession.id);
                 if (error) throw error;
                 return data || [];
             });
 
             if (data) {
-                const totalChars = data.reduce((sum, post) => sum + (post.char_count || 0), 0);
-                const completedMissions = data.filter(p => p.is_submitted).length;
+                // 1. 미션별로 그룹화하여 '최종' 제출물만 추출
+                const missionMap = new Map();
+                data.forEach(post => {
+                    const missionId = post.mission_id;
+                    const existing = missionMap.get(missionId);
 
+                    // 우선순위: 승인완료(confirmed) > 제출됨(submitted) > 최신순
+                    let isBetter = false;
+                    if (!existing) {
+                        isBetter = true;
+                    } else if (post.is_confirmed && !existing.is_confirmed) {
+                        isBetter = true;
+                    } else if (!existing.is_confirmed && post.is_submitted && !existing.is_submitted) {
+                        isBetter = true;
+                    } else if (post.is_submitted === existing.is_submitted && post.is_confirmed === existing.is_confirmed) {
+                        if (new Date(post.created_at) > new Date(existing.created_at)) {
+                            isBetter = true;
+                        }
+                    }
+
+                    if (isBetter) {
+                        missionMap.set(missionId, post);
+                    }
+                });
+
+                const finalPosts = Array.from(missionMap.values());
+
+                // 2. 최종 '승인'된 글의 글자수만 합산 (is_confirmed 기준)
+                const totalChars = finalPosts
+                    .filter(p => p.is_confirmed)
+                    .reduce((sum, post) => sum + (post.char_count || 0), 0);
+
+                // 3. 완료한 미션 수 (승인 기준)
+                const completedMissions = finalPosts.filter(p => p.is_confirmed).length;
+
+                // 4. 이번 달 작성 수 (승인 기준)
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
-                const monthlyPosts = data.filter(p => {
+                const monthlyPosts = finalPosts.filter(p => {
+                    if (!p.is_confirmed) return false;
                     const postDate = new Date(p.created_at);
                     return postDate.getMonth() === currentMonth && postDate.getFullYear() === currentYear;
                 }).length;

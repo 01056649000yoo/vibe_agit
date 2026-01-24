@@ -549,8 +549,9 @@ const PostDetailViewer = ({
                         )}
                     </AnimatePresence>
                 </motion.div>
-            )}
-        </AnimatePresence>
+            )
+            }
+        </AnimatePresence >
     );
 };
 

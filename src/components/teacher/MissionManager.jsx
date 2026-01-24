@@ -133,6 +133,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 setSelectedPost={setSelectedPost}
                 setTempFeedback={setTempFeedback}
                 isGenerating={isGenerating}
+                isMobile={isMobile}
             />
 
             {/* 글 상세보기 (Viewer) */}

@@ -5,8 +5,10 @@ import Button from '../common/Button';
 const SubmissionStatusModal = ({
     selectedMission, setSelectedMission, posts, loadingPosts,
     handleBulkAIAction, handleBulkApprove, handleBulkRecovery,
-    handleBulkRequestRewrite, setSelectedPost, setTempFeedback, isGenerating
+    handleBulkRequestRewrite, setSelectedPost, setTempFeedback, isGenerating, isMobile
 }) => {
+    const [isCollectViewOpen, setIsCollectViewOpen] = React.useState(false);
+
     return (
         <AnimatePresence>
             {selectedMission && (
@@ -51,20 +53,36 @@ const SubmissionStatusModal = ({
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                     {/* 일괄 동작 영역 */}
                                     <div style={{ display: 'flex', gap: '8px', padding: '0 0 16px 0', borderBottom: '1px dashed #EEE', marginBottom: '8px', flexWrap: 'wrap' }}>
+                                        {/* [신규] 모아보기 버튼 추가 */}
+                                        <Button
+                                            onClick={() => setIsCollectViewOpen(true)}
+                                            style={{
+                                                flex: '1 1 48%',
+                                                backgroundColor: '#EEF2FF',
+                                                color: '#4F46E5',
+                                                border: '2px solid #C3DAFE',
+                                                fontWeight: '900',
+                                                fontSize: '0.85rem',
+                                                padding: '12px 8px'
+                                            }}
+                                        >
+                                            📂 학생 글 모아보기 ✨
+                                        </Button>
+
                                         <Button
                                             onClick={handleBulkAIAction}
                                             disabled={isGenerating || loadingPosts}
                                             style={{
-                                                flex: '1 1 100%',
+                                                flex: '1 1 48%',
                                                 backgroundColor: '#F3E5F5',
                                                 color: '#7B1FA2',
                                                 border: '2px solid #E1BEE7',
                                                 fontWeight: '900',
                                                 fontSize: '0.85rem',
-                                                marginBottom: '4px'
+                                                padding: '12px 8px'
                                             }}
                                         >
-                                            {isGenerating ? '🤖 피드백 생성 중...' : '🤖 일괄 AI 피드백 생성 후 다시쓰기 요청'}
+                                            {isGenerating ? '🤖 피드백 생성 중...' : '🤖 일괄 AI 피드백'}
                                         </Button>
 
                                         {posts.some(p => p.is_submitted && !p.is_confirmed) && (
@@ -159,6 +177,65 @@ const SubmissionStatusModal = ({
                             )}
                         </div>
                     </motion.div>
+
+                    {/* [신규] 학생 글 모아보기 모달 (비교 뷰) */}
+                    <AnimatePresence>
+                        {isCollectViewOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                style={{
+                                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                                    background: 'white', zIndex: 3000,
+                                    display: 'flex', flexDirection: 'column',
+                                    boxSizing: 'border-box'
+                                }}
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <header style={{ padding: '20px 40px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📂 학생 글 모아보기 (처음 vs 마지막)</h3>
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>모든 학생의 초안과 최종본을 한꺼번에 비교합니다.</p>
+                                    </div>
+                                    <Button onClick={() => setIsCollectViewOpen(false)} style={{ background: '#F8F9FA', color: '#495057', border: '1px solid #E9ECEF', borderRadius: '12px' }}>✕ 닫기</Button>
+                                </header>
+                                <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '40px', background: '#FAFAFA' }}>
+                                    <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                                        {posts.map((post, idx) => (
+                                            <div key={post.id} style={{ background: 'white', borderRadius: '24px', padding: '32px', border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                                                <div style={{ paddingBottom: '16px', borderBottom: '1px solid #F8F9FA', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ fontWeight: '900', color: '#3498DB', fontSize: '1.1rem' }}>{idx + 1}. {post.students?.name} 학생</span>
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '24px' }}>
+                                                    {/* 처음글 */}
+                                                    <div>
+                                                        <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#10B981', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            📜 처음글 (초안)
+                                                        </div>
+                                                        <div style={{ padding: '20px', background: '#F0FDF4', borderRadius: '16px', border: '1px solid #DCFCE7', fontSize: '0.95rem', color: '#333', lineHeight: '1.7', whiteSpace: 'pre-wrap', minHeight: '100px' }}>
+                                                            {post.original_content || '기록 없음'}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 마지막글 */}
+                                                    <div>
+                                                        <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#3B82F6', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            ✨ 마지막글 (수정본)
+                                                        </div>
+                                                        <div style={{ padding: '20px', background: '#EFF6FF', borderRadius: '16px', border: '1px solid #DBEAFE', fontSize: '0.95rem', color: '#333', lineHeight: '1.7', whiteSpace: 'pre-wrap', minHeight: '100px' }}>
+                                                            {post.content || '기록 없음'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </motion.div>
             )}
         </AnimatePresence>

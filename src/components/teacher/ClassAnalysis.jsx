@@ -38,15 +38,35 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                 supabase.from('student_posts').select('*').in('student_id', students.map(s => s.id))
             ]);
 
-            // 2. 통계 계산
-            const totalChars = posts?.reduce((sum, p) => sum + (p.char_count || 0), 0) || 0;
+            // 2. 통계 계산 (미션별 최종 제출물만 필터링)
+            const getFinalPosts = (postList) => {
+                const map = new Map();
+                postList.forEach(p => {
+                    const key = `${p.student_id}_${p.mission_id}`;
+                    const existing = map.get(key);
+
+                    let isBetter = false;
+                    if (!existing) isBetter = true;
+                    else if (p.is_confirmed && !existing.is_confirmed) isBetter = true;
+                    else if (!existing.is_confirmed && p.is_submitted && !existing.is_submitted) isBetter = true;
+                    else if (p.is_submitted === existing.is_submitted && p.is_confirmed === existing.is_confirmed) {
+                        if (new Date(p.created_at) > new Date(existing.created_at)) isBetter = true;
+                    }
+
+                    if (isBetter) map.set(key, p);
+                });
+                return Array.from(map.values()).filter(p => p.is_confirmed);
+            };
+
+            const finalPosts = getFinalPosts(posts || []);
+            const totalChars = finalPosts.reduce((sum, p) => sum + (p.char_count || 0), 0);
             const avgChars = students.length > 0 ? Math.round(totalChars / students.length) : 0;
 
             // 학생별 제출 현황 및 랭킹
             const studentStats = students.map(s => {
-                const myPosts = posts?.filter(p => p.student_id === s.id && p.is_submitted) || [];
-                const myChars = myPosts.reduce((sum, p) => sum + (p.char_count || 0), 0);
-                return { name: s.name, count: myPosts.length, chars: myChars };
+                const myFinalPosts = finalPosts.filter(p => p.student_id === s.id);
+                const myChars = myFinalPosts.reduce((sum, p) => sum + (p.char_count || 0), 0);
+                return { name: s.name, count: myFinalPosts.length, chars: myChars };
             });
 
             const topStudents = studentStats.sort((a, b) => b.chars - a.chars).slice(0, 5);
