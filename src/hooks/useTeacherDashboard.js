@@ -69,6 +69,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 .from('classes')
                 .select('*')
                 .eq('teacher_id', session.user.id)
+                .is('deleted_at', null)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -243,6 +244,54 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         }
     };
 
+    const handleRestoreClass = async (classId) => {
+        if (!classId) return;
+        try {
+            const { error } = await supabase
+                .from('classes')
+                .update({ deleted_at: null })
+                .eq('id', classId);
+
+            if (error) throw error;
+            await fetchAllClasses();
+            alert('학급이 성공적으로 복구되었습니다! ♻️');
+        } catch (err) {
+            console.error('학급 복구 실패:', err.message);
+            alert('복구 중 오류가 발생했습니다.');
+        }
+    };
+
+    const fetchDeletedClasses = async () => {
+        if (!session?.user?.id) return [];
+        try {
+            const threeDaysAgo = new Date();
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+            // 1. 3일이 지난 학급은 완전히 삭제 (자동 정리 ✨)
+            await supabase
+                .from('classes')
+                .delete()
+                .eq('teacher_id', session.user.id)
+                .not('deleted_at', 'is', null)
+                .lt('deleted_at', threeDaysAgo.toISOString());
+
+            // 2. 복구 가능한 학급 (3일 이내) 조회
+            const { data, error } = await supabase
+                .from('classes')
+                .select('*')
+                .eq('teacher_id', session.user.id)
+                .not('deleted_at', 'is', null)
+                .gte('deleted_at', threeDaysAgo.toISOString())
+                .order('deleted_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (err) {
+            console.error('삭제된 학급 조회 실패:', err.message);
+            return [];
+        }
+    };
+
     const maskKey = (key) => {
         if (!key) return '';
         if (key.length <= 4) return '****';
@@ -258,7 +307,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         isKeyVisible, setIsKeyVisible,
         savingKey, testingKey,
         handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestGeminiKey,
-        handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass,
-        fetchAllClasses, maskKey
+        handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
+        fetchAllClasses, fetchDeletedClasses, maskKey
     };
 };

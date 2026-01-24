@@ -183,7 +183,7 @@ const UsageGuide = ({ isMobile }) => {
                     <p><strong>• AI 질문 생성:</strong>
                         <br />직접 질문을 만들기 어렵다면 <strong>'AI 질문 생성하기'</strong> 버튼을 클릭하세요.
                         최신 모델인 <strong>Gemini 3.0 Flash</strong>가 미션 주제에 딱 맞는 질문을 자동으로 설계해줍니다.
-                        <br /><span style={{ color: '#E67E22', fontWeight: 'bold' }}>⚠️ AI 질문 생성은 1일 5회까지 무료로 최적화되어 제공됩니다.</span>
+                        <br /><span style={{ color: '#E67E22', fontWeight: 'bold' }}>⚠️ Gemini무료 api를 사용하는경우 AI 질문 생성은 1일 5회까지 무료로 최적화되어 제공됩니다.</span>
                     </p>
                     <p><strong>• 미션 보관 및 데이터 내보내기:</strong>
                         <br />학기가 끝나거나 완료된 미션은 '보관함으로 이동'을 선택하세요.
@@ -213,7 +213,7 @@ const UsageGuide = ({ isMobile }) => {
                     <br /><br />
                     ⚠️ <strong>안정적인 서비스 운영 (AI 모델 안내):</strong><br />
                     현재 더욱 똑똑해진 <strong>Gemini 2.5 Flash Lite</strong> 버전과 <strong>Gemini 2.5</strong> 버전이 함께 활용되어 최적의 피드백을 제공합니다. <br />
-                    <span style={{ color: '#E67E22', fontWeight: 'bold' }}>• 제미나이 무료 API를 사용할 경우, 1일 총 25건의 AI 피드백 생성이 가능하오니 이용에 참고해 주세요.</span> <br />
+                    <span style={{ color: '#E67E22', fontWeight: 'bold' }}>• 제미나이 무료 API를 사용할 경우, 학생 글 2건을 1회 호출로 처리하여 1일 총 30건의 AI 피드백 생성이 가능하오니 이용에 참고해 주세요.</span> <br />
                     Lite 모델의 할당량이 초과되더라도 고성능 모델로 자동 전환되어 끊김 없는 서비스를 지원합니다.
                     <br /><br />
                     <button

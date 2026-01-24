@@ -159,11 +159,6 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             <div style={{ background: '#F8F9FA', padding: '24px', borderRadius: '20px', marginBottom: '32px', border: '1px solid #E9ECEF', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <div style={{ background: '#FFFFFF', padding: '2px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: '900', color: '#607D8B', border: '1px solid #E9ECEF' }}>선생님의 가이드 💡</div>
-                    {originalContent && (
-                        <button onClick={() => setShowOriginal(!showOriginal)} style={{ background: showOriginal ? '#E3F2FD' : '#F8F9FA', color: showOriginal ? '#1976D2' : '#7F8C8D', border: '1px solid #E9ECEF', padding: '6px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {showOriginal ? '📜 나의 처음 글' : '✨ 나의 마지막 글'}
-                        </button>
-                    )}
                 </div>
                 <p style={{ margin: 10, fontSize: '1.05rem', color: '#455A64', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>{mission.guide}</p>
             </div>
@@ -264,8 +259,33 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 marginBottom: '40px',
                 boxShadow: '0 20px 50px rgba(0,0,0,0.05)'
             }}>
-                <div style={{ borderBottom: '2px solid #3498DB', width: '120px', marginBottom: '32px', paddingBottom: '8px' }}>
-                    <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.1rem' }}>✍️ 본격 글쓰기</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                    <div style={{ borderBottom: '2px solid #3498DB', width: '120px', paddingBottom: '8px' }}>
+                        <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.1rem' }}>✍️ 본격 글쓰기</span>
+                    </div>
+                    {originalContent && (
+                        <button
+                            onClick={() => setShowOriginal(!showOriginal)}
+                            style={{
+                                background: showOriginal ? '#FFFDE7' : '#FFFFFF',
+                                color: showOriginal ? '#F57F17' : '#3498DB',
+                                border: showOriginal ? '2px solid #FBC02D' : '1px solid #D6EAF8',
+                                padding: '10px 18px',
+                                borderRadius: '16px',
+                                fontSize: '0.95rem',
+                                fontWeight: '900',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                boxShadow: showOriginal ? '0 4px 15px rgba(251, 192, 45, 0.2)' : '0 2px 8px rgba(52, 152, 219, 0.1)',
+                                transition: 'all 0.2s',
+                                zIndex: 20
+                            }}
+                        >
+                            {showOriginal ? '✨ 마지막 글(수정본) 보기' : '📜 나의 처음 글과 비교하기'}
+                        </button>
+                    )}
                 </div>
 
                 <div style={{ position: 'relative' }}>

@@ -13,11 +13,29 @@ import { motion, AnimatePresence } from 'framer-motion';
  * - classes 테이블은 ON DELETE CASCADE 설정이 되어 있어야 합니다.
  *   (학급 삭제 시 student, writing_missions 등 관련 데이터가 자동 삭제됨)
  */
-const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted, isMobile, primaryClassId, onSetPrimaryClass }) => {
+const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted, isMobile, primaryClassId, onSetPrimaryClass, fetchDeletedClasses, onRestoreClass }) => {
     const [className, setClassName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isZoomModalOpen, setIsZoomModalOpen] = useState(false); // 초대 코드 크게 보기 모달
+    const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
+    const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
+    const [deletedClasses, setDeletedClasses] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
+
+    const handleOpenTrash = async () => {
+        if (fetchDeletedClasses) {
+            const data = await fetchDeletedClasses();
+            setDeletedClasses(data);
+            setIsTrashModalOpen(true);
+        }
+    };
+
+    const handleRestore = async (id) => {
+        if (onRestoreClass) {
+            await onRestoreClass(id);
+            const data = await fetchDeletedClasses();
+            setDeletedClasses(data);
+        }
+    };
 
     useEffect(() => {
         // 학급이 하나도 없을 경우 자동으로 생성 모달을 띄워 유도합니다. ✨
@@ -77,41 +95,33 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
         if (!targetId) return;
 
         // 1. 사용자 확인 (window.confirm)
-        if (!window.confirm(`정말 [${targetName}] 학급을 완전히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며 모든 데이터가 삭제됩니다.`)) {
+        if (!window.confirm(`정말 [${targetName}] 학급을 삭제하시겠습니까?\n\n삭제된 학급은 3일 이내에 다시 되돌릴 수 있습니다.\n3일이 지나면 모든 데이터가 영구적으로 삭제됩니다.`)) {
             return;
         }
 
         setIsSaving(true);
         try {
-            // 2. DB 삭제 실행
+            // 2. DB 업데이트 (삭제가 아닌 soft delete)
             const { error } = await supabase
                 .from('classes')
-                .delete()
+                .update({ deleted_at: new Date().toISOString() })
                 .eq('id', targetId);
 
             if (error) {
-                // 외래키 제약 조건 에러 처리
-                if (error.code === '23503') {
-                    alert('학급에 학생이 남아있습니다. 학생 명단을 먼저 삭제해야 합니다. ⚠️');
-                } else {
-                    alert(`삭제 권한이 없거나 오류가 발생했습니다: ${error.message}`);
-                }
+                alert(`삭제 권한이 없거나 오류가 발생했습니다: ${error.message}`);
                 return;
             }
 
             // 3. 상태 업데이트 순서 조정 (성공 시 즉시 반영)
-            // (1) 목록에서 즉시 제거
             if (setClasses) {
                 setClasses(prev => prev.filter(c => c.id !== targetId));
             }
-            // (2) 현재 선택된 학급 정보 비우기
             if (activeClass && activeClass.id === targetId && setActiveClass) {
                 setActiveClass(null);
             }
 
-            alert(`[${targetName}] 학급이 삭제되었습니다. ✨`);
+            alert(`[${targetName}] 학급이 삭제 대기 상태로 이동되었습니다. 📦\n3일 이내에 복구할 수 있으며, 이후에는 영구 삭제됩니다.`);
 
-            // (3) 콜백 호출로 데이터 재정렬
             if (onClassDeleted) await onClassDeleted();
         } catch (error) {
             console.error('❌ ClassManager: 삭제 처리 실패:', error);
@@ -136,11 +146,33 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                         >
                             ➕ 새 학급 만들기
                         </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={handleOpenTrash}
+                            style={{
+                                width: '100%', marginTop: '12px', fontSize: '0.9rem', color: '#7F8C8D',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                            }}
+                        >
+                            🗑️ 삭제된 학급 복구하기
+                        </Button>
                     </Card>
 
                     {classes.length > 0 && (
                         <div style={{ background: 'white', borderRadius: '24px', padding: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
-                            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>나의 학급 목록</h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>나의 학급 목록</h3>
+                                <button
+                                    onClick={handleOpenTrash}
+                                    style={{
+                                        background: '#F8F9FA', border: '1px solid #E9ECEF', borderRadius: '10px',
+                                        padding: '6px 12px', fontSize: '0.8rem', color: '#7F8C8D', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold'
+                                    }}
+                                >
+                                    🗑️ 복구함
+                                </button>
+                            </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {classes.map((cls) => (
                                     <div
@@ -390,6 +422,79 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     </Card>
                 </div>
             )}
+
+            {/* 삭제된 학급 복구 모달 (Trash Modal) */}
+            <AnimatePresence>
+                {isTrashModalOpen && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(44, 62, 80, 0.7)',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        zIndex: 3500, backdropFilter: 'blur(8px)'
+                    }}>
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            style={{ width: '90%', maxWidth: '500px' }}
+                        >
+                            <Card style={{ padding: '32px', borderRadius: '32px', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                    <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#2C3E50', fontWeight: '900' }}>🗑️ 삭제된 학급 복구</h2>
+                                    <button onClick={() => setIsTrashModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ADB5BD' }}>✕</button>
+                                </div>
+
+                                <div style={{ background: '#FFFCEB', padding: '16px', borderRadius: '16px', border: '1px solid #FFE082', marginBottom: '24px' }}>
+                                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#B26700', lineHeight: '1.5', fontWeight: 'bold' }}>
+                                        💡 삭제된 학급은 <span style={{ textDecoration: 'underline' }}>삭제 후 3일간</span> 이곳에서 복구하실 수 있습니다.
+                                        3일이 경과하면 모든 데이터가 자동으로 영구 삭제됩니다.
+                                    </p>
+                                </div>
+
+                                <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '4px' }}>
+                                    {deletedClasses.length === 0 ? (
+                                        <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>
+                                            <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🍃</div>
+                                            복구할 수 있는 학급이 없습니다.
+                                        </div>
+                                    ) : (
+                                        deletedClasses.map(cls => (
+                                            <div key={cls.id} style={{
+                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                padding: '16px', borderRadius: '16px', background: '#F8F9FA',
+                                                border: '1px solid #F1F3F5'
+                                            }}>
+                                                <div>
+                                                    <span style={{ fontWeight: 'bold', color: '#2C3E50', display: 'block' }}>🏫 {cls.name}</span>
+                                                    <span style={{ fontSize: '0.75rem', color: '#95A5A6' }}>
+                                                        삭제일: {new Date(cls.deleted_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    style={{ background: '#E3F2FD', color: '#1976D2', border: '1px solid #BBDEFB' }}
+                                                    onClick={() => handleRestore(cls.id)}
+                                                >
+                                                    되돌리기
+                                                </Button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                <Button
+                                    variant="ghost"
+                                    style={{ width: '100%', height: '54px', marginTop: '24px', borderRadius: '16px', fontWeight: 'bold' }}
+                                    onClick={() => setIsTrashModalOpen(false)}
+                                >
+                                    닫기
+                                </Button>
+                            </Card>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

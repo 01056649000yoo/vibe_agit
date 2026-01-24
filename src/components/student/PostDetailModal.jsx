@@ -199,7 +199,17 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                 display: 'flex', alignItems: 'center', gap: '8px'
                             }}>
                                 {showOriginal ? (post.original_title || post.title) : post.title}
-                                {showOriginal && <span style={{ fontSize: '0.7rem', color: '#E67E22', background: '#FFF3E0', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>최초</span>}
+                                <span style={{
+                                    fontSize: '0.7rem',
+                                    color: showOriginal ? '#E67E22' : '#3498DB',
+                                    background: showOriginal ? '#FFF3E0' : '#E3F2FD',
+                                    padding: '2px 8px',
+                                    borderRadius: '6px',
+                                    fontWeight: '900',
+                                    border: showOriginal ? '1px solid #FFE082' : '1px solid #BBDEFB'
+                                }}>
+                                    {showOriginal ? '처음글' : '마지막글'}
+                                </span>
                             </h3>
                         </div>
                     </div>
@@ -216,7 +226,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                 flexShrink: 0
                             }}
                         >
-                            {showOriginal ? '✨ 최신' : '📜 최초'}
+                            {showOriginal ? '✨ 마지막글 보기' : '📜 처음글과 비교하기'}
                         </button>
                     )}
                     {!post.original_content && <div style={{ width: '44px' }} />}
@@ -230,7 +240,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                         wordBreak: 'break-word',
                         transition: 'color 0.2s'
                     }}>
-                        {showOriginal ? (post.original_content || '기록된 최초 내용이 없습니다.') : post.content}
+                        {showOriginal ? (post.original_content || '기록된 처음글 내용이 없습니다.') : post.content}
                     </div>
 
                     {/* 반응 섹션 */}

@@ -35,8 +35,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         isKeyVisible, setIsKeyVisible,
         savingKey, testingKey,
         handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestGeminiKey,
-        handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass,
-        fetchAllClasses, maskKey
+        handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
+        fetchAllClasses, fetchDeletedClasses, maskKey
     } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass);
 
     useEffect(() => {
@@ -153,6 +153,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 userId={session.user.id} classes={classes} activeClass={activeClass}
                                 setActiveClass={setActiveClass} setClasses={setClasses}
                                 onClassDeleted={fetchAllClasses} isMobile={isMobile}
+                                fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
                             />
                         </div>
                     ) : (
@@ -167,6 +168,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 savingKey={savingKey} testingKey={testingKey} originalKey={originalKey} maskKey={maskKey}
                                 promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate}
                                 handleSaveTeacherSettings={handleSaveTeacherSettings} originalPrompt={originalPrompt}
+                                fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
                             />
                         )
                     )}

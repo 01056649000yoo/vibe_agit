@@ -26,7 +26,9 @@ const TeacherSettingsTab = ({
     promptTemplate,
     setPromptTemplate,
     handleSaveTeacherSettings,
-    originalPrompt
+    originalPrompt,
+    fetchDeletedClasses,
+    onRestoreClass
 }) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
@@ -46,6 +48,8 @@ const TeacherSettingsTab = ({
                     isMobile={isMobile}
                     primaryClassId={profile?.primary_class_id}
                     onSetPrimaryClass={handleSetPrimaryClass}
+                    fetchDeletedClasses={fetchDeletedClasses}
+                    onRestoreClass={onRestoreClass}
                 />
             </section>
 

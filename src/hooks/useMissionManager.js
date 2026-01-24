@@ -288,7 +288,9 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         }
     };
 
-    const fetchAIFeedback = async (postTitle, postContent, retryCount = 0) => {
+    const fetchAIFeedback = async (postArray, retryCount = 0) => {
+        // postArray는 [{id, title, content}, ...] 형식
+        const isBulk = postArray.length > 1;
         const { data: { user } } = await supabase.auth.getUser();
         const { data: profileData } = await supabase
             .from('profiles')
@@ -324,13 +326,28 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 (내용을 더 풍성하게 만들 질문이나 아이디어를 하나만 제안)`;
 
         const basePrompt = customTemplate || defaultTemplate;
-        const prompt = `${basePrompt}\n\n---\n[학생의 글 정보]\n글 제목: "${postTitle}"\n글 내용:\n"${postContent}"`;
 
-        // 현재 지원되는 최신 모델 목록 (2.5 라인업)
-        const models = [
-            "gemini-2.5-flash-lite", // 기본 모델
-            "gemini-2.5-flash"      // 대체 모델 (Fallback)
-        ];
+        let prompt = "";
+        if (isBulk) {
+            prompt = `${basePrompt}
+
+현재 입력된 글은 총 ${postArray.length}개야. 
+각 학생별로 원본 피드백 형식을 유지하면서, 반드시 아래의 JSON 형식으로만 응답해줘. 
+설명은 일절 하지 말고 오직 JSON 코드 블록만 출력해.
+
+[응답 형식]
+[
+  { "id": "글의_ID", "feedback": "위의 피드백 형식을 따른 전체 텍스트" },
+  ...
+]
+
+[분석할 글 목록]
+${postArray.map((p, idx) => `[학생 ${idx + 1}]\nID: ${p.id}\n제목: ${p.title}\n내용: ${p.content}`).join('\n\n')}`;
+        } else {
+            prompt = `${basePrompt}\n\n---\n[학생의 글 정보]\n글 제목: "${postArray[0].title}"\n글 내용:\n"${postArray[0].content}"`;
+        }
+
+        const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
 
         const tryFetch = async (modelName, currentRetry = 0) => {
             try {
@@ -346,34 +363,31 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                 if (!response.ok) {
                     const errorData = await response.json();
                     const status = response.status;
-                    const errorMsg = errorData?.error?.message || '알 수 없는 서비스 오류';
-
-                    // 429(Quota Exceeded) 또는 404(Model Not Found) 발생 시 다음 모델로 전환 시도
-                    if ((status === 429 || status === 404) && modelName.includes('lite')) {
-                        console.log(`[AI Fallback] ${modelName} 쿼터 초과 또는 지원 안됨. 다음 모델로 전환합니다...`);
+                    // 첫 번째 모델(lite) 실패 시 두 번째 모델로 전환
+                    if ((status === 429 || status === 404 || status === 400) && modelName === models[0]) {
+                        console.log(`[AI Fallback] ${modelName} 실패. ${models[1]}으로 전환합니다...`);
                         return tryFetch(models[1]);
                     }
-
-                    // 503(Overloaded) 등 일시적 오류 시 동일 모델 재시도
-                    if ((status === 503 || status === 429) && currentRetry < 2) {
-                        console.log(`[AI Retry ${currentRetry + 1}] ${modelName} 서비스 응답 문제로 재시도합니다...`);
-                        await new Promise(resolve => setTimeout(resolve, 2000 * (currentRetry + 1)));
+                    if ((status === 503 || status === 429) && currentRetry < 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1500));
                         return tryFetch(modelName, currentRetry + 1);
                     }
-
-                    throw new Error(`AI 서비스 오류 (${status}): ${errorMsg}`);
+                    throw new Error(`AI 서비스 오류 (${status})`);
                 }
 
                 const data = await response.json();
-                if (data.candidates && data.candidates[0].content.parts[0].text) {
-                    return data.candidates[0].content.parts[0].text;
+                const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (isBulk) {
+                    const jsonMatch = responseText.match(/\[\s*\{.*\}\s*\]/s);
+                    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+                    // JSON 형식이 아닐 경우 재시도 생략하고 텍스트 파싱 시도 (간소화)
+                    throw new Error('AI 응답 형식이 일괄 처리에 적합하지 않습니다.');
                 }
-                throw new Error('AI 응답 형식이 올바르지 않습니다.');
+
+                return responseText;
             } catch (err) {
-                // 모델이 망가졌거나 네트워크 오류 시 다음 모델이 있다면 시도
-                if (modelName.includes('lite') && !err.message.includes('401')) {
-                    return tryFetch(models[1]);
-                }
+                if (modelName.includes('2.0')) return tryFetch(models[1]);
                 throw err;
             }
         };
@@ -381,10 +395,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         try {
             return await tryFetch(models[0]);
         } catch (err) {
-            console.error('AI 피드백 생성 최종 실패:', err.message);
-            if (retryCount >= 2) {
-                alert(`피드백 생성 중 문제가 발생했습니다: ${err.message}`);
-            }
+            console.error('AI 피드백 생성 실패:', err.message);
             return null;
         }
     };
@@ -393,7 +404,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         if (!selectedPost) return;
         setIsGenerating(true);
         try {
-            const feedback = await fetchAIFeedback(selectedPost.title, selectedPost.content);
+            const feedback = await fetchAIFeedback([{ id: selectedPost.id, title: selectedPost.title, content: selectedPost.content }]);
             if (feedback) {
                 const { error } = await supabase
                     .from('student_posts')
@@ -424,52 +435,59 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             return;
         }
 
-        if (!confirm(`${targetPosts.length}개의 글에 대해 AI 피드백을 생성하고, 동시에 '다시 쓰기'를 일괄 요청하시겠습니까? 🤖♻️\n학생들에게 자동으로 피드백이 전달됩니다.`)) return;
+        if (!confirm(`${targetPosts.length}개의 글에 대해 AI 피드백을 생성(2명씩 묶음 처리)하고, '다시 쓰기'를 일괄 요청하시겠습니까? 🤖♻️`)) return;
 
         setIsGenerating(true);
         setProgress({ current: 0, total: targetPosts.length });
 
         try {
             let processedCount = 0;
-            // [수정] Promise.all 대신 순차적 처리를 통해 API 부하 방지
-            for (const post of targetPosts) {
+            // 2명씩 묶어서 처리
+            for (let i = 0; i < targetPosts.length; i += 2) {
+                const chunk = targetPosts.slice(i, i + 2);
                 try {
-                    const feedback = await fetchAIFeedback(post.title, post.content);
-                    if (feedback) {
-                        await Promise.all([
-                            supabase
-                                .from('student_posts')
-                                .update({
-                                    ai_feedback: feedback,
-                                    is_submitted: false,
-                                    is_returned: true
-                                })
-                                .eq('id', post.id),
+                    const results = await fetchAIFeedback(chunk.map(p => ({ id: p.id, title: p.title, content: p.content })));
 
-                            supabase.from('point_logs').insert({
-                                student_id: post.student_id,
-                                post_id: post.id,
-                                mission_id: post.mission_id,
-                                amount: 0,
-                                reason: `[AI 요청] '${post.title}' 글에 대한 다시 쓰기 요청이 도착했습니다. ♻️`
-                            })
-                        ]);
+                    if (results && Array.isArray(results)) {
+                        for (const res of results) {
+                            const post = chunk.find(p => p.id === res.id);
+                            if (post && res.feedback) {
+                                await Promise.all([
+                                    supabase
+                                        .from('student_posts')
+                                        .update({
+                                            ai_feedback: res.feedback,
+                                            is_submitted: false,
+                                            is_returned: true
+                                        })
+                                        .eq('id', post.id),
+
+                                    supabase.from('point_logs').insert({
+                                        student_id: post.student_id,
+                                        post_id: post.id,
+                                        mission_id: post.mission_id,
+                                        amount: 0,
+                                        reason: `[AI 일괄 요청] '${post.title}' 글에 대한 다시 쓰기가 도착했습니다. ♻️`
+                                    })
+                                ]);
+                            }
+                        }
                     }
-                    processedCount++;
-                    setProgress(prev => ({ ...prev, current: processedCount }));
+                    processedCount += chunk.length;
+                    setProgress(prev => ({ ...prev, current: Math.min(processedCount, targetPosts.length) }));
 
-                    // API 부하 방지를 위한 짧은 지연 시간 (0.5초)
-                    if (processedCount < targetPosts.length) {
-                        await new Promise(resolve => setTimeout(resolve, 500));
+                    // API 부하 방지 지연
+                    if (i + 2 < targetPosts.length) {
+                        await new Promise(resolve => setTimeout(resolve, 800));
                     }
                 } catch (innerErr) {
-                    console.error(`Post ${post.id} 처리 중 에러:`, innerErr);
+                    console.error(`Chunk 처리 중 에러:`, innerErr);
                 }
             }
 
             setShowCompleteToast(true);
             setTimeout(() => setShowCompleteToast(false), 3000);
-            alert('모든 글에 대한 AI 피드백 생성 및 다시 쓰기 요청이 완료되었습니다! ✨');
+            alert('모든 글에 대한 2인 단위 일괄 처리가 완료되었습니다! ✨');
             fetchPostsForMission(selectedMission);
         } catch (err) {
             alert('일괄 처리 중 오류가 발생했습니다.');
