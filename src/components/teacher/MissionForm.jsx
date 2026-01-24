@@ -414,62 +414,79 @@ const MissionForm = ({
 
                                     {formData.evaluation_rubric?.use_rubric && (
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            {[3, 4, 5].map(lvl => (
-                                                <button
-                                                    key={lvl}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const currentLevels = formData.evaluation_rubric.levels || [];
-                                                        let newLevels = [];
-                                                        if (lvl === 3) {
-                                                            newLevels = [
-                                                                { score: 3, label: '우수' },
-                                                                { score: 2, label: '보통' },
-                                                                { score: 1, label: '노력' }
-                                                            ];
-                                                        } else if (lvl === 4) {
-                                                            newLevels = [
-                                                                { score: 4, label: '매우 우수' },
-                                                                { score: 3, label: '우수' },
-                                                                { score: 2, label: '보통' },
-                                                                { score: 1, label: '노력' }
-                                                            ];
-                                                        } else {
-                                                            newLevels = [
-                                                                { score: 5, label: '매우 우수' },
-                                                                { score: 4, label: '우수' },
-                                                                { score: 3, label: '보통' },
-                                                                { score: 2, label: '기초' },
-                                                                { score: 1, label: '노력' }
-                                                            ];
-                                                        }
-                                                        setFormData({
-                                                            ...formData,
-                                                            evaluation_rubric: { ...formData.evaluation_rubric, levels: newLevels }
-                                                        });
-                                                    }}
-                                                    style={{
-                                                        padding: '6px 12px',
-                                                        borderRadius: '10px',
-                                                        border: '1px solid #F39C12',
-                                                        background: formData.evaluation_rubric.levels?.length === lvl ? '#F39C12' : 'white',
-                                                        color: formData.evaluation_rubric.levels?.length === lvl ? 'white' : '#F39C12',
-                                                        fontSize: '0.8rem',
-                                                        fontWeight: 'bold',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    {lvl}단계
-                                                </button>
-                                            ))}
+                                            {[3, 4, 5].map(lvl => {
+                                                const colors = {
+                                                    3: { main: '#10B981', border: '#D1FAE5' },
+                                                    4: { main: '#3B82F6', border: '#DBEAFE' },
+                                                    5: { main: '#8B5CF6', border: '#EDE9FE' }
+                                                };
+                                                const theme = colors[lvl];
+                                                const isSelected = formData.evaluation_rubric.levels?.length === lvl;
+
+                                                return (
+                                                    <button
+                                                        key={lvl}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            let newLevels = [];
+                                                            if (lvl === 3) {
+                                                                newLevels = [
+                                                                    { score: 3, label: '우수' },
+                                                                    { score: 2, label: '보통' },
+                                                                    { score: 1, label: '노력' }
+                                                                ];
+                                                            } else if (lvl === 4) {
+                                                                newLevels = [
+                                                                    { score: 4, label: '매우 우수' },
+                                                                    { score: 3, label: '우수' },
+                                                                    { score: 2, label: '보통' },
+                                                                    { score: 1, label: '노력' }
+                                                                ];
+                                                            } else {
+                                                                newLevels = [
+                                                                    { score: 5, label: '매우 우수' },
+                                                                    { score: 4, label: '우수' },
+                                                                    { score: 3, label: '보통' },
+                                                                    { score: 2, label: '기초' },
+                                                                    { score: 1, label: '노력' }
+                                                                ];
+                                                            }
+                                                            setFormData({
+                                                                ...formData,
+                                                                evaluation_rubric: { ...formData.evaluation_rubric, levels: newLevels }
+                                                            });
+                                                        }}
+                                                        style={{
+                                                            padding: '6px 14px',
+                                                            borderRadius: '12px',
+                                                            border: `2px solid ${isSelected ? theme.main : '#E2E8F0'}`,
+                                                            background: isSelected ? theme.main : 'white',
+                                                            color: isSelected ? 'white' : '#64748B',
+                                                            fontSize: '0.85rem',
+                                                            fontWeight: '900',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s',
+                                                            boxShadow: isSelected ? `0 4px 12px ${theme.main}40` : 'none'
+                                                        }}
+                                                    >
+                                                        {lvl}단계
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
 
                                 {formData.evaluation_rubric?.use_rubric && (
-                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${formData.evaluation_rubric.levels.length}, 1fr)`, gap: '10px' }}>
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: isMobile ? '1fr' : `repeat(${formData.evaluation_rubric.levels.length}, 1fr)`,
+                                        gap: '10px',
+                                        width: '100%',
+                                        boxSizing: 'border-box'
+                                    }}>
                                         {formData.evaluation_rubric.levels.map((level, idx) => (
-                                            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                                                 <span style={{ fontSize: '0.7rem', color: '#E67E22', fontWeight: 'bold' }}>{level.score}점 명칭</span>
                                                 <input
                                                     type="text"
@@ -483,13 +500,16 @@ const MissionForm = ({
                                                         });
                                                     }}
                                                     style={{
+                                                        width: '100%',
                                                         padding: '10px',
                                                         borderRadius: '10px',
                                                         border: '1px solid #FAD7A0',
                                                         fontSize: '0.85rem',
                                                         textAlign: 'center',
                                                         outline: 'none',
-                                                        background: 'white'
+                                                        background: 'white',
+                                                        boxSizing: 'border-box',
+                                                        minWidth: 0
                                                     }}
                                                 />
                                             </div>

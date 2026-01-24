@@ -23,6 +23,9 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
         }
     };
 
+    const maxScore = mission?.evaluation_rubric?.levels?.length || 3;
+    const requiredGrowth = maxScore === 3 ? 2 : maxScore === 4 ? 3 : 4;
+
     // 통계 계산
     const stats = useMemo(() => {
         const validInitial = reportData.filter(d => d.initial_eval !== null);
@@ -36,36 +39,41 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
             ? (validFinal.reduce((sum, d) => sum + d.final_eval, 0) / validFinal.length).toFixed(1)
             : 0;
 
-        const growthKings = reportData.filter(d => (d.final_eval - d.initial_eval) >= 2).length;
+        const growthKings = reportData.filter(d => (d.final_eval - d.initial_eval) >= requiredGrowth);
+        const improved = reportData.filter(d => (d.final_eval - d.initial_eval) > 0);
 
-        return { avgInitial, avgFinal, growthKings, total: reportData.length };
-    }, [reportData]);
+        return {
+            avgInitial,
+            avgFinal,
+            growthKingNames: growthKings.map(d => d.students?.name).filter(Boolean),
+            improvedNames: improved.map(d => d.students?.name).filter(Boolean),
+            total: reportData.length
+        };
+    }, [reportData, requiredGrowth]);
 
     const processedData = useMemo(() => {
-        let filtered = [...reportData];
+        let filtered = reportData.filter(d => {
+            if (filterScore === 0) return true;
+            if (filterScore === 1) return d.final_eval === 1;
+            if (filterScore === 2) return d.final_eval <= 2;
+            return true;
+        });
 
-        // 필터: 특정 점수 이하
-        if (filterScore > 0) {
-            filtered = filtered.filter(d => d.final_eval && d.final_eval <= filterScore);
-        }
-
-        // 정렬
         filtered.sort((a, b) => {
-            if (sortBy === 'growth') {
+            if (sortBy === 'name') {
+                return (a.students?.name || '').localeCompare(b.students?.name || '');
+            } else if (sortBy === 'growth') {
                 const growthA = (a.final_eval || 0) - (a.initial_eval || 0);
                 const growthB = (b.final_eval || 0) - (b.initial_eval || 0);
-                return growthB - growthA;
+                return growthB - growthA; // Descending
             } else if (sortBy === 'final') {
-                return (b.final_eval || 0) - (a.final_eval || 0);
-            } else {
-                return (a.students?.name || '').localeCompare(b.students?.name || '');
+                return (b.final_eval || 0) - (a.final_eval || 0); // Descending
             }
+            return 0;
         });
 
         return filtered;
     }, [reportData, filterScore, sortBy]);
-
-    const maxScore = mission?.evaluation_rubric?.levels?.length || 5;
 
     return (
         <motion.div
@@ -96,10 +104,10 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                 maxWidth: '1100px', margin: '0 auto', width: '100%', boxSizing: 'border-box'
             }}>
                 {/* 상단 통계 차트 영역 */}
-                <section style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: '24px', marginBottom: '40px' }}>
-                    <div style={{ background: '#F8FAFC', padding: '32px', borderRadius: '32px', border: '1px solid #E2E8F0' }}>
-                        <h4 style={{ margin: '0 0 24px 0', color: '#64748B' }}>📉 학급 평균 성장도 (최대 {maxScore}점)</h4>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <section style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: '24px', marginBottom: '32px' }}>
+                    <div style={{ background: '#F8FAFC', padding: '20px 24px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>
+                        <h4 style={{ margin: '0 0 12px 0', color: '#64748B', fontSize: '0.95rem' }}>📉 학급 평균 성장도 (최대 {maxScore}점)</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>
                                     <span>처음글 평균 점수</span>
@@ -127,13 +135,24 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                                 </div>
                             </div>
                         </div>
+
+                        {stats.improvedNames.length > 0 && (
+                            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed #CBD5E1' }}>
+                                <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 'bold', marginBottom: '4px' }}>🚀 글쓰기가 향상된 학생들</div>
+                                <div style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 'bold', lineHeight: '1.4' }}>
+                                    {stats.improvedNames.join(', ')}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    <div style={{ background: 'linear-gradient(135deg, #FFEDD5 0%, #FFF7ED 100%)', padding: '32px', borderRadius: '32px', border: '1px solid #FED7AA', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '10px' }}>👑</div>
+                    <div style={{ background: 'linear-gradient(135deg, #FFEDD5 0%, #FFF7ED 100%)', padding: '20px', borderRadius: '24px', border: '1px solid #FED7AA', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ fontSize: '2rem', marginBottom: '6px' }}>👑</div>
                         <h3 style={{ margin: 0, color: '#9A3412', fontWeight: '900' }}>성장왕 탄생!</h3>
-                        <p style={{ margin: '8px 0', color: '#C2410C', fontWeight: 'bold' }}>2단계 이상 향상된 학생</p>
-                        <div style={{ fontSize: '2rem', fontWeight: '900', color: '#EA580C' }}>{stats.growthKings}명</div>
+                        <p style={{ margin: '8px 0', color: '#C2410C', fontWeight: 'bold' }}>{requiredGrowth}단계 이상 향상된 주인공</p>
+                        <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#EA580C', wordBreak: 'keep-all', lineHeight: '1.5' }}>
+                            {stats.growthKingNames.length > 0 ? stats.growthKingNames.join(', ') : '아직 대기 중! 🌱'}
+                        </div>
                     </div>
                 </section>
 
@@ -179,7 +198,7 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                         <tbody>
                             {processedData.map((student) => {
                                 const growth = (student.final_eval || 0) - (student.initial_eval || 0);
-                                const isGrowthKing = growth >= 2;
+                                const isGrowthKing = growth >= requiredGrowth;
 
                                 return (
                                     <tr key={student.id} style={{ borderBottom: '1px solid #F1F5F9' }}>

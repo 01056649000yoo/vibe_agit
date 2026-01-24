@@ -463,9 +463,9 @@ const PostDetailViewer = ({
                                     <div style={{ flex: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
                                         {/* 처음글 섹션 */}
                                         <section>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                                <div style={{ fontSize: '0.9rem', fontWeight: '900', color: '#10B981', background: '#ECFDF5', padding: '4px 12px', borderRadius: '8px' }}>📜 처음글 (초안)</div>
-                                                <div style={{ display: 'flex', gap: '6px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
+                                                <div style={{ fontSize: '0.9rem', fontWeight: '900', color: '#10B981', background: '#ECFDF5', padding: '4px 12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>📜 처음글 (초안)</div>
+                                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                                     {selectedMission.evaluation_rubric.levels.map(lvl => (
                                                         <button
                                                             key={lvl.score}
@@ -496,9 +496,9 @@ const PostDetailViewer = ({
 
                                         {/* 마지막글 섹션 */}
                                         <section>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                                <div style={{ fontSize: '0.9rem', fontWeight: '900', color: '#3B82F6', background: '#EFF6FF', padding: '4px 12px', borderRadius: '8px' }}>✨ 마지막글 (수정본)</div>
-                                                <div style={{ display: 'flex', gap: '6px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
+                                                <div style={{ fontSize: '0.9rem', fontWeight: '900', color: '#3B82F6', background: '#EFF6FF', padding: '4px 12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>✨ 마지막글 (수정본)</div>
+                                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                                     {selectedMission.evaluation_rubric.levels.map(lvl => (
                                                         <button
                                                             key={lvl.score}

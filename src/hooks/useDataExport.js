@@ -95,8 +95,8 @@ export const useDataExport = () => {
                 .select(`
                     title,
                     content,
-                    students (name),
-                    writing_missions (title, id)
+                    students (name, student_code, created_at),
+                    writing_missions!inner (title, id)
                 `)
                 .eq('is_submitted', true);
 
@@ -111,28 +111,35 @@ export const useDataExport = () => {
 
             let formattedData = data.map(post => ({
                 작성자: post.students?.name || '알 수 없음',
+                번호: post.students?.student_code || 0,
                 미션제목: post.writing_missions?.title || '제목 없음',
                 학생글제목: post.title || '제목 없음',
                 내용: post.content || '',
                 _missionId: post.writing_missions?.id,
-                _studentName: post.students?.name
+                _studentCreatedAt: post.students?.created_at
             }));
 
             if (type === 'student') {
                 formattedData.sort((a, b) => (a._missionId || 0) - (b._missionId || 0));
             } else if (type === 'mission') {
-                formattedData.sort((a, b) => a._studentName.localeCompare(b._studentName, 'ko'));
+                // 학생 등록 순서(created_at)대로 정렬
+                formattedData.sort((a, b) => {
+                    const dateA = new Date(a._studentCreatedAt || 0);
+                    const dateB = new Date(b._studentCreatedAt || 0);
+                    return dateA - dateB;
+                });
             }
 
-            return formattedData.map(({ 작성자, 미션제목, 학생글제목, 내용 }) => ({
+            return formattedData.map(({ 번호, 작성자, 미션제목, 학생글제목, 내용 }) => ({
+                번호,
+                작성자,
                 미션제목,
                 학생글제목,
-                작성자,
                 내용
             }));
 
         } catch (error) {
-            console.error('데이터 추출 실패:', error);
+            console.error('데이터 추출 실패 상세:', error);
             alert('데이터를 불러오는 중 오류가 발생했습니다.');
             return [];
         }
