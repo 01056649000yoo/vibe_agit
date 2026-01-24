@@ -20,6 +20,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const [progress, setProgress] = useState({ current: 0, total: 0 });
     const [isEditing, setIsEditing] = useState(false);
     const [editingMissionId, setEditingMissionId] = useState(null);
+    const [isEvaluationMode, setIsEvaluationMode] = useState(false);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -33,7 +34,15 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         allow_comments: true,
         mission_type: '일기',
         guide_questions: [],
-        question_count: 3
+        question_count: 3,
+        evaluation_rubric: {
+            use_rubric: false,
+            levels: [
+                { score: 3, label: '우수' },
+                { score: 2, label: '보통' },
+                { score: 1, label: '노력' }
+            ]
+        }
     });
     const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
 
@@ -44,7 +53,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             const [missionsResult, studentCountResult] = await Promise.all([
                 supabase
                     .from('writing_missions')
-                    .select('id, title, guide, genre, min_chars, min_paragraphs, base_reward, bonus_threshold, bonus_reward, allow_comments, is_archived, created_at, mission_type, guide_questions')
+                    .select('id, title, guide, genre, min_chars, min_paragraphs, base_reward, bonus_threshold, bonus_reward, allow_comments, is_archived, created_at, mission_type, guide_questions, evaluation_rubric')
                     .eq('class_id', activeClass.id)
                     .eq('is_archived', false)
                     .order('created_at', { ascending: false }),
@@ -102,7 +111,11 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             bonus_reward: mission.bonus_reward,
             allow_comments: mission.allow_comments,
             mission_type: mission.mission_type || mission.genre,
-            guide_questions: mission.guide_questions || []
+            guide_questions: mission.guide_questions || [],
+            evaluation_rubric: mission.evaluation_rubric || {
+                use_rubric: false,
+                levels: [{ score: 3, label: '우수' }, { score: 2, label: '보통' }, { score: 1, label: '노력' }]
+            }
         });
         setEditingMissionId(mission.id);
         setIsEditing(true);
@@ -124,7 +137,15 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             bonus_reward: 10,
             allow_comments: true,
             mission_type: '일기',
-            guide_questions: []
+            guide_questions: [],
+            evaluation_rubric: {
+                use_rubric: false,
+                levels: [
+                    { score: 3, label: '우수' },
+                    { score: 2, label: '보통' },
+                    { score: 1, label: '노력' }
+                ]
+            }
         });
         setIsFormOpen(false);
     };
@@ -260,8 +281,19 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             setPostReactions([]);
             setPostComments([]);
             setTempFeedback('');
+            setIsEvaluationMode(false); // 뷰어 닫힐 때 평가 모드 초기화
         }
     }, [selectedPost]);
+
+    const handleEvaluationMode = async (mission) => {
+        const fetchedPosts = await fetchPostsForMission(mission);
+        if (fetchedPosts && fetchedPosts.length > 0) {
+            setSelectedPost(fetchedPosts[0]);
+            setIsEvaluationMode(true);
+        } else {
+            alert('아직 제출한 학생이 없습니다. 🐥');
+        }
+    };
 
     const fetchPostsForMission = async (mission) => {
         setLoadingPosts(true);
@@ -271,7 +303,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                 .from('student_posts')
                 .select(`
                     id, title, content, student_id, mission_id, char_count, is_submitted, is_confirmed, is_returned, ai_feedback, created_at,
-                    original_title, original_content, first_submitted_at,
+                    original_title, original_content, first_submitted_at, initial_eval, final_eval, eval_comment,
                     students!inner(name, class_id)
                 `)
                 .eq('mission_id', mission.id)
@@ -280,9 +312,11 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
             if (error) throw error;
             setPosts(data || []);
+            return data || [];
         } catch (err) {
             console.error('학생 글 불러오기 실패:', err.message);
             alert('글을 불러오는 도중 오류가 발생했습니다.');
+            return [];
         } finally {
             setLoadingPosts(false);
         }
@@ -808,6 +842,7 @@ ${postArray.map((p, idx) => `[학생 ${idx + 1}]\nID: ${p.id}\n제목: ${p.title
         handleApprovePost, handleBulkApprove, handleRecovery, handleBulkRecovery,
         handleBulkRequestRewrite,
         handleFinalArchive, fetchMissions,
-        handleGenerateQuestions, isGeneratingQuestions
+        handleGenerateQuestions, isGeneratingQuestions,
+        isEvaluationMode, setIsEvaluationMode, handleEvaluationMode
     };
 };

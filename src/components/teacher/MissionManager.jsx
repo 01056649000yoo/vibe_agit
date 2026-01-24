@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import { useMissionManager } from '../../hooks/useMissionManager';
 import MissionForm from './MissionForm';
@@ -7,6 +8,7 @@ import SubmissionStatusModal from './SubmissionStatusModal';
 import PostDetailViewer from './PostDetailViewer';
 import ArchiveConfirmModal from './ArchiveConfirmModal';
 import BulkAIProgressModal from './BulkAIProgressModal';
+import EvaluationReport from './EvaluationReport';
 
 /**
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
@@ -26,8 +28,11 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         handleBulkRecovery,
         handleBulkRequestRewrite,
         handleFinalArchive, fetchMissions,
-        handleGenerateQuestions, isGeneratingQuestions
+        handleGenerateQuestions, isGeneratingQuestions,
+        isEvaluationMode, setIsEvaluationMode, handleEvaluationMode
     } = useMissionManager(activeClass);
+
+    const [reportMission, setReportMission] = useState(null);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -111,6 +116,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 fetchPostsForMission={fetchPostsForMission}
                 fetchMissions={fetchMissions}
                 isMobile={isMobile}
+                showEvaluationReport={(m) => setReportMission(m)}
+                handleEvaluationMode={handleEvaluationMode}
             />
 
             {/* 학생 제출 현황 모달 */}
@@ -145,6 +152,9 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 postComments={postComments}
                 reactionIcons={reactionIcons}
                 isMobile={isMobile}
+                onUpdate={() => fetchPostsForMission(selectedMission)}
+                isEvaluationMode={isEvaluationMode}
+                posts={posts}
             />
 
             {/* 보관 확인 커스텀 모달 */}
@@ -159,6 +169,16 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 isGenerating={isGenerating}
                 progress={progress}
             />
+
+            <AnimatePresence>
+                {reportMission && (
+                    <EvaluationReport
+                        mission={reportMission}
+                        onClose={() => setReportMission(null)}
+                        isMobile={isMobile}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };

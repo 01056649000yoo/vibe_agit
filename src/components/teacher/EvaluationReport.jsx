@@ -1,0 +1,222 @@
+import React, { useEffect, useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEvaluation } from '../../hooks/useEvaluation';
+import Card from '../common/Card';
+import Button from '../common/Button';
+
+const EvaluationReport = ({ mission, onClose, isMobile }) => {
+    const { fetchMissionReport, loading } = useEvaluation();
+    const [reportData, setReportData] = useState([]);
+    const [filterScore, setFilterScore] = useState(0); // 0 means no filter
+    const [sortBy, setSortBy] = useState('name'); // 'name', 'growth', 'final'
+
+    useEffect(() => {
+        if (mission?.id) {
+            loadReport();
+        }
+    }, [mission?.id]);
+
+    const loadReport = async () => {
+        const result = await fetchMissionReport(mission.id);
+        if (result.success) {
+            setReportData(result.data || []);
+        }
+    };
+
+    // 통계 계산
+    const stats = useMemo(() => {
+        const validInitial = reportData.filter(d => d.initial_eval !== null);
+        const validFinal = reportData.filter(d => d.final_eval !== null);
+
+        const avgInitial = validInitial.length > 0
+            ? (validInitial.reduce((sum, d) => sum + d.initial_eval, 0) / validInitial.length).toFixed(1)
+            : 0;
+
+        const avgFinal = validFinal.length > 0
+            ? (validFinal.reduce((sum, d) => sum + d.final_eval, 0) / validFinal.length).toFixed(1)
+            : 0;
+
+        const growthKings = reportData.filter(d => (d.final_eval - d.initial_eval) >= 2).length;
+
+        return { avgInitial, avgFinal, growthKings, total: reportData.length };
+    }, [reportData]);
+
+    const processedData = useMemo(() => {
+        let filtered = [...reportData];
+
+        // 필터: 특정 점수 이하
+        if (filterScore > 0) {
+            filtered = filtered.filter(d => d.final_eval && d.final_eval <= filterScore);
+        }
+
+        // 정렬
+        filtered.sort((a, b) => {
+            if (sortBy === 'growth') {
+                const growthA = (a.final_eval || 0) - (a.initial_eval || 0);
+                const growthB = (b.final_eval || 0) - (b.initial_eval || 0);
+                return growthB - growthA;
+            } else if (sortBy === 'final') {
+                return (b.final_eval || 0) - (a.final_eval || 0);
+            } else {
+                return (a.students?.name || '').localeCompare(b.students?.name || '');
+            }
+        });
+
+        return filtered;
+    }, [reportData, filterScore, sortBy]);
+
+    const maxScore = mission?.evaluation_rubric?.levels?.length || 5;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(255,255,255,0.98)', zIndex: 2000,
+                display: 'flex', flexDirection: 'column',
+                boxSizing: 'border-box'
+            }}
+        >
+            <header style={{
+                padding: '20px 40px', borderBottom: '1px solid #F1F3F5',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                background: 'white', flexShrink: 0
+            }}>
+                <div>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📊 학생 평가 리포트</h2>
+                    <div style={{ fontSize: '0.9rem', color: '#7F8C8D', fontWeight: 'bold' }}>미션: {mission.title}</div>
+                </div>
+                <Button variant="ghost" onClick={onClose} style={{ fontSize: '1.2rem' }}>✕ 닫기</Button>
+            </header>
+
+            <main style={{
+                flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '40px',
+                maxWidth: '1100px', margin: '0 auto', width: '100%', boxSizing: 'border-box'
+            }}>
+                {/* 상단 통계 차트 영역 */}
+                <section style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: '24px', marginBottom: '40px' }}>
+                    <div style={{ background: '#F8FAFC', padding: '32px', borderRadius: '32px', border: '1px solid #E2E8F0' }}>
+                        <h4 style={{ margin: '0 0 24px 0', color: '#64748B' }}>📉 학급 평균 성장도 (최대 {maxScore}점)</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                    <span>처음글 평균 점수</span>
+                                    <span style={{ color: '#10B981' }}>{stats.avgInitial}P</span>
+                                </div>
+                                <div style={{ height: '12px', background: '#E2E8F0', borderRadius: '6px', overflow: 'hidden' }}>
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${(stats.avgInitial / maxScore) * 100}%` }}
+                                        style={{ height: '100%', background: '#10B981' }}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                    <span>마지막글 평균 점수</span>
+                                    <span style={{ color: '#3B82F6' }}>{stats.avgFinal}P</span>
+                                </div>
+                                <div style={{ height: '12px', background: '#E2E8F0', borderRadius: '6px', overflow: 'hidden' }}>
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${(stats.avgFinal / maxScore) * 100}%` }}
+                                        style={{ height: '100%', background: '#3B82F6' }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ background: 'linear-gradient(135deg, #FFEDD5 0%, #FFF7ED 100%)', padding: '32px', borderRadius: '32px', border: '1px solid #FED7AA', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '10px' }}>👑</div>
+                        <h3 style={{ margin: 0, color: '#9A3412', fontWeight: '900' }}>성장왕 탄생!</h3>
+                        <p style={{ margin: '8px 0', color: '#C2410C', fontWeight: 'bold' }}>2단계 이상 향상된 학생</p>
+                        <div style={{ fontSize: '2rem', fontWeight: '900', color: '#EA580C' }}>{stats.growthKings}명</div>
+                    </div>
+                </section>
+
+                {/* 필터 및 정렬 컨트롤러 */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <select
+                            value={filterScore}
+                            onChange={e => setFilterScore(Number(e.target.value))}
+                            style={{ padding: '10px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '0.9rem', outline: 'none' }}
+                        >
+                            <option value={0}>전체 학생 보기</option>
+                            <option value={1}>1점 학생만 (집중 지도)</option>
+                            <option value={2}>2점 이하 학생</option>
+                        </select>
+                        <select
+                            value={sortBy}
+                            onChange={e => setSortBy(e.target.value)}
+                            style={{ padding: '10px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '0.9rem', outline: 'none' }}
+                        >
+                            <option value="name">이름순</option>
+                            <option value="growth">성장도순</option>
+                            <option value="final">최종 점수순</option>
+                        </select>
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#64748B', fontWeight: 'bold' }}>
+                        분석 대상: 총 {processedData.length}명
+                    </div>
+                </div>
+
+                {/* 상세 결과 테이블 */}
+                <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                            <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                                <th style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#64748B' }}>학생 이름</th>
+                                <th style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#64748B' }}>처음 점수</th>
+                                <th style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#64748B' }}>최종 점수</th>
+                                <th style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#64748B' }}>성장도</th>
+                                <th style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#64748B' }}>교사 의견</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {processedData.map((student) => {
+                                const growth = (student.final_eval || 0) - (student.initial_eval || 0);
+                                const isGrowthKing = growth >= 2;
+
+                                return (
+                                    <tr key={student.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                        <td style={{ padding: '16px 24px', fontWeight: 'bold' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                {student.students?.name}
+                                                {isGrowthKing && <span title="성장왕" style={{ fontSize: '1.2rem' }}>👑</span>}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '16px 24px', color: '#64748B' }}>{student.initial_eval || '-'}</td>
+                                        <td style={{ padding: '16px 24px', fontWeight: '900', color: '#3B82F6' }}>{student.final_eval || '-'}</td>
+                                        <td style={{ padding: '16px 24px' }}>
+                                            <span style={{
+                                                padding: '4px 10px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold',
+                                                background: growth > 0 ? '#ECFDF5' : growth < 0 ? '#FEF2F2' : '#F1F5F9',
+                                                color: growth > 0 ? '#059669' : growth < 0 ? '#DC2626' : '#64748B'
+                                            }}>
+                                                {growth > 0 ? `+${growth}` : growth}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#444', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {student.eval_comment || <span style={{ color: '#CBD5E1' }}>의견 없음</span>}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    {processedData.length === 0 && (
+                        <div style={{ padding: '80px', textAlign: 'center', color: '#94A3B8' }}>
+                            검색 결과나 평가 데이터가 없습니다. 🖋️
+                        </div>
+                    )}
+                </div>
+            </main>
+        </motion.div>
+    );
+};
+
+export default EvaluationReport;
