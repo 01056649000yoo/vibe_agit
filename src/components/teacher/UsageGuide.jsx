@@ -17,6 +17,7 @@ const UsageGuide = ({ isMobile }) => {
         { id: 'mission-writing', title: '✍️ 미션 및 글쓰기', emoji: '✍️' },
         { id: 'playground', title: '🎢 놀이터 및 게임 설정', emoji: '🎢' },
         { id: 'points-dragon', title: '💰 포인트 및 드래곤', emoji: '💰' },
+        { id: 'evaluation', title: '🎯 학생 평가 및 기록', emoji: '🎯' },
         { id: 'analysis', title: '📊 학습 분석 활용', emoji: '📊' },
     ];
 
@@ -285,10 +286,36 @@ const UsageGuide = ({ isMobile }) => {
                 </div>
             </section>
 
-            {/* 섹션 5: 학습 분석 활용 */}
-            <section id="analysis" style={sectionStyle}>
+            {/* 섹션 5: 학생 평가 및 기록 */}
+            <section id="evaluation" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
                     {sections[4].title}
+                </h2>
+                <div style={cardStyle}>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#16A085' }}>📊 성취도 평가 및 루브릭 활용</h3>
+                    <p><strong>1. 평가 루브릭 설정:</strong><br />
+                        미션을 만들 때 <strong>[평가 루브릭 사용]</strong>을 체크하면 '우수-보통-노력' 등 단계별 평가 기준을 설정할 수 있습니다.
+                        선생님만의 전문적인 평가 기준을 미리 등록하여 체계적인 기록을 시작해보세요!
+                    </p>
+                </div>
+                <div style={cardStyle}>
+                    <p><strong>2. 학생별 성장 평가하기:</strong><br />
+                        [글쓰기 미션 현황]에서 각 학생의 글을 클릭한 후, 상단의 <strong>'📊 성장 평가하기'</strong> 버튼을 눌러보세요.
+                        학생의 초안과 최종본을 비교하며 단계별 성취도와 구체적인 관찰 의견을 기록할 수 있습니다.
+                    </p>
+                </div>
+                <div style={highlightStyle}>
+                    📂 <strong>전체 학생 글 모아보기 (비교 뷰):</strong>
+                    <br />
+                    미션의 '제출 현황' 모달창 상단에 있는 <strong>'📂 학생 글 모아보기'</strong> 버튼을 클릭하세요!
+                    우리 반 전체 학생의 <strong>처음 쓴 글(초안)과 마지막 글(최종본)</strong>을 한 화면에서 나란히 비교하며 학급 전체의 성장 흐름을 한눈에 파악할 수 있습니다.
+                </div>
+            </section>
+
+            {/* 섹션 6: 학습 분석 활용 */}
+            <section id="analysis" style={sectionStyle}>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    {sections[5].title}
                 </h2>
                 <div style={cardStyle}>
                     <p><strong>1. 학급 종합 분석판</strong><br />

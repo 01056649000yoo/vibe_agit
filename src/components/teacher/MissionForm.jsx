@@ -7,7 +7,8 @@ import { createPortal } from 'react-dom';
 const MissionForm = ({
     isFormOpen, isEditing, formData, setFormData,
     genreCategories, handleSubmit, handleCancelEdit, isMobile,
-    handleGenerateQuestions, isGeneratingQuestions
+    handleGenerateQuestions, isGeneratingQuestions,
+    handleSaveDefaultRubric
 }) => {
     const [isQuestionModalOpen, setIsQuestionModalOpen] = React.useState(false);
     const useAIQuestions = (formData.guide_questions?.length > 0) || formData.use_ai_questions;
@@ -404,7 +405,7 @@ const MissionForm = ({
                                         </div>
                                         <div>
                                             <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#2C3E50' }}>
-                                                📊 성취도 평가 루브릭 {formData.evaluation_rubric?.use_rubric ? '(사용 중)' : '(선택)'}
+                                                📊 글쓰기 평가 루브릭 {formData.evaluation_rubric?.use_rubric ? '(사용 중)' : '(선택)'}
                                             </div>
                                             <div style={{ fontSize: '0.8rem', color: '#7F8C8D' }}>
                                                 글쓰기 완료 후 학생의 성취도를 {formData.evaluation_rubric?.levels?.length || 3}단계로 평가합니다.
@@ -413,66 +414,84 @@ const MissionForm = ({
                                     </div>
 
                                     {formData.evaluation_rubric?.use_rubric && (
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            {[3, 4, 5].map(lvl => {
-                                                const colors = {
-                                                    3: { main: '#10B981', border: '#D1FAE5' },
-                                                    4: { main: '#3B82F6', border: '#DBEAFE' },
-                                                    5: { main: '#8B5CF6', border: '#EDE9FE' }
-                                                };
-                                                const theme = colors[lvl];
-                                                const isSelected = formData.evaluation_rubric.levels?.length === lvl;
+                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                {[3, 4, 5].map(lvl => {
+                                                    const colors = {
+                                                        3: { main: '#10B981', border: '#D1FAE5' },
+                                                        4: { main: '#3B82F6', border: '#DBEAFE' },
+                                                        5: { main: '#8B5CF6', border: '#EDE9FE' }
+                                                    };
+                                                    const theme = colors[lvl];
+                                                    const isSelected = formData.evaluation_rubric.levels?.length === lvl;
 
-                                                return (
-                                                    <button
-                                                        key={lvl}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            let newLevels = [];
-                                                            if (lvl === 3) {
-                                                                newLevels = [
-                                                                    { score: 3, label: '우수' },
-                                                                    { score: 2, label: '보통' },
-                                                                    { score: 1, label: '노력' }
-                                                                ];
-                                                            } else if (lvl === 4) {
-                                                                newLevels = [
-                                                                    { score: 4, label: '매우 우수' },
-                                                                    { score: 3, label: '우수' },
-                                                                    { score: 2, label: '보통' },
-                                                                    { score: 1, label: '노력' }
-                                                                ];
-                                                            } else {
-                                                                newLevels = [
-                                                                    { score: 5, label: '매우 우수' },
-                                                                    { score: 4, label: '우수' },
-                                                                    { score: 3, label: '보통' },
-                                                                    { score: 2, label: '기초' },
-                                                                    { score: 1, label: '노력' }
-                                                                ];
-                                                            }
-                                                            setFormData({
-                                                                ...formData,
-                                                                evaluation_rubric: { ...formData.evaluation_rubric, levels: newLevels }
-                                                            });
-                                                        }}
-                                                        style={{
-                                                            padding: '6px 14px',
-                                                            borderRadius: '12px',
-                                                            border: `2px solid ${isSelected ? theme.main : '#E2E8F0'}`,
-                                                            background: isSelected ? theme.main : 'white',
-                                                            color: isSelected ? 'white' : '#64748B',
-                                                            fontSize: '0.85rem',
-                                                            fontWeight: '900',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.2s',
-                                                            boxShadow: isSelected ? `0 4px 12px ${theme.main}40` : 'none'
-                                                        }}
-                                                    >
-                                                        {lvl}단계
-                                                    </button>
-                                                );
-                                            })}
+                                                    return (
+                                                        <button
+                                                            key={lvl}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                let newLevels = [];
+                                                                if (lvl === 3) {
+                                                                    newLevels = [
+                                                                        { score: 3, label: '우수' },
+                                                                        { score: 2, label: '보통' },
+                                                                        { score: 1, label: '노력' }
+                                                                    ];
+                                                                } else if (lvl === 4) {
+                                                                    newLevels = [
+                                                                        { score: 4, label: '매우 우수' },
+                                                                        { score: 3, label: '우수' },
+                                                                        { score: 2, label: '보통' },
+                                                                        { score: 1, label: '노력' }
+                                                                    ];
+                                                                } else {
+                                                                    newLevels = [
+                                                                        { score: 5, label: '매우 우수' },
+                                                                        { score: 4, label: '우수' },
+                                                                        { score: 3, label: '보통' },
+                                                                        { score: 2, label: '기초' },
+                                                                        { score: 1, label: '노력' }
+                                                                    ];
+                                                                }
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    evaluation_rubric: { ...formData.evaluation_rubric, levels: newLevels }
+                                                                });
+                                                            }}
+                                                            style={{
+                                                                padding: '6px 14px',
+                                                                borderRadius: '12px',
+                                                                border: `2px solid ${isSelected ? theme.main : '#E2E8F0'}`,
+                                                                background: isSelected ? theme.main : 'white',
+                                                                color: isSelected ? 'white' : '#64748B',
+                                                                fontSize: '0.85rem',
+                                                                fontWeight: '900',
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.2s',
+                                                                boxShadow: isSelected ? `0 4px 12px ${theme.main}40` : 'none'
+                                                            }}
+                                                        >
+                                                            {lvl}단계
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                onClick={handleSaveDefaultRubric}
+                                                style={{
+                                                    background: '#FFFFFF',
+                                                    border: '1px solid #F39C12',
+                                                    color: '#F39C12',
+                                                    padding: '6px 12px',
+                                                    fontSize: '0.8rem',
+                                                    borderRadius: '10px',
+                                                    fontWeight: 'bold',
+                                                    minHeight: 'auto'
+                                                }}
+                                            >
+                                                💾 기본값으로 저장
+                                            </Button>
                                         </div>
                                     )}
                                 </div>

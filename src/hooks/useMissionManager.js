@@ -22,28 +22,42 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const [editingMissionId, setEditingMissionId] = useState(null);
     const [isEvaluationMode, setIsEvaluationMode] = useState(false);
 
-    const [formData, setFormData] = useState({
-        title: '',
-        guide: '',
-        genre: '일기',
-        min_chars: 100,
-        min_paragraphs: 1,
-        base_reward: 100,
-        bonus_threshold: 100,
-        bonus_reward: 10,
-        allow_comments: true,
-        mission_type: '일기',
-        guide_questions: [],
-        question_count: 3,
-        evaluation_rubric: {
-            use_rubric: false,
-            levels: [
-                { score: 3, label: '우수' },
-                { score: 2, label: '보통' },
-                { score: 1, label: '노력' }
-            ]
-        }
-    });
+    const getResetFormData = useCallback(() => {
+        const savedLevels = localStorage.getItem('default_rubric_levels');
+        const defaultLevels = savedLevels ? JSON.parse(savedLevels) : [
+            { score: 3, label: '우수' },
+            { score: 2, label: '보통' },
+            { score: 1, label: '노력' }
+        ];
+
+        return {
+            title: '',
+            guide: '',
+            genre: '일기',
+            min_chars: 100,
+            min_paragraphs: 1,
+            base_reward: 100,
+            bonus_threshold: 100,
+            bonus_reward: 10,
+            allow_comments: true,
+            mission_type: '일기',
+            guide_questions: [],
+            question_count: 3,
+            evaluation_rubric: {
+                use_rubric: false, // 신규 미션은 항상 '사용 안 함'이 기본
+                levels: defaultLevels // 하지만 켜는 순간 저장된 기본 단계가 나옴
+            }
+        };
+    }, []);
+
+    const [formData, setFormData] = useState(getResetFormData);
+
+    const handleSaveDefaultRubric = () => {
+        if (!formData.evaluation_rubric?.levels) return;
+        localStorage.setItem('default_rubric_levels', JSON.stringify(formData.evaluation_rubric.levels));
+        alert('현재 루브릭의 단계와 명칭이 저장되었습니다! 💾\n앞으로 새로운 미션에서 루브릭을 활성화하면 이 설정이 기본으로 적용됩니다.');
+    };
+
     const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
 
     const fetchMissions = useCallback(async () => {
@@ -100,6 +114,13 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     }, [activeClass?.id, fetchMissions]);
 
     const handleEditClick = (mission) => {
+        const savedLevels = localStorage.getItem('default_rubric_levels');
+        const defaultLevels = savedLevels ? JSON.parse(savedLevels) : [
+            { score: 3, label: '우수' },
+            { score: 2, label: '보통' },
+            { score: 1, label: '노력' }
+        ];
+
         setFormData({
             title: mission.title,
             guide: mission.guide,
@@ -114,7 +135,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             guide_questions: mission.guide_questions || [],
             evaluation_rubric: mission.evaluation_rubric || {
                 use_rubric: false,
-                levels: [{ score: 3, label: '우수' }, { score: 2, label: '보통' }, { score: 1, label: '노력' }]
+                levels: defaultLevels
             }
         });
         setEditingMissionId(mission.id);
@@ -126,27 +147,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const handleCancelEdit = () => {
         setIsEditing(false);
         setEditingMissionId(null);
-        setFormData({
-            title: '',
-            guide: '',
-            genre: '일기',
-            min_chars: 100,
-            min_paragraphs: 1,
-            base_reward: 100,
-            bonus_threshold: 100,
-            bonus_reward: 10,
-            allow_comments: true,
-            mission_type: '일기',
-            guide_questions: [],
-            evaluation_rubric: {
-                use_rubric: false,
-                levels: [
-                    { score: 3, label: '우수' },
-                    { score: 2, label: '보통' },
-                    { score: 1, label: '노력' }
-                ]
-            }
-        });
+        setFormData(getResetFormData());
         setIsFormOpen(false);
     };
 
@@ -843,6 +844,7 @@ ${postArray.map((p, idx) => `[학생 ${idx + 1}]\nID: ${p.id}\n제목: ${p.title
         handleBulkRequestRewrite,
         handleFinalArchive, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
+        handleSaveDefaultRubric,
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode
     };
 };

@@ -29,6 +29,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         handleBulkRequestRewrite,
         handleFinalArchive, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
+        handleSaveDefaultRubric,
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode
     } = useMissionManager(activeClass);
 
@@ -103,6 +104,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 isMobile={isMobile}
                 handleGenerateQuestions={handleGenerateQuestions}
                 isGeneratingQuestions={isGeneratingQuestions}
+                handleSaveDefaultRubric={handleSaveDefaultRubric}
             />
 
             {/* 미션 리스트 */}
