@@ -32,11 +32,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
         editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
-        geminiKey, setGeminiKey, originalKey,
+        openaiKey, setOpenaiKey, originalKey,
         promptTemplate, setPromptTemplate, originalPrompt,
+        reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         isKeyVisible, setIsKeyVisible,
         savingKey, testingKey,
-        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestGeminiKey,
+        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses, maskKey
     } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass);
@@ -132,7 +133,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '📊 미션 현황' : tabId === 'archive' ? '📂 글 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📋 생활지도기록부 도움자료' : tabId === 'playground' ? '🎢 놀이터 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '📖 앱 사용법'}
+                        {tabId === 'dashboard' ? '📊 글쓰기 미션 관리' : tabId === 'archive' ? '📂 글 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📋 AI쫑알이' : tabId === 'playground' ? '🎢 놀이터 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '📖 앱 사용법'}
                     </button>
                 ))}
             </nav>
@@ -164,16 +165,16 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         ) : currentTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
                         ) : currentTab === 'activity' ? (
-                            <ActivityReport activeClass={activeClass} isMobile={isMobile} geminiKey={originalKey} />
+                            <ActivityReport activeClass={activeClass} isMobile={isMobile} promptTemplate={reportPromptTemplate} />
                         ) : (
                             <TeacherSettingsTab
                                 session={session} classes={classes} activeClass={activeClass} setActiveClass={setActiveClass}
                                 setClasses={setClasses} fetchAllClasses={fetchAllClasses} handleSetPrimaryClass={handleSetPrimaryClass}
-                                profile={profile} isMobile={isMobile} geminiKey={geminiKey} setGeminiKey={setGeminiKey}
-                                isKeyVisible={isKeyVisible} setIsKeyVisible={setIsKeyVisible} handleTestGeminiKey={handleTestGeminiKey}
+                                openaiKey={openaiKey} handleTestAIConnection={handleTestAIConnection}
                                 savingKey={savingKey} testingKey={testingKey} originalKey={originalKey} maskKey={maskKey}
-                                promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate}
-                                handleSaveTeacherSettings={handleSaveTeacherSettings} originalPrompt={originalPrompt}
+                                promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
+                                reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}
+                                handleSaveTeacherSettings={handleSaveTeacherSettings}
                                 fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
                             />
                         )

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { callGemini } from '../lib/gemini';
+import { callGemini } from '../lib/openai';
 
 export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const [missions, setMissions] = useState([]);
@@ -179,20 +179,8 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             return;
         }
 
-        const { data: { user } } = await supabase.auth.getUser();
-        const { data: profileData } = await supabase
-            .from('profiles')
-            .select('gemini_api_key')
-            .eq('id', user.id)
-            .single();
-
-        const apiKey = profileData?.gemini_api_key;
-        if (!apiKey) {
-            alert('Gemini API 키가 설정되지 않았습니다. [설정]에서 키를 등록해주세요! 🔑');
-            return;
-        }
-
         setIsGeneratingQuestions(true);
+
         try {
             const prompt = `
             너는 초등학생 글쓰기 지도를 돕는 AI 선생님이야. 
@@ -211,7 +199,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             ["질문1", "질문2", "질문3"]
             `;
 
-            const responseText = await callGemini(prompt, apiKey);
+            const responseText = await callGemini(prompt); // API key is now handled internally in lib/openai.js
 
             const jsonMatch = responseText.match(/\[.*\]/s);
             if (jsonMatch) {
@@ -305,7 +293,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                 .from('student_posts')
                 .select(`
                     id, title, content, student_id, mission_id, char_count, is_submitted, is_confirmed, is_returned, ai_feedback, created_at,
-                    original_title, original_content, first_submitted_at, initial_eval, final_eval, eval_comment,
+                    original_title, original_content, first_submitted_at, initial_eval, final_eval, eval_comment, student_answers,
                     students!inner(name, class_id)
                 `)
                 .eq('mission_id', mission.id)
@@ -330,16 +318,20 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         const { data: { user } } = await supabase.auth.getUser();
         const { data: profileData } = await supabase
             .from('profiles')
-            .select('gemini_api_key, ai_prompt_template')
+            .select('ai_prompt_template')
             .eq('id', user?.id)
             .single();
 
-        const apiKey = profileData?.gemini_api_key?.trim();
-        const customTemplate = profileData?.ai_prompt_template?.trim();
+        let customTemplate = profileData?.ai_prompt_template?.trim();
 
-        if (!apiKey) {
-            alert('Gemini API 키가 등록되지 않았습니다. [설정] 메뉴에서 키를 먼저 등록해주세요! 🔐');
-            return null;
+        // JSON 패킹된 프롬프트인지 확인하여 피드백 섹션만 추출
+        if (customTemplate && customTemplate.startsWith('{') && customTemplate.endsWith('}')) {
+            try {
+                const parsed = JSON.parse(customTemplate);
+                customTemplate = parsed.feedback;
+            } catch (e) {
+                console.warn('프롬프트 JSON 파싱 실패, 원문 사용');
+            }
         }
 
         const defaultTemplate = `너는 초등학생의 글쓰기 성장을 돕는 다정한 보조 선생님이야. 아래 학생의 글을 읽고 정해진 형식에 맞춰 피드백을 작성해줘.
@@ -363,7 +355,6 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
         const basePrompt = customTemplate || defaultTemplate;
 
-        let prompt = "";
         if (isBulk) {
             prompt = `${basePrompt}
 
@@ -373,18 +364,28 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
 [응답 형식]
 [
-  { "id": "글의_ID", "feedback": "위의 피드백 형식을 따른 전체 텍스트" },
-  ...
+  { "id": "글의_ID", "feedback": "위의 피드백 형식을 따른 전체 텍스트" }
 ]
 
 [분석할 글 목록]
-${postArray.map((p, idx) => `[학생 ${idx + 1}]\nID: ${p.id}\n제목: ${p.title}\n내용: ${p.content}`).join('\n\n')}`;
+${postArray.map((p, idx) => {
+                let qaSection = "";
+                if (selectedMission?.guide_questions?.length > 0 && p.student_answers?.length > 0) {
+                    qaSection = "\n[핵심질문에 대한 답변]\n" + selectedMission.guide_questions.map((q, i) => `질문${i + 1}: ${q}\n답변${i + 1}: ${p.student_answers[i] || '(답변 없음)'}`).join('\n');
+                }
+                return `[학생 ${idx + 1}]\nID: ${p.id}\n성함: ${p.student_name || '학생'}\n제목: ${p.title}\n내용: ${p.content}${qaSection}`;
+            }).join('\n\n')}`;
         } else {
-            prompt = `${basePrompt}\n\n---\n[학생의 글 정보]\n글 제목: "${postArray[0].title}"\n글 내용:\n"${postArray[0].content}"`;
+            let qaSection = "";
+            const p = postArray[0];
+            if (selectedMission?.guide_questions?.length > 0 && p.student_answers?.length > 0) {
+                qaSection = "\n[핵심질문에 대한 답변]\n" + selectedMission.guide_questions.map((q, i) => `질문${i + 1}: ${q}\n답변${i + 1}: ${p.student_answers[i] || '(답변 없음)'}`).join('\n');
+            }
+            prompt = `${basePrompt}\n\n---\n[학생 정보]\n이름: ${p.student_name || '학생'}\n글 제목: "${p.title}"\n글 내용:\n"${p.content}"${qaSection}`;
         }
 
         try {
-            const responseText = await callGemini(prompt, apiKey);
+            const responseText = await callGemini(prompt);
 
             if (isBulk) {
                 const jsonMatch = responseText.match(/\[\s*\{.*\}\s*\]/s);
@@ -403,7 +404,13 @@ ${postArray.map((p, idx) => `[학생 ${idx + 1}]\nID: ${p.id}\n제목: ${p.title
         if (!selectedPost) return;
         setIsGenerating(true);
         try {
-            const feedback = await fetchAIFeedback([{ id: selectedPost.id, title: selectedPost.title, content: selectedPost.content }]);
+            const feedback = await fetchAIFeedback([{
+                id: selectedPost.id,
+                title: selectedPost.title,
+                content: selectedPost.content,
+                student_answers: selectedPost.student_answers,
+                student_name: selectedPost.students?.name
+            }]);
             if (feedback) {
                 const { error } = await supabase
                     .from('student_posts')
@@ -445,7 +452,13 @@ ${postArray.map((p, idx) => `[학생 ${idx + 1}]\nID: ${p.id}\n제목: ${p.title
             for (let i = 0; i < targetPosts.length; i += 2) {
                 const chunk = targetPosts.slice(i, i + 2);
                 try {
-                    const results = await fetchAIFeedback(chunk.map(p => ({ id: p.id, title: p.title, content: p.content })));
+                    const results = await fetchAIFeedback(chunk.map(p => ({
+                        id: p.id,
+                        title: p.title,
+                        content: p.content,
+                        student_answers: p.student_answers,
+                        student_name: p.students?.name
+                    })));
 
                     if (results && Array.isArray(results)) {
                         for (const res of results) {

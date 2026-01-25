@@ -1,59 +1,56 @@
-/**
- * Gemini 모델 호출 유틸리티 ✨
- * 사용자 요청에 따른 모델 계층화 및 폴백(Fallback) 로직을 처리합니다.
- */
-
-const MODEL_HIERARCHY = [
-    'gemini-2.5-flash-lite',               // 사용자 요청 1순위
-    'gemini-2.5-flash',                    // 사용자 요청 2순위
-    'gemini-3-flash',                      // 사용자 요청 3순위
-    'gemini-2.0-flash-lite-preview-02-05', // 현 시점 최신 Lite 폴백
-    'gemini-2.0-flash',                    // 현 시점 표준 폴백
-    'gemini-1.5-flash'                     // 안정적인 최종 폴백
+const OPENAI_MODEL_HIERARCHY = [
+    'gpt-5-mini',
+    'gpt-5.1',
+    'gpt-5-nano',
 ];
 
 /**
- * Gemini API를 호출합니다. 계층별 모델 폴백을 시도합니다.
- * @param {string} prompt - 전송할 프롬프트
- * @param {string} apiKey - API 키
+ * OpenAI API를 호출합니다.
  */
-export const callGemini = async (prompt, apiKey) => {
-    if (!apiKey) throw new Error('API 키가 설정되지 않았습니다.');
+export const callOpenAI = async (prompt, apiKey) => {
+    const key = apiKey || import.meta.env.VITE_OPENAI_API_KEY;
+    if (!key) throw new Error('OpenAI API 키가 설정되지 않았습니다.');
 
     let lastError = null;
 
-    for (const model of MODEL_HIERARCHY) {
+    for (const model of OPENAI_MODEL_HIERARCHY) {
         try {
-            const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-            const response = await fetch(`${baseUrl}?key=${apiKey}`, {
+            const response = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${key}`
+                },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
+                    model: model,
+                    messages: [{ role: "user", content: prompt }]
                 })
             });
 
             if (response.ok) {
                 const data = await response.json();
-                const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                const content = data.choices?.[0]?.message?.content;
                 if (content) return content.trim();
-                throw new Error('응답 데이터가 비어있습니다.');
+            } else {
+                const errorData = await response.json();
+                lastError = errorData?.error?.message || `HTTP ${response.status}`;
             }
-
-            const errorData = await response.json();
-            const errorMsg = errorData?.error?.message || `HTTP ${response.status}`;
-
-            // 404(모델 없음), 429(속도 제한), 400(잘못된 요청 - 모델 관련인 경우) 등에 대해 폴백 시도
-            console.warn(`모델 ${model} 호출 실패, 다음 모델 시도 중:`, errorMsg);
-            lastError = errorMsg;
-            continue;
-
         } catch (err) {
-            console.error(`모델 ${model} 오류:`, err.message);
             lastError = err.message;
-            continue;
         }
     }
+    throw new Error(`OpenAI 호출 실패: ${lastError}`);
+};
 
-    throw new Error(`모든 모델 호출에 실패했습니다. 최후 오류: ${lastError}`);
+/**
+ * 설정된 공급자에 따라 AI를 호출합니다. (GPT 전용으로 통합) ✨
+ */
+export const callAI = async (prompt) => {
+    return await callOpenAI(prompt);
+};
+
+// 하위 호환성을 위해 남겨둠 (기존 코드에서 callGemini를 참조하는 경우를 대비)
+export const callGemini = (prompt) => {
+    console.warn('callGemini is deprecated. Using OpenAI instead.');
+    return callOpenAI(prompt);
 };

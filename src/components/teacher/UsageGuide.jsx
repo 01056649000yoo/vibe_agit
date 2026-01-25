@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import GeminiGuideModal from './GeminiGuideModal';
+
 
 const UsageGuide = ({ isMobile }) => {
-    const [showGeminiGuide, setShowGeminiGuide] = useState(false);
+
 
     const scrollToSection = (id) => {
         const element = document.getElementById(id);
@@ -17,7 +17,7 @@ const UsageGuide = ({ isMobile }) => {
         { id: 'mission-writing', title: '✍️ 미션 및 글쓰기', emoji: '✍️' },
         { id: 'playground', title: '🎢 놀이터 및 게임 설정', emoji: '🎢' },
         { id: 'points-dragon', title: '💰 포인트 및 드래곤', emoji: '💰' },
-        { id: 'evaluation', title: '🎯 학생 평가 및 기록', emoji: '🎯' },
+        { id: 'evaluation', title: '🎯 학생 평가 및 AI쫑알이', emoji: '🎯' },
         { id: 'analysis', title: '📊 학습 분석 활용', emoji: '📊' },
     ];
 
@@ -114,35 +114,7 @@ const UsageGuide = ({ isMobile }) => {
                     </button>
                 ))}
 
-                {/* [추가] AI 피드백 섹션으로 바로가기 버튼 */}
-                <button
-                    onClick={() => scrollToSection('ai-feedback')}
-                    style={{
-                        textAlign: 'left',
-                        padding: '12px 20px',
-                        background: '#E8F0FE', // 구별되는 배경색
-                        border: '1px solid #4285F4',
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        fontSize: '0.95rem',
-                        fontWeight: '700',
-                        color: '#4285F4', // 구글 블루
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}
-                    onMouseEnter={e => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(66, 133, 244, 0.2)';
-                    }}
-                    onMouseLeave={e => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                    }}
-                >
-                    🔑 Gemini API 키 발급 방법
-                </button>
+
             </div>
 
             {/* 섹션 1: 학급 및 학생 관리 */}
@@ -183,8 +155,7 @@ const UsageGuide = ({ isMobile }) => {
                     </p>
                     <p><strong>• AI 질문 생성:</strong>
                         <br />직접 질문을 만들기 어렵다면 <strong>'AI 질문 생성하기'</strong> 버튼을 클릭하세요.
-                        최신 모델인 <strong>Gemini 3.0 Flash</strong>가 미션 주제에 딱 맞는 질문을 자동으로 설계해줍니다.
-                        <br /><span style={{ color: '#E67E22', fontWeight: 'bold' }}>⚠️ Gemini무료 api를 사용하는경우 AI 질문 생성은 1일 5회까지 무료로 최적화되어 제공됩니다.</span>
+                        최신 모델인 <strong>OpenAI GPT-5 Mini</strong>가 미션 주제에 딱 맞는 질문을 자동으로 설계해줍니다. ✨
                     </p>
                     <p><strong>• 미션 보관 및 데이터 내보내기:</strong>
                         <br />학기가 끝나거나 완료된 미션은 '보관함으로 이동'을 선택하세요.
@@ -210,33 +181,15 @@ const UsageGuide = ({ isMobile }) => {
                 <div id="ai-feedback" style={{ ...highlightStyle, scrollMarginTop: '100px' }}>
                     🤖 <strong>AI 피드백 활용 (PRO):</strong>
                     <br />
-                    미확인 글에 대해 <strong>'AI 피드백 일괄 생성'</strong> 버튼을 누르면, 선생님이 설정한 API 키를 사용하여 AI가 모든 글을 분석하고 맞춤형 조언을 댓글로 남겨줍니다.
+                    미확인 글에 대해 <strong>'AI 피드백 일괄 생성'</strong> 버튼을 누르면, 시스템이 AI 모델을 사용하여 모든 글을 분석하고 맞춤형 조언을 댓글로 남겨줍니다.
                     <br /><br />
                     ⚠️ <strong>안정적인 서비스 운영 (AI 모델 안내):</strong><br />
-                    현재 더욱 똑똑해진 <strong>Gemini 2.5 Flash Lite</strong> 버전과 <strong>Gemini 2.5</strong> 버전이 함께 활용되어 최적의 피드백을 제공합니다. <br />
-                    <span style={{ color: '#E67E22', fontWeight: 'bold' }}>• 제미나이 무료 API를 사용할 경우, 학생 글 2건을 1회 호출로 처리하여 1일 총 30건의 AI 피드백 생성이 가능하오니 이용에 참고해 주세요.</span> <br />
-                    Lite 모델의 할당량이 초과되더라도 고성능 모델로 자동 전환되어 끊김 없는 서비스를 지원합니다.
-                    <br /><br />
-                    <button
-                        onClick={() => setShowGeminiGuide(true)}
-                        style={{
-                            background: '#4285F4',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 16px',
-                            borderRadius: '8px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            marginTop: '8px',
-                            fontSize: '0.9rem'
-                        }}
-                    >
-                        🔑 Gemini API 키 발급 방법 자세히 보기
-                    </button>
+                    현재 더욱 똑똑해진 <strong>OpenAI GPT-5 Mini</strong> 기반 모델이 활용되어 최적의 피드백을 제공합니다.
+                    선생님은 [관리 설정]에서 피드백의 말투나 형식을 결정하는 <strong>'AI 피드백 프롬프트'</strong>를 직접 수정할 수 있습니다. ✨
                 </div>
             </section>
 
-            <GeminiGuideModal isOpen={showGeminiGuide} onClose={() => setShowGeminiGuide(false)} />
+
 
             {/* 섹션 3: 놀이터 및 게임 설정 */}
             <section id="playground" style={sectionStyle}>
@@ -286,29 +239,39 @@ const UsageGuide = ({ isMobile }) => {
                 </div>
             </section>
 
-            {/* 섹션 5: 학생 평가 및 기록 */}
+            {/* 섹션 5: 학생 평가 및 AI쫑알이 */}
             <section id="evaluation" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
                     {sections[4].title}
                 </h2>
+
                 <div style={cardStyle}>
-                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#16A085' }}>📊 성취도 평가 및 루브릭 활용</h3>
-                    <p><strong>1. 평가 루브릭 설정:</strong><br />
-                        미션을 만들 때 <strong>[평가 루브릭 사용]</strong>을 체크하면 '우수-보통-노력' 등 단계별 평가 기준을 설정할 수 있습니다.
-                        선생님만의 전문적인 평가 기준을 미리 등록하여 체계적인 기록을 시작해보세요!
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#16A085' }}>1단계: 성취도 평가 및 루브릭 설정</h3>
+                    <p><strong>• 평가 기준(루브릭) 등록:</strong> 미션 생성 시 <strong>[평가 루브릭 사용]</strong>을 체크하여 '우수-보통-노력' 등 단계별 평가 기준을 설정합니다. 관리 설정에서 선생님만의 기본 루브릭을 저장해두면 매번 입력할 필요 없이 편리하게 불러올 수 있습니다.</p>
+                    <p><strong>• 학생별 성장 평가:</strong> [글쓰기 미션 현황]에서 학생의 글을 클릭한 후 <strong>'📊 성장 평가하기'</strong>를 누르세요. 처음 쓴 글과 마지막 글을 비교하며 성취 수준(점수)과 구체적인 관찰 의견을 기록할 수 있습니다.</p>
+                </div>
+
+                <div style={cardStyle}>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#E67E22' }}>2단계: AI쫑알이를 활용한 종합 분석</h3>
+                    <p><strong>• AI쫑알이란?</strong> 학기 말이나 단원 종료 후, 여러 미션에 흩어진 학생의 활동 기록과 선생님의 평가 데이터를 하나로 모아 <strong>학교생활기록부용 종합 의견</strong>을 초안으로 작성해주는 똑똑한 도우미입니다. 🐥</p>
+                    <p><strong>• 생성 과정:</strong>
+                        <br />1. 상단 <strong>[AI쫑알이]</strong> 탭으로 이동합니다.
+                        <br />2. 분석하고자 하는 미션들을 여러 개 선택합니다. (예: 1학기 일기 미션 전체)
+                        <br />3. 명단에서 학생을 선택하거나 <strong>'일괄 생성'</strong> 버튼을 클릭합니다.
+                        <br />4. AI가 해당 학생의 모든 글 내용, 핵심 질문 답변, 그리고 선생님이 남긴 <strong>성취도 평가 결과</strong>를 종합 분석하여 리포트를 생성합니다.
                     </p>
                 </div>
-                <div style={cardStyle}>
-                    <p><strong>2. 학생별 성장 평가하기:</strong><br />
-                        [글쓰기 미션 현황]에서 각 학생의 글을 클릭한 후, 상단의 <strong>'📊 성장 평가하기'</strong> 버튼을 눌러보세요.
-                        학생의 초안과 최종본을 비교하며 단계별 성취도와 구체적인 관찰 의견을 기록할 수 있습니다.
-                    </p>
-                </div>
+
                 <div style={highlightStyle}>
-                    📂 <strong>전체 학생 글 모아보기 (비교 뷰):</strong>
+                    ✨ <strong>전문적인 프롬프트 관리:</strong>
                     <br />
-                    미션의 '제출 현황' 모달창 상단에 있는 <strong>'📂 학생 글 모아보기'</strong> 버튼을 클릭하세요!
-                    우리 반 전체 학생의 <strong>처음 쓴 글(초안)과 마지막 글(최종본)</strong>을 한 화면에서 나란히 비교하며 학급 전체의 성장 흐름을 한눈에 파악할 수 있습니다.
+                    [관리 설정] 대시보드에서 <strong>'AI쫑알이 생성 프롬프트'</strong>를 직접 수정해보세요.
+                    "교사 관점의 평어체(~함)로 작성해줘", "학생의 강점을 위주로 서술해줘"와 같은 구체적인 지침을 입력해두면 훨씬 더 만족스러운 생기부 문구를 얻을 수 있습니다.
+                </div>
+
+                <div style={cardStyle}>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#2980B9' }}>3단계: 데이터 내보내기 및 활용</h3>
+                    <p><strong>• 엑셀 다운로드:</strong> 생성된 종합 리포트 내용은 엑셀 파일로 한꺼번에 내려받을 수 있습니다. 나이스(NEIS) 입력 시 기초 자료로 활용하거나 학부모 상담 자료로 사용해보세요!</p>
                 </div>
             </section>
 

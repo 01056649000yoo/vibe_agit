@@ -4,14 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { useEvaluation } from '../../hooks/useEvaluation';
-import { callGemini } from '../../lib/gemini';
+import { callGemini } from '../../lib/openai';
 import * as XLSX from 'xlsx';
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink } from 'lucide-react';
 
 /**
  * 역할: 선생님 - 활동별 리포트 (통합 분석 & 내보내기 버전) 📊
  */
-const ActivityReport = ({ activeClass, isMobile, geminiKey }) => {
+const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     const [allTags, setAllTags] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
     const [missions, setMissions] = useState([]);
@@ -85,18 +85,26 @@ const ActivityReport = ({ activeClass, isMobile, geminiKey }) => {
             }
             setLoadingDetails(true);
             try {
-                const { data, error } = await supabase
+                // 1. 해당 학급의 모든 학생 목록 먼저 가져오기
+                const { data: classStudents, error: studentsError } = await supabase
+                    .from('students')
+                    .select('id, name')
+                    .eq('class_id', activeClass.id)
+                    .order('name', { ascending: true });
+
+                if (studentsError) throw studentsError;
+
+                // 2. 선택된 미션들에 대한 제출물 가져오기
+                const { data: postsData, error: postsError } = await supabase
                     .from('student_posts')
                     .select(`
                         *,
-                        students (name, id),
                         writing_missions (id, title, evaluation_rubric)
                     `)
                     .in('mission_id', selectedMissionIds)
-                    .eq('is_submitted', true)
-                    .order('created_at', { ascending: true });
+                    .eq('is_submitted', true);
 
-                if (error) throw error;
+                if (postsError) throw postsError;
 
                 // 로컬 저장소에서 기존 생성 결과 가져오기
                 let savedResults = {};
@@ -105,22 +113,27 @@ const ActivityReport = ({ activeClass, isMobile, geminiKey }) => {
                     if (saved) savedResults = JSON.parse(saved);
                 }
 
-                const grouped = data.reduce((acc, post) => {
-                    const sId = post.students.id;
-                    if (!acc[sId]) {
-                        acc[sId] = {
-                            student: post.students,
-                            posts: [],
-                            ai_synthesis: savedResults[sId] || ''
-                        };
-                    }
-                    acc[sId].posts.push(post);
+                // 학생 ID별로 포스트 그룹화
+                const postMap = (postsData || []).reduce((acc, p) => {
+                    if (!acc[p.student_id]) acc[p.student_id] = [];
+                    acc[p.student_id].push(p);
                     return acc;
                 }, {});
 
-                setStudentPosts(Object.values(grouped).sort((a, b) => a.student.name.localeCompare(b.student.name)));
+                // 학생 목록 기반으로 데이터 구성
+                const synthesized = classStudents.map(student => ({
+                    student: student,
+                    posts: postMap[student.id] || [],
+                    ai_synthesis: savedResults[student.id] || ''
+                }));
+
+                // 게시물이 하나라도 있는 학생만 보여주거나, 전체를 보여줌 (여기서는 일단 참여 학생만 필터링)
+                const activeInMissions = synthesized.filter(s => s.posts.length > 0);
+
+                setStudentPosts(activeInMissions);
             } catch (err) {
                 console.error('데이터 수합 실패:', err.message);
+                alert('학생 데이터를 불러오는 중 오류가 발생했습니다.');
             } finally {
                 setLoadingDetails(false);
             }
@@ -139,10 +152,6 @@ const ActivityReport = ({ activeClass, isMobile, geminiKey }) => {
 
     // 5. 단일 생성
     const generateCombinedReview = async (studentData) => {
-        if (!geminiKey) {
-            alert('키가 설정되지 않았습니다. 🔑');
-            return;
-        }
         setIsGenerating(prev => ({ ...prev, [studentData.student.id]: true }));
         try {
             const activitiesInfo = studentData.posts.map(p => `
@@ -152,8 +161,14 @@ const ActivityReport = ({ activeClass, isMobile, geminiKey }) => {
                 [교사코멘트]: ${p.eval_comment || '없음'}
             `).join('\n---\n');
 
-            const prompt = `학생 '${studentData.student.name}'의 여러 활동 데이터:\n${activitiesInfo}\n\n위 활동들을 통합하여 생기부용 성장 분석 코멘트를 200자 이내 평어체(~함.)로 작성해줘.`;
-            const review = await callGemini(prompt, geminiKey);
+            let prompt = '';
+            if (promptTemplate && promptTemplate.trim()) {
+                prompt = `${promptTemplate}\n\n[대상 학생 활동 데이터]\n${activitiesInfo}`;
+            } else {
+                prompt = `학생 '${studentData.student.name}'의 여러 활동 데이터:\n${activitiesInfo}\n\n위 활동들을 통합하여 생기부용 성장 분석 코멘트를 200자 이내 평어체(~함.)로 작성해줘.`;
+            }
+
+            const review = await callGemini(prompt);
 
             if (review) {
                 setStudentPosts(prev => prev.map(s =>
@@ -162,7 +177,8 @@ const ActivityReport = ({ activeClass, isMobile, geminiKey }) => {
                 saveToPersistence(studentData.student.id, review);
             }
         } catch (err) {
-            console.error(err);
+            console.error('단일 생성 오류:', err);
+            alert(`생성 중 오류 발생: ${err.message}`);
         } finally {
             setIsGenerating(prev => ({ ...prev, [studentData.student.id]: false }));
         }
@@ -171,16 +187,11 @@ const ActivityReport = ({ activeClass, isMobile, geminiKey }) => {
     // 6. 일괄 생성
     const handleBatchGenerate = async () => {
         if (studentPosts.length === 0) return;
-        if (!geminiKey) {
-            alert('API 키 등록이 필요합니다.');
-            return;
-        }
         if (!confirm('학급 전체 학생의 통합 리포트를 일괄 생성하시겠습니까? (저장된 결과는 유지됩니다)')) return;
 
         setBatchLoading(true);
         setBatchProgress({ current: 0, total: studentPosts.length });
 
-        const updatedPosts = [...studentPosts];
         for (let i = 0; i < studentPosts.length; i++) {
             const data = studentPosts[i];
             if (data.ai_synthesis) {
@@ -189,19 +200,34 @@ const ActivityReport = ({ activeClass, isMobile, geminiKey }) => {
             }
 
             try {
-                const activitiesInfo = data.posts.map(p => `[${p.writing_missions.title}] ${p.content}`).join('\n');
-                const prompt = `학생 '${data.student.name}'의 활동들:\n${activitiesInfo}\n\n생기부용 통합 총평 180자 내외 평어체 작성:`;
-                const review = await callGemini(prompt, geminiKey);
+                const activitiesInfo = data.posts.map(p => `
+                    [미션]: ${p.writing_missions.title} 
+                    [내용]: ${p.content.substring(0, 300)}...
+                    [평가]: ${p.final_eval || p.initial_eval || '-'}
+                `).join('\n');
+
+                let prompt = '';
+                if (promptTemplate && promptTemplate.trim()) {
+                    prompt = `${promptTemplate}\n\n[학생 명단: ${data.student.name}]\n[활동들]\n${activitiesInfo}`;
+                } else {
+                    prompt = `학생 '${data.student.name}'의 활동들:\n${activitiesInfo}\n\n생기부용 통합 총평 180자 내외 평어체 작성:`;
+                }
+
+                const review = await callGemini(prompt);
                 if (review) {
-                    updatedPosts[i].ai_synthesis = review;
+                    setStudentPosts(prev => prev.map((s, idx) =>
+                        idx === i ? { ...s, ai_synthesis: review } : s
+                    ));
                     saveToPersistence(data.student.id, review);
                 }
                 setBatchProgress(prev => ({ ...prev, current: i + 1 }));
-                await new Promise(r => setTimeout(r, 600));
-            } catch (err) { console.error(err); }
+                await new Promise(r => setTimeout(r, 800)); // Rate limiting safety
+            } catch (err) {
+                console.error(`학생 ${data.student.name} 처리 중 오류:`, err);
+            }
         }
-        setStudentPosts(updatedPosts);
         setBatchLoading(false);
+        alert('일괄 생성이 완료되었습니다! ✨');
     };
 
     // 7. 엑셀 내보내기
@@ -247,7 +273,7 @@ const ActivityReport = ({ activeClass, isMobile, geminiKey }) => {
         <div style={{ width: '100%', boxSizing: 'border-box', padding: isMobile ? '0' : '10px 0' }}>
             <header style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                    <h2 style={{ margin: '0 0 8px 0', fontSize: '1.8rem', fontWeight: '950', color: '#1E293B' }}>🔗 생활지도기록부 도움자료 생성기</h2>
+                    <h2 style={{ margin: '0 0 8px 0', fontSize: '1.8rem', fontWeight: '950', color: '#1E293B' }}>🔗 AI쫑알이 (생기부 도움자료)</h2>
                     <p style={{ color: '#64748B', fontSize: '1.05rem', margin: 0 }}>여러 미션을 연결하여 학기 말 생활지도기록부 작성을 돕는 기초 자료를 완성합니다.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>

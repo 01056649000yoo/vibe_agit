@@ -14,19 +14,17 @@ const TeacherSettingsTab = ({
     handleSetPrimaryClass,
     profile,
     isMobile,
-    geminiKey,
-    setGeminiKey,
-    isKeyVisible,
-    setIsKeyVisible,
-    handleTestGeminiKey,
+    openaiKey,
+    handleTestAIConnection,
     savingKey,
     testingKey,
-    originalKey,
-    maskKey,
     promptTemplate,
     setPromptTemplate,
-    handleSaveTeacherSettings,
     originalPrompt,
+    reportPromptTemplate,
+    setReportPromptTemplate,
+    originalReportPrompt,
+    handleSaveTeacherSettings,
     fetchDeletedClasses,
     onRestoreClass
 }) => {
@@ -81,77 +79,71 @@ const TeacherSettingsTab = ({
                         display: 'flex', flexDirection: 'column'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                            <span style={{ fontSize: '1.5rem' }}>🔐</span>
-                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>AI 자동 피드백 보안 센터</h3>
+                            <span style={{ fontSize: '1.5rem' }}>🤖</span>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>AI 자동 피드백 설정(수정 사용가능)</h3>
                         </div>
 
                         <div style={{
                             background: 'white', padding: '20px', borderRadius: '18px', border: '1px solid #E9ECEF',
                             flex: 1, display: 'flex', flexDirection: 'column'
                         }}>
-                            <label style={{ display: 'block', fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold', marginBottom: '10px' }}>
-                                Gemini API Key
-                            </label>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <div style={{ position: 'relative', flex: 1 }}>
-                                    <input
-                                        type={isKeyVisible ? "text" : "password"}
-                                        value={geminiKey}
-                                        onChange={(e) => setGeminiKey(e.target.value)}
-                                        placeholder="키를 입력해 주세요 (AI...)"
-                                        style={{
-                                            width: '100%', padding: '12px 16px', borderRadius: '12px',
-                                            border: '1px solid #DEE2E6', outline: 'none', transition: 'all 0.2s',
-                                            fontSize: '0.9rem', color: '#2C3E50'
-                                        }}
-                                    />
-                                    <button
-                                        onClick={() => setIsKeyVisible(!isKeyVisible)}
-                                        style={{
-                                            position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                                            background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem'
-                                        }}
-                                    >
-                                        {isKeyVisible ? '🙈' : '👁️'}
-                                    </button>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                <div style={{ fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold' }}>
+                                    AI 시스템 상태: <span style={{ color: '#27AE60' }}>● 연결됨</span>
                                 </div>
                                 <Button
                                     variant="secondary"
-                                    onClick={handleTestGeminiKey}
-                                    disabled={savingKey || testingKey}
-                                    style={{ borderRadius: '12px', minWidth: '90px', background: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9', fontSize: '0.85rem' }}
+                                    onClick={handleTestAIConnection}
+                                    disabled={testingKey}
+                                    style={{ borderRadius: '12px', padding: '6px 12px', background: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9', fontSize: '0.75rem' }}
                                 >
-                                    {testingKey ? '...' : '테스트'}
+                                    {testingKey ? '연결 확인 중...' : '연결 테스트'}
                                 </Button>
                             </div>
-                            {originalKey && (
-                                <p style={{ marginTop: '10px', fontSize: '0.75rem', color: '#95A5A6' }}>
-                                    사용 중인 키: <code style={{ background: '#F8F9FA', padding: '2px 4px', borderRadius: '4px' }}>{maskKey(originalKey)}</code>
-                                </p>
-                            )}
 
-                            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #DEE2E6', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <label style={{ display: 'block', fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold', marginBottom: '8px' }}>
-                                    AI 피드백 프롬프트
-                                </label>
-                                <textarea
-                                    value={promptTemplate}
-                                    onChange={(e) => setPromptTemplate(e.target.value)}
-                                    placeholder="선생님만의 피드백 규칙을 입력하세요."
-                                    style={{
-                                        width: '100%', flex: 1, minHeight: '100px', padding: '12px', borderRadius: '12px',
-                                        border: '1px solid #DEE2E6', fontSize: '0.85rem', lineHeight: '1.5',
-                                        color: '#2C3E50', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit'
-                                    }}
-                                />
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                            <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px dashed #DEE2E6', flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                {/* (1) 학생 개별 피드백 프롬프트 */}
+                                <div style={{ flex: '0.6', display: 'flex', flexDirection: 'column' }}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#4F46E5', fontWeight: 'bold', marginBottom: '8px' }}>
+                                        💬 학생 AI 피드백 프롬프트
+                                    </label>
+                                    <textarea
+                                        value={promptTemplate}
+                                        onChange={(e) => setPromptTemplate(e.target.value)}
+                                        placeholder="학생들에게 줄 댓글 피드백 규칙을 입력하세요."
+                                        style={{
+                                            width: '100%', flex: 1, minHeight: '80px', padding: '12px', borderRadius: '12px',
+                                            border: '1px solid #DEE2E6', fontSize: '0.82rem', lineHeight: '1.4',
+                                            color: '#2C3E50', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit'
+                                        }}
+                                    />
+                                </div>
+
+                                {/* (2) AI쫑알이 생성 프롬프트 */}
+                                <div style={{ flex: '0.6', display: 'flex', flexDirection: 'column' }}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#059669', fontWeight: 'bold', marginBottom: '8px' }}>
+                                        📋 AI쫑알이 생성 프롬프트
+                                    </label>
+                                    <textarea
+                                        value={reportPromptTemplate}
+                                        onChange={(e) => setReportPromptTemplate(e.target.value)}
+                                        placeholder="생기부 도움자료 생성 시 적용할 규칙을 입력하세요."
+                                        style={{
+                                            width: '100%', flex: 1, minHeight: '80px', padding: '12px', borderRadius: '12px',
+                                            border: '1px solid #DEE2E6', fontSize: '0.82rem', lineHeight: '1.4',
+                                            color: '#2C3E50', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit'
+                                        }}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '5px' }}>
                                     <Button
                                         onClick={handleSaveTeacherSettings}
-                                        disabled={savingKey || (geminiKey === originalKey && promptTemplate === originalPrompt)}
+                                        disabled={savingKey || (promptTemplate === originalPrompt && reportPromptTemplate === originalReportPrompt)}
                                         size="sm"
-                                        style={{ borderRadius: '10px', padding: '8px 20px' }}
+                                        style={{ borderRadius: '10px', padding: '8px 24px', fontWeight: 'bold', background: '#3498DB' }}
                                     >
-                                        {savingKey ? '저장 중...' : '설정 저장'}
+                                        {savingKey ? '저장 중...' : '모든 AI 설정 저장'}
                                     </Button>
                                 </div>
                             </div>

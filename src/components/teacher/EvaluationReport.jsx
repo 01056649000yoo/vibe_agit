@@ -200,6 +200,13 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                                 const growth = (student.final_eval || 0) - (student.initial_eval || 0);
                                 const isGrowthKing = growth >= requiredGrowth;
 
+                                // 점수를 평어로 변환하는 헬퍼 함수
+                                const getScoreLabel = (score) => {
+                                    if (score === null || score === undefined || score === 0) return '-';
+                                    const level = mission.evaluation_rubric?.levels?.find(l => l.score === score);
+                                    return level ? level.label : `${score}점`;
+                                };
+
                                 return (
                                     <tr key={student.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
                                         <td style={{ padding: '16px 24px', fontWeight: 'bold' }}>
@@ -208,8 +215,8 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                                                 {isGrowthKing && <span title="성장왕" style={{ fontSize: '1.2rem' }}>👑</span>}
                                             </div>
                                         </td>
-                                        <td style={{ padding: '16px 24px', color: '#64748B' }}>{student.initial_eval || '-'}</td>
-                                        <td style={{ padding: '16px 24px', fontWeight: '900', color: '#3B82F6' }}>{student.final_eval || '-'}</td>
+                                        <td style={{ padding: '16px 24px', color: '#64748B' }}>{getScoreLabel(student.initial_eval)}</td>
+                                        <td style={{ padding: '16px 24px', fontWeight: '900', color: '#3B82F6' }}>{getScoreLabel(student.final_eval)}</td>
                                         <td style={{ padding: '16px 24px' }}>
                                             <span style={{
                                                 padding: '4px 10px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold',

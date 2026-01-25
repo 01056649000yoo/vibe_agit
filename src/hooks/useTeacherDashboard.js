@@ -1,15 +1,34 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { callGemini } from '../lib/openai';
+
 
 export const useTeacherDashboard = (session, profile, onProfileUpdate, activeClass, setActiveClass) => {
     const [classes, setClasses] = useState([]);
     const [loadingClasses, setLoadingClasses] = useState(true);
 
-    // Gemini API Key 및 AI 프롬프트 관련 상태
-    const [geminiKey, setGeminiKey] = useState('');
+    // AI 설정 관련 상태
+    const [openaiKey, setOpenaiKey] = useState('시스템 설정 활성화됨');
     const [originalKey, setOriginalKey] = useState('');
-    const [promptTemplate, setPromptTemplate] = useState('');
-    const [originalPrompt, setOriginalPrompt] = useState('');
+    const DEFAULT_FEEDBACK_PROMPT = `[시스템 역할 설정]
+너는 초등학생의 글쓰기 성장을 돕는 다정하고 전문적인 글쓰기 코치야. 학생이 쓴 글을 읽고, 학생의 수준에 맞춰 구체적이고 격려 섞인 피드백을 제공해야 해.
+[입력 데이터]
+글쓰기 주제: {title}
+학생이 작성한 내용: {content}
+핵심질문의 답변
+[피드백 작성 가이드라인]
+분량: 전체 내용을 공백 포함 500자 이내로 작성할 것.
+구성: 아래의 3가지 요소를 반드시 포함할 것.
+🌟 칭찬해줄 점: 글의 내용이나 표현 중 창의적이거나 논리적인 부분, 혹은 주제를 잘 드러낸 부분을 구체적으로 칭찬함.
+💡 보완하면 좋을 점: 주제에 맞는 근거가 부족하거나, 문장 간의 연결이 어색한 부분에 대해 '어떻게 고치면 좋을지' 제안함.
+🔍 맞춤법 및 문장 교정: 틀리기 쉬운 맞춤법이나 띄어쓰기, 어색한 문장 표현 1~2가지를 친절하게 짚어줌.
+말투: "했니?", "해볼까?", "정말 멋지다!"와 같이 초등학교 5학년 학생에게 친근감을 주는 부드러운 구어체를 사용할 것.`;
+    const DEFAULT_REPORT_PROMPT = "너는 초등학교 담임교사야. 학생의 여러 글쓰기 활동 기록과 성취 수준을 종합하여 학교생활기록부에 기재할 수 있는 전문적인 문구로 정리해줘. 학생의 글쓰기 역량과 태도, 성취도를 바탕으로 강점을 중점적으로 서술하고, 문장은 관찰 중심의 평어체(~함, ~임)를 사용하여 180자 내외로 간결하게 작성해줘.";
+
+    const [promptTemplate, setPromptTemplate] = useState(DEFAULT_FEEDBACK_PROMPT);
+    const [originalPrompt, setOriginalPrompt] = useState(""); // 초기에 저장이 가능하도록 빈값으로 설정
+    const [reportPromptTemplate, setReportPromptTemplate] = useState(DEFAULT_REPORT_PROMPT);
+    const [originalReportPrompt, setOriginalReportPrompt] = useState(""); // 초기에 저장이 가능하도록 빈값으로 설정
     const [isKeyVisible, setIsKeyVisible] = useState(false);
     const [savingKey, setSavingKey] = useState(false);
     const [testingKey, setTestingKey] = useState(false);
@@ -45,18 +64,35 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         if (!session?.user?.id) return;
         const { data, error } = await supabase
             .from('profiles')
-            .select('gemini_api_key, ai_prompt_template')
+            .select('gemini_api_key, ai_prompt_template, report_prompt_template')
             .eq('id', session.user.id)
             .single();
 
         if (data) {
-            if (data.gemini_api_key) {
-                setOriginalKey(data.gemini_api_key);
-                setGeminiKey(data.gemini_api_key);
-            }
+            setOriginalKey('Environment Variable Active');
             if (data.ai_prompt_template) {
-                setOriginalPrompt(data.ai_prompt_template);
-                setPromptTemplate(data.ai_prompt_template);
+                const rawPrompt = data.ai_prompt_template.trim();
+                // JSON 형식인지 확인하여 피드백/리포트 프롬프트 분리 추출
+                if (rawPrompt.startsWith('{') && rawPrompt.endsWith('}')) {
+                    try {
+                        const parsed = JSON.parse(rawPrompt);
+                        const fVal = parsed.feedback || DEFAULT_FEEDBACK_PROMPT;
+                        const rVal = parsed.report || DEFAULT_REPORT_PROMPT;
+
+                        setOriginalPrompt(fVal);
+                        setPromptTemplate(fVal);
+                        setOriginalReportPrompt(rVal);
+                        setReportPromptTemplate(rVal);
+                    } catch (e) {
+                        // 파싱 실패 시 일반 텍스트로 처리
+                        setOriginalPrompt(rawPrompt);
+                        setPromptTemplate(rawPrompt);
+                    }
+                } else {
+                    // 일반 텍스트일 경우 피드백 프롬프트로만 설정
+                    setOriginalPrompt(rawPrompt);
+                    setPromptTemplate(rawPrompt);
+                }
             }
         }
     }, [session?.user?.id]);
@@ -170,17 +206,22 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     const handleSaveTeacherSettings = async () => {
         setSavingKey(true);
         try {
+            // 여러 프롬프트를 하나의 컬럼에 JSON으로 패킹하여 저장 (DB 스키마 변경 불필요)
+            const packedPrompt = JSON.stringify({
+                feedback: promptTemplate.trim(),
+                report: reportPromptTemplate.trim()
+            });
+
             const { error } = await supabase
                 .from('profiles')
-                .update({
-                    gemini_api_key: geminiKey.trim(),
-                    ai_prompt_template: promptTemplate.trim()
-                })
-                .eq('id', session.user.id);
+                .upsert({
+                    id: session.user.id,
+                    ai_prompt_template: packedPrompt
+                }, { onConflict: 'id' });
 
             if (error) throw error;
-            setOriginalKey(geminiKey.trim());
             setOriginalPrompt(promptTemplate.trim());
+            setOriginalReportPrompt(reportPromptTemplate.trim());
             alert('설정이 안전하게 저장되었습니다! ✨');
         } catch (err) {
             console.error('설정 저장 실패:', err.message);
@@ -190,35 +231,11 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         }
     };
 
-    const handleTestGeminiKey = async () => {
-        if (!geminiKey.trim()) {
-            alert('테스트할 API 키를 먼저 입력해주세요! 🔑');
-            return;
-        }
+    const handleTestAIConnection = async () => {
         setTestingKey(true);
         try {
-            const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
-            const response = await fetch(`${baseUrl}?key=${geminiKey.trim()}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: "정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘."
-                        }]
-                    }]
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '응답 없음';
-                alert(`✅ 연결 성공!\nAI 응답: ${aiResponse}`);
-            } else {
-                const errorData = await response.json();
-                const msg = errorData?.error?.message || '알 수 없는 오류';
-                throw new Error(msg);
-            }
+            const aiResponse = await callGemini("정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘.");
+            alert(`✅ 연결 성공!\nAI 응답: ${aiResponse}`);
         } catch (err) {
             console.error('API 테스트 실패:', err.message);
             alert(`❌ 연결 실패: ${err.message}`);
@@ -226,6 +243,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             setTestingKey(false);
         }
     };
+
 
     const handleSetPrimaryClass = async (classId) => {
         if (!classId) return;
@@ -302,11 +320,12 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
         editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
-        geminiKey, setGeminiKey, originalKey,
+        openaiKey, originalKey,
         promptTemplate, setPromptTemplate, originalPrompt,
+        reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         isKeyVisible, setIsKeyVisible,
         savingKey, testingKey,
-        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestGeminiKey,
+        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses, maskKey
     };
