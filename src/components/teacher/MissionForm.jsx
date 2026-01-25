@@ -8,9 +8,11 @@ const MissionForm = ({
     isFormOpen, isEditing, formData, setFormData,
     genreCategories, handleSubmit, handleCancelEdit, isMobile,
     handleGenerateQuestions, isGeneratingQuestions,
-    handleSaveDefaultRubric
+    handleSaveDefaultRubric,
+    frequentTags, saveFrequentTag, removeFrequentTag
 }) => {
     const [isQuestionModalOpen, setIsQuestionModalOpen] = React.useState(false);
+    const [tagInput, setTagInput] = React.useState('');
     const useAIQuestions = (formData.guide_questions?.length > 0) || formData.use_ai_questions;
 
     const toggleAIQuestions = () => {
@@ -21,6 +23,13 @@ const MissionForm = ({
         } else {
             setFormData({ ...formData, use_ai_questions: true });
             setIsQuestionModalOpen(true);
+        }
+    };
+
+    const handleAddTag = (val) => {
+        const cleanVal = val.trim().replace(',', '');
+        if (cleanVal && !formData.tags?.includes(cleanVal)) {
+            setFormData({ ...formData, tags: [...(formData.tags || []), cleanVal] });
         }
     };
 
@@ -70,6 +79,128 @@ const MissionForm = ({
                                 onChange={e => setFormData({ ...formData, guide: e.target.value })}
                                 style={{ padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '80px', fontSize: '1rem', width: '100%', boxSizing: 'border-box' }}
                             />
+
+                            {/* 태그 입력 UI */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', background: '#F8F9FF', borderRadius: '16px', border: '1px solid #E0E7FF' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                    <label style={{ fontSize: '0.85rem', color: '#4F46E5', fontWeight: 'bold' }}>🏷️ 미션 태그</label>
+                                    <span style={{ fontSize: '0.75rem', color: '#6366F1', opacity: 0.8 }}>* 태그를 입력하면 학생들의 글을 키워드별로 분류하여 관리할 수 있습니다.</span>
+                                </div>
+
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    {formData.tags?.map((tag, index) => (
+                                        <motion.div
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            key={index}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                color: 'white',
+                                                padding: '6px 14px',
+                                                borderRadius: '20px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 'bold',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                            }}
+                                        >
+                                            #{tag}
+                                            <span
+                                                onClick={() => {
+                                                    const newTags = formData.tags.filter((_, i) => i !== index);
+                                                    setFormData({ ...formData, tags: newTags });
+                                                }}
+                                                style={{ cursor: 'pointer', opacity: 0.8, fontSize: '1.1rem', marginLeft: '4px' }}
+                                            >
+                                                ×
+                                            </span>
+                                        </motion.div>
+                                    ))}
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="태그 입력 (엔터 또는 쉼표)"
+                                        value={tagInput}
+                                        onChange={e => setTagInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ',') {
+                                                e.preventDefault();
+                                                handleAddTag(tagInput);
+                                                setTagInput('');
+                                            }
+                                        }}
+                                        style={{
+                                            flex: 1,
+                                            padding: '12px 16px',
+                                            borderRadius: '12px',
+                                            border: '1px solid #C7D2FE',
+                                            fontSize: '0.9rem',
+                                            boxSizing: 'border-box',
+                                            background: 'white'
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={() => {
+                                            saveFrequentTag(tagInput.trim().replace(',', ''));
+                                            handleAddTag(tagInput);
+                                            setTagInput('');
+                                        }}
+                                        style={{
+                                            background: '#C7D2FE',
+                                            color: '#4F46E5',
+                                            padding: '0 16px',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 'bold',
+                                            minHeight: 'auto',
+                                            height: '46px'
+                                        }}
+                                    >
+                                        ⭐ 저장
+                                    </Button>
+                                </div>
+
+                                {/* 자주 쓰는 태그 목록 */}
+                                {frequentTags?.length > 0 && (
+                                    <div style={{ marginTop: '8px' }}>
+                                        <div style={{ fontSize: '0.75rem', color: '#6366F1', marginBottom: '8px', fontWeight: 'bold' }}>⭐ 자주 쓰는 태그 (클릭해서 추가)</div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {frequentTags.map((tag, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        background: 'white',
+                                                        border: '1px solid #E0E7FF',
+                                                        padding: '4px 10px',
+                                                        borderRadius: '10px',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onClick={() => handleAddTag(tag)}
+                                                >
+                                                    <span style={{ fontSize: '0.8rem', color: '#4F46E5', fontWeight: 'bold' }}>#{tag}</span>
+                                                    <span
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            removeFrequentTag(tag);
+                                                        }}
+                                                        style={{ color: '#FDA4AF', fontSize: '0.9rem', marginLeft: '4px', cursor: 'pointer' }}
+                                                    >
+                                                        ×
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
                             {/* [개편] 핵심 질문 설계 인터페이스 */}
                             <div style={{

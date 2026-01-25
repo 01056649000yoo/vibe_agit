@@ -10,6 +10,7 @@ const ArchiveManager = lazy(() => import('./ArchiveManager'));
 const UsageGuide = lazy(() => import('./UsageGuide'));
 const GameManager = lazy(() => import('./GameManager'));
 const TeacherEvaluationTab = lazy(() => import('./TeacherEvaluationTab'));
+const ActivityReport = lazy(() => import('./ActivityReport'));
 
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
@@ -120,7 +121,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 display: 'flex', background: 'white', borderBottom: '1px solid #E9ECEF',
                 padding: isMobile ? '0 12px' : '0 24px', flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box'
             }}>
-                {['dashboard', 'archive', 'evaluation', 'playground', 'settings', 'guide'].map((tabId) => (
+                {['dashboard', 'archive', 'evaluation', 'activity', 'playground', 'settings', 'guide'].map((tabId) => (
                     <button
                         key={tabId}
                         onClick={() => setCurrentTab(tabId)}
@@ -131,7 +132,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '📊 미션 현황' : tabId === 'archive' ? '📂 글 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'playground' ? '🎢 놀이터 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '📖 앱 사용법'}
+                        {tabId === 'dashboard' ? '📊 미션 현황' : tabId === 'archive' ? '📂 글 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📋 생활지도기록부 도움자료' : tabId === 'playground' ? '🎢 놀이터 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '📖 앱 사용법'}
                     </button>
                 ))}
             </nav>
@@ -162,6 +163,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             <TeacherMissionTab activeClass={activeClass} isMobile={isMobile} setSelectedActivityPost={setSelectedActivityPost} />
                         ) : currentTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
+                        ) : currentTab === 'activity' ? (
+                            <ActivityReport activeClass={activeClass} isMobile={isMobile} geminiKey={originalKey} />
                         ) : (
                             <TeacherSettingsTab
                                 session={session} classes={classes} activeClass={activeClass} setActiveClass={setActiveClass}

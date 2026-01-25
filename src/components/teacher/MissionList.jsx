@@ -69,6 +69,23 @@ const MissionItem = memo(({
                 </div>
             </div>
             <h4 style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.1rem', color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
+
+            {mission.tags && mission.tags.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '-4px' }}>
+                    {mission.tags.map((tag, idx) => (
+                        <span key={idx} style={{
+                            fontSize: '0.7rem',
+                            background: '#F3E5F5',
+                            color: '#7B1FA2',
+                            padding: '2px 8px',
+                            borderRadius: '8px',
+                            fontWeight: 'bold'
+                        }}>
+                            #{tag}
+                        </span>
+                    ))}
+                </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={PROGRESS_BAR_CONTAINER_STYLE}>
                     <div style={{ width: `${Math.min(completedCount / (totalStudentCount || 1) * 100, 100)}%`, height: '100%', background: '#2E7D32', borderRadius: '4px' }} />

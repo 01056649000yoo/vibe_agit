@@ -30,7 +30,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         handleFinalArchive, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric,
-        isEvaluationMode, setIsEvaluationMode, handleEvaluationMode
+        isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
+        frequentTags, saveFrequentTag, removeFrequentTag
     } = useMissionManager(activeClass);
 
     const [reportMission, setReportMission] = useState(null);
@@ -105,6 +106,9 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 handleGenerateQuestions={handleGenerateQuestions}
                 isGeneratingQuestions={isGeneratingQuestions}
                 handleSaveDefaultRubric={handleSaveDefaultRubric}
+                frequentTags={frequentTags}
+                saveFrequentTag={saveFrequentTag}
+                removeFrequentTag={removeFrequentTag}
             />
 
             {/* 미션 리스트 */}

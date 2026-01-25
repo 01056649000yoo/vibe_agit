@@ -211,6 +211,23 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                     {showOriginal ? '처음글' : '마지막글'}
                                 </span>
                             </h3>
+                            {mission?.tags && mission.tags.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                                    {mission.tags.map((tag, idx) => (
+                                        <span key={idx} style={{
+                                            fontSize: '0.7rem',
+                                            background: '#F3E5F5',
+                                            color: '#7B1FA2',
+                                            padding: '2px 8px',
+                                            borderRadius: '8px',
+                                            fontWeight: 'bold',
+                                            border: '1px solid #E1BEE7'
+                                        }}>
+                                            #{tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                     {post.original_content && (

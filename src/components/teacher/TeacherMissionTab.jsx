@@ -46,7 +46,7 @@ const TeacherMissionTab = ({ activeClass, isMobile, setSelectedActivityPost }) =
                         overflow: 'hidden',
                         width: '100%', boxSizing: 'border-box'
                     }}>
-                        <StudentManager classId={activeClass?.id} isDashboardMode={true} />
+                        <StudentManager activeClass={activeClass} classId={activeClass?.id} isDashboardMode={true} />
                     </section>
 
                     <section style={{

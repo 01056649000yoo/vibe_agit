@@ -11,6 +11,8 @@ import ExportSelectModal from '../common/ExportSelectModal';
  */
 const ArchiveManager = ({ activeClass, isMobile }) => {
     const [archivedMissions, setArchivedMissions] = useState([]);
+    const [selectedTags, setSelectedTags] = useState([]);
+    const [allTags, setAllTags] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedMission, setSelectedMission] = useState(null);
     const [posts, setPosts] = useState([]);
@@ -87,12 +89,33 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
             }));
 
             setArchivedMissions(missionsWithStats || []);
+
+            // 모든 태그 추출 (중복 제거)
+            const tags = new Set();
+            missions.forEach(m => {
+                if (m.tags && Array.isArray(m.tags)) {
+                    m.tags.forEach(t => tags.add(t));
+                }
+            });
+            setAllTags(Array.from(tags).sort());
         } catch (err) {
             console.error('보관된 미션 로드 실패:', err.message);
         } finally {
             setLoading(false);
         }
     };
+
+    const toggleTagFilter = (tag) => {
+        setSelectedTags(prev =>
+            prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+        );
+    };
+
+    const filteredMissions = archivedMissions.filter(m => {
+        if (selectedTags.length === 0) return true;
+        if (!m.tags || !Array.isArray(m.tags)) return false;
+        return selectedTags.every(tag => m.tags.includes(tag));
+    });
 
     const fetchPostsForMission = async (mission) => {
         setSelectedMission(mission);
@@ -138,20 +161,67 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                 📂 글 보관함 <span style={{ fontSize: '1rem', fontWeight: 'normal', color: '#95A5A6' }}>지난 미션과 아이들의 글을 소중히 보관합니다.</span>
             </h3>
 
+            {/* 태그 필터링 UI */}
+            {allTags.length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#7F8C8D', marginBottom: '10px', fontWeight: 'bold' }}>🏷️ 태그로 필터링 (다중 선택 가능)</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        <button
+                            onClick={() => setSelectedTags([])}
+                            style={{
+                                padding: '6px 14px',
+                                borderRadius: '12px',
+                                fontSize: '0.85rem',
+                                fontWeight: 'bold',
+                                border: '1px solid #E9ECEF',
+                                background: selectedTags.length === 0 ? '#3498DB' : 'white',
+                                color: selectedTags.length === 0 ? 'white' : '#7F8C8D',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            전체보기
+                        </button>
+                        {allTags.map(tag => {
+                            const isSelected = selectedTags.includes(tag);
+                            return (
+                                <button
+                                    key={tag}
+                                    onClick={() => toggleTagFilter(tag)}
+                                    style={{
+                                        padding: '6px 14px',
+                                        borderRadius: '12px',
+                                        fontSize: '0.85rem',
+                                        fontWeight: 'bold',
+                                        border: `1px solid ${isSelected ? '#3498DB' : '#E9ECEF'}`,
+                                        background: isSelected ? '#E3F2FD' : 'white',
+                                        color: isSelected ? '#3498DB' : '#7F8C8D',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    #{tag}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {loading ? (
                 <div style={{ padding: '60px', textAlign: 'center', color: '#ADB5BD' }}>데이터를 불러오는 중입니다...</div>
-            ) : archivedMissions.length === 0 ? (
+            ) : filteredMissions.length === 0 ? (
                 <Card style={{ padding: '60px', textAlign: 'center', color: '#ADB5BD', border: '2px dashed #E9ECEF' }}>
                     <div style={{ fontSize: '3rem', marginBottom: '20px' }}>📭</div>
-                    <p style={{ fontSize: '1.1rem' }}>아직 보관된 미션이 없습니다.</p>
+                    <p style={{ fontSize: '1.1rem' }}>{selectedTags.length > 0 ? '해당 태그를 포함한 미션이 없습니다.' : '아직 보관된 미션이 없습니다.'}</p>
                 </Card>
             ) : (
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
                     gap: '20px'
                 }}>
-                    {archivedMissions.map((mission) => (
+                    {filteredMissions.map((mission) => (
                         <motion.div
                             key={mission.id}
                             initial={{ opacity: 0, y: 10 }}
@@ -218,6 +288,23 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                                         {mission.allow_comments ? '💬 댓글 ON' : '🔒 댓글 OFF'}
                                     </span>
                                 </div>
+                                {mission.tags && mission.tags.length > 0 && (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
+                                        {mission.tags.map((tag, idx) => (
+                                            <span key={idx} style={{
+                                                fontSize: '0.7rem',
+                                                background: '#F3E5F5',
+                                                color: '#7B1FA2',
+                                                padding: '2px 8px',
+                                                borderRadius: '8px',
+                                                fontWeight: 'bold',
+                                                border: '1px solid #E1BEE7'
+                                            }}>
+                                                #{tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             {/* 바디: 통계 정보 */}

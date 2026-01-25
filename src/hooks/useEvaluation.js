@@ -76,10 +76,53 @@ export const useEvaluation = () => {
         }
     }, []);
 
+    /**
+     * 특정 태그(배열)를 포함한 미션들과 그에 대한 특정 학생의 글/평가 데이터를 가져옵니다.
+     * @param {string} studentId 
+     * @param {string[]} tags - 필터링할 태그 배열
+     */
+    const getEvaluationDataByTag = useCallback(async (studentId, tags) => {
+        if (!studentId || !tags || tags.length === 0) return { success: true, data: [] };
+
+        setLoading(true);
+        try {
+            // student_posts를 기준으로 writing_missions를 join하여 가져옵니다.
+            // .contains('writing_missions.tags', tags)를 통해 태그 필터링을 수행합니다.
+            const { data, error } = await supabase
+                .from('student_posts')
+                .select(`
+                    id, 
+                    content, 
+                    original_content, 
+                    initial_eval, 
+                    final_eval, 
+                    eval_comment,
+                    student_answers,
+                    writing_missions!inner (
+                        id, 
+                        title, 
+                        guide_questions, 
+                        tags
+                    )
+                `)
+                .eq('student_id', studentId)
+                .contains('writing_missions.tags', tags);
+
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error('태그 기반 평가 데이터 조회 실패:', err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     return {
         loading,
         updateRubric,
         saveEvaluation,
-        fetchMissionReport
+        fetchMissionReport,
+        getEvaluationDataByTag
     };
 };

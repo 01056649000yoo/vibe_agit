@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import ExportSelectModal from '../common/ExportSelectModal';
 import { useStudentManager } from '../../hooks/useStudentManager';
 
@@ -7,12 +8,13 @@ import StudentManagerHeader from './StudentManagerHeader';
 import StudentRankingList from './StudentRankingList';
 import StudentManagementList from './StudentManagementList';
 import StudentModals from './StudentModals';
+import RecordAssistant from './RecordAssistant';
 
 /**
  * 역할: 선생님 - 학급 내 학생 명단 관리 (슬림 2열 그리드 버전)
  * 비즈니스 로직과 UI를 분리하여 가독성과 유지보수성을 향상시켰습니다. ✨
  */
-const StudentManager = ({ classId, isDashboardMode = true }) => {
+const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
     const {
@@ -25,6 +27,8 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
         handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, openHistoryModal,
         toggleSelectAll, handleExportConfirm, toggleSelection, copyCode
     } = useStudentManager(classId);
+
+    const [recordStudent, setRecordStudent] = useState(null);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -87,6 +91,7 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                     openHistoryModal={openHistoryModal}
                     setDeleteTarget={setDeleteTarget}
                     setIsDeleteModalOpen={setIsDeleteModalOpen}
+                    onOpenRecordAssistant={(s) => setRecordStudent(s)}
                 />
             ) : (
                 <StudentManagementList
@@ -100,8 +105,20 @@ const StudentManager = ({ classId, isDashboardMode = true }) => {
                     copiedId={copiedId}
                     setDeleteTarget={setDeleteTarget}
                     setIsDeleteModalOpen={setIsDeleteModalOpen}
+                    onOpenRecordAssistant={(s) => setRecordStudent(s)}
                 />
             )}
+
+            <AnimatePresence>
+                {recordStudent && (
+                    <RecordAssistant
+                        student={recordStudent}
+                        activeClass={activeClass}
+                        isMobile={isMobile}
+                        onClose={() => setRecordStudent(null)}
+                    />
+                )}
+            </AnimatePresence>
 
             {/* 통합 모달 섹션 */}
             <StudentModals

@@ -13,7 +13,7 @@ const SCROLL_FADE_STYLE = {
 const RankingItem = memo(({
     student, index, isMobile, isSelected, copiedId,
     toggleSelection, setSelectedStudentForCode, setIsCodeZoomModalOpen,
-    copyCode, openHistoryModal, setDeleteTarget, setIsDeleteModalOpen
+    copyCode, openHistoryModal, setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant
 }) => {
     const isFirst = index === 0;
     const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}위`;
@@ -98,6 +98,13 @@ const RankingItem = memo(({
                     📜
                 </button>
                 <button
+                    onClick={(e) => { e.stopPropagation(); onOpenRecordAssistant(student); }}
+                    style={{ background: '#EEF2FF', border: '1px solid #E0E7FF', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
+                    title="생기부 도우미"
+                >
+                    ✏️
+                </button>
+                <button
                     onClick={(e) => { e.stopPropagation(); setDeleteTarget(student); setIsDeleteModalOpen(true); }}
                     style={{ background: '#FFF5F5', border: '1px solid #FFDada', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
                     title="학생 삭제"
@@ -112,7 +119,7 @@ const RankingItem = memo(({
 const StudentRankingList = ({
     displayStudents, isMobile, selectedIds, toggleSelection,
     setSelectedStudentForCode, setIsCodeZoomModalOpen, copyCode,
-    copiedId, openHistoryModal, setDeleteTarget, setIsDeleteModalOpen
+    copiedId, openHistoryModal, setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant
 }) => {
     return (
         <div style={LIST_CONTAINER_STYLE}>
@@ -144,6 +151,7 @@ const StudentRankingList = ({
                         openHistoryModal={openHistoryModal}
                         setDeleteTarget={setDeleteTarget}
                         setIsDeleteModalOpen={setIsDeleteModalOpen}
+                        onOpenRecordAssistant={onOpenRecordAssistant}
                     />
                 ))}
             </div>

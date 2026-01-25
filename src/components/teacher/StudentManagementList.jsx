@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const StudentManagementList = ({
     displayStudents, isMobile, setSelectedStudentForCode, setIsCodeZoomModalOpen,
     openHistoryModal, handleExportClick, copyCode, copiedId,
-    setDeleteTarget, setIsDeleteModalOpen
+    setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant
 }) => {
     return (
         <div
@@ -127,6 +127,31 @@ const StudentManagementList = ({
                                     title="데이터 내보내기"
                                 >
                                     📤
+                                </button>
+
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onOpenRecordAssistant(s);
+                                    }}
+                                    style={{
+                                        background: '#EEF2FF',
+                                        border: '1px solid #E0E7FF',
+                                        color: '#4F46E5',
+                                        cursor: 'pointer',
+                                        width: '32px',
+                                        height: '32px',
+                                        borderRadius: '8px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '1rem',
+                                        transition: 'all 0.2s',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                    }}
+                                    title="생기부 도우미"
+                                >
+                                    ✏️
                                 </button>
 
                                 <div style={{ position: 'relative' }}>

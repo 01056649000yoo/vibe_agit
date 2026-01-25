@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { callGemini } from '../lib/gemini';
 
 export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const [missions, setMissions] = useState([]);
@@ -21,6 +22,25 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editingMissionId, setEditingMissionId] = useState(null);
     const [isEvaluationMode, setIsEvaluationMode] = useState(false);
+    const [frequentTags, setFrequentTags] = useState([]);
+
+    useEffect(() => {
+        const saved = localStorage.getItem('teacher_frequent_tags');
+        if (saved) setFrequentTags(JSON.parse(saved));
+    }, []);
+
+    const saveFrequentTag = (tag) => {
+        if (!tag || frequentTags.includes(tag)) return;
+        const newTags = [...frequentTags, tag];
+        setFrequentTags(newTags);
+        localStorage.setItem('teacher_frequent_tags', JSON.stringify(newTags));
+    };
+
+    const removeFrequentTag = (tag) => {
+        const newTags = frequentTags.filter(t => t !== tag);
+        setFrequentTags(newTags);
+        localStorage.setItem('teacher_frequent_tags', JSON.stringify(newTags));
+    };
 
     const getResetFormData = useCallback(() => {
         const savedLevels = localStorage.getItem('default_rubric_levels');
@@ -43,6 +63,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             mission_type: '일기',
             guide_questions: [],
             question_count: 3,
+            tags: [],
             evaluation_rubric: {
                 use_rubric: false, // 신규 미션은 항상 '사용 안 함'이 기본
                 levels: defaultLevels // 하지만 켜는 순간 저장된 기본 단계가 나옴
@@ -67,7 +88,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             const [missionsResult, studentCountResult] = await Promise.all([
                 supabase
                     .from('writing_missions')
-                    .select('id, title, guide, genre, min_chars, min_paragraphs, base_reward, bonus_threshold, bonus_reward, allow_comments, is_archived, created_at, mission_type, guide_questions, evaluation_rubric')
+                    .select('id, title, guide, genre, min_chars, min_paragraphs, base_reward, bonus_threshold, bonus_reward, allow_comments, is_archived, created_at, mission_type, guide_questions, evaluation_rubric, tags')
                     .eq('class_id', activeClass.id)
                     .eq('is_archived', false)
                     .order('created_at', { ascending: false }),
@@ -133,6 +154,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             allow_comments: mission.allow_comments,
             mission_type: mission.mission_type || mission.genre,
             guide_questions: mission.guide_questions || [],
+            tags: mission.tags || [],
             evaluation_rubric: mission.evaluation_rubric || {
                 use_rubric: false,
                 levels: defaultLevels
@@ -189,28 +211,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             ["질문1", "질문2", "질문3"]
             `;
 
-            const modelName = "gemini-2.5-flash";
-            const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
-
-            const response = await fetch(`${baseUrl}?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('Gemini API Error details:', errorData);
-                if (response.status === 429) {
-                    throw new Error('AI 사용량이 너무 많습니다. 잠시 후 다시 시도해주세요! (Rate Limit)');
-                }
-                throw new Error(errorData.error?.message || '질문 생성 실패');
-            }
-
-            const result = await response.json();
-            const responseText = result.candidates[0].content.parts[0].text;
+            const responseText = await callGemini(prompt, apiKey);
 
             const jsonMatch = responseText.match(/\[.*\]/s);
             if (jsonMatch) {
@@ -382,53 +383,16 @@ ${postArray.map((p, idx) => `[학생 ${idx + 1}]\nID: ${p.id}\n제목: ${p.title
             prompt = `${basePrompt}\n\n---\n[학생의 글 정보]\n글 제목: "${postArray[0].title}"\n글 내용:\n"${postArray[0].content}"`;
         }
 
-        const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
-
-        const tryFetch = async (modelName, currentRetry = 0) => {
-            try {
-                const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
-                const response = await fetch(`${baseUrl}?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    const status = response.status;
-                    // 첫 번째 모델(lite) 실패 시 두 번째 모델로 전환
-                    if ((status === 429 || status === 404 || status === 400) && modelName === models[0]) {
-                        console.log(`[AI Fallback] ${modelName} 실패. ${models[1]}으로 전환합니다...`);
-                        return tryFetch(models[1]);
-                    }
-                    if ((status === 503 || status === 429) && currentRetry < 1) {
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                        return tryFetch(modelName, currentRetry + 1);
-                    }
-                    throw new Error(`AI 서비스 오류 (${status})`);
-                }
-
-                const data = await response.json();
-                const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (isBulk) {
-                    const jsonMatch = responseText.match(/\[\s*\{.*\}\s*\]/s);
-                    if (jsonMatch) return JSON.parse(jsonMatch[0]);
-                    // JSON 형식이 아닐 경우 재시도 생략하고 텍스트 파싱 시도 (간소화)
-                    throw new Error('AI 응답 형식이 일괄 처리에 적합하지 않습니다.');
-                }
-
-                return responseText;
-            } catch (err) {
-                if (modelName.includes('2.0')) return tryFetch(models[1]);
-                throw err;
-            }
-        };
-
         try {
-            return await tryFetch(models[0]);
+            const responseText = await callGemini(prompt, apiKey);
+
+            if (isBulk) {
+                const jsonMatch = responseText.match(/\[\s*\{.*\}\s*\]/s);
+                if (jsonMatch) return JSON.parse(jsonMatch[0]);
+                throw new Error('AI 응답 형식이 일괄 처리에 적합하지 않습니다.');
+            }
+
+            return responseText;
         } catch (err) {
             console.error('AI 피드백 생성 실패:', err.message);
             return null;
@@ -845,6 +809,7 @@ ${postArray.map((p, idx) => `[학생 ${idx + 1}]\nID: ${p.id}\n제목: ${p.title
         handleFinalArchive, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric,
-        isEvaluationMode, setIsEvaluationMode, handleEvaluationMode
+        isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
+        frequentTags, saveFrequentTag, removeFrequentTag
     };
 };

@@ -68,7 +68,7 @@ const TeacherSettingsTab = ({
                         width: '100%', display: 'flex', flexDirection: 'column'
                     }}>
                         <div style={{ flex: 1 }}>
-                            <StudentManager classId={activeClass.id} isDashboardMode={false} />
+                            <StudentManager activeClass={activeClass} classId={activeClass.id} isDashboardMode={false} />
                         </div>
                     </section>
 
