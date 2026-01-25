@@ -150,23 +150,31 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         localStorage.setItem(persistenceKey, JSON.stringify(data));
     };
 
+    // AI에게 보낼 학생 활동 데이터 및 프롬프트 구성 (공통 사용)
+    const getStudentPrompt = (studentName, posts) => {
+        const activitiesInfo = posts.map(p => `
+[미션명]: ${p.writing_missions?.title || '정보없음'}
+[성취수준]: ${p.final_eval || p.initial_eval || '평가 전'}
+[작성내용]: ${p.content}
+[교사코멘트]: ${p.eval_comment || '없음'}`).join('\n\n---\n');
+
+        const contextData = `
+[분석 대상 학생]: ${studentName}
+[활동 기록 데이터]:
+${activitiesInfo}`;
+
+        if (promptTemplate && promptTemplate.trim()) {
+            return `${promptTemplate.trim()}\n\n${contextData.trim()}`;
+        }
+
+        return `학생 '${studentName}'의 활동 기록들을 바탕으로 학교생활기록부용 성취 수준 분석 리포트를 200자 내외 평어체(~함.)로 작성해줘.\n\n${contextData.trim()}`;
+    };
+
     // 5. 단일 생성
     const generateCombinedReview = async (studentData) => {
         setIsGenerating(prev => ({ ...prev, [studentData.student.id]: true }));
         try {
-            const activitiesInfo = studentData.posts.map(p => `
-                [미션명]: ${p.writing_missions.title}
-                [성취준위]: ${p.final_eval || p.initial_eval || '평가 전'}
-                [작성내용]: ${p.content}
-                [교사코멘트]: ${p.eval_comment || '없음'}
-            `).join('\n---\n');
-
-            let prompt = '';
-            if (promptTemplate && promptTemplate.trim()) {
-                prompt = `${promptTemplate}\n\n[대상 학생 활동 데이터]\n${activitiesInfo}`;
-            } else {
-                prompt = `학생 '${studentData.student.name}'의 여러 활동 데이터:\n${activitiesInfo}\n\n위 활동들을 통합하여 생기부용 성장 분석 코멘트를 200자 이내 평어체(~함.)로 작성해줘.`;
-            }
+            const prompt = getStudentPrompt(studentData.student.name, studentData.posts);
 
             const review = await callGemini(prompt);
 
@@ -184,34 +192,32 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         }
     };
 
-    // 6. 일괄 생성
+    // 6. 일괄 생성 및 재생성
     const handleBatchGenerate = async () => {
         if (studentPosts.length === 0) return;
-        if (!confirm('학급 전체 학생의 통합 리포트를 일괄 생성하시겠습니까? (저장된 결과는 유지됩니다)')) return;
+
+        const isRegen = generatedCount > 0;
+        const msg = isRegen
+            ? '기존 내용은 삭제되고 재생성됩니다. 진행하시겠습니까?'
+            : '학급 전체 학생의 통합 리포트를 일괄 생성하시겠습니까?';
+
+        if (!confirm(msg)) return;
 
         setBatchLoading(true);
         setBatchProgress({ current: 0, total: studentPosts.length });
 
         for (let i = 0; i < studentPosts.length; i++) {
             const data = studentPosts[i];
-            if (data.ai_synthesis) {
+
+            // 일괄 생성이 아니고(처음 생성이고) 이미 내용이 있다면 건너뜀 (이미 생성된 데이터 보존용)
+            // 단, '재생성' 모드(isRegen)일 때는 건너뛰지 않고 덮어씀
+            if (!isRegen && data.ai_synthesis) {
                 setBatchProgress(prev => ({ ...prev, current: i + 1 }));
                 continue;
             }
 
             try {
-                const activitiesInfo = data.posts.map(p => `
-                    [미션]: ${p.writing_missions.title} 
-                    [내용]: ${p.content.substring(0, 300)}...
-                    [평가]: ${p.final_eval || p.initial_eval || '-'}
-                `).join('\n');
-
-                let prompt = '';
-                if (promptTemplate && promptTemplate.trim()) {
-                    prompt = `${promptTemplate}\n\n[학생 명단: ${data.student.name}]\n[활동들]\n${activitiesInfo}`;
-                } else {
-                    prompt = `학생 '${data.student.name}'의 활동들:\n${activitiesInfo}\n\n생기부용 통합 총평 180자 내외 평어체 작성:`;
-                }
+                const prompt = getStudentPrompt(data.student.name, data.posts);
 
                 const review = await callGemini(prompt);
                 if (review) {
@@ -227,7 +233,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
             }
         }
         setBatchLoading(false);
-        alert('일괄 생성이 완료되었습니다! ✨');
+        alert(isRegen ? '일괄 AI 쫑알이 재생성이 완료되었습니다! ✨' : '일괄 AI쫑알이 생성이 완료되었습니다! ✨');
     };
 
     // 7. 엑셀 내보내기
@@ -271,17 +277,29 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
 
     return (
         <div style={{ width: '100%', boxSizing: 'border-box', padding: isMobile ? '0' : '10px 0' }}>
-            <header style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <header style={{
+                marginBottom: '32px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: 'white',
+                padding: '24px 32px',
+                borderRadius: '24px',
+                border: '1px solid #E2E8F0',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+            }}>
                 <div>
-                    <h2 style={{ margin: '0 0 8px 0', fontSize: '1.8rem', fontWeight: '950', color: '#1E293B' }}>🔗 AI쫑알이 (생기부 도움자료)</h2>
-                    <p style={{ color: '#64748B', fontSize: '1.05rem', margin: 0 }}>여러 미션을 연결하여 학기 말 생활지도기록부 작성을 돕는 기초 자료를 완성합니다.</p>
+                    <h2 style={{ margin: '0 0 4px 0', fontSize: '1.6rem', fontWeight: '950', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '1.8rem' }}>🐣</span> AI쫑알이 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>생기부 도움자료</span>
+                    </h2>
+                    <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>활동 기록을 연결하여 나만의 교육과정 성취 기준 리포트를 완성하세요.</p>
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <Button variant="outline" size="sm" onClick={exportToExcel} style={{ borderColor: '#10B981', color: '#059669', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <FileDown size={16} /> 엑셀 다운로드
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <Button variant="outline" size="sm" onClick={exportToExcel} style={{ borderRadius: '12px', borderColor: '#10B981', color: '#059669', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}>
+                        <FileDown size={14} /> 엑셀 저장
                     </Button>
-                    <Button variant="outline" size="sm" onClick={copyToDocs} style={{ borderColor: '#3B82F6', color: '#2563EB', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <FileText size={16} /> 구글 문서용 복사
+                    <Button variant="outline" size="sm" onClick={copyToDocs} style={{ borderRadius: '12px', borderColor: '#3B82F6', color: '#2563EB', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}>
+                        <FileText size={14} /> 클립보드 복사
                     </Button>
                 </div>
             </header>
@@ -330,63 +348,90 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                                 <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 'bold' }}>
                                     총 <span style={{ color: '#1E293B' }}>{studentPosts.length}명</span>의 학생 중 <span style={{ color: '#6366F1' }}>{generatedCount}명</span> 분석 완료
                                 </div>
-                                <Button size="sm" onClick={handleBatchGenerate} disabled={batchLoading || studentPosts.length === 0} style={{ borderRadius: '10px', fontWeight: 'bold' }}>
-                                    {batchLoading ? `생성 중... (${batchProgress.current}/${batchProgress.total})` : '🪄 일괄 생성'}
+                                <Button
+                                    size="sm"
+                                    onClick={handleBatchGenerate}
+                                    disabled={batchLoading || studentPosts.length === 0}
+                                    style={{
+                                        borderRadius: '12px',
+                                        fontWeight: 'bold',
+                                        background: generatedCount > 0 ? '#F59E0B' : '#6366F1'
+                                    }}
+                                >
+                                    {batchLoading
+                                        ? `작업 중... (${batchProgress.current}/${batchProgress.total})`
+                                        : (generatedCount > 0 ? '🔄 일괄 AI 쫑알이 재생성' : '🪄 일괄 AI쫑알이 생성')}
                                 </Button>
                             </div>
 
-                            {/* 리스트 헤더 */}
+                            {/* 리스트 헤더 - 더 타이트하게 조정 */}
                             <div style={{
                                 display: 'grid',
-                                gridTemplateColumns: 'minmax(120px, 1fr) 100px 120px 100px 50px',
+                                gridTemplateColumns: '80px minmax(100px, 1fr) 100px 100px 120px 50px',
                                 padding: '12px 24px',
-                                background: 'white',
+                                background: '#F8F9FA',
                                 borderRadius: '16px 16px 0 0',
-                                borderBottom: '2px solid #F1F5F9',
-                                fontSize: '0.85rem',
+                                borderBottom: '1px solid #E2E8F0',
+                                fontSize: '0.8rem',
                                 color: '#94A3B8',
                                 fontWeight: 'bold'
                             }}>
+                                <div style={{ textAlign: 'center' }}>번호</div>
                                 <div>학생 이름</div>
-                                <div style={{ textAlign: 'center' }}>활동 수</div>
+                                <div style={{ textAlign: 'center' }}>참여 활동</div>
                                 <div style={{ textAlign: 'center' }}>분석 상태</div>
-                                <div style={{ textAlign: 'right' }}>관리</div>
+                                <div style={{ textAlign: 'center' }}>AI 분석</div>
                                 <div></div>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: '#F1F5F9' }}>
-                                {studentPosts.map(data => (
-                                    <div key={data.student.id} style={{ background: 'white' }}>
+                                {studentPosts.map((data, idx) => (
+                                    <div key={data.student.id} style={{ background: 'white', borderBottom: '1px solid #F1F5F9' }}>
                                         <div
                                             onClick={() => setExpandedStudentId(expandedStudentId === data.student.id ? null : data.student.id)}
                                             style={{
                                                 display: 'grid',
-                                                gridTemplateColumns: 'minmax(120px, 1fr) 100px 120px 100px 50px',
-                                                padding: '20px 24px',
+                                                gridTemplateColumns: '80px minmax(100px, 1fr) 100px 100px 120px 50px',
+                                                padding: '16px 24px',
                                                 alignItems: 'center',
                                                 cursor: 'pointer',
-                                                transition: 'background 0.2s',
+                                                transition: 'all 0.2s',
                                                 background: expandedStudentId === data.student.id ? '#F8F9FF' : 'white'
                                             }}
-                                            onMouseEnter={(e) => e.currentTarget.style.background = '#F9FAFB'}
-                                            onMouseLeave={(e) => e.currentTarget.style.background = expandedStudentId === data.student.id ? '#F8F9FF' : 'white'}
                                         >
+                                            <div style={{ textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem', fontWeight: '600' }}>{idx + 1}</div>
                                             <div style={{ fontWeight: '900', color: '#1E293B', fontSize: '1rem' }}>{data.student.name}</div>
-                                            <div style={{ textAlign: 'center', fontSize: '0.9rem', color: '#64748B' }}>{data.posts.length}건</div>
+                                            <div style={{ textAlign: 'center' }}>
+                                                <span style={{ fontSize: '0.9rem', color: '#334155', fontWeight: '700', background: '#F1F5F9', padding: '2px 8px', borderRadius: '6px' }}>{data.posts.length}건</span>
+                                            </div>
                                             <div style={{ textAlign: 'center' }}>
                                                 {data.ai_synthesis ? (
-                                                    <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '8px', background: '#ECFDF5', color: '#059669', fontWeight: 'bold' }}>분석 완료</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', color: '#059669', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                                        <CheckCircle2 size={14} /> 완료
+                                                    </div>
                                                 ) : (
-                                                    <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '8px', background: '#F1F5F9', color: '#94A3B8' }}>대기 중</span>
+                                                    <div style={{ color: '#94A3B8', fontSize: '0.8rem' }}>미완료</div>
                                                 )}
                                             </div>
-                                            <div style={{ textAlign: 'right' }}>
+                                            <div style={{ textAlign: 'center' }}>
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); generateCombinedReview(data); }}
                                                     disabled={isGenerating[data.student.id]}
-                                                    style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#6366F1', fontSize: '0.85rem', fontWeight: 'bold' }}
+                                                    style={{
+                                                        border: '1px solid #6366F1',
+                                                        background: isGenerating[data.student.id] ? '#F1F3FF' : 'white',
+                                                        color: '#6366F1',
+                                                        padding: '6px 16px',
+                                                        borderRadius: '10px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 'bold',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onMouseEnter={e => { if (!isGenerating[data.student.id]) { e.currentTarget.style.background = '#6366F1'; e.currentTarget.style.color = 'white'; } }}
+                                                    onMouseLeave={e => { if (!isGenerating[data.student.id]) { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#6366F1'; } }}
                                                 >
-                                                    {isGenerating[data.student.id] ? '...' : '분석'}
+                                                    {isGenerating[data.student.id] ? '분석 중...' : '생성하기'}
                                                 </button>
                                             </div>
                                             <div style={{ textAlign: 'center', color: '#CBD5E1' }}>
