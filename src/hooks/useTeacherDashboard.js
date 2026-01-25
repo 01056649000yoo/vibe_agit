@@ -322,7 +322,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
         editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
-        openaiKey, originalKey,
+        openaiKey, setOpenaiKey, originalKey,
         promptTemplate, setPromptTemplate, originalPrompt,
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         isKeyVisible, setIsKeyVisible,

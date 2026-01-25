@@ -11,21 +11,36 @@ const MODEL_HIERARCHY = [
     'gpt-3.5-turbo' // 레거시 폴백
 ];
 
-const openai = new OpenAI({
-    apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-    dangerouslyAllowBrowser: true // 클라이언트 측 호출 허용 (개발 단계)
-});
+let openaiInstance = null;
+
+const getOpenAI = (apiKey) => {
+    const key = apiKey || import.meta.env.VITE_OPENAI_API_KEY;
+    if (!key) {
+        throw new Error('OpenAI API 키가 설정되지 않았습니다. [설정 > AI 보안 센터]에서 키를 등록하거나 시스템 관리자에게 문의하세요.');
+    }
+
+    if (!openaiInstance || (apiKey && openaiInstance.apiKey !== apiKey)) {
+        openaiInstance = new OpenAI({
+            apiKey: key,
+            dangerouslyAllowBrowser: true // 클라이언트 측 호출 허용 (개발 단계)
+        });
+    }
+    return openaiInstance;
+};
 
 /**
  * OpenAI API를 호출하여 메시지를 생성합니다.
  * @param {string} prompt - 전송할 프롬프트
  */
-export const callOpenAI = async (prompt) => {
-    if (!import.meta.env.VITE_OPENAI_API_KEY) {
-        throw new Error('OpenAI API 키가 설정되지 않았습니다.');
-    }
-
+export const callOpenAI = async (prompt, apiKey) => {
     let lastError = null;
+    let openai;
+
+    try {
+        openai = getOpenAI(apiKey);
+    } catch (err) {
+        throw err;
+    }
 
     for (const model of MODEL_HIERARCHY) {
         try {
