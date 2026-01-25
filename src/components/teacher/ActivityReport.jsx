@@ -7,6 +7,7 @@ import { useEvaluation } from '../../hooks/useEvaluation';
 import { callGemini } from '../../lib/openai';
 import * as XLSX from 'xlsx';
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink } from 'lucide-react';
+import BulkAIProgressModal from './BulkAIProgressModal';
 
 /**
  * 역할: 선생님 - 활동별 리포트 (통합 분석 & 내보내기 버전) 📊
@@ -523,6 +524,9 @@ ${activitiesInfo}`;
                     )}
                 </main>
             </div>
+
+            {/* AI 일괄 생성 진행 모달 */}
+            <BulkAIProgressModal isGenerating={batchLoading} progress={batchProgress} />
         </div>
     );
 };

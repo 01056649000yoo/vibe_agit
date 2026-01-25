@@ -171,10 +171,18 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 handleFinalArchive={handleFinalArchive}
             />
 
-            {/* AI 생성 진행률 모달 */}
+            {/* AI 생성 진행률 모달 (피드백용) */}
             <BulkAIProgressModal
                 isGenerating={isGenerating}
                 progress={progress}
+            />
+
+            {/* AI 핵심 질문 생성 진행 모달 (미션 설계용) */}
+            <BulkAIProgressModal
+                isGenerating={isGeneratingQuestions}
+                progress={{ current: 0, total: 1 }}
+                title="멋진 질문을 만들고 있어요"
+                description="주제에 딱 맞는 핵심 질문을 AI가 설계 중입니다. ✨"
             />
 
             <AnimatePresence>

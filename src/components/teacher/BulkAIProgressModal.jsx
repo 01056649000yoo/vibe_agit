@@ -1,15 +1,28 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 
-const BulkAIProgressModal = ({ isGenerating, progress }) => {
-    return (
+const BulkAIProgressModal = ({
+    isGenerating,
+    progress,
+    title = "열심히 AI쫑알이 작성중이에요",
+    description = "학생들의 기록을 꼼꼼히 검토하고 있어요."
+}) => {
+    // SSR 대응 (서버 사이드 환경에서는 포탈을 사용하지 않음)
+    const [mounted, setMounted] = React.useState(false);
+    React.useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+    const content = (
         <AnimatePresence>
             {isGenerating && progress.total > 0 && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(0, 0, 0, 0.6)',
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    zIndex: 3000, backdropFilter: 'blur(4px)'
+                    zIndex: 100000, backdropFilter: 'blur(4px)'
                 }}>
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
@@ -27,10 +40,10 @@ const BulkAIProgressModal = ({ isGenerating, progress }) => {
                     >
                         <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🤖</div>
                         <h3 style={{ margin: '0 0 10px 0', fontSize: '1.4rem', color: '#2C3E50', fontWeight: '900' }}>
-                            AI 피드백 생성 중...
+                            {title}
                         </h3>
                         <p style={{ margin: '0 0 24px 0', color: '#7F8C8D', fontSize: '1rem' }}>
-                            학생들의 글을 꼼꼼히 읽고 있어요! ✍️
+                            {description}
                         </p>
 
                         <div style={{ position: 'relative', height: '12px', background: '#F1F3F5', borderRadius: '10px', overflow: 'hidden', marginBottom: '12px' }}>
@@ -49,6 +62,9 @@ const BulkAIProgressModal = ({ isGenerating, progress }) => {
             )}
         </AnimatePresence>
     );
+
+    if (!mounted || typeof document === 'undefined') return null;
+    return createPortal(content, document.body);
 };
 
 export default BulkAIProgressModal;
