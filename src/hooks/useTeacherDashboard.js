@@ -236,7 +236,13 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     const handleTestAIConnection = async () => {
         setTestingKey(true);
         try {
-            const aiResponse = await callGemini("정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘.");
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('gemini_api_key')
+                .eq('id', session.user.id)
+                .single();
+
+            const aiResponse = await callGemini("정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘.", profileData?.gemini_api_key);
             alert(`✅ 연결 성공!\nAI 응답: ${aiResponse}`);
         } catch (err) {
             console.error('API 테스트 실패:', err.message);

@@ -199,7 +199,14 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             ["질문1", "질문2", "질문3"]
             `;
 
-            const responseText = await callGemini(prompt); // API key is now handled internally in lib/openai.js
+            const { data: { user } } = await supabase.auth.getUser();
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('gemini_api_key')
+                .eq('id', user?.id)
+                .single();
+
+            const responseText = await callGemini(prompt, profileData?.gemini_api_key);
 
             const jsonMatch = responseText.match(/\[.*\]/s);
             if (jsonMatch) {
@@ -318,9 +325,11 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         const { data: { user } } = await supabase.auth.getUser();
         const { data: profileData } = await supabase
             .from('profiles')
-            .select('ai_prompt_template')
+            .select('gemini_api_key, ai_prompt_template')
             .eq('id', user?.id)
             .single();
+
+        const userApiKey = profileData?.gemini_api_key;
 
         let customTemplate = profileData?.ai_prompt_template?.trim();
 
@@ -385,7 +394,7 @@ ${postArray.map((p, idx) => {
         }
 
         try {
-            const responseText = await callGemini(prompt);
+            const responseText = await callGemini(prompt, userApiKey);
 
             if (isBulk) {
                 const jsonMatch = responseText.match(/\[\s*\{.*\}\s*\]/s);

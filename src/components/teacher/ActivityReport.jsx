@@ -175,9 +175,15 @@ ${activitiesInfo}`;
     const generateCombinedReview = async (studentData) => {
         setIsGenerating(prev => ({ ...prev, [studentData.student.id]: true }));
         try {
-            const prompt = getStudentPrompt(studentData.student.name, studentData.posts);
+            const { data: { user } } = await supabase.auth.getUser();
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('gemini_api_key')
+                .eq('id', user?.id)
+                .single();
 
-            const review = await callGemini(prompt);
+            const prompt = getStudentPrompt(studentData.student.name, studentData.posts);
+            const review = await callGemini(prompt, profileData?.gemini_api_key);
 
             if (review) {
                 setStudentPosts(prev => prev.map(s =>
@@ -207,34 +213,46 @@ ${activitiesInfo}`;
         setBatchLoading(true);
         setBatchProgress({ current: 0, total: studentPosts.length });
 
-        for (let i = 0; i < studentPosts.length; i++) {
-            const data = studentPosts[i];
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('gemini_api_key')
+                .eq('id', user?.id)
+                .single();
 
-            // 일괄 생성이 아니고(처음 생성이고) 이미 내용이 있다면 건너뜀 (이미 생성된 데이터 보존용)
-            // 단, '재생성' 모드(isRegen)일 때는 건너뛰지 않고 덮어씀
-            if (!isRegen && data.ai_synthesis) {
-                setBatchProgress(prev => ({ ...prev, current: i + 1 }));
-                continue;
-            }
+            const userApiKey = profileData?.gemini_api_key;
 
-            try {
-                const prompt = getStudentPrompt(data.student.name, data.posts);
+            for (let i = 0; i < studentPosts.length; i++) {
+                const data = studentPosts[i];
 
-                const review = await callGemini(prompt);
-                if (review) {
-                    setStudentPosts(prev => prev.map((s, idx) =>
-                        idx === i ? { ...s, ai_synthesis: review } : s
-                    ));
-                    saveToPersistence(data.student.id, review);
+                if (!isRegen && data.ai_synthesis) {
+                    setBatchProgress(prev => ({ ...prev, current: i + 1 }));
+                    continue;
                 }
-                setBatchProgress(prev => ({ ...prev, current: i + 1 }));
-                await new Promise(r => setTimeout(r, 800)); // Rate limiting safety
-            } catch (err) {
-                console.error(`학생 ${data.student.name} 처리 중 오류:`, err);
+
+                try {
+                    const prompt = getStudentPrompt(data.student.name, data.posts);
+                    const review = await callGemini(prompt, userApiKey);
+                    if (review) {
+                        setStudentPosts(prev => prev.map((s, idx) =>
+                            idx === i ? { ...s, ai_synthesis: review } : s
+                        ));
+                        saveToPersistence(data.student.id, review);
+                    }
+                    setBatchProgress(prev => ({ ...prev, current: i + 1 }));
+                    await new Promise(r => setTimeout(r, 800)); // Rate limiting safety
+                } catch (err) {
+                    console.error(`학생 ${data.student.name} 처리 중 오류:`, err);
+                }
             }
+        } catch (err) {
+            console.error('일괄 처리 초기화 오류:', err);
+            alert('일괄 처리를 시작하는 도중 오류가 발생했습니다.');
+        } finally {
+            setBatchLoading(false);
+            alert(isRegen ? '일괄 AI 쫑알이 재생성이 완료되었습니다! ✨' : '일괄 AI쫑알이 생성이 완료되었습니다! ✨');
         }
-        setBatchLoading(false);
-        alert(isRegen ? '일괄 AI 쫑알이 재생성이 완료되었습니다! ✨' : '일괄 AI쫑알이 생성이 완료되었습니다! ✨');
     };
 
     // 7. 엑셀 내보내기
