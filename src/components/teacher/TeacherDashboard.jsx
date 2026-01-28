@@ -22,7 +22,7 @@ import ActivityDetailModal from './ActivityDetailModal';
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
  */
-const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onProfileUpdate, isAdmin, onSwitchToAdminMode, onLogout }) => {
+const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onProfileUpdate, isAdmin, onSwitchToAdminMode }) => {
     const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'settings', 'playground', 'archive', 'guide'
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
     const [selectedActivityPost, setSelectedActivityPost] = useState(null);
@@ -111,7 +111,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                     <Button variant="ghost" size="sm" onClick={() => setIsEditProfileOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
                         ⚙️ 정보 수정
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={onLogout} style={{ fontSize: '0.8rem', color: '#DC3545' }}>
+                    <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()} style={{ fontSize: '0.8rem', color: '#DC3545' }}>
                         로그아웃
                     </Button>
                 </div>
