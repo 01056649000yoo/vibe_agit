@@ -1,6 +1,6 @@
 import { useCallback, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import * as XLSX from 'xlsx';
+// import * as XLSX from 'xlsx'; // 동적 임포트로 변경하여 초기 로딩 속도 최적화
 import { gapi } from 'gapi-script';
 
 /**
@@ -297,15 +297,24 @@ export const useDataExport = () => {
         }
     }, [isGapiLoaded]);
 
-    const exportToExcel = useCallback((data, fileName) => {
+    const exportToExcel = useCallback(async (data, fileName) => {
         if (!data || data.length === 0) {
             alert('출력할 데이터가 없습니다.');
             return;
         }
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
-        XLSX.writeFile(workbook, `${fileName}.xlsx`);
+
+        try {
+            // [최적화] xlsx 라이브러리를 필요할 때만 불러옵니다 (Dynamic Import)
+            const XLSX = await import('xlsx');
+
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+            XLSX.writeFile(workbook, `${fileName}.xlsx`);
+        } catch (error) {
+            console.error('Excel Export Failed:', error);
+            alert('엑셀 파일 생성 중 오류가 발생했습니다.');
+        }
     }, []);
 
     return { fetchExportData, exportToExcel, exportToGoogleDoc, isGapiLoaded };
