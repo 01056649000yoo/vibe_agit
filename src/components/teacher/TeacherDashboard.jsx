@@ -170,7 +170,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             <TeacherSettingsTab
                                 session={session} classes={classes} activeClass={activeClass} setActiveClass={setActiveClass}
                                 setClasses={setClasses} fetchAllClasses={fetchAllClasses} handleSetPrimaryClass={handleSetPrimaryClass}
-                                openaiKey={openaiKey} handleTestAIConnection={handleTestAIConnection}
+                                openaiKey={openaiKey} setOpenaiKey={setOpenaiKey} handleTestAIConnection={handleTestAIConnection}
                                 savingKey={savingKey} testingKey={testingKey} originalKey={originalKey} maskKey={maskKey}
                                 promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
                                 reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}

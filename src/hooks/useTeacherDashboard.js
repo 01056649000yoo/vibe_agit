@@ -66,7 +66,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         if (!session?.user?.id) return;
         const { data, error } = await supabase
             .from('profiles')
-            .select('gemini_api_key, api_mode, personal_openai_api_key, ai_prompt_template, report_prompt_template')
+            .select('*') // 특정 컬럼 지정 시 DB에 없으면 400 에러 발생하므로 전체 선택으로 변경 (안전장치)
             .eq('id', session.user.id)
             .single();
 
@@ -226,7 +226,11 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             const updatePayload = {
                 id: session.user.id,
                 ai_prompt_template: packedPrompt,
-                ...updatedProfile // { api_mode: '...', personal_openai_api_key: '...' } 등
+                // [보안/에러방지] DB에 실제 존재하는 컬럼만 선별하여 업데이트 Payload 구성
+                // 1. 현재 입력된 개인 API 키 상태 반영 (입력란의 값)
+                personal_openai_api_key: openaiKey,
+                // 2. updatedProfile에서 허용된 필드만 추출 (schoolName 등 불필요한 필드 제외하여 400 에러 방지)
+                ...(updatedProfile.api_mode && { api_mode: updatedProfile.api_mode }),
             };
 
             const { error } = await supabase
