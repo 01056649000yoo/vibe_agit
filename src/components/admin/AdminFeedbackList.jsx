@@ -26,7 +26,14 @@ const AdminFeedbackList = () => {
                 `)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                // 권한 없음(403) 에러 시 안내
+                if (error.code === '42501' || error.message.includes('permission')) {
+                    console.error('권한 부족:', error);
+                    alert('데이터를 불러올 권한이 없습니다. (새로고침 하거나 관리자 계정인지 확인해주세요)');
+                }
+                throw error;
+            }
             setFeedbacks(data || []);
         } catch (error) {
             console.error('피드백 로드 실패:', error);
