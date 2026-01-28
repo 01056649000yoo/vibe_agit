@@ -112,3 +112,4 @@ export const callOpenAI = async (prompt) => {
  * (기존 코드 변경을 최소화하기 위함)
  */
 export const callGemini = callOpenAI;
+export const callAI = callOpenAI;

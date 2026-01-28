@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { useEvaluation } from '../../hooks/useEvaluation';
+import { callAI } from '../../lib/openai';
 
 /**
  * 역할: 선생님 - 생기부 도우미 (태그 기반 성취도 추출 및 나이스 입력형 에디터) ✏️
@@ -56,11 +57,7 @@ const RecordAssistant = ({ student, activeClass, isMobile, onClose }) => {
             return;
         }
 
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-        if (!apiKey) {
-            alert('API 키가 설정되지 않았습니다.');
-            return;
-        }
+        // [변경] 더 이상 클라이언트 키를 직접 확인하지 않고, callAI 내부에서 처리합니다.
 
         setIsGenerating(true);
         try {
@@ -87,21 +84,14 @@ const RecordAssistant = ({ student, activeClass, isMobile, onClose }) => {
             5. 활동의 단순 나열이 아닌, 학생만의 고유한 특성이 드러나도록 유기적으로 구성하라.
             `;
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
-                })
-            });
+            // [변경] GPT 통합 호출 (callAI 사용)
+            const text = await callAI(prompt);
 
-            if (!response.ok) throw new Error('AI 서비스 통신 오류');
-            const data = await response.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
             if (text) setRecordContent(text);
         } catch (err) {
-            console.error('생기부 생성 실패:', err.message);
-            alert('AI 문구 생성 중 오류가 발생했습니다.');
+            console.error('생기부 생성 실패:', err);
+            // 에러 메시지가 명확하다면 보여주고, 아니면 일반 메시지
+            alert('AI 문구 생성 중 오류가 발생했습니다: ' + (err.message || '알 수 없는 오류'));
         } finally {
             setIsGenerating(false);
         }

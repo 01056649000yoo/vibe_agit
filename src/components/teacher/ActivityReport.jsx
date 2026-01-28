@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { useEvaluation } from '../../hooks/useEvaluation';
-import { callGemini } from '../../lib/openai';
+import { callAI } from '../../lib/openai';
 import * as XLSX from 'xlsx';
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink } from 'lucide-react';
 import BulkAIProgressModal from './BulkAIProgressModal';
@@ -183,7 +183,7 @@ ${activitiesInfo}`;
                 .single();
 
             const prompt = getStudentPrompt(studentData.student.name, studentData.posts);
-            const review = await callGemini(prompt, profileData?.gemini_api_key);
+            const review = await callAI(prompt, profileData?.gemini_api_key);
 
             if (review) {
                 setStudentPosts(prev => prev.map(s =>
@@ -233,7 +233,7 @@ ${activitiesInfo}`;
 
                 try {
                     const prompt = getStudentPrompt(data.student.name, data.posts);
-                    const review = await callGemini(prompt, userApiKey);
+                    const review = await callAI(prompt, userApiKey);
                     if (review) {
                         setStudentPosts(prev => prev.map((s, idx) =>
                             idx === i ? { ...s, ai_synthesis: review } : s
