@@ -35,13 +35,45 @@ export const useStudentManager = (classId) => {
 
     const fetchStudents = useCallback(async () => {
         if (!classId) return;
-        const { data, error } = await supabase
+
+        // 1. 학생 데이터 조회
+        const { data: studentsData, error } = await supabase
             .from('students')
             .select('*')
             .eq('class_id', classId)
             .order('created_at', { ascending: true });
 
-        if (!error && data) setStudents(data);
+        if (error || !studentsData) {
+            console.error('학생 목록 로드 실패:', error);
+            return;
+        }
+
+        // 2. 활동 점수 계산 (누적 포인트: 사용한 포인트 제외하고 획득한 포인트만 합산)
+        const studentIds = studentsData.map(s => s.id);
+        let activityMap = {};
+
+        if (studentIds.length > 0) {
+            const { data: logsData, error: logsError } = await supabase
+                .from('point_logs')
+                .select('student_id, amount')
+                .in('student_id', studentIds)
+                .gt('amount', 0); // 양수(획득) 포인트만 조회
+
+            if (!logsError && logsData) {
+                logsData.forEach(log => {
+                    if (!activityMap[log.student_id]) activityMap[log.student_id] = 0;
+                    activityMap[log.student_id] += log.amount;
+                });
+            }
+        }
+
+        // 3. 데이터 병합
+        const studentsWithStats = studentsData.map(s => ({
+            ...s,
+            activity_score: activityMap[s.id] || 0 // 누적 획득 포인트 (활동 점수)
+        }));
+
+        setStudents(studentsWithStats);
     }, [classId]);
 
     useEffect(() => {
@@ -100,7 +132,12 @@ export const useStudentManager = (classId) => {
         // 낙관적 업데이트
         setStudents(prev => prev.map(s =>
             selectedIds.includes(s.id)
-                ? { ...s, total_points: (s.total_points || 0) + actualAmount }
+                ? {
+                    ...s,
+                    total_points: (s.total_points || 0) + actualAmount,
+                    // 획득(양수)일 경우 활동 점수도 증가
+                    activity_score: (s.activity_score || 0) + (actualAmount > 0 ? actualAmount : 0)
+                }
                 : s
         ));
         setIsPointModalOpen(false);

@@ -52,7 +52,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
 
     // 용도에 따른 정렬 로직
     const displayStudents = isDashboardMode
-        ? [...students].sort((a, b) => (b.total_points || 0) - (a.total_points || 0))
+        ? [...students].sort((a, b) => (b.activity_score || 0) - (a.activity_score || 0))
         : [...students].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     const handleExportClick = (student) => {

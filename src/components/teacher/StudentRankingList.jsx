@@ -52,10 +52,10 @@ const RankingItem = memo(({
                     color: isFirst ? '#F39C12' : '#212529',
                     fontSize: '1.2rem',
                     fontFamily: 'Outfit, sans-serif'
-                }}>
-                    {(student.total_points || 0).toLocaleString()}
+                }} title={`현재 보유 포인트: ${(student.total_points || 0).toLocaleString()} P`}>
+                    {(student.activity_score || 0).toLocaleString()}
                 </span>
-                <span style={{ fontSize: '0.8rem', color: isFirst ? '#F39C12' : '#ADB5BD', marginLeft: '2px', fontWeight: 'bold' }}>P</span>
+                <span style={{ fontSize: '0.8rem', color: isFirst ? '#F39C12' : '#ADB5BD', marginLeft: '2px', fontWeight: 'bold' }}>XP</span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
