@@ -254,6 +254,7 @@ function App() {
               setInternalPage={setInternalPage}
               isAdmin={profile.role === 'ADMIN'}
               onSwitchToAdminMode={() => setAdminModeHandler(true)}
+              onLogout={handleLogout}
             />
           )
         ) : studentSession ? (
