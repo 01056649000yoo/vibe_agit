@@ -182,15 +182,19 @@ function App() {
 
   // 로그아웃 통합 처리 (교사/학생 공용 가능하도록 강화)
   const handleLogout = async () => {
-    // 모든 유무형 세션 데이터 초기화
-    await supabase.auth.signOut();
-    localStorage.clear();
-    setSession(null);
-    setProfile(null);
-    setStudentSession(null);
-    setIsStudentLoginMode(false);
-    setInternalPage({ name: 'main', params: {} });
-    setAdminModeHandler(true);
+    try {
+      // 모든 유무형 세션 데이터 초기화
+      await supabase.auth.signOut();
+      localStorage.clear();
+      sessionStorage.clear(); // 세션 스토리지도 비우기
+
+      // 강제 페이지 리로드를 통해 모든 상태를 확실하게 초기화
+      window.location.href = '/';
+    } catch (error) {
+      console.error('로그아웃 중 에러:', error);
+      // 에러가 나더라도 강제로 이동
+      window.location.href = '/';
+    }
   }
 
   // 학생 로그아웃 처리 (명시적 별도 함수 유지 - UI 호출용)
