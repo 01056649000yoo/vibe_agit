@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import AdminFeedbackList from './AdminFeedbackList';
 
 // --- Components ---
 
@@ -115,7 +116,7 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
     const [autoApproval, setAutoApproval] = useState(false);
 
     // States for UI
-    const [currentTab, setCurrentTab] = useState('active'); // 'active', 'pending', 'settings'
+    const [currentTab, setCurrentTab] = useState('active'); // 'active', 'pending', 'settings', 'feedback'
     const [searchTerm, setSearchTerm] = useState('');
 
     const [loading, setLoading] = useState(true);
@@ -272,6 +273,7 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                         {[
                             { id: 'active', label: '✅ 활동 중인 선생님' },
                             { id: 'pending', label: `⏳ 승인 대기 (${pendingTeachers.length})` },
+                            { id: 'feedback', label: '📢 의견 및 제보' },
                             { id: 'settings', label: '⚙️ 시스템 설정' }
                         ].map(tab => (
                             <button
@@ -449,6 +451,10 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                                 </div>
                             </div>
                         </Card>
+                    )}
+
+                    {!loading && currentTab === 'feedback' && (
+                        <AdminFeedbackList />
                     )}
                 </div>
             </div>

@@ -18,6 +18,7 @@ import TeacherMissionTab from './TeacherMissionTab';
 import TeacherSettingsTab from './TeacherSettingsTab';
 import TeacherProfileModal from './TeacherProfileModal';
 import ActivityDetailModal from './ActivityDetailModal';
+import FeedbackModal from './FeedbackModal';
 
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
@@ -26,6 +27,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'settings', 'playground', 'archive', 'guide'
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
     const [selectedActivityPost, setSelectedActivityPost] = useState(null);
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
     const {
@@ -111,6 +113,9 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                     <Button variant="ghost" size="sm" onClick={() => setIsEditProfileOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
                         ⚙️ 정보 수정
                     </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setIsFeedbackOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
+                        📢 의견 보내기
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()} style={{ fontSize: '0.8rem', color: '#DC3545' }}>
                         로그아웃
                     </Button>
@@ -195,6 +200,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 handleUpdateTeacherProfile={handleUpdateTeacherProfile}
                 handleSwitchGoogleAccount={handleSwitchGoogleAccount}
                 handleWithdrawal={handleWithdrawal}
+            />
+
+            <FeedbackModal
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
+                userId={session.user.id}
             />
         </div>
     );
