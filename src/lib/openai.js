@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+// import OpenAI from 'openai'; // Edge Function 사용으로 불필요
 
 /**
  * OpenAI 모델 호출 유틸리티 ✨
@@ -11,22 +11,7 @@ const MODEL_HIERARCHY = [
     'gpt-3.5-turbo' // 레거시 폴백
 ];
 
-let openaiInstance = null;
-
-const getOpenAI = (apiKey) => {
-    const key = apiKey || import.meta.env.VITE_OPENAI_API_KEY;
-    if (!key) {
-        throw new Error('OpenAI API 키가 설정되지 않았습니다. [설정 > AI 보안 센터]에서 키를 등록하거나 시스템 관리자에게 문의하세요.');
-    }
-
-    if (!openaiInstance || (apiKey && openaiInstance.apiKey !== apiKey)) {
-        openaiInstance = new OpenAI({
-            apiKey: key,
-            dangerouslyAllowBrowser: true // 클라이언트 측 호출 허용 (개발 단계)
-        });
-    }
-    return openaiInstance;
-};
+// Edge Function 전용으로 전환되어 getOpenAI(클라이언트 직접 호출)는 제거되었습니다.
 
 /**
  * OpenAI API를 호출하여 메시지를 생성합니다.
