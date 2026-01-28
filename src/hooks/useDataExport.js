@@ -39,7 +39,7 @@ export const useDataExport = () => {
 
                 const client = window.google.accounts.oauth2.initTokenClient({
                     client_id: clientId,
-                    scope: "https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file",
+                    scope: "https://www.googleapis.com/auth/drive.file",
                     callback: (response) => {
                         // Default callback - will be overridden in getAccessToken
                         console.log('GIS Token Response:', response);
