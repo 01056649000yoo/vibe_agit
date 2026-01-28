@@ -114,6 +114,7 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
     const [pendingTeachers, setPendingTeachers] = useState([]);
     const [approvedTeachers, setApprovedTeachers] = useState([]);
     const [autoApproval, setAutoApproval] = useState(false);
+    const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
 
     // States for UI
     const [currentTab, setCurrentTab] = useState('active'); // 'active', 'pending', 'settings', 'feedback'
@@ -126,7 +127,21 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
     useEffect(() => {
         fetchTeachers();
         fetchSettings();
+        fetchFeedbackCount();
     }, []);
+
+    const fetchFeedbackCount = async () => {
+        try {
+            const { count, error } = await supabase
+                .from('feedback_reports')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'open');
+
+            if (!error) setPendingFeedbackCount(count || 0);
+        } catch (err) {
+            console.error('피드백 개수 확인 실패:', err);
+        }
+    };
 
     const fetchSettings = async () => {
         try {
@@ -273,7 +288,22 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                         {[
                             { id: 'active', label: '✅ 활동 중인 선생님' },
                             { id: 'pending', label: `⏳ 승인 대기 (${pendingTeachers.length})` },
-                            { id: 'feedback', label: '📢 의견 및 제보' },
+                            {
+                                id: 'feedback',
+                                label: (
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        📢 의견 및 제보
+                                        {pendingFeedbackCount > 0 && (
+                                            <span style={{
+                                                background: '#E53E3E', color: 'white', fontSize: '0.7rem',
+                                                padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold'
+                                            }}>
+                                                {pendingFeedbackCount}
+                                            </span>
+                                        )}
+                                    </span>
+                                )
+                            },
                             { id: 'settings', label: '⚙️ 시스템 설정' }
                         ].map(tab => (
                             <button

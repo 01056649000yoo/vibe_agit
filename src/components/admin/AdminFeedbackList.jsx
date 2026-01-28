@@ -110,14 +110,14 @@ const AdminFeedbackList = () => {
                                                 {item.status === 'done' ? '완료' : item.status === 'open' ? '대기중' : item.status}
                                             </span>
                                         </td>
-                                        <td style={{ padding: '16px' }}>
-                                            <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#2C3E50' }}>{item.title}</div>
+                                        <td style={{ padding: '16px', maxWidth: '400px' }}>
+                                            <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#2C3E50', wordBreak: 'break-word', whiteSpace: 'normal' }}>{item.title}</div>
                                             <div
                                                 style={{
                                                     fontSize: '0.85rem', color: '#546E7A', lineHeight: '1.4',
                                                     maxHeight: expandedIds.has(item.id) ? 'none' : '40px',
                                                     overflow: 'hidden', cursor: 'pointer',
-                                                    whiteSpace: 'pre-wrap'
+                                                    whiteSpace: 'pre-wrap', wordBreak: 'break-word'
                                                 }}
                                                 onClick={() => toggleExpand(item.id)}
                                             >
