@@ -182,17 +182,17 @@ function App() {
 
   // 로그아웃 통합 처리 (교사/학생 공용 가능하도록 강화)
   const handleLogout = async () => {
-    try {
-      // 모든 유무형 세션 데이터 초기화
-      await supabase.auth.signOut();
-      localStorage.clear();
-      sessionStorage.clear(); // 세션 스토리지도 비우기
+    // 1. 로컬 스토리지 즉시 비우기 (서버 응답 대기 없이 클라이언트 상태 해제 우선)
+    localStorage.clear();
+    sessionStorage.clear();
 
-      // 강제 페이지 리로드를 통해 모든 상태를 확실하게 초기화
-      window.location.href = '/';
+    try {
+      // 2. 서버 세션 종료 시도 (토큰 만료/403 상황에도 안전하게 처리)
+      await supabase.auth.signOut();
     } catch (error) {
-      console.error('로그아웃 중 에러:', error);
-      // 에러가 나더라도 강제로 이동
+      console.warn('서버 로그아웃 실패 (무시됨):', error);
+    } finally {
+      // 3. 무조건 메인으로 강제 리로드
       window.location.href = '/';
     }
   }
