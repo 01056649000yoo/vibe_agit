@@ -122,11 +122,12 @@ const StudentRankingList = ({
     copiedId, openHistoryModal, setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant
 }) => {
     return (
-        <div style={LIST_CONTAINER_STYLE}>
+        <div style={{ ...LIST_CONTAINER_STYLE, display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div
                 className="ranking-scroll"
                 style={{
-                    maxHeight: isMobile ? '340px' : '440px',
+                    flex: 1,
+                    minHeight: 0,
                     overflowY: 'auto',
                     display: 'flex',
                     flexDirection: 'column',

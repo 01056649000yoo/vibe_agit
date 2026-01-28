@@ -10,7 +10,8 @@ const StudentManagementList = ({
         <div
             className="ranking-scroll"
             style={{
-                maxHeight: isMobile ? 'calc(100vh - 300px)' : '600px',
+                flex: 1,
+                minHeight: 0,
                 overflowY: 'auto',
                 display: 'flex',
                 flexDirection: 'column',

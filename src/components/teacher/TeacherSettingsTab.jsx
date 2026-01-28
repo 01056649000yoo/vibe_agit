@@ -29,6 +29,8 @@ const TeacherSettingsTab = ({
     fetchDeletedClasses,
     onRestoreClass
 }) => {
+    const [activePromptTab, setActivePromptTab] = React.useState('feedback');
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
             {/* 1. 상단: 학급 추가/선택 배너 (가로 와이드) */}
@@ -62,11 +64,11 @@ const TeacherSettingsTab = ({
                 }}>
                     {/* 2. 좌측: 학생 명단 및 계정 관리 */}
                     <section style={{
-                        background: 'white', borderRadius: '24px', padding: isMobile ? '20px' : '28px',
+                        background: 'white', borderRadius: '24px',
                         border: '1px solid #E9ECEF', boxSizing: 'border-box', boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
-                        width: '100%', display: 'flex', flexDirection: 'column'
+                        width: '100%', display: 'flex', flexDirection: 'column', position: 'relative'
                     }}>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, padding: isMobile ? '20px' : '28px' }}>
                             <StudentManager activeClass={activeClass} classId={activeClass.id} isDashboardMode={false} />
                         </div>
                     </section>
@@ -142,36 +144,59 @@ const TeacherSettingsTab = ({
                                     </div>
                                 </div>
 
-                                {/* (1) 학생 개별 피드백 프롬프트 */}
-                                <div style={{ flex: '0.6', display: 'flex', flexDirection: 'column' }}>
-                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#4F46E5', fontWeight: 'bold', marginBottom: '8px' }}>
-                                        💬 학생 AI 피드백 프롬프트
-                                    </label>
-                                    <textarea
-                                        value={promptTemplate}
-                                        onChange={(e) => setPromptTemplate(e.target.value)}
-                                        placeholder="학생들에게 줄 댓글 피드백 규칙을 입력하세요."
+                                {/* 탭 UI 헤더 */}
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '0' }}>
+                                    <button
+                                        onClick={() => setActivePromptTab('feedback')}
                                         style={{
-                                            width: '100%', flex: 1, minHeight: '80px', padding: '12px', borderRadius: '12px',
-                                            border: '1px solid #DEE2E6', fontSize: '0.82rem', lineHeight: '1.4',
-                                            color: '#2C3E50', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit'
+                                            flex: 1, padding: '12px', borderRadius: '12px 12px 0 0', border: 'none', cursor: 'pointer',
+                                            background: activePromptTab === 'feedback' ? '#4F46E5' : '#E0E7FF',
+                                            color: activePromptTab === 'feedback' ? 'white' : '#4F46E5',
+                                            fontWeight: 'bold', fontSize: '0.9rem', transition: 'all 0.2s',
+                                            boxShadow: activePromptTab === 'feedback' ? '0 -2px 10px rgba(0,0,0,0.05)' : 'none'
                                         }}
-                                    />
+                                    >
+                                        💬 학생 AI 피드백
+                                    </button>
+                                    <button
+                                        onClick={() => setActivePromptTab('report')}
+                                        style={{
+                                            flex: 1, padding: '12px', borderRadius: '12px 12px 0 0', border: 'none', cursor: 'pointer',
+                                            background: activePromptTab === 'report' ? '#059669' : '#D1FAE5',
+                                            color: activePromptTab === 'report' ? 'white' : '#059669',
+                                            fontWeight: 'bold', fontSize: '0.9rem', transition: 'all 0.2s',
+                                            boxShadow: activePromptTab === 'report' ? '0 -2px 10px rgba(0,0,0,0.05)' : 'none'
+                                        }}
+                                    >
+                                        📋 AI쫑알이 생성
+                                    </button>
                                 </div>
 
-                                {/* (2) AI쫑알이 생성 프롬프트 */}
-                                <div style={{ flex: '0.6', display: 'flex', flexDirection: 'column' }}>
-                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#059669', fontWeight: 'bold', marginBottom: '8px' }}>
-                                        📋 AI쫑알이 생성 프롬프트
-                                    </label>
+                                {/* 통합 프롬프트 입력창 */}
+                                <div style={{
+                                    flex: 1, display: 'flex', flexDirection: 'column',
+                                    border: `2px solid ${activePromptTab === 'feedback' ? '#4F46E5' : '#059669'}`,
+                                    borderRadius: '0 0 12px 12px', background: 'white', padding: '16px',
+                                    marginTop: 0, minHeight: '400px',
+                                    boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+                                }}>
+                                    <div style={{ marginBottom: '12px', fontSize: '0.9rem', color: '#4B5563', lineHeight: '1.5', background: '#F3F4F6', padding: '12px', borderRadius: '8px' }}>
+                                        {activePromptTab === 'feedback'
+                                            ? 'ℹ️ 학생들이 글을 제출했을 때 AI가 자동으로 작성해줄 피드백의 규칙을 설정합니다.'
+                                            : 'ℹ️ 학생 생활기록부 도움자료(AI쫑알이)를 생성할 때 AI가 참고할 규칙을 설정합니다.'}
+                                    </div>
+
                                     <textarea
-                                        value={reportPromptTemplate}
-                                        onChange={(e) => setReportPromptTemplate(e.target.value)}
-                                        placeholder="생기부 도움자료 생성 시 적용할 규칙을 입력하세요."
+                                        value={activePromptTab === 'feedback' ? promptTemplate : reportPromptTemplate}
+                                        onChange={(e) => activePromptTab === 'feedback' ? setPromptTemplate(e.target.value) : setReportPromptTemplate(e.target.value)}
+                                        placeholder={activePromptTab === 'feedback'
+                                            ? "예시: 초등학생 수준에 맞춰 다정하게 존댓말을 써주고, 글의 장점을 먼저 칭찬한 뒤 고칠 점을 하나만 제안해줘..."
+                                            : "예시: 창의적 체험활동 영역에 들어갈 내용을 요약해주고, 학생의 성실함을 강조하는 문구로 작성해줘..."}
                                         style={{
-                                            width: '100%', flex: 1, minHeight: '80px', padding: '12px', borderRadius: '12px',
-                                            border: '1px solid #DEE2E6', fontSize: '0.82rem', lineHeight: '1.4',
-                                            color: '#2C3E50', resize: 'none', boxSizing: 'border-box', fontFamily: 'inherit'
+                                            flex: 1, width: '100%', padding: '16px', borderRadius: '8px',
+                                            border: '1px solid #E5E7EB', fontSize: '0.95rem', lineHeight: '1.6',
+                                            color: '#1F2937', resize: 'none', boxSizing: 'border-box', fontFamily: "'Pretendard', sans-serif",
+                                            background: '#FAFAFA', outline: 'none'
                                         }}
                                     />
                                 </div>

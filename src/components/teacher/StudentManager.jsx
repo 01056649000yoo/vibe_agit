@@ -61,7 +61,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
     };
 
     return (
-        <div style={{ width: '100%', boxSizing: 'border-box' }}>
+        <div style={{ width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', height: '100%' }}>
             {/* 상단 헤더 섹션 */}
             <StudentManagerHeader
                 isDashboardMode={isDashboardMode}
