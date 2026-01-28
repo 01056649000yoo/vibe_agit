@@ -312,22 +312,82 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                     {loading && <div style={{ padding: '40px', textAlign: 'center', color: '#A0AEC0' }}>데이터 불러오는 중...</div>}
 
                     {!loading && currentTab === 'active' && (
-                        <div>
+                        <div style={{ overflowX: 'auto', background: 'white', borderRadius: '12px', border: '1px solid #E9ECEF', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                             {approvedTeachers.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '60px', color: '#A0AEC0' }}>활동 중인 선생님이 없습니다.</div>
                             ) : (
-                                filterList(approvedTeachers).map(profile => (
-                                    <TeacherItem
-                                        key={profile.id}
-                                        profile={profile}
-                                        onAction={() => handleRevoke(profile.id, profile.teachers?.name || profile.full_name)}
-                                        actionLabel="승인 취소"
-                                        actionColor="#E53E3E"
-                                        isRevoke={true}
-                                        onForceWithdrawal={() => handleForceWithdrawal(profile.id, profile.teachers?.name || profile.full_name)}
-                                        onToggleApiMode={() => handleToggleApiMode(profile.id, profile.teachers?.name || profile.full_name, profile.api_mode)}
-                                    />
-                                ))
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem', minWidth: '800px' }}>
+                                    <thead>
+                                        <tr style={{ background: '#F8F9FA', borderBottom: '2px solid #E9ECEF', color: '#546E7A' }}>
+                                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>이름</th>
+                                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>학교</th>
+                                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>API 사용 권한</th>
+                                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>이메일</th>
+                                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>전화번호</th>
+                                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>관리</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filterList(approvedTeachers).map((profile, index) => {
+                                            const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
+                                            const displayName = teacherInfo?.name || profile.full_name || '이름 없음';
+                                            const schoolName = teacherInfo?.school_name || '-';
+                                            const displayPhone = teacherInfo?.phone || '-';
+                                            const apiMode = profile.api_mode || 'SYSTEM';
+
+                                            return (
+                                                <tr key={profile.id} style={{ borderBottom: '1px solid #F1F3F5', transition: 'background 0.2s', background: 'white' }}>
+                                                    <td style={{ padding: '16px', fontWeight: 'bold', color: '#2C3E50' }}>{displayName}</td>
+                                                    <td style={{ padding: '16px', color: '#455A64' }}>{schoolName}</td>
+                                                    <td style={{ padding: '16px', textAlign: 'center' }}>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleToggleApiMode(profile.id, displayName, apiMode); }}
+                                                            title="클릭하여 모드 변경"
+                                                            style={{
+                                                                fontSize: '0.8rem', fontWeight: 'bold',
+                                                                padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
+                                                                border: apiMode === 'PERSONAL' ? '1px solid #A5D6A7' : '1px solid #90CAF9',
+                                                                background: apiMode === 'PERSONAL' ? '#E8F5E9' : '#E3F2FD',
+                                                                color: apiMode === 'PERSONAL' ? '#2E7D32' : '#1976D2',
+                                                                display: 'inline-flex', alignItems: 'center', gap: '6px'
+                                                            }}
+                                                        >
+                                                            {apiMode === 'PERSONAL' ? '🔑 개인 키' : '🌐 공용 키'}
+                                                        </button>
+                                                    </td>
+                                                    <td style={{ padding: '16px', color: '#546E7A' }}>{profile.email}</td>
+                                                    <td style={{ padding: '16px', color: '#546E7A' }}>{displayPhone}</td>
+                                                    <td style={{ padding: '16px', textAlign: 'center' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                            <Button
+                                                                onClick={() => handleRevoke(profile.id, displayName)}
+                                                                size="sm"
+                                                                style={{
+                                                                    background: 'white', color: '#E53E3E',
+                                                                    border: '1px solid #FEB2B2',
+                                                                    fontWeight: 'bold', borderRadius: '6px', padding: '6px 10px', fontSize: '0.8rem'
+                                                                }}
+                                                            >
+                                                                승인 취소
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => handleForceWithdrawal(profile.id, displayName)}
+                                                                size="sm"
+                                                                style={{
+                                                                    background: '#FFF5F5', color: '#C0392B',
+                                                                    border: '1px solid #FC8181',
+                                                                    fontWeight: 'bold', borderRadius: '6px', padding: '6px 10px', fontSize: '0.8rem'
+                                                                }}
+                                                            >
+                                                                강제 탈퇴
+                                                            </Button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             )}
                         </div>
                     )}
