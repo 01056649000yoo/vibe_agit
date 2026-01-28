@@ -41,10 +41,47 @@ Deno.serve(async (req) => {
         // 5. 요청 바디 파싱
         const { prompt, model } = await req.json()
 
-        // 6. OpenAI 호출 (서버 환경변수 OPENAI_API_KEY 사용)
-        const apiKey = Deno.env.get('OPENAI_API_KEY');
-        if (!apiKey) {
-            throw new Error('Server misconfiguration: OPENAI_API_KEY missing');
+        // 6. API Key 결정 로직
+        let apiKey = '';
+
+        // (1) [상위 권한] 시스템 전역 설정(use_central_api) 조회
+        const { data: settingsData } = await supabaseClient
+            .from('system_settings')
+            .select('value')
+            .eq('key', 'use_central_api')
+            .single();
+
+        // 전역 설정이 'true'(관리자 키 강제 사용)이면 개별 설정 무시
+        const forceCentralApi = settingsData?.value ?? true;
+
+        if (forceCentralApi) {
+            console.log('API Mode: FORCE SYSTEM (Global Setting)');
+            apiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+            if (!apiKey) throw new Error('Server misconfiguration: OPENAI_API_KEY missing');
+        } else {
+            // (2) [개별 권한] 사용자 프로필 설정 조회
+            const { data: profileData, error: profileError } = await supabaseClient
+                .from('profiles')
+                .select('api_mode, personal_openai_api_key')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError) {
+                console.error('프로필 조회 실패:', profileError);
+                throw new Error('사용자 정보를 불러오는데 실패했습니다.');
+            }
+
+            const apiMode = profileData?.api_mode || 'SYSTEM';
+
+            if (apiMode === 'SYSTEM') {
+                console.log('API Mode: SYSTEM (User Profile)');
+                apiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+                if (!apiKey) throw new Error('Server misconfiguration: OPENAI_API_KEY missing');
+            } else {
+                console.log('API Mode: PERSONAL (User Profile)');
+                apiKey = profileData?.personal_openai_api_key ?? '';
+                if (!apiKey) throw new Error('개인 API 키가 설정되지 않았습니다. [설정 > AI 보안 센터]에서 키를 등록해주세요.');
+            }
         }
 
         const openai = new OpenAI({

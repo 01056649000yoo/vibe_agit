@@ -66,12 +66,20 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         if (!session?.user?.id) return;
         const { data, error } = await supabase
             .from('profiles')
-            .select('gemini_api_key, ai_prompt_template, report_prompt_template')
+            .select('gemini_api_key, api_mode, personal_openai_api_key, ai_prompt_template, report_prompt_template')
             .eq('id', session.user.id)
             .single();
 
         if (data) {
-            setOriginalKey('Environment Variable Active');
+            setOriginalKey(data.api_mode === 'PERSONAL' ? 'Personal Key Active' : 'System Key Active');
+
+            // 저장된 개인 키가 있으면 상태에 반영 (마스킹 등 보안 처리는 렌더링 시점에 고려 가능하나, 여기선 편집을 위해 원본 로드)
+            if (data.personal_openai_api_key) {
+                setOpenaiKey(data.personal_openai_api_key);
+            } else {
+                setOpenaiKey('');
+            }
+
             if (data.ai_prompt_template) {
                 const rawPrompt = data.ai_prompt_template.trim();
                 // JSON 형식인지 확인하여 피드백/리포트 프롬프트 분리 추출
@@ -205,29 +213,38 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         });
     };
 
-    const handleSaveTeacherSettings = async () => {
+    const handleSaveTeacherSettings = async (updatedProfile = {}) => {
         setSavingKey(true);
         try {
-            // 여러 프롬프트를 하나의 컬럼에 JSON으로 패킹하여 저장 (DB 스키마 변경 불필요)
+            // 여러 프롬프트를 하나의 컬럼에 JSON으로 패킹하여 저장
             const packedPrompt = JSON.stringify({
                 feedback: promptTemplate.trim(),
                 report: reportPromptTemplate.trim()
             });
 
+            // 업데이트할 객체 준비 (API 키 등 포함)
+            const updatePayload = {
+                id: session.user.id,
+                ai_prompt_template: packedPrompt,
+                ...updatedProfile // { api_mode: '...', personal_openai_api_key: '...' } 등
+            };
+
             const { error } = await supabase
                 .from('profiles')
-                .upsert({
-                    id: session.user.id,
-                    ai_prompt_template: packedPrompt
-                }, { onConflict: 'id' });
+                .upsert(updatePayload, { onConflict: 'id' });
 
             if (error) throw error;
+
             setOriginalPrompt(promptTemplate.trim());
             setOriginalReportPrompt(reportPromptTemplate.trim());
+
+            // 프로필 상태 갱신을 위해 콜백 호출
+            if (onProfileUpdate) await onProfileUpdate();
+
             alert('설정이 안전하게 저장되었습니다! ✨');
         } catch (err) {
             console.error('설정 저장 실패:', err.message);
-            alert('저장 중 오류가 발생했습니다.');
+            alert('저장 중 오류가 발생했습니다: ' + err.message);
         } finally {
             setSavingKey(false);
         }

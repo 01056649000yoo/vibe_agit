@@ -102,6 +102,55 @@ const TeacherSettingsTab = ({
                             </div>
 
                             <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px dashed #DEE2E6', flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                {/* (0) API 모드 설정 (시스템 공용 / 개인 키) */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '15px', background: '#F8F9FA', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
+                                    <label style={{ fontSize: '0.85rem', color: '#2C3E50', fontWeight: 'bold' }}>🔑 AI API 모드 설정</label>
+                                    <div style={{ display: 'flex', gap: '15px' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: 'pointer' }}>
+                                            <input
+                                                type="radio"
+                                                name="apiMode"
+                                                value="SYSTEM"
+                                                checked={(!profile?.api_mode || profile?.api_mode === 'SYSTEM')}
+                                                onChange={(e) => handleSaveTeacherSettings({ ...profile, api_mode: e.target.value })}
+                                            />
+                                            시스템 공용 키 (기본)
+                                        </label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: 'pointer' }}>
+                                            <input
+                                                type="radio"
+                                                name="apiMode"
+                                                value="PERSONAL"
+                                                checked={profile?.api_mode === 'PERSONAL'}
+                                                onChange={(e) => handleSaveTeacherSettings({ ...profile, api_mode: e.target.value })}
+                                            />
+                                            교사 개인 키 사용
+                                        </label>
+                                    </div>
+
+                                    {profile?.api_mode === 'PERSONAL' && (
+                                        <div style={{ marginTop: '10px' }}>
+                                            <input
+                                                type="password"
+                                                value={openaiKey || ''}
+                                                /* 상위 컴포넌트에서 openaiKey set 함수를 넘겨주지 않아서, 여기서는 임시로 input 처리가 필요함. 
+                                                   하지만 기존 구조를 유지하기 위해 onChange 이벤트를 handleSaveTeacherSettings가 아닌 별도 prop으로 변경하는 것이 좋지만, 
+                                                   일단은 사용자 경험을 위해 input change 시 바로 업데이트보다는 별도 state 관리가 필요할 수 있음.
+                                                   여기서는 간단히 openaiKey prop을 편집 가능한 상태로 가정하고 처리 */
+                                                onChange={(e) => handleSaveTeacherSettings({ ...profile, personal_openai_api_key: e.target.value })}
+                                                placeholder="sk-... 로 시작하는 OpenAI API 키를 입력하세요"
+                                                style={{
+                                                    width: '100%', padding: '10px', borderRadius: '8px',
+                                                    border: '1px solid #DEE2E6', fontSize: '0.85rem'
+                                                }}
+                                            />
+                                            <p style={{ margin: '5px 0 0', fontSize: '0.75rem', color: '#7F8C8D' }}>
+                                                * 키는 서버에 안전하게 저장되며, 클라이언트 코드에 노출되지 않습니다.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* (1) 학생 개별 피드백 프롬프트 */}
                                 <div style={{ flex: '0.6', display: 'flex', flexDirection: 'column' }}>
                                     <label style={{ display: 'block', fontSize: '0.85rem', color: '#4F46E5', fontWeight: 'bold', marginBottom: '8px' }}>

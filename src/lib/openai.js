@@ -32,51 +32,47 @@ const getOpenAI = (apiKey) => {
  * OpenAI API를 호출하여 메시지를 생성합니다.
  * @param {string} prompt - 전송할 프롬프트
  */
-export const callOpenAI = async (prompt, apiKey) => {
-    // 1. 개인 키가 있으면 기존처럼 클라이언트에서 직접 호출 (개인 비용 사용)
-    if (apiKey) {
-        let openaiInstance = getOpenAI(apiKey);
-        let lastError = null;
+export const callOpenAI = async (prompt) => {
+    // 이제 모든 호출은 Edge Function 'vibe-ai'를 통해 이루어집니다.
+    // Edge Function 내부에서 공용 키(시스템) 또는 개인 키(DB)를 자동으로 선택합니다.
 
-        for (const model of MODEL_HIERARCHY) {
-            try {
-                const completion = await openaiInstance.chat.completions.create({
-                    messages: [{ role: 'user', content: prompt }],
-                    model: model,
-                });
-                return completion.choices[0]?.message?.content?.trim();
-            } catch (err) {
-                console.warn(`모델 ${model} 호출 실패:`, err.message);
-                lastError = err.message;
-                continue;
-            }
-        }
-        throw new Error(`개인 API 키 호출 실패: ${lastError}`);
-    }
-
-    // 2. 개인 키가 없으면 서버(Edge Function)를 통해 공용 키 사용 (보안)
-    // Edge Function은 'vibe-ai'라는 이름으로 배포되어 있어야 합니다.
     try {
-        const { data, error } = await import('./supabaseClient').then(m => m.supabase.functions.invoke('vibe-ai', {
-            body: {
-                prompt: prompt,
-                model: 'gpt-4o-mini' // 기본적으로 빠르고 저렴한 모델 사용
-            }
+        // [중요] 함수 호출 전 세션 확인 (401 방지)
+        const { data: { session }, error: sessionError } = await import('./supabaseClient').then(m => m.supabase.auth.getSession());
+
+        if (sessionError || !session) {
+            console.warn('AI 호출 전 세션 만료됨, 재로그인 필요');
+            throw new Error('로그인 세션이 만료되었습니다. 페이지를 새로고침하거나 다시 로그인해주세요.');
+        }
+
+        // [1차 시도] 1순위: gpt-4o-mini (가장 가성비 좋고 빠른 모델)
+        // Edge Function에 model 파라미터를 전달하면 내부에서 해당 모델로 호출합니다.
+        const { data: data1, error: error1 } = await import('./supabaseClient').then(m => m.supabase.functions.invoke('vibe-ai', {
+            body: { prompt: prompt, model: 'gpt-4o-mini' }
         }));
 
-        if (error) {
-            // Edge Function이 없거나 에러인 경우, 로컬 환경변수 확인 (개발자용 백업)
-            console.warn('Edge Function 호출 실패, 로컬 환경 변수 시도:', error);
-            if (import.meta.env.VITE_OPENAI_API_KEY) {
-                return callOpenAI(prompt, import.meta.env.VITE_OPENAI_API_KEY);
-            }
-            throw new Error(`AI 서버 연결 실패: ${error.message}`);
+        if (!error1 && data1?.text) return data1.text;
+
+        // 401 오류인 경우 즉시 중단 (권한 문제이므로 재시도 의미 없음)
+        if (error1 && (error1.code === 401 || error1.message?.includes('401'))) {
+            throw new Error('AI 서버 접근 권한이 없습니다. (401 Unauthorized) - 관리자에게 문의하세요.');
         }
 
-        return data.text;
+        console.warn('1차(gpt-4o-mini) 실패, 2차(gpt-3.5-turbo) 시도:', error1);
+
+        // [2차 시도] 폴백: gpt-3.5-turbo
+        const { data: data2, error: error2 } = await import('./supabaseClient').then(m => m.supabase.functions.invoke('vibe-ai', {
+            body: { prompt: prompt, model: 'gpt-3.5-turbo' }
+        }));
+
+        if (!error2 && data2?.text) return data2.text;
+
+        // 모든 시도 실패 시
+        throw new Error(`AI 서버 연결 실패: ${error2?.message || '알 수 없는 오류'}`);
+
     } catch (err) {
         console.error('AI 호출 치명적 오류:', err);
-        throw new Error('AI 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+        throw new Error(err.message || 'AI 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
     }
 };
 

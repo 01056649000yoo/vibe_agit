@@ -176,6 +176,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}
                                 handleSaveTeacherSettings={handleSaveTeacherSettings}
                                 fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
+                                profile={profile}
                             />
                         )
                     )}
