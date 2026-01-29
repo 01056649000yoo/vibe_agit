@@ -9,49 +9,64 @@ const TermsOfService = () => {
             <p style={{ fontSize: '0.8rem', color: '#95A5A6', marginBottom: '20px' }}>발효일: 2026년 1월 16일</p>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>제1조 (목적)</h4>
-                <p>본 약관은 운영자 유쌤이 제공하는 ‘끄적끄적 아지트’ 글쓰기 및 학급 소통 플랫폼 서비스(이하 ’서비스’) 이용과 관련하여 회원의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>1. 서비스 이용약관</h4>
+                <p>본 이용약관은 이용자와 '끄적끄적 아지트' 간의 법적 계약을 구성합니다. 서비스 가입은 귀하가 본 약관에 동의함을 의미합니다.</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>제2조 (서비스의 목적 및 정의)</h4>
-                <ol style={{ paddingLeft: '20px', margin: 0 }}>
-                    <li>본 서비스는 학생들의 글쓰기 역량 강화와 학급 내 건전한 소통을 목적으로 하는 학급 운영 통합 플랫폼입니다.</li>
-                    <li>'드래곤 키우기' 등의 게임화 요소는 글쓰기 활동을 독려하기 위한 부가적인 동기부여 수단으로 제공됩니다.</li>
-                </ol>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>2. 서비스 설명</h4>
+                <p>'끄적끄적 아지트'는 교육 환경에서 학생들과 교사 간의 상호작용을 향상시키기 위한 플랫폼입니다. 본 서비스는 학생 포인트 관리, 감정 기록, 댓글 및 피드백 등의 기능을 제공합니다.</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>제3조 (이용계약의 체결 및 승인)</h4>
-                <ol style={{ paddingLeft: '20px', margin: 0 }}>
-                    <li>교사는 구글 계정 인증을 통해 가입을 신청하며, <strong>최종적인 서비스 이용은 관리자의 승인 절차 완료 후 가능합니다.</strong></li>
-                    <li>학생은 선생님으로부터 부여받은 이름(별칭)과 접속코드를 입력하여 서비스를 이용함으로써 본 약관에 동의한 것으로 간주합니다.</li>
-                </ol>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>3. 계정 등록 및 보안</h4>
+                <p>서비스 이용을 위해 이용자는 계정을 등록해야 할 수 있습니다. 이용자는 개인 계정 정보의 정확성과 보안을 유지할 책임이 있으며, 본인의 직접적인 계정 활동에 대한 모든 책임을 집니다.</p>
+                <p style={{ marginTop: '10px', color: '#E74C3C' }}><strong>학생은 본 서비스의 가입이 불가능하며, 학생 이용자의 고유 식별을 가능하게 하는 어떠한 민감 개인 정보도 강제적으로 수집하지 않습니다.(실명정보, 주민등록번호, 학생 이메일 주소 등) 아울러 이용자는 학생 계정 생성 시 이용자는 개인 학생 정보를 식별할 수 없도록 학생의 고유식별이 유추될 수 있는 정보를 입력하지 않도록 유의해야 합니다.</strong></p>
+                <p>식별 가능한 학생 민감 정보에 입력에 대한 모든 책임은 이용자에게 있습니다.</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>제4조 (권리의 귀속 및 저작물)</h4>
-                <ol style={{ paddingLeft: '20px', margin: 0 }}>
-                    <li>서비스 내 시스템, 디자인, 캐릭터(드래곤 등)에 대한 모든 권리는 운영자에게 귀속됩니다.</li>
-                    <li>회원이 작성한 게시물(글, 댓글 등)의 저작권은 작성자 본인에게 있습니다. 단, 교육적 목적을 위해 학급 내에서 공유되고 선생님의 피드백 지도를 받는 용도로 활용됨에 동의합니다.</li>
-                </ol>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>4. 사용자 행동 및 콘텐츠</h4>
+                <p>서비스를 사용할 때 귀하는 다음 사항에 동의합니다:</p>
+                <ul style={{ paddingLeft: '20px', marginTop: '5px' }}>
+                    <li>부적절하거나 불법적인 콘텐츠를 게시하지 않을 것</li>
+                    <li>서비스의 정상적인 운영을 방해하지 않을 것</li>
+                </ul>
+                <p style={{ marginTop: '10px' }}><strong>'끄적끄적 아지트'는 본 서비스의 기능만을 제공하며, 이를 이용하면서 발생하는 부수적 사안(API 비용 등)에 대한 모든 책임은 이용자에게 있습니다.</strong></p>
             </section>
 
-            <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>제5조 (이용 제한, 승인 취소 및 면책)</h4>
-            <ol style={{ paddingLeft: '20px', margin: 0 }}>
-                <li><strong>관리자의 권한 및 승인 취소:</strong> 약관에 위배되는 행동을 하거나, 비정상적인 사용으로 문제가 발생할 경우, <strong>관리자는 사전 통보 없이 즉시 사용 승인을 취소하거나 회원을 강제 탈퇴시킬 수 있습니다.</strong></li>
-                <li><strong>책임의 소재:</strong> 위와 같은 귀책사유로 인해 발생한 강제 탈퇴, 데이터 삭제, 서비스 이용 불가 등 <strong>모든 결과에 대한 책임은 전적으로 사용자 본인에게 있음을 명시합니다.</strong></li>
-                <li>타인 비방, 욕설, 도용 등 교육 목적에 반하는 행위 시 운영자는 게시물을 삭제하거나 이용을 제한할 수 있습니다.</li>
-                <li>운영자는 천재지변이나 기술적 결함으로 인한 일시적인 서비스 중단에 대해 고의가 없는 한 책임을 지지 않습니다.</li>
-                <li><strong>API 서비스 이용 및 책임 제한:</strong> 본 서비스에서 제공하는 AI 피드백 기능은 회원이 직접 발급받은 외부 API 키(GPT API)를 연동하여 동작합니다. 회원은 개인 API 키의 보안 관리에 최선을 다해야 하며, 다음 사항을 반드시 준수할 것을 권장합니다:
-                    <ul style={{ marginTop: '5px', listStyleType: 'circle' }}>
-                        <li><strong>비용 관리:</strong> OpenAI 플랫폼 설정에서 **예상 사용 한도(Usage Limits)**를 설정하고, 가급적 **충전식(Prepaid)** 결제 방식을 사용하여 예상치 못한 비용 발생을 사전에 방지하시기 바랍니다.</li>
-                        <li><strong>책임 제한:</strong> 유료 API 사용으로 발생하는 모든 비용 및 청구 문제에 대해 서비스 제공자(운영자)는 어떠한 책임도 지지 않습니다.</li>
-                    </ul>
-                </li>
-            </ol>
+            <section style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>5. 지적 재산권</h4>
+                <p>서비스 및 관련 콘텐츠에 대한 모든 지적 재산권은 '끄적끄적 아지트' 또는 그 라이센서에게 있습니다. 귀하는 개인적, 비상업적 목적으로만 서비스를 사용할 수 있으며, '끄적끄적 아지트'의 명시적 허가 없이 서비스의 어떤 부분도 수정, 배포, 전송, 복제할 수 없습니다.</p>
+            </section>
+
+            <section style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>6. 서비스 변경 및 종료</h4>
+                <p>본 서비스는 언제든지 서비스의 일부 또는 전체를 임시적으로 또는 영구적으로 수정하거나 중단할 권리가 있습니다. 본 서비스는 서비스 변경이나 중단에 대해 가능한 한 사전 통지를 제공하기 위해 노력할 것이나, 모든 상황에서 이를 보장할 수는 없습니다.</p>
+            </section>
+
+            <section style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>7. 면책 조항</h4>
+                <p>서비스는 "있는 그대로" 제공되며, 본 서비스는 상품성, 특정 목적에의 적합성, 비침해성에 대한 묵시적 보증을 포함하여 모든 종류의 명시적 또는 묵시적 보증을 부인합니다.</p>
+            </section>
+
+            <section style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>8. 책임 제한</h4>
+                <p>법률이 허용하는 최대 범위 내에서, 본 서비스는 귀하 또는 제3자에 대해 이익 손실, 데이터 손실, 영업 중단 또는 기타 특별, 간접, 결과적 손해를 포함한 어떠한 직접적, 간접적, 부수적, 특별, 결과적 또는 징벌적 손해에 대해서도 책임을 지지 않습니다.</p>
+            </section>
+
+            <section style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>9. 약관 변경</h4>
+                <p>본 서비스는 언제든지 본 이용약관을 수정할 권리가 있습니다. 중대한 변경이 있는 경우, 본 서비스는 서비스 내 공지를 통해 변경 사실을 고지하며, 변경 사항이 발효된 후 계속해서 서비스를 사용하는 것은 수정된 약관에 동의하는 것으로 간주됩니다.</p>
+            </section>
+
+            <section style={{ marginBottom: '20px' }}>
+                <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>10. 문의 및 불만 처리</h4>
+                <p>본 이용약관에 관한 질문이나 의견이 있으시면 <a href="mailto:yshgg@naver.com">yshgg@naver.com</a>으로 연락해 주시기 바랍니다.</p>
+            </section>
         </div>
     );
 };
 
 export default TermsOfService;
+

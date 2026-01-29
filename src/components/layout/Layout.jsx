@@ -104,7 +104,7 @@ const Layout = ({ children, fullHeight = true, full = false }) => {
                 isOpen={!!modalContent}
                 onClose={() => setModalContent(null)}
                 title={modalContent === 'terms' ? '서비스 이용약관 📜' : '개인정보 처리방침 🛡️'}
-                maxWidth="600px"
+                maxWidth="1200px"
             >
                 {modalContent === 'terms' ? <TermsOfService /> : <PrivacyPolicy />}
             </Modal>

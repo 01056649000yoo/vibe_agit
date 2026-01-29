@@ -120,7 +120,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
                 isOpen={policyModal.open}
                 onClose={closeModal}
                 title={policyModal.type === 'privacy' ? '개인정보 처리방침 🛡️' : '서비스 이용약관 📜'}
-                maxWidth="600px"
+                maxWidth="1200px"
             >
                 {policyModal.type === 'privacy' ? <PrivacyPolicy /> : <TermsOfService />}
             </Modal>
