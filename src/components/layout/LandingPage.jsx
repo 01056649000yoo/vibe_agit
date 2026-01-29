@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import Card from '../common/Card';
+import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
 import Modal from '../common/Modal';
 import PrivacyPolicy from './PrivacyPolicy';
@@ -9,7 +12,7 @@ import TermsOfService from './TermsOfService';
  *  - onStudentLoginClick: 학생 로그인 모드로 전환하는 함수
  */
 const LandingPage = ({ onStudentLoginClick }) => {
-    const [policyModal, setPolicyModal] = React.useState({ open: false, type: null });
+    const [policyModal, setPolicyModal] = useState({ open: false, type: null });
 
     const openModal = (type) => setPolicyModal({ open: true, type });
     const closeModal = () => setPolicyModal({ open: false, type: null });

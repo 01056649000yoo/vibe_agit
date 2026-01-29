@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import TermsOfService from './TermsOfService';
 import PrivacyPolicy from './PrivacyPolicy';
 import Modal from '../common/Modal';
 
