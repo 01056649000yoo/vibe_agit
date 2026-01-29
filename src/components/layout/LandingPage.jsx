@@ -1,7 +1,7 @@
-import React from 'react';
-import Card from '../common/Card';
-import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
+import Modal from '../common/Modal';
+import PrivacyPolicy from './PrivacyPolicy';
+import TermsOfService from './TermsOfService';
 
 /**
  * 역할: 로그인 전 초기 랜딩 페이지
@@ -9,6 +9,11 @@ import { supabase } from '../../lib/supabaseClient';
  *  - onStudentLoginClick: 학생 로그인 모드로 전환하는 함수
  */
 const LandingPage = ({ onStudentLoginClick }) => {
+    const [policyModal, setPolicyModal] = React.useState({ open: false, type: null });
+
+    const openModal = (type) => setPolicyModal({ open: true, type });
+    const closeModal = () => setPolicyModal({ open: false, type: null });
+
     return (
         <Card style={{
             textAlign: 'center',
@@ -93,9 +98,29 @@ const LandingPage = ({ onStudentLoginClick }) => {
                 justifyContent: 'center',
                 gap: '20px'
             }}>
-                <a href="/privacy" style={{ color: '#ADB5BD', fontSize: '0.8rem', textDecoration: 'none' }}>개인정보처리방침</a>
-                <a href="/terms" style={{ color: '#ADB5BD', fontSize: '0.8rem', textDecoration: 'none' }}>이용약관</a>
+                <button
+                    onClick={() => openModal('privacy')}
+                    style={{ background: 'none', border: 'none', color: '#ADB5BD', fontSize: '0.8rem', cursor: 'pointer', outline: 'none' }}
+                >
+                    개인정보처리방침
+                </button>
+                <button
+                    onClick={() => openModal('terms')}
+                    style={{ background: 'none', border: 'none', color: '#ADB5BD', fontSize: '0.8rem', cursor: 'pointer', outline: 'none' }}
+                >
+                    이용약관
+                </button>
             </div>
+
+            {/* 정책 모달 */}
+            <Modal
+                isOpen={policyModal.open}
+                onClose={closeModal}
+                title={policyModal.type === 'privacy' ? '개인정보 처리방침 🛡️' : '서비스 이용약관 📜'}
+                maxWidth="600px"
+            >
+                {policyModal.type === 'privacy' ? <PrivacyPolicy /> : <TermsOfService />}
+            </Modal>
         </Card>
     );
 };
