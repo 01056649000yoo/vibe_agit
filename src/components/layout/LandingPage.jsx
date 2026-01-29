@@ -2,21 +2,7 @@ import React, { useState } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
-import Modal from '../common/Modal';
-import PrivacyPolicy from './PrivacyPolicy';
-import TermsOfService from './TermsOfService';
-
-/**
- * 역할: 로그인 전 초기 랜딩 페이지
- * props: 
- *  - onStudentLoginClick: 학생 로그인 모드로 전환하는 함수
- */
 const LandingPage = ({ onStudentLoginClick }) => {
-    const [policyModal, setPolicyModal] = useState({ open: false, type: null });
-
-    const openModal = (type) => setPolicyModal({ open: true, type });
-    const closeModal = () => setPolicyModal({ open: false, type: null });
-
     return (
         <Card style={{
             textAlign: 'center',
@@ -91,39 +77,6 @@ const LandingPage = ({ onStudentLoginClick }) => {
             <p style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#999', fontWeight: '500' }}>
                 나만의 글쓰기 아지트로 입장해요 🏠
             </p>
-
-            {/* 구글 브랜딩용 Footer 링크 추가 */}
-            <div style={{
-                marginTop: '1.5rem',
-                paddingTop: '1.5rem',
-                borderTop: '1px solid #F1F3F5',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '20px'
-            }}>
-                <button
-                    onClick={() => openModal('privacy')}
-                    style={{ background: 'none', border: 'none', color: '#ADB5BD', fontSize: '0.8rem', cursor: 'pointer', outline: 'none' }}
-                >
-                    개인정보처리방침
-                </button>
-                <button
-                    onClick={() => openModal('terms')}
-                    style={{ background: 'none', border: 'none', color: '#ADB5BD', fontSize: '0.8rem', cursor: 'pointer', outline: 'none' }}
-                >
-                    이용약관
-                </button>
-            </div>
-
-            {/* 정책 모달 */}
-            <Modal
-                isOpen={policyModal.open}
-                onClose={closeModal}
-                title={policyModal.type === 'privacy' ? '개인정보 처리방침 🛡️' : '서비스 이용약관 📜'}
-                maxWidth="1200px"
-            >
-                {policyModal.type === 'privacy' ? <PrivacyPolicy /> : <TermsOfService />}
-            </Modal>
         </Card>
     );
 };
