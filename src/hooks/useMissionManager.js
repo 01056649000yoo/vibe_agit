@@ -675,7 +675,11 @@ ${postArray.map((p, idx) => {
             const amountToRecover = logs[0].amount;
             await supabase
                 .from('student_posts')
-                .update({ is_confirmed: false, is_submitted: true })
+                .update({
+                    is_confirmed: false,
+                    is_submitted: true,
+                    ai_feedback: tempFeedback
+                })
                 .eq('id', post.id);
 
             const { data: stData } = await supabase
