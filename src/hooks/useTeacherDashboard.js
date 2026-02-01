@@ -192,9 +192,13 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
             if (profileError) throw profileError;
 
-            await supabase.auth.signOut();
+            try {
+                await supabase.auth.signOut();
+            } catch (e) {
+                console.warn("Withdrawal signout failed:", e);
+            }
             alert('탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.');
-            window.location.reload();
+            window.location.href = '/';
         } catch (err) {
             console.error('탈퇴 처리 실패:', err.message);
             alert('탈퇴 처리 중 오류가 발생했습니다: ' + err.message);
@@ -203,7 +207,11 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
     const handleSwitchGoogleAccount = async () => {
         if (!confirm('현재 계정에서 로그아웃하고 다른 구글 계정으로 로그인하시겠습니까?')) return;
-        await supabase.auth.signOut();
+        try {
+            await supabase.auth.signOut();
+        } catch (e) {
+            console.warn("Account switch signout failed:", e);
+        }
         await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {

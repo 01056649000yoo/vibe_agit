@@ -9,7 +9,7 @@ import PrivacyPolicy from '../layout/PrivacyPolicy';
  * 역할: 로그인 후 선생님 필수 정보(이름, 학교, 연락처) 설정 페이지 ✨
  * 단계: 1. 약관 동의 -> 2. 정보 입력
  */
-const TeacherProfileSetup = ({ email, onTeacherStart }) => {
+const TeacherProfileSetup = ({ email, onTeacherStart, onLogout }) => {
     const [step, setStep] = useState(1); // 1: 약관동의, 2: 정보입력
     const [loading, setLoading] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
@@ -253,7 +253,7 @@ const TeacherProfileSetup = ({ email, onTeacherStart }) => {
                             </Button>
                             <Button
                                 variant="ghost"
-                                onClick={() => supabase.auth.signOut()}
+                                onClick={onLogout}
                                 size="sm"
                                 style={{ flex: 1, borderRadius: '12px', color: '#999' }}
                             >

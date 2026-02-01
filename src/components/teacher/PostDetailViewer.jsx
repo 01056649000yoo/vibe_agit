@@ -258,53 +258,6 @@ const PostDetailViewer = ({
                                 }}>
                                     {showOriginal ? (selectedPost.original_content || '기록된 최초 내용이 없습니다.') : selectedPost.content}
                                 </div>
-
-                                <div style={{ borderTop: '2px solid #F1F3F5', paddingTop: '40px', marginTop: '20px' }}>
-                                    <div style={{ marginBottom: '48px' }}>
-                                        <h4 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#2C3E50', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            🌈 친구들의 반응 현황
-                                        </h4>
-                                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                            {reactionIcons.map(icon => {
-                                                const count = postReactions.filter(r => r.reaction_type === icon.type).length;
-                                                return (
-                                                    <div key={icon.type} style={{
-                                                        display: 'flex', alignItems: 'center', gap: '8px',
-                                                        padding: '10px 20px', background: '#F8F9FA', borderRadius: '16px',
-                                                        border: '1px solid #ECEFF1', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                                                    }}>
-                                                        <span style={{ fontSize: '1.4rem' }}>{icon.emoji}</span>
-                                                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#546E7A' }}>{icon.label}</span>
-                                                        <span style={{ fontSize: '1rem', fontWeight: '900', color: '#3498DB' }}>{count}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <h4 style={{ fontSize: '1.2rem', fontWeight: '900', color: '#2C3E50', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            💬 친구들의 따뜻한 응원 ({postComments.length})
-                                        </h4>
-                                        {postComments.length === 0 ? (
-                                            <div style={{ padding: '40px', textAlign: 'center', color: '#94A3B8', background: '#F8F9FA', borderRadius: '24px', border: '2px dashed #E2E8F0' }}>
-                                                아직 작성된 댓글이 없습니다.
-                                            </div>
-                                        ) : (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                                {postComments.map(comment => (
-                                                    <div key={comment.id} style={{ padding: '20px 24px', background: '#F8F9FA', borderRadius: '24px', border: '1px solid #F1F3F5' }}>
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                                            <span style={{ fontWeight: '900', fontSize: '1rem', color: '#3498DB' }}>{comment.students?.name}</span>
-                                                            <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>{new Date(comment.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                                        </div>
-                                                        <div style={{ fontSize: '1.05rem', color: '#334155', lineHeight: '1.7' }}>{comment.content}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
                             </div>
 
                             <aside style={{
@@ -549,9 +502,8 @@ const PostDetailViewer = ({
                         )}
                     </AnimatePresence>
                 </motion.div>
-            )
-            }
-        </AnimatePresence >
+            )}
+        </AnimatePresence>
     );
 };
 

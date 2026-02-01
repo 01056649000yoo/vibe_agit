@@ -11,6 +11,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const [isReturned, setIsReturned] = useState(false); // 선생님이 다시 쓰기를 요청했는지 여부
     const [isConfirmed, setIsConfirmed] = useState(false); // 선생님이 승인하여 포인트가 지급되었는지 여부
     const [isSubmitted, setIsSubmitted] = useState(false); // 제출 여부
+    const [postId, setPostId] = useState(null); // [신규] 포스트 ID
     const [aiFeedback, setAiFeedback] = useState(''); // 상시 피드백 내용
     const [originalTitle, setOriginalTitle] = useState('');
     const [originalContent, setOriginalContent] = useState('');
@@ -60,6 +61,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     setOriginalTitle(postData.original_title || '');
                     setOriginalContent(postData.original_content || '');
                     setStudentAnswers(postData.student_answers || []);
+                    setPostId(postData.id);
                 } else if (params?.postId) {
                     console.warn(`[useMissionSubmit] postId(${params.postId})에 해당하는 글을 찾을 수 없습니다.`);
                 }
@@ -268,6 +270,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         isReturned,
         isConfirmed,
         isSubmitted,
+        postId,
         aiFeedback,
         originalTitle,
         originalContent,

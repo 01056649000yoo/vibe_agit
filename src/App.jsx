@@ -182,16 +182,21 @@ function App() {
 
   // 로그아웃 통합 처리 (교사/학생 공용 가능하도록 강화)
   const handleLogout = async () => {
-    // 1. 로컬 상태 즉시 클리어
-    localStorage.clear();
-    sessionStorage.clear();
+    try {
+      // 1. 서버 로그아웃 요청 (세션이 이미 무효화된 경우 403 등이 발생할 수 있음)
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.warn('Logout server request failed (ignoring):', err);
+    } finally {
+      // 2. 서버 결과와 상관없이 로컬 상태 및 스토리지 강제 클리어
+      localStorage.clear();
+      sessionStorage.clear();
 
-    // 2. 서버 로그아웃 요청 (결과 기다리지 않음 - Fire & Forget)
-    // 403 에러가 나더라도 무시하고 진행
-    supabase.auth.signOut().catch(err => console.warn('Logout signal sent:', err));
-
-    // 3. 즉시 리로드
-    window.location.href = '/';
+      // 3. 즉시 리로드하여 초기 상태로 복구
+      window.location.href = '/';
+    }
   }
 
   // 학생 로그아웃 처리 (명시적 별도 함수 유지 - UI 호출용)
@@ -230,6 +235,7 @@ function App() {
             <TeacherProfileSetup
               email={session.user.email}
               onTeacherStart={handleTeacherStart}
+              onLogout={handleLogout}
             />
           ) : (profile.role === 'ADMIN' && isAdminMode) ? ( /* [0순위] 관리자 확인 + 관리자 모드 */
             <AdminDashboard
@@ -246,6 +252,7 @@ function App() {
               activeClass={activeClass}
               setActiveClass={setActiveClass}
               onProfileUpdate={() => fetchProfile(session.user.id)}
+              onLogout={handleLogout}
               onNavigate={(page, params) => setInternalPage({ name: page, params })}
               internalPage={internalPage}
               setInternalPage={setInternalPage}
@@ -291,8 +298,14 @@ function App() {
           /* [3순위] 학생 로그인 화면 */
           <StudentLogin
             onLoginSuccess={async (data) => {
-              // 학생 로그인 시 만약 교사 세션이 남아있다면 강제 로그아웃
-              if (session) await supabase.auth.signOut();
+              // 학생 로그인 시 만약 교사 세션이 남아있다면 강제 로그아웃 (에러 무시)
+              if (session) {
+                try {
+                  await supabase.auth.signOut();
+                } catch (e) {
+                  console.warn("Cleanup signout failed:", e);
+                }
+              }
 
               const sessionData = {
                 id: data.id,

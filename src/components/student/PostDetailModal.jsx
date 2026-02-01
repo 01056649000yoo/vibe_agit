@@ -262,174 +262,178 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                     </div>
 
                     {/* 반응 섹션 */}
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        gap: isMobile ? '8px' : '12px',
-                        padding: isMobile ? '16px 10px' : '20px',
-                        background: '#F8F9FA',
-                        borderRadius: '24px',
-                        marginBottom: '48px',
-                        border: '1px solid #F1F3F5',
-                        overflowX: 'visible', // 툴팁이 잘리지 않도록 수정
-                        scrollbarWidth: 'none'
-                    }}>
-                        {reactionIcons.map((icon) => {
-                            const typeReactions = reactions.filter(r => r.reaction_type === icon.type);
-                            const isMine = typeReactions.some(r => r.student_id === studentSession.id);
-                            const reactorNames = typeReactions.map(r => r.students?.name).filter(Boolean);
+                    {!isTeacher && (
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            gap: isMobile ? '8px' : '12px',
+                            padding: isMobile ? '16px 10px' : '20px',
+                            background: '#F8F9FA',
+                            borderRadius: '24px',
+                            marginBottom: '48px',
+                            border: '1px solid #F1F3F5',
+                            overflowX: 'visible', // 툴팁이 잘리지 않도록 수정
+                            scrollbarWidth: 'none'
+                        }}>
+                            {reactionIcons.map((icon) => {
+                                const typeReactions = reactions.filter(r => r.reaction_type === icon.type);
+                                const isMine = typeReactions.some(r => r.student_id === studentSession?.id);
+                                const reactorNames = typeReactions.map(r => r.students?.name).filter(Boolean);
 
-                            return (
-                                <div
-                                    key={icon.type}
-                                    style={{ flex: 1, position: 'relative' }}
-                                    onMouseEnter={() => setHoveredType(icon.type)}
-                                    onMouseLeave={() => setHoveredType(null)}
-                                >
-                                    <button
-                                        onClick={() => handleReaction(icon.type)}
-                                        style={{
-                                            width: '100%',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            padding: isMobile ? '8px 4px' : '12px 8px',
-                                            border: isMine ? '2px solid #3498DB' : '1px solid #ECEFF1',
-                                            background: isMine ? '#E3F2FD' : 'white',
-                                            borderRadius: '16px',
-                                            boxShadow: isMine ? '0 4px 10px rgba(52, 152, 219, 0.15)' : '0 2px 4px rgba(0,0,0,0.02)',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s ease',
-                                            minWidth: isMobile ? '60px' : '80px',
-                                            whiteSpace: 'nowrap'
-                                        }}
+                                return (
+                                    <div
+                                        key={icon.type}
+                                        style={{ flex: 1, position: 'relative' }}
+                                        onMouseEnter={() => setHoveredType(icon.type)}
+                                        onMouseLeave={() => setHoveredType(null)}
                                     >
-                                        <span style={{ fontSize: isMobile ? '1.2rem' : '1.4rem' }}>{icon.emoji}</span>
-                                        <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isMine ? '#3498DB' : '#7F8C8D', letterSpacing: '-0.03em' }}>
-                                            {icon.label}
-                                        </span>
-                                        <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#2980B9' : '#ADB5BD' }}>
-                                            {typeReactions.length}
-                                        </span>
-                                    </button>
+                                        <button
+                                            onClick={() => handleReaction(icon.type)}
+                                            style={{
+                                                width: '100%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                padding: isMobile ? '8px 4px' : '12px 8px',
+                                                border: isMine ? '2px solid #3498DB' : '1px solid #ECEFF1',
+                                                background: isMine ? '#E3F2FD' : 'white',
+                                                borderRadius: '16px',
+                                                boxShadow: isMine ? '0 4px 10px rgba(52, 152, 219, 0.15)' : '0 2px 4px rgba(0,0,0,0.02)',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease',
+                                                minWidth: isMobile ? '60px' : '80px',
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            <span style={{ fontSize: isMobile ? '1.2rem' : '1.4rem' }}>{icon.emoji}</span>
+                                            <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isMine ? '#3498DB' : '#7F8C8D', letterSpacing: '-0.03em' }}>
+                                                {icon.label}
+                                            </span>
+                                            <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#2980B9' : '#ADB5BD' }}>
+                                                {typeReactions.length}
+                                            </span>
+                                        </button>
 
-                                    <AnimatePresence>
-                                        {hoveredType === icon.type && reactorNames.length > 0 && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                                                style={{
-                                                    position: 'absolute',
-                                                    bottom: '100%',
-                                                    left: '20%', // 왼쪽 기준으로 고정
-                                                    marginBottom: '10px',
-                                                    background: '#2D3436',
-                                                    color: 'white',
-                                                    padding: '10px 16px',
-                                                    borderRadius: '12px',
-                                                    fontSize: '0.8rem',
-                                                    fontWeight: '600',
-                                                    zIndex: 9999,
-                                                    boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
-                                                    pointerEvents: 'none',
-                                                    minWidth: 'max-content',
-                                                    maxWidth: '250px', // 너무 길어지지 않게 제한
-                                                }}
-                                            >
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}>
-                                                        <span style={{ fontSize: '0.9rem' }}>👥</span>
-                                                        <span style={{ color: '#BDC3C7', fontSize: '0.7rem' }}>반응을 보낸 친구들</span>
+                                        <AnimatePresence>
+                                            {hoveredType === icon.type && reactorNames.length > 0 && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        bottom: '100%',
+                                                        left: '20%', // 왼쪽 기준으로 고정
+                                                        marginBottom: '10px',
+                                                        background: '#2D3436',
+                                                        color: 'white',
+                                                        padding: '10px 16px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: '600',
+                                                        zIndex: 9999,
+                                                        boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
+                                                        pointerEvents: 'none',
+                                                        minWidth: 'max-content',
+                                                        maxWidth: '250px', // 너무 길어지지 않게 제한
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}>
+                                                            <span style={{ fontSize: '0.9rem' }}>👥</span>
+                                                            <span style={{ color: '#BDC3C7', fontSize: '0.7rem' }}>반응을 보낸 친구들</span>
+                                                        </div>
+                                                        <div style={{ lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
+                                                            {(() => {
+                                                                const chunks = [];
+                                                                for (let i = 0; i < reactorNames.length; i += 5) {
+                                                                    chunks.push(reactorNames.slice(i, i + 5).join(', '));
+                                                                }
+                                                                return chunks.join(',\n');
+                                                            })()}
+                                                        </div>
                                                     </div>
-                                                    <div style={{ lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
-                                                        {(() => {
-                                                            const chunks = [];
-                                                            for (let i = 0; i < reactorNames.length; i += 5) {
-                                                                chunks.push(reactorNames.slice(i, i + 5).join(', '));
-                                                            }
-                                                            return chunks.join(',\n');
-                                                        })()}
-                                                    </div>
-                                                </div>
-                                                {/* 말풍선 꼬리 - 왼쪽 정렬 기준 고정 */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: '100%',
-                                                    left: '20px',
-                                                    width: 0,
-                                                    height: 0,
-                                                    borderLeft: '6px solid transparent',
-                                                    borderRight: '6px solid transparent',
-                                                    borderTop: '6px solid #2D3436'
-                                                }} />
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                                    {/* 말풍선 꼬리 - 왼쪽 정렬 기준 고정 */}
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        top: '100%',
+                                                        left: '20px',
+                                                        width: 0,
+                                                        height: 0,
+                                                        borderLeft: '6px solid transparent',
+                                                        borderRight: '6px solid transparent',
+                                                        borderTop: '6px solid #2D3436'
+                                                    }} />
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
 
                     {/* 댓글 섹션 */}
-                    <div style={{ borderTop: '2px solid #F1F3F5', paddingTop: '48px' }}>
-                        <h4 style={{ margin: '0 0 24px 0', fontSize: '1.25rem', fontWeight: '900', color: '#2D3436' }}>
-                            💬 친구들의 따뜻한 한마디
-                        </h4>
+                    {!isTeacher && (
+                        <div style={{ borderTop: '2px solid #F1F3F5', paddingTop: '48px' }}>
+                            <h4 style={{ margin: '0 0 24px 0', fontSize: '1.25rem', fontWeight: '900', color: '#2D3436' }}>
+                                💬 친구들의 따뜻한 한마디
+                            </h4>
 
-                        {mission?.allow_comments === false ? (
-                            <div style={{ textAlign: 'center', padding: '40px', background: '#F8F9FA', borderRadius: '24px', border: '1px solid #E9ECEF', color: '#95A5A6', fontWeight: 'bold' }}>
-                                <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '8px' }}>🔒</span>
-                                선생님이 댓글창을 닫아두셨어요.
-                            </div>
-                        ) : (
-                            <>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '40px' }}>
-                                    {comments.length === 0 ? (
-                                        <div style={{ textAlign: 'center', color: '#B2BEC3', fontSize: '1rem', padding: '50px', background: '#FDFDFD', borderRadius: '24px', border: '2px dashed #F1F3F5' }}>
-                                            첫 번째 응원의 주인공이 되어보세요! ✨
-                                        </div>
-                                    ) : (
-                                        comments.map(c => (
-                                            <div key={c.id} style={{ padding: '20px 24px', background: (c.student_id === studentSession?.id) ? '#E3F2FD' : '#F8F9FA', borderRadius: '24px', border: (c.student_id === studentSession?.id) ? '1px solid #BBDEFB' : '1px solid #F1F3F5', position: 'relative' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                                    <div style={{ fontWeight: '900', fontSize: '0.9rem', color: (c.student_id === studentSession?.id) ? '#1976D2' : '#3498DB' }}>
-                                                        {c.students?.name} {(c.student_id === studentSession?.id) && '(나)'}
-                                                    </div>
-                                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                                        {(c.student_id === studentSession?.id) && (
-                                                            <button onClick={() => handleEditComment(c)} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>수정</button>
-                                                        )}
-                                                        {((c.student_id === studentSession?.id) || isTeacher) && (
-                                                            <button onClick={() => handleDeleteCommentClick(c.id)} style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>삭제</button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7' }}>{c.content}</div>
-                                            </div>
-                                        ))
-                                    )}
+                            {mission?.allow_comments === false ? (
+                                <div style={{ textAlign: 'center', padding: '40px', background: '#F8F9FA', borderRadius: '24px', border: '1px solid #E9ECEF', color: '#95A5A6', fontWeight: 'bold' }}>
+                                    <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '8px' }}>🔒</span>
+                                    선생님이 댓글창을 닫아두셨어요.
                                 </div>
+                            ) : (
+                                <>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', marginBottom: '40px' }}>
+                                        {comments.length === 0 ? (
+                                            <div style={{ textAlign: 'center', color: '#B2BEC3', fontSize: '1rem', padding: '50px', background: '#FDFDFD', borderRadius: '24px', border: '2px dashed #F1F3F5' }}>
+                                                첫 번째 응원의 주인공이 되어보세요! ✨
+                                            </div>
+                                        ) : (
+                                            comments.map(c => (
+                                                <div key={c.id} style={{ padding: '20px 24px', background: (c.student_id === studentSession?.id) ? '#E3F2FD' : '#F8F9FA', borderRadius: '24px', border: (c.student_id === studentSession?.id) ? '1px solid #BBDEFB' : '1px solid #F1F3F5', position: 'relative' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                        <div style={{ fontWeight: '900', fontSize: '0.9rem', color: (c.student_id === studentSession?.id) ? '#1976D2' : '#3498DB' }}>
+                                                            {c.students?.name} {(c.student_id === studentSession?.id) && '(나)'}
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                            {(c.student_id === studentSession?.id) && (
+                                                                <button onClick={() => handleEditComment(c)} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>수정</button>
+                                                            )}
+                                                            {((c.student_id === studentSession?.id) || isTeacher) && (
+                                                                <button onClick={() => handleDeleteCommentClick(c.id)} style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>삭제</button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7' }}>{c.content}</div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
 
-                                <form onSubmit={handleCommentSubmit} style={{ display: 'flex', gap: '14px', background: 'white', padding: '10px', borderRadius: '22px', border: editingCommentId ? '2px solid #3498DB' : '2px solid #F1F3F5', boxShadow: '0 8px 16px rgba(0,0,0,0.04)' }}>
-                                    <input
-                                        type="text"
-                                        value={commentInput}
-                                        onChange={e => setCommentInput(e.target.value)}
-                                        placeholder={editingCommentId ? "댓글을 수정하고 있어요..." : "따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨"}
-                                        style={{ flex: 1, padding: '14px 20px', border: 'none', outline: 'none', fontSize: '1.05rem', color: '#2D3436' }}
-                                    />
-                                    {editingCommentId && (
-                                        <Button type="button" variant="ghost" size="sm" onClick={() => { setEditingCommentId(null); setCommentInput(''); }}>취소</Button>
-                                    )}
-                                    <Button type="submit" size="sm" style={{ borderRadius: '16px', padding: '0 24px', fontWeight: '900' }} disabled={submittingComment}>
-                                        {editingCommentId ? '수정' : '보내기'}
-                                    </Button>
-                                </form>
-                            </>
-                        )}
-                    </div>
+                                    <form onSubmit={handleCommentSubmit} style={{ display: 'flex', gap: '14px', background: 'white', padding: '10px', borderRadius: '22px', border: editingCommentId ? '2px solid #3498DB' : '2px solid #F1F3F5', boxShadow: '0 8px 16px rgba(0,0,0,0.04)' }}>
+                                        <input
+                                            type="text"
+                                            value={commentInput}
+                                            onChange={e => setCommentInput(e.target.value)}
+                                            placeholder={editingCommentId ? "댓글을 수정하고 있어요..." : "따뜻한 응원을 남겨주세요... (댓글 쓰면 5P!) ✨"}
+                                            style={{ flex: 1, padding: '14px 20px', border: 'none', outline: 'none', fontSize: '1.05rem', color: '#2D3436' }}
+                                        />
+                                        {editingCommentId && (
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => { setEditingCommentId(null); setCommentInput(''); }}>취소</Button>
+                                        )}
+                                        <Button type="submit" size="sm" style={{ borderRadius: '16px', padding: '0 24px', fontWeight: '900' }} disabled={submittingComment}>
+                                            {editingCommentId ? '수정' : '보내기'}
+                                        </Button>
+                                    </form>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
             </motion.div>
         </motion.div>,

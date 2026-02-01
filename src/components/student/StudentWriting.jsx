@@ -3,6 +3,15 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMissionSubmit } from '../../hooks/useMissionSubmit';
+import { usePostInteractions } from '../../hooks/usePostInteractions';
+
+const REACTION_ICONS = [
+    { type: 'heart', label: '좋아요', emoji: '❤️' },
+    { type: 'laugh', label: '재밌어요', emoji: '😂' },
+    { type: 'wow', label: '멋져요', emoji: '👏' },
+    { type: 'bulb', label: '배워요', emoji: '💡' },
+    { type: 'star', label: '최고야', emoji: '✨' }
+];
 
 /**
  * 역할: 학생 - 글쓰기 에디터 (단계별 답변 및 본문 삽입 기능 포함) ✨
@@ -23,8 +32,23 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         studentAnswers,
         setStudentAnswers,
         handleSave,
-        handleSubmit
+        handleSubmit,
+        postId
     } = useMissionSubmit(studentSession, missionId, params, onBack, onNavigate);
+
+    const {
+        reactions,
+        comments,
+        handleReaction,
+        addComment,
+        updateComment,
+        deleteComment
+    } = usePostInteractions(postId, studentSession?.id);
+
+    const [commentInput, setCommentInput] = useState('');
+    const [submittingComment, setSubmittingComment] = useState(false);
+    const [editingCommentId, setEditingCommentId] = useState(null);
+    const [hoveredType, setHoveredType] = useState(null);
 
     const [showOriginal, setShowOriginal] = useState(false);
     const editorRef = useRef(null);
@@ -87,6 +111,35 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
     // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)
     const isLocked = isConfirmed || (isSubmitted && !isReturned);
+
+    const handleCommentSubmit = async (e) => {
+        e.preventDefault();
+        if (!commentInput.trim() || submittingComment) return;
+
+        setSubmittingComment(true);
+        try {
+            if (editingCommentId) {
+                const success = await updateComment(editingCommentId, commentInput);
+                if (success) {
+                    setEditingCommentId(null);
+                    setCommentInput('');
+                }
+            } else {
+                const alreadyCommented = comments.some(c => c.student_id === studentSession?.id);
+                if (alreadyCommented) {
+                    alert('댓글은 하나만 작성할 수 있어요! 😊');
+                    setSubmittingComment(false);
+                    return;
+                }
+                const success = await addComment(commentInput);
+                if (success) setCommentInput('');
+            }
+        } catch (err) {
+            console.error('댓글 작업 실패:', err.message);
+        } finally {
+            setSubmittingComment(false);
+        }
+    };
 
     if (loading) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 도구를 준비하는 중... ✍️</p></Card>;
     if (!mission) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 미션을 찾을 수 없습니다.</p><Button onClick={onBack}>돌아가기</Button></Card>;
@@ -359,6 +412,154 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     />
                 </div>
             </div>
+
+            {/* [신규] 내 글에 달린 소식 (반응 및 댓글) */}
+            <AnimatePresence>
+                {isLocked && postId && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        style={{
+                            marginTop: '40px',
+                            padding: '40px',
+                            background: '#F8F9FA',
+                            borderRadius: '32px',
+                            border: '1px solid #E9ECEF'
+                        }}
+                    >
+                        <h3 style={{ margin: '0 0 24px 0', fontSize: '1.4rem', color: '#2C3E50', fontWeight: '900' }}>
+                            💬 친구들의 소중한 반응
+                        </h3>
+
+                        {/* 반응 버튼들 */}
+                        <div style={{
+                            display: 'flex',
+                            gap: '12px',
+                            marginBottom: '40px',
+                            overflowX: 'visible'
+                        }}>
+                            {REACTION_ICONS.map((icon) => {
+                                const typeReactions = reactions.filter(r => r.reaction_type === icon.type);
+                                const isMine = typeReactions.some(r => r.student_id === studentSession?.id);
+                                const reactorNames = typeReactions.map(r => r.students?.name).filter(Boolean);
+
+                                return (
+                                    <div
+                                        key={icon.type}
+                                        style={{ flex: 1, position: 'relative' }}
+                                        onMouseEnter={() => setHoveredType(icon.type)}
+                                        onMouseLeave={() => setHoveredType(null)}
+                                    >
+                                        <button
+                                            onClick={() => handleReaction(icon.type)}
+                                            style={{
+                                                width: '100%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                padding: '12px 8px',
+                                                border: isMine ? '2px solid #3498DB' : '1px solid #ECEFF1',
+                                                background: isMine ? '#E3F2FD' : 'white',
+                                                borderRadius: '16px',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease'
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '1.4rem' }}>{icon.emoji}</span>
+                                            <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isMine ? '#3498DB' : '#7F8C8D' }}>{icon.label}</span>
+                                            <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#2980B9' : '#ADB5BD' }}>{typeReactions.length}</span>
+                                        </button>
+
+                                        {/* 툴팁 */}
+                                        <AnimatePresence>
+                                            {hoveredType === icon.type && reactorNames.length > 0 && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        bottom: '100%',
+                                                        left: '20%',
+                                                        marginBottom: '10px',
+                                                        background: '#2D3436',
+                                                        color: 'white',
+                                                        padding: '10px 16px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '0.8rem',
+                                                        fontWeight: '600',
+                                                        zIndex: 9999,
+                                                        boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
+                                                        pointerEvents: 'none',
+                                                        minWidth: 'max-content',
+                                                        maxWidth: '250px',
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}>
+                                                            <span style={{ fontSize: '0.9rem' }}>👥</span>
+                                                            <span style={{ color: '#BDC3C7', fontSize: '0.7rem' }}>반응을 보낸 친구들</span>
+                                                        </div>
+                                                        <div style={{ lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
+                                                            {(() => {
+                                                                const chunks = [];
+                                                                for (let i = 0; i < reactorNames.length; i += 5) {
+                                                                    chunks.push(reactorNames.slice(i, i + 5).join(', '));
+                                                                }
+                                                                return chunks.join(',\n');
+                                                            })()}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ position: 'absolute', top: '100%', left: '20px', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid #2D3436' }} />
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* 댓글 리스트 */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {comments.length === 0 ? (
+                                <div style={{ textAlign: 'center', color: '#B2BEC3', padding: '40px', background: 'white', borderRadius: '24px', border: '2px dashed #F1F3F5' }}>
+                                    아직 친구들의 댓글이 없어요. 🌵
+                                </div>
+                            ) : (
+                                comments.map(c => (
+                                    <div key={c.id} style={{ padding: '20px', background: (c.student_id === studentSession?.id) ? '#E3F2FD' : 'white', borderRadius: '20px', border: '1px solid #F1F3F5', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                            <div style={{ fontWeight: '900', fontSize: '0.9rem', color: (c.student_id === studentSession?.id) ? '#1976D2' : '#3498DB' }}>
+                                                {c.students?.name} {c.student_id === studentSession?.id && '(나)'}
+                                            </div>
+                                            {(c.student_id === studentSession?.id) && (
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button onClick={() => { setEditingCommentId(c.id); setCommentInput(c.content); }} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer' }}>수정</button>
+                                                    <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: '0.8rem', cursor: 'pointer' }}>삭제</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.6' }}>{c.content}</div>
+                                    </div>
+                                ))
+                            )}
+
+                            {/* 댓글 입력창 (내 글이지만 나도 댓글 달 수 있게 하거나, 혹은 보기만 하거나 선택 가능) */}
+                            <form onSubmit={handleCommentSubmit} style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                                <input
+                                    type="text"
+                                    value={commentInput}
+                                    onChange={e => setCommentInput(e.target.value)}
+                                    placeholder="친구들에게 답글을 남겨보세요... ✨"
+                                    style={{ flex: 1, padding: '14px 20px', borderRadius: '16px', border: '2px solid #F1F3F5', outline: 'none' }}
+                                />
+                                <Button type="submit" disabled={submittingComment}>{editingCommentId ? '수정' : '보내기'}</Button>
+                            </form>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* 통계 및 보너스 현황 */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: '#FFFDE7', borderRadius: '20px', marginBottom: '32px', border: '1px solid #FFF59D' }}>
