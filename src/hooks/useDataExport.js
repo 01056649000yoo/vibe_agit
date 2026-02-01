@@ -152,7 +152,7 @@ export const useDataExport = () => {
      * @param {boolean} usePageBreak - 페이지 나누기 사용 여부
      * @param {string} targetDocId - (선택) 기존 문서 ID (여기에 이어붙이려면 전달)
      */
-    const exportToGoogleDoc = useCallback(async (data, title, usePageBreak = true, targetDocId = null) => {
+    const exportToGoogleDoc = useCallback(async (data, title, usePageBreak = true, targetDocId = null, groupBy = 'mission') => {
         if (!isGapiLoaded || !tokenClient) {
             alert('Google API 서비스를 준비 중입니다. 잠시 후 다시 시도해 주세요.');
             return;
@@ -205,13 +205,15 @@ export const useDataExport = () => {
                 currentIndex += separator.length;
             }
 
-            // 3. 학생별 데이터 순차 삽입
-            let lastMissionTitle = "";
+            // 3. 데이터 순차 삽입
+            let lastGroupValue = ""; // 미션제목 or 작성자
 
             data.forEach((item, index) => {
-                // [일괄 내보내기 대응] 미션 주제가 바뀌면 중간 제목(HEADING_1) 삽입
-                if (item.미션제목 !== lastMissionTitle) {
-                    // 첫 번째 항목이 아닐 때만 미션 제목 앞에 페이지 나누기 (옵션 활성화 시)
+                const currentGroupValue = groupBy === 'student' ? item.작성자 : item.미션제목;
+
+                // 그룹(섹션)이 바뀌면 헤더 삽입
+                if (currentGroupValue !== lastGroupValue) {
+                    // 첫 번째 항목이 아닐 때만 페이지 나누기 (옵션 활성화 시)
                     if (index > 0 && usePageBreak) {
                         requests.push({
                             insertPageBreak: { location: { index: currentIndex } }
@@ -219,13 +221,16 @@ export const useDataExport = () => {
                         currentIndex += 1;
                     }
 
-                    const missionHeader = `[미션 주제: ${item.미션제목}]\n\n`;
+                    const headerText = groupBy === 'student'
+                        ? `[학생: ${item.작성자}]\n\n`
+                        : `[미션 주제: ${item.미션제목}]\n\n`;
+
                     requests.push({
-                        insertText: { location: { index: currentIndex }, text: missionHeader }
+                        insertText: { location: { index: currentIndex }, text: headerText }
                     });
                     requests.push({
                         updateParagraphStyle: {
-                            range: { startIndex: currentIndex, endIndex: currentIndex + missionHeader.length },
+                            range: { startIndex: currentIndex, endIndex: currentIndex + headerText.length },
                             paragraphStyle: {
                                 namedStyleType: 'HEADING_1',
                                 alignment: 'CENTER'
@@ -233,50 +238,62 @@ export const useDataExport = () => {
                             fields: 'namedStyleType,alignment'
                         }
                     });
-                    currentIndex += missionHeader.length;
-                    lastMissionTitle = item.미션제목;
+                    currentIndex += headerText.length;
+                    lastGroupValue = currentGroupValue;
                 }
 
-                // (a) 학생 글 제목 (HEADING_2) - 미션 제목이 HEADING_1이 되었으므로 레벨 조정
-                const postTitleLine = `${item.학생글제목}\n`;
+                // (a) 소제목 (HEADING_2)
+                // 학생별 모드일 때: 미션제목이 소제목
+                // 미션별 모드일 때: 학생글제목이 소제목 (기존 방식)
+                const subTitleText = groupBy === 'student'
+                    ? `📄 ${item.미션제목} : ${item.학생글제목}\n`
+                    : `${item.학생글제목}\n`;
+
                 requests.push({
-                    insertText: { location: { index: currentIndex }, text: postTitleLine }
+                    insertText: { location: { index: currentIndex }, text: subTitleText }
                 });
                 requests.push({
                     updateParagraphStyle: {
-                        range: { startIndex: currentIndex, endIndex: currentIndex + postTitleLine.length },
+                        range: { startIndex: currentIndex, endIndex: currentIndex + subTitleText.length },
                         paragraphStyle: {
                             namedStyleType: 'HEADING_2'
                         },
                         fields: 'namedStyleType'
                     }
                 });
-                currentIndex += postTitleLine.length;
+                currentIndex += subTitleText.length;
 
                 // (b) 학생 이름 (작성자: 이름)
-                const nameLine = `작성자: ${item.작성자}\n\n`;
-                requests.push({
-                    insertText: { location: { index: currentIndex }, text: nameLine }
-                });
-                requests.push({
-                    updateParagraphStyle: {
-                        range: { startIndex: currentIndex, endIndex: currentIndex + nameLine.length },
-                        paragraphStyle: {
-                            namedStyleType: 'NORMAL_TEXT',
-                            alignment: 'START'
-                        },
-                        fields: 'namedStyleType,alignment'
-                    }
-                });
-                // 이름 부분 볼드 처리 (선택)
-                requests.push({
-                    updateTextStyle: {
-                        range: { startIndex: currentIndex, endIndex: currentIndex + nameLine.length - 2 },
-                        textStyle: { bold: true },
-                        fields: 'bold'
-                    }
-                });
-                currentIndex += nameLine.length;
+                // 학생별 모드인 경우 이미 헤더가 학생 이름이므로 중복 표시 제외
+                if (groupBy !== 'student') {
+                    const nameLine = `작성자: ${item.작성자}\n\n`;
+                    requests.push({
+                        insertText: { location: { index: currentIndex }, text: nameLine }
+                    });
+                    requests.push({
+                        updateParagraphStyle: {
+                            range: { startIndex: currentIndex, endIndex: currentIndex + nameLine.length },
+                            paragraphStyle: {
+                                namedStyleType: 'NORMAL_TEXT',
+                                alignment: 'START'
+                            },
+                            fields: 'namedStyleType,alignment'
+                        }
+                    });
+                    requests.push({
+                        updateTextStyle: {
+                            range: { startIndex: currentIndex, endIndex: currentIndex + nameLine.length - 2 },
+                            textStyle: { bold: true },
+                            fields: 'bold'
+                        }
+                    });
+                    currentIndex += nameLine.length;
+                } else {
+                    // 학생별 모드에서는 작성자 생략하고 간격만 살짝
+                    const spacer = "\n";
+                    requests.push({ insertText: { location: { index: currentIndex }, text: spacer } });
+                    currentIndex += spacer.length;
+                }
 
                 // (c) 글 내용 (본문)
                 const contentText = `${item.내용}\n`;
@@ -296,15 +313,16 @@ export const useDataExport = () => {
                 currentIndex += contentText.length;
 
                 // (d) 학생 간 페이지 나누기 (추가 미션 내에서의 구분)
-                // 만약 다음 항목이 다른 미션이라면 여기서 나누지 않고 상단의 미션 헤더 삽입부에서 나눔
-                const isNextDifferentMission = index < data.length - 1 && data[index + 1].미션제목 !== item.미션제목;
+                // 만약 다음 항목이 다른 그룹(미션/학생)이라면 여기서 나누지 않고 상단의 헤더 삽입부에서 나눔
+                const nextItem = index < data.length - 1 ? data[index + 1] : null;
+                const isNextDifferentGroup = nextItem && (groupBy === 'student' ? nextItem.작성자 !== item.작성자 : nextItem.미션제목 !== item.미션제목);
 
-                if (usePageBreak && index < data.length - 1 && !isNextDifferentMission) {
+                if (usePageBreak && nextItem && !isNextDifferentGroup) {
                     requests.push({
                         insertPageBreak: { location: { index: currentIndex } }
                     });
                     currentIndex += 1;
-                } else if (index < data.length - 1 && !isNextDifferentMission) {
+                } else if (nextItem && !isNextDifferentGroup) {
                     // 데이터 간 줄바꿈
                     const spacer = "\n\n";
                     requests.push({ insertText: { location: { index: currentIndex }, text: spacer } });

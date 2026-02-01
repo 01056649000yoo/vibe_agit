@@ -94,8 +94,27 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
         if (format === 'excel') {
             exportToExcel(data, fileName);
         } else if (format === 'googleDoc') {
+            const groupBy = options.groupBy || 'mission';
+
+            // [추가] 학생별 모아보기 선택 시 데이터 정렬 (학생번호 -> 이름 -> 미션제목 순)
+            if (groupBy === 'student') {
+                data.sort((a, b) => {
+                    // 번호 정렬 (숫자 비교)
+                    const numA = Number(a.번호) || 9999;
+                    const numB = Number(b.번호) || 9999;
+                    if (numA !== numB) return numA - numB;
+
+                    // 이름 정렬
+                    if (a.작성자 !== b.작성자) return a.작성자.localeCompare(b.작성자);
+
+                    // 미션 제목 정렬 (선택된 미션 순서대로 나오면 좋지만 여기선 단순히 제목순)
+                    // (만약 선택 순서를 유지하고 싶다면 _missionId 순서를 참조해야 함)
+                    return 0;
+                });
+            }
+
             // 구글 문서의 경우 이미 useDataExport에서 item.미션제목을 출력하므로 순서대로 정렬된 data를 넘기면 됨
-            await exportToGoogleDoc(data, fileName, options.usePageBreak);
+            await exportToGoogleDoc(data, fileName, options.usePageBreak, null, groupBy);
         }
     };
 
@@ -596,6 +615,7 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                 title={exportTarget?.title}
                 onConfirm={handleExportConfirm}
                 isGapiLoaded={isGapiLoaded}
+                isBulk={exportTarget?.type === 'bulk_missions'}
             />
         </div>
     );

@@ -23,28 +23,63 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const [editingMissionId, setEditingMissionId] = useState(null);
     const [isEvaluationMode, setIsEvaluationMode] = useState(false);
     const [frequentTags, setFrequentTags] = useState([]);
+    const [defaultRubric, setDefaultRubric] = useState(null);
 
     useEffect(() => {
-        const saved = localStorage.getItem('teacher_frequent_tags');
-        if (saved) setFrequentTags(JSON.parse(saved));
+        const fetchProfileData = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('frequent_tags, default_rubric')
+                .eq('id', user.id)
+                .single();
+
+            if (data) {
+                if (data.frequent_tags) setFrequentTags(data.frequent_tags);
+                if (data.default_rubric) setDefaultRubric(data.default_rubric);
+            }
+        };
+        fetchProfileData();
     }, []);
 
-    const saveFrequentTag = (tag) => {
+    // defaultRubric이 로드되면 폼 데이터에도 반영 (새 글 작성 시에만 초기값으로 세팅)
+    useEffect(() => {
+        if (defaultRubric && !isEditing) {
+            setFormData(prev => ({
+                ...prev,
+                evaluation_rubric: {
+                    ...prev.evaluation_rubric,
+                    levels: defaultRubric
+                }
+            }));
+        }
+    }, [defaultRubric, isEditing]);
+
+    const saveFrequentTag = async (tag) => {
         if (!tag || frequentTags.includes(tag)) return;
         const newTags = [...frequentTags, tag];
-        setFrequentTags(newTags);
-        localStorage.setItem('teacher_frequent_tags', JSON.stringify(newTags));
+        setFrequentTags(newTags); // UI 즉시 반영
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            await supabase.from('profiles').update({ frequent_tags: newTags }).eq('id', user.id);
+        }
     };
 
-    const removeFrequentTag = (tag) => {
+    const removeFrequentTag = async (tag) => {
         const newTags = frequentTags.filter(t => t !== tag);
-        setFrequentTags(newTags);
-        localStorage.setItem('teacher_frequent_tags', JSON.stringify(newTags));
+        setFrequentTags(newTags); // UI 즉시 반영
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            await supabase.from('profiles').update({ frequent_tags: newTags }).eq('id', user.id);
+        }
     };
 
     const getResetFormData = useCallback(() => {
-        const savedLevels = localStorage.getItem('default_rubric_levels');
-        const defaultLevels = savedLevels ? JSON.parse(savedLevels) : [
+        const defaultLevels = [
             { score: 3, label: '우수' },
             { score: 2, label: '보통' },
             { score: 1, label: '노력' }
@@ -65,18 +100,34 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             question_count: 3,
             tags: [],
             evaluation_rubric: {
-                use_rubric: false, // 신규 미션은 항상 '사용 안 함'이 기본
-                levels: defaultLevels // 하지만 켜는 순간 저장된 기본 단계가 나옴
+                use_rubric: false,
+                levels: defaultLevels
             }
         };
     }, []);
 
     const [formData, setFormData] = useState(getResetFormData);
 
-    const handleSaveDefaultRubric = () => {
+    const handleSaveDefaultRubric = async () => {
         if (!formData.evaluation_rubric?.levels) return;
-        localStorage.setItem('default_rubric_levels', JSON.stringify(formData.evaluation_rubric.levels));
-        alert('현재 루브릭의 단계와 명칭이 저장되었습니다! 💾\n앞으로 새로운 미션에서 루브릭을 활성화하면 이 설정이 기본으로 적용됩니다.');
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await supabase
+                .from('profiles')
+                .update({ default_rubric: formData.evaluation_rubric.levels })
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            setDefaultRubric(formData.evaluation_rubric.levels);
+            alert('현재 루브릭의 단계와 명칭이 계정에 저장되었습니다! 💾\n어디서든 로그인하면 이 설정이 기본으로 적용됩니다.');
+        } catch (err) {
+            console.error('루브릭 저장 실패:', err);
+            alert('저장 중 오류가 발생했습니다.');
+        }
     };
 
     const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);

@@ -1,8 +1,8 @@
 -- ====================================================================
--- [VIBE_TEST 통합 마스터 스키마 (Master Schema) v4]
--- 작성일: 2026-02-01
--- 설명: Supabase에 현재 적용된 모든 로직(테이블, 정책, 초기 설정)을 통합한 파일입니다.
---       v3 이후 추가된 댓글 상태(status) 및 피드백 정책 수정을 포함합니다.
+-- [VIBE_TEST 통합 마스터 스키마 (Master Schema) v4 - Finalized]
+-- 작성일: 2026-02-02
+-- 설명: Supabase에 적용된 모든 로직(테이블, 정책, 초기 설정)을 통합한 최종 버전입니다.
+--       v3 피드백 정책, post_comments 상태(status), frequent_tags 컬럼 등을 모두 포함합니다.
 -- ====================================================================
 
 -- 1. 정책 및 권한 초기화 (Clean Start)
@@ -32,7 +32,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     api_mode TEXT DEFAULT 'SYSTEM',
     ai_prompt_template TEXT,
     activity_ai_prompt TEXT,
-    primary_class_id UUID
+    primary_class_id UUID,
+    frequent_tags JSONB DEFAULT '[]'::jsonb,
+    default_rubric JSONB
 );
 
 -- [Teachers] 선생님 상세 정보

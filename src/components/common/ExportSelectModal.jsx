@@ -11,12 +11,13 @@ import { motion, AnimatePresence } from 'framer-motion';
  * @param {function} onConfirm (format, options) => void 내보내기 실행 콜백
  * @param {boolean} isGapiLoaded 구글 API 로드 여부 (비활성화 처리용)
  */
-const ExportSelectModal = ({ isOpen, onClose, title, onConfirm, isGapiLoaded }) => {
+const ExportSelectModal = ({ isOpen, onClose, title, onConfirm, isGapiLoaded, isBulk }) => {
     const [format, setFormat] = useState('excel'); // 'excel' | 'googleDoc'
     const [usePageBreak, setUsePageBreak] = useState(true);
+    const [groupBy, setGroupBy] = useState('mission'); // 'mission' | 'student'
 
     const handleConfirm = () => {
-        onConfirm(format, { usePageBreak });
+        onConfirm(format, { usePageBreak, groupBy });
         onClose();
     };
 
@@ -108,6 +109,36 @@ const ExportSelectModal = ({ isOpen, onClose, title, onConfirm, isGapiLoaded }) 
                                             exit={{ height: 0, opacity: 0 }}
                                             style={{ overflow: 'hidden' }}
                                         >
+                                            {isBulk && (
+                                                <div style={{ padding: '0 8px 12px 8px', display: 'flex', flexDirection: 'column', gap: '8px', borderBottom: '1px solid #F1F3F5', marginBottom: '8px' }}>
+                                                    <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#546E7A' }}>📚 문집 구성 방식</div>
+                                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.9rem' }}>
+                                                            <input
+                                                                type="radio"
+                                                                name="groupBy"
+                                                                value="mission"
+                                                                checked={groupBy === 'mission'}
+                                                                onChange={(e) => setGroupBy(e.target.value)}
+                                                                style={{ accentColor: '#4285F4' }}
+                                                            />
+                                                            주제(미션)별
+                                                        </label>
+                                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.9rem' }}>
+                                                            <input
+                                                                type="radio"
+                                                                name="groupBy"
+                                                                value="student"
+                                                                checked={groupBy === 'student'}
+                                                                onChange={(e) => setGroupBy(e.target.value)}
+                                                                style={{ accentColor: '#4285F4' }}
+                                                            />
+                                                            학생(사람)별
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div style={{ padding: '0 8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <input
                                                     type="checkbox"
@@ -117,7 +148,7 @@ const ExportSelectModal = ({ isOpen, onClose, title, onConfirm, isGapiLoaded }) 
                                                     style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                                                 />
                                                 <label htmlFor="pageBreak" style={{ fontSize: '0.9rem', color: '#546E7A', cursor: 'pointer', fontWeight: 'bold' }}>
-                                                    글마다 페이지 나누기 (권장)
+                                                    {groupBy === 'student' ? '학생마다 페이지 나누기 (권장)' : '글마다 페이지 나누기 (권장)'}
                                                 </label>
                                             </div>
                                         </motion.div>

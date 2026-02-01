@@ -325,10 +325,17 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     <div style={{ display: 'flex', gap: '12px' }}>
                         <Button
                             variant="ghost"
-                            style={{ flex: 2, background: 'white', border: '1px solid #ECEFF1', color: '#2C3E50', height: '54px', fontWeight: 'bold' }}
+                            style={{ flex: 1.5, background: 'white', border: '1px solid #ECEFF1', color: '#2C3E50', height: '54px', fontWeight: 'bold' }}
                             onClick={() => setIsModalOpen(true)}
                         >
                             ➕ 다른 학급 추가
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            style={{ flex: 1, background: 'white', border: '1px solid #ECEFF1', color: '#7F8C8D', height: '54px', fontWeight: 'bold' }}
+                            onClick={handleOpenTrash}
+                        >
+                            ♻️ 복구함
                         </Button>
                         <Button
                             variant="ghost"
