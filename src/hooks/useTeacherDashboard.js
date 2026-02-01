@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { callGemini } from '../lib/openai';
+import { callAI } from '../lib/openai';
 
 
 export const useTeacherDashboard = (session, profile, onProfileUpdate, activeClass, setActiveClass) => {
@@ -42,6 +42,9 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     const [editSchool, setEditSchool] = useState('');
     const [editPhone, setEditPhone] = useState('');
 
+    // AI 상태 관련
+    const [aiStatus, setAiStatus] = useState('disconnected'); // 초기값은 안전하게 '연결되지 않음'으로 시작
+
     const fetchTeacherInfo = useCallback(async () => {
         if (!session?.user?.id) return;
         try {
@@ -73,11 +76,25 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         if (data) {
             setOriginalKey(data.api_mode === 'PERSONAL' ? 'Personal Key Active' : 'System Key Active');
 
-            // 저장된 개인 키가 있으면 상태에 반영 (마스킹 등 보안 처리는 렌더링 시점에 고려 가능하나, 여기선 편집을 위해 원본 로드)
+            // 저장된 개인 키가 있으면 상태에 반영
             if (data.personal_openai_api_key) {
                 setOpenaiKey(data.personal_openai_api_key);
             } else {
                 setOpenaiKey('');
+            }
+
+            // [추가] 초기 AI 연결 상태 결정 로직
+            if (data.api_mode === 'PERSONAL') {
+                // 개인 키 모드인데 키가 비어있으면 '연결되지 않음'
+                if (!data.personal_openai_api_key || !data.personal_openai_api_key.trim()) {
+                    setAiStatus('disconnected');
+                } else {
+                    // 키가 있으면 일단 '연결됨'으로 표시 (실제 연결 확인은 테스트 버튼 권장)
+                    setAiStatus('connected');
+                }
+            } else {
+                // 시스템 모드는 항상 '연결됨' (공용 키 사용)
+                setAiStatus('connected');
             }
 
             if (data.ai_prompt_template) {
@@ -173,11 +190,20 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     };
 
     const handleWithdrawal = async () => {
-        if (!window.confirm('정말로 탈퇴하시겠습니까?\n\n탈퇴 시 모든 학급 데이터, 미션, 학생 정보가 영구적으로 삭제되며 복구할 수 없습니다.\n또한 Google 로그인 정보도 삭제됩니다.')) {
+        if (!window.confirm('정말로 탈퇴하시겠습니까?\n\n탈퇴 시 모든 학급 데이터, 미션, 학생 정보가 영구적으로 삭제되며 복구할 수 없습니다.')) {
             return;
         }
 
         try {
+            // 1. 학급 데이터 삭제 (연쇄 삭제가 설정되어 있지 않을 경우 대비)
+            const { error: classError } = await supabase
+                .from('classes')
+                .delete()
+                .eq('teacher_id', session.user.id);
+
+            if (classError) console.warn("학급 삭제 중 경고:", classError.message);
+
+            // 2. 선생님 상세 정보 삭제
             const { error: teacherError } = await supabase
                 .from('teachers')
                 .delete()
@@ -185,6 +211,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
             if (teacherError) throw teacherError;
 
+            // 3. 프로필 삭제
             const { error: profileError } = await supabase
                 .from('profiles')
                 .delete()
@@ -192,12 +219,18 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
             if (profileError) throw profileError;
 
+            // 4. 브라우저 저장 데이터 완전 초기화
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // 5. 로그아웃 처리
             try {
                 await supabase.auth.signOut();
             } catch (e) {
                 console.warn("Withdrawal signout failed:", e);
             }
-            alert('탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.');
+
+            alert('탈퇴가 완료되었습니다. 모든 데이터가 안전하게 삭제되었습니다.');
             window.location.href = '/';
         } catch (err) {
             console.error('탈퇴 처리 실패:', err.message);
@@ -264,17 +297,15 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
     const handleTestAIConnection = async () => {
         setTestingKey(true);
+        setAiStatus('testing');
         try {
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('gemini_api_key')
-                .eq('id', session.user.id)
-                .single();
-
-            const aiResponse = await callGemini("정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘.", profileData?.gemini_api_key);
+            // [변경] 이제 모든 키 조회 로직은 Edge Function 내부에서 처리되므로 프롬프트만 보냅니다.
+            const aiResponse = await callAI("정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘.");
+            setAiStatus('connected');
             alert(`✅ 연결 성공!\nAI 응답: ${aiResponse}`);
         } catch (err) {
             console.error('API 테스트 실패:', err.message);
+            setAiStatus('disconnected');
             alert(`❌ 연결 실패: ${err.message}`);
         } finally {
             setTestingKey(false);
@@ -361,7 +392,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         promptTemplate, setPromptTemplate, originalPrompt,
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         isKeyVisible, setIsKeyVisible,
-        savingKey, testingKey,
+        savingKey, testingKey, aiStatus,
         handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses, maskKey

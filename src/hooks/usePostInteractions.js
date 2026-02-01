@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { checkBadWords } from '../constants/badWords';
+import { checkContentSafety } from '../utils/aiSafety';
 
 /**
  * 역할: 게시글의 반응(좋아요 등)과 댓글을 관리하는 공통 훅 ✨
@@ -92,7 +94,23 @@ export const usePostInteractions = (postId, studentId) => {
     // 댓글 등록 핸들러
     const addComment = async (content) => {
         if (!content.trim() || !studentId || !postId) return;
+
+        // 1단: 로컬 비속어 체크 (즉시)
+        if (checkBadWords(content)) {
+            alert('다정한 교실을 위해 예쁜 말을 사용해 주세요! 🌸\n(비속어나 욕설은 등록할 수 없어요.)');
+            return false;
+        }
+
+        setLoading(true);
         try {
+            // 2단: AI 문맥 분석 (심층)
+            const safety = await checkContentSafety(content);
+            if (!safety.is_appropriate) {
+                alert(`잠깐! ✋\n\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}`);
+                setLoading(false);
+                return false;
+            }
+
             const { error } = await supabase
                 .from('post_comments')
                 .insert({
@@ -107,6 +125,7 @@ export const usePostInteractions = (postId, studentId) => {
             return true;
         } catch (err) {
             console.error('댓글 등록 오류:', err.message);
+            setLoading(false);
             return false;
         }
     };
@@ -114,7 +133,23 @@ export const usePostInteractions = (postId, studentId) => {
     // 댓글 수정 핸들러
     const updateComment = async (commentId, newContent) => {
         if (!newContent.trim() || !studentId) return;
+
+        // 1단: 로컬 비속어 체크
+        if (checkBadWords(newContent)) {
+            alert('다정한 교실을 위해 예쁜 말을 사용해 주세요! 🌸\n(비속어나 욕설은 저장할 수 없어요.)');
+            return false;
+        }
+
+        setLoading(true);
         try {
+            // 2단: AI 문맥 분석
+            const safety = await checkContentSafety(newContent);
+            if (!safety.is_appropriate) {
+                alert(`잠깐! ✋\n\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}`);
+                setLoading(false);
+                return false;
+            }
+
             const { error } = await supabase
                 .from('post_comments')
                 .update({ content: newContent.trim() })

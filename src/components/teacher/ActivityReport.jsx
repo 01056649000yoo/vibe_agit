@@ -183,7 +183,7 @@ ${activitiesInfo}`;
                 .single();
 
             const prompt = getStudentPrompt(studentData.student.name, studentData.posts);
-            const review = await callAI(prompt, profileData?.gemini_api_key);
+            const review = await callAI({ prompt, type: 'AI_FEEDBACK' });
 
             if (review) {
                 setStudentPosts(prev => prev.map(s =>
@@ -233,7 +233,7 @@ ${activitiesInfo}`;
 
                 try {
                     const prompt = getStudentPrompt(data.student.name, data.posts);
-                    const review = await callAI(prompt, userApiKey);
+                    const review = await callAI({ prompt, type: 'AI_FEEDBACK' });
                     if (review) {
                         setStudentPosts(prev => prev.map((s, idx) =>
                             idx === i ? { ...s, ai_synthesis: review } : s

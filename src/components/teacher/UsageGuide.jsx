@@ -16,9 +16,11 @@ const UsageGuide = ({ isMobile }) => {
         { id: 'class-management', title: '🏫 학급 및 학생 관리', emoji: '🏫' },
         { id: 'mission-writing', title: '✍️ 미션 및 글쓰기', emoji: '✍️' },
         { id: 'playground', title: '🎢 놀이터 및 게임 설정', emoji: '🎢' },
-        { id: 'points-dragon', title: '💰 포인트 및 드래곤', emoji: '💰' },
+        { id: 'points-dragon', title: '💰 포인트 및 드래곤기르기', emoji: '💰' },
         { id: 'evaluation', title: '🎯 학생 평가 및 AI쫑알이', emoji: '🎯' },
-        { id: 'analysis', title: '📊 학습 분석 활용', emoji: '📊' },
+        { id: 'analysis', title: '📊 학급 분석 활용', emoji: '📊' },
+        { id: 'book-publishing', title: '📚 학급 도서 출판', emoji: '📚' },
+        { id: 'gpt-info', title: '🤖 GPT 인공지능 활용 안내', emoji: '🤖' },
     ];
 
     const containerStyle = {
@@ -155,16 +157,7 @@ const UsageGuide = ({ isMobile }) => {
                     </p>
                     <p><strong>• AI 질문 생성:</strong>
                         <br />직접 질문을 만들기 어렵다면 <strong>'AI 질문 생성하기'</strong> 버튼을 클릭하세요.
-                        최신 모델인 <strong>OpenAI GPT-5 Mini</strong>가 미션 주제에 딱 맞는 질문을 자동으로 설계해줍니다. ✨
-                    </p>
-                    <p><strong>• 미션 보관 및 데이터 내보내기:</strong>
-                        <br />학기가 끝나거나 완료된 미션은 '보관함으로 이동'을 선택하세요.
-                        보관된 미션은 <strong>[글 보관함]</strong> 탭에서 언제든지 확인할 수 있으며, 학생들의 소중한 글을 외부 파일로 내보낼 수 있습니다.
-                    </p>
-                    <p><strong>• 엑셀(Excel) 및 구글 문서(Google Docs) 활용:</strong>
-                        <br />- <strong>엑셀 내보내기:</strong> 학생들의 글 통계와 내용을 표 형태로 한눈에 정리하여 보관할 수 있습니다.
-                        <br />- <strong>구글 문서로 책 만들기:</strong> 모든 글을 구글 문서로 전송하여 <strong>나만의 학급 문집</strong>을 만들 수 있습니다.
-                        <br />- <strong>출판 최적화 기능:</strong> '학생별 1페이지씩 정리' 또는 '주제별 글 이어붙이기' 기능을 통해 별도의 편집 없이도 즉시 책으로 출판할 수 있는 깔끔한 원고를 얻을 수 있습니다. ✨
+                        AI가 미션 주제에 딱 맞는 질문을 자동으로 설계해줍니다. ✨
                     </p>
                 </div>
 
@@ -181,15 +174,16 @@ const UsageGuide = ({ isMobile }) => {
                 <div id="ai-feedback" style={{ ...highlightStyle, scrollMarginTop: '100px' }}>
                     🤖 <strong>AI 피드백 활용 (PRO):</strong>
                     <br />
-                    미확인 글에 대해 <strong>'AI 피드백 일괄 생성'</strong> 버튼을 누르면, 시스템이 AI 모델을 사용하여 모든 글을 분석하고 맞춤형 조언을 댓글로 남겨줍니다.
+                    미확인 글에 대해 <strong>'AI 피드백 일괄 생성'</strong> 버튼을 누르면, 시스템이 AI를 사용하여 모든 글을 분석하고 맞춤형 조언을 댓글로 남겨줍니다.
                     <br /><br />
-                    ⚠️ <strong>안정적인 서비스 운영 (AI 모델 안내):</strong><br />
-                    현재 더욱 똑똑해진 <strong>OpenAI GPT-5 Mini</strong> 기반 모델이 활용되어 최적의 피드백을 제공합니다.
+                    ⚠️ <strong>안정적인 서비스 운영:</strong><br />
+                    현재 더욱 빠르고 정확한 AI 기반 모델이 활용되어 최적의 피드백을 제공합니다.
                     선생님은 [관리 설정]에서 피드백의 말투나 형식을 결정하는 <strong>'AI 피드백 프롬프트'</strong>를 직접 수정할 수 있습니다. ✨
+                    <br /><br />
+                    🛡️ <strong>실시간 글쓰기 보안관:</strong><br />
+                    모든 학생의 댓글과 글은 AI 보안관이 실시간으로 분석하여 비속어나 부적절한 내용을 필터링합니다. 선생님의 개입 없이도 안전한 학급 문화를 유지할 수 있습니다.
                 </div>
             </section>
-
-
 
             {/* 섹션 3: 놀이터 및 게임 설정 */}
             <section id="playground" style={sectionStyle}>
@@ -222,6 +216,7 @@ const UsageGuide = ({ isMobile }) => {
                         나만의 글을 남기는 모든 활동이 포인트가 됩니다!
                         <br />• <strong>미션 완료 보상:</strong> 선생님이 설정하신 미션의 기본 포인트와 보너스 포인트를 획득합니다.
                         <br />• <strong>활동 포인트:</strong> 정성껏 글을 쓰고 친구들의 글에 댓글을 남기는 모든 과정에서 점수가 쌓입니다.
+                        <br />• 🛡️ <strong>AI 보안관 (24시간 가동):</strong> 모든 글과 댓글은 AI가 실시간으로 확인하여 부적절한 내용을 필터링하고 안전한 아지트 문화를 지켜줍니다.
                         <br />• <strong>활동지수랭킹:</strong> 우리 반에서 누가 가장 많은 포인트를 획득했는지 실시간 랭킹 확인이 가능하여 건강한 경쟁심을 유도합니다.
                         <br />(활동지수(XP)는 학생이 지금까지 획득한 총 누적 포인트로 계산됩니다. 포인트 사용(차감) 내역은 랭킹에 영향을 주지 않으므로, 학생들은 마음껏 포인트를 사용하여 드래곤을 꾸밀 수 있습니다. 💎)
                     </p>
@@ -291,6 +286,91 @@ const UsageGuide = ({ isMobile }) => {
                 <div style={cardStyle}>
                     <p><strong>2. 미제출자 확인</strong><br />
                         '미제출 알림' 섹션을 통해 아직 미션을 수행하지 않은 학생들을 빠르게 파악하고 지도할 수 있습니다.</p>
+                </div>
+            </section>
+
+            {/* 섹션 7: 학급 도서 출판 */}
+            <section id="book-publishing" style={sectionStyle}>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    {sections[6].title}
+                </h2>
+                <div style={cardStyle}>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#27AE60' }}>📚 학기 말 학급 문집 및 데이터 관리</h3>
+                    <p><strong>• 미션 보관:</strong> 학기가 끝나거나 완료된 미션은 '보관함으로 이동'을 선택하세요. 보관된 미션은 <strong>[글 보관함]</strong> 탭에서 언제든지 확인할 수 있습니다.</p>
+                    <p><strong>• 데이터 내보내기:</strong> 학생들의 소중한 글을 외부 파일로 내보내어 영구 보관할 수 있습니다.</p>
+                    <p><strong>• 엑셀(Excel) 및 구글 문서(Google Docs) 활용:</strong>
+                        <br />- <strong>엑셀 내보내기:</strong> 학생들의 글 통계 및 내용을 표 형태로 한눈에 정리하여 보관할 수 있습니다.
+                        <br />- <strong>구글 문서로 책 만들기:</strong> 모든 글을 구글 문서로 전송하여 <strong>나만의 학급 문집</strong>을 만들 수 있습니다.
+                        <br />- <strong>출판 최적화 기능:</strong> '학생별 1페이지씩 정리' 또는 '주제별 글 이어붙이기' 기능을 통해 별도의 편집 없이도 즉시 책으로 출판할 수 있는 깔끔한 원고를 얻을 수 있습니다. ✨
+                    </p>
+                </div>
+            </section>
+
+            {/* 섹션 7: GPT 인공지능 활용 안내 (신규) */}
+            <section id="gpt-info" style={sectionStyle}>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    {sections[7].title}
+                </h2>
+                <div style={cardStyle}>
+                    <p style={{ marginBottom: '20px' }}>
+                        끄적끄적 아지트는 교육적 활용도와 보안을 위해 각 기능별로 최적화된 최신 <strong>OpenAI GPT 모델</strong>을 구분하여 사용하고 있습니다.
+                    </p>
+
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{
+                            width: '100%',
+                            borderCollapse: 'collapse',
+                            fontSize: '0.95rem',
+                            minWidth: '600px',
+                            background: 'white',
+                            borderRadius: '16px',
+                            overflow: 'hidden',
+                            border: '1px solid #E9ECEF'
+                        }}>
+                            <thead>
+                                <tr style={{ background: '#3498DB', color: 'white' }}>
+                                    <th style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid #DEE2E6', width: '35%' }}>서비스 영역 / 적용 모델</th>
+                                    <th style={{ padding: '16px', textAlign: 'left', borderBottom: '1px solid #DEE2E6' }}>선정 및 활용 이유</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style={{ padding: '16px', borderBottom: '1px solid #F1F3F5' }}>
+                                        <div style={{ fontWeight: '800', color: '#E74C3C', marginBottom: '4px' }}>🛡️ 실시간 보안관</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#2C3E50', opacity: 0.8 }}>모델: OpenAI GPT-5-Nano</div>
+                                    </td>
+                                    <td style={{ padding: '16px', borderBottom: '1px solid #F1F3F5', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                                        1. 최신 차세대 나노 엔진을 통해 비속어 및 부적절한 표현을 더욱 정교하고 빠르게 감지합니다.<br />
+                                        2. 학생들의 안전한 글쓰기 환경을 보장하기 위해 고도화된 교육 윤리 가이드라인이 적용되었습니다.
+                                    </td>
+                                </tr>
+                                <tr style={{ background: '#FDFEFE' }}>
+                                    <td style={{ padding: '16px', borderBottom: '1px solid #F1F3F5' }}>
+                                        <div style={{ fontWeight: '800', color: '#3498DB', marginBottom: '4px' }}>✍️ 피드백 & 질문 설계</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#2C3E50', opacity: 0.8 }}>모델: OpenAI GPT-4o-Mini</div>
+                                    </td>
+                                    <td style={{ padding: '16px', borderBottom: '1px solid #F1F3F5', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                                        1. 글 주제에 대한 깊은 이해를 바탕으로 정교하고 다정한 맞춤형 피드백을 즉시 생성합니다.<br />
+                                        2. 학생의 사고 수준을 고려한 창의적 질문을 설계하여 자기주도적 글쓰기 역량을 강화합니다.
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style={{ padding: '16px', borderBottom: '1px solid #F1F3F5' }}>
+                                        <div style={{ fontWeight: '800', color: '#9B59B6', marginBottom: '4px' }}>🐥 AI 쫑알이 (종합 분석)</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#2C3E50', opacity: 0.8 }}>모델: OpenAI GPT-5-Nano</div>
+                                    </td>
+                                    <td style={{ padding: '16px', borderBottom: '1px solid #F1F3F5', fontSize: '0.9rem', lineHeight: '1.6' }}>
+                                        1. 수개월간 축적된 방대한 활동 데이터를 논리적으로 요약하고 핵심 성취를 정확히 포착합니다.<br />
+                                        2. 실제 교육 현장에서 활용 가능한 신뢰도 높은 학교생활기록부용 관찰 의견 초안을 제작합니다.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style={{ marginTop: '24px', fontSize: '0.9rem', color: '#7F8C8D' }}>
+                        ※ 모든 AI 기능은 선생님이 직접 성능과 말투를 제어할 수 있도록 [관리 설정]에서 프롬프트 수정을 지원합니다.
+                    </div>
                 </div>
             </section>
 

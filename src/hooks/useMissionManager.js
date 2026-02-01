@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { callGemini } from '../lib/openai';
+import { callAI } from '../lib/openai';
 
 export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const [missions, setMissions] = useState([]);
@@ -199,14 +199,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             ["질문1", "질문2", "질문3"]
             `;
 
-            const { data: { user } } = await supabase.auth.getUser();
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('gemini_api_key')
-                .eq('id', user?.id)
-                .single();
-
-            const responseText = await callGemini(prompt, profileData?.gemini_api_key);
+            const responseText = await callAI(prompt, { type: 'GENERAL' });
 
             const jsonMatch = responseText.match(/\[.*\]/s);
             if (jsonMatch) {
@@ -327,11 +320,9 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         const { data: { user } } = await supabase.auth.getUser();
         const { data: profileData } = await supabase
             .from('profiles')
-            .select('gemini_api_key, ai_prompt_template')
+            .select('ai_prompt_template')
             .eq('id', user?.id)
             .single();
-
-        const userApiKey = profileData?.gemini_api_key;
 
         let customTemplate = profileData?.ai_prompt_template?.trim();
 
@@ -396,7 +387,7 @@ ${postArray.map((p, idx) => {
         }
 
         try {
-            const responseText = await callGemini(prompt, userApiKey);
+            const responseText = await callAI(prompt, { type: 'AI_FEEDBACK' });
 
             if (isBulk) {
                 const jsonMatch = responseText.match(/\[\s*\{.*\}\s*\]/s);

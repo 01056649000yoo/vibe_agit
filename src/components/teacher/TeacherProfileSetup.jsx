@@ -52,14 +52,15 @@ const TeacherProfileSetup = ({ email, onTeacherStart, onLogout }) => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('로그인이 필요합니다.');
 
-            // 1. 프로필 역할 설정
+            // 1. 프로필 역할 설정 및 AI 모드 기본값(PERSONAL) 지정
             const { error: profileError } = await supabase
                 .from('profiles')
                 .upsert({
                     id: user.id,
                     role: 'TEACHER',
                     email: user.email,
-                    full_name: teacherName.trim()
+                    full_name: teacherName.trim(),
+                    api_mode: 'PERSONAL' // [추가] 가입 시 개인 키 사용이 기본값이 되도록 설정
                 });
 
             if (profileError) throw profileError;

@@ -85,7 +85,7 @@ const RecordAssistant = ({ student, activeClass, isMobile, onClose }) => {
             `;
 
             // [변경] GPT 통합 호출 (callAI 사용)
-            const text = await callAI(prompt);
+            const text = await callAI({ prompt, type: 'RECORD_ASSISTANT' });
 
             if (text) setRecordContent(text);
         } catch (err) {

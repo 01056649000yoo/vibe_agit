@@ -19,6 +19,7 @@ const TeacherSettingsTab = ({
     handleTestAIConnection,
     savingKey,
     testingKey,
+    aiStatus,
     promptTemplate,
     setPromptTemplate,
     originalPrompt,
@@ -92,13 +93,26 @@ const TeacherSettingsTab = ({
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                                 <div style={{ fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold' }}>
-                                    AI 시스템 상태: <span style={{ color: '#27AE60' }}>● 연결됨</span>
+                                    AI 시스템 상태: {aiStatus === 'testing' ? (
+                                        <span style={{ color: '#F39C12' }}>● 연결 확인 중...</span>
+                                    ) : aiStatus === 'connected' ? (
+                                        <span style={{ color: '#27AE60' }}>● 연결됨</span>
+                                    ) : (
+                                        <span style={{ color: '#E74C3C' }}>● 연결되지 않음</span>
+                                    )}
                                 </div>
                                 <Button
                                     variant="secondary"
                                     onClick={handleTestAIConnection}
                                     disabled={testingKey}
-                                    style={{ borderRadius: '12px', padding: '6px 12px', background: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9', fontSize: '0.75rem' }}
+                                    style={{
+                                        borderRadius: '12px',
+                                        padding: '6px 12px',
+                                        background: aiStatus === 'disconnected' ? '#FDEDEC' : '#E8F5E9',
+                                        color: aiStatus === 'disconnected' ? '#E74C3C' : '#2E7D32',
+                                        border: aiStatus === 'disconnected' ? '1px solid #FADBD8' : '1px solid #C8E6C9',
+                                        fontSize: '0.75rem'
+                                    }}
                                 >
                                     {testingKey ? '연결 확인 중...' : '연결 테스트'}
                                 </Button>

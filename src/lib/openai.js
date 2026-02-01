@@ -15,76 +15,106 @@ const MODEL_HIERARCHY = [
 
 /**
  * OpenAI API를 호출하여 메시지를 생성합니다.
- * @param {string} prompt - 전송할 프롬프트
+ * @param {string|object} payload - 전송할 프롬프트 문자열 또는 옵션 객체
+ * @param {object} options - 추가 옵션 (type: 'SAFETY_CHECK' 등)
  */
-export const callOpenAI = async (prompt) => {
+export const callOpenAI = async (payload, options = {}) => {
     // 이제 모든 호출은 Edge Function 'vibe-ai'를 통해 이루어집니다.
-    // Edge Function 내부에서 공용 키(시스템) 또는 개인 키(DB)를 자동으로 선택합니다.
+    // payload가 문자열이면 prompt로 처리, 객체면 해당 속성들을 사용
+
+    let body = {};
+    if (typeof payload === 'string') {
+        body.prompt = payload;
+    } else {
+        body = { ...payload };
+    }
+
+    // 추가 옵션 병합
+    body = { ...body, ...options };
 
     try {
-        // [중요] 함수 호출 전 세션 확인 (401 방지)
+        // [중요] 함수 호출 전 세션 확인 (교사용 Supabase 세션 또는 학생용 로컬 세션)
         const { data: { session }, error: sessionError } = await import('./supabaseClient').then(m => m.supabase.auth.getSession());
 
-        if (sessionError || !session) {
-            console.warn('AI 호출 전 세션 만료됨, 재로그인 필요');
-            throw new Error('로그인 세션이 만료되었습니다. 페이지를 새로고침하거나 다시 로그인해주세요.');
+        // 학생 로컬 세션 정보 가져오기
+        const studentRaw = localStorage.getItem('student_session');
+        const studentSession = studentRaw ? JSON.parse(studentRaw) : null;
+
+        if (!session && !studentSession) {
+            console.warn('AI 호출 전 세션 감지 안 됨');
+            throw new Error('로그인이 필요합니다. 페이지를 새로고침하거나 다시 로그인해주세요.');
         }
 
-        // [1차 시도] 1순위: gpt-4o-mini (가장 가성비 좋고 빠른 모델)
+        if (sessionError) {
+            console.warn('세션 확인 중 오류 발생:', sessionError);
+        }
+
+        // 학생 세션이 있다면 body에 studentId 포함 (서버 보안 인증용)
+        // [수정] 세션 여부와 상관없이 학생 ID가 있으면 무조건 전송하여 서버 인증을 보조합니다.
+        if (studentSession?.id) {
+            body.studentId = studentSession.id;
+        }
+
+        // [1차 시도] 1순위: gpt-4o-mini
         // Edge Function에 model 파라미터를 전달하면 내부에서 해당 모델로 호출합니다.
         const { data: data1, error: error1 } = await import('./supabaseClient').then(m => m.supabase.functions.invoke('vibe-ai', {
-            body: { prompt: prompt, model: 'gpt-4o-mini' }
+            body: { model: 'gpt-4o-mini', ...body }
         }));
 
         if (!error1 && data1?.text) return data1.text;
 
-        // 401: 권한 없음, 400: 설정 오류 (키 누락 등) - 즉시 중단 및 상세 메시지 표시
+        // 400/401: 설정 오류, 권한 오류, 정책 위반 등
         if (error1) {
-            // Edge Function이 반환한 상세 에러 메시지 추출 시도
-            // (supabase-js 최신 버전에서는 error.context.json() 등으로 바디 접근 가능할 수 있으나, 보통 error.message에 포함되거나 data 없이 error만 옴)
+            console.error("AI Server Error Detail:", error1);
 
-            // 만약 서버가 명시적으로 400을 반환했다면 (설정 오류)
-            if (error1.code === 400 || error1.message?.includes('400') || error1.toString().includes('non-2xx')) {
-                // data1이 있을 경우 그 안에 error 메시지가 있을 수 있음 (하지만 보통 error가 나면 data는 null)
-                // Edge Function이 body에 { error: "..." }를 보냈다면, supabase-js는 이를 error 객체 어딘가에 담거나, 
-                // parsing 실패 시 generic error를 냄.
+            let serverMsg = "AI 서비스를 일시적으로 사용할 수 없습니다.";
+            let serverDetails = "";
 
-                // 여기서는 사용자가 직관적으로 알 수 없는 "non-2xx" 대신, 서버 로그나 상황에 맞는 가이드를 줄 수 있도록 함.
-                // 하지만 가장 좋은 건 error1 객체 내부를 확인하는 것임.
-
-                // 일단 에러를 그대로 pass하지 않고, 400이면 재시도 없이 던짐
-                console.error("AI Server Error (400):", error1);
-
-                // 서버에서 보낸 메시지가 error1.context 또는 error message에 포함되어 있는지 확인
-                let serverMsg = "AI 설정이 올바르지 않습니다.";
-                if (error1.context && typeof error1.context.json === 'function') {
+            // 에러 바디에서 상세 메시지 추출 시도 (Supabase Functions 특유의 에러 구조 대응)
+            if (error1.context) {
+                try {
+                    const response = error1.context;
+                    // response.json()이 동작하지 않는 환경이 있을 수 있으므로 텍스트로 먼저 받기 시도
+                    const text = await response.text();
                     try {
-                        const errBody = await error1.context.json();
+                        const errBody = JSON.parse(text);
                         if (errBody.error) serverMsg = errBody.error;
-                    } catch (e) { /* ignore */ }
-                } else if (data1?.error) { // 혹시 data에 들어있다면
-                    serverMsg = data1.error;
+                        if (errBody.details) serverDetails = errBody.details;
+                    } catch (e) {
+                        serverDetails = text;
+                    }
+                } catch (e) {
+                    console.warn("에러 바디 추출 실패:", e);
                 }
-
-                throw new Error(serverMsg !== "AI 설정이 올바르지 않습니다." ? serverMsg : "AI 설정 오류: 개인 키가 등록되지 않았거나 시스템 설정에 문제가 있습니다. (400 Bad Request)");
+            } else if (data1?.error) {
+                serverMsg = data1.error;
+                if (data1.details) serverDetails = data1.details;
+            } else if (error1.message) {
+                serverMsg = error1.message;
             }
 
-            if (error1.code === 401 || error1.message?.includes('401')) {
-                throw new Error('AI 서버 접근 권한이 없습니다. (401 Unauthorized) - 세션 만료 또는 권한 부족.');
+            // Unauthorized 에러 한글화 및 상세 정보 결합
+            if (serverMsg === 'Unauthorized' || serverMsg.includes('401')) {
+                serverMsg = "로그인 정보 인증에 실패했습니다." + (serverDetails ? `\n(원인: ${serverDetails})` : "\n(다시 로그인하거나 페이지를 새로고침 해주세요.)");
+            } else if (serverDetails) {
+                serverMsg += `\n\n상세: ${serverDetails}`;
             }
+
+            throw new Error(serverMsg);
         }
 
-        console.warn('1차(gpt-4o-mini) 실패, 2차(gpt-3.5-turbo) 시도:', error1);
+        // [2차 시도] 폴백: gpt-3.5-turbo (교사 호출 등의 일반 상황에서만 시도)
+        if (!body.type || body.type !== 'SAFETY_CHECK') {
+            console.warn('1차(gpt-4o-mini) 실패, 2차(gpt-3.5-turbo) 시도:', error1);
+            const { data: data2, error: error2 } = await import('./supabaseClient').then(m => m.supabase.functions.invoke('vibe-ai', {
+                body: { model: 'gpt-3.5-turbo', ...body }
+            }));
 
-        // [2차 시도] 폴백: gpt-3.5-turbo (400 에러 아닐 때만)
-        const { data: data2, error: error2 } = await import('./supabaseClient').then(m => m.supabase.functions.invoke('vibe-ai', {
-            body: { prompt: prompt, model: 'gpt-3.5-turbo' }
-        }));
+            if (!error2 && data2?.text) return data2.text;
+            throw new Error(`AI 서버 연결 실패: ${error2?.message || '알 수 없는 오류'}`);
+        }
 
-        if (!error2 && data2?.text) return data2.text;
-
-        // 모든 시도 실패 시
-        throw new Error(`AI 서버 연결 실패: ${error2?.message || '알 수 없는 오류'}`);
+        throw new Error("분석에 실패했습니다. 다시 시도해주세요.");
 
     } catch (err) {
         console.error('AI 호출 치명적 오류:', err);

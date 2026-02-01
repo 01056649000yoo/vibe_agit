@@ -556,6 +556,9 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                 />
                                 <Button type="submit" disabled={submittingComment}>{editingCommentId ? '수정' : '보내기'}</Button>
                             </form>
+                            <div style={{ marginTop: '10px', fontSize: '0.75rem', color: '#95A5A6', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                                <span>🛡️</span> <strong>AI 보안관</strong>이 안전한 댓글 문화를 위해 24시간 감시 중이에요.
+                            </div>
                         </div>
                     </motion.div>
                 )}
