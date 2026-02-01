@@ -233,7 +233,7 @@ const SubmissionStatusModal = ({
                                         maxWidth: '1300px',
                                         margin: '0 auto',
                                         display: 'grid',
-                                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
                                         gap: '20px'
                                     }}>
                                         {posts.map((post, idx) => (

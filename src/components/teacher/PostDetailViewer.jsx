@@ -19,6 +19,7 @@ const PostDetailViewer = ({
     const [initialEval, setInitialEval] = useState(selectedPost?.initial_eval || null);
     const [finalEval, setFinalEval] = useState(selectedPost?.final_eval || null);
     const [evalComment, setEvalComment] = useState(selectedPost?.eval_comment || '');
+    const [isFeedbackVisible, setIsFeedbackVisible] = useState(true);
 
     useEffect(() => {
         if (selectedPost) {
@@ -166,7 +167,7 @@ const PostDetailViewer = ({
                                 <div style={{ fontSize: '0.8rem', color: '#95A5A6', fontWeight: 'bold' }}>{selectedMission?.title}</div>
                                 <div style={{ fontSize: '1rem', color: '#2C3E50', fontWeight: '900' }}>{selectedPost.students?.name} 학생의 글 {isEvaluationMode ? '평가 중' : ''}</div>
                             </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 {selectedPost.is_submitted && !selectedPost.is_confirmed && (
                                     <>
                                         <Button
@@ -197,7 +198,7 @@ const PostDetailViewer = ({
                                             padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
                                         }}
                                     >
-                                        ⚠️ 승인 취소 & 포인트 회수
+                                        ⚠️ 승인 취소/회수
                                     </Button>
                                 )}
                                 {selectedMission?.evaluation_rubric?.use_rubric && (
@@ -209,177 +210,180 @@ const PostDetailViewer = ({
                                             borderRadius: '12px'
                                         }}
                                     >
-                                        📊 성장 평가하기
+                                        📊 성장 평가
                                     </Button>
                                 )}
+                                <div style={{ width: '1px', height: '24px', background: '#F1F3F5', margin: '0 4px' }} />
+                                <Button
+                                    onClick={() => setIsFeedbackVisible(!isFeedbackVisible)}
+                                    style={{
+                                        backgroundColor: isFeedbackVisible ? '#F8F9FA' : '#3498DB',
+                                        color: isFeedbackVisible ? '#4B5563' : 'white',
+                                        border: '1px solid #E5E7EB',
+                                        padding: '8px 16px', fontSize: '0.85rem', fontWeight: 'bold',
+                                        borderRadius: '12px'
+                                    }}
+                                >
+                                    {isFeedbackVisible ? '💬 피드백 접기' : '💬 피드백 열기'}
+                                </Button>
                             </div>
                         </header>
 
                         <main style={{
                             flex: 1, overflowY: 'auto', padding: isMobile ? '24px 20px' : '40px',
-                            maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box',
-                            display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '6fr 4fr', gap: '40px'
+                            maxWidth: (showOriginal || !isFeedbackVisible) ? '1600px' : '1200px',
+                            margin: '0 auto', width: '100%', boxSizing: 'border-box',
+                            display: 'flex', gap: '40px', transition: 'all 0.3s'
                         }}>
-                            <div>
-                                <h2 style={{
-                                    fontSize: isMobile ? '1.5rem' : '2rem',
-                                    color: '#2C3E50', fontWeight: '900',
-                                    marginBottom: '24px', lineHeight: '1.4',
-                                    borderLeft: '6px solid #FBC02D', paddingLeft: '20px',
-                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                                <div style={{
+                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                    marginBottom: '24px', borderBottom: '2px solid #F1F3F5', paddingBottom: '16px'
                                 }}>
-                                    <div>
+                                    <h2 style={{
+                                        fontSize: isMobile ? '1.5rem' : '1.8rem',
+                                        color: '#2C3E50', fontWeight: '900',
+                                        margin: 0, lineHeight: '1.4',
+                                        borderLeft: '5px solid #FBC02D', paddingLeft: '16px'
+                                    }}>
                                         {showOriginal ? (selectedPost.original_title || selectedPost.title) : (selectedPost.title || '제목 없음')}
-                                        {showOriginal && <span style={{ fontSize: '0.9rem', color: '#E67E22', marginLeft: '12px', background: '#FFF3E0', padding: '2px 8px', borderRadius: '6px' }}>최초 제출본</span>}
-                                    </div>
+                                    </h2>
                                     {selectedPost.original_content && (
                                         <button
                                             onClick={() => setShowOriginal(!showOriginal)}
                                             style={{
-                                                fontSize: '0.85rem', padding: '6px 12px', borderRadius: '10px',
+                                                fontSize: '0.85rem', padding: '8px 16px', borderRadius: '12px',
                                                 border: showOriginal ? '2px solid #3498DB' : '1px solid #DEE2E6',
                                                 background: showOriginal ? '#EBF5FB' : 'white',
                                                 color: showOriginal ? '#3498DB' : '#7F8C8D',
-                                                fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s'
+                                                fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s',
+                                                display: 'flex', alignItems: 'center', gap: '6px'
                                             }}
                                         >
-                                            {showOriginal ? '✨ 최신글 보기' : '📜 최초글 비교하기'}
+                                            {showOriginal ? '✨ 최신글만 보기' : '📜 최초글과 비교하기'}
                                         </button>
                                     )}
-                                </h2>
-
-                                <div style={{
-                                    fontSize: isMobile ? '1.1rem' : '1.25rem',
-                                    color: showOriginal ? '#7F8C8D' : '#444',
-                                    lineHeight: '1.8',
-                                    whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                                    paddingBottom: '40px',
-                                    transition: 'color 0.2s'
-                                }}>
-                                    {showOriginal ? (selectedPost.original_content || '기록된 최초 내용이 없습니다.') : selectedPost.content}
                                 </div>
+
+                                {showOriginal ? (
+                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '30px', flex: 1 }}>
+                                        {/* Left: Original Content */}
+                                        <div style={{
+                                            background: '#F8F9FA', borderRadius: '24px', padding: '24px',
+                                            border: '1px solid #E9ECEF', display: 'flex', flexDirection: 'column'
+                                        }}>
+                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#10B981', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                🌱 최초 제출 (초안)
+                                            </div>
+                                            <div style={{
+                                                fontSize: '1.15rem', color: '#64748B', lineHeight: '1.8',
+                                                whiteSpace: 'pre-wrap', wordBreak: 'break-word'
+                                            }}>
+                                                {selectedPost.original_content || '최초 내용 기록이 없습니다.'}
+                                            </div>
+                                        </div>
+
+                                        {/* Right: Final Content */}
+                                        <div style={{
+                                            background: 'white', borderRadius: '24px', padding: '24px',
+                                            border: '1px solid #E9ECEF', boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+                                            display: 'flex', flexDirection: 'column'
+                                        }}>
+                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#3B82F6', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                ✨ 최종 제출 (수정본)
+                                            </div>
+                                            <div style={{
+                                                fontSize: '1.15rem', color: '#1F2937', lineHeight: '1.8',
+                                                whiteSpace: 'pre-wrap', wordBreak: 'break-word'
+                                            }}>
+                                                {selectedPost.content}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{
+                                        fontSize: isMobile ? '1.15rem' : '1.3rem',
+                                        color: '#374151',
+                                        lineHeight: '2',
+                                        whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                                        padding: '0 10px'
+                                    }}>
+                                        {selectedPost.content}
+                                    </div>
+                                )}
                             </div>
 
-                            <aside style={{
-                                display: 'flex', flexDirection: 'column',
-                                position: isMobile ? 'static' : 'sticky',
-                                top: '20px',
-                                height: isMobile ? 'auto' : 'calc(100vh - 180px)',
-                                minHeight: isMobile ? '400px' : '0'
-                            }}>
-                                <div style={{
-                                    background: '#F8F9FA', borderRadius: '24px', padding: '24px',
-                                    border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                                    display: 'flex', flexDirection: 'column', flex: 1,
-                                    overflow: 'hidden'
+                            {/* Sidebar Area */}
+                            {isFeedbackVisible && !isMobile && (
+                                <aside style={{
+                                    width: '380px', flexShrink: 0, display: 'flex', flexDirection: 'column',
+                                    position: 'sticky', top: '20px', height: 'fit-content'
                                 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <h4 style={{ margin: 0, color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            📝 선생님의 피드백
-                                        </h4>
-                                        <Button
-                                            onClick={handleGenerateSingleAI}
-                                            disabled={isGenerating}
-                                            style={{
-                                                backgroundColor: '#3498DB', color: 'white', padding: '6px 12px',
-                                                fontSize: '0.8rem', borderRadius: '10px'
-                                            }}
-                                        >
-                                            {isGenerating ? '✨ 분석 중...' : '✨ AI 피드백 생성'}
-                                        </Button>
-                                    </div>
-                                    <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                        <textarea
-                                            ref={textareaRef}
-                                            value={tempFeedback}
-                                            onChange={(e) => setTempFeedback(e.target.value)}
-                                            placeholder="AI 선생님의 도움을 받거나 직접 따뜻한 조언을 남겨주세요..."
-                                            style={{
-                                                width: '100%', flex: 1, minHeight: '150px', padding: '24px',
-                                                borderRadius: '20px', border: '1px solid #E0E4E8',
-                                                fontSize: '1.1rem', lineHeight: '2', outline: 'none',
-                                                resize: 'none', transition: 'all 0.1s', color: '#2C3E50',
-                                                backgroundColor: '#fff',
-                                                overflowY: 'auto',
-                                                fontFamily: "'Pretendard', 'Apple SD Gothic Neo', sans-serif",
-                                                letterSpacing: '-0.01em',
-                                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
-                                            }}
-                                            onFocus={e => e.target.style.borderColor = '#3498DB'}
-                                            onBlur={e => e.target.style.borderColor = '#E0E4E8'}
-                                        />
-
-                                        <AnimatePresence>
-                                            {isGenerating && (
-                                                <motion.div
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0 }}
-                                                    style={{
-                                                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                                                        background: 'rgba(255, 255, 255, 0.85)',
-                                                        backdropFilter: 'blur(4px)',
-                                                        display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                                                        borderRadius: '20px', zIndex: 10, textAlign: 'center', padding: '20px'
-                                                    }}
-                                                >
+                                    <div style={{
+                                        background: '#F8F9FA', borderRadius: '24px', padding: '24px',
+                                        border: '1px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                                        display: 'flex', flexDirection: 'column', overflow: 'hidden'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                            <h4 style={{ margin: 0, color: '#1F2937', fontWeight: '900', fontSize: '1.05rem' }}>
+                                                📝 선생님 피드백
+                                            </h4>
+                                            <Button
+                                                onClick={handleGenerateSingleAI}
+                                                disabled={isGenerating}
+                                                style={{
+                                                    backgroundColor: '#3498DB', color: 'white', padding: '6px 12px',
+                                                    fontSize: '0.8rem', borderRadius: '10px'
+                                                }}
+                                            >
+                                                {isGenerating ? '✨ 분석 중...' : '✨ AI 생성'}
+                                            </Button>
+                                        </div>
+                                        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                                            <textarea
+                                                ref={textareaRef}
+                                                value={tempFeedback}
+                                                onChange={(e) => setTempFeedback(e.target.value)}
+                                                placeholder="학생에게 격려와 피드백을 남겨주세요..."
+                                                style={{
+                                                    width: '100%', minHeight: '300px', padding: '20px',
+                                                    borderRadius: '20px', border: '1px solid #D1D5DB',
+                                                    fontSize: '1.1rem', lineHeight: '1.8', outline: 'none',
+                                                    resize: 'none', transition: 'all 0.1s', color: '#374151',
+                                                    backgroundColor: '#fff'
+                                                }}
+                                            />
+                                            <AnimatePresence>
+                                                {isGenerating && (
                                                     <motion.div
-                                                        animate={{
-                                                            scale: [1, 1.2, 1],
-                                                            rotate: [0, 10, -10, 0]
-                                                        }}
-                                                        transition={{ duration: 2, repeat: Infinity }}
-                                                        style={{ fontSize: '3rem', marginBottom: '20px' }}
-                                                    >
-                                                        🤖
-                                                    </motion.div>
-                                                    <h3 style={{ margin: '0 0 10px 0', color: '#2C3E50', fontWeight: '900', fontSize: '1.2rem' }}>
-                                                        AI 선생님이 분석 중입니다...
-                                                    </h3>
-                                                    <p style={{ margin: 0, color: '#64748B', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                                                        문맥과 맞춤법을 꼼꼼히 읽고 있어요.<br />
-                                                        잠시만 기다려주세요! (약 10~15초 소요)
-                                                    </p>
-                                                    <motion.div
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        exit={{ opacity: 0 }}
                                                         style={{
-                                                            marginTop: '20px', width: '100px', height: '4px',
-                                                            background: '#E2E8F0', borderRadius: '2px', overflow: 'hidden'
+                                                            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                                            background: 'rgba(255, 255, 255, 0.9)',
+                                                            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                                                            borderRadius: '20px', zIndex: 10, textAlign: 'center'
                                                         }}
                                                     >
                                                         <motion.div
-                                                            animate={{ x: [-100, 100] }}
-                                                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                                                            style={{ width: '40px', height: '100%', background: '#3498DB' }}
-                                                        />
+                                                            animate={{ rotate: 360 }}
+                                                            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                                                            style={{ fontSize: '2rem', marginBottom: '12px' }}
+                                                        >
+                                                            🤖
+                                                        </motion.div>
+                                                        <div style={{ fontWeight: 'bold', color: '#4B5563', fontSize: '0.9rem' }}>AI가 글을 읽는 중...</div>
                                                     </motion.div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-
-                                        <AnimatePresence>
-                                            {showCompleteToast && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: -20 }}
-                                                    style={{
-                                                        position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
-                                                        background: '#2D3436', color: 'white', padding: '12px 24px',
-                                                        borderRadius: '30px', fontWeight: 'bold', fontSize: '0.9rem',
-                                                        display: 'flex', alignItems: 'center', gap: '8px', zIndex: 20,
-                                                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
-                                                    }}
-                                                >
-                                                    <span>✅ AI 피드백이 완료되었습니다!</span>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                        <p style={{ margin: '12px 0 0 0', fontSize: '0.75rem', color: '#9CA3AF', textAlign: 'center' }}>
+                                            * 피드백은 학생의 [글 보관함]에서 확인 가능합니다.
+                                        </p>
                                     </div>
-                                    <p style={{ margin: '12px 0 0 0', fontSize: '0.8rem', color: '#95A5A6', textAlign: 'center' }}>
-                                        * 피드백은 [다시 쓰기] 또는 [승인] 요청 시 학생에게 전달됩니다.
-                                    </p>
-                                </div>
-                            </aside>
+                                </aside>
+                            )}
                         </main>
 
                         <footer style={{
