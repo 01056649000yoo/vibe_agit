@@ -426,7 +426,14 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                         {editingCommentId && (
                                             <Button type="button" variant="ghost" size="sm" onClick={() => { setEditingCommentId(null); setCommentInput(''); }}>취소</Button>
                                         )}
-                                        <Button type="submit" size="sm" style={{ borderRadius: '16px', padding: '0 24px', fontWeight: '900' }} disabled={submittingComment}>
+                                        <Button
+                                            type="submit"
+                                            size="sm"
+                                            style={{ borderRadius: '16px', padding: '0 24px', fontWeight: '900', minWidth: '80px' }}
+                                            disabled={submittingComment}
+                                            loading={submittingComment}
+                                            loadingText="AI 보안관이 확인 중... 🛡️"
+                                        >
                                             {editingCommentId ? '수정' : '보내기'}
                                         </Button>
                                     </form>

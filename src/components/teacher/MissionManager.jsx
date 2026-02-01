@@ -29,7 +29,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         handleBulkRequestRewrite,
         handleFinalArchive, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
-        handleSaveDefaultRubric,
+        handleSaveDefaultRubric, handleSaveDefaultSettings,
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
         frequentTags, saveFrequentTag, removeFrequentTag
     } = useMissionManager(activeClass);
@@ -109,6 +109,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 frequentTags={frequentTags}
                 saveFrequentTag={saveFrequentTag}
                 removeFrequentTag={removeFrequentTag}
+                handleSaveDefaultSettings={handleSaveDefaultSettings}
             />
 
             {/* 미션 리스트 */}

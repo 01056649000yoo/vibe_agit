@@ -24,6 +24,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const [isEvaluationMode, setIsEvaluationMode] = useState(false);
     const [frequentTags, setFrequentTags] = useState([]);
     const [defaultRubric, setDefaultRubric] = useState(null);
+    const [missionDefaultSettings, setMissionDefaultSettings] = useState(null);
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -32,13 +33,14 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
             const { data, error } = await supabase
                 .from('profiles')
-                .select('frequent_tags, default_rubric')
+                .select('frequent_tags, default_rubric, mission_default_settings')
                 .eq('id', user.id)
                 .single();
 
             if (data) {
                 if (data.frequent_tags) setFrequentTags(data.frequent_tags);
                 if (data.default_rubric) setDefaultRubric(data.default_rubric);
+                if (data.mission_default_settings) setMissionDefaultSettings(data.mission_default_settings);
             }
         };
         fetchProfileData();
@@ -56,6 +58,21 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             }));
         }
     }, [defaultRubric, isEditing]);
+
+    // DB에서 불러온 미션 기본 설정을 폼에 적용 (새 글 작성 시에만)
+    useEffect(() => {
+        if (missionDefaultSettings && !isEditing) {
+            setFormData(prev => ({
+                ...prev,
+                min_chars: missionDefaultSettings.min_chars ?? prev.min_chars,
+                min_paragraphs: missionDefaultSettings.min_paragraphs ?? prev.min_paragraphs,
+                base_reward: missionDefaultSettings.base_reward ?? prev.base_reward,
+                bonus_threshold: missionDefaultSettings.bonus_threshold ?? prev.bonus_threshold,
+                bonus_reward: missionDefaultSettings.bonus_reward ?? prev.bonus_reward,
+                allow_comments: missionDefaultSettings.allow_comments ?? prev.allow_comments
+            }));
+        }
+    }, [missionDefaultSettings, isEditing]);
 
     const saveFrequentTag = async (tag) => {
         if (!tag || frequentTags.includes(tag)) return;
@@ -85,16 +102,20 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             { score: 1, label: '노력' }
         ];
 
+        // 로컬 스토리지에서 기본 설정 불러오기
+        const savedSettings = typeof window !== 'undefined' ? localStorage.getItem('mission_default_settings') : null;
+        const defaults = savedSettings ? JSON.parse(savedSettings) : {};
+
         return {
             title: '',
             guide: '',
             genre: '일기',
-            min_chars: 100,
-            min_paragraphs: 1,
-            base_reward: 100,
-            bonus_threshold: 100,
-            bonus_reward: 10,
-            allow_comments: true,
+            min_chars: defaults.min_chars ?? 100,
+            min_paragraphs: defaults.min_paragraphs ?? 1,
+            base_reward: defaults.base_reward ?? 100,
+            bonus_threshold: defaults.bonus_threshold ?? 100,
+            bonus_reward: defaults.bonus_reward ?? 10,
+            allow_comments: defaults.allow_comments ?? true,
             mission_type: '일기',
             guide_questions: [],
             question_count: 3,
@@ -127,6 +148,40 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         } catch (err) {
             console.error('루브릭 저장 실패:', err);
             alert('저장 중 오류가 발생했습니다.');
+        }
+    };
+
+    const handleSaveDefaultSettings = async () => {
+        const settingsToSave = {
+            min_chars: formData.min_chars,
+            min_paragraphs: formData.min_paragraphs,
+            base_reward: formData.base_reward,
+            bonus_threshold: formData.bonus_threshold,
+            bonus_reward: formData.bonus_reward,
+            allow_comments: formData.allow_comments
+        };
+
+        // 1. 로컬 스토리지 저장 (백업용)
+        localStorage.setItem('mission_default_settings', JSON.stringify(settingsToSave));
+
+        // 2. DB 프로필에 저장
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ mission_default_settings: settingsToSave })
+                    .eq('id', user.id);
+
+                if (error) throw error;
+            }
+            // 상태 업데이트하여 즉시 반영
+            setMissionDefaultSettings(settingsToSave);
+            alert('분량, 포인트, 댓글 설정이 계정에 저장되었습니다! 💾\n어디서든 로그인하면 이 설정이 기본으로 적용됩니다.');
+        } catch (err) {
+            console.error('설정 저장 실패:', err);
+            // DB 저장 실패해도 로컬스토리지는 성공했을 수 있으므로 안내 메시지 조절
+            alert('설정 저장에 저장되었으나 동기화 중 일부 오류가 발생했습니다.');
         }
     };
 
@@ -880,6 +935,8 @@ ${postArray.map((p, idx) => {
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric,
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
-        frequentTags, saveFrequentTag, removeFrequentTag
+        isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
+        frequentTags, saveFrequentTag, removeFrequentTag,
+        handleSaveDefaultSettings
     };
 };

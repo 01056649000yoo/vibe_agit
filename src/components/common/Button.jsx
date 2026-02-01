@@ -17,6 +17,7 @@ const Button = ({
     children,
     onClick,
     style,
+    loadingText = '기다려요...',
     className = ''
 }) => {
     const baseDefaultStyles = {
@@ -80,7 +81,7 @@ const Button = ({
             onClick={!disabled && !loading ? onClick : undefined}
             disabled={disabled || loading}
         >
-            {loading ? '기다려요...' : children}
+            {loading ? loadingText : children}
 
             <style>{`
         .custom-button:hover:not(:disabled) {

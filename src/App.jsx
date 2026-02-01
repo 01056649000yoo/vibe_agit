@@ -37,7 +37,7 @@ function App() {
   const [isStudentLoginMode, setIsStudentLoginMode] = useState(false)
   const [internalPage, setInternalPage] = useState({ name: 'main', params: {} }) // { name, params }
   const [loading, setLoading] = useState(true)
-  /* [수정] 관리자 모드 상태를 localStorage와 연동하여 유지 */
+  /* [수정] 관리자 모드 상태를 localStorage와 연동하여 유지 (기본값: false = 교사 대시보드) */
   const [isAdminMode, setIsAdminMode] = useState(() => {
     try {
       // 키 변경으로 캐시/기존 값 간섭 배제
@@ -46,9 +46,10 @@ function App() {
       if (saved === 'false') return false;
       if (saved === 'true') return true;
 
-      return saved !== null ? JSON.parse(saved) : true;
+      // 저장된 값이 없으면 기본적으로 false (교사 모드)
+      return false;
     } catch (e) {
-      return true;
+      return false;
     }
   });
 

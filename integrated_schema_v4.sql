@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     activity_ai_prompt TEXT,
     primary_class_id UUID,
     frequent_tags JSONB DEFAULT '[]'::jsonb,
-    default_rubric JSONB
+    default_rubric JSONB,
+    mission_default_settings JSONB
 );
 
 -- [Teachers] 선생님 상세 정보

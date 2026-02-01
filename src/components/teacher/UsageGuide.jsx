@@ -21,6 +21,7 @@ const UsageGuide = ({ isMobile }) => {
         { id: 'analysis', title: '📊 학급 분석 활용', emoji: '📊' },
         { id: 'book-publishing', title: '📚 학급 도서 출판', emoji: '📚' },
         { id: 'gpt-info', title: '🤖 GPT 인공지능 활용 안내', emoji: '🤖' },
+        { id: 'realtime-guardian', title: '🛡️ 실시간 보안관 (학생 댓글 안전)', emoji: '🛡️' },
     ];
 
     const containerStyle = {
@@ -150,14 +151,20 @@ const UsageGuide = ({ isMobile }) => {
                 </h2>
                 <div style={cardStyle}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#3498DB' }}>📝 미션 관리 및 핵심 질문 설계</h3>
-                    <p><strong>• 미션 생성:</strong> '새 미션 만들기' 버튼을 눌러 주제, 가이드 사진, 최소 글자 수, 보상 포인트를 설정합니다.</p>
-                    <p><strong>• 핵심 질문 설계 (추천):</strong>
-                        <br />미션 생성 시 <strong>[핵심 질문 설계]</strong> 기능을 활용해보세요! 학생들이 글을 쓰기 전 생각을 정리할 수 있는 질문 리스트를 미리 만들 수 있습니다.
-                        학생들은 이 질문에 답한 후 내용을 본문에 바로 삽입하여 더 풍성한 글을 쓸 수 있게 됩니다.
+                    <p><strong>• 미션 생성 및 태그 활용:</strong>
+                        <br />'새 미션 만들기'를 통해 주제와 가이드를 설정합니다. <strong>#태그</strong>를 입력하면(예: #감사일기 #독후감) 나중에 같은 주제끼리 모아볼 수 있어 관리가 편리해집니다.
                     </p>
-                    <p><strong>• AI 질문 생성:</strong>
-                        <br />직접 질문을 만들기 어렵다면 <strong>'AI 질문 생성하기'</strong> 버튼을 클릭하세요.
-                        AI가 미션 주제에 딱 맞는 질문을 자동으로 설계해줍니다. ✨
+                    <p><strong>• 핵심 질문 설계 (Scaffolding):</strong>
+                        <br />학생들이 글을 쓰기 전 생각을 정리할 수 있도록 <strong>[핵심 질문]</strong>을 3~5개 정도 미리 만들어주세요. 학생은 답변 후 내용을 본문에 바로 삽입하여 풍성한 글을 완성할 수 있습니다.
+                        <br />(직접 만들기 어렵다면 <strong>'AI 질문 생성하기'</strong> 버튼을 눌러보세요! ✨)
+                    </p>
+                    <p><strong>• 미션 세부 설정 (통합):</strong>
+                        <br />분량(글자/문단 수)과 포인트 보상(기본/보너스)을 한곳에서 조절합니다.
+                        <br />- <strong>친구 댓글 허용:</strong> 켜두면 학생들이 서로 격려 댓글을 달 수 있고, 끄면 선생님만 볼 수 있습니다.
+                        <br />- <strong>💾 설정값 기본으로 저장:</strong> 자주 쓰는 설정(예: 200자, 댓글 허용 등)은 우측 상단 저장 버튼을 누르세요. 다음 미션부터 자동으로 이 설정이 적용되어 매우 편리합니다!
+                    </p>
+                    <p><strong>• 글쓰기 평가 루브릭:</strong>
+                        <br />하단의 <strong>[평가 루브릭 사용]</strong>을 체크하여 '내용의 풍부함', '표현력' 등의 기준과 배점(상/중/하)을 미리 등록해두세요. 평가 시 클릭만으로 성취도를 기록할 수 있습니다.
                     </p>
                 </div>
 
@@ -242,9 +249,15 @@ const UsageGuide = ({ isMobile }) => {
                 </h2>
 
                 <div style={cardStyle}>
-                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#16A085' }}>1단계: 성취도 평가 및 루브릭 설정</h3>
-                    <p><strong>• 평가 기준(루브릭) 등록:</strong> 미션 생성 시 <strong>[평가 루브릭 사용]</strong>을 체크하여 '우수-보통-노력' 등 단계별 평가 기준을 설정합니다. 관리 설정에서 선생님만의 기본 루브릭을 저장해두면 매번 입력할 필요 없이 편리하게 불러올 수 있습니다.</p>
-                    <p><strong>• 학생별 성장 평가:</strong> [글쓰기 미션 현황]에서 학생의 글을 클릭한 후 <strong>'📊 성장 평가하기'</strong>를 누르세요. 처음 쓴 글과 마지막 글을 비교하며 성취 수준(점수)과 구체적인 관찰 의견을 기록할 수 있습니다.</p>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#16A085' }}>1단계: 성취도 평가 및 루브릭 활용</h3>
+                    <p><strong>• 루브릭 기반 평가:</strong>
+                        <br />미션 생성 시 등록해둔 <strong>평가 기준(루브릭)</strong>이 평가 화면에 그대로 나타납니다.
+                        <br />선생님은 학생 글을 읽으며 <strong>[우수 - 보통 - 노력]</strong> 버튼을 클릭하기만 하면 됩니다. 점수가 자동 합산되어 평가가 훨씬 객관적이고 간편해집니다. (기본 루브릭을 저장해두면 매번 입력할 필요도 없어요!)
+                    </p>
+                    <p><strong>• 학생별 성장 피드백:</strong>
+                        <br />[글쓰기 미션 현황]에서 학생 글을 클릭해 <strong>'📊 성장 평가하기'</strong>를 열어보세요.
+                        <br />루브릭 점수뿐만 아니라, 학생의 변화된 점을 구체적인 텍스트로(관찰 의견) 남길 수 있습니다. 이 기록은 나중에 <strong>'AI 쫑알이'</strong>가 생활기록부 문구를 만들 때 아주 중요한 기초 자료가 됩니다! 🌟
+                    </p>
                 </div>
 
                 <div style={cardStyle}>
@@ -376,10 +389,42 @@ const UsageGuide = ({ isMobile }) => {
                 </div>
             </section>
 
+            {/* 섹션 8: 실시간 보안관 (신규 추가) */}
+            <section id="realtime-guardian" style={sectionStyle}>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    {sections[8].title}
+                </h2>
+                <div style={cardStyle}>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#E74C3C' }}>🛡️ 학생 댓글 2단계 안전 그물망</h3>
+                    <p>끄적끄적 아지트는 학생들이 서로 격려하는 따뜻한 공간이 되도록, <strong>'실시간 보안관'</strong>이 24시간 댓글을 점검합니다. 선생님이 일일이 확인하지 않아도 안전합니다! </p>
+
+                    <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #EEE', margin: '16px 0' }}>
+                        <p style={{ margin: '0 0 8px 0' }}><strong>🔍 1단계: 금지어 차단 (즉시 차단)</strong></p>
+                        <p style={{ fontSize: '0.9rem', color: '#555' }}>
+                            욕설이나 비속어 등 명백히 나쁜 단어가 포함되면 시스템이 즉시 감지하여 등록을 막습니다.
+                        </p>
+                    </div>
+
+                    <div style={{ background: 'white', padding: '16px', borderRadius: '12px', border: '1px solid #EEE', margin: '16px 0' }}>
+                        <p style={{ margin: '0 0 8px 0' }}><strong>🤖 2단계: AI 문맥 점검 및 순화 (스마트 케어)</strong></p>
+                        <p style={{ fontSize: '0.9rem', color: '#555' }}>
+                            단어는 문제가 없더라도 비꼬거나 상처를 주는 문장이 있을 수 있죠? <br />
+                            1단계를 통과하더라도 <strong>AI가 다시 한번 문맥을 읽어보고</strong>, 친구에게 상처가 될 수 있는 표현이라면 <strong>"이렇게 말해보는 건 어때?"</strong>라고 부드럽게 순화된 표현을 제안합니다.
+                        </p>
+                    </div>
+
+                    <div style={highlightStyle}>
+                        🔑 <strong>주의사항:</strong><br />
+                        AI(GPT) API 키가 입력되지 않으면 <strong>2단계(문맥 점검 및 순화)는 작동하지 않고 건너뜁니다.</strong><br />
+                        (이 경우에도 1단계 금지어 차단은 정상적으로 작동하여 욕설은 막아줍니다.)
+                    </div>
+                </div>
+            </section>
+
             <footer style={{ textAlign: 'center', padding: '40px 0', borderTop: '1px solid #EEE', color: '#ADB5BD', fontSize: '0.9rem' }}>
                 &copy; 끄적끄적아지트-선생님의 행복한 글쓰기 교실을 응원합니다.
             </footer>
-        </motion.div>
+        </motion.div >
     );
 };
 
