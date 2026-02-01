@@ -122,7 +122,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                 background: 'rgba(0,0,0,0.6)',
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
-                zIndex: 3000,
+                zIndex: 10002, // zIndex nav(9999)보다 높게 설정
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: isMobile ? 'flex-end' : 'center',

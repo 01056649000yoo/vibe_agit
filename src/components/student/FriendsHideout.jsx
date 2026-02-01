@@ -54,20 +54,20 @@ const FriendHideoutModal = ({ classmate, onClose, isMobile }) => {
     return (
         <div style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
-            backdropFilter: 'blur(10px)', zIndex: 3000, display: 'flex',
-            justifyContent: 'center', alignItems: isMobile ? 'flex-end' : 'center',
-            padding: isMobile ? '0' : '20px'
+            backdropFilter: 'blur(10px)', zIndex: 10001, display: 'flex', // zIndex nav보다 높게 설정
+            justifyContent: 'center', alignItems: 'center', // 항상 중앙 정렬
+            padding: '20px' // 모바일에서도 여백
         }} onClick={onClose}>
             <motion.div
-                initial={{ y: isMobile ? '100%' : 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
+                initial={{ scale: 0.9, opacity: 0 }} // 팝업 효과로 변경
+                animate={{ scale: 1, opacity: 1 }}
                 onClick={e => e.stopPropagation()}
                 style={{
                     background: 'white',
                     width: '100%',
                     maxWidth: '600px',
-                    maxHeight: isMobile ? '92vh' : '90vh',
-                    borderRadius: isMobile ? '32px 32px 0 0' : '32px',
+                    maxHeight: '90vh',
+                    borderRadius: '32px', // 항상 둥근 모서리
                     position: 'relative',
                     boxShadow: `0 25px 60px rgba(0,0,0,0.4)`,
                     overflow: 'hidden',
