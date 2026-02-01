@@ -100,7 +100,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             {/* [모바일 최적화] 모바일에서는 전체 폭, PC에서는 카드 형태 유지 */}
             <Card style={isMobile ? {
                 width: '100%',
-                maxWidth: '100%',
+                maxWidth: '800px', // 태블릿 가로모드 대응 (너무 넓어짐 방지)
+                margin: '0 auto', // 중앙 정렬
                 minHeight: '100vh',
                 border: 'none',
                 borderRadius: 0,

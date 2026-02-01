@@ -11,6 +11,13 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     const [missions, setMissions] = useState([]);
     const [posts, setPosts] = useState({}); // missionId -> post 객체
     const [loading, setLoading] = useState(true);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         fetchData();
@@ -113,7 +120,22 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     };
 
     return (
-        <Card style={{ maxWidth: '650px', padding: '32px', background: '#FFFDF7', border: '2px solid #FFE082' }}>
+        <Card style={isMobile ? {
+            width: '100%',
+            maxWidth: '800px', // 태블릿 최적화
+            margin: '0 auto',
+            minHeight: '100vh',
+            padding: '20px 20px 100px 20px', // 하단 탭바 고려
+            background: '#FFFDF7',
+            border: 'none',
+            borderRadius: 0,
+            boxSizing: 'border-box'
+        } : {
+            maxWidth: '650px',
+            padding: '32px',
+            background: '#FFFDF7',
+            border: '2px solid #FFE082'
+        }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px' }}>
                 <Button variant="ghost" size="sm" onClick={onBack} style={{ marginRight: '16px' }} disabled={loading}>
                     ⬅️ 뒤로가기

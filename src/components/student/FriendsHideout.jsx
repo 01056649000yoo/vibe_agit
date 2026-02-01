@@ -217,7 +217,17 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 
     return (
         <>
-            <Card style={CONTAINER_STYLE}>
+            <Card style={isMobile ? {
+                width: '100%',
+                maxWidth: '900px', // 태블릿 최적화 (친구 아지트는 좀 더 넓게)
+                margin: '0 auto',
+                minHeight: '100vh',
+                padding: '20px 20px 100px 20px',
+                background: '#F8F9FA',
+                border: 'none',
+                borderRadius: 0,
+                boxSizing: 'border-box'
+            } : CONTAINER_STYLE}>
                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', marginBottom: '32px', gap: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <Button variant="ghost" size="sm" onClick={onBack}>⬅️ 돌아가기</Button>
