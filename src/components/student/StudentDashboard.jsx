@@ -26,7 +26,7 @@ const HIDEOUT_BACKGROUNDS = {
 };
 
 const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
@@ -67,7 +67,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     }, []);
 
     useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        const handleResize = () => setIsMobile(window.innerWidth <= 1024);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);

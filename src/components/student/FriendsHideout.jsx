@@ -185,7 +185,7 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
  * 역할: 학생 - 친구들의 글을 읽고 반응/댓글 남기기 (친구 글 아지트) 🌈
  */
 const FriendsHideout = ({ studentSession, onBack, params }) => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
     const [activeMainTab, setActiveMainTab] = useState('posts'); // 'posts' or 'dragons'
     const [viewingFriendHideout, setViewingFriendHideout] = useState(null);
     const observer = useRef();
@@ -205,7 +205,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
     }, [loading, loadingMore, hasMore, loadMore]);
 
     useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        const handleResize = () => setIsMobile(window.innerWidth <= 1024);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);

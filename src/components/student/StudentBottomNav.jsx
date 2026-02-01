@@ -47,7 +47,7 @@ const StudentBottomNav = ({ activeTab, onNavigate }) => {
                     display: none; /* 기본 숨김 (PC) */
                 }
 
-                @media (max-width: 768px) {
+                @media (max-width: 1024px) {
                     .bottom-nav-container {
                         display: flex;
                         position: fixed;
