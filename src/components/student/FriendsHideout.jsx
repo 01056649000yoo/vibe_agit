@@ -92,7 +92,7 @@ const FriendHideoutModal = ({ classmate, onClose, isMobile }) => {
                     <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                         <div style={{ marginBottom: '12px' }}>
                             <span style={{
-                                background: bg.color, color: 'white', padding: '6px 18px',
+                                background: bg.color, color: bg.textColor, padding: '6px 18px',
                                 borderRadius: '20px', fontSize: '0.9rem', fontWeight: '900',
                                 boxShadow: `0 4px 12px ${bg.glow}`, display: 'inline-block'
                             }}>
