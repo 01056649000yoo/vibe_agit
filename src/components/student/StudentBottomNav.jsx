@@ -54,7 +54,7 @@ const StudentBottomNav = ({ activeTab, onNavigate }) => {
                         bottom: 0;
                         left: 0;
                         right: 0;
-                        height: 65px; /* 약간 높게 */
+                        /* height: 65px; fixed height removed for safety */
                         background: rgba(255, 255, 255, 0.95);
                         backdrop-filter: blur(10px);
                         border-top: 1px solid rgba(0,0,0,0.05);
@@ -62,7 +62,11 @@ const StudentBottomNav = ({ activeTab, onNavigate }) => {
                         z-index: 9999;
                         justify-content: space-around;
                         align-items: center;
-                        padding-bottom: env(safe-area-inset-bottom); /* 아이폰 노치 대응 */
+                        
+                        /* Dynamic height handling */
+                        padding-top: 12px;
+                        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+                        box-sizing: border-box; 
                     }
 
                     .nav-item {
