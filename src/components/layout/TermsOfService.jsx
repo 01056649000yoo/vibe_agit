@@ -15,7 +15,7 @@ const TermsOfService = () => {
 
             <section style={{ marginBottom: '20px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '8px' }}>2. 서비스 설명</h4>
-                <p>'끄적끄적 아지트'는 교육 환경에서 학생들과 교사 간의 상호작용을 향상시키기 위한 플랫폼입니다. 본 서비스는 학생 포인트 관리, 감정 기록, 댓글 및 피드백 등의 기능을 제공합니다.</p>
+                <p><strong>'끄적끄적 아지트'</strong>는 <strong>글쓰기 활동을 기반으로 한 학급 경영 및 게이미피케이션 플랫폼</strong>입니다. 학생들의 꾸준한 글쓰기와 긍정적인 행동 강화, 퀘스트 수행, 포인트 관리 등을 통해 학급 경영을 지원하는 비교과용 에듀테크 서비스입니다.</p>
             </section>
 
             <section style={{ marginBottom: '20px' }}>
