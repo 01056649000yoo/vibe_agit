@@ -17,6 +17,7 @@ const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard')) /
 const StudentWriting = lazy(() => import('./components/student/StudentWriting'))
 const MissionList = lazy(() => import('./components/student/MissionList'))
 const FriendsHideout = lazy(() => import('./components/student/FriendsHideout'))
+const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
 const PrivacyPolicy = lazy(() => import('./components/layout/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('./components/layout/TermsOfService'))
 
@@ -294,6 +295,14 @@ function App() {
                 onBack={() => setInternalPage({ name: 'main', params: {} })}
               />
             )}
+
+            {/* [신규] 학생용 하단 모바일 내비게이션 (모바일에서만 표시됨) */}
+            <Suspense fallback={null}>
+              <StudentBottomNav
+                activeTab={internalPage.name}
+                onNavigate={(page, params) => setInternalPage({ name: page, params })}
+              />
+            </Suspense>
           </>
         ) : isStudentLoginMode ? (
           /* [3순위] 학생 로그인 화면 */

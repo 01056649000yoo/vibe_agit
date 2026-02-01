@@ -97,7 +97,20 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         <>
             <StudentGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
 
-            <Card style={{ maxWidth: '600px', background: '#FFFDF7', border: '2px solid #FFE082' }}>
+            {/* [모바일 최적화] 모바일에서는 전체 폭, PC에서는 카드 형태 유지 */}
+            <Card style={isMobile ? {
+                width: '100%',
+                maxWidth: '100%',
+                minHeight: '100vh',
+                border: 'none',
+                borderRadius: 0,
+                background: '#FFFDF7',
+                paddingBottom: '80px', // 하단 탭바 가림 방지
+            } : {
+                maxWidth: '600px',
+                background: '#FFFDF7',
+                border: '2px solid #FFE082'
+            }}>
                 {/* 헤더 섹션 */}
                 <StudentHeader
                     studentSession={studentSession}
