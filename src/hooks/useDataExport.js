@@ -206,8 +206,38 @@ export const useDataExport = () => {
             }
 
             // 3. 학생별 데이터 순차 삽입
+            let lastMissionTitle = "";
+
             data.forEach((item, index) => {
-                // (a) 학생 글 제목 (HEADING_1)
+                // [일괄 내보내기 대응] 미션 주제가 바뀌면 중간 제목(HEADING_1) 삽입
+                if (item.미션제목 !== lastMissionTitle) {
+                    // 첫 번째 항목이 아닐 때만 미션 제목 앞에 페이지 나누기 (옵션 활성화 시)
+                    if (index > 0 && usePageBreak) {
+                        requests.push({
+                            insertPageBreak: { location: { index: currentIndex } }
+                        });
+                        currentIndex += 1;
+                    }
+
+                    const missionHeader = `[미션 주제: ${item.미션제목}]\n\n`;
+                    requests.push({
+                        insertText: { location: { index: currentIndex }, text: missionHeader }
+                    });
+                    requests.push({
+                        updateParagraphStyle: {
+                            range: { startIndex: currentIndex, endIndex: currentIndex + missionHeader.length },
+                            paragraphStyle: {
+                                namedStyleType: 'HEADING_1',
+                                alignment: 'CENTER'
+                            },
+                            fields: 'namedStyleType,alignment'
+                        }
+                    });
+                    currentIndex += missionHeader.length;
+                    lastMissionTitle = item.미션제목;
+                }
+
+                // (a) 학생 글 제목 (HEADING_2) - 미션 제목이 HEADING_1이 되었으므로 레벨 조정
                 const postTitleLine = `${item.학생글제목}\n`;
                 requests.push({
                     insertText: { location: { index: currentIndex }, text: postTitleLine }
@@ -216,7 +246,7 @@ export const useDataExport = () => {
                     updateParagraphStyle: {
                         range: { startIndex: currentIndex, endIndex: currentIndex + postTitleLine.length },
                         paragraphStyle: {
-                            namedStyleType: 'HEADING_1'
+                            namedStyleType: 'HEADING_2'
                         },
                         fields: 'namedStyleType'
                     }
@@ -265,14 +295,17 @@ export const useDataExport = () => {
                 });
                 currentIndex += contentText.length;
 
-                // (c) 페이지 나누기 (마지막 학생이 아니거나 옵션 활성화 시)
-                if (usePageBreak && index < data.length - 1) {
+                // (d) 학생 간 페이지 나누기 (추가 미션 내에서의 구분)
+                // 만약 다음 항목이 다른 미션이라면 여기서 나누지 않고 상단의 미션 헤더 삽입부에서 나눔
+                const isNextDifferentMission = index < data.length - 1 && data[index + 1].미션제목 !== item.미션제목;
+
+                if (usePageBreak && index < data.length - 1 && !isNextDifferentMission) {
                     requests.push({
                         insertPageBreak: { location: { index: currentIndex } }
                     });
                     currentIndex += 1;
-                } else if (index < data.length - 1) {
-                    // 페이지 나누기 안 할 때는 줄바꿈으로 구분
+                } else if (index < data.length - 1 && !isNextDifferentMission) {
+                    // 데이터 간 줄바꿈
                     const spacer = "\n\n";
                     requests.push({ insertText: { location: { index: currentIndex }, text: spacer } });
                     currentIndex += spacer.length;

@@ -17,6 +17,7 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
     const [selectedMission, setSelectedMission] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(false);
+    const [selectedMissionIds, setSelectedMissionIds] = useState([]); // 다중 선택된 미션 ID들
 
     // 엑셀 추출 훅
     const { fetchExportData, exportToExcel, exportToGoogleDoc, isGapiLoaded } = useDataExport();
@@ -30,20 +31,70 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
         setExportModalOpen(true);
     };
 
+    const handleBulkExportClick = () => {
+        if (selectedMissionIds.length === 0) return;
+
+        // 선택한 순서대로 미션 정보 찾기
+        const selectedMissions = selectedMissionIds.map(id =>
+            archivedMissions.find(m => m.id === id)
+        ).filter(Boolean);
+
+        const selectedTitles = selectedMissions.map(m => m.title);
+
+        setExportTarget({
+            type: 'bulk_missions',
+            ids: selectedMissionIds, // 이미 클릭 순서대로 저장되어 있음
+            title: selectedTitles.join(', ')
+        });
+        setExportModalOpen(true);
+    };
+
     const handleExportConfirm = async (format, options) => {
         if (!exportTarget) return;
 
-        const data = await fetchExportData(exportTarget.type, exportTarget.id);
+        let data = [];
+        let fileName = "";
+
+        if (exportTarget.type === 'bulk_missions') {
+            setLoading(true);
+            try {
+                // 선택한 순서(exportTarget.ids)대로 데이터를 순차적으로 가져옴
+                const allData = await Promise.all(
+                    exportTarget.ids.map(async (id) => {
+                        const missionData = await fetchExportData('mission', id);
+                        return missionData;
+                    })
+                );
+
+                // 데이터 병합 (순서 유지됨)
+                data = allData.flat();
+
+                // 파일명 설정 (너무 길면 자름)
+                const baseName = exportTarget.title.length > 30
+                    ? exportTarget.title.substring(0, 30) + '...'
+                    : exportTarget.title;
+                fileName = `일괄내보내기_${baseName}`;
+            } catch (err) {
+                console.error('일괄 데이터 로드 실패:', err);
+                alert('데이터를 불러오는데 실패했습니다.');
+                setLoading(false);
+                return;
+            }
+            setLoading(false);
+        } else {
+            data = await fetchExportData(exportTarget.type, exportTarget.id);
+            fileName = `${exportTarget.title}_글모음`;
+        }
+
         if (!data || data.length === 0) {
             alert('제출된 글이 없습니다.');
             return;
         }
 
-        const fileName = `${exportTarget.title}_글모음`;
-
         if (format === 'excel') {
             exportToExcel(data, fileName);
         } else if (format === 'googleDoc') {
+            // 구글 문서의 경우 이미 useDataExport에서 item.미션제목을 출력하므로 순서대로 정렬된 data를 넘기면 됨
             await exportToGoogleDoc(data, fileName, options.usePageBreak);
         }
     };
@@ -116,6 +167,20 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
         if (!m.tags || !Array.isArray(m.tags)) return false;
         return selectedTags.every(tag => m.tags.includes(tag));
     });
+
+    const toggleMissionSelection = (id) => {
+        setSelectedMissionIds(prev =>
+            prev.includes(id) ? prev.filter(missId => missId !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelectAll = () => {
+        if (selectedMissionIds.length === filteredMissions.length) {
+            setSelectedMissionIds([]);
+        } else {
+            setSelectedMissionIds(filteredMissions.map(m => m.id));
+        }
+    };
 
     const fetchPostsForMission = async (mission) => {
         setSelectedMission(mission);
@@ -208,6 +273,60 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                 </div>
             )}
 
+            {/* 다중 선택 및 액션 바 */}
+            {filteredMissions.length > 0 && (
+                <div style={{
+                    marginBottom: '20px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '16px 24px',
+                    background: 'white',
+                    borderRadius: '20px',
+                    border: '1px solid #E9ECEF',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '10px', fontSize: '1rem', fontWeight: 'bold', color: '#2C3E50' }}>
+                            <input
+                                type="checkbox"
+                                checked={selectedMissionIds.length > 0 && selectedMissionIds.length === filteredMissions.length}
+                                onChange={handleSelectAll}
+                                style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: '#3498DB' }}
+                            />
+                            전체 선택 ({selectedMissionIds.length}/{filteredMissions.length})
+                        </label>
+                    </div>
+                    <AnimatePresence mode="wait">
+                        {selectedMissionIds.length > 0 ? (
+                            <motion.div
+                                key="bulk-btn"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                            >
+                                <Button
+                                    onClick={handleBulkExportClick}
+                                    style={{
+                                        background: '#3498DB',
+                                        color: 'white',
+                                        fontWeight: '900',
+                                        borderRadius: '14px',
+                                        padding: '10px 24px',
+                                        boxShadow: '0 4px 12px rgba(52, 152, 219, 0.3)'
+                                    }}
+                                >
+                                    📥 {selectedMissionIds.length}건 일괄 내보내기
+                                </Button>
+                            </motion.div>
+                        ) : (
+                            <div style={{ fontSize: '0.9rem', color: '#95A5A6' }}>내보낼 미션을 선택해주세요.</div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
+
+
             {loading ? (
                 <div style={{ padding: '60px', textAlign: 'center', color: '#ADB5BD' }}>데이터를 불러오는 중입니다...</div>
             ) : filteredMissions.length === 0 ? (
@@ -229,7 +348,7 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                             whileHover={{ y: -4, borderColor: '#3498DB', boxShadow: '0 8px 16px rgba(0,0,0,0.08)' }}
                             style={{
                                 background: 'white',
-                                border: '1px solid #E9ECEF',
+                                border: selectedMissionIds.includes(mission.id) ? '2px solid #3498DB' : '1px solid #E9ECEF',
                                 borderRadius: '20px',
                                 padding: '20px',
                                 display: 'flex',
@@ -238,11 +357,49 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                                 transition: 'all 0.2s ease',
                                 height: '100%',
                                 boxSizing: 'border-box',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                                boxShadow: selectedMissionIds.includes(mission.id) ? '0 4px 12px rgba(52, 152, 219, 0.15)' : '0 2px 4px rgba(0,0,0,0.02)',
+                                cursor: 'default',
+                                position: 'relative'
+                            }}
+                            onClick={(e) => {
+                                // 버튼 클릭 시가 아닐 때만 체크박스 토글
+                                if (e.target.tagName !== 'BUTTON') {
+                                    toggleMissionSelection(mission.id);
+                                }
                             }}
                         >
+                            {/* 선택 순서 표시 배지 (우측 상단) */}
+                            <div
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleMissionSelection(mission.id);
+                                }}
+                                style={{
+                                    position: 'absolute',
+                                    top: '15px',
+                                    right: '15px',
+                                    width: '24px',
+                                    height: '24px',
+                                    borderRadius: '50%',
+                                    border: selectedMissionIds.includes(mission.id) ? 'none' : '2px solid #ADB5BD',
+                                    background: selectedMissionIds.includes(mission.id) ? '#3498DB' : 'transparent',
+                                    color: 'white',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    zIndex: 5,
+                                    boxShadow: selectedMissionIds.includes(mission.id) ? '0 2px 6px rgba(52, 152, 219, 0.4)' : 'none'
+                                }}
+                            >
+                                {selectedMissionIds.includes(mission.id) ? (selectedMissionIds.indexOf(mission.id) + 1) : ''}
+                            </div>
+
                             {/* 헤더: 제목 및 날짜 */}
-                            <div style={{ marginBottom: '16px' }}>
+                            <div style={{ marginBottom: '16px', paddingRight: '25px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                                     <h4 style={{
                                         margin: 0,
