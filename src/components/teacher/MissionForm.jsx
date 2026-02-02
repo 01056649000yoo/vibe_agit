@@ -312,9 +312,8 @@ const MissionForm = ({
                                                     <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: '950', color: '#1E293B', letterSpacing: '-1px' }}>
                                                         🪄 핵심 질문 <span style={{ color: '#6366F1' }}>설계 마법사</span>
                                                     </h2>
-                                                    <p style={{ margin: '10px 0 0 0', color: '#64748B', fontSize: '1.05rem', lineHeight: '1.5' }}>
-                                                        학생들이 생각의 깊이를 더할 수 있도록<br />
-                                                        글의 구조를 잡는 징검다리 질문을 디자인합니다.
+                                                    <p style={{ margin: '14px 0 0 0', color: '#64748B', fontSize: '1.2rem', fontWeight: '500', letterSpacing: '-0.3px' }}>
+                                                        학생들이 생각의 깊이를 더할 수 있도록 글의 구조를 잡는 징검다리 질문을 디자인합니다.
                                                     </p>
                                                 </div>
                                                 <button
@@ -416,32 +415,56 @@ const MissionForm = ({
                                                             exit={{ x: 20, opacity: 0 }}
                                                             style={{
                                                                 display: 'flex',
-                                                                gap: '16px',
+                                                                gap: '24px',
                                                                 background: 'white',
-                                                                border: '2px solid #F1F5F9',
-                                                                padding: '20px',
-                                                                borderRadius: '20px',
-                                                                transition: 'all 0.2s',
-                                                                alignItems: 'center'
-                                                            }}
-                                                            onMouseOver={e => e.currentTarget.style.borderColor = '#E2E8F0'}
-                                                            onMouseOut={e => e.currentTarget.style.borderColor = '#F1F5F9'}
-                                                        >
-                                                            <div style={{
-                                                                width: '36px',
-                                                                height: '36px',
-                                                                background: '#6366F1',
-                                                                color: 'white',
-                                                                borderRadius: '12px',
-                                                                display: 'flex',
+                                                                border: '1px solid #E2E8F0',
+                                                                padding: '32px',
+                                                                borderRadius: '28px',
+                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                                                 alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                fontWeight: '900',
-                                                                flexShrink: 0,
-                                                                fontSize: '1rem',
-                                                                boxShadow: '0 4px 10px rgba(99, 102, 241, 0.2)'
-                                                            }}>
-                                                                {idx + 1}
+                                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                                                                position: 'relative'
+                                                            }}
+                                                            onMouseOver={e => {
+                                                                e.currentTarget.style.borderColor = '#6366F1';
+                                                                e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+                                                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                                            }}
+                                                            onMouseOut={e => {
+                                                                e.currentTarget.style.borderColor = '#E2E8F0';
+                                                                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
+                                                                e.currentTarget.style.transform = 'translateY(0)';
+                                                            }}
+                                                        >
+                                                            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                                <div style={{
+                                                                    width: '42px',
+                                                                    height: '42px',
+                                                                    background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
+                                                                    color: 'white',
+                                                                    borderRadius: '14px',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    fontWeight: '900',
+                                                                    flexShrink: 0,
+                                                                    fontSize: '1.2rem',
+                                                                    boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)',
+                                                                    zIndex: 2
+                                                                }}>
+                                                                    {idx + 1}
+                                                                </div>
+                                                                {idx < (formData.guide_questions?.length - 1) && (
+                                                                    <div style={{
+                                                                        position: 'absolute',
+                                                                        top: '42px',
+                                                                        bottom: '-36px',
+                                                                        width: '4px',
+                                                                        background: 'linear-gradient(to bottom, #E2E8F0 50%, transparent 50%)',
+                                                                        backgroundSize: '4px 12px',
+                                                                        zIndex: 1
+                                                                    }} />
+                                                                )}
                                                             </div>
                                                             <textarea
                                                                 value={q}
@@ -453,14 +476,28 @@ const MissionForm = ({
                                                                 style={{
                                                                     flex: 1,
                                                                     border: 'none',
-                                                                    background: 'transparent',
+                                                                    background: '#F8FAFC',
+                                                                    padding: '20px 24px',
+                                                                    borderRadius: '20px',
                                                                     resize: 'none',
-                                                                    fontSize: '1.1rem',
-                                                                    color: '#1E293B',
+                                                                    fontSize: '1.2rem',
+                                                                    fontWeight: '600',
+                                                                    color: '#0F172A',
                                                                     outline: 'none',
                                                                     fontFamily: 'inherit',
-                                                                    padding: '4px 0',
-                                                                    lineHeight: '1.6'
+                                                                    lineHeight: '1.7',
+                                                                    border: '1px solid transparent',
+                                                                    transition: 'all 0.2s'
+                                                                }}
+                                                                onFocus={e => {
+                                                                    e.currentTarget.style.background = 'white';
+                                                                    e.currentTarget.style.borderColor = '#6366F1';
+                                                                    e.currentTarget.style.boxShadow = '0 0 0 4px rgba(99, 102, 241, 0.1)';
+                                                                }}
+                                                                onBlur={e => {
+                                                                    e.currentTarget.style.background = '#F8FAFC';
+                                                                    e.currentTarget.style.borderColor = 'transparent';
+                                                                    e.currentTarget.style.boxShadow = 'none';
                                                                 }}
                                                                 rows={2}
                                                                 placeholder="질문 내용을 입력해주세요..."
@@ -516,7 +553,7 @@ const MissionForm = ({
                                             </div>
 
                                             {/* 하단 버튼 */}
-                                            <div style={{ display: 'flex', gap: '16px' }}>
+                                            < div style={{ display: 'flex', gap: '16px' }}>
                                                 <Button
                                                     onClick={() => setIsQuestionModalOpen(false)}
                                                     style={{
@@ -941,14 +978,14 @@ const MissionForm = ({
                                         {isEditing ? '수정 완료 ✏️' : '글쓰기 미션 공개하기 🚀'}
                                     </Button>
                                 </div>
-                            </form>
-                        </Card>
-                    </motion.div>
+                            </form >
+                        </Card >
+                    </motion.div >
                 )}
-            </AnimatePresence>
+            </AnimatePresence >
 
             {/* AI 핵심 질문 생성 로딩 오버레이 (최상단 레이어 보장) */}
-            <AnimatePresence>
+            < AnimatePresence >
                 {isGeneratingQuestions && typeof document !== 'undefined' && createPortal(
                     <motion.div
                         key="ai-loading-root"
@@ -989,7 +1026,7 @@ const MissionForm = ({
                     </motion.div>,
                     document.body
                 )}
-            </AnimatePresence>
+            </AnimatePresence >
         </>
     );
 };
