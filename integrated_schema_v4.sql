@@ -74,7 +74,8 @@ CREATE TABLE IF NOT EXISTS public.students (
     selected_items JSONB DEFAULT '{"background": "default", "desk": "default"}'::jsonb,
     pet_data JSONB DEFAULT '{"name": "드래곤", "level": 1, "exp": 0}'::jsonb,
     last_feedback_check TIMESTAMP WITH TIME ZONE DEFAULT '1970-01-01 00:00:00+00',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE -- v4.2 추가: 학생 Soft Delete 지원
 );
 
 -- [Writing Missions] 글쓰기 미션
@@ -138,6 +139,19 @@ CREATE TABLE IF NOT EXISTS public.post_reactions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     CONSTRAINT unique_post_student_reaction UNIQUE (post_id, student_id)
 );
+
+-- 유예 기간(3일)이 지난 삭제 데이터 자동 정리를 위한 함수 (Cron 등 외부 도구에서 호출 가능)
+-- 운영자가 직접 실행하거나 Supabase Edge Functions 등으로 주기적 실행 권장
+CREATE OR REPLACE FUNCTION public.cleanup_expired_deletions()
+RETURNS void AS $$
+BEGIN
+    -- 3일이 지난 학급 삭제
+    DELETE FROM public.classes WHERE deleted_at < now() - interval '3 days';
+    
+    -- 3일이 지난 학생 삭제
+    DELETE FROM public.students WHERE deleted_at < now() - interval '3 days';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- [Point Logs] 포인트 내역
 CREATE TABLE IF NOT EXISTS public.point_logs (

@@ -25,10 +25,13 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
         selectedStudentForCode, setSelectedStudentForCode, historyStudent, historyLogs, loadingHistory,
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
         handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, openHistoryModal,
-        toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, isGapiLoaded
+        toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, isGapiLoaded,
+        fetchDeletedStudents, handleRestoreStudent
     } = useStudentManager(classId);
 
     const [recordStudent, setRecordStudent] = useState(null);
+    const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
+    const [deletedStudents, setDeletedStudents] = useState([]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -60,6 +63,18 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
         setExportModalOpen(true);
     };
 
+    const handleOpenTrash = async () => {
+        const data = await fetchDeletedStudents();
+        setDeletedStudents(data);
+        setIsTrashModalOpen(true);
+    };
+
+    const handleRestore = async (id) => {
+        await handleRestoreStudent(id);
+        const data = await fetchDeletedStudents();
+        setDeletedStudents(data);
+    };
+
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
             {/* 상단 헤더 섹션 */}
@@ -75,6 +90,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                 handleAddStudent={handleAddStudent}
                 isAdding={isAdding}
                 setIsAllCodesModalOpen={setIsAllCodesModalOpen}
+                onOpenTrash={handleOpenTrash}
             />
 
             {/* 메인 리스트 섹션 */}
@@ -142,6 +158,10 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                 setIsAllCodesModalOpen={setIsAllCodesModalOpen}
                 selectedStudentForCode={selectedStudentForCode}
                 students={students}
+                isTrashModalOpen={isTrashModalOpen}
+                setIsTrashModalOpen={setIsTrashModalOpen}
+                deletedStudents={deletedStudents}
+                handleRestore={handleRestore}
             />
 
             {/* 엑셀/구글문서 내보내기 선택 모달 */}

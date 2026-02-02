@@ -4,7 +4,7 @@ import Button from '../common/Button';
 const StudentManagerHeader = ({
     isDashboardMode, isMobile, toggleSelectAll, setIsPointModalOpen,
     selectedIds, students, studentName, setStudentName, handleAddStudent,
-    isAdding, setIsAllCodesModalOpen
+    isAdding, setIsAllCodesModalOpen, onOpenTrash
 }) => {
     if (isDashboardMode) {
         return (
@@ -22,6 +22,14 @@ const StudentManagerHeader = ({
             }}>
                 <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.2rem', color: '#212529', fontWeight: '900' }}>👥 활동지수랭킹</h3>
                 <div style={{ display: 'flex', gap: '8px' }}>
+                    <Button
+                        onClick={onOpenTrash}
+                        variant="ghost"
+                        size="sm"
+                        style={{ fontSize: '0.75rem', color: '#6C757D', padding: '4px 8px', minHeight: '36px' }}
+                    >
+                        ♻️ 복구함
+                    </Button>
                     <Button
                         onClick={toggleSelectAll}
                         variant="ghost"
@@ -72,6 +80,14 @@ const StudentManagerHeader = ({
                     />
                     <Button onClick={handleAddStudent} disabled={isAdding} size="sm">추가</Button>
                 </div>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onOpenTrash}
+                    style={{ background: '#F8F9FA', border: '1px solid #E9ECEF', color: '#7F8C8D', fontWeight: 'bold' }}
+                >
+                    ♻️ 복구함
+                </Button>
                 <Button
                     variant="ghost"
                     size="sm"

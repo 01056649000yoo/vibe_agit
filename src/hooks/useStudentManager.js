@@ -36,11 +36,12 @@ export const useStudentManager = (classId) => {
     const fetchStudents = useCallback(async () => {
         if (!classId) return;
 
-        // 1. 학생 데이터 조회
+        // 1. 학생 데이터 조회 (삭제되지 않은 학생만)
         const { data: studentsData, error } = await supabase
             .from('students')
             .select('*')
             .eq('class_id', classId)
+            .is('deleted_at', null)
             .order('created_at', { ascending: true });
 
         if (error || !studentsData) {
@@ -162,15 +163,71 @@ export const useStudentManager = (classId) => {
     const handleDeleteStudent = async () => {
         if (!deleteTarget) return;
         try {
-            const { error } = await supabase.from('students').delete().eq('id', deleteTarget.id);
+            // Soft Delete: 삭제 일시 기록
+            const { error } = await supabase
+                .from('students')
+                .update({ deleted_at: new Date().toISOString() })
+                .eq('id', deleteTarget.id);
+
             if (error) throw error;
+
             setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
             setSelectedIds(prev => prev.filter(id => id !== deleteTarget.id));
+
+            alert(`[${deleteTarget.name}] 학생이 삭제 대기 상태로 이동되었습니다. 📦\n3일 이내에 복구할 수 있으며, 이후에는 영구 삭제됩니다.`);
         } catch (error) {
             alert('삭제 실패: ' + error.message);
         } finally {
             setIsDeleteModalOpen(false);
             setDeleteTarget(null);
+        }
+    };
+
+    const fetchDeletedStudents = async () => {
+        if (!classId) return [];
+        try {
+            const threeDaysAgo = new Date();
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+            // 1. 3일이 지난 학생 자동 정리 (클라이언트 호출 시 사이드 이펙트로 처리)
+            await supabase
+                .from('students')
+                .delete()
+                .eq('class_id', classId)
+                .not('deleted_at', 'is', null)
+                .lt('deleted_at', threeDaysAgo.toISOString());
+
+            // 2. 복구 가능한 학생 조회
+            const { data, error } = await supabase
+                .from('students')
+                .select('*')
+                .eq('class_id', classId)
+                .not('deleted_at', 'is', null)
+                .gte('deleted_at', threeDaysAgo.toISOString())
+                .order('deleted_at', { ascending: false });
+
+            if (error) throw error;
+            return data || [];
+        } catch (err) {
+            console.error('삭제된 학생 조회 실패:', err.message);
+            return [];
+        }
+    };
+
+    const handleRestoreStudent = async (studentId) => {
+        if (!studentId) return;
+        try {
+            const { error } = await supabase
+                .from('students')
+                .update({ deleted_at: null })
+                .eq('id', studentId);
+
+            if (error) throw error;
+            await fetchStudents();
+            alert('학생 정보가 성공적으로 복구되었습니다! ♻️');
+        } catch (err) {
+            console.error('학생 복구 실패:', err.message);
+            alert('복구 중 오류가 발생했습니다.');
         }
     };
 
@@ -223,6 +280,7 @@ export const useStudentManager = (classId) => {
         selectedStudentForCode, setSelectedStudentForCode, historyStudent, historyLogs, loadingHistory,
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
         handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, openHistoryModal,
-        toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, fetchStudents, isGapiLoaded
+        toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, fetchStudents, isGapiLoaded,
+        fetchDeletedStudents, handleRestoreStudent
     };
 };
