@@ -121,6 +121,8 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         setSelectedMissionIds(newIds);
     };
 
+    const pendingHistoryRef = React.useRef(null);
+
     useEffect(() => {
         const loadAndSynthesize = async () => {
             if (selectedMissionIds.length === 0) {
@@ -157,6 +159,24 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                     if (saved) savedResults = JSON.parse(saved);
                 }
 
+                // [추가] 불러오기 예약된 이력이 있다면 덮어쓰기 (Ref 사용으로 재렌더링 방지)
+                if (pendingHistoryRef.current) {
+                    const parsedResults = parseHistoryContent(pendingHistoryRef.current.content);
+                    Object.keys(parsedResults).forEach(name => {
+                        const student = classStudents.find(s => s.name === name);
+                        if (student) {
+                            savedResults[student.id] = parsedResults[name];
+                        }
+                    });
+
+                    // 불러온 이력을 로컬 스토리지에도 즉시 저장
+                    if (persistenceKey) {
+                        localStorage.setItem(persistenceKey, JSON.stringify(savedResults));
+                    }
+
+                    pendingHistoryRef.current = null; // 사용 후 초기화
+                }
+
                 // 학생 ID별로 포스트 그룹화
                 const postMap = (postsData || []).reduce((acc, p) => {
                     if (!acc[p.student_id]) acc[p.student_id] = [];
@@ -171,7 +191,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                     ai_synthesis: savedResults[student.id] || ''
                 }));
 
-                // 게시물이 하나라도 있는 학생만 보여주거나, 전체를 보여줌 (여기서는 일단 참여 학생만 필터링)
+                // 게시물이 하나라도 있는 학생만 보여주거나, 전체를 보여줌
                 const activeInMissions = synthesized.filter(s => s.posts.length > 0);
 
                 setStudentPosts(activeInMissions);
@@ -496,14 +516,21 @@ ${activitiesInfo}`;
                                             onMouseLeave={(e) => e.currentTarget.style.background = '#F8FAFC'}
                                             onClick={() => {
                                                 // 1. 해당 미션들을 선택
-                                                setSelectedMissionIds(record.mission_ids || []);
+                                                const targetMissionIds = record.mission_ids || [];
+                                                setSelectedMissionIds(targetMissionIds);
 
-                                                // 2. 저장된 결과 파싱하여 학생 목록에 적용
+                                                // 2. 불러오기 예약 (데이터 로드 완료 후 적용됨 - Ref 사용)
+                                                pendingHistoryRef.current = record;
+
+                                                // 3. 만약 이미 해당 미션들이 로드되어 있다면 즉시 반영 시도 (사용자 경험 향상)
                                                 const parsedResults = parseHistoryContent(record.content);
-                                                setStudentPosts(prev => prev.map(s => ({
-                                                    ...s,
-                                                    ai_synthesis: parsedResults[s.student.name] || s.ai_synthesis
-                                                })));
+                                                setStudentPosts(prev => {
+                                                    if (prev.length === 0) return prev;
+                                                    return prev.map(s => ({
+                                                        ...s,
+                                                        ai_synthesis: parsedResults[s.student.name] || s.ai_synthesis
+                                                    }));
+                                                });
 
                                                 alert(`${new Date(record.created_at).toLocaleString()}에 생성된 기록을 불러왔습니다.`);
                                             }}
