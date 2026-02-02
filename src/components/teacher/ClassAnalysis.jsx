@@ -79,7 +79,7 @@ const ClassAnalysis = ({ classId, isMobile }) => {
             let notSubmittedStudents = [];
             if (missions && missions.length > 0) {
                 const latestMissionId = missions[0].id;
-                const submittedPosts = posts ? posts.filter(p => p.mission_id === latestMissionId && p.is_submitted) : [];
+                const submittedPosts = posts ? posts.filter(p => p.mission_id === latestMissionId && p.is_confirmed) : [];
                 const submittedIds = new Set(submittedPosts.map(p => p.student_id));
                 notSubmittedStudents = students.filter(s => !submittedIds.has(s.id)).map(s => s.name);
             }
@@ -89,7 +89,7 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                 const d = new Date();
                 d.setDate(d.getDate() - i);
                 const dayStr = d.toISOString().split('T')[0];
-                const count = posts ? posts.filter(p => p.is_submitted && p.created_at?.startsWith(dayStr)).length : 0;
+                const count = posts ? posts.filter(p => p.is_confirmed && p.created_at?.startsWith(dayStr)).length : 0;
                 return { date: dayStr, count };
             }).reverse();
 
@@ -100,7 +100,7 @@ const ClassAnalysis = ({ classId, isMobile }) => {
             const missionAvgMap = {};
 
             const missionRates = recentMissions.map(m => {
-                const missionPosts = posts ? posts.filter(p => p.mission_id === m.id && p.is_submitted) : [];
+                const missionPosts = posts ? posts.filter(p => p.mission_id === m.id && p.is_confirmed) : [];
                 const submittedCount = missionPosts.length;
                 const rate = students.length > 0 ? Math.round((submittedCount / students.length) * 100) : 0;
 
