@@ -74,9 +74,30 @@ const LandingPage = ({ onStudentLoginClick }) => {
                 </Button>
             </div>
 
-            <p style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#999', fontWeight: '500' }}>
-                나만의 글쓰기 아지트로 입장해요 🏠
-            </p>
+            <div style={{ marginTop: '2rem' }}>
+                <p style={{ fontSize: '0.9rem', color: '#999', fontWeight: '500', marginBottom: '1rem' }}>
+                    나만의 글쓰기 아지트로 입장해요 🏠
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', fontSize: '0.85rem' }}>
+                    <a
+                        href="https://moduai.notion.site/_-2fb79937a97380148743fa935dfa768c?source=copy_link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#6366F1', textDecoration: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                        📚 교사용 가이드
+                    </a>
+                    <span style={{ color: '#DDD' }}>|</span>
+                    <a
+                        href="https://moduai.notion.site/_-2fb79937a97380c99dacd9fe11182473?source=copy_link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#F59E0B', textDecoration: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                        📖 학생용 가이드
+                    </a>
+                </div>
+            </div>
         </Card>
     );
 };
