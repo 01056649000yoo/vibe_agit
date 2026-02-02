@@ -549,24 +549,29 @@ ${postArray.map((p, idx) => {
             return;
         }
 
-        if (!confirm(`${targetPosts.length}개의 글에 대해 AI 피드백을 생성(2명씩 묶음 처리)하고, '다시 쓰기'를 일괄 요청하시겠습니까? 🤖♻️`)) return;
+        if (!confirm(`${targetPosts.length}개의 글에 대해 AI 피드백을 생성하고, '다시 쓰기'를 일괄 요청하시겠습니까? 🤖♻️`)) return;
 
         setIsGenerating(true);
         setProgress({ current: 0, total: targetPosts.length });
 
         try {
             let processedCount = 0;
-            // 2명씩 묶어서 처리
-            for (let i = 0; i < targetPosts.length; i += 2) {
-                const chunk = targetPosts.slice(i, i + 2);
+            // 1명씩 처리
+            for (let i = 0; i < targetPosts.length; i++) {
+                const chunk = targetPosts.slice(i, i + 1);
                 try {
-                    const results = await fetchAIFeedback(chunk.map(p => ({
+                    let results = await fetchAIFeedback(chunk.map(p => ({
                         id: p.id,
                         title: p.title,
                         content: p.content,
                         student_answers: p.student_answers,
                         student_name: p.students?.name
                     })));
+
+                    // 결과가 단일 문자열인 경우 배열 형식으로 변환
+                    if (results && !Array.isArray(results)) {
+                        results = [{ id: chunk[0].id, feedback: results }];
+                    }
 
                     if (results && Array.isArray(results)) {
                         for (const res of results) {
@@ -597,7 +602,7 @@ ${postArray.map((p, idx) => {
                     setProgress(prev => ({ ...prev, current: Math.min(processedCount, targetPosts.length) }));
 
                     // API 부하 방지 지연
-                    if (i + 2 < targetPosts.length) {
+                    if (i + 1 < targetPosts.length) {
                         await new Promise(resolve => setTimeout(resolve, 800));
                     }
                 } catch (innerErr) {
@@ -607,7 +612,7 @@ ${postArray.map((p, idx) => {
 
             setShowCompleteToast(true);
             setTimeout(() => setShowCompleteToast(false), 3000);
-            alert('모든 글에 대한 2인 단위 일괄 처리가 완료되었습니다! ✨');
+            alert('모든 글에 대한 일괄 처리가 완료되었습니다! ✨');
             fetchPostsForMission(selectedMission);
         } catch (err) {
             alert('일괄 처리 중 오류가 발생했습니다.');

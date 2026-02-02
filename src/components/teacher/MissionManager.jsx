@@ -176,6 +176,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
             <BulkAIProgressModal
                 isGenerating={isGenerating}
                 progress={progress}
+                title="일괄 AI 피드백을 작성 중이에요"
+                description="학생들의 글을 하나하나 읽고 피드백을 생성하고 있습니다."
             />
 
             {/* AI 핵심 질문 생성 진행 모달 (미션 설계용) */}
