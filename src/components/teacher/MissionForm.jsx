@@ -271,8 +271,8 @@ const MissionForm = ({
                                 </div>
 
                                 {typeof document !== 'undefined' && isQuestionModalOpen && createPortal(
-                                    /* ... existing modal code ... */
                                     <div
+                                        onClick={() => setIsQuestionModalOpen(false)}
                                         style={{
                                             position: 'fixed',
                                             top: 0, left: 0, right: 0, bottom: 0,
@@ -281,15 +281,386 @@ const MissionForm = ({
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            padding: '20px',
+                                            padding: isMobile ? '10px' : '20px',
                                             backdropFilter: 'blur(8px)',
-                                            WebkitBackdropFilter: 'blur(8px)'
+                                            WebkitBackdropFilter: 'blur(8px)',
+                                            overflowY: 'auto'
                                         }}
                                     >
-                                        {/* ... modal content ... */}
-                                        {/* NOTE: I cannot use '...' in replacement. I need to be careful not to break the modal if I targeted wrong lines.
-                                            Actually, I can just target the line 415 where the next div starts.
-                                        */}
+                                        <motion.div
+                                            initial={{ scale: 0.9, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            exit={{ scale: 0.9, opacity: 0 }}
+                                            onClick={(e) => e.stopPropagation()}
+                                            style={{
+                                                width: '100%',
+                                                maxWidth: isMobile ? '100%' : '900px',
+                                                maxHeight: '90vh',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                backgroundColor: 'white',
+                                                borderRadius: isMobile ? '16px' : '24px',
+                                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
+                                            {/* 헤더 (고정) */}
+                                            <div style={{
+                                                padding: isMobile ? '16px' : '24px',
+                                                borderBottom: '2px solid #E8F4F8',
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                color: 'white',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                flexShrink: 0
+                                            }}>
+                                                <h3 style={{
+                                                    margin: 0,
+                                                    fontSize: isMobile ? '1.1rem' : '1.4rem',
+                                                    fontWeight: '900',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px'
+                                                }}>
+                                                    🎯 핵심 질문 설계
+                                                </h3>
+                                                <button
+                                                    onClick={() => setIsQuestionModalOpen(false)}
+                                                    style={{
+                                                        background: 'rgba(255,255,255,0.2)',
+                                                        border: 'none',
+                                                        color: 'white',
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        borderRadius: '50%',
+                                                        cursor: 'pointer',
+                                                        fontSize: '1.2rem',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+
+                                            {/* 콘텐츠 (스크롤 가능) */}
+                                            <div style={{
+                                                flex: 1,
+                                                overflowY: 'auto',
+                                                padding: isMobile ? '16px' : '24px',
+                                                backgroundColor: '#FAFBFC'
+                                            }}>
+                                                <div style={{
+                                                    background: '#E8F4F8',
+                                                    padding: isMobile ? '12px' : '16px',
+                                                    borderRadius: '12px',
+                                                    marginBottom: '20px',
+                                                    border: '1px solid #B8E6F5'
+                                                }}>
+                                                    <p style={{
+                                                        margin: 0,
+                                                        fontSize: isMobile ? '0.85rem' : '0.9rem',
+                                                        color: '#2C3E50',
+                                                        lineHeight: '1.6'
+                                                    }}>
+                                                        💡 <strong>핵심 질문</strong>은 학생들이 글을 쓰기 전에 생각을 정리할 수 있도록 돕는 가이드입니다.
+                                                        AI가 주제에 맞는 질문을 자동으로 생성하거나, 직접 입력할 수 있습니다.
+                                                    </p>
+                                                </div>
+
+                                                {/* 질문 개수 선택 (간결한 슬라이더) */}
+                                                <div style={{
+                                                    background: '#F9FAFB',
+                                                    padding: isMobile ? '12px 16px' : '14px 18px',
+                                                    borderRadius: '12px',
+                                                    border: '1px solid #E5E7EB',
+                                                    marginBottom: '16px'
+                                                }}>
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: isMobile ? '12px' : '16px',
+                                                        flexWrap: isMobile ? 'wrap' : 'nowrap'
+                                                    }}>
+                                                        <label style={{
+                                                            fontSize: '0.85rem',
+                                                            fontWeight: '600',
+                                                            color: '#6B7280',
+                                                            whiteSpace: 'nowrap',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '6px'
+                                                        }}>
+                                                            📊 AI 질문 개수
+                                                        </label>
+
+                                                        <div style={{
+                                                            flex: 1,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '12px',
+                                                            minWidth: isMobile ? '100%' : '200px'
+                                                        }}>
+                                                            <input
+                                                                type="range"
+                                                                min="1"
+                                                                max="5"
+                                                                value={formData.question_count || 3}
+                                                                onChange={(e) => setFormData({ ...formData, question_count: parseInt(e.target.value) })}
+                                                                style={{
+                                                                    flex: 1,
+                                                                    height: '6px',
+                                                                    borderRadius: '3px',
+                                                                    outline: 'none',
+                                                                    background: `linear-gradient(to right, 
+                                                                        #8B5CF6 0%, 
+                                                                        #8B5CF6 ${((formData.question_count || 3) - 1) * 25}%, 
+                                                                        #E5E7EB ${((formData.question_count || 3) - 1) * 25}%, 
+                                                                        #E5E7EB 100%)`,
+                                                                    WebkitAppearance: 'none',
+                                                                    cursor: 'pointer'
+                                                                }}
+                                                            />
+                                                            <span style={{
+                                                                fontSize: '0.9rem',
+                                                                fontWeight: 'bold',
+                                                                color: '#8B5CF6',
+                                                                minWidth: '35px',
+                                                                textAlign: 'center'
+                                                            }}>
+                                                                {formData.question_count || 3}개
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <style>{`
+                                                        input[type="range"]::-webkit-slider-thumb {
+                                                            -webkit-appearance: none;
+                                                            appearance: none;
+                                                            width: 18px;
+                                                            height: 18px;
+                                                            border-radius: 50%;
+                                                            background: #8B5CF6;
+                                                            cursor: pointer;
+                                                            box-shadow: 0 1px 4px rgba(139, 92, 246, 0.3);
+                                                            border: 2px solid white;
+                                                            transition: all 0.2s;
+                                                        }
+                                                        input[type="range"]::-moz-range-thumb {
+                                                            width: 18px;
+                                                            height: 18px;
+                                                            border-radius: 50%;
+                                                            background: #8B5CF6;
+                                                            cursor: pointer;
+                                                            box-shadow: 0 1px 4px rgba(139, 92, 246, 0.3);
+                                                            border: 2px solid white;
+                                                            transition: all 0.2s;
+                                                        }
+                                                        input[type="range"]::-webkit-slider-thumb:hover {
+                                                            transform: scale(1.15);
+                                                            box-shadow: 0 2px 6px rgba(139, 92, 246, 0.4);
+                                                        }
+                                                        input[type="range"]::-moz-range-thumb:hover {
+                                                            transform: scale(1.15);
+                                                            box-shadow: 0 2px 6px rgba(139, 92, 246, 0.4);
+                                                        }
+                                                    `}</style>
+                                                </div>
+
+                                                {/* AI 생성 버튼 */}
+                                                <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+                                                    <Button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (!formData.title?.trim()) {
+                                                                alert('먼저 글쓰기 주제를 입력해주세요!');
+                                                                return;
+                                                            }
+                                                            handleGenerateQuestions(formData.question_count || 3);
+                                                        }}
+                                                        disabled={isGeneratingQuestions}
+                                                        style={{
+                                                            background: 'linear-gradient(135deg, #36D1DC 0%, #5B86E0 100%)',
+                                                            color: 'white',
+                                                            fontWeight: 'bold',
+                                                            padding: isMobile ? '12px 20px' : '14px 28px',
+                                                            fontSize: isMobile ? '0.9rem' : '1rem',
+                                                            borderRadius: '14px',
+                                                            border: 'none',
+                                                            boxShadow: '0 4px 15px rgba(91, 134, 224, 0.3)',
+                                                            cursor: isGeneratingQuestions ? 'not-allowed' : 'pointer',
+                                                            opacity: isGeneratingQuestions ? 0.6 : 1,
+                                                            width: isMobile ? '100%' : 'auto'
+                                                        }}
+                                                    >
+                                                        {isGeneratingQuestions ? '⏳ AI가 질문을 만들고 있어요...' : `🪄 AI로 질문 자동 생성`}
+                                                    </Button>
+                                                </div>
+
+                                                {/* 질문 목록 */}
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                                    {(formData.guide_questions || []).map((question, index) => (
+                                                        <div
+                                                            key={index}
+                                                            style={{
+                                                                background: 'white',
+                                                                padding: isMobile ? '14px' : '18px',
+                                                                borderRadius: '16px',
+                                                                border: '2px solid #E0E7FF',
+                                                                boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                                                            }}
+                                                        >
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '10px',
+                                                                marginBottom: '10px'
+                                                            }}>
+                                                                <span style={{
+                                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                                    color: 'white',
+                                                                    width: isMobile ? '28px' : '32px',
+                                                                    height: isMobile ? '28px' : '32px',
+                                                                    borderRadius: '50%',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    fontWeight: 'bold',
+                                                                    fontSize: isMobile ? '0.85rem' : '0.9rem',
+                                                                    flexShrink: 0
+                                                                }}>
+                                                                    {index + 1}
+                                                                </span>
+                                                                <input
+                                                                    type="text"
+                                                                    value={question}
+                                                                    onChange={(e) => {
+                                                                        const newQuestions = [...formData.guide_questions];
+                                                                        newQuestions[index] = e.target.value;
+                                                                        setFormData({ ...formData, guide_questions: newQuestions });
+                                                                    }}
+                                                                    placeholder={`질문 ${index + 1}을 입력하세요`}
+                                                                    style={{
+                                                                        flex: 1,
+                                                                        padding: isMobile ? '10px' : '12px',
+                                                                        border: '1px solid #C7D2FE',
+                                                                        borderRadius: '10px',
+                                                                        fontSize: isMobile ? '0.9rem' : '1rem',
+                                                                        outline: 'none',
+                                                                        transition: 'all 0.2s'
+                                                                    }}
+                                                                    onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                                                                    onBlur={(e) => e.target.style.borderColor = '#C7D2FE'}
+                                                                />
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const newQuestions = formData.guide_questions.filter((_, i) => i !== index);
+                                                                        setFormData({ ...formData, guide_questions: newQuestions });
+                                                                    }}
+                                                                    style={{
+                                                                        background: '#FEE2E2',
+                                                                        border: 'none',
+                                                                        color: '#DC2626',
+                                                                        width: isMobile ? '32px' : '36px',
+                                                                        height: isMobile ? '32px' : '36px',
+                                                                        borderRadius: '50%',
+                                                                        cursor: 'pointer',
+                                                                        fontSize: '1.1rem',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        flexShrink: 0,
+                                                                        transition: 'all 0.2s'
+                                                                    }}
+                                                                    onMouseEnter={e => e.currentTarget.style.background = '#FCA5A5'}
+                                                                    onMouseLeave={e => e.currentTarget.style.background = '#FEE2E2'}
+                                                                >
+                                                                    🗑️
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+
+                                                    {/* 질문 추가 버튼 */}
+                                                    <button
+                                                        onClick={() => {
+                                                            setFormData({
+                                                                ...formData,
+                                                                guide_questions: [...(formData.guide_questions || []), '']
+                                                            });
+                                                        }}
+                                                        style={{
+                                                            background: 'white',
+                                                            border: '2px dashed #C7D2FE',
+                                                            padding: isMobile ? '14px' : '18px',
+                                                            borderRadius: '16px',
+                                                            cursor: 'pointer',
+                                                            color: '#667eea',
+                                                            fontWeight: 'bold',
+                                                            fontSize: isMobile ? '0.9rem' : '1rem',
+                                                            transition: 'all 0.2s',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '8px'
+                                                        }}
+                                                        onMouseEnter={e => {
+                                                            e.currentTarget.style.background = '#F5F3FF';
+                                                            e.currentTarget.style.borderColor = '#667eea';
+                                                        }}
+                                                        onMouseLeave={e => {
+                                                            e.currentTarget.style.background = 'white';
+                                                            e.currentTarget.style.borderColor = '#C7D2FE';
+                                                        }}
+                                                    >
+                                                        ➕ 질문 추가하기
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* 푸터 (고정) */}
+                                            <div style={{
+                                                padding: isMobile ? '16px' : '20px 24px',
+                                                borderTop: '1px solid #E5E7EB',
+                                                background: 'white',
+                                                display: 'flex',
+                                                gap: '12px',
+                                                flexShrink: 0
+                                            }}>
+                                                <Button
+                                                    type="button"
+                                                    onClick={() => setIsQuestionModalOpen(false)}
+                                                    style={{
+                                                        flex: 1,
+                                                        background: '#F3F4F6',
+                                                        color: '#6B7280',
+                                                        fontWeight: 'bold',
+                                                        height: isMobile ? '48px' : '52px',
+                                                        fontSize: isMobile ? '0.95rem' : '1rem'
+                                                    }}
+                                                >
+                                                    취소
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    onClick={() => setIsQuestionModalOpen(false)}
+                                                    style={{
+                                                        flex: 2,
+                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                        color: 'white',
+                                                        fontWeight: 'bold',
+                                                        height: isMobile ? '48px' : '52px',
+                                                        fontSize: isMobile ? '0.95rem' : '1rem'
+                                                    }}
+                                                >
+                                                    ✅ 완료
+                                                </Button>
+                                            </div>
+                                        </motion.div>
                                     </div>,
                                     document.body
                                 )}
