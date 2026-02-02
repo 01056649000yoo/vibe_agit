@@ -31,7 +31,7 @@ export const useStudentManager = (classId) => {
         reason: '참여도가 높아요! 🌟'
     });
 
-    const { fetchExportData, exportToExcel, exportToGoogleDoc } = useDataExport();
+    const { fetchExportData, exportToExcel, exportToGoogleDoc, isGapiLoaded } = useDataExport();
 
     const fetchStudents = useCallback(async () => {
         if (!classId) return;
@@ -223,6 +223,6 @@ export const useStudentManager = (classId) => {
         selectedStudentForCode, setSelectedStudentForCode, historyStudent, historyLogs, loadingHistory,
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
         handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, openHistoryModal,
-        toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, fetchStudents
+        toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, fetchStudents, isGapiLoaded
     };
 };

@@ -25,7 +25,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
         selectedStudentForCode, setSelectedStudentForCode, historyStudent, historyLogs, loadingHistory,
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
         handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, openHistoryModal,
-        toggleSelectAll, handleExportConfirm, toggleSelection, copyCode
+        toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, isGapiLoaded
     } = useStudentManager(classId);
 
     const [recordStudent, setRecordStudent] = useState(null);
@@ -149,10 +149,12 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                 isOpen={exportModalOpen}
                 onClose={() => setExportModalOpen(false)}
                 onConfirm={handleExportConfirm}
-                title={exportTarget?.title ? `${exportTarget.title} 학생의 글 내보내기` : '데이터 내보내기'}
+                title={exportTarget?.title ? `${exportTarget.title} 학생` : '데이터 내보내기'}
+                isGapiLoaded={isGapiLoaded}
             />
         </div>
     );
 };
+
 
 export default StudentManager;

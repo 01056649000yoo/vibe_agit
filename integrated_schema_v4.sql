@@ -1,8 +1,9 @@
 -- ====================================================================
--- [VIBE_TEST 통합 마스터 스키마 (Master Schema) v4 - Finalized]
+-- [VIBE_TEST 통합 마스터 스키마 (Master Schema) v4.1 - Updated]
 -- 작성일: 2026-02-02
 -- 설명: Supabase에 적용된 모든 로직(테이블, 정책, 초기 설정)을 통합한 최종 버전입니다.
---       v3 피드백 정책, post_comments 상태(status), frequent_tags 컬럼 등을 모두 포함합니다.
+--       v4 기능 + student_records 테이블 추가 (생기부 도우미 기록 저장)
+--       classes.class_name → name, student_posts에 title, is_submitted 추가
 -- ====================================================================
 
 -- 1. 정책 및 권한 초기화 (Clean Start)
@@ -51,7 +52,7 @@ CREATE TABLE IF NOT EXISTS public.teachers (
 -- [Classes] 학급 정보
 CREATE TABLE IF NOT EXISTS public.classes (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    class_name TEXT NOT NULL,
+    name TEXT NOT NULL,
     grade INTEGER,
     class_number INTEGER,
     teacher_id UUID REFERENCES public.teachers(id) ON DELETE CASCADE,
@@ -102,7 +103,9 @@ CREATE TABLE IF NOT EXISTS public.student_posts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     mission_id UUID REFERENCES public.writing_missions(id) ON DELETE CASCADE,
     student_id UUID REFERENCES public.students(id) ON DELETE CASCADE,
+    title TEXT,
     content TEXT NOT NULL,
+    is_submitted BOOLEAN DEFAULT false,
     status TEXT DEFAULT 'submitted',
     original_content TEXT,
     original_title TEXT,
@@ -161,6 +164,36 @@ CREATE TABLE IF NOT EXISTS public.feedback_reports (
   status TEXT DEFAULT 'open',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- [Student Records] 생기부 도우미 및 AI쫑알이 기록 저장
+CREATE TABLE IF NOT EXISTS public.student_records (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    student_id UUID REFERENCES public.students(id) ON DELETE CASCADE,
+    class_id UUID REFERENCES public.classes(id) ON DELETE CASCADE NOT NULL,
+    teacher_id UUID REFERENCES public.teachers(id) ON DELETE CASCADE NOT NULL,
+    
+    -- 기록 타입: 'record_assistant' (생기부 도우미) 또는 'ai_comment' (AI쫑알이)
+    record_type TEXT DEFAULT 'record_assistant',
+    
+    -- 내용
+    content TEXT NOT NULL,
+    tags TEXT[] DEFAULT '{}',
+    mission_ids UUID[] DEFAULT '{}', -- AI쫑알이에서 선택한 미션 ID들
+    
+    -- 메타 정보
+    byte_size INTEGER DEFAULT 0,
+    activity_count INTEGER DEFAULT 0,
+    
+    -- 타임스탬프
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 인덱스 생성
+CREATE INDEX IF NOT EXISTS idx_student_records_student_id ON public.student_records(student_id);
+CREATE INDEX IF NOT EXISTS idx_student_records_class_id ON public.student_records(class_id);
+CREATE INDEX IF NOT EXISTS idx_student_records_created_at ON public.student_records(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_student_records_type ON public.student_records(record_type);
 
 
 -- 3. 함수 정의
@@ -229,6 +262,21 @@ CREATE POLICY "view_feedback_policy" ON feedback_reports FOR SELECT USING (auth.
 CREATE POLICY "insert_feedback_policy" ON feedback_reports FOR INSERT WITH CHECK (auth.uid() = teacher_id);
 CREATE POLICY "update_feedback_policy" ON feedback_reports FOR UPDATE USING (is_admin());
 CREATE POLICY "delete_feedback_policy" ON feedback_reports FOR DELETE USING (is_admin());
+
+-- [4-8] Student Records (생기부 도우미)
+ALTER TABLE public.student_records ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Teachers can view their class student records" ON student_records FOR SELECT USING (
+    teacher_id IN (SELECT id FROM public.teachers WHERE id = auth.uid())
+);
+CREATE POLICY "Teachers can insert their class student records" ON student_records FOR INSERT WITH CHECK (
+    teacher_id IN (SELECT id FROM public.teachers WHERE id = auth.uid())
+);
+CREATE POLICY "Teachers can update their class student records" ON student_records FOR UPDATE USING (
+    teacher_id IN (SELECT id FROM public.teachers WHERE id = auth.uid())
+);
+CREATE POLICY "Teachers can delete their class student records" ON student_records FOR DELETE USING (
+    teacher_id IN (SELECT id FROM public.teachers WHERE id = auth.uid())
+);
 
 
 -- 5. 초기 데이터 및 실시간 설정

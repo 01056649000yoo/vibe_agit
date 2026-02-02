@@ -1,5 +1,4 @@
 import { useState, useEffect, Suspense, lazy } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { supabase } from './lib/supabaseClient'
 import './App.css'
 
@@ -19,8 +18,8 @@ const StudentWriting = lazy(() => import('./components/student/StudentWriting'))
 const MissionList = lazy(() => import('./components/student/MissionList'))
 const FriendsHideout = lazy(() => import('./components/student/FriendsHideout'))
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
-const PrivacyPolicyPage = lazy(() => import('./components/layout/PrivacyPolicyPage'))
-const TermsOfServicePage = lazy(() => import('./components/layout/TermsOfServicePage'))
+const PrivacyPolicy = lazy(() => import('./components/layout/PrivacyPolicy'))
+const TermsOfService = lazy(() => import('./components/layout/TermsOfService'))
 
 /**
  * 역할: 전역 상태 관리 및 라우팅 (메인 진입점)
@@ -228,135 +227,116 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* 독립 페이지 라우트 */}
-        <Route path="/privacy-policy" element={
-          <Suspense fallback={<Loading />}>
-            <PrivacyPolicyPage />
-          </Suspense>
-        } />
-        <Route path="/terms-of-service" element={
-          <Suspense fallback={<Loading />}>
-            <TermsOfServicePage />
-          </Suspense>
-        } />
+    <Layout full={!!studentSession || (!!session && !!profile)}>
+      <Suspense fallback={<Loading />}>
+        {loading ? (
+          <Loading />
+        ) : session ? (
+          /* [1순위] 교사 세션 존재 시 (프로필 또는 선생님 정보 미설정 포함) */
+          (!profile || !profile.role || !profile.teacherName || !profile.schoolName) ? (
+            <TeacherProfileSetup
+              email={session.user.email}
+              onTeacherStart={handleTeacherStart}
+              onLogout={handleLogout}
+            />
+          ) : (profile.role === 'ADMIN' && isAdminMode) ? ( /* [0순위] 관리자 확인 + 관리자 모드 */
+            <AdminDashboard
+              session={session}
+              onLogout={handleLogout}
+              onSwitchToTeacherMode={() => setAdminModeHandler(false)}
+            />
+          ) : !profile.is_approved ? ( /* [1.5순위] 승인 대기 확인 */
+            <PendingApproval onLogout={handleLogout} />
+          ) : (
+            <TeacherDashboard
+              profile={profile}
+              session={session}
+              activeClass={activeClass}
+              setActiveClass={setActiveClass}
+              onProfileUpdate={() => fetchProfile(session.user.id)}
+              onLogout={handleLogout}
+              onNavigate={(page, params) => setInternalPage({ name: page, params })}
+              internalPage={internalPage}
+              setInternalPage={setInternalPage}
+              isAdmin={profile.role === 'ADMIN'}
+              onSwitchToAdminMode={() => setAdminModeHandler(true)}
+            />
+          )
+        ) : studentSession ? (
+          /* [2순위] 학생 모드 (교사 세션이 없을 때) */
+          <>
+            {internalPage.name === 'main' && (
+              <StudentDashboard
+                studentSession={studentSession}
+                onLogout={handleStudentLogout}
+                onNavigate={(page, params) => setInternalPage({ name: page, params })}
+              />
+            )}
+            {internalPage.name === 'mission_list' && (
+              <MissionList
+                studentSession={studentSession}
+                onBack={() => setInternalPage({ name: 'main', params: {} })}
+                onNavigate={(page, params) => setInternalPage({ name: page, params })}
+              />
+            )}
+            {internalPage.name === 'writing' && (
+              <StudentWriting
+                studentSession={studentSession}
+                missionId={internalPage.params.missionId}
+                params={internalPage.params}
+                onBack={() => setInternalPage({ name: 'mission_list', params: {} })}
+                onNavigate={(page, params) => setInternalPage({ name: page, params })}
+              />
+            )}
+            {internalPage.name === 'friends_hideout' && (
+              <FriendsHideout
+                studentSession={studentSession}
+                params={internalPage.params}
+                onBack={() => setInternalPage({ name: 'main', params: {} })}
+              />
+            )}
 
-        {/* 메인 앱 라우트 */}
-        <Route path="*" element={
-          <Layout full={!!studentSession || (!!session && !!profile)}>
-            <Suspense fallback={<Loading />}>
-              {loading ? (
-                <Loading />
-              ) : session ? (
-                /* [1순위] 교사 세션 존재 시 (프로필 또는 선생님 정보 미설정 포함) */
-                (!profile || !profile.role || !profile.teacherName || !profile.schoolName) ? (
-                  <TeacherProfileSetup
-                    email={session.user.email}
-                    onTeacherStart={handleTeacherStart}
-                    onLogout={handleLogout}
-                  />
-                ) : (profile.role === 'ADMIN' && isAdminMode) ? ( /* [0순위] 관리자 확인 + 관리자 모드 */
-                  <AdminDashboard
-                    session={session}
-                    onLogout={handleLogout}
-                    onSwitchToTeacherMode={() => setAdminModeHandler(false)}
-                  />
-                ) : !profile.is_approved ? ( /* [1.5순위] 승인 대기 확인 */
-                  <PendingApproval onLogout={handleLogout} />
-                ) : (
-                  <TeacherDashboard
-                    profile={profile}
-                    session={session}
-                    activeClass={activeClass}
-                    setActiveClass={setActiveClass}
-                    onProfileUpdate={() => fetchProfile(session.user.id)}
-                    onLogout={handleLogout}
-                    onNavigate={(page, params) => setInternalPage({ name: page, params })}
-                    internalPage={internalPage}
-                    setInternalPage={setInternalPage}
-                    isAdmin={profile.role === 'ADMIN'}
-                    onSwitchToAdminMode={() => setAdminModeHandler(true)}
-                  />
-                )
-              ) : studentSession ? (
-                /* [2순위] 학생 모드 (교사 세션이 없을 때) */
-                <>
-                  {internalPage.name === 'main' && (
-                    <StudentDashboard
-                      studentSession={studentSession}
-                      onLogout={handleStudentLogout}
-                      onNavigate={(page, params) => setInternalPage({ name: page, params })}
-                    />
-                  )}
-                  {internalPage.name === 'mission_list' && (
-                    <MissionList
-                      studentSession={studentSession}
-                      onBack={() => setInternalPage({ name: 'main', params: {} })}
-                      onNavigate={(page, params) => setInternalPage({ name: page, params })}
-                    />
-                  )}
-                  {internalPage.name === 'writing' && (
-                    <StudentWriting
-                      studentSession={studentSession}
-                      missionId={internalPage.params.missionId}
-                      params={internalPage.params}
-                      onBack={() => setInternalPage({ name: 'mission_list', params: {} })}
-                      onNavigate={(page, params) => setInternalPage({ name: page, params })}
-                    />
-                  )}
-                  {internalPage.name === 'friends_hideout' && (
-                    <FriendsHideout
-                      studentSession={studentSession}
-                      params={internalPage.params}
-                      onBack={() => setInternalPage({ name: 'main', params: {} })}
-                    />
-                  )}
-
-                  {/* [신규] 학생용 하단 모바일 내비게이션 (모바일에서만 표시됨) */}
-                  <Suspense fallback={null}>
-                    <StudentBottomNav
-                      activeTab={internalPage.name}
-                      onNavigate={(page, params) => setInternalPage({ name: page, params })}
-                    />
-                  </Suspense>
-                </>
-              ) : isStudentLoginMode ? (
-                /* [3순위] 학생 로그인 화면 */
-                <StudentLogin
-                  onLoginSuccess={async (data) => {
-                    // 학생 로그인 시 만약 교사 세션이 남아있다면 강제 로그아웃 (에러 무시)
-                    if (session) {
-                      try {
-                        await supabase.auth.signOut();
-                      } catch (e) {
-                        console.warn("Cleanup signout failed:", e);
-                      }
-                    }
-
-                    const sessionData = {
-                      id: data.id,
-                      name: data.name,
-                      code: data.student_code,
-                      classId: data.class_id,
-                      className: data.classes?.name,
-                      role: 'STUDENT'
-                    };
-                    setStudentSession(sessionData);
-                    setIsStudentLoginMode(false);
-                    setInternalPage({ name: 'main', params: {} });
-                  }}
-                  onBack={() => setIsStudentLoginMode(false)}
-                />
-              ) : (
-                /* [4순위] 비로그인 (랜딩 페이지) */
-                <LandingPage onStudentLoginClick={() => setIsStudentLoginMode(true)} />
-              )}
+            {/* [신규] 학생용 하단 모바일 내비게이션 (모바일에서만 표시됨) */}
+            <Suspense fallback={null}>
+              <StudentBottomNav
+                activeTab={internalPage.name}
+                onNavigate={(page, params) => setInternalPage({ name: page, params })}
+              />
             </Suspense>
-          </Layout>
-        } />
-      </Routes>
-    </BrowserRouter>
+          </>
+        ) : isStudentLoginMode ? (
+          /* [3순위] 학생 로그인 화면 */
+          <StudentLogin
+            onLoginSuccess={async (data) => {
+              // 학생 로그인 시 만약 교사 세션이 남아있다면 강제 로그아웃 (에러 무시)
+              if (session) {
+                try {
+                  await supabase.auth.signOut();
+                } catch (e) {
+                  console.warn("Cleanup signout failed:", e);
+                }
+              }
+
+              const sessionData = {
+                id: data.id,
+                name: data.name,
+                code: data.student_code,
+                classId: data.class_id,
+                className: data.classes?.name,
+                role: 'STUDENT'
+              };
+              setStudentSession(sessionData);
+              setIsStudentLoginMode(false);
+              setInternalPage({ name: 'main', params: {} });
+            }}
+            onBack={() => setIsStudentLoginMode(false)}
+          />
+        ) : (
+          /* [4순위] 비로그인 (랜딩 페이지) */
+          <LandingPage onStudentLoginClick={() => setIsStudentLoginMode(true)} />
+        )}
+      </Suspense>
+    </Layout>
   )
 }
 

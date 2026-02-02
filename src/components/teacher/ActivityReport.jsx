@@ -24,6 +24,8 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     const [batchLoading, setBatchLoading] = useState(false);
     const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
     const [expandedStudentId, setExpandedStudentId] = useState(null);
+    const [generationHistory, setGenerationHistory] = useState([]);
+    const [teacherId, setTeacherId] = useState(null);
 
     // 로컬 스토리지 키 생성 (해당 학급 + 선택된 미션 조합별 유니크 키)
     const persistenceKey = useMemo(() => {
@@ -59,6 +61,47 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    // 교사 ID 가져오기 및 이력 로드
+    useEffect(() => {
+        const fetchTeacherAndHistory = async () => {
+            if (!activeClass?.id) return;
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data: teacherData } = await supabase
+                .from('teachers')
+                .select('id')
+                .eq('id', user.id)
+                .single();
+
+            if (teacherData) {
+                setTeacherId(teacherData.id);
+                await loadGenerationHistory(activeClass.id);
+            }
+        };
+        fetchTeacherAndHistory();
+    }, [activeClass?.id]);
+
+    // 생성 이력 불러오기
+    const loadGenerationHistory = async (classId) => {
+        if (!classId) return;
+        const { data, error } = await supabase
+            .from('student_records')
+            .select('*')
+            .eq('class_id', classId)
+            .eq('record_type', 'ai_comment')
+            .is('student_id', null)
+            .order('created_at', { ascending: false });
+
+        if (!error && data) {
+            console.log('생성 이력 로드:', data); // 디버깅용
+            setGenerationHistory(data);
+        } else if (error) {
+            console.error('생성 이력 로드 실패:', error);
+        }
+    };
 
     // 2. 태그 필터링
     const filteredMissions = missions.filter(m => {
@@ -230,7 +273,6 @@ ${activitiesInfo}`;
                     setBatchProgress(prev => ({ ...prev, current: i + 1 }));
                     continue;
                 }
-
                 try {
                     const prompt = getStudentPrompt(data.student.name, data.posts);
                     const review = await callAI({ prompt, type: 'AI_FEEDBACK' });
@@ -240,8 +282,10 @@ ${activitiesInfo}`;
                         ));
                         saveToPersistence(data.student.id, review);
                     }
+                    // ✅ 진행 상태 업데이트 추가
                     setBatchProgress(prev => ({ ...prev, current: i + 1 }));
-                    await new Promise(r => setTimeout(r, 800)); // Rate limiting safety
+                    // ✅ AI API 과부하 방지를 위한 짧은 휴식 추가
+                    await new Promise(r => setTimeout(r, 800));
                 } catch (err) {
                     console.error(`학생 ${data.student.name} 처리 중 오류:`, err);
                 }
@@ -251,7 +295,81 @@ ${activitiesInfo}`;
             alert('일괄 처리를 시작하는 도중 오류가 발생했습니다.');
         } finally {
             setBatchLoading(false);
+
+            // ✅ 상태 업데이트가 반영될 시간을 준 뒤 저장 함수 호출
+            setTimeout(async () => {
+                // 저장 함수 내 로직을 보강하여 현재 렌더링된 최신 데이터를 가져오도록 합니다.
+                await saveGenerationHistory();
+            }, 1000);
+
             alert(isRegen ? '일괄 AI 쫑알이 재생성이 완료되었습니다! ✨' : '일괄 AI쫑알이 생성이 완료되었습니다! ✨');
+        }
+    };
+
+    // 저장된 텍스트에서 학생별 분석 결과 파싱
+    const parseHistoryContent = (content) => {
+        const results = {};
+        const sections = content.split('\n\n---\n\n');
+        sections.forEach(section => {
+            const match = section.match(/^\[(.*?)\]\n([\s\S]*)$/);
+            if (match) {
+                const [_, name, synthesis] = match;
+                results[name] = synthesis;
+            }
+        });
+        return results;
+    };
+
+    // 생성 이력 저장
+    const saveGenerationHistory = async () => {
+        if (!teacherId || selectedMissionIds.length === 0) return;
+
+        try {
+            // ✅ 현재 studentPosts 상태에서 ai_synthesis가 있는 것들만 취합
+            // studentPosts 자체는 최신 상태를 유지하므로 여기서 직접 참조합니다.
+            const currentResults = studentPosts.filter(s => s.ai_synthesis);
+
+            if (currentResults.length === 0) {
+                console.log('저장할 분석 결과가 없습니다.');
+                return;
+            }
+
+            // 1. 학급 전체 이력용 (기존 유지)
+            const combinedContent = currentResults
+                .map(s => `[${s.student.name}]\n${s.ai_synthesis}`)
+                .join('\n\n---\n\n');
+
+            await supabase
+                .from('student_records')
+                .insert({
+                    class_id: activeClass.id,
+                    teacher_id: teacherId,
+                    record_type: 'ai_comment',
+                    content: combinedContent,
+                    mission_ids: selectedMissionIds,
+                    activity_count: currentResults.length
+                });
+
+            // 2. ✅ 개별 학생별 기록 저장 (학생 명단에서 조회하기 위함)
+            const individualRecords = currentResults.map(s => ({
+                student_id: s.student.id,
+                class_id: activeClass.id,
+                teacher_id: teacherId,
+                record_type: 'ai_comment',
+                content: s.ai_synthesis,
+                mission_ids: selectedMissionIds,
+                activity_count: s.posts.length
+            }));
+
+            const { error: indError } = await supabase
+                .from('student_records')
+                .insert(individualRecords);
+
+            if (indError) throw indError;
+
+            await loadGenerationHistory(activeClass.id);
+        } catch (err) {
+            console.error('생성 이력 저장 실패:', err);
         }
     };
 
@@ -351,6 +469,60 @@ ${activitiesInfo}`;
                             ))}
                         </div>
                     </div>
+
+                    {/* 생성 이력 */}
+                    {generationHistory.length > 0 && (
+                        <div style={{ background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 'bold', marginBottom: '12px' }}>📚 생성 이력 ({generationHistory.length}건)</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
+                                {generationHistory.map(record => {
+                                    const missionTitles = record.mission_ids?.map(id => {
+                                        const mission = missions.find(m => m.id === id);
+                                        return mission?.title || '미션';
+                                    }).join(', ') || '정보 없음';
+
+                                    return (
+                                        <div
+                                            key={record.id}
+                                            style={{
+                                                padding: '12px',
+                                                background: '#F8FAFC',
+                                                borderRadius: '12px',
+                                                border: '1px solid #E2E8F0',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = '#EEF2FF'}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = '#F8FAFC'}
+                                            onClick={() => {
+                                                // 1. 해당 미션들을 선택
+                                                setSelectedMissionIds(record.mission_ids || []);
+
+                                                // 2. 저장된 결과 파싱하여 학생 목록에 적용
+                                                const parsedResults = parseHistoryContent(record.content);
+                                                setStudentPosts(prev => prev.map(s => ({
+                                                    ...s,
+                                                    ai_synthesis: parsedResults[s.student.name] || s.ai_synthesis
+                                                })));
+
+                                                alert(`${new Date(record.created_at).toLocaleString()}에 생성된 기록을 불러왔습니다.`);
+                                            }}
+                                        >
+                                            <div style={{ fontSize: '0.7rem', color: '#6366F1', fontWeight: 'bold', marginBottom: '4px' }}>
+                                                {new Date(record.created_at).toLocaleString('ko-KR')}
+                                            </div>
+                                            <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '4px' }}>
+                                                {record.activity_count}명 분석 완료
+                                            </div>
+                                            <div style={{ fontSize: '0.7rem', color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {missionTitles}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </aside>
 
                 {/* 메인 리스트 영역 (클린 테이블 UI) */}

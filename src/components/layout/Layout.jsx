@@ -1,10 +1,13 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import TermsOfService from './TermsOfService';
+import PrivacyPolicy from './PrivacyPolicy';
+import Modal from '../common/Modal';
 
 /**
  * Layout 공통 컴포넌트 (따뜻한 파스텔 배경 및 하단 푸터 포함) ✨
  */
 const Layout = ({ children, fullHeight = true, full = false }) => {
+    const [modalContent, setModalContent] = useState(null); // 'terms' | 'privacy' | null
 
     const layoutStyle = full ? {
         width: '100%',
@@ -56,19 +59,19 @@ const Layout = ({ children, fullHeight = true, full = false }) => {
                         gap: '24px',
                         flexWrap: 'wrap'
                     }}>
-                        <Link
-                            to="/terms-of-service"
-                            style={{ textDecoration: 'none', fontSize: '1rem', color: '#37474F', fontWeight: '900' }}
+                        <button
+                            onClick={() => setModalContent('terms')}
+                            style={{ background: 'none', border: 'none', padding: 0, textDecoration: 'none', fontSize: '1rem', color: '#37474F', cursor: 'pointer', fontWeight: '900' }}
                         >
                             이용약관
-                        </Link>
+                        </button>
                         <span style={{ color: '#CFD8DC' }}>|</span>
-                        <Link
-                            to="/privacy-policy"
-                            style={{ textDecoration: 'none', fontSize: '1rem', color: '#37474F', fontWeight: '900' }}
+                        <button
+                            onClick={() => setModalContent('privacy')}
+                            style={{ background: 'none', border: 'none', padding: 0, textDecoration: 'none', fontSize: '1rem', color: '#37474F', cursor: 'pointer', fontWeight: '900' }}
                         >
                             개인정보 처리방침
-                        </Link>
+                        </button>
                         <span style={{ color: '#CFD8DC' }}>|</span>
                         <span style={{ fontSize: '1rem', color: '#37474F', fontWeight: '900' }}>
                             상호명: 끄적끄적 아지트
@@ -95,6 +98,16 @@ const Layout = ({ children, fullHeight = true, full = false }) => {
                     </div>
                 </div>
             </footer>
+
+            {/* 약관/개인정보 모달 */}
+            <Modal
+                isOpen={!!modalContent}
+                onClose={() => setModalContent(null)}
+                title={modalContent === 'terms' ? '서비스 이용약관 📜' : '개인정보 처리방침 🛡️'}
+                maxWidth="1200px"
+            >
+                {modalContent === 'terms' ? <TermsOfService /> : <PrivacyPolicy />}
+            </Modal>
         </div>
     );
 };
