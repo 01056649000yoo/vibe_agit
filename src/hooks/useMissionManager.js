@@ -790,7 +790,7 @@ ${postArray.map((p, idx) => {
                 .eq('id', post.student_id)
                 .single();
 
-            const newPoints = (stData?.total_points || 0) - amountToRecover;
+            const newPoints = Math.max(0, (stData?.total_points || 0) - amountToRecover);
             await supabase.from('students').update({ total_points: newPoints }).eq('id', post.student_id);
 
             await supabase.from('point_logs').insert({
@@ -839,7 +839,7 @@ ${postArray.map((p, idx) => {
                         const { data: st } = await supabase.from('students').select('total_points').eq('id', post.student_id).single();
                         await Promise.all([
                             supabase.from('student_posts').update({ is_confirmed: false, is_submitted: true }).eq('id', post.id),
-                            supabase.from('students').update({ total_points: (st?.total_points || 0) - amount }).eq('id', post.student_id),
+                            supabase.from('students').update({ total_points: Math.max(0, (st?.total_points || 0) - amount) }).eq('id', post.student_id),
                             supabase.from('point_logs').insert({
                                 student_id: post.student_id,
                                 post_id: post.id,

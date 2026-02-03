@@ -182,10 +182,9 @@ export const useDataExport = () => {
 
             const requests = [];
 
-            // 2. [주제/제목] 삽입 및 안내 문구 추가
+            // 2. [주제/제목] 삽입 (새 문서일 경우만 최상단에 추가)
             if (!targetDocId) {
-                // (a) 본문 최상단 제목
-                const headerText = `${fullTitle}\n`;
+                const headerText = `${fullTitle}\n\n`;
                 requests.push({
                     insertText: { location: { index: currentIndex }, text: headerText }
                 });
@@ -200,30 +199,6 @@ export const useDataExport = () => {
                     }
                 });
                 currentIndex += headerText.length;
-
-                // (b) 목차 생성 방법 안내 (구글 API 제한으로 인해 자동 삽입이 불가능하므로 가이드 제공)
-                const guideText = "\n[ ✍️ 목차를 만드는 방법 ]\n본 문서는 자동 목차 생성을 위한 헤더 스타일이 모두 적용되어 있습니다.\n상단 메뉴에서 [삽입] -> [목차]를 선택하시면 즉시 목차가 완성됩니다! ✨\n\n";
-                requests.push({
-                    insertText: { location: { index: currentIndex }, text: guideText }
-                });
-                requests.push({
-                    updateTextStyle: {
-                        range: { startIndex: currentIndex, endIndex: currentIndex + guideText.length },
-                        textStyle: {
-                            italic: true,
-                            foregroundColor: { color: { rgbColor: { red: 0.2, green: 0.5, blue: 0.8 } } }
-                        },
-                        fields: 'italic,foregroundColor'
-                    }
-                });
-                currentIndex += guideText.length;
-
-                // (c) 페이지 나누기 (안내 문구 다음 본문)
-                requests.push({
-                    insertPageBreak: { location: { index: currentIndex } }
-                });
-                currentIndex += 1;
-
             } else {
                 const separator = "\n--- 새로운 데이터 추가 ---\n\n";
                 requests.push({ insertText: { location: { index: currentIndex }, text: separator } });
@@ -236,7 +211,7 @@ export const useDataExport = () => {
             data.forEach((item, index) => {
                 const currentGroupValue = groupBy === 'student' ? item.작성자 : item.미션제목;
 
-                // 그룹(섹션)이 바뀌면 헤더 삽입 (이 헤더들이 목차에 표시됨)
+                // 그룹(섹션)이 바뀌면 헤더 삽입
                 if (currentGroupValue !== lastGroupValue) {
                     // 첫 번째 항목이 아닐 때만 페이지 나누기 (옵션 활성화 시)
                     if (index > 0 && usePageBreak) {
@@ -247,8 +222,8 @@ export const useDataExport = () => {
                     }
 
                     const headerText = groupBy === 'student'
-                        ? `${item.작성자}\n`
-                        : `${item.미션제목}\n`;
+                        ? `[학생: ${item.작성자}]\n\n`
+                        : `[미션 주제: ${item.미션제목}]\n\n`;
 
                     requests.push({
                         insertText: { location: { index: currentIndex }, text: headerText }
@@ -258,7 +233,7 @@ export const useDataExport = () => {
                             range: { startIndex: currentIndex, endIndex: currentIndex + headerText.length },
                             paragraphStyle: {
                                 namedStyleType: 'HEADING_1',
-                                alignment: 'START'
+                                alignment: 'CENTER'
                             },
                             fields: 'namedStyleType,alignment'
                         }
@@ -267,10 +242,12 @@ export const useDataExport = () => {
                     lastGroupValue = currentGroupValue;
                 }
 
-                // (a) 소제목 (HEADING_2) - 개별 글 제목도 목차에 표시되도록 설정
+                // (a) 소제목 (HEADING_2)
+                // 학생별 모드일 때: 미션제목이 소제목
+                // 미션별 모드일 때: 학생글제목이 소제목 (기존 방식)
                 const subTitleText = groupBy === 'student'
                     ? `📄 ${item.미션제목} : ${item.학생글제목}\n`
-                    : `👤 ${item.작성자} : ${item.학생글제목}\n`;
+                    : `${item.학생글제목}\n`;
 
                 requests.push({
                     insertText: { location: { index: currentIndex }, text: subTitleText }
@@ -286,8 +263,37 @@ export const useDataExport = () => {
                 });
                 currentIndex += subTitleText.length;
 
-                // (b) 작성자 정보 (기호에 따라 본문에 추가 노출)
-                // 작성자 이름이 이미 HEADING_2에 포함되어 있으므로 추가 텍스트 보다는 본문으로 바로 진입 가능
+                // (b) 학생 이름 (작성자: 이름)
+                // 학생별 모드인 경우 이미 헤더가 학생 이름이므로 중복 표시 제외
+                if (groupBy !== 'student') {
+                    const nameLine = `작성자: ${item.작성자}\n\n`;
+                    requests.push({
+                        insertText: { location: { index: currentIndex }, text: nameLine }
+                    });
+                    requests.push({
+                        updateParagraphStyle: {
+                            range: { startIndex: currentIndex, endIndex: currentIndex + nameLine.length },
+                            paragraphStyle: {
+                                namedStyleType: 'NORMAL_TEXT',
+                                alignment: 'START'
+                            },
+                            fields: 'namedStyleType,alignment'
+                        }
+                    });
+                    requests.push({
+                        updateTextStyle: {
+                            range: { startIndex: currentIndex, endIndex: currentIndex + nameLine.length - 2 },
+                            textStyle: { bold: true },
+                            fields: 'bold'
+                        }
+                    });
+                    currentIndex += nameLine.length;
+                } else {
+                    // 학생별 모드에서는 작성자 생략하고 간격만 살짝
+                    const spacer = "\n";
+                    requests.push({ insertText: { location: { index: currentIndex }, text: spacer } });
+                    currentIndex += spacer.length;
+                }
 
                 // (c) 글 내용 (본문)
                 const contentText = `${item.내용}\n`;
@@ -307,6 +313,7 @@ export const useDataExport = () => {
                 currentIndex += contentText.length;
 
                 // (d) 학생 간 페이지 나누기 (추가 미션 내에서의 구분)
+                // 만약 다음 항목이 다른 그룹(미션/학생)이라면 여기서 나누지 않고 상단의 헤더 삽입부에서 나눔
                 const nextItem = index < data.length - 1 ? data[index + 1] : null;
                 const isNextDifferentGroup = nextItem && (groupBy === 'student' ? nextItem.작성자 !== item.작성자 : nextItem.미션제목 !== item.미션제목);
 
@@ -332,7 +339,7 @@ export const useDataExport = () => {
                 console.log(`Inserted ${requests.length} operations successfully.`);
             }
 
-            alert(`'${fullTitle}' 문서가 목차를 포함하여 성공적으로 생성되었습니다! ✨\n구글 드라이브에서 확인해 보세요.`);
+            alert(`'${fullTitle}' 문서가 성공적으로 생성되었습니다! ✨\n구글 드라이브에서 확인해 보세요.`);
             window.open(`https://docs.google.com/document/d/${documentId}/edit`, '_blank');
 
         } catch (error) {

@@ -169,11 +169,7 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
                     {post.students?.name}
                 </span>
             </div>
-            <h4 style={{
-                margin: '0 0 12px 0', fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900',
-                overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box',
-                WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: '1.4'
-            }}>{post.title}</h4>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>{post.title}</h4>
             <p style={{
                 fontSize: '0.9rem', color: '#7F8C8D', margin: 0, lineHeight: '1.6',
                 overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box',
