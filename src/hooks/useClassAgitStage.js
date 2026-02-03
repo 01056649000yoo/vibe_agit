@@ -1,0 +1,352 @@
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { supabase } from '../lib/supabaseClient';
+
+const DEFAULT_SETTINGS = {
+    targetScore: 100,
+    activityGoals: { post: 1, comment: 5, reaction: 5 }
+};
+
+/**
+ * useClassAgitStage - 우리반 아지트의 온도와 성장 단계를 관리하는 훅
+ * 초등학생들이 자기 효능감을 느낄 수 있도록 '우리들의 노력으로 아지트가 자라난다'는 컨셉
+ */
+export const useClassAgitStage = (classId, currentStudentId) => {
+    console.log("🏫 [useClassAgitStage 훅 호출됨]", { classId, currentStudentId });
+
+    const [loading, setLoading] = useState(true);
+    const [temperature, setTemperature] = useState(0);
+    const [stageLevel, setStageLevel] = useState(1);
+    const [counts, setCounts] = useState({ posts: 0, feedbacks: 0 });
+    const [unlockedContent, setUnlockedContent] = useState({
+        thermometer: true, // 1단계: 기본 제공
+        relayNovel: false, // 2단계
+        classAlbum: false, // 3단계
+        secretGarden: false, // 4단계
+        legendaryBase: false  // 5단계
+    });
+    const [boardMessages, setBoardMessages] = useState([]); // 실시간 전광판 메시지
+    const [dailyStats, setDailyStats] = useState({ totalAddedTemp: 0 });
+    const [myMissionStatus, setMyMissionStatus] = useState({ post: 0, comment: 0, reaction: 0, achieved: false });
+    const [agitSettingsState, setAgitSettingsState] = useState(DEFAULT_SETTINGS);
+    const [achievedStudentsList, setAchievedStudentsList] = useState([]); // 오늘의 미션 완료자 목록
+
+    const agitSettings = useMemo(() => agitSettingsState, [agitSettingsState]);
+
+    // 단계별 메시지 및 설명 (초등학생 눈높이)
+    const stageInfo = {
+        1: {
+            title: "아지트의 시작 🌱",
+            description: "우리들의 첫 발걸음! 글을 쓰고 친구의 글에 반응하면 아지트의 마법이 시작돼요.",
+            tip: "친구의 글에 예쁜 피드백을 남기면 온도가 쑥쑥 올라가요! (피드백은 +5도, 글쓰기는 +2도)"
+        },
+        2: {
+            title: "쑥쑥 자라는 씨앗 🌿",
+            description: "아지트에 생기가 돌고 있어요! 우리들의 목소리가 모여 작은 숲이 되었네요.",
+            tip: "이제 '릴레이 소설' 기능이 열렸어요! 친구와 함께 이야기를 이어가 볼까요?"
+        },
+        3: {
+            title: "꽃피는 아지트 🌸",
+            description: "우와! 우리 반 친구들의 열정이 가득해요. 이제 아지트가 환하게 빛나고 있어요.",
+            tip: "와아! '우리들의 사진첩'이 열렸어요. 즐거운 추억을 사진으로 남겨보세요!"
+        },
+        4: {
+            title: "신비한 마법 정원 ✨",
+            description: "우리들의 마음이 하나로 모여 마법 같은 공간이 탄생했어요! 정말 대단해요.",
+            tip: "이제 '비밀의 정원'에서 우리 반만의 특별한 미션을 수행할 수 있어요!"
+        },
+        5: {
+            title: "전설의 공중 아지트 🏰",
+            description: "최고예요! 우리 반은 이제 전설이 되었어요. 세계에서 가장 멋진 아지트예요!",
+            tip: "전설의 아지트 보상을 확인해 보세요. 우리 모두가 만들어낸 기적이에요!"
+        }
+    };
+
+    const calculateStage = (temp, target) => {
+        const t = target || 100;
+        if (temp >= t) return 5;
+        if (temp >= t * 0.75) return 4;
+        if (temp >= t * 0.5) return 3;
+        if (temp >= t * 0.25) return 2;
+        return 1;
+    };
+
+    const updateUnlockedContent = (level) => {
+        setUnlockedContent({
+            thermometer: true,
+            relayNovel: level >= 2,
+            classAlbum: level >= 3,
+            secretGarden: level >= 4,
+            legendaryBase: level >= 5
+        });
+    };
+
+    const fetchData = useCallback(async (isInitial = false) => {
+        if (!classId) {
+            setLoading(false);
+            return;
+        }
+
+        try {
+            if (isInitial) setLoading(true);
+
+            console.log("🔍 [아지트 데이터 조회 시작] classId:", classId);
+
+            // 0. 학급 설정 조회 (목표 온도 및 점수 정책)
+            const { data: classData, error: classError } = await supabase
+                .from('classes')
+                .select('agit_settings')
+                .eq('id', classId)
+                .single();
+
+            console.log("📦 [DB 조회 결과]", { classData, classError });
+
+            if (classError) console.warn("⚠️ 학급 설정을 가져오는데 실패했거나 설정이 없습니다:", classError);
+
+            // DB 설정을 최우선으로, 없으면 기본값 사용
+            // 0이 입력될 경우 || 연산자는 false로 처리하므로 ?? (Nullish coalescing) 사용
+            const dbSettings = classData?.agit_settings || {};
+            const currentSettings = {
+                targetScore: dbSettings.targetScore ?? DEFAULT_SETTINGS.targetScore,
+                surpriseGift: dbSettings.surpriseGift ?? '',
+                activityGoals: {
+                    post: dbSettings.activityGoals?.post ?? DEFAULT_SETTINGS.activityGoals.post,
+                    comment: dbSettings.activityGoals?.comment ?? DEFAULT_SETTINGS.activityGoals.comment,
+                    reaction: dbSettings.activityGoals?.reaction ?? DEFAULT_SETTINGS.activityGoals.reaction
+                }
+            };
+
+            console.log("✅ [동기화된 아지트 설정]", currentSettings);
+
+            // 상태 업데이트 최적화 (값이 실제로 변했을 때만 업데이트)
+            setAgitSettingsState(prev => {
+                if (JSON.stringify(prev) !== JSON.stringify(currentSettings)) {
+                    return currentSettings;
+                }
+                return prev;
+            });
+
+            // 1. 전체 게시글 수 조회 (student_posts)
+            const { count: postCount } = await supabase
+                .from('student_posts')
+                .select('student_id, students!inner(class_id)', { count: 'exact', head: true })
+                .eq('students.class_id', classId);
+
+            // 2. 전체 반응 및 댓글 수 조회 (Temperature 계산용)
+            const { count: reactionCount } = await supabase
+                .from('post_reactions')
+                .select('student_id, students!inner(class_id)', { count: 'exact', head: true })
+                .eq('students.class_id', classId);
+
+            const { count: commentCount } = await supabase
+                .from('post_comments')
+                .select('student_id, students!inner(class_id)', { count: 'exact', head: true })
+                .eq('students.class_id', classId);
+
+            const totalFeedbacks = (reactionCount || 0) + (commentCount || 0);
+
+            // 3. 오늘의 활동 집계 (일일 미션 시스템)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            const startDate = today.toISOString();
+            const endDate = tomorrow.toISOString();
+
+            console.log("📅 [오늘 미션 집계 기간]", { startDate, endDate });
+
+            // 학생별 오늘의 활동 집계
+            const { data: dailyPosts } = await supabase
+                .from('student_posts')
+                .select('student_id, students!inner(name, class_id)')
+                .eq('students.class_id', classId)
+                .gte('created_at', startDate)
+                .lt('created_at', endDate);
+
+            const { data: dailyReactions } = await supabase
+                .from('post_reactions')
+                .select('student_id, students!inner(name, class_id)')
+                .eq('students.class_id', classId)
+                .gte('created_at', startDate)
+                .lt('created_at', endDate);
+
+            const { data: dailyComments } = await supabase
+                .from('post_comments')
+                .select('student_id, students!inner(name, class_id)')
+                .eq('students.class_id', classId)
+                .gte('created_at', startDate)
+                .lt('created_at', endDate);
+
+            // 점수 계산 정책 (교사 설정 반영 - 미션 달성형)
+            const goals = currentSettings.activityGoals || { post: 1, comment: 5, reaction: 5 };
+            const studentMap = {};
+
+            const process = (items, type) => {
+                items?.forEach(item => {
+                    const sid = item.student_id;
+                    const studentName = item.students?.name;
+                    if (!sid || !studentName) return;
+
+                    if (!studentMap[sid]) {
+                        studentMap[sid] = {
+                            name: studentName,
+                            counts: { post: 0, comment: 0, reaction: 0 },
+                            isAchieved: false
+                        };
+                    }
+                    studentMap[sid].counts[type] += 1;
+                });
+            };
+
+            process(dailyPosts, 'post');
+            process(dailyReactions, 'reaction');
+            process(dailyComments, 'comment');
+
+            const achievedStudents = [];
+            Object.values(studentMap).forEach(s => {
+                if (
+                    s.counts.post >= goals.post &&
+                    s.counts.comment >= goals.comment &&
+                    s.counts.reaction >= goals.reaction
+                ) {
+                    s.isAchieved = true;
+                    achievedStudents.push(s);
+                }
+            });
+
+            const messages = achievedStudents.map(s => {
+                const phrases = [
+                    `🎉 축하합니다! ${s.name} 학생이 오늘의 아지트 미션을 완수하여 온도가 1도 올랐어요! 🌡️`,
+                    `✨ ${s.name} 학생의 열정적인 참여로 일일 목표 달성! 우리 반 온도가 1도 더 따뜻해졌네요!`,
+                    `🏆 ${s.name} 학생이 글, 댓글, 반응 미션을 모두 성공했어요! 아지트가 1도 상승합니다!`,
+                    `반짝반짝! ${s.name} 학생이 정성껏 활동하며 오늘의 1도를 선물해 주었답니다! 🎁`
+                ];
+                return phrases[Math.floor(Math.random() * phrases.length)];
+            });
+
+            // 누적 온도 계산 (DB에 저장된 누적값 + 오늘 달성한 미션 수)
+            const baseTemperature = currentSettings.currentTemperature || 0;
+            const todayMissionTemp = achievedStudents.length;
+            const currentTemp = Math.min(currentSettings.targetScore, baseTemperature + todayMissionTemp);
+
+            console.log("🌡️ [온도 계산]", {
+                baseTemperature,
+                todayMissionTemp,
+                currentTemp,
+                achievedStudents: achievedStudents.map(s => s.name)
+            });
+
+            const level = calculateStage(currentTemp, currentSettings.targetScore);
+
+            setBoardMessages(messages.length > 0 ? messages : ["오늘의 아지트 미션(글 쓰기, 댓글 달기, 반응하기)을 모두 달성하면 전광판에 이름이 올라와요! 😊"]);
+            setCounts({ posts: postCount || 0, feedbacks: totalFeedbacks });
+            setTemperature(currentTemp);
+
+            if (currentStudentId && studentMap[currentStudentId]) {
+                const s = studentMap[currentStudentId];
+                setMyMissionStatus({
+                    ...s.counts,
+                    achieved: s.isAchieved
+                });
+            } else {
+                setMyMissionStatus({ post: 0, comment: 0, reaction: 0, achieved: false });
+            }
+
+            setDailyStats({ totalAddedTemp: todayMissionTemp });
+            setStageLevel(level);
+            updateUnlockedContent(level);
+
+            // 훅 내부 상태에 저장하여 외부로 노출
+            setAchievedStudentsList(achievedStudents);
+
+        } catch (error) {
+            console.error("Error fetching agit data:", error);
+        } finally {
+            if (isInitial) setLoading(false);
+        }
+    }, [classId, currentStudentId]);
+
+    useEffect(() => {
+        fetchData(true);
+
+        // 실시간 업데이트 설정 (student_posts & comments, reactions 감시)
+        const postSubscription = supabase
+            .channel(`agit-posts-${classId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'student_posts'
+            }, () => fetchData(false))
+            .subscribe();
+
+        const commentSubscription = supabase
+            .channel(`agit-comments-${classId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'post_comments'
+            }, () => fetchData(false))
+            .subscribe();
+
+        const reactionSubscription = supabase
+            .channel(`agit-reactions-${classId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'post_reactions'
+            }, () => fetchData(false))
+            .subscribe();
+
+        const classSubscription = supabase
+            .channel(`agit-settings-${classId}`)
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'classes',
+                filter: `id=eq.${classId}`
+            }, () => fetchData(false))
+            .subscribe();
+
+        // 1. 자정이 지나 날짜가 바뀌었는지 1분마다 체크하여 자동 갱신
+        let lastCheckDate = new Date().getDate();
+        const dateCheckInterval = setInterval(() => {
+            const currentDay = new Date().getDate();
+            if (currentDay !== lastCheckDate) {
+                console.log("🕛 [자정 경과] 날짜 변경 감지 -> 데이터 갱신");
+                lastCheckDate = currentDay;
+                fetchData(false);
+            }
+        }, 60000); // 1분 간격
+
+        // 2. 브라우저 탭 활성화 시 데이터 갱신 (오래 켜뒀다가 다시 볼 때 대비)
+        const handleFocus = () => {
+            console.log("👀 [윈도우 포커스] 최신 데이터 확인");
+            fetchData(false);
+        };
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            supabase.removeChannel(postSubscription);
+            supabase.removeChannel(commentSubscription);
+            supabase.removeChannel(reactionSubscription);
+            supabase.removeChannel(classSubscription);
+            clearInterval(dateCheckInterval); // 인터벌 정리
+            window.removeEventListener('focus', handleFocus); // 이벤트 리스너 정리
+        };
+    }, [classId, fetchData]);
+
+    return {
+        loading,
+        temperature,
+        stageLevel,
+        stageInfo: stageInfo[stageLevel],
+        unlockedContent,
+        counts,
+        boardMessages,
+        dailyStats,
+        myMissionStatus,
+        agitSettings,
+        refresh: fetchData,
+        achievedStudents: achievedStudentsList
+    };
+};

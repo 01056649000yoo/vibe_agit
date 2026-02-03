@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Card from '../common/Card';
 import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
@@ -13,6 +14,7 @@ import PointLevelCard from './PointLevelCard';
 import DashboardMenu from './DashboardMenu';
 import DragonHideoutModal from './DragonHideoutModal';
 import BackgroundShopModal from './BackgroundShopModal';
+import AgitOnStagePage from './AgitOnStagePage'; // [신규] 아지트 페이지 임포트
 
 // [신규] 드래곤 아지트 배경 목록 (상수 외부 이동)
 const HIDEOUT_BACKGROUNDS = {
@@ -29,6 +31,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
+    const [isAgitOpen, setIsAgitOpen] = useState(false); // [신규] 아지트 오픈 상태
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
     // 전반적인 대시보드 데이터 및 비즈니스 로직
@@ -153,6 +156,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 <DashboardMenu
                     onNavigate={onNavigate}
                     setIsDragonModalOpen={setIsDragonModalOpen}
+                    setIsAgitOpen={setIsAgitOpen} // [추가]
                     isMobile={isMobile}
                 />
 
@@ -204,6 +208,31 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
                 />
             </Card>
+
+            {/* [신규] 우리반 아지트 독립 창 (전체 화면 오버레이) */}
+            <AnimatePresence>
+                {isAgitOpen && (
+                    <motion.div
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        style={{
+                            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                            background: 'white', zIndex: 5000, overflow: 'hidden'
+                        }}
+                    >
+                        <AgitOnStagePage
+                            studentSession={studentSession}
+                            onBack={() => setIsAgitOpen(false)}
+                            onNavigate={(path) => {
+                                setIsAgitOpen(false);
+                                onNavigate(path);
+                            }}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 };

@@ -60,7 +60,8 @@ CREATE TABLE IF NOT EXISTS public.classes (
     deleted_at TIMESTAMP WITH TIME ZONE,
     dragon_feed_points INTEGER DEFAULT 80,
     dragon_degen_days INTEGER DEFAULT 14,
-    game_config JSONB DEFAULT '{"degenerationDays": 14, "feedCost": 80}'::JSONB
+    game_config JSONB DEFAULT '{"degenerationDays": 14, "feedCost": 80}'::JSONB,
+    agit_settings JSONB DEFAULT '{"targetScore": 100, "currentTemperature": 0, "activityGoals": {"post": 1, "comment": 5, "reaction": 5}}'::JSONB
 );
 
 -- [Students] 학생 정보

@@ -4,12 +4,15 @@ import React from 'react';
  * Card 공통 컴포넌트 (초등학생 친화적 따뜻한 종이 컨셉)
  * @param {boolean} animate - 등장 애니메이션 여부
  */
-const Card = ({ children, className = '', style, animate = true }) => {
+const Card = ({ children, className = '', style, animate = true, ...props }) => {
   const cardStyle = {
     background: 'var(--card-bg)',
     border: '2px solid rgba(135, 206, 235, 0.1)', // 살짝 푸른빛 테두리
     borderRadius: 'var(--border-radius-lg)',
-    padding: '2.5rem',
+    paddingTop: '2.5rem',
+    paddingBottom: '2.5rem',
+    paddingLeft: '2.5rem',
+    paddingRight: '2.5rem',
     boxShadow: 'var(--shadow-normal)',
     transition: 'transform var(--transition-normal)',
     animation: animate ? 'fadeIn 0.8s ease-out forwards' : 'none',
@@ -22,7 +25,7 @@ const Card = ({ children, className = '', style, animate = true }) => {
   };
 
   return (
-    <div className={`custom-card ${className}`} style={cardStyle}>
+    <div className={`custom-card ${className}`} style={cardStyle} {...props}>
       {/* 장식용 서브 도형 (친근함 추가) */}
       <div style={{
         position: 'absolute',
