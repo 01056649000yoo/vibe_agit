@@ -19,6 +19,7 @@ import TeacherSettingsTab from './TeacherSettingsTab';
 import TeacherProfileModal from './TeacherProfileModal';
 import ActivityDetailModal from './ActivityDetailModal';
 import FeedbackModal from './FeedbackModal';
+import TeacherAnnouncementManager from './TeacherAnnouncementManager';
 
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
@@ -113,6 +114,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                     <Button variant="ghost" size="sm" onClick={() => setIsEditProfileOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
                         ⚙️ 정보 수정
                     </Button>
+                    <TeacherAnnouncementManager isMobile={isMobile} />
                     <Button variant="ghost" size="sm" onClick={() => setIsFeedbackOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
                         📢 의견 보내기
                     </Button>

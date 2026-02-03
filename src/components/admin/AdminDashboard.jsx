@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import AdminFeedbackList from './AdminFeedbackList';
+import AdminAnnouncementManager from './AdminAnnouncementManager';
 
 // --- Components ---
 
@@ -117,7 +118,7 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
     const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
 
     // States for UI
-    const [currentTab, setCurrentTab] = useState('active'); // 'active', 'pending', 'settings', 'feedback'
+    const [currentTab, setCurrentTab] = useState('active'); // 'active', 'pending', 'settings', 'feedback', 'announcements'
     const [searchTerm, setSearchTerm] = useState('');
 
     const [loading, setLoading] = useState(true);
@@ -304,6 +305,10 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                                     </span>
                                 )
                             },
+                            {
+                                id: 'announcements',
+                                label: '📢 공지사항 관리'
+                            },
                             { id: 'settings', label: '⚙️ 시스템 설정' }
                         ].map(tab => (
                             <button
@@ -485,6 +490,10 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
 
                     {!loading && currentTab === 'feedback' && (
                         <AdminFeedbackList />
+                    )}
+
+                    {!loading && currentTab === 'announcements' && (
+                        <AdminAnnouncementManager />
                     )}
                 </div>
             </div>
