@@ -106,7 +106,9 @@ export const useClassAgitStage = (classId, currentStudentId) => {
             // 0이 입력될 경우 || 연산자는 false로 처리하므로 ?? (Nullish coalescing) 사용
             const dbSettings = classData?.agit_settings || {};
             const currentSettings = {
+                currentTemperature: dbSettings.currentTemperature ?? 0,
                 targetScore: dbSettings.targetScore ?? DEFAULT_SETTINGS.targetScore,
+                lastResetAt: dbSettings.lastResetAt ?? null,
                 surpriseGift: dbSettings.surpriseGift ?? '',
                 activityGoals: {
                     post: dbSettings.activityGoals?.post ?? DEFAULT_SETTINGS.activityGoals.post,
@@ -125,37 +127,53 @@ export const useClassAgitStage = (classId, currentStudentId) => {
                 return prev;
             });
 
-            // 1. 전체 게시글 수 조회 (student_posts)
+            // 1. 집계 시작 시점 결정 (오늘 또는 마지막 초기화 시점)
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(todayStart);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            let calculationStart = todayStart;
+            if (currentSettings.lastResetAt) {
+                const resetTime = new Date(currentSettings.lastResetAt);
+                // 밀리초 단위 비교로 더 정확하게 판단 (오늘 시작보다 초기화 시점이 늦으면 초기화 시점부터)
+                if (resetTime.getTime() > todayStart.getTime()) {
+                    calculationStart = resetTime;
+                    console.log("🕒 [초기화 시점 기준 집계 시작]", resetTime.toISOString());
+                }
+            }
+
+            const startDate = calculationStart.toISOString();
+            const endDate = tomorrow.toISOString();
+
+            console.log("📅 [아지트 집계 시작 시각(ISO)]:", startDate);
+            console.log("📅 [아지트 집계 종료 시각(ISO)]:", endDate);
+            console.log("🏠 [현재 설정상의 마지막 초기화 시각]:", currentSettings.lastResetAt);
+            // 1. 전체 게시글 수 조회 (초기화 시점 이후만)
             const { count: postCount } = await supabase
                 .from('student_posts')
                 .select('student_id, students!inner(class_id)', { count: 'exact', head: true })
-                .eq('students.class_id', classId);
+                .eq('students.class_id', classId)
+                .gte('created_at', startDate);
 
-            // 2. 전체 반응 및 댓글 수 조회 (Temperature 계산용)
+            // 2. 전체 반응 및 댓글 수 조회 (초기화 시점 이후만)
             const { count: reactionCount } = await supabase
                 .from('post_reactions')
                 .select('student_id, students!inner(class_id)', { count: 'exact', head: true })
-                .eq('students.class_id', classId);
+                .eq('students.class_id', classId)
+                .gte('created_at', startDate);
 
             const { count: commentCount } = await supabase
                 .from('post_comments')
                 .select('student_id, students!inner(class_id)', { count: 'exact', head: true })
-                .eq('students.class_id', classId);
+                .eq('students.class_id', classId)
+                .gte('created_at', startDate);
 
             const totalFeedbacks = (reactionCount || 0) + (commentCount || 0);
 
-            // 3. 오늘의 활동 집계 (일일 미션 시스템)
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
+            // 3. 오늘의 활동 집계 (일일 미션 시스템용 - 시간 범위 적용)
+            console.log("📅 [아지트 활동 집계 기간]", { startDate, endDate });
 
-            const startDate = today.toISOString();
-            const endDate = tomorrow.toISOString();
-
-            console.log("📅 [오늘 미션 집계 기간]", { startDate, endDate });
-
-            // 학생별 오늘의 활동 집계
             const { data: dailyPosts } = await supabase
                 .from('student_posts')
                 .select('student_id, students!inner(name, class_id)')
@@ -189,6 +207,7 @@ export const useClassAgitStage = (classId, currentStudentId) => {
 
                     if (!studentMap[sid]) {
                         studentMap[sid] = {
+                            student_id: sid, // ID 보존
                             name: studentName,
                             counts: { post: 0, comment: 0, reaction: 0 },
                             isAchieved: false
@@ -258,6 +277,36 @@ export const useClassAgitStage = (classId, currentStudentId) => {
 
             // 훅 내부 상태에 저장하여 외부로 노출
             setAchievedStudentsList(achievedStudents);
+
+            // [신규] 명예의 전당 DB 기록 (백그라운드 동기화)
+            if (achievedStudents.length > 0) {
+                const records = achievedStudents.map(s => ({
+                    student_id: s.student_id, // sid를 student_id로 매핑했던 process 함수 확인 필요
+                    class_id: classId,
+                    // achieved_date는 DB에서 DEFAULT CURRENT_DATE로 처리
+                }));
+
+                // 실제 insert (unique 제약조건 때문에 중복은 무시됨)
+                // Note: process 함수에서 student_id 필드가 확보되어 있어야 함.
+                // fetchData 내부의 process 함수를 확인해보니 item.student_id를 sid로 사용함.
+                const recordsToInsert = achievedStudents.map(s => {
+                    // achievedStudents 객체 구조: { name, counts, isAchieved, student_id }
+                    // student_id를 확보하기 위해 process 함수 수정 필요 (아래에서 수정)
+                    return {
+                        student_id: s.student_id,
+                        class_id: classId
+                    };
+                }).filter(r => r.student_id);
+
+                if (recordsToInsert.length > 0) {
+                    supabase
+                        .from('agit_honor_roll')
+                        .upsert(recordsToInsert, { onConflict: 'student_id,achieved_date' })
+                        .then(({ error }) => {
+                            if (error && error.code !== '23505') console.error("명예의 전당 기록 실패:", error);
+                        });
+                }
+            }
 
         } catch (error) {
             console.error("Error fetching agit data:", error);

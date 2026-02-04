@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -11,6 +11,12 @@ const AgitManager = ({ activeClass, isMobile }) => {
 
     // 학생 화면과 동일한 온도 및 설정 실시간 동기화
     const { temperature: liveTemperature, agitSettings: liveSettings, refresh } = useClassAgitStage(activeClass?.id, null);
+
+    const [honorRollStats, setHonorRollStats] = useState([]);
+    const [statsLoading, setStatsLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('settings'); // 'settings' | 'history'
+    const [seasonHistory, setSeasonHistory] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
 
     const [settings, setSettings] = useState({
         targetScore: 100,
@@ -33,6 +39,70 @@ const AgitManager = ({ activeClass, isMobile }) => {
         }
     }, [liveSettings]);
 
+    const fetchHonorRollStats = useCallback(async () => {
+        if (!activeClass?.id) return;
+        try {
+            setStatsLoading(true);
+            const { data, error } = await supabase
+                .from('agit_honor_roll')
+                .select(`
+                    student_id,
+                    students (name)
+                `)
+                .eq('class_id', activeClass.id)
+                .gte('created_at', liveSettings?.lastResetAt || '2000-01-01'); // 초기화 이후 시점 데이터만 조회
+
+            if (error) throw error;
+
+            const statsMap = {};
+            data.forEach(row => {
+                const sid = row.student_id;
+                const name = row.students?.name || '알 수 없는 학생';
+                if (!statsMap[sid]) {
+                    statsMap[sid] = { name, count: 0 };
+                }
+                statsMap[sid].count += 1;
+            });
+
+            const sortedStats = Object.values(statsMap).sort((a, b) => b.count - a.count);
+            setHonorRollStats(sortedStats);
+        } catch (err) {
+            console.error("통계 조회 실패:", err);
+        } finally {
+            setStatsLoading(false);
+        }
+    }, [activeClass?.id]);
+
+    // 명예의 전당 통계 불러오기
+    useEffect(() => {
+        fetchHonorRollStats();
+    }, [fetchHonorRollStats, liveSettings]);
+
+    const fetchSeasonHistory = useCallback(async () => {
+        if (!activeClass?.id) return;
+        try {
+            setHistoryLoading(true);
+            const { data, error } = await supabase
+                .from('agit_season_history')
+                .select('*')
+                .eq('class_id', activeClass.id)
+                .order('ended_at', { ascending: false });
+
+            if (error) throw error;
+            setSeasonHistory(data || []);
+        } catch (err) {
+            console.error("시즌 기록 조회 실패:", err);
+        } finally {
+            setHistoryLoading(false);
+        }
+    }, [activeClass?.id]);
+
+    useEffect(() => {
+        if (isSettingsModalOpen && activeTab === 'history') {
+            fetchSeasonHistory();
+        }
+    }, [isSettingsModalOpen, activeTab, fetchSeasonHistory]);
+
     // 모달 열 때 최신 설정값으로 동기화
     const openSettingsModal = () => {
         if (liveSettings) {
@@ -51,11 +121,11 @@ const AgitManager = ({ activeClass, isMobile }) => {
 
             if (error) throw error;
 
-            setIsSettingsModalOpen(false);
-            alert('아지트 설정이 저장되었습니다! 🏠✨');
+            alert('설정 정보가 저장되었습니다! 🏠✨');
 
             // 즉시 데이터 갱신 요청
             refresh();
+            fetchHonorRollStats();
 
         } catch (error) {
             console.error("Error saving agit settings:", error);
@@ -65,25 +135,96 @@ const AgitManager = ({ activeClass, isMobile }) => {
         }
     };
 
-    // UI 표시용 타겟 점수 (실시간 데이터와 로컬 데이터 중 최신값 반영 노력)
-    // 저장 직후에는 liveSettings가 갱신되기 전일 수 있으므로 로컬 settings도 고려
-    // 하지만 결국 liveSettings가 source of truth여야 함. refresh 호출로 해결 기대.
+    const handleStartNewSeason = async () => {
+        if (!window.confirm("🚀 새로운 시즌을 시작하시겠습니까?\n\n[주의] 이전 시즌 기록은 보관되며, 현재 명예의 전당 누적 현황은 초기화됩니다.\n명예의 전당 누적은 시즌 시작 이후부터 새롭게 적용됩니다.")) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            // 0. 현재 시즌 명칭 (기존 기록 수 + 1)
+            const { count: historyCount } = await supabase
+                .from('agit_season_history')
+                .select('*', { count: 'exact', head: true })
+                .eq('class_id', activeClass.id);
+
+            const seasonName = `${(historyCount || 0) + 1}번째 시즌`;
+
+            // 1. 현재 시즌 기록 아카이빙 (현재 라이브 데이터 기준)
+            const { error: archiveError } = await supabase
+                .from('agit_season_history')
+                .insert({
+                    class_id: activeClass.id,
+                    season_name: seasonName,
+                    target_score: liveSettings?.targetScore || settings.targetScore,
+                    surprise_gift: liveSettings?.surpriseGift || settings.surpriseGift,
+                    started_at: liveSettings?.lastResetAt,
+                    ended_at: new Date().toISOString(),
+                    rankings: honorRollStats.slice(0, 5) // 상위 5명 보관
+                });
+
+            if (archiveError) throw archiveError;
+
+            // 2. 아지트 설정 초기화 (디폴트값으로 완전히 초기화하여 새 출발)
+            const newSeasonSettings = {
+                currentTemperature: 0,
+                targetScore: 100,
+                lastResetAt: new Date().toISOString(), // 새로운 시즌 시작 시점
+                surpriseGift: '',
+                activityGoals: {
+                    post: 1,
+                    comment: 5,
+                    reaction: 5
+                }
+            };
+
+            const { error: settingsError } = await supabase
+                .from('classes')
+                .update({ agit_settings: newSeasonSettings })
+                .eq('id', activeClass.id);
+
+            if (settingsError) throw settingsError;
+
+            // 3. 명예의 전당 기록 삭제 (새 시즌을 위해)
+            const { error: statsError } = await supabase
+                .from('agit_honor_roll')
+                .delete()
+                .eq('class_id', activeClass.id);
+
+            if (statsError) throw statsError;
+
+            alert(`${seasonName}이 종료되고 새로운 시즌이 시작되었습니다! 🌱`);
+            setIsSettingsModalOpen(false);
+            setHonorRollStats([]); // 로컬 상태 즉시 초기화
+            refresh();
+            fetchHonorRollStats();
+            fetchSeasonHistory();
+
+        } catch (error) {
+            console.error("Error starting new season:", error);
+            alert('시즌 시작 중 오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const displayTargetScore = liveSettings?.targetScore || settings.targetScore || 100;
     const displaySurpriseGift = liveSettings?.surpriseGift || settings.surpriseGift;
+
+    const isGoalReached = liveTemperature >= displayTargetScore;
+    const isSeasonLocked = !isGoalReached && (liveSettings?.targetScore > 0) && (liveTemperature > 0);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <h2 style={{ margin: 0, color: '#1E1B4B', fontWeight: '900' }}>🏠 우리반 아지트 관리</h2>
 
-            {/* [메인 허브] 카드 레이아웃 - 현재는 아지트 관리 카드 하나만 배치 */}
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(400px, 1fr))', gap: '20px' }}>
 
                 {/* 1. 아지트 溫 스테이지 관리 카드 */}
                 <motion.div
                     whileHover={{ scale: 1.02, y: -5 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={openSettingsModal}
-                    style={{ cursor: 'pointer', height: '100%' }}
+                    style={{ height: '100%' }}
                 >
                     <div style={{
                         height: '100%',
@@ -93,14 +234,11 @@ const AgitManager = ({ activeClass, isMobile }) => {
                         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
                         overflow: 'hidden',
                         display: 'flex',
-                        flexDirection: 'column',
-                        transition: 'all 0.3s ease'
+                        flexDirection: 'column'
                     }}>
-                        {/* 헤더 영역 - 그라데이션 & 타이틀 */}
                         <div style={{
                             background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
                             padding: '24px',
-                            position: 'relative',
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'flex-start'
@@ -122,23 +260,9 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                 </div>
                                 <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: 'white', letterSpacing: '-0.02em' }}>아지트 溫 스테이지</h3>
                             </div>
-                            <div style={{
-                                background: 'white',
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                            }}>
-                                <span style={{ color: '#4338CA', fontSize: '1.2rem' }}>⚙️</span>
-                            </div>
                         </div>
 
-                        {/* 본문 영역 - 통계 및 상태 */}
                         <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            {/* 온도 현황 */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: '16px', borderBottom: '1px solid #F1F5F9' }}>
                                 <div>
                                     <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B', fontWeight: '600', marginBottom: '4px' }}>현재 온도</p>
@@ -156,7 +280,6 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                 </div>
                             </div>
 
-                            {/* 진행률 바 */}
                             <div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                     <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#6366F1' }}>진행률</span>
@@ -174,7 +297,6 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                 </div>
                             </div>
 
-                            {/* 깜짝 선물 미리보기 */}
                             <div style={{ background: '#FFFBEB', borderRadius: '12px', padding: '16px', border: '1px solid #FCD34D' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                                     <span style={{ fontSize: '1rem' }}>🎁</span>
@@ -186,23 +308,26 @@ const AgitManager = ({ activeClass, isMobile }) => {
                             </div>
                         </div>
 
-                        {/* 푸터 - 액션 */}
-                        <div style={{
-                            padding: '16px 24px',
-                            background: '#F8FAFC',
-                            borderTop: '1px solid #F1F5F9',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                        }}>
+                        <div
+                            onClick={openSettingsModal}
+                            style={{
+                                padding: '16px 24px',
+                                background: '#F8FAFC',
+                                borderTop: '1px solid #F1F5F9',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                cursor: 'pointer'
+                            }}
+                        >
                             <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>설정 및 미션 관리</span>
                             <span style={{ color: '#6366F1', fontWeight: '800', fontSize: '0.9rem' }}>관리하기 →</span>
                         </div>
                     </div>
                 </motion.div>
+
             </div>
 
-            {/* [상세 설정 모달창] */}
             <AnimatePresence>
                 {isSettingsModalOpen && (
                     <motion.div
@@ -225,145 +350,272 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                 boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
                             }}
                         >
-                            <header style={{ padding: '24px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#1E1B4B' }}>🛠️ 아지트 溫 스테이지 세부 관리</h3>
-                                    <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#64748B' }}>학급의 온도를 올리는 규칙을 설정합니다.</p>
+                            <header style={{ padding: '0 24px', borderBottom: '1px solid #F1F5F9' }}>
+                                <div style={{ padding: '24px 0 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#1E1B4B' }}>🛠️ 아지트 溫 스테이지 세부 관리</h3>
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#64748B' }}>학급의 온도를 올리는 규칙을 설정합니다.</p>
+                                    </div>
+                                    <button onClick={() => setIsSettingsModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.6rem', cursor: 'pointer', color: '#94A3B8' }}>×</button>
                                 </div>
-                                <button onClick={() => setIsSettingsModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.6rem', cursor: 'pointer', color: '#94A3B8' }}>×</button>
+                                <div style={{ display: 'flex', gap: '20px' }}>
+                                    {['settings', 'history'].map(tab => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setActiveTab(tab)}
+                                            style={{
+                                                padding: '8px 12px 16px 12px',
+                                                background: 'none',
+                                                border: 'none',
+                                                borderBottom: activeTab === tab ? '3px solid #6366F1' : '3px solid transparent',
+                                                color: activeTab === tab ? '#1E1B4B' : '#94A3B8',
+                                                fontWeight: '800',
+                                                fontSize: '0.95rem',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            {tab === 'settings' ? '⚙️ 현재 설정' : '📜 시즌 기록'}
+                                        </button>
+                                    ))}
+                                </div>
                             </header>
 
                             <div style={{ flex: 1, overflowY: 'auto', padding: '30px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                {activeTab === 'settings' ? (
+                                    <>
+                                        <section>
+                                            <h4 style={{ margin: '0 0 16px 0', color: '#1E1B4B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: '800' }}>
+                                                🎯 시즌 목표 및 일일 미션
+                                            </h4>
 
-                                {/* A. 목표 온도 및 일일 미션 설정 (통합) */}
-                                <section>
-                                    <h4 style={{ margin: '0 0 16px 0', color: '#1E1B4B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: '800' }}>
-                                        🎯 시즌 목표 및 일일 미션
-                                    </h4>
+                                            <div style={{ background: '#F8FAFC', padding: '24px', borderRadius: '16px', border: '2px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid #E2E8F0', paddingBottom: '24px' }}>
+                                                    <div style={{ flex: 1, minWidth: '200px' }}>
+                                                        <label style={{ fontSize: '0.9rem', color: '#1E1B4B', fontWeight: '800', display: 'block', marginBottom: '4px' }}>시즌 목표 온도</label>
+                                                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>달성 시 깜짝 선물이 공개됩니다.</p>
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <input
+                                                            type="number"
+                                                            value={settings.targetScore}
+                                                            disabled={isSeasonLocked}
+                                                            onChange={(e) => setSettings({ ...settings, targetScore: parseInt(e.target.value) || 0 })}
+                                                            style={{
+                                                                width: '120px', padding: '12px', borderRadius: '12px',
+                                                                border: isSeasonLocked ? '2px solid #E2E8F0' : '2px solid #CBD5E1',
+                                                                background: isSeasonLocked ? '#F8FAFC' : 'white',
+                                                                outline: 'none', fontSize: '1.4rem', fontWeight: '800',
+                                                                color: isSeasonLocked ? '#94A3B8' : '#1E1B4B', textAlign: 'center',
+                                                                cursor: isSeasonLocked ? 'not-allowed' : 'text'
+                                                            }}
+                                                        />
+                                                        <span style={{ fontWeight: '800', color: isSeasonLocked ? '#94A3B8' : '#1E1B4B', fontSize: '1.4rem' }}>도</span>
+                                                    </div>
+                                                </div>
+                                                {isSeasonLocked && (
+                                                    <p style={{ margin: '-12px 0 0 0', fontSize: '0.8rem', color: '#6366F1', fontWeight: '600' }}>
+                                                        🔒 목표 온도가 설정되어 시즌이 진행 중입니다. 달성 후 초기화가 가능합니다.
+                                                    </p>
+                                                )}
 
-                                    <div style={{ background: '#F8FAFC', padding: '24px', borderRadius: '16px', border: '2px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                                <div>
+                                                    <div style={{ marginBottom: '16px' }}>
+                                                        <label style={{ fontSize: '0.9rem', color: '#1E1B4B', fontWeight: '800', display: 'block', marginBottom: '4px' }}>일일 미션 달성 조건</label>
+                                                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>
+                                                            학생 1명이 하루에 <strong style={{ color: '#4338CA' }}>세 가지 모두 달성 시 +1도</strong>
+                                                        </p>
+                                                    </div>
 
-                                        {/* 1. 시즌 목표 온도 */}
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid #E2E8F0', paddingBottom: '24px' }}>
-                                            <div style={{ flex: 1, minWidth: '200px' }}>
-                                                <label style={{ fontSize: '0.9rem', color: '#1E1B4B', fontWeight: '800', display: 'block', marginBottom: '4px' }}>시즌 목표 온도</label>
-                                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>달성 시 깜짝 선물이 공개됩니다.</p>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '12px' }}>
+                                                        {[
+                                                            { id: 'post', label: '글쓰기', icon: '✏️', color: '#EF4444' },
+                                                            { id: 'comment', label: '댓글', icon: '💬', color: '#3B82F6' },
+                                                            { id: 'reaction', label: '반응', icon: '❤️', color: '#EC4899' }
+                                                        ].map(act => (
+                                                            <div key={act.id} style={{
+                                                                background: 'white', padding: '16px', borderRadius: '12px', border: '2px solid #E2E8F0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'
+                                                            }}>
+                                                                <div style={{ fontSize: '1.5rem' }}>{act.icon}</div>
+                                                                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748B' }}>{act.label}</div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={settings.activityGoals[act.id]}
+                                                                        onChange={(e) => setSettings({
+                                                                            ...settings,
+                                                                            activityGoals: { ...settings.activityGoals, [act.id]: parseInt(e.target.value) || 0 }
+                                                                        })}
+                                                                        style={{
+                                                                            width: '60px', padding: '6px', border: `2px solid ${act.color}`, borderRadius: '8px', textAlign: 'center', fontWeight: '800', fontSize: '1rem', color: act.color, outline: 'none'
+                                                                        }}
+                                                                    />
+                                                                    <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '700' }}>회</span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <input
-                                                    type="number"
-                                                    value={settings.targetScore}
-                                                    onChange={(e) => setSettings({ ...settings, targetScore: parseInt(e.target.value) || 0 })}
+                                        </section>
+
+                                        <section>
+                                            <h4 style={{ margin: '0 0 16px 0', color: '#1E1B4B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: '800' }}>
+                                                🎁 깜짝 선물 설정
+                                            </h4>
+
+                                            <div style={{ background: '#FFFBEB', padding: '24px', borderRadius: '16px', border: '2px solid #FCD34D' }}>
+                                                <textarea
+                                                    value={settings.surpriseGift}
+                                                    onChange={(e) => setSettings({ ...settings, surpriseGift: e.target.value })}
+                                                    placeholder="예시:&#10;🎉 우리 반 모두 함께 영화 관람!&#10;🏆 반 전체 자유 시간 30분 추가!&#10;🍕 피자 파티!"
                                                     style={{
-                                                        width: '120px',
-                                                        padding: '12px',
-                                                        borderRadius: '12px',
-                                                        border: '2px solid #CBD5E1',
-                                                        outline: 'none',
-                                                        fontSize: '1.4rem',
-                                                        fontWeight: '800',
-                                                        color: '#1E1B4B',
-                                                        textAlign: 'center'
+                                                        width: '100%', padding: '14px', borderRadius: '12px', border: '2px solid #FCD34D', outline: 'none', fontSize: '0.95rem', fontWeight: '500', color: '#78350F', minHeight: '100px', resize: 'vertical', fontFamily: 'inherit', lineHeight: '1.6', background: 'white'
                                                     }}
                                                 />
-                                                <span style={{ fontWeight: '800', color: '#1E1B4B', fontSize: '1.4rem' }}>도</span>
-                                            </div>
-                                        </div>
-
-                                        {/* 2. 일일 미션 달성 조건 */}
-                                        <div>
-                                            <div style={{ marginBottom: '16px' }}>
-                                                <label style={{ fontSize: '0.9rem', color: '#1E1B4B', fontWeight: '800', display: 'block', marginBottom: '4px' }}>일일 미션 달성 조건</label>
-                                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>
-                                                    학생 1명이 하루에 <strong style={{ color: '#4338CA' }}>세 가지 모두 달성 시 +1도</strong>
+                                                <p style={{ margin: '12px 0 0 0', fontSize: '0.85rem', color: '#92400E', lineHeight: 1.5 }}>
+                                                    💡 목표 온도 달성 시 학생들에게 공개될 특별한 선물이나 보상을 입력하세요.
                                                 </p>
                                             </div>
+                                        </section>
 
-                                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '12px' }}>
-                                                {[
-                                                    { id: 'post', label: '글쓰기', icon: '✏️', color: '#EF4444' },
-                                                    { id: 'comment', label: '댓글', icon: '💬', color: '#3B82F6' },
-                                                    { id: 'reaction', label: '반응', icon: '❤️', color: '#EC4899' }
-                                                ].map(act => (
-                                                    <div key={act.id} style={{
-                                                        background: 'white',
-                                                        padding: '16px',
-                                                        borderRadius: '12px',
-                                                        border: '2px solid #E2E8F0',
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center',
-                                                        gap: '8px'
-                                                    }}>
-                                                        <div style={{ fontSize: '1.5rem' }}>{act.icon}</div>
-                                                        <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748B' }}>{act.label}</div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                            <input
-                                                                type="number"
-                                                                value={settings.activityGoals[act.id]}
-                                                                onChange={(e) => setSettings({
-                                                                    ...settings,
-                                                                    activityGoals: { ...settings.activityGoals, [act.id]: parseInt(e.target.value) || 0 }
-                                                                })}
-                                                                style={{
-                                                                    width: '60px',
-                                                                    padding: '6px',
-                                                                    border: `2px solid ${act.color}`,
-                                                                    borderRadius: '8px',
-                                                                    textAlign: 'center',
-                                                                    fontWeight: '800',
-                                                                    fontSize: '1rem',
-                                                                    color: act.color,
-                                                                    outline: 'none'
-                                                                }}
-                                                            />
-                                                            <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '700' }}>회</span>
+                                        {/* C. 명예의 전당 누적 현황 (모달 안으로 이동) */}
+                                        <section>
+                                            <h4 style={{ margin: '0 0 16px 0', color: '#1E1B4B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: '800' }}>
+                                                🏆 명예의 전당 누적 현황
+                                            </h4>
+
+                                            <div style={{ background: '#F0FDF4', padding: '24px', borderRadius: '16px', border: '2px solid #BBF7D0' }}>
+                                                <div style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: '10px' }}>
+                                                    {statsLoading ? (
+                                                        <div style={{ textAlign: 'center', padding: '20px', color: '#059669', fontWeight: '600' }}>데이터 로딩 중...</div>
+                                                    ) : honorRollStats.length > 0 ? (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                            {honorRollStats.map((student, idx) => (
+                                                                <div key={idx} style={{
+                                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                                    padding: '12px 16px', background: 'white',
+                                                                    borderRadius: '12px', border: idx < 3 ? '2px solid #10B981' : '1px solid #E2E8F0',
+                                                                    boxShadow: idx < 3 ? '0 4px 6px -1px rgba(16, 185, 129, 0.1)' : 'none'
+                                                                }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                                        <div style={{
+                                                                            width: '32px', height: '32px', borderRadius: '50%',
+                                                                            background: idx < 3 ? '#F0FDF4' : '#F8FAFC',
+                                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                            fontSize: '0.9rem', fontWeight: '900', color: idx < 3 ? '#10B981' : '#64748B',
+                                                                            border: `1px solid ${idx < 3 ? '#BBF7D0' : '#E2E8F0'}`
+                                                                        }}>
+                                                                            {idx < 3 ? ['🥇', '🥈', '🥉'][idx] : idx + 1}
+                                                                        </div>
+                                                                        <span style={{ fontWeight: '800', color: '#1E293B', fontSize: '1rem' }}>{student.name}</span>
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                        <span style={{ fontSize: '1.2rem', fontWeight: '900', color: '#059669' }}>{student.count}</span>
+                                                                        <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '700' }}>회 달성</span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ textAlign: 'center', padding: '30px', color: '#059669' }}>
+                                                            <p style={{ margin: 0, fontSize: '1.5rem', marginBottom: '10px' }}>🍃</p>
+                                                            <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '700' }}>아직 달성 기록이 없습니다.</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <p style={{ margin: '16px 0 0 0', fontSize: '0.85rem', color: '#059669', lineHeight: 1.5, fontWeight: '600' }}>
+                                                    💡 학급 명예의 전당은 일일 미션을 모두 완료한 학생들의 누적 기록입니다.
+                                                </p>
+                                            </div>
+                                        </section>
+                                    </>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        {historyLoading ? (
+                                            <div style={{ textAlign: 'center', padding: '40px', color: '#64748B' }}>시즌 기록을 불러오는 중...</div>
+                                        ) : seasonHistory.length > 0 ? (
+                                            seasonHistory.map((history, idx) => (
+                                                <div key={history.id} style={{
+                                                    background: 'white', border: '1px solid #E2E8F0', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+                                                }}>
+                                                    <div style={{ background: '#F8FAFC', padding: '16px 20px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontWeight: '900', color: '#1E1B4B', fontSize: '1.1rem' }}>🎉 {history.season_name}</span>
+                                                        <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: '600' }}>
+                                                            {new Date(history.started_at).toLocaleDateString()} ~ {new Date(history.ended_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr', gap: '20px' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                            <div style={{ display: 'flex', gap: '12px' }}>
+                                                                <div style={{ background: '#EEF2FF', padding: '10px 16px', borderRadius: '10px', flex: 1 }}>
+                                                                    <div style={{ fontSize: '0.75rem', color: '#6366F1', fontWeight: '800', marginBottom: '2px' }}>목표 온도</div>
+                                                                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#1E1B4B' }}>{history.target_score}도 달성!</div>
+                                                                </div>
+                                                                <div style={{ background: '#F0FDF4', padding: '10px 16px', borderRadius: '10px', flex: 1 }}>
+                                                                    <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: '800', marginBottom: '2px' }}>달성 기간</div>
+                                                                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#1E1B4B' }}>
+                                                                        {Math.max(1, Math.ceil((new Date(history.ended_at) - new Date(history.started_at)) / (1000 * 60 * 60 * 24)))}일 소요
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ background: '#FFFBEB', padding: '12px 16px', borderRadius: '10px', border: '1px solid #FCD34D' }}>
+                                                                <div style={{ fontSize: '0.75rem', color: '#92400E', fontWeight: '800', marginBottom: '4px' }}>🎁 깜짝 선물</div>
+                                                                <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#78350F' }}>{history.surprise_gift || '없음'}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ background: '#F1F5F9', padding: '16px', borderRadius: '12px' }}>
+                                                            <div style={{ fontSize: '0.8rem', fontWeight: '800', color: '#475569', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>🏆 명예의 전당 TOP 5</div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                                {history.rankings?.map((r, i) => (
+                                                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                                                                        <span style={{ fontWeight: '700', color: '#334155' }}>{i + 1}. {r.name}</span>
+                                                                        <span style={{ fontWeight: '800', color: '#059669' }}>{r.count}회</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                ))}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div style={{ textAlign: 'center', padding: '60px', color: '#94A3B8' }}>
+                                                <div style={{ fontSize: '3rem', marginBottom: '10px' }}>📜</div>
+                                                <div style={{ fontWeight: '700' }}>아직 종료된 시즌 기록이 없습니다.</div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
-                                </section>
-
-                                {/* B. 깜짝 선물 설정 (별도 유지) */}
-                                <section>
-                                    <h4 style={{ margin: '0 0 16px 0', color: '#1E1B4B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: '800' }}>
-                                        🎁 깜짝 선물 설정
-                                    </h4>
-
-                                    <div style={{ background: '#FFFBEB', padding: '24px', borderRadius: '16px', border: '2px solid #FCD34D' }}>
-                                        <textarea
-                                            value={settings.surpriseGift}
-                                            onChange={(e) => setSettings({ ...settings, surpriseGift: e.target.value })}
-                                            placeholder="예시:&#10;🎉 우리 반 모두 함께 영화 관람!&#10;🏆 반 전체 자유 시간 30분 추가!&#10;🍕 피자 파티!"
-                                            style={{
-                                                width: '100%',
-                                                padding: '14px',
-                                                borderRadius: '12px',
-                                                border: '2px solid #FCD34D',
-                                                outline: 'none',
-                                                fontSize: '0.95rem',
-                                                fontWeight: '500',
-                                                color: '#78350F',
-                                                minHeight: '100px',
-                                                resize: 'vertical',
-                                                fontFamily: 'inherit',
-                                                lineHeight: '1.6',
-                                                background: 'white'
-                                            }}
-                                        />
-                                        <p style={{ margin: '12px 0 0 0', fontSize: '0.85rem', color: '#92400E', lineHeight: 1.5 }}>
-                                            💡 목표 온도 달성 시 학생들에게 공개될 특별한 선물이나 보상을 입력하세요.
-                                        </p>
-                                    </div>
-                                </section>
-
+                                )}
                             </div>
 
-                            <footer style={{ padding: '24px', borderTop: '1px solid #F1F5F9', display: 'flex', gap: '12px', background: '#F8FAFC' }}>
-                                <Button onClick={handleSaveSettings} style={{ flex: 1, background: '#6366F1', fontWeight: 'bold', padding: '16px', fontSize: '1rem' }}>설정 저장 및 우리 반 아지트에 즉시 적용</Button>
-                                <Button onClick={() => setIsSettingsModalOpen(false)} variant="ghost" style={{ flex: 0.3, padding: '16px' }}>취소</Button>
+                            <footer style={{ padding: '24px', borderTop: '1px solid #F1F5F9', display: 'flex', gap: '12px', background: '#F8FAFC', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+                                <Button
+                                    onClick={handleSaveSettings}
+                                    style={{ flex: 1, background: '#64748B', fontWeight: 'bold', padding: '16px', fontSize: '0.95rem', minWidth: isMobile ? '100% ' : 'auto' }}
+                                >
+                                    💾 설정 정보 저장
+                                </Button>
+                                <Button
+                                    onClick={handleStartNewSeason}
+                                    style={{
+                                        flex: 2,
+                                        background: isGoalReached ? 'linear-gradient(135deg, #EC4899 0%, #6366F1 100%)' : '#6366F1',
+                                        fontWeight: '900',
+                                        padding: '16px',
+                                        fontSize: '1rem',
+                                        minWidth: isMobile ? '100%' : 'auto',
+                                        boxShadow: isGoalReached ? '0 4px 15px rgba(236, 72, 153, 0.3)' : 'none'
+                                    }}
+                                >
+                                    {isGoalReached ? '🎉 목표 달성! 시즌 종료 및 새 시즌 시작' : '🚀 새로운 시즌 시작'}
+                                </Button>
+                                <Button
+                                    onClick={() => setIsSettingsModalOpen(false)}
+                                    variant="ghost"
+                                    style={{ flex: 0.7, padding: '16px', minWidth: isMobile ? '100%' : 'auto' }}
+                                >
+                                    닫기
+                                </Button>
                             </footer>
                         </motion.div>
                     </motion.div>

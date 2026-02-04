@@ -26,6 +26,12 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
     const [isMobileSize, setIsMobileSize] = useState(window.innerWidth <= 1024);
     const [showSurprise, setShowSurprise] = useState(false);
 
+    // 전광판 2줄 노출을 위한 메시지 분리
+    const row1Messages = boardMessages.filter((_, i) => i % 2 === 0);
+    const row2Messages = boardMessages.filter((_, i) => i % 2 !== 0);
+    const displayRow1 = row1Messages.length > 0 ? row1Messages : boardMessages;
+    const displayRow2 = row2Messages.length > 0 ? row2Messages : (boardMessages.length > 0 ? boardMessages : ["..."]);
+
     // 폭죽 효과를 위한 파티클 생성
     const confettiParticles = useRef([...Array(20)].map((_, i) => ({
         id: i,
@@ -345,35 +351,64 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
                                 </motion.div>
                             </div>
 
-                            {/* [실시간 활동 전광판 (Marquee)] */}
+                            {/* [실시간 활동 전광판 (Marquee) - 2단 구성] */}
                             <div style={{
                                 position: 'absolute', bottom: '0', left: 0, right: 0,
-                                background: 'linear-gradient(90deg, rgba(30,27,75,0.9), rgba(76,29,149,0.9))',
-                                padding: '14px 0',
-                                borderTop: '1px solid rgba(252, 211, 77, 0.5)',
-                                borderBottom: '1px solid rgba(252, 211, 77, 0.5)',
+                                background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 27, 75, 0.95))',
+                                padding: '10px 0',
+                                borderTop: '2px solid rgba(252, 211, 77, 0.4)',
+                                borderBottom: '1px solid rgba(252, 211, 77, 0.2)',
                                 overflow: 'hidden', whiteSpace: 'nowrap', zIndex: 105,
-                                backdropFilter: 'blur(5px)'
+                                backdropFilter: 'blur(12px)',
+                                display: 'flex', flexDirection: 'column', gap: '8px'
                             }}>
+                                {/* 첫 번째 줄 (상단) - 속도를 60초로 늦춤 */}
                                 <motion.div
                                     animate={{ x: ['100%', '-100%'] }}
-                                    transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+                                    transition={{ repeat: Infinity, duration: 60, ease: "linear" }}
                                     style={{ display: 'inline-block', paddingLeft: '100%' }}
                                 >
-                                    <div style={{ display: 'flex', gap: '60px', alignItems: 'center' }}>
-                                        {boardMessages.map((msg, idx) => (
+                                    <div style={{ display: 'flex', gap: '80px', alignItems: 'center' }}>
+                                        {displayRow1.map((msg, idx) => (
                                             <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <span style={{ color: '#FCD34D', fontWeight: '900', fontSize: '1.1rem' }}>📢 알림</span>
-                                                <span style={{ color: 'white', fontWeight: '700', fontSize: '1.1rem', letterSpacing: '-0.02em', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                                                <span style={{ color: '#FCD34D', fontWeight: '900', fontSize: '1rem' }}>📢 알림</span>
+                                                <span style={{ color: 'white', fontWeight: '700', fontSize: '1.05rem', letterSpacing: '-0.02em', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                                                     {msg}
                                                 </span>
                                             </div>
                                         ))}
-                                        {/* 루프가 매끄럽도록 원본 데이터 복제 */}
-                                        {boardMessages.map((msg, idx) => (
-                                            <div key={`dup-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <span style={{ color: '#FCD34D', fontWeight: '900', fontSize: '1.1rem' }}>📢 알림</span>
-                                                <span style={{ color: 'white', fontWeight: '700', fontSize: '1.1rem', letterSpacing: '-0.02em', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                                        {/* 루프를 위한 복제 */}
+                                        {displayRow1.map((msg, idx) => (
+                                            <div key={`dup1-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <span style={{ color: '#FCD34D', fontWeight: '900', fontSize: '1rem' }}>📢 알림</span>
+                                                <span style={{ color: 'white', fontWeight: '700', fontSize: '1.05rem', letterSpacing: '-0.02em', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                                                    {msg}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+
+                                {/* 두 번째 줄 (하단) - 가독성을 위해 약간 다른 속도(70초)와 딜레이 적용 */}
+                                <motion.div
+                                    animate={{ x: ['100%', '-100%'] }}
+                                    transition={{ repeat: Infinity, duration: 75, ease: "linear", delay: 2 }}
+                                    style={{ display: 'inline-block', paddingLeft: '100%' }}
+                                >
+                                    <div style={{ display: 'flex', gap: '80px', alignItems: 'center' }}>
+                                        {displayRow2.map((msg, idx) => (
+                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <span style={{ color: '#60A5FA', fontWeight: '900', fontSize: '1rem' }}>🔔 소식</span>
+                                                <span style={{ color: 'rgba(255,255,255,0.95)', fontWeight: '700', fontSize: '1.05rem', letterSpacing: '-0.02em', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                                                    {msg}
+                                                </span>
+                                            </div>
+                                        ))}
+                                        {/* 루프를 위한 복제 */}
+                                        {displayRow2.map((msg, idx) => (
+                                            <div key={`dup2-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <span style={{ color: '#60A5FA', fontWeight: '900', fontSize: '1rem' }}>🔔 소식</span>
+                                                <span style={{ color: 'rgba(255,255,255,0.95)', fontWeight: '700', fontSize: '1.05rem', letterSpacing: '-0.02em', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                                                     {msg}
                                                 </span>
                                             </div>
