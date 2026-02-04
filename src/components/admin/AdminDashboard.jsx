@@ -109,6 +109,34 @@ const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, on
     );
 };
 
+const formatLastLogin = (dateString) => {
+    if (!dateString) return '-';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+
+        const now = new Date();
+        const diff = now - date;
+        const minutes = Math.floor(diff / (1000 * 60));
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (minutes < 1) return '방금 전';
+        if (minutes < 60) return `${minutes}분 전`;
+        if (hours < 24) return `${hours}시간 전`;
+        if (days < 5) return `${days}일 전`;
+
+        return date.toLocaleDateString('ko-KR', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        return '-';
+    }
+};
+
 // --- Main Container ---
 
 const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
@@ -120,6 +148,8 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
     // States for UI
     const [currentTab, setCurrentTab] = useState('active'); // 'active', 'pending', 'settings', 'feedback', 'announcements'
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     const [loading, setLoading] = useState(true);
     const [settingsLoading, setSettingsLoading] = useState(false);
@@ -130,6 +160,11 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
         fetchSettings();
         fetchFeedbackCount();
     }, []);
+
+    // 탭이나 검색어가 바뀔 때 페이지 리셋
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [currentTab, searchTerm]);
 
     const fetchFeedbackCount = async () => {
         try {
@@ -344,6 +379,16 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                     )}
                 </div>
 
+                {/* Pagination Statistics */}
+                {(currentTab === 'active' || currentTab === 'pending') && !loading && (
+                    <div style={{ fontSize: '0.85rem', color: '#718096', display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                        <span>총 {filterList(currentTab === 'active' ? approvedTeachers : pendingTeachers).length}명</span>
+                        {filterList(currentTab === 'active' ? approvedTeachers : pendingTeachers).length > ITEMS_PER_PAGE && (
+                            <span>(페이지 {currentPage} / {Math.ceil(filterList(currentTab === 'active' ? approvedTeachers : pendingTeachers).length / ITEMS_PER_PAGE)})</span>
+                        )}
+                    </div>
+                )}
+
                 {/* Tab Content */}
                 <div style={{ minHeight: '400px' }}>
                     {loading && <div style={{ padding: '40px', textAlign: 'center', color: '#A0AEC0' }}>데이터 불러오는 중...</div>}
@@ -358,6 +403,7 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                                         <tr style={{ background: '#F8F9FA', borderBottom: '2px solid #E9ECEF', color: '#546E7A' }}>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>이름</th>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>학교</th>
+                                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>최근 접속</th>
                                             <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>API 사용 권한</th>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>이메일</th>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>전화번호</th>
@@ -365,66 +411,107 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filterList(approvedTeachers).map((profile, index) => {
-                                            const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
-                                            const displayName = teacherInfo?.name || profile.full_name || '이름 없음';
-                                            const schoolName = teacherInfo?.school_name || '-';
-                                            const displayPhone = teacherInfo?.phone || '-';
-                                            const apiMode = profile.api_mode || 'SYSTEM';
+                                        {(() => {
+                                            const filtered = filterList(approvedTeachers);
+                                            const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+                                            return paginated.map((profile, index) => {
+                                                const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
+                                                const displayName = teacherInfo?.name || profile.full_name || '이름 없음';
+                                                const schoolName = teacherInfo?.school_name || '-';
+                                                const displayPhone = teacherInfo?.phone || '-';
+                                                const apiMode = profile.api_mode || 'SYSTEM';
 
-                                            return (
-                                                <tr key={profile.id} style={{ borderBottom: '1px solid #F1F3F5', transition: 'background 0.2s', background: 'white' }}>
-                                                    <td style={{ padding: '16px', fontWeight: 'bold', color: '#2C3E50' }}>{displayName}</td>
-                                                    <td style={{ padding: '16px', color: '#455A64' }}>{schoolName}</td>
-                                                    <td style={{ padding: '16px', textAlign: 'center' }}>
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleToggleApiMode(profile.id, displayName, apiMode); }}
-                                                            title="클릭하여 모드 변경"
-                                                            style={{
-                                                                fontSize: '0.8rem', fontWeight: 'bold',
-                                                                padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
-                                                                border: apiMode === 'PERSONAL' ? '1px solid #A5D6A7' : '1px solid #90CAF9',
-                                                                background: apiMode === 'PERSONAL' ? '#E8F5E9' : '#E3F2FD',
-                                                                color: apiMode === 'PERSONAL' ? '#2E7D32' : '#1976D2',
-                                                                display: 'inline-flex', alignItems: 'center', gap: '6px'
-                                                            }}
-                                                        >
-                                                            {apiMode === 'PERSONAL' ? '🔑 개인 키' : '🌐 공용 키'}
-                                                        </button>
-                                                    </td>
-                                                    <td style={{ padding: '16px', color: '#546E7A' }}>{profile.email}</td>
-                                                    <td style={{ padding: '16px', color: '#546E7A' }}>{displayPhone}</td>
-                                                    <td style={{ padding: '16px', textAlign: 'center' }}>
-                                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                                                            <Button
-                                                                onClick={() => handleRevoke(profile.id, displayName)}
-                                                                size="sm"
+                                                return (
+                                                    <tr key={profile.id} style={{ borderBottom: '1px solid #F1F3F5', transition: 'background 0.2s', background: 'white' }}>
+                                                        <td style={{ padding: '16px', fontWeight: 'bold', color: '#2C3E50' }}>{displayName}</td>
+                                                        <td style={{ padding: '16px', color: '#455A64' }}>{schoolName}</td>
+                                                        <td style={{ padding: '16px', textAlign: 'center', color: '#546E7A', fontWeight: '500' }}>
+                                                            {formatLastLogin(profile.last_login_at)}
+                                                        </td>
+                                                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleToggleApiMode(profile.id, displayName, apiMode); }}
+                                                                title="클릭하여 모드 변경"
                                                                 style={{
-                                                                    background: 'white', color: '#E53E3E',
-                                                                    border: '1px solid #FEB2B2',
-                                                                    fontWeight: 'bold', borderRadius: '6px', padding: '6px 10px', fontSize: '0.8rem'
+                                                                    fontSize: '0.8rem', fontWeight: 'bold',
+                                                                    padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
+                                                                    border: apiMode === 'PERSONAL' ? '1px solid #A5D6A7' : '1px solid #90CAF9',
+                                                                    background: apiMode === 'PERSONAL' ? '#E8F5E9' : '#E3F2FD',
+                                                                    color: apiMode === 'PERSONAL' ? '#2E7D32' : '#1976D2',
+                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px'
                                                                 }}
                                                             >
-                                                                승인 취소
-                                                            </Button>
-                                                            <Button
-                                                                onClick={() => handleForceWithdrawal(profile.id, displayName)}
-                                                                size="sm"
-                                                                style={{
-                                                                    background: '#FFF5F5', color: '#C0392B',
-                                                                    border: '1px solid #FC8181',
-                                                                    fontWeight: 'bold', borderRadius: '6px', padding: '6px 10px', fontSize: '0.8rem'
-                                                                }}
-                                                            >
-                                                                강제 탈퇴
-                                                            </Button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
+                                                                {apiMode === 'PERSONAL' ? '🔑 개인 키' : '🌐 공용 키'}
+                                                            </button>
+                                                        </td>
+                                                        <td style={{ padding: '16px', color: '#546E7A' }}>{profile.email}</td>
+                                                        <td style={{ padding: '16px', color: '#546E7A' }}>{displayPhone}</td>
+                                                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                                <Button
+                                                                    onClick={() => handleRevoke(profile.id, displayName)}
+                                                                    size="sm"
+                                                                    style={{
+                                                                        background: 'white', color: '#E53E3E',
+                                                                        border: '1px solid #FEB2B2',
+                                                                        fontWeight: 'bold', borderRadius: '6px', padding: '6px 10px', fontSize: '0.8rem'
+                                                                    }}
+                                                                >
+                                                                    승인 취소
+                                                                </Button>
+                                                                <Button
+                                                                    onClick={() => handleForceWithdrawal(profile.id, displayName)}
+                                                                    size="sm"
+                                                                    style={{
+                                                                        background: '#FFF5F5', color: '#C0392B',
+                                                                        border: '1px solid #FC8181',
+                                                                        fontWeight: 'bold', borderRadius: '6px', padding: '6px 10px', fontSize: '0.8rem'
+                                                                    }}
+                                                                >
+                                                                    강제 탈퇴
+                                                                </Button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            });
+                                        })()}
                                     </tbody>
                                 </table>
+                            )}
+
+                            {/* Pagination Controls */}
+                            {!loading && filterList(approvedTeachers).length > ITEMS_PER_PAGE && (
+                                <div style={{
+                                    padding: '16px', borderTop: '1px solid #E9ECEF',
+                                    display: 'flex', justifyContent: 'center', gap: '8px', background: '#F8F9FA'
+                                }}>
+                                    <Button
+                                        size="sm" variant="ghost"
+                                        disabled={currentPage === 1}
+                                        onClick={() => setCurrentPage(prev => prev - 1)}
+                                    >이전</Button>
+
+                                    {Array.from({ length: Math.ceil(filterList(approvedTeachers).length / ITEMS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+                                        <Button
+                                            key={page}
+                                            size="sm"
+                                            style={{
+                                                minWidth: '32px',
+                                                background: currentPage === page ? '#4299E1' : 'transparent',
+                                                color: currentPage === page ? 'white' : '#718096',
+                                                border: currentPage === page ? 'none' : '1px solid #E2E8F0'
+                                            }}
+                                            onClick={() => setCurrentPage(page)}
+                                        >{page}</Button>
+                                    ))}
+
+                                    <Button
+                                        size="sm" variant="ghost"
+                                        disabled={currentPage === Math.ceil(filterList(approvedTeachers).length / ITEMS_PER_PAGE)}
+                                        onClick={() => setCurrentPage(prev => prev + 1)}
+                                    >다음</Button>
+                                </div>
                             )}
                         </div>
                     )}
@@ -434,16 +521,49 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
                             {pendingTeachers.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '60px', color: '#A0AEC0' }}>승인 대기 중인 요청이 없습니다. 🎉</div>
                             ) : (
-                                filterList(pendingTeachers).map(profile => (
-                                    <TeacherItem
-                                        key={profile.id}
-                                        profile={profile}
-                                        onAction={() => handleApprove(profile.id, profile.teachers?.name || profile.full_name)}
-                                        actionLabel="가입 승인"
-                                        actionColor="#38A169"
-                                        onToggleApiMode={() => handleToggleApiMode(profile.id, profile.teachers?.name || profile.full_name, profile.api_mode)}
-                                    />
-                                ))
+                                <>
+                                    {filterList(pendingTeachers)
+                                        .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                                        .map(profile => (
+                                            <TeacherItem
+                                                key={profile.id}
+                                                profile={profile}
+                                                onAction={() => handleApprove(profile.id, profile.teachers?.name || profile.full_name)}
+                                                actionLabel="가입 승인"
+                                                actionColor="#38A169"
+                                                onToggleApiMode={() => handleToggleApiMode(profile.id, profile.teachers?.name || profile.full_name, profile.api_mode)}
+                                            />
+                                        ))}
+
+                                    {/* Pagination for Pending */}
+                                    {filterList(pendingTeachers).length > ITEMS_PER_PAGE && (
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px' }}>
+                                            <Button
+                                                size="sm" variant="ghost"
+                                                disabled={currentPage === 1}
+                                                onClick={() => setCurrentPage(prev => prev - 1)}
+                                            >이전</Button>
+                                            {Array.from({ length: Math.ceil(filterList(pendingTeachers).length / ITEMS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+                                                <Button
+                                                    key={page}
+                                                    size="sm"
+                                                    style={{
+                                                        minWidth: '32px',
+                                                        background: currentPage === page ? '#4299E1' : 'white',
+                                                        color: currentPage === page ? 'white' : '#718096',
+                                                        border: '1px solid #E2E8F0'
+                                                    }}
+                                                    onClick={() => setCurrentPage(page)}
+                                                >{page}</Button>
+                                            ))}
+                                            <Button
+                                                size="sm" variant="ghost"
+                                                disabled={currentPage === Math.ceil(filterList(pendingTeachers).length / ITEMS_PER_PAGE)}
+                                                onClick={() => setCurrentPage(prev => prev + 1)}
+                                            >다음</Button>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     )}

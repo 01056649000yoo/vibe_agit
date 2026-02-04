@@ -118,6 +118,16 @@ function App() {
 
   // DB에서 사용자 프로필 정보 가져오기 (교사 기본 정보 포함)
   const fetchProfile = async (userId) => {
+    // [추가] 최근 접속 시간 기록 (가장 최근 활동 시점 파악용)
+    try {
+      await supabase
+        .from('profiles')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', userId);
+    } catch (e) {
+      console.warn("최근 접속 시간 업데이트 실패:", e);
+    }
+
     // 1. 프로필 정보와 교사 정보를 병렬로 가져오기 (Waterfalls 제거)
     const [profileResult, teacherResult] = await Promise.all([
       supabase
@@ -135,7 +145,7 @@ function App() {
     const profileData = profileResult.data;
     const teacherData = teacherResult.data;
 
-    setProfile({ ...profileData, teacherName: teacherData?.name, schoolName: teacherData?.school_name })
+    setProfile({ ...profileData, last_login_at: profileData?.last_login_at, teacherName: teacherData?.name, schoolName: teacherData?.school_name })
   }
 
   // 역할을 'TEACHER'로 저장하는 함수
