@@ -169,6 +169,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     setIsDragonModalOpen={setIsDragonModalOpen}
                     setIsAgitOpen={setIsAgitOpen} // [추가]
                     isMobile={isMobile}
+                    agitSettings={agitSettings}
                 />
 
                 {/* 오늘의 목표 하단 문구 */}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, isMobile }) => {
+const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, isMobile, agitSettings }) => {
     return (
         <>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
@@ -92,47 +92,60 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, isMobi
 
                 {/* [신규] 두근두근 우리반 아지트 배너 */}
                 <motion.div
-                    whileHover={{ scale: 1.01, y: -5 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => setIsAgitOpen(true)}
+                    whileHover={agitSettings?.isEnabled !== false ? { scale: 1.01, y: -5 } : {}}
+                    whileTap={agitSettings?.isEnabled !== false ? { scale: 0.99 } : {}}
+                    onClick={() => {
+                        if (agitSettings?.isEnabled === false) {
+                            alert('🔒 현재 아지트 온 클래스 서비스 준비 중입니다. 선생님께 문의해 주세요!');
+                            return;
+                        }
+                        setIsAgitOpen(true);
+                    }}
                     style={{
-                        background: 'linear-gradient(135deg, #FFE4E6 0%, #FFF1F2 100%)',
+                        background: agitSettings?.isEnabled === false
+                            ? 'linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%)'
+                            : 'linear-gradient(135deg, #FFE4E6 0%, #FFF1F2 100%)',
                         borderRadius: '24px',
-                        padding: '30px 24px', // 상단 배너들과 동일한 패딩
-                        cursor: 'pointer',
-                        border: '2px solid #FDA4AF',
-                        boxShadow: '0 8px 24px rgba(251, 113, 133, 0.15)',
+                        padding: '30px 24px',
+                        cursor: agitSettings?.isEnabled === false ? 'default' : 'pointer',
+                        border: agitSettings?.isEnabled === false ? '2px solid #CBD5E1' : '2px solid #FDA4AF',
+                        boxShadow: agitSettings?.isEnabled === false ? 'none' : '0 8px 24px rgba(251, 113, 133, 0.15)',
                         textAlign: 'center',
                         position: 'relative',
                         overflow: 'hidden',
                         gridColumn: isMobile ? 'span 1' : 'span 2',
-                        minHeight: '220px', // 세로 높이 고정
+                        minHeight: '220px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        opacity: agitSettings?.isEnabled === false ? 0.8 : 1
                     }}
                 >
                     <div style={{
-                        position: 'absolute', top: -15, left: -15, fontSize: '4rem', opacity: 0.1, transform: 'rotate(-15deg)'
-                    }}>🎈</div>
+                        position: 'absolute', top: -15, left: -15, fontSize: '4rem', opacity: 0.05, transform: 'rotate(-15deg)'
+                    }}>{agitSettings?.isEnabled === false ? '🔒' : '🎈'}</div>
                     <div style={{
-                        position: 'absolute', bottom: -15, right: -15, fontSize: '4rem', opacity: 0.1, transform: 'rotate(15deg)'
-                    }}>✨</div>
+                        position: 'absolute', bottom: -15, right: -15, fontSize: '4rem', opacity: 0.05, transform: 'rotate(15deg)'
+                    }}>{agitSettings?.isEnabled === false ? '🔒' : '✨'}</div>
 
-                    <div style={{ fontSize: '3.2rem', marginBottom: '10px' }}>🎈</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: '900', color: '#9F1239', marginBottom: '4px' }}>
-                        두근두근 우리반 아지트
+                    <div style={{ fontSize: '3.2rem', marginBottom: '10px' }}>
+                        {agitSettings?.isEnabled === false ? '🔒' : '🎈'}
                     </div>
-                    <p style={{ margin: '0 0 12px 0', color: '#E11D48', fontSize: '0.9rem', fontWeight: '500' }}>
-                        학급 친구들과 함께 에너지를 모으는 신나는 공간!
+                    <div style={{ fontSize: '1.4rem', fontWeight: '900', color: agitSettings?.isEnabled === false ? '#64748B' : '#9F1239', marginBottom: '4px' }}>
+                        두근두근 우리반 아지트 {agitSettings?.isEnabled === false && <span style={{ fontSize: '0.8rem', color: '#EF4444' }}>[준비중]</span>}
+                    </div>
+                    <p style={{ margin: '0 0 12px 0', color: agitSettings?.isEnabled === false ? '#94A3B8' : '#E11D48', fontSize: '0.9rem', fontWeight: '500' }}>
+                        {agitSettings?.isEnabled === false
+                            ? '지금은 준비 중이에요. 선생님이 열어주실 때까지 기다려주세요!'
+                            : '학급 친구들과 함께 에너지를 모으는 신나는 공간!'}
                     </p>
                     <div style={{
-                        fontSize: '0.9rem', color: '#FB7185', fontWeight: 'bold',
+                        fontSize: '0.9rem', color: agitSettings?.isEnabled === false ? '#94A3B8' : '#FB7185', fontWeight: 'bold',
                         background: 'white', padding: '5px 18px', borderRadius: '12px',
-                        display: 'inline-block', boxShadow: '0 2px 4px rgba(225, 29, 72, 0.1)'
+                        display: 'inline-block', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
                     }}>
-                        아지트 입장하기 🚀
+                        {agitSettings?.isEnabled === false ? '입장 불가 🔒' : '아지트 입장하기 🚀'}
                     </div>
                 </motion.div>
             </div>
