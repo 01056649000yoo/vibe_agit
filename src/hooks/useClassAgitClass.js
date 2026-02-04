@@ -7,11 +7,11 @@ const DEFAULT_SETTINGS = {
 };
 
 /**
- * useClassAgitStage - 우리반 아지트의 온도와 성장 단계를 관리하는 훅
+ * useClassAgitClass - 우리반 아지트의 온도와 성장 단계를 관리하는 훅
  * 초등학생들이 자기 효능감을 느낄 수 있도록 '우리들의 노력으로 아지트가 자라난다'는 컨셉
  */
-export const useClassAgitStage = (classId, currentStudentId) => {
-    console.log("🏫 [useClassAgitStage 훅 호출됨]", { classId, currentStudentId });
+export const useClassAgitClass = (classId, currentStudentId) => {
+    console.log("🏫 [useClassAgitClass 훅 호출됨]", { classId, currentStudentId });
 
     const [loading, setLoading] = useState(true);
     const [temperature, setTemperature] = useState(0);
@@ -234,13 +234,7 @@ export const useClassAgitStage = (classId, currentStudentId) => {
             });
 
             const messages = achievedStudents.map(s => {
-                const phrases = [
-                    `🎉 축하합니다! ${s.name} 학생이 오늘의 아지트 미션을 완수하여 온도가 1도 올랐어요! 🌡️`,
-                    `✨ ${s.name} 학생의 열정적인 참여로 일일 목표 달성! 우리 반 온도가 1도 더 따뜻해졌네요!`,
-                    `🏆 ${s.name} 학생이 글, 댓글, 반응 미션을 모두 성공했어요! 아지트가 1도 상승합니다!`,
-                    `반짝반짝! ${s.name} 학생이 정성껏 활동하며 오늘의 1도를 선물해 주었답니다! 🎁`
-                ];
-                return phrases[Math.floor(Math.random() * phrases.length)];
+                return `🏆 [오늘의 주인공] ${s.name}님이 일일 미션을 모두 달성하여 온도를 1도 올렸습니다! ✨`;
             });
 
             // 누적 온도 계산 (DB에 저장된 누적값 + 오늘 달성한 미션 수)

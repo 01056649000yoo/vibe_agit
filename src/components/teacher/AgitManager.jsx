@@ -3,14 +3,14 @@ import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useClassAgitStage } from '../../hooks/useClassAgitStage';
+import { useClassAgitClass } from '../../hooks/useClassAgitClass';
 
 const AgitManager = ({ activeClass, isMobile }) => {
     const [loading, setLoading] = useState(true);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     // 학생 화면과 동일한 온도 및 설정 실시간 동기화
-    const { temperature: liveTemperature, agitSettings: liveSettings, refresh } = useClassAgitStage(activeClass?.id, null);
+    const { temperature: liveTemperature, agitSettings: liveSettings, refresh } = useClassAgitClass(activeClass?.id, null);
 
     const [honorRollStats, setHonorRollStats] = useState([]);
     const [statsLoading, setStatsLoading] = useState(true);
@@ -209,6 +209,30 @@ const AgitManager = ({ activeClass, isMobile }) => {
         }
     };
 
+    const handleDeleteSeasonHistory = async (historyId, seasonName) => {
+        if (!window.confirm(`🚨 [주의] ${seasonName} 기록을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const { error } = await supabase
+                .from('agit_season_history')
+                .delete()
+                .eq('id', historyId);
+
+            if (error) throw error;
+
+            alert('시즌 기록이 삭제되었습니다.');
+            fetchSeasonHistory();
+        } catch (error) {
+            console.error("Error deleting season history:", error);
+            alert('기록 삭제 중 오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const displayTargetScore = liveSettings?.targetScore || settings.targetScore || 100;
     const displaySurpriseGift = liveSettings?.surpriseGift || settings.surpriseGift;
 
@@ -217,11 +241,11 @@ const AgitManager = ({ activeClass, isMobile }) => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <h2 style={{ margin: 0, color: '#1E1B4B', fontWeight: '900' }}>🏠 우리반 아지트 관리</h2>
+            <h2 style={{ margin: 0, color: '#1E1B4B', fontWeight: '900' }}>🏠 아지트 溫 클래스 관리</h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(400px, 1fr))', gap: '20px' }}>
 
-                {/* 1. 아지트 溫 스테이지 관리 카드 */}
+                {/* 1. 아지트 溫 클래스 관리 카드 */}
                 <motion.div
                     whileHover={{ scale: 1.02, y: -5 }}
                     style={{ height: '100%' }}
@@ -258,7 +282,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                     <span style={{ fontSize: '1.2rem' }}>🌡️</span>
                                     <span style={{ color: 'white', fontWeight: '800', fontSize: '0.8rem', letterSpacing: '0.05em' }}>AGIT TEMPERATURE</span>
                                 </div>
-                                <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: 'white', letterSpacing: '-0.02em' }}>아지트 溫 스테이지</h3>
+                                <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: 'white', letterSpacing: '-0.02em' }}>아지트 溫 클래스</h3>
                             </div>
                         </div>
 
@@ -353,7 +377,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
                             <header style={{ padding: '0 24px', borderBottom: '1px solid #F1F5F9' }}>
                                 <div style={{ padding: '24px 0 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
-                                        <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#1E1B4B' }}>🛠️ 아지트 溫 스테이지 세부 관리</h3>
+                                        <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#1E1B4B' }}>🛠️ 아지트 溫 클래스 세부 관리</h3>
                                         <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#64748B' }}>학급의 온도를 올리는 규칙을 설정합니다.</p>
                                     </div>
                                     <button onClick={() => setIsSettingsModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.6rem', cursor: 'pointer', color: '#94A3B8' }}>×</button>
@@ -541,9 +565,32 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                                 }}>
                                                     <div style={{ background: '#F8FAFC', padding: '16px 20px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <span style={{ fontWeight: '900', color: '#1E1B4B', fontSize: '1.1rem' }}>🎉 {history.season_name}</span>
-                                                        <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: '600' }}>
-                                                            {new Date(history.started_at).toLocaleDateString()} ~ {new Date(history.ended_at).toLocaleDateString()}
-                                                        </span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: '600' }}>
+                                                                {new Date(history.started_at).toLocaleDateString()} ~ {new Date(history.ended_at).toLocaleDateString()}
+                                                            </span>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteSeasonHistory(history.id, history.season_name);
+                                                                }}
+                                                                style={{
+                                                                    background: 'rgba(239, 68, 68, 0.1)',
+                                                                    color: '#EF4444',
+                                                                    border: 'none',
+                                                                    padding: '4px 8px',
+                                                                    borderRadius: '6px',
+                                                                    fontSize: '0.75rem',
+                                                                    fontWeight: '800',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.2s'
+                                                                }}
+                                                                onMouseOver={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.2)'}
+                                                                onMouseOut={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.1)'}
+                                                            >
+                                                                삭제
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                     <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr', gap: '20px' }}>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

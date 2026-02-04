@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useClassAgitStage } from '../../hooks/useClassAgitStage';
+import { useClassAgitClass } from '../../hooks/useClassAgitClass';
 import Button from '../common/Button';
 import Card from '../common/Card';
 
 // 교실 속 비밀 아지트 느낌의 수채화 배경
 const CLASSROOM_BG = "/agit_hideout_bg.png";
 
-const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
+const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
     console.log("🎓 [학생 아지트 페이지] studentSession:", studentSession);
 
     const {
@@ -20,7 +20,7 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
         myMissionStatus,
         agitSettings,
         achievedStudents
-    } = useClassAgitStage(studentSession?.classId, studentSession?.id);
+    } = useClassAgitClass(studentSession?.classId, studentSession?.id);
 
     const [subTab, setSubTab] = useState('hub');
     const [isMobileSize, setIsMobileSize] = useState(window.innerWidth <= 1024);
@@ -42,7 +42,20 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
     }))).current;
 
     // 온도를 0-100 사이로 맵핑
-    const currentVisualTemp = Math.min(100, Math.max(0, temperature || 0));
+    const currentTempFromHook = Math.min(100, Math.max(0, temperature || 0));
+
+    // [시뮬레이션용] 실제 데이터 대신 UI 테스트를 위한 가상 온도 상태
+    const [simulatedTemp, setSimulatedTemp] = useState(currentTempFromHook);
+    const [isSimulating, setIsSimulating] = useState(false);
+
+    // 훅에서 오는 온도가 변경되면 시뮬레이션 중이 아닐 때만 업데이트
+    useEffect(() => {
+        if (!isSimulating) {
+            setSimulatedTemp(currentTempFromHook);
+        }
+    }, [currentTempFromHook, isSimulating]);
+
+    const currentVisualTemp = isSimulating ? simulatedTemp : currentTempFromHook;
 
     useEffect(() => {
         const handleResize = () => setIsMobileSize(window.innerWidth <= 1024);
@@ -58,7 +71,7 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
             const isUnlocked = currentVisualTemp >= target;
 
             // 아직 보여주지 않았고, 목표 달성했고, 현재 스테이지 화면이라면
-            if (isUnlocked && subTab === 'onStage' && !hasShownSurpriseRef.current) {
+            if (isUnlocked && subTab === 'onClass' && !hasShownSurpriseRef.current) {
                 const timer = setTimeout(() => {
                     setShowSurprise(true);
                     hasShownSurpriseRef.current = true;
@@ -94,9 +107,11 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
         }}>
             <header style={{
                 padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px',
-                background: subTab === 'hub' ? 'white' : 'rgba(0,0,0,0.8)', zIndex: 100,
+                background: subTab === 'hub' ? 'white' : `rgba(0,0,0,${Math.max(0.4, 0.8 - (currentVisualTemp / 100) * 0.4)})`,
+                zIndex: 100,
                 borderBottom: subTab === 'hub' ? '1px solid #F1F5F9' : '1px solid rgba(255,255,255,0.1)',
-                backdropFilter: subTab === 'hub' ? 'none' : 'blur(15px)'
+                backdropFilter: subTab === 'hub' ? 'none' : 'blur(15px)',
+                transition: 'background 1.5s ease'
             }}>
                 <motion.button
                     whileHover={{ x: -3 }}
@@ -106,7 +121,7 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
                     ‹
                 </motion.button>
                 <h1 style={{ margin: 0, fontSize: '1rem', fontWeight: '900', color: subTab === 'hub' ? '#1E293B' : 'white' }}>
-                    {subTab === 'hub' ? '우리반 아지트' : '아지트 온(溫) 스테이지'}
+                    {subTab === 'hub' ? '우리반 아지트' : '아지트 온(溫) 클래스'}
                 </h1>
             </header>
 
@@ -188,13 +203,13 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
                         </div>
 
                         <Card
-                            onClick={() => setSubTab('onStage')}
+                            onClick={() => setSubTab('onClass')}
                             style={{ background: 'white', border: '1px solid #E2E8F0', cursor: 'pointer', padding: '24px', margin: 0 }}
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                                 <div style={{ width: '56px', height: '56px', background: '#F5F3FF', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>🌡️</div>
                                 <div>
-                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.05rem', fontWeight: '800', color: '#4338CA' }}>아지트 온(溫) 스테이지</h3>
+                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.05rem', fontWeight: '800', color: '#4338CA' }}>아지트 온(溫) 클래스</h3>
                                     <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>우리 반 온도를 높여 아지트를 밝혀주세요!</p>
                                 </div>
                             </div>
@@ -202,16 +217,58 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
                     </motion.div>
                 ) : (
                     <motion.div
-                        key="onStage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        key="onClass" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}
                     >
+                        {/* [시뮬레이션 컨트롤러] 개발용 */}
+                        <div style={{
+                            position: 'absolute', top: '100px', right: '12px', zIndex: 1000,
+                            background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)',
+                            padding: '12px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.2)',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.4)', color: 'white',
+                            display: 'flex', flexDirection: 'column', gap: '8px', width: '140px'
+                        }}>
+                            <div style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#FCD34D', display: 'flex', justifyContent: 'space-between' }}>
+                                🛠 시뮬레이터
+                                <button
+                                    onClick={() => setIsSimulating(!isSimulating)}
+                                    style={{ background: isSimulating ? '#EF4444' : '#10B981', border: 'none', borderRadius: '4px', fontSize: '0.6rem', color: 'white', padding: '2px 4px', cursor: 'pointer' }}
+                                >
+                                    {isSimulating ? 'OFF' : 'ON'}
+                                </button>
+                            </div>
+                            {isSimulating && (
+                                <>
+                                    <input
+                                        type="range" min="0" max="100"
+                                        value={simulatedTemp}
+                                        onChange={(e) => setSimulatedTemp(Number(e.target.value))}
+                                        style={{ width: '100%', cursor: 'pointer', accentColor: '#FCD34D' }}
+                                    />
+                                    <div style={{ fontSize: '0.8rem', textAlign: 'center', fontWeight: '900' }}>
+                                        {simulatedTemp}°C
+                                    </div>
+                                    <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
+                                        슬라이더를 움직여보세요!
+                                    </div>
+                                </>
+                            )}
+                        </div>
                         {/* [프리미엄 학급 온도계 UI] */}
-                        <div style={{ padding: '24px 20px', zIndex: 10, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div style={{
+                            padding: '24px 20px', zIndex: 10,
+                            background: `rgba(0,0,0,${Math.max(0.3, 0.7 - (currentVisualTemp / 100) * 0.4)})`,
+                            backdropFilter: 'blur(12px)',
+                            borderBottom: '1px solid rgba(255,255,255,0.1)',
+                            transition: 'background 1.5s ease'
+                        }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px' }}>
                                 <div>
                                     <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', fontWeight: '800', marginBottom: '2px', letterSpacing: '0.05em' }}>CLASS TEMPERATURE</div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ color: 'white', fontSize: '1.2rem', fontWeight: '900', letterSpacing: '-0.02em' }}>따뜻한 우리 반 아지트</span>
+                                        <span style={{ color: 'white', fontSize: '1.2rem', fontWeight: '900', letterSpacing: '-0.02em' }}>
+                                            {studentSession?.className || '우리 반'} 아지트
+                                        </span>
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
@@ -287,35 +344,48 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
                                 position: 'absolute', inset: 0,
                                 backgroundImage: `url(${CLASSROOM_BG})`,
                                 backgroundSize: 'cover', backgroundPosition: 'center',
-                                filter: `brightness(${0.35 + (currentVisualTemp / 100) * 0.75}) saturate(${0.9 + (currentVisualTemp / 100) * 0.3})`,
-                                transition: 'filter 1.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                                // 온도가 낮을 때(0도) 0.15 정도로 매우 어둡게 시작하여 100도일 때 1.1까지 밝아지도록 조정
+                                filter: `brightness(${0.15 + (currentVisualTemp / 100) * 0.95}) saturate(${0.7 + (currentVisualTemp / 100) * 0.5}) contrast(${0.9 + (currentVisualTemp / 100) * 0.2})`,
+                                transition: 'filter 2s cubic-bezier(0.4, 0, 0.2, 1)'
                             }} />
 
-                            {/* 부드러운 광원 효과 (눈이 편안하도록 강도 조정) */}
+                            {/* [신규] 온도가 올라갈수록 은은하게 퍼지는 따뜻한 노란 전구광 효과 */}
                             <motion.div
                                 animate={{
-                                    opacity: (currentVisualTemp / 100) * 0.8,
-                                    scale: 0.9 + (currentVisualTemp / 100) * 0.4,
-                                    filter: `blur(${35 + (currentVisualTemp / 100) * 25}px)`
+                                    opacity: (currentVisualTemp / 100) * 0.6,
                                 }}
                                 style={{
-                                    position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
-                                    width: '260px', height: '260px',
-                                    background: 'radial-gradient(circle, rgba(255,253,210,1) 0%, rgba(255,250,180,0.5) 40%, transparent 80%)',
-                                    zIndex: 3, pointerEvents: 'none',
-                                    boxShadow: `0 0 ${currentVisualTemp * 0.8}px rgba(255, 255, 200, 0.3)`
+                                    position: 'absolute', inset: 0,
+                                    background: 'radial-gradient(circle at 70% 30%, rgba(255, 243, 176, 0.4) 0%, transparent 70%)',
+                                    zIndex: 2, pointerEvents: 'none',
                                 }}
                             />
 
+                            {/* 부드러운 중앙 광원 효과 (온도에 따라 크기와 강도 확장) */}
+                            <motion.div
+                                animate={{
+                                    opacity: (currentVisualTemp / 100) * 0.7,
+                                    scale: 0.8 + (currentVisualTemp / 100) * 0.6,
+                                    filter: `blur(${40 + (currentVisualTemp / 100) * 40}px)`
+                                }}
+                                style={{
+                                    position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)',
+                                    width: '300px', height: '300px',
+                                    background: 'radial-gradient(circle, rgba(255,253,210,0.8) 0%, rgba(255,230,150,0.3) 50%, transparent 80%)',
+                                    zIndex: 3, pointerEvents: 'none',
+                                }}
+                            />
+
+                            {/* 전체적인 어둠 레이어 (온도가 낮을수록 진함) */}
                             <div style={{
                                 position: 'absolute', inset: 0,
-                                background: `rgba(0,0,0, ${0.6 - (currentVisualTemp / 100) * 0.6})`,
-                                transition: 'background 1.5s ease', zIndex: 1
+                                background: `linear-gradient(to bottom, rgba(0,0,0,${0.85 - (currentVisualTemp / 100) * 0.85}), rgba(0,0,0,${0.6 - (currentVisualTemp / 100) * 0.6}))`,
+                                transition: 'background 2s ease', zIndex: 1
                             }} />
 
                             {/* [중앙 다이내믹 격려 메시지] */}
                             <div style={{
-                                position: 'absolute', top: '45%', left: '50%', transform: 'translate(-50%, -50%)',
+                                position: 'absolute', top: '25%', left: '50%', transform: 'translate(-50%, -50%)',
                                 width: '100%', textAlign: 'center', zIndex: 15, pointerEvents: 'none'
                             }}>
                                 <motion.div
@@ -333,17 +403,17 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
                                         {(() => {
                                             const tempRange = Math.floor(currentVisualTemp / 10) * 10;
                                             const messages = {
-                                                0: "🌱 우리들의 첫 씨앗을 심어볼까요?",
-                                                10: "✨ 작은 빛이 반짝이기 시작했어요!",
-                                                20: "🕯️ 조금씩 아지트가 따뜻해지고 있어요.",
-                                                30: "🔥 우리 반의 열정이 느껴져요!",
-                                                40: "🌟 와! 벌써 이렇게나 밝아지다니!",
-                                                50: "🌗 어느덧 절반! 조금만 더 힘내요!",
-                                                60: "🌈 교실에 무지개 빛이 도는 것 같아요.",
-                                                70: "🔆 정말 눈부시게 성장하고 있군요!",
-                                                80: "💎 우리들의 마음이 보석처럼 빛나요.",
-                                                90: "🌠 이제 전설의 아지트가 눈앞이에요!",
-                                                100: "🎉 축하합니다! 우리들의 태양이 완성됐어요! ❤️"
+                                                0: "🌑 아직은 차갑고 어두운 아지트... 온도를 높여 불을 켜주세요!",
+                                                10: "🕯️ 작은 촛불 하나가 켜졌어요! 조금 더 마음을 모아봐요.",
+                                                20: "🏮 어두웠던 구석까지 은은한 온기가 퍼지기 시작해요.",
+                                                30: "🔦 와! 우리들의 열정이 어둠을 조금씩 밀어내고 있어요!",
+                                                40: "💡 아지트가 제업 밝아졌네요! 창가에 햇살이 비치는 것 같아요.",
+                                                50: "🌗 어느덧 절반! 어둠보다 빛이 더 많아진 우리 반 아지트!",
+                                                60: "🔆 눈부신 성장의 빛이 교실 곳곳을 환하게 채우고 있어요.",
+                                                70: "🌟 정말 따뜻해요! 우리들의 활동이 찬란한 별빛이 되었군요.",
+                                                80: "💎 보석처럼 빛나는 우리 반, 이제 어둠은 찾아볼 수 없어요!",
+                                                90: "🌠 거의 다 왔어요! 전설처럼 빛나는 아지트의 탄생 직전!",
+                                                100: "☀️ 축하합니다! 우리 모두의 마음으로 가장 환한 아지트를 만들었어요! ❤️"
                                             };
                                             return messages[tempRange] || messages[0];
                                         })()}
@@ -354,19 +424,20 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
                             {/* [실시간 활동 전광판 (Marquee) - 2단 구성] */}
                             <div style={{
                                 position: 'absolute', bottom: '0', left: 0, right: 0,
-                                background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 27, 75, 0.95))',
+                                background: `linear-gradient(90deg, rgba(15, 23, 42, ${0.95 - (currentVisualTemp / 100) * 0.2}), rgba(30, 27, 75, ${0.95 - (currentVisualTemp / 100) * 0.2}))`,
                                 padding: '10px 0',
                                 borderTop: '2px solid rgba(252, 211, 77, 0.4)',
                                 borderBottom: '1px solid rgba(252, 211, 77, 0.2)',
                                 overflow: 'hidden', whiteSpace: 'nowrap', zIndex: 105,
                                 backdropFilter: 'blur(12px)',
-                                display: 'flex', flexDirection: 'column', gap: '8px'
+                                display: 'flex', flexDirection: 'column', gap: '8px',
+                                transition: 'background 1.5s ease'
                             }}>
                                 {/* 첫 번째 줄 (상단) - 속도를 60초로 늦춤 */}
                                 <motion.div
                                     animate={{ x: ['100%', '-100%'] }}
-                                    transition={{ repeat: Infinity, duration: 60, ease: "linear" }}
-                                    style={{ display: 'inline-block', paddingLeft: '100%' }}
+                                    transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
+                                    style={{ display: 'inline-block', paddingLeft: '5%' }}
                                 >
                                     <div style={{ display: 'flex', gap: '80px', alignItems: 'center' }}>
                                         {displayRow1.map((msg, idx) => (
@@ -377,9 +448,9 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
                                                 </span>
                                             </div>
                                         ))}
-                                        {/* 루프를 위한 복제 */}
+                                        {/* 3벌 복제로 끊김 없는 연결 */}
                                         {displayRow1.map((msg, idx) => (
-                                            <div key={`dup1-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div key={`dup1-2-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                 <span style={{ color: '#FCD34D', fontWeight: '900', fontSize: '1rem' }}>📢 알림</span>
                                                 <span style={{ color: 'white', fontWeight: '700', fontSize: '1.05rem', letterSpacing: '-0.02em', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                                                     {msg}
@@ -392,8 +463,8 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
                                 {/* 두 번째 줄 (하단) - 가독성을 위해 약간 다른 속도(70초)와 딜레이 적용 */}
                                 <motion.div
                                     animate={{ x: ['100%', '-100%'] }}
-                                    transition={{ repeat: Infinity, duration: 75, ease: "linear", delay: 2 }}
-                                    style={{ display: 'inline-block', paddingLeft: '100%' }}
+                                    transition={{ repeat: Infinity, duration: 18, ease: "linear", delay: 0.5 }}
+                                    style={{ display: 'inline-block', paddingLeft: '5%' }}
                                 >
                                     <div style={{ display: 'flex', gap: '80px', alignItems: 'center' }}>
                                         {displayRow2.map((msg, idx) => (
@@ -404,9 +475,9 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
                                                 </span>
                                             </div>
                                         ))}
-                                        {/* 루프를 위한 복제 */}
+                                        {/* 3벌 복제로 끊김 없는 연결 */}
                                         {displayRow2.map((msg, idx) => (
-                                            <div key={`dup2-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div key={`dup2-2-${idx}`} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                 <span style={{ color: '#60A5FA', fontWeight: '900', fontSize: '1rem' }}>🔔 소식</span>
                                                 <span style={{ color: 'rgba(255,255,255,0.95)', fontWeight: '700', fontSize: '1.05rem', letterSpacing: '-0.02em', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                                                     {msg}
@@ -524,4 +595,4 @@ const AgitOnStagePage = ({ studentSession, onBack, onNavigate }) => {
     );
 };
 
-export default AgitOnStagePage;
+export default AgitOnClassPage;

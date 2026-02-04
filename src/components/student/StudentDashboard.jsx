@@ -14,7 +14,7 @@ import PointLevelCard from './PointLevelCard';
 import DashboardMenu from './DashboardMenu';
 import DragonHideoutModal from './DragonHideoutModal';
 import BackgroundShopModal from './BackgroundShopModal';
-import AgitOnStagePage from './AgitOnStagePage'; // [신규] 아지트 페이지 임포트
+import AgitOnClassPage from './AgitOnClassPage'; // [신규] 아지트 페이지 임포트
 
 // [신규] 드래곤 아지트 배경 목록 (상수 외부 이동)
 const HIDEOUT_BACKGROUNDS = {
@@ -222,7 +222,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             background: 'white', zIndex: 5000, overflow: 'hidden'
                         }}
                     >
-                        <AgitOnStagePage
+                        <AgitOnClassPage
                             studentSession={studentSession}
                             onBack={() => setIsAgitOpen(false)}
                             onNavigate={(path) => {
