@@ -27,12 +27,21 @@ const HIDEOUT_BACKGROUNDS = {
     legend: { id: 'legend', name: '🌈 무지개 성소', color: 'linear-gradient(135deg, #FF9A9E 0%, #FAD0C4 99%, #FAD0C4 100%)', border: '#FFD700', textColor: '#D81B60', subColor: '#AD1457', price: 0, requiresMaxLevel: true, glow: 'rgba(255, 215, 0, 0.6)' }
 };
 
+// [신규] 아지트 실시간 데이터 연동 훅
+import { useClassAgitClass } from '../../hooks/useClassAgitClass';
+
 const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isAgitOpen, setIsAgitOpen] = useState(false); // [신규] 아지트 오픈 상태
     const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+    // [신규] 아지트 온도 및 활성화 정보 실시간 동기화
+    const {
+        agitSettings,
+        temperature
+    } = useClassAgitClass(studentSession?.classId || studentSession?.class_id, studentSession?.id);
 
     // 전반적인 대시보드 데이터 및 비즈니스 로직
     const {
@@ -150,6 +159,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     levelInfo={levelInfo}
                     stats={stats}
                     isLoading={isLoading}
+                    agitSettings={agitSettings}
+                    temperature={temperature}
                 />
 
                 {/* 주요 활동 메뉴 */}

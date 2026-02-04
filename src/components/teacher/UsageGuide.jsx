@@ -17,6 +17,7 @@ const UsageGuide = ({ isMobile }) => {
         { id: 'mission-writing', title: '✍️ 미션 및 글쓰기', emoji: '✍️' },
         { id: 'playground', title: '🎢 놀이터 및 게임 설정', emoji: '🎢' },
         { id: 'points-dragon', title: '💰 포인트 및 드래곤기르기', emoji: '💰' },
+        { id: 'agit-on-class', title: '🌡️ 아지트 온(溫) 클래스 관리', emoji: '🌡️' },
         { id: 'evaluation', title: '🎯 학생 평가 및 AI쫑알이', emoji: '🎯' },
         { id: 'analysis', title: '📊 학급 분석 활용', emoji: '📊' },
         { id: 'book-publishing', title: '📚 학급 도서 출판', emoji: '📚' },
@@ -247,10 +248,47 @@ const UsageGuide = ({ isMobile }) => {
                 </div>
             </section>
 
-            {/* 섹션 5: 학생 평가 및 AI쫑알이 */}
-            <section id="evaluation" style={sectionStyle}>
+            {/* 섹션 5: 아지트 온(溫) 클래스 관리 */}
+            <section id="agit-on-class" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
                     {sections[4].title}
+                </h2>
+
+                <div style={cardStyle}>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#6366F1' }}>🌡️ 학급 온도 및 성장 시스템</h3>
+                    <p><strong>• 우리들의 노력으로 밝아지는 아지트:</strong>
+                        <br />학생들이 미션을 수행하면 학급의 <strong>'온도'</strong>가 올라갑니다. 0도일 때 아지트는 칠흑같이 어두운 상태이지만, 온도가 올라감에 따라 조명이 하나씩 켜지며 환하고 따뜻한 공간으로 시뮬레이션됩니다.
+                    </p>
+                    <p><strong>• 실시간 격려 메시지:</strong>
+                        <br />온도 구간(10도 단위)마다 아지트를 밝히는 따뜻한 메시지가 나타나 학생들에게 정서적 성취감을 제공합니다.
+                    </p>
+                </div>
+
+                <div style={cardStyle}>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#10B981' }}>📝 일일 미션 및 명예의 전당</h3>
+                    <p><strong>• 온도 상승 조건:</strong>
+                        <br />학생 1명이 하루 동안 선생님이 설정한 <strong>[글쓰기 / 댓글 / 반응]</strong> 개수를 모두 달성하면 학급 온도가 <strong>+1도</strong> 올라갑니다.
+                    </p>
+                    <p><strong>• 명예의 전당 (Honor Roll):</strong>
+                        <br />일일 미션을 달성한 학생은 아지트 중앙 전광판에 이름이 올라가며, 시즌 동안 누가 가장 많이 기여했는지 누적 횟수가 기록됩니다.
+                    </p>
+                </div>
+
+                <div style={cardStyle}>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#F59E0B' }}>🚀 시즌 관리 및 깜짝 선물</h3>
+                    <p><strong>1. 목표 설정:</strong> 시즌 목표 온도와 달성 시 지급할 <strong>'깜짝 선물'</strong>(예: 자유시간 30분, 간식 파티 등)을 입력하세요.</p>
+                    <p><strong>2. 시즌 종료 및 초기화:</strong> 목표 온도 달성 시 시즌을 종료하고 새로운 시즌을 시작할 수 있습니다. 종료된 시즌의 데이터는 <strong>'📜 시즌 기록'</strong> 탭에 자동으로 아카이빙됩니다.</p>
+                </div>
+
+                <div style={highlightStyle}>
+                    💡 <strong>관리 팁:</strong> 하단의 <strong>[관리 정보 저장]</strong> 버튼을 누르면 실시간으로 학생들의 아지트 화면에 반영됩니다. 학급 분위기에 맞춰 목표 온도와 일일 미션 난이도를 조절해보세요!
+                </div>
+            </section>
+
+            {/* 섹션 6: 학생 평가 및 AI쫑알이 */}
+            <section id="evaluation" style={sectionStyle}>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    {sections[5].title}
                 </h2>
 
                 <div style={cardStyle}>
@@ -289,10 +327,10 @@ const UsageGuide = ({ isMobile }) => {
                 </div>
             </section>
 
-            {/* 섹션 6: 학습 분석 활용 */}
+            {/* 섹션 7: 학습 분석 활용 */}
             <section id="analysis" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[5].title}
+                    {sections[6].title}
                 </h2>
                 <div style={cardStyle}>
                     <p><strong>1. 학급 종합 분석판</strong><br />
@@ -307,10 +345,10 @@ const UsageGuide = ({ isMobile }) => {
                 </div>
             </section>
 
-            {/* 섹션 7: 학급 도서 출판 */}
+            {/* 섹션 8: 학급 도서 출판 */}
             <section id="book-publishing" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[6].title}
+                    {sections[7].title}
                 </h2>
                 <div style={cardStyle}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#27AE60' }}>📚 학급 도서 출판 (NEW)</h3>
@@ -326,10 +364,10 @@ const UsageGuide = ({ isMobile }) => {
                 </div>
             </section>
 
-            {/* 섹션 7: GPT 인공지능 활용 안내 (신규) */}
+            {/* 섹션 9: GPT 인공지능 활용 안내 (신규) */}
             <section id="gpt-info" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[7].title}
+                    {sections[8].title}
                 </h2>
                 <div style={cardStyle}>
                     <p style={{ marginBottom: '20px' }}>
@@ -394,10 +432,10 @@ const UsageGuide = ({ isMobile }) => {
                 </div>
             </section>
 
-            {/* 섹션 8: 실시간 보안관 (신규 추가) */}
+            {/* 섹션 10: 실시간 보안관 (신규 추가) */}
             <section id="realtime-guardian" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[8].title}
+                    {sections[9].title}
                 </h2>
                 <div style={cardStyle}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#E74C3C' }}>🛡️ 학생 댓글 2단계 안전 그물망</h3>

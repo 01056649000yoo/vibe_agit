@@ -203,14 +203,36 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                         </div>
 
                         <Card
-                            onClick={() => setSubTab('onClass')}
-                            style={{ background: 'white', border: '1px solid #E2E8F0', cursor: 'pointer', padding: '24px', margin: 0 }}
+                            onClick={() => {
+                                if (agitSettings?.isEnabled === false) {
+                                    alert('🔒 현재 아지트 온 클래스 서비스 준비 중입니다. 선생님께 문의해 주세요!');
+                                    return;
+                                }
+                                setSubTab('onClass');
+                            }}
+                            style={{
+                                background: agitSettings?.isEnabled === false ? '#F1F5F9' : 'white',
+                                border: '1px solid #E2E8F0',
+                                cursor: agitSettings?.isEnabled === false ? 'default' : 'pointer',
+                                padding: '24px', margin: 0,
+                                opacity: agitSettings?.isEnabled === false ? 0.7 : 1
+                            }}
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                <div style={{ width: '56px', height: '56px', background: '#F5F3FF', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>🌡️</div>
+                                <div style={{
+                                    width: '56px', height: '56px',
+                                    background: agitSettings?.isEnabled === false ? '#E2E8F0' : '#F5F3FF',
+                                    borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem'
+                                }}>
+                                    {agitSettings?.isEnabled === false ? '🔒' : '🌡️'}
+                                </div>
                                 <div>
-                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.05rem', fontWeight: '800', color: '#4338CA' }}>아지트 온(溫) 클래스</h3>
-                                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>우리 반 온도를 높여 아지트를 밝혀주세요!</p>
+                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.05rem', fontWeight: '800', color: agitSettings?.isEnabled === false ? '#64748B' : '#4338CA' }}>
+                                        아지트 온(溫) 클래스 {agitSettings?.isEnabled === false && <span style={{ fontSize: '0.7rem', color: '#EF4444', verticalAlign: 'middle', marginLeft: '4px' }}>[준비중]</span>}
+                                    </h3>
+                                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>
+                                        {agitSettings?.isEnabled === false ? '준비 중인 서비스입니다. 입장이 제한됩니다.' : '우리 반 온도를 높여 아지트를 밝혀주세요!'}
+                                    </p>
                                 </div>
                             </div>
                         </Card>

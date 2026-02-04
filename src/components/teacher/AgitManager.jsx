@@ -19,6 +19,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
     const [historyLoading, setHistoryLoading] = useState(false);
 
     const [settings, setSettings] = useState({
+        isEnabled: false,
         targetScore: 100,
         surpriseGift: '',
         activityGoals: {
@@ -151,32 +152,31 @@ const AgitManager = ({ activeClass, isMobile }) => {
 
             const seasonName = `${(historyCount || 0) + 1}번째 시즌`;
 
-            // 1. 현재 시즌 기록 아카이빙 (현재 라이브 데이터 기준)
-            const { error: archiveError } = await supabase
-                .from('agit_season_history')
-                .insert({
-                    class_id: activeClass.id,
-                    season_name: seasonName,
-                    target_score: liveSettings?.targetScore || settings.targetScore,
-                    surprise_gift: liveSettings?.surpriseGift || settings.surpriseGift,
-                    started_at: liveSettings?.lastResetAt,
-                    ended_at: new Date().toISOString(),
-                    rankings: honorRollStats.slice(0, 5) // 상위 5명 보관
-                });
+            // 1. 기존 기록이 있는 경우에만 아카이빙 진행
+            if (historyCount > 0 || liveTemperature > 0) {
+                const { error: archiveError } = await supabase
+                    .from('agit_season_history')
+                    .insert({
+                        class_id: activeClass.id,
+                        season_name: seasonName,
+                        target_score: liveSettings?.targetScore || settings.targetScore,
+                        surprise_gift: liveSettings?.surpriseGift || settings.surpriseGift,
+                        started_at: liveSettings?.lastResetAt || new Date().toISOString(),
+                        ended_at: new Date().toISOString(),
+                        rankings: honorRollStats.slice(0, 5) // 상위 5명 보관
+                    });
 
-            if (archiveError) throw archiveError;
+                if (archiveError) throw archiveError;
+            }
 
-            // 2. 아지트 설정 초기화 (디폴트값으로 완전히 초기화하여 새 출발)
+            // 2. 아지트 설정 초기화 (새 시즌은 비활성 상태로 시작)
             const newSeasonSettings = {
+                isEnabled: false,
                 currentTemperature: 0,
-                targetScore: 100,
+                targetScore: settings.targetScore || 100,
                 lastResetAt: new Date().toISOString(), // 새로운 시즌 시작 시점
                 surpriseGift: '',
-                activityGoals: {
-                    post: 1,
-                    comment: 5,
-                    reaction: 5
-                }
+                activityGoals: settings.activityGoals
             };
 
             const { error: settingsError } = await supabase
@@ -194,7 +194,11 @@ const AgitManager = ({ activeClass, isMobile }) => {
 
             if (statsError) throw statsError;
 
-            alert(`${seasonName}이 종료되고 새로운 시즌이 시작되었습니다! 🌱`);
+            const successMsg = (historyCount || 0) === 0
+                ? "아지트 온 클래스 시즌이 성공적으로 시작되었습니다! 🌱"
+                : `${seasonName}이 종료되고 새로운 시즌이 시작되었습니다! 🚀`;
+
+            alert(successMsg);
             setIsSettingsModalOpen(false);
             setHonorRollStats([]); // 로컬 상태 즉시 초기화
             refresh();
@@ -203,6 +207,28 @@ const AgitManager = ({ activeClass, isMobile }) => {
 
         } catch (error) {
             console.error("Error starting new season:", error);
+            alert('시즌 처리 중 오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSeasonStart = async () => {
+        try {
+            setLoading(true);
+            const updatedSettings = { ...settings, isEnabled: true, lastResetAt: liveSettings?.lastResetAt || new Date().toISOString() };
+            const { error } = await supabase
+                .from('classes')
+                .update({ agit_settings: updatedSettings })
+                .eq('id', activeClass.id);
+
+            if (error) throw error;
+
+            alert('🚀 아지트 온 클래스 시즌을 시작합니다! 학생들의 입장이 허용되었습니다.');
+            setSettings(updatedSettings);
+            refresh();
+        } catch (error) {
+            console.error("Error starting season:", error);
             alert('시즌 시작 중 오류가 발생했습니다.');
         } finally {
             setLoading(false);
@@ -408,6 +434,40 @@ const AgitManager = ({ activeClass, isMobile }) => {
                             <div style={{ flex: 1, overflowY: 'auto', padding: '30px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                 {activeTab === 'settings' ? (
                                     <>
+                                        <section style={{ marginBottom: '20px' }}>
+                                            <div style={{
+                                                background: settings.isEnabled ? '#EEF2FF' : '#F8FAFC',
+                                                padding: '20px', borderRadius: '16px', border: `2px solid ${settings.isEnabled ? '#6366F1' : '#E2E8F0'}`,
+                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                transition: 'all 0.3s'
+                                            }}>
+                                                <div>
+                                                    <h4 style={{ margin: 0, color: '#1E1B4B', fontSize: '1rem', fontWeight: '900' }}>
+                                                        {settings.isEnabled ? '✅ 아지트 활성화됨' : '🔒 아지트 비활성화됨'}
+                                                    </h4>
+                                                    <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#64748B' }}>
+                                                        {settings.isEnabled ? '학생들이 아지트 온 클래스에 입장하여 활동할 수 있습니다.' : '학생들에게는 "준비 중" 문구가 표시되며 입장이 제한됩니다.'}
+                                                    </p>
+                                                </div>
+                                                <div
+                                                    onClick={() => setSettings({ ...settings, isEnabled: !settings.isEnabled })}
+                                                    style={{
+                                                        width: '60px', height: '32px', background: settings.isEnabled ? '#6366F1' : '#CBD5E1',
+                                                        borderRadius: '20px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s'
+                                                    }}
+                                                >
+                                                    <motion.div
+                                                        animate={{ x: settings.isEnabled ? 30 : 2 }}
+                                                        style={{
+                                                            width: '28px', height: '28px', background: 'white',
+                                                            borderRadius: '50%', position: 'absolute', top: '2px',
+                                                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </section>
+
                                         <section>
                                             <h4 style={{ margin: '0 0 16px 0', color: '#1E1B4B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: '800' }}>
                                                 🎯 시즌 목표 및 일일 미션
@@ -640,22 +700,38 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                     onClick={handleSaveSettings}
                                     style={{ flex: 1, background: '#64748B', fontWeight: 'bold', padding: '16px', fontSize: '0.95rem', minWidth: isMobile ? '100% ' : 'auto' }}
                                 >
-                                    💾 설정 정보 저장
+                                    💾 설정 저장
                                 </Button>
-                                <Button
-                                    onClick={handleStartNewSeason}
-                                    style={{
-                                        flex: 2,
-                                        background: isGoalReached ? 'linear-gradient(135deg, #EC4899 0%, #6366F1 100%)' : '#6366F1',
-                                        fontWeight: '900',
-                                        padding: '16px',
-                                        fontSize: '1rem',
-                                        minWidth: isMobile ? '100%' : 'auto',
-                                        boxShadow: isGoalReached ? '0 4px 15px rgba(236, 72, 153, 0.3)' : 'none'
-                                    }}
-                                >
-                                    {isGoalReached ? '🎉 목표 달성! 시즌 종료 및 새 시즌 시작' : '🚀 새로운 시즌 시작'}
-                                </Button>
+
+                                {!liveSettings?.isEnabled ? (
+                                    <Button
+                                        onClick={handleSeasonStart}
+                                        style={{
+                                            flex: 2,
+                                            background: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
+                                            fontWeight: '900', padding: '16px', fontSize: '1rem',
+                                            minWidth: isMobile ? '100%' : 'auto',
+                                            boxShadow: '0 4px 15px rgba(99, 102, 241, 0.3)'
+                                        }}
+                                    >
+                                        🚀 {seasonHistory.length === 0 ? '첫 번째 시즌 시작하기' : '새로운 시즌 시작하기'}
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        onClick={handleStartNewSeason}
+                                        style={{
+                                            flex: 2,
+                                            background: isGoalReached ? 'linear-gradient(135deg, #EC4899 0%, #6366F1 100%)' : '#EF4444',
+                                            fontWeight: '900', padding: '16px', fontSize: '1rem',
+                                            minWidth: isMobile ? '100%' : 'auto',
+                                            boxShadow: isGoalReached ? '0 4px 15px rgba(236, 72, 153, 0.3)' : 'none',
+                                            opacity: isGoalReached ? 1 : 0.8
+                                        }}
+                                    >
+                                        {isGoalReached ? '🎉 목표 달성! 시즌 종료 및 기록 보관' : '⚠️ 현재 시즌 강제 종료 및 초기화'}
+                                    </Button>
+                                )}
+
                                 <Button
                                     onClick={() => setIsSettingsModalOpen(false)}
                                     variant="ghost"

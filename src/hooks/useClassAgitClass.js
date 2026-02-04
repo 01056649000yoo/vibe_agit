@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 const DEFAULT_SETTINGS = {
+    isEnabled: false,
     targetScore: 100,
     activityGoals: { post: 1, comment: 5, reaction: 5 }
 };
@@ -106,6 +107,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
             // 0이 입력될 경우 || 연산자는 false로 처리하므로 ?? (Nullish coalescing) 사용
             const dbSettings = classData?.agit_settings || {};
             const currentSettings = {
+                isEnabled: dbSettings.isEnabled ?? false,
                 currentTemperature: dbSettings.currentTemperature ?? 0,
                 targetScore: dbSettings.targetScore ?? DEFAULT_SETTINGS.targetScore,
                 lastResetAt: dbSettings.lastResetAt ?? null,
