@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../../lib/supabaseClient';
 import useVocabularyTower from '../../hooks/useVocabularyTower';
 
 /**
@@ -11,8 +12,23 @@ import useVocabularyTower from '../../hooks/useVocabularyTower';
  * @param {number} dailyLimit - 일일 시도 횟수 제한
  * @param {number} timeLimit - [신규] 게임 제한 시간 (초)
  * @param {number} rewardPoints - [신규] 기회 소진 시 보상 포인트
+ * @param {number} rewardPoints - [신규] 기회 소진 시 보상 포인트
  * @param {string} resetDate - [신규] 교사 설정 변경에 따른 리셋 기준일
  */
+
+const FLOOR_MESSAGES = {
+    2: "첫 발을 내디뎠어요! 어휘의 탑 정복 시작! 🌱",
+    3: "놀라운 기세예요! 벌써 3층이라니 대단합니다! 🚀",
+    4: "어휘력이 폭발하고 있어요! 이 기세로 쭉쭉 가보자고! 🔥",
+    5: "드디어 탑의 절반! 당신은 어휘의 강자입니다! 🏅",
+    6: "고지가 멀지 않았어요! 집중력을 잃지 마세요! 🎯",
+    7: "진정한 실력자가 나타났다! 어휘 마스터에 한 발짝 더! ✨",
+    8: "대문호의 기운이 느껴져요! 엄청난 실력입니다! 👑",
+    9: "이제 단 한 층뿐! 마지막까지 에너지를 쏟아부으세요! ⚡",
+    10: "전설의 탄생! 탑의 정상이 코앞이에요! 🏆",
+    default: "점점 더 정상이 가까워지고 있어요! 💪"
+};
+
 const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit = 3, timeLimit = 60, rewardPoints = 80, resetDate }) => {
     // 교사가 설정한 학년이 있으면 고정, 없으면 학생 학년 또는 4학년
     const [selectedGrade, setSelectedGrade] = useState(forcedGrade || studentSession?.grade || 4);
@@ -77,7 +93,13 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         if (!hasStarted || showResult || isTimeUp || isFullyExhausted) return;
 
         if (timeLeft <= 0) {
-            setIsTimeUp(true);
+            if (remainingAttempts <= 0) {
+                // 남은 기회가 없으면 즉시 보상 결과 화면으로
+                setIsFullyExhausted(true);
+            } else {
+                // 기회가 남았을 때만 시간 초과 팝업 표시
+                setIsTimeUp(true);
+            }
             return;
         }
 
@@ -90,18 +112,37 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
     // 보상 포인트 지급 로직
     const handleRewardPoints = async () => {
-        if (awardedPoints > 0) return;
+        const rewardKey = `${getTodayKey()}_rewarded`;
+
+        // 이미 지급했거나 보상 포인트가 0 이하인 경우 방지
+        if (awardedPoints > 0 || rewardPoints <= 0 || localStorage.getItem(rewardKey)) {
+            // 이미 지급된 상태라면 상태값만 동기화 (UI 표시용)
+            if (localStorage.getItem(rewardKey) && awardedPoints === 0) {
+                setAwardedPoints(rewardPoints);
+            }
+            return;
+        }
 
         try {
+            console.log('💰 보상 포인트 지급 시작:', { student_id: studentSession.id, points: rewardPoints });
+
             const { error } = await supabase.rpc('increment_student_points', {
                 student_id: studentSession.id,
                 points_to_add: rewardPoints
             });
 
             if (error) throw error;
+
+            // 로컬 스토리지에 기록하여 중복 지급 방지
+            localStorage.setItem(rewardKey, 'true');
             setAwardedPoints(rewardPoints);
+
+            // 학생에게 명확하게 알림
+            alert(`🏆 어휘의 탑 일일 미션 완료!\n\n오늘의 기회를 모두 소진하여 보상 포인트 ${rewardPoints}P가 지급되었습니다. 내일 또 도전해 보세요! ✨\n(합산된 포인트는 대시보드에서 확인할 수 있습니다.)`);
+
+            console.log('✅ 보상 포인트 지급 완료');
         } catch (err) {
-            console.error('보상 포인트 지급 실패:', err);
+            console.error('❌ 보상 포인트 지급 실패:', err);
         }
     };
 
@@ -132,6 +173,13 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         if (lastResult?.leveledUp) {
             setPreviousFloor(stats.currentFloor - 1);
             setShowLevelUp(true);
+
+            // [보너스] 다음 층 도달 시 시간 추가 로직 적용
+            // 2층: +20초, 3층부터: 20초 + (층수-2)*3초
+            const floor = stats.currentFloor;
+            const bonus = 20 + (Math.max(0, floor - 2) * 3);
+            setTimeLeft(prev => prev + bonus);
+
             setTimeout(() => setShowLevelUp(false), 3000);
         }
     }, [lastResult, stats.currentFloor]);
@@ -217,52 +265,129 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         return (
             <div style={{
                 position: 'fixed',
-                right: '20px',
-                top: '50%',
+                right: '120px', // 더 왼쪽으로 이동
+                top: '65%',
                 transform: 'translateY(-50%)',
+                zIndex: 100,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px',
-                zIndex: 100,
-                padding: '12px',
-                background: 'rgba(255,255,255,0.2)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '20px',
-                border: '1px solid rgba(255,255,255,0.3)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+                alignItems: 'center',
+                pointerEvents: 'none',
+                scale: '1.2' // 전체적인 크기 확대
             }}>
-                {floors.map(f => (
-                    <div
-                        key={f}
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.8rem',
-                            fontWeight: 'bold',
-                            border: f === stats.currentFloor ? '2px solid #FFD700' : '1px solid rgba(255,255,255,0.5)',
-                            background: f === stats.currentFloor ? '#FFF' :
-                                f < stats.currentFloor ? 'rgba(76, 175, 80, 0.4)' : 'rgba(255,255,255,0.1)',
-                            color: f === stats.currentFloor ? '#1565C0' : 'rgba(255,255,255,0.8)',
-                            transition: 'all 0.3s ease',
-                            position: 'relative'
-                        }}
-                    >
-                        {f}
-                        {f === stats.currentFloor && (
-                            <motion.span
-                                layoutId="tower-pointer"
-                                style={{ position: 'absolute', left: '-25px', fontSize: '1.2rem' }}
+                {/* 타워 꼭대기 지붕 (10층 위) */}
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    style={{
+                        width: '0',
+                        height: '0',
+                        borderLeft: '40px solid transparent', // 지붕 크기 확대
+                        borderRight: '40px solid transparent',
+                        borderBottom: '50px solid #D32F2F',
+                        marginBottom: '-5px',
+                        position: 'relative',
+                        filter: 'drop-shadow(0 -5px 10px rgba(211,47,47,0.4))',
+                        zIndex: 2
+                    }}
+                >
+                    <span style={{ position: 'absolute', top: '18px', left: '-12px', fontSize: '1.6rem' }}>👑</span>
+                </motion.div>
+
+                {/* 타워 몸체 */}
+                <div style={{
+                    background: '#5D4037',
+                    padding: '8px 6px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                    border: '3px solid #3E2723'
+                }}>
+                    {floors.map(f => {
+                        const isCurrent = f === stats.currentFloor;
+                        const isPassed = f < stats.currentFloor;
+
+                        return (
+                            <motion.div
+                                key={f}
+                                initial={false}
+                                animate={{
+                                    scale: isCurrent ? 1.2 : 1,
+                                    x: isCurrent ? -10 : 0,
+                                    backgroundColor: isCurrent ? '#FFF' : (isPassed ? '#4CAF50' : '#8D6E63'),
+                                    boxShadow: isCurrent ? '0 0 20px #FFD700' : 'none'
+                                }}
+                                style={{
+                                    width: '45px',
+                                    height: '32px',
+                                    borderRadius: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.9rem',
+                                    fontWeight: '900',
+                                    color: isCurrent ? '#1565C0' : (isPassed ? '#FFF' : '#D7CCC8'),
+                                    border: `2px solid ${isCurrent ? '#FFD700' : '#4E342E'}`,
+                                    position: 'relative'
+                                }}
                             >
-                                🚩
-                            </motion.span>
-                        )}
-                        {f === 10 && <span style={{ position: 'absolute', top: '-20px', fontSize: '1rem' }}>👑</span>}
-                    </div>
-                ))}
+                                {f === 10 ? 'TOP' : f}
+
+                                {isCurrent && (
+                                    <motion.div
+                                        layoutId="tower-marker-new"
+                                        style={{
+                                            position: 'absolute',
+                                            left: '-65px',
+                                            background: 'linear-gradient(135deg, #FF9800, #F57C00)',
+                                            color: 'white',
+                                            padding: '4px 8px',
+                                            borderRadius: '8px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 'bold',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            boxShadow: '0 4px 10px rgba(255,152,0,0.4)',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        <span>내 위치</span>
+                                        <motion.span
+                                            animate={{ x: [0, 4, 0] }}
+                                            transition={{ repeat: Infinity, duration: 1 }}
+                                        >
+                                            ▶
+                                        </motion.span>
+                                    </motion.div>
+                                )}
+
+                                {/* 장식: 창문 */}
+                                <div style={{
+                                    position: 'absolute',
+                                    right: '4px',
+                                    top: '4px',
+                                    width: '5px',
+                                    height: '7px',
+                                    background: isCurrent ? '#FFEB3B' : 'rgba(0,0,0,0.2)',
+                                    borderRadius: '1px'
+                                }} />
+                            </motion.div>
+                        );
+                    })}
+                </div>
+
+                {/* 타워 받침대 */}
+                <div style={{
+                    width: '70px',
+                    height: '20px',
+                    background: '#3E2723',
+                    borderRadius: '4px 4px 12px 12px',
+                    marginTop: '-2px',
+                    boxShadow: '0 5px 15px rgba(0,0,0,0.2)'
+                }} />
             </div>
         );
     };
@@ -437,10 +562,14 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 1 }}
-                            style={{ textAlign: 'center', marginTop: '40px' }}
+                            style={{ textAlign: 'center', marginTop: '40px', padding: '0 20px' }}
                         >
-                            <h2 style={{ color: 'white', fontSize: '1.8rem', margin: 0 }}>층간 정복 완료!</h2>
-                            <p style={{ color: '#DDD', fontSize: '1.1rem', marginTop: '10px' }}>점점 더 정상이 가까워지고 있어요! 💪</p>
+                            <h2 style={{ color: 'white', fontSize: '1.8rem', margin: 0 }}>
+                                {stats.currentFloor === 10 ? '✨ 최종 층 도달! ✨' : '층간 정복 완료!'}
+                            </h2>
+                            <p style={{ color: '#DDD', fontSize: '1.2rem', marginTop: '12px', lineHeight: 1.5 }}>
+                                {FLOOR_MESSAGES[stats.currentFloor] || FLOOR_MESSAGES.default}
+                            </p>
                         </motion.div>
                     </motion.div>
                 )}
@@ -665,9 +794,9 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                 </div>
             </div>
 
-            {/* 퀴즈 영역 */}
+            {/* 퀴즈 영역 (여백 추가하여 아래로 이동) */}
             {currentQuiz && (
-                <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+                <div style={{ padding: '20px', maxWidth: '750px', margin: '5px auto 0 auto' }}>
                     {/* 문제 카드 */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -676,7 +805,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                         style={{
                             background: 'white',
                             borderRadius: '24px',
-                            padding: '28px',
+                            padding: '35px',
                             boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
                             marginBottom: '20px'
                         }}
@@ -712,7 +841,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
                         {/* 문제 (뜻) */}
                         <h3 style={{
-                            fontSize: '1.3rem',
+                            fontSize: '1.6rem',
                             color: '#333',
                             marginBottom: '16px',
                             lineHeight: 1.5,
@@ -723,7 +852,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
                         {/* 예문 */}
                         <p style={{
-                            fontSize: '0.95rem',
+                            fontSize: '1.1rem',
                             color: '#666',
                             background: '#F5F5F5',
                             padding: '14px 18px',
@@ -739,7 +868,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                     <div style={{
                         display: 'grid',
                         gridTemplateColumns: '1fr 1fr',
-                        gap: '12px'
+                        gap: '16px'
                     }}>
                         {currentQuiz.options.map((option, index) => {
                             const isSelected = selectedAnswer === option;
@@ -782,10 +911,10 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                                     onClick={() => handleAnswerSelect(option)}
                                     disabled={showResult}
                                     style={{
-                                        padding: '18px 16px',
+                                        padding: '22px 20px',
                                         borderRadius: '16px',
                                         ...buttonStyle,
-                                        fontSize: '1.1rem',
+                                        fontSize: '1.25rem',
                                         fontWeight: 'bold',
                                         cursor: showResult ? 'default' : 'pointer',
                                         transition: 'all 0.2s ease',
@@ -811,32 +940,38 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                                 style={{
-                                    marginTop: '24px',
-                                    padding: '24px',
+                                    marginTop: '16px',
+                                    padding: '12px 20px',
                                     background: lastResult.isCorrect
                                         ? 'linear-gradient(135deg, #E8F5E9, #C8E6C9)'
                                         : 'linear-gradient(135deg, #FFEBEE, #FFCDD2)',
                                     borderRadius: '20px',
-                                    textAlign: 'center'
+                                    textAlign: 'center',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '4px'
                                 }}
                             >
-                                <div style={{ fontSize: '3rem', marginBottom: '12px' }}>
-                                    {lastResult.isCorrect ? '🎉' : '💪'}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '1.8rem' }}>
+                                        {lastResult.isCorrect ? '🎉' : '💪'}
+                                    </span>
+                                    <h3 style={{
+                                        color: lastResult.isCorrect ? '#2E7D32' : '#C62828',
+                                        margin: 0,
+                                        fontSize: '1.2rem'
+                                    }}>
+                                        {lastResult.isCorrect ? '정답이에요!' : '아쉬워요!'}
+                                    </h3>
                                 </div>
-                                <h3 style={{
-                                    color: lastResult.isCorrect ? '#2E7D32' : '#C62828',
-                                    marginBottom: '8px',
-                                    fontSize: '1.3rem'
-                                }}>
-                                    {lastResult.isCorrect ? '정답이에요!' : '아쉬워요!'}
-                                </h3>
                                 {lastResult.isCorrect && (
-                                    <p style={{ color: '#388E3C', fontSize: '1rem', marginBottom: '8px' }}>
+                                    <p style={{ color: '#388E3C', fontSize: '1rem', margin: 0 }}>
                                         +{lastResult.earnedExp} EXP 획득! 🌟
                                     </p>
                                 )}
                                 {!lastResult.isCorrect && (
-                                    <p style={{ color: '#666', fontSize: '0.95rem', marginBottom: '8px' }}>
+                                    <p style={{ color: '#666', fontSize: '0.95rem', margin: 0 }}>
                                         정답: <strong style={{ color: '#1565C0' }}>{lastResult.correctAnswer}</strong>
                                     </p>
                                 )}
@@ -846,9 +981,9 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                                     whileTap={{ scale: 0.95 }}
                                     onClick={handleNextQuestion}
                                     style={{
-                                        marginTop: '16px',
-                                        padding: '14px 36px',
-                                        borderRadius: '25px',
+                                        marginTop: '10px',
+                                        padding: '10px 32px',
+                                        borderRadius: '20px',
                                         border: 'none',
                                         background: 'linear-gradient(135deg, #2196F3, #1565C0)',
                                         color: 'white',
@@ -864,7 +999,8 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                         )}
                     </AnimatePresence>
                 </div>
-            )}
+            )
+            }
 
             {/* 하단 재시작 버튼 */}
             <div style={{
@@ -1003,7 +1139,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 
