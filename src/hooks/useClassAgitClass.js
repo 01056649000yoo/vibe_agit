@@ -33,6 +33,16 @@ export const useClassAgitClass = (classId, currentStudentId) => {
 
     const agitSettings = useMemo(() => agitSettingsState, [agitSettingsState]);
 
+    // [신규] 어휘의 탑 게임 설정 상태
+    const [vocabTowerSettings, setVocabTowerSettings] = useState({
+        enabled: false,
+        grade: 4,
+        dailyLimit: 3,
+        timeLimit: 60,
+        rewardPoints: 80,
+        resetDate: null
+    });
+
     // 단계별 메시지 및 설명 (초등학생 눈높이)
     const stageInfo = {
         1: {
@@ -95,7 +105,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
             // 0. 학급 설정 조회 (목표 온도 및 점수 정책)
             const { data: classData, error: classError } = await supabase
                 .from('classes')
-                .select('agit_settings')
+                .select('agit_settings, vocab_tower_enabled, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_reset_date, vocab_tower_time_limit, vocab_tower_reward_points')
                 .eq('id', classId)
                 .single();
 
@@ -127,6 +137,16 @@ export const useClassAgitClass = (classId, currentStudentId) => {
                     return currentSettings;
                 }
                 return prev;
+            });
+
+            // [신규] 어휘의 탑 설정 동기화
+            setVocabTowerSettings({
+                enabled: classData?.vocab_tower_enabled ?? false,
+                grade: classData?.vocab_tower_grade || 4,
+                dailyLimit: classData?.vocab_tower_daily_limit ?? 3,
+                timeLimit: classData?.vocab_tower_time_limit ?? 60,
+                rewardPoints: classData?.vocab_tower_reward_points ?? 80,
+                resetDate: classData?.vocab_tower_reset_date || null
             });
 
             // 1. 집계 시작 시점 결정 (오늘 또는 마지막 초기화 시점)
@@ -392,6 +412,8 @@ export const useClassAgitClass = (classId, currentStudentId) => {
         myMissionStatus,
         agitSettings,
         refresh: fetchData,
-        achievedStudents: achievedStudentsList
+        achievedStudents: achievedStudentsList,
+        // [신규] 어휘의 탑 설정 노출
+        vocabTowerSettings
     };
 };

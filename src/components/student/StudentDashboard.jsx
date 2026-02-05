@@ -15,6 +15,7 @@ import DashboardMenu from './DashboardMenu';
 import DragonHideoutModal from './DragonHideoutModal';
 import BackgroundShopModal from './BackgroundShopModal';
 import AgitOnClassPage from './AgitOnClassPage'; // [신규] 아지트 페이지 임포트
+import VocabularyTowerGame from './VocabularyTowerGame'; // [신규] 어휘의 탑 게임 컴포넌트
 
 // [신규] 드래곤 아지트 배경 목록 (상수 외부 이동)
 const HIDEOUT_BACKGROUNDS = {
@@ -35,12 +36,14 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isAgitOpen, setIsAgitOpen] = useState(false); // [신규] 아지트 오픈 상태
+    const [isVocabTowerOpen, setIsVocabTowerOpen] = useState(false); // [신규] 어휘의 탑 오픈 상태
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
     // [신규] 아지트 온도 및 활성화 정보 실시간 동기화
     const {
         agitSettings,
-        temperature
+        temperature,
+        vocabTowerSettings // [신규] 어휘의 탑 설정
     } = useClassAgitClass(studentSession?.classId || studentSession?.class_id, studentSession?.id);
 
     // 전반적인 대시보드 데이터 및 비즈니스 로직
@@ -168,8 +171,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     onNavigate={onNavigate}
                     setIsDragonModalOpen={setIsDragonModalOpen}
                     setIsAgitOpen={setIsAgitOpen} // [추가]
+                    setIsVocabTowerOpen={setIsVocabTowerOpen} // [추가] 어휘의탑
                     isMobile={isMobile}
                     agitSettings={agitSettings}
+                    vocabTowerSettings={vocabTowerSettings} // [신규] 어휘의 탑 설정
+                    studentSession={studentSession} // [신규] 시도 횟수 확인용
                 />
 
                 {/* 오늘의 목표 하단 문구 */}
@@ -241,6 +247,32 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                                 setIsAgitOpen(false);
                                 onNavigate(path);
                             }}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* [신규] 어휘의 탑 게임 (전체 화면 오버레이) */}
+            <AnimatePresence>
+                {isVocabTowerOpen && (
+                    <motion.div
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        style={{
+                            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                            background: 'white', zIndex: 5000, overflow: 'auto'
+                        }}
+                    >
+                        <VocabularyTowerGame
+                            studentSession={studentSession}
+                            onBack={() => setIsVocabTowerOpen(false)}
+                            forcedGrade={vocabTowerSettings?.grade} // [신규] 교사 설정 학년
+                            dailyLimit={vocabTowerSettings?.dailyLimit ?? 3} // [신규] 일일 시도 횟수
+                            timeLimit={vocabTowerSettings?.timeLimit ?? 60} // [신규] 게임 제한 시간
+                            rewardPoints={vocabTowerSettings?.rewardPoints ?? 80} // [신규] 완료 보상 포인트
+                            resetDate={vocabTowerSettings?.resetDate} // [신규] 리셋 기준일
                         />
                     </motion.div>
                 )}
