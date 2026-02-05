@@ -134,12 +134,12 @@ function App() {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single(),
+        .maybeSingle(),
       supabase
         .from('teachers')
         .select('name, school_name')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
     ]);
 
     const profileData = profileResult.data;
