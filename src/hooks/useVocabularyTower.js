@@ -116,10 +116,31 @@ const useVocabularyTower = (selectedGrade) => {
             setUsedWordIds(new Set());
         }
 
-        // 정답 단어 선택 (현재 층수와 레벨이 맞는 단어 우선)
-        const targetLevel = Math.min(currentFloor, 5);
-        const sameLevelWords = wordsToUse.filter(w => w.level === targetLevel);
-        const correctWordPool = sameLevelWords.length > 0 ? sameLevelWords : wordsToUse;
+        // [난이도 가중치 로직 개선]
+        // 층수가 올라갈수록 높은 레벨(1~3)의 단어가 나올 확률을 높입니다.
+        const floor = currentFloor;
+        let targetLevel;
+
+        // 1. 현재 층수에 따른 목표 난이도(Target Level) 결정
+        if (floor <= 3) {
+            // 1~3층: 레벨 1(80%), 레벨 2(20%)
+            targetLevel = Math.random() < 0.8 ? 1 : 2;
+        } else if (floor <= 7) {
+            // 4~7층: 레벨 1(20%), 레벨 2(60%), 레벨 3(20%)
+            const rand = Math.random();
+            targetLevel = rand < 0.2 ? 1 : rand < 0.8 ? 2 : 3;
+        } else {
+            // 8~10층: 레벨 2(30%), 레벨 3(70%)
+            targetLevel = Math.random() < 0.3 ? 2 : 3;
+        }
+
+        // 2. 해당 난이도의 단어들 필터링
+        let correctWordPool = wordsToUse.filter(w => w.level === targetLevel);
+
+        // 만약 해당 난이도의 단어가 다 떨어졌다면 인접 난이도에서 가져옴
+        if (correctWordPool.length === 0) {
+            correctWordPool = wordsToUse;
+        }
 
         const randomIndex = Math.floor(Math.random() * correctWordPool.length);
         const correctWord = correctWordPool[randomIndex];
