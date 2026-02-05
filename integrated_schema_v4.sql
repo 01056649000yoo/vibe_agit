@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     primary_class_id UUID,
     frequent_tags JSONB DEFAULT '[]'::jsonb,
     default_rubric JSONB,
-    mission_default_settings JSONB
+    mission_default_settings JSONB,
+    last_login_at TIMESTAMP WITH TIME ZONE
 );
 
 -- [Teachers] 선생님 상세 정보
@@ -61,7 +62,8 @@ CREATE TABLE IF NOT EXISTS public.classes (
     dragon_feed_points INTEGER DEFAULT 80,
     dragon_degen_days INTEGER DEFAULT 14,
     game_config JSONB DEFAULT '{"degenerationDays": 14, "feedCost": 80}'::JSONB,
-    agit_settings JSONB DEFAULT '{"targetScore": 100, "currentTemperature": 0, "activityGoals": {"post": 1, "comment": 5, "reaction": 5}}'::JSONB
+    agit_settings JSONB DEFAULT '{"targetScore": 100, "currentTemperature": 0, "activityGoals": {"post": 1, "comment": 5, "reaction": 5}}'::JSONB,
+    invite_code TEXT
 );
 
 -- [Students] 학생 정보
