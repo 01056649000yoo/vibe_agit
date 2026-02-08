@@ -4,7 +4,17 @@ import Button from '../common/Button';
 import Card from '../common/Card';
 
 const AnnouncementModal = ({ announcement, onClose }) => {
+    const [doNotShowToday, setDoNotShowToday] = useState(false);
+
     if (!announcement) return null;
+
+    const handleClose = () => {
+        if (doNotShowToday) {
+            const today = new Date().toISOString().split('T')[0];
+            localStorage.setItem(`hide_announcement_${announcement.id}`, today);
+        }
+        onClose();
+    };
 
     return (
         <div style={{
@@ -33,11 +43,25 @@ const AnnouncementModal = ({ announcement, onClose }) => {
                     }}>
                         {announcement.content}
                     </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '8px', justifyContent: 'center' }}>
+                        <input
+                            type="checkbox"
+                            id="doNotShowToday"
+                            checked={doNotShowToday}
+                            onChange={(e) => setDoNotShowToday(e.target.checked)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <label htmlFor="doNotShowToday" style={{ fontSize: '0.9rem', color: '#6B7280', cursor: 'pointer', fontWeight: 'bold' }}>
+                            오늘 하루 보지 않기
+                        </label>
+                    </div>
+
                     <Button
-                        onClick={onClose}
+                        onClick={handleClose}
                         style={{ width: '100%', background: '#6366F1', fontWeight: 'bold' }}
                     >
-                        닫기
+                        확인
                     </Button>
                 </Card>
             </motion.div>
@@ -185,10 +209,20 @@ const AnnouncementListModal = ({ announcements, onClose }) => {
 
 const AnnouncementBanner = ({ latestAnnouncement, onViewAll }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
 
-    // 이전에 확인했는지 로컬스토리지 체크 (선택사항)
+    // [신규] 오늘 하루 보지 않기 체크
+    useEffect(() => {
+        if (latestAnnouncement) {
+            const hiddenDate = localStorage.getItem(`hide_announcement_${latestAnnouncement.id}`);
+            const today = new Date().toISOString().split('T')[0];
+            if (hiddenDate === today) {
+                setIsVisible(false);
+            }
+        }
+    }, [latestAnnouncement]);
 
-    if (!latestAnnouncement) return null;
+    if (!latestAnnouncement || !isVisible) return null;
 
     return (
         <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch' }}>

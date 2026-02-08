@@ -9,14 +9,20 @@ const TeacherAnnouncementManager = ({ isMobile }) => {
     const [showPopup, setShowPopup] = useState(false);
     const [showList, setShowList] = useState(false);
 
+    const handleClosePopup = () => {
+        if (latestAnnouncement) {
+            localStorage.setItem(`announcement_popup_seen_${latestAnnouncement.id}`, 'true');
+        }
+        setShowPopup(false);
+    };
+
     useEffect(() => {
         if (!loading && latestAnnouncement && latestAnnouncement.is_popup) {
-            const popupKey = `announcement_popup_${latestAnnouncement.id}`;
-            const hasSeen = sessionStorage.getItem(popupKey);
+            const popupKey = `announcement_popup_seen_${latestAnnouncement.id}`;
+            const hasSeen = localStorage.getItem(popupKey);
 
             if (!hasSeen) {
                 setShowPopup(true);
-                sessionStorage.setItem(popupKey, 'true');
             }
         }
     }, [latestAnnouncement, loading]);
@@ -49,7 +55,7 @@ const TeacherAnnouncementManager = ({ isMobile }) => {
                 {showPopup && latestAnnouncement && (
                     <AnnouncementModal
                         announcement={latestAnnouncement}
-                        onClose={() => setShowPopup(false)}
+                        onClose={handleClosePopup}
                     />
                 )}
                 {showList && (
