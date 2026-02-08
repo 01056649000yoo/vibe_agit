@@ -29,6 +29,47 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
     const [rankings, setRankings] = useState([]);
     const [isRankingHovered, setIsRankingHovered] = useState(false);
 
+    // [신규] 새 미션 존재 여부 확인 (최근 24시간)
+    const [hasNewMission, setHasNewMission] = useState(false);
+
+    useEffect(() => {
+        const classId = studentSession?.class_id || studentSession?.classId;
+        const studentId = studentSession?.id;
+        if (!classId || !studentId) return;
+
+        const checkNewMissions = async () => {
+            try {
+                // 1. 최근 24시간 내 생성된 미션 조회
+                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const { data: recentMissions } = await supabase
+                    .from('writing_missions')
+                    .select('id')
+                    .eq('class_id', classId)
+                    .eq('is_archived', false)
+                    .gt('created_at', twentyFourHoursAgo);
+
+                if (recentMissions && recentMissions.length > 0) {
+                    const missionIds = recentMissions.map(m => m.id);
+                    // 2. 해당 미션들에 대해 학생이 제출한 기록이 있는지 확인
+                    const { data: myPosts } = await supabase
+                        .from('student_posts')
+                        .select('mission_id')
+                        .eq('student_id', studentId)
+                        .in('mission_id', missionIds)
+                        .eq('is_submitted', true);
+
+                    const submittedMissionIds = new Set(myPosts?.map(p => p.mission_id) || []);
+                    const hasUnsubmittedNew = recentMissions.some(m => !submittedMissionIds.has(m.id));
+                    setHasNewMission(hasUnsubmittedNew);
+                }
+            } catch (err) {
+                console.error('새 미션 확인 실패:', err);
+            }
+        };
+
+        checkNewMissions();
+    }, [studentSession?.class_id, studentSession?.classId, studentSession?.id]);
+
     useEffect(() => {
         const classId = studentSession?.class_id || studentSession?.classId;
         if (!classId || !isVocabTowerEnabled) return;
@@ -74,6 +115,15 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                     }}
                     onClick={() => onNavigate('mission_list')}
                 >
+                    {hasNewMission && (
+                        <div style={{
+                            position: 'absolute', top: '12px', right: '12px',
+                            background: '#FF5252', color: 'white', fontSize: '0.7rem',
+                            padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold',
+                            boxShadow: '0 2px 4px rgba(255, 82, 82, 0.3)',
+                            animation: 'bounce 1s infinite'
+                        }}>NEW</div>
+                    )}
                     <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📝</div>
                     <h3 style={{ margin: 0, color: '#5D4037' }}>글쓰기 미션</h3>
                     <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>선생님의 주제 확인</p>

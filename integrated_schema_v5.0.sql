@@ -329,11 +329,14 @@ ALTER TABLE public.point_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Student_Public_Access" ON students FOR ALL USING (
     deleted_at IS NULL 
     OR is_admin() 
-    OR EXISTS (SELECT 1 FROM public.classes WHERE id = students.class_id AND teacher_id = auth.uid())
+    OR (auth.uid() IS NOT NULL AND EXISTS (SELECT 1 FROM public.classes WHERE id = students.class_id AND teacher_id = auth.uid()))
 );
 CREATE POLICY "Mission_Public_Read" ON writing_missions FOR SELECT USING (true);
 CREATE POLICY "Mission_Teacher_Manage" ON writing_missions FOR ALL USING (auth.uid() = teacher_id);
 CREATE POLICY "Post_Public_Access" ON student_posts FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.students WHERE id = student_id AND deleted_at IS NULL)
+    OR is_admin()
+) WITH CHECK (
     EXISTS (SELECT 1 FROM public.students WHERE id = student_id AND deleted_at IS NULL)
     OR is_admin()
 );

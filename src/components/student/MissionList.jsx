@@ -225,6 +225,16 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                 }}
                                 onClick={() => handleMissionClick(mission.id)}
                             >
+                                {/* [신규] 새 미션 뱃지 (24시간 이내 && 제출 전) */}
+                                {(!post?.is_submitted && new Date(mission.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)) && (
+                                    <div style={{
+                                        position: 'absolute', top: '12px', right: '12px',
+                                        background: '#FF5252', color: 'white', fontSize: '0.7rem',
+                                        padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold',
+                                        boxShadow: '0 2px 4px rgba(255, 82, 82, 0.2)',
+                                        zIndex: 2
+                                    }}>NEW</div>
+                                )}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                         <div style={{
