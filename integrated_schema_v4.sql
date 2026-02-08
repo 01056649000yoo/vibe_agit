@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS public.point_logs (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     student_id UUID REFERENCES public.students(id) ON DELETE CASCADE,
     reason TEXT NOT NULL,
-    points INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -299,11 +299,12 @@ CREATE POLICY "Teachers can delete their class student records" ON student_recor
 -- 5. 초기 데이터 및 실시간 설정
 -- --------------------------------------------------------------------
 
--- 포인트 로그 실시간 감지 활성화
+-- 포인트 로그 및 게시글 실시간 감지 활성화
 DO $$
 BEGIN
     BEGIN
         ALTER PUBLICATION supabase_realtime ADD TABLE public.point_logs;
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.student_posts;
     EXCEPTION WHEN duplicate_object THEN NULL;
     END;
 END $$;

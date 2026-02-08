@@ -326,25 +326,19 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     {
                         event: 'INSERT',
                         schema: 'public',
-                        table: 'point_logs'
+                        table: 'point_logs',
+                        filter: `student_id=eq.${studentSession.id}`
                     },
                     (payload) => {
                         const newLog = payload.new;
-                        if (newLog.student_id !== studentSession.id) return;
-
                         if (newLog.amount !== 0) {
                             setPoints(prev => (prev || 0) + newLog.amount);
                         }
 
-                        const isRewrite = newLog.reason?.includes('다시 쓰기') || newLog.reason?.includes('♻️');
                         let bannerMsg = "";
                         let bannerIcon = "🎁";
 
-                        if (isRewrite) {
-                            bannerMsg = "♻️ 선생님의 다시 쓰기 요청이 있습니다.";
-                            bannerIcon = "♻️";
-                            checkActivity();
-                        } else if (newLog.amount < 0) {
+                        if (newLog.amount < 0) {
                             bannerMsg = `⚠️ ${newLog.reason} (${newLog.amount}P)`;
                             bannerIcon = "⚠️";
                         } else if (newLog.reason?.includes('승인')) {
@@ -357,11 +351,33 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
                         if (bannerMsg) {
                             setTeacherNotify({
-                                type: isRewrite ? 'rewrite' : 'point',
+                                type: 'point',
                                 message: bannerMsg,
                                 icon: bannerIcon,
                                 timestamp: Date.now()
                             });
+                        }
+                    }
+                )
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'student_posts',
+                        filter: `student_id=eq.${studentSession.id}`
+                    },
+                    (payload) => {
+                        const updatedPost = payload.new;
+                        // 반려(다시 쓰기) 요청이 새로 설정된 경우
+                        if (updatedPost.is_returned && !payload.old.is_returned) {
+                            setTeacherNotify({
+                                type: 'rewrite',
+                                message: "♻️ 선생님의 다시 쓰기 요청이 있습니다.",
+                                icon: "♻️",
+                                timestamp: Date.now()
+                            });
+                            checkActivity();
                         }
                     }
                 )

@@ -133,7 +133,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
 
                                     return (
                                         <div
-                                            key={f.id || idx}
+                                            key={f.id ? `feedback-${f.id}` : `idx-${idx}`}
                                             style={{
                                                 padding: '16px',
                                                 background: bgColor,
