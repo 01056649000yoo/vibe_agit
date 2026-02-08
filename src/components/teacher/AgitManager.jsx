@@ -269,7 +269,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <h2 style={{ margin: 0, color: '#1E1B4B', fontWeight: '900' }}>🏠 아지트 溫 클래스 관리</h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(400px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))', gap: '32px' }}>
 
                 {/* 1. 아지트 溫 클래스 관리 카드 */}
                 <motion.div
@@ -372,6 +372,154 @@ const AgitManager = ({ activeClass, isMobile }) => {
                         >
                             <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>설정 및 미션 관리</span>
                             <span style={{ color: '#6366F1', fontWeight: '800', fontSize: '0.9rem' }}>관리하기 →</span>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* 2. 북적북적 아지트 한줄 릴레이 */}
+                <motion.div
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    style={{ height: '100%' }}
+                >
+                    <div style={{
+                        height: '100%',
+                        background: 'white',
+                        borderRadius: '24px',
+                        border: '1px solid #E2E8F0',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        opacity: 0.8
+                    }}>
+                        <div style={{
+                            background: 'linear-gradient(135deg, #FF9A9E 0%, #FAD0C4 100%)',
+                            padding: '24px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start'
+                        }}>
+                            <div>
+                                <div style={{
+                                    background: 'rgba(255,255,255,0.3)',
+                                    backdropFilter: 'blur(8px)',
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    marginBottom: '8px',
+                                    border: '1px solid rgba(255,255,255,0.2)'
+                                }}>
+                                    <span style={{ fontSize: '1.2rem' }}>✍️</span>
+                                    <span style={{ color: '#721c24', fontWeight: '800', fontSize: '0.75rem', letterSpacing: '0.05em' }}>STORY RELAY</span>
+                                </div>
+                                <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#721c24', letterSpacing: '-0.02em' }}>북적북적 한줄 릴레이</h3>
+                            </div>
+                            <div style={{
+                                background: '#721c24',
+                                color: 'white',
+                                padding: '4px 10px',
+                                borderRadius: '20px',
+                                fontSize: '0.75rem',
+                                fontWeight: '900'
+                            }}>준비중</div>
+                        </div>
+
+                        <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center', textAlign: 'center' }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '10px' }}>📚</div>
+                            <p style={{ margin: 0, fontSize: '1rem', color: '#1E1B4B', fontWeight: '800', lineHeight: '1.5' }}>
+                                한 문장씩 이어가며<br />우리 반만의 소설을 지어보아요!
+                            </p>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', fontWeight: '500' }}>
+                                친구들과 함께 상상력을 나누는 공간입니다.
+                            </p>
+                        </div>
+
+                        <div style={{
+                            padding: '16px 24px',
+                            background: '#F8FAFC',
+                            borderTop: '1px solid #F1F5F9',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            cursor: 'default'
+                        }}>
+                            <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontWeight: '700' }}>기능 개발 중... 🛠️</span>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* 3. 아지트 비밀 우체통 */}
+                <motion.div
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    style={{ height: '100%' }}
+                >
+                    <div style={{
+                        height: '100%',
+                        background: 'white',
+                        borderRadius: '24px',
+                        border: '1px solid #E2E8F0',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        opacity: 0.8
+                    }}>
+                        <div style={{
+                            background: 'linear-gradient(135deg, #84FAB0 0%, #8FD3F4 100%)',
+                            padding: '24px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start'
+                        }}>
+                            <div>
+                                <div style={{
+                                    background: 'rgba(255,255,255,0.3)',
+                                    backdropFilter: 'blur(8px)',
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    marginBottom: '8px',
+                                    border: '1px solid rgba(255,255,255,0.2)'
+                                }}>
+                                    <span style={{ fontSize: '1.2rem' }}>📬</span>
+                                    <span style={{ color: '#064E3B', fontWeight: '800', fontSize: '0.75rem', letterSpacing: '0.05em' }}>SECRET MAILBOX</span>
+                                </div>
+                                <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#064E3B', letterSpacing: '-0.02em' }}>아지트 비밀 우체통</h3>
+                            </div>
+                            <div style={{
+                                background: '#064E3B',
+                                color: 'white',
+                                padding: '4px 10px',
+                                borderRadius: '20px',
+                                fontSize: '0.75rem',
+                                fontWeight: '900'
+                            }}>준비중</div>
+                        </div>
+
+                        <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center', textAlign: 'center' }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '10px' }}>💌</div>
+                            <p style={{ margin: 0, fontSize: '1rem', color: '#1E1B4B', fontWeight: '800', lineHeight: '1.5' }}>
+                                친구에게 전하고 싶은 따뜻한 마음을<br />비밀 편지로 보내보아요.
+                            </p>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', fontWeight: '500' }}>
+                                익명 혹은 기명으로 따뜻함을 나누는 공간입니다.
+                            </p>
+                        </div>
+
+                        <div style={{
+                            padding: '16px 24px',
+                            background: '#F8FAFC',
+                            borderTop: '1px solid #F1F5F9',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            cursor: 'default'
+                        }}>
+                            <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontWeight: '700' }}>기능 개발 중... 🛠️</span>
                         </div>
                     </div>
                 </motion.div>

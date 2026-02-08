@@ -1,5 +1,6 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../../lib/supabaseClient';
 
 const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsVocabTowerOpen, isMobile, agitSettings, vocabTowerSettings, studentSession }) => {
     // 어휘의 탑 활성화 여부
@@ -23,6 +24,42 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
     const currentAttempts = getAttempts();
     const remainingAttempts = Math.max(0, dailyLimit - currentAttempts);
     const isExhausted = remainingAttempts <= 0;
+
+    // [신규] 랭킹 실시간 프리뷰 상태
+    const [rankings, setRankings] = useState([]);
+    const [isRankingHovered, setIsRankingHovered] = useState(false);
+
+    useEffect(() => {
+        const classId = studentSession?.class_id || studentSession?.classId;
+        if (!classId || !isVocabTowerEnabled) return;
+
+        const fetchRankings = async () => {
+            try {
+                let query = supabase
+                    .from('vocab_tower_rankings')
+                    .select(`
+                        max_floor,
+                        student_id,
+                        students:student_id ( name )
+                    `)
+                    .eq('class_id', classId);
+
+                if (vocabTowerSettings?.rankingResetDate) {
+                    query = query.gte('updated_at', vocabTowerSettings.rankingResetDate);
+                }
+
+                const { data, error } = await query
+                    .order('max_floor', { ascending: false })
+                    .limit(5);
+
+                if (!error) setRankings(data || []);
+            } catch (err) {
+                console.error('랭킹 프리뷰 로드 실패:', err);
+            }
+        };
+
+        fetchRankings();
+    }, [studentSession?.class_id, studentSession?.classId, isVocabTowerEnabled, vocabTowerSettings?.rankingResetDate]);
 
     return (
         <>
@@ -85,7 +122,6 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                     <div style={{ fontSize: '0.9rem', color: '#FBC02D', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>나의 드래곤 아지트 가기</div>
                 </motion.div>
 
-                {/* 어휘의 탑 카드 - 활성화/비활성화/횟수소진에 따라 다르게 표시 */}
                 <motion.div
                     whileHover={(isVocabTowerEnabled && !isExhausted) ? { scale: 1.02, y: -5 } : {}}
                     whileTap={(isVocabTowerEnabled && !isExhausted) ? { scale: 0.98 } : {}}
@@ -100,6 +136,8 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                         }
                         setIsVocabTowerOpen(true);
                     }}
+                    onMouseEnter={() => isVocabTowerEnabled && setIsRankingHovered(true)}
+                    onMouseLeave={() => setIsRankingHovered(false)}
                     style={{
                         background: !isVocabTowerEnabled
                             ? 'linear-gradient(135deg, #F5F5F5 0%, #EEEEEE 100%)'
@@ -117,13 +155,13 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                         boxShadow: (isVocabTowerEnabled && !isExhausted) ? '0 8px 24px rgba(144, 202, 249, 0.2)' : 'none',
                         textAlign: 'center',
                         position: 'relative',
-                        overflow: 'hidden',
                         minHeight: '220px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        opacity: (isVocabTowerEnabled && !isExhausted) ? 1 : 0.8
+                        opacity: (isVocabTowerEnabled && !isExhausted) ? 1 : 0.8,
+                        zIndex: isRankingHovered ? 100 : 1
                     }}
                 >
                     <div style={{ fontSize: '3.5rem', marginBottom: '10px', filter: (isVocabTowerEnabled && !isExhausted) ? 'none' : 'grayscale(0.3)' }}>🏰</div>
@@ -155,6 +193,61 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                     {!isVocabTowerEnabled && (
                         <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#9E9E9E', color: 'white', fontSize: '0.7rem', padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold' }}>준비중</div>
                     )}
+
+                    {/* [신규] 실시간 랭킹 호버 보드 */}
+                    <AnimatePresence>
+                        {isRankingHovered && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                                style={{
+                                    position: 'absolute',
+                                    bottom: '100%',
+                                    left: '0',
+                                    right: '0',
+                                    marginBottom: '15px',
+                                    background: 'rgba(255, 255, 255, 0.98)',
+                                    borderRadius: '24px',
+                                    padding: '20px',
+                                    boxShadow: '0 15px 40px rgba(21, 101, 192, 0.15)',
+                                    border: '2px solid #E3F2FD',
+                                    backdropFilter: 'blur(10px)',
+                                    zIndex: 2000,
+                                    pointerEvents: 'none'
+                                }}
+                            >
+                                <div style={{ fontSize: '0.9rem', fontWeight: '900', color: '#1565C0', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    🏆 우리 반 TOP 5
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {rankings.length > 0 ? (
+                                        rankings.map((rank, idx) => (
+                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: idx === 0 ? '#E3F2FD' : '#F8F9FA', borderRadius: '12px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{
+                                                        width: '20px', height: '20px', borderRadius: '50%', background: idx === 0 ? '#FFD700' : idx === 1 ? '#C0C0C0' : idx === 2 ? '#CD7F32' : '#E0E0E0',
+                                                        color: 'white', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                    }}>
+                                                        {idx + 1}
+                                                    </span>
+                                                    <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#2C3E50' }}>{rank.students?.name}</span>
+                                                </div>
+                                                <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#1565C0' }}>{rank.max_floor}F</span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div style={{ padding: '20px 0', textAlign: 'center', color: '#7F8C8D', fontSize: '0.8rem' }}>
+                                            아직 랭킹 데이터가 없습니다.
+                                            <div style={{ marginTop: '5px' }}>도전해서 첫 주인공이 되어보세요! 🏰</div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div style={{ position: 'absolute', bottom: '-8px', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: '8px solid white' }} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </motion.div>
 
                 {/* [신규] 두근두근 우리반 아지트 배너 */}
@@ -215,7 +308,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                         {agitSettings?.isEnabled === false ? '입장 불가 🔒' : '아지트 입장하기 🚀'}
                     </div>
                 </motion.div>
-            </div>
+            </div >
         </>
     );
 };

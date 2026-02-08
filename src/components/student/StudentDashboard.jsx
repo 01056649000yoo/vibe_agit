@@ -273,6 +273,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             timeLimit={vocabTowerSettings?.timeLimit ?? 60} // [신규] 게임 제한 시간
                             rewardPoints={vocabTowerSettings?.rewardPoints ?? 80} // [신규] 완료 보상 포인트
                             resetDate={vocabTowerSettings?.resetDate} // [신규] 리셋 기준일
+                            rankingResetDate={vocabTowerSettings?.rankingResetDate} // [신규] 랭킹 리셋 기준일
                         />
                     </motion.div>
                 )}

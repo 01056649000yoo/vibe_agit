@@ -36,11 +36,12 @@ export const useClassAgitClass = (classId, currentStudentId) => {
     // [신규] 어휘의 탑 게임 설정 상태
     const [vocabTowerSettings, setVocabTowerSettings] = useState({
         enabled: false,
-        grade: 4,
+        grade: 3,
         dailyLimit: 3,
-        timeLimit: 60,
+        timeLimit: 40,
         rewardPoints: 80,
-        resetDate: null
+        resetDate: null,
+        rankingResetDate: null
     });
 
     // 단계별 메시지 및 설명 (초등학생 눈높이)
@@ -105,7 +106,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
             // 0. 학급 설정 조회 (목표 온도 및 점수 정책)
             const { data: classData, error: classError } = await supabase
                 .from('classes')
-                .select('agit_settings, vocab_tower_enabled, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_reset_date, vocab_tower_time_limit, vocab_tower_reward_points')
+                .select('agit_settings, vocab_tower_enabled, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_reset_date, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
                 .eq('id', classId)
                 .single();
 
@@ -142,11 +143,12 @@ export const useClassAgitClass = (classId, currentStudentId) => {
             // [신규] 어휘의 탑 설정 동기화
             setVocabTowerSettings({
                 enabled: classData?.vocab_tower_enabled ?? false,
-                grade: classData?.vocab_tower_grade || 4,
+                grade: classData?.vocab_tower_grade || 3,
                 dailyLimit: classData?.vocab_tower_daily_limit ?? 3,
-                timeLimit: classData?.vocab_tower_time_limit ?? 60,
+                timeLimit: classData?.vocab_tower_time_limit ?? 40,
                 rewardPoints: classData?.vocab_tower_reward_points ?? 80,
-                resetDate: classData?.vocab_tower_reset_date || null
+                resetDate: classData?.vocab_tower_reset_date || null,
+                rankingResetDate: classData?.vocab_tower_ranking_reset_date || null
             });
 
             // 1. 집계 시작 시점 결정 (오늘 또는 마지막 초기화 시점)

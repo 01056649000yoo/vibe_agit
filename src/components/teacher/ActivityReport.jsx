@@ -6,7 +6,7 @@ import Card from '../common/Card';
 import { useEvaluation } from '../../hooks/useEvaluation';
 import { callAI } from '../../lib/openai';
 import * as XLSX from 'xlsx';
-import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink } from 'lucide-react';
+import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import BulkAIProgressModal from './BulkAIProgressModal';
 
 /**
@@ -25,6 +25,8 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
     const [expandedStudentId, setExpandedStudentId] = useState(null);
     const [generationHistory, setGenerationHistory] = useState([]);
+    const [historyPage, setHistoryPage] = useState(1);
+    const ITEMS_PER_PAGE = 5;
     const [teacherId, setTeacherId] = useState(null);
 
     // 로컬 스토리지 키 생성 (해당 학급 + 선택된 미션 조합별 유니크 키)
@@ -96,10 +98,28 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
             .order('created_at', { ascending: false });
 
         if (!error && data) {
-            console.log('생성 이력 로드:', data); // 디버깅용
             setGenerationHistory(data);
         } else if (error) {
             console.error('생성 이력 로드 실패:', error);
+        }
+    };
+
+    // [신규] 생성 이력 삭제
+    const handleDeleteHistory = async (e, recordId) => {
+        e.stopPropagation(); // 부모 클릭 이벤트(불러오기) 방지
+        if (!window.confirm('🗑️ 이 기록을 삭제하시겠습니까? (학생별 기록은 보존됩니다)')) return;
+
+        try {
+            const { error } = await supabase
+                .from('student_records')
+                .delete()
+                .eq('id', recordId);
+
+            if (error) throw error;
+            setGenerationHistory(prev => prev.filter(r => r.id !== recordId));
+        } catch (err) {
+            console.error('기록 삭제 실패:', err);
+            alert('삭제에 실패했습니다.');
         }
     };
 
@@ -492,62 +512,125 @@ ${activitiesInfo}`;
 
                     {/* 생성 이력 */}
                     {generationHistory.length > 0 && (
-                        <div style={{ background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 'bold', marginBottom: '12px' }}>📚 생성 이력 ({generationHistory.length}건)</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
-                                {generationHistory.map(record => {
-                                    const missionTitles = record.mission_ids?.map(id => {
-                                        const mission = missions.find(m => m.id === id);
-                                        return mission?.title || '미션';
-                                    }).join(', ') || '정보 없음';
-
-                                    return (
-                                        <div
-                                            key={record.id}
-                                            style={{
-                                                padding: '12px',
-                                                background: '#F8FAFC',
-                                                borderRadius: '12px',
-                                                border: '1px solid #E2E8F0',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s'
-                                            }}
-                                            onMouseEnter={(e) => e.currentTarget.style.background = '#EEF2FF'}
-                                            onMouseLeave={(e) => e.currentTarget.style.background = '#F8FAFC'}
-                                            onClick={() => {
-                                                // 1. 해당 미션들을 선택
-                                                const targetMissionIds = record.mission_ids || [];
-                                                setSelectedMissionIds(targetMissionIds);
-
-                                                // 2. 불러오기 예약 (데이터 로드 완료 후 적용됨 - Ref 사용)
-                                                pendingHistoryRef.current = record;
-
-                                                // 3. 만약 이미 해당 미션들이 로드되어 있다면 즉시 반영 시도 (사용자 경험 향상)
-                                                const parsedResults = parseHistoryContent(record.content);
-                                                setStudentPosts(prev => {
-                                                    if (prev.length === 0) return prev;
-                                                    return prev.map(s => ({
-                                                        ...s,
-                                                        ai_synthesis: parsedResults[s.student.name] || s.ai_synthesis
-                                                    }));
-                                                });
-
-                                                alert(`${new Date(record.created_at).toLocaleString()}에 생성된 기록을 불러왔습니다.`);
-                                            }}
-                                        >
-                                            <div style={{ fontSize: '0.7rem', color: '#6366F1', fontWeight: 'bold', marginBottom: '4px' }}>
-                                                {new Date(record.created_at).toLocaleString('ko-KR')}
-                                            </div>
-                                            <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '4px' }}>
-                                                {record.activity_count}명 분석 완료
-                                            </div>
-                                            <div style={{ fontSize: '0.7rem', color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                {missionTitles}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                        <div style={{ background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span>📚 생성 이력 ({generationHistory.length}건)</span>
                             </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minHeight: '400px' }}>
+                                {generationHistory
+                                    .slice((historyPage - 1) * ITEMS_PER_PAGE, historyPage * ITEMS_PER_PAGE)
+                                    .map(record => {
+                                        const missionTitles = record.mission_ids?.map(id => {
+                                            const mission = missions.find(m => m.id === id);
+                                            return mission?.title || '미션';
+                                        }).join(', ') || '정보 없음';
+
+                                        return (
+                                            <div
+                                                key={record.id}
+                                                style={{
+                                                    padding: '14px',
+                                                    background: '#F8FAFC',
+                                                    borderRadius: '16px',
+                                                    border: '1px solid #E2E8F0',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    position: 'relative',
+                                                    overflow: 'hidden'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.background = '#EEF2FF';
+                                                    e.currentTarget.style.borderColor = '#6366F1';
+                                                    const btn = e.currentTarget.querySelector('.delete-btn');
+                                                    if (btn) btn.style.opacity = '1';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.background = '#F8FAFC';
+                                                    e.currentTarget.style.borderColor = '#E2E8F0';
+                                                    const btn = e.currentTarget.querySelector('.delete-btn');
+                                                    if (btn) btn.style.opacity = '0';
+                                                }}
+                                                onClick={() => {
+                                                    const targetMissionIds = record.mission_ids || [];
+                                                    setSelectedMissionIds(targetMissionIds);
+                                                    pendingHistoryRef.current = record;
+                                                    const parsedResults = parseHistoryContent(record.content);
+                                                    setStudentPosts(prev => {
+                                                        if (prev.length === 0) return prev;
+                                                        return prev.map(s => ({
+                                                            ...s,
+                                                            ai_synthesis: parsedResults[s.student.name] || s.ai_synthesis
+                                                        }));
+                                                    });
+                                                    alert(`${new Date(record.created_at).toLocaleString()}에 생성된 기록을 불러왔습니다.`);
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div style={{ fontSize: '0.75rem', color: '#6366F1', fontWeight: '900', marginBottom: '6px' }}>
+                                                        {new Date(record.created_at).toLocaleString('ko-KR')}
+                                                    </div>
+                                                    <button
+                                                        className="delete-btn"
+                                                        onClick={(e) => handleDeleteHistory(e, record.id)}
+                                                        style={{
+                                                            padding: '4px',
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            color: '#94A3B8',
+                                                            opacity: 0,
+                                                            transition: 'all 0.2s',
+                                                            marginTop: '-6px'
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.color = '#F43F5E'}
+                                                        onMouseLeave={e => e.currentTarget.style.color = '#94A3B8'}
+                                                        title="이력 삭제"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                                <div style={{ fontSize: '0.85rem', color: '#1E293B', fontWeight: 'bold', marginBottom: '8px' }}>
+                                                    🎯 {record.activity_count}명 분석 완료
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '0.75rem',
+                                                    color: '#64748B',
+                                                    lineHeight: '1.4',
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: '2',
+                                                    WebkitBoxOrient: 'vertical',
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    🔗 {missionTitles}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                            </div>
+
+                            {/* 페이지네이션 컨트롤 */}
+                            {generationHistory.length > ITEMS_PER_PAGE && (
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', paddingTop: '10px', borderTop: '1px solid #F1F5F9' }}>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setHistoryPage(p => Math.max(1, p - 1)); }}
+                                        disabled={historyPage === 1}
+                                        style={{ border: 'none', background: 'none', cursor: historyPage === 1 ? 'default' : 'pointer', color: historyPage === 1 ? '#CBD5E1' : '#6366F1', display: 'flex', alignItems: 'center' }}
+                                    >
+                                        ◀
+                                    </button>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#475569' }}>
+                                        {historyPage} / {Math.ceil(generationHistory.length / ITEMS_PER_PAGE)}
+                                    </span>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setHistoryPage(p => Math.min(Math.ceil(generationHistory.length / ITEMS_PER_PAGE), p + 1)); }}
+                                        disabled={historyPage >= Math.ceil(generationHistory.length / ITEMS_PER_PAGE)}
+                                        style={{ border: 'none', background: 'none', cursor: historyPage >= Math.ceil(generationHistory.length / ITEMS_PER_PAGE) ? 'default' : 'pointer', color: historyPage >= Math.ceil(generationHistory.length / ITEMS_PER_PAGE) ? '#CBD5E1' : '#6366F1', display: 'flex', alignItems: 'center' }}
+                                    >
+                                        ▶
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </aside>

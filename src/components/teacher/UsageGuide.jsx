@@ -15,7 +15,8 @@ const UsageGuide = ({ isMobile }) => {
     const sections = [
         { id: 'class-management', title: '🏫 학급 및 학생 관리', emoji: '🏫' },
         { id: 'mission-writing', title: '✍️ 미션 및 글쓰기', emoji: '✍️' },
-        { id: 'playground', title: '🎢 놀이터 및 게임 설정', emoji: '🎢' },
+        { id: 'playground', title: '🎢 드래곤 및 게임 설정', emoji: '🎢' },
+        { id: 'vocab-tower', title: '🏰 어휘의 탑 게임 안내', emoji: '🏰' },
         { id: 'points-dragon', title: '💰 포인트 및 드래곤기르기', emoji: '💰' },
         { id: 'agit-on-class', title: '🌡️ 아지트 온(溫) 클래스 관리', emoji: '🌡️' },
         { id: 'evaluation', title: '🎯 학생 평가 및 AI쫑알이', emoji: '🎯' },
@@ -219,10 +220,36 @@ const UsageGuide = ({ isMobile }) => {
                 </div>
             </section>
 
+            {/* 섹션 4: 어휘의 탑 게임 안내 */}
+            <section id="vocab-tower" style={sectionStyle}>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    {sections[3].title}
+                </h2>
+                <div style={cardStyle}>
+                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#2E7D32' }}>🏰 어휘의 탑: 한계를 시험하는 어휘 퀴즈</h3>
+                    <p><strong>1. 게임 방식</strong><br />
+                        학생들은 80초~120초의 제한 시간 동안 학년별 단어 퀴즈를 풀며 최대한 높은 층으로 올라가야 합니다. 오답을 선택하면 층수가 깎이므로 신중하고 빠르게 풀어야 합니다.</p>
+                </div>
+                <div style={cardStyle}>
+                    <p><strong>2. 선생님의 게임 제어</strong><br />
+                        - <strong>일일 도전 횟수:</strong> 하루에 학생당 최대 몇 번까지 도전할 수 있는지 설정합니다. (설정 시 즉시 리셋됨)<br />
+                        - <strong>제한 시간 및 보너스:</strong> 1판당 시간과 최종 완주 시 지급할 대량의 포인트를 조절합니다.<br />
+                        - <strong>학년별 단어 설정:</strong> 우리 반 수준에 맞는 학년(3~6학년)을 선택하면 해당 난이도의 단어가 출제됩니다.</p>
+                </div>
+                <div style={cardStyle}>
+                    <p><strong>3. 랭킹 시스템 및 시즌 관리</strong><br />
+                        - <strong>실시간 랭킹:</strong> 우리 반에서 누가 가장 높은 층에 도달했는지 실시간으로 확인하고, 기록을 개별/전체 초기화할 수 있습니다.<br />
+                        - <strong>시즌 초기화 (추천):</strong> 새로운 달이나 학기 시작 시 '랭킹 시스템 초기화'를 클릭하세요. 현재 우승 기록이 <strong>[지난 시즌 기록]</strong>으로 안전하게 자동 보관되며, 새로운 신나고 공정한 경쟁이 시작됩니다.</p>
+                </div>
+                <div style={highlightStyle}>
+                    💡 <strong>교육 활용 팁:</strong> 매주 금요일 '어휘의 탑 상위 3명'에게 소정의 포인트나 상품을 주는 이벤트를 열어보세요. 학생들의 어휘 학습 열기가 뜨거워집니다! 🔥
+                </div>
+            </section>
+
             {/* 섹션 4: 포인트 및 드래곤 */}
             <section id="points-dragon" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[3].title}
+                    {sections[4].title}
                 </h2>
                 <div style={cardStyle}>
                     <p><strong>1. 즐거운 포인트 획득 및 랭킹</strong><br />
@@ -251,7 +278,7 @@ const UsageGuide = ({ isMobile }) => {
             {/* 섹션 5: 아지트 온(溫) 클래스 관리 */}
             <section id="agit-on-class" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[4].title}
+                    {sections[5].title}
                 </h2>
 
                 <div style={cardStyle}>
@@ -288,7 +315,7 @@ const UsageGuide = ({ isMobile }) => {
             {/* 섹션 6: 학생 평가 및 AI쫑알이 */}
             <section id="evaluation" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[5].title}
+                    {sections[6].title}
                 </h2>
 
                 <div style={cardStyle}>
@@ -330,7 +357,7 @@ const UsageGuide = ({ isMobile }) => {
             {/* 섹션 7: 학습 분석 활용 */}
             <section id="analysis" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[6].title}
+                    {sections[7].title}
                 </h2>
                 <div style={cardStyle}>
                     <p><strong>1. 학급 종합 분석판</strong><br />
@@ -348,7 +375,7 @@ const UsageGuide = ({ isMobile }) => {
             {/* 섹션 8: 학급 도서 출판 */}
             <section id="book-publishing" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[7].title}
+                    {sections[8].title}
                 </h2>
                 <div style={cardStyle}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#27AE60' }}>📚 학급 도서 출판 (NEW)</h3>
@@ -367,7 +394,7 @@ const UsageGuide = ({ isMobile }) => {
             {/* 섹션 9: GPT 인공지능 활용 안내 (신규) */}
             <section id="gpt-info" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[8].title}
+                    {sections[9].title}
                 </h2>
                 <div style={cardStyle}>
                     <p style={{ marginBottom: '20px' }}>
@@ -435,7 +462,7 @@ const UsageGuide = ({ isMobile }) => {
             {/* 섹션 10: 실시간 보안관 (신규 추가) */}
             <section id="realtime-guardian" style={sectionStyle}>
                 <h2 style={{ fontSize: '1.8rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                    {sections[9].title}
+                    {sections[10].title}
                 </h2>
                 <div style={cardStyle}>
                     <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#E74C3C' }}>🛡️ 학생 댓글 2단계 안전 그물망</h3>
