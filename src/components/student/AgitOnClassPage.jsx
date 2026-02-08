@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClassAgitClass } from '../../hooks/useClassAgitClass';
+import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import Card from '../common/Card';
 
@@ -22,6 +23,39 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
         agitSettings,
         achievedStudents
     } = useClassAgitClass(classId, studentSession?.id);
+
+    // [신규] 아지트 명예의 전당 새 소식 확인 (최근 24시간)
+    const [hasNewAgitHonor, setHasNewAgitHonor] = useState(false);
+
+    useEffect(() => {
+        const checkNewHonor = async () => {
+            if (!classId) return;
+            try {
+                // [신규] 명예의 전당 최신 글 조회 및 확인 여부 체크
+                const { data: latestHonor } = await supabase
+                    .from('agit_honor_roll')
+                    .select('created_at')
+                    .eq('class_id', classId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (latestHonor) {
+                    const lastCheck = localStorage.getItem(`last_visit_agit_onclass_${classId}`);
+                    // 최근 24시간 이내의 글이면서, 마지막 확인보다 최신일 때만 NEW 표시
+                    const isRecent = new Date(latestHonor.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
+                    const isUnchecked = !lastCheck || new Date(latestHonor.created_at) > new Date(lastCheck);
+
+                    if (isRecent && isUnchecked) {
+                        setHasNewAgitHonor(true);
+                    }
+                }
+            } catch (err) {
+                console.error('명예의 전당 새 소식 확인 실패:', err);
+            }
+        };
+        checkNewHonor();
+    }, [classId]);
 
     const [subTab, setSubTab] = useState('hub');
     const [isMobileSize, setIsMobileSize] = useState(window.innerWidth <= 1024);
@@ -209,6 +243,11 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                     alert('🔒 현재 아지트 온 클래스 서비스 준비 중입니다. 선생님께 문의해 주세요!');
                                     return;
                                 }
+                                // [신규] 확인 시점 기록 및 뱃지 제거
+                                if (classId) {
+                                    localStorage.setItem(`last_visit_agit_onclass_${classId}`, new Date().toISOString());
+                                    setHasNewAgitHonor(false);
+                                }
                                 setSubTab('onClass');
                             }}
                             style={{
@@ -216,9 +255,20 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                 border: '1px solid #E2E8F0',
                                 cursor: agitSettings?.isEnabled === false ? 'default' : 'pointer',
                                 padding: '24px', margin: 0,
-                                opacity: agitSettings?.isEnabled === false ? 0.7 : 1
+                                opacity: agitSettings?.isEnabled === false ? 0.7 : 1,
+                                position: 'relative'
                             }}
                         >
+                            {/* [신규] 명예의 전당 New 뱃지 */}
+                            {hasNewAgitHonor && agitSettings?.isEnabled !== false && (
+                                <div style={{
+                                    position: 'absolute', top: '12px', right: '12px',
+                                    background: '#FF5252', color: 'white', fontSize: '0.7rem',
+                                    padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold',
+                                    boxShadow: '0 2px 4px rgba(255, 82, 82, 0.3)',
+                                    animation: 'bounce 1s infinite'
+                                }}>NEW</div>
+                            )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                                 <div style={{
                                     width: '56px', height: '56px',
