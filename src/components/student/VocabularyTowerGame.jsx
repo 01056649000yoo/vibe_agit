@@ -543,8 +543,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                     pointerEvents: 'none'
                 }} />
 
-                {/* 미니 타워 맵 */}
-                <TowerMap />
+                {/* 미니 타워 맵 제거 (중복) */}
                 {/* [신규] 층간 이동 고도화 애니메이션 */}
                 <AnimatePresence>
                     {showLevelUp && (
