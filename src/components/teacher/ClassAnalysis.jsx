@@ -26,10 +26,24 @@ const ClassAnalysis = ({ classId, isMobile }) => {
     const fetchAnalysisData = async () => {
         setLoading(true);
         try {
-            // 1. 기초 데이터 로드 (학생, 미션, 제출물)
-            const { data: students, error: sErr } = await supabase.from('students').select('id, name').eq('class_id', classId);
+            // 1. 기초 데이터 로드 (학생, 미션, 제출물) - 삭제되지 않은 학생만 조회
+            const { data: students, error: sErr } = await supabase
+                .from('students')
+                .select('id, name')
+                .eq('class_id', classId)
+                .is('deleted_at', null);
+
             if (sErr || !students || students.length === 0) {
-                setStats(prev => ({ ...prev, studentCount: 0 }));
+                setStats({
+                    studentCount: 0,
+                    avgChars: 0,
+                    submissionRate: 0,
+                    topStudents: [],
+                    notSubmitted: [],
+                    trendData: [],
+                    missionRates: [],
+                    todayRate: 0
+                });
                 setLoading(false);
                 return;
             }
