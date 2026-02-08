@@ -45,7 +45,13 @@ const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, on
         }}>
             <div style={{ flex: 1, minWidth: '200px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '900', color: '#2C3E50' }}>{displayName}</span>
+                    <span
+                        translate="no"
+                        className="notranslate"
+                        style={{ fontSize: '1.1rem', fontWeight: '900', color: '#2C3E50' }}
+                    >
+                        {displayName}
+                    </span>
                     <span style={{ fontSize: '0.8rem', color: '#546E7A', background: '#ECEFF1', padding: '2px 8px', borderRadius: '4px', border: '1px solid #CFD8DC' }}>
                         {schoolName}
                     </span>
@@ -423,7 +429,13 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
 
                                                 return (
                                                     <tr key={profile.id} style={{ borderBottom: '1px solid #F1F3F5', transition: 'background 0.2s', background: 'white' }}>
-                                                        <td style={{ padding: '16px', fontWeight: 'bold', color: '#2C3E50' }}>{displayName}</td>
+                                                        <td
+                                                            translate="no"
+                                                            className="notranslate"
+                                                            style={{ padding: '16px', fontWeight: 'bold', color: '#2C3E50' }}
+                                                        >
+                                                            {displayName}
+                                                        </td>
                                                         <td style={{ padding: '16px', color: '#455A64' }}>{schoolName}</td>
                                                         <td style={{ padding: '16px', textAlign: 'center', color: '#546E7A', fontWeight: '500' }}>
                                                             {formatLastLogin(profile.last_login_at)}

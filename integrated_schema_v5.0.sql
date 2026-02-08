@@ -262,8 +262,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION public.cleanup_expired_deletions()
 RETURNS void AS $$
 BEGIN
-    DELETE FROM public.classes WHERE deleted_at < now() - interval '3 days';
+    -- 3일이 지난 학생 완전 삭제 (게시글 등 관련 데이터 자동 연쇄 삭제)
     DELETE FROM public.students WHERE deleted_at < now() - interval '3 days';
+    -- 3일이 지난 학급 삭제
+    DELETE FROM public.classes WHERE deleted_at < now() - interval '3 days';
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -324,12 +326,25 @@ ALTER TABLE public.post_comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.post_reactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.point_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Student_Public_Access" ON students FOR ALL USING (true);
+CREATE POLICY "Student_Public_Access" ON students FOR ALL USING (
+    deleted_at IS NULL 
+    OR is_admin() 
+    OR EXISTS (SELECT 1 FROM public.classes WHERE id = students.class_id AND teacher_id = auth.uid())
+);
 CREATE POLICY "Mission_Public_Read" ON writing_missions FOR SELECT USING (true);
 CREATE POLICY "Mission_Teacher_Manage" ON writing_missions FOR ALL USING (auth.uid() = teacher_id);
-CREATE POLICY "Post_Public_Access" ON student_posts FOR ALL USING (true);
-CREATE POLICY "Comment_Public_Access" ON post_comments FOR ALL USING (true);
-CREATE POLICY "Reaction_Public_Access" ON post_reactions FOR ALL USING (true);
+CREATE POLICY "Post_Public_Access" ON student_posts FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.students WHERE id = student_id AND deleted_at IS NULL)
+    OR is_admin()
+);
+CREATE POLICY "Comment_Public_Access" ON post_comments FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.students WHERE id = student_id AND deleted_at IS NULL)
+    OR is_admin()
+);
+CREATE POLICY "Reaction_Public_Access" ON post_reactions FOR ALL USING (
+    EXISTS (SELECT 1 FROM public.students WHERE id = student_id AND deleted_at IS NULL)
+    OR is_admin()
+);
 CREATE POLICY "Log_Public_Access" ON point_logs FOR ALL USING (true);
 
 -- Student Records (생기부 도우미)
