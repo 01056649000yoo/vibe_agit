@@ -296,6 +296,9 @@ ${activitiesInfo}`;
         setBatchLoading(true);
         setBatchProgress({ current: 0, total: studentPosts.length });
 
+        // [수정] 최신 상태를 추적하기 위한 로컬 변수 (클로저 문제 해결)
+        let updatedPosts = [...studentPosts];
+
         try {
             const { data: { user } } = await supabase.auth.getUser();
             const { data: profileData } = await supabase
@@ -320,6 +323,9 @@ ${activitiesInfo}`;
                         setStudentPosts(prev => prev.map((s, idx) =>
                             idx === i ? { ...s, ai_synthesis: review } : s
                         ));
+                        // 로컬 변수 업데이트
+                        updatedPosts[i] = { ...updatedPosts[i], ai_synthesis: review };
+
                         saveToPersistence(data.student.id, review);
                     }
                     // ✅ 진행 상태 업데이트 추가
@@ -336,10 +342,9 @@ ${activitiesInfo}`;
         } finally {
             setBatchLoading(false);
 
-            // ✅ 상태 업데이트가 반영될 시간을 준 뒤 저장 함수 호출
+            // ✅ 최신 데이터를 인자로 전달하여 저장
             setTimeout(async () => {
-                // 저장 함수 내 로직을 보강하여 현재 렌더링된 최신 데이터를 가져오도록 합니다.
-                await saveGenerationHistory();
+                await saveGenerationHistory(updatedPosts);
             }, 1000);
 
             alert(isRegen ? '일괄 AI 쫑알이 재생성이 완료되었습니다! ✨' : '일괄 AI쫑알이 생성이 완료되었습니다! ✨');
@@ -361,13 +366,12 @@ ${activitiesInfo}`;
     };
 
     // 생성 이력 저장
-    const saveGenerationHistory = async () => {
+    const saveGenerationHistory = async (postsToSave = studentPosts) => {
         if (!teacherId || selectedMissionIds.length === 0) return;
 
         try {
-            // ✅ 현재 studentPosts 상태에서 ai_synthesis가 있는 것들만 취합
-            // studentPosts 자체는 최신 상태를 유지하므로 여기서 직접 참조합니다.
-            const currentResults = studentPosts.filter(s => s.ai_synthesis);
+            // ✅ 인자로 전달된 postsToSave를 사용하여 최신 상태 반영
+            const currentResults = postsToSave.filter(s => s.ai_synthesis);
 
             if (currentResults.length === 0) {
                 console.log('저장할 분석 결과가 없습니다.');
