@@ -10,8 +10,9 @@ const AnnouncementModal = ({ announcement, onClose }) => {
 
     const handleClose = () => {
         if (doNotShowToday) {
-            const today = new Date().toISOString().split('T')[0];
-            localStorage.setItem(`hide_announcement_${announcement.id}`, today);
+            // [수정] 오늘 하루만이 아니라, 팝업 자체를 다시 띄우지 않도록 처리
+            // TeacherAnnouncementManager에서 사용하는 키와 동일하게 설정하여 팝업 재등장 방지
+            localStorage.setItem(`announcement_popup_seen_${announcement.id}`, 'true');
         }
         onClose();
     };
@@ -53,7 +54,7 @@ const AnnouncementModal = ({ announcement, onClose }) => {
                             style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                         />
                         <label htmlFor="doNotShowToday" style={{ fontSize: '0.9rem', color: '#6B7280', cursor: 'pointer', fontWeight: 'bold' }}>
-                            오늘 하루 보지 않기
+                            다시 보지 않기
                         </label>
                     </div>
 

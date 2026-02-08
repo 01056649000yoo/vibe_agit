@@ -10,9 +10,8 @@ const TeacherAnnouncementManager = ({ isMobile }) => {
     const [showList, setShowList] = useState(false);
 
     const handleClosePopup = () => {
-        if (latestAnnouncement) {
-            localStorage.setItem(`announcement_popup_seen_${latestAnnouncement.id}`, 'true');
-        }
+        // [수정] 무조건 저장하지 않고, 모달 내부에서 체크박스 여부에 따라 저장을 결정하도록 함.
+        // 여기서는 단순히 닫기만 수행
         setShowPopup(false);
     };
 
