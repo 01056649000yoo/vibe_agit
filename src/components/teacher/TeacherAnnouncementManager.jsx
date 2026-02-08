@@ -9,25 +9,20 @@ const TeacherAnnouncementManager = ({ isMobile }) => {
     const [showPopup, setShowPopup] = useState(false);
     const [showList, setShowList] = useState(false);
 
-    const handleClosePopup = () => {
-        // [수정] 무조건 저장하지 않고, 모달 내부에서 체크박스 여부에 따라 저장을 결정하도록 함.
-        // 여기서는 단순히 닫기만 수행
-        setShowPopup(false);
-    };
-
     useEffect(() => {
-        if (!loading && latestAnnouncement && latestAnnouncement.is_popup) {
-            const popupKey = `announcement_popup_seen_${latestAnnouncement.id}`;
-            const hasSeen = localStorage.getItem(popupKey);
+        // 로딩 중이거나 공지사항이 없거나 팝업 설정이 없으면 무시
+        if (loading || !latestAnnouncement || !latestAnnouncement.is_popup) return;
 
-            if (!hasSeen) {
-                setShowPopup(true);
-            }
+        const popupKey = `announcement_popup_${latestAnnouncement.id}`;
+        const hasSeen = localStorage.getItem(popupKey);
+
+        // 아직 보지 않은 경우에만 팝업 표시
+        if (hasSeen !== 'true') {
+            setShowPopup(true);
         }
-    }, [latestAnnouncement, loading]);
+    }, [latestAnnouncement?.id, loading, latestAnnouncement?.is_popup]); // 의존성 배열 최적화
 
-    // [수정] 로딩 중이라도 이미 데이터가 있다면 언마운트 하지 않음 (체크박스 상태 유지)
-    if (loading && !latestAnnouncement) return null;
+    if (loading) return null;
 
     return (
         <>
@@ -55,7 +50,12 @@ const TeacherAnnouncementManager = ({ isMobile }) => {
                 {showPopup && latestAnnouncement && (
                     <AnnouncementModal
                         announcement={latestAnnouncement}
-                        onClose={handleClosePopup}
+                        onClose={() => setShowPopup(false)}
+                        onDoNotShowAgain={() => {
+                            const popupKey = `announcement_popup_${latestAnnouncement.id}`;
+                            localStorage.setItem(popupKey, 'true');
+                            setShowPopup(false); // 즉시 닫기
+                        }}
                     />
                 )}
                 {showList && (

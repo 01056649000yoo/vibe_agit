@@ -3,8 +3,90 @@ import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import Card from '../common/Card';
 
-const AnnouncementItem = ({ ann, onDelete }) => {
+const AnnouncementItem = ({ ann, onDelete, onUpdate }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editTitle, setEditTitle] = useState(ann.title);
+    const [editContent, setEditContent] = useState(ann.content);
+    const [editIsPopup, setEditIsPopup] = useState(ann.is_popup);
+    const [editTargetRole, setEditTargetRole] = useState(ann.target_role);
+
+    const handleSave = () => {
+        onUpdate(ann.id, {
+            title: editTitle,
+            content: editContent,
+            is_popup: editIsPopup,
+            target_role: editTargetRole
+        });
+        setIsEditing(false);
+    };
+
+    if (isEditing) {
+        return (
+            <div style={{
+                background: 'white', borderRadius: '16px', padding: '20px',
+                border: '2px solid #6366F1', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.2)',
+                display: 'flex', flexDirection: 'column', gap: '12px'
+            }}>
+                <div style={{ fontWeight: 'bold', color: '#6366F1', marginBottom: '8px' }}>✏️ 공지사항 수정</div>
+
+                <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    placeholder="제목"
+                    style={{ padding: '8px', borderRadius: '8px', border: '1px solid #CBD5E0', fontWeight: 'bold' }}
+                />
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <select
+                        value={editTargetRole}
+                        onChange={(e) => setEditTargetRole(e.target.value)}
+                        style={{ padding: '6px', borderRadius: '8px', border: '1px solid #CBD5E0' }}
+                    >
+                        <option value="TEACHER">선생님만</option>
+                        <option value="STUDENT">학생만</option>
+                        <option value="ALL">전체 공개</option>
+                    </select>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', cursor: 'pointer' }}>
+                        <input
+                            type="checkbox"
+                            checked={editIsPopup}
+                            onChange={(e) => setEditIsPopup(e.target.checked)}
+                        />
+                        팝업 강조
+                    </label>
+                </div>
+
+                <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    placeholder="내용"
+                    style={{ padding: '8px', borderRadius: '8px', border: '1px solid #CBD5E0', minHeight: '120px', resize: 'vertical' }}
+                />
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setIsEditing(false)}
+                        style={{ color: '#64748B' }}
+                    >
+                        취소
+                    </Button>
+                    <Button
+                        size="sm"
+                        onClick={handleSave}
+                        style={{ background: '#6366F1', color: 'white' }}
+                    >
+                        저장
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div
             onClick={() => setIsExpanded(!isExpanded)}
@@ -34,19 +116,34 @@ const AnnouncementItem = ({ ann, onDelete }) => {
                         </span>
                     </div>
                 </div>
-                <Button
-                    variant="ghost"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(ann.id);
-                    }}
-                    style={{
-                        color: '#EF4444', fontSize: '0.75rem', flexShrink: 0,
-                        padding: '2px 8px', borderRadius: '6px', background: '#FEF2F2'
-                    }}
-                >
-                    삭제
-                </Button>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                    <Button
+                        variant="ghost"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsEditing(true);
+                        }}
+                        style={{
+                            color: '#3B82F6', fontSize: '0.75rem', flexShrink: 0,
+                            padding: '2px 8px', borderRadius: '6px', background: '#EFF6FF'
+                        }}
+                    >
+                        수정
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(ann.id);
+                        }}
+                        style={{
+                            color: '#EF4444', fontSize: '0.75rem', flexShrink: 0,
+                            padding: '2px 8px', borderRadius: '6px', background: '#FEF2F2'
+                        }}
+                    >
+                        삭제
+                    </Button>
+                </div>
             </div>
 
             <div style={{
@@ -143,6 +240,22 @@ const AdminAnnouncementManager = () => {
         }
     };
 
+    const handleUpdate = async (id, updates) => {
+        try {
+            const { error } = await supabase
+                .from('announcements')
+                .update(updates)
+                .eq('id', id);
+
+            if (error) throw error;
+
+            alert('공지사항이 수정되었습니다.');
+            fetchAnnouncements();
+        } catch (err) {
+            alert('수정 실패: ' + err.message);
+        }
+    };
+
     const handleDelete = async (id) => {
         if (!confirm('정말 삭제하시겠습니까?')) return;
         try {
@@ -219,7 +332,7 @@ const AdminAnnouncementManager = () => {
                 marginTop: '20px'
             }}>
                 {announcements.map(ann => (
-                    <AnnouncementItem key={ann.id} ann={ann} onDelete={handleDelete} />
+                    <AnnouncementItem key={ann.id} ann={ann} onDelete={handleDelete} onUpdate={handleUpdate} />
                 ))}
             </div>
 

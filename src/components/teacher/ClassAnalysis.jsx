@@ -108,10 +108,7 @@ const ClassAnalysis = ({ classId, isMobile }) => {
             }).reverse();
 
             // 최근 미션별 완료율 (상위 2개), 미제출자 맵, 미션별 TOP 5, 미션별 평균 글자수 구성
-            // [수정] created_at 내림차순 정렬 보장
-            const sortedMissions = missions ? missions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) : [];
-            const recentMissions = sortedMissions.slice(0, 2);
-
+            const recentMissions = missions ? missions.slice(0, 2) : [];
             const missionNotSubmitted = {};
             const missionTopMap = {};
             const missionAvgMap = {};
@@ -140,14 +137,8 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                 return { id: m.id, title: m.title, rate };
             });
 
-            // [수정] 가장 최근 미션 자동 선택 (기존 selectedMissionId가 없거나 유효하지 않을 때)
-            if (recentMissions.length > 0) {
-                // 이미 선택된 ID가 있고 그것이 최근 미션 목록에 있다면 유지, 아니면 첫 번째(가장 최근) 선택
-                if (!selectedMissionId || !recentMissions.find(m => m.id === selectedMissionId)) {
-                    setSelectedMissionId(recentMissions[0].id);
-                }
-            } else {
-                setSelectedMissionId(null);
+            if (recentMissions.length > 0 && !selectedMissionId) {
+                setSelectedMissionId(recentMissions[0].id);
             }
 
             setMissionNotSubmittedMap(missionNotSubmitted);

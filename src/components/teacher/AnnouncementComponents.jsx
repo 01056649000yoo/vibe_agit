@@ -3,17 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import Card from '../common/Card';
 
-const AnnouncementModal = ({ announcement, onClose }) => {
-    const [doNotShowToday, setDoNotShowToday] = useState(false);
+const AnnouncementModal = ({ announcement, onClose, onDoNotShowAgain }) => {
+    const [doNotShow, setDoNotShow] = useState(false);
 
     if (!announcement) return null;
 
     const handleClose = () => {
-        if (doNotShowToday) {
-            // [수정] 오늘 하루만이 아니라, 팝업 자체를 다시 띄우지 않도록 처리
-            // TeacherAnnouncementManager에서 사용하는 키와 동일하게 설정하여 팝업 재등장 방지
-            localStorage.setItem(`announcement_popup_seen_${announcement.id}`, 'true');
-        }
+        if (doNotShow && onDoNotShowAgain) onDoNotShowAgain();
         onClose();
     };
 
@@ -45,16 +41,16 @@ const AnnouncementModal = ({ announcement, onClose }) => {
                         {announcement.content}
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '8px', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                         <input
                             type="checkbox"
-                            id="doNotShowToday"
-                            checked={doNotShowToday}
-                            onChange={(e) => setDoNotShowToday(e.target.checked)}
-                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                            id="doNotShow"
+                            checked={doNotShow}
+                            onChange={(e) => setDoNotShow(e.target.checked)}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                         />
-                        <label htmlFor="doNotShowToday" style={{ fontSize: '0.9rem', color: '#6B7280', cursor: 'pointer', fontWeight: 'bold' }}>
-                            다시 보지 않기
+                        <label htmlFor="doNotShow" style={{ fontSize: '0.9rem', color: '#64748B', cursor: 'pointer', fontWeight: 'bold' }}>
+                            다시 보지 않기 (닫기 시 적용)
                         </label>
                     </div>
 
@@ -62,7 +58,7 @@ const AnnouncementModal = ({ announcement, onClose }) => {
                         onClick={handleClose}
                         style={{ width: '100%', background: '#6366F1', fontWeight: 'bold' }}
                     >
-                        확인
+                        닫기
                     </Button>
                 </Card>
             </motion.div>
@@ -210,20 +206,10 @@ const AnnouncementListModal = ({ announcements, onClose }) => {
 
 const AnnouncementBanner = ({ latestAnnouncement, onViewAll }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [isVisible, setIsVisible] = useState(true);
 
-    // [신규] 오늘 하루 보지 않기 체크
-    useEffect(() => {
-        if (latestAnnouncement) {
-            const hiddenDate = localStorage.getItem(`hide_announcement_${latestAnnouncement.id}`);
-            const today = new Date().toISOString().split('T')[0];
-            if (hiddenDate === today) {
-                setIsVisible(false);
-            }
-        }
-    }, [latestAnnouncement]);
+    // 이전에 확인했는지 로컬스토리지 체크 (선택사항)
 
-    if (!latestAnnouncement || !isVisible) return null;
+    if (!latestAnnouncement) return null;
 
     return (
         <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch' }}>

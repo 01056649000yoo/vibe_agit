@@ -202,9 +202,10 @@ function App() {
     } catch (err) {
       console.warn('Logout server request failed (ignoring):', err);
     } finally {
-      // 2. 서버 결과와 상관없이 로컬 상태 및 스토리지 강제 클리어
-      localStorage.clear();
-      sessionStorage.clear();
+      // 2. 로컬 스토리지 클리어 제외 (사용자 설정 보존)
+      // localStorage.clear(); 
+      // sessionStorage.clear(); 
+
 
       // 3. 즉시 리로드하여 초기 상태로 복구
       window.location.href = '/';
