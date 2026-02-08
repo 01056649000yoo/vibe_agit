@@ -648,39 +648,57 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                     )}
                 </AnimatePresence>
 
-                {/* 헤더 */}
+                {/* 헤더 - 학년 표시 통합 */}
                 <div style={{
-                    padding: '16px 20px',
+                    padding: '12px 20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     background: 'rgba(255,255,255,0.95)',
                     backdropFilter: 'blur(10px)',
                     borderBottom: '2px solid #E3F2FD',
-                    zIndex: 1000
+                    zIndex: 1000,
+                    height: '70px'
                 }}>
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleExit}
-                        style={{
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleExit}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                background: '#F5F5F5',
+                                border: '1px solid #E0E0E0',
+                                padding: '6px 14px',
+                                borderRadius: '12px',
+                                color: '#666',
+                                fontSize: '0.9rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <span style={{ fontSize: '1.2rem' }}>←</span>
+                            <span className="hide-on-mobile">나가기</span>
+                        </motion.button>
+
+                        {/* [개선] 학년 표시를 헤더로 이동 (상단 공간 절약) */}
+                        <div style={{
+                            padding: '6px 16px',
+                            background: '#E3F2FD',
+                            borderRadius: '12px',
+                            border: '1px solid #BBDEFB',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px',
-                            background: '#F5F5F5',
-                            border: '1px solid #E0E0E0',
-                            padding: '6px 14px',
-                            borderRadius: '12px',
-                            color: '#666',
-                            fontSize: '0.9rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        <span style={{ fontSize: '1.2rem' }}>←</span>
-                        <span className="hide-on-mobile">나가기</span>
-                    </motion.button>
-                    <h2 style={{ margin: 0, color: '#1565C0', fontSize: '1.2rem', fontWeight: '800' }}>🏰 어휘의 탑</h2>
+                            gap: '6px'
+                        }}>
+                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#1565C0' }}>📚 {selectedGrade}학년</span>
+                        </div>
+                    </div>
+
+                    <h2 style={{ margin: 0, color: '#1565C0', fontSize: '1.2rem', fontWeight: '800', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>🏰 어휘의 탑</h2>
+
                     {/* [신규] 남은 시도 횟수 표시 */}
                     <div style={{
                         display: 'flex',
@@ -702,276 +720,107 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                     </div>
                 </div>
 
-                {/* 학년 선택 - 교사 설정 시 고정 표시 */}
-                <div style={{
-                    padding: '16px 20px',
-                    background: 'rgba(255,255,255,0.9)',
-                    display: 'flex',
-                    gap: '10px',
-                    justifyContent: 'center',
-                    flexWrap: 'wrap',
-                    alignItems: 'center'
-                }}>
-                    {forcedGrade ? (
-                        // 교사가 학년을 설정한 경우: 고정 표시
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '10px 20px',
-                            background: '#E8F5E9',
-                            borderRadius: '20px',
-                            border: '2px solid #4CAF50'
-                        }}>
-                            <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#2E7D32' }}>
-                                📚 {forcedGrade}학년 어휘
-                            </span>
-                            <span style={{ fontSize: '0.8rem', color: '#66BB6A' }}>
-                                (선생님 설정)
-                            </span>
-                        </div>
-                    ) : (
-                        // 교사 설정이 없으면 학생이 선택 가능
-                        [3, 4, 5, 6].map(grade => (
-                            <motion.button
-                                key={grade}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => handleGradeChange(grade)}
-                                style={{
-                                    padding: '10px 20px',
-                                    borderRadius: '20px',
-                                    border: selectedGrade === grade ? '2px solid #1565C0' : '2px solid #E0E0E0',
-                                    background: selectedGrade === grade ? '#1565C0' : 'white',
-                                    color: selectedGrade === grade ? 'white' : '#666',
-                                    fontSize: '0.95rem',
-                                    fontWeight: 'bold',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                {grade}학년
-                            </motion.button>
-                        ))
-                    )}
-                </div>
+                {/* 기존 학년 선택 영역 제거 (헤더로 통합됨) */}
 
-                {/* 상태 표시 바 */}
+                {/* 상태바 (경험치 & 타이머) - 더 컴팩트하게 */}
                 <div style={{
-                    padding: '20px',
-                    background: 'rgba(255,255,255,0.95)',
-                    margin: '0',
-                    borderBottom: '2px solid #E3F2FD'
+                    padding: '10px 20px',
+                    background: 'rgba(255,255,255,0.8)',
+                    backdropFilter: 'blur(5px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '20px',
+                    borderBottom: '1px solid rgba(0,0,0,0.05)'
                 }}>
                     {/* 현재 층수 */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: '16px'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{
-                                width: '50px',
-                                height: '50px',
-                                borderRadius: '50%',
-                                background: getFloorBackground(stats.currentFloor),
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '1.5rem',
-                                fontWeight: 'bold',
-                                color: getFloorTextColor(stats.currentFloor),
-                                boxShadow: '0 4px 15px rgba(0,0,0,0.15)'
-                            }}>
-                                {stats.currentFloor}
-                            </div>
-                            <div>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#333' }}>
-                                    {stats.currentFloor}층
-                                </div>
-                                <div style={{ fontSize: '0.85rem', color: '#666' }}>
-                                    현재 위치
-                                </div>
-                            </div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.85rem', color: '#666' }}>다음 층까지</div>
-                            <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1565C0' }}>
-                                {stats.requiredExp - stats.experience} EXP
-                            </div>
-                        </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '90px' }}>
+                        <div style={{
+                            width: '32px', height: '32px', borderRadius: '50%',
+                            background: getFloorBackground(stats.currentFloor),
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.9rem', fontWeight: 'bold', color: getFloorTextColor(stats.currentFloor),
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        }}>{stats.currentFloor}</div>
+                        <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{stats.currentFloor}층</span>
                     </div>
 
                     {/* 경험치 바 */}
-                    <div style={{
-                        width: '100%',
-                        height: '12px',
-                        background: '#E0E0E0',
-                        borderRadius: '6px',
-                        overflow: 'hidden'
-                    }}>
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${stats.expProgress}%` }}
-                            transition={{ duration: 0.5, ease: 'easeOut' }}
-                            style={{
-                                height: '100%',
-                                background: 'linear-gradient(90deg, #2196F3, #1565C0)',
-                                borderRadius: '6px'
-                            }}
-                        />
-                    </div>
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        marginTop: '8px',
-                        fontSize: '0.8rem',
-                        color: '#666'
-                    }}>
-                        <span>EXP: {stats.experience} / {stats.requiredExp}</span>
-                        <span>📚 {stats.usedWords} / {stats.totalWords} 단어</span>
-                    </div>
-
-                    {/* [신규] 타이머 표시 */}
-                    <div style={{
-                        marginTop: '16px',
-                        padding: '10px 15px',
-                        background: timeLeft <= 10 ? '#FFEBEE' : '#F5F5F5',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '10px',
-                        border: `1px solid ${timeLeft <= 10 ? '#FFCDD2' : '#E0E0E0'}`
-                    }}>
-                        <span style={{ fontSize: '1.2rem' }}>⏱️</span>
-                        <div style={{ flex: 1, height: '8px', background: '#E0E0E0', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ width: '100%', height: '8px', background: '#E0E0E0', borderRadius: '4px', overflow: 'hidden' }}>
                             <motion.div
-                                animate={{ width: `${(timeLeft / timeLimit) * 100}%` }}
-                                style={{
-                                    height: '100%',
-                                    background: timeLeft <= 10 ? '#E53935' : '#FF9800',
-                                    borderRadius: '4px'
-                                }}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${stats.expProgress}%` }}
+                                style={{ height: '100%', background: 'linear-gradient(90deg, #2196F3, #1565C0)' }}
                             />
                         </div>
-                        <span style={{
-                            fontSize: '1rem',
-                            fontWeight: '1000',
-                            color: timeLeft <= 10 ? '#C62828' : '#333',
-                            minWidth: '40px',
-                            textAlign: 'right',
-                            fontFamily: 'monospace'
-                        }}>
-                            {timeLeft}초
-                        </span>
+                    </div>
+
+                    {/* [신규] 타이머 - 컴팩트형 */}
+                    <div style={{
+                        minWidth: '100px', padding: '4px 12px',
+                        background: timeLeft <= 10 ? '#FFEBEE' : '#F5F5F5',
+                        borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px',
+                        border: `1px solid ${timeLeft <= 10 ? '#FFCDD2' : '#E0E0E0'}`
+                    }}>
+                        <span>⏱️</span>
+                        <span style={{ fontWeight: 'bold', color: timeLeft <= 10 ? '#C62828' : '#333' }}>{timeLeft}초</span>
                     </div>
                 </div>
 
-                {/* 퀴즈 및 랭킹 영역 - Flex 레이아웃으로 변경 (겹침 방지) */}
+                {/* 3열 레이아웃: 랭킹 / 퀴즈 / 타워맵 */}
                 {currentQuiz && (
                     <div style={{
+                        flex: 1,
                         width: '100%',
-                        padding: '20px',
-                        margin: '10px auto 0 auto',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        flexWrap: 'wrap', // 화면이 좁아지면 아래로 배치
-                        alignItems: 'flex-start',
-                        justifyContent: 'center',
-                        gap: '24px',
-                        minHeight: 'auto'
+                        padding: '10px 20px',
+                        display: 'grid',
+                        gridTemplateColumns: 'minmax(250px, 300px) 1fr minmax(150px, 200px)',
+                        gap: '20px',
+                        alignItems: 'start',
+                        overflowY: 'auto'
                     }}>
-                        {/* [신규] 랭킹 보드 */}
+                        {/* [1열] 랭킹 리스트 (좌측) */}
                         <div style={{
-                            width: '300px',
                             background: 'rgba(255, 255, 255, 0.95)',
-                            backdropFilter: 'blur(10px)',
                             borderRadius: '24px',
-                            padding: '24px 20px',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                            border: '2px solid #E3F2FD',
-                            zIndex: 10,
-                            flexShrink: 0
+                            padding: '20px 16px',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                            border: '1px solid #E3F2FD',
+                            maxHeight: 'calc(100vh - 120px)',
+                            overflowY: 'auto'
                         }}>
-                            <h3 style={{
-                                margin: '0 0 20px 0',
-                                fontSize: '1.1rem',
-                                color: '#1565C0',
-                                fontWeight: '900',
-                                textAlign: 'center',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px'
-                            }}>
-                                🏆 실시간 탑 랭킹
-                            </h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <h3 style={{ margin: '0 0 15px 0', fontSize: '1rem', color: '#1565C0', fontWeight: '900', textAlign: 'center' }}>🏆 탑 랭킹</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {/* 랭킹 렌더링 (동일 로직 최적화) */}
                                 {(() => {
-                                    if (rankings.length === 0) {
-                                        return <p style={{ textAlign: 'center', color: '#999', fontSize: '0.85rem', margin: '20px 0' }}> 아직 기록이 없어요!</p>;
-                                    }
-
-                                    // 층별 그룹화
+                                    if (rankings.length === 0) return <p style={{ textAlign: 'center', color: '#999', fontSize: '0.8rem' }}>참여 기록 없음</p>;
                                     const grouped = rankings.reduce((acc, curr) => {
                                         const f = curr.max_floor;
                                         if (!acc[f]) acc[f] = [];
                                         acc[f].push(curr);
                                         return acc;
                                     }, {});
-
-                                    // 층수 내림차순 정렬
                                     const sortedFloors = Object.keys(grouped).sort((a, b) => b - a);
-
                                     let currentRank = 1;
-                                    return sortedFloors.map((floor, idx) => {
+                                    return sortedFloors.slice(0, 5).map((floor) => { // 상위 5그룹만 표시
                                         const students = grouped[floor];
                                         const rank = currentRank;
-                                        currentRank += students.length; // 공동 순위 반영 (예: 1등 2명이면 다음은 3등)
-
+                                        currentRank += students.length;
                                         const isMyGroup = students.some(s => s.student_id === studentSession?.id);
-
                                         return (
                                             <div key={floor} style={{
-                                                background: isMyGroup ? '#E3F2FD' : 'white',
-                                                borderRadius: '16px',
-                                                padding: '12px 14px',
-                                                border: isMyGroup ? '2px solid #2196F3' : '1px solid #F0F0F0',
-                                                boxShadow: isMyGroup ? '0 4px 12px rgba(33, 150, 243, 0.1)' : 'none'
+                                                background: isMyGroup ? '#E3F2FD' : '#F8F9FA',
+                                                borderRadius: '12px', padding: '10px',
+                                                border: isMyGroup ? '1px solid #2196F3' : '1px solid #EEE'
                                             }}>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    marginBottom: '6px'
-                                                }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <span style={{
-                                                            fontWeight: '1000',
-                                                            fontSize: '1rem',
-                                                            color: rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : '#9E9E9E',
-                                                        }}>
-                                                            {rank}위
-                                                        </span>
-                                                        <span style={{ fontWeight: '1000', color: '#1565C0', fontSize: '0.95rem' }}>{floor}F</span>
-                                                    </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px' }}>
+                                                    <span style={{ color: rank <= 3 ? '#E65100' : '#666' }}>{rank}위</span>
+                                                    <span style={{ color: '#1565C0' }}>{floor}F</span>
                                                 </div>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    flexWrap: 'wrap',
-                                                    gap: '6px'
-                                                }}>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                                                     {students.map(s => (
-                                                        <span key={s.student_id} style={{
-                                                            fontSize: '0.85rem',
-                                                            padding: '4px 8px',
-                                                            background: s.student_id === studentSession?.id ? '#2196F3' : '#F5F5F5',
-                                                            color: s.student_id === studentSession?.id ? 'white' : '#555',
-                                                            borderRadius: '8px',
-                                                            fontWeight: s.student_id === studentSession?.id ? 'bold' : 'normal'
-                                                        }}>
-                                                            {s.students?.name || '학생'}
+                                                        <span key={s.student_id} style={{ fontSize: '0.75rem', padding: '2px 6px', background: s.student_id === studentSession?.id ? '#2196F3' : 'white', color: s.student_id === studentSession?.id ? 'white' : '#555', borderRadius: '4px', border: '1px solid #DDD' }}>
+                                                            {s.students?.name}
                                                         </span>
                                                     ))}
                                                 </div>
@@ -982,245 +831,106 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                             </div>
                         </div>
 
-                        {/* 메인 퀴즈 컨텐츠 */}
-                        <div style={{
-                            flex: '1',
-                            maxWidth: '800px',
-                            minWidth: '320px',
-                            position: 'relative',
-                            zIndex: 1
-                        }}>
-                            {/* 문제 카드 */}
+                        {/* [2열] 메인 퀴즈 (중앙) */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            {/* 문제 카드 - 더 컴팩트하게 */}
                             <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
                                 key={currentQuiz.correctAnswer}
                                 style={{
-                                    background: 'white',
-                                    borderRadius: '24px',
-                                    padding: '30px', // 패딩 약간 축소
-                                    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                                    marginBottom: '20px'
+                                    background: 'white', borderRadius: '24px', padding: '25px',
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid #EEE'
                                 }}
                             >
-                                {/* 카테고리 & 레벨 태그 */}
-                                <div style={{
-                                    display: 'flex',
-                                    gap: '10px',
-                                    marginBottom: '16px',
-                                    flexWrap: 'wrap'
-                                }}>
-                                    <span style={{
-                                        background: '#E3F2FD',
-                                        color: '#1565C0',
-                                        padding: '6px 14px',
-                                        borderRadius: '20px',
-                                        fontSize: '0.85rem',
-                                        fontWeight: 'bold'
-                                    }}>
-                                        {currentQuiz.category}
-                                    </span>
-                                    <span style={{
-                                        background: currentQuiz.level >= 4 ? '#FCE4EC' : currentQuiz.level >= 2 ? '#FFF3E0' : '#E8F5E9',
-                                        color: currentQuiz.level >= 4 ? '#C2185B' : currentQuiz.level >= 2 ? '#E65100' : '#2E7D32',
-                                        padding: '6px 14px',
-                                        borderRadius: '20px',
-                                        fontSize: '0.85rem',
-                                        fontWeight: 'bold'
-                                    }}>
-                                        레벨 {currentQuiz.level}
-                                    </span>
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                                    <span style={{ background: '#E3F2FD', color: '#1565C0', padding: '4px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>{currentQuiz.category}</span>
+                                    <span style={{ background: '#F5F5F5', color: '#666', padding: '4px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>Lv.{currentQuiz.level}</span>
                                 </div>
-
-                                {/* 문제 (뜻) */}
-                                <h3 style={{
-                                    fontSize: '1.6rem',
-                                    color: '#333',
-                                    marginBottom: '16px',
-                                    lineHeight: 1.5,
-                                    fontWeight: '600'
-                                }}>
-                                    📖 "{currentQuiz.question}"
-                                </h3>
-
-                                {/* 예문 */}
-                                <p style={{
-                                    fontSize: '1.1rem',
-                                    color: '#666',
-                                    background: '#F5F5F5',
-                                    padding: '14px 18px',
-                                    borderRadius: '12px',
-                                    lineHeight: 1.6,
-                                    borderLeft: '4px solid #2196F3'
-                                }}>
-                                    💡 <strong>힌트:</strong> {currentQuiz.example?.replace(currentQuiz.correctAnswer, '___') || '예문이 없습니다.'}
+                                <h3 style={{ fontSize: '1.4rem', color: '#333', marginBottom: '12px', lineHeight: 1.4, fontWeight: '700' }}>📖 "{currentQuiz.question}"</h3>
+                                <p style={{ fontSize: '1rem', color: '#666', background: '#F9F9F9', padding: '12px 15px', borderRadius: '12px', borderLeft: '4px solid #2196F3', margin: 0 }}>
+                                    💡 힌트: {currentQuiz.example?.replace(currentQuiz.correctAnswer, '___') || '예문이 없습니다.'}
                                 </p>
                             </motion.div>
 
-                            {/* 보기 버튼들 */}
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr',
-                                gap: '16px'
-                            }}>
-                                {currentQuiz.options.map((option, index) => {
+                            {/* 보기 버튼들 - 그리드 최적화 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                {currentQuiz.options.map((option) => {
                                     const isSelected = selectedAnswer === option;
                                     const isCorrect = option === currentQuiz.correctAnswer;
                                     const showCorrectness = showResult;
-
-                                    let buttonStyle = {
-                                        background: 'white',
-                                        border: '2px solid #E0E0E0',
-                                        color: '#333'
-                                    };
-
+                                    let btnStyle = { background: 'white', border: '2px solid #EEE', color: '#333' };
                                     if (showCorrectness) {
-                                        if (isCorrect) {
-                                            buttonStyle = {
-                                                background: 'linear-gradient(135deg, #4CAF50, #81C784)',
-                                                border: '2px solid #4CAF50',
-                                                color: 'white'
-                                            };
-                                        } else if (isSelected && !isCorrect) {
-                                            buttonStyle = {
-                                                background: 'linear-gradient(135deg, #EF5350, #E57373)',
-                                                border: '2px solid #EF5350',
-                                                color: 'white'
-                                            };
-                                        }
-                                    } else if (isSelected) {
-                                        buttonStyle = {
-                                            background: '#E3F2FD',
-                                            border: '2px solid #2196F3',
-                                            color: '#1565C0'
-                                        };
-                                    }
+                                        if (isCorrect) btnStyle = { background: '#4CAF50', border: '2px solid #4CAF50', color: 'white' };
+                                        else if (isSelected) btnStyle = { background: '#EF5350', border: '2px solid #EF5350', color: 'white' };
+                                    } else if (isSelected) btnStyle = { background: '#E3F2FD', border: '2px solid #2196F3', color: '#1565C0' };
 
                                     return (
                                         <motion.button
                                             key={option}
-                                            whileHover={!showResult ? { scale: 1.03 } : {}}
-                                            whileTap={!showResult ? { scale: 0.97 } : {}}
+                                            whileHover={!showResult ? { scale: 1.02, y: -2 } : {}}
+                                            whileTap={!showResult ? { scale: 0.98 } : {}}
                                             onClick={() => handleAnswerSelect(option)}
                                             disabled={showResult}
                                             style={{
-                                                padding: '22px 20px',
-                                                borderRadius: '16px',
-                                                ...buttonStyle,
-                                                fontSize: '1.25rem',
-                                                fontWeight: 'bold',
-                                                cursor: showResult ? 'default' : 'pointer',
-                                                transition: 'all 0.2s ease',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '8px'
+                                                padding: '16px', borderRadius: '16px', ...btnStyle,
+                                                fontSize: '1.1rem', fontWeight: 'bold', cursor: showResult ? 'default' : 'pointer',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.05)', transition: 'all 0.2s'
                                             }}
                                         >
-                                            {showCorrectness && isCorrect && '✅ '}
-                                            {showCorrectness && isSelected && !isCorrect && '❌ '}
                                             {option}
                                         </motion.button>
                                     );
                                 })}
                             </div>
 
-                            {/* 결과 표시 및 다음 버튼 */}
+                            {/* 정답 확인 결과 및 다음 버튼 */}
                             <AnimatePresence>
                                 {showResult && lastResult && (
                                     <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -20 }}
+                                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                         style={{
-                                            marginTop: '16px',
-                                            padding: '12px 20px',
-                                            background: lastResult.isCorrect
-                                                ? 'linear-gradient(135deg, #E8F5E9, #C8E6C9)'
-                                                : 'linear-gradient(135deg, #FFEBEE, #FFCDD2)',
-                                            borderRadius: '20px',
-                                            textAlign: 'center',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            gap: '4px'
+                                            padding: '12px 20px', borderRadius: '16px', textAlign: 'center',
+                                            background: lastResult.isCorrect ? '#E8F5E9' : '#FFEBEE',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px'
                                         }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '1.8rem' }}>
-                                                {lastResult.isCorrect ? '🎉' : '💪'}
-                                            </span>
-                                            <h3 style={{
-                                                color: lastResult.isCorrect ? '#2E7D32' : '#C62828',
-                                                margin: 0,
-                                                fontSize: '1.2rem'
-                                            }}>
-                                                {lastResult.isCorrect ? '정답이에요!' : '아쉬워요!'}
-                                            </h3>
-                                        </div>
-                                        {lastResult.isCorrect && (
-                                            <p style={{ color: '#388E3C', fontSize: '1rem', margin: 0 }}>
-                                                +{lastResult.earnedExp} EXP 획득! 🌟
-                                            </p>
-                                        )}
-                                        {!lastResult.isCorrect && (
-                                            <p style={{ color: '#666', fontSize: '0.95rem', margin: 0 }}>
-                                                정답: <strong style={{ color: '#1565C0' }}>{lastResult.correctAnswer}</strong>
-                                            </p>
-                                        )}
-
+                                        <span style={{ fontWeight: 'bold', color: lastResult.isCorrect ? '#2E7D32' : '#C62828' }}>
+                                            {lastResult.isCorrect ? `🎉 정답! +${lastResult.earnedExp} EXP` : `💪 아쉬워요! 정답은 [${lastResult.correctAnswer}]`}
+                                        </span>
                                         <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
+                                            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                                             onClick={handleNextQuestion}
                                             style={{
-                                                marginTop: '10px',
-                                                padding: '10px 32px',
-                                                borderRadius: '20px',
-                                                border: 'none',
-                                                background: 'linear-gradient(135deg, #2196F3, #1565C0)',
-                                                color: 'white',
-                                                fontSize: '1.1rem',
-                                                fontWeight: 'bold',
-                                                cursor: 'pointer',
-                                                boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)'
+                                                padding: '8px 24px', borderRadius: '12px', border: 'none',
+                                                background: '#1565C0', color: 'white', fontSize: '0.9rem', fontWeight: 'bold', cursor: 'pointer'
                                             }}
-                                        >
-                                            다음 문제 →
-                                        </motion.button>
+                                        >다음 문제 →</motion.button>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
                         </div>
+
+                        {/* [3열] 실시간 타워 맵 (우측) */}
+                        <div style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center',
+                            justifyContent: 'center', height: '100%', pointerEvents: 'none'
+                        }}>
+                            <div style={{ transform: 'scale(0.85)' }}>
+                                <TowerMap />
+                            </div>
+                            <div style={{
+                                marginTop: '20px', padding: '10px 15px', background: 'rgba(255,255,255,0.7)',
+                                borderRadius: '12px', textAlign: 'center', backdropFilter: 'blur(5px)'
+                            }}>
+                                <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '2px' }}>나의 정복도</div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1565C0' }}>{stats.currentFloor}층 탐험 중</div>
+                            </div>
+                        </div>
                     </div>
                 )}
 
-                {/* 하단 재시작 버튼 */}
-                <div style={{
-                    padding: '20px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    paddingBottom: '100px'
-                }}>
-                    <motion.button
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={handleRestart}
-                        style={{
-                            padding: '12px 28px',
-                            borderRadius: '20px',
-                            border: '2px solid rgba(255,255,255,0.5)',
-                            background: 'rgba(255,255,255,0.2)',
-                            color: getFloorTextColor(stats.currentFloor),
-                            fontSize: '0.95rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            backdropFilter: 'blur(10px)'
-                        }}
-                    >
-                        🔄 처음부터 다시 시작
-                    </motion.button>
-                </div>
+                {/* 하단 재설정 버튼 - 컴팩트 레이아웃에선 제거 또는 최소화 */}
                 {/* [신규] 시간 초과 오버레이 */}
                 <AnimatePresence>
                     {isTimeUp && !isFullyExhausted && (
