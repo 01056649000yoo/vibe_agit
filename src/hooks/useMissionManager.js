@@ -203,6 +203,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                     .from('students')
                     .select('id', { count: 'exact', head: true })
                     .eq('class_id', activeClass.id)
+                    .is('deleted_at', null)
             ]);
 
             if (missionsResult.error) throw missionsResult.error;
@@ -216,8 +217,9 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                 const missionIds = data.map(m => m.id);
                 const { data: counts, error: countError } = await supabase
                     .from('student_posts')
-                    .select('mission_id')
-                    .in('mission_id', missionIds);
+                    .select('mission_id, students!inner(id)')
+                    .in('mission_id', missionIds)
+                    .is('students.deleted_at', null);
 
                 if (!countError && counts) {
                     const stats = counts.reduce((acc, curr) => {
@@ -406,6 +408,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                 `)
                 .eq('mission_id', mission.id)
                 .eq('students.class_id', activeClass.id)
+                .is('students.deleted_at', null)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
