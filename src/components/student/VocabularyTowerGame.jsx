@@ -324,16 +324,11 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         const floors = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
         return (
             <div style={{
-                position: 'fixed',
-                right: '40px', // 우측 끝으로 이동
-                top: '55%',
-                transform: 'translateY(-50%)',
-                zIndex: 100,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 pointerEvents: 'none',
-                scale: '1.1' // 모바일/태블릿 배려하여 약간 축소
+                scale: '1.2'
             }}>
                 {/* 타워 꼭대기 지붕 (10층 위) */}
                 <motion.div
