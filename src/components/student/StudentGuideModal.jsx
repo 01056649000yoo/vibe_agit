@@ -33,7 +33,13 @@ const StudentGuideModal = ({ isOpen, onClose }) => {
             title: '4단계: 내 드래곤 자랑하기',
             description: '내가 꾸민 멋진 아지트를 친구들에게 보여주세요!',
             bg: 'linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%)',
-            borderColor: '#CE93D8'
+        },
+        {
+            icon: '🏰',
+            title: '5단계: 어휘의 탑 도전하기',
+            description: '퀴즈를 풀어 탑을 올라가세요! 오답이어도 층수는 깎이지 않으니 걱정 마세요. 높은 층에 올라갈수록 보너스 시간도 받는답니다! ⏱️',
+            bg: 'linear-gradient(135deg, #E8EAF6 0%, #C5CAE9 100%)',
+            borderColor: '#7986CB'
         }
     ];
 
