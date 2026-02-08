@@ -21,6 +21,7 @@ const RecentActivity = ({ classId, onPostClick }) => {
                     writing_missions!inner(title)
                 `)
                 .eq('students.class_id', classId)
+                .is('students.deleted_at', null)
                 .order('created_at', { ascending: false })
                 .limit(20);
 
