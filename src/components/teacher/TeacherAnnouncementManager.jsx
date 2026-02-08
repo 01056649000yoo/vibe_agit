@@ -26,7 +26,8 @@ const TeacherAnnouncementManager = ({ isMobile }) => {
         }
     }, [latestAnnouncement, loading]);
 
-    if (loading) return null;
+    // [수정] 로딩 중이라도 이미 데이터가 있다면 언마운트 하지 않음 (체크박스 상태 유지)
+    if (loading && !latestAnnouncement) return null;
 
     return (
         <>
