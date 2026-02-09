@@ -49,7 +49,7 @@ function App() {
 
       // 저장된 값이 없으면 기본적으로 false (교사 모드)
       return false;
-    } catch (e) {
+    } catch (_e) {
       return false;
     }
   });

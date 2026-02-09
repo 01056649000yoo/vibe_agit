@@ -138,14 +138,14 @@ const formatLastLogin = (dateString) => {
             hour: '2-digit',
             minute: '2-digit'
         });
-    } catch (e) {
+    } catch (_e) {
         return '-';
     }
 };
 
 // --- Main Container ---
 
-const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
+const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) => {
     const [pendingTeachers, setPendingTeachers] = useState([]);
     const [approvedTeachers, setApprovedTeachers] = useState([]);
     const [autoApproval, setAutoApproval] = useState(false);
@@ -159,7 +159,7 @@ const AdminDashboard = ({ session, onLogout, onSwitchToTeacherMode }) => {
 
     const [loading, setLoading] = useState(true);
     const [settingsLoading, setSettingsLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [_error, setError] = useState(null);
 
     useEffect(() => {
         fetchTeachers();

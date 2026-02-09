@@ -1,12 +1,13 @@
 
+// eslint-disable-next-line no-unused-vars
 import { createClient } from '@supabase/supabase-js';
 
 const url = 'https://rdtapjpppundovhtwzzc.supabase.co';
 const key = 'sb_publishable_xu5EvZxaNPBrmi2OtJ0pbA_tlmY5qHF'; // 현재 .env의 키
 
-const supabase = createClient(url, key);
+const _supabase = createClient(url, key);
 
-const sql = `
+const _sql = `
 -- 교사 개인 API 키 저장을 위한 컬럼 추가
 ALTER TABLE profiles 
 ADD COLUMN IF NOT EXISTS personal_openai_api_key TEXT,
