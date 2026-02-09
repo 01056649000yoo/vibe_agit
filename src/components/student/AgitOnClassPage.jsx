@@ -77,20 +77,7 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
     }))).current;
 
     // 온도를 0-100 사이로 맵핑
-    const currentTempFromHook = Math.min(100, Math.max(0, temperature || 0));
-
-    // [시뮬레이션용] 실제 데이터 대신 UI 테스트를 위한 가상 온도 상태
-    const [simulatedTemp, setSimulatedTemp] = useState(currentTempFromHook);
-    const [isSimulating, setIsSimulating] = useState(false);
-
-    // 훅에서 오는 온도가 변경되면 시뮬레이션 중이 아닐 때만 업데이트
-    useEffect(() => {
-        if (!isSimulating) {
-            setSimulatedTemp(currentTempFromHook);
-        }
-    }, [currentTempFromHook, isSimulating]);
-
-    const currentVisualTemp = isSimulating ? simulatedTemp : currentTempFromHook;
+    const currentVisualTemp = Math.min(100, Math.max(0, temperature || 0));
 
     useEffect(() => {
         const handleResize = () => setIsMobileSize(window.innerWidth <= 1024);
@@ -327,40 +314,7 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                         key="onClass" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}
                     >
-                        {/* [시뮬레이션 컨트롤러] 개발용 */}
-                        <div style={{
-                            position: 'absolute', top: '100px', right: '12px', zIndex: 1000,
-                            background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)',
-                            padding: '12px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.2)',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.4)', color: 'white',
-                            display: 'flex', flexDirection: 'column', gap: '8px', width: '140px'
-                        }}>
-                            <div style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#FCD34D', display: 'flex', justifyContent: 'space-between' }}>
-                                🛠 시뮬레이터
-                                <button
-                                    onClick={() => setIsSimulating(!isSimulating)}
-                                    style={{ background: isSimulating ? '#EF4444' : '#10B981', border: 'none', borderRadius: '4px', fontSize: '0.6rem', color: 'white', padding: '2px 4px', cursor: 'pointer' }}
-                                >
-                                    {isSimulating ? 'OFF' : 'ON'}
-                                </button>
-                            </div>
-                            {isSimulating && (
-                                <>
-                                    <input
-                                        type="range" min="0" max="100"
-                                        value={simulatedTemp}
-                                        onChange={(e) => setSimulatedTemp(Number(e.target.value))}
-                                        style={{ width: '100%', cursor: 'pointer', accentColor: '#FCD34D' }}
-                                    />
-                                    <div style={{ fontSize: '0.8rem', textAlign: 'center', fontWeight: '900' }}>
-                                        {simulatedTemp}°C
-                                    </div>
-                                    <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>
-                                        슬라이더를 움직여보세요!
-                                    </div>
-                                </>
-                            )}
-                        </div>
+
                         {/* [프리미엄 학급 온도계 UI] */}
                         <div style={{
                             padding: '24px 20px', zIndex: 10,
