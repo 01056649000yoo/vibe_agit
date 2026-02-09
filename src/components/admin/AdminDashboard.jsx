@@ -29,7 +29,10 @@ const StatCard = ({ label, value, color, icon }) => (
 
 const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, onForceWithdrawal, onToggleApiMode }) => {
     const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
-    const displayName = teacherInfo?.name || profile.full_name || '이름 없음';
+    // teachers.name을 최우선 사용, 없으면 full_name에서 이메일 형태가 아닌 경우만 사용
+    const rawFullName = profile.full_name || '';
+    const isEmailLike = rawFullName.includes('@');
+    const displayName = teacherInfo?.name || (!isEmailLike ? rawFullName : '') || '이름 없음';
     const schoolName = teacherInfo?.school_name || '학교 정보 없음';
     const displayPhone = teacherInfo?.phone || '-';
     // API 모드 (기본값 SYSTEM)
@@ -46,9 +49,14 @@ const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, on
             <div style={{ flex: 1, minWidth: '200px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
                     <span
+                        lang="ko"
                         translate="no"
                         className="notranslate"
-                        style={{ fontSize: '1.1rem', fontWeight: '900', color: '#2C3E50' }}
+                        style={{
+                            fontSize: '1.1rem',
+                            fontWeight: '900',
+                            color: '#2C3E50'
+                        }}
                     >
                         {displayName}
                     </span>
@@ -422,7 +430,10 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                             const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
                                             return paginated.map((profile, index) => {
                                                 const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
-                                                const displayName = teacherInfo?.name || profile.full_name || '이름 없음';
+                                                // teachers.name을 최우선 사용, 없으면 full_name에서 이메일 형태가 아닌 경우만 사용
+                                                const rawFullName = profile.full_name || '';
+                                                const isEmailLike = rawFullName.includes('@');
+                                                const displayName = teacherInfo?.name || (!isEmailLike ? rawFullName : '') || '이름 없음';
                                                 const schoolName = teacherInfo?.school_name || '-';
                                                 const displayPhone = teacherInfo?.phone || '-';
                                                 const apiMode = profile.api_mode || 'SYSTEM';
@@ -430,9 +441,14 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                                 return (
                                                     <tr key={profile.id} style={{ borderBottom: '1px solid #F1F3F5', transition: 'background 0.2s', background: 'white' }}>
                                                         <td
+                                                            lang="ko"
                                                             translate="no"
                                                             className="notranslate"
-                                                            style={{ padding: '16px', fontWeight: 'bold', color: '#2C3E50' }}
+                                                            style={{
+                                                                padding: '16px',
+                                                                fontWeight: 'bold',
+                                                                color: '#2C3E50'
+                                                            }}
                                                         >
                                                             {displayName}
                                                         </td>
