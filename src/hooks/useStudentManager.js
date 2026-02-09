@@ -90,27 +90,27 @@ export const useStudentManager = (classId) => {
         setIsAdding(true);
         const code = Math.random().toString(36).substring(2, 10).toUpperCase();
         try {
-            const { data, error } = await supabase
-                .from('students')
-                .insert({
-                    class_id: classId,
-                    name: studentName,
-                    student_code: code,
-                    total_points: 100
-                })
-                .select();
+            // RPC 함수를 통해 학생 추가 및 초기 포인트 부여 (point_logs INSERT도 함수 내에서 처리)
+            const { data: newStudentId, error } = await supabase.rpc('add_student_with_bonus', {
+                p_class_id: classId,
+                p_name: studentName,
+                p_student_code: code,
+                p_initial_points: 100
+            });
 
             if (error) throw error;
 
-            if (data && data[0]) {
-                const newStudent = data[0];
-                await supabase.from('point_logs').insert({
-                    student_id: newStudent.id,
-                    amount: 100,
-                    reason: '신규 등록 기념 환영 포인트! 🎁'
-                });
+            // 추가된 학생 정보 조회
+            const { data: newStudentData, error: fetchError } = await supabase
+                .from('students')
+                .select('*')
+                .eq('id', newStudentId)
+                .single();
 
-                setStudents(prev => [...prev, newStudent]);
+            if (fetchError) throw fetchError;
+
+            if (newStudentData) {
+                setStudents(prev => [...prev, newStudentData]);
                 setStudentName('');
             }
         } catch (err) {
@@ -144,12 +144,14 @@ export const useStudentManager = (classId) => {
         setIsPointModalOpen(false);
 
         try {
+            // RPC 함수를 통해 포인트 변경 및 로그 기록 (point_logs INSERT도 함수 내에서 처리)
             const operations = targets.map(async (t) => {
-                const newPoints = (t.total_points || 0) + actualAmount;
-                const { error: upError } = await supabase.from('students').update({ total_points: newPoints }).eq('id', t.id);
-                if (upError) throw upError;
-                const { error: logError } = await supabase.from('point_logs').insert({ student_id: t.id, amount: actualAmount, reason: reason });
-                if (logError) throw logError;
+                const { error } = await supabase.rpc('teacher_manage_points', {
+                    target_student_id: t.id,
+                    points_amount: actualAmount,
+                    reason_text: reason
+                });
+                if (error) throw error;
             });
             await Promise.all(operations);
             alert(`${targets.length}명의 포인트 처리가 완료되었습니다! ✨`);

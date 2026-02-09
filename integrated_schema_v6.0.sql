@@ -463,6 +463,51 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
+-- 교사가 학생 포인트를 관리하는 함수 (SECURITY DEFINER로 RLS 우회)
+CREATE OR REPLACE FUNCTION public.teacher_manage_points(
+    target_student_id UUID,
+    points_amount INTEGER,
+    reason_text TEXT
+)
+RETURNS void AS $$
+BEGIN
+    -- 1. 학생 포인트 업데이트
+    UPDATE public.students 
+    SET total_points = COALESCE(total_points, 0) + points_amount 
+    WHERE id = target_student_id;
+    
+    -- 2. 포인트 로그 기록
+    INSERT INTO public.point_logs (student_id, reason, amount) 
+    VALUES (target_student_id, reason_text, points_amount);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- 학생 추가 시 초기 포인트 부여 함수
+CREATE OR REPLACE FUNCTION public.add_student_with_bonus(
+    p_class_id UUID,
+    p_name TEXT,
+    p_student_code TEXT,
+    p_initial_points INTEGER DEFAULT 100
+)
+RETURNS UUID AS $$
+DECLARE
+    new_student_id UUID;
+BEGIN
+    -- 1. 학생 추가
+    INSERT INTO public.students (class_id, name, student_code, total_points)
+    VALUES (p_class_id, p_name, p_student_code, p_initial_points)
+    RETURNING id INTO new_student_id;
+    
+    -- 2. 환영 포인트 로그 기록
+    INSERT INTO public.point_logs (student_id, reason, amount)
+    VALUES (new_student_id, '신규 등록 기념 환영 포인트! 🎁', p_initial_points);
+    
+    RETURN new_student_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
 -- ============================================================
 -- PART 5: RLS (Row Level Security) 정책
 -- ============================================================
@@ -534,9 +579,11 @@ CREATE POLICY "Reaction_Read" ON post_reactions FOR SELECT USING (
 );
 CREATE POLICY "Reaction_Manage" ON post_reactions FOR ALL USING (true);
 
--- Point Logs
+-- Point Logs (보안 강화: SELECT만 허용, INSERT는 시스템 함수에서만 가능)
 ALTER TABLE public.point_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Log_Public_Access" ON point_logs FOR ALL USING (true);
+CREATE POLICY "Log_Read" ON point_logs FOR SELECT USING (true);
+-- INSERT/UPDATE/DELETE는 SECURITY DEFINER 함수(increment_student_points)에서만 가능
+-- 직접 API 호출로는 포인트 조작 불가
 
 -- Student Records
 ALTER TABLE public.student_records ENABLE ROW LEVEL SECURITY;
@@ -560,21 +607,35 @@ ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Announcement_Read" ON announcements FOR SELECT USING (true);
 CREATE POLICY "Announcement_Manage" ON announcements FOR ALL USING (is_admin());
 
--- Vocab Tower Rankings
+-- Vocab Tower Rankings (보안 강화: SELECT만 허용, 수정은 RPC 함수에서만 가능)
 ALTER TABLE public.vocab_tower_rankings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Tower_Rankings_Access" ON vocab_tower_rankings FOR ALL USING (true);
+CREATE POLICY "Tower_Rankings_Read" ON vocab_tower_rankings FOR SELECT USING (true);
+-- INSERT/UPDATE는 SECURITY DEFINER 함수(update_tower_max_floor)에서만 가능
+-- 직접 API 호출로는 랭킹 조작 불가
 
--- Vocab Tower History
+-- Vocab Tower History (보안 강화: SELECT만 허용, 수정은 교사/관리자만)
 ALTER TABLE public.vocab_tower_history ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Tower_History_Access" ON vocab_tower_history FOR ALL USING (true);
+CREATE POLICY "Tower_History_Read" ON vocab_tower_history FOR SELECT USING (true);
+CREATE POLICY "Tower_History_Manage" ON vocab_tower_history FOR ALL USING (
+    EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+    OR is_admin()
+);
 
--- Agit Honor Roll
+-- Agit Honor Roll (보안 강화: SELECT만 허용, 수정은 교사/관리자만)
 ALTER TABLE public.agit_honor_roll ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Honor_Roll_Access" ON agit_honor_roll FOR ALL USING (true);
+CREATE POLICY "Honor_Roll_Read" ON agit_honor_roll FOR SELECT USING (true);
+CREATE POLICY "Honor_Roll_Manage" ON agit_honor_roll FOR ALL USING (
+    EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+    OR is_admin()
+);
 
--- Agit Season History
+-- Agit Season History (보안 강화: SELECT만 허용, 수정은 교사/관리자만)
 ALTER TABLE public.agit_season_history ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Season_History_Access" ON agit_season_history FOR ALL USING (true);
+CREATE POLICY "Season_History_Read" ON agit_season_history FOR SELECT USING (true);
+CREATE POLICY "Season_History_Manage" ON agit_season_history FOR ALL USING (
+    EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+    OR is_admin()
+);
 
 
 -- ============================================================
