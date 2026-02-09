@@ -214,7 +214,11 @@ function App() {
 
   // 학생 로그아웃 처리 (명시적 별도 함수 유지 - UI 호출용)
   const handleStudentLogout = () => {
-    handleLogout();
+    // 학생 세션은 localStorage에 저장되므로 명시적으로 삭제해야 함
+    localStorage.removeItem('student_session');
+    setStudentSession(null);
+    // 페이지 리로드하여 로그인 화면으로 이동
+    window.location.href = '/';
   }
 
   // Supabase 설정이 없을 경우 안내 화면 표시
