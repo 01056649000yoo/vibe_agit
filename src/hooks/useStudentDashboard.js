@@ -96,17 +96,14 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const fetchMyPoints = useCallback(async () => {
         if (!studentSession?.id) return;
         try {
-            // 포인트 정보는 캐시보다 최신성이 중요하므로 TTL을 짧게(5초) 잡거나 생략 가능하지만, 잦은 리렌더링 방지를 위해 5초 캐시 적용
-            const data = await dataCache.get(`points_${studentSession.id}`, async () => {
-                const { data, error } = await supabase
-                    .from('students')
-                    .select('total_points, pet_data, last_feedback_check')
-                    .eq('id', studentSession.id)
-                    .maybeSingle();
+            // 포인트 정보는 실시간성이 중요하므로 캐시 없이 매번 최신 정보를 가져옵니다.
+            const { data, error } = await supabase
+                .from('students')
+                .select('total_points, pet_data, last_feedback_check')
+                .eq('id', studentSession.id)
+                .maybeSingle();
 
-                if (error) throw error;
-                return data;
-            }, 5000);
+            if (error) throw error;
 
             if (data) {
                 if (data.total_points !== null && data.total_points !== undefined) {
@@ -338,24 +335,29 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                         let bannerMsg = "";
                         let bannerIcon = "🎁";
 
-                        if (newLog.amount < 0) {
-                            bannerMsg = `⚠️ ${newLog.reason} (${newLog.amount}P)`;
-                            bannerIcon = "⚠️";
-                        } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('결정')) {
-                            bannerMsg = `🏛️✅ 내 아이디어가 최종 결정되었어요! (+${newLog.amount}P)`;
-                            bannerIcon = "🏛️";
-                        } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('제출')) {
-                            bannerMsg = `🏛️💡 아이디어 제출 보상! (+${newLog.amount}P)`;
-                            bannerIcon = "💡";
-                        } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('토론')) {
-                            bannerMsg = `🏛️💬 아이디어 토론 참여 보상! (+${newLog.amount}P)`;
-                            bannerIcon = "💬";
-                        } else if (newLog.reason?.includes('승인')) {
-                            bannerMsg = `🎉 글이 승인되어 +${newLog.amount}P를 받았어요!`;
-                            bannerIcon = "🎉";
-                        } else if (newLog.amount > 0) {
-                            bannerMsg = `🎁 ${newLog.reason} (+${newLog.amount}P)`;
-                            bannerIcon = "🎁";
+                        if (newLog.amount > 0 || newLog.amount < 0) {
+                            // [수정] 상세 사유에서 PostID 식별용 문자열 제거 후 출력
+                            const cleanReason = (newLog.reason || '').replace(/\(PostID:[^)]+\)/, '').trim();
+
+                            if (newLog.amount < 0) {
+                                bannerMsg = `⚠️ ${cleanReason} (${newLog.amount}P)`;
+                                bannerIcon = "⚠️";
+                            } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('결정')) {
+                                bannerMsg = `🏛️✅ 내 아이디어가 최종 결정되었어요! (+${newLog.amount}P)`;
+                                bannerIcon = "🏛️";
+                            } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('제출')) {
+                                bannerMsg = `🏛️💡 아이디어 제출 보상! (+${newLog.amount}P)`;
+                                bannerIcon = "💡";
+                            } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('토론')) {
+                                bannerMsg = `🏛️💬 아이디어 토론 참여 보상! (+${newLog.amount}P)`;
+                                bannerIcon = "💬";
+                            } else if (newLog.reason?.includes('승인')) {
+                                bannerMsg = `🎉 글이 승인되어 +${newLog.amount}P를 받았어요!`;
+                                bannerIcon = "🎉";
+                            } else {
+                                bannerMsg = `🎁 ${cleanReason} (+${newLog.amount}P)`;
+                                bannerIcon = "🎁";
+                            }
                         }
 
                         if (bannerMsg) {

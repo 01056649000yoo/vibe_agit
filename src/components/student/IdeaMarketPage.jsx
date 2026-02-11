@@ -703,24 +703,33 @@ const IdeaDetailView = ({ idea, meeting, studentSession, onBack, onVote, isMobil
                 }
                 const success = await addComment(commentInput);
                 if (success) {
-                    // 포인트 지급
+                    let pointsAwarded = false;
+                    // [수정] RPC를 사용하여 포인트 지급 (중복 수령 방지 로직 추가)
                     if (studentId) {
-                        const { data: studentData } = await supabase
-                            .from('students')
-                            .select('total_points')
-                            .eq('id', studentId)
-                            .maybeSingle();
+                        try {
+                            const detailReason = `아이디어 마켓에서 토론에 참여했어요! 🏛️ (PostID:${idea.id})`;
 
-                        const newPoints = (studentData?.total_points || 0) + 5;
-                        await supabase.from('students').update({ total_points: newPoints }).eq('id', studentId);
-                        await supabase.from('point_logs').insert({
-                            student_id: studentId,
-                            amount: 5,
-                            reason: '아이디어 마켓에서 토론에 참여했어요! 🏛️'
-                        });
+                            const { data: existingReward } = await supabase
+                                .from('point_logs')
+                                .select('id')
+                                .eq('student_id', studentId)
+                                .eq('reason', detailReason)
+                                .maybeSingle();
+
+                            if (!existingReward) {
+                                await supabase.rpc('increment_student_points', {
+                                    student_id: studentId,
+                                    points_to_add: 5,
+                                    log_reason: detailReason
+                                });
+                                pointsAwarded = true;
+                            }
+                        } catch (ptErr) {
+                            console.error('포인트 지급 확인 실패:', ptErr.message);
+                        }
                     }
                     setCommentInput('');
-                    alert('의견이 등록되었습니다! (+5P) 💬');
+                    alert(pointsAwarded ? '의견이 등록되었습니다! (+5P 보너스!) 💬' : '의견이 등록되었습니다! 💬');
                 }
             }
         } catch (err) {
@@ -984,7 +993,7 @@ const IdeaDetailView = ({ idea, meeting, studentSession, onBack, onVote, isMobil
                             onChange={(e) => setCommentInput(e.target.value)}
                             placeholder={editingCommentId
                                 ? '의견을 수정하고 있어요...'
-                                : '이 아이디어에 대한 의견을 남겨주세요 (+5P) 💬'}
+                                : '이 아이디어에 대한 의견을 남겨주세요 (+5P 보너스!) 💬'}
                             style={{
                                 flex: 1, padding: '10px 14px', border: 'none',
                                 outline: 'none', fontSize: '0.9rem', color: '#2D3436',

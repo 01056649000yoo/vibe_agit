@@ -60,29 +60,33 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
 
                 const success = await addComment(commentInput);
                 if (success) {
+                    let pointsAwarded = false;
+                    // [수정] RPC를 사용하여 포인트 지급 (중복 수령 방지 로직 추가)
                     if (studentSession?.id) {
-                        const { data: studentData } = await supabase
-                            .from('students')
-                            .select('total_points')
-                            .eq('id', studentSession.id)
-                            .maybeSingle();
+                        try {
+                            const detailReason = `친구 글에 따뜻한 응원을 남겨주셨네요! ✨ (PostID:${post.id})`;
 
-                        const newPoints = (studentData?.total_points || 0) + 5;
-                        await supabase
-                            .from('students')
-                            .update({ total_points: newPoints })
-                            .eq('id', studentSession.id);
+                            const { data: existingReward } = await supabase
+                                .from('point_logs')
+                                .select('id')
+                                .eq('student_id', studentSession.id)
+                                .eq('reason', detailReason)
+                                .maybeSingle();
 
-                        await supabase
-                            .from('point_logs')
-                            .insert({
-                                student_id: studentSession.id,
-                                amount: 5,
-                                reason: `친구 글에 따뜻한 응원을 남겨주셨네요! ✨`
-                            });
+                            if (!existingReward) {
+                                await supabase.rpc('increment_student_points', {
+                                    student_id: studentSession.id,
+                                    points_to_add: 5,
+                                    log_reason: detailReason
+                                });
+                                pointsAwarded = true;
+                            }
+                        } catch (ptErr) {
+                            console.error('포인트 지급 확인 실패:', ptErr.message);
+                        }
                     }
                     setCommentInput('');
-                    alert('댓글을 남기고 5포인트를 받았어요! ✨');
+                    alert(pointsAwarded ? '의견이 등록되었습니다! (+5P) 💬' : '의견이 등록되었습니다! 💬');
                 }
             }
         } catch (err) {
