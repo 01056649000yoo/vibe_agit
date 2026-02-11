@@ -328,20 +328,6 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                 ✨ 곧 추가될 새로운 즐거움
                             </h4>
 
-                            {/* [신규] 한줄 릴레이 준비 중 카드 */}
-                            <Card style={{ background: '#F8FAFC', border: '1px dashed #CBD5E1', opacity: 0.7, cursor: 'default', padding: '20px', margin: 0 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <div style={{ width: '48px', height: '48px', background: '#F1F5F9', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>✍️</div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                                            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: '#475569' }}>북적북적 아지트 한줄 릴레이</h3>
-                                            <span style={{ fontSize: '0.65rem', padding: '2px 6px', background: '#E2E8F0', borderRadius: '6px', color: '#64748B', fontWeight: 'bold' }}>준비중</span>
-                                        </div>
-                                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8' }}>한 문장씩 이어가며 우리 반만의 소설을 지어보아요!</p>
-                                    </div>
-                                </div>
-                            </Card>
-
                             {/* [신규] 비밀 우체통 준비 중 카드 */}
                             <Card style={{ background: '#F8FAFC', border: '1px dashed #CBD5E1', opacity: 0.7, cursor: 'default', padding: '20px', margin: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -352,6 +338,20 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                             <span style={{ fontSize: '0.65rem', padding: '2px 6px', background: '#E2E8F0', borderRadius: '6px', color: '#64748B', fontWeight: 'bold' }}>준비중</span>
                                         </div>
                                         <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8' }}>친구에게 전하고 싶은 따뜻한 마음을 비밀 편지로 보내보아요.</p>
+                                    </div>
+                                </div>
+                            </Card>
+
+                            {/* [신규] 한줄 릴레이 준비 중 카드 */}
+                            <Card style={{ background: '#F8FAFC', border: '1px dashed #CBD5E1', opacity: 0.7, cursor: 'default', padding: '20px', margin: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{ width: '48px', height: '48px', background: '#F1F5F9', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>✍️</div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                                            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: '#475569' }}>북적북적 아지트 한줄 릴레이</h3>
+                                            <span style={{ fontSize: '0.65rem', padding: '2px 6px', background: '#E2E8F0', borderRadius: '6px', color: '#64748B', fontWeight: 'bold' }}>준비중</span>
+                                        </div>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8' }}>한 문장씩 이어가며 우리 반만의 소설을 지어보아요!</p>
                                     </div>
                                 </div>
                             </Card>
