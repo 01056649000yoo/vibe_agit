@@ -239,6 +239,28 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
         }
     };
 
+    const handleDeleteMission = async (missionId, missionTitle) => {
+        if (!confirm(`🚨 [영구 삭제] "${missionTitle}" 미션을 완전히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며, 학생들의 모든 제출 글과 댓글이 함께 삭제됩니다.`)) return;
+
+        setLoading(true);
+        try {
+            const { error } = await supabase
+                .from('writing_missions')
+                .delete()
+                .eq('id', missionId);
+
+            if (error) throw error;
+
+            alert('미션이 영구적으로 삭제되었습니다.');
+            fetchArchivedMissions();
+        } catch (err) {
+            console.error('미션 삭제 실패:', err.message);
+            alert('삭제에 실패했습니다. 다시 시도해주세요.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
             <h3 style={{ margin: '0 0 24px 0', fontSize: '1.5rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -539,13 +561,26 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                                 </Button>
                                 <Button
                                     size="sm"
+                                    onClick={() => handleDeleteMission(mission.id, mission.title)}
+                                    style={{
+                                        width: '100%',
+                                        background: '#FFF1F2',
+                                        color: '#E11D48',
+                                        border: 'none',
+                                        gridColumn: 'span 2'
+                                    }}
+                                >
+                                    🗑️ 영구 삭제
+                                </Button>
+                                <Button
+                                    size="sm"
                                     onClick={() => handleExportClick(mission)}
                                     style={{
                                         width: '100%',
                                         background: '#E0F7FA',
                                         color: '#006064',
                                         border: 'none',
-                                        gridColumn: 'span 2' // 하단에 꽉 차게 배치
+                                        gridColumn: 'span 2'
                                     }}
                                 >
                                     📤 데이터 내보내기

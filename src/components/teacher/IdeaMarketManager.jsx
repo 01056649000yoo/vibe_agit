@@ -227,7 +227,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
         try {
             const { error } = await supabase
                 .from('writing_missions')
-                .update({ is_archived: true })
+                .update({ is_archived: true, archived_at: new Date().toISOString() })
                 .eq('id', meetingId);
 
             if (error) throw error;
@@ -238,7 +238,34 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
             }
             alert('회의 안건이 보관되었습니다.');
         } catch (err) {
+            console.error('[IdeaMarketManager] 아카이브 실패:', err.message);
+        }
+    };
+
+    // 회의 안건 영구 삭제
+    const handleDeleteMeeting = async (meetingId, title) => {
+        if (!confirm(`🚨 [영구 삭제] "${title}" 안건을 완전히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며, 모든 학생 제안과 댓글이 함께 삭제됩니다.`)) return;
+
+        setSaving(true);
+        try {
+            const { error } = await supabase
+                .from('writing_missions')
+                .delete()
+                .eq('id', meetingId);
+
+            if (error) throw error;
+
+            alert('안건이 성공적으로 삭제되었습니다.');
+            fetchMeetings();
+            if (selectedMeeting?.id === meetingId) {
+                setSelectedMeeting(null);
+                setIdeas([]);
+            }
+        } catch (err) {
             console.error('[IdeaMarketManager] 삭제 실패:', err.message);
+            alert('삭제에 실패했습니다. 다시 시도해주세요.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -644,6 +671,15 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                                                     fontWeight: 'bold', fontSize: '0.75rem'
                                                 }}
                                             >📦 안건 보관</button>
+                                            <button
+                                                onClick={() => handleDeleteMeeting(selectedMeeting.id, selectedMeeting.title)}
+                                                style={{
+                                                    padding: '6px 12px', background: '#FFF1F2',
+                                                    border: '1px solid #FECACA', borderRadius: '8px',
+                                                    cursor: 'pointer', color: '#E11D48',
+                                                    fontWeight: 'bold', fontSize: '0.75rem'
+                                                }}
+                                            >🗑️ 완전 삭제</button>
                                         </div>
                                     )}
                                 </div>
