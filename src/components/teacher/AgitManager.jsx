@@ -267,11 +267,11 @@ const AgitManager = ({ activeClass, isMobile }) => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <h2 style={{ margin: 0, color: '#1E1B4B', fontWeight: '900' }}>🏠 아지트 溫 클래스 관리</h2>
+            <h2 style={{ margin: 0, color: '#1E1B4B', fontWeight: '900' }}>🏠 아지트 관리</h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))', gap: '32px' }}>
 
-                {/* 1. 아지트 溫 클래스 관리 카드 */}
+                {/* 1. 아지트 관리 카드 */}
                 <motion.div
                     whileHover={{ scale: 1.02, y: -5 }}
                     style={{ height: '100%' }}
@@ -551,7 +551,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
                             <header style={{ padding: '0 24px', borderBottom: '1px solid #F1F5F9' }}>
                                 <div style={{ padding: '24px 0 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
-                                        <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#1E1B4B' }}>🛠️ 아지트 溫 클래스 세부 관리</h3>
+                                        <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#1E1B4B' }}>🛠️ 아지트 세부 관리</h3>
                                         <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#64748B' }}>학급의 온도를 올리는 규칙을 설정합니다.</p>
                                     </div>
                                     <button onClick={() => setIsSettingsModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.6rem', cursor: 'pointer', color: '#94A3B8' }}>×</button>
