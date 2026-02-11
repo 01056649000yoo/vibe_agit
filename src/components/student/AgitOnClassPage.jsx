@@ -4,6 +4,7 @@ import { useClassAgitClass } from '../../hooks/useClassAgitClass';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import Card from '../common/Card';
+import IdeaMarketPage from './IdeaMarketPage';
 
 // 교실 속 비밀 아지트 느낌의 수채화 배경
 const CLASSROOM_BG = "/agit_hideout_bg.png";
@@ -118,6 +119,16 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
         if (subTab === 'hub') onBack();
         else setSubTab('hub');
     };
+
+    // 아이디어 마켓 뷰일 경우 별도 페이지 렌더링
+    if (subTab === 'ideaMarket') {
+        return (
+            <IdeaMarketPage
+                studentSession={studentSession}
+                onBack={() => setSubTab('hub')}
+            />
+        );
+    }
 
     return (
         <div style={{
@@ -274,6 +285,43 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                 </div>
                             </div>
                         </Card>
+
+                        {/* [신규] 아이디어 마켓 카드 - 아지트 온 클래스 바로 아래 */}
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} style={{ marginTop: '12px' }}>
+                            <Card
+                                onClick={() => setSubTab('ideaMarket')}
+                                style={{
+                                    background: 'linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 100%)',
+                                    border: '1px solid #DDD6FE',
+                                    cursor: 'pointer', padding: '20px', margin: 0,
+                                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.1)',
+                                    position: 'relative'
+                                }}
+                            >
+                                <div style={{
+                                    position: 'absolute', top: '10px', right: '10px',
+                                    background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                                    color: 'white', fontSize: '0.65rem',
+                                    padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold'
+                                }}>OPEN</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{
+                                        width: '48px', height: '48px',
+                                        background: 'linear-gradient(135deg, #A855F7, #7C3AED)',
+                                        borderRadius: '12px', display: 'flex',
+                                        alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '1.5rem', boxShadow: '0 4px 10px rgba(124, 58, 237, 0.3)'
+                                    }}>🏛️</div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                                            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: '#4C1D95' }}>아지트 아이디어 마켓</h3>
+                                        </div>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#7C3AED' }}>우리 반 민주주의 광장! 제안하는 글쓰기를 통해 아이디어를 제안해요.</p>
+                                    </div>
+                                    <span style={{ fontSize: '1.2rem', color: '#A855F7' }}>›</span>
+                                </div>
+                            </Card>
+                        </motion.div>
 
                         <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: '#64748B', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>

@@ -132,7 +132,8 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
             const { error } = await supabase.rpc('increment_student_points', {
                 student_id: studentSession.id,
-                points_to_add: rewardPoints
+                points_to_add: rewardPoints,
+                log_reason: '어휘의 탑 일일 미션 보상 🏰'
             });
 
             if (error) throw error;

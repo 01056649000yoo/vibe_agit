@@ -4,10 +4,12 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClassAgitClass } from '../../hooks/useClassAgitClass';
+import IdeaMarketManager from './IdeaMarketManager';
 
 const AgitManager = ({ activeClass, isMobile }) => {
     const [loading, setLoading] = useState(true);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+    const [showIdeaMarket, setShowIdeaMarket] = useState(false);
 
     // 학생 화면과 동일한 온도 및 설정 실시간 동기화
     const { temperature: liveTemperature, agitSettings: liveSettings, refresh } = useClassAgitClass(activeClass?.id, null);
@@ -265,6 +267,17 @@ const AgitManager = ({ activeClass, isMobile }) => {
     const isGoalReached = liveTemperature >= displayTargetScore;
     const isSeasonLocked = !isGoalReached && (liveSettings?.targetScore > 0) && (liveTemperature > 0);
 
+    // 아이디어 마켓 관리 화면
+    if (showIdeaMarket) {
+        return (
+            <IdeaMarketManager
+                activeClass={activeClass}
+                onBack={() => setShowIdeaMarket(false)}
+                isMobile={isMobile}
+            />
+        );
+    }
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <h2 style={{ margin: 0, color: '#1E1B4B', fontWeight: '900' }}>🏠 아지트 관리</h2>
@@ -376,7 +389,82 @@ const AgitManager = ({ activeClass, isMobile }) => {
                     </div>
                 </motion.div>
 
-                {/* 2. 북적북적 아지트 한줄 릴레이 */}
+                {/* 2. 아지트 아이디어 마켓 */}
+                <motion.div
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    style={{ height: '100%', cursor: 'pointer' }}
+                    onClick={() => setShowIdeaMarket(true)}
+                >
+                    <div style={{
+                        height: '100%',
+                        background: 'white',
+                        borderRadius: '24px',
+                        border: '1px solid #E2E8F0',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        opacity: 1
+                    }}>
+                        <div style={{
+                            background: 'linear-gradient(135deg, #A18CD1 0%, #FBC2EB 100%)',
+                            padding: '24px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start'
+                        }}>
+                            <div>
+                                <div style={{
+                                    background: 'rgba(255,255,255,0.3)',
+                                    backdropFilter: 'blur(8px)',
+                                    padding: '6px 12px',
+                                    borderRadius: '8px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    marginBottom: '8px',
+                                    border: '1px solid rgba(255,255,255,0.2)'
+                                }}>
+                                    <span style={{ fontSize: '1.2rem' }}>💡</span>
+                                    <span style={{ color: '#4C1D95', fontWeight: '800', fontSize: '0.75rem', letterSpacing: '0.05em' }}>IDEA MARKET</span>
+                                </div>
+                                <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#4C1D95', letterSpacing: '-0.02em' }}>아지트 아이디어 마켓</h3>
+                            </div>
+                            <div style={{
+                                background: '#7C3AED',
+                                color: 'white',
+                                padding: '4px 10px',
+                                borderRadius: '20px',
+                                fontSize: '0.75rem',
+                                fontWeight: '900'
+                            }}>OPEN</div>
+                        </div>
+
+                        <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center', textAlign: 'center' }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🏛️</div>
+                            <p style={{ margin: 0, fontSize: '1rem', color: '#1E1B4B', fontWeight: '800', lineHeight: '1.5' }}>
+                                우리 반 민주주의 광장!<br />더 즐거운 학급을 위한 제안을 모아요.
+                            </p>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', fontWeight: '500' }}>
+                                학생들의 창의적인 건의사항을 확인하고 소통하는 공간입니다.
+                            </p>
+                        </div>
+
+                        <div style={{
+                            padding: '16px 24px',
+                            background: '#F5F3FF',
+                            borderTop: '1px solid #EDE9FE',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            cursor: 'pointer'
+                        }}>
+                            <span style={{ fontSize: '0.85rem', color: '#7C3AED', fontWeight: '700' }}>회의 안건 관리하기 →</span>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* 3. 북적북적 아지트 한줄 릴레이 */}
                 <motion.div
                     whileHover={{ scale: 1.02, y: -5 }}
                     style={{ height: '100%' }}
@@ -450,7 +538,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
                     </div>
                 </motion.div>
 
-                {/* 3. 아지트 비밀 우체통 */}
+                {/* 4. 아지트 비밀 우체통 */}
                 <motion.div
                     whileHover={{ scale: 1.02, y: -5 }}
                     style={{ height: '100%' }}

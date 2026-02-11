@@ -435,7 +435,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
 -- 학생 포인트 증가 및 로그 기록
-CREATE OR REPLACE FUNCTION public.increment_student_points(student_id UUID, points_to_add INTEGER)
+CREATE OR REPLACE FUNCTION public.increment_student_points(
+    student_id UUID,
+    points_to_add INTEGER,
+    log_reason TEXT DEFAULT '포인트 보상 🎁'
+)
 RETURNS void AS $$
 BEGIN
     UPDATE public.students 
@@ -443,7 +447,7 @@ BEGIN
     WHERE id = student_id;
     
     INSERT INTO public.point_logs (student_id, reason, amount) 
-    VALUES (student_id, '어휘의 탑 일일 미션 보상 🏰', points_to_add);
+    VALUES (student_id, log_reason, points_to_add);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

@@ -83,6 +83,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                 .select('*')
                 .eq('class_id', classId)
                 .eq('is_archived', false)
+                .neq('mission_type', 'meeting')
                 .order('created_at', { ascending: false });
 
             if (mError) throw mError;

@@ -341,6 +341,15 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                         if (newLog.amount < 0) {
                             bannerMsg = `⚠️ ${newLog.reason} (${newLog.amount}P)`;
                             bannerIcon = "⚠️";
+                        } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('결정')) {
+                            bannerMsg = `🏛️✅ 내 아이디어가 최종 결정되었어요! (+${newLog.amount}P)`;
+                            bannerIcon = "🏛️";
+                        } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('제출')) {
+                            bannerMsg = `🏛️💡 아이디어 제출 보상! (+${newLog.amount}P)`;
+                            bannerIcon = "💡";
+                        } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('토론')) {
+                            bannerMsg = `🏛️💬 아이디어 토론 참여 보상! (+${newLog.amount}P)`;
+                            bannerIcon = "💬";
                         } else if (newLog.reason?.includes('승인')) {
                             bannerMsg = `🎉 글이 승인되어 +${newLog.amount}P를 받았어요!`;
                             bannerIcon = "🎉";

@@ -197,6 +197,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                     .select('id, title, guide, genre, min_chars, min_paragraphs, base_reward, bonus_threshold, bonus_reward, allow_comments, is_archived, created_at, mission_type, guide_questions, evaluation_rubric, tags')
                     .eq('class_id', activeClass.id)
                     .eq('is_archived', false)
+                    .neq('mission_type', 'meeting') // 아이디어 마켓 안건은 제외
                     .order('created_at', { ascending: false }),
 
                 supabase
