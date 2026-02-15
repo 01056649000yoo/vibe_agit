@@ -199,9 +199,8 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                             <h3 style={{
                                 margin: 0, fontWeight: '900', color: '#2D3436',
                                 fontSize: isMobile ? '1rem' : '1.3rem',
-                                maxWidth: isMobile ? '150px' : '400px',
-                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                                display: 'flex', alignItems: 'center', gap: '8px'
+                                wordBreak: 'break-word', lineHeight: '1.4',
+                                display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap'
                             }}>
                                 {showOriginal ? (post.original_title || post.title) : post.title}
                                 <span style={{
@@ -211,7 +210,8 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                     padding: '2px 8px',
                                     borderRadius: '6px',
                                     fontWeight: '900',
-                                    border: showOriginal ? '1px solid #FFE082' : '1px solid #BBDEFB'
+                                    border: showOriginal ? '1px solid #FFE082' : '1px solid #BBDEFB',
+                                    whiteSpace: 'nowrap'
                                 }}>
                                     {showOriginal ? '처음글' : '마지막글'}
                                 </span>

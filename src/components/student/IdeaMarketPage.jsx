@@ -420,8 +420,9 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                                         <h3 style={{
                                                             margin: '0 0 8px', fontSize: '1.05rem',
                                                             fontWeight: '900', color: '#1E293B',
-                                                            paddingRight: '70px'
-                                                        }}>
+                                                            paddingRight: '70px',
+                                                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                                        }} title={idea.title}>
                                                             {idea.title}
                                                         </h3>
 
@@ -621,7 +622,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                     onChange={(e) => setIdeaContent(e.target.value)}
                                     placeholder="아이디어를 자세히 설명해 주세요. 왜 이 아이디어가 필요한지, 어떻게 실현할 수 있는지 적어보세요!"
                                     style={{
-                                        width: '100%', minHeight: '150px',
+                                        width: '100%', minHeight: '300px',
                                         border: '2px solid #E2E8F0', borderRadius: '14px',
                                         padding: '14px 16px', fontSize: '0.95rem',
                                         lineHeight: '1.7', outline: 'none',

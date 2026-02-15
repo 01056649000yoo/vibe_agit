@@ -38,8 +38,8 @@ const SubmissionStatusModal = ({
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.9, y: 20 }}
                         style={{
-                            background: 'white', borderRadius: '24px',
-                            width: '100%', maxWidth: '600px', maxHeight: '80vh',
+                            background: 'white', borderRadius: '28px',
+                            width: '100%', maxWidth: '1100px', maxHeight: '95vh',
                             display: 'flex', flexDirection: 'column', overflow: 'hidden',
                             boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)'
                         }}
@@ -53,13 +53,13 @@ const SubmissionStatusModal = ({
                             <button onClick={() => setSelectedMission(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ADB5BD' }}>✕</button>
                         </div>
 
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '24px', background: '#FAFAFA' }}>
                             {loadingPosts ? (
-                                <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>데이터를 불러오는 중...</div>
+                                <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>글을 불러오고 있어요...</div>
                             ) : posts.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>아직 제출한 학생이 없습니다. 🐥</div>
+                                <div style={{ textAlign: 'center', padding: '60px', color: '#95A5A6' }}>제출된 글이 없습니다.</div>
                             ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                <>
                                     {/* 일괄 동작 영역 */}
                                     <div style={{ display: 'flex', gap: '8px', padding: '0 0 16px 0', borderBottom: '1px dashed #EEE', marginBottom: '8px', flexWrap: 'wrap' }}>
                                         {/* Row 1: 모아보기 버튼들 */}
@@ -165,109 +165,145 @@ const SubmissionStatusModal = ({
                                         )}
                                     </div>
 
-                                    {posts.map(post => (
-                                        <div
-                                            key={post.id}
-                                            onClick={() => {
-                                                setSelectedPost(post);
-                                                setTempFeedback(post.ai_feedback || '');
-                                            }}
-                                            style={{
-                                                padding: '16px', borderRadius: '16px', background: '#F8F9FA',
-                                                border: '1px solid #E9ECEF', cursor: 'pointer',
-                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                                transition: 'all 0.2s'
-                                            }}
-                                            onMouseEnter={e => e.currentTarget.style.background = '#F1F3F5'}
-                                            onMouseLeave={e => e.currentTarget.style.background = '#F8F9FA'}
-                                        >
-                                            <div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                                    <span style={{ fontWeight: '900', color: '#2C3E50' }}>{post.students?.name}</span>
-                                                    {post.is_confirmed ? (
-                                                        <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E8F5E9', color: '#2E7D32', borderRadius: '4px', fontWeight: 'bold' }}>✅ 지급 완료</span>
-                                                    ) : post.is_submitted ? (
-                                                        <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E3F2FD', color: '#1565C0', borderRadius: '4px', fontWeight: 'bold' }}>⏳ 승인 대기</span>
-                                                    ) : post.is_returned ? (
-                                                        <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#FFF3E0', color: '#E65100', borderRadius: '4px', fontWeight: 'bold' }}>♻️ 다시 쓰기 중</span>
-                                                    ) : (
-                                                        <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#F1F3F5', color: '#6C757D', borderRadius: '4px', fontWeight: 'bold' }}>📝 작성 중</span>
-                                                    )}
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                                        gap: '20px',
+                                        width: '100%',
+                                        boxSizing: 'border-box'
+                                    }}>
+                                        {posts.map(post => (
+                                            <div
+                                                key={post.id}
+                                                onClick={() => {
+                                                    setSelectedPost(post);
+                                                    setTempFeedback(post.ai_feedback || '');
+                                                }}
+                                                style={{
+                                                    padding: '16px', borderRadius: '16px', background: '#F8F9FA',
+                                                    border: '1px solid #E9ECEF', cursor: 'pointer',
+                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#F1F3F5'}
+                                                onMouseLeave={e => e.currentTarget.style.background = '#F8F9FA'}
+                                            >
+                                                <div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                                        <span style={{ fontWeight: '900', color: '#2C3E50' }}>{post.students?.name}</span>
+                                                        {post.is_confirmed ? (
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E8F5E9', color: '#2E7D32', borderRadius: '4px', fontWeight: 'bold' }}>✅ 지급 완료</span>
+                                                        ) : post.is_submitted ? (
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E3F2FD', color: '#1565C0', borderRadius: '4px', fontWeight: 'bold' }}>⏳ 승인 대기</span>
+                                                        ) : post.is_returned ? (
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#FFF3E0', color: '#E65100', borderRadius: '4px', fontWeight: 'bold' }}>♻️ 다시 쓰기 중</span>
+                                                        ) : (
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#F1F3F5', color: '#6C757D', borderRadius: '4px', fontWeight: 'bold' }}>📝 작성 중</span>
+                                                        )}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#95A5A6' }}>
+                                                        {post.char_count}자 · {new Date(post.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
                                                 </div>
-                                                <div style={{ fontSize: '0.8rem', color: '#95A5A6' }}>
-                                                    {post.char_count}자 · {new Date(post.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                </div>
+                                                <div style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.85rem' }}>읽어보기 ➔</div>
                                             </div>
-                                            <div style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.85rem' }}>읽어보기 ➔</div>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                </>
                             )}
                         </div>
                     </motion.div>
 
-                    {/* [신규] 학생 글 모아보기 모달 (비교 뷰) */}
+                    {/* [수정] 학생 글 모아보기 모달 (전체 화면이 아닌 중앙 고정형 모달로 변경) */}
                     <AnimatePresence>
                         {isCollectViewOpen && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                style={{
-                                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                                    background: 'white', zIndex: 3000,
-                                    display: 'flex', flexDirection: 'column',
-                                    boxSizing: 'border-box'
-                                }}
-                                onClick={e => e.stopPropagation()}
-                            >
-                                <header style={{ padding: '20px 40px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div>
-                                        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📂 학생 글 모아보기 (처음 vs 마지막)</h3>
-                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>모든 학생의 초안과 최종본을 한꺼번에 비교합니다.</p>
-                                    </div>
-                                    <Button onClick={() => setIsCollectViewOpen(false)} style={{ background: '#F8F9FA', color: '#495057', border: '1px solid #E9ECEF', borderRadius: '12px' }}>✕ 닫기</Button>
-                                </header>
-                                <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '30px', background: '#FAFAFA' }}>
-                                    <div style={{
-                                        maxWidth: '1300px',
-                                        margin: '0 auto',
-                                        display: 'grid',
-                                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-                                        gap: '20px'
-                                    }}>
-                                        {posts.map((post, idx) => (
-                                            <div key={post.id} style={{ background: 'white', borderRadius: '20px', padding: '20px', border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column' }}>
-                                                <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F8F9FA', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <span style={{ fontWeight: '900', color: '#3498DB', fontSize: '1rem' }}>{idx + 1}. {post.students?.name}</span>
-                                                </div>
-
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
-                                                    {/* 처음글 */}
-                                                    <div>
-                                                        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#10B981', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                            📜 처음글 (초안)
-                                                        </div>
-                                                        <div style={{ padding: '12px', background: '#F0FDF4', borderRadius: '12px', border: '1px solid #DCFCE7', fontSize: '0.85rem', color: '#333', lineHeight: '1.6', whiteSpace: 'pre-wrap', maxHeight: '150px', overflowY: 'auto' }}>
-                                                            {post.original_content || '기록 없음'}
-                                                        </div>
+                            <div style={{
+                                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                                background: 'rgba(0,0,0,0.6)', zIndex: 3000,
+                                display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                padding: '20px', boxSizing: 'border-box'
+                            }} onClick={() => setIsCollectViewOpen(false)}>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                                    style={{
+                                        background: 'white', borderRadius: '32px',
+                                        width: '100%', maxWidth: '1100px', maxHeight: '92vh',
+                                        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                                        boxSizing: 'border-box'
+                                    }}
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    <header style={{ padding: '20px 40px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📂 학생 글 모아보기 (처음 vs 마지막)</h3>
+                                            <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>모든 학생의 초안과 최종본을 한꺼번에 비교합니다.</p>
+                                        </div>
+                                        <Button onClick={() => setIsCollectViewOpen(false)} style={{ background: '#F8F9FA', color: '#495057', border: '1px solid #E9ECEF', borderRadius: '12px' }}>✕ 닫기</Button>
+                                    </header>
+                                    <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '32px', background: '#FAFAFA' }}>
+                                        <div style={{
+                                            maxWidth: '1020px',
+                                            margin: '0 auto',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '32px',
+                                            width: '100%',
+                                            boxSizing: 'border-box'
+                                        }}>
+                                            {posts.map((post, idx) => (
+                                                <div key={post.id} style={{
+                                                    background: 'white', borderRadius: '24px', padding: '24px',
+                                                    border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                                                    width: '100%', boxSizing: 'border-box'
+                                                }}>
+                                                    <div style={{ paddingBottom: '16px', borderBottom: '1px solid #F8F9FA', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontWeight: '900', color: '#3498DB', fontSize: '1.1rem' }}>{idx + 1}. {post.students?.name}</span>
+                                                        <span style={{ fontSize: '0.85rem', color: '#95A5A6' }}>{post.char_count}자 작성</span>
                                                     </div>
 
-                                                    {/* 마지막글 */}
-                                                    <div>
-                                                        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#3B82F6', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                            ✨ 마지막글 (수정본)
+                                                    <div style={{
+                                                        display: 'grid',
+                                                        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                                                        gap: '24px',
+                                                        width: '100%'
+                                                    }}>
+                                                        {/* 처음글 */}
+                                                        <div style={{ minWidth: 0 }}>
+                                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#10B981', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                📜 처음글 (초안)
+                                                            </div>
+                                                            <div style={{
+                                                                padding: '20px', background: '#F0FDF4', borderRadius: '16px',
+                                                                border: '1px solid #DCFCE7', fontSize: '0.95rem', color: '#333',
+                                                                lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
+                                                            }}>
+                                                                {post.original_content || '기록 없음'}
+                                                            </div>
                                                         </div>
-                                                        <div style={{ padding: '12px', background: '#EFF6FF', borderRadius: '12px', border: '1px solid #DBEAFE', fontSize: '0.85rem', color: '#333', lineHeight: '1.6', whiteSpace: 'pre-wrap', maxHeight: '150px', overflowY: 'auto' }}>
-                                                            {post.content || '기록 없음'}
+
+                                                        {/* 마지막글 */}
+                                                        <div style={{ minWidth: 0 }}>
+                                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#3B82F6', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                ✨ 마지막글 (수정본)
+                                                            </div>
+                                                            <div style={{
+                                                                padding: '20px', background: '#EFF6FF', borderRadius: '16px',
+                                                                border: '1px solid #DBEAFE', fontSize: '0.95rem', color: '#333',
+                                                                lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
+                                                            }}>
+                                                                {post.content || '기록 없음'}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
+                                </motion.div>
+                            </div>
                         )}
                     </AnimatePresence>
 
@@ -293,19 +329,24 @@ const SubmissionStatusModal = ({
                                     </div>
                                     <Button onClick={() => setIsReactionViewOpen(false)} style={{ background: '#F8F9FA', color: '#495057', border: '1px solid #E9ECEF', borderRadius: '12px' }}>✕ 닫기</Button>
                                 </header>
-                                <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '30px', background: '#FAFAFA' }}>
+                                <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '40px', background: '#FAFAFA' }}>
                                     <div style={{
-                                        maxWidth: '1300px',
-                                        margin: '0 auto',
                                         display: 'grid',
-                                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-                                        gap: '20px'
+                                        gridTemplateColumns: isMobile ? '1fr' : '400px 400px 400px',
+                                        gap: '24px',
+                                        justifyContent: 'center',
+                                        margin: '0 auto',
+                                        boxSizing: 'border-box'
                                     }}>
                                         {posts.map((post, idx) => (
                                             <div key={post.id} style={{ background: 'white', borderRadius: '20px', padding: '20px', border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column' }}>
-                                                <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F8F9FA', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: 'column', gap: '4px' }}>
+                                                <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F8F9FA', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: 'column', gap: '4px', width: '100%', overflow: 'hidden' }}>
                                                     <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1rem' }}>{idx + 1}. {post.students?.name}</span>
-                                                    <span style={{ fontSize: '0.8rem', color: '#7F8C8D', fontWeight: 'bold' }}>「 {post.title} 」</span>
+                                                    <span style={{
+                                                        fontSize: '0.8rem', color: '#7F8C8D', fontWeight: 'bold',
+                                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                                        width: '100%', display: 'block'
+                                                    }} title={post.title}>「 {post.title} 」</span>
                                                 </div>
 
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>

@@ -605,7 +605,7 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             style={{
-                                background: 'white', borderRadius: '28px', width: '100%', maxWidth: '900px',
+                                background: 'white', borderRadius: '28px', width: '100%', maxWidth: '1200px',
                                 maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden'
                             }} onClick={e => e.stopPropagation()}>
                             <header style={{ padding: '24px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -616,24 +616,36 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                                 <button onClick={() => setSelectedMission(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ADB5BD' }}>✕</button>
                             </header>
 
-                            <div style={{ flex: 1, overflowY: 'auto', padding: '32px', background: '#FAFAFA' }}>
+                            <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '32px', background: '#FAFAFA' }}>
                                 {loadingPosts ? (
                                     <div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>글을 불러오고 있어요...</div>
                                 ) : posts.length === 0 ? (
                                     <div style={{ textAlign: 'center', padding: '60px', color: '#95A5A6' }}>제출된 글이 없습니다.</div>
                                 ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                                        gap: '20px',
+                                        maxWidth: '1100px',
+                                        margin: '0 auto',
+                                        width: '100%',
+                                        boxSizing: 'border-box'
+                                    }}>
                                         {posts.map((post, idx) => (
                                             <div key={post.id} style={{
-                                                background: 'white', padding: '32px', borderRadius: '24px',
-                                                border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                                                background: 'white', padding: '24px', borderRadius: '24px',
+                                                border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
+                                                display: 'flex', flexDirection: 'column'
                                             }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #F8F9FA', paddingBottom: '12px' }}>
-                                                    <span style={{ fontWeight: '900', fontSize: '1.1rem', color: '#3498DB' }}>{idx + 1}. {post.students?.name} 학생</span>
-                                                    <span style={{ fontSize: '0.85rem', color: '#ADB5BD' }}>{new Date(post.created_at).toLocaleDateString()}</span>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #F8F9FA', paddingBottom: '12px' }}>
+                                                    <span style={{ fontWeight: '900', fontSize: '1rem', color: '#3498DB' }}>{idx + 1}. {post.students?.name}</span>
+                                                    <span style={{ fontSize: '0.8rem', color: '#ADB5BD' }}>{new Date(post.created_at).toLocaleDateString()}</span>
                                                 </div>
-                                                <h4 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', color: '#2C3E50', fontWeight: '900' }}>{post.title}</h4>
-                                                <div style={{ lineHeight: '1.8', color: '#444', whiteSpace: 'pre-wrap', fontSize: '1.05rem' }}>{post.content}</div>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>{post.title}</h4>
+                                                <div style={{
+                                                    lineHeight: '1.6', color: '#444', whiteSpace: 'pre-wrap',
+                                                    fontSize: '0.95rem', flex: 1, maxHeight: '300px', overflowY: 'auto'
+                                                }}>{post.content}</div>
                                             </div>
                                         ))}
                                     </div>

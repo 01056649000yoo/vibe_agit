@@ -169,7 +169,8 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
             style={{
                 background: 'white', padding: '24px', borderRadius: '24px',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.03)', cursor: 'pointer',
-                border: '1px solid #E9ECEF'
+                border: '1px solid #E9ECEF',
+                height: '200px', display: 'flex', flexDirection: 'column'
             }}
         >
             <div style={{ marginBottom: '12px' }}>
@@ -180,7 +181,10 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
                     {post.students?.name}
                 </span>
             </div>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>{post.title}</h4>
+            <h4 style={{
+                margin: '0 0 8px 0', fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+            }} title={post.title}>{post.title}</h4>
             <p style={{
                 fontSize: '0.9rem', color: '#7F8C8D', margin: 0, lineHeight: '1.6',
                 overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box',
