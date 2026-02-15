@@ -21,7 +21,7 @@ const UsageGuide = ({ isMobile }) => {
         { id: 'agit-on-class', title: '🌡️ 아지트 온(溫) 클래스 관리', emoji: '🌡️' },
         { id: 'evaluation', title: '🎯 학생 평가 및 AI쫑알이', emoji: '🎯' },
         { id: 'analysis', title: '📊 학급 분석 활용', emoji: '📊' },
-        { id: 'book-publishing', title: '📚 학급 도서 출판', emoji: '📚' },
+        { id: 'book-publishing', title: '📚 학급 도서 출판 지원 기능', emoji: '📚' },
         { id: 'gpt-info', title: '🤖 GPT 인공지능 활용 안내', emoji: '🤖' },
         { id: 'realtime-guardian', title: '🛡️ 실시간 보안관 (학생 댓글 안전)', emoji: '🛡️' },
     ];
@@ -378,7 +378,7 @@ const UsageGuide = ({ isMobile }) => {
                     {sections[8].title}
                 </h2>
                 <div style={cardStyle}>
-                    <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem', color: '#27AE60' }}>📚 학급 도서 출판 (NEW)</h3>
+
                     <p><strong>• 미션 보관:</strong> 학기가 끝나거나 완료된 미션은 '보관함으로 이동'을 선택하세요. 보관된 미션은 <strong>[글 보관함]</strong> 탭에서 언제든지 확인할 수 있습니다.</p>
                     <p><strong>• 일괄 내보내기 & 순서 지정:</strong>
                         <br />보관함에 저장된 여러 개의 글쓰기 미션을 원하는 대로 선택할 수 있습니다.
@@ -386,7 +386,8 @@ const UsageGuide = ({ isMobile }) => {
                     </p>
                     <p><strong>• 엑셀(Excel) 및 구글 문서(Google Docs) 활용:</strong>
                         <br />- <strong>엑셀 내보내기:</strong> 학생들의 모든 글 통계 및 내용을 표 형태로 깔끔하게 정리하여 백업할 수 있습니다.
-                        <br />- <strong>구글 문서로 책 만들기:</strong> 모든 글을 구글 문서로 전송하여 <strong>나만의 학급 문집</strong>을 만들 수 있습니다. 표지, 목차, 학생별 글이 자동으로 정렬되어 편집 수고를 덜어줍니다. ✨
+                        <br />- <strong>구글 문서로 책 만들기:</strong> 모든 글을 구글 문서로 전송하여 <strong>나만의 학급 문집</strong>을 만들 수 있습니다.
+                        <br />- <strong>목차 자동 생성:</strong> 구글 문서 메뉴에서 <strong>[삽입] -&gt; [페이지 요소] -&gt; [목차]</strong>를 선택하면, 글 제목이 자동으로 인식되어 목차까지 한 번에 완성됩니다! ✨
                     </p>
                 </div>
             </section>
