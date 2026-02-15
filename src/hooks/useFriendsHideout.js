@@ -134,7 +134,32 @@ export const useFriendsHideout = (studentSession, params) => {
         if (params?.initialPostId) {
             handleInitialPost(params.initialPostId);
         }
-    }, [params, fetchMissions, fetchClassmates, handleInitialPost]);
+
+        // [실시간] 친구들의 드래곤 데이터 실시간 구독
+        const classId = studentSession.classId || studentSession.class_id;
+        const classmateSubscription = supabase
+            .channel(`classmates_${classId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'students',
+                    filter: `class_id=eq.${classId}`
+                },
+                (payload) => {
+                    // 본인이 아닌 경우에만 업데이트
+                    if (payload.new.id !== studentSession.id) {
+                        setClassmates(prev => prev.map(c => c.id === payload.new.id ? payload.new : c));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(classmateSubscription);
+        };
+    }, [params, fetchMissions, fetchClassmates, handleInitialPost, studentSession.classId, studentSession.class_id, studentSession.id]);
 
     const handleMissionChange = (mission) => {
         setSelectedMission(mission);

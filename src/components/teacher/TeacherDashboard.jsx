@@ -27,7 +27,7 @@ import TeacherAnnouncementManager from './TeacherAnnouncementManager';
  */
 const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onProfileUpdate, isAdmin, onSwitchToAdminMode, onLogout }) => {
     const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'settings', 'playground', 'archive', 'guide'
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [selectedActivityPost, setSelectedActivityPost] = useState(null);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 

@@ -32,7 +32,11 @@ const TeacherNotifyBanner = ({ returnedCount, teacherNotify, setTeacherNotify, h
                     }}
                 >
                     <span style={{ fontSize: '2.5rem' }}>
-                        {teacherNotify?.icon || (teacherNotify?.type === 'point' ? '🎁' : '♻️')}
+                        {teacherNotify?.icon || (
+                            teacherNotify?.type === 'point' ? '🎁' :
+                                teacherNotify?.type === 'approve' ? '🎉' :
+                                    teacherNotify?.type === 'recovery' ? '⚠️' : '♻️'
+                        )}
                     </span>
                     <div style={{ flex: 1 }}>
                         <div style={{

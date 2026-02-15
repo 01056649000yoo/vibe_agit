@@ -159,13 +159,40 @@ const GameManager = ({ activeClass, isMobile }) => {
     }, [activeClass?.id]);
 
     useEffect(() => {
-        if (activeClass?.id) {
-            fetchGameConfig();
-            fetchStudents();
-            fetchTowerRankings();
-            fetchTowerHistory();
-            fetchDragonHistory();
-        }
+        if (!activeClass?.id) return;
+
+        fetchGameConfig();
+        fetchStudents();
+        fetchTowerRankings();
+        fetchTowerHistory();
+        fetchDragonHistory();
+
+        // [실시간] 학생 데이터(드래곤 성장 등) 실시간 구독
+        const studentSubscription = supabase
+            .channel(`monitoring_${activeClass.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'students',
+                    filter: `class_id=eq.${activeClass.id}`
+                },
+                (payload) => {
+                    if (payload.event === 'UPDATE') {
+                        setStudents(prev => prev.map(s => s.id === payload.new.id ? payload.new : s));
+                    } else if (payload.event === 'INSERT') {
+                        setStudents(prev => [...prev, payload.new].sort((a, b) => a.name.localeCompare(b.name)));
+                    } else if (payload.event === 'DELETE') {
+                        setStudents(prev => prev.filter(s => s.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(studentSubscription);
+        };
     }, [activeClass?.id, fetchGameConfig, fetchStudents, fetchTowerRankings, fetchTowerHistory, fetchDragonHistory]);
 
     // [신규] 랭킹 초기화 함수
@@ -1129,7 +1156,17 @@ const TeacherHideoutPreview = ({ student, onClose }) => {
                 <div style={{ marginBottom: '32px' }}>
                     <span style={{ background: 'rgba(255,255,255,0.9)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '900', color: '#7F8C8D', border: '1px solid #EEE' }}>{student.name} 학생의 아지트 내부</span>
                     <h2 style={{ margin: '16px 0 0 0', color: '#2C3E50', fontSize: '2rem', fontWeight: '1000' }}>{pet.name}</h2>
-                    <div style={{ color: '#5D4037', fontWeight: 'bold', marginTop: '4px' }}>Lv.{pet.level} {dragon.name}</div>
+                    <div style={{ color: '#5D4037', fontWeight: 'bold', marginTop: '4px', marginBottom: '12px' }}>Lv.{pet.level} {dragon.name}</div>
+                    {/* [추가] 경험치 바 */}
+                    <div style={{ maxWidth: '280px', margin: '0 auto' }}>
+                        <div style={{ height: '8px', background: 'rgba(255,255,255,0.3)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${pet.exp}%` }} style={{ height: '100%', background: pet.level >= 5 && pet.exp >= 100 ? 'linear-gradient(90deg, #FFD700, #BA68C8)' : 'white' }} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.75rem', fontWeight: '900', color: 'rgba(255,255,255,0.8)' }}>
+                            <span>EXP {pet.exp}%</span>
+                            <span>{pet.level >= 5 && pet.exp >= 100 ? 'MAX' : `${100 - pet.exp}% 남음`}</span>
+                        </div>
+                    </div>
                 </div>
                 <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <motion.img animate={{ y: [0, -15, 0] }} transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }} src={dragon.image} alt="Dragon" style={{ width: '240px', height: '240px', objectFit: 'contain', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.2))' }} />

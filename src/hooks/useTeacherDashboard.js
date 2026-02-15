@@ -147,9 +147,12 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
     useEffect(() => {
         if (session?.user?.id) {
-            fetchAllClasses();
-            fetchGeminiKey();
-            fetchTeacherInfo();
+            // [async-parallel] 초기 데이터 로딩을 병렬로 처리하여 첫 로딩 속도 향상
+            Promise.all([
+                fetchAllClasses(),
+                fetchGeminiKey(),
+                fetchTeacherInfo()
+            ]).catch(err => console.error("초기 로딩 중 오류:", err));
         }
     }, [session?.user?.id, fetchAllClasses, fetchGeminiKey, fetchTeacherInfo]);
 

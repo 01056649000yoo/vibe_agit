@@ -35,6 +35,10 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
     // [신규] 아지트 명예의 전당 새 소식 확인 (최근 24시간)
     const [hasNewAgitHonor, setHasNewAgitHonor] = useState(false);
 
+    // [신규] 아이디어 마켓 새 소식 확인
+    const [hasNewIdeaMarket, setHasNewIdeaMarket] = useState(false);
+    const [hasNewAgitUpdate, setHasNewAgitUpdate] = useState(false);
+
     useEffect(() => {
         const classId = studentSession?.class_id || studentSession?.classId;
         const studentId = studentSession?.id;
@@ -44,14 +48,18 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
             try {
                 // 1. 최근 24시간 내 생성된 미션 조회
                 const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-                const { data: recentMissions } = await supabase
+                const { data: allRecent } = await supabase
                     .from('writing_missions')
-                    .select('id')
+                    .select('id, mission_type')
                     .eq('class_id', classId)
                     .eq('is_archived', false)
                     .gt('created_at', twentyFourHoursAgo);
 
-                if (recentMissions && recentMissions.length > 0) {
+                // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장
+                const recentMissions = allRecent?.filter(m => m.mission_type !== 'meeting') || [];
+
+                let unsubmittedNew = false;
+                if (recentMissions.length > 0) {
                     const missionIds = recentMissions.map(m => m.id);
                     // 2. 해당 미션들에 대해 학생이 제출한 기록이 있는지 확인
                     const { data: myPosts } = await supabase
@@ -62,9 +70,9 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                         .eq('is_submitted', true);
 
                     const submittedMissionIds = new Set(myPosts?.map(p => p.mission_id) || []);
-                    const hasUnsubmittedNew = recentMissions.some(m => !submittedMissionIds.has(m.id));
-                    setHasNewMission(hasUnsubmittedNew);
+                    unsubmittedNew = recentMissions.some(m => !submittedMissionIds.has(m.id));
                 }
+                setHasNewMission(unsubmittedNew);
 
                 // [신규] 3. 아지트 명예의 전당 최신 글 조회 및 확인 여부 체크
                 const { data: latestHonor } = await supabase
@@ -73,10 +81,10 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                     .eq('class_id', classId)
                     .order('created_at', { ascending: false })
                     .limit(1)
-                    .single();
+                    .maybeSingle();
 
                 if (latestHonor) {
-                    const lastCheck = localStorage.getItem(`last_visit_agit_hub_${classId}`);
+                    const lastCheck = localStorage.getItem(`last_visit_agit_honor_${classId}`);
                     // 최근 24시간 이내의 글이면서, 마지막 확인보다 최신일 때만 NEW 표시
                     const isRecent = new Date(latestHonor.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
                     const isUnchecked = !lastCheck || new Date(latestHonor.created_at) > new Date(lastCheck);
@@ -84,6 +92,60 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                     if (isRecent && isUnchecked) {
                         setHasNewAgitHonor(true);
                     }
+                }
+
+                // [신규] 4. 아이디어 마켓 최신 안건/아이디어 확인
+                const { data: latestMeeting } = await supabase
+                    .from('writing_missions')
+                    .select('id, created_at')
+                    .eq('class_id', classId)
+                    .eq('mission_type', 'meeting')
+                    .eq('is_archived', false)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                let latestIdea = null;
+                if (latestMeeting?.id) {
+                    const { data: ideaData } = await supabase
+                        .from('student_posts')
+                        .select('created_at')
+                        .eq('mission_id', latestMeeting.id)
+                        .eq('is_submitted', true)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+                    latestIdea = ideaData;
+                }
+
+                const latestMeetingTime = latestMeeting ? new Date(latestMeeting.created_at) : new Date(0);
+                const latestIdeaTime = latestIdea ? new Date(latestIdea.created_at) : new Date(0);
+                const mostRecentMarketTime = new Date(Math.max(latestMeetingTime, latestIdeaTime));
+
+                if (mostRecentMarketTime.getTime() > 0) {
+                    const lastCheckMarket = localStorage.getItem(`last_visit_idea_market_${classId}`);
+                    // 최근 24시간 이내의 소식이면서, 마지막 확인보다 최신일 때만 NEW 표시
+                    const isRecentMarket = mostRecentMarketTime > new Date(Date.now() - 24 * 60 * 60 * 1000);
+                    const isUncheckedMarket = !lastCheckMarket || mostRecentMarketTime > new Date(lastCheckMarket);
+
+                    if (isRecentMarket && isUncheckedMarket) {
+                        setHasNewIdeaMarket(true);
+                    }
+                }
+
+                // [신규] 5. 아지트 메뉴 전체 알림 상태 (대시보드 배너용)
+                const lastAccessMenu = localStorage.getItem(`last_visit_agit_menu_${classId}`);
+                const latestAgitTime = new Date(Math.max(
+                    latestHonor ? new Date(latestHonor.created_at) : 0,
+                    mostRecentMarketTime
+                ));
+
+                if (latestAgitTime.getTime() > 0) {
+                    const hasUnseenUpdate = !lastAccessMenu || latestAgitTime > new Date(lastAccessMenu);
+                    const isWithin24h = latestAgitTime > new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+                    // 대시보드 배너의 'NEW'는 메뉴 자체를 열었는지 여부로 판단
+                    setHasNewAgitUpdate(hasUnseenUpdate && isWithin24h);
                 }
 
             } catch (err) {
@@ -333,11 +395,11 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                             alert('🔒 현재 아지트 온 클래스 서비스 준비 중입니다. 선생님께 문의해 주세요!');
                             return;
                         }
-                        // [신규] 확인 시점 기록 및 뱃지 제거
+                        // [신규] 대시보드 배너 알림만 제거 (전체 열람 기록)
                         const classId = studentSession?.class_id || studentSession?.classId;
                         if (classId) {
-                            localStorage.setItem(`last_visit_agit_hub_${classId}`, new Date().toISOString());
-                            setHasNewAgitHonor(false);
+                            localStorage.setItem(`last_visit_agit_menu_${classId}`, new Date().toISOString());
+                            setHasNewAgitUpdate(false);
                         }
                         setIsAgitOpen(true);
                     }}
@@ -369,8 +431,8 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                         position: 'absolute', bottom: -15, right: -15, fontSize: '4rem', opacity: 0.05, transform: 'rotate(15deg)'
                     }}>{agitSettings?.isEnabled === false ? '🔒' : '✨'}</div>
 
-                    {/* [신규] 명예의 전당 New 뱃지 */}
-                    {hasNewAgitHonor && agitSettings?.isEnabled !== false && (
+                    {/* [신규] 아지트 전체 New 뱃지 (메인 배너용) */}
+                    {hasNewAgitUpdate && agitSettings?.isEnabled !== false && (
                         <div style={{
                             position: 'absolute', top: '12px', right: '12px',
                             background: '#FF5252', color: 'white', fontSize: '0.7rem',

@@ -208,7 +208,9 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             ]);
 
             if (missionsResult.error) throw missionsResult.error;
-            const data = missionsResult.data || [];
+
+            // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장 (아이디어 마켓 안건 제외)
+            const data = (missionsResult.data || []).filter(m => m.mission_type !== 'meeting');
             setMissions(data);
 
             if (studentCountResult.error) console.error('학생 수 조회 실패:', studentCountResult.error);
@@ -680,29 +682,16 @@ ${postArray.map((p, idx) => {
 
             if (postError) throw postError;
 
-            const { data: studentData, error: studentFetchError } = await supabase
-                .from('students')
-                .select('total_points')
-                .eq('id', post.student_id)
-                .single();
+            // [수정] RPC를 사용하여 포인트 증액과 로그 생성을 한 번에 처리
+            const { error: rpcError } = await supabase.rpc('increment_student_points', {
+                p_student_id: post.student_id,
+                p_amount: totalPointsToGive,
+                p_reason: `[${selectedMission.title}] 미션 승인 보상 ${isBonusAchieved ? '(보너스 달성! 🔥)' : ''}`,
+                p_post_id: post.id,
+                p_mission_id: post.mission_id
+            });
 
-            if (studentFetchError) throw studentFetchError;
-
-            const newTotalPoints = (studentData.total_points || 0) + totalPointsToGive;
-            await supabase
-                .from('students')
-                .update({ total_points: newTotalPoints })
-                .eq('id', post.student_id);
-
-            await supabase
-                .from('point_logs')
-                .insert({
-                    student_id: post.student_id,
-                    post_id: post.id,
-                    mission_id: post.mission_id,
-                    amount: totalPointsToGive,
-                    reason: `[${selectedMission.title}] 미션 승인 보상 ${isBonusAchieved ? '(보너스 포함! 🔥)' : ''}`
-                });
+            if (rpcError) throw rpcError;
 
             alert(`✅ ${totalPointsToGive}포인트가 성공적으로 지급되었습니다!`);
             setSelectedPost(null);
@@ -732,17 +721,16 @@ ${postArray.map((p, idx) => {
                 let isBonus = (selectedMission.bonus_threshold && post.char_count >= selectedMission.bonus_threshold);
                 if (isBonus) amount += (selectedMission.bonus_reward || 0);
 
+                // 1. 글 승인 상태 변경
                 await supabase.from('student_posts').update({ is_confirmed: true }).eq('id', post.id);
-                const { data: st } = await supabase.from('students').select('total_points').eq('id', post.student_id).single();
-                const currentPoints = st?.total_points || 0;
-                await supabase.from('students').update({ total_points: currentPoints + amount }).eq('id', post.student_id);
 
-                await supabase.from('point_logs').insert({
-                    student_id: post.student_id,
-                    post_id: post.id,
-                    mission_id: post.mission_id,
-                    amount: amount,
-                    reason: `일괄 승인 보상: ${selectedMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`
+                // 2. [수정] RPC를 이용한 일행적(Atomic) 데이터 처리
+                await supabase.rpc('increment_student_points', {
+                    p_student_id: post.student_id,
+                    p_amount: amount,
+                    p_reason: `일괄 승인 보상: ${selectedMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`,
+                    p_post_id: post.id,
+                    p_mission_id: post.mission_id
                 });
             });
 
@@ -763,23 +751,68 @@ ${postArray.map((p, idx) => {
 
         setLoadingPosts(true);
         try {
-            const { data: logs, error: logFetchError } = await supabase
+            // [개선] 3단계 레이어 검색 로직 (더욱 유연하게)
+            let logs = null;
+            let logFetchError = null;
+
+            // 1. post_id로 직접 검색
+            const step1 = await supabase
                 .from('point_logs')
                 .select('*')
-                .eq('student_id', post.student_id)
-                .ilike('reason', `%${selectedMission.title}%`)
+                .eq('post_id', post.id)
+                .gt('amount', 0)
                 .order('created_at', { ascending: false })
                 .limit(1);
+            logs = step1.data;
+            logFetchError = step1.error;
 
-            if (logFetchError) throw logFetchError;
-
+            // 2. mission_id + student_id로 검색
             if (!logs || logs.length === 0) {
-                alert('해당 글에 대한 지급 내역을 찾을 수 없어 회수가 불가능합니다.');
-                return;
+                const step2 = await supabase
+                    .from('point_logs')
+                    .select('*')
+                    .eq('student_id', post.student_id)
+                    .eq('mission_id', selectedMission.id)
+                    .gt('amount', 0)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                if (step2.data && step2.data.length > 0) logs = step2.data;
             }
 
-            const amountToRecover = logs[0].amount;
-            await supabase
+            // 3. 제목 키워드로 검색 (공백 무관 검색 패턴)
+            if (!logs || logs.length === 0) {
+                const cleanTitle = selectedMission.title.replace(/[^\w\sㄱ-ㅎㅏ-ㅣ가-힣]/g, '').trim();
+                const keywords = cleanTitle.split(/\s+/).filter(k => k.length > 0);
+                const searchPattern = `%${keywords.join('%')}%`;
+
+                const step3 = await supabase
+                    .from('point_logs')
+                    .select('*')
+                    .eq('student_id', post.student_id)
+                    .ilike('reason', searchPattern)
+                    .gt('amount', 0)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                if (step3.data && step3.data.length > 0) logs = step3.data;
+            }
+
+            // 만약 컬럼 부재 에러(42703)가 났다면 DB 업데이트가 안 된 것임
+            if (logFetchError && logFetchError.code === '42703') {
+                console.warn('DB에 post_id 컬럼이 없습니다. SQL을 다시 실행해주세요.');
+            }
+
+            let amountToRecover = 0;
+            if (logs && logs.length > 0) {
+                amountToRecover = logs[0].amount;
+            } else {
+                // [핵심 해결] 내역을 못 찾은 경우 사용자에게 물어보고 진행
+                if (!confirm('포인트 지급 내역을 찾을 수 없습니다. 🔍\n미션 제목이 바뀌었거나 이미 회수된 상태일 수 있어요.\n\n지급된 포인트 회수 없이 [승인 취소]만 진행할까요?')) {
+                    return;
+                }
+            }
+
+            // 1. 글 승인 상태 취소
+            const { error: postError } = await supabase
                 .from('student_posts')
                 .update({
                     is_confirmed: false,
@@ -788,22 +821,19 @@ ${postArray.map((p, idx) => {
                 })
                 .eq('id', post.id);
 
-            const { data: stData } = await supabase
-                .from('students')
-                .select('total_points')
-                .eq('id', post.student_id)
-                .single();
+            if (postError) throw postError;
 
-            const newPoints = Math.max(0, (stData?.total_points || 0) - amountToRecover);
-            await supabase.from('students').update({ total_points: newPoints }).eq('id', post.student_id);
-
-            await supabase.from('point_logs').insert({
-                student_id: post.student_id,
-                post_id: post.id,
-                mission_id: post.mission_id,
-                amount: -amountToRecover,
-                reason: `[${selectedMission.title}] 승인 취소로 인한 포인트 회수`
-            });
+            // 2. 포인트 회수가 가능한 경우에만 RPC 호출
+            if (amountToRecover > 0) {
+                const { error: rpcError } = await supabase.rpc('increment_student_points', {
+                    p_student_id: post.student_id,
+                    p_amount: -amountToRecover,
+                    p_reason: `[${selectedMission.title}] 승인 취소로 인한 포인트 회수 ⚠️`,
+                    p_post_id: post.id,
+                    p_mission_id: post.mission_id
+                });
+                if (rpcError) throw rpcError;
+            }
 
             alert(`✅ ${amountToRecover}포인트 회수 및 승인 취소가 완료되었습니다.`);
             setSelectedPost(null);
@@ -829,29 +859,41 @@ ${postArray.map((p, idx) => {
         setLoadingPosts(true);
         try {
             const recoveryPromises = toRecover.map(async (post) => {
-                const { data: logs } = await supabase
+                // [개선] 일괄 회수 시에도 post_id 기반 검색 우선
+                let { data: logs } = await supabase
                     .from('point_logs')
                     .select('amount')
-                    .eq('student_id', post.student_id)
-                    .ilike('reason', `%${selectedMission.title}%`)
+                    .eq('post_id', post.id)
+                    .gt('amount', 0)
                     .order('created_at', { ascending: false })
                     .limit(1);
+
+                if (!logs || logs.length === 0) {
+                    const legacyResult = await supabase
+                        .from('point_logs')
+                        .select('amount')
+                        .eq('student_id', post.student_id)
+                        .ilike('reason', `%${selectedMission.title}%`)
+                        .gt('amount', 0)
+                        .order('created_at', { ascending: false })
+                        .limit(1);
+                    logs = legacyResult.data;
+                }
 
                 if (logs && logs.length > 0) {
                     const amount = logs[0].amount;
                     if (amount > 0) {
-                        const { data: st } = await supabase.from('students').select('total_points').eq('id', post.student_id).single();
-                        await Promise.all([
-                            supabase.from('student_posts').update({ is_confirmed: false, is_submitted: true }).eq('id', post.id),
-                            supabase.from('students').update({ total_points: Math.max(0, (st?.total_points || 0) - amount) }).eq('id', post.student_id),
-                            supabase.from('point_logs').insert({
-                                student_id: post.student_id,
-                                post_id: post.id,
-                                mission_id: post.mission_id,
-                                amount: -amount,
-                                reason: `[일괄 회수] 승인 취소: ${selectedMission.title}`
-                            })
-                        ]);
+                        // 1. 승인 상태 복구
+                        await supabase.from('student_posts').update({ is_confirmed: false, is_submitted: true }).eq('id', post.id);
+
+                        // 2. [수정] RPC를 통한 일괄 회수 처리
+                        await supabase.rpc('increment_student_points', {
+                            p_student_id: post.student_id,
+                            p_amount: -amount,
+                            p_reason: `[일괄 회수] 승인 취소: ${selectedMission.title} ⚠️`,
+                            p_post_id: post.id,
+                            p_mission_id: post.mission_id
+                        });
                     }
                 }
             });
@@ -943,7 +985,6 @@ ${postArray.map((p, idx) => {
         handleFinalArchive, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric,
-        isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
         frequentTags, saveFrequentTag, removeFrequentTag,
         handleSaveDefaultSettings

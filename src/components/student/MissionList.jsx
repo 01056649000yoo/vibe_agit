@@ -11,7 +11,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     const [missions, setMissions] = useState([]);
     const [posts, setPosts] = useState({}); // missionId -> post 객체
     const [loading, setLoading] = useState(true);
-    const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 1024);
@@ -78,17 +78,19 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
         try {
             // 2. 미션 목록 가져오기 (학생 소속 반 기준)
             console.log(`📡 [MissionList] 미션 조회 중... (반 ID: ${classId})`);
-            const { data: mData, error: mError } = await supabase
+            const { data: allMissions, error: mError } = await supabase
                 .from('writing_missions')
                 .select('*')
                 .eq('class_id', classId)
                 .eq('is_archived', false)
-                .neq('mission_type', 'meeting')
                 .order('created_at', { ascending: false });
 
             if (mError) throw mError;
-            console.log(`✅ [MissionList] 미션 로드 성공: ${mData?.length || 0}건`);
-            setMissions(mData || []);
+
+            // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장 (아이디어 마켓 안건 제외)
+            const filteredMissions = allMissions?.filter(m => m.mission_type !== 'meeting') || [];
+            console.log(`✅ [MissionList] 미션 로드 성공: ${filteredMissions.length}건`);
+            setMissions(filteredMissions);
 
             // 3. 학생의 해당 미션들에 대한 제출물 현황 가져오기
             console.log(`📡 [MissionList] 학생 제출물 조회 중... (학생 ID: ${studentId})`);

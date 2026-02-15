@@ -34,7 +34,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
         submitIdea, handleVote, refresh
     } = useIdeaMarket(classId, studentId);
 
-    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
     const [viewMode, setViewMode] = useState('list'); // 'list' | 'write' | 'detail'
     const [selectedIdea, setSelectedIdea] = useState(null);
 
@@ -50,12 +50,17 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // 가이드 질문 초기화
+    // 가이드 질문 초기화 및 알림 확인 시간 갱신
     useEffect(() => {
-        if (selectedMeeting?.guide_questions?.length > 0) {
-            setAnswers(selectedMeeting.guide_questions.map(() => ''));
+        if (selectedMeeting?.id) {
+            setAnswers(selectedMeeting.guide_questions?.map(() => '') || []);
+
+            // [신규] 안건 확인 시점 기록 (알림 제거용)
+            if (classId) {
+                localStorage.setItem(`last_visit_idea_market_${classId}`, new Date().toISOString());
+            }
         }
-    }, [selectedMeeting?.id]);
+    }, [selectedMeeting?.id, classId]);
 
     // 내 아이디어가 있으면 폼에 미리 채워넣기
     useEffect(() => {
@@ -233,7 +238,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                     )}
 
                                     {/* 선택된 회의 정보 카드 */}
-                                    {selectedMeeting && (
+                                    {selectedMeeting ? (
                                         <motion.div
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
@@ -256,7 +261,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                                     </p>
                                                 </div>
                                             </div>
-                                            {selectedMeeting.guide && (
+                                            {selectedMeeting.guide ? (
                                                 <p style={{
                                                     margin: 0, fontSize: '0.9rem', color: '#5B21B6',
                                                     lineHeight: '1.6', background: 'rgba(255,255,255,0.5)',
@@ -264,7 +269,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                                 }}>
                                                     {selectedMeeting.guide}
                                                 </p>
-                                            )}
+                                            ) : null}
 
                                             {/* 통계 */}
                                             <div style={{
@@ -332,7 +337,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                                 </div>
                                             )}
                                         </motion.div>
-                                    )}
+                                    ) : null}
 
                                     {/* 아이디어 목록 */}
                                     {ideasLoading ? (

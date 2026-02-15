@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Card from '../common/Card';
 import StudentGuideModal from './StudentGuideModal';
@@ -14,8 +14,9 @@ import PointLevelCard from './PointLevelCard';
 import DashboardMenu from './DashboardMenu';
 import DragonHideoutModal from './DragonHideoutModal';
 import BackgroundShopModal from './BackgroundShopModal';
-import AgitOnClassPage from './AgitOnClassPage'; // [신규] 아지트 페이지 임포트
-import VocabularyTowerGame from './VocabularyTowerGame'; // [신규] 어휘의 탑 게임 컴포넌트
+// [bundle-dynamic-imports] 조건부 렌더링되는 대형 컴포넌트를 lazy loading으로 전환
+const AgitOnClassPage = lazy(() => import('./AgitOnClassPage'));
+const VocabularyTowerGame = lazy(() => import('./VocabularyTowerGame'));
 
 // [신규] 드래곤 아지트 배경 목록 (상수 외부 이동)
 const HIDEOUT_BACKGROUNDS = {
@@ -32,7 +33,7 @@ const HIDEOUT_BACKGROUNDS = {
 import { useClassAgitClass } from '../../hooks/useClassAgitClass';
 
 const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isAgitOpen, setIsAgitOpen] = useState(false); // [신규] 아지트 오픈 상태
@@ -50,7 +51,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab, teacherNotify, setTeacherNotify,
-        returnedCount, stats, levelInfo, isLoading, dragonConfig,
+        returnedCount, stats, levelInfo, isLoading, dragonConfig, initialPetData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback
     } = useStudentDashboard(studentSession, onNavigate);
 
@@ -63,7 +64,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         points,
         setPoints,
         dragonConfig.feedCost,
-        dragonConfig.degenDays
+        dragonConfig.degenDays,
+        initialPetData // [수정] 충돌을 피하기 위해 이름을 변경하여 전달
     );
 
     // [신규] 이미지 선행 로딩 (Optimization 4)
@@ -213,6 +215,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     setIsShopOpen={setIsShopOpen}
                     isEvolving={isEvolving}
                     isFlashing={isFlashing}
+                    currentPoints={points}
                 />
 
                 {/* 배경 상점 모달 */}
@@ -240,14 +243,21 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             background: 'white', zIndex: 5000, overflow: 'hidden'
                         }}
                     >
-                        <AgitOnClassPage
-                            studentSession={studentSession}
-                            onBack={() => setIsAgitOpen(false)}
-                            onNavigate={(path) => {
-                                setIsAgitOpen(false);
-                                onNavigate(path);
-                            }}
-                        />
+                        <Suspense fallback={
+                            <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'white' }}>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏠</div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#8D6E63' }}>우리반 아지트로 이동 중...</div>
+                            </div>
+                        }>
+                            <AgitOnClassPage
+                                studentSession={studentSession}
+                                onBack={() => setIsAgitOpen(false)}
+                                onNavigate={(path) => {
+                                    setIsAgitOpen(false);
+                                    onNavigate(path);
+                                }}
+                            />
+                        </Suspense>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -265,16 +275,23 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             background: 'white', zIndex: 5000, overflow: 'auto'
                         }}
                     >
-                        <VocabularyTowerGame
-                            studentSession={studentSession}
-                            onBack={() => setIsVocabTowerOpen(false)}
-                            forcedGrade={vocabTowerSettings?.grade} // [신규] 교사 설정 학년
-                            dailyLimit={vocabTowerSettings?.dailyLimit ?? 3} // [신규] 일일 시도 횟수
-                            timeLimit={vocabTowerSettings?.timeLimit ?? 60} // [신규] 게임 제한 시간
-                            rewardPoints={vocabTowerSettings?.rewardPoints ?? 80} // [신규] 완료 보상 포인트
-                            resetDate={vocabTowerSettings?.resetDate} // [신규] 리셋 기준일
-                            rankingResetDate={vocabTowerSettings?.rankingResetDate} // [신규] 랭킹 리셋 기준일
-                        />
+                        <Suspense fallback={
+                            <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'white' }}>
+                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🗼</div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#1565C0' }}>어휘의 탑 입장 중...</div>
+                            </div>
+                        }>
+                            <VocabularyTowerGame
+                                studentSession={studentSession}
+                                onBack={() => setIsVocabTowerOpen(false)}
+                                forcedGrade={vocabTowerSettings?.grade}
+                                dailyLimit={vocabTowerSettings?.dailyLimit ?? 3}
+                                timeLimit={vocabTowerSettings?.timeLimit ?? 60}
+                                rewardPoints={vocabTowerSettings?.rewardPoints ?? 80}
+                                resetDate={vocabTowerSettings?.resetDate}
+                                rankingResetDate={vocabTowerSettings?.rankingResetDate}
+                            />
+                        </Suspense>
                     </motion.div>
                 )}
             </AnimatePresence>

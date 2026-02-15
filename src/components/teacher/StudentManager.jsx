@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import ExportSelectModal from '../common/ExportSelectModal';
 import { useStudentManager } from '../../hooks/useStudentManager';
+import './StudentManager.css';
 
 // 분리된 서브 컴포넌트들
 import StudentManagerHeader from './StudentManagerHeader';
@@ -15,13 +16,15 @@ import RecordAssistant from './RecordAssistant';
  * 비즈니스 로직과 UI를 분리하여 가독성과 유지보수성을 향상시켰습니다. ✨
  */
 const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+    // [rerender-lazy-state-init] window.innerWidth 접근은 lazy initializer로 래핑
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
 
     const {
         students, studentName, setStudentName, isAdding, selectedIds,
         isPointModalOpen, setIsPointModalOpen, isHistoryModalOpen, setIsHistoryModalOpen,
         isDeleteModalOpen, setIsDeleteModalOpen, isCodeZoomModalOpen, setIsCodeZoomModalOpen,
         isAllCodesModalOpen, setIsAllCodesModalOpen, exportModalOpen, setExportModalOpen,
+        isRankingModalOpen, setIsRankingModalOpen, // [신규] 반환값 추가
         selectedStudentForCode, setSelectedStudentForCode, historyStudent, historyLogs, loadingHistory,
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
         handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, openHistoryModal,
@@ -33,47 +36,37 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
     const [deletedStudents, setDeletedStudents] = useState([]);
 
+    // [js-batch-dom-css] 동적 style 태그 삽입 대신 CSS 파일로 분리 (StudentManager.css)
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
         window.addEventListener('resize', handleResize);
-
-        // 스크롤바 커스텀 스타일 주입
-        const style = document.createElement('style');
-        style.innerHTML = `
-            .ranking-scroll::-webkit-scrollbar { width: 5px; }
-            .ranking-scroll::-webkit-scrollbar-track { background: transparent; }
-            .ranking-scroll::-webkit-scrollbar-thumb { background: #DEE2E6; border-radius: 10px; }
-            .ranking-scroll::-webkit-scrollbar-thumb:hover { background: #ADB5BD; }
-        `;
-        document.head.appendChild(style);
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            document.head.removeChild(style);
-        };
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // 용도에 따른 정렬 로직
-    const displayStudents = isDashboardMode
-        ? [...students].sort((a, b) => (b.activity_score || 0) - (a.activity_score || 0))
-        : [...students].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    // [rerender-memo] 정렬 연산을 useMemo로 메모이제이션하여 불필요한 재정렬 방지
+    const displayStudents = useMemo(() => {
+        return isDashboardMode
+            ? [...students].sort((a, b) => (b.activity_score || 0) - (a.activity_score || 0))
+            : [...students].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    }, [students, isDashboardMode]);
 
-    const handleExportClick = (student) => {
+    // [rerender-functional-setstate] useCallback으로 핸들러 안정화
+    const handleExportClick = useCallback((student) => {
         setExportTarget({ type: 'student', id: student.id, title: student.name });
         setExportModalOpen(true);
-    };
+    }, [setExportTarget, setExportModalOpen]);
 
-    const handleOpenTrash = async () => {
+    const handleOpenTrash = useCallback(async () => {
         const data = await fetchDeletedStudents();
         setDeletedStudents(data);
         setIsTrashModalOpen(true);
-    };
+    }, [fetchDeletedStudents]);
 
-    const handleRestore = async (id) => {
+    const handleRestore = useCallback(async (id) => {
         await handleRestoreStudent(id);
         const data = await fetchDeletedStudents();
         setDeletedStudents(data);
-    };
+    }, [handleRestoreStudent, fetchDeletedStudents]);
 
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
@@ -91,6 +84,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                 isAdding={isAdding}
                 setIsAllCodesModalOpen={setIsAllCodesModalOpen}
                 onOpenTrash={handleOpenTrash}
+                setIsRankingModalOpen={setIsRankingModalOpen} // [신규] 프롭 전달
             />
 
             {/* 메인 리스트 섹션 */}
@@ -125,15 +119,16 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                 />
             )}
 
+            {/* [rendering-conditional-render] && 대신 삼항 연산자 사용 */}
             <AnimatePresence>
-                {recordStudent && (
+                {recordStudent ? (
                     <RecordAssistant
                         student={recordStudent}
                         activeClass={activeClass}
                         isMobile={isMobile}
                         onClose={() => setRecordStudent(null)}
                     />
-                )}
+                ) : null}
             </AnimatePresence>
 
             {/* 통합 모달 섹션 */}
@@ -162,6 +157,9 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                 setIsTrashModalOpen={setIsTrashModalOpen}
                 deletedStudents={deletedStudents}
                 handleRestore={handleRestore}
+                isRankingModalOpen={isRankingModalOpen}
+                setIsRankingModalOpen={setIsRankingModalOpen}
+                displayStudents={displayStudents}
             />
 
             {/* 엑셀/구글문서 내보내기 선택 모달 */}

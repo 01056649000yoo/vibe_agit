@@ -131,6 +131,17 @@ const FriendHideoutModal = ({ classmate, onClose, isMobile }) => {
                         fontSize: '1rem', lineHeight: '1.6', textAlign: 'center',
                         boxShadow: '0 4px 10px rgba(0,0,0,0.02)'
                     }}>
+                        {/* [추가] 친구 드래곤 경험치 바 */}
+                        <div style={{ marginBottom: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                                <span>성장도</span>
+                                <span>{petData.exp}%</span>
+                            </div>
+                            <div style={{ height: '10px', background: 'rgba(0,0,0,0.05)', borderRadius: '5px', overflow: 'hidden' }}>
+                                <motion.div initial={{ width: 0 }} animate={{ width: `${petData.exp}%` }} style={{ height: '100%', background: petData.exp >= 100 ? 'linear-gradient(90deg, #FFD700, #BA68C8)' : 'linear-gradient(90deg, #FBC02D, #FFA000)', borderRadius: '5px' }} />
+                            </div>
+                        </div>
+
                         <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>💖</div>
                         <strong>{classmate.name}</strong> 친구가 정성을 다해 드래곤을 키우고 있어요! <br />
                         멋진 드래곤으로 성장할 수 있게 응원해주세요.
@@ -185,7 +196,7 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
  * 역할: 학생 - 친구들의 글을 읽고 반응/댓글 남기기 (친구 글 아지트) 🌈
  */
 const FriendsHideout = ({ studentSession, onBack, params }) => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
     const [activeMainTab, setActiveMainTab] = useState('posts'); // 'posts' or 'dragons'
     const [viewingFriendHideout, setViewingFriendHideout] = useState(null);
     const observer = useRef();
@@ -333,6 +344,10 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                             <div style={{ fontSize: '0.8rem', color: '#7F8C8D', fontWeight: 'bold' }}>{friend.name} 친구</div>
                                             <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#2C3E50' }}>{pet.name}</div>
                                             <div style={{ fontSize: '0.75rem', color: bg.subColor, fontWeight: 'bold' }}>Lv.{pet.level} {dragon.name}</div>
+                                            {/* [추가] 미니 경험치 바 */}
+                                            <div style={{ height: '4px', background: '#F1F3F5', borderRadius: '2px', overflow: 'hidden', marginTop: '6px', width: '80%' }}>
+                                                <div style={{ width: `${pet.exp}%`, height: '100%', background: pet.exp >= 100 ? 'linear-gradient(90deg, #FFD700, #BA68C8)' : '#FBC02D', transition: 'width 0.5s ease' }} />
+                                            </div>
                                         </div>
                                         <div style={{ fontSize: '1.2rem' }}>🏠</div>
                                     </motion.div>

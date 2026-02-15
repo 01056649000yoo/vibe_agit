@@ -12,6 +12,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const [feedbackInitialTab, setFeedbackInitialTab] = useState(0);
     const [teacherNotify, setTeacherNotify] = useState(null);
     const [returnedCount, setReturnedCount] = useState(0);
+    const [petData, setPetData] = useState(null); // [추가] 초기 펫 데이터 상태
     const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 });
     const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', emoji: '🌱', next: 1401 });
     const [isLoading, setIsLoading] = useState(true);
@@ -108,6 +109,9 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             if (data) {
                 if (data.total_points !== null && data.total_points !== undefined) {
                     setPoints(data.total_points);
+                }
+                if (data.pet_data) {
+                    setPetData(data.pet_data);
                 }
                 if (data.last_feedback_check) {
                     lastCheckRef.current = data.last_feedback_check;
@@ -207,14 +211,15 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     }, [studentSession?.id]);
 
     const handleClearFeedback = async () => {
-        const now = new Date().toISOString();
         try {
-            await supabase
-                .from('students')
-                .update({ last_feedback_check: now })
-                .eq('id', studentSession.id);
+            // [수정] RLS 정책으로 인해 직접 update가 불가능하므로 RPC(mark_feedback_as_read) 사용
+            const { error } = await supabase.rpc('mark_feedback_as_read', {
+                p_student_id: studentSession.id
+            });
 
-            lastCheckRef.current = now;
+            if (error) throw error;
+
+            lastCheckRef.current = new Date().toISOString();
             setFeedbacks([]);
             setHasActivity(false);
         } catch (err) {
@@ -304,10 +309,13 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             const loadData = async () => {
                 setIsLoading(true);
                 try {
-                    await fetchMyPoints();
-                    const classConfig = await fetchClassSettings();
-                    fetchStats();
-                    checkActivity();
+                    // [async-parallel] 독립적인 데이터 요청을 병렬로 실행하여 로딩 시간 단축
+                    await Promise.all([
+                        fetchMyPoints(),
+                        fetchClassSettings(),
+                        fetchStats(),
+                        checkActivity()
+                    ]);
                 } catch (e) {
                     console.error('데이터 로드 중 오류:', e);
                 } finally {
@@ -380,8 +388,12 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     },
                     (payload) => {
                         const updatedPost = payload.new;
-                        // 반려(다시 쓰기) 요청이 새로 설정된 경우
-                        if (updatedPost.is_returned && !payload.old.is_returned) {
+                        const oldPost = payload.old;
+
+                        // [debug] REPLICA IDENTITY FULL을 통해 이전 상태(payload.old)와 비교
+
+                        // 1. 반려(다시 쓰기) 요청이 새로 설정된 경우
+                        if (updatedPost.is_returned && !oldPost.is_returned) {
                             setTeacherNotify({
                                 type: 'rewrite',
                                 message: "♻️ 선생님의 다시 쓰기 요청이 있습니다.",
@@ -389,6 +401,28 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                                 timestamp: Date.now()
                             });
                             checkActivity();
+                        }
+                        // 2. 승인 완료 (is_confirmed: false -> true)
+                        else if (updatedPost.is_confirmed && !oldPost.is_confirmed) {
+                            setTeacherNotify({
+                                type: 'approve',
+                                message: `🎉 글이 승인되었습니다! 축하해요!`,
+                                icon: "🎉",
+                                timestamp: Date.now()
+                            });
+                            fetchMyPoints();
+                            fetchStats();
+                        }
+                        // 3. 승인 취소 또는 회수 (is_confirmed: true -> false)
+                        else if (!updatedPost.is_confirmed && oldPost.is_confirmed) {
+                            setTeacherNotify({
+                                type: 'recovery',
+                                message: "⚠️ 글의 승인이 취소되거나 회수되었습니다.",
+                                icon: "⚠️",
+                                timestamp: Date.now()
+                            });
+                            fetchMyPoints();
+                            fetchStats();
                         }
                     }
                 )
@@ -403,7 +437,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     return {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab, teacherNotify, setTeacherNotify,
-        returnedCount, stats, levelInfo, isLoading, dragonConfig,
+        returnedCount, stats, levelInfo, isLoading, dragonConfig, initialPetData: petData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback
     };
 };

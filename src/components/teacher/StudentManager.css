@@ -1,0 +1,18 @@
+/* [js-batch-dom-css] 동적 style 태그 삽입 대신 정적 CSS 파일로 분리 */
+/* 스크롤바 커스텀 스타일 */
+.ranking-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+
+.ranking-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ranking-scroll::-webkit-scrollbar-thumb {
+    background: #DEE2E6;
+    border-radius: 10px;
+}
+
+.ranking-scroll::-webkit-scrollbar-thumb:hover {
+    background: #ADB5BD;
+}

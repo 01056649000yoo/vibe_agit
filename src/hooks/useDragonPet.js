@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import confetti from 'canvas-confetti';
 
-export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenDays = 14) => {
+export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenDays = 14, initialPetData = null) => {
     const [petData, setPetData] = useState({
         name: '나의 드래곤',
         level: 1,
@@ -13,6 +13,13 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
     });
     const [isEvolving, setIsEvolving] = useState(false);
     const [isFlashing, setIsFlashing] = useState(false);
+
+    // [추가] 초기 데이터 동기화
+    useEffect(() => {
+        if (initialPetData) {
+            setPetData(initialPetData);
+        }
+    }, [initialPetData]);
 
     // [정밀 동기화] props로 전달된 설정값이 비동기로 업데이트될 때 훅 내부에서도 즉시 반영되도록 ref 사용
     const feedCostRef = useRef(feedCost);

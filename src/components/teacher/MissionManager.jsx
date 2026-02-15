@@ -14,7 +14,7 @@ import EvaluationReport from './EvaluationReport';
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
 const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
 
     const {
         missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
@@ -189,13 +189,13 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
             />
 
             <AnimatePresence>
-                {reportMission && (
+                {reportMission ? (
                     <EvaluationReport
                         mission={reportMission}
                         onClose={() => setReportMission(null)}
                         isMobile={isMobile}
                     />
-                )}
+                ) : null}
             </AnimatePresence>
         </div>
     );

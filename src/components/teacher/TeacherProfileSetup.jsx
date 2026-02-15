@@ -13,7 +13,7 @@ import { searchSchools } from '../../utils/schoolApi';
 const TeacherProfileSetup = ({ email, onTeacherStart, onLogout }) => {
     const [step, setStep] = useState(1); // 1: 약관동의, 2: 정보입력
     const [loading, setLoading] = useState(false);
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
 
     // 약관 동의 상태
     const [agreedToTerms, setAgreedToTerms] = useState(false);

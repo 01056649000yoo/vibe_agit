@@ -25,24 +25,25 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
         achievedStudents
     } = useClassAgitClass(classId, studentSession?.id);
 
-    // [신규] 아지트 명예의 전당 새 소식 확인 (최근 24시간)
+    // [신규] 아이디어 마켓 및 명예의 전당 새 소식 확인
+    const [hasNewIdeaMarket, setHasNewIdeaMarket] = useState(false);
     const [hasNewAgitHonor, setHasNewAgitHonor] = useState(false);
 
     useEffect(() => {
-        const checkNewHonor = async () => {
+        const checkNewContent = async () => {
             if (!classId) return;
             try {
-                // [신규] 명예의 전당 최신 글 조회 및 확인 여부 체크
+                // 1. 명예의 전당 최신 글 조회
                 const { data: latestHonor } = await supabase
                     .from('agit_honor_roll')
                     .select('created_at')
                     .eq('class_id', classId)
                     .order('created_at', { ascending: false })
                     .limit(1)
-                    .single();
+                    .maybeSingle();
 
                 if (latestHonor) {
-                    const lastCheck = localStorage.getItem(`last_visit_agit_onclass_${classId}`);
+                    const lastCheck = localStorage.getItem(`last_visit_agit_honor_${classId}`);
                     // 최근 24시간 이내의 글이면서, 마지막 확인보다 최신일 때만 NEW 표시
                     const isRecent = new Date(latestHonor.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
                     const isUnchecked = !lastCheck || new Date(latestHonor.created_at) > new Date(lastCheck);
@@ -51,15 +52,53 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                         setHasNewAgitHonor(true);
                     }
                 }
+
+                // 2. 아이디어 마켓 최신 안건/아이디어 확인
+                const { data: latestMeeting } = await supabase
+                    .from('writing_missions')
+                    .select('id, created_at')
+                    .eq('class_id', classId)
+                    .eq('mission_type', 'meeting')
+                    .eq('is_archived', false)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                let latestIdea = null;
+                if (latestMeeting?.id) {
+                    const { data: ideaData } = await supabase
+                        .from('student_posts')
+                        .select('created_at')
+                        .eq('mission_id', latestMeeting.id)
+                        .eq('is_submitted', true)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+                    latestIdea = ideaData;
+                }
+
+                const latestMeetingTime = latestMeeting ? new Date(latestMeeting.created_at) : new Date(0);
+                const latestIdeaTime = latestIdea ? new Date(latestIdea.created_at) : new Date(0);
+                const mostRecentMarketTime = new Date(Math.max(latestMeetingTime, latestIdeaTime));
+
+                if (mostRecentMarketTime.getTime() > 0) {
+                    const lastCheckMarket = localStorage.getItem(`last_visit_idea_market_${classId}`);
+                    const isRecentMarket = mostRecentMarketTime > new Date(Date.now() - 24 * 60 * 60 * 1000);
+                    const isUncheckedMarket = !lastCheckMarket || mostRecentMarketTime > new Date(lastCheckMarket);
+
+                    if (isRecentMarket && isUncheckedMarket) {
+                        setHasNewIdeaMarket(true);
+                    }
+                }
             } catch (err) {
-                console.error('명예의 전당 새 소식 확인 실패:', err);
+                console.error('새 소식 확인 실패:', err);
             }
         };
-        checkNewHonor();
+        checkNewContent();
     }, [classId]);
 
     const [subTab, setSubTab] = useState('hub');
-    const [isMobileSize, setIsMobileSize] = useState(window.innerWidth <= 1024);
+    const [isMobileSize, setIsMobileSize] = useState(() => window.innerWidth <= 1024);
     const [showSurprise, setShowSurprise] = useState(false);
 
     // 전광판 2줄 노출을 위한 메시지 분리
@@ -243,7 +282,7 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                 }
                                 // [신규] 확인 시점 기록 및 뱃지 제거
                                 if (classId) {
-                                    localStorage.setItem(`last_visit_agit_onclass_${classId}`, new Date().toISOString());
+                                    localStorage.setItem(`last_visit_agit_honor_${classId}`, new Date().toISOString());
                                     setHasNewAgitHonor(false);
                                 }
                                 setSubTab('onClass');
@@ -289,7 +328,14 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                         {/* [신규] 아이디어 마켓 카드 - 아지트 온 클래스 바로 아래 */}
                         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} style={{ marginTop: '12px' }}>
                             <Card
-                                onClick={() => setSubTab('ideaMarket')}
+                                onClick={() => {
+                                    // [신규] 확인 시점 기록 및 뱃지 제거
+                                    if (classId) {
+                                        localStorage.setItem(`last_visit_idea_market_${classId}`, new Date().toISOString());
+                                        setHasNewIdeaMarket(false);
+                                    }
+                                    setSubTab('ideaMarket');
+                                }}
                                 style={{
                                     background: 'linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 100%)',
                                     border: '1px solid #DDD6FE',
@@ -298,12 +344,17 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                     position: 'relative'
                                 }}
                             >
-                                <div style={{
-                                    position: 'absolute', top: '10px', right: '10px',
-                                    background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
-                                    color: 'white', fontSize: '0.65rem',
-                                    padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold'
-                                }}>OPEN</div>
+                                {hasNewIdeaMarket && (
+                                    <div style={{
+                                        position: 'absolute', top: '10px', right: '10px',
+                                        background: '#FF5252',
+                                        color: 'white', fontSize: '0.65rem',
+                                        padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold',
+                                        boxShadow: '0 2px 4px rgba(255, 82, 82, 0.3)',
+                                        animation: 'bounce 1s infinite',
+                                        zIndex: 10
+                                    }}>NEW</div>
+                                )}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                     <div style={{
                                         width: '48px', height: '48px',

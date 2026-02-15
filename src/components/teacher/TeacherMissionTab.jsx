@@ -1,6 +1,8 @@
-import React, { lazy } from 'react';
+import React, { lazy, Suspense } from 'react';
 import RecentActivity from './RecentActivity';
-import ClassAnalysis from './ClassAnalysis';
+
+// [bundle-dynamic-imports] 무거운 분석 컴포넌트를 lazy loading
+const ClassAnalysis = lazy(() => import('./ClassAnalysis'));
 
 const MissionManager = lazy(() => import('./MissionManager'));
 const StudentManager = lazy(() => import('./StudentManager'));
@@ -9,7 +11,9 @@ const TeacherMissionTab = ({ activeClass, isMobile, setSelectedActivityPost }) =
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
             {/* 학급 종합 분석 섹션 (신규) */}
-            <ClassAnalysis classId={activeClass.id} isMobile={isMobile} />
+            <Suspense fallback={<div style={{ padding: '20px', textAlign: 'center', color: '#ADB5BD' }}>📊 분석 로딩 중...</div>}>
+                <ClassAnalysis classId={activeClass.id} isMobile={isMobile} />
+            </Suspense>
 
             <div style={{
                 display: 'grid',

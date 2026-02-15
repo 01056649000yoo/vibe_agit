@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS public.student_posts (
     initial_eval INT,
     final_eval INT,
     eval_comment TEXT,
+    is_confirmed BOOLEAN DEFAULT false, -- [추가] 선생님의 글 승인 여부
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -170,6 +171,8 @@ CREATE TABLE IF NOT EXISTS public.post_reactions (
 CREATE TABLE IF NOT EXISTS public.point_logs (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     student_id UUID REFERENCES public.students(id) ON DELETE CASCADE,
+    post_id UUID REFERENCES public.student_posts(id) ON DELETE SET NULL,
+    mission_id UUID REFERENCES public.writing_missions(id) ON DELETE SET NULL,
     reason TEXT NOT NULL,
     amount INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -300,11 +303,41 @@ ALTER TABLE public.classes ADD COLUMN IF NOT EXISTS vocab_tower_reset_date TIMES
 ALTER TABLE public.classes ADD COLUMN IF NOT EXISTS vocab_tower_ranking_reset_date TIMESTAMP WITH TIME ZONE;
 ALTER TABLE public.classes ADD COLUMN IF NOT EXISTS season_started_at TIMESTAMP WITH TIME ZONE;
 
+-- Point Logs 컬럼 추가
+ALTER TABLE public.point_logs ADD COLUMN IF NOT EXISTS post_id UUID REFERENCES public.student_posts(id) ON DELETE SET NULL;
+ALTER TABLE public.point_logs ADD COLUMN IF NOT EXISTS mission_id UUID REFERENCES public.writing_missions(id) ON DELETE SET NULL;
+
+-- Realtime 연동을 위한 데이터 복제 모드 설정 (Full)
+ALTER TABLE public.student_posts REPLICA IDENTITY FULL;
+ALTER TABLE public.point_logs REPLICA IDENTITY FULL;
+ALTER TABLE public.students REPLICA IDENTITY FULL;
+ALTER TABLE public.post_comments REPLICA IDENTITY FULL;
+ALTER TABLE public.post_reactions REPLICA IDENTITY FULL;
+
 -- Students 컬럼
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS total_points INTEGER DEFAULT 0;
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS inventory JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS selected_items JSONB DEFAULT '{"background": "default", "desk": "default"}'::jsonb;
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS pet_data JSONB DEFAULT '{"name": "드래곤", "level": 1, "exp": 0, "lastFed": "1970-01-01", "ownedItems": [], "background": "default"}'::jsonb;
 ALTER TABLE public.students ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE public.students ADD COLUMN IF NOT EXISTS last_feedback_check TIMESTAMP WITH TIME ZONE DEFAULT '1970-01-01 00:00:00+00';
 
+-- 기존 데이터 초기화 (NULL이거나 구조가 불완전한 경우 기본값 채우기)
+UPDATE public.students SET pet_data = '{"name": "드래곤", "level": 1, "exp": 0, "lastFed": "1970-01-01", "ownedItems": [], "background": "default"}'::jsonb WHERE pet_data IS NULL OR jsonb_typeof(pet_data) != 'object';
+UPDATE public.students SET total_points = 0 WHERE total_points IS NULL;
+UPDATE public.students SET inventory = '[]'::jsonb WHERE inventory IS NULL;
+UPDATE public.students SET selected_items = '{"background": "default", "desk": "default"}'::jsonb WHERE selected_items IS NULL;
+
+-- [보완] pet_data의 필수 필드(level, exp)가 누락된 경우 강제 보정
+UPDATE public.students 
+SET pet_data = jsonb_set(
+    jsonb_set(COALESCE(pet_data, '{}'::jsonb), '{level}', '1'),
+    '{exp}', '0'
+)
+WHERE pet_data->'level' IS NULL OR pet_data->'exp' IS NULL;
+
 -- Student Posts 컬럼
+ALTER TABLE public.student_posts ADD COLUMN IF NOT EXISTS is_confirmed BOOLEAN DEFAULT false;
 ALTER TABLE public.student_posts ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'submitted';
 ALTER TABLE public.student_posts ADD COLUMN IF NOT EXISTS is_returned BOOLEAN DEFAULT false;
 ALTER TABLE public.student_posts ADD COLUMN IF NOT EXISTS original_content TEXT;
@@ -315,6 +348,10 @@ ALTER TABLE public.student_posts ADD COLUMN IF NOT EXISTS student_answers JSONB 
 ALTER TABLE public.student_posts ADD COLUMN IF NOT EXISTS initial_eval INT;
 ALTER TABLE public.student_posts ADD COLUMN IF NOT EXISTS final_eval INT;
 ALTER TABLE public.student_posts ADD COLUMN IF NOT EXISTS eval_comment TEXT;
+
+-- 기존 데이터 초기화: 제출된 글은 일단 승인된 것으로 간주 (운영 편의상)
+UPDATE public.student_posts SET is_confirmed = true WHERE is_submitted = true AND is_confirmed IS NULL;
+UPDATE public.student_posts SET is_confirmed = false WHERE is_confirmed IS NULL;
 
 -- Post Comments 컬럼
 ALTER TABLE public.post_comments ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'approved';
@@ -434,20 +471,22 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
--- 학생 포인트 증가 및 로그 기록
+-- 학생 포인트 증가 및 로그 기록 (확장 버전)
 CREATE OR REPLACE FUNCTION public.increment_student_points(
-    student_id UUID,
-    points_to_add INTEGER,
-    log_reason TEXT DEFAULT '포인트 보상 🎁'
+    p_student_id UUID,
+    p_amount INTEGER,
+    p_reason TEXT DEFAULT '포인트 보상 🎁',
+    p_post_id UUID DEFAULT NULL,
+    p_mission_id UUID DEFAULT NULL
 )
 RETURNS void AS $$
 BEGIN
     UPDATE public.students 
-    SET total_points = COALESCE(total_points, 0) + points_to_add 
-    WHERE id = student_id;
+    SET total_points = COALESCE(total_points, 0) + p_amount 
+    WHERE id = p_student_id;
     
-    INSERT INTO public.point_logs (student_id, reason, amount) 
-    VALUES (student_id, log_reason, points_to_add);
+    INSERT INTO public.point_logs (student_id, reason, amount, post_id, mission_id) 
+    VALUES (p_student_id, p_reason, p_amount, p_post_id, p_mission_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -463,6 +502,17 @@ BEGIN
         max_floor = GREATEST(vocab_tower_rankings.max_floor, EXCLUDED.max_floor),
         updated_at = now()
     WHERE vocab_tower_rankings.max_floor < EXCLUDED.max_floor;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- 학생의 알림 확인 시간 업데이트 (RLS 우회용)
+CREATE OR REPLACE FUNCTION public.mark_feedback_as_read(p_student_id UUID)
+RETURNS void AS $$
+BEGIN
+    UPDATE public.students 
+    SET last_feedback_check = timezone('utc'::text, now())
+    WHERE id = p_student_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -540,9 +590,9 @@ CREATE POLICY "Student_Access" ON students FOR SELECT USING (
     OR is_admin()
     OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
 );
+-- [수정] 학생 본인의 데이터(포인트, 드래곤 등) 업데이트 허용 (anon 포함)
 CREATE POLICY "Student_Manage" ON students FOR ALL USING (
-    is_admin()
-    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+    true
 );
 
 -- Writing Missions
@@ -583,11 +633,12 @@ CREATE POLICY "Reaction_Read" ON post_reactions FOR SELECT USING (
 );
 CREATE POLICY "Reaction_Manage" ON post_reactions FOR ALL USING (true);
 
--- Point Logs (보안 강화: SELECT만 허용, INSERT는 시스템 함수에서만 가능)
+-- Point Logs
 ALTER TABLE public.point_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Log_Read" ON point_logs FOR SELECT USING (true);
--- INSERT/UPDATE/DELETE는 SECURITY DEFINER 함수(increment_student_points)에서만 가능
--- 직접 API 호출로는 포인트 조작 불가
+CREATE POLICY "Log_Select" ON point_logs FOR SELECT USING (true);
+-- [수정] 먹이주기, 상점 구매 등 포인트 사용 시 로그 기록을 위해 INSERT 허용
+CREATE POLICY "Log_Insert" ON point_logs FOR INSERT WITH CHECK (true);
+-- UPDATE/DELETE는 여전히 금지 (포인트 조작 방지)
 
 -- Student Records
 ALTER TABLE public.student_records ENABLE ROW LEVEL SECURITY;
@@ -625,12 +676,12 @@ CREATE POLICY "Tower_History_Manage" ON vocab_tower_history FOR ALL USING (
     OR is_admin()
 );
 
--- Agit Honor Roll (보안 강화: SELECT만 허용, 수정은 교사/관리자만)
+-- Agit Honor Roll
 ALTER TABLE public.agit_honor_roll ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Honor_Roll_Read" ON agit_honor_roll FOR SELECT USING (true);
+-- [수정] 학생도 자신의 미션 달성을 기록할 수 있도록 ALL 정책 허용
 CREATE POLICY "Honor_Roll_Manage" ON agit_honor_roll FOR ALL USING (
-    EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
-    OR is_admin()
+    true
 );
 
 -- Agit Season History (보안 강화: SELECT만 허용, 수정은 교사/관리자만)

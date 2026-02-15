@@ -49,19 +49,20 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         return `vocab_tower_attempts_${studentSession?.id}_${today}${resetSuffix}`;
     };
 
-    const getAttempts = () => {
+    // [rerender-lazy-state-init] + [js-cache-storage]
+    // 초기 렌더링 시에만 localStorage에서 값을 호출하고 상태로 관리합니다.
+    const [attempts, setAttempts] = useState(() => {
         const key = getTodayKey();
         const stored = localStorage.getItem(key);
         return stored ? parseInt(stored, 10) : 0;
-    };
-
-    const [attempts, setAttempts] = useState(getAttempts());
+    });
     const [hasStarted, setHasStarted] = useState(false);
+    const [isIntroOpen, setIsIntroOpen] = useState(true); // [신규] 게임 시작 안내 화면 상태
 
-    // 차감 전 남은 횟수 (게임 진입 시점 기준)
-    const initialRemaining = dailyLimit - getAttempts();
-    // 현재 표시용 남은 횟수 (차감 후)
+    // 현재 표시용 남은 횟수
     const remainingAttempts = Math.max(0, dailyLimit - attempts);
+    // 초기 진입 시 남은 횟수 계산 (attempts 상태의 현재값 활용)
+    const initialRemaining = dailyLimit - attempts;
 
     // 시도 횟수 차감 (게임 시작 시 한 번만 차감)
     const consumeAttempt = () => {
@@ -76,18 +77,21 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     };
 
     useEffect(() => {
-        // 게임 진입 시 차감 전 남은 횟수가 0 이하면 즉시 종료
+        // 게임 진입 시 차감 전 남은 횟수가 0 이하면 즉시 종료 (안내창 띄울 필요 없이)
         if (initialRemaining <= 0) {
             setIsFullyExhausted(true);
+            setIsIntroOpen(false);
             return;
         }
+    }, []); // 입구 컷만 담당하므로 마운트 시에만 한 번 체크
 
-        // 진입 시 첫 번째 시도 차감
-        if (!hasStarted) {
-            consumeAttempt();
+    // [신규] 실제로 게임을 시작하는 함수 (버튼 클릭 시 호출)
+    const handleGameStart = () => {
+        if (consumeAttempt()) {
             setHasStarted(true);
+            setIsIntroOpen(false);
         }
-    }, []);
+    };
 
     // 타이머 로직
     useEffect(() => {
@@ -113,15 +117,19 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
     // 보상 포인트 지급 로직
     const handleRewardPoints = async () => {
-        const rewardKey = `${getTodayKey()}_rewarded`;
+        const todayKey = getTodayKey();
+        const rewardKey = `${todayKey}_rewarded`;
+
+        // [js-cache-storage] localStorage 호출 결과를 상수에 할당
+        const isRewarded = localStorage.getItem(rewardKey);
 
         // [신규] 게임 종료 시 현재 층수 랭킹에 기록
         updateMaxFloor(stats.currentFloor);
 
         // 이미 지급했거나 보상 포인트가 0 이하인 경우 방지
-        if (awardedPoints > 0 || rewardPoints <= 0 || localStorage.getItem(rewardKey)) {
+        if (awardedPoints > 0 || rewardPoints <= 0 || isRewarded) {
             // 이미 지급된 상태라면 상태값만 동기화 (UI 표시용)
-            if (localStorage.getItem(rewardKey) && awardedPoints === 0) {
+            if (isRewarded && awardedPoints === 0) {
                 setAwardedPoints(rewardPoints);
             }
             return;
@@ -142,9 +150,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
             localStorage.setItem(rewardKey, 'true');
             setAwardedPoints(rewardPoints);
 
-            // 학생에게 명확하게 알림
-            alert(`🏆 어휘의 탑 일일 미션 완료!\n\n오늘의 기회를 모두 소진하여 보상 포인트 ${rewardPoints}P가 지급되었습니다! ✨\n(이제 활동지수 랭킹에서 내 점수를 확인해보세요!)`);
-
+            // [수정] 중복 알림 방지를 위해 브라우저 alert 제거 (중앙 배너 UI만 노출)
             console.log('✅ 보상 포인트 지급 완료');
         } catch (err) {
             console.error('❌ 보상 포인트 지급 실패:', err);
@@ -293,8 +299,15 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
             return;
         }
 
-        // 게임 도중 나갈 때 경고
-        if (window.confirm('⚠️ 아직 게임이 진행 중이에요! 지금 나가면 시도 횟수 1회가 차감됩니다.\n정말 대시보드로 나갈까요?')) {
+        // 기본 경고 메시지
+        let message = '⚠️ 아직 게임이 진행 중이에요! 지금 나가면 시도 횟수 1회가 차감됩니다.\n정말 대시보드로 나갈까요?';
+
+        // 마지막 기회인 경우 포인트 미지급 경고 추가
+        if (remainingAttempts === 0) {
+            message = '⚠️ 마지막 도전 기회예요! 지금 게임을 중단하고 나가면 일일 미션 보상 포인트를 받을 수 없어요.\n끝까지 도전해서 보상을 챙겨보세요! 정말 나갈까요?';
+        }
+
+        if (window.confirm(message)) {
             onBack();
         }
     };
@@ -508,6 +521,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         );
     }
 
+
     return (
         <div style={{
             minHeight: '100vh',
@@ -538,6 +552,80 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                     backgroundSize: '30px 30px',
                     pointerEvents: 'none'
                 }} />
+
+                {/* [신규] 게임 시작 안내 화면 (Intro) */}
+                <AnimatePresence>
+                    {isIntroOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            style={{
+                                position: 'fixed', inset: 0,
+                                background: 'rgba(0,0,0,0.8)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                zIndex: 20000, padding: '20px'
+                            }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                style={{
+                                    background: 'white', borderRadius: '32px', padding: '40px 30px',
+                                    maxWidth: '450px', width: '100%', textAlign: 'center',
+                                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                                    position: 'relative', overflow: 'hidden'
+                                }}
+                            >
+                                <div style={{
+                                    position: 'absolute', top: 0, left: 0, right: 0, height: '8px',
+                                    background: 'linear-gradient(90deg, #1565C0, #42A5F5)'
+                                }} />
+
+                                <span style={{ fontSize: '4.5rem', display: 'block', marginBottom: '10px' }}>🏰</span>
+                                <h2 style={{ fontSize: '1.8rem', color: '#1565C0', margin: '10px 0', fontWeight: '900' }}>어휘의 탑 챌린지</h2>
+
+                                <div style={{
+                                    background: '#F0F7FF', borderRadius: '20px', padding: '20px',
+                                    margin: '25px 0', textAlign: 'left', border: '1px solid #E3F2FD'
+                                }}>
+                                    <p style={{ margin: '0 0 12px 0', fontSize: '0.95rem', color: '#455A64', lineHeight: '1.6' }}>
+                                        🎯 <strong>게임 방법:</strong><br />
+                                        제한 시간 내에 어휘 퀴즈를 맞히고 탑을 높이 올라가세요! 정답을 맞히면 경험치를 얻고 다음 층으로 올라갑니다.
+                                    </p>
+                                    <p style={{ margin: 0, fontSize: '0.95rem', color: '#455A64', lineHeight: '1.6' }}>
+                                        💡 <strong>도전 기회:</strong><br />
+                                        매일 총 <strong>{dailyLimit}번</strong>의 도전 기회가 주어집니다.<br />
+                                        (현재 남은 기회: <strong>{remainingAttempts}회</strong>)
+                                    </p>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
+                                    <Button
+                                        onClick={onBack}
+                                        variant="ghost"
+                                        style={{
+                                            height: '60px', border: '2px solid #E0E0E0',
+                                            color: '#757575', borderRadius: '20px'
+                                        }}
+                                    >
+                                        나중에 하기
+                                    </Button>
+                                    <Button
+                                        onClick={handleGameStart}
+                                        style={{
+                                            height: '60px', background: 'linear-gradient(135deg, #1565C0, #1976D2)',
+                                            color: 'white', fontSize: '1.1rem', fontWeight: '900',
+                                            borderRadius: '20px', boxShadow: '0 8px 16px rgba(21, 101, 192, 0.3)'
+                                        }}
+                                    >
+                                        챌린지 시작! 🚀
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* 미니 타워 맵 제거 (중복) */}
                 {/* [신규] 층간 이동 고도화 애니메이션 */}
@@ -909,7 +997,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                         {/* [3열] 실시간 타워 맵 (우측) */}
                         <div style={{
                             display: 'flex', flexDirection: 'column', alignItems: 'center',
-                            justifyContent: 'center', height: '100%', pointerEvents: 'none'
+                            justifyContent: 'flex-start', paddingTop: '20px', pointerEvents: 'none'
                         }}>
                             <div style={{ transform: 'scale(0.85)' }}>
                                 <TowerMap />

@@ -15,6 +15,7 @@ export const useStudentManager = (classId) => {
     const [isCodeZoomModalOpen, setIsCodeZoomModalOpen] = useState(false);
     const [isAllCodesModalOpen, setIsAllCodesModalOpen] = useState(false);
     const [exportModalOpen, setExportModalOpen] = useState(false);
+    const [isRankingModalOpen, setIsRankingModalOpen] = useState(false); // [신규] 랭킹 모달 상태 추가
 
     // 데이터 상태
     const [selectedStudentForCode, setSelectedStudentForCode] = useState(null);
@@ -51,19 +52,35 @@ export const useStudentManager = (classId) => {
 
         // 2. 활동 점수 계산 (누적 포인트: 사용한 포인트 제외하고 획득한 포인트만 합산)
         const studentIds = studentsData.map(s => s.id);
-        let activityMap = {};
+        let activityMap = { all: {}, week: {}, month: {} };
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
         if (studentIds.length > 0) {
             const { data: logsData, error: logsError } = await supabase
                 .from('point_logs')
-                .select('student_id, amount')
+                .select('student_id, amount, created_at')
                 .in('student_id', studentIds)
                 .gt('amount', 0); // 양수(획득) 포인트만 조회
 
             if (!logsError && logsData) {
                 logsData.forEach(log => {
-                    if (!activityMap[log.student_id]) activityMap[log.student_id] = 0;
-                    activityMap[log.student_id] += log.amount;
+                    const logDate = new Date(log.created_at);
+                    const sid = log.student_id;
+
+                    // 전체 기간
+                    activityMap.all[sid] = (activityMap.all[sid] || 0) + log.amount;
+
+                    // 최근 1주일
+                    if (logDate >= weekAgo) {
+                        activityMap.week[sid] = (activityMap.week[sid] || 0) + log.amount;
+                    }
+
+                    // 최근 1달
+                    if (logDate >= monthAgo) {
+                        activityMap.month[sid] = (activityMap.month[sid] || 0) + log.amount;
+                    }
                 });
             }
         }
@@ -71,7 +88,10 @@ export const useStudentManager = (classId) => {
         // 3. 데이터 병합
         const studentsWithStats = studentsData.map(s => ({
             ...s,
-            activity_score: activityMap[s.id] || 0 // 누적 획득 포인트 (활동 점수)
+            activity_score: activityMap.all[s.id] || 0, // 기본 대시보드 표시용
+            score_all: activityMap.all[s.id] || 0,
+            score_week: activityMap.week[s.id] || 0,
+            score_month: activityMap.month[s.id] || 0
         }));
 
         setStudents(studentsWithStats);
@@ -279,6 +299,7 @@ export const useStudentManager = (classId) => {
         isPointModalOpen, setIsPointModalOpen, isHistoryModalOpen, setIsHistoryModalOpen,
         isDeleteModalOpen, setIsDeleteModalOpen, isCodeZoomModalOpen, setIsCodeZoomModalOpen,
         isAllCodesModalOpen, setIsAllCodesModalOpen, exportModalOpen, setExportModalOpen,
+        isRankingModalOpen, setIsRankingModalOpen, // [신규] 반환값 추가
         selectedStudentForCode, setSelectedStudentForCode, historyStudent, historyLogs, loadingHistory,
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
         handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, openHistoryModal,

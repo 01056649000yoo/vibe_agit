@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 const DragonHideoutModal = ({
     isOpen, onClose, isMobile, petData, dragonInfo,
     HIDEOUT_BACKGROUNDS, daysSinceLastFed, dragonConfig,
-    handleFeed, setIsShopOpen, isEvolving, isFlashing
+    handleFeed, setIsShopOpen, isEvolving, isFlashing,
+    currentPoints = 0
 }) => {
     return (
         <AnimatePresence>
@@ -42,16 +43,42 @@ const DragonHideoutModal = ({
                         <button
                             onClick={onClose}
                             style={{
-                                position: 'absolute', top: '20px', right: '20px',
-                                background: 'rgba(255,255,255,0.7)', border: 'none',
-                                width: '36px', height: '36px', borderRadius: '50%',
-                                fontSize: '1.2rem', cursor: 'pointer', zIndex: 10
+                                position: 'absolute', top: '24px', right: '24px',
+                                background: '#FFFFFF',
+                                border: '1px solid #EEEEEE',
+                                width: '40px', height: '40px', borderRadius: '50%',
+                                fontSize: '1.2rem', cursor: 'pointer', zIndex: 10,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                color: '#7F8C8D',
+                                fontWeight: 'bold'
                             }}
                         >
                             ✕
                         </button>
 
-                        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '24px', position: 'relative' }}>
+                            {/* [수정] 보유 포인트 배지를 왼쪽 상단으로 이동하여 닫기 버튼과 겹치지 않게 함 */}
+                            <div style={{
+                                position: isMobile ? 'static' : 'absolute',
+                                top: '0',
+                                left: '0',
+                                marginBottom: isMobile ? '12px' : '0',
+                                background: '#FFF9C4',
+                                padding: '6px 14px',
+                                borderRadius: '12px',
+                                border: '1px solid #FBC02D',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                            }}>
+                                <span style={{ fontSize: '1rem' }}>💰</span>
+                                <span style={{ fontWeight: '900', color: '#F57F17', fontSize: '0.95rem' }}>
+                                    {currentPoints.toLocaleString()}P
+                                </span>
+                            </div>
+
                             <h2 style={{ margin: 0, color: '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 드래곤 아지트</h2>
                             <p style={{ margin: '4px 0 0 0', color: '#8D6E63', fontSize: '0.9rem' }}>나의 소중한 드래곤 파트너와 함께하는 공간</p>
                         </div>

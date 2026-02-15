@@ -226,7 +226,10 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                                                 {growth > 0 ? `+${growth}` : growth}
                                             </span>
                                         </td>
-                                        <td style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#444', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <td
+                                            title={student.eval_comment}
+                                            style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#444', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                        >
                                             {student.eval_comment || <span style={{ color: '#CBD5E1' }}>의견 없음</span>}
                                         </td>
                                     </tr>
