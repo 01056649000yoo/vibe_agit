@@ -106,14 +106,6 @@ const StudentManagerHeader = ({
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <Button
-                        onClick={onOpenTrash}
-                        variant="ghost"
-                        size="sm"
-                        style={{ fontSize: '0.75rem', color: '#6C757D', padding: '4px 8px', minHeight: '36px' }}
-                    >
-                        ♻️ 복구함
-                    </Button>
-                    <Button
                         onClick={toggleSelectAll}
                         variant="ghost"
                         size="sm"
