@@ -95,20 +95,18 @@ function App() {
               setStudentSession(sessionData);
               localStorage.setItem('student_session', JSON.stringify(sessionData));
             } else {
-              // auth_id 바인딩이 해제된 세션 (로그아웃 후 재접속 등)
-              // localStorage 폴백 시도
-              const savedStudent = localStorage.getItem('student_session');
-              if (savedStudent) {
-                setStudentSession(JSON.parse(savedStudent));
-              }
+              // auth_id 바인딩이 해제된 익명 세션
+              // [보안 강화] localStorage를 신뢰하지 않고 세션만 유효하면 unbind된 것으로 간주
+              // 로컬스토리지 위조를 염두하여 학생 ID를 승인 목적으로 사용 가능한 취약점 제거
+              console.warn('학생 auth 바인딩 해제됨 — 로그인 화면으로 이동');
+              localStorage.removeItem('student_session');
+              // 세션은 있지만 학생으로 확인 불가 → 로그인 화면 표시 (studentSession=null)
             }
           } catch (e) {
             console.warn('학생 세션 복구 실패:', e);
-            // localStorage 폴백
-            const savedStudent = localStorage.getItem('student_session');
-            if (savedStudent) {
-              setStudentSession(JSON.parse(savedStudent));
-            }
+            // [보안 강화] 예외 발생 시도 localStorage 폴백 제거
+            // 서버 오류시 localStorage 위조로 소파베이스 RLS를 우회할 수 있는 취약점 차단
+            localStorage.removeItem('student_session');
           }
         } else {
           // ── 교사/관리자 세션 ──
@@ -118,11 +116,9 @@ function App() {
           await fetchProfile(session.user.id);
         }
       } else {
-        // 세션 없음 - localStorage 폴백 (마이그레이션 호환)
-        const savedStudent = localStorage.getItem('student_session');
-        if (savedStudent) {
-          setStudentSession(JSON.parse(savedStudent));
-        }
+        // [보안 강화] Supabase 세션이 없으면 localStorage도 신뢰하지 않음
+        // localStorage만 조작하면 다른 학생을 사칭할 수 있는 취약점 차단
+        localStorage.removeItem('student_session');
       }
       setLoading(false);
     };

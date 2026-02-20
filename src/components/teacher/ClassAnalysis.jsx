@@ -48,13 +48,24 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                 return;
             }
 
-            const [
-                { data: missions },
-                { data: posts }
-            ] = await Promise.all([
-                supabase.from('writing_missions').select('id, title, created_at').eq('class_id', classId).eq('is_archived', false).order('created_at', { ascending: false }),
-                supabase.from('student_posts').select('*').in('student_id', students.map(s => s.id))
-            ]);
+            // [수정] 미션은 보관되지 않은 것만 조회
+            const { data: missions } = await supabase
+                .from('writing_missions')
+                .select('id, title, created_at')
+                .eq('class_id', classId)
+                .eq('is_archived', false)
+                .order('created_at', { ascending: false });
+
+            // [수정] posts는 현재 살아있는 미션에 속한 것만 조회
+            // 삭제/보관된 미션의 posts가 완료율 통계에 포함되는 버그 수정
+            const activeMissionIds = (missions || []).map(m => m.id);
+            const { data: posts } = activeMissionIds.length > 0
+                ? await supabase
+                    .from('student_posts')
+                    .select('*')
+                    .in('student_id', students.map(s => s.id))
+                    .in('mission_id', activeMissionIds)   // ← 핵심: 살아있는 미션 ID만
+                : { data: [] };
 
             // 2. 통계 계산 (미션별 최종 제출물만 필터링)
             const getFinalPosts = (postList) => {

@@ -136,34 +136,28 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
                 lastFed: today
             };
 
-            // DB 업데이트 (포인트 차감 + 펫 데이터)
-            const { error: updateError } = await supabase
-                .from('students')
-                .update({
-                    total_points: newPoints,
-                    pet_data: newPetData
-                })
-                .eq('id', studentId);
-
-            if (updateError) throw updateError;
-
-            // [추가] 포인트 로그 기록
-            const { error: logError } = await supabase
-                .from('point_logs')
-                .insert({
-                    student_id: studentId,
-                    amount: -FEED_COST,
-                    reason: '드래곤 먹이주기 🍖'
+            // [보안 수정] RPC를 통한 안전한 포인트 차감 + 펫 데이터 동시 업데이트
+            // total_points를 직접 UPDATE하지 않음 (GRANT 제한 + 서버 검증)
+            const { data: spendResult, error: updateError } = await supabase
+                .rpc('spend_student_points', {
+                    p_amount: FEED_COST,
+                    p_reason: '드래곤 먹이주기 🍖',
+                    p_pet_data: newPetData
                 });
 
-            if (logError) console.error('포인트 로그 기록 실패:', logError);
+            if (updateError) throw updateError;
+            if (!spendResult?.success) {
+                throw new Error(spendResult?.error || '포인트 차감 실패');
+            }
+
+            const confirmedNewPoints = spendResult.new_points;
 
             if (isLevelUp) {
                 setTimeout(() => {
                     setIsFlashing(true);
 
                     setPetData(newPetData);
-                    setPoints(newPoints);
+                    setPoints(confirmedNewPoints);
 
                     confetti({
                         particleCount: 150,
@@ -178,13 +172,13 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
                     }, 500);
                 }, 1500);
             } else {
-                setPoints(newPoints);
+                setPoints(confirmedNewPoints);
                 setPetData(newPetData);
             }
         } catch (err) {
             console.error('포인트 업데이트 실패:', err.message);
             alert('포인트 사용에 실패했습니다. 다시 시도해 주세요!');
-            setIsEvolving(false); // 에러 시 상태 복구
+            setIsEvolving(false);
         }
     };
 
@@ -203,24 +197,20 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
         const newPetData = { ...petData, ownedItems: newOwned };
 
         try {
-            const { error } = await supabase
-                .from('students')
-                .update({
-                    total_points: newPoints,
-                    pet_data: newPetData
-                })
-                .eq('id', studentId);
+            // [보안 수정] RPC를 통한 안전한 포인트 차감 + 펫 데이터 동시 업데이트
+            const { data: spendResult, error } = await supabase
+                .rpc('spend_student_points', {
+                    p_amount: item.price,
+                    p_reason: `아지트 배경 구매: ${item.name}`,
+                    p_pet_data: newPetData
+                });
 
             if (error) throw error;
+            if (!spendResult?.success) {
+                throw new Error(spendResult?.error || '포인트 차감 실패');
+            }
 
-            // [추가] 포인트 로그 기록 (상점 구매)
-            await supabase.from('point_logs').insert({
-                student_id: studentId,
-                amount: -item.price,
-                reason: `아지트 배경 구매: ${item.name}`
-            });
-
-            setPoints(newPoints);
+            setPoints(spendResult.new_points);
             setPetData(newPetData);
             alert(`[${item.name}] 구매 성공! 리스트에서 '적용하기'를 눌러보세요. ✨`);
         } catch (err) {

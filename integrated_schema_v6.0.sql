@@ -584,32 +584,48 @@ CREATE POLICY "Teacher_Read" ON teachers FOR SELECT USING (
 CREATE POLICY "Teacher_Manage_Own" ON teachers FOR ALL USING (auth.uid() = id);
 CREATE POLICY "Admin_Manage_Teachers" ON teachers FOR ALL USING (is_admin());
 
--- Classes
+-- Classes (무한 재귀 방지 버전)
 ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
--- [수정] 모든 사용자가 목록을 조회하는 것을 방지하고, 교사/관리자/소속 학생만 조회 가능하도록 제한
-CREATE POLICY "Classes_Select" ON classes FOR SELECT USING (
-    auth.uid() = teacher_id 
-    OR is_admin() 
-    OR (deleted_at IS NULL) -- 학생 접근을 위해 최소한으로 허용 (추후 세션 도입 권장)
+-- [수정] 학생 조회 시 get_my_class_id() 함수를 사용하여 classes → students → classes 순환 참조 방지
+CREATE POLICY "Classes_Select" ON public.classes FOR SELECT USING (
+    auth.uid() = teacher_id
+    OR is_admin()
+    OR (
+        deleted_at IS NULL 
+        AND id = public.get_my_class_id()
+    )
 );
-CREATE POLICY "Teacher_Manage_Own_Classes" ON classes FOR ALL USING (auth.uid() = teacher_id);
-CREATE POLICY "Admin_Manage_Classes" ON classes FOR ALL USING (is_admin());
+CREATE POLICY "Teacher_Manage_Own_Classes" ON public.classes FOR ALL USING (auth.uid() = teacher_id);
+CREATE POLICY "Admin_Manage_Classes" ON public.classes FOR ALL USING (is_admin());
 
--- Students
+-- Students (auth_id 기반 보안 + 무한 재귀 방지)
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
--- [수정] 본인 학급의 학생 정보만 접근 가능하도록 제한 (교사/관리자 위주)
-CREATE POLICY "Student_Select" ON students FOR SELECT USING (
+-- 조회: 교사(소속 학급), 관리자, 또는 같은 학급 소속 학생
+-- get_my_class_id() 코 함수 사용으로 students → classes → students 순환 참조 방지
+CREATE POLICY "Student_Select" ON public.students FOR SELECT USING (
     is_admin()
-    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND (teacher_id = auth.uid() OR deleted_at IS NULL))
+    OR EXISTS (
+        SELECT 1 FROM public.classes c 
+        WHERE c.id = class_id AND c.teacher_id = auth.uid()
+    )
+    OR (
+        deleted_at IS NULL 
+        AND auth_id IS NOT NULL 
+        AND class_id = public.get_my_class_id()
+    )
 );
--- [수정] 무분별한 ALL 허용(true) 제거 -> 기능별 세분화
-CREATE POLICY "Student_Update_Self" ON students FOR UPDATE USING (
-    deleted_at IS NULL -- 삭제되지 않은 상태에서만
-) WITH CHECK (
-    -- 포인트 조작 방지: anon은 포인트를 직접 수정할 수 없도록 제한 (RPC 통해서만 가능)
-    (auth.uid() IS NOT NULL) OR (total_points = (SELECT total_points FROM students WHERE id = id))
+-- 수정: 교사(소속 학급), 관리자, 또는 본인(auth_id 일치)만 허용
+CREATE POLICY "Student_Update" ON students FOR UPDATE USING (
+    is_admin()
+    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+    OR (auth.uid() = auth_id AND deleted_at IS NULL)
 );
-CREATE POLICY "Teacher_Admin_Manage_Students" ON students FOR ALL USING (
+-- 삽입/삭제: 교사 또는 관리자만
+CREATE POLICY "Student_Insert" ON students FOR INSERT WITH CHECK (
+    is_admin()
+    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+);
+CREATE POLICY "Student_Delete" ON students FOR DELETE USING (
     is_admin()
     OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
 );
@@ -620,7 +636,10 @@ ALTER TABLE public.writing_missions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Mission_Read" ON writing_missions FOR SELECT USING (
     is_admin() 
     OR auth.uid() = teacher_id 
-    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND deleted_at IS NULL)
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.class_id = writing_missions.class_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
 );
 CREATE POLICY "Mission_Manage" ON writing_missions FOR ALL USING (
     auth.uid() = teacher_id
@@ -628,20 +647,51 @@ CREATE POLICY "Mission_Manage" ON writing_missions FOR ALL USING (
     OR is_admin()
 );
 
--- Student Posts
+-- Student Posts (auth_id 기반 보안)
 ALTER TABLE public.student_posts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Post_Read" ON student_posts FOR SELECT USING (
+-- 조회: 관리자, 담당 교사, 또는 같은 학급 소속 학생
+CREATE POLICY "Post_Select" ON student_posts FOR SELECT USING (
     is_admin()
-    OR EXISTS (SELECT 1 FROM students WHERE id = student_id AND deleted_at IS NULL)
     OR EXISTS (
         SELECT 1 FROM writing_missions m
         JOIN classes c ON m.class_id = c.id
-        WHERE m.id = mission_id AND (c.teacher_id = auth.uid() OR c.deleted_at IS NULL)
+        WHERE m.id = mission_id AND c.teacher_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1 FROM students s
+        JOIN students self ON self.class_id = s.class_id
+        WHERE s.id = student_id AND s.deleted_at IS NULL 
+        AND self.auth_id = auth.uid() AND self.deleted_at IS NULL
     )
 );
--- [수정] 누구나 글을 쓰고 수정하는 것 방지
-CREATE POLICY "Post_Insert" ON student_posts FOR INSERT WITH CHECK (true); -- 글쓰기 허용
-CREATE POLICY "Post_Update_Delete" ON student_posts FOR ALL USING (
+-- 삽입: 본인의 학생 ID로만 글을 작성 가능
+CREATE POLICY "Post_Insert" ON student_posts FOR INSERT WITH CHECK (
+    is_admin()
+    OR EXISTS (
+        SELECT 1 FROM writing_missions m
+        JOIN classes c ON m.class_id = c.id
+        WHERE m.id = mission_id AND c.teacher_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.id = student_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
+);
+-- 수정: 본인이 작성한 글 또는 담당 교사/관리자
+CREATE POLICY "Post_Update" ON student_posts FOR UPDATE USING (
+    is_admin()
+    OR EXISTS (
+        SELECT 1 FROM writing_missions m
+        JOIN classes c ON m.class_id = c.id
+        WHERE m.id = mission_id AND c.teacher_id = auth.uid()
+    )
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.id = student_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
+);
+-- 삭제: 교사/관리자만
+CREATE POLICY "Post_Delete" ON student_posts FOR DELETE USING (
     is_admin()
     OR EXISTS (
         SELECT 1 FROM writing_missions m
@@ -650,12 +700,35 @@ CREATE POLICY "Post_Update_Delete" ON student_posts FOR ALL USING (
     )
 );
 
--- Post Comments
+-- Post Comments (auth_id 기반 보안)
 ALTER TABLE public.post_comments ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Comment_Read" ON post_comments FOR SELECT USING (true);
-CREATE POLICY "Comment_Insert" ON post_comments FOR INSERT WITH CHECK (true);
-CREATE POLICY "Comment_Manage" ON post_comments FOR ALL USING (
+-- 조회: 전체 허용
+CREATE POLICY "Comment_Select" ON post_comments FOR SELECT USING (true);
+-- 삽입: 인증된 사용자만
+CREATE POLICY "Comment_Insert" ON post_comments FOR INSERT WITH CHECK (
+    is_admin() OR auth.uid() IS NOT NULL
+);
+-- 수정: 본인 댓글 또는 담당 교사/관리자
+CREATE POLICY "Comment_Update" ON post_comments FOR UPDATE USING (
     is_admin()
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.id = student_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
+    OR EXISTS (
+        SELECT 1 FROM student_posts p
+        JOIN writing_missions m ON p.mission_id = m.id
+        JOIN classes c ON m.class_id = c.id
+        WHERE p.id = post_id AND c.teacher_id = auth.uid()
+    )
+);
+-- 삭제: 본인 댓글 또는 담당 교사/관리자
+CREATE POLICY "Comment_Delete" ON post_comments FOR DELETE USING (
+    is_admin()
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.id = student_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
     OR EXISTS (
         SELECT 1 FROM student_posts p
         JOIN writing_missions m ON p.mission_id = m.id
@@ -664,33 +737,43 @@ CREATE POLICY "Comment_Manage" ON post_comments FOR ALL USING (
     )
 );
 
--- Post Reactions
+-- Post Reactions (auth_id 기반 보안)
 ALTER TABLE public.post_reactions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Reaction_Read" ON post_reactions FOR SELECT USING (true);
-CREATE POLICY "Reaction_Insert" ON post_reactions FOR INSERT WITH CHECK (true);
+-- 조회: 전체 허용 (반응 수는 공개 정보)
+CREATE POLICY "Reaction_Select" ON post_reactions FOR SELECT USING (true);
+-- 삽입: 본인의 학생 ID로만 반응 가능
+CREATE POLICY "Reaction_Insert" ON post_reactions FOR INSERT WITH CHECK (
+    is_admin()
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.id = student_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
+);
+-- 삭제: 본인의 반응만 취소 가능 + 교사/관리자
 CREATE POLICY "Reaction_Delete" ON post_reactions FOR DELETE USING (
     is_admin()
     OR EXISTS (
-        SELECT 1 FROM student_posts p
-        JOIN writing_missions m ON p.mission_id = m.id
-        JOIN classes c ON m.class_id = c.id
-        WHERE p.id = post_id AND c.teacher_id = auth.uid()
+        SELECT 1 FROM students s 
+        WHERE s.id = student_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
     )
-    -- [주의] anon 학생은 본인이 누른 좋아요만 취소할 수 있어야 하나, session 이슈로 교사/관리자 제어로 강화
 );
 
--- Point Logs
+-- Point Logs (auth_id 기반 보안)
 ALTER TABLE public.point_logs ENABLE ROW LEVEL SECURITY;
+-- 조회: 본인 로그 또는 교사/관리자
 CREATE POLICY "Log_Select" ON point_logs FOR SELECT USING (
     is_admin()
-    OR auth.uid() IS NOT NULL -- 교사는 전체 확인 가능
-    OR EXISTS (SELECT 1 FROM students WHERE id = student_id) -- 학생은 자신의 로그 (ID 알 때만)
+    OR auth.uid() IS NOT NULL
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.id = student_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
 );
--- [수정] anon이 직접 로그를 쌓는 것 방지 (보안 정의된 RPC 함수로만 가능하도록 유도)
+-- 삽입: 인증 사용자만 (SECURITY DEFINER RPC 권장)
 CREATE POLICY "Log_Insert" ON point_logs FOR INSERT WITH CHECK (
     is_admin() OR auth.uid() IS NOT NULL
 );
--- UPDATE/DELETE는 여전히 금지 (포인트 조작 방지)
+-- UPDATE/DELETE는 금지 (포인트 조작 방지)
 
 -- Student Records
 ALTER TABLE public.student_records ENABLE ROW LEVEL SECURITY;
@@ -715,39 +798,70 @@ ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Announcement_Read" ON announcements FOR SELECT USING (true);
 CREATE POLICY "Announcement_Manage" ON announcements FOR ALL USING (is_admin());
 
--- Vocab Tower Rankings
+-- Vocab Tower Rankings (auth_id 기반 학급 격리)
 ALTER TABLE public.vocab_tower_rankings ENABLE ROW LEVEL SECURITY;
--- [수정] 전역 랭킹 노출을 방지하고 학급 내 랭킹만 조회 가능하도록 제한
 CREATE POLICY "Tower_Rankings_Read" ON vocab_tower_rankings FOR SELECT USING (
     is_admin() 
-    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND (teacher_id = auth.uid() OR deleted_at IS NULL))
+    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.class_id = vocab_tower_rankings.class_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
 );
 -- INSERT/UPDATE는 SECURITY DEFINER 함수(update_tower_max_floor)에서만 가능
 -- 직접 API 호출로는 랭킹 조작 불가
 
--- Vocab Tower History (보안 강화: SELECT만 허용, 수정은 교사/관리자만)
+-- Vocab Tower History (auth_id 기반 학급 격리)
 ALTER TABLE public.vocab_tower_history ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Tower_History_Read" ON vocab_tower_history FOR SELECT USING (true);
+CREATE POLICY "Tower_History_Read" ON vocab_tower_history FOR SELECT USING (
+    is_admin() 
+    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.class_id = vocab_tower_history.class_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
+);
 CREATE POLICY "Tower_History_Manage" ON vocab_tower_history FOR ALL USING (
     EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
     OR is_admin()
 );
 
--- Agit Honor Roll
+-- Agit Honor Roll (auth_id 기반 보안)
 ALTER TABLE public.agit_honor_roll ENABLE ROW LEVEL SECURITY;
--- [수정] 학급별 명예의 전당 정보 격리
-CREATE POLICY "Honor_Roll_Read" ON agit_honor_roll FOR SELECT USING (
-    is_admin() 
-    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND (teacher_id = auth.uid() OR deleted_at IS NULL))
+-- 조회: 학급 내 데이터만
+CREATE POLICY "Honor_Roll_Select" ON agit_honor_roll FOR SELECT USING (
+    is_admin()
+    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.class_id = agit_honor_roll.class_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
 );
--- [수정] 학생도 자신의 미션 달성을 기록할 수 있도록 ALL 정책 허용
+-- 삽입: 본인의 학생 ID로만 기록 가능 + 교사/관리자
+CREATE POLICY "Honor_Roll_Insert" ON agit_honor_roll FOR INSERT WITH CHECK (
+    is_admin()
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.id = student_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
+    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+);
+-- 수정/삭제: 교사/관리자만
 CREATE POLICY "Honor_Roll_Manage" ON agit_honor_roll FOR ALL USING (
-    true
+    is_admin()
+    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
 );
 
--- Agit Season History (보안 강화: SELECT만 허용, 수정은 교사/관리자만)
+-- Agit Season History (auth_id 기반 학급 격리)
 ALTER TABLE public.agit_season_history ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Season_History_Read" ON agit_season_history FOR SELECT USING (true);
+CREATE POLICY "Season_History_Read" ON agit_season_history FOR SELECT USING (
+    is_admin()
+    OR EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        WHERE s.class_id = agit_season_history.class_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
+    )
+);
 CREATE POLICY "Season_History_Manage" ON agit_season_history FOR ALL USING (
     EXISTS (SELECT 1 FROM classes WHERE id = class_id AND teacher_id = auth.uid())
     OR is_admin()
@@ -800,19 +914,35 @@ SET teacher_id = c.teacher_id
 FROM public.classes c
 WHERE wm.class_id = c.id AND wm.teacher_id IS NULL;
 
--- 권한 부여 (Principle of Least Privilege)
--- service_role은 관리용으로 전체 권한 유지
+-- 권한 부여 (Principle of Least Privilege - auth_id 도입 최종 버전)
+-- 1. 기존 anon 권한 초기화
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
+
+-- 2. service_role은 관리용으로 전체 권한 유지
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
 
--- authenticated(교사/관리자)는 일반적인 작업 허용
+-- 3. authenticated(교사/관리자)는 일반적인 작업 허용
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
--- anon(학생)은 읽기 및 제한적 쓰기만 허용 (RLS에서 2차 차단)
-GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO anon;
+-- 4. anon(익명 로그인 학생) - 학급 활동에 필요한 최소한의 권한만 부여
+-- 조회 허용 테이블 (실제 접근은 RLS가 최종 통제)
+GRANT SELECT ON public.classes, public.students, public.writing_missions, public.student_posts, 
+             public.post_comments, public.post_reactions, public.point_logs, 
+             public.announcements, public.agit_honor_roll, public.vocab_tower_rankings,
+             public.agit_season_history, public.vocab_tower_history TO anon;
+
+-- 작성 허용 테이블
+GRANT INSERT ON public.student_posts, public.post_comments, public.post_reactions, 
+             public.point_logs, public.agit_honor_roll TO anon;
+
+-- [보안 핵심] 수정 가능 컬럼 제한 (포인트, 코드, auth_id 등 민감 정보 수정 불가)
+GRANT UPDATE (inventory, selected_items, pet_data, last_feedback_check) ON public.students TO anon;
+GRANT UPDATE (content, title, is_submitted, status) ON public.student_posts TO anon;
+
+-- 시퀀스 접근
 GRANT SELECT, USAGE ON ALL SEQUENCES IN SCHEMA public TO anon;
--- [주의] anon에게서 DELETE 권한을 완전히 제거하여 실수/악의적 삭제 방지
 
 -- 스키마 캐시 새로고침
 NOTIFY pgrst, 'reload schema';

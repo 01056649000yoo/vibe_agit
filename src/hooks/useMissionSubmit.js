@@ -37,8 +37,9 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
 
             setMission(missionData);
 
-            // 2. 이미 작성 중인 글 확인 (postId가 있으면 id로 우선 조회, 없으면 missionId+studentId로 조회)
-            const currentStudentId = studentSession?.id || JSON.parse(localStorage.getItem('student_session'))?.id;
+            // 2. 이미 작성 중인 글 확인
+            // [보안 강화] localStorage 폴백 제거 - Supabase 세션에서만 studentId 가져오기
+            const currentStudentId = studentSession?.id;
             if (currentStudentId) {
                 let query = supabase.from('student_posts').select('*');
 
@@ -104,7 +105,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
 
     // 임시 저장 처리
     const handleSave = async (showMsg = true) => {
-        let currentStudentId = studentSession?.id || JSON.parse(localStorage.getItem('student_session'))?.id;
+        // [보안 강화] Supabase 세션에서만 studentId 가져오기 - localStorage 폴백 제거
+        const currentStudentId = studentSession?.id;
         if (!currentStudentId) return;
 
         // [추가] 제출 상태 확인: 이미 제출되었고 다시 쓰기 요청이 없는 경우 저장 불가
@@ -166,20 +168,12 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             return;
         }
 
-        // [방어 코드] 세션 데이터 최종 점검
+        // [보안 강화] Supabase 세션에서만 studentId 가져오기
+        // localStorage를 신뢰하면 위조된 student_id로 게시글 업로드 가능
         let currentStudentId = studentSession?.id;
 
-        // 만약 prop으로 받은 세션이 유실되었다면 로컬 스토리지에서 다시 시도
         if (!currentStudentId) {
-            const saved = localStorage.getItem('student_session');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                currentStudentId = parsed.id;
-            }
-        }
-
-        if (!currentStudentId) {
-            alert('로그인 정보가 유실되었습니다. 😢\n다시 로그인한 후에 제출을 시도해 주세요.');
+            alert('로그인 정보가 유실되었습니다. 편집한 내용을 복사한 후 다시 로그인하여 제출해 주세요. 😢');
             console.error('❌ 제출 중단: studentSession.id가 없습니다.');
             return;
         }
