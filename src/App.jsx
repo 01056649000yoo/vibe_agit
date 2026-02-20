@@ -71,17 +71,54 @@ function App() {
       // [안전장치] Supabase 클라이언트가 없을 경우 중단
       if (!supabase) return;
 
-      // 1. 구글 로그인(교사) 세션 확인
+      // 1. 현재 Supabase Auth 세션 확인 (교사 구글 로그인 또는 학생 익명 로그인 모두 포함)
       const { data: { session } } = await supabase.auth.getSession();
 
       if (session) {
-        // 교사 세션이 있으면 학생 세션 데이터 강제 초기화
-        localStorage.removeItem('student_session');
-        setStudentSession(null);
-        setSession(session);
-        await fetchProfile(session.user.id);
+        // 익명 사용자인지 확인 (학생 세션)
+        const isAnonymous = session.user?.is_anonymous === true;
+
+        if (isAnonymous) {
+          // ── 학생 익명 세션 복구 ──
+          try {
+            const { data: studentResult } = await supabase.rpc('get_student_by_auth');
+            if (studentResult?.success) {
+              const s = studentResult.student;
+              const sessionData = {
+                id: s.id,
+                name: s.name,
+                code: s.code,
+                classId: s.classId,
+                className: s.className,
+                role: 'STUDENT'
+              };
+              setStudentSession(sessionData);
+              localStorage.setItem('student_session', JSON.stringify(sessionData));
+            } else {
+              // auth_id 바인딩이 해제된 세션 (로그아웃 후 재접속 등)
+              // localStorage 폴백 시도
+              const savedStudent = localStorage.getItem('student_session');
+              if (savedStudent) {
+                setStudentSession(JSON.parse(savedStudent));
+              }
+            }
+          } catch (e) {
+            console.warn('학생 세션 복구 실패:', e);
+            // localStorage 폴백
+            const savedStudent = localStorage.getItem('student_session');
+            if (savedStudent) {
+              setStudentSession(JSON.parse(savedStudent));
+            }
+          }
+        } else {
+          // ── 교사/관리자 세션 ──
+          localStorage.removeItem('student_session');
+          setStudentSession(null);
+          setSession(session);
+          await fetchProfile(session.user.id);
+        }
       } else {
-        // 2. 학생 코드 로그인 확인 (교사 세션이 없을 때만)
+        // 세션 없음 - localStorage 폴백 (마이그레이션 호환)
         const savedStudent = localStorage.getItem('student_session');
         if (savedStudent) {
           setStudentSession(JSON.parse(savedStudent));
@@ -97,12 +134,19 @@ function App() {
     if (supabase) {
       const { data } = supabase.auth.onAuthStateChange((_event, session) => {
         if (session) {
+          const isAnonymous = session.user?.is_anonymous === true;
+
+          if (isAnonymous) {
+            // 학생 익명 로그인 이벤트 - 별도 처리하지 않음
+            // (StudentLogin.jsx에서 onLoginSuccess를 통해 상태가 업데이트됨)
+            return;
+          }
+
           // 교사 로그인 시 학생 데이터 즉시 폐기
           localStorage.removeItem('student_session');
           setStudentSession(null);
           setSession(session);
           fetchProfile(session.user.id);
-          // setIsAdminMode(true); // 로그인 시 관리자 모드 리셋 (제거: 창 전환 시 초기화 방지)
         } else {
           setSession(null);
           setProfile(null);
@@ -212,9 +256,21 @@ function App() {
     }
   }
 
-  // 학생 로그아웃 처리 (명시적 별도 함수 유지 - UI 호출용)
-  const handleStudentLogout = () => {
-    // 학생 세션은 localStorage에 저장되므로 명시적으로 삭제해야 함
+  // 학생 로그아웃 처리 (익명 세션 + localStorage 모두 정리)
+  const handleStudentLogout = async () => {
+    try {
+      // 1. DB에서 auth_id 바인딩 해제 (RPC)
+      await supabase.rpc('unbind_student_auth');
+    } catch (e) {
+      console.warn('학생 auth 바인딩 해제 실패 (무시):', e);
+    }
+    try {
+      // 2. Supabase 익명 세션 로그아웃
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn('학생 로그아웃 실패 (무시):', e);
+    }
+    // 3. localStorage 클리어 및 상태 초기화
     localStorage.removeItem('student_session');
     setStudentSession(null);
     // 페이지 리로드하여 로그인 화면으로 이동
