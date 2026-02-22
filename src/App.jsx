@@ -291,7 +291,7 @@ function App() {
               onTeacherStart={handleTeacherStart}
               onLogout={handleLogout}
             />
-          ) : !profile.is_approved ? ( /* [1.5순위] 승인 대기 확인 */
+          ) : (profile.role !== 'ADMIN' && !profile.is_approved) ? ( /* [1.5순위] 승인 대기 확인 (관리자는 우회) */
             <PendingApproval onLogout={handleLogout} />
           ) : (
             <TeacherDashboard
