@@ -451,6 +451,93 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- [보안] 민감 컬럼(role, is_approved) 보호 트리거 함수
+-- 비관리자가 profile의 role/is_approved를 변경하지 못하도록 DB 레벨에서 차단
+CREATE OR REPLACE FUNCTION public.protect_profile_sensitive_columns()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_is_admin BOOLEAN := false;
+    v_caller_id UUID;
+BEGIN
+    IF COALESCE(current_setting('app.bypass_profile_protection', true), '') = 'true' THEN
+        RETURN NEW;
+    END IF;
+    v_caller_id := auth.uid();
+    IF v_caller_id IS NULL THEN RETURN NEW; END IF;
+    SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_caller_id AND role = 'ADMIN') INTO v_is_admin;
+    IF TG_OP = 'UPDATE' THEN
+        IF NEW.role IS DISTINCT FROM OLD.role AND NOT v_is_admin THEN
+            RAISE EXCEPTION '[보안] role 변경 권한이 없습니다.' USING ERRCODE = '42501';
+        END IF;
+        IF NEW.is_approved IS DISTINCT FROM OLD.is_approved AND NOT v_is_admin THEN
+            RAISE EXCEPTION '[보안] 승인 상태 변경 권한이 없습니다.' USING ERRCODE = '42501';
+        END IF;
+    END IF;
+    IF TG_OP = 'INSERT' THEN
+        IF NEW.role = 'ADMIN' AND NOT v_is_admin THEN
+            RAISE EXCEPTION '[보안] ADMIN 역할은 자체 할당할 수 없습니다.' USING ERRCODE = '42501';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_protect_profile ON public.profiles;
+CREATE TRIGGER trg_protect_profile
+    BEFORE INSERT OR UPDATE ON public.profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION public.protect_profile_sensitive_columns();
+
+
+-- [보안] 교사 프로필 초기 설정 보안 RPC
+CREATE OR REPLACE FUNCTION public.setup_teacher_profile(
+    p_full_name TEXT DEFAULT NULL,
+    p_email TEXT DEFAULT NULL,
+    p_api_mode TEXT DEFAULT 'PERSONAL'
+)
+RETURNS JSON AS $$
+DECLARE
+    v_auth_id UUID;
+    v_auto_approve BOOLEAN := false;
+    v_existing RECORD;
+    v_is_approved BOOLEAN;
+    v_final_role TEXT;
+BEGIN
+    v_auth_id := auth.uid();
+    IF v_auth_id IS NULL THEN
+        RETURN json_build_object('success', false, 'error', '인증되지 않은 요청입니다.');
+    END IF;
+    SELECT * INTO v_existing FROM public.profiles WHERE id = v_auth_id;
+    IF v_existing.role = 'ADMIN' THEN
+        RETURN json_build_object('success', true, 'role', 'ADMIN', 'is_approved', true);
+    END IF;
+    BEGIN
+        SELECT (value = to_jsonb(true)) INTO v_auto_approve
+        FROM public.system_settings WHERE key = 'auto_approval';
+    EXCEPTION WHEN OTHERS THEN
+        v_auto_approve := false;
+    END;
+    v_is_approved := COALESCE(v_existing.is_approved, false) OR COALESCE(v_auto_approve, false);
+    v_final_role := COALESCE(v_existing.role, 'TEACHER');
+    IF v_final_role != 'ADMIN' THEN v_final_role := 'TEACHER'; END IF;
+    PERFORM set_config('app.bypass_profile_protection', 'true', true);
+    INSERT INTO public.profiles (id, role, email, full_name, is_approved, api_mode)
+    VALUES (v_auth_id, v_final_role, COALESCE(p_email, ''), p_full_name, v_is_approved, COALESCE(p_api_mode, 'PERSONAL'))
+    ON CONFLICT (id) DO UPDATE SET
+        email = COALESCE(EXCLUDED.email, public.profiles.email),
+        full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name),
+        api_mode = COALESCE(EXCLUDED.api_mode, public.profiles.api_mode),
+        role = CASE WHEN public.profiles.role = 'ADMIN' THEN 'ADMIN' ELSE 'TEACHER' END,
+        is_approved = CASE
+            WHEN public.profiles.is_approved = true THEN true
+            WHEN v_auto_approve THEN true
+            ELSE public.profiles.is_approved
+        END;
+    PERFORM set_config('app.bypass_profile_protection', '', true);
+    RETURN json_build_object('success', true, 'role', v_final_role, 'is_approved', v_is_approved);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 
 -- 만료된(3일 경과) 삭제 데이터 청소
 CREATE OR REPLACE FUNCTION public.cleanup_expired_deletions()
@@ -569,9 +656,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- PART 5: RLS (Row Level Security) 정책
 -- ============================================================
 
--- Profiles
+-- Profiles (세분화된 정책 - 권한 탈취 방지)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Manage_Own_Profile" ON profiles FOR ALL USING (auth.uid() = id);
+-- [보안 수정] FOR ALL → SELECT/INSERT/UPDATE 분리 (DELETE 제거)
+CREATE POLICY "Profile_Select_Own" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Profile_Insert_Own" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Profile_Update_Own" ON profiles FOR UPDATE USING (auth.uid() = id);
+-- ※ DELETE 없음: 사용자가 직접 프로필 삭제 불가
 CREATE POLICY "Admin_Full_Access_Profiles" ON profiles FOR ALL USING (is_admin());
 
 -- Teachers
@@ -925,6 +1016,7 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
 -- 3. authenticated(교사/관리자)는 일반적인 작업 허용
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+GRANT EXECUTE ON FUNCTION public.setup_teacher_profile(TEXT, TEXT, TEXT) TO authenticated;
 
 -- 4. anon(익명 로그인 학생) - 학급 활동에 필요한 최소한의 권한만 부여
 -- 조회 허용 테이블 (실제 접근은 RLS가 최종 통제)

@@ -188,48 +188,21 @@ function App() {
     setProfile({ ...profileData, last_login_at: profileData?.last_login_at, teacherName: teacherData?.name, schoolName: teacherData?.school_name })
   }
 
-  // 역할을 'TEACHER'로 저장하는 함수
+  // [보안 수정] 교사 프로필 설정 - 서버 사이드 RPC 사용
+  // role과 is_approved는 서버에서만 결정 (클라이언트 조작 불가)
   const handleTeacherStart = async () => {
     if (!session) return
 
-    // 1. 자동 승인 설정 확인
-    let autoApprove = false;
-    try {
-      const { data: settings } = await supabase
-        .from('system_settings')
-        .select('value')
-        .eq('key', 'auto_approval')
-        .maybeSingle();
+    const { data, error } = await supabase.rpc('setup_teacher_profile', {
+      p_full_name: session.user.user_metadata.full_name,
+      p_email: session.user.email
+    });
 
-      if (settings) {
-        autoApprove = (settings.value === true);
-      }
-    } catch (e) {
-      console.warn("시스템 설정 확인 실패 (수동 승인 기본값 적용):", e);
+    if (!error && data?.success) {
+      fetchProfile(session.user.id)
+    } else {
+      alert('역할 저장 중 오류가 발생했습니다: ' + (error?.message || data?.error || '알 수 없는 오류'))
     }
-
-    // 2. 기존 프로필 정보가 있는지 먼저 확인 (기존 필드 보존을 위해)
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({
-        id: session.user.id,
-        role: 'TEACHER',
-        email: session.user.email,
-        full_name: session.user.user_metadata.full_name,
-        // 자동 승인 설정이 켜져 있거나, 이미 승인된 계정인 경우 true
-        is_approved: autoApprove || existingProfile?.is_approved || false,
-        // 기존 데이터가 있다면 보존하고, 없으면 NULL
-        gemini_api_key: existingProfile?.gemini_api_key || null
-      });
-
-    if (!error) fetchProfile(session.user.id)
-    else alert('역할 저장 중 오류가 발생했습니다: ' + error.message)
   }
 
   // 로그아웃 통합 처리 (교사/학생 공용 가능하도록 강화)

@@ -93,18 +93,17 @@ const TeacherProfileSetup = ({ email, onTeacherStart, onLogout }) => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('로그인이 필요합니다.');
 
-            // 1. 프로필 역할 설정 및 AI 모드 기본값(PERSONAL) 지정
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .upsert({
-                    id: user.id,
-                    role: 'TEACHER',
-                    email: user.email,
-                    full_name: teacherName.trim(),
-                    api_mode: 'PERSONAL' // [추가] 가입 시 개인 키 사용이 기본값이 되도록 설정
-                });
+            // [보안 수정] 서버 사이드 RPC로 프로필 설정
+            // role과 is_approved는 서버에서만 결정 (클라이언트 조작 불가)
+            const { data: profileResult, error: profileError } = await supabase.rpc('setup_teacher_profile', {
+                p_full_name: teacherName.trim(),
+                p_email: user.email,
+                p_api_mode: 'PERSONAL'
+            });
 
-            if (profileError) throw profileError;
+            if (profileError || !profileResult?.success) {
+                throw new Error(profileError?.message || profileResult?.error || '프로필 설정 실패');
+            }
 
             // 2. 선생님 상세 정보 저장
             const { error: teacherInfoError } = await supabase
