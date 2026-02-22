@@ -146,6 +146,12 @@ BEGIN
     -- 기존 프로필 확인
     SELECT * INTO v_existing FROM public.profiles WHERE id = v_auth_id;
 
+    -- [보안 강화] 이미 학생인 사용자가 교사로 승격되는 것을 차단
+    IF v_existing.role = 'STUDENT' THEN
+        RAISE EXCEPTION '[보안] 학생 계정은 교사 프로필을 설정할 수 없습니다.'
+            USING ERRCODE = '42501';
+    END IF;
+
     -- 이미 관리자인 경우 역할 변경 없이 유지
     IF v_existing.role = 'ADMIN' THEN
         RETURN json_build_object('success', true, 'role', 'ADMIN', 'is_approved', true);

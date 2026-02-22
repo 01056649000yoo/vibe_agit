@@ -724,9 +724,9 @@ const IdeaDetailView = ({ idea, meeting, studentSession, onBack, onVote, isMobil
 
                             if (!existingReward) {
                                 await supabase.rpc('increment_student_points', {
-                                    student_id: studentId,
-                                    points_to_add: 5,
-                                    log_reason: detailReason
+                                    p_student_id: studentId,
+                                    p_amount: 5,
+                                    p_reason: detailReason
                                 });
                                 pointsAwarded = true;
                             }

@@ -72,14 +72,15 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
             };
 
             try {
-                const { error } = await supabase
-                    .from('students')
-                    .update({
-                        pet_data: newPetData
-                    })
-                    .eq('id', studentId);
+                const { data: spendResult, error } = await supabase
+                    .rpc('spend_student_points', {
+                        p_amount: 0,
+                        p_reason: '드래곤 돌봄 부족으로 인한 퇴화 📉',
+                        p_pet_data: newPetData
+                    });
 
                 if (error) throw error;
+                if (!spendResult?.success) throw new Error(spendResult?.error);
 
                 console.warn('📉 드래곤 퇴화 페널티 적용됨:', newPetData);
 
@@ -222,15 +223,24 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
         const newPetData = { ...petData, background: bgId };
 
         try {
-            const { error } = await supabase
-                .from('students')
-                .update({ pet_data: newPetData })
-                .eq('id', studentId);
+            // [보안 수정] 직접 update 대신 포인트를 차감하지 않는(0포인트) RPC 호출로 안전하게 반영
+            // students 테이블의 보호 트리거를 우회하기 위해 RPC를 사용합니다.
+            const { data: spendResult, error } = await supabase
+                .rpc('spend_student_points', {
+                    p_amount: 0,
+                    p_reason: `아지트 배경 변경: ${bgId}`,
+                    p_pet_data: newPetData
+                });
 
             if (error) throw error;
+            if (!spendResult?.success) {
+                throw new Error(spendResult?.error || '배경 변경 실패');
+            }
+
             setPetData(newPetData);
         } catch (err) {
             console.error('배경 변경 실패:', err.message);
+            alert('배경 변경에 실패했습니다. 다시 시도해 주세요!');
         }
     };
 

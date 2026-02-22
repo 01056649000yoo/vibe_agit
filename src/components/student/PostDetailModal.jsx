@@ -75,9 +75,9 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
 
                             if (!existingReward) {
                                 await supabase.rpc('increment_student_points', {
-                                    student_id: studentSession.id,
-                                    points_to_add: 5,
-                                    log_reason: detailReason
+                                    p_student_id: studentSession.id,
+                                    p_amount: 5,
+                                    p_reason: detailReason
                                 });
                                 pointsAwarded = true;
                             }

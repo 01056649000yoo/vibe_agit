@@ -201,9 +201,9 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 if (idea?.student_id) {
                     try {
                         await supabase.rpc('increment_student_points', {
-                            student_id: idea.student_id,
-                            points_to_add: decidedReward,
-                            log_reason: `아이디어 마켓 결정! "${(idea.title || '').slice(0, 20)}" 🏛️✅`
+                            p_student_id: idea.student_id,
+                            p_amount: decidedReward,
+                            p_reason: `아이디어 마켓 결정! "${(idea.title || '').slice(0, 20)}" 🏛️✅`
                         });
                     } catch (ptErr) {
                         console.error('[IdeaMarketManager] 결정 포인트 지급 실패:', ptErr.message);
