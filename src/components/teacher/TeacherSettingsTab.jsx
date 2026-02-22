@@ -16,6 +16,7 @@ const TeacherSettingsTab = ({
     isMobile,
     openaiKey,
     setOpenaiKey,
+    hasApiKey,
     handleTestAIConnection,
     savingKey,
     testingKey,
@@ -145,7 +146,7 @@ const TeacherSettingsTab = ({
                                             type="password"
                                             value={openaiKey || ''}
                                             onChange={(e) => setOpenaiKey && setOpenaiKey(e.target.value)}
-                                            placeholder="sk-... 로 시작하는 OpenAI API 키 입력 (저장 시 암호화됨)"
+                                            placeholder={hasApiKey ? '●●●●●●●●  (기존 키 저장됨 — 변경 시에만 새 키 입력)' : 'sk-... 로 시작하는 OpenAI API 키 입력'}
                                             style={{
                                                 width: '100%', padding: '10px', borderRadius: '8px',
                                                 border: '1px solid #DEE2E6', fontSize: '0.85rem',

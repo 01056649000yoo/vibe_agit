@@ -44,6 +44,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
     // AI 상태 관련
     const [aiStatus, setAiStatus] = useState('disconnected'); // 초기값은 안전하게 '연결되지 않음'으로 시작
+    const [hasApiKey, setHasApiKey] = useState(false); // [보안] 키 존재 여부만 추적 (실제 키 값은 저장 안 함)
 
     const fetchTeacherInfo = useCallback(async () => {
         if (!session?.user?.id) return;
@@ -67,33 +68,35 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
     const fetchGeminiKey = useCallback(async () => {
         if (!session?.user?.id) return;
+        // [보안] API 키 원본을 클라이언트에 로드하지 않음
+        // personal_openai_api_key, gemini_api_key 컬럼을 명시적으로 제외
         const { data, error } = await supabase
             .from('profiles')
-            .select('*') // 특정 컬럼 지정 시 DB에 없으면 400 에러 발생하므로 전체 선택으로 변경 (안전장치)
+            .select('api_mode, ai_prompt_template')
             .eq('id', session.user.id)
             .single();
+
+        // [보안] 키 존재 여부만 별도 확인 (실제 키 값은 가져오지 않음)
+        const { data: keyCheck } = await supabase.rpc('check_my_api_key_exists');
 
         if (data) {
             setOriginalKey(data.api_mode === 'PERSONAL' ? 'Personal Key Active' : 'System Key Active');
 
-            // 저장된 개인 키가 있으면 상태에 반영
-            if (data.personal_openai_api_key) {
-                setOpenaiKey(data.personal_openai_api_key);
-            } else {
-                setOpenaiKey('');
-            }
+            // [보안 강화] API 키 원본을 state에 저장하지 않음
+            // 입력란은 항상 빈 상태로 시작 (새 키 입력 시에만 변경)
+            setOpenaiKey('');
 
-            // [추가] 초기 AI 연결 상태 결정 로직
+            // [보안] 키 존재 여부(boolean)만으로 AI 연결 상태 판단
+            const hasKey = keyCheck?.has_key === true;
+            setHasApiKey(hasKey);
+
             if (data.api_mode === 'PERSONAL') {
-                // 개인 키 모드인데 키가 비어있으면 '연결되지 않음'
-                if (!data.personal_openai_api_key || !data.personal_openai_api_key.trim()) {
+                if (!hasKey) {
                     setAiStatus('disconnected');
                 } else {
-                    // 키가 있으면 일단 '연결됨'으로 표시 (실제 연결 확인은 테스트 버튼 권장)
                     setAiStatus('connected');
                 }
             } else {
-                // 시스템 모드는 항상 '연결됨' (공용 키 사용)
                 setAiStatus('connected');
             }
 
@@ -266,14 +269,12 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 report: reportPromptTemplate.trim()
             });
 
-            // 업데이트할 객체 준비 (API 키 등 포함)
+            // [보안 강화] API 키는 사용자가 새로 입력한 경우에만 전송
             const updatePayload = {
                 id: session.user.id,
                 ai_prompt_template: packedPrompt,
-                // [보안/에러방지] DB에 실제 존재하는 컬럼만 선별하여 업데이트 Payload 구성
-                // 1. 현재 입력된 개인 API 키 상태 반영 (입력란의 값)
-                personal_openai_api_key: openaiKey,
-                // 2. updatedProfile에서 허용된 필드만 추출 (schoolName 등 불필요한 필드 제외하여 400 에러 방지)
+                // API 키: 빈 문자열이면 변경하지 않음 (서버의 기존 키 유지)
+                ...(openaiKey.trim() && { personal_openai_api_key: openaiKey }),
                 ...(updatedProfile.api_mode && { api_mode: updatedProfile.api_mode }),
             };
 
@@ -391,7 +392,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
         editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
-        openaiKey, setOpenaiKey, originalKey,
+        openaiKey, setOpenaiKey, originalKey, hasApiKey,
         promptTemplate, setPromptTemplate, originalPrompt,
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         isKeyVisible, setIsKeyVisible,

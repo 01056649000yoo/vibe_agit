@@ -259,11 +259,7 @@ ${activitiesInfo}`;
         setIsGenerating(prev => ({ ...prev, [studentData.student.id]: true }));
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('gemini_api_key')
-                .eq('id', user?.id)
-                .single();
+            // [보안] gemini_api_key 조회 제거 — Edge Function이 서버에서 키를 관리하므로 클라이언트 불필요
 
             const prompt = getStudentPrompt(studentData.student.name, studentData.posts);
             const review = await callAI({ prompt, type: 'AI_FEEDBACK' });
@@ -301,13 +297,7 @@ ${activitiesInfo}`;
 
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('gemini_api_key')
-                .eq('id', user?.id)
-                .single();
-
-            const userApiKey = profileData?.gemini_api_key;
+            // [보안] gemini_api_key 조회 제거 — Edge Function이 서버에서 키를 관리
 
             for (let i = 0; i < studentPosts.length; i++) {
                 const data = studentPosts[i];
