@@ -68,20 +68,20 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
                 const finalPosts = Array.from(missionMap.values());
 
-                // 2. 최종 '승인'된 글의 글자수만 합산 (is_confirmed 기준)
+                // 2. 제출되었거나 승인된 글의 글자수 합산
                 const totalChars = finalPosts
-                    .filter(p => p.is_confirmed)
+                    .filter(p => p.is_confirmed || p.is_submitted)
                     .reduce((sum, post) => sum + (post.char_count || 0), 0);
 
-                // 3. 완료한 미션 수 (승인 기준)
-                const completedMissions = finalPosts.filter(p => p.is_confirmed).length;
+                // 3. 완료한 미션 수 (제출/승인 기준)
+                const completedMissions = finalPosts.filter(p => p.is_confirmed || p.is_submitted).length;
 
-                // 4. 이번 달 작성 수 (승인 기준)
+                // 4. 이번 달 작성 수 (제출/승인 기준)
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
                 const monthlyPosts = finalPosts.filter(p => {
-                    if (!p.is_confirmed) return false;
+                    if (!(p.is_confirmed || p.is_submitted)) return false;
                     const postDate = new Date(p.created_at);
                     return postDate.getMonth() === currentMonth && postDate.getFullYear() === currentYear;
                 }).length;
