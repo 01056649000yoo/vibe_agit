@@ -272,18 +272,24 @@ function App() {
         {loading ? (
           <Loading />
         ) : session ? (
-          /* [1순위] 교사 세션 존재 시 (프로필 또는 선생님 정보 미설정 포함) */
-          (!profile || !profile.role || !profile.teacherName || !profile.schoolName) ? (
+          /* [1순위] 교사 세션 존재 시 */
+          (!profile || !profile.role) ? (
             <TeacherProfileSetup
               email={session.user.email}
               onTeacherStart={handleTeacherStart}
               onLogout={handleLogout}
             />
-          ) : (profile.role === 'ADMIN' && isAdminMode) ? ( /* [0순위] 관리자 확인 + 관리자 모드 */
+          ) : (profile.role === 'ADMIN' && isAdminMode) ? ( /* [0순위] 관리자 모드 활성화 시 최우선 노출 */
             <AdminDashboard
               session={session}
               onLogout={handleLogout}
               onSwitchToTeacherMode={() => setAdminModeHandler(false)}
+            />
+          ) : (profile.role !== 'ADMIN' && (!profile.teacherName || !profile.schoolName)) ? ( /* 일반 교사인데 정보가 없는 경우만 설정 페이지로 */
+            <TeacherProfileSetup
+              email={session.user.email}
+              onTeacherStart={handleTeacherStart}
+              onLogout={handleLogout}
             />
           ) : !profile.is_approved ? ( /* [1.5순위] 승인 대기 확인 */
             <PendingApproval onLogout={handleLogout} />
