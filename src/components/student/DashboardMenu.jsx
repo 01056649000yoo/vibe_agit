@@ -153,7 +153,11 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
             }
         };
 
-        checkNewMissions();
+        const timerId = setTimeout(() => {
+            checkNewMissions();
+        }, 1000); // [최적화] 대시보드 필수 데이터 로딩 대기
+
+        return () => clearTimeout(timerId);
     }, [studentSession?.class_id, studentSession?.classId, studentSession?.id]);
 
     useEffect(() => {
@@ -185,7 +189,11 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
             }
         };
 
-        fetchRankings();
+        const timerId = setTimeout(() => {
+            fetchRankings();
+        }, 1000); // [최적화] 로딩 지연
+
+        return () => clearTimeout(timerId);
     }, [studentSession?.class_id, studentSession?.classId, isVocabTowerEnabled, vocabTowerSettings?.rankingResetDate]);
 
     return (

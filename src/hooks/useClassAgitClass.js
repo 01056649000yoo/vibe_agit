@@ -168,64 +168,31 @@ export const useClassAgitClass = (classId, currentStudentId) => {
 
             console.log("📅 [아지트 집계 기간]", { startDate, endDate });
 
-            // ★ [성능 최적화] 6개 쿼리를 병렬 실행 (기존: 순차 ~1400ms → 병렬 ~300ms)
-            const [
-                postCountResult,
-                reactionCountResult,
-                commentCountResult,
-                dailyPostsResult,
-                dailyReactionsResult,
-                dailyCommentsResult
-            ] = await Promise.all([
-                // 1. 전체 게시글 수
-                supabase
-                    .from('student_posts')
-                    .select('student_id, students!inner(class_id)', { count: 'exact', head: true })
-                    .eq('students.class_id', classId)
-                    .gte('created_at', startDate),
-                // 2. 전체 반응 수
-                supabase
-                    .from('post_reactions')
-                    .select('student_id, students!inner(class_id)', { count: 'exact', head: true })
-                    .eq('students.class_id', classId)
-                    .gte('created_at', startDate),
-                // 3. 전체 댓글 수
-                supabase
-                    .from('post_comments')
-                    .select('student_id, students!inner(class_id)', { count: 'exact', head: true })
-                    .eq('students.class_id', classId)
-                    .gte('created_at', startDate),
-                // 4. 오늘 게시글 (학생별)
-                supabase
-                    .from('student_posts')
-                    .select('student_id, students!inner(name, class_id)')
-                    .eq('students.class_id', classId)
-                    .gte('created_at', startDate)
-                    .lt('created_at', endDate),
-                // 5. 오늘 반응 (학생별)
-                supabase
-                    .from('post_reactions')
-                    .select('student_id, students!inner(name, class_id)')
-                    .eq('students.class_id', classId)
-                    .gte('created_at', startDate)
-                    .lt('created_at', endDate),
-                // 6. 오늘 댓글 (학생별)
-                supabase
-                    .from('post_comments')
-                    .select('student_id, students!inner(name, class_id)')
-                    .eq('students.class_id', classId)
-                    .gte('created_at', startDate)
-                    .lt('created_at', endDate)
-            ]);
+            // ★ [성능 최적화] count 전용 쿼리 3개 제거 → data.length로 대체 (쿼리 7개→4개)
+            const { data: dailyPosts } = await supabase
+                .from('student_posts')
+                .select('student_id, students!inner(name, class_id)')
+                .eq('students.class_id', classId)
+                .gte('created_at', startDate)
+                .lt('created_at', endDate);
 
-            const postCount = postCountResult.count;
-            const reactionCount = reactionCountResult.count;
-            const commentCount = commentCountResult.count;
-            const dailyPosts = dailyPostsResult.data;
-            const dailyReactions = dailyReactionsResult.data;
-            const dailyComments = dailyCommentsResult.data;
+            const { data: dailyReactions } = await supabase
+                .from('post_reactions')
+                .select('student_id, students!inner(name, class_id)')
+                .eq('students.class_id', classId)
+                .gte('created_at', startDate)
+                .lt('created_at', endDate);
 
-            const totalFeedbacks = (reactionCount || 0) + (commentCount || 0);
+            const { data: dailyComments } = await supabase
+                .from('post_comments')
+                .select('student_id, students!inner(name, class_id)')
+                .eq('students.class_id', classId)
+                .gte('created_at', startDate)
+                .lt('created_at', endDate);
+
+            // count는 data.length로 대체 (별도 쿼리 불필요)
+            const postCount = dailyPosts?.length || 0;
+            const totalFeedbacks = (dailyReactions?.length || 0) + (dailyComments?.length || 0);
 
             // 점수 계산 정책 (교사 설정 반영 - 미션 달성형)
             const goals = currentSettings.activityGoals || { post: 1, comment: 5, reaction: 5 };
@@ -337,7 +304,10 @@ export const useClassAgitClass = (classId, currentStudentId) => {
     }, [classId, currentStudentId]);
 
     useEffect(() => {
-        fetchData(true);
+        // [최적화] 메인 대시보드 로딩(PointLevelCard 등)을 방해하지 않도록 아지트 데이터 Fetch 지연
+        const initTimer = setTimeout(() => {
+            fetchData(true);
+        }, 500);
 
         // 실시간 업데이트 설정 (student_posts & comments, reactions 감시)
         const postSubscription = supabase
@@ -396,6 +366,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
         window.addEventListener('focus', handleFocus);
 
         return () => {
+            clearTimeout(initTimer);
             supabase.removeChannel(postSubscription);
             supabase.removeChannel(commentSubscription);
             supabase.removeChannel(reactionSubscription);

@@ -169,27 +169,19 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         try {
             if (!studentSession?.id) return;
 
-            const { data: myPosts } = await supabase
-                .from('student_posts')
-                .select('id')
-                .eq('student_id', studentSession.id);
-
-            if (!myPosts || myPosts.length === 0) return;
-            const postIds = myPosts.map(p => p.id);
-
             const lastCheckTime = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
 
             const [reactionsResult, commentsResult, returnedResult] = await Promise.all([
                 supabase
                     .from('post_reactions')
-                    .select('id', { count: 'exact', head: true })
-                    .in('post_id', postIds)
+                    .select('id, student_posts!inner(student_id)', { count: 'exact', head: true })
+                    .eq('student_posts.student_id', studentSession.id)
                     .neq('student_id', studentSession.id)
                     .gt('created_at', lastCheckTime),
                 supabase
                     .from('post_comments')
-                    .select('id', { count: 'exact', head: true })
-                    .in('post_id', postIds)
+                    .select('id, student_posts!inner(student_id)', { count: 'exact', head: true })
+                    .eq('student_posts.student_id', studentSession.id)
                     .neq('student_id', studentSession.id)
                     .gt('created_at', lastCheckTime),
                 supabase
@@ -309,12 +301,14 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             const loadData = async () => {
                 setIsLoading(true);
                 try {
-                    // [async-parallel] 독립적인 데이터 요청을 병렬로 실행하여 로딩 시간 단축
+                    // 활동 내역 체크는 표시(로딩) 지연 요인이 아니므로 병렬 비동기 실행
+                    checkActivity();
+
+                    // [async-parallel] 필수 데이터만 병렬 로드하여 로딩 시간 단축
                     await Promise.all([
                         fetchMyPoints(),
                         fetchClassSettings(),
-                        fetchStats(),
-                        checkActivity()
+                        fetchStats()
                     ]);
                 } catch (e) {
                     console.error('데이터 로드 중 오류:', e);
