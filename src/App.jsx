@@ -185,7 +185,18 @@ function App() {
     const profileData = profileResult.data;
     const teacherData = teacherResult.data;
 
-    setProfile({ ...profileData, last_login_at: profileData?.last_login_at, teacherName: teacherData?.name, schoolName: teacherData?.school_name })
+    // [보완] 프로필 데이터가 없거나 역할 정보가 누락된 경우 기본값 할당
+    if (profileData) {
+      setProfile({
+        ...profileData,
+        last_login_at: profileData.last_login_at,
+        teacherName: teacherData?.name,
+        schoolName: teacherData?.school_name
+      });
+    } else if (teacherData) {
+      // 프로필 테이블 조회가 실패하더라도 최소한의 정보는 유지
+      setProfile({ role: 'TEACHER', teacherName: teacherData.name, schoolName: teacherData.school_name });
+    }
   }
 
   // [보안 수정] 교사 프로필 설정 - 서버 사이드 RPC 사용
@@ -279,13 +290,13 @@ function App() {
               onTeacherStart={handleTeacherStart}
               onLogout={handleLogout}
             />
-          ) : (profile.role === 'ADMIN' && isAdminMode) ? ( /* [0순위] 관리자 모드 활성화 시 최우선 노출 */
+          ) : (profile?.role === 'ADMIN' && isAdminMode) ? ( /* [0순위] 관리자 모드 활성화 시 최우선 노출 */
             <AdminDashboard
               session={session}
               onLogout={handleLogout}
               onSwitchToTeacherMode={() => setAdminModeHandler(false)}
             />
-          ) : (profile.role !== 'ADMIN' && (!profile.teacherName || !profile.schoolName)) ? ( /* 일반 교사인데 정보가 없는 경우만 설정 페이지로 */
+          ) : (profile?.role !== 'ADMIN' && (!profile?.teacherName || !profile?.schoolName)) ? ( /* 일반 교사인데 정보가 없는 경우만 설정 페이지로 */
             <TeacherProfileSetup
               email={session.user.email}
               onTeacherStart={handleTeacherStart}
@@ -304,7 +315,7 @@ function App() {
               onNavigate={(page, params) => setInternalPage({ name: page, params })}
               internalPage={internalPage}
               setInternalPage={setInternalPage}
-              isAdmin={profile.role === 'ADMIN'}
+              isAdmin={profile?.role === 'ADMIN'}
               onSwitchToAdminMode={() => setAdminModeHandler(true)}
             />
           )
