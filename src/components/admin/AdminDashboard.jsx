@@ -182,6 +182,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
     const fetchFeedbackCount = async () => {
         try {
+            // count: 'exact'와 head: true를 사용하여 406 에러 방지 및 효율적인 조회
             const { count, error } = await supabase
                 .from('feedback_reports')
                 .select('*', { count: 'exact', head: true })
@@ -195,7 +196,8 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
     const fetchSettings = async () => {
         try {
-            const { data } = await supabase.from('system_settings').select('*').eq('key', 'auto_approval').single();
+            // .single() 대신 .maybeSingle()을 사용하여 데이터가 없을 때의 406 에러 차단
+            const { data } = await supabase.from('system_settings').select('*').eq('key', 'auto_approval').maybeSingle();
             if (data) setAutoApproval(data.value === true);
         } catch (err) { console.error('설정 로드 실패:', err); }
     };
