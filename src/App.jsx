@@ -300,13 +300,13 @@ function App() {
               onTeacherStart={handleTeacherStart}
               onLogout={handleLogout}
             />
-          ) : ((profile?.role === 'ADMIN' || session?.user?.email?.includes('yshgg') || session?.user?.email?.includes('01056649000yoo')) && isAdminMode) ? ( /* [0순위] 관리자 모드 활성화 시 최우선 노출 (긴급 우회 적용) */
+          ) : ((profile?.role === 'ADMIN' || ['yshgg@naver.com', '01056649000yoo@gmail.com', '01056649000yoo@naver.com'].includes(session?.user?.email)) && isAdminMode) ? ( /* [0순위] 관리자 모드 활성화 시 최우선 노출 (엄격한 이메일 체크) */
             <AdminDashboard
               session={session}
               onLogout={handleLogout}
               onSwitchToTeacherMode={() => setAdminModeHandler(false)}
             />
-          ) : (profile?.role !== 'ADMIN' && !session?.user?.email?.includes('yshgg') && (!profile?.teacherName || !profile?.schoolName)) ? ( /* 일반 교사인데 정보가 없는 경우만 설정 페이지로 */
+          ) : (profile?.role !== 'ADMIN' && !['yshgg@naver.com', '01056649000yoo@gmail.com', '01056649000yoo@naver.com'].includes(session?.user?.email) && (!profile?.teacherName || !profile?.schoolName)) ? ( /* 일반 교사인데 정보가 없는 경우만 설정 페이지로 */
             <TeacherProfileSetup
               email={session.user.email}
               onTeacherStart={handleTeacherStart}
@@ -325,7 +325,7 @@ function App() {
               onNavigate={(page, params) => setInternalPage({ name: page, params })}
               internalPage={internalPage}
               setInternalPage={setInternalPage}
-              isAdmin={profile?.role === 'ADMIN' || session?.user?.email?.includes('yshgg') || session?.user?.email?.includes('01056649000yoo')}
+              isAdmin={profile?.role === 'ADMIN' || ['yshgg@naver.com', '01056649000yoo@gmail.com', '01056649000yoo@naver.com'].includes(session?.user?.email)}
               onSwitchToAdminMode={() => setAdminModeHandler(true)}
             />
           )

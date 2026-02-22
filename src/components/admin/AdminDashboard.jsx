@@ -240,6 +240,10 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     };
 
     const handleApprove = async (teacherId, teacherName) => {
+        if (_session?.user?.id === teacherId) {
+            alert('자신에 대해서는 이 작업을 수행할 수 없습니다.');
+            return;
+        }
         if (!confirm(`'${teacherName}' 선생님의 가입을 승인하시겠습니까?`)) return;
         try {
             const { error } = await supabase.from('profiles').update({ is_approved: true }).eq('id', teacherId);
@@ -250,6 +254,10 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     };
 
     const handleRevoke = async (teacherId, teacherName) => {
+        if (_session?.user?.id === teacherId) {
+            alert('자신의 승인을 관리자 화면에서 취소할 수 없습니다.');
+            return;
+        }
         if (!confirm(`'${teacherName}' 선생님의 승인을 취소하시겠습니까?`)) return;
         try {
             const { error } = await supabase.from('profiles').update({ is_approved: false }).eq('id', teacherId);
@@ -279,6 +287,10 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     };
 
     const handleForceWithdrawal = async (teacherId, teacherName) => {
+        if (_session?.user?.id === teacherId) {
+            alert('관리자 대시보드에서 본인을 삭제할 수 없습니다. 대신 회원 탈퇴 설정을 이용해주세요.');
+            return;
+        }
         if (!confirm(`🚨 경고: '${teacherName}' 선생님을 삭제하시겠습니까?\n모든 데이터가 영구 삭제됩니다.`)) return;
         if (!confirm(`⚠️ 정말로 삭제하시겠습니까?`)) return;
 
