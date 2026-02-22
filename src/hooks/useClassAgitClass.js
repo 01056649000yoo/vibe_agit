@@ -298,23 +298,18 @@ export const useClassAgitClass = (classId, currentStudentId) => {
 
             // [신규] 명예의 전당 DB 기록 (백그라운드 동기화)
             if (achievedStudents.length > 0) {
-                const records = achievedStudents.map(s => ({
-                    student_id: s.student_id, // sid를 student_id로 매핑했던 process 함수 확인 필요
-                    class_id: classId,
-                    // achieved_date는 DB에서 DEFAULT CURRENT_DATE로 처리
-                }));
-
                 // 실제 insert (unique 제약조건 때문에 중복은 무시됨)
-                // Note: process 함수에서 student_id 필드가 확보되어 있어야 함.
-                // fetchData 내부의 process 함수를 확인해보니 item.student_id를 sid로 사용함.
-                const recordsToInsert = achievedStudents.map(s => {
-                    // achievedStudents 객체 구조: { name, counts, isAchieved, student_id }
-                    // student_id를 확보하기 위해 process 함수 수정 필요 (아래에서 수정)
-                    return {
+                const recordsToInsert = achievedStudents
+                    .filter(s => {
+                        // 학생(currentStudentId가 있는 경우)은 본인의 기록만 전송
+                        // 교사(null인 경우)는 학급 전체의 기록을 동기화 가능
+                        if (!currentStudentId) return true;
+                        return s.student_id === currentStudentId;
+                    })
+                    .map(s => ({
                         student_id: s.student_id,
                         class_id: classId
-                    };
-                }).filter(r => r.student_id);
+                    }));
 
                 if (recordsToInsert.length > 0) {
                     supabase
