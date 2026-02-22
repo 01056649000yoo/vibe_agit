@@ -755,24 +755,49 @@ ${activitiesInfo}`;
                                                                 <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#64748B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                                     <span style={{ fontSize: '1rem' }}>🔗</span> 참여 미션 ({data.posts.length})
                                                                 </div>
-                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                                    {data.posts.map(p => (
-                                                                        <div key={p.id} style={{
-                                                                            background: 'white',
-                                                                            padding: '10px 14px',
-                                                                            borderRadius: '10px',
-                                                                            border: '1px solid #E2E8F0',
-                                                                            fontSize: '0.8rem',
-                                                                            display: 'flex',
-                                                                            justifyContent: 'space-between',
-                                                                            alignItems: 'center',
-                                                                            gap: '8px'
-                                                                        }}>
-                                                                            <span style={{ fontWeight: 'bold', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.writing_missions.title}</span>
-                                                                            <span style={{ fontSize: '0.75rem', color: '#3B82F6', fontWeight: '900', flexShrink: 0 }}>{p.final_eval || p.initial_eval || '-'}점</span>
+                                                                {data.posts.map(p => (
+                                                                    <div key={p.id} style={{
+                                                                        background: 'white',
+                                                                        padding: '12px 16px',
+                                                                        borderRadius: '12px',
+                                                                        border: '1px solid #E2E8F0',
+                                                                        fontSize: '0.85rem',
+                                                                        marginBottom: '8px'
+                                                                    }}>
+                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                                                            <span style={{ fontWeight: 'bold', color: '#4F46E5' }}>{p.writing_missions?.title}</span>
+                                                                            <span style={{ fontSize: '0.75rem', color: '#3B82F6', fontWeight: '900' }}>{p.final_eval || p.initial_eval || '-'}점</span>
                                                                         </div>
-                                                                    ))}
-                                                                </div>
+
+                                                                        {/* 미션 가이드/안내문 표시 */}
+                                                                        {p.writing_missions?.guide && (
+                                                                            <div style={{
+                                                                                fontSize: '0.75rem',
+                                                                                color: '#64748B',
+                                                                                marginBottom: '8px',
+                                                                                padding: '8px',
+                                                                                background: '#F1F5F9',
+                                                                                borderRadius: '6px',
+                                                                                borderLeft: '3px solid #CBD5E1'
+                                                                            }}>
+                                                                                <strong>💡 미션 안내:</strong> {p.writing_missions.guide}
+                                                                            </div>
+                                                                        )}
+
+                                                                        <div style={{
+                                                                            fontSize: '0.8rem',
+                                                                            color: '#1E293B',
+                                                                            lineHeight: '1.5',
+                                                                            whiteSpace: 'pre-wrap',
+                                                                            background: '#F8FAFC',
+                                                                            padding: '10px',
+                                                                            borderRadius: '8px',
+                                                                            border: '1px solid #F1F5F9'
+                                                                        }}>
+                                                                            {p.content}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
                                                             </div>
 
                                                             {/* AI 분석 결과 (메인 영역) */}

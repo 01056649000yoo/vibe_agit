@@ -194,9 +194,8 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             const [missionsResult, studentCountResult] = await Promise.all([
                 supabase
                     .from('writing_missions')
-                    .select('id, title, guide, genre, min_chars, min_paragraphs, base_reward, bonus_threshold, bonus_reward, allow_comments, is_archived, created_at, mission_type, guide_questions, evaluation_rubric, tags')
+                    .select('*')
                     .eq('class_id', activeClass.id)
-                    .or('is_archived.eq.false,is_archived.is.null')
                     .order('created_at', { ascending: false }),
 
                 supabase
@@ -208,8 +207,8 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
             if (missionsResult.error) throw missionsResult.error;
 
-            // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장 (아이디어 마켓 안건 제외)
-            const data = (missionsResult.data || []).filter(m => m.mission_type !== 'meeting' || !m.mission_type);
+            // [수정] 모든 미션을 가져온 뒤 JS에서 보류/보관 처리 (디버깅용으로 필터 완전히 제거)
+            const data = missionsResult.data || [];
             setMissions(data);
 
             if (studentCountResult.error) console.error('학생 수 조회 실패:', studentCountResult.error);
@@ -341,7 +340,13 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                 if (error) throw error;
                 alert('글쓰기 미션이 성공적으로 수정되었습니다! ✏️');
             } else {
-                const { error } = await supabase.from('writing_missions').insert({ ...formData, mission_type: formData.genre, class_id: activeClass.id });
+                const { data: { user } } = await supabase.auth.getUser();
+                const { error } = await supabase.from('writing_missions').insert({
+                    ...formData,
+                    mission_type: formData.genre,
+                    class_id: activeClass.id,
+                    teacher_id: user?.id
+                });
                 if (error) throw error;
                 alert('새로운 글쓰기 미션이 공개되었습니다! 🚀');
             }
