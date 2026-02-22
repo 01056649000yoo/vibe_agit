@@ -98,7 +98,7 @@ const TeacherProfileSetup = ({ email, onTeacherStart, onLogout }) => {
             const { data: profileResult, error: profileError } = await supabase.rpc('setup_teacher_profile', {
                 p_full_name: teacherName.trim(),
                 p_email: user.email,
-                p_api_mode: 'SYSTEM'
+                p_api_mode: 'PERSONAL'
             });
 
             if (profileError || !profileResult?.success) {
