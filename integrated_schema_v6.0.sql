@@ -561,7 +561,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
--- 학생 포인트 증가 및 로그 기록 (확장 버전)
+-- 학생 포인트 증가 및 로그 기록 (확장 버전 + 소유권 검증)
 CREATE OR REPLACE FUNCTION public.increment_student_points(
     p_student_id UUID,
     p_amount INTEGER,
@@ -570,21 +570,56 @@ CREATE OR REPLACE FUNCTION public.increment_student_points(
     p_mission_id UUID DEFAULT NULL
 )
 RETURNS void AS $$
+DECLARE
+    v_caller_id UUID;
+    v_is_authorized BOOLEAN := false;
 BEGIN
-    UPDATE public.students 
-    SET total_points = COALESCE(total_points, 0) + p_amount 
-    WHERE id = p_student_id;
-    
-    INSERT INTO public.point_logs (student_id, reason, amount, post_id, mission_id) 
-    VALUES (p_student_id, p_reason, p_amount, p_post_id, p_mission_id);
+    v_caller_id := auth.uid();
+    IF v_caller_id IS NULL THEN
+        v_is_authorized := true;
+    ELSE
+        SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_caller_id AND role = 'ADMIN') INTO v_is_authorized;
+        IF NOT v_is_authorized THEN
+            SELECT EXISTS (
+                SELECT 1 FROM public.students s
+                JOIN public.classes c ON c.id = s.class_id
+                WHERE s.id = p_student_id
+                  AND (c.teacher_id = v_caller_id OR s.auth_id = v_caller_id)
+                  AND s.deleted_at IS NULL
+            ) INTO v_is_authorized;
+        END IF;
+    END IF;
+    IF NOT v_is_authorized THEN
+        RAISE EXCEPTION '[보안] 해당 학생의 포인트를 변경할 권한이 없습니다.' USING ERRCODE = '42501';
+    END IF;
+    UPDATE public.students SET total_points = COALESCE(total_points, 0) + p_amount WHERE id = p_student_id;
+    INSERT INTO public.point_logs (student_id, reason, amount, post_id, mission_id) VALUES (p_student_id, p_reason, p_amount, p_post_id, p_mission_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
--- 어휘의 탑 최고 층수 업데이트
+-- 어휘의 탑 최고 층수 업데이트 (소유권 검증 추가)
 CREATE OR REPLACE FUNCTION public.update_tower_max_floor(p_student_id UUID, p_class_id UUID, p_floor INTEGER)
 RETURNS void AS $$
+DECLARE
+    v_caller_id UUID;
+    v_is_authorized BOOLEAN := false;
 BEGIN
+    v_caller_id := auth.uid();
+    IF v_caller_id IS NULL THEN v_is_authorized := true;
+    ELSE
+        SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_caller_id AND role = 'ADMIN') INTO v_is_authorized;
+        IF NOT v_is_authorized THEN
+            SELECT EXISTS (
+                SELECT 1 FROM public.students s JOIN public.classes c ON c.id = s.class_id
+                WHERE s.id = p_student_id AND s.class_id = p_class_id AND s.deleted_at IS NULL
+                  AND (s.auth_id = v_caller_id OR c.teacher_id = v_caller_id)
+            ) INTO v_is_authorized;
+        END IF;
+    END IF;
+    IF NOT v_is_authorized THEN
+        RAISE EXCEPTION '[보안] 해당 학생의 랭킹을 변경할 권한이 없습니다.' USING ERRCODE = '42501';
+    END IF;
     INSERT INTO public.vocab_tower_rankings (student_id, class_id, max_floor, updated_at)
     VALUES (p_student_id, p_class_id, p_floor, now())
     ON CONFLICT (student_id)
@@ -596,38 +631,65 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
--- 학생의 알림 확인 시간 업데이트 (RLS 우회용)
+-- 학생의 알림 확인 시간 업데이트 (소유권 검증 추가)
 CREATE OR REPLACE FUNCTION public.mark_feedback_as_read(p_student_id UUID)
 RETURNS void AS $$
+DECLARE
+    v_caller_id UUID;
+    v_is_authorized BOOLEAN := false;
 BEGIN
-    UPDATE public.students 
-    SET last_feedback_check = timezone('utc'::text, now())
-    WHERE id = p_student_id;
+    v_caller_id := auth.uid();
+    IF v_caller_id IS NULL THEN v_is_authorized := true;
+    ELSE
+        SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_caller_id AND role = 'ADMIN') INTO v_is_authorized;
+        IF NOT v_is_authorized THEN
+            SELECT EXISTS (
+                SELECT 1 FROM public.students s LEFT JOIN public.classes c ON c.id = s.class_id
+                WHERE s.id = p_student_id AND s.deleted_at IS NULL
+                  AND (s.auth_id = v_caller_id OR c.teacher_id = v_caller_id)
+            ) INTO v_is_authorized;
+        END IF;
+    END IF;
+    IF NOT v_is_authorized THEN
+        RAISE EXCEPTION '[보안] 해당 학생의 알림 상태를 변경할 권한이 없습니다.' USING ERRCODE = '42501';
+    END IF;
+    UPDATE public.students SET last_feedback_check = timezone('utc'::text, now()) WHERE id = p_student_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
--- 교사가 학생 포인트를 관리하는 함수 (SECURITY DEFINER로 RLS 우회)
+-- 교사가 학생 포인트를 관리하는 함수 (소유권 검증 추가)
 CREATE OR REPLACE FUNCTION public.teacher_manage_points(
     target_student_id UUID,
     points_amount INTEGER,
     reason_text TEXT
 )
 RETURNS void AS $$
+DECLARE
+    v_caller_id UUID;
+    v_is_authorized BOOLEAN := false;
 BEGIN
-    -- 1. 학생 포인트 업데이트
-    UPDATE public.students 
-    SET total_points = COALESCE(total_points, 0) + points_amount 
-    WHERE id = target_student_id;
-    
-    -- 2. 포인트 로그 기록
-    INSERT INTO public.point_logs (student_id, reason, amount) 
-    VALUES (target_student_id, reason_text, points_amount);
+    v_caller_id := auth.uid();
+    IF v_caller_id IS NULL THEN v_is_authorized := true;
+    ELSE
+        SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_caller_id AND role = 'ADMIN') INTO v_is_authorized;
+        IF NOT v_is_authorized THEN
+            SELECT EXISTS (
+                SELECT 1 FROM public.students s JOIN public.classes c ON c.id = s.class_id
+                WHERE s.id = target_student_id AND c.teacher_id = v_caller_id AND s.deleted_at IS NULL
+            ) INTO v_is_authorized;
+        END IF;
+    END IF;
+    IF NOT v_is_authorized THEN
+        RAISE EXCEPTION '[보안] 해당 학생의 포인트를 관리할 권한이 없습니다.' USING ERRCODE = '42501';
+    END IF;
+    UPDATE public.students SET total_points = COALESCE(total_points, 0) + points_amount WHERE id = target_student_id;
+    INSERT INTO public.point_logs (student_id, reason, amount) VALUES (target_student_id, reason_text, points_amount);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
--- 학생 추가 시 초기 포인트 부여 함수
+-- 학생 추가 시 초기 포인트 부여 함수 (학급 소유권 검증 추가)
 CREATE OR REPLACE FUNCTION public.add_student_with_bonus(
     p_class_id UUID,
     p_name TEXT,
@@ -636,17 +698,28 @@ CREATE OR REPLACE FUNCTION public.add_student_with_bonus(
 )
 RETURNS UUID AS $$
 DECLARE
+    v_caller_id UUID;
+    v_is_authorized BOOLEAN := false;
     new_student_id UUID;
 BEGIN
-    -- 1. 학생 추가
+    v_caller_id := auth.uid();
+    IF v_caller_id IS NULL THEN v_is_authorized := true;
+    ELSE
+        SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_caller_id AND role = 'ADMIN') INTO v_is_authorized;
+        IF NOT v_is_authorized THEN
+            SELECT EXISTS (
+                SELECT 1 FROM public.classes WHERE id = p_class_id AND teacher_id = v_caller_id AND deleted_at IS NULL
+            ) INTO v_is_authorized;
+        END IF;
+    END IF;
+    IF NOT v_is_authorized THEN
+        RAISE EXCEPTION '[보안] 해당 학급에 학생을 추가할 권한이 없습니다.' USING ERRCODE = '42501';
+    END IF;
     INSERT INTO public.students (class_id, name, student_code, total_points)
     VALUES (p_class_id, p_name, p_student_code, p_initial_points)
     RETURNING id INTO new_student_id;
-    
-    -- 2. 환영 포인트 로그 기록
     INSERT INTO public.point_logs (student_id, reason, amount)
     VALUES (new_student_id, '신규 등록 기념 환영 포인트! 🎁', p_initial_points);
-    
     RETURN new_student_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -793,8 +866,25 @@ CREATE POLICY "Post_Delete" ON student_posts FOR DELETE USING (
 
 -- Post Comments (auth_id 기반 보안)
 ALTER TABLE public.post_comments ENABLE ROW LEVEL SECURITY;
--- 조회: 전체 허용
-CREATE POLICY "Comment_Select" ON post_comments FOR SELECT USING (true);
+-- 조회: 같은 학급 내 학생/담당교사/관리자만
+CREATE POLICY "Comment_Select" ON post_comments FOR SELECT USING (
+    is_admin()
+    OR EXISTS (
+        SELECT 1 FROM student_posts p
+        JOIN writing_missions m ON p.mission_id = m.id
+        JOIN students s ON s.class_id = m.class_id
+        WHERE p.id = post_id 
+          AND s.auth_id = auth.uid()
+          AND s.deleted_at IS NULL
+    )
+    OR EXISTS (
+        SELECT 1 FROM student_posts p
+        JOIN writing_missions m ON p.mission_id = m.id
+        JOIN classes c ON m.class_id = c.id
+        WHERE p.id = post_id 
+          AND c.teacher_id = auth.uid()
+    )
+);
 -- 삽입: 인증된 사용자만
 CREATE POLICY "Comment_Insert" ON post_comments FOR INSERT WITH CHECK (
     is_admin() OR auth.uid() IS NOT NULL
@@ -830,8 +920,25 @@ CREATE POLICY "Comment_Delete" ON post_comments FOR DELETE USING (
 
 -- Post Reactions (auth_id 기반 보안)
 ALTER TABLE public.post_reactions ENABLE ROW LEVEL SECURITY;
--- 조회: 전체 허용 (반응 수는 공개 정보)
-CREATE POLICY "Reaction_Select" ON post_reactions FOR SELECT USING (true);
+-- 조회: 같은 학급 내 학생/담당교사/관리자만
+CREATE POLICY "Reaction_Select" ON post_reactions FOR SELECT USING (
+    is_admin()
+    OR EXISTS (
+        SELECT 1 FROM student_posts p
+        JOIN writing_missions m ON p.mission_id = m.id
+        JOIN students s ON s.class_id = m.class_id
+        WHERE p.id = post_id 
+          AND s.auth_id = auth.uid()
+          AND s.deleted_at IS NULL
+    )
+    OR EXISTS (
+        SELECT 1 FROM student_posts p
+        JOIN writing_missions m ON p.mission_id = m.id
+        JOIN classes c ON m.class_id = c.id
+        WHERE p.id = post_id 
+          AND c.teacher_id = auth.uid()
+    )
+);
 -- 삽입: 본인의 학생 ID로만 반응 가능
 CREATE POLICY "Reaction_Insert" ON post_reactions FOR INSERT WITH CHECK (
     is_admin()
@@ -851,18 +958,31 @@ CREATE POLICY "Reaction_Delete" ON post_reactions FOR DELETE USING (
 
 -- Point Logs (auth_id 기반 보안)
 ALTER TABLE public.point_logs ENABLE ROW LEVEL SECURITY;
--- 조회: 본인 로그 또는 교사/관리자
+-- 조회: 본인/담당교사/관리자만 (교차 학급 조회 차단)
 CREATE POLICY "Log_Select" ON point_logs FOR SELECT USING (
     is_admin()
-    OR auth.uid() IS NOT NULL
     OR EXISTS (
         SELECT 1 FROM students s 
         WHERE s.id = student_id AND s.auth_id = auth.uid() AND s.deleted_at IS NULL
     )
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        JOIN classes c ON c.id = s.class_id
+        WHERE s.id = student_id 
+          AND c.teacher_id = auth.uid()
+          AND s.deleted_at IS NULL
+    )
 );
--- 삽입: 인증 사용자만 (SECURITY DEFINER RPC 권장)
+-- 삽입: 관리자/담당교사만 (학생 포인트는 RPC를 통해서만)
 CREATE POLICY "Log_Insert" ON point_logs FOR INSERT WITH CHECK (
-    is_admin() OR auth.uid() IS NOT NULL
+    is_admin()
+    OR EXISTS (
+        SELECT 1 FROM students s 
+        JOIN classes c ON c.id = s.class_id
+        WHERE s.id = student_id 
+          AND c.teacher_id = auth.uid()
+          AND s.deleted_at IS NULL
+    )
 );
 -- UPDATE/DELETE는 금지 (포인트 조작 방지)
 

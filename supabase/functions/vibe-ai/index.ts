@@ -58,22 +58,39 @@ Deno.serve(async (req) => {
         let isAuthorized = !!user;
         let isStudentRequest = false;
 
-        // 교사용 세션이 없는 경우, 학생 ID로 보조 인증 수행
+        // [보안 강화] 학생 인증: UUID 존재 + auth_id 매칭 이중 검증
+        // 기존: studentId가 DB에 존재하기만 하면 통과 (UUID를 아는 누구나 AI 사용 가능 → 위험)
+        // 수정: 현재 익명 세션의 auth.uid()가 해당 학생의 auth_id와 일치하는지 검증
         if (!isAuthorized && studentId) {
             console.log(`학생 인증 시도 중... ID: ${studentId}`);
             try {
-                const { data: student, error: studentError } = await supabaseAdmin
-                    .from('students')
-                    .select('id')
-                    .eq('id', studentId)
-                    .maybeSingle();
+                // Step 1: 현재 요청의 auth 세션에서 익명 사용자 ID 추출
+                let anonUserId: string | null = null;
+                try {
+                    const { data: anonUserData } = await supabaseClient.auth.getUser();
+                    anonUserId = anonUserData?.user?.id ?? null;
+                } catch (_e) {
+                    console.log("익명 세션 추출 건너뜀");
+                }
 
-                if (student && !studentError) {
-                    isAuthorized = true;
-                    isStudentRequest = true;
-                    console.log(`✅ 학생 인증 성공 (ID: ${studentId})`);
+                if (anonUserId) {
+                    // Step 2: studentId와 auth_id가 동시에 일치하는지 검증
+                    const { data: student, error: studentError } = await supabaseAdmin
+                        .from('students')
+                        .select('id')
+                        .eq('id', studentId)
+                        .eq('auth_id', anonUserId)  // auth_id 매칭 필수!
+                        .maybeSingle();
+
+                    if (student && !studentError) {
+                        isAuthorized = true;
+                        isStudentRequest = true;
+                        console.log(`✅ 학생 인증 성공 (ID: ${studentId}, AuthID: ${anonUserId})`);
+                    } else {
+                        console.warn(`❌ 학생 인증 실패 - auth_id 불일치 (StudentID: ${studentId}, AuthID: ${anonUserId})`);
+                    }
                 } else {
-                    console.warn(`❌ 학생 인증 실패 (ID: ${studentId}):`, studentError?.message || "학생을 찾을 수 없음");
+                    console.warn(`❌ 학생 인증 실패 - 유효한 익명 세션 없음 (StudentID: ${studentId})`);
                 }
             } catch (e) {
                 console.error("학생 DB 조회 중 오류 발생:", e.message);
@@ -97,6 +114,12 @@ Deno.serve(async (req) => {
         // 6. 용도별 모델 매핑 및 보안 제약 (핵심 방어선)
         let finalPrompt = prompt || content;
         let selectedModel = model; // 클라이언트에서 명시적으로 보낸 모델이 있으면 우선 (단, 학생/안전체크 제외)
+
+        // [보안 강화] 모든 요청에 프롬프트 길이 제한 적용 (API 키 남용, 비용 폭증 방지)
+        const MAX_PROMPT_LENGTH = isStudentRequest ? 300 : 10000;
+        if (finalPrompt && finalPrompt.length > MAX_PROMPT_LENGTH) {
+            throw new Error(`요청 내용이 너무 깁니다. (최대 ${MAX_PROMPT_LENGTH}자 이내로 제한됩니다.)`);
+        }
 
         // 타입별 모델 강제 지정
         if (type === 'SAFETY_CHECK' || isStudentRequest) {

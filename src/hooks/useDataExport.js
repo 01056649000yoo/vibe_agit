@@ -16,6 +16,10 @@ export const useDataExport = () => {
         // 1. GAPI 클라이언트 초기화 (API 호출용)
         function startGapi() {
             gapi.client.init({
+                // ⚠️ [보안 안내] VITE_ 접두사 환경변수는 클라이언트 JS 번들에 포함됩니다.
+                // → Google Cloud Console → API 키 → 키 제한사항 에서:
+                //   1. "HTTP 리퍼러" 제한 설정 (허용 도메인만 지정)
+                //   2. "API 제한사항" → Google Docs API만 허용
                 apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
                 // clientId는 여기서 빼고 GIS에서 사용함
             }).then(() => {

@@ -221,7 +221,8 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         try {
             const { data, error: fetchError } = await supabase
                 .from('profiles')
-                .select(`*, teachers!left (name, school_name, phone)`)
+                // [보안] select('*') 대신 필요한 컬럼만 명시 → personal_openai_api_key, gemini_api_key 등 민감정보 미노출
+                .select(`id, role, email, full_name, is_approved, api_mode, created_at, last_login_at, teachers!left(name, school_name, phone)`)
                 .eq('role', 'TEACHER')
                 .order('created_at', { ascending: false });
 

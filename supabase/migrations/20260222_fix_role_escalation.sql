@@ -28,14 +28,17 @@
 DROP POLICY IF EXISTS "Manage_Own_Profile" ON public.profiles;
 
 -- 본인 프로필 조회 (안전)
+DROP POLICY IF EXISTS "Profile_Select_Own" ON public.profiles;
 CREATE POLICY "Profile_Select_Own" ON public.profiles
     FOR SELECT USING (auth.uid() = id);
 
 -- 본인 프로필 생성 (최초 가입 시, 트리거가 role 보호)
+DROP POLICY IF EXISTS "Profile_Insert_Own" ON public.profiles;
 CREATE POLICY "Profile_Insert_Own" ON public.profiles
     FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- 본인 프로필 수정 (트리거가 role/is_approved 보호)
+DROP POLICY IF EXISTS "Profile_Update_Own" ON public.profiles;
 CREATE POLICY "Profile_Update_Own" ON public.profiles
     FOR UPDATE USING (auth.uid() = id);
 
