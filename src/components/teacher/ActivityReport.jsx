@@ -45,6 +45,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                 .from('writing_missions')
                 .select('*')
                 .eq('class_id', activeClass.id)
+                .or('is_archived.eq.false,is_archived.is.null')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;

@@ -196,7 +196,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                     .from('writing_missions')
                     .select('id, title, guide, genre, min_chars, min_paragraphs, base_reward, bonus_threshold, bonus_reward, allow_comments, is_archived, created_at, mission_type, guide_questions, evaluation_rubric, tags')
                     .eq('class_id', activeClass.id)
-                    .eq('is_archived', false)
+                    .or('is_archived.eq.false,is_archived.is.null')
                     .order('created_at', { ascending: false }),
 
                 supabase
@@ -209,7 +209,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             if (missionsResult.error) throw missionsResult.error;
 
             // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장 (아이디어 마켓 안건 제외)
-            const data = (missionsResult.data || []).filter(m => m.mission_type !== 'meeting');
+            const data = (missionsResult.data || []).filter(m => m.mission_type !== 'meeting' || !m.mission_type);
             setMissions(data);
 
             if (studentCountResult.error) console.error('학생 수 조회 실패:', studentCountResult.error);
