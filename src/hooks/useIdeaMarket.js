@@ -111,7 +111,9 @@ export const useIdeaMarket = (classId, studentId) => {
                 student_id: studentId,
                 original_content: content,
                 original_title: title,
-                first_submitted_at: new Date().toISOString()
+                first_submitted_at: new Date().toISOString(),
+                char_count: content.length,
+                paragraph_count: content.split(/\n+/).filter(p => p.trim().length > 0).length
             };
 
             if (existing?.id) {

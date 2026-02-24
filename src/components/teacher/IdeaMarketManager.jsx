@@ -33,7 +33,9 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
         guide: '',
         guide_questions: ['이 아이디어를 제안하는 이유는 무엇인가요?', '예상되는 문제점과 해결 방법은 무엇인가요?'],
         submit_reward: 30,
-        decided_reward: 50
+        decided_reward: 50,
+        min_chars: 100,
+        min_paragraphs: 1
     });
 
     // 회의 목록 가져오기
@@ -111,8 +113,8 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 genre: '회의',
                 mission_type: 'meeting',
                 guide_questions: formData.guide_questions.filter(q => q.trim()),
-                min_chars: 30,
-                min_paragraphs: 1,
+                min_chars: formData.min_chars || 100,
+                min_paragraphs: formData.min_paragraphs || 1,
                 base_reward: formData.submit_reward || 30,
                 bonus_threshold: 100,
                 bonus_reward: formData.decided_reward || 50,
@@ -144,7 +146,9 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 guide: '',
                 guide_questions: ['이 아이디어를 제안하는 이유는 무엇인가요?', '예상되는 문제점과 해결 방법은 무엇인가요?'],
                 submit_reward: 30,
-                decided_reward: 50
+                decided_reward: 50,
+                min_chars: 100,
+                min_paragraphs: 1
             });
             setEditingMeetingId(null);
             fetchMeetings();
@@ -165,7 +169,9 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
             guide: meeting.guide || '',
             guide_questions: meeting.guide_questions || [],
             submit_reward: meeting.base_reward || 30,
-            decided_reward: meeting.bonus_reward || 50
+            decided_reward: meeting.bonus_reward || 50,
+            min_chars: meeting.min_chars || 100,
+            min_paragraphs: meeting.min_paragraphs || 1
         });
         setActiveTab('create');
     };
@@ -315,7 +321,9 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                                 guide: '',
                                 guide_questions: ['이 아이디어를 제안하는 이유는 무엇인가요?', '예상되는 문제점과 해결 방법은 무엇인가요?'],
                                 submit_reward: 30,
-                                decided_reward: 50
+                                decided_reward: 50,
+                                min_chars: 100,
+                                min_paragraphs: 1
                             });
                         }
                     }}
@@ -579,6 +587,77 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                                         <p style={{ margin: '6px 0 0', fontSize: '0.7rem', color: '#FDBA74' }}>
                                             아이디어가 결정되면 받는 보너스 포인트
                                         </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 분량 조건 설정 */}
+                            <div style={{ marginBottom: '24px' }}>
+                                <label style={{
+                                    display: 'block', fontSize: '0.9rem', fontWeight: '700',
+                                    color: '#1E293B', marginBottom: '12px'
+                                }}>
+                                    📏 분량 필수 조건
+                                </label>
+                                <div style={{
+                                    display: 'flex', gap: '12px',
+                                    flexWrap: isMobile ? 'wrap' : 'nowrap'
+                                }}>
+                                    <div style={{
+                                        flex: 1, background: '#F8FAFC', borderRadius: '14px',
+                                        padding: '16px', border: '1px solid #E2E8F0',
+                                        minWidth: '200px'
+                                    }}>
+                                        <div style={{
+                                            fontSize: '0.8rem', fontWeight: '700', color: '#64748B',
+                                            marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px'
+                                        }}>
+                                            최소 글자수
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <input
+                                                type="number"
+                                                value={formData.min_chars}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, min_chars: parseInt(e.target.value) || 0 }))}
+                                                min="0"
+                                                style={{
+                                                    width: '70px', padding: '8px 10px',
+                                                    border: '1px solid #CBD5E1', borderRadius: '10px',
+                                                    fontSize: '1rem', fontWeight: '800',
+                                                    textAlign: 'center', outline: 'none',
+                                                    color: '#334155'
+                                                }}
+                                            />
+                                            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748B' }}>자 이상</span>
+                                        </div>
+                                    </div>
+                                    <div style={{
+                                        flex: 1, background: '#F8FAFC', borderRadius: '14px',
+                                        padding: '16px', border: '1px solid #E2E8F0',
+                                        minWidth: '200px'
+                                    }}>
+                                        <div style={{
+                                            fontSize: '0.8rem', fontWeight: '700', color: '#64748B',
+                                            marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px'
+                                        }}>
+                                            최소 문단수
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <input
+                                                type="number"
+                                                value={formData.min_paragraphs}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, min_paragraphs: parseInt(e.target.value) || 0 }))}
+                                                min="0"
+                                                style={{
+                                                    width: '70px', padding: '8px 10px',
+                                                    border: '1px solid #CBD5E1', borderRadius: '10px',
+                                                    fontSize: '1rem', fontWeight: '800',
+                                                    textAlign: 'center', outline: 'none',
+                                                    color: '#334155'
+                                                }}
+                                            />
+                                            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748B' }}>문단 이상</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

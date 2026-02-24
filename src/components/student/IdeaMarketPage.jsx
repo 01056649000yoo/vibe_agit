@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIdeaMarket } from '../../hooks/useIdeaMarket';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
@@ -43,6 +43,40 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
     const [ideaContent, setIdeaContent] = useState('');
     const [answers, setAnswers] = useState([]);
     const [isAnonymous, setIsAnonymous] = useState(false);
+    const editorRef = useRef(null);
+
+    const insertToBody = (text) => {
+        if (!text?.trim()) return;
+        const textarea = editorRef.current;
+
+        if (!textarea) {
+            setIdeaContent(prev => prev ? prev + '\n' + text : text);
+            return;
+        }
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const before = ideaContent.substring(0, start);
+        const after = ideaContent.substring(end);
+
+        setIdeaContent(before + text + after);
+
+        setTimeout(() => {
+            textarea.focus();
+            const newPos = start + text.length;
+            textarea.setSelectionRange(newPos, newPos);
+        }, 0);
+    };
+
+    const insertAllToBody = () => {
+        const validAnswers = answers.filter(a => a?.trim());
+        if (validAnswers.length === 0) {
+            alert('입력된 답변이 없습니다! 질문에 먼저 답을 적어주세요. 😊');
+            return;
+        }
+        const combined = validAnswers.join('\n\n');
+        setIdeaContent(prev => prev ? prev + '\n\n' + combined : combined);
+    };
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -76,6 +110,19 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
     const handleSubmitIdea = async () => {
         if (!ideaTitle.trim() || !ideaContent.trim()) {
             alert('제목과 내용을 모두 입력해주세요! ✍️');
+            return;
+        }
+
+        const charCount = ideaContent.length;
+        const paragraphCount = ideaContent.split(/\n+/).filter(p => p.trim().length > 0).length;
+
+        if (charCount < (selectedMeeting?.min_chars || 0)) {
+            alert(`최소 ${selectedMeeting.min_chars}자 이상 써야 해요! 조금 더 자세히 적어볼까요? 💪`);
+            return;
+        }
+
+        if (paragraphCount < (selectedMeeting?.min_paragraphs || 0)) {
+            alert(`최소 ${selectedMeeting.min_paragraphs}문단 이상이 필요해요! 엔터를 활용해 내용을 나눠서 적어보세요. 📏`);
             return;
         }
 
@@ -542,12 +589,17 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                             {/* 가이드 질문 */}
                             {selectedMeeting?.guide_questions?.length > 0 && (
                                 <div style={{ marginBottom: '20px' }}>
-                                    <h4 style={{
-                                        margin: '0 0 12px', fontSize: '0.9rem', fontWeight: '800',
-                                        color: '#4C1D95', display: 'flex', alignItems: 'center', gap: '6px'
-                                    }}>
-                                        📌 생각 정리 질문
-                                    </h4>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                        <h4 style={{
+                                            margin: 0, fontSize: '0.9rem', fontWeight: '800',
+                                            color: '#4C1D95', display: 'flex', alignItems: 'center', gap: '6px'
+                                        }}>
+                                            📌 생각 정리 질문
+                                        </h4>
+                                        <Button size="sm" onClick={insertAllToBody} style={{ background: '#A855F7', color: 'white', fontWeight: 'bold', padding: '6px 12px', borderRadius: '10px' }}>
+                                            전체 답변 삽입 📥
+                                        </Button>
+                                    </div>
                                     {selectedMeeting.guide_questions.map((q, idx) => (
                                         <div key={idx} style={{
                                             background: 'white', borderRadius: '16px',
@@ -579,6 +631,20 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                                 onFocus={(e) => e.target.style.borderColor = '#A855F7'}
                                                 onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
                                             />
+                                            <div style={{ textAlign: 'right', marginTop: '10px' }}>
+                                                <button
+                                                    onClick={() => insertToBody(answers[idx])}
+                                                    disabled={!answers[idx]?.trim()}
+                                                    style={{
+                                                        background: '#F3E8FF', color: '#7C3AED',
+                                                        border: 'none', padding: '6px 14px', borderRadius: '8px',
+                                                        fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer',
+                                                        transition: 'all 0.2s', opacity: !answers[idx]?.trim() ? 0.5 : 1
+                                                    }}
+                                                >
+                                                    이 답변만 삽입 📥
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -611,13 +677,24 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
 
                             {/* 내용 */}
                             <div style={{ marginBottom: '20px' }}>
-                                <label style={{
-                                    display: 'block', fontSize: '0.85rem', fontWeight: '700',
-                                    color: '#1E293B', marginBottom: '6px'
-                                }}>
-                                    📝 상세 내용
-                                </label>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '6px' }}>
+                                    <label style={{
+                                        display: 'block', fontSize: '0.85rem', fontWeight: '700',
+                                        color: '#1E293B'
+                                    }}>
+                                        📝 상세 내용
+                                    </label>
+                                    <div style={{ fontSize: '0.8rem', fontWeight: '800', display: 'flex', gap: '12px' }}>
+                                        <span style={{ color: ideaContent.length >= (selectedMeeting?.min_chars || 0) ? '#16A34A' : '#EF4444' }}>
+                                            글자: {ideaContent.length} / {selectedMeeting?.min_chars || 0}
+                                        </span>
+                                        <span style={{ color: ideaContent.split(/\n+/).filter(p => p.trim().length > 0).length >= (selectedMeeting?.min_paragraphs || 0) ? '#16A34A' : '#EF4444' }}>
+                                            문단: {ideaContent.split(/\n+/).filter(p => p.trim().length > 0).length} / {selectedMeeting?.min_paragraphs || 0}
+                                        </span>
+                                    </div>
+                                </div>
                                 <textarea
+                                    ref={editorRef}
                                     value={ideaContent}
                                     onChange={(e) => setIdeaContent(e.target.value)}
                                     placeholder="아이디어를 자세히 설명해 주세요. 왜 이 아이디어가 필요한지, 어떻게 실현할 수 있는지 적어보세요!"

@@ -226,22 +226,23 @@ function App() {
     }
   }
 
-  // 로그아웃 통합 처리 (교사/학생 공용 가능하도록 강화)
+  // 로그아웃 통합 처리 (교사/관리자)
   const handleLogout = async () => {
     try {
-      // 1. 서버 로그아웃 요청 (세션이 이미 무효화된 경우 403 등이 발생할 수 있음)
       if (supabase) {
         await supabase.auth.signOut();
       }
     } catch (err) {
       console.warn('Logout server request failed (ignoring):', err);
     } finally {
-      // 2. 로컬 스토리지 클리어 제외 (사용자 설정 보존)
-      // localStorage.clear(); 
-      // sessionStorage.clear(); 
+      // 에러 상관 없이 프론트엔드 단의 상태를 완전히 초기화하여 강제 로그아웃 (서버 403 버그로 인해 로그아웃이 씹히는 현상 방지)
+      setSession(null);
+      setProfile(null);
 
+      const sbKeys = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
+      sbKeys.forEach(k => localStorage.removeItem(k));
 
-      // 3. 즉시 리로드하여 초기 상태로 복구
+      // 로그인 화면으로 이동
       window.location.href = '/';
     }
   }
@@ -254,17 +255,22 @@ function App() {
     } catch (e) {
       console.warn('학생 auth 바인딩 해제 실패 (무시):', e);
     }
+
     try {
       // 2. Supabase 익명 세션 로그아웃
       await supabase.auth.signOut();
     } catch (e) {
       console.warn('학생 로그아웃 실패 (무시):', e);
+    } finally {
+      // 에러 발생 여부와 상관없이 무조건 클라이언트 세션 파기
+      localStorage.removeItem('student_session');
+      setStudentSession(null);
+
+      const sbKeys = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
+      sbKeys.forEach(k => localStorage.removeItem(k));
+
+      window.location.href = '/';
     }
-    // 3. localStorage 클리어 및 상태 초기화
-    localStorage.removeItem('student_session');
-    setStudentSession(null);
-    // 페이지 리로드하여 로그인 화면으로 이동
-    window.location.href = '/';
   }
 
   // Supabase 설정이 없을 경우 안내 화면 표시

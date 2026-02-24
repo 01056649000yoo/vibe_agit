@@ -326,9 +326,13 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                         </Card>
 
                         {/* [신규] 아이디어 마켓 카드 - 아지트 온 클래스 바로 아래 */}
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} style={{ marginTop: '12px' }}>
+                        <motion.div whileHover={agitSettings?.isIdeaMarketEnabled !== false ? { scale: 1.02 } : {}} whileTap={agitSettings?.isIdeaMarketEnabled !== false ? { scale: 0.98 } : {}} style={{ marginTop: '12px' }}>
                             <Card
                                 onClick={() => {
+                                    if (agitSettings?.isIdeaMarketEnabled === false) {
+                                        alert('🔒 현재 아지트 아이디어 마켓 기능이 준비 중입니다.');
+                                        return;
+                                    }
                                     // [신규] 확인 시점 기록 및 뱃지 제거
                                     if (classId) {
                                         localStorage.setItem(`last_visit_idea_market_${classId}`, new Date().toISOString());
@@ -337,14 +341,15 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                     setSubTab('ideaMarket');
                                 }}
                                 style={{
-                                    background: 'linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 100%)',
-                                    border: '1px solid #DDD6FE',
-                                    cursor: 'pointer', padding: '20px', margin: 0,
-                                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.1)',
-                                    position: 'relative'
+                                    background: agitSettings?.isIdeaMarketEnabled === false ? 'linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%)' : 'linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 100%)',
+                                    border: agitSettings?.isIdeaMarketEnabled === false ? '1px solid #CBD5E1' : '1px solid #DDD6FE',
+                                    cursor: agitSettings?.isIdeaMarketEnabled === false ? 'default' : 'pointer', padding: '20px', margin: 0,
+                                    boxShadow: agitSettings?.isIdeaMarketEnabled === false ? 'none' : '0 4px 12px rgba(124, 58, 237, 0.1)',
+                                    position: 'relative',
+                                    opacity: agitSettings?.isIdeaMarketEnabled === false ? 0.7 : 1
                                 }}
                             >
-                                {hasNewIdeaMarket && (
+                                {hasNewIdeaMarket && agitSettings?.isIdeaMarketEnabled !== false && (
                                     <div style={{
                                         position: 'absolute', top: '10px', right: '10px',
                                         background: '#FF5252',
@@ -358,18 +363,29 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                     <div style={{
                                         width: '48px', height: '48px',
-                                        background: 'linear-gradient(135deg, #A855F7, #7C3AED)',
+                                        background: agitSettings?.isIdeaMarketEnabled === false ? '#94A3B8' : 'linear-gradient(135deg, #A855F7, #7C3AED)',
                                         borderRadius: '12px', display: 'flex',
                                         alignItems: 'center', justifyContent: 'center',
-                                        fontSize: '1.5rem', boxShadow: '0 4px 10px rgba(124, 58, 237, 0.3)'
-                                    }}>🏛️</div>
+                                        fontSize: '1.5rem', boxShadow: agitSettings?.isIdeaMarketEnabled === false ? 'none' : '0 4px 10px rgba(124, 58, 237, 0.3)',
+                                        filter: agitSettings?.isIdeaMarketEnabled === false ? 'grayscale(100%)' : 'none'
+                                    }}>{agitSettings?.isIdeaMarketEnabled === false ? '🔒' : '🏛️'}</div>
                                     <div style={{ flex: 1 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                                            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: '#4C1D95' }}>아지트 아이디어 마켓</h3>
+                                            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: agitSettings?.isIdeaMarketEnabled === false ? '#64748B' : '#4C1D95' }}>
+                                                아지트 아이디어 마켓 {agitSettings?.isIdeaMarketEnabled === false && <span style={{ fontSize: '0.7rem', color: '#EF4444' }}>[준비중]</span>}
+                                            </h3>
                                         </div>
-                                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#7C3AED' }}>우리 반 민주주의 광장! 제안하는 글쓰기를 통해 아이디어를 제안해요.</p>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: agitSettings?.isIdeaMarketEnabled === false ? '#94A3B8' : '#7C3AED' }}>
+                                            {agitSettings?.isIdeaMarketEnabled === false ? '지금은 준비 중이에요. 선생님이 열어주실 때까지 기다려주세요!' : '우리 반 민주주의 광장! 제안하는 글쓰기를 통해 아이디어를 제안해요.'}
+                                        </p>
                                     </div>
-                                    <span style={{ fontSize: '1.2rem', color: '#A855F7' }}>›</span>
+                                    <div style={{
+                                        fontSize: '0.9rem', color: agitSettings?.isIdeaMarketEnabled === false ? '#94A3B8' : '#8B5CF6',
+                                        fontWeight: '900', padding: '6px 16px', background: 'rgba(255, 255, 255, 0.8)',
+                                        borderRadius: '16px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+                                    }}>
+                                        {agitSettings?.isIdeaMarketEnabled === false ? '입장 불가' : '입장하기'}
+                                    </div>
                                 </div>
                             </Card>
                         </motion.div>

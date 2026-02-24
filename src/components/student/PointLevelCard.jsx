@@ -23,16 +23,7 @@ const PointLevelCard = ({ points, levelInfo, stats, isLoading, agitSettings, tem
                 gap: '16px'
             }}
         >
-            {isLoading && (
-                <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(255,255,255,0.8)', zIndex: 10,
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold'
-                }}>
-                    로딩 중... ✨
-                </div>
-            )}
+            {/* 로딩 오버레이 제거 - framer-motion으로 인해 0점 -> 실제 점수로 다이나믹하게 올라가는 형태로 변경됨 (체감 성능 극대화) */}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ textAlign: 'left' }}>

@@ -6,6 +6,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useClassAgitClass } from '../../hooks/useClassAgitClass';
 import IdeaMarketManager from './IdeaMarketManager';
 
+const DEFAULT_AGIT_SETTINGS = {
+    isMenuEnabled: false,
+    isIdeaMarketEnabled: false,
+    isEnabled: false,
+    targetScore: 100,
+    surpriseGift: '',
+    activityGoals: {
+        post: 1,      // 1도를 올리기 위해 필요한 글쓰기 횟수
+        comment: 5,   // 1도를 올리기 위해 필요한 댓글 횟수
+        reaction: 5   // 1도를 올리기 위해 필요한 반응 횟수
+    }
+};
+
 const AgitManager = ({ activeClass, isMobile }) => {
     const [loading, setLoading] = useState(true);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -20,16 +33,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
     const [seasonHistory, setSeasonHistory] = useState([]);
     const [historyLoading, setHistoryLoading] = useState(false);
 
-    const [settings, setSettings] = useState({
-        isEnabled: false,
-        targetScore: 100,
-        surpriseGift: '',
-        activityGoals: {
-            post: 1,      // 1도를 올리기 위해 필요한 글쓰기 횟수
-            comment: 5,   // 1도를 올리기 위해 필요한 댓글 횟수
-            reaction: 5   // 1도를 올리기 위해 필요한 반응 횟수
-        }
-    });
+    const [settings, setSettings] = useState(DEFAULT_AGIT_SETTINGS);
 
     // liveSettings가 로드되면 로컬 settings도 업데이트 (초기 로딩 시)
     useEffect(() => {
@@ -42,10 +46,11 @@ const AgitManager = ({ activeClass, isMobile }) => {
         }
     }, [liveSettings]);
 
-    const fetchHonorRollStats = useCallback(async () => {
+    const fetchHonorRollStats = useCallback(async (overrideResetAt = null) => {
         if (!activeClass?.id) return;
         try {
             setStatsLoading(true);
+            const resetAt = overrideResetAt || liveSettings?.lastResetAt || '2000-01-01';
             const { data, error } = await supabase
                 .from('agit_honor_roll')
                 .select(`
@@ -53,7 +58,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
                     students (name)
                 `)
                 .eq('class_id', activeClass.id)
-                .gte('created_at', liveSettings?.lastResetAt || '2000-01-01'); // 초기화 이후 시점 데이터만 조회
+                .gte('created_at', resetAt); // 초기화 이후 시점 데이터만 조회
 
             if (error) throw error;
 
@@ -74,7 +79,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
         } finally {
             setStatsLoading(false);
         }
-    }, [activeClass?.id]);
+    }, [activeClass?.id, liveSettings]);
 
     // 명예의 전당 통계 불러오기
     useEffect(() => {
@@ -127,7 +132,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
             alert('설정 정보가 저장되었습니다! 🏠✨');
 
             // 즉시 데이터 갱신 요청
-            refresh();
+            refresh(true);
             fetchHonorRollStats();
 
         } catch (error) {
@@ -162,6 +167,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
                         class_id: activeClass.id,
                         season_name: seasonName,
                         target_score: liveSettings?.targetScore || settings.targetScore,
+                        achieved_score: liveTemperature || 0,
                         surprise_gift: liveSettings?.surpriseGift || settings.surpriseGift,
                         started_at: liveSettings?.lastResetAt || new Date().toISOString(),
                         ended_at: new Date().toISOString(),
@@ -171,40 +177,32 @@ const AgitManager = ({ activeClass, isMobile }) => {
                 if (archiveError) throw archiveError;
             }
 
-            // 2. 아지트 설정 초기화 (새 시즌은 비활성 상태로 시작)
-            const newSeasonSettings = {
-                isEnabled: false,
-                currentTemperature: 0,
-                targetScore: settings.targetScore || 100,
-                lastResetAt: new Date().toISOString(), // 새로운 시즌 시작 시점
-                surpriseGift: '',
-                activityGoals: settings.activityGoals
+            // 2. 아지트 설정 공장 초기화 (isEnabled: false 등)
+            const resetSettings = {
+                ...DEFAULT_AGIT_SETTINGS,
+                lastResetAt: new Date().toISOString()
             };
 
-            const { error: settingsError } = await supabase
+            const { error: updateError } = await supabase
                 .from('classes')
-                .update({ agit_settings: newSeasonSettings })
+                .update({ agit_settings: resetSettings })
                 .eq('id', activeClass.id);
 
-            if (settingsError) throw settingsError;
+            if (updateError) throw updateError;
 
-            // 3. 명예의 전당 기록 삭제 (새 시즌을 위해)
-            const { error: statsError } = await supabase
-                .from('agit_honor_roll')
-                .delete()
-                .eq('class_id', activeClass.id);
-
-            if (statsError) throw statsError;
+            // 3. 현재 명예의 전당 점수 초기화는 lastResetAt 기준으로 필터링되므로
+            // DB 자체를 비울 필요는 없으나, 즉각적인 체감을 위해 refresh 호출
 
             const successMsg = (historyCount || 0) === 0
-                ? "아지트 온 클래스 시즌이 성공적으로 시작되었습니다! 🌱"
-                : `${seasonName}이 종료되고 새로운 시즌이 시작되었습니다! 🚀`;
+                ? "아지트 설정이 초기화되었습니다. 🌱"
+                : `${seasonName} 기록을 보관하고 시즌을 강제 종료했습니다. 🚀`;
 
             alert(successMsg);
+            setSettings(resetSettings);
+            refresh(true); // 강제 새로고침
             setIsSettingsModalOpen(false);
             setHonorRollStats([]); // 로컬 상태 즉시 초기화
-            refresh();
-            fetchHonorRollStats();
+            fetchHonorRollStats(resetSettings.lastResetAt); // 변경된 시점 즉시 반영
             fetchSeasonHistory();
 
         } catch (error) {
@@ -218,7 +216,14 @@ const AgitManager = ({ activeClass, isMobile }) => {
     const handleSeasonStart = async () => {
         try {
             setLoading(true);
-            const updatedSettings = { ...settings, isEnabled: true, lastResetAt: liveSettings?.lastResetAt || new Date().toISOString() };
+            // 아지트 온 클래스가 활성화되면 상위 메뉴 활성화(isMenuEnabled)도 자동으로 true로 동기화
+            // 동시에 실질적인 시작 시점(lastResetAt)을 현재로 갱신하여 이전 기록과 분리
+            const updatedSettings = {
+                ...settings,
+                isEnabled: true,
+                isMenuEnabled: true,
+                lastResetAt: new Date().toISOString()
+            };
             const { error } = await supabase
                 .from('classes')
                 .update({ agit_settings: updatedSettings })
@@ -228,7 +233,8 @@ const AgitManager = ({ activeClass, isMobile }) => {
 
             alert('🚀 아지트 온 클래스 시즌을 시작합니다! 학생들의 입장이 허용되었습니다.');
             setSettings(updatedSettings);
-            refresh();
+            refresh(true); // 강제 새로고침
+            fetchHonorRollStats(updatedSettings.lastResetAt); // 변경된 시점 즉시 반영
         } catch (error) {
             console.error("Error starting season:", error);
             alert('시즌 시작 중 오류가 발생했습니다.');
@@ -261,6 +267,46 @@ const AgitManager = ({ activeClass, isMobile }) => {
         }
     };
 
+    const handleToggleMenuEnable = async () => {
+        try {
+            setLoading(true);
+            const updatedSettings = { ...settings, isMenuEnabled: !settings.isMenuEnabled };
+            const { error } = await supabase
+                .from('classes')
+                .update({ agit_settings: updatedSettings })
+                .eq('id', activeClass.id);
+
+            if (error) throw error;
+            setSettings(updatedSettings);
+            refresh(true);
+        } catch (error) {
+            console.error("Error toggling menu:", error);
+            alert('메뉴 활성화 변경 중 오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleToggleIdeaMarketEnable = async () => {
+        try {
+            setLoading(true);
+            const updatedSettings = { ...settings, isIdeaMarketEnabled: !settings.isIdeaMarketEnabled };
+            const { error } = await supabase
+                .from('classes')
+                .update({ agit_settings: updatedSettings })
+                .eq('id', activeClass.id);
+
+            if (error) throw error;
+            setSettings(updatedSettings);
+            refresh(true);
+        } catch (error) {
+            console.error("Error toggling idea market:", error);
+            alert('아이디어 마켓 활성화 변경 중 오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const displayTargetScore = liveSettings?.targetScore || settings.targetScore || 100;
     const displaySurpriseGift = liveSettings?.surpriseGift || settings.surpriseGift;
 
@@ -280,7 +326,76 @@ const AgitManager = ({ activeClass, isMobile }) => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <h2 style={{ margin: 0, color: '#1E1B4B', fontWeight: '900' }}>🏠 아지트 관리</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                <h2 style={{ margin: 0, color: '#1E1B4B', fontWeight: '900' }}>🏠 아지트 관리</h2>
+
+                {/* [신규] 기능별 활성화 토글 그룹 */}
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    {/* [신규] 전체 아지트 메뉴 활성화 토글 */}
+                    <div style={{
+                        background: settings.isMenuEnabled ? '#EEF2FF' : '#F8FAFC',
+                        padding: '12px 20px', borderRadius: '16px', border: `2px solid ${settings.isMenuEnabled ? '#6366F1' : '#E2E8F0'}`,
+                        display: 'flex', alignItems: 'center', gap: '16px', transition: 'all 0.3s'
+                    }}>
+                        <div>
+                            <div style={{ margin: 0, color: '#1E1B4B', fontSize: '0.95rem', fontWeight: '900' }}>
+                                두근두근 우리반 아지트 (전체 메뉴)
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
+                                {settings.isMenuEnabled ? '메인 입장 배너 활성화됨' : '메인 입장 배너 잠김'}
+                            </div>
+                        </div>
+                        <div
+                            onClick={handleToggleMenuEnable}
+                            style={{
+                                width: '50px', height: '28px', background: settings.isMenuEnabled ? '#6366F1' : '#CBD5E1',
+                                borderRadius: '14px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s', flexShrink: 0
+                            }}
+                        >
+                            <motion.div
+                                animate={{ x: settings.isMenuEnabled ? 24 : 2 }}
+                                style={{
+                                    width: '24px', height: '24px', background: 'white',
+                                    borderRadius: '50%', position: 'absolute', top: '2px',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* [신규] 아이디어 마켓 활성화 토글 */}
+                    <div style={{
+                        background: settings.isIdeaMarketEnabled ? '#F5F3FF' : '#F8FAFC',
+                        padding: '12px 20px', borderRadius: '16px', border: `2px solid ${settings.isIdeaMarketEnabled ? '#8B5CF6' : '#E2E8F0'}`,
+                        display: 'flex', alignItems: 'center', gap: '16px', transition: 'all 0.3s'
+                    }}>
+                        <div>
+                            <div style={{ margin: 0, color: '#1E1B4B', fontSize: '0.95rem', fontWeight: '900' }}>
+                                아지트 아이디어 마켓
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
+                                {settings.isIdeaMarketEnabled ? '아이디어 마켓 메뉴 열림' : '아이디어 마켓 메뉴 잠김'}
+                            </div>
+                        </div>
+                        <div
+                            onClick={handleToggleIdeaMarketEnable}
+                            style={{
+                                width: '50px', height: '28px', background: settings.isIdeaMarketEnabled ? '#8B5CF6' : '#CBD5E1',
+                                borderRadius: '14px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s', flexShrink: 0
+                            }}
+                        >
+                            <motion.div
+                                animate={{ x: settings.isIdeaMarketEnabled ? 24 : 2 }}
+                                style={{
+                                    width: '24px', height: '24px', background: 'white',
+                                    borderRadius: '50%', position: 'absolute', top: '2px',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))', gap: '32px' }}>
 
@@ -892,8 +1007,15 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                                             <div style={{ display: 'flex', gap: '12px' }}>
                                                                 <div style={{ background: '#EEF2FF', padding: '10px 16px', borderRadius: '10px', flex: 1 }}>
-                                                                    <div style={{ fontSize: '0.75rem', color: '#6366F1', fontWeight: '800', marginBottom: '2px' }}>목표 온도</div>
-                                                                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#1E1B4B' }}>{history.target_score}도 달성!</div>
+                                                                    <div style={{ fontSize: '0.75rem', color: '#6366F1', fontWeight: '800', marginBottom: '2px', display: 'flex', justifyContent: 'space-between' }}>
+                                                                        <span>최종 온도 / 목표</span>
+                                                                    </div>
+                                                                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: (history.achieved_score !== null && history.achieved_score !== undefined && history.achieved_score < history.target_score) ? '#EF4444' : '#1E1B4B' }}>
+                                                                        {history.achieved_score ?? history.target_score}도
+                                                                        <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: '600', marginLeft: '6px' }}>
+                                                                            / {history.target_score}도 {(history.achieved_score !== null && history.achieved_score !== undefined && history.achieved_score < history.target_score) ? '(미달성)' : '달성!'}
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
                                                                 <div style={{ background: '#F0FDF4', padding: '10px 16px', borderRadius: '10px', flex: 1 }}>
                                                                     <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: '800', marginBottom: '2px' }}>달성 기간</div>

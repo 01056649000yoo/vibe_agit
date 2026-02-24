@@ -34,7 +34,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             const data = await dataCache.get(`stats_${studentSession.id}`, async () => {
                 const { data, error } = await supabase
                     .from('student_posts')
-                    .select('mission_id, char_count, created_at, is_submitted, is_confirmed')
+                    .select('mission_id, char_count, created_at, is_submitted, is_confirmed, writing_missions!inner(mission_type)')
                     .eq('student_id', studentSession.id);
                 if (error) throw error;
                 return data || [];
@@ -172,18 +172,22 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             const lastCheckTime = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
 
             const [reactionsResult, commentsResult, returnedResult] = await Promise.all([
+                // Inner join과 head: true를 브라우저 환경에서 동시 사용 시 반환값 누락 버그 발생 가능성 우려.
+                // 활동 유무(1개라도 있는지)만 알면 되므로 head 대신 limit(1) 사용
                 supabase
                     .from('post_reactions')
-                    .select('id, student_posts!inner(student_id)', { count: 'exact', head: true })
+                    .select('id, student_posts!inner(student_id)')
                     .eq('student_posts.student_id', studentSession.id)
                     .neq('student_id', studentSession.id)
-                    .gt('created_at', lastCheckTime),
+                    .gt('created_at', lastCheckTime)
+                    .limit(1),
                 supabase
                     .from('post_comments')
-                    .select('id, student_posts!inner(student_id)', { count: 'exact', head: true })
+                    .select('id, student_posts!inner(student_id)')
                     .eq('student_posts.student_id', studentSession.id)
                     .neq('student_id', studentSession.id)
-                    .gt('created_at', lastCheckTime),
+                    .gt('created_at', lastCheckTime)
+                    .limit(1),
                 supabase
                     .from('student_posts')
                     .select('id', { count: 'exact', head: true })
@@ -191,12 +195,15 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     .eq('is_returned', true)
             ]);
 
-            const reactionCount = reactionsResult.count || 0;
-            const commentCount = commentsResult.count || 0;
+            if (reactionsResult.error) console.error("Reactions Check Error:", reactionsResult.error);
+            if (commentsResult.error) console.error("Comments Check Error:", commentsResult.error);
+
+            const hasNewReaction = (reactionsResult.data?.length || 0) > 0;
+            const hasNewComment = (commentsResult.data?.length || 0) > 0;
             const returnedCountVal = returnedResult.count || 0;
 
             setReturnedCount(returnedCountVal);
-            setHasActivity(reactionCount + commentCount > 0);
+            setHasActivity(hasNewReaction || hasNewComment);
         } catch (err) {
             console.error('활동 확인 실패:', err.message);
         }
@@ -247,28 +254,26 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const fetchFeedbacks = async () => {
         setLoadingFeedback(true);
         try {
-            const { data: myPosts } = await supabase
-                .from('student_posts')
-                .select('id')
-                .eq('student_id', studentSession.id);
+            const lastCheck = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
 
-            if (!myPosts || myPosts.length === 0) {
-                setFeedbacks([]);
-                return;
-            }
-            const postIds = myPosts.map(p => p.id);
-
+            // ★ [성능 최적화] Inner Join과 조건을 DB 레벨로 내려서 쿼리 횟수를 줄이고 페이로드를 최소화
             const [reactionsResult, commentsResult] = await Promise.all([
                 supabase
                     .from('post_reactions')
-                    .select('*, students:student_id(name), student_posts(title, id)')
-                    .in('post_id', postIds)
-                    .neq('student_id', studentSession.id),
+                    .select('*, students:student_id(name), student_posts!inner(title, id, student_id)')
+                    .eq('student_posts.student_id', studentSession.id)
+                    .neq('student_id', studentSession.id)
+                    .gt('created_at', lastCheck)
+                    .order('created_at', { ascending: false })
+                    .limit(50),
                 supabase
                     .from('post_comments')
-                    .select('*, students:student_id(name), student_posts(title, id)')
-                    .in('post_id', postIds)
+                    .select('*, students:student_id(name), student_posts!inner(title, id, student_id)')
+                    .eq('student_posts.student_id', studentSession.id)
                     .neq('student_id', studentSession.id)
+                    .gt('created_at', lastCheck)
+                    .order('created_at', { ascending: false })
+                    .limit(50)
             ]);
 
             const reactions = reactionsResult.data || [];
@@ -279,10 +284,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 ...comments.map(c => ({ ...c, type: 'comment' }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            const lastCheck = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
-            const newFeedbacks = combined.filter(f => new Date(f.created_at) > new Date(lastCheck));
-
-            setFeedbacks(newFeedbacks);
+            setFeedbacks(combined);
         } catch (err) {
             console.error('피드백 로드 실패:', err.message);
         } finally {
@@ -298,23 +300,17 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
     useEffect(() => {
         if (studentSession?.id) {
-            const loadData = async () => {
-                setIsLoading(true);
-                try {
-                    // 활동 내역 체크는 표시(로딩) 지연 요인이 아니므로 병렬 비동기 실행
-                    checkActivity();
+            const loadData = () => {
+                // 블로킹 없이 각 요청을 개별 비동기 실행하도록 뜯어 고쳐 체감 로딩 시간(TTI) 제로화
+                setIsLoading(false); // 즉시 렌더링을 허용 (데이터는 각자 도착하는 대로 채워짐)
 
-                    // [async-parallel] 필수 데이터만 병렬 로드하여 로딩 시간 단축
-                    await Promise.all([
-                        fetchMyPoints(),
-                        fetchClassSettings(),
-                        fetchStats()
-                    ]);
-                } catch (e) {
-                    console.error('데이터 로드 중 오류:', e);
-                } finally {
-                    setIsLoading(false);
-                }
+                // fetchMyPoints에서 lastCheckRef를 세팅한 이후에 활동 내역을 체크해야 함 (알림 메시지 버그 방지)
+                fetchMyPoints().then(() => {
+                    checkActivity();
+                });
+
+                fetchClassSettings();
+                fetchStats();
             };
             loadData();
 

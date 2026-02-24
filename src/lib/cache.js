@@ -4,6 +4,7 @@
  */
 
 const cache = new Map();
+const pendingRequests = new Map();
 
 export const dataCache = {
     /**
@@ -15,21 +16,34 @@ export const dataCache = {
         const cached = cache.get(key);
         const now = Date.now();
 
+        // 1. 유효한 캐시가 있으면 반환
         if (cached && (now - cached.timestamp < ttl)) {
             return cached.data;
         }
 
-        try {
-            const data = await fetcher();
-            cache.set(key, { data, timestamp: now });
-            return data;
-        } catch (error) {
-            // 에러 발생 시 기존 캐시가 있다면 반환, 없으면 에러 던짐
-            if (cached) return cached.data;
-            throw error;
+        // 2. 이미 동일한 키로 진행 중인 요청이 있다면 해당 Promise를 재사용 (중복 요청 방지)
+        if (pendingRequests.has(key)) {
+            return pendingRequests.get(key);
         }
-    },
 
+        // 3. 실제 요청 실행 및 상태 관리
+        const promise = (async () => {
+            try {
+                const data = await fetcher();
+                cache.set(key, { data, timestamp: Date.now() });
+                return data;
+            } catch (error) {
+                // 에러 발생 시 기존 만료된 캐시라도 있으면 반환, 없으면 에러
+                if (cached) return cached.data;
+                throw error;
+            } finally {
+                pendingRequests.delete(key);
+            }
+        })();
+
+        pendingRequests.set(key, promise);
+        return promise;
+    },
     invalidate(key) {
         if (key) cache.delete(key);
         else cache.clear();

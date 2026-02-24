@@ -207,8 +207,9 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
             if (missionsResult.error) throw missionsResult.error;
 
-            // [수정] 모든 미션을 가져온 뒤 JS에서 보류/보관 처리 (디버깅용으로 필터 완전히 제거)
-            const data = missionsResult.data || [];
+            // [수정] 모든 미션을 가져온 뒤 JS에서 보관 상태 및 아이디어 마켓(meeting) 타입 제외 처리
+            // 아이디어 마켓 글 미션은 글쓰기 미션 현황에서 표시하지 않고 보관함은 동일하게 공유
+            const data = (missionsResult.data || []).filter(m => !m.is_archived && m.mission_type !== 'meeting');
             setMissions(data);
 
             if (studentCountResult.error) console.error('학생 수 조회 실패:', studentCountResult.error);
