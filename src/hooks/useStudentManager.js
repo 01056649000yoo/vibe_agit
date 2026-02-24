@@ -148,6 +148,17 @@ export const useStudentManager = (classId) => {
         const { type, amount, reason } = pointFormData;
         const actualAmount = type === 'give' ? amount : -amount;
         const targets = students.filter(s => selectedIds.includes(s.id));
+
+        // [추가] 회수(subtract) 시 보유 포인트가 부족한 학생이 있는지 확인
+        if (type === 'subtract') {
+            const insufficientOnes = targets.filter(s => (s.total_points || 0) < amount);
+            if (insufficientOnes.length > 0) {
+                const names = insufficientOnes.map(s => s.name).join(', ');
+                alert(`⚠️ 포인트 회수 실패!\n보유 포인트가 부족한 학생이 포함되어 있습니다: ${names}`);
+                return;
+            }
+        }
+
         const previousStudents = [...students];
 
         // 낙관적 업데이트
