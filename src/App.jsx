@@ -38,6 +38,26 @@ function App() {
   const [isStudentLoginMode, setIsStudentLoginMode] = useState(false)
   const [internalPage, setInternalPage] = useState({ name: 'main', params: {} }) // { name, params }
   const [loading, setLoading] = useState(true)
+
+  // [추가] 외부에서 특정 직접 주소(/terms, /privacy)로 접근했는지 여부 확인
+  const [directPath, setDirectPath] = useState(() => {
+    const path = window.location.pathname;
+    if (path === '/terms') return 'terms';
+    if (path === '/privacy') return 'privacy';
+    return null;
+  });
+
+  // [추가] 직접 주소 접근 시 타이틀 변경
+  useEffect(() => {
+    if (directPath === 'terms') {
+      document.title = '이용약관 | 끄적끄적 아지트';
+    } else if (directPath === 'privacy') {
+      document.title = '개인정보 처리방침 | 끄적끄적 아지트';
+    } else {
+      document.title = '아지트 (agit) - 기록하는 즐거움';
+    }
+  }, [directPath]);
+
   /* [수정] 관리자 모드 상태를 localStorage와 연동하여 유지 (기본값: false = 교사 대시보드) */
   const [isAdminMode, setIsAdminMode] = useState(() => {
     try {
@@ -298,6 +318,60 @@ function App() {
       <Suspense fallback={<Loading />}>
         {loading ? (
           <Loading />
+        ) : directPath ? (
+          /* [0순위] 직접 주소 접근 시 (약관/개인정보) */
+          <div style={{
+            padding: '60px 20px',
+            maxWidth: '1200px',
+            margin: '0 auto',
+            width: '100%',
+            minHeight: 'calc(100vh - 200px)'
+          }}>
+            <div style={{
+              background: 'white',
+              padding: '40px',
+              borderRadius: '24px',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.05)',
+              border: '1px solid #f0f0f0'
+            }}>
+              <h1 style={{
+                fontSize: '2rem',
+                marginBottom: '30px',
+                color: '#2C3E50',
+                borderBottom: '2px solid #F1F3F5',
+                paddingBottom: '20px'
+              }}>
+                {directPath === 'terms' ? '서비스 이용약관 📜' : '개인정보 처리방침 🛡️'}
+              </h1>
+
+              <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '10px' }}>
+                {directPath === 'terms' ? <TermsOfService /> : <PrivacyPolicy />}
+              </div>
+
+              <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    window.history.pushState({}, '', '/');
+                    setDirectPath(null);
+                  }}
+                  style={{
+                    padding: '14px 32px',
+                    backgroundColor: '#4A90E2',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(74, 144, 226, 0.3)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  메인 화면으로 가기
+                </button>
+              </div>
+            </div>
+          </div>
         ) : session ? (
           /* [1순위] 교사 세션 존재 시 */
           (!profile || !profile.role) ? (
