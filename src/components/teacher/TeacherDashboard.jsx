@@ -52,16 +52,6 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    if (loadingClasses) {
-        return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#F8F9FA' }}>
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔔</div>
-                    <p style={{ color: '#7F8C8D', fontWeight: 'bold' }}>학급 정보를 불러오고 있습니다...</p>
-                </div>
-            </div>
-        );
-    }
 
     const hasZeroClasses = classes.length === 0;
 
@@ -151,8 +141,22 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 flex: 1, width: '100%', maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '16px' : '24px',
                 boxSizing: 'border-box', overflowY: 'auto'
             }}>
-                <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px' }}>로딩 중... ✨</div>}>
-                    {currentTab === 'guide' ? (
+                <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>로딩 중... ✨</div>}>
+                    {/* 학급 데이터 로딩 중이면 스켈레톤 표시 */}
+                    {loadingClasses ? (
+                        <div style={{ padding: isMobile ? '16px' : '24px' }}>
+                            <style>{`
+                                @keyframes pulse {
+                                    0%, 100% { opacity: 1; }
+                                    50% { opacity: 0.4; }
+                                }
+                                .skeleton { animation: pulse 1.4s ease-in-out infinite; background: #E9ECEF; border-radius: 8px; }
+                            `}</style>
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="skeleton" style={{ height: '80px', marginBottom: '12px' }} />
+                            ))}
+                        </div>
+                    ) : currentTab === 'guide' ? (
                         <UsageGuide isMobile={isMobile} />
                     ) : currentTab === 'archive' ? (
                         <ArchiveManager activeClass={activeClass} isMobile={isMobile} />

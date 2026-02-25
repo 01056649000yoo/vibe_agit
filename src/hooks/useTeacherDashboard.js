@@ -69,15 +69,15 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     const fetchGeminiKey = useCallback(async () => {
         if (!session?.user?.id) return;
         // [보안] API 키 원본을 클라이언트에 로드하지 않음
-        // personal_openai_api_key, gemini_api_key 컬럼을 명시적으로 제외
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('api_mode, ai_prompt_template')
-            .eq('id', session.user.id)
-            .single();
-
-        // [보안] 키 존재 여부만 별도 확인 (실제 키 값은 가져오지 않음)
-        const { data: keyCheck } = await supabase.rpc('check_my_api_key_exists');
+        // [최적화] 두 DB 요청을 병렬로 실행하여 순차 대기 제거
+        const [{ data, error }, { data: keyCheck }] = await Promise.all([
+            supabase
+                .from('profiles')
+                .select('api_mode, ai_prompt_template')
+                .eq('id', session.user.id)
+                .single(),
+            supabase.rpc('check_my_api_key_exists')
+        ]);
 
         if (data) {
             setOriginalKey(data.api_mode === 'PERSONAL' ? 'Personal Key Active' : 'System Key Active');

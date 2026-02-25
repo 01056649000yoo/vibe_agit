@@ -578,10 +578,18 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                    {charCount >= mission.bonus_threshold ? (
-                        <div style={{ color: '#E65100', fontWeight: '900', fontSize: '1rem' }}>🔥 보너스 달성 완료! (+{mission.bonus_reward}P)</div>
-                    ) : (
-                        <div style={{ color: '#795548', fontSize: '0.9rem' }}><strong style={{ color: '#E65100' }}>{mission.bonus_threshold}자</strong>를 넘기면 보너스 점수가 있어요!</div>
+                    {mission.bonus_threshold > 0 && mission.bonus_reward > 0 && (
+                        charCount >= mission.bonus_threshold ? (
+                            <div style={{ color: '#E65100', fontWeight: '900', fontSize: '1rem' }}>🔥 보너스 달성 완료! (+{mission.bonus_reward}P)</div>
+                        ) : (
+                            <div style={{ color: '#795548', fontSize: '0.9rem' }}>
+                                <strong style={{ color: '#E65100' }}>{mission.bonus_threshold}자</strong>를 넘기면{' '}
+                                <strong style={{ color: '#E65100' }}>+{mission.bonus_reward}P</strong>를 더 얻을 수 있어요!
+                                <span style={{ marginLeft: '6px', color: '#BCAAA4', fontSize: '0.8rem' }}>
+                                    ({mission.bonus_threshold - charCount}자 남음)
+                                </span>
+                            </div>
+                        )
                     )}
                 </div>
             </div>
