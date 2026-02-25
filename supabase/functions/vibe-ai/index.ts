@@ -7,7 +7,7 @@ import OpenAI from 'jsr:@openai/openai@^4.28.0'
 // 여러 도메인 허용 시 쉼표로 구분: https://app.com,https://www.app.com
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
     .split(',')
-    .map(o => o.trim())
+    .map(o => o.trim().replace(/\/$/, '')) // ✅ Remove trailing slash
     .filter(Boolean);
 
 function getCorsHeaders(requestOrigin: string | null) {
@@ -16,11 +16,14 @@ function getCorsHeaders(requestOrigin: string | null) {
     if (ALLOWED_ORIGINS.length === 0) {
         allowedOrigin = '*';
     } else if (requestOrigin) {
+        // Remove trailing slash from request origin as well just in case
+        const cleanOrigin = requestOrigin.replace(/\/$/, '');
+
         // 명시된 허용 도메인이거나, 로컬 호스트인 경우 허용
-        if (ALLOWED_ORIGINS.includes(requestOrigin) ||
-            requestOrigin.startsWith('http://localhost:') ||
-            requestOrigin.startsWith('http://127.0.0.1:')) {
-            allowedOrigin = requestOrigin;
+        if (ALLOWED_ORIGINS.includes(cleanOrigin) ||
+            cleanOrigin.startsWith('http://localhost:') ||
+            cleanOrigin.startsWith('http://127.0.0.1:')) {
+            allowedOrigin = requestOrigin; // 브라우저가 보낸 Origin 그대로 다시 돌려줘야 CORS 통과
         }
     }
 
