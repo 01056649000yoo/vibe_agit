@@ -2,14 +2,34 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import OpenAI from 'jsr:@openai/openai@^4.28.0'
 
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// CORS: 허용 도메인은 Supabase Dashboard → Edge Functions → Secrets에서
+// ALLOWED_ORIGIN 환경 변수로 설정하세요. (예: https://your-app.vercel.app)
+// 여러 도메인 허용 시 쉼표로 구분: https://app.com,https://www.app.com
+const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
+    .split(',')
+    .map(o => o.trim())
+    .filter(Boolean);
+
+function getCorsHeaders(requestOrigin: string | null) {
+    const allowedOrigin =
+        ALLOWED_ORIGINS.length === 0
+            ? '*'  // 환경 변수 미설정 시 개발용으로 허용 (배포 전 반드시 설정)
+            : ALLOWED_ORIGINS.find(o => o === requestOrigin) ?? ALLOWED_ORIGINS[0];
+
+    return {
+        'Access-Control-Allow-Origin': allowedOrigin,
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+        'Vary': 'Origin',
+    };
 }
 
 console.log("Hello from vibe-ai Functions!")
 
 Deno.serve(async (req) => {
+    // 요청 출처 추출 (CORS 응답에 사용)
+    const origin = req.headers.get('Origin');
+    const corsHeaders = getCorsHeaders(origin);
+
     // 1. CORS 처리
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
