@@ -67,73 +67,73 @@ Deno.serve(async (req) => {
         const { prompt, content, model, studentId, type } = await req.json()
 
         // 5. 인증 검사 (교사 세션 또는 학생 ID)
-        let user = null;
-        const authHeaderValue = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : '';
+        const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : '';
+        let jwtUserId: string | null = null;
 
-        if (authHeaderValue && authHeaderValue.length > 20) { // 유효해 보이는 토큰인 경우만 시도
+        // [신규] JWT 수동 디코딩 (Edge Function에서 auth.getUser() 보다 안정적임)
+        if (token && token.length > 20) {
             try {
-                const { data: userData, error: authErr } = await supabaseClient.auth.getUser();
-                if (authErr) {
-                    console.log("Auth User 확인 실패 (무시됨):", authErr.message);
-                } else {
-                    user = userData?.user;
-                }
+                // JWT 페이로드는 [header].[payload].[signature] 중 2번째입니다.
+                const payloadBase64 = token.split('.')[1];
+                // Deno 환경에서는 atob가 표준으로 제공됩니다.
+                const decodedPayload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
+                jwtUserId = decodedPayload.sub || null;
+                console.log(`🔑 인증 토큰 확인됨: ${jwtUserId}`);
             } catch (e) {
-                console.log("교사 세션 확인 건너뜀:", e.message);
+                console.warn("JWT 디코딩 실패 (비정상 토큰):", e.message);
             }
         }
 
-        let isAuthorized = !!user;
+        let isAuthorized = false;
         let isStudentRequest = false;
+        let authReason = "";
 
-        // [보안 강화] 학생 인증: UUID 존재 + auth_id 매칭 이중 검증
-        // 기존: studentId가 DB에 존재하기만 하면 통과 (UUID를 아는 누구나 AI 사용 가능 → 위험)
-        // 수정: 현재 익명 세션의 auth.uid()가 해당 학생의 auth_id와 일치하는지 검증
-        if (!isAuthorized && studentId) {
-            console.log(`학생 인증 시도 중... ID: ${studentId}`);
+        // (1) 교사 인증 시도
+        if (jwtUserId) {
             try {
-                // Step 1: 현재 요청의 auth 세션에서 익명 사용자 ID 추출
-                let anonUserId: string | null = null;
-                try {
-                    const { data: anonUserData } = await supabaseClient.auth.getUser();
-                    anonUserId = anonUserData?.user?.id ?? null;
-                } catch (_e) {
-                    console.log("익명 세션 추출 건너뜀");
+                const { data: userData } = await supabaseClient.auth.getUser();
+                if (userData?.user) {
+                    isAuthorized = true;
+                    console.log(`✅ 교사 인증 성공 (UserID: ${jwtUserId})`);
                 }
+            } catch (_e) {
+                console.log("교사 세션 확인 시스템 건너뜀");
+            }
+        }
 
-                if (anonUserId) {
-                    // Step 2: studentId와 auth_id가 동시에 일치하는지 검증
-                    const { data: student, error: studentError } = await supabaseAdmin
-                        .from('students')
-                        .select('id')
-                        .eq('id', studentId)
-                        .eq('auth_id', anonUserId)  // auth_id 매칭 필수!
-                        .maybeSingle();
+        // (2) 학생 인증 시도 (studentId + JWT 매칭)
+        if (!isAuthorized && studentId && jwtUserId) {
+            console.log(`학생 인증 시도 중... ID: ${studentId}, JWT_SUB: ${jwtUserId}`);
+            try {
+                // studentId와 JWT의 sub(auth_id)가 DB에서 일치하는지 검증
+                const { data: student, error: studentError } = await supabaseAdmin
+                    .from('students')
+                    .select('id, auth_id')
+                    .eq('id', studentId)
+                    .eq('auth_id', jwtUserId)
+                    .maybeSingle();
 
-                    if (student && !studentError) {
-                        isAuthorized = true;
-                        isStudentRequest = true;
-                        console.log(`✅ 학생 인증 성공 (ID: ${studentId}, AuthID: ${anonUserId})`);
-                    } else {
-                        console.warn(`❌ 학생 인증 실패 - auth_id 불일치 (StudentID: ${studentId}, AuthID: ${anonUserId})`);
-                    }
+                if (student && !studentError) {
+                    isAuthorized = true;
+                    isStudentRequest = true;
+                    console.log(`✅ 학생 인증 성공 (ID: ${studentId})`);
                 } else {
-                    console.warn(`❌ 학생 인증 실패 - 유효한 익명 세션 없음 (StudentID: ${studentId})`);
+                    authReason = `학생 인증 실패: DB 정보 불일치 (ReqStudentId: ${studentId}, JWT_UID: ${jwtUserId})`;
+                    console.warn(`❌ ${authReason}`);
                 }
             } catch (e) {
-                console.error("학생 DB 조회 중 오류 발생:", e.message);
+                authReason = `DB 조회 중 오류: ${e.message}`;
+                console.error(authReason);
             }
         }
 
         if (!isAuthorized) {
-            const reason = !user && !studentId ? "세션 정보와 학생 ID가 모두 없습니다." :
-                !user ? `학생 ID(${studentId || '없음'}) 인증에 실패했습니다. (DB에서 학생을 찾을 수 없거나 ID가 유효하지 않습니다.)` : "인증되지 않은 사용자입니다.";
-
-            console.error(`🚫 최종 인증 실패: ${reason}`);
+            const finalReason = authReason || (!jwtUserId ? "인증 토큰(JWT)이 없습니다." : "인증되지 않은 사용자입니다.");
+            console.error(`🚫 최종 인증 실패: ${finalReason}`);
             return new Response(
                 JSON.stringify({
                     error: 'Unauthorized',
-                    details: reason
+                    details: finalReason
                 }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
             );
@@ -191,7 +191,7 @@ Deno.serve(async (req) => {
         // 7. API Key 결정 로직 (개인 키 우선 정책)
         let apiKey = '';
         let currentMode = 'SYSTEM';
-        let targetTeacherId = user?.id;
+        let targetTeacherId = isStudentRequest ? null : jwtUserId;
 
         // (1) 학생이 호출한 경우, 담임 선생님의 ID를 추적
         if (isStudentRequest && studentId) {

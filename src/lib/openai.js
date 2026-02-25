@@ -50,82 +50,73 @@ export const callOpenAI = async (payload, options = {}) => {
         }
 
         // 학생 세션이 있다면 body에 studentId 포함 (서버 보안 인증용)
-        // [수정] 세션 여부와 상관없이 학생 ID가 있으면 무조건 전송하여 서버 인증을 보조합니다.
         if (studentSession?.id) {
             body.studentId = studentSession.id;
         }
 
         // [1차 시도] 1순위: gpt-4o-mini
-        // Edge Function에 model 파라미터를 전달하면 내부에서 해당 모델로 호출합니다.
         const { data: data1, error: error1 } = await import('./supabaseClient').then(m => m.supabase.functions.invoke('vibe-ai', {
             body: { model: 'gpt-4o-mini', ...body }
         }));
 
         if (!error1 && data1?.text) return data1.text;
 
-        // 400/401: 설정 오류, 권한 오류, 정책 위반 등
+        // 에러 처리 로직
         if (error1) {
             console.error("AI Server Error Detail:", error1);
 
             let serverMsg = "AI 서비스를 일시적으로 사용할 수 없습니다.";
             let serverDetails = "";
+            const statusCode = error1.status || (error1.context?.status);
 
-            // 에러 바디에서 상세 메시지 추출 시도 (Supabase Functions 특유의 에러 구조 대응)
-            if (error1.context && typeof error1.context.text === 'function') {
+            // 응답 바디에서 상세 정보 추출
+            if (error1.context && typeof error1.context.text === 'function' && !error1.context.bodyUsed) {
                 try {
-                    const response = error1.context;
-                    const text = await response.text();
+                    const text = await error1.context.text();
                     try {
                         const errBody = JSON.parse(text);
                         if (errBody.error) serverMsg = errBody.error;
                         if (errBody.details) serverDetails = errBody.details;
                     } catch (e) {
-                        serverDetails = text;
+                        if (text && text.length < 200) serverDetails = text;
                     }
                 } catch (e) {
-                    console.warn("에러 바디 추출 실패:", e);
+                    console.warn("에러 디테일 추출 실패:", e.message);
                 }
             } else if (error1.message && error1.message.includes('CORS')) {
-                serverMsg = "CORS 정책에 의해 차단되었습니다. (로컬 개발 환경 도메인이 허용되어 있지 않습니다.)";
-            } else if (data1?.error) {
-                serverMsg = data1.error;
-                if (data1.details) serverDetails = data1.details;
+                serverMsg = "CORS 차단: 로컬 개발 환경(localhost)이 허용되지 않았습니다.";
             } else if (error1.message) {
                 serverMsg = error1.message;
             }
 
-            // Unauthorized 에러 한글화 및 상세 정보 결합
-            if (serverMsg === 'Unauthorized' || serverMsg.includes('401')) {
-                serverMsg = "로그인 정보 인증에 실패했습니다." + (serverDetails ? `\n(원인: ${serverDetails})` : "\n(다시 로그인하거나 페이지를 새로고침 해주세요.)");
-            } else if (serverDetails) {
-                serverMsg += `\n\n상세: ${serverDetails}`;
+            // 폴백 결정: 안전 검사가 아니면 2차 모델 시도
+            if (!body.type || body.type !== 'SAFETY_CHECK') {
+                console.warn('1차 실패, 2차(gpt-3.5-turbo) 시도...');
+                const { data: data2, error: error2 } = await import('./supabaseClient').then(m => m.supabase.functions.invoke('vibe-ai', {
+                    body: { model: 'gpt-3.5-turbo', ...body }
+                }));
+                if (!error2 && data2?.text) return data2.text;
+                if (error2) console.error("2차 폴백 실패:", error2);
             }
 
-            throw new Error(serverMsg);
+            // 최종 에러 메시지 구성
+            let finalError = serverMsg;
+            if (statusCode === 401) {
+                finalError = "로그인 인증 실패: " + (serverDetails || "다시 로그인해주세요.");
+            } else if (serverDetails) {
+                finalError += ` (${serverDetails})`;
+            }
+
+            throw new Error(finalError);
         }
 
-        // [2차 시도] 폴백: gpt-3.5-turbo (교사 호출 등의 일반 상황에서만 시도)
-        if (!body.type || body.type !== 'SAFETY_CHECK') {
-            console.warn('1차(gpt-4o-mini) 실패, 2차(gpt-3.5-turbo) 시도:', error1);
-            const { data: data2, error: error2 } = await import('./supabaseClient').then(m => m.supabase.functions.invoke('vibe-ai', {
-                body: { model: 'gpt-3.5-turbo', ...body }
-            }));
-
-            if (!error2 && data2?.text) return data2.text;
-            throw new Error(`AI 서버 연결 실패: ${error2?.message || '알 수 없는 오류'}`);
-        }
-
-        throw new Error("분석에 실패했습니다. 다시 시도해주세요.");
+        throw new Error("분석 결과가 비어있습니다.");
 
     } catch (err) {
         console.error('AI 호출 치명적 오류:', err);
-        throw new Error(err.message || 'AI 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+        throw new Error(err.message || 'AI 서비스 연결 실패');
     }
 };
 
-/**
- * 하위 호환성을 위해 callGemini 이름으로도 내보냅니다.
- * (기존 코드 변경을 최소화하기 위함)
- */
 export const callGemini = callOpenAI;
 export const callAI = callOpenAI;
