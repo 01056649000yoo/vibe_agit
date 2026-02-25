@@ -337,7 +337,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
                 event: '*',
                 schema: 'public',
                 table: 'student_posts'
-            }, () => fetchData(false))
+            }, () => fetchData(false, true))
             .subscribe();
 
         const commentSubscription = supabase
@@ -346,7 +346,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
                 event: '*',
                 schema: 'public',
                 table: 'post_comments'
-            }, () => fetchData(false))
+            }, () => fetchData(false, true))
             .subscribe();
 
         const reactionSubscription = supabase
@@ -355,7 +355,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
                 event: '*',
                 schema: 'public',
                 table: 'post_reactions'
-            }, () => fetchData(false))
+            }, () => fetchData(false, true))
             .subscribe();
 
         const classSubscription = supabase
@@ -365,7 +365,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
                 schema: 'public',
                 table: 'classes',
                 filter: `id=eq.${classId}`
-            }, () => fetchData(false))
+            }, () => fetchData(false, true))
             .subscribe();
 
         // 1. 자정이 지나 날짜가 바뀌었는지 1분마다 체크하여 자동 갱신
@@ -375,14 +375,14 @@ export const useClassAgitClass = (classId, currentStudentId) => {
             if (currentDay !== lastCheckDate) {
                 console.log("🕛 [자정 경과] 날짜 변경 감지 -> 데이터 갱신");
                 lastCheckDate = currentDay;
-                fetchData(false);
+                fetchData(false, true);
             }
         }, 60000); // 1분 간격
 
         // 2. 브라우저 탭 활성화 시 데이터 갱신 (오래 켜뒀다가 다시 볼 때 대비)
         const handleFocus = () => {
             console.log("👀 [윈도우 포커스] 최신 데이터 확인");
-            fetchData(false);
+            fetchData(false, true);
         };
         window.addEventListener('focus', handleFocus);
 
