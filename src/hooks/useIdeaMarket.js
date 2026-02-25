@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { dataCache } from '../lib/cache';
 
 /**
  * 역할: 아지트 아이디어 마켓 - 학급 회의 & 아이디어 제안 관리 훅 🏛️
@@ -141,6 +142,11 @@ export const useIdeaMarket = (classId, studentId) => {
                         console.error('[useIdeaMarket] 제출 포인트 지급 실패:', ptErr.message);
                     }
                 }
+            }
+
+            // 대시보드 통계 캐시 무효화 (글자수 즉시 반영)
+            if (studentId) {
+                dataCache.invalidate(`stats_${studentId}`);
             }
 
             await fetchIdeas(selectedMeeting.id);

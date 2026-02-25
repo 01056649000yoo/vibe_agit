@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { dataCache } from '../lib/cache';
 import confetti from 'canvas-confetti';
 
 export const useMissionSubmit = (studentSession, missionId, params, onBack, onNavigate) => {
@@ -233,6 +234,11 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 origin: { y: 0.6 },
                 colors: ['#FFD700', '#FFA500', '#FF4500', '#ADFF2F', '#00BFFF']
             });
+
+            // 대시보드 통계 불일치 방지를 위한 캐시 무효화
+            if (currentStudentId) {
+                dataCache.invalidate(`stats_${currentStudentId}`);
+            }
 
             alert(`🎉 제출 성공! 선생님이 확인하신 후 포인트가 지급될 거예요!`);
 
