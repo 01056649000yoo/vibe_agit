@@ -11,10 +11,18 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
     .filter(Boolean);
 
 function getCorsHeaders(requestOrigin: string | null) {
-    const allowedOrigin =
-        ALLOWED_ORIGINS.length === 0
-            ? '*'  // 환경 변수 미설정 시 개발용으로 허용 (배포 전 반드시 설정)
-            : ALLOWED_ORIGINS.find(o => o === requestOrigin) ?? ALLOWED_ORIGINS[0];
+    let allowedOrigin = ALLOWED_ORIGINS[0] || '*';
+
+    if (ALLOWED_ORIGINS.length === 0) {
+        allowedOrigin = '*';
+    } else if (requestOrigin) {
+        // 명시된 허용 도메인이거나, 로컬 호스트인 경우 허용
+        if (ALLOWED_ORIGINS.includes(requestOrigin) ||
+            requestOrigin.startsWith('http://localhost:') ||
+            requestOrigin.startsWith('http://127.0.0.1:')) {
+            allowedOrigin = requestOrigin;
+        }
+    }
 
     return {
         'Access-Control-Allow-Origin': allowedOrigin,
@@ -143,9 +151,9 @@ Deno.serve(async (req) => {
 
         // 타입별 모델 강제 지정
         if (type === 'SAFETY_CHECK' || isStudentRequest) {
-            selectedModel = 'gpt-5-nano';
+            selectedModel = 'gpt-4o-mini';
         } else if (type === 'RECORD_ASSISTANT') {
-            selectedModel = 'gpt-5-nano';
+            selectedModel = 'gpt-4o-mini';
         } else if (type === 'AI_FEEDBACK') {
             selectedModel = 'gpt-4o-mini';
         }
@@ -234,11 +242,19 @@ Deno.serve(async (req) => {
 
         const openai = new OpenAI({ apiKey: apiKey })
 
-        const completion = await openai.chat.completions.create({
+        const completionOptions: any = {
             messages: [{ role: 'user', content: finalPrompt }],
             model: finalModel,
-            max_tokens: 1000,
-        })
+        };
+
+        // [수정] o1, o3 시리즈 등 최신 모델은 max_tokens 대신 max_completion_tokens 사용
+        if (finalModel.startsWith('o1') || finalModel.startsWith('o3')) {
+            completionOptions.max_completion_tokens = 1000;
+        } else {
+            completionOptions.max_tokens = 1000;
+        }
+
+        const completion = await openai.chat.completions.create(completionOptions);
 
         const generatedText = completion.choices[0]?.message?.content;
 

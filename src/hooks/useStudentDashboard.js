@@ -10,7 +10,6 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const [feedbacks, setFeedbacks] = useState([]);
     const [loadingFeedback, setLoadingFeedback] = useState(false);
     const [feedbackInitialTab, setFeedbackInitialTab] = useState(0);
-    const [teacherNotify, setTeacherNotify] = useState(null);
     const [returnedCount, setReturnedCount] = useState(0);
     const [petData, setPetData] = useState(null); // [추가] 초기 펫 데이터 상태
     const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 });
@@ -313,121 +312,14 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 fetchStats();
             };
             loadData();
-
-            const notificationChannel = supabase
-                .channel(`student_realtime_v3_${studentSession.id}`)
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'point_logs',
-                        filter: `student_id=eq.${studentSession.id}`
-                    },
-                    (payload) => {
-                        const newLog = payload.new;
-                        if (newLog.amount !== 0) {
-                            setPoints(prev => (prev || 0) + newLog.amount);
-                        }
-
-                        let bannerMsg = "";
-                        let bannerIcon = "🎁";
-
-                        if (newLog.amount > 0 || newLog.amount < 0) {
-                            // [수정] 상세 사유에서 PostID 식별용 문자열 제거 후 출력
-                            const cleanReason = (newLog.reason || '').replace(/\(PostID:[^)]+\)/, '').trim();
-
-                            if (newLog.amount < 0) {
-                                bannerMsg = `⚠️ ${cleanReason} (${newLog.amount}P)`;
-                                bannerIcon = "⚠️";
-                            } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('결정')) {
-                                bannerMsg = `🏛️✅ 내 아이디어가 최종 결정되었어요! (+${newLog.amount}P)`;
-                                bannerIcon = "🏛️";
-                            } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('제출')) {
-                                bannerMsg = `🏛️💡 아이디어 제출 보상! (+${newLog.amount}P)`;
-                                bannerIcon = "💡";
-                            } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('토론')) {
-                                bannerMsg = `🏛️💬 아이디어 토론 참여 보상! (+${newLog.amount}P)`;
-                                bannerIcon = "💬";
-                            } else if (newLog.reason?.includes('승인')) {
-                                bannerMsg = `🎉 글이 승인되어 +${newLog.amount}P를 받았어요!`;
-                                bannerIcon = "🎉";
-                            } else {
-                                bannerMsg = `🎁 ${cleanReason} (+${newLog.amount}P)`;
-                                bannerIcon = "🎁";
-                            }
-                        }
-
-                        if (bannerMsg) {
-                            setTeacherNotify({
-                                type: 'point',
-                                message: bannerMsg,
-                                icon: bannerIcon,
-                                timestamp: Date.now()
-                            });
-                        }
-                    }
-                )
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'student_posts',
-                        filter: `student_id=eq.${studentSession.id}`
-                    },
-                    (payload) => {
-                        const updatedPost = payload.new;
-                        const oldPost = payload.old;
-
-                        // [debug] REPLICA IDENTITY FULL을 통해 이전 상태(payload.old)와 비교
-
-                        // 1. 반려(다시 쓰기) 요청이 새로 설정된 경우
-                        if (updatedPost.is_returned && !oldPost.is_returned) {
-                            setTeacherNotify({
-                                type: 'rewrite',
-                                message: "♻️ 선생님의 다시 쓰기 요청이 있습니다.",
-                                icon: "♻️",
-                                timestamp: Date.now()
-                            });
-                            checkActivity();
-                        }
-                        // 2. 승인 완료 (is_confirmed: false -> true)
-                        else if (updatedPost.is_confirmed && !oldPost.is_confirmed) {
-                            setTeacherNotify({
-                                type: 'approve',
-                                message: `🎉 글이 승인되었습니다! 축하해요!`,
-                                icon: "🎉",
-                                timestamp: Date.now()
-                            });
-                            fetchMyPoints();
-                            fetchStats();
-                        }
-                        // 3. 승인 취소 또는 회수 (is_confirmed: true -> false)
-                        else if (!updatedPost.is_confirmed && oldPost.is_confirmed) {
-                            setTeacherNotify({
-                                type: 'recovery',
-                                message: "⚠️ 글의 승인이 취소되거나 회수되었습니다.",
-                                icon: "⚠️",
-                                timestamp: Date.now()
-                            });
-                            fetchMyPoints();
-                            fetchStats();
-                        }
-                    }
-                )
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(notificationChannel);
-            };
         }
     }, [studentSession?.id, fetchMyPoints, fetchClassSettings, fetchStats, checkActivity]);
 
     return {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
-        loadingFeedback, feedbackInitialTab, teacherNotify, setTeacherNotify,
+        loadingFeedback, feedbackInitialTab,
         returnedCount, stats, levelInfo, isLoading, dragonConfig, initialPetData: petData,
-        handleClearFeedback, handleDirectRewriteGo, openFeedback
+        handleClearFeedback, handleDirectRewriteGo, openFeedback,
+        fetchMyPoints, fetchStats, checkActivity // 새로운 훅에 넘기기 위한 내보내기
     };
 };

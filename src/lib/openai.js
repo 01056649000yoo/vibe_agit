@@ -71,10 +71,9 @@ export const callOpenAI = async (payload, options = {}) => {
             let serverDetails = "";
 
             // 에러 바디에서 상세 메시지 추출 시도 (Supabase Functions 특유의 에러 구조 대응)
-            if (error1.context) {
+            if (error1.context && typeof error1.context.text === 'function') {
                 try {
                     const response = error1.context;
-                    // response.json()이 동작하지 않는 환경이 있을 수 있으므로 텍스트로 먼저 받기 시도
                     const text = await response.text();
                     try {
                         const errBody = JSON.parse(text);
@@ -86,6 +85,8 @@ export const callOpenAI = async (payload, options = {}) => {
                 } catch (e) {
                     console.warn("에러 바디 추출 실패:", e);
                 }
+            } else if (error1.message && error1.message.includes('CORS')) {
+                serverMsg = "CORS 정책에 의해 차단되었습니다. (로컬 개발 환경 도메인이 허용되어 있지 않습니다.)";
             } else if (data1?.error) {
                 serverMsg = data1.error;
                 if (data1.details) serverDetails = data1.details;

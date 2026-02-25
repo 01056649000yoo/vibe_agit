@@ -363,37 +363,6 @@ const AgitManager = ({ activeClass, isMobile }) => {
                         </div>
                     </div>
 
-                    {/* [신규] 아이디어 마켓 활성화 토글 */}
-                    <div style={{
-                        background: settings.isIdeaMarketEnabled ? '#F5F3FF' : '#F8FAFC',
-                        padding: '12px 20px', borderRadius: '16px', border: `2px solid ${settings.isIdeaMarketEnabled ? '#8B5CF6' : '#E2E8F0'}`,
-                        display: 'flex', alignItems: 'center', gap: '16px', transition: 'all 0.3s'
-                    }}>
-                        <div>
-                            <div style={{ margin: 0, color: '#1E1B4B', fontSize: '0.95rem', fontWeight: '900' }}>
-                                아지트 아이디어 마켓
-                            </div>
-                            <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
-                                {settings.isIdeaMarketEnabled ? '아이디어 마켓 메뉴 열림' : '아이디어 마켓 메뉴 잠김'}
-                            </div>
-                        </div>
-                        <div
-                            onClick={handleToggleIdeaMarketEnable}
-                            style={{
-                                width: '50px', height: '28px', background: settings.isIdeaMarketEnabled ? '#8B5CF6' : '#CBD5E1',
-                                borderRadius: '14px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s', flexShrink: 0
-                            }}
-                        >
-                            <motion.div
-                                animate={{ x: settings.isIdeaMarketEnabled ? 24 : 2 }}
-                                style={{
-                                    width: '24px', height: '24px', background: 'white',
-                                    borderRadius: '50%', position: 'absolute', top: '2px',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                }}
-                            />
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -563,6 +532,45 @@ const AgitManager = ({ activeClass, isMobile }) => {
                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', fontWeight: '500' }}>
                                 학생들의 창의적인 건의사항을 확인하고 소통하는 공간입니다.
                             </p>
+                        </div>
+
+                        {/* 활성화 토글 (카드 내부) */}
+                        <div
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                                padding: '14px 24px',
+                                borderTop: '1px solid #EDE9FE',
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                background: settings.isIdeaMarketEnabled ? '#F5F3FF' : '#F8FAFC',
+                                transition: 'background 0.3s'
+                            }}
+                        >
+                            <div>
+                                <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#4C1D95' }}>
+                                    {settings.isIdeaMarketEnabled ? '🟣 학생 메뉴 활성화됨' : '⚪ 학생 메뉴 잠김'}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: '#7C3AED', marginTop: '2px' }}>
+                                    {settings.isIdeaMarketEnabled ? '학생들이 아이디어 마켓에 입장할 수 있습니다' : '학생들에게는 잠금 표시가 보입니다'}
+                                </div>
+                            </div>
+                            <div
+                                onClick={handleToggleIdeaMarketEnable}
+                                style={{
+                                    width: '50px', height: '28px',
+                                    background: settings.isIdeaMarketEnabled ? '#8B5CF6' : '#CBD5E1',
+                                    borderRadius: '14px', position: 'relative',
+                                    cursor: 'pointer', transition: 'background 0.3s', flexShrink: 0
+                                }}
+                            >
+                                <motion.div
+                                    animate={{ x: settings.isIdeaMarketEnabled ? 24 : 2 }}
+                                    style={{
+                                        width: '24px', height: '24px', background: 'white',
+                                        borderRadius: '50%', position: 'absolute', top: '2px',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }}
+                                />
+                            </div>
                         </div>
 
                         <div style={{

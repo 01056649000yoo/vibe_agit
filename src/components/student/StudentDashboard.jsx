@@ -5,6 +5,7 @@ import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
 import { useDragonPet } from '../../hooks/useDragonPet';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
+import { useRealtimeNotifications } from '../../hooks/useRealtimeNotifications'; // [신규] 분리된 리얼타임 훅
 
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
@@ -50,10 +51,22 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     // 전반적인 대시보드 데이터 및 비즈니스 로직
     const {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
-        loadingFeedback, feedbackInitialTab, teacherNotify, setTeacherNotify,
+        loadingFeedback, feedbackInitialTab,
         returnedCount, stats, levelInfo, isLoading, dragonConfig, initialPetData,
-        handleClearFeedback, handleDirectRewriteGo, openFeedback
+        handleClearFeedback, handleDirectRewriteGo, openFeedback,
+        fetchMyPoints, fetchStats, checkActivity
     } = useStudentDashboard(studentSession, onNavigate);
+
+    // [신규] 실시간 알림 로직 전담 훅 (의존성 안정화)
+    const refetchDataControls = React.useMemo(() => ({
+        fetchMyPoints, fetchStats, checkActivity
+    }), [fetchMyPoints, fetchStats, checkActivity]);
+
+    const { teacherNotify, setTeacherNotify } = useRealtimeNotifications(
+        studentSession,
+        setPoints,
+        refetchDataControls
+    );
 
     // 드래곤 관련 상태 및 액션
     const {

@@ -120,6 +120,24 @@ export const usePostInteractions = (postId, studentId) => {
                 });
             if (error) throw error;
 
+            // [추가] 댓글 등록 성공 시 보상 지급 (RPC 호출)
+            console.log(`[usePostInteractions] Calling reward_for_comment for post: ${postId}`);
+            try {
+                const { data: rewardData, error: rpcErr } = await supabase.rpc('reward_for_comment', {
+                    p_post_id: postId
+                });
+
+                if (rpcErr) {
+                    console.error('[usePostInteractions] reward_for_comment RPC Error:', rpcErr);
+                } else if (rewardData?.success) {
+                    console.log(`[usePostInteractions] 💰 보상 지급 성공! +${rewardData.points_awarded}P`);
+                } else {
+                    console.log(`[usePostInteractions] ⏭️ 보상 지급 건너뜀 (이미 지급됨 혹은 기타):`, rewardData?.message || rewardData);
+                }
+            } catch (rErr) {
+                console.error('[usePostInteractions] 댓글 보상 지급 중 예외 발생:', rErr);
+            }
+
             // 포인트 지급 등 추가 로직은 컴포넌트 레벨에서 처리하거나 훅 확장 가능
             fetchInteractions();
             return true;

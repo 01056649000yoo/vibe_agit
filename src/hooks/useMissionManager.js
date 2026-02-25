@@ -688,6 +688,7 @@ ${postArray.map((p, idx) => {
             if (postError) throw postError;
 
             // [수정] RPC를 사용하여 포인트 증액과 로그 생성을 한 번에 처리
+            console.log(`[Approval] Awarding points to student: ${post.student_id}, Post: ${post.id}, Mission: ${post.mission_id}, Amount: ${totalPointsToGive}`);
             const { error: rpcError } = await supabase.rpc('increment_student_points', {
                 p_student_id: post.student_id,
                 p_amount: totalPointsToGive,
@@ -761,6 +762,7 @@ ${postArray.map((p, idx) => {
             let logFetchError = null;
 
             // 1. post_id로 직접 검색
+            console.log(`[Recovery] Searching for log by post_id: ${post.id}`);
             const step1 = await supabase
                 .from('point_logs')
                 .select('*')
@@ -768,11 +770,13 @@ ${postArray.map((p, idx) => {
                 .gt('amount', 0)
                 .order('created_at', { ascending: false })
                 .limit(1);
+
             logs = step1.data;
             logFetchError = step1.error;
 
             // 2. mission_id + student_id로 검색
             if (!logs || logs.length === 0) {
+                console.log(`[Recovery] No post_id log found. Trying mission_id: ${selectedMission.id} for student: ${post.student_id}`);
                 const step2 = await supabase
                     .from('point_logs')
                     .select('*')
@@ -781,11 +785,15 @@ ${postArray.map((p, idx) => {
                     .gt('amount', 0)
                     .order('created_at', { ascending: false })
                     .limit(1);
-                if (step2.data && step2.data.length > 0) logs = step2.data;
+                if (step2.data && step2.data.length > 0) {
+                    logs = step2.data;
+                    console.log(`[Recovery] Found log via mission_id:`, logs[0]);
+                }
             }
 
             // 3. 제목 키워드로 검색 (공백 무관 검색 패턴)
             if (!logs || logs.length === 0) {
+                console.log(`[Recovery] No mission_id log found. Trying keyword search...`);
                 const cleanTitle = selectedMission.title.replace(/[^\w\sㄱ-ㅎㅏ-ㅣ가-힣]/g, '').trim();
                 const keywords = cleanTitle.split(/\s+/).filter(k => k.length > 0);
                 const searchPattern = `%${keywords.join('%')}%`;
@@ -798,7 +806,30 @@ ${postArray.map((p, idx) => {
                     .gt('amount', 0)
                     .order('created_at', { ascending: false })
                     .limit(1);
-                if (step3.data && step3.data.length > 0) logs = step3.data;
+
+                if (step3.data && step3.data.length > 0) {
+                    logs = step3.data;
+                    console.log(`[Recovery] Found log via keyword search:`, logs[0]);
+                } else {
+                    // [추가] 4. 최후의 수단: student_id + 가장 최근의 '승인' 보상 기록 (PostID/MissionID 무관)
+                    console.log(`[Recovery] Keyword search failed. Trying most recent reward for student...`);
+                    const step4 = await supabase
+                        .from('point_logs')
+                        .select('*')
+                        .eq('student_id', post.student_id)
+                        .gt('amount', 0)
+                        .ilike('reason', '%승인%')
+                        .order('created_at', { ascending: false })
+                        .limit(1);
+                    if (step4.data && step4.data.length > 0) {
+                        logs = step4.data;
+                        console.log(`[Recovery] Found log via student reward history:`, logs[0]);
+                    }
+                }
+            }
+
+            if (!logs || logs.length === 0) {
+                console.warn(`[Recovery] All search steps failed to find a positive point log for this post/mission.`);
             }
 
             // 만약 컬럼 부재 에러(42703)가 났다면 DB 업데이트가 안 된 것임
