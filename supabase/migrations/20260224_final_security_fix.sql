@@ -98,13 +98,12 @@ CREATE TRIGGER trg_protect_profile
     BEFORE INSERT OR UPDATE ON public.profiles
     FOR EACH ROW EXECUTE FUNCTION public.protect_profile_sensitive_columns();
 
--- [6단계] 관리자 계정 권한 확합 (Strict Email List)
--- 하드코딩된 이메일 목록 사용 (DB 레벨의 최종 보루)
-UPDATE public.profiles SET role = 'ADMIN', is_approved = true 
-WHERE email IN (
-    'yshgg@naver.com', 
-    '01056649000yoo@gmail.com', 
-    '01056649000yoo@naver.com'
-);
+-- [6단계] 관리자 계정 권한 설정
+-- ⚠️ 보안상 이메일을 코드 파일에 기록하지 않습니다.
+-- 최초 배포 시 Supabase SQL Editor에서 직접 실행하세요 (Git에 저장하지 말 것):
+--
+--   UPDATE public.profiles SET role = 'ADMIN', is_approved = true
+--   WHERE email = '관리자이메일@도메인.com';
+--
 
 NOTIFY pgrst, 'reload schema';

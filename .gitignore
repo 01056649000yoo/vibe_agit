@@ -31,3 +31,6 @@ dist-ssr
 *.bak
 *.config
 
+# 관리자 계정 정보가 포함될 수 있는 마이그레이션 (Git에 올리지 말 것)
+supabase/migrations/20260224_final_security_fix.sql
+

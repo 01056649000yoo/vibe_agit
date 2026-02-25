@@ -134,10 +134,8 @@ export const useIdeaMarket = (classId, studentId) => {
                 const submitReward = selectedMeeting?.base_reward || 30;
                 if (submitReward > 0 && studentId) {
                     try {
-                        await supabase.rpc('increment_student_points', {
-                            p_student_id: studentId,
-                            p_amount: submitReward,
-                            p_reason: '아이디어 마켓에 제안을 제출했어요! 🏛️💡'
+                        await supabase.rpc('reward_for_idea_submission', {
+                            p_mission_id: selectedMeeting.id
                         });
                     } catch (ptErr) {
                         console.error('[useIdeaMarket] 제출 포인트 지급 실패:', ptErr.message);

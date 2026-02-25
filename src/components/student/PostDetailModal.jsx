@@ -61,29 +61,16 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                 const success = await addComment(commentInput);
                 if (success) {
                     let pointsAwarded = false;
-                    // [수정] RPC를 사용하여 포인트 지급 (중복 수령 방지 로직 추가)
-                    if (studentSession?.id) {
-                        try {
-                            const detailReason = `친구 글에 따뜻한 응원을 남겨주셨네요! ✨ (PostID:${post.id})`;
-
-                            const { data: existingReward } = await supabase
-                                .from('point_logs')
-                                .select('id')
-                                .eq('student_id', studentSession.id)
-                                .eq('reason', detailReason)
-                                .maybeSingle();
-
-                            if (!existingReward) {
-                                await supabase.rpc('increment_student_points', {
-                                    p_student_id: studentSession.id,
-                                    p_amount: 5,
-                                    p_reason: detailReason
-                                });
-                                pointsAwarded = true;
-                            }
-                        } catch (ptErr) {
-                            console.error('포인트 지급 확인 실패:', ptErr.message);
+                    // [보안] reward_for_comment RPC 사용 (중복 방지 서버 처리)
+                    try {
+                        const { data: rewardData } = await supabase.rpc('reward_for_comment', {
+                            p_post_id: post.id
+                        });
+                        if (rewardData?.success) {
+                            pointsAwarded = true;
                         }
+                    } catch (ptErr) {
+                        console.error('포인트 지급 실패:', ptErr.message);
                     }
                     setCommentInput('');
                     alert(pointsAwarded ? '의견이 등록되었습니다! (+5P) 💬' : '의견이 등록되었습니다! 💬');
