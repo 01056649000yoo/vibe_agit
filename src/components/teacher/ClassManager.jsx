@@ -16,7 +16,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted, isMobile, primaryClassId, onSetPrimaryClass, fetchDeletedClasses, onRestoreClass }) => {
     const [className, setClassName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
     const [deletedClasses, setDeletedClasses] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
@@ -210,15 +209,14 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    {/* 학급 정보 및 초대 코드 섹션 (슬림 2열 레이아웃) */}
+                    {/* 학급 정보 섹션 */}
                     <div style={{
-                        padding: isMobile ? '16px' : '14px 32px', // [수정] 세로 높이 축소를 위해 패딩 조정
+                        padding: isMobile ? '16px' : '14px 32px',
                         background: 'linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%)',
                         borderRadius: '24px',
                         border: '1px solid #FFE082',
                         display: 'flex',
                         flexDirection: isMobile ? 'column' : 'row',
-                        justifyContent: 'space-between', // [수정] 좌우 균형 배치로 변경
                         alignItems: 'center',
                         gap: '16px',
                         boxShadow: '0 4px 15px rgba(255, 236, 179, 0.3)',
@@ -226,100 +224,54 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                         boxSizing: 'border-box',
                         overflow: 'hidden'
                     }}>
-                        {/* 좌측: 학급 이름 및 뱃지 그룹 */}
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: isMobile ? 'column' : 'row',
-                            alignItems: 'center',
-                            gap: '16px',
-                            textAlign: isMobile ? 'center' : 'left'
-                        }}>
-                            <div>
-                                <span style={{
-                                    fontSize: '0.75rem',
-                                    color: '#B26700',
-                                    background: '#FFF176',
-                                    padding: '2px 8px',
-                                    borderRadius: '6px',
-                                    fontWeight: '900',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px',
-                                    display: 'inline-block',
-                                    marginBottom: '6px',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                                }}>
-                                    CURRENT CLASS
-                                </span>
-                                <h3 style={{
-                                    margin: 0,
-                                    fontSize: isMobile ? '1.8rem' : '2.4rem',
-                                    color: '#2C3E50',
-                                    fontWeight: '950',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
-                                    lineHeight: 1,
-                                    textShadow: '1px 1px 0px rgba(255,255,255,0.8)'
-                                }}>
-                                    <span style={{ fontSize: '1.2em' }}>🏫</span> {activeClass?.name}
-                                </h3>
-                            </div>
-
-                            {activeClass?.id === primaryClassId ? (
-                                <div style={{ background: '#FFD700', color: '#8B4513', padding: '6px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(255, 215, 0, 0.2)' }}>
-                                    ⭐ 주 학급
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => onSetPrimaryClass && onSetPrimaryClass(activeClass.id)}
-                                    style={{
-                                        background: 'white', border: '1px solid #FFD700', color: '#DAA520',
-                                        padding: '6px 14px', borderRadius: '10px', fontSize: '0.75rem',
-                                        fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s',
-                                        display: 'flex', alignItems: 'center', gap: '4px'
-                                    }}
-                                >
-                                    ⭐ 주 학급 설정
-                                </button>
-                            )}
+                        <div>
+                            <span style={{
+                                fontSize: '0.75rem',
+                                color: '#B26700',
+                                background: '#FFF176',
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                fontWeight: '900',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px',
+                                display: 'inline-block',
+                                marginBottom: '6px',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                            }}>
+                                CURRENT CLASS
+                            </span>
+                            <h3 style={{
+                                margin: 0,
+                                fontSize: isMobile ? '1.8rem' : '2.4rem',
+                                color: '#2C3E50',
+                                fontWeight: '950',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                lineHeight: 1,
+                                textShadow: '1px 1px 0px rgba(255,255,255,0.8)'
+                            }}>
+                                <span style={{ fontSize: '1.2em' }}>🏫</span> {activeClass?.name}
+                            </h3>
                         </div>
 
-                        {/* 우측: 초대 코드 컴팩트 카드 */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '16px',
-                            background: 'white',
-                            padding: '10px 20px',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255, 224, 130, 0.5)',
-                            boxShadow: '0 4px 10px rgba(0,0,0,0.03)',
-                            minWidth: isMobile ? '100%' : 'auto',
-                            boxSizing: 'border-box'
-                        }}>
-                            <div style={{ textAlign: 'right' }}>
-                                <p style={{ margin: 0, fontSize: '0.75rem', color: '#95A5A6', fontWeight: 'bold' }}>초대 코드</p>
-                                <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#3498DB', letterSpacing: '2px', fontFamily: 'monospace', lineHeight: 1 }}>
-                                    {activeClass?.invite_code}
-                                </p>
+                        {activeClass?.id === primaryClassId ? (
+                            <div style={{ background: '#FFD700', color: '#8B4513', padding: '6px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(255, 215, 0, 0.2)' }}>
+                                ⭐ 주 학급
                             </div>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsZoomModalOpen(true)}
+                        ) : (
+                            <button
+                                onClick={() => onSetPrimaryClass && onSetPrimaryClass(activeClass.id)}
                                 style={{
-                                    background: '#F0F7FF',
-                                    color: '#3498DB',
-                                    border: 'none',
-                                    padding: '8px 16px',
-                                    fontWeight: '900',
-                                    borderRadius: '10px',
-                                    fontSize: '0.8rem'
+                                    background: 'white', border: '1px solid #FFD700', color: '#DAA520',
+                                    padding: '6px 14px', borderRadius: '10px', fontSize: '0.75rem',
+                                    fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s',
+                                    display: 'flex', alignItems: 'center', gap: '4px'
                                 }}
                             >
-                                🔍 크게 보기
-                            </Button>
-                        </div>
+                                ⭐ 주 학급 설정
+                            </button>
+                        )}
                     </div>
 
                     <div style={{ display: 'flex', gap: '12px' }}>
@@ -348,54 +300,6 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     </div>
                 </div>
             )}
-
-            {/* 초대 코드 크게 보기 모달 */}
-            <AnimatePresence>
-                {isZoomModalOpen && activeClass && (
-                    <div style={{
-                        position: 'fixed',
-                        top: 0, left: 0, right: 0, bottom: 0,
-                        background: 'rgba(255,255,255,0.98)',
-                        zIndex: 3000,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backdropFilter: 'blur(10px)'
-                    }}>
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.8, opacity: 0 }}
-                            style={{ textAlign: 'center', maxWidth: '90%' }}
-                        >
-                            <span style={{ fontSize: '1.2rem', color: '#7F8C8D', fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>{activeClass.name}</span>
-                            <h1 style={{ fontSize: '3rem', color: '#2C3E50', marginBottom: '40px', fontWeight: '900' }}>학급 초대 코드 🏫</h1>
-                            <div style={{
-                                fontSize: 'min(15vw, 10rem)',
-                                fontWeight: '900',
-                                color: '#3498DB',
-                                letterSpacing: '10px',
-                                background: 'white',
-                                padding: '40px 60px',
-                                borderRadius: '40px',
-                                boxShadow: '0 30px 60px rgba(52, 152, 219, 0.15)',
-                                border: '6px solid #3498DB',
-                                fontFamily: 'monospace'
-                            }}>
-                                {activeClass.invite_code}
-                            </div>
-                            <Button
-                                variant="primary"
-                                onClick={() => setIsZoomModalOpen(false)}
-                                style={{ marginTop: '60px', padding: '20px 60px', fontSize: '1.5rem', borderRadius: '24px', fontWeight: '900' }}
-                            >
-                                닫기
-                            </Button>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
 
             {/* 학급 생성 모달 */}
             {isModalOpen && (
@@ -430,7 +334,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                 </div>
             )}
 
-            {/* 삭제된 학급 복구 모달 (Trash Modal) */}
+            {/* 삭제된 학급 복구 모달 */}
             <AnimatePresence>
                 {isTrashModalOpen && (
                     <div style={{
