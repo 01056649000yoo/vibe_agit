@@ -219,18 +219,14 @@ export const useStudentManager = (classId) => {
     const fetchDeletedStudents = async () => {
         if (!classId) return [];
         try {
+            // 1. 서버 측 RPC로 3일 경과한 학생 하드 삭제 처리
+            //    (클라이언트 타임스탬프 조작 방지: 서버에서 now() 기준으로 검증)
+            await supabase.rpc('purge_expired_students', { p_class_id: classId });
+
+            // 2. 복구 가능한 학생 조회 (3일 이내 소프트 딜리트된 학생)
             const threeDaysAgo = new Date();
             threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-            // 1. 3일이 지난 학생 자동 정리 (클라이언트 호출 시 사이드 이펙트로 처리)
-            await supabase
-                .from('students')
-                .delete()
-                .eq('class_id', classId)
-                .not('deleted_at', 'is', null)
-                .lt('deleted_at', threeDaysAgo.toISOString());
-
-            // 2. 복구 가능한 학생 조회
             const { data, error } = await supabase
                 .from('students')
                 .select('*')
