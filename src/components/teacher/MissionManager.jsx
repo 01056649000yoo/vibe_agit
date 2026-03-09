@@ -31,7 +31,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric, handleSaveDefaultSettings,
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
-        frequentTags, saveFrequentTag, removeFrequentTag
+        frequentTags, saveFrequentTag, removeFrequentTag,
+        addTeacherComment, deleteTeacherComment
     } = useMissionManager(activeClass);
 
     const [reportMission, setReportMission] = useState(null);
@@ -163,6 +164,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 onUpdate={() => fetchPostsForMission(selectedMission)}
                 isEvaluationMode={isEvaluationMode}
                 posts={posts}
+                addTeacherComment={addTeacherComment}
+                deleteTeacherComment={deleteTeacherComment}
             />
 
             {/* 보관 확인 커스텀 모달 */}

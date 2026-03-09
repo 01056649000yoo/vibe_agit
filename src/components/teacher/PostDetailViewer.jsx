@@ -8,12 +8,25 @@ const PostDetailViewer = ({
     handleRequestRewrite, handleApprovePost, handleRecovery,
     handleGenerateSingleAI, tempFeedback, setTempFeedback,
     isGenerating, showCompleteToast, postReactions, postComments,
-    reactionIcons, isMobile, onUpdate, isEvaluationMode, posts = []
+    reactionIcons, isMobile, onUpdate, isEvaluationMode, posts = [],
+    addTeacherComment, deleteTeacherComment
 }) => {
     const { saveEvaluation, loading: evalLoading } = useEvaluation();
     const textareaRef = useRef(null);
     const [showOriginal, setShowOriginal] = useState(false);
     const [isEvalModalOpen, setIsEvalModalOpen] = useState(false);
+    const [teacherCommentInput, setTeacherCommentInput] = useState('');
+    const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+    const [currentTeacherUid, setCurrentTeacherUid] = useState(null);
+
+    // 현재 교사 uid 조회
+    useEffect(() => {
+        import('../../lib/supabaseClient').then(({ supabase }) => {
+            supabase.auth.getUser().then(({ data: { user } }) => {
+                if (user) setCurrentTeacherUid(user.id);
+            });
+        });
+    }, []);
 
     // 평가 관련 상태
     const [initialEval, setInitialEval] = useState(selectedPost?.initial_eval || null);
@@ -317,8 +330,10 @@ const PostDetailViewer = ({
                             {isFeedbackVisible && !isMobile && (
                                 <aside style={{
                                     width: '380px', flexShrink: 0, display: 'flex', flexDirection: 'column',
+                                    gap: '16px',
                                     position: 'sticky', top: '20px', height: 'fit-content'
                                 }}>
+                                    {/* 피드백 섹션 */}
                                     <div style={{
                                         background: '#F8F9FA', borderRadius: '24px', padding: '24px',
                                         border: '1px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
@@ -382,8 +397,134 @@ const PostDetailViewer = ({
                                             * 피드백은 학생의 [글 보관함]에서 확인 가능합니다.
                                         </p>
                                     </div>
+
+                                    {/* 댓글 섹션 */}
+                                    <div style={{
+                                        background: '#F8F9FA', borderRadius: '24px', padding: '24px',
+                                        border: '1px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                                        display: 'flex', flexDirection: 'column', gap: '12px'
+                                    }}>
+                                        <h4 style={{ margin: 0, color: '#1F2937', fontWeight: '900', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            💬 학생 댓글
+                                            <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: '#9CA3AF' }}>({postComments.length}개)</span>
+                                        </h4>
+
+                                        {/* 댓글 목록 */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
+                                            {postComments.length === 0 ? (
+                                                <div style={{ textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem', padding: '20px 0' }}>
+                                                    아직 댓글이 없습니다
+                                                </div>
+                                            ) : (
+                                                postComments.map(comment => {
+                                                    const isTeacherComment = !!comment.teacher_id;
+                                                    const isMyComment = isTeacherComment && comment.teacher_id === currentTeacherUid;
+                                                    return (
+                                                        <div
+                                                            key={comment.id}
+                                                            style={{
+                                                                background: isTeacherComment ? '#EFF6FF' : 'white',
+                                                                border: isTeacherComment ? '1px solid #BFDBFE' : '1px solid #E9ECEF',
+                                                                borderRadius: '14px',
+                                                                padding: '10px 14px',
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                gap: '4px'
+                                                            }}
+                                                        >
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                    {isTeacherComment ? (
+                                                                        <span style={{
+                                                                            fontSize: '0.7rem', fontWeight: '900',
+                                                                            background: '#3B82F6', color: 'white',
+                                                                            padding: '2px 7px', borderRadius: '6px'
+                                                                        }}>🍎 선생님</span>
+                                                                    ) : (
+                                                                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#374151' }}>
+                                                                            {comment.students?.name || '학생'}
+                                                                        </span>
+                                                                    )}
+                                                                    <span style={{ fontSize: '0.7rem', color: '#ADB5BD' }}>
+                                                                        {new Date(comment.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                                    </span>
+                                                                </div>
+                                                                {(isMyComment || !isTeacherComment) && deleteTeacherComment && (
+                                                                    <button
+                                                                        onClick={() => deleteTeacherComment(comment.id, selectedPost.id)}
+                                                                        title="댓글 삭제"
+                                                                        style={{
+                                                                            background: 'none', border: 'none',
+                                                                            cursor: 'pointer', fontSize: '0.8rem',
+                                                                            color: '#CBD5E1', padding: '0 2px'
+                                                                        }}
+                                                                    >🗑️</button>
+                                                                )}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.9rem', color: '#374151', lineHeight: '1.5' }}>
+                                                                {comment.content}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+
+                                        {/* 교사 댓글 입력 */}
+                                        {addTeacherComment && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid #E9ECEF', paddingTop: '12px' }}>
+                                                <textarea
+                                                    value={teacherCommentInput}
+                                                    onChange={e => setTeacherCommentInput(e.target.value)}
+                                                    placeholder="격려 댓글을 남겨주세요... 🍎"
+                                                    rows={2}
+                                                    style={{
+                                                        width: '100%', padding: '10px 14px',
+                                                        borderRadius: '12px', border: '1px solid #D1D5DB',
+                                                        fontSize: '0.9rem', lineHeight: '1.6', outline: 'none',
+                                                        resize: 'none', color: '#374151', boxSizing: 'border-box',
+                                                        backgroundColor: 'white'
+                                                    }}
+                                                    onKeyDown={async e => {
+                                                        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !isSubmittingComment) {
+                                                            e.preventDefault();
+                                                            if (!teacherCommentInput.trim()) return;
+                                                            setIsSubmittingComment(true);
+                                                            const ok = await addTeacherComment(selectedPost.id, teacherCommentInput);
+                                                            if (ok) setTeacherCommentInput('');
+                                                            setIsSubmittingComment(false);
+                                                        }
+                                                    }}
+                                                />
+                                                <button
+                                                    disabled={!teacherCommentInput.trim() || isSubmittingComment}
+                                                    onClick={async () => {
+                                                        if (!teacherCommentInput.trim() || isSubmittingComment) return;
+                                                        setIsSubmittingComment(true);
+                                                        const ok = await addTeacherComment(selectedPost.id, teacherCommentInput);
+                                                        if (ok) setTeacherCommentInput('');
+                                                        setIsSubmittingComment(false);
+                                                    }}
+                                                    style={{
+                                                        padding: '9px 0',
+                                                        borderRadius: '12px',
+                                                        border: 'none',
+                                                        background: teacherCommentInput.trim() ? '#3B82F6' : '#E9ECEF',
+                                                        color: teacherCommentInput.trim() ? 'white' : '#ADB5BD',
+                                                        fontWeight: 'bold',
+                                                        fontSize: '0.85rem',
+                                                        cursor: teacherCommentInput.trim() ? 'pointer' : 'not-allowed',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    {isSubmittingComment ? '등록 중...' : '💬 댓글 등록 (Ctrl+Enter)'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </aside>
                             )}
+
                         </main>
 
                         <footer style={{

@@ -370,7 +370,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
             const { data: comments, error: cmError } = await supabase
                 .from('post_comments')
-                .select('id, content, student_id, created_at, students(name)')
+                .select('id, content, student_id, teacher_id, created_at, students(name)')
                 .eq('post_id', postId)
                 .order('created_at', { ascending: true });
             if (!cmError) setPostComments(comments || []);
@@ -1008,6 +1008,51 @@ ${postArray.map((p, idx) => {
         }
     };
 
+    // 교사 댓글 등록
+    const addTeacherComment = async (postId, content) => {
+        if (!content.trim() || !postId) return false;
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return false;
+
+            const { error } = await supabase
+                .from('post_comments')
+                .insert({
+                    post_id: postId,
+                    teacher_id: user.id,
+                    student_id: null,
+                    content: content.trim()
+                });
+
+            if (error) throw error;
+            await fetchReactionsAndComments(postId);
+            return true;
+        } catch (err) {
+            console.error('교사 댓글 등록 실패:', err.message);
+            alert('댓글 등록 중 오류가 발생했습니다: ' + err.message);
+            return false;
+        }
+    };
+
+    // 교사 댓글 삭제
+    const deleteTeacherComment = async (commentId, postId) => {
+        if (!commentId) return false;
+        try {
+            const { error } = await supabase
+                .from('post_comments')
+                .delete()
+                .eq('id', commentId);
+
+            if (error) throw error;
+            if (postId) await fetchReactionsAndComments(postId);
+            return true;
+        } catch (err) {
+            console.error('교사 댓글 삭제 실패:', err.message);
+            alert('댓글 삭제 중 오류가 발생했습니다: ' + err.message);
+            return false;
+        }
+    };
+
     return {
         missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, setPosts, selectedPost, setSelectedPost,
@@ -1023,6 +1068,7 @@ ${postArray.map((p, idx) => {
         handleSaveDefaultRubric,
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
         frequentTags, saveFrequentTag, removeFrequentTag,
-        handleSaveDefaultSettings
+        handleSaveDefaultSettings,
+        addTeacherComment, deleteTeacherComment
     };
 };

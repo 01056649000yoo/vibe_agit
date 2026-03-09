@@ -385,24 +385,40 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                                 첫 번째 응원의 주인공이 되어보세요! ✨
                                             </div>
                                         ) : (
-                                            comments.map(c => (
-                                                <div key={c.id} style={{ padding: '20px 24px', background: (c.student_id === studentSession?.id) ? '#E3F2FD' : '#F8F9FA', borderRadius: '24px', border: (c.student_id === studentSession?.id) ? '1px solid #BBDEFB' : '1px solid #F1F3F5', position: 'relative' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                                        <div style={{ fontWeight: '900', fontSize: '0.9rem', color: (c.student_id === studentSession?.id) ? '#1976D2' : '#3498DB' }}>
-                                                            {c.students?.name} {(c.student_id === studentSession?.id) && '(나)'}
+                                            comments.map(c => {
+                                                const isTeacherComment = !!c.teacher_id;
+                                                const isMe = c.student_id === studentSession?.id;
+                                                return (
+                                                    <div key={c.id} style={{
+                                                        padding: '20px 24px',
+                                                        background: isTeacherComment ? '#EFF6FF' : isMe ? '#E3F2FD' : '#F8F9FA',
+                                                        borderRadius: '24px',
+                                                        border: isTeacherComment ? '1px solid #BFDBFE' : isMe ? '1px solid #BBDEFB' : '1px solid #F1F3F5',
+                                                        position: 'relative'
+                                                    }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                {isTeacherComment ? (
+                                                                    <span style={{ fontSize: '0.75rem', fontWeight: '900', background: '#3B82F6', color: 'white', padding: '2px 8px', borderRadius: '6px' }}>🍎 선생님</span>
+                                                                ) : (
+                                                                    <span style={{ fontWeight: '900', fontSize: '0.9rem', color: isMe ? '#1976D2' : '#3498DB' }}>
+                                                                        {c.students?.name} {isMe && '(나)'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                                {isMe && (
+                                                                    <button onClick={() => handleEditComment(c)} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>수정</button>
+                                                                )}
+                                                                {(isMe || isTeacher) && (
+                                                                    <button onClick={() => handleDeleteCommentClick(c.id)} style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>삭제</button>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                                            {(c.student_id === studentSession?.id) && (
-                                                                <button onClick={() => handleEditComment(c)} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>수정</button>
-                                                            )}
-                                                            {((c.student_id === studentSession?.id) || isTeacher) && (
-                                                                <button onClick={() => handleDeleteCommentClick(c.id)} style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>삭제</button>
-                                                            )}
-                                                        </div>
+                                                        <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7' }}>{c.content}</div>
                                                     </div>
-                                                    <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7' }}>{c.content}</div>
-                                                </div>
-                                            ))
+                                                );
+                                            })
                                         )}
                                     </div>
 

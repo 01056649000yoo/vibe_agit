@@ -524,25 +524,48 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {comments.length === 0 ? (
                                 <div style={{ textAlign: 'center', color: '#B2BEC3', padding: '40px', background: 'white', borderRadius: '24px', border: '2px dashed #F1F3F5' }}>
-                                    아직 친구들의 댓글이 없어요. 🌵
+                                    아직 친구들이나 선생님의 댓글이 없어요. 🌵
                                 </div>
                             ) : (
-                                comments.map(c => (
-                                    <div key={c.id} style={{ padding: '20px', background: (c.student_id === studentSession?.id) ? '#E3F2FD' : 'white', borderRadius: '20px', border: '1px solid #F1F3F5', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                            <div style={{ fontWeight: '900', fontSize: '0.9rem', color: (c.student_id === studentSession?.id) ? '#1976D2' : '#3498DB' }}>
-                                                {c.students?.name} {c.student_id === studentSession?.id && '(나)'}
-                                            </div>
-                                            {(c.student_id === studentSession?.id) && (
-                                                <div style={{ display: 'flex', gap: '8px' }}>
-                                                    <button onClick={() => { setEditingCommentId(c.id); setCommentInput(c.content); }} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer' }}>수정</button>
-                                                    <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: '0.8rem', cursor: 'pointer' }}>삭제</button>
+                                comments.map(c => {
+                                    const isTeacher = !!c.teacher_id;
+                                    const isMe = c.student_id === studentSession?.id;
+                                    return (
+                                        <div key={c.id} style={{
+                                            padding: '20px',
+                                            background: isTeacher ? '#EFF6FF' : isMe ? '#E3F2FD' : 'white',
+                                            borderRadius: '20px',
+                                            border: isTeacher ? '1px solid #BFDBFE' : '1px solid #F1F3F5',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    {isTeacher ? (
+                                                        <span style={{
+                                                            fontSize: '0.75rem', fontWeight: '900',
+                                                            background: '#3B82F6', color: 'white',
+                                                            padding: '2px 8px', borderRadius: '6px'
+                                                        }}>🍎 선생님</span>
+                                                    ) : (
+                                                        <span style={{ fontWeight: '900', fontSize: '0.9rem', color: isMe ? '#1976D2' : '#3498DB' }}>
+                                                            {c.students?.name} {isMe && '(나)'}
+                                                        </span>
+                                                    )}
+                                                    <span style={{ fontSize: '0.75rem', color: '#ADB5BD' }}>
+                                                        {new Date(c.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
                                                 </div>
-                                            )}
+                                                {isMe && (
+                                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                                        <button onClick={() => { setEditingCommentId(c.id); setCommentInput(c.content); }} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer' }}>수정</button>
+                                                        <button onClick={() => deleteComment(c.id)} style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: '0.8rem', cursor: 'pointer' }}>삭제</button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.6' }}>{c.content}</div>
                                         </div>
-                                        <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.6' }}>{c.content}</div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
 
                             {/* 댓글 입력창 (내 글이지만 나도 댓글 달 수 있게 하거나, 혹은 보기만 하거나 선택 가능) */}

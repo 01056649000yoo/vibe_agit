@@ -170,9 +170,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
             const lastCheckTime = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
 
-            const [reactionsResult, commentsResult, returnedResult] = await Promise.all([
-                // Inner join과 head: true를 브라우저 환경에서 동시 사용 시 반환값 누락 버그 발생 가능성 우려.
-                // 활동 유무(1개라도 있는지)만 알면 되므로 head 대신 limit(1) 사용
+            const [reactionsResult, studentCommentsResult, teacherCommentsResult, returnedResult] = await Promise.all([
                 supabase
                     .from('post_reactions')
                     .select('id, student_posts!inner(student_id)')
@@ -180,11 +178,21 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     .neq('student_id', studentSession.id)
                     .gt('created_at', lastCheckTime)
                     .limit(1),
+                // 친구 댓글
                 supabase
                     .from('post_comments')
                     .select('id, student_posts!inner(student_id)')
                     .eq('student_posts.student_id', studentSession.id)
+                    .not('student_id', 'is', null)
                     .neq('student_id', studentSession.id)
+                    .gt('created_at', lastCheckTime)
+                    .limit(1),
+                // 교사 댓글
+                supabase
+                    .from('post_comments')
+                    .select('id, student_posts!inner(student_id)')
+                    .eq('student_posts.student_id', studentSession.id)
+                    .not('teacher_id', 'is', null)
                     .gt('created_at', lastCheckTime)
                     .limit(1),
                 supabase
@@ -195,10 +203,12 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             ]);
 
             if (reactionsResult.error) console.error("Reactions Check Error:", reactionsResult.error);
-            if (commentsResult.error) console.error("Comments Check Error:", commentsResult.error);
+            if (studentCommentsResult.error) console.error("Student Comments Check Error:", studentCommentsResult.error);
+            if (teacherCommentsResult.error) console.error("Teacher Comments Check Error:", teacherCommentsResult.error);
 
             const hasNewReaction = (reactionsResult.data?.length || 0) > 0;
-            const hasNewComment = (commentsResult.data?.length || 0) > 0;
+            const hasNewComment = (studentCommentsResult.data?.length || 0) > 0
+                || (teacherCommentsResult.data?.length || 0) > 0;
             const returnedCountVal = returnedResult.count || 0;
 
             setReturnedCount(returnedCountVal);
@@ -255,8 +265,8 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         try {
             const lastCheck = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
 
-            // ★ [성능 최적화] Inner Join과 조건을 DB 레벨로 내려서 쿼리 횟수를 줄이고 페이로드를 최소화
-            const [reactionsResult, commentsResult] = await Promise.all([
+            const [reactionsResult, studentCommentsResult, teacherCommentsResult] = await Promise.all([
+                // 반응
                 supabase
                     .from('post_reactions')
                     .select('*, students:student_id(name), student_posts!inner(title, id, student_id)')
@@ -265,22 +275,35 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     .gt('created_at', lastCheck)
                     .order('created_at', { ascending: false })
                     .limit(50),
+                // 친구 댓글 (student_id 있음, teacher_id 없음)
                 supabase
                     .from('post_comments')
                     .select('*, students:student_id(name), student_posts!inner(title, id, student_id)')
                     .eq('student_posts.student_id', studentSession.id)
+                    .not('student_id', 'is', null)
                     .neq('student_id', studentSession.id)
+                    .gt('created_at', lastCheck)
+                    .order('created_at', { ascending: false })
+                    .limit(50),
+                // 교사 댓글 (teacher_id 있음)
+                supabase
+                    .from('post_comments')
+                    .select('*, student_posts!inner(title, id, student_id)')
+                    .eq('student_posts.student_id', studentSession.id)
+                    .not('teacher_id', 'is', null)
                     .gt('created_at', lastCheck)
                     .order('created_at', { ascending: false })
                     .limit(50)
             ]);
 
             const reactions = reactionsResult.data || [];
-            const comments = commentsResult.data || [];
+            const studentComments = studentCommentsResult.data || [];
+            const teacherComments = teacherCommentsResult.data || [];
 
             const combined = [
                 ...reactions.map(r => ({ ...r, type: 'reaction' })),
-                ...comments.map(c => ({ ...c, type: 'comment' }))
+                ...studentComments.map(c => ({ ...c, type: 'comment' })),
+                ...teacherComments.map(c => ({ ...c, type: 'comment' }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             setFeedbacks(combined);

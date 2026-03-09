@@ -164,7 +164,11 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                                 </span>
                                                 <span style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem' }}>
                                                     {f.type === 'reaction' ? `${f.students?.name} 친구가 리액션을 남겼어요!` :
-                                                        f.type === 'comment' ? `${f.students?.name} 친구가 댓글을 남겼어요!` :
+                                                        f.type === 'comment' ? (
+                                                            f.teacher_id
+                                                                ? '🍎 선생님이 댓글을 남겼어요!'
+                                                                : `${f.students?.name} 친구가 댓글을 남겼어요!`
+                                                        ) :
                                                             '새로운 소식이 도착했어요!'}
                                                 </span>
                                             </div>

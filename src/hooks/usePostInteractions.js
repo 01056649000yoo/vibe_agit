@@ -29,7 +29,7 @@ export const usePostInteractions = (postId, studentId) => {
             // 2. 댓글 가져오기 (students 정보를 student_id 조인으로 가져옴)
             const { data: cmData, error: cmError } = await supabase
                 .from('post_comments')
-                .select('*, students:student_id(name)')
+                .select('*, students:student_id(name), teacher_id')
                 .eq('post_id', postId)
                 .order('created_at', { ascending: true });
 
