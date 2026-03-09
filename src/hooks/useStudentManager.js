@@ -216,6 +216,29 @@ export const useStudentManager = (classId) => {
         }
     };
 
+    const handleDeleteStudentImmediately = async () => {
+        if (!deleteTarget) return;
+        if (!window.confirm(`⚠️ 정말로 [${deleteTarget.name}] 학생을 즉시 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며 모든 활동 데이터가 삭제됩니다.`)) return;
+
+        try {
+            const { error } = await supabase.rpc('delete_student_immediately', {
+                p_student_id: deleteTarget.id
+            });
+
+            if (error) throw error;
+
+            setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
+            setSelectedIds(prev => prev.filter(id => id !== deleteTarget.id));
+
+            alert(`[${deleteTarget.name}] 학생이 즉시 영구 삭제되었습니다. 🗑️`);
+        } catch (error) {
+            alert('즉시 삭제 실패: ' + error.message);
+        } finally {
+            setIsDeleteModalOpen(false);
+            setDeleteTarget(null);
+        }
+    };
+
     const fetchDeletedStudents = async () => {
         if (!classId) return [];
         try {
@@ -309,7 +332,7 @@ export const useStudentManager = (classId) => {
         isRankingModalOpen, setIsRankingModalOpen, // [신규] 반환값 추가
         selectedStudentForCode, setSelectedStudentForCode, historyStudent, historyLogs, loadingHistory,
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
-        handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, openHistoryModal,
+        handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, handleDeleteStudentImmediately, openHistoryModal,
         toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, fetchStudents, isGapiLoaded,
         fetchDeletedStudents, handleRestoreStudent
     };

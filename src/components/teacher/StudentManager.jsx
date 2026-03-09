@@ -24,10 +24,10 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
         isPointModalOpen, setIsPointModalOpen, isHistoryModalOpen, setIsHistoryModalOpen,
         isDeleteModalOpen, setIsDeleteModalOpen, isCodeZoomModalOpen, setIsCodeZoomModalOpen,
         isAllCodesModalOpen, setIsAllCodesModalOpen, exportModalOpen, setExportModalOpen,
-        isRankingModalOpen, setIsRankingModalOpen, // [신규] 반환값 추가
+        isRankingModalOpen, setIsRankingModalOpen,
         selectedStudentForCode, setSelectedStudentForCode, historyStudent, historyLogs, loadingHistory,
         deleteTarget, setDeleteTarget, exportTarget, setExportTarget, copiedId, pointFormData, setPointFormData,
-        handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, openHistoryModal,
+        handleAddStudent, handleBulkProcessPoints, handleDeleteStudent, handleDeleteStudentImmediately, openHistoryModal,
         toggleSelectAll, handleExportConfirm, toggleSelection, copyCode, isGapiLoaded,
         fetchDeletedStudents, handleRestoreStudent
     } = useStudentManager(classId);
@@ -147,6 +147,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                 setIsDeleteModalOpen={setIsDeleteModalOpen}
                 deleteTarget={deleteTarget}
                 handleDeleteStudent={handleDeleteStudent}
+                handleDeleteStudentImmediately={handleDeleteStudentImmediately}
                 isCodeZoomModalOpen={isCodeZoomModalOpen}
                 setIsCodeZoomModalOpen={setIsCodeZoomModalOpen}
                 isAllCodesModalOpen={isAllCodesModalOpen}

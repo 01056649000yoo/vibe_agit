@@ -6,7 +6,7 @@ import Button from '../common/Button';
 const StudentModals = ({
     isPointModalOpen, setIsPointModalOpen, pointFormData, setPointFormData, handleBulkProcessPoints,
     isHistoryModalOpen, setIsHistoryModalOpen, historyStudent, historyLogs, loadingHistory,
-    isDeleteModalOpen, setIsDeleteModalOpen, deleteTarget, handleDeleteStudent,
+    isDeleteModalOpen, setIsDeleteModalOpen, deleteTarget, handleDeleteStudent, handleDeleteStudentImmediately,
     isCodeZoomModalOpen, setIsCodeZoomModalOpen, isAllCodesModalOpen, setIsAllCodesModalOpen,
     selectedStudentForCode, students,
     isTrashModalOpen, setIsTrashModalOpen, deletedStudents, handleRestore,
@@ -71,16 +71,36 @@ const StudentModals = ({
 
             {isDeleteModalOpen && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
-                    <Card style={{ width: '320px', padding: '24px', textAlign: 'center', borderRadius: '24px' }}>
+                    <Card style={{ width: '340px', padding: '24px', textAlign: 'center', borderRadius: '24px' }}>
                         <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⚠️</div>
                         <h3 style={{ margin: '0 0 8px 0' }}>학생을 삭제할까요?</h3>
                         <p style={{ color: '#6C757D', fontSize: '0.85rem', marginBottom: '20px', lineHeight: '1.5' }}>
-                            {deleteTarget?.name} 학생이 삭제 대기 상태로 이동합니다.<br />
-                            <strong>3일 이내</strong>에 복구할 수 있습니다.
+                            {deleteTarget?.name} 학생 정보를 삭제합니다.
                         </p>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <Button variant="ghost" style={{ flex: 1 }} onClick={() => setIsDeleteModalOpen(false)}>취소</Button>
-                            <Button style={{ flex: 1, backgroundColor: '#E74C3C', color: 'white', fontWeight: 'bold' }} onClick={handleDeleteStudent}>삭제</Button>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <Button
+                                style={{ backgroundColor: '#E74C3C', color: 'white', fontWeight: 'bold', width: '100%' }}
+                                onClick={handleDeleteStudent}
+                            >
+                                📦 복구함으로 이동 (3일간 보관)
+                            </Button>
+
+                            <Button
+                                variant="ghost"
+                                style={{ color: '#E74C3C', border: '1px solid #FFDada', width: '100%', fontWeight: 'bold' }}
+                                onClick={handleDeleteStudentImmediately}
+                            >
+                                🗑️ 즉시 영구 삭제
+                            </Button>
+
+                            <Button
+                                variant="ghost"
+                                style={{ width: '100%', color: '#ADB5BD' }}
+                                onClick={() => setIsDeleteModalOpen(false)}
+                            >
+                                취소
+                            </Button>
                         </div>
                     </Card>
                 </div>
