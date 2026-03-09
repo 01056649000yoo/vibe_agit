@@ -378,12 +378,27 @@ const SubmissionStatusModal = ({
                                                         <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#E67E22', marginBottom: '8px' }}>💬 작성된 댓글</div>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                             {post.post_comments && post.post_comments.length > 0 ? (
-                                                                post.post_comments.map(comment => (
-                                                                    <div key={comment.id} style={{ padding: '10px 12px', background: '#FFF7ED', borderRadius: '12px', border: '1px solid #FFEDD5' }}>
-                                                                        <div style={{ fontWeight: 'bold', color: '#C2410C', fontSize: '0.75rem', marginBottom: '2px' }}>{comment.students?.name || '친구'}</div>
-                                                                        <div style={{ color: '#431407', fontSize: '0.85rem', lineHeight: '1.4' }}>{comment.content}</div>
-                                                                    </div>
-                                                                ))
+                                                                post.post_comments.map(comment => {
+                                                                    const isTeacher = !!comment.teacher_id;
+                                                                    return (
+                                                                        <div key={comment.id} style={{
+                                                                            padding: '10px 12px',
+                                                                            background: isTeacher ? '#EFF6FF' : '#FFF7ED',
+                                                                            borderRadius: '12px',
+                                                                            border: isTeacher ? '1px solid #BFDBFE' : '1px solid #FFEDD5'
+                                                                        }}>
+                                                                            <div style={{
+                                                                                fontWeight: 'bold',
+                                                                                color: isTeacher ? '#1E40AF' : '#C2410C',
+                                                                                fontSize: '0.75rem',
+                                                                                marginBottom: '2px'
+                                                                            }}>
+                                                                                {isTeacher ? '🍎 선생님' : (comment.students?.name || '친구')}
+                                                                            </div>
+                                                                            <div style={{ color: isTeacher ? '#1E3A8A' : '#431407', fontSize: '0.85rem', lineHeight: '1.4' }}>{comment.content}</div>
+                                                                        </div>
+                                                                    );
+                                                                })
                                                             ) : (
                                                                 <div style={{ fontSize: '0.8rem', color: '#B2BEC3', fontStyle: 'italic' }}>댓글을 기다리고 있어요 🐣</div>
                                                             )}
