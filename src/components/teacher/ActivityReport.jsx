@@ -5,7 +5,7 @@ import Button from '../common/Button';
 import Card from '../common/Card';
 import { useEvaluation } from '../../hooks/useEvaluation';
 import { callAI } from '../../lib/openai';
-import * as XLSX from 'xlsx';
+// xlsx는 exportToExcel() 호출 시 동적 로드 (429KB 초기 로드 제거)
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import BulkAIProgressModal from './BulkAIProgressModal';
 
@@ -409,7 +409,8 @@ ${activitiesInfo}`;
     };
 
     // 7. 엑셀 내보내기
-    const exportToExcel = () => {
+    const exportToExcel = async () => {
+        const XLSX = await import('xlsx');
         const data = studentPosts.map(s => {
             const achievements = s.posts.map(p => `${p.writing_missions.title}: ${p.final_eval || p.initial_eval || '-'}점`).join(', ');
             return {
