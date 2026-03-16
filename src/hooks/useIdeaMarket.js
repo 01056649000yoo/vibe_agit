@@ -26,7 +26,7 @@ export const useIdeaMarket = (classId, studentId) => {
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('id, title, guide, guide_questions, created_at, is_archived, mission_type, base_reward, bonus_reward')
+                .select('id, title, guide, guide_questions, created_at, is_archived, mission_type, base_reward, bonus_reward, min_chars, min_paragraphs, bonus_threshold')
                 .eq('class_id', classId)
                 .eq('is_archived', false)
                 .eq('mission_type', 'meeting')

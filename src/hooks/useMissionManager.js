@@ -672,7 +672,9 @@ ${postArray.map((p, idx) => {
             setLoadingPosts(true);
             let totalPointsToGive = selectedMission.base_reward || 0;
             let isBonusAchieved = false;
-            if (selectedMission.bonus_threshold && post.char_count >= selectedMission.bonus_threshold) {
+            const totalThreshold = (selectedMission.min_chars || 0) + (selectedMission.bonus_threshold || 0);
+            
+            if (selectedMission.bonus_threshold && post.char_count >= totalThreshold) {
                 totalPointsToGive += (selectedMission.bonus_reward || 0);
                 isBonusAchieved = true;
             }
@@ -724,7 +726,8 @@ ${postArray.map((p, idx) => {
         try {
             const approvalPromises = toApprove.map(async (post) => {
                 let amount = selectedMission.base_reward || 0;
-                let isBonus = (selectedMission.bonus_threshold && post.char_count >= selectedMission.bonus_threshold);
+                const totalThreshold = (selectedMission.min_chars || 0) + (selectedMission.bonus_threshold || 0);
+                let isBonus = (selectedMission.bonus_threshold && post.char_count >= totalThreshold);
                 if (isBonus) amount += (selectedMission.bonus_reward || 0);
 
                 // 1. 글 승인 상태 변경

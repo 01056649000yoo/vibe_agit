@@ -770,7 +770,7 @@ const MissionForm = ({
                                                                 background: 'white'
                                                             }}
                                                         />
-                                                        <span style={{ fontSize: '0.8rem', color: '#7F8C8D', fontWeight: 'bold' }}>자 이상</span>
+                                                        <span style={{ fontSize: '0.8rem', color: '#7F8C8D', fontWeight: 'bold' }}>자 추가 작성 시</span>
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                         <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#B7950B' }}>+</span>

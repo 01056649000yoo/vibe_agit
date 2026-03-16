@@ -35,6 +35,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
         submit_reward: 30,
         decided_reward: 50,
         min_chars: 100,
+        bonus_threshold: 100,
         min_paragraphs: 1
     });
 
@@ -116,7 +117,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 min_chars: formData.min_chars || 100,
                 min_paragraphs: formData.min_paragraphs || 1,
                 base_reward: formData.submit_reward || 30,
-                bonus_threshold: 100,
+                bonus_threshold: formData.bonus_threshold || 100,
                 bonus_reward: formData.decided_reward || 50,
                 allow_comments: true,
                 is_archived: false,
@@ -148,6 +149,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 submit_reward: 30,
                 decided_reward: 50,
                 min_chars: 100,
+                bonus_threshold: 100,
                 min_paragraphs: 1
             });
             setEditingMeetingId(null);
@@ -171,6 +173,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
             submit_reward: meeting.base_reward || 30,
             decided_reward: meeting.bonus_reward || 50,
             min_chars: meeting.min_chars || 100,
+            bonus_threshold: meeting.bonus_threshold || 100,
             min_paragraphs: meeting.min_paragraphs || 1
         });
         setActiveTab('create');
@@ -178,11 +181,20 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
 
     // 아이디어 상태 변경
     const handleStatusChange = async (postId, newStatus) => {
+        const idea = ideas.find(i => i.id === postId);
+        const baseThreshold = selectedMeeting?.min_chars || 100;
+        const bonusThreshold = selectedMeeting?.bonus_threshold || 0;
+        const totalThreshold = baseThreshold + bonusThreshold;
+        const reward = selectedMeeting?.bonus_reward || 50;
+        const isBonusEligible = (idea?.char_count || 0) >= totalThreshold;
+
         // 결정됨으로 변경 시 확인 절차 추가
         if (newStatus === '결정됨') {
-            const idea = ideas.find(i => i.id === postId);
-            const reward = selectedMeeting?.bonus_reward || 50;
-            if (!confirm(`"${idea?.title || '이 아이디어'}"를 최종 결정하시겠습니까?\n확인 시 학생에게 ${reward}P가 지급됩니다.`)) {
+            const message = isBonusEligible
+                ? `"${idea?.title || '이 아이디어'}"를 최종 결정하시겠습니까?\n확인 시 학생에게 ${reward}P가 지급됩니다.\n(기준: ${totalThreshold}자 달성 / 현재: ${idea?.char_count || 0}자)`
+                : `"${idea?.title || '이 아이디어'}"를 최종 결정하시겠습니까?\n⚠️ 글자수 기준(${totalThreshold}자) 미달로 추가 포인트가 지급되지 않습니다.\n(기준: 기본 ${baseThreshold}자 + 추가 ${bonusThreshold}자 / 현재: ${idea?.char_count || 0}자)`;
+            
+            if (!confirm(message)) {
                 return;
             }
         }
@@ -200,9 +212,8 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
 
             if (error) throw error;
 
-            // 결정됨 → 해당 학생에게 결정 포인트 지급
-            if (newStatus === '결정됨' && selectedMeeting) {
-                const idea = ideas.find(i => i.id === postId);
+            // 결정됨 → 해당 학생에게 결정 포인트 지급 (글자수 기준 충족 시)
+            if (newStatus === '결정됨' && selectedMeeting && isBonusEligible) {
                 const decidedReward = selectedMeeting.bonus_reward || 50;
                 if (idea?.student_id) {
                     try {
@@ -629,6 +640,34 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                                                 }}
                                             />
                                             <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748B' }}>자 이상</span>
+                                        </div>
+                                    </div>
+                                    <div style={{
+                                        flex: 1, background: '#F8FAFC', borderRadius: '14px',
+                                        padding: '16px', border: '1px solid #E2E8F0',
+                                        minWidth: '200px'
+                                    }}>
+                                        <div style={{
+                                            fontSize: '0.8rem', fontWeight: '700', color: '#64748B',
+                                            marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px'
+                                        }}>
+                                            보너스 추가 글자수
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <input
+                                                type="number"
+                                                value={formData.bonus_threshold}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, bonus_threshold: parseInt(e.target.value) || 0 }))}
+                                                min="0"
+                                                style={{
+                                                    width: '70px', padding: '8px 10px',
+                                                    border: '1px solid #CBD5E1', borderRadius: '10px',
+                                                    fontSize: '1rem', fontWeight: '800',
+                                                    textAlign: 'center', outline: 'none',
+                                                    color: '#334155'
+                                                }}
+                                            />
+                                            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748B' }}>자 추가 시</span>
                                         </div>
                                     </div>
                                     <div style={{

@@ -579,7 +579,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                             )}
                                             {selectedMeeting.base_reward > 0 && selectedMeeting.bonus_reward > 0 && ' · '}
                                             {selectedMeeting.bonus_reward > 0 && (
-                                                <span>결정 시 <b>+{selectedMeeting.bonus_reward}P</b> 추가 보상!</span>
+                                                <span>결정 시(총 {(selectedMeeting.min_chars || 0) + (selectedMeeting.bonus_threshold || 0)}자 달성) <b>+{selectedMeeting.bonus_reward}P</b> 추가 보상!</span>
                                             )}
                                         </div>
                                     </div>
