@@ -50,10 +50,12 @@ Deno.serve(async (req) => {
         // 2. 인증 헤더 확인 (Gateway JWT 이슈 대응을 위해 선택적으로 변경)
         const authHeader = req.headers.get('Authorization');
 
-        // [디버그] 모든 헤더 로그 (Invalid JWT 원인 파악용)
-        const allHeaders: Record<string, string> = {};
-        req.headers.forEach((v, k) => { allHeaders[k] = v; });
-        console.log("📥 수신된 모든 헤더:", JSON.stringify(allHeaders));
+        // [보안] 민감 헤더 마스킹 로그
+        const safeHeaders: Record<string, string> = {};
+        req.headers.forEach((v, k) => {
+            safeHeaders[k] = (k.toLowerCase() === 'authorization') ? `Bearer ***${v.slice(-8)}` : v;
+        });
+        console.log("📥 수신 헤더(마스킹):", JSON.stringify(safeHeaders));
 
         // 3. Supabase 클라이언트 생성
         // (1) 사용자 인증용 (유효한 헤더가 있을 때만 RLS 적용)
