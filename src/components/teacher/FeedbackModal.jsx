@@ -32,7 +32,7 @@ const FeedbackModal = ({ isOpen, onClose, userId }) => {
             // 2. 이메일 전송 (Edge Function 호출)
             // 성공/실패 여부와 관계없이 사용자에게는 "전송 완료" 처리
             // 실제 구현 시에는 Supabase Edge Function URL을 호출합니다.
-            supabase.functions.invoke('send-feedback-email', {
+            supabase.functions.invoke('send-feedback', {
                 body: { title, content, teacherId: userId }
             }).then(({ error }) => {
                 if (error) console.error('이메일 전송 실패:', error);

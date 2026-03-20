@@ -45,7 +45,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                 .from('writing_missions')
                 .select('*')
                 .eq('class_id', activeClass.id)
-                .or('is_archived.eq.false,is_archived.is.null')
+                // .or('is_archived.eq.false,is_archived.is.null') // 보관함 미션도 선택 가능하도록 필터 제거
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -266,10 +266,14 @@ ${activitiesInfo}`;
             const review = await callAI({ prompt, type: 'AI_FEEDBACK' });
 
             if (review) {
+                const updatedStudent = { ...studentData, ai_synthesis: review };
                 setStudentPosts(prev => prev.map(s =>
-                    s.student.id === studentData.student.id ? { ...s, ai_synthesis: review } : s
+                    s.student.id === studentData.student.id ? updatedStudent : s
                 ));
                 saveToPersistence(studentData.student.id, review);
+                
+                // ✅ 단일 생성 시에도 즉시 DB 저장 (학생 누적기록 연동)
+                await saveGenerationHistory([updatedStudent]);
             }
         } catch (err) {
             console.error('단일 생성 오류:', err);
@@ -356,36 +360,38 @@ ${activitiesInfo}`;
         return results;
     };
 
-    // 생성 이력 저장
-    const saveGenerationHistory = async (postsToSave = studentPosts) => {
+    // 생성 이력 저장 (targets 인자가 있으면 해당 리스트만, 없으면 전체 studentPosts 중 생성된 것만 저장)
+    const saveGenerationHistory = async (targets = null) => {
         if (!teacherId || selectedMissionIds.length === 0) return;
 
         try {
-            // ✅ 인자로 전달된 postsToSave를 사용하여 최신 상태 반영
-            const currentResults = postsToSave.filter(s => s.ai_synthesis);
+            // ✅ 저장할 대상 결정 (전체 일괄 저장 또는 특정 학생 단일 저장)
+            const currentResults = (targets || studentPosts).filter(s => s.ai_synthesis);
 
             if (currentResults.length === 0) {
                 console.log('저장할 분석 결과가 없습니다.');
                 return;
             }
 
-            // 1. 학급 전체 이력용 (기존 유지)
-            const combinedContent = currentResults
-                .map(s => `[${s.student.name}]\n${s.ai_synthesis}`)
-                .join('\n\n---\n\n');
+            // 1. 학급 전체 이력용 (일괄 저장 시에만 의미가 큼)
+            if (!targets || targets.length > 1) {
+                const combinedContent = currentResults
+                    .map(s => `[${s.student.name}]\n${s.ai_synthesis}`)
+                    .join('\n\n---\n\n');
 
-            await supabase
-                .from('student_records')
-                .insert({
-                    class_id: activeClass.id,
-                    teacher_id: teacherId,
-                    record_type: 'ai_comment',
-                    content: combinedContent,
-                    mission_ids: selectedMissionIds,
-                    activity_count: currentResults.length
-                });
+                await supabase
+                    .from('student_records')
+                    .insert({
+                        class_id: activeClass.id,
+                        teacher_id: teacherId,
+                        record_type: 'ai_comment',
+                        content: combinedContent,
+                        mission_ids: selectedMissionIds,
+                        activity_count: currentResults.length
+                    });
+            }
 
-            // 2. ✅ 개별 학생별 기록 저장 (학생 명단에서 조회하기 위함)
+            // 2. ✅ 개별 학생별 기록 저장 (학생 명단 > 누적 기록에서 조회하기 위함)
             const individualRecords = currentResults.map(s => ({
                 student_id: s.student.id,
                 class_id: activeClass.id,
@@ -402,6 +408,7 @@ ${activitiesInfo}`;
 
             if (indError) throw indError;
 
+            // 히스트로리 목록 갱신 (전체 이력 탭용)
             await loadGenerationHistory(activeClass.id);
         } catch (err) {
             console.error('생성 이력 저장 실패:', err);
@@ -500,7 +507,9 @@ ${activitiesInfo}`;
                             {filteredMissions.map(m => (
                                 <div key={m.id} onClick={() => toggleMissionSelection(m.id)} style={{ padding: '10px 14px', background: selectedMissionIds.includes(m.id) ? '#EEF2FF' : '#F8FAFC', borderRadius: '12px', border: selectedMissionIds.includes(m.id) ? '1px solid #6366F1' : '1px solid #E2E8F0', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     {selectedMissionIds.includes(m.id) ? <CheckCircle2 size={16} color="#6366F1" /> : <Circle size={16} color="#CBD5E1" />}
-                                    <span style={{ fontWeight: selectedMissionIds.includes(m.id) ? 'bold' : 'normal', color: selectedMissionIds.includes(m.id) ? '#312E81' : '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</span>
+                                    <span style={{ fontWeight: selectedMissionIds.includes(m.id) ? 'bold' : 'normal', color: selectedMissionIds.includes(m.id) ? '#312E81' : '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {m.title} {m.is_archived && <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 'normal' }}>(보관됨)</span>}
+                                    </span>
                                 </div>
                             ))}
                         </div>
@@ -765,38 +774,11 @@ ${activitiesInfo}`;
                                                                         fontSize: '0.85rem',
                                                                         marginBottom: '8px'
                                                                     }}>
-                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                                             <span style={{ fontWeight: 'bold', color: '#4F46E5' }}>{p.writing_missions?.title}</span>
                                                                             <span style={{ fontSize: '0.75rem', color: '#3B82F6', fontWeight: '900' }}>{p.final_eval || p.initial_eval || '-'}점</span>
                                                                         </div>
 
-                                                                        {/* 미션 가이드/안내문 표시 */}
-                                                                        {p.writing_missions?.guide && (
-                                                                            <div style={{
-                                                                                fontSize: '0.75rem',
-                                                                                color: '#64748B',
-                                                                                marginBottom: '8px',
-                                                                                padding: '8px',
-                                                                                background: '#F1F5F9',
-                                                                                borderRadius: '6px',
-                                                                                borderLeft: '3px solid #CBD5E1'
-                                                                            }}>
-                                                                                <strong>💡 미션 안내:</strong> {p.writing_missions.guide}
-                                                                            </div>
-                                                                        )}
-
-                                                                        <div style={{
-                                                                            fontSize: '0.8rem',
-                                                                            color: '#1E293B',
-                                                                            lineHeight: '1.5',
-                                                                            whiteSpace: 'pre-wrap',
-                                                                            background: '#F8FAFC',
-                                                                            padding: '10px',
-                                                                            borderRadius: '8px',
-                                                                            border: '1px solid #F1F5F9'
-                                                                        }}>
-                                                                            {p.content}
-                                                                        </div>
                                                                     </div>
                                                                 ))}
                                                             </div>

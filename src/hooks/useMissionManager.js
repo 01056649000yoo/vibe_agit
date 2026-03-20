@@ -473,6 +473,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 (내용을 더 풍성하게 만들 질문이나 아이디어를 하나만 제안)`;
 
         const basePrompt = customTemplate || defaultTemplate;
+        let prompt = '';
 
         if (isBulk) {
             prompt = `${basePrompt}

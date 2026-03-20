@@ -1,16 +1,37 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 // 관리자 이메일 (여기로 알림이 전송됩니다)
 const ADMIN_EMAIL = 'admin@kku-azit.com'
 
-serve(async (req) => {
+Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' } })
+        return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-customer-auth' } })
     }
 
     try {
+        const authHeader = req.headers.get('Authorization')
+        if (!authHeader) {
+            return new Response(JSON.stringify({ error: 'No authorization header' }), { status: 401 })
+        }
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            global: { headers: { Authorization: authHeader } }
+        })
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) {
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+        }
+
         const { title, content, teacherId } = await req.json()
+
+        // 보안: 요청한 teacherId가 로그인한 사용자와 다른지 확인 (선택 사항이지만 권장)
+        if (teacherId && teacherId !== user.id) {
+            console.warn(`⚠️ ID mismatch: Request[${teacherId}] vs Auth[${user.id}]`)
+        }
 
         // 이메일 발송 로직 (Resend 예시)
         // 실제 사용 시 Supabase 대시보드에서 RESEND_API_KEY를 설정해야 합니다.

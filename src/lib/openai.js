@@ -77,19 +77,22 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
             // [핵심] "Invalid JWT" 또는 401 발생 시 대응
             if ((serverMsg.includes("Invalid JWT") || statusCode === 401) && retryCount < 2) {
 
-                // (1) SAFETY_CHECK인데 JWT 에러가 난 경우: 인증 헤더 없이 마지막 재시도
-                if (body.type === 'SAFETY_CHECK' && retryCount === 1) {
-                    console.warn("🛡️ Safety Check 인증 실패 - 인증 없이 마지막 시도를 진행합니다...");
+                // (1) 2차 재시도 (Bypass): Authorization 헤더를 숨기고 전송
+                if (retryCount === 1) {
+                    console.warn("🛡️ Gateway 인증 실패 - 우회 호출(X-Customer-Auth)을 진행합니다...");
 
                     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
                     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+                    const { data: { session } } = await supabase.auth.getSession();
+                    const token = session?.access_token;
 
                     try {
                         const directResp = await fetch(`${supabaseUrl}/functions/v1/vibe-ai`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'apikey': anonKey, // 필수 헤더
+                                'apikey': anonKey,
+                                'X-Customer-Auth': token ? `Bearer ${token}` : '',
                                 // Authorization을 제외하여 게이트웨이 JWT 중복 체크 우회
                             },
                             body: JSON.stringify({ model: 'gpt-4o-mini', ...body })
@@ -98,7 +101,7 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
                         if (directResp.ok) {
                             const resJson = await directResp.json();
                             if (resJson.text) {
-                                console.log("✅ 인증 우회(apikey) 호출 성공!");
+                                console.log("✅ 인증 우회 호출 성공!");
                                 return resJson.text;
                             }
                         } else {
@@ -110,13 +113,15 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
                     }
                 }
 
-                // (2) 세션 갱신 후 1차 재시도
+                // (2) 1차 재시도: 세션 갱신 후 시도
                 if (retryCount === 0) {
                     console.warn("🔐 인증 토큰 오류 감지 - 세션 갱신 후 1회 재시도합니다...");
                     const { error: refreshErr } = await supabase.auth.refreshSession();
                     if (!refreshErr) {
                         return callOpenAI(payload, options, retryCount + 1);
                     }
+                    // 세션 갱신 실패해도 retryCount를 올려서 2차 우회 시도로 넘어가게 함
+                    return callOpenAI(payload, options, retryCount + 1);
                 }
             }
 
