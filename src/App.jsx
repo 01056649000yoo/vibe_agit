@@ -87,12 +87,15 @@ function App() {
   useEffect(() => {
     // 앱 실행 시 현재 로그인 세션 확인 및 충돌 방지
     const checkSessions = async () => {
+      const start = performance.now();
+      console.log('🔍 세션 확인 중...');
 
       // [안전장치] Supabase 클라이언트가 없을 경우 중단
       if (!supabase) return;
 
-      // 1. 현재 Supabase Auth 세션 확인 (교사 구글 로그인 또는 학생 익명 로그인 모두 포함)
+      // 1. 현재 Supabase Auth 세션 확인
       const { data: { session } } = await supabase.auth.getSession();
+      console.log(`🔐 세션 획득 완료 (${(performance.now() - start).toFixed(0)}ms)`);
 
       if (session) {
         // 익명 사용자인지 확인 (학생 세션)
@@ -179,55 +182,64 @@ function App() {
   // DB에서 사용자 프로필 정보 가져오기 (교사 기본 정보 포함)
   const fetchProfile = async (userId) => {
     // [추가] 최근 접속 시간 기록 (가장 최근 활동 시점 파악용)
+    // 1. 성능 측정 시작
+    const startTime = performance.now();
+    console.log('⏱️ 프로필 로드 시작...');
+
+    // 2. 모든 요청을 병렬로 처리 (워터폴 제거)
     try {
-      await supabase
-        .from('profiles')
-        .update({ last_login_at: new Date().toISOString() })
-        .eq('id', userId);
+        const [updateResult, profileResult, teacherResult] = await Promise.all([
+            // (A) 최근 접속 시간 업데이트 (결과를 기다리지 않아도 무방하지만 병렬 처리)
+            supabase
+                .from('profiles')
+                .update({ last_login_at: new Date().toISOString() })
+                .eq('id', userId),
+            
+            // (B) 프로필 정보 조회
+            supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .maybeSingle(),
+            
+            // (C) 교사 정보 조회
+            supabase
+                .from('teachers')
+                .select('name, school_name')
+                .eq('id', userId)
+                .maybeSingle()
+        ]);
+
+        const endTime = performance.now();
+        console.log(`✅ 프로필 로드 완료 (${(endTime - startTime).toFixed(0)}ms)`);
+
+        const profileData = profileResult.data;
+        const teacherData = teacherResult.data;
+
+        if (profileResult.error) {
+            console.error("프로필 로드 에러 (RLS 확인 필요):", profileResult.error);
+        }
+
+        if (profileData) {
+            setProfile({
+                ...profileData,
+                last_login_at: profileData.last_login_at,
+                role: profileData.role || 'TEACHER',
+                teacherName: teacherData?.name,
+                schoolName: teacherData?.school_name
+            });
+        } else if (teacherData) {
+            // [복구] 신규 가입자 등의 경우 기본 역할 부여
+            setProfile({
+                role: 'TEACHER',
+                teacherName: teacherData.name,
+                schoolName: teacherData.school_name
+            });
+        }
     } catch (e) {
-      console.warn("최근 접속 시간 업데이트 실패:", e);
+        console.warn("프로필 로드 중 오류 발생:", e);
     }
-
-    // 1. 프로필 정보와 교사 정보를 병렬로 가져오기 (Waterfalls 제거)
-    const [profileResult, teacherResult] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle(),
-      supabase
-        .from('teachers')
-        .select('name, school_name')
-        .eq('id', userId)
-        .maybeSingle()
-    ]);
-
-    const profileData = profileResult.data;
-    const teacherData = teacherResult.data;
-
-    if (profileResult.error) {
-      console.error("프로필 로드 에러 (RLS 확인 필요):", profileResult.error);
-    }
-
-    if (profileData) {
-      // 데이터가 존재할 때만 상태 업데이트
-      setProfile({
-        ...profileData,
-        last_login_at: profileData.last_login_at,
-        role: profileData.role || 'TEACHER', // 기본값 보호
-        teacherName: teacherData?.name,
-        schoolName: teacherData?.school_name
-      });
-    } else if (teacherData && !profile) {
-      // 신규 가입자 등의 경우에만 기본 역할 부여 (기존 정보 유지)
-      setProfile(prev => ({
-        ...(prev || {}),
-        role: prev?.role || 'TEACHER',
-        teacherName: teacherData.name,
-        schoolName: teacherData.school_name
-      }));
-    }
-  }
+}
 
   // [보안 수정] 교사 프로필 설정 - 서버 사이드 RPC 사용
   // role과 is_approved는 서버에서만 결정 (클라이언트 조작 불가)
