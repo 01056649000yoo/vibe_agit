@@ -20,11 +20,18 @@
 ALTER TABLE public.vocab_tower_rankings
     DROP CONSTRAINT IF EXISTS vocab_tower_rankings_student_id_key;
 
--- student_id + class_id 조합이 유니크하도록 설정
--- (한 학생이 여러 반에서 각각 독립적인 랭킹을 가질 수 있음)
-ALTER TABLE public.vocab_tower_rankings
-    ADD CONSTRAINT vocab_tower_rankings_student_class_uniq
-    UNIQUE (student_id, class_id);
+-- student_id + class_id 복합 unique constraint (없을 때만 추가)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'vocab_tower_rankings_student_class_uniq'
+          AND conrelid = 'public.vocab_tower_rankings'::regclass
+    ) THEN
+        ALTER TABLE public.vocab_tower_rankings
+            ADD CONSTRAINT vocab_tower_rankings_student_class_uniq
+            UNIQUE (student_id, class_id);
+    END IF;
+END $$;
 
 
 -- [2] update_tower_max_floor 함수 수정

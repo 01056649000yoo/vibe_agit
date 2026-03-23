@@ -140,7 +140,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             } : {
                 maxWidth: '600px',
                 background: '#FFFDF7',
-                border: '2px solid #FFE082'
+                border: '2px solid #FFE082',
+                overflow: 'visible'
             }}>
                 {/* 헤더 섹션 */}
                 <StudentHeader

@@ -153,15 +153,38 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         }
     };
 
+    // 최신 currentFloor를 ref로 추적 (stale closure 방지)
+    const currentFloorRef = React.useRef(1);
+
     useEffect(() => {
         if (isFullyExhausted) {
-            // [신규] 기회 완전 소진 시 최종 층수 기록 후 보상 지급
-            updateMaxFloor(stats.currentFloor);
+            // [수정] ref로 추적한 최신 층수 사용
+            const finalFloor = currentFloorRef.current;
+            const classId = studentSession?.class_id || studentSession?.classId;
+            if (studentSession?.id && classId) {
+                supabase.rpc('update_tower_max_floor', {
+                    p_student_id: studentSession.id,
+                    p_class_id: classId,
+                    p_floor: finalFloor
+                }).then(({ error }) => {
+                    if (error) {
+                        console.error('❌ isFullyExhausted 시 쳕수 기록 실패:', error);
+                    } else {
+                        // 랭킹 갱신
+                        supabase
+                            .from('vocab_tower_rankings')
+                            .select('max_floor, student_id, students:student_id ( name )')
+                            .eq('class_id', classId)
+                            .order('max_floor', { ascending: false })
+                            .then(({ data }) => { if (data) setRankings(data); });
+                    }
+                });
+            }
             handleRewardPoints();
         }
-    }, [isFullyExhausted]);
+    }, [isFullyExhausted, studentSession?.id, studentSession?.class_id, studentSession?.classId]);
 
-    // [신규] 랭킹 데이터 불러오기
+    // []
     const fetchRankings = React.useCallback(async () => {
         const classId = studentSession?.class_id || studentSession?.classId;
         if (!classId) return;
@@ -176,13 +199,11 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                 `)
                 .eq('class_id', classId);
 
-            // [신규] 랭킹 리셋 설정이 있다면 해당 시점 이후 데이터만 필터링
             if (rankingResetDate) {
                 query = query.gte('updated_at', rankingResetDate);
             }
 
             const { data, error } = await query.order('max_floor', { ascending: false });
-
             if (error) throw error;
             setRankings(data || []);
         } catch (err) {
@@ -196,17 +217,18 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         }
     }, [fetchRankings]);
 
-    // [신규] 최고 층수 업데이트
+    // [신규] 최고 층수 업데이트 (순환참조 제거 - fetchRankings 개별 호출)
     const updateMaxFloor = React.useCallback(async (floor) => {
         const classId = studentSession?.class_id || studentSession?.classId;
         if (!studentSession?.id || !classId) return;
 
         try {
-            await supabase.rpc('update_tower_max_floor', {
+            const { error } = await supabase.rpc('update_tower_max_floor', {
                 p_student_id: studentSession.id,
                 p_class_id: classId,
                 p_floor: floor
             });
+            if (error) throw error;
             fetchRankings(); // 랭킹 갱신
         } catch (err) {
             console.error('❌ 최고 층수 업데이트 실패:', err);
@@ -233,14 +255,14 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     useEffect(() => {
         if (lastResult?.leveledUp) {
             const newFloor = lastResult.newFloor ?? stats.currentFloor;
+            // ref 업데이트
+            currentFloorRef.current = newFloor;
             setPreviousFloor(newFloor - 1);
             setShowLevelUp(true);
 
-            // [신규] 레벨업 시 최고 층수 DB 업데이트 (lastResult에서 받은 정확한 층수 사용)
+            // [수정] 레벨업 시 최고 층수 DB 업데이트
             updateMaxFloor(newFloor);
 
-            // [보너스] 다음 층 도달 시 시간 추가 로직 적용
-            // 2층: +20초, 3층부터: 20초 + (층수-2)*3초
             const bonus = 20 + (Math.max(0, newFloor - 2) * 3);
             setTimeLeft(prev => prev + bonus);
 
