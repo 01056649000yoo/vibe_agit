@@ -123,9 +123,6 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         // [js-cache-storage] localStorage 호출 결과를 상수에 할당
         const isRewarded = localStorage.getItem(rewardKey);
 
-        // [신규] 게임 종료 시 현재 층수 랭킹에 기록
-        updateMaxFloor(stats.currentFloor);
-
         // 이미 지급했거나 보상 포인트가 0 이하인 경우 방지
         if (awardedPoints > 0 || rewardPoints <= 0 || isRewarded) {
             // 이미 지급된 상태라면 상태값만 동기화 (UI 표시용)
@@ -158,12 +155,14 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
     useEffect(() => {
         if (isFullyExhausted) {
+            // [신규] 기회 완전 소진 시 최종 층수 기록 후 보상 지급
+            updateMaxFloor(stats.currentFloor);
             handleRewardPoints();
         }
     }, [isFullyExhausted]);
 
     // [신규] 랭킹 데이터 불러오기
-    const fetchRankings = async () => {
+    const fetchRankings = React.useCallback(async () => {
         const classId = studentSession?.class_id || studentSession?.classId;
         if (!classId) return;
 
@@ -189,16 +188,16 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         } catch (err) {
             console.error('❌ 랭킹 로드 실패:', err);
         }
-    };
+    }, [studentSession?.class_id, studentSession?.classId, rankingResetDate]);
 
     useEffect(() => {
         if (studentSession?.class_id || studentSession?.classId) {
             fetchRankings();
         }
-    }, [studentSession?.class_id, studentSession?.classId, rankingResetDate]);
+    }, [fetchRankings]);
 
     // [신규] 최고 층수 업데이트
-    const updateMaxFloor = async (floor) => {
+    const updateMaxFloor = React.useCallback(async (floor) => {
         const classId = studentSession?.class_id || studentSession?.classId;
         if (!studentSession?.id || !classId) return;
 
@@ -212,7 +211,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         } catch (err) {
             console.error('❌ 최고 층수 업데이트 실패:', err);
         }
-    };
+    }, [studentSession?.id, studentSession?.class_id, studentSession?.classId, fetchRankings]);
 
     // forcedGrade가 변경되면 동기화
     useEffect(() => {
@@ -233,21 +232,21 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     // 레벨업 애니메이션 처리
     useEffect(() => {
         if (lastResult?.leveledUp) {
-            setPreviousFloor(stats.currentFloor - 1);
+            const newFloor = lastResult.newFloor ?? stats.currentFloor;
+            setPreviousFloor(newFloor - 1);
             setShowLevelUp(true);
 
-            // [신규] 레벨업 시 최고 층수 DB 업데이트
-            updateMaxFloor(stats.currentFloor);
+            // [신규] 레벨업 시 최고 층수 DB 업데이트 (lastResult에서 받은 정확한 층수 사용)
+            updateMaxFloor(newFloor);
 
             // [보너스] 다음 층 도달 시 시간 추가 로직 적용
             // 2층: +20초, 3층부터: 20초 + (층수-2)*3초
-            const floor = stats.currentFloor;
-            const bonus = 20 + (Math.max(0, floor - 2) * 3);
+            const bonus = 20 + (Math.max(0, newFloor - 2) * 3);
             setTimeLeft(prev => prev + bonus);
 
             setTimeout(() => setShowLevelUp(false), 3000);
         }
-    }, [lastResult, stats.currentFloor]);
+    }, [lastResult]);
 
     // 정답 선택 핸들러
     const handleAnswerSelect = (answer) => {
