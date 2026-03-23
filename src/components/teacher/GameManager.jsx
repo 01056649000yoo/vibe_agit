@@ -215,7 +215,8 @@ const GameManager = ({ activeClass, isMobile }) => {
                 const { error } = await supabase
                     .from('vocab_tower_rankings')
                     .delete()
-                    .eq('student_id', studentId);
+                    .eq('student_id', studentId)
+                    .eq('class_id', activeClass.id);
                 if (error) throw error;
             }
 
