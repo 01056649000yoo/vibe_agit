@@ -41,6 +41,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     const [isFullyExhausted, setIsFullyExhausted] = useState(false);
     const [awardedPoints, setAwardedPoints] = useState(0);
     const [rankings, setRankings] = useState([]); // [신규] 랭킹 정보
+    const [isTowerCleared, setIsTowerCleared] = useState(false); // [신규] 10층 클리어 상태
 
     // [신규] 일일 시도 횟수 관리
     const getTodayKey = () => {
@@ -157,7 +158,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     const currentFloorRef = React.useRef(1);
 
     useEffect(() => {
-        if (isFullyExhausted) {
+        if (isFullyExhausted && !isTowerCleared) { // 클리어 시에는 중복 실행 안 함
             // [수정] ref로 추적한 최신 층수 사용
             const finalFloor = currentFloorRef.current;
             const classId = studentSession?.class_id || studentSession?.classId;
@@ -182,7 +183,28 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
             }
             handleRewardPoints();
         }
-    }, [isFullyExhausted, studentSession?.id, studentSession?.class_id, studentSession?.classId]);
+    }, [isFullyExhausted, isTowerCleared, studentSession?.id, studentSession?.class_id, studentSession?.classId]);
+
+    // [신규] 10층 클리어 보상 지급 로직 (500 포인트)
+    useEffect(() => {
+        if (isTowerCleared) {
+            const clearKey = `${getTodayKey()}_floor10_cleared`;
+            const isCleared = localStorage.getItem(clearKey);
+
+            if (!isCleared) {
+                console.log('👑 10층 정복 보상 지급 시작: 500P');
+                supabase.rpc('reward_for_vocab_tower', { p_amount: 500 })
+                    .then(({ error }) => {
+                        if (!error) {
+                            localStorage.setItem(clearKey, 'true');
+                            console.log('✅ 10층 정복 보상 지급 완료');
+                        } else {
+                            console.error('❌ 10층 정복 보상 지급 실패:', error);
+                        }
+                    });
+            }
+        }
+    }, [isTowerCleared, studentSession?.id]);
 
     // []
     const fetchRankings = React.useCallback(async () => {
@@ -266,7 +288,13 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
             const bonus = 20 + (Math.max(0, newFloor - 2) * 3);
             setTimeLeft(prev => prev + bonus);
 
-            setTimeout(() => setShowLevelUp(false), 3000);
+            setTimeout(() => {
+                setShowLevelUp(false);
+                // 10층에 막 도달했다면 클리어 처리
+                if (newFloor === 10) {
+                    setIsTowerCleared(true);
+                }
+            }, 3000);
         }
     }, [lastResult]);
 
@@ -1150,6 +1178,63 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                                     }}
                                 >
                                     대시보드로 돌아가기 🏠
+                                </Button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* [신규] 10층 타워 클리어 오버레이 */}
+                <AnimatePresence>
+                    {isTowerCleared && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            style={{
+                                position: 'fixed', inset: 0, background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                zIndex: 8000, padding: '20px'
+                            }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.8, y: 50 }}
+                                animate={{ scale: 1, y: 0 }}
+                                style={{
+                                    background: 'white', borderRadius: '32px', padding: '40px 30px',
+                                    maxWidth: '450px', width: '100%', textAlign: 'center',
+                                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+                                }}
+                            >
+                                <span style={{ fontSize: '4.5rem', display: 'block', marginBottom: '15px' }}>👑</span>
+                                <h2 style={{ fontSize: '2.2rem', color: '#FF9800', margin: '0 0 10px 0', fontWeight: '1000' }}>어휘마스터 등극!</h2>
+                                <p style={{ color: '#666', fontSize: '1.1rem', marginBottom: '30px', lineHeight: '1.6' }}>
+                                    대단해요! 어휘의 탑 정상을 정복했습니다!<br />
+                                    전설적인 실력을 증명한 학생에게<br />
+                                    <strong>특별 보너스</strong>를 드립니다!
+                                </p>
+
+                                <div style={{
+                                    background: '#FFF8E1', borderRadius: '20px', padding: '20px',
+                                    marginBottom: '40px', border: '2px dashed #FF9800'
+                                }}>
+                                    <span style={{ color: '#F57C00', fontWeight: 'bold' }}>탑 클리어 기념 보너스</span>
+                                    <div style={{ fontSize: '3rem', fontWeight: '1000', color: '#E65100', marginTop: '10px' }}>
+                                        +500P
+                                    </div>
+                                    <p style={{ fontSize: '0.85rem', color: '#FB8C00', marginTop: '10px', margin: 0 }}>
+                                        (보관함에 즉시 지급되었습니다)
+                                    </p>
+                                </div>
+
+                                <Button
+                                    onClick={onBack}
+                                    style={{
+                                        width: '100%', height: '60px',
+                                        background: '#E65100', color: 'white',
+                                        fontSize: '1.2rem', fontWeight: '900', borderRadius: '20px'
+                                    }}
+                                >
+                                    위풍당당하게 돌아가기 🏠
                                 </Button>
                             </motion.div>
                         </motion.div>

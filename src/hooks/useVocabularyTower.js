@@ -204,11 +204,17 @@ const useVocabularyTower = (selectedGrade) => {
 
             // 레벨업 체크
             if (newExp >= requiredExpForNextFloor) {
-                leveledUp = true;
-                newFloor = currentFloor + 1;
-                newExp = 0; // 경험치 초기화
-
-                setCurrentFloor(newFloor);
+                if (currentFloor < 10) {
+                    leveledUp = true;
+                    newFloor = currentFloor + 1;
+                    newExp = 0; // 경험치 초기화
+                    setCurrentFloor(newFloor);
+                } else {
+                    // 10층(최종 층) 도달 시 레벨업 방지 및 경험치 MAX 고정
+                    newFloor = 10;
+                    newExp = requiredExpForNextFloor; 
+                    leveledUp = false;
+                }
             }
 
             setExperience(newExp);
