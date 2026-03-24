@@ -5,6 +5,7 @@ import './App.css'
 // 레이아웃 및 공통 컴포넌트
 import Layout from './components/layout/Layout'
 import Loading from './components/common/Loading'
+import ErrorBoundary from './components/common/ErrorBoundary' // [추가] 에러 방어막
 
 // 지연 로딩 (Lazy Loading) 적용
 const LandingPage = lazy(() => import('./components/layout/LandingPage'))
@@ -327,7 +328,8 @@ function App() {
 
   return (
     <Layout full={!!studentSession || (!!session && !!profile)}>
-      <Suspense fallback={<Loading />}>
+      <ErrorBoundary>
+        <Suspense fallback={<Loading />}>
         {loading ? (
           <Loading />
         ) : directPath ? (
@@ -495,6 +497,7 @@ function App() {
           <LandingPage onStudentLoginClick={() => setIsStudentLoginMode(true)} />
         )}
       </Suspense>
+      </ErrorBoundary>
     </Layout>
   )
 }
