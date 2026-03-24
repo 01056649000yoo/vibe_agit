@@ -270,9 +270,12 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         }
     }, [lastResult]);
 
+    // [신규] 광클(어뷰징) 방지를 위한 트랜지션 락
+    const isTransitioningRef = React.useRef(false);
+
     // 정답 선택 핸들러
     const handleAnswerSelect = (answer) => {
-        if (showResult) return;
+        if (showResult || selectedAnswer || isTransitioningRef.current) return; // 광클 어뷰징 방지
         setSelectedAnswer(answer);
         actions.handleAnswer(answer);
         setShowResult(true);
@@ -280,9 +283,17 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
     // 다음 문제로 이동
     const handleNextQuestion = () => {
+        if (isTransitioningRef.current) return; // 이미 넘어가는 중이면 무시 (광클 방지)
+        isTransitioningRef.current = true;
+
         setShowResult(false);
         setSelectedAnswer(null);
         actions.nextQuiz();
+
+        // 새 퀴즈 렌더링 후 락 해제 (버튼 애니메이션 페이드아웃 고려 0.3초)
+        setTimeout(() => {
+            isTransitioningRef.current = false;
+        }, 300);
     };
 
     // 게임 재시작 (시간 초과 후 계속하기 시 사용)
