@@ -330,42 +330,22 @@ export const useClassAgitClass = (classId, currentStudentId) => {
         // 딜레이 없이 즉각 로드 (체감 속도 향상)
         fetchData(true);
 
-        // 실시간 업데이트 설정 (student_posts & comments, reactions 감시)
-        const postSubscription = supabase
-            .channel(`agit-posts-${classId}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'student_posts'
-            }, () => fetchData(false, true))
-            .subscribe();
+        // [최적화] 디바운싱: 여러 실시간 이벤트가 동시에 들어올 때 최후 1초 뒤에 한 번만 실행
+        let timeoutId;
+        const debouncedFetch = () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                fetchData(false, true);
+            }, 1000);
+        };
 
-        const commentSubscription = supabase
-            .channel(`agit-comments-${classId}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'post_comments'
-            }, () => fetchData(false, true))
-            .subscribe();
-
-        const reactionSubscription = supabase
-            .channel(`agit-reactions-${classId}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'post_reactions'
-            }, () => fetchData(false, true))
-            .subscribe();
-
-        const classSubscription = supabase
-            .channel(`agit-settings-${classId}`)
-            .on('postgres_changes', {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'classes',
-                filter: `id=eq.${classId}`
-            }, () => fetchData(false, true))
+        // [최적화] 단일 채널 다중화 (Multiplexing): 4개의 개별 커넥션을 1개로 통합
+        const agitChannel = supabase
+            .channel(`agit-realtime-events-${classId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'student_posts' }, debouncedFetch)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, debouncedFetch)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'post_reactions' }, debouncedFetch)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'classes', filter: `id=eq.${classId}` }, debouncedFetch)
             .subscribe();
 
         // 1. 자정이 지나 날짜가 바뀌었는지 1분마다 체크하여 자동 갱신
@@ -387,10 +367,8 @@ export const useClassAgitClass = (classId, currentStudentId) => {
         window.addEventListener('focus', handleFocus);
 
         return () => {
-            supabase.removeChannel(postSubscription);
-            supabase.removeChannel(commentSubscription);
-            supabase.removeChannel(reactionSubscription);
-            supabase.removeChannel(classSubscription);
+            supabase.removeChannel(agitChannel);
+            if (timeoutId) clearTimeout(timeoutId);
             clearInterval(dateCheckInterval); // 인터벌 정리
             window.removeEventListener('focus', handleFocus); // 이벤트 리스너 정리
         };

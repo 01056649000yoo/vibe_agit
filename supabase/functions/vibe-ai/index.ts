@@ -121,9 +121,10 @@ Deno.serve(async (req) => {
                     if (user.is_anonymous) {
                         // (A) 학생(익명)인 경우
                         if (studentId) {
+                            // [최적화] 인증 검사와 교사 정보 조회를 하나의 JOIN 쿼리로 통합 (N+1 쿼리 방지)
                             const { data: student } = await supabaseAdmin
                                 .from('students')
-                                .select('id')
+                                .select('id, classes:class_id(teacher_id)')
                                 .eq('id', studentId)
                                 .eq('auth_id', user.id)
                                 .maybeSingle();
@@ -131,7 +132,10 @@ Deno.serve(async (req) => {
                             if (student) {
                                 isAuthorized = true;
                                 isStudentRequest = true;
-                                console.log(`✅ 학생 인증 성공: Student[${studentId}]`);
+                                targetTeacherId = Array.isArray(student.classes) 
+                                    ? student.classes[0]?.teacher_id 
+                                    : student.classes?.teacher_id || null;
+                                console.log(`✅ 학생 인증 성공: Student[${studentId}] (Teacher: ${targetTeacherId})`);
                             } else {
                                 authReason = `학생 ID 불일치`;
                             }
@@ -161,11 +165,6 @@ Deno.serve(async (req) => {
                 console.warn(`⚠️ 인증 우회 허용(SAFETY_CHECK): ${authReason}`);
 
             // [특수 허용 2] JWT 수동 디코딩으로 userId를 확인했지만 getUser()가 실패한 경우
-            // 보안 검토:
-            //   - studentId 포함 요청(학생)은 여기서 허용하지 않음 (isStudentRequest=false 강제)
-            //   - targetTeacherId를 jwtUserId로 설정 → API Key를 해당 교사 것만 사용
-            //   - MAX_PROMPT_LENGTH(10000자) 제한은 그대로 적용됨
-            //   - 만료된 JWT라면 애초에 Supabase Gateway에서 이미 거절하므로 이 분기까지 오지 않음
             } else if (jwtUserId && !studentId) {
                 isAuthorized = true;
                 authedUserId = jwtUserId;
@@ -220,19 +219,7 @@ Deno.serve(async (req) => {
         // 7. API Key 결정
         let apiKey = '';
         let currentMode = 'SYSTEM';
-        // targetTeacherId는 위 인증 블록에서 이미 선언/할당되었을 수 있음
-
-        if (isStudentRequest && studentId) {
-            const { data: studentMapping } = await supabaseAdmin
-                .from('students')
-                .select('class_id, classes:class_id(teacher_id)')
-                .eq('id', studentId)
-                .maybeSingle();
-
-            if (studentMapping?.classes?.teacher_id) {
-                targetTeacherId = studentMapping.classes.teacher_id;
-            }
-        }
+        // targetTeacherId는 위 인증 블록에서 이미 선언/할당되었음 (불필요한 DB 쿼리 제거됨)
 
         if (targetTeacherId) {
             const { data: profileData } = await supabaseAdmin

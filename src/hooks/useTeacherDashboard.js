@@ -201,29 +201,16 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         }
 
         try {
-            // 1. 학급 데이터 삭제 (연쇄 삭제가 설정되어 있지 않을 경우 대비)
-            const { error: classError } = await supabase
-                .from('classes')
-                .delete()
-                .eq('teacher_id', session.user.id);
+            // [최적화] 학급, 교사 상세, 프로필 데이터 병렬 삭제 (Promise.all)
+            const [classResult, teacherResult, profileResult] = await Promise.all([
+                supabase.from('classes').delete().eq('teacher_id', session.user.id),
+                supabase.from('teachers').delete().eq('id', session.user.id),
+                supabase.from('profiles').delete().eq('id', session.user.id)
+            ]);
 
-            if (classError) console.warn("학급 삭제 중 경고:", classError.message);
-
-            // 2. 선생님 상세 정보 삭제
-            const { error: teacherError } = await supabase
-                .from('teachers')
-                .delete()
-                .eq('id', session.user.id);
-
-            if (teacherError) throw teacherError;
-
-            // 3. 프로필 삭제
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .delete()
-                .eq('id', session.user.id);
-
-            if (profileError) throw profileError;
+            if (classResult.error) console.warn("학급 삭제 중 경고:", classResult.error.message);
+            if (teacherResult.error) throw teacherResult.error;
+            if (profileResult.error) throw profileResult.error;
 
             // 4. 브라우저 저장 데이터 완전 초기화
             localStorage.clear();

@@ -295,8 +295,15 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         if (!confirm(`⚠️ 정말로 삭제하시겠습니까?`)) return;
 
         try {
-            await supabase.from('teachers').delete().eq('id', teacherId);
-            await supabase.from('profiles').delete().eq('id', teacherId);
+            // [최적화] 여러 테이블의 삭제를 병렬로 처리
+            const [teacherResult, profileResult] = await Promise.all([
+                supabase.from('teachers').delete().eq('id', teacherId),
+                supabase.from('profiles').delete().eq('id', teacherId)
+            ]);
+            
+            if (teacherResult.error) throw teacherResult.error;
+            if (profileResult.error) throw profileResult.error;
+
             alert(`🗑️ 삭제 완료`);
             fetchTeachers();
         } catch (err) { alert('삭제 실패: ' + err.message); }

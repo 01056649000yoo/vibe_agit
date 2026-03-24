@@ -638,24 +638,25 @@ ${postArray.map((p, idx) => {
         if (!confirm('학생에게 이 글을 돌려보내고 다시 쓰기를 요청할까요? ♻️\n학생의 화면에 안내 문구가 표시됩니다.')) return;
 
         try {
-            const { error } = await supabase
-                .from('student_posts')
-                .update({
+            // [최적화] 글 상태 업데이트와 포인트 로그 삽입을 병렬 처리
+            const [postResult, logResult] = await Promise.all([
+                supabase.from('student_posts').update({
                     is_submitted: false,
                     is_returned: true,
                     ai_feedback: tempFeedback
+                }).eq('id', post.id),
+                
+                supabase.from('point_logs').insert({
+                    student_id: post.student_id,
+                    post_id: post.id,
+                    mission_id: post.mission_id,
+                    amount: 0,
+                    reason: `선생님께서 '${post.title}' 글에 대한 다시 쓰기를 요청하셨습니다. ♻️`
                 })
-                .eq('id', post.id);
+            ]);
 
-            if (error) throw error;
-
-            await supabase.from('point_logs').insert({
-                student_id: post.student_id,
-                post_id: post.id,
-                mission_id: post.mission_id,
-                amount: 0,
-                reason: `선생님께서 '${post.title}' 글에 대한 다시 쓰기를 요청하셨습니다. ♻️`
-            });
+            if (postResult.error) throw postResult.error;
+            if (logResult.error) throw logResult.error;
 
             alert('다시 쓰기 요청을 전달했습니다! 📤');
             setSelectedPost(null);
@@ -725,26 +726,27 @@ ${postArray.map((p, idx) => {
 
         setLoadingPosts(true);
         try {
-            const approvalPromises = toApprove.map(async (post) => {
+            // [최적화] N번의 글 승인 통신과 N번의 포인트 RPC 호출(총 2N회)을 하나의 데이터 배열로 묶어(Bulk) 서버리스 함수 1회 호출로 해결.
+            const submissions = toApprove.map((post) => {
                 let amount = selectedMission.base_reward || 0;
                 const totalThreshold = (selectedMission.min_chars || 0) + (selectedMission.bonus_threshold || 0);
                 let isBonus = (selectedMission.bonus_threshold && post.char_count >= totalThreshold);
                 if (isBonus) amount += (selectedMission.bonus_reward || 0);
 
-                // 1. 글 승인 상태 변경
-                await supabase.from('student_posts').update({ is_confirmed: true }).eq('id', post.id);
-
-                // 2. [수정] RPC를 이용한 일행적(Atomic) 데이터 처리
-                await supabase.rpc('increment_student_points', {
-                    p_student_id: post.student_id,
-                    p_amount: amount,
-                    p_reason: `일괄 승인 보상: ${selectedMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`,
-                    p_post_id: post.id,
-                    p_mission_id: post.mission_id
-                });
+                return {
+                    post_id: post.id,
+                    student_id: post.student_id,
+                    mission_id: post.mission_id,
+                    amount: amount,
+                    reason: `일괄 승인 보상: ${selectedMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`
+                };
             });
 
-            await Promise.all(approvalPromises);
+            const { error } = await supabase.rpc('bulk_approve_posts', {
+                p_submissions: submissions
+            });
+
+            if (error) throw error;
             alert(`🎉 ${toApprove.length}건 일괄 승인 완료!`);
             fetchPostsForMission(selectedMission);
             fetchMissions();
