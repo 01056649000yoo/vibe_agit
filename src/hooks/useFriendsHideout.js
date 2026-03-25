@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 import { dataCache } from '../lib/cache';
@@ -11,7 +11,7 @@ export const useFriendsHideout = (studentSession, params) => {
     const [loadingMore, setLoadingMore] = useState(false);
     const [viewingPost, setViewingPost] = useState(null);
     const [classmates, setClassmates] = useState([]);
-    const [page, setPage] = useState(0);
+    const pageRef = useRef(0);
     const [hasMore, setHasMore] = useState(true);
 
     const PAGE_SIZE = 10;
@@ -36,12 +36,12 @@ export const useFriendsHideout = (studentSession, params) => {
     const fetchPosts = useCallback(async (missionId, isAppend = false) => {
         if (!isAppend) {
             setLoading(true);
-            setPage(0);
+            pageRef.current = 0;
         } else {
             setLoadingMore(true);
         }
 
-        const currentOffset = isAppend ? (page + 1) * PAGE_SIZE : 0;
+        const currentOffset = isAppend ? (pageRef.current + 1) * PAGE_SIZE : 0;
 
         try {
             const { data, error } = await supabase
@@ -62,7 +62,7 @@ export const useFriendsHideout = (studentSession, params) => {
 
             if (isAppend) {
                 setPosts(prev => [...prev, ...(data || [])]);
-                setPage(prev => prev + 1);
+                pageRef.current += 1;
             } else {
                 setPosts(data || []);
             }
@@ -74,13 +74,13 @@ export const useFriendsHideout = (studentSession, params) => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [studentSession.id, page]);
+    }, [studentSession.id]);
 
-    const loadMore = () => {
+    const loadMore = useCallback(() => {
         if (!loadingMore && hasMore && selectedMission) {
             fetchPosts(selectedMission.id, true);
         }
-    };
+    }, [loadingMore, hasMore, selectedMission, fetchPosts]);
 
     const fetchMissions = useCallback(async () => {
         setLoading(true);
@@ -134,9 +134,13 @@ export const useFriendsHideout = (studentSession, params) => {
         if (params?.initialPostId) {
             handleInitialPost(params.initialPostId);
         }
+    }, [fetchMissions, fetchClassmates, handleInitialPost, params?.initialPostId]);
 
+    useEffect(() => {
         // [실시간] 친구들의 드래곤 데이터 실시간 구독
         const classId = studentSession.classId || studentSession.class_id;
+        if (!classId) return;
+
         const classmateSubscription = supabase
             .channel(`classmates_${classId}`)
             .on(
@@ -159,7 +163,7 @@ export const useFriendsHideout = (studentSession, params) => {
         return () => {
             supabase.removeChannel(classmateSubscription);
         };
-    }, [params, fetchMissions, fetchClassmates, handleInitialPost, studentSession.classId, studentSession.class_id, studentSession.id]);
+    }, [studentSession.classId, studentSession.class_id, studentSession.id]);
 
     const handleMissionChange = (mission) => {
         setSelectedMission(mission);

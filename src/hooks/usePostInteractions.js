@@ -101,51 +101,63 @@ export const usePostInteractions = (postId, studentId) => {
             return false;
         }
 
-        setLoading(true);
-        try {
-            // 2단: AI 문맥 분석 (심층)
-            const safety = await checkContentSafety(content);
-            if (!safety.is_appropriate) {
-                alert(`잠깐! ✋\n\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}`);
-                setLoading(false);
-                return false;
-            }
+        // [낙관적 업데이트] 즉시 화면에 임시 댓글 표시
+        const tempId = `temp-${Date.now()}`;
+        const optimisticComment = {
+            id: tempId,
+            post_id: postId,
+            student_id: studentId,
+            content: content.trim(),
+            created_at: new Date().toISOString(),
+            isOptimistic: true
+        };
+        setComments(prev => [...prev, optimisticComment]);
 
-            const { error } = await supabase
-                .from('post_comments')
-                .insert({
-                    post_id: postId,
-                    student_id: studentId,
-                    content: content.trim()
-                });
-            if (error) throw error;
-
-            // [추가] 댓글 등록 성공 시 보상 지급 (RPC 호출)
-            console.log(`[usePostInteractions] Calling reward_for_comment for post: ${postId}`);
+        // 2단: 비동기 DB 저장 및 AI 검사 (Fire-and-forget)
+        (async () => {
             try {
-                const { data: rewardData, error: rpcErr } = await supabase.rpc('reward_for_comment', {
-                    p_post_id: postId
+                // 1. 실제 DB 인서트 (대기)
+                const { data: insertedComment, error } = await supabase
+                    .from('post_comments')
+                    .insert({
+                        post_id: postId,
+                        student_id: studentId,
+                        content: content.trim()
+                    }).select('id').single();
+
+                if (error) throw error;
+                const newCommentId = insertedComment.id;
+
+                // 2. 보상 지급 (백그라운드)
+                supabase.rpc('reward_for_comment', { p_post_id: postId }).then(({ data, error: rpcErr }) => {
+                    if (!rpcErr && data?.success) {
+                        console.log(`💰 [Realtime] 보상 지급 성공! +${data.points_awarded}P`);
+                    }
                 });
 
-                if (rpcErr) {
-                    console.error('[usePostInteractions] reward_for_comment RPC Error:', rpcErr);
-                } else if (rewardData?.success) {
-                    console.log(`[usePostInteractions] 💰 보상 지급 성공! +${rewardData.points_awarded}P`);
-                } else {
-                    console.log(`[usePostInteractions] ⏭️ 보상 지급 건너뜀 (이미 지급됨 혹은 기타):`, rewardData?.message || rewardData);
-                }
-            } catch (rErr) {
-                console.error('[usePostInteractions] 댓글 보상 지급 중 예외 발생:', rErr);
-            }
+                // 3. AI 문맥 분석 (백그라운드)
+                checkContentSafety(content).then(async (safety) => {
+                    if (!safety.is_appropriate) {
+                        // 통과 실패 시 삭제 후 알림 및 새로고침
+                        await supabase.from('post_comments').delete().eq('id', newCommentId);
+                        alert(`잠깐! ✋\n\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n(방금 작성한 댓글은 삭제 처리 되었습니다.)`);
+                        fetchInteractions();
+                    } else {
+                        // 통과 시 정상 댓글 목록으로 새로고침 (tempId 제거)
+                        fetchInteractions();
+                    }
+                }).catch(err => {
+                    console.error('AI Check failed:', err);
+                    fetchInteractions();
+                });
 
-            // 포인트 지급 등 추가 로직은 컴포넌트 레벨에서 처리하거나 훅 확장 가능
-            fetchInteractions();
-            return true;
-        } catch (err) {
-            console.error('댓글 등록 오류:', err.message);
-            setLoading(false);
-            return false;
-        }
+            } catch (err) {
+                console.error('댓글 비동기 저장 오류:', err.message);
+                fetchInteractions(); // 에러 발생 시 UI 롤백
+            }
+        })();
+
+        return true; // UI 즉시 해제 (Blocking 방지)
     };
 
     // 댓글 수정 핸들러
@@ -158,27 +170,43 @@ export const usePostInteractions = (postId, studentId) => {
             return false;
         }
 
-        setLoading(true);
-        try {
-            // 2단: AI 문맥 분석
-            const safety = await checkContentSafety(newContent);
-            if (!safety.is_appropriate) {
-                alert(`잠깐! ✋\n\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}`);
-                setLoading(false);
-                return false;
-            }
+        // [낙관적 업데이트] 화면 우선 반영
+        const previousComments = [...comments];
+        setComments(prev => prev.map(c => c.id === commentId ? { ...c, content: newContent.trim(), isOptimistic: true } : c));
 
-            const { error } = await supabase
-                .from('post_comments')
-                .update({ content: newContent.trim() })
-                .eq('id', commentId);
-            if (error) throw error;
-            fetchInteractions();
-            return true;
-        } catch (err) {
-            console.error('댓글 수정 오류:', err.message);
-            return false;
-        }
+        // 2단: 비동기 업데이트 및 AI 검사 (Fire-and-forget)
+        (async () => {
+            try {
+                // DB 즉시 업데이트
+                const { error } = await supabase
+                    .from('post_comments')
+                    .update({ content: newContent.trim() })
+                    .eq('id', commentId);
+                if (error) throw error;
+
+                // AI 문맥 분석 (백그라운드)
+                checkContentSafety(newContent).then(async (safety) => {
+                    if (!safety.is_appropriate) {
+                        // 통과 실패 시 이전 내용으로 롤백 후 알림
+                        const originalContent = previousComments.find(c => c.id === commentId)?.content;
+                        if (originalContent) {
+                            await supabase.from('post_comments').update({ content: originalContent }).eq('id', commentId);
+                        }
+                        alert(`잠깐! ✋\n\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n(수정 내용이 차단 및 복구되었습니다.)`);
+                    }
+                    fetchInteractions();
+                }).catch(err => {
+                    console.error('AI Check failed:', err);
+                    fetchInteractions();
+                });
+
+            } catch (err) {
+                console.error('댓글 비동기 수정 오류:', err.message);
+                setComments(previousComments); // 에러 발생 시 롤백
+            }
+        })();
+
+        return true; // UI 즉시 해제 (Blocking 방지)
     };
 
     // 댓글 삭제 핸들러

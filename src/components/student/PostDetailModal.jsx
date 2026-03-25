@@ -394,7 +394,9 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                                         background: isTeacherComment ? '#EFF6FF' : isMe ? '#E3F2FD' : '#F8F9FA',
                                                         borderRadius: '24px',
                                                         border: isTeacherComment ? '1px solid #BFDBFE' : isMe ? '1px solid #BBDEFB' : '1px solid #F1F3F5',
-                                                        position: 'relative'
+                                                        position: 'relative',
+                                                        opacity: c.isOptimistic ? 0.6 : 1,
+                                                        transition: 'opacity 0.3s ease'
                                                     }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
