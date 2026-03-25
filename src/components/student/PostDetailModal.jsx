@@ -338,11 +338,20 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                                         </div>
                                                         <div style={{ lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
                                                             {(() => {
+                                                                const MAX_DISPLAY = 15;
+                                                                const displayNames = reactorNames.slice(0, MAX_DISPLAY);
+                                                                const extraCount = reactorNames.length - MAX_DISPLAY;
+                                                                
                                                                 const chunks = [];
-                                                                for (let i = 0; i < reactorNames.length; i += 5) {
-                                                                    chunks.push(reactorNames.slice(i, i + 5).join(', '));
+                                                                for (let i = 0; i < displayNames.length; i += 5) {
+                                                                    chunks.push(displayNames.slice(i, i + 5).join(', '));
                                                                 }
-                                                                return chunks.join(',\n');
+                                                                
+                                                                let text = chunks.join(',\n');
+                                                                if (extraCount > 0) {
+                                                                    text += `\n외 ${extraCount}명`;
+                                                                }
+                                                                return text;
                                                             })()}
                                                         </div>
                                                     </div>

@@ -10,6 +10,11 @@ const SubmissionStatusModal = ({
     const [isCollectViewOpen, setIsCollectViewOpen] = React.useState(false);
     const [isReactionViewOpen, setIsReactionViewOpen] = React.useState(false);
 
+    // [성능 최적화] 지연 렌더링을 위한 표시 개수 상태
+    const [mainDisplayLimit, setMainDisplayLimit] = React.useState(20);
+    const [collectDisplayLimit, setCollectDisplayLimit] = React.useState(10);
+    const [reactionDisplayLimit, setReactionDisplayLimit] = React.useState(12);
+
     const reactionIcons = [
         { type: 'heart', label: '좋아요', emoji: '❤️' },
         { type: 'laugh', label: '재밌어요', emoji: '😂' },
@@ -48,7 +53,7 @@ const SubmissionStatusModal = ({
                         <div style={{ padding: '24px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                                 <span style={{ fontSize: '0.8rem', color: '#1976D2', background: '#E3F2FD', padding: '2px 8px', borderRadius: '6px', fontWeight: 'bold' }}>{selectedMission.genre}</span>
-                                <h4 style={{ margin: '8px 0 0 0', fontSize: '1.2rem', color: '#2C3E50', fontWeight: '900' }}>{selectedMission.title}</h4>
+                                <h4 style={{ margin: '8px 0 0 0', fontSize: '1.2rem', color: '#2C3E50', fontWeight: '900' }}>{selectedMission.title} ({posts.length}명)</h4>
                             </div>
                             <button onClick={() => setSelectedMission(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ADB5BD' }}>✕</button>
                         </div>
@@ -165,6 +170,7 @@ const SubmissionStatusModal = ({
                                         )}
                                     </div>
 
+                                    {/* 지연 렌더링된 리스트 */}
                                     <div style={{
                                         display: 'grid',
                                         gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
@@ -172,8 +178,10 @@ const SubmissionStatusModal = ({
                                         width: '100%',
                                         boxSizing: 'border-box'
                                     }}>
-                                        {posts.map(post => (
-                                            <div
+                                        {posts.slice(0, mainDisplayLimit).map(post => (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
                                                 key={post.id}
                                                 onClick={() => {
                                                     setSelectedPost(post);
@@ -206,15 +214,28 @@ const SubmissionStatusModal = ({
                                                     </div>
                                                 </div>
                                                 <div style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.85rem' }}>읽어보기 ➔</div>
-                                            </div>
+                                            </motion.div>
                                         ))}
                                     </div>
+
+                                    {/* 더보기 버튼 */}
+                                    {mainDisplayLimit < posts.length && (
+                                        <div style={{ padding: '24px 0', textAlign: 'center' }}>
+                                            <Button 
+                                                variant="ghost" 
+                                                onClick={() => setMainDisplayLimit(prev => prev + 20)}
+                                                style={{ border: '1px solid #DEE2E6', color: '#607D8B' }}
+                                            >
+                                                학생 더 보기 ({mainDisplayLimit} / {posts.length}) 🔽
+                                            </Button>
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>
                     </motion.div>
 
-                    {/* [수정] 학생 글 모아보기 모달 (전체 화면이 아닌 중앙 고정형 모달로 변경) */}
+                    {/* [수정] 학생 글 모아보기 모달 */}
                     <AnimatePresence>
                         {isCollectViewOpen && (
                             <div style={{
@@ -238,8 +259,8 @@ const SubmissionStatusModal = ({
                                 >
                                     <header style={{ padding: '20px 40px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
-                                            <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📂 학생 글 모아보기 (처음 vs 마지막)</h3>
-                                            <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>모든 학생의 초안과 최종본을 한꺼번에 비교합니다.</p>
+                                            <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📂 학생 글 모아보기</h3>
+                                            <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>한 화면에 {collectDisplayLimit}개씩 표시됩니다. (총 {posts.length}건)</p>
                                         </div>
                                         <Button onClick={() => setIsCollectViewOpen(false)} style={{ background: '#F8F9FA', color: '#495057', border: '1px solid #E9ECEF', borderRadius: '12px' }}>✕ 닫기</Button>
                                     </header>
@@ -253,7 +274,7 @@ const SubmissionStatusModal = ({
                                             width: '100%',
                                             boxSizing: 'border-box'
                                         }}>
-                                            {posts.map((post, idx) => (
+                                            {posts.slice(0, collectDisplayLimit).map((post, idx) => (
                                                 <div key={post.id} style={{
                                                     background: 'white', borderRadius: '24px', padding: '24px',
                                                     border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.02)',
@@ -270,36 +291,31 @@ const SubmissionStatusModal = ({
                                                         gap: '24px',
                                                         width: '100%'
                                                     }}>
-                                                        {/* 처음글 */}
                                                         <div style={{ minWidth: 0 }}>
-                                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#10B981', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                                📜 처음글 (초안)
-                                                            </div>
+                                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#10B981', marginBottom: '10px' }}>📜 처음글 (초안)</div>
                                                             <div style={{
                                                                 padding: '20px', background: '#F0FDF4', borderRadius: '16px',
                                                                 border: '1px solid #DCFCE7', fontSize: '0.95rem', color: '#333',
                                                                 lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
-                                                            }}>
-                                                                {post.original_content || '기록 없음'}
-                                                            </div>
+                                                            }}>{post.original_content || '기록 없음'}</div>
                                                         </div>
-
-                                                        {/* 마지막글 */}
                                                         <div style={{ minWidth: 0 }}>
-                                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#3B82F6', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                                ✨ 마지막글 (수정본)
-                                                            </div>
+                                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#3B82F6', marginBottom: '10px' }}>✨ 마지막글 (수정본)</div>
                                                             <div style={{
                                                                 padding: '20px', background: '#EFF6FF', borderRadius: '16px',
                                                                 border: '1px solid #DBEAFE', fontSize: '0.95rem', color: '#333',
                                                                 lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
-                                                            }}>
-                                                                {post.content || '기록 없음'}
-                                                            </div>
+                                                            }}>{post.content || '기록 없음'}</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             ))}
+
+                                            {collectDisplayLimit < posts.length && (
+                                                <div style={{ textAlign: 'center', paddingBottom: '40px' }}>
+                                                    <Button onClick={() => setCollectDisplayLimit(prev => prev + 10)}>글 더 보기 🔽</Button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </motion.div>
@@ -325,20 +341,21 @@ const SubmissionStatusModal = ({
                                 <header style={{ padding: '20px 40px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📊 학생 반응 및 댓글 모아보기</h3>
-                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>모든 학생의 글에 달린 친구들의 반응과 따뜻한 댓글을 한눈에 확인합니다.</p>
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>한 화면에 {reactionDisplayLimit}개씩 표시됩니다. (총 {posts.length}건)</p>
                                     </div>
                                     <Button onClick={() => setIsReactionViewOpen(false)} style={{ background: '#F8F9FA', color: '#495057', border: '1px solid #E9ECEF', borderRadius: '12px' }}>✕ 닫기</Button>
                                 </header>
                                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '40px', background: '#FAFAFA' }}>
                                     <div style={{
                                         display: 'grid',
-                                        gridTemplateColumns: isMobile ? '1fr' : '400px 400px 400px',
+                                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(360px, 1fr))',
                                         gap: '24px',
                                         justifyContent: 'center',
                                         margin: '0 auto',
+                                        maxWidth: '1200px',
                                         boxSizing: 'border-box'
                                     }}>
-                                        {posts.map((post, idx) => (
+                                        {posts.slice(0, reactionDisplayLimit).map((post, idx) => (
                                             <div key={post.id} style={{ background: 'white', borderRadius: '20px', padding: '20px', border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column' }}>
                                                 <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F8F9FA', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: 'column', gap: '4px', width: '100%', overflow: 'hidden' }}>
                                                     <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1rem' }}>{idx + 1}. {post.students?.name}</span>
@@ -350,7 +367,6 @@ const SubmissionStatusModal = ({
                                                 </div>
 
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
-                                                    {/* 반응 요약 */}
                                                     <div>
                                                         <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#3498DB', marginBottom: '8px' }}>🌈 받은 반응</div>
                                                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -373,12 +389,11 @@ const SubmissionStatusModal = ({
                                                         </div>
                                                     </div>
 
-                                                    {/* 댓글 목록 */}
                                                     <div style={{ flex: 1 }}>
                                                         <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#E67E22', marginBottom: '8px' }}>💬 작성된 댓글</div>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                             {post.post_comments && post.post_comments.length > 0 ? (
-                                                                post.post_comments.map(comment => {
+                                                                post.post_comments.slice(0, 3).map(comment => {
                                                                     const isTeacher = !!comment.teacher_id;
                                                                     return (
                                                                         <div key={comment.id} style={{
@@ -387,12 +402,7 @@ const SubmissionStatusModal = ({
                                                                             borderRadius: '12px',
                                                                             border: isTeacher ? '1px solid #BFDBFE' : '1px solid #FFEDD5'
                                                                         }}>
-                                                                            <div style={{
-                                                                                fontWeight: 'bold',
-                                                                                color: isTeacher ? '#1E40AF' : '#C2410C',
-                                                                                fontSize: '0.75rem',
-                                                                                marginBottom: '2px'
-                                                                            }}>
+                                                                            <div style={{ fontWeight: 'bold', color: isTeacher ? '#1E40AF' : '#C2410C', fontSize: '0.75rem', marginBottom: '2px' }}>
                                                                                 {isTeacher ? '🍎 선생님' : (comment.students?.name || '친구')}
                                                                             </div>
                                                                             <div style={{ color: isTeacher ? '#1E3A8A' : '#431407', fontSize: '0.85rem', lineHeight: '1.4' }}>{comment.content}</div>
@@ -402,12 +412,20 @@ const SubmissionStatusModal = ({
                                                             ) : (
                                                                 <div style={{ fontSize: '0.8rem', color: '#B2BEC3', fontStyle: 'italic' }}>댓글을 기다리고 있어요 🐣</div>
                                                             )}
+                                                            {post.post_comments?.length > 3 && (
+                                                                <div style={{ fontSize: '0.7rem', color: '#ADB5BD', textAlign: 'center' }}>외 {post.post_comments.length - 3}개의 댓글 더 있음</div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
+                                    {reactionDisplayLimit < posts.length && (
+                                        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                                            <Button onClick={() => setReactionDisplayLimit(prev => prev + 12)}>반응 더 보기 🔽</Button>
+                                        </div>
+                                    )}
                                 </div>
                             </motion.div>
                         )}

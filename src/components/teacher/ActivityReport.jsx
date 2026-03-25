@@ -26,6 +26,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     const [expandedStudentId, setExpandedStudentId] = useState(null);
     const [generationHistory, setGenerationHistory] = useState([]);
     const [historyPage, setHistoryPage] = useState(1);
+    const [mainListLimit, setMainListLimit] = useState(20); // [성능 최적화] 메인 리스트 지연 렌더링
     const ITEMS_PER_PAGE = 5;
     const [teacherId, setTeacherId] = useState(null);
 
@@ -691,7 +692,7 @@ ${activitiesInfo}`;
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: '#F1F5F9' }}>
-                                {studentPosts.map((data, idx) => (
+                                {studentPosts.slice(0, mainListLimit).map((data, idx) => (
                                     <div key={data.student.id} style={{ background: 'white', borderBottom: '1px solid #F1F5F9' }}>
                                         <div
                                             onClick={() => setExpandedStudentId(expandedStudentId === data.student.id ? null : data.student.id)}
@@ -798,12 +799,9 @@ ${activitiesInfo}`;
                                                                 </div>
                                                                 <div style={{
                                                                     background: '#FFFBEB',
-                                                                    padding: '24px',
-                                                                    borderRadius: '18px',
+                                                                    padding: '20px',
+                                                                    borderRadius: '16px',
                                                                     border: '1px solid #FEF3C7',
-                                                                    fontSize: '1.05rem',
-                                                                    lineHeight: '1.75',
-                                                                    color: '#451A03',
                                                                     whiteSpace: 'pre-wrap',
                                                                     boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.02)'
                                                                 }}>
@@ -820,6 +818,31 @@ ${activitiesInfo}`;
                                     </div>
                                 ))}
                             </div>
+
+                            {/* [성능 최적화] 더보기 버튼 추가 */}
+                            {mainListLimit < studentPosts.length && (
+                                <div style={{ padding: '24px 0', textAlign: 'center' }}>
+                                    <button
+                                        onClick={() => setMainListLimit(prev => prev + 20)}
+                                        style={{
+                                            border: '1px solid #DEE2E6',
+                                            background: 'white',
+                                            color: '#6366F1',
+                                            padding: '10px 24px',
+                                            borderRadius: '12px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.9rem',
+                                            fontWeight: 'bold',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                                    >
+                                        학생 명단 더 보기 ({mainListLimit} / {studentPosts.length}) 🔽
+                                    </button>
+                                </div>
+                            )}
+
                             <footer style={{ textAlign: 'center', padding: '20px', color: '#94A3B8', fontSize: '0.85rem' }}>
                                 * 생성된 분석 결과는 선택된 미션 조합별로 이 브라우저에 안전하게 저장됩니다.
                             </footer>

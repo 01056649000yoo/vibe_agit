@@ -9,6 +9,7 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
     const [reportData, setReportData] = useState([]);
     const [filterScore, setFilterScore] = useState(0); // 0 means no filter
     const [sortBy, setSortBy] = useState('name'); // 'name', 'growth', 'final'
+    const [displayLimit, setDisplayLimit] = useState(50); // [성능 최적화] 지연 렌더링을 위한 표시 개수
 
     useEffect(() => {
         if (mission?.id) {
@@ -196,7 +197,7 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {processedData.map((student) => {
+                            {processedData.slice(0, displayLimit).map((student) => {
                                 const growth = (student.final_eval || 0) - (student.initial_eval || 0);
                                 const isGrowthKing = growth >= requiredGrowth;
 
@@ -237,6 +238,13 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                             })}
                         </tbody>
                     </table>
+                    {displayLimit < processedData.length && (
+                        <div style={{ padding: '24px', textAlign: 'center', borderTop: '1px solid #E2E8F0' }}>
+                            <Button variant="ghost" onClick={() => setDisplayLimit(prev => prev + 50)}>
+                                명단 더 보기 ({displayLimit} / {processedData.length}) 🔽
+                            </Button>
+                        </div>
+                    )}
                     {processedData.length === 0 && (
                         <div style={{ padding: '80px', textAlign: 'center', color: '#94A3B8' }}>
                             검색 결과나 평가 데이터가 없습니다. 🖋️

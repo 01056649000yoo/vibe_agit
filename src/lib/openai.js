@@ -74,6 +74,14 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
                 }
             }
 
+            // [핵심] 429 (Rate Limit) 또는 "Too Many Requests" 발생 시 지수 백오프 재시도
+            if ((statusCode === 429 || serverMsg.includes("Too Many Requests")) && retryCount < 3) {
+                const delay = Math.pow(2, retryCount) * 1500 + Math.random() * 1000;
+                console.warn(`⏳ AI 속도 제한(429) 감지 - ${Math.round(delay)}ms 후 재시도합니다... (재시도: ${retryCount + 1}/3)`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return callOpenAI(payload, options, retryCount + 1);
+            }
+
             // [핵심] "Invalid JWT" 또는 401 발생 시 대응
             if ((serverMsg.includes("Invalid JWT") || statusCode === 401) && retryCount < 2) {
 
