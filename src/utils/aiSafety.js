@@ -27,7 +27,8 @@ export const checkContentSafety = async (content) => {
 
 {
   "is_appropriate": boolean,
-  "reason": "부적절할 경우 보여줄 2~3문장의 다정한 훈육 메시지"
+  "reason": "부적절할 경우 보여줄 2~3문장의 다정한 훈육 메시지",
+  "purified_content": "부적절할 경우 다정하고 예의 바르게 고친 문장 (적절하면 원문 그대로)"
 }
 `;
 

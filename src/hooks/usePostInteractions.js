@@ -125,22 +125,23 @@ export const usePostInteractions = (postId, studentId) => {
                 if (error) throw error;
                 const newCommentId = insertedComment.id;
 
-                // 2. 보상 지급 (백그라운드)
-                supabase.rpc('reward_for_comment', { p_post_id: postId }).then(({ data, error: rpcErr }) => {
-                    if (!rpcErr && data?.success) {
-                        console.log(`💰 [Realtime] 보상 지급 성공! +${data.points_awarded}P`);
-                    }
-                });
-
-                // 3. AI 문맥 분석 (백그라운드)
+                // 3. AI 문맥 분석 및 실시간 상호작용 (백그라운드)
                 checkContentSafety(content).then(async (safety) => {
                     if (!safety.is_appropriate) {
-                        // 통과 실패 시 삭제 후 알림 및 새로고침
+                        // 통과 실패 시 DB에서 즉시 삭제 (포인트 보상 안함)
                         await supabase.from('post_comments').delete().eq('id', newCommentId);
+                        
+                        console.log(`🛡️ [AI 보안관] 부적절한 표현 감지 -> 자동 삭제 완료: ${content}`);
                         alert(`잠깐! ✋\n\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n(방금 작성한 댓글은 삭제 처리 되었습니다.)`);
                         fetchInteractions();
                     } else {
-                        // 통과 시 정상 댓글 목록으로 새로고침 (tempId 제거)
+                        // 통과 시에만 보상 지급 (RPC 호출)
+                        supabase.rpc('reward_for_comment', { p_post_id: postId }).then(({ data, error: rpcErr }) => {
+                            if (!rpcErr && data?.success) {
+                                console.log(`💰 [AI 보안관] 안전한 댓글 확인 -> +${data.points_awarded}P 지급 완료!`);
+                            }
+                        });
+                        // 정상 댓글 목록으로 새로고침 (tempId 제거)
                         fetchInteractions();
                     }
                 }).catch(err => {
@@ -181,14 +182,16 @@ export const usePostInteractions = (postId, studentId) => {
                     .eq('id', commentId);
                 if (error) throw error;
 
-                // AI 문맥 분석 (백그라운드)
+                // AI 문맥 분석 및 자동 원복 (백그라운드)
                 checkContentSafety(newContent).then(async (safety) => {
                     if (!safety.is_appropriate) {
-                        // 통과 실패 시 이전 내용으로 롤백 후 알림
+                        // 통과 실패 시 이전 내용으로 강제 롤백
                         const originalContent = previousComments.find(c => c.id === commentId)?.content;
                         if (originalContent) {
                             await supabase.from('post_comments').update({ content: originalContent }).eq('id', commentId);
                         }
+                        
+                        console.log(`🛡️ [AI 보안관] 부적절한 수정 감지 -> 원복 완료: ${newContent}`);
                         alert(`잠깐! ✋\n\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n(수정 내용이 차단 및 복구되었습니다.)`);
                     }
                     fetchInteractions();
