@@ -75,34 +75,39 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         }
     }, [missionId, params, studentSession?.id, onBack]);
 
+    // 1. 미션 및 데이터 로딩
     useEffect(() => {
         if (missionId) {
             fetchMission();
-
-            // [실시간 연동] 선생님이 미션 수정 시 즉시 반영
-            const channel = supabase
-                .channel(`mission_updates_${missionId}`)
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'writing_missions',
-                        filter: `id=eq.${missionId}`
-                    },
-                    (payload) => {
-                        console.log('🔔 실시간 미션 정보 업데이트됨:', payload.new);
-                        setMission(prev => ({ ...prev, ...payload.new }));
-                        alert('📢 선생님이 미션 내용을 수정하셨어요! 바뀐 기준을 확인해주세요.');
-                    }
-                )
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(channel);
-            };
         }
     }, [missionId, fetchMission]);
+
+    // 2. 선생님의 미션 수정 실시간 감지 (의존성 최소화로 웹소켓 폭탄 방지)
+    useEffect(() => {
+        if (!missionId) return;
+
+        const channel = supabase
+            .channel(`mission_updates_${missionId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'writing_missions',
+                    filter: `id=eq.${missionId}`
+                },
+                (payload) => {
+                    console.log('🔔 실시간 미션 정보 업데이트됨:', payload.new);
+                    setMission(prev => ({ ...prev, ...payload.new }));
+                    alert('📢 선생님이 미션 내용을 수정하셨어요! 바뀐 기준을 확인해주세요.');
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [missionId]);
 
     // 임시 저장 처리
     const handleSave = async (showMsg = true) => {
