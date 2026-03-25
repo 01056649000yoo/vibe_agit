@@ -107,13 +107,14 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }} // 오버레이 등장 속도 단축
             style={{
                 position: 'fixed',
                 top: 0, left: 0, width: '100vw', height: '100vh',
                 background: 'rgba(0,0,0,0.6)',
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
-                zIndex: 10002, // zIndex nav(9999)보다 높게 설정
+                zIndex: 10002,
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: isMobile ? 'flex-end' : 'center',
@@ -122,10 +123,10 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
             onClick={onClose}
         >
             <motion.div
-                initial={{ y: isMobile ? '100%' : 80, scale: isMobile ? 1 : 0.9, opacity: isMobile ? 1 : 0 }}
+                initial={{ y: isMobile ? '100%' : 40, scale: isMobile ? 1 : 0.95, opacity: 0 }}
                 animate={{ y: 0, scale: 1, opacity: 1 }}
-                exit={{ y: isMobile ? '100%' : 80, scale: isMobile ? 1 : 0.9, opacity: isMobile ? 1 : 0 }}
-                transition={{ type: 'spring', damping: 30, stiffness: 250 }}
+                exit={{ y: isMobile ? '100%' : 40, scale: isMobile ? 1 : 0.95, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 350, mass: 0.5 }} // 더 빠르고 가벼운 느낌으로 수정
                 style={{
                     background: 'white',
                     borderRadius: isMobile ? '32px 32px 0 0' : '40px',

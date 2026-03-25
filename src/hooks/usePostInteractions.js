@@ -16,27 +16,24 @@ export const usePostInteractions = (postId, studentId) => {
         if (!postId) return;
         setLoading(true);
         try {
-            // 1. 반응 가져오기 (students 정보를 student_id 조인으로 가져옴)
-            const { data: rxData, error: rxError } = await supabase
-                .from('post_reactions')
-                .select('*, students:student_id(name)')
-                .eq('post_id', postId);
+            const [rxRes, cmRes] = await Promise.all([
+                supabase
+                    .from('post_reactions')
+                    .select('*, students:student_id(name)')
+                    .eq('post_id', postId),
+                supabase
+                    .from('post_comments')
+                    .select('*, students:student_id(name), teacher_id')
+                    .eq('post_id', postId)
+                    .order('created_at', { ascending: true })
+            ]);
 
-            if (rxError) throw rxError;
-            console.log(`[usePostInteractions] 반응 조회 성공 (postId: ${postId}):`, rxData);
-            setReactions(rxData || []);
+            if (rxRes.error) throw rxRes.error;
+            if (cmRes.error) throw cmRes.error;
 
-            // 2. 댓글 가져오기 (students 정보를 student_id 조인으로 가져옴)
-            const { data: cmData, error: cmError } = await supabase
-                .from('post_comments')
-                .select('*, students:student_id(name), teacher_id')
-                .eq('post_id', postId)
-                .order('created_at', { ascending: true });
-
-            if (cmError) throw cmError;
-            console.log(`[usePostInteractions] 댓글 조회 성공 (postId: ${postId}):`, cmData);
-            setComments(cmData || []);
-
+            console.log(`[usePostInteractions] 조회 성공 (postId: ${postId})`);
+            setReactions(rxRes.data || []);
+            setComments(cmRes.data || []);
         } catch (err) {
             console.error('[usePostInteractions] 데이터 로드 실패:', err.message);
         } finally {

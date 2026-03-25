@@ -43,6 +43,8 @@ export const useFriendsHideout = (studentSession, params) => {
 
         const currentOffset = isAppend ? (pageRef.current + 1) * PAGE_SIZE : 0;
 
+        const classId = studentSession.classId || studentSession.class_id;
+
         try {
             const { data, error } = await supabase
                 .from('student_posts')
@@ -55,6 +57,7 @@ export const useFriendsHideout = (studentSession, params) => {
                 .eq('mission_id', missionId)
                 .eq('is_submitted', true)
                 .neq('student_id', studentSession.id)
+                .eq('students.class_id', classId) // [최적화] RLS 속도를 극대화하기 위한 명시적 조인 필터
                 .order('created_at', { ascending: false })
                 .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 

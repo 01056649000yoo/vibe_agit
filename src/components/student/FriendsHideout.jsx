@@ -190,7 +190,7 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
                 overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box',
                 WebkitLineClamp: 3, WebkitBoxOrient: 'vertical'
             }}>
-                {post.content}
+                {post.content && post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content}
             </p>
         </motion.div>
     );
