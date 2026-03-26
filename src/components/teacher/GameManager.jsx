@@ -56,7 +56,7 @@ const GameManager = ({ activeClass, isMobile }) => {
         try {
             const { data, error } = await supabase
                 .from('classes')
-                .select('dragon_feed_points, dragon_degen_days, vocab_tower_enabled, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
+                .select('created_at, dragon_feed_points, dragon_degen_days, vocab_tower_enabled, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
                 .eq('id', activeClass.id)
                 .single();
 
@@ -73,7 +73,8 @@ const GameManager = ({ activeClass, isMobile }) => {
                     dailyLimit: data.vocab_tower_daily_limit ?? 3,
                     timeLimit: data.vocab_tower_time_limit ?? 40,
                     rewardPoints: data.vocab_tower_reward_points ?? 80,
-                    rankingResetDate: data.vocab_tower_ranking_reset_date || null
+                    rankingResetDate: data.vocab_tower_ranking_reset_date || null,
+                    createdAt: data.created_at // 시작일 추적용 추가
                 });
             }
         } catch (err) {
@@ -323,19 +324,27 @@ const GameManager = ({ activeClass, isMobile }) => {
             }
             const { data: currentRanks } = await query.order('max_floor', { ascending: false });
 
-            // 2. 히스토리 테이블에 저장 (랭킹이 있을 경우만)
+            // 2. 히스토리 테이블에 저장 (랭킹이 있을 경우만) - [수정] 기존 기록 삭제 후 최신 1건만 유지
             if (currentRanks && currentRanks.length > 0) {
-                const seasonName = `${new Date().toLocaleDateString()} 종료 시즌`;
+                const startDate = vocabTowerConfig.rankingResetDate || vocabTowerConfig.createdAt || new Date().toISOString();
+                const seasonName = `${new Date(startDate).toLocaleDateString()} ~ ${new Date(now).toLocaleDateString()} 시즌 기록`;
                 const formattedRanks = currentRanks.map(r => ({
                     name: r.students?.name || '학생',
                     floor: r.max_floor
                 }));
 
+                // 기존 시즌 기록 모두 삭제 (최신 1건만 남기기 위해)
+                await supabase
+                    .from('vocab_tower_history')
+                    .delete()
+                    .eq('class_id', activeClass.id);
+
+                // 신규 시즌 기록 추가
                 await supabase.from('vocab_tower_history').insert({
                     class_id: activeClass.id,
                     season_name: seasonName,
                     rankings: formattedRanks,
-                    started_at: vocabTowerConfig.rankingResetDate || activeClass.created_at,
+                    started_at: startDate,
                     ended_at: now
                 });
             }

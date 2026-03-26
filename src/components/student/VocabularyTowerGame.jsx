@@ -33,7 +33,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     // 교사가 설정한 학년이 있으면 고정, 없으면 학생 학년 또는 4학년
     const [selectedGrade, setSelectedGrade] = useState(forcedGrade || studentSession?.grade || 4);
     const [showResult, setShowResult] = useState(false);
-    const [selectedAnswer, setSelectedAnswer] = useState(null);
+    const [selectedAnswers, setSelectedAnswers] = useState([]); // [수정] 여러 번 선택 가능하도록 변경
     const [showLevelUp, setShowLevelUp] = useState(false);
     const [previousFloor, setPreviousFloor] = useState(1); // [신규] 이전 층 기록
     const [timeLeft, setTimeLeft] = useState(timeLimit);
@@ -42,6 +42,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     const [awardedPoints, setAwardedPoints] = useState(0);
     const [rankings, setRankings] = useState([]); // [신규] 랭킹 정보
     const [isTowerCleared, setIsTowerCleared] = useState(false); // [신규] 10층 클리어 상태
+    const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false); // [신규] 퇴장 확인 팝업 상태
 
     // [신규] 일일 시도 횟수 관리
     const getTodayKey = () => {
@@ -273,16 +274,13 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         lastResult
     } = useVocabularyTower(selectedGrade);
 
-    // 레벨업 애니메이션 처리
+    // 레벨업/감점 애니메이션 처리
     useEffect(() => {
         if (lastResult?.leveledUp) {
             const newFloor = lastResult.newFloor ?? stats.currentFloor;
-            // ref 업데이트
             currentFloorRef.current = newFloor;
             setPreviousFloor(newFloor - 1);
             setShowLevelUp(true);
-
-            // [수정] 레벨업 시 최고 층수 DB 업데이트
             updateMaxFloor(newFloor);
 
             const bonus = 20 + (Math.max(0, newFloor - 2) * 3);
@@ -290,23 +288,31 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
             setTimeout(() => {
                 setShowLevelUp(false);
-                // 10층에 막 도달했다면 클리어 처리
-                if (newFloor === 10) {
-                    setIsTowerCleared(true);
-                }
+                if (newFloor === 10) setIsTowerCleared(true);
             }, 3000);
         }
-    }, [lastResult]);
+    }, [lastResult, updateMaxFloor, stats.currentFloor]);
 
     // [신규] 광클(어뷰징) 방지를 위한 트랜지션 락
     const isTransitioningRef = React.useRef(false);
 
-    // 정답 선택 핸들러
+    // 정답 선택 핸들러 (어뷰징 방지 3회 기회 로직)
     const handleAnswerSelect = (answer) => {
-        if (showResult || selectedAnswer || isTransitioningRef.current) return; // 광클 어뷰징 방지
-        setSelectedAnswer(answer);
-        actions.handleAnswer(answer);
-        setShowResult(true);
+        if (showResult || selectedAnswers.includes(answer) || isTransitioningRef.current) return;
+
+        const result = actions.handleAnswer(answer);
+        const isCorrect = answer === currentQuiz.correctAnswer;
+        
+        // 선택 내역 기록
+        setSelectedAnswers(prev => [...prev, answer]);
+
+        if (isCorrect || result?.isMaxAttemptsReached) {
+            // 정답이거나 3회 모두 틀린 경우에만 결과창 노출
+            setShowResult(true);
+            
+            // [수정] 자동 전환 타이머 제거: 이제 학생이 명시적으로 '다음 문제' 버튼을 눌러야 함
+            // (주변 클릭 시 넘어가는 것처럼 느껴지는 혼란 방지)
+        }
     };
 
     // 다음 문제로 이동
@@ -315,7 +321,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         isTransitioningRef.current = true;
 
         setShowResult(false);
-        setSelectedAnswer(null);
+        setSelectedAnswers([]); // 선택 내역 초기화
         actions.nextQuiz();
 
         // 새 퀴즈 렌더링 후 락 해제 (버튼 애니메이션 페이드아웃 고려 0.3초)
@@ -337,44 +343,41 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         setTimeLeft(timeLimit);
         setIsTimeUp(false);
         setShowResult(false);
-        setSelectedAnswer(null);
+        setSelectedAnswers([]);
         actions.startGame();
     };
 
     // 게임 재시작 (결과 화면 등에서 사용)
     const handleRestart = () => {
         setShowResult(false);
-        setSelectedAnswer(null);
+        setSelectedAnswers([]);
         setTimeLeft(timeLimit);
         actions.startGame();
     };
 
-    // [신규] 게임 중 퇴장 핸들러
-    const handleExit = () => {
+    // [신규] 게임 중 퇴장 핸들러 (커스텀 팝업 사용으로 안정성 강화)
+    const handleExit = React.useCallback(() => {
         // 이미 모든 기회를 썼거나 시간 초과 상태면 그냥 나감
         if (isFullyExhausted || isTimeUp) {
-            onBack();
+            if (onBack) onBack();
             return;
         }
 
-        // 기본 경고 메시지
-        let message = '⚠️ 아직 게임이 진행 중이에요! 지금 나가면 시도 횟수 1회가 차감됩니다.\n정말 대시보드로 나갈까요?';
+        // 게임 중일 때는 커스텀 확인 팝업을 엽니다.
+        setIsExitConfirmOpen(true);
+    }, [isFullyExhausted, isTimeUp, onBack]);
 
-        // 마지막 기회인 경우 포인트 미지급 경고 추가
-        if (remainingAttempts === 0) {
-            message = '⚠️ 마지막 도전 기회예요! 지금 게임을 중단하고 나가면 일일 미션 보상 포인트를 받을 수 없어요.\n끝까지 도전해서 보상을 챙겨보세요! 정말 나갈까요?';
-        }
-
-        if (window.confirm(message)) {
-            onBack();
-        }
+    // 팝업에서 최종 퇴장 승인 시 호출
+    const confirmExit = () => {
+        setIsExitConfirmOpen(false);
+        if (onBack) onBack();
     };
 
     // 학년 변경
     const handleGradeChange = (grade) => {
         setSelectedGrade(grade);
         setShowResult(false);
-        setSelectedAnswer(null);
+        setSelectedAnswers([]);
     };
 
     // 층수에 따른 배경색 결정
@@ -789,17 +792,18 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                     )}
                 </AnimatePresence>
 
-                {/* 헤더 - 학년 표시 통합 */}
                 <div style={{
-                    padding: '12px 20px',
+                    padding: '0 20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    background: 'rgba(255,255,255,0.95)',
+                    background: 'rgba(255,255,255,0.98)',
                     backdropFilter: 'blur(10px)',
                     borderBottom: '2px solid #E3F2FD',
-                    zIndex: 1000,
-                    height: '70px'
+                    zIndex: 1500, // 헤더 내부 요소들보다 위에 있도록 상향
+                    height: '70px',
+                    position: 'sticky',
+                    top: 0
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <motion.button
@@ -997,29 +1001,49 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                             {/* 보기 버튼들 - 그리드 최적화 */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 {currentQuiz.options.map((option) => {
-                                    const isSelected = selectedAnswer === option;
+                                    const isSelected = selectedAnswers.includes(option);
                                     const isCorrect = option === currentQuiz.correctAnswer;
-                                    const showCorrectness = showResult;
+                                    
                                     let btnStyle = { background: 'white', border: '2px solid #EEE', color: '#333' };
-                                    if (showCorrectness) {
-                                        if (isCorrect) btnStyle = { background: '#4CAF50', border: '2px solid #4CAF50', color: 'white' };
-                                        else if (isSelected) btnStyle = { background: '#EF5350', border: '2px solid #EF5350', color: 'white' };
-                                    } else if (isSelected) btnStyle = { background: '#E3F2FD', border: '2px solid #2196F3', color: '#1565C0' };
+                                    
+                                    if (isSelected) {
+                                        if (isCorrect) {
+                                            btnStyle = { background: '#4CAF50', border: '2px solid #4CAF50', color: 'white' };
+                                        } else {
+                                            btnStyle = { background: '#FFEBEE', border: '2px solid #EF5350', color: '#C62828', opacity: 0.7 };
+                                        }
+                                    }
 
                                     return (
                                         <motion.button
                                             key={option}
-                                            whileHover={!showResult ? { scale: 1.02, y: -2 } : {}}
-                                            whileTap={!showResult ? { scale: 0.98 } : {}}
+                                            whileHover={(!showResult && !isSelected) ? { scale: 1.02, y: -2 } : {}}
+                                            whileTap={(!showResult && !isSelected) ? { scale: 0.98 } : {}}
                                             onClick={() => handleAnswerSelect(option)}
-                                            disabled={showResult}
+                                            disabled={showResult || isSelected}
                                             style={{
                                                 padding: '16px', borderRadius: '16px', ...btnStyle,
-                                                fontSize: '1.1rem', fontWeight: 'bold', cursor: showResult ? 'default' : 'pointer',
-                                                boxShadow: '0 4px 12px rgba(0,0,0,0.05)', transition: 'all 0.2s'
+                                                fontSize: '1.1rem', fontWeight: 'bold', 
+                                                cursor: (showResult || isSelected) ? 'default' : 'pointer',
+                                                boxShadow: isSelected ? 'none' : '0 4px 12px rgba(0,0,0,0.05)', 
+                                                transition: 'all 0.2s',
+                                                position: 'relative',
+                                                overflow: 'hidden'
                                             }}
                                         >
                                             {option}
+                                            {isSelected && !isCorrect && (
+                                                <motion.span 
+                                                    initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                                    style={{ position: 'absolute', right: '10px', top: '10px', fontSize: '1rem' }}
+                                                >❌</motion.span>
+                                            )}
+                                            {isSelected && isCorrect && (
+                                                <motion.span 
+                                                    initial={{ scale: 0 }} animate={{ scale: 1 }}
+                                                    style={{ position: 'absolute', right: '10px', top: '10px', fontSize: '1rem' }}
+                                                >✅</motion.span>
+                                            )}
                                         </motion.button>
                                     );
                                 })}
@@ -1036,8 +1060,14 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px'
                                         }}
                                     >
-                                        <span style={{ fontWeight: 'bold', color: lastResult.isCorrect ? '#2E7D32' : '#C62828' }}>
-                                            {lastResult.isCorrect ? `🎉 정답! +${lastResult.earnedExp} EXP` : `💪 아쉬워요! 정답은 [${lastResult.correctAnswer}]`}
+                                        <span style={{ fontWeight: 'bold', color: lastResult.isCorrect ? (lastResult.earnedExp < 0 ? '#E65100' : '#2E7D32') : '#C62828' }}>
+                                            {lastResult.isCorrect 
+                                                ? lastResult.earnedExp >= 0 
+                                                    ? `🎉 정답! +${lastResult.earnedExp} EXP` 
+                                                    : `⚠️ 늦게 맞혔어요! ${lastResult.earnedExp} EXP`
+                                                : lastResult.isMaxAttemptsReached 
+                                                    ? `📉 최종 오답 패널티! ${lastResult.earnedExp} EXP (정답: ${lastResult.correctAnswer})`
+                                                    : `💪 아쉬워요! 남은 기회: ${3 - lastResult.wrongAttempts}번`}
                                         </span>
                                         <motion.button
                                             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
@@ -1236,6 +1266,59 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                                 >
                                     위풍당당하게 돌아가기 🏠
                                 </Button>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                {/* [신규] 커스텀 퇴장 확인 팝업 (window.confirm 대체) */}
+                <AnimatePresence>
+                    {isExitConfirmOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            style={{
+                                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                zIndex: 30000, padding: '20px' // 최상위 z-index
+                            }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                style={{
+                                    background: 'white', borderRadius: '32px', padding: '35px 25px',
+                                    maxWidth: '400px', width: '100%', textAlign: 'center',
+                                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                                }}
+                            >
+                                <span style={{ fontSize: '3.5rem', display: 'block', marginBottom: '15px' }}>⚠️</span>
+                                <h2 style={{ fontSize: '1.5rem', color: '#C62828', margin: '0 0 12px 0', fontWeight: '900' }}>잠깐! 나갈까요?</h2>
+                                <p style={{ color: '#546E7A', marginBottom: '30px', lineHeight: '1.6', fontSize: '0.95rem' }}>
+                                    {remainingAttempts === 0 
+                                        ? '마지막 도전 기회예요! 지금 중단하면 오늘 미션 보상 포인트를 받을 수 없어요. 끝까지 해보는 건 어떨까요?'
+                                        : '아직 게임이 진행 중이에요! 지금 나가면 시도 횟수 1회가 차감됩니다. 그래도 나갈까요?'
+                                    }
+                                </p>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <Button
+                                        onClick={() => setIsExitConfirmOpen(false)}
+                                        variant="ghost"
+                                        style={{ height: '56px', background: '#F5F5F5', color: '#666', borderRadius: '16px' }}
+                                    >
+                                        계속하기
+                                    </Button>
+                                    <Button
+                                        onClick={confirmExit}
+                                        style={{
+                                            height: '56px', background: '#E53935', color: 'white',
+                                            fontWeight: 'bold', borderRadius: '16px', boxShadow: '0 4px 12px rgba(229,57,53,0.3)'
+                                        }}
+                                    >
+                                        나가기
+                                    </Button>
+                                </div>
                             </motion.div>
                         </motion.div>
                     )}

@@ -57,7 +57,7 @@ export const useFriendsHideout = (studentSession, params) => {
                 .eq('mission_id', missionId)
                 .eq('is_submitted', true)
                 .neq('student_id', studentSession.id)
-                .eq('students.class_id', classId) // [최적화] RLS 속도를 극대화하기 위한 명시적 조인 필터
+                .eq('students.class_id', classId)
                 .order('created_at', { ascending: false })
                 .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
@@ -70,7 +70,7 @@ export const useFriendsHideout = (studentSession, params) => {
                 setPosts(data || []);
             }
 
-            setHasMore(data?.length === PAGE_SIZE);
+            setHasMore(prev => (data?.length === PAGE_SIZE));
         } catch (err) {
             console.error('친구 글 로드 실패:', err.message);
         } finally {
@@ -140,10 +140,10 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [fetchMissions, fetchClassmates, handleInitialPost, params?.initialPostId]);
 
     useEffect(() => {
-        // [실시간] 친구들의 드래곤 데이터 실시간 구독
         const classId = studentSession.classId || studentSession.class_id;
         if (!classId) return;
 
+        // [실시간 1] 친구들의 드래곤 데이터 및 프로필 업데이트 구독
         const classmateSubscription = supabase
             .channel(`classmates_${classId}`)
             .on(
@@ -155,9 +155,49 @@ export const useFriendsHideout = (studentSession, params) => {
                     filter: `class_id=eq.${classId}`
                 },
                 (payload) => {
-                    // 본인이 아닌 경우에만 업데이트
                     if (payload.new.id !== studentSession.id) {
-                        setClassmates(prev => prev.map(c => c.id === payload.new.id ? payload.new : c));
+                        setClassmates(prev => prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c));
+                    }
+                }
+            )
+            .subscribe();
+
+        // [실시간 2] 새 글 알림 구독 (현재 선택된 미션에 대해서만)
+        const postsSubscription = supabase
+            .channel(`posts_${classId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'student_posts'
+                },
+                async (payload) => {
+                    // 현재 내가 보고 있는 미션의 글이고, 내가 쓴 글이 아니며, 제출된 상태인 경우
+                    if (
+                        payload.new.mission_id === selectedMission?.id &&
+                        payload.new.student_id !== studentSession.id &&
+                        payload.new.is_submitted
+                    ) {
+                        // 새 글의 경우 작성자 정보를 포함하여 상세 정보를 다시 가져와서 목록 상단에 추가
+                        const { data: newPost, error } = await supabase
+                            .from('student_posts')
+                            .select(`
+                                id, title, content, student_id, mission_id, created_at, char_count, is_confirmed,
+                                original_title, original_content,
+                                students:student_id!inner(name, class_id, pet_data),
+                                writing_missions(allow_comments)
+                            `)
+                            .eq('id', payload.new.id)
+                            .single();
+                        
+                        if (!error && newPost) {
+                            setPosts(prev => {
+                                // 중복 추가 방지
+                                if (prev.some(p => p.id === newPost.id)) return prev;
+                                return [newPost, ...prev];
+                            });
+                        }
                     }
                 }
             )
@@ -165,8 +205,9 @@ export const useFriendsHideout = (studentSession, params) => {
 
         return () => {
             supabase.removeChannel(classmateSubscription);
+            supabase.removeChannel(postsSubscription);
         };
-    }, [studentSession.classId, studentSession.class_id, studentSession.id]);
+    }, [studentSession.class_id, studentSession.classId, studentSession.id, selectedMission?.id]);
 
     const handleMissionChange = (mission) => {
         setSelectedMission(mission);

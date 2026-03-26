@@ -22,6 +22,9 @@ const useVocabularyTower = (selectedGrade) => {
     // 마지막 정답 결과
     const [lastResult, setLastResult] = useState(null);
 
+    // [신규] 현재 문제의 오답 횟수 (최대 2회 기회 제한용)
+    const [wrongAttempts, setWrongAttempts] = useState(0);
+
     /**
      * 학년에 따라 어휘 데이터를 로드
      */
@@ -53,6 +56,7 @@ const useVocabularyTower = (selectedGrade) => {
                 setUsedWordIds(new Set());
                 setCurrentQuiz(null);
                 setLastResult(null);
+                setWrongAttempts(0);
             } catch (err) {
                 setError(err.message || '어휘 데이터를 불러오는 중 오류가 발생했습니다.');
                 setVocabulary([]);
@@ -172,6 +176,7 @@ const useVocabularyTower = (selectedGrade) => {
 
         setCurrentQuiz(quiz);
         setLastResult(null);
+        setWrongAttempts(0); // 새 문제 시작 시 오답 횟수 초기화
 
         return quiz;
     }, [vocabulary, currentFloor, usedWordIds, getWordsForCurrentFloor, shuffleArray]);
@@ -193,31 +198,53 @@ const useVocabularyTower = (selectedGrade) => {
 
         let earnedExp = 0;
         let leveledUp = false;
+        let leveledDown = false; // [신규] 층수 하락 여부
         let newFloor = currentFloor;
         let newExp = experience;
 
+        const isMaxAttemptsReached = !isCorrect && (wrongAttempts + 1 >= 3); // [수정] 3회 기회 부여
+
         if (isCorrect) {
-            // 단어 레벨에 비례하는 경험치 지급
-            // 기본 10점 + (레벨 * 10점) = 레벨 1: 20점, 레벨 5: 60점
-            earnedExp = 10 + (currentQuiz.level * 10);
+            if (wrongAttempts === 0) {
+                // 1회차 정답: 정상 가점
+                earnedExp = 10 + (currentQuiz.level * 10);
+            } else if (wrongAttempts === 1) {
+                // 2회차 정답: 패널티 감점 (-10)
+                earnedExp = -10;
+            } else if (wrongAttempts === 2) {
+                // 3회차 정답: 대폭 패널티 감점 (-30)
+                earnedExp = -30;
+            }
+            
             newExp = experience + earnedExp;
 
-            // 레벨업 체크
-            if (newExp >= requiredExpForNextFloor) {
+            // 레벨업 체크 (경험치가 올랐을 때만)
+            if (earnedExp > 0 && newExp >= requiredExpForNextFloor) {
                 if (currentFloor < 10) {
                     leveledUp = true;
                     newFloor = currentFloor + 1;
-                    newExp = 0; // 경험치 초기화
-                    setCurrentFloor(newFloor);
+                    newExp = 0;
                 } else {
-                    // 10층(최종 층) 도달 시 레벨업 방지 및 경험치 MAX 고정
                     newFloor = 10;
-                    newExp = requiredExpForNextFloor; 
-                    leveledUp = false;
+                    newExp = requiredExpForNextFloor;
                 }
             }
+        } else if (isMaxAttemptsReached) {
+            // [패널티] 3회 최종 오답 시 강력한 감점 (-50) 및 즉시 층수 하락 시도
+            earnedExp = -50;
+            newExp = experience + earnedExp;
+        }
 
+        // 경험치 0 미만 시 처리 (하한선 0점 고정, 층수 하락 제거)
+        if (newExp < 0) {
+            newExp = 0;
+        }
+
+        if (isCorrect || isMaxAttemptsReached) {
             setExperience(newExp);
+            if (newFloor !== currentFloor) {
+                setCurrentFloor(newFloor);
+            }
         }
 
         const result = {
@@ -226,15 +253,22 @@ const useVocabularyTower = (selectedGrade) => {
             correctAnswer: currentQuiz.correctAnswer,
             earnedExp,
             leveledUp,
+            leveledDown, // 층수 하락 정보 추가
             newFloor,
             newExp,
-            word: currentQuiz.word
+            word: currentQuiz.word,
+            wrongAttempts: isCorrect ? wrongAttempts : wrongAttempts + 1,
+            isMaxAttemptsReached
         };
+
+        if (!isCorrect) {
+            setWrongAttempts(prev => prev + 1);
+        }
 
         setLastResult(result);
 
         return result;
-    }, [currentQuiz, currentFloor, experience, requiredExpForNextFloor]);
+    }, [currentQuiz, currentFloor, experience, requiredExpForNextFloor, wrongAttempts]); // [수정] wrongAttempts 의존성 추가
 
     /**
      * 다음 문제로 넘어가기
@@ -252,6 +286,7 @@ const useVocabularyTower = (selectedGrade) => {
         setUsedWordIds(new Set());
         setCurrentQuiz(null);
         setLastResult(null);
+        setWrongAttempts(0);
     }, []);
 
     /**

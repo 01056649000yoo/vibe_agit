@@ -1,9 +1,144 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
 import Button from '../common/Button';
+
+// [최적화] 개별 댓글 컴포넌트 분리 및 메모이제이션 💬
+const CommentItem = memo(({ comment, studentId, isTeacher, onEdit, onDelete }) => {
+    // [수정] 본인 확인 로직 강화
+    const isMe = (comment.student_id === studentId && !!studentId) || (comment.teacher_id === studentId && !!studentId);
+    
+    // 삭제 확인 상태 추가 (window.confirm 대체)
+    const [isConfirming, setIsConfirming] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (!isConfirming) {
+            setIsConfirming(true);
+            return;
+        }
+
+        setIsDeleting(true);
+        const success = await onDelete(comment.id);
+        if (!success) {
+            setIsDeleting(false);
+            setIsConfirming(false);
+        }
+    };
+
+    const isTeacherComment = !!comment.teacher_id;
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            style={{
+                padding: '20px 24px',
+                background: isDeleting ? '#F5F5F5' : (isTeacherComment ? '#EFF6FF' : isMe ? '#E3F2FD' : '#F8F9FA'),
+                borderRadius: '24px',
+                border: isTeacherComment ? '1px solid #BFDBFE' : isMe ? '1px solid #BBDEFB' : '1px solid #F1F3F5',
+                position: 'relative',
+                opacity: (comment.isOptimistic || isDeleting) ? 0.6 : 1,
+                transition: 'all 0.3s ease',
+                pointerEvents: isDeleting ? 'none' : 'auto'
+            }}
+        >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {isTeacherComment ? (
+                        <span style={{ fontSize: '0.75rem', fontWeight: '900', background: '#3B82F6', color: 'white', padding: '2px 8px', borderRadius: '6px' }}>🍎 선생님</span>
+                    ) : (
+                        <span style={{ fontWeight: '900', fontSize: '0.9rem', color: isMe ? '#1976D2' : '#3498DB' }}>
+                            {comment.students?.name || '익명 친구'}
+                        </span>
+                    )}
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    {(isMe && !isTeacher) && !isConfirming && (
+                        <button onClick={() => onEdit(comment)} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>수정</button>
+                    )}
+                    {(isMe || isTeacher) && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button 
+                                onClick={handleDelete} 
+                                style={{ 
+                                    background: isConfirming ? '#E74C3C' : 'none', 
+                                    border: 'none', 
+                                    color: isConfirming ? 'white' : '#E74C3C', 
+                                    padding: isConfirming ? '4px 12px' : '0',
+                                    borderRadius: '10px',
+                                    fontSize: '0.8rem', 
+                                    cursor: 'pointer', 
+                                    fontWeight: 'bold',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {isDeleting ? '삭제 중...' : (isConfirming ? '정말 삭제할까요?' : '삭제')}
+                            </button>
+                            {isConfirming && !isDeleting && (
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setIsConfirming(false); }}
+                                    style={{ background: '#ECF0F1', border: 'none', color: '#7F8C8D', padding: '4px 12px', borderRadius: '10px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}
+                                >
+                                    취소
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+            <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                {comment.content}
+            </div>
+        </motion.div>
+    );
+});
+
+// [최적화] 반응 버튼 아이콘 컴포넌트 분리 및 메모이제이션 ❤️
+const ReactionButton = memo(({ icon, count, isMine, onClick, onMouseEnter, onMouseLeave, isMobile }) => {
+    return (
+        <div
+            style={{ flex: 1, position: 'relative' }}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+        >
+            <button
+                onClick={onClick}
+                style={{
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: isMobile ? '8px 4px' : '12px 8px',
+                    border: isMine ? '2px solid #3498DB' : '1px solid #ECEFF1',
+                    background: isMine ? '#E3F2FD' : 'white',
+                    borderRadius: '16px',
+                    boxShadow: isMine ? '0 4px 10px rgba(52, 152, 219, 0.15)' : '0 2px 4px rgba(0,0,0,0.02)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    minWidth: isMobile ? '60px' : '80px',
+                    whiteSpace: 'nowrap'
+                }}
+            >
+                <span style={{ fontSize: isMobile ? '1.2rem' : '1.4rem' }}>{icon.emoji}</span>
+                <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isMine ? '#3498DB' : '#7F8C8D', letterSpacing: '-0.03em' }}>
+                    {icon.label}
+                </span>
+                <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#2980B9' : '#ADB5BD' }}>
+                    {count}
+                </span>
+            </button>
+        </div>
+    );
+});
 
 const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons, isMobile, ACCESSORIES }) => {
     const [commentInput, setCommentInput] = useState('');
@@ -73,7 +208,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                         console.error('포인트 지급 실패:', ptErr.message);
                     }
                     setCommentInput('');
-                    alert(pointsAwarded ? '의견이 등록되었습니다! (+5P) 💬' : '의견이 등록되었습니다! 💬');
+                    alert(pointsAwarded ? '의견이 등록되었습니다! 🎉\nAI 보안관이 확인 후 친구들에게 공개할게요!' : '의견이 등록되었습니다! 💬\nAI 보안관이 확인 후 친구들에게 공개할게요!');
                 }
             }
         } catch (err) {
@@ -88,17 +223,11 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
         setCommentInput(comment.content);
     };
 
-    const handleDeleteCommentClick = async (commentId) => {
-        if (!confirm('정말 이 댓글을 삭제할까요?')) return;
-        const success = await deleteComment(commentId);
-        if (success) {
-            alert('댓글이 삭제되었습니다.');
-            if (editingCommentId === commentId) {
-                setEditingCommentId(null);
-                setCommentInput('');
-            }
-        }
-    };
+    // 댓글 삭제 클릭 (onDelete로 전달됨)
+    const handleDeleteCommentClick = useCallback(async (commentId) => {
+        // 내부 CommentItem에서 confirmUI를 처리하므로 여기서는 바로 실행
+        return await deleteComment(commentId);
+    }, [deleteComment]);
 
     const getReactionCount = (type) => reactions.filter(r => r.reaction_type === type).length;
 
@@ -273,39 +402,16 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                 const reactorNames = typeReactions.map(r => r.students?.name).filter(Boolean);
 
                                 return (
-                                    <div
-                                        key={icon.type}
-                                        style={{ flex: 1, position: 'relative' }}
-                                        onMouseEnter={() => setHoveredType(icon.type)}
-                                        onMouseLeave={() => setHoveredType(null)}
-                                    >
-                                        <button
+                                    <React.Fragment key={icon.type}>
+                                        <ReactionButton
+                                            icon={icon}
+                                            count={typeReactions.length}
+                                            isMine={isMine}
                                             onClick={() => handleReaction(icon.type)}
-                                            style={{
-                                                width: '100%',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                gap: '4px',
-                                                padding: isMobile ? '8px 4px' : '12px 8px',
-                                                border: isMine ? '2px solid #3498DB' : '1px solid #ECEFF1',
-                                                background: isMine ? '#E3F2FD' : 'white',
-                                                borderRadius: '16px',
-                                                boxShadow: isMine ? '0 4px 10px rgba(52, 152, 219, 0.15)' : '0 2px 4px rgba(0,0,0,0.02)',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s ease',
-                                                minWidth: isMobile ? '60px' : '80px',
-                                                whiteSpace: 'nowrap'
-                                            }}
-                                        >
-                                            <span style={{ fontSize: isMobile ? '1.2rem' : '1.4rem' }}>{icon.emoji}</span>
-                                            <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: isMine ? '#3498DB' : '#7F8C8D', letterSpacing: '-0.03em' }}>
-                                                {icon.label}
-                                            </span>
-                                            <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#2980B9' : '#ADB5BD' }}>
-                                                {typeReactions.length}
-                                            </span>
-                                        </button>
+                                            onMouseEnter={() => setHoveredType(icon.type)}
+                                            onMouseLeave={() => setHoveredType(null)}
+                                            isMobile={isMobile}
+                                        />
 
                                         <AnimatePresence>
                                             {hoveredType === icon.type && reactorNames.length > 0 && (
@@ -369,7 +475,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
-                                    </div>
+                                    </React.Fragment>
                                 );
                             })}
                         </div>
@@ -395,42 +501,16 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                                 첫 번째 응원의 주인공이 되어보세요! ✨
                                             </div>
                                         ) : (
-                                            comments.map(c => {
-                                                const isTeacherComment = !!c.teacher_id;
-                                                const isMe = c.student_id === studentSession?.id;
-                                                return (
-                                                    <div key={c.id} style={{
-                                                        padding: '20px 24px',
-                                                        background: isTeacherComment ? '#EFF6FF' : isMe ? '#E3F2FD' : '#F8F9FA',
-                                                        borderRadius: '24px',
-                                                        border: isTeacherComment ? '1px solid #BFDBFE' : isMe ? '1px solid #BBDEFB' : '1px solid #F1F3F5',
-                                                        position: 'relative',
-                                                        opacity: c.isOptimistic ? 0.6 : 1,
-                                                        transition: 'opacity 0.3s ease'
-                                                    }}>
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                {isTeacherComment ? (
-                                                                    <span style={{ fontSize: '0.75rem', fontWeight: '900', background: '#3B82F6', color: 'white', padding: '2px 8px', borderRadius: '6px' }}>🍎 선생님</span>
-                                                                ) : (
-                                                                    <span style={{ fontWeight: '900', fontSize: '0.9rem', color: isMe ? '#1976D2' : '#3498DB' }}>
-                                                                        {c.students?.name} {isMe && '(나)'}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                                {isMe && (
-                                                                    <button onClick={() => handleEditComment(c)} style={{ background: 'none', border: 'none', color: '#7F8C8D', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>수정</button>
-                                                                )}
-                                                                {(isMe || isTeacher) && (
-                                                                    <button onClick={() => handleDeleteCommentClick(c.id)} style={{ background: 'none', border: 'none', color: '#E74C3C', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}>삭제</button>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div style={{ fontSize: '1.05rem', color: '#2D3436', lineHeight: '1.7' }}>{c.content}</div>
-                                                    </div>
-                                                );
-                                            })
+                                            comments.map(c => (
+                                                <CommentItem
+                                                    key={c.id}
+                                                    comment={c}
+                                                    studentId={studentSession?.id}
+                                                    isTeacher={isTeacher}
+                                                    onEdit={handleEditComment}
+                                                    onDelete={handleDeleteCommentClick}
+                                                />
+                                            ))
                                         )}
                                     </div>
 
@@ -470,4 +550,4 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
     );
 };
 
-export default PostDetailModal;
+export default memo(PostDetailModal);

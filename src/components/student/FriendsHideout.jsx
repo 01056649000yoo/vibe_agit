@@ -45,7 +45,7 @@ const getDragonStage = (level) => {
 };
 
 // [신규] 친구 아지트 구경 모달 (읽기 전용 - 잘림 방지 및 가독성 개선)
-const FriendHideoutModal = ({ classmate, onClose, isMobile }) => {
+const FriendHideoutModal = memo(({ classmate, onClose, isMobile }) => {
     if (!classmate) return null;
     const petData = classmate.pet_data || { name: '친구 드래곤', level: 1, background: 'default' };
     const bg = HIDEOUT_BACKGROUNDS[petData.background] || HIDEOUT_BACKGROUNDS.default;
@@ -157,7 +157,7 @@ const FriendHideoutModal = ({ classmate, onClose, isMobile }) => {
             </motion.div>
         </div>
     );
-};
+});
 
 // 개별 포스트 카드 컴포넌트 분리 및 memo 적용
 const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
@@ -225,10 +225,10 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const handleCloseModal = () => {
+    const handleCloseModal = useCallback(() => {
         if (params?.initialPostId) onBack();
         else setViewingPost(null);
-    };
+    }, [params, onBack, setViewingPost]);
 
     return (
         <>

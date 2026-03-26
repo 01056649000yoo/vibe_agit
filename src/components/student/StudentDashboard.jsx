@@ -254,7 +254,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                         style={{
                             position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-                            background: 'white', zIndex: 5000, overflow: 'hidden'
+                            background: 'white', zIndex: 20000, overflow: 'hidden'
                         }}
                     >
                         <Suspense fallback={
@@ -286,7 +286,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                         style={{
                             position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-                            background: 'white', zIndex: 5000, overflow: 'auto'
+                            background: 'white', zIndex: 20000, overflow: 'hidden'
                         }}
                     >
                         <Suspense fallback={
