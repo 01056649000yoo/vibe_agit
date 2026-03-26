@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { checkBadWords } from '../constants/badWords';
 import { checkContentSafety } from '../utils/aiSafety';
+import { debounce } from '../utils/debounce';
 
 /**
  * 역할: 게시글의 반응(좋아요 등)과 댓글을 관리하는 공통 훅 ✨
@@ -45,47 +46,70 @@ export const usePostInteractions = (postId, studentId) => {
         fetchInteractions();
     }, [fetchInteractions]);
 
-    // 반응 추가/취소 핸들러
-    const handleReaction = async (type) => {
+    // [신규] DB 동기화 로직 (디바운스 적용)
+    const syncReactionWithDB = useMemo(() => debounce(async (type, isRemoving) => {
         if (!studentId || !postId) return;
-
-        // 현재 학생의 기존 반응이 있는지 확인
-        const myReaction = reactions.find(r => r.student_id === studentId);
-
+        
         try {
-            if (myReaction) {
-                if (myReaction.reaction_type === type) {
-                    // 동일한 반응을 클릭하면 삭제 (토글 오프)
-                    const { error } = await supabase
-                        .from('post_reactions')
-                        .delete()
-                        .eq('post_id', postId)
-                        .eq('student_id', studentId);
-                    if (error) throw error;
-                } else {
-                    // 다른 반응을 클릭하면 기존 반응을 새로운 것으로 교체 (1개 유지)
-                    const { error } = await supabase
-                        .from('post_reactions')
-                        .update({ reaction_type: type })
-                        .eq('post_id', postId)
-                        .eq('student_id', studentId);
-                    if (error) throw error;
-                }
-            } else {
-                // 기존 반응이 없으면 새로 추가
+            if (isRemoving) {
+                // 동일한 반응을 클릭하면 삭제 (토글 오프)
                 const { error } = await supabase
                     .from('post_reactions')
-                    .insert({
+                    .delete()
+                    .eq('post_id', postId)
+                    .eq('student_id', studentId);
+                if (error) throw error;
+            } else {
+                // 반응 추가 또는 변경 (unique 제약조건을 활용한 upsert)
+                const { error } = await supabase
+                    .from('post_reactions')
+                    .upsert({
                         post_id: postId,
                         student_id: studentId,
                         reaction_type: type
-                    });
+                    }, { onConflict: 'post_id,student_id' });
                 if (error) throw error;
             }
+            // 최종적으로 서버 데이터를 다시 불러와서 정합성 맞춤
             fetchInteractions();
         } catch (err) {
-            console.error('반응 처리 오류:', err.message);
+            console.error('[usePostInteractions] DB 동기화 실패:', err.message);
+            fetchInteractions(); // 에러 발생 시 UI 롤백을 위해 다시 불러오기
         }
+    }, 1000), [postId, studentId, fetchInteractions]);
+
+    // 반응 추가/취소 핸들러 (낙관적 업데이트 적용)
+    const handleReaction = async (type) => {
+        if (!studentId || !postId) return;
+
+        // 현재 나의 반응 상태 확인
+        const myReaction = reactions.find(r => r.student_id === studentId);
+        const isRemoving = myReaction && myReaction.reaction_type === type;
+
+        // 1. 낙관적 업데이트: UI 상태 먼저 변경
+        setReactions(prev => {
+            if (isRemoving) {
+                // 동일 반응 클릭 -> 삭제
+                return prev.filter(r => r.student_id !== studentId);
+            } 
+            
+            if (myReaction) {
+                // 다른 반응 클릭 -> 변경
+                return prev.map(r => r.student_id === studentId ? { ...r, reaction_type: type } : r);
+            }
+            
+            // 기존 반응 없음 -> 새 추가
+            return [...prev, {
+                post_id: postId,
+                student_id: studentId,
+                reaction_type: type,
+                students: { name: '나' }, // 임시 표시용
+                created_at: new Date().toISOString()
+            }];
+        });
+
+        // 2. 디바운스된 DB 동기화 호출 (1초 대기)
+        syncReactionWithDB(type, isRemoving);
     };
 
     // 댓글 등록 핸들러
