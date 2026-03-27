@@ -130,7 +130,7 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
             // 미션 정보와 함께, 전체 학생 수와 제출된 글 수를 계산하기 위해 데이터 조회
             const { data: missions, error: missionError } = await supabase
                 .from('writing_missions')
-                .select('*')
+                .select('id, title, archived_at, genre, allow_comments, tags, min_chars, max_chars')
                 .eq('class_id', activeClass.id)
                 .eq('is_archived', true)
                 .order('archived_at', { ascending: false });

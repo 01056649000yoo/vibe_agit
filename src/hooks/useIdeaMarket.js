@@ -36,8 +36,8 @@ export const useIdeaMarket = (classId, studentId) => {
             setMeetings(data || []);
 
             // 가장 최근 회의를 자동 선택
-            if (data && data.length > 0 && !selectedMeeting) {
-                setSelectedMeeting(data[0]);
+            if (data && data.length > 0) {
+                setSelectedMeeting(prev => prev || data[0]);
             }
         } catch (err) {
             console.error('[useIdeaMarket] 회의 목록 로드 실패:', err.message);

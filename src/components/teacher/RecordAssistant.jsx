@@ -24,7 +24,7 @@ const RecordAssistant = ({ student, activeClass, isMobile, onClose }) => {
         try {
             const { data, error } = await supabase
                 .from('student_records')
-                .select('*')
+                .select('id, content, created_at, record_type, mission_ids, activity_count, tags')
                 .eq('student_id', student.id)
                 .in('record_type', ['ai_comment', 'teacher_edit'])
                 .order('created_at', { ascending: false });

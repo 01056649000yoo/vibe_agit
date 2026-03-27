@@ -132,7 +132,7 @@ const GameManager = ({ activeClass, isMobile }) => {
         try {
             const { data, error } = await supabase
                 .from('vocab_tower_history')
-                .select('*')
+                .select('id, season_name, rankings, started_at, ended_at')
                 .eq('class_id', activeClass.id)
                 .order('ended_at', { ascending: false });
 
@@ -148,7 +148,7 @@ const GameManager = ({ activeClass, isMobile }) => {
         try {
             const { data, error } = await supabase
                 .from('agit_season_history')
-                .select('*')
+                .select('id, season_name, rankings, started_at, ended_at')
                 .eq('class_id', activeClass.id)
                 .order('ended_at', { ascending: false });
 

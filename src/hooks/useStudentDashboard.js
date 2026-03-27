@@ -30,62 +30,54 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const fetchStats = useCallback(async () => {
         if (!studentSession?.id) return;
         try {
-            const data = await dataCache.get(`stats_${studentSession.id}`, async () => {
-                const { data, error } = await supabase
-                    .from('student_posts')
-                    .select('mission_id, char_count, created_at, is_submitted, is_confirmed, writing_missions!inner(mission_type)')
-                    .eq('student_id', studentSession.id);
-                if (error) throw error;
-                return data || [];
-            });
+            const now = new Date();
+            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-            if (data) {
-                // 1. 미션별로 그룹화하여 '최종' 제출물만 추출
+            // [최적화] 두 가지 통계를 DB 레벨 필터링을 통해 병렬로 가져옴
+            const [lifetimeData, monthlyCount] = await Promise.all([
+                // 1. 전체 승인된 글 (최대 100개 제한)
+                dataCache.get(`stats_lifetime_${studentSession.id}`, async () => {
+                    const { data, error } = await supabase
+                        .from('student_posts')
+                        .select('mission_id, char_count')
+                        .eq('student_id', studentSession.id)
+                        .eq('is_confirmed', true)
+                        .limit(100);
+                    if (error) throw error;
+                    return data || [];
+                }, 300000), // 5분 캐시
+                
+                // 2. 이번 달 승인된 글 개수 (DB 레벨 필터링)
+                dataCache.get(`stats_monthly_${studentSession.id}`, async () => {
+                    const { count, error } = await supabase
+                        .from('student_posts')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('student_id', studentSession.id)
+                        .eq('is_confirmed', true)
+                        .gte('created_at', firstDayOfMonth);
+                    if (error) throw error;
+                    return count || 0;
+                }, 60000) // 1분 캐시
+            ]);
+
+            if (lifetimeData) {
+                // [최적화] 이미 DB에서 승인된 것만 가져왔으므로 미션별 중복만 제거
                 const missionMap = new Map();
-                data.forEach(post => {
-                    const missionId = post.mission_id;
-                    const existing = missionMap.get(missionId);
-
-                    // 우선순위: 승인완료(confirmed) > 제출됨(submitted) > 최신순
-                    let isBetter = false;
-                    if (!existing) {
-                        isBetter = true;
-                    } else if (post.is_confirmed && !existing.is_confirmed) {
-                        isBetter = true;
-                    } else if (!existing.is_confirmed && post.is_submitted && !existing.is_submitted) {
-                        isBetter = true;
-                    } else if (post.is_submitted === existing.is_submitted && post.is_confirmed === existing.is_confirmed) {
-                        if (new Date(post.created_at) > new Date(existing.created_at)) {
-                            isBetter = true;
-                        }
-                    }
-
-                    if (isBetter) {
-                        missionMap.set(missionId, post);
+                lifetimeData.forEach(post => {
+                    if (!missionMap.has(post.mission_id)) {
+                        missionMap.set(post.mission_id, post);
                     }
                 });
 
                 const finalPosts = Array.from(missionMap.values());
-
-                // 2. 제출되었거나 승인된 글의 글자수 합산
-                const totalChars = finalPosts
-                    .filter(p => p.is_confirmed || p.is_submitted)
-                    .reduce((sum, post) => sum + (post.char_count || 0), 0);
-
-                // 3. 완료한 미션 수 (제출/승인 기준)
-                const completedMissions = finalPosts.filter(p => p.is_confirmed || p.is_submitted).length;
-
-                // 4. 이번 달 작성 수 (제출/승인 기준)
-                const now = new Date();
-                const currentMonth = now.getMonth();
-                const currentYear = now.getFullYear();
-                const monthlyPosts = finalPosts.filter(p => {
-                    if (!(p.is_confirmed || p.is_submitted)) return false;
-                    const postDate = new Date(p.created_at);
-                    return postDate.getMonth() === currentMonth && postDate.getFullYear() === currentYear;
-                }).length;
-
-                setStats({ totalChars, completedMissions, monthlyPosts });
+                const totalChars = finalPosts.reduce((sum, post) => sum + (post.char_count || 0), 0);
+                const completedMissions = finalPosts.length;
+                
+                setStats({ 
+                    totalChars, 
+                    completedMissions, 
+                    monthlyPosts: monthlyCount 
+                });
                 setLevelInfo(getLevelInfo(totalChars));
             }
         } catch (err) {

@@ -196,7 +196,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             const missionsData = await dataCache.get(`missions_${activeClass.id}`, async () => {
                 const { data, error } = await supabase
                     .from('writing_missions')
-                    .select('*')
+                    .select('id, title, guide, mission_type, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward')
                     .eq('class_id', activeClass.id)
                     .order('created_at', { ascending: false });
                 if (error) throw error;
@@ -572,10 +572,13 @@ ${postArray.map((p, idx) => {
         setProgress({ current: 0, total: targetPosts.length });
 
         try {
-            let processedCount = 0;
-            // 1명씩 처리
-            for (let i = 0; i < targetPosts.length; i++) {
-                const chunk = targetPosts.slice(i, i + 1);
+            const allLogs = [];
+            const allUpdatePromises = [];
+            const processedIds = [];
+            const CHUNK_SIZE = 5; // [최적화] 한 번에 5개씩 AI 처리 (N+1 문제 완화)
+
+            for (let i = 0; i < targetPosts.length; i += CHUNK_SIZE) {
+                const chunk = targetPosts.slice(i, i + CHUNK_SIZE);
                 try {
                     let results = await fetchAIFeedback(chunk.map(p => ({
                         id: p.id,
@@ -585,7 +588,7 @@ ${postArray.map((p, idx) => {
                         student_name: p.students?.name
                     })));
 
-                    // 결과가 단일 문자열인 경우 배열 형식으로 변환
+                    // 결과 보정
                     if (results && !Array.isArray(results)) {
                         results = [{ id: chunk[0].id, feedback: results }];
                     }
@@ -594,7 +597,10 @@ ${postArray.map((p, idx) => {
                         for (const res of results) {
                             const post = chunk.find(p => p.id === res.id);
                             if (post && res.feedback) {
-                                await Promise.all([
+                                processedIds.push(post.id);
+
+                                // 1. 개별 업데이트 약속 수집 (피드백은 글마다 다르므로 Promise.all 활용)
+                                allUpdatePromises.push(
                                     supabase
                                         .from('student_posts')
                                         .update({
@@ -602,29 +608,46 @@ ${postArray.map((p, idx) => {
                                             is_submitted: false,
                                             is_returned: true
                                         })
-                                        .eq('id', post.id),
+                                        .eq('id', post.id)
+                                );
 
-                                    supabase.from('point_logs').insert({
-                                        student_id: post.student_id,
-                                        post_id: post.id,
-                                        mission_id: post.mission_id,
-                                        amount: 0,
-                                        reason: `[AI 일괄 요청] '${post.title}' 글에 대한 다시 쓰기가 도착했습니다. ♻️`
-                                    })
-                                ]);
+                                // 2. 포인트 로그 데이터 수집 (일괄 처리를 위해 배열에 저장)
+                                allLogs.push({
+                                    student_id: post.student_id,
+                                    post_id: post.id,
+                                    mission_id: post.mission_id,
+                                    amount: 0,
+                                    reason: `[AI 일괄 요청] '${post.title}' 글에 대한 다시 쓰기가 도착했습니다. ♻️`
+                                });
                             }
                         }
                     }
-                    processedCount += chunk.length;
-                    setProgress(prev => ({ ...prev, current: Math.min(processedCount, targetPosts.length) }));
+                    
+                    setProgress(prev => ({ 
+                        ...prev, 
+                        current: Math.min(i + chunk.length, targetPosts.length) 
+                    }));
 
-                    // API 부하 방지 지연
-                    if (i + 1 < targetPosts.length) {
-                        await new Promise(resolve => setTimeout(resolve, 800));
+                    // [최적화] API 부하 방지 지연 최소화 (청크 처리에 따라 빈도 감소)
+                    if (i + CHUNK_SIZE < targetPosts.length) {
+                        await new Promise(resolve => setTimeout(resolve, 300));
                     }
                 } catch (innerErr) {
                     console.error(`Chunk 처리 중 에러:`, innerErr);
                 }
+            }
+
+            // [최종 최적화] 수집된 DB 작업들을 일괄 처리
+            const dbTasks = [];
+            if (allLogs.length > 0) {
+                dbTasks.push(supabase.from('point_logs').insert(allLogs));
+            }
+            if (allUpdatePromises.length > 0) {
+                dbTasks.push(Promise.all(allUpdatePromises));
+            }
+
+            if (dbTasks.length > 0) {
+                await Promise.all(dbTasks);
             }
 
             setShowCompleteToast(true);
@@ -776,7 +799,8 @@ ${postArray.map((p, idx) => {
             console.log(`[Recovery] Searching for log by post_id: ${post.id}`);
             const step1 = await supabase
                 .from('point_logs')
-                .select('*')
+                // 포인트 회수 및 내역 조회를 위해 식별값, 금액, 사유, 일시 및 연관 ID만 선택
+                .select('id, amount, reason, created_at, student_id, mission_id, post_id')
                 .eq('post_id', post.id)
                 .gt('amount', 0)
                 .order('created_at', { ascending: false })
@@ -790,7 +814,8 @@ ${postArray.map((p, idx) => {
                 console.log(`[Recovery] No post_id log found. Trying mission_id: ${selectedMission.id} for student: ${post.student_id}`);
                 const step2 = await supabase
                     .from('point_logs')
-                    .select('*')
+                    // mission_id 매칭 시에도 필요한 필수 필드만 선택
+                    .select('id, amount, reason, created_at, student_id, mission_id, post_id')
                     .eq('student_id', post.student_id)
                     .eq('mission_id', selectedMission.id)
                     .gt('amount', 0)
@@ -811,7 +836,8 @@ ${postArray.map((p, idx) => {
 
                 const step3 = await supabase
                     .from('point_logs')
-                    .select('*')
+                    // 키워드 검색 시에도 필요한 필수 필드만 선택
+                    .select('id, amount, reason, created_at, student_id, mission_id, post_id')
                     .eq('student_id', post.student_id)
                     .ilike('reason', searchPattern)
                     .gt('amount', 0)
@@ -826,7 +852,8 @@ ${postArray.map((p, idx) => {
                     console.log(`[Recovery] Keyword search failed. Trying most recent reward for student...`);
                     const step4 = await supabase
                         .from('point_logs')
-                        .select('*')
+                        // 최후의 수단으로 최근 승인 내역 조회 시에도 필수 필드만 선택
+                        .select('id, amount, reason, created_at, student_id, mission_id, post_id')
                         .eq('student_id', post.student_id)
                         .gt('amount', 0)
                         .ilike('reason', '%승인%')

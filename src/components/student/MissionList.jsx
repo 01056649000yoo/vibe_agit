@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -12,6 +12,75 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     const [posts, setPosts] = useState({}); // missionId -> post 객체
     const [loading, setLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
+
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        console.log("🔍 [MissionList] 데이터 로딩 시작...");
+
+        // 1. 세션 정보 확인 (prop 우선, 없으면 localStorage)
+        let currentStudent = studentSession;
+        if (!currentStudent) {
+            const saved = localStorage.getItem('student_session');
+            if (saved) {
+                currentStudent = JSON.parse(saved);
+            }
+        }
+
+        console.log("👤 [MissionList] 현재 학생 정보:", currentStudent);
+
+        if (!currentStudent || (!currentStudent.classId && !currentStudent.class_id)) {
+            console.error("❌ [MissionList] 유효한 학생 세션이 없습니다.");
+            alert('로그인 정보가 올바르지 않습니다. 다시 로그인해 주세요! 🎒');
+            if (onBack) onBack();
+            setLoading(false); // Ensure loading state is reset even on early exit
+            return;
+        }
+
+        const classId = currentStudent.classId || currentStudent.class_id;
+        const studentId = currentStudent.id;
+
+        try {
+            // 2. 미션 목록 가져오기 (학생 소속 반 기준)
+            console.log(`📡 [MissionList] 미션 조회 중... (반 ID: ${classId})`);
+            const { data: allMissions, error: mError } = await supabase
+                .from('writing_missions')
+                .select('id, title, genre, created_at, mission_type, evaluation_rubric, guide, tags, base_reward')
+                .eq('class_id', classId)
+                .is('is_archived', false)
+                .order('created_at', { ascending: false });
+
+            if (mError) throw mError;
+
+            // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장 (아이디어 마켓 안건 제외)
+            const filteredMissions = allMissions?.filter(m => m.mission_type !== 'meeting') || [];
+            console.log(`✅ [MissionList] 미션 로드 성공: ${filteredMissions.length}건`);
+            setMissions(filteredMissions);
+
+            // 3. 학생의 해당 미션들에 대한 제출물 현황 가져오기
+            console.log(`📡 [MissionList] 학생 제출물 조회 중... (학생 ID: ${studentId})`);
+            const { data: pData, error: pError } = await supabase
+                .from('student_posts')
+                .select('id, mission_id, is_confirmed, char_count, created_at')
+                .eq('student_id', studentId);
+
+            if (pError) throw pError;
+
+            // mission_id를 키로 하는 맵 생성
+            const postMap = {};
+            if (pData) {
+                pData.forEach(p => postMap[p.mission_id] = p);
+            }
+            setPosts(postMap);
+            console.log(`✅ [MissionList] 제출 현황 로드 성공`);
+
+        } catch (err) {
+            console.error('❌ [MissionList] 데이터 로드 중 치명적 오류:', err.message);
+            alert('데이터를 불러오는데 실패했습니다. 😢');
+        } finally {
+            setLoading(false);
+            console.log("🏁 [MissionList] 데이터 로딩 종료");
+        }
+    }, [studentSession, onBack]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 1024);
@@ -50,76 +119,8 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                 supabase.removeChannel(channel);
             };
         }
-    }, [studentSession]);
+    }, [studentSession, fetchData]);
 
-    const fetchData = async () => {
-        setLoading(true);
-        console.log("🔍 [MissionList] 데이터 로딩 시작...");
-
-        // 1. 세션 정보 확인 (prop 우선, 없으면 localStorage)
-        let currentStudent = studentSession;
-        if (!currentStudent) {
-            const saved = localStorage.getItem('student_session');
-            if (saved) {
-                currentStudent = JSON.parse(saved);
-            }
-        }
-
-        console.log("👤 [MissionList] 현재 학생 정보:", currentStudent);
-
-        if (!currentStudent || (!currentStudent.classId && !currentStudent.class_id)) {
-            console.error("❌ [MissionList] 유효한 학생 세션이 없습니다.");
-            alert('로그인 정보가 올바르지 않습니다. 다시 로그인해 주세요! 🎒');
-            if (onBack) onBack();
-            setLoading(false); // Ensure loading state is reset even on early exit
-            return;
-        }
-
-        const classId = currentStudent.classId || currentStudent.class_id;
-        const studentId = currentStudent.id;
-
-        try {
-            // 2. 미션 목록 가져오기 (학생 소속 반 기준)
-            console.log(`📡 [MissionList] 미션 조회 중... (반 ID: ${classId})`);
-            const { data: allMissions, error: mError } = await supabase
-                .from('writing_missions')
-                .select('*')
-                .eq('class_id', classId)
-                .eq('is_archived', false)
-                .order('created_at', { ascending: false });
-
-            if (mError) throw mError;
-
-            // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장 (아이디어 마켓 안건 제외)
-            const filteredMissions = allMissions?.filter(m => m.mission_type !== 'meeting') || [];
-            console.log(`✅ [MissionList] 미션 로드 성공: ${filteredMissions.length}건`);
-            setMissions(filteredMissions);
-
-            // 3. 학생의 해당 미션들에 대한 제출물 현황 가져오기
-            console.log(`📡 [MissionList] 학생 제출물 조회 중... (학생 ID: ${studentId})`);
-            const { data: pData, error: pError } = await supabase
-                .from('student_posts')
-                .select('*')
-                .eq('student_id', studentId);
-
-            if (pError) throw pError;
-
-            // mission_id를 키로 하는 맵 생성
-            const postMap = {};
-            if (pData) {
-                pData.forEach(p => postMap[p.mission_id] = p);
-            }
-            setPosts(postMap);
-            console.log(`✅ [MissionList] 제출 현황 로드 성공`);
-
-        } catch (err) {
-            console.error('❌ [MissionList] 데이터 로드 중 치명적 오류:', err.message);
-            alert('데이터를 불러오는데 실패했습니다. 😢');
-        } finally {
-            setLoading(false);
-            console.log("🏁 [MissionList] 데이터 로딩 종료");
-        }
-    };
 
     const handleMissionClick = (missionId) => {
         onNavigate('writing', { missionId });

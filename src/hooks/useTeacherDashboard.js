@@ -139,7 +139,8 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             const data = await dataCache.get(`classes_${session.user.id}`, async () => {
                 const { data, error } = await supabase
                     .from('classes')
-                    .select('*')
+                    // 학급 목록 표시를 위해 식별값, 이름, 생성일시 정보만 선택
+                    .select('id, name, created_at, teacher_id')
                     .eq('teacher_id', session.user.id)
                     .is('deleted_at', null)
                     .order('created_at', { ascending: false });
@@ -176,7 +177,8 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         dataCache.get(`missions_${activeClass.id}`, async () => {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('*')
+                // 대시보드 미션 요약 표시를 위해 ID, 제목, 타입, 보관여부 등 선택
+                .select('id, title, mission_type, is_archived, created_at')
                 .eq('class_id', activeClass.id)
                 .order('created_at', { ascending: false });
             if (error) throw error;
@@ -187,7 +189,8 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         dataCache.get(`students_${activeClass.id}`, async () => {
             const { data, error } = await supabase
                 .from('students')
-                .select('*')
+                // 학생 요약 정보(ID, 이름)만 프리페칭
+                .select('id, name, class_id')
                 .eq('class_id', activeClass.id)
                 .is('deleted_at', null)
                 .order('name');
@@ -393,7 +396,8 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             // 2. 복구 가능한 학급 (3일 이내) 조회
             const { data, error } = await supabase
                 .from('classes')
-                .select('*')
+                // 삭제된 학급 복구 목록을 위해 이름과 삭제일시 선택
+                .select('id, name, deleted_at, teacher_id')
                 .eq('teacher_id', session.user.id)
                 .not('deleted_at', 'is', null)
                 .gte('deleted_at', threeDaysAgo.toISOString())

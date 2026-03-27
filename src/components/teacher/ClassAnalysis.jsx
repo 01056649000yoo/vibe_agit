@@ -62,9 +62,10 @@ const ClassAnalysis = ({ classId, isMobile }) => {
             const { data: posts } = activeMissionIds.length > 0
                 ? await supabase
                     .from('student_posts')
-                    .select('*')
+                    .select('id, student_id, mission_id, is_confirmed, is_submitted, created_at, char_count')
                     .in('student_id', students.map(s => s.id))
-                    .in('mission_id', activeMissionIds)   // ← 핵심: 살아있는 미션 ID만
+                    .in('mission_id', activeMissionIds)
+                    .eq('is_confirmed', true) // DB 레벨에서 확정된 포스트만 필터링
                 : { data: [] };
 
             // 2. 통계 계산 (미션별 최종 제출물만 필터링)
@@ -84,7 +85,7 @@ const ClassAnalysis = ({ classId, isMobile }) => {
 
                     if (isBetter) map.set(key, p);
                 });
-                return Array.from(map.values()).filter(p => p.is_confirmed);
+                return Array.from(map.values()); // 이미 DB에서 is_confirmed 필터링됨
             };
 
             const finalPosts = getFinalPosts(posts || []);

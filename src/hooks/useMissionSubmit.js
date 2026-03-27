@@ -24,7 +24,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             // 1. 미션 정보 가져오기
             const { data: missionData, error: missionError } = await supabase
                 .from('writing_missions')
-                .select('*')
+                // 미션 식별, 제목, 설명, 타입, 최소 글자/문단수 및 가이드 질문 등 필수 데이터만 로드
+                .select('id, title, guide, mission_type, min_chars, min_paragraphs, guide_questions, is_archived')
                 .eq('id', missionId)
                 .maybeSingle();
 
@@ -42,7 +43,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             // [보안 강화] localStorage 폴백 제거 - Supabase 세션에서만 studentId 가져오기
             const currentStudentId = studentSession?.id;
             if (currentStudentId) {
-                let query = supabase.from('student_posts').select('*');
+                // 학생이 기존에 작성하던 글의 제목, 내용, 제출 및 승인 상태, 피드백 정보만 로드
+                let query = supabase.from('student_posts').select('id, title, content, is_returned, is_confirmed, is_submitted, ai_feedback, original_title, original_content, student_answers, student_id, mission_id');
 
                 if (params?.postId) {
                     query = query.eq('id', params.postId);

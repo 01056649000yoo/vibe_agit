@@ -44,7 +44,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('*')
+                .select('id, title')
                 .eq('class_id', activeClass.id)
                 // .or('is_archived.eq.false,is_archived.is.null') // 보관함 미션도 선택 가능하도록 필터 제거
                 .order('created_at', { ascending: false });
@@ -93,7 +93,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         if (!classId) return;
         const { data, error } = await supabase
             .from('student_records')
-            .select('*')
+            .select('id, content, created_at, record_type, mission_ids, activity_count, tags')
             .eq('class_id', classId)
             .eq('record_type', 'ai_comment')
             .is('student_id', null)
@@ -162,15 +162,13 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
 
                 if (studentsError) throw studentsError;
 
-                // 2. 선택된 미션들에 대한 제출물 가져오기
+                // 2. 선택된 미션들에 대한 제출물 가져오기 (컬럼 최적화 + DB 필터링 + 리미트)
                 const { data: postsData, error: postsError } = await supabase
                     .from('student_posts')
-                    .select(`
-                        *,
-                        writing_missions (id, title, evaluation_rubric)
-                    `)
+                    .select('id, student_id, mission_id, content, final_eval, initial_eval, eval_comment, is_submitted, is_confirmed, char_count, writing_missions(id, title, evaluation_rubric)')
                     .in('mission_id', selectedMissionIds)
-                    .eq('is_submitted', true);
+                    .eq('is_confirmed', true)
+                    .limit(200);
 
                 if (postsError) throw postsError;
 

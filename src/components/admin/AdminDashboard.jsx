@@ -197,7 +197,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const fetchSettings = async () => {
         try {
             // .single() 대신 .maybeSingle()을 사용하여 데이터가 없을 때의 406 에러 차단
-            const { data } = await supabase.from('system_settings').select('*').eq('key', 'auto_approval').maybeSingle();
+            const { data } = await supabase.from('system_settings').select('value').eq('key', 'auto_approval').maybeSingle();
             if (data) setAutoApproval(data.value === true);
         } catch (err) { console.error('설정 로드 실패:', err); }
     };

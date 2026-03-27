@@ -20,7 +20,7 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('*')
+                .select('id, genre, created_at, title, evaluation_rubric')
                 .eq('class_id', activeClass.id)
                 .order('created_at', { ascending: false });
 

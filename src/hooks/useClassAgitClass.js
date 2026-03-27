@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { dataCache } from '../lib/cache';
 
@@ -21,6 +21,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
     const [temperature, setTemperature] = useState(0);
     const [stageLevel, setStageLevel] = useState(1);
     const [counts, setCounts] = useState({ posts: 0, feedbacks: 0 });
+    
     const [unlockedContent, setUnlockedContent] = useState({
         thermometer: true, // 1단계: 기본 제공
         relayNovel: false, // 2단계
@@ -342,6 +343,12 @@ export const useClassAgitClass = (classId, currentStudentId) => {
         }
     }, [classId, currentStudentId]);
 
+    // [최적화] fetchData의 최신 참조를 유지하여 Realtime 재연결 방지
+    const fetchDataRef = useRef(null);
+    useEffect(() => {
+        fetchDataRef.current = fetchData;
+    }, [fetchData]);
+
     useEffect(() => {
         // 딜레이 없이 즉각 로드 (체감 속도 향상)
         fetchData(true);
@@ -351,7 +358,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
         const debouncedFetch = () => {
             if (timeoutId) clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
-                fetchData(false, true);
+                if (fetchDataRef.current) fetchDataRef.current(false, true);
             }, 1000);
         };
 
@@ -381,14 +388,14 @@ export const useClassAgitClass = (classId, currentStudentId) => {
             if (currentDay !== lastCheckDate) {
                 console.log("🕛 [자정 경과] 날짜 변경 감지 -> 데이터 갱신");
                 lastCheckDate = currentDay;
-                fetchData(false, true);
+                if (fetchDataRef.current) fetchDataRef.current(false, true);
             }
         }, 60000); // 1분 간격
 
         // 2. 브라우저 탭 활성화 시 데이터 갱신 (오래 켜뒀다가 다시 볼 때 대비)
         const handleFocus = () => {
             console.log("👀 [윈도우 포커스] 최신 데이터 확인");
-            fetchData(false, true);
+            if (fetchDataRef.current) fetchDataRef.current(false, true);
         };
         window.addEventListener('focus', handleFocus);
 
@@ -398,7 +405,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
             clearInterval(dateCheckInterval); // 인터벌 정리
             window.removeEventListener('focus', handleFocus); // 이벤트 리스너 정리
         };
-    }, [classId, fetchData]);
+    }, [classId]); // fetchData 의존성 제거
 
     return {
         loading,

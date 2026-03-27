@@ -42,7 +42,8 @@ export const useStudentManager = (classId) => {
             dataCache.get(`students_${classId}`, async () => {
                 const { data, error } = await supabase
                     .from('students')
-                    .select('*')
+                    // 학생 관리 목록에 필요한 기본 정보와 펫 데이터를 선택
+                    .select('id, name, total_points, student_code, created_at, pet_data')
                     .eq('class_id', classId)
                     .is('deleted_at', null)
                     .order('created_at', { ascending: true });
@@ -108,7 +109,8 @@ export const useStudentManager = (classId) => {
             // 추가된 학생 정보 조회
             const { data: newStudentData, error: fetchError } = await supabase
                 .from('students')
-                .select('*')
+                // 새 학생 추가 후 상태 동기화를 위해 필수 필드(이름, 코드, 포인트, 펫 등)만 선택
+                .select('id, name, total_points, student_code, created_at, pet_data, class_id')
                 .eq('id', newStudentId)
                 .single();
 
@@ -245,7 +247,8 @@ export const useStudentManager = (classId) => {
 
             const { data, error } = await supabase
                 .from('students')
-                .select('*')
+                // 복구함 목록 표시를 위해 이름과 삭제 일시 정보만 필터링해서 선택
+                .select('id, name, deleted_at, class_id')
                 .eq('class_id', classId)
                 .not('deleted_at', 'is', null)
                 .gte('deleted_at', threeDaysAgo.toISOString())
@@ -282,7 +285,8 @@ export const useStudentManager = (classId) => {
         setLoadingHistory(true);
         const { data, error } = await supabase
             .from('point_logs')
-            .select('*')
+            // 포인트 변동 내역 표시를 위해 변동량, 사유, 일시 선택
+            .select('id, amount, reason, created_at, student_id')
             .eq('student_id', student.id)
             .order('created_at', { ascending: false });
 

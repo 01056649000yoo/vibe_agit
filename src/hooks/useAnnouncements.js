@@ -11,7 +11,8 @@ export const useAnnouncements = (role = 'TEACHER') => {
             setLoading(true);
             const { data, error } = await supabase
                 .from('announcements')
-                .select('*')
+                // UI에서 공지 제목, 내용, 일시, 대상 권한을 보여주기 위해 필수 필드만 선택
+                .select('id, title, content, created_at, target_role')
                 .or(`target_role.eq.${role},target_role.eq.ALL`)
                 .order('created_at', { ascending: false });
 
