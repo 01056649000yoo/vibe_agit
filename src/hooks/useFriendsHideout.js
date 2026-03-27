@@ -23,6 +23,7 @@ export const useFriendsHideout = (studentSession, params) => {
                 .from('students')
                 .select('id, name, pet_data')
                 .eq('class_id', classId)
+                .is('deleted_at', null)
                 .neq('id', studentSession.id)
                 .order('name');
 

@@ -212,6 +212,10 @@ export const useStudentManager = (classId) => {
 
             if (error) throw error;
 
+            // [추가] 캐시 무효화: 즉시 삭제 시 학급 전체 학생 목록 및 통계 캐시 갱신 유도
+            dataCache.invalidate(`students_${classId}`);
+            dataCache.invalidate(`stats_${classId}`);
+
             setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
             setSelectedIds(prev => prev.filter(id => id !== deleteTarget.id));
 

@@ -19,12 +19,14 @@ export const usePostInteractions = (postId, studentId, studentName) => {
             const [rxRes, cmRes] = await Promise.all([
                 supabase
                     .from('post_reactions')
-                    .select('*, students:student_id(name)')
-                    .eq('post_id', postId),
+                    .select('*, students!inner(name, deleted_at)')
+                    .eq('post_id', postId)
+                    .is('students.deleted_at', null),
                 supabase
                     .from('post_comments')
-                    .select('*, students:student_id(name), teacher_id')
+                    .select('*, students!inner(name, deleted_at), teacher_id')
                     .eq('post_id', postId)
+                    .is('students.deleted_at', null)
                     .or(`status.eq.approved,student_id.eq.${studentId}`)
                     .order('created_at', { ascending: true })
             ]);
@@ -62,8 +64,9 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                     if (payload.eventType === 'INSERT') {
                         const { data: newComment } = await supabase
                             .from('post_comments')
-                            .select('*, students:student_id(name), teacher_id')
+                            .select('*, students!inner(name, deleted_at), teacher_id')
                             .eq('id', payload.new.id)
+                            .is('students.deleted_at', null)
                             .single();
                         
                         if (newComment) {
@@ -108,8 +111,9 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                     if (payload.eventType === 'INSERT') {
                         const { data: newRx } = await supabase
                             .from('post_reactions')
-                            .select('*, students:student_id(name)')
+                            .select('*, students!inner(name, deleted_at)')
                             .eq('id', payload.new.id)
+                            .is('students.deleted_at', null)
                             .single();
                         if (newRx) setReactions(prev => [...prev.filter(r => r.id !== newRx.id), newRx]);
                     } else if (payload.eventType === 'UPDATE') {

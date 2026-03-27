@@ -151,8 +151,9 @@ export const useClassAgitClass = (classId, currentStudentId) => {
                     .lt('created_at', tomorrow.toISOString()),
                 supabase
                     .from('agit_honor_roll')
-                    .select('student_id, students(name), created_at')
+                    .select('student_id, students!inner(name, deleted_at), created_at')
                     .eq('class_id', classId)
+                    .is('students.deleted_at', null)
             ]);
 
             console.log("📦 [DB 조회 결과]", { classData, classError });
