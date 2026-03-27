@@ -83,7 +83,7 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
                     let bannerMsg = "";
                     let bannerIcon = "🎁";
                     if (newLog.amount !== 0) {
-                        const cleanReason = (newLog.reason || '').replace(/\(PostID:[^)]+\)/, '').trim();
+                        const cleanReason = (newLog.reason || '').replace(/\((Post|Mission)ID:[^)]+\)/g, '').trim();
                         if (newLog.amount < 0) {
                             if (newLog.reason?.includes('승인 취소')) bannerMsg = `⚠️ 앗! 글 승인이 취소되어 ${newLog.amount}P가 회수되었습니다.`;
                             else bannerMsg = `⚠️ ${cleanReason} (${newLog.amount}P)`;
@@ -127,7 +127,12 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
                         debouncedNotify({ type: 'rewrite', message: "♻️ 선생님의 다시 쓰기 요청이 있습니다.", icon: "♻️", timestamp: Date.now() });
                         debouncedFetch('activity');
                     } else if (updatedPost.is_confirmed && !oldPost.is_confirmed) {
-                        debouncedNotify({ type: 'approve', message: `🎉 글이 승인되었습니다! 축하해요!`, icon: "🎉", timestamp: Date.now() });
+                        // [수정] 아이디어 마켓 결정 시 전용 문구 노출
+                        const isIdea = updatedPost.status === '결정됨';
+                        const message = isIdea ? "🎉 아이디어가 최종 결정되었습니다!" : "🎉 글이 승인되었습니다! 축하해요!";
+                        const icon = isIdea ? "🏛️" : "🎉";
+                        
+                        debouncedNotify({ type: isIdea ? 'idea_decided' : 'approve', message, icon, timestamp: Date.now() });
                         debouncedFetch('points');
                     } else if (!updatedPost.is_confirmed && oldPost.is_confirmed) {
                         debouncedNotify({ type: 'recovery', message: "⚠️ 글의 승인이 취소되거나 회수되었습니다.", icon: "⚠️", timestamp: Date.now() });

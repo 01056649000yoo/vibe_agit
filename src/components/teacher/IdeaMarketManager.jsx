@@ -46,7 +46,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('id, title, guide, guide_questions, created_at, is_archived, mission_type, base_reward, bonus_reward')
+                .select('id, title, guide, guide_questions, created_at, is_archived, mission_type, base_reward, bonus_reward, min_chars, min_paragraphs, bonus_threshold')
                 .eq('class_id', activeClass.id)
                 .eq('is_archived', false)
                 .eq('mission_type', 'meeting')
@@ -71,6 +71,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 .select(`
                     id, title, content, student_id, mission_id, status,
                     is_submitted, is_confirmed, student_answers, created_at,
+                    char_count, paragraph_count,
                     students!inner(id, name),
                     post_reactions(id, reaction_type),
                     post_comments(id)

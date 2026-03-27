@@ -56,6 +56,7 @@ export const useIdeaMarket = (classId, studentId) => {
                 .select(`
                     id, title, content, student_id, mission_id, status,
                     is_submitted, is_confirmed, student_answers, created_at,
+                    char_count, paragraph_count,
                     students!inner(id, name, pet_data),
                     post_reactions(id, reaction_type, student_id, students(name)),
                     post_comments(id, content, student_id, created_at, students(name))
