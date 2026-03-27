@@ -20,7 +20,29 @@ const ClassAnalysis = ({ classId, isMobile }) => {
     const [missionAvgCharsMap, setMissionAvgCharsMap] = useState({});
 
     useEffect(() => {
-        if (classId) fetchAnalysisData();
+        if (!classId) return;
+        
+        fetchAnalysisData();
+
+        // [추가] 미션 및 제출물 변경 시 실시간 통계 갱신
+        const channel = supabase
+            .channel(`class_analysis_${classId}`)
+            .on('postgres_changes', { 
+                event: '*', 
+                schema: 'public', 
+                table: 'writing_missions',
+                filter: `class_id=eq.${classId}`
+            }, () => fetchAnalysisData())
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'student_posts'
+            }, () => fetchAnalysisData())
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [classId]);
 
     const fetchAnalysisData = async () => {
@@ -48,12 +70,13 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                 return;
             }
 
-            // [수정] 미션은 보관되지 않은 것만 조회
+            // [수정] 미션은 보관되지 않은 것만 조회 (아이디어 마켓 안건 제외)
             const { data: missions } = await supabase
                 .from('writing_missions')
                 .select('id, title, created_at')
                 .eq('class_id', classId)
-                .eq('is_archived', false)
+                .is('is_archived', false)
+                .neq('mission_type', 'meeting')
                 .order('created_at', { ascending: false });
 
             // [수정] posts는 현재 살아있는 미션에 속한 것만 조회
