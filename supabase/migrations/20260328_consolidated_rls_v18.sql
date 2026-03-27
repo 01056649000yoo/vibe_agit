@@ -21,7 +21,8 @@ BEGIN
               'agit_honor_roll', 'announcements', 'classes', 'feedback_reports', 
               'point_logs', 'post_comments', 'post_reactions', 'profiles', 
               'student_posts', 'student_records', 'students', 'system_settings', 
-              'teachers', 'vocab_tower_rankings', 'writing_missions'
+              'teachers', 'vocab_tower_rankings', 'vocab_tower_history',
+              'agit_season_history', 'writing_missions'
           )
     ) LOOP
         EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', r.policyname, r.tablename);
@@ -65,11 +66,12 @@ ON CONFLICT (id) DO UPDATE SET
     gemini_api_key = EXCLUDED.gemini_api_key,
     personal_openai_api_key = EXCLUDED.personal_openai_api_key;
 
--- 기존 profiles 테이블에서 민감 컬럼 삭제 (안전하게 처리)
+-- [주의] 기존 profiles 테이블에서 민감 컬럼 삭제는 운영 단계에서 검증 후 실행 권장
 -- ALTER TABLE public.profiles DROP COLUMN IF EXISTS gemini_api_key;
 -- ALTER TABLE public.profiles DROP COLUMN IF EXISTS personal_openai_api_key;
 
 -- RPC 함수 업데이트 (API 키 존재 여부 확인)
+-- 기존 2222_add_check_api_key_rpc.sql를 대체함
 CREATE OR REPLACE FUNCTION public.check_my_api_key_exists()
 RETURNS JSON AS $$
 DECLARE
@@ -107,11 +109,20 @@ USING (public.auth_user_role() = 'ADMIN')
 WITH CHECK (public.auth_user_role() = 'ADMIN');
 
 -- 3. feedback_reports
-CREATE POLICY "Feedback_Reports_V18" ON public.feedback_reports FOR ALL TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()));
+CREATE POLICY "Feedback_Reports_Select_V18" ON public.feedback_reports FOR SELECT TO authenticated 
+USING ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()));
 
--- 4. profiles (Sensitive columns removed, standard select/update)
+CREATE POLICY "Feedback_Reports_Insert_V18" ON public.feedback_reports FOR INSERT TO authenticated 
+WITH CHECK (teacher_id = auth.uid());
+
+CREATE POLICY "Feedback_Reports_Update_V18" ON public.feedback_reports FOR UPDATE TO authenticated 
+USING (teacher_id = auth.uid())
+WITH CHECK (teacher_id = auth.uid());
+
+CREATE POLICY "Feedback_Reports_Delete_V18" ON public.feedback_reports FOR DELETE TO authenticated 
+USING ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()));
+
+-- 4. profiles
 CREATE POLICY "Profiles_Select_V18" ON public.profiles FOR SELECT TO authenticated 
 USING ((public.auth_user_role() = 'ADMIN') OR (id = auth.uid()));
 
@@ -123,9 +134,18 @@ CREATE POLICY "Profiles_Insert_V18" ON public.profiles FOR INSERT TO authenticat
 WITH CHECK (id = auth.uid());
 
 -- 5. student_records
-CREATE POLICY "Records_V18" ON public.student_records FOR ALL TO authenticated 
+CREATE POLICY "Records_Select_V18" ON public.student_records FOR SELECT TO authenticated 
+USING ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()));
+
+CREATE POLICY "Records_Insert_V18" ON public.student_records FOR INSERT TO authenticated 
+WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()));
+
+CREATE POLICY "Records_Update_V18" ON public.student_records FOR UPDATE TO authenticated 
 USING ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()))
 WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()));
+
+CREATE POLICY "Records_Delete_V18" ON public.student_records FOR DELETE TO authenticated 
+USING ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()));
 
 -- 6. system_settings
 CREATE POLICY "Settings_V18" ON public.system_settings FOR ALL TO authenticated 
@@ -136,9 +156,12 @@ CREATE POLICY "Settings_Read_V18" ON public.system_settings FOR SELECT TO authen
 USING ((auth.uid() IS NOT NULL) OR (public.auth_user_role() = 'ADMIN'));
 
 -- 7. teachers
-CREATE POLICY "Teachers_V18" ON public.teachers FOR ALL TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (id = auth.uid()))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (id = auth.uid()));
+CREATE POLICY "Teachers_Select_V18" ON public.teachers FOR SELECT TO authenticated 
+USING ((public.auth_user_role() = 'ADMIN') OR (id = auth.uid()));
+
+CREATE POLICY "Teachers_Update_V18" ON public.teachers FOR UPDATE TO authenticated 
+USING (id = auth.uid())
+WITH CHECK (id = auth.uid());
 
 -- 8. post_reactions
 CREATE POLICY "Reaction_Select_V18" ON public.post_reactions FOR SELECT TO authenticated 
@@ -256,6 +279,16 @@ WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (auth.uid() = teacher_id));
 
 CREATE POLICY "Point_Logs_Delete_V18" ON public.point_logs FOR DELETE TO authenticated 
 USING (public.auth_user_role() = 'ADMIN');
+
+-- 16. vocab_tower_history
+CREATE POLICY "Tower_History_V18" ON public.vocab_tower_history FOR ALL TO authenticated 
+USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()))
+WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+
+-- 17. agit_season_history
+CREATE POLICY "Season_History_V18" ON public.agit_season_history FOR ALL TO authenticated 
+USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()))
+WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
 
 -- [6] 스키마 캐시 새로고침
 NOTIFY pgrst, 'reload schema';
