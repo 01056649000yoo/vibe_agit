@@ -339,14 +339,24 @@ export const useClassAgitClass = (classId, currentStudentId) => {
             }, 1000);
         };
 
-        // [최적화] 단일 채널 다중화 (Multiplexing): 4개의 개별 커넥션을 1개로 통합
+        // [방어막] 기존 동일 이름의 채널이 있다면 명시적으로 제거하여 중복 구독 방지
+        const duplicate = supabase.getChannels().find(c => c.name === `agit-realtime-events-${classId}`);
+        if (duplicate) {
+            console.log(`♻️ [Agit] 중복 채널 감지 및 제거: agit-realtime-events-${classId}`);
+            supabase.removeChannel(duplicate);
+        }
+
         const agitChannel = supabase
             .channel(`agit-realtime-events-${classId}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'student_posts' }, debouncedFetch)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, debouncedFetch)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'post_reactions' }, debouncedFetch)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'classes', filter: `id=eq.${classId}` }, debouncedFetch)
-            .subscribe();
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('✅ [Agit] 실시간 채널 연결 성공');
+                }
+            });
 
         // 1. 자정이 지나 날짜가 바뀌었는지 1분마다 체크하여 자동 갱신
         let lastCheckDate = new Date().getDate();

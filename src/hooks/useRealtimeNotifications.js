@@ -31,13 +31,27 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
         }, 300);
     };
 
+    // [최적화] 콜백 안정화 (부모 리렌더링 시 구독 유지)
+    const callbacksRef = useRef({ setPoints, refetchDataControls });
+    useEffect(() => {
+        callbacksRef.current = { setPoints, refetchDataControls };
+    }, [setPoints, refetchDataControls]);
+
     useEffect(() => {
         if (!studentSession?.id) return;
 
-        console.log(`📡 [Realtime] 알림 채널 구독 시작 (Student ID: ${studentSession.id})`);
+        const channelName = `student_realtime_v3_${studentSession.id}`;
+        console.log(`📡 [Realtime] 알림 채널 구독 시작: ${channelName}`);
+
+        // [방어막] 기존 동일 이름의 채널이 있다면 명시적으로 제거하여 중복 구독 방지
+        const duplicate = supabase.getChannels().find(c => c.name === channelName);
+        if (duplicate) {
+            console.log(`♻️ [Realtime] 중복 채널 감지 및 제거: ${channelName}`);
+            supabase.removeChannel(duplicate);
+        }
 
         const notificationChannel = supabase
-            .channel(`student_realtime_v3_${studentSession.id}`)
+            .channel(channelName)
             // 1. 포인트 변동 감지 (point_logs)
             .on(
                 'postgres_changes',
@@ -49,30 +63,25 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
                 },
                 (payload) => {
                     const newLog = payload.new;
-                    console.log(`📡 [Realtime] 포인트 알림 수신! (Amount: ${newLog.amount}, Reason: ${newLog.reason})`, newLog);
+                    console.log(`📡 [Realtime] 포인트 알림 수신! (Amount: ${newLog.amount})`);
 
                     if (newLog.amount !== 0) {
-                        // [최적화] 여러 포인트 알림이 동시에 올 경우 모아서 한 번에 업데이트 (디바운싱)
                         accumulatedPointsRef.current += newLog.amount;
                         if (pointTimerRef.current) clearTimeout(pointTimerRef.current);
                         
                         pointTimerRef.current = setTimeout(() => {
                             const totalAmount = accumulatedPointsRef.current;
-                            accumulatedPointsRef.current = 0; // 초기화
+                            accumulatedPointsRef.current = 0; 
                             
                             if (totalAmount !== 0) {
-                                setPoints(prev => {
-                                    const updated = (prev || 0) + totalAmount;
-                                    console.log(`💰 [Realtime Debounced] 포인트 UI 갱신됨: ${prev} -> ${updated}`);
-                                    return updated;
-                                });
+                                callbacksRef.current.setPoints(prev => (prev || 0) + totalAmount);
                             }
                         }, 500);
                     }
-
+                    
+                    // ... (알림 배너 로직 생략 가능하나 원본 유지)
                     let bannerMsg = "";
                     let bannerIcon = "🎁";
-
                     if (newLog.amount !== 0) {
                         const cleanReason = (newLog.reason || '').replace(/\(PostID:[^)]+\)/, '').trim();
                         if (newLog.amount < 0) {
@@ -96,11 +105,7 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
 
                     if (bannerMsg) {
                         debouncedNotify({
-                            type: 'point',
-                            message: bannerMsg,
-                            icon: bannerIcon,
-                            amount: newLog.amount,
-                            timestamp: Date.now()
+                            type: 'point', message: bannerMsg, icon: bannerIcon, amount: newLog.amount, timestamp: Date.now()
                         });
                     }
                 }
@@ -118,25 +123,14 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
                     const updatedPost = payload.new;
                     const oldPost = payload.old;
 
-                    // 1. 반려(다시 쓰기) 요청
                     if (updatedPost.is_returned && !oldPost.is_returned) {
-                        debouncedNotify({
-                            type: 'rewrite', message: "♻️ 선생님의 다시 쓰기 요청이 있습니다.", icon: "♻️", timestamp: Date.now()
-                        });
+                        debouncedNotify({ type: 'rewrite', message: "♻️ 선생님의 다시 쓰기 요청이 있습니다.", icon: "♻️", timestamp: Date.now() });
                         debouncedFetch('activity');
-                    }
-                    // 2. 승인 완료
-                    else if (updatedPost.is_confirmed && !oldPost.is_confirmed) {
-                        debouncedNotify({
-                            type: 'approve', message: `🎉 글이 승인되었습니다! 축하해요!`, icon: "🎉", timestamp: Date.now()
-                        });
+                    } else if (updatedPost.is_confirmed && !oldPost.is_confirmed) {
+                        debouncedNotify({ type: 'approve', message: `🎉 글이 승인되었습니다! 축하해요!`, icon: "🎉", timestamp: Date.now() });
                         debouncedFetch('points');
-                    }
-                    // 3. 승인 취소/회수
-                    else if (!updatedPost.is_confirmed && oldPost.is_confirmed) {
-                        debouncedNotify({
-                            type: 'recovery', message: "⚠️ 글의 승인이 취소되거나 회수되었습니다.", icon: "⚠️", timestamp: Date.now()
-                        });
+                    } else if (!updatedPost.is_confirmed && oldPost.is_confirmed) {
+                        debouncedNotify({ type: 'recovery', message: "⚠️ 글의 승인이 취소되거나 회수되었습니다.", icon: "⚠️", timestamp: Date.now() });
                         debouncedFetch('points');
                     }
                 }

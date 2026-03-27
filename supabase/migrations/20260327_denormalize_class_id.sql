@@ -31,6 +31,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
+-- [2-1] student_posts 전용 class_id 자동 할당 트리거 함수
+-- student_posts 테이블은 본인의 mission_id를 직접 참조합니다.
+CREATE OR REPLACE FUNCTION public.fn_fill_class_id_for_student_posts()
+RETURNS TRIGGER AS $$
+BEGIN
+  SELECT class_id INTO NEW.class_id
+  FROM public.writing_missions
+  WHERE id = NEW.mission_id;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
 -- [3] 트리거 설정 (INSERT 전 실행)
 DROP TRIGGER IF EXISTS trg_fill_comment_class_id ON public.post_comments;
 CREATE TRIGGER trg_fill_comment_class_id
@@ -48,7 +61,7 @@ DROP TRIGGER IF EXISTS trg_fill_post_class_id ON public.student_posts;
 CREATE TRIGGER trg_fill_post_class_id
   BEFORE INSERT ON public.student_posts
   FOR EACH ROW
-  EXECUTE FUNCTION public.fn_fill_class_id_from_post();
+  EXECUTE FUNCTION public.fn_fill_class_id_for_student_posts();
 
 -- [3-1] point_logs용 별도 트리거 함수 및 설정 (student_id 기반)
 CREATE OR REPLACE FUNCTION public.fn_fill_class_id_from_student()

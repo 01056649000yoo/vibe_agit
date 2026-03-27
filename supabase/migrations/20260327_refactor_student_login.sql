@@ -40,8 +40,11 @@ BEGIN
         RETURN json_build_object('success', false, 'error', '이미 다른 기기(계정)에서 사용 중인 코드입니다.');
     END IF;
     
-    -- 3. 중복 바인딩 방지 처리 (Atomicity 보장)
+    -- 3. 중복 바인딩 및 트리거 정책 대응
     -- 현재 세션(auth_id)이 이전에 다른 학생 코드에 묶여있었다면 이를 해제
+    -- [보안] 민감한 계정 정보 수정 감지 트리거를 우회하기 위해 세션 변수 설정
+    PERFORM set_config('app.bypass_student_trigger', 'true', true);
+
     UPDATE public.students 
     SET auth_id = NULL 
     WHERE auth_id = v_auth_id AND id != v_student.id;
@@ -50,6 +53,9 @@ BEGIN
     UPDATE public.students 
     SET auth_id = v_auth_id 
     WHERE id = v_student.id;
+
+    -- 트리거 우회 해제
+    PERFORM set_config('app.bypass_student_trigger', 'false', true);
     
     -- 5. [수정] auth.users 메타데이터 주입 로직 제거 
     -- (Edge Function: set-student-metadata에서 처리하도록 변경됨)
