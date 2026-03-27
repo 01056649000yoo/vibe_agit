@@ -216,10 +216,29 @@ export const useIdeaMarket = (classId, studentId) => {
         }
     };
 
-    // 초기 로딩
+    // 초기 로딩 및 실시간 구독
     useEffect(() => {
         fetchMeetings();
-    }, [fetchMeetings]);
+
+        if (classId) {
+            const channel = supabase
+                .channel(`idea_market_meetings_${classId}`)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'writing_missions',
+                    filter: `class_id=eq.${classId}`
+                }, (payload) => {
+                    console.log('📢 [useIdeaMarket] 회의 목록 변경 감지:', payload);
+                    fetchMeetings();
+                })
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
+        }
+    }, [classId, fetchMeetings]);
 
     // 미션 선택 시 아이디어 로딩
     useEffect(() => {

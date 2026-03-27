@@ -30,6 +30,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
         const classId = getSessionClassId();
 
         if (classId) {
+            console.log(`📡 [MissionList] 실시간 채널 구독 시작... (classId: ${classId})`);
             const channel = supabase
                 .channel(`mission_list_changes_${classId}`)
                 .on('postgres_changes', {
@@ -38,16 +39,18 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                     table: 'writing_missions',
                     filter: `class_id=eq.${classId}`
                 }, (payload) => {
-                    console.log('📢 미션 목록 변경 감지:', payload);
+                    console.log('📢 [MissionList] 미션 목록 변경 감지:', payload);
                     fetchData();
                 })
-                .subscribe();
+                .subscribe((status) => {
+                    console.log(`📡 [MissionList] 구독 상태: ${status}`);
+                });
 
             return () => {
                 supabase.removeChannel(channel);
             };
         }
-    }, []);
+    }, [studentSession]);
 
     const fetchData = async () => {
         setLoading(true);

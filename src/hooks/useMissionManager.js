@@ -352,6 +352,11 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                 alert('새로운 글쓰기 미션이 공개되었습니다! 🚀');
             }
 
+            // [추가] 캐시 무효화로 즉각 반영 보장
+            if (activeClass?.id) {
+                dataCache.invalidate(`missions_${activeClass.id}`);
+            }
+
             handleCancelEdit();
             fetchMissions();
         } catch (error) {
@@ -1007,6 +1012,12 @@ ${postArray.map((p, idx) => {
                 .eq('id', archiveModal.mission.id);
 
             if (error) throw error;
+            
+            // [추가] 캐시 무효화
+            if (activeClass?.id) {
+                dataCache.invalidate(`missions_${activeClass.id}`);
+            }
+
             setArchiveModal({ isOpen: false, mission: null, hasIncomplete: false });
             fetchMissions();
         } catch (err) {

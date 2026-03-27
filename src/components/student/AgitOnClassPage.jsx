@@ -44,7 +44,6 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
 
                 if (latestHonor) {
                     const lastCheck = localStorage.getItem(`last_visit_agit_honor_${classId}`);
-                    // 최근 24시간 이내의 글이면서, 마지막 확인보다 최신일 때만 NEW 표시
                     const isRecent = new Date(latestHonor.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
                     const isUnchecked = !lastCheck || new Date(latestHonor.created_at) > new Date(lastCheck);
 
@@ -94,7 +93,26 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                 console.error('새 소식 확인 실패:', err);
             }
         };
+
         checkNewContent();
+
+        // [실시간 연동] 새로운 미션/안건 등록 시 뱃지 갱신
+        if (classId) {
+            const channel = supabase
+                .channel(`agit_hub_changes_${classId}`)
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'writing_missions',
+                    filter: `class_id=eq.${classId}`
+                }, () => {
+                    console.log('📢 [AgitHub] 새로운 미션 감지 -> 뱃지 갱신');
+                    checkNewContent();
+                })
+                .subscribe();
+
+            return () => supabase.removeChannel(channel);
+        }
     }, [classId]);
 
     const [subTab, setSubTab] = useState('hub');
