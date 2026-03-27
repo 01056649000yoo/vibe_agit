@@ -70,7 +70,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     // 드래곤 관련 상태 및 액션
     const {
-        petData, setPetData, isEvolving, isFlashing,
+        petData, setPetData, isEvolving, isFlashing, isBusy,
         handleFeed, buyItem, equipItem
     } = useDragonPet(
         studentSession?.id,
@@ -229,6 +229,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     setIsShopOpen={setIsShopOpen}
                     isEvolving={isEvolving}
                     isFlashing={isFlashing}
+                    isBusy={isBusy}
                     currentPoints={points}
                 />
 
@@ -240,6 +241,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     petData={petData}
                     buyItem={buyItem}
                     equipItem={equipItem}
+                    isBusy={isBusy}
                     HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
                 />
             </Card>

@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const DragonHideoutModal = ({
     isOpen, onClose, isMobile, petData, dragonInfo,
     HIDEOUT_BACKGROUNDS, daysSinceLastFed, dragonConfig,
-    handleFeed, setIsShopOpen, isEvolving, isFlashing,
+    handleFeed, setIsShopOpen, isEvolving, isFlashing, isBusy,
     currentPoints = 0
 }) => {
+    const [showConfirm, setShowConfirm] = useState(false);
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -58,7 +60,6 @@ const DragonHideoutModal = ({
                         </button>
 
                         <div style={{ textAlign: 'center', marginBottom: '24px', position: 'relative' }}>
-                            {/* [수정] 보유 포인트 배지를 왼쪽 상단으로 이동하여 닫기 버튼과 겹치지 않게 함 */}
                             <div style={{
                                 position: isMobile ? 'static' : 'absolute',
                                 top: '0',
@@ -89,7 +90,7 @@ const DragonHideoutModal = ({
                                     position: 'relative',
                                     width: '280px',
                                     height: '280px',
-                                    background: '#F0F0F0', // [수정] 기본 바탕색은 고정하여 깜빡임 방지
+                                    background: '#F0F0F0',
                                     borderRadius: '24px',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -97,10 +98,8 @@ const DragonHideoutModal = ({
                                     overflow: 'hidden',
                                     border: petData.level >= 5 ? '4px solid #FFD700' : `2px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || '#DDD'}`,
                                 }}>
-                                    {/* 후경 장식 (비네팅 효과) */}
                                     <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.2) 100%)', pointerEvents: 'none', zIndex: 10 }} />
 
-                                    {/* [개선] 배경별 효과 및 그래디언트 통합 관리 (교차 페이드 적용) */}
                                     <AnimatePresence mode="wait">
                                         <motion.div
                                             key={`${petData.background}-${isOpen}`}
@@ -131,10 +130,8 @@ const DragonHideoutModal = ({
                                                     ))}
                                                 </>
                                             )}
-                                            {/* [완전 개편] 천상 전당 (sky) - 구름 위의 궁전 연출 */}
                                             {petData.background === 'sky' && (
                                                 <>
-                                                    {/* 1. 고공 구름 연출 (다층 레이어) */}
                                                     {[...Array(6)].map((_, i) => (
                                                         <motion.div
                                                             key={`${petData.background}-cloud-layer-${i}`}
@@ -160,7 +157,6 @@ const DragonHideoutModal = ({
                                                         </motion.div>
                                                     ))}
 
-                                                    {/* 2. 신비로운 천상의 빛무리 (Celestial Orbs) */}
                                                     {[...Array(8)].map((_, i) => (
                                                         <motion.div
                                                             key={`${petData.background}-sky-orb-${i}`}
@@ -187,7 +183,6 @@ const DragonHideoutModal = ({
                                                         />
                                                     ))}
 
-                                                    {/* 3. 천상의 문 후광 (Heavenly Gate Halo) */}
                                                     <motion.div
                                                         key={`${petData.background}-sky-halo`}
                                                         animate={{
@@ -206,7 +201,6 @@ const DragonHideoutModal = ({
                                                         }}
                                                     />
 
-                                                    {/* 4. 부유하는 깃털 (Floating Feathers) */}
                                                     {[...Array(4)].map((_, i) => (
                                                         <motion.div
                                                             key={`${petData.background}-feather-${i}`}
@@ -260,10 +254,8 @@ const DragonHideoutModal = ({
                                                     ))}
                                                 </>
                                             )}
-                                            {/* [완전 개편] 번개 폭풍 (storm) - 극한의 기상 연출 */}
                                             {petData.background === 'storm' && (
                                                 <>
-                                                    {/* 1. 폭풍우 비효과 (Rain Particles) */}
                                                     {[...Array(20)].map((_, i) => (
                                                         <motion.div
                                                             key={`${petData.background}-rain-${i}`}
@@ -288,7 +280,6 @@ const DragonHideoutModal = ({
                                                         />
                                                     ))}
 
-                                                    {/* 2. 소용돌이치는 먹구름 (Stormy Clouds) - 매우 어둡게 */}
                                                     {[...Array(4)].map((_, i) => (
                                                         <motion.div
                                                             key={`${petData.background}-storm-cloud-${i}`}
@@ -310,7 +301,6 @@ const DragonHideoutModal = ({
                                                         </motion.div>
                                                     ))}
 
-                                                    {/* 3. 강력한 번개 섬광 (Lightning Flashes) - 화면 전체 */}
                                                     <motion.div
                                                         key={`${petData.background}-lightning-flash`}
                                                         animate={{
@@ -325,7 +315,6 @@ const DragonHideoutModal = ({
                                                         style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}
                                                     />
 
-                                                    {/* 4. 역동적인 지그재그 낙뢰 (Dynamic SVG Lightning Bolts) */}
                                                     {[...Array(3)].map((_, i) => (
                                                         <motion.div
                                                             key={`${petData.background}-bolt-wrapper-${i}`}
@@ -368,7 +357,6 @@ const DragonHideoutModal = ({
                                                         </motion.div>
                                                     ))}
 
-                                                    {/* 5. 전기 스파크 (Electric Sparks) - 드래곤 주변 */}
                                                     {[...Array(4)].map((_, i) => (
                                                         <motion.div
                                                             key={`${petData.background}-spark-${i}`}
@@ -421,10 +409,8 @@ const DragonHideoutModal = ({
                                                 </div>
                                             )}
 
-                                            {/* [완전 개편] 천상의 황금성소 (legend) - 골드 드래곤을 위한 압도적 연출 */}
                                             {petData.background === 'legend' && (
                                                 <>
-                                                    {/* 1. 심연의 황금 성운 배경 (골드 드래곤 대비 극대화) */}
                                                     <motion.div
                                                         key={`${petData.background}-nebula`}
                                                         animate={{
@@ -438,7 +424,6 @@ const DragonHideoutModal = ({
                                                         style={{ position: 'absolute', inset: 0, opacity: 0.8 }}
                                                     />
 
-                                                    {/* 2. 황금빛 신성한 빛줄기 (God Rays) */}
                                                     {[...Array(6)].map((_, i) => (
                                                         <motion.div
                                                             key={`${petData.background}-gold-ray-${i}`}
@@ -461,7 +446,6 @@ const DragonHideoutModal = ({
                                                         />
                                                     ))}
 
-                                                    {/* 3. 공중에 떠오르는 황금 파편 (Golden Embers) */}
                                                     {[...Array(15)].map((_, i) => (
                                                         <motion.div
                                                             key={`${petData.background}-ember-${i}`}
@@ -486,10 +470,8 @@ const DragonHideoutModal = ({
                                                         </motion.div>
                                                     ))}
 
-                                                    {/* 4. 마스터 전용 구동체 (Divine Orbital Rings) */}
                                                     {petData.level >= 5 && petData.exp >= 100 && (
                                                         <>
-                                                            {/* 궤도 링 1 */}
                                                             <motion.div
                                                                 key={`${petData.background}-ring-1`}
                                                                 animate={{ rotateZ: 360, rotateX: [60, 70, 60] }}
@@ -504,7 +486,6 @@ const DragonHideoutModal = ({
                                                                     perspective: '1000px'
                                                                 }}
                                                             />
-                                                            {/* 궤도 링 2 */}
                                                             <motion.div
                                                                 key={`${petData.background}-ring-2`}
                                                                 animate={{ rotateZ: -360, rotateY: [60, 50, 60] }}
@@ -519,7 +500,6 @@ const DragonHideoutModal = ({
                                                                 }}
                                                             />
 
-                                                            {/* 태양신 광륜 (Radiant Halo) */}
                                                             <motion.div
                                                                 key={`${petData.background}-sun-halo`}
                                                                 animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.3, 0.5, 0.3] }}
@@ -537,7 +517,6 @@ const DragonHideoutModal = ({
                                                         </>
                                                     )}
 
-                                                    {/* 5. 바닥의 황금 물결 (Golden Ripple) */}
                                                     <motion.div
                                                         key={`${petData.background}-ground-ripple`}
                                                         animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.1, 0.3, 0.1] }}
@@ -610,14 +589,131 @@ const DragonHideoutModal = ({
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleFeed} style={{ flex: 1, background: '#FF8A65', color: 'white', border: 'none', padding: '16px', borderRadius: '20px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 6px 0 #E64A19', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
-                                        🍖 먹이 주기 ({dragonConfig.feedCost}P)
-                                    </motion.button>
-                                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsShopOpen(true)} style={{ flex: 1, background: '#3498DB', color: 'white', border: 'none', padding: '16px', borderRadius: '20px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 6px 0 #2980B9', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
-                                        🛍️ 상점/꾸미기
-                                    </motion.button>
-                                </div>
+                                <AnimatePresence mode="wait">
+                                    {!showConfirm ? (
+                                        <motion.div 
+                                            key="action-buttons"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            style={{ display: 'flex', gap: '12px' }}
+                                        >
+                                            <motion.button 
+                                                whileHover={!isBusy ? { scale: 1.05 } : {}} 
+                                                whileTap={!isBusy ? { scale: 0.95 } : {}} 
+                                                onClick={() => setShowConfirm(true)} 
+                                                disabled={isBusy}
+                                                style={{ 
+                                                    flex: 2, 
+                                                    background: isBusy ? '#BDC3C7' : '#FF8A65', 
+                                                    color: 'white', 
+                                                    border: 'none', 
+                                                    padding: '16px', 
+                                                    borderRadius: '20px', 
+                                                    fontSize: '1rem', 
+                                                    fontWeight: 'bold', 
+                                                    cursor: isBusy ? 'default' : 'pointer', 
+                                                    boxShadow: isBusy ? '0 6px 0 #95A5A6' : '0 6px 0 #E64A19', 
+                                                    display: 'flex', 
+                                                    justifyContent: 'center', 
+                                                    alignItems: 'center', 
+                                                    gap: '10px',
+                                                    opacity: isBusy ? 0.8 : 1
+                                                }}
+                                            >
+                                                {isBusy ? '🍖 잠시만요...' : `🍖 먹이 주기 (${dragonConfig.feedCost}P)`}
+                                            </motion.button>
+                                            <motion.button 
+                                                whileHover={{ scale: 1.05 }} 
+                                                whileTap={{ scale: 0.95 }} 
+                                                onClick={() => setIsShopOpen(true)} 
+                                                style={{ 
+                                                    flex: 1, 
+                                                    background: '#3498DB', 
+                                                    color: 'white', 
+                                                    border: 'none', 
+                                                    padding: '16px', 
+                                                    borderRadius: '20px', 
+                                                    fontSize: '1rem', 
+                                                    fontWeight: 'bold', 
+                                                    cursor: 'pointer', 
+                                                    boxShadow: '0 6px 0 #2980B9', 
+                                                    display: 'flex', 
+                                                    justifyContent: 'center', 
+                                                    alignItems: 'center', 
+                                                    gap: '10px' 
+                                                }}
+                                            >
+                                                🛍️ 상점
+                                            </motion.button>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div 
+                                            key="confirm-buttons"
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            style={{ 
+                                                background: '#FFF3E0', 
+                                                padding: '20px', 
+                                                borderRadius: '24px', 
+                                                border: '2px solid #FFB74D',
+                                                boxShadow: '0 8px 16px rgba(255,152,0,0.1)'
+                                            }}
+                                        >
+                                            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                                                <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#E65100', marginBottom: '8px' }}>🍖 먹이를 주시겠습니까?</div>
+                                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
+                                                    <div style={{ textAlign: 'center' }}>
+                                                        <div style={{ fontSize: '0.75rem', color: '#FB8C00' }}>현재</div>
+                                                        <div style={{ fontWeight: 'bold' }}>{currentPoints.toLocaleString()}P</div>
+                                                    </div>
+                                                    <div style={{ fontSize: '1.2rem', color: '#FFB74D' }}>➜</div>
+                                                    <div style={{ textAlign: 'center' }}>
+                                                        <div style={{ fontSize: '0.75rem', color: '#FB8C00' }}>남은 포인트</div>
+                                                        <div style={{ fontWeight: 'bold', color: '#E65100' }}>{(currentPoints - dragonConfig.feedCost).toLocaleString()}P</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <button 
+                                                    onClick={() => setShowConfirm(false)}
+                                                    style={{ 
+                                                        flex: 1, 
+                                                        background: 'white', 
+                                                        color: '#7F8C8D', 
+                                                        border: '1px solid #DDD', 
+                                                        padding: '12px', 
+                                                        borderRadius: '14px', 
+                                                        fontWeight: 'bold', 
+                                                        cursor: 'pointer' 
+                                                    }}
+                                                >
+                                                    취소
+                                                </button>
+                                                <button 
+                                                    onClick={() => {
+                                                        handleFeed();
+                                                        setShowConfirm(false);
+                                                    }}
+                                                    style={{ 
+                                                        flex: 1.5, 
+                                                        background: '#FF9800', 
+                                                        color: 'white', 
+                                                        border: 'none', 
+                                                        padding: '12px', 
+                                                        borderRadius: '14px', 
+                                                        fontWeight: 'bold', 
+                                                        cursor: 'pointer',
+                                                        boxShadow: '0 4px 0 #E65100'
+                                                    }}
+                                                >
+                                                    확인
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </div>
                     </motion.div>

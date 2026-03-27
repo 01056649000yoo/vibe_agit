@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
 
-const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipItem, HIDEOUT_BACKGROUNDS }) => {
+const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipItem, isBusy, HIDEOUT_BACKGROUNDS }) => {
     if (!isOpen) return null;
 
     return (
@@ -97,15 +97,16 @@ const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipI
                                         style={{
                                             width: isLegendary ? '80%' : '100%',
                                             margin: '0 auto',
-                                            background: (isLegendary && !hasFullyMastered) ? '#EEE' : '#FBC02D',
-                                            color: (isLegendary && !hasFullyMastered) ? '#999' : '#795548',
+                                            background: (isLegendary && !hasFullyMastered) || isBusy ? '#EEE' : '#FBC02D',
+                                            color: (isLegendary && !hasFullyMastered) || isBusy ? '#999' : '#795548',
                                             fontWeight: 'bold',
-                                            cursor: (isLegendary && !hasFullyMastered) ? 'not-allowed' : 'pointer'
+                                            cursor: (isLegendary && !hasFullyMastered) || isBusy ? 'not-allowed' : 'pointer',
+                                            opacity: isBusy ? 0.7 : 1
                                         }}
-                                        onClick={() => !(isLegendary && !hasFullyMastered) && buyItem(item)}
-                                        disabled={isLegendary && !hasFullyMastered}
+                                        onClick={() => !(isLegendary && !hasFullyMastered) && !isBusy && buyItem(item)}
+                                        disabled={(isLegendary && !hasFullyMastered) || isBusy}
                                     >
-                                        {isLegendary && !hasFullyMastered ? '잠겨있음' : '지금 받기'}
+                                        {isBusy ? '처리 중...' : (isLegendary && !hasFullyMastered ? '잠겨있음' : '지금 받기')}
                                     </Button>
                                 ) : (
                                     <Button

@@ -13,6 +13,7 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
     });
     const [isEvolving, setIsEvolving] = useState(false);
     const [isFlashing, setIsFlashing] = useState(false);
+    const [isBusy, setIsBusy] = useState(false); 
 
     // [추가] 초기 데이터 동기화
     useEffect(() => {
@@ -95,7 +96,7 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
 
     // 먹이 주기 기능
     const handleFeed = async () => {
-        if (points === undefined || points === null) return;
+        if (points === undefined || points === null || isBusy) return;
 
         const FEED_COST = feedCostRef.current;
         if (points < FEED_COST) {
@@ -108,6 +109,8 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
             alert('작업을 완료할 수 없습니다. 포인트가 유효하지 않습니다.');
             return;
         }
+
+        setIsBusy(true);
 
         let newExp = petData.exp + 20;
         let newLevel = petData.level;
@@ -138,7 +141,6 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
             };
 
             // [보안 수정] RPC를 통한 안전한 포인트 차감 + 펫 데이터 동시 업데이트
-            // total_points를 직접 UPDATE하지 않음 (GRANT 제한 + 서버 검증)
             const { data: spendResult, error: updateError } = await supabase
                 .rpc('spend_student_points', {
                     p_amount: FEED_COST,
@@ -170,21 +172,24 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
                     setTimeout(() => {
                         setIsFlashing(false);
                         setIsEvolving(false);
+                        setIsBusy(false);
                     }, 500);
                 }, 1500);
             } else {
                 setPoints(confirmedNewPoints);
                 setPetData(newPetData);
+                setIsBusy(false);
             }
         } catch (err) {
             console.error('포인트 업데이트 실패:', err.message);
             alert('포인트 사용에 실패했습니다. 다시 시도해 주세요!');
             setIsEvolving(false);
+            setIsBusy(false);
         }
     };
 
     const buyItem = async (item) => {
-        if (points === undefined || points === null) return;
+        if (points === undefined || points === null || isBusy) return;
 
         if (points < item.price) {
             alert('포인트가 부족해요! 꾸준히 글을 써 보세요. ✍️');
@@ -196,6 +201,8 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
         const newPoints = points - item.price;
         const newOwned = [...petData.ownedItems, item.id];
         const newPetData = { ...petData, ownedItems: newOwned };
+
+        setIsBusy(true);
 
         try {
             // [보안 수정] RPC를 통한 안전한 포인트 차감 + 펫 데이터 동시 업데이트
@@ -216,6 +223,9 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
             alert(`[${item.name}] 구매 성공! 리스트에서 '적용하기'를 눌러보세요. ✨`);
         } catch (err) {
             console.error('배경 구매 실패:', err.message);
+            alert('구매에 실패했습니다. 다시 시도해 주세요.');
+        } finally {
+            setIsBusy(false);
         }
     };
 
@@ -249,6 +259,7 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
         setPetData,
         isEvolving,
         isFlashing,
+        isBusy,
         handleFeed,
         checkPetDegeneration,
         buyItem,
