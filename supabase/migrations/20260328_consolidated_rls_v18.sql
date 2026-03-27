@@ -70,6 +70,23 @@ ON CONFLICT (id) DO UPDATE SET
 -- ALTER TABLE public.profiles DROP COLUMN IF EXISTS gemini_api_key;
 -- ALTER TABLE public.profiles DROP COLUMN IF EXISTS personal_openai_api_key;
 
+-- [보완] RLS 성능 최적화를 위한 누락된 class_id 컬럼 추가 (Denormalization)
+ALTER TABLE public.post_comments ADD COLUMN IF NOT EXISTS class_id UUID REFERENCES public.classes(id) ON DELETE CASCADE;
+ALTER TABLE public.point_logs ADD COLUMN IF NOT EXISTS class_id UUID REFERENCES public.classes(id) ON DELETE CASCADE;
+
+-- 기존 데이터에 class_id 채우기 (연결된 post/student 정보를 바탕으로)
+-- post_comments
+UPDATE public.post_comments pc
+SET class_id = sp.class_id
+FROM public.student_posts sp
+WHERE pc.post_id = sp.id AND pc.class_id IS NULL;
+
+-- point_logs
+UPDATE public.point_logs pl
+SET class_id = s.class_id
+FROM public.students s
+WHERE pl.student_id = s.id AND pl.class_id IS NULL;
+
 -- RPC 함수 업데이트 (API 키 존재 여부 확인)
 -- 기존 2222_add_check_api_key_rpc.sql를 대체함
 CREATE OR REPLACE FUNCTION public.check_my_api_key_exists()
@@ -212,14 +229,22 @@ CREATE POLICY "Comment_Insert_V18" ON public.post_comments FOR INSERT TO authent
 WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
 
 CREATE POLICY "Comment_Update_V18" ON public.post_comments FOR UPDATE TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (student_id = public.auth_student_id()) OR (public.auth_user_role() = 'TEACHER'))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (student_id = public.auth_student_id()) OR (public.auth_user_role() = 'TEACHER'));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (student_id = public.auth_student_id()) OR 
+    ((public.auth_user_role() = 'TEACHER') AND (class_id = public.auth_user_class_id()))
+)
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (student_id = public.auth_student_id()) OR 
+    ((public.auth_user_role() = 'TEACHER') AND (class_id = public.auth_user_class_id()))
+);
 
 CREATE POLICY "Comment_Delete_V18" ON public.post_comments FOR DELETE TO authenticated 
 USING (
     (public.auth_user_role() = 'ADMIN') OR 
     (student_id = public.auth_student_id()) OR 
-    (public.auth_user_role() = 'TEACHER' AND class_id = public.auth_user_class_id())
+    ((public.auth_user_role() = 'TEACHER') AND (class_id = public.auth_user_class_id()))
 );
 
 -- 12. student_posts
@@ -271,11 +296,11 @@ CREATE POLICY "Point_Logs_Select_V18" ON public.point_logs FOR SELECT TO authent
 USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
 
 CREATE POLICY "Point_Logs_Insert_V18" ON public.point_logs FOR INSERT TO authenticated 
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (auth.uid() = teacher_id));
+WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
 
 CREATE POLICY "Point_Logs_Update_V18" ON public.point_logs FOR UPDATE TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (auth.uid() = teacher_id))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (auth.uid() = teacher_id));
+USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()))
+WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
 
 CREATE POLICY "Point_Logs_Delete_V18" ON public.point_logs FOR DELETE TO authenticated 
 USING (public.auth_user_role() = 'ADMIN');
