@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
+import { dataCache } from '../lib/cache';
 
 export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const [missions, setMissions] = useState([]);
@@ -191,32 +192,31 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         if (!activeClass?.id) return;
         setLoading(true);
         try {
-            const [missionsResult, studentCountResult] = await Promise.all([
-                supabase
+            // [Performance] 캐시 적용 (Pre-fetch된 데이터와 동기화)
+            const missionsData = await dataCache.get(`missions_${activeClass.id}`, async () => {
+                const { data, error } = await supabase
                     .from('writing_missions')
                     .select('*')
                     .eq('class_id', activeClass.id)
-                    .order('created_at', { ascending: false }),
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                return (data || []).filter(m => !m.is_archived && m.mission_type !== 'meeting');
+            }, 120000);
 
-                supabase
-                    .from('students')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('class_id', activeClass.id)
-                    .is('deleted_at', null)
-            ]);
+            setMissions(missionsData || []);
 
-            if (missionsResult.error) throw missionsResult.error;
+            // 학생 수 조회도 캐시 가능하지만 일단 병렬로 유지
+            const { count: studentCount, error: studentCountError } = await supabase
+                .from('students')
+                .select('id', { count: 'exact', head: true })
+                .eq('class_id', activeClass.id)
+                .is('deleted_at', null);
 
-            // [수정] 모든 미션을 가져온 뒤 JS에서 보관 상태 및 아이디어 마켓(meeting) 타입 제외 처리
-            // 아이디어 마켓 글 미션은 글쓰기 미션 현황에서 표시하지 않고 보관함은 동일하게 공유
-            const data = (missionsResult.data || []).filter(m => !m.is_archived && m.mission_type !== 'meeting');
-            setMissions(data);
+            if (studentCountError) console.error('학생 수 조회 실패:', studentCountError);
+            else setTotalStudentCount(studentCount || 0);
 
-            if (studentCountResult.error) console.error('학생 수 조회 실패:', studentCountResult.error);
-            else setTotalStudentCount(studentCountResult.count || 0);
-
-            if (data && data.length > 0) {
-                const missionIds = data.map(m => m.id);
+            if (missionsData && missionsData.length > 0) {
+                const missionIds = missionsData.map(m => m.id);
                 const { data: counts, error: countError } = await supabase
                     .from('student_posts')
                     .select('mission_id, students!inner(id)')

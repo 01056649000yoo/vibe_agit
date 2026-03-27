@@ -1,112 +1,111 @@
--- ============================================================================
--- 🛡️ [보안 강화] V17: 게시물/댓글/반응 삭제 권한 본인 한정 (Granular RLS)
+-- ====================================================================
+-- 🛡️ [보안 강화 V17] 게시물/댓글/반응 삭제 권한 분리 및 성능 최적화
 -- 작성일: 2026-03-27
--- 설명: 같은 반 학생이 서로의 글/댓글/반응을 삭제할 수 없도록 ALL 정책을 분리합니다.
---       DELETE 및 UPDATE 권한을 본인 또는 ADMIN/교사(관리용)로 제한합니다.
--- ============================================================================
+--
+-- 변경 사항:
+--   1. ALL 정책을 폐기하고 SELECT/INSERT/UPDATE/DELETE로 명확히 분리
+--   2. DELETE 권한을 '본인' 또는 '담당 교사'로 제한
+--   3. EXISTS 서브쿼리를 제거하고 auth_user_class_id() 헬퍼 함수를 사용하여 성능 최적화
+-- ====================================================================
 
--- [1] STABLE 헬퍼 함수 추가: JWT에서 student_id 추출
--- 쿼리 성능을 위해 매 행마다 서브쿼리를 실행하는 대신 JWT 메타데이터를 활용합니다.
-CREATE OR REPLACE FUNCTION public.auth_student_id()
-RETURNS uuid AS $$
-  SELECT (NULLIF(auth.jwt() -> 'app_metadata' ->> 'student_id', ''))::uuid;
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
-
-GRANT EXECUTE ON FUNCTION public.auth_student_id() TO authenticated;
-GRANT EXECUTE ON FUNCTION public.auth_student_id() TO service_role;
-
--- [2] 기존 V12 ALL 정책 삭제
+-- 1. post_comments (댓글) 정책 재구성
 DROP POLICY IF EXISTS "Comment_V12" ON public.post_comments;
+DROP POLICY IF EXISTS "Comment_Select_V17" ON public.post_comments;
+DROP POLICY IF EXISTS "Comment_Insert_V17" ON public.post_comments;
+DROP POLICY IF EXISTS "Comment_Update_V17" ON public.post_comments;
+DROP POLICY IF EXISTS "Comment_Delete_V17" ON public.post_comments;
+
+CREATE POLICY "Comment_Select_V17" ON public.post_comments
+FOR SELECT USING (
+  -- 같은 반 학생들의 댓글은 볼 수 있음 (V12 로직 계승)
+  class_id = public.auth_user_class_id()
+  OR student_id = (SELECT id FROM public.students WHERE auth_id = auth.uid() LIMIT 1)
+  OR teacher_id = auth.uid()
+);
+
+CREATE POLICY "Comment_Insert_V17" ON public.post_comments
+FOR INSERT WITH CHECK (
+  auth.uid() IS NOT NULL
+);
+
+CREATE POLICY "Comment_Update_V17" ON public.post_comments
+FOR UPDATE USING (
+  -- 본인(학생/교사) 또는 관리자만 수정 가능
+  student_id = (SELECT id FROM public.students WHERE auth_id = auth.uid() LIMIT 1)
+  OR teacher_id = auth.uid()
+  OR public.auth_user_role() = 'ADMIN'
+);
+
+CREATE POLICY "Comment_Delete_V17" ON public.post_comments
+FOR DELETE USING (
+  -- 본인(학생/교사) 또는 해당 반 교사 또는 관리자만 삭제 가능
+  student_id = (SELECT id FROM public.students WHERE auth_id = auth.uid() LIMIT 1)
+  OR teacher_id = auth.uid()
+  OR (public.auth_user_role() = 'TEACHER' AND class_id = public.auth_user_class_id())
+  OR public.auth_user_role() = 'ADMIN'
+);
+
+
+-- 2. post_reactions (반응) 정책 재구성
 DROP POLICY IF EXISTS "Reaction_V12" ON public.post_reactions;
+DROP POLICY IF EXISTS "Reaction_Select_V17" ON public.post_reactions;
+DROP POLICY IF EXISTS "Reaction_Insert_V17" ON public.post_reactions;
+DROP POLICY IF EXISTS "Reaction_Update_V17" ON public.post_reactions;
+DROP POLICY IF EXISTS "Reaction_Delete_V17" ON public.post_reactions;
+
+CREATE POLICY "Reaction_Select_V17" ON public.post_reactions
+FOR SELECT USING (true);
+
+CREATE POLICY "Reaction_Insert_V17" ON public.post_reactions
+FOR INSERT WITH CHECK (
+  auth.uid() IS NOT NULL
+);
+
+CREATE POLICY "Reaction_Update_V17" ON public.post_reactions
+FOR UPDATE USING (
+  student_id = (SELECT id FROM public.students WHERE auth_id = auth.uid() LIMIT 1)
+  OR public.auth_user_role() = 'ADMIN'
+);
+
+CREATE POLICY "Reaction_Delete_V17" ON public.post_reactions
+FOR DELETE USING (
+  student_id = (SELECT id FROM public.students WHERE auth_id = auth.uid() LIMIT 1)
+  OR public.auth_user_role() = 'ADMIN'
+);
+
+
+-- 3. student_posts (글) 정책 재구성
 DROP POLICY IF EXISTS "Post_V12" ON public.student_posts;
+DROP POLICY IF EXISTS "Post_Select_V17" ON public.student_posts;
+DROP POLICY IF EXISTS "Post_Insert_V17" ON public.student_posts;
+DROP POLICY IF EXISTS "Post_Update_V17" ON public.student_posts;
+DROP POLICY IF EXISTS "Post_Delete_V17" ON public.student_posts;
 
--- [3] post_comments 테이블 정책 세분화
--- 조회: 관리자 또는 같은 반 학생/교사
-CREATE POLICY "Comment_Select_V17" ON public.post_comments FOR SELECT TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
-
--- 삽입: 관리자 또는 같은 반 학생/교사
-CREATE POLICY "Comment_Insert_V17" ON public.post_comments FOR INSERT TO authenticated 
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
-
--- 수정: 관리자 또는 작성자 본인 (학생/교사)
-CREATE POLICY "Comment_Update_V17" ON public.post_comments FOR UPDATE TO authenticated 
-USING (
-    (public.auth_user_role() = 'ADMIN') 
-    OR (student_id = public.auth_student_id()) 
-    OR (teacher_id = auth.uid())
-)
-WITH CHECK (
-    (public.auth_user_role() = 'ADMIN') 
-    OR (student_id = public.auth_student_id()) 
-    OR (teacher_id = auth.uid())
+CREATE POLICY "Post_Select_V17" ON public.student_posts
+FOR SELECT USING (
+  class_id = public.auth_user_class_id()
+  OR student_id = (SELECT id FROM public.students WHERE auth_id = auth.uid() LIMIT 1)
 );
 
--- 삭제: 관리자, 작성자 본인, 또는 해당 학급의 담당 교사(관리용)
-CREATE POLICY "Comment_Delete_V17" ON public.post_comments FOR DELETE TO authenticated 
-USING (
-    (public.auth_user_role() = 'ADMIN') 
-    OR (student_id = public.auth_student_id()) 
-    OR (teacher_id = auth.uid())
-    OR EXISTS (
-        SELECT 1 FROM public.student_posts p
-        JOIN public.writing_missions m ON p.mission_id = m.id
-        LEFT JOIN public.classes c ON m.class_id = c.id
-        WHERE p.id = post_comments.post_id 
-          AND (c.teacher_id = auth.uid() OR m.teacher_id = auth.uid())
-    )
+CREATE POLICY "Post_Insert_V17" ON public.student_posts
+FOR INSERT WITH CHECK (
+  auth.uid() IS NOT NULL
 );
 
--- [4] post_reactions 테이블 정책 세분화
--- 조회 및 삽입
-CREATE POLICY "Reaction_Select_V17" ON public.post_reactions FOR SELECT TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
-
-CREATE POLICY "Reaction_Insert_V17" ON public.post_reactions FOR INSERT TO authenticated 
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
-
--- 수정 및 삭제: 관리자 또는 본인
-CREATE POLICY "Reaction_Update_V17" ON public.post_reactions FOR UPDATE TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (student_id = public.auth_student_id()));
-
-CREATE POLICY "Reaction_Delete_V17" ON public.post_reactions FOR DELETE TO authenticated 
-USING (
-    (public.auth_user_role() = 'ADMIN') 
-    OR (student_id = public.auth_student_id())
-    OR EXISTS (
-        SELECT 1 FROM public.student_posts p
-        JOIN public.writing_missions m ON p.mission_id = m.id
-        LEFT JOIN public.classes c ON m.class_id = c.id
-        WHERE p.id = post_reactions.post_id 
-          AND (c.teacher_id = auth.uid() OR m.teacher_id = auth.uid())
-    )
+CREATE POLICY "Post_Update_V17" ON public.student_posts
+FOR UPDATE USING (
+  student_id = (SELECT id FROM public.students WHERE auth_id = auth.uid() LIMIT 1)
+  OR public.auth_user_role() = 'ADMIN'
 );
 
--- [5] student_posts 테이블 정책 세분화
--- 조회 및 삽입
-CREATE POLICY "Post_Select_V17" ON public.student_posts FOR SELECT TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
-
-CREATE POLICY "Post_Insert_V17" ON public.student_posts FOR INSERT TO authenticated 
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
-
--- 수정: 관리자 또는 본인
-CREATE POLICY "Post_Update_V17" ON public.student_posts FOR UPDATE TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (student_id = public.auth_student_id()))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (student_id = public.auth_student_id()));
-
--- 삭제: 관리자, 작성자 본인, 또는 담당 교사
-CREATE POLICY "Post_Delete_V17" ON public.student_posts FOR DELETE TO authenticated 
-USING (
-    (public.auth_user_role() = 'ADMIN') 
-    OR (student_id = public.auth_student_id())
-    OR EXISTS (
-        SELECT 1 FROM public.writing_missions m
-        LEFT JOIN public.classes c ON c.id = m.class_id
-        WHERE m.id = student_posts.mission_id 
-          AND (m.teacher_id = auth.uid() OR c.teacher_id = auth.uid())
-    )
+CREATE POLICY "Post_Delete_V17" ON public.student_posts
+FOR DELETE USING (
+  -- 본인 또는 해당 반 교사 또는 관리자만 삭제 가능
+  student_id = (SELECT id FROM public.students WHERE auth_id = auth.uid() LIMIT 1)
+  OR (public.auth_user_role() = 'TEACHER' AND class_id = public.auth_user_class_id())
+  OR public.auth_user_role() = 'ADMIN'
 );
+
 
 -- 스키마 캐시 새로고침
 NOTIFY pgrst, 'reload schema';

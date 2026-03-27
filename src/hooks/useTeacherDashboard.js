@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
+import { dataCache } from '../lib/cache';
 
 
 export const useTeacherDashboard = (session, profile, onProfileUpdate, activeClass, setActiveClass) => {
@@ -49,11 +50,15 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     const fetchTeacherInfo = useCallback(async () => {
         if (!session?.user?.id) return;
         try {
-            const { data, error } = await supabase
-                .from('teachers')
-                .select('name, school_name, phone')
-                .eq('id', session.user.id)
-                .single();
+            const data = await dataCache.get(`teacher_info_${session.user.id}`, async () => {
+                const { data, error } = await supabase
+                    .from('teachers')
+                    .select('name, school_name, phone')
+                    .eq('id', session.user.id)
+                    .single();
+                if (error) throw error;
+                return data;
+            }, 600000, true); // 10분 캐시, 영속성 부여
 
             if (data) {
                 setTeacherInfo(data);
@@ -131,14 +136,18 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         if (!session?.user?.id) return;
         setLoadingClasses(true);
         try {
-            const { data, error } = await supabase
-                .from('classes')
-                .select('*')
-                .eq('teacher_id', session.user.id)
-                .is('deleted_at', null)
-                .order('created_at', { ascending: false });
+            const data = await dataCache.get(`classes_${session.user.id}`, async () => {
+                const { data, error } = await supabase
+                    .from('classes')
+                    .select('*')
+                    .eq('teacher_id', session.user.id)
+                    .is('deleted_at', null)
+                    .order('created_at', { ascending: false });
 
-            if (error) throw error;
+                if (error) throw error;
+                return data || [];
+            }, 300000, true); // 5분 캐시, 영속성 부여
+
             setClasses(data || []);
         } catch (err) {
             console.error('❌ Hook: 학급 불러오기 실패:', err.message);
@@ -158,6 +167,35 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             ]).catch(err => console.error("초기 로딩 중 오류:", err));
         }
     }, [session?.user?.id, fetchAllClasses, fetchGeminiKey, fetchTeacherInfo]);
+
+    // [Performance] 활성 학급 변경 시 미션/학생 데이터 백그라운드 프리페칭
+    useEffect(() => {
+        if (!activeClass?.id) return;
+
+        // 1. 미션 목록 프리페칭
+        dataCache.get(`missions_${activeClass.id}`, async () => {
+            const { data, error } = await supabase
+                .from('writing_missions')
+                .select('*')
+                .eq('class_id', activeClass.id)
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            return (data || []).filter(m => !m.is_archived && m.mission_type !== 'meeting');
+        }, 120000); // 2분 캐시
+
+        // 2. 학생 목록 프리페칭
+        dataCache.get(`students_${activeClass.id}`, async () => {
+            const { data, error } = await supabase
+                .from('students')
+                .select('*')
+                .eq('class_id', activeClass.id)
+                .is('deleted_at', null)
+                .order('name');
+            if (error) throw error;
+            return data || [];
+        }, 120000);
+
+    }, [activeClass?.id]);
 
     // 활성 학급 자동 선택 로직
     useEffect(() => {

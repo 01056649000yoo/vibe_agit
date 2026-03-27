@@ -33,6 +33,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
     const [myMissionStatus, setMyMissionStatus] = useState({ post: 0, comment: 0, reaction: 0, achieved: false });
     const [agitSettingsState, setAgitSettingsState] = useState(DEFAULT_SETTINGS);
     const [achievedStudentsList, setAchievedStudentsList] = useState([]); // 오늘의 미션 완료자 목록
+    const [historyStats, setHistoryStats] = useState([]); // [추가] 명예의 전당 누적 통계
 
     const agitSettings = useMemo(() => agitSettingsState, [agitSettingsState]);
 
@@ -106,19 +107,53 @@ export const useClassAgitClass = (classId, currentStudentId) => {
 
             console.log("🔍 [아지트 데이터 조회 시작] classId:", classId);
 
-            // 0. 학급 설정 조회 (목표 온도 및 점수 정책) — dataCache 사용하여 중복 호출 방지
+            // [성능 최적화] 모든 핵심 데이터(설정 + 오늘 활동 + 과거 명예의 전당)를 병렬로 조회하여 워터폴 제거
             const cacheKey = `class_settings_full_${classId}`;
-            if (forceRefresh) {
-                dataCache.invalidate(cacheKey);
-            }
-            const { classData, classError } = await dataCache.get(cacheKey, async () => {
-                const { data, error } = await supabase
-                    .from('classes')
-                    .select('agit_settings, vocab_tower_enabled, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_reset_date, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
-                    .eq('id', classId)
-                    .single();
-                return { classData: data, classError: error };
-            }, 60000); // 1분 캐시 유지
+            if (forceRefresh) dataCache.invalidate(cacheKey);
+
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(todayStart);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            const [
+                { classData, classError },
+                { data: dailyPosts },
+                { data: dailyReactions },
+                { data: dailyComments },
+                { data: allHonorRolls }
+            ] = await Promise.all([
+                dataCache.get(cacheKey, async () => {
+                    const { data, error } = await supabase
+                        .from('classes')
+                        .select('agit_settings, vocab_tower_enabled, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_reset_date, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
+                        .eq('id', classId)
+                        .single();
+                    return { classData: data, classError: error };
+                }, 60000),
+                supabase
+                    .from('student_posts')
+                    .select('student_id, students!inner(name, class_id)')
+                    .eq('students.class_id', classId)
+                    .gte('created_at', todayStart.toISOString())
+                    .lt('created_at', tomorrow.toISOString()),
+                supabase
+                    .from('post_reactions')
+                    .select('student_id, students!inner(name, class_id)')
+                    .eq('students.class_id', classId)
+                    .gte('created_at', todayStart.toISOString())
+                    .lt('created_at', tomorrow.toISOString()),
+                supabase
+                    .from('post_comments')
+                    .select('student_id, students!inner(name, class_id)')
+                    .eq('students.class_id', classId)
+                    .gte('created_at', todayStart.toISOString())
+                    .lt('created_at', tomorrow.toISOString()),
+                supabase
+                    .from('agit_honor_roll')
+                    .select('student_id, students(name), created_at')
+                    .eq('class_id', classId)
+            ]);
 
             console.log("📦 [DB 조회 결과]", { classData, classError });
 
@@ -162,56 +197,18 @@ export const useClassAgitClass = (classId, currentStudentId) => {
 
             // 1. 집계 시작 시점 결정 (오늘 하루 단위로 달성 여부 판단)
             // 명예의 전당과 일일 활동은 '오늘 00시' 기준으로 초기화되어 재집계됨
-            const todayStart = new Date();
-            todayStart.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(todayStart);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-
+            
             // [수정] 오늘 활동이더라도 "시즌 시작 시점(lastResetAt)"보다 이전의 활동은 포함하지 않음
             // (오늘 시즌을 초기화하고 다시 시작했을 때 이전 시즌의 오늘 활동이 합산되는 현상 방지)
             const seasonStartStr = currentSettings.lastResetAt || '2000-01-01T00:00:00.000Z';
             const seasonStartDate = new Date(seasonStartStr);
 
-            // 실제 집계 시작 시점은 (오늘 00시)와 (시즌 시작 시점) 중 더 늦은 시간
-            const effectiveStartDate = seasonStartDate > todayStart ? seasonStartDate : todayStart;
-
-            const startDate = effectiveStartDate.toISOString();
+            const startDate = (seasonStartDate > todayStart ? seasonStartDate : todayStart).toISOString();
             const endDate = tomorrow.toISOString();
 
             console.log("📅 [아지트 일일 활동 집계 기간]", { startDate, endDate, seasonStartStr });
 
-            // ★ [성능 최적화] count 전용 쿼리 제거 및 4개 쿼리 병렬 실행으로 로딩 속도 대폭 개선
-            const [
-                { data: dailyPosts },
-                { data: dailyReactions },
-                { data: dailyComments },
-                { data: pastHonorRolls }
-            ] = await Promise.all([
-                supabase
-                    .from('student_posts')
-                    .select('student_id, students!inner(name, class_id)')
-                    .eq('students.class_id', classId)
-                    .gte('created_at', startDate)
-                    .lt('created_at', endDate),
-                supabase
-                    .from('post_reactions')
-                    .select('student_id, students!inner(name, class_id)')
-                    .eq('students.class_id', classId)
-                    .gte('created_at', startDate)
-                    .lt('created_at', endDate),
-                supabase
-                    .from('post_comments')
-                    .select('student_id, students!inner(name, class_id)')
-                    .eq('students.class_id', classId)
-                    .gte('created_at', startDate)
-                    .lt('created_at', endDate),
-                supabase
-                    .from('agit_honor_roll')
-                    .select('id')
-                    .eq('class_id', classId)
-                    .gte('created_at', currentSettings.lastResetAt || '2000-01-01T00:00:00.000Z')
-                    .lt('created_at', startDate)
-            ]);
+            // (기존 병렬 쿼리 블록은 상단 Promise.all로 통합됨)
 
             // count는 data.length로 대체 (별도 쿼리 불필요)
             const postCount = dailyPosts?.length || 0;
@@ -259,17 +256,35 @@ export const useClassAgitClass = (classId, currentStudentId) => {
                 return `🏆 [오늘의 주인공] ${s.name}님이 일일 미션을 모두 달성하여 온도를 1도 올렸습니다! ✨`;
             });
 
-            // 누적 온도 계산 (명예의 전당 과거 누적 달성 횟수 + 오늘 달성한 미션 수)
-            const pastHonorRollCount = pastHonorRolls?.length || 0;
-            const todayMissionTemp = achievedStudents.length;
-            const currentTemp = Math.min(currentSettings.targetScore, pastHonorRollCount + todayMissionTemp);
-
-            console.log("🌡️ [온도 계산]", {
-                pastHonorRollCount,
-                todayMissionTemp,
-                currentTemp,
-                achievedStudents: achievedStudents.map(s => s.name)
+            // 이번 시즌 누적 온도 계산
+            // (시즌 시작 이후 ~ 오늘 이전 기록) + (오늘 달성한 명단)
+            const seasonStartAt = currentSettings.lastResetAt || '2000-01-01T00:00:00.000Z';
+            const pastHonorRolls = allHonorRolls?.filter(h => h.created_at >= seasonStartAt && h.created_at < startDate) || [];
+            
+            // [추가] 전체 명예의 전당 통계용 (과거 기록 + 오늘 달성자 합산하여 AgitManager 등에 노출)
+            const statsMapForHonorRoll = {};
+            
+            // 1. 과거 기록 먼저 합산
+            pastHonorRolls.forEach(row => {
+                const sid = row.student_id;
+                const name = row.students?.name || '알 수 없는 학생';
+                if (!statsMapForHonorRoll[sid]) statsMapForHonorRoll[sid] = { name, count: 0 };
+                statsMapForHonorRoll[sid].count += 1;
             });
+            
+            // 2. 오늘 달성자 합산 (DB에 아직 안 들어갔을 수도 있으므로 메모리 값 우선)
+            achievedStudents.forEach(s => {
+                const sid = s.student_id;
+                if (!statsMapForHonorRoll[sid]) {
+                    statsMapForHonorRoll[sid] = { name: s.name, count: 0 };
+                }
+                statsMapForHonorRoll[sid].count += 1;
+            });
+
+            const sortedStats = Object.values(statsMapForHonorRoll).sort((a, b) => b.count - a.count);
+            setHistoryStats(sortedStats);
+
+            const currentTemp = Math.min(currentSettings.targetScore, pastHonorRolls.length + achievedStudents.length);
 
             const level = calculateStage(currentTemp, currentSettings.targetScore);
 
@@ -287,7 +302,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
                 setMyMissionStatus({ post: 0, comment: 0, reaction: 0, achieved: false });
             }
 
-            setDailyStats({ totalAddedTemp: todayMissionTemp });
+            setDailyStats({ totalAddedTemp: achievedStudents.length });
             setStageLevel(level);
             updateUnlockedContent(level);
 
@@ -397,6 +412,7 @@ export const useClassAgitClass = (classId, currentStudentId) => {
         agitSettings,
         refresh: (force = true) => fetchData(false, force === true),
         achievedStudents: achievedStudentsList,
+        honorRollStats: historyStats, // [추가]
         // [신규] 어휘의 탑 설정 노출
         vocabTowerSettings
     };

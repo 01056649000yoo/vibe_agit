@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useDataExport } from './useDataExport';
+import { dataCache } from '../lib/cache';
 
 export const useStudentManager = (classId) => {
     const [students, setStudents] = useState([]);
@@ -37,26 +38,31 @@ export const useStudentManager = (classId) => {
     const fetchStudents = useCallback(async () => {
         if (!classId) return;
 
-        // [최적화] N+1급 병목 제거: Promise.all을 통한 병렬 통신과 RPC를 사용한 서버 사이드 그룹 연산 도입
-        // 기존: 수 만 건의 point_logs를 클라이언트로 다운받아 루프를 돌며 계산하여 브라우저 심각한 멈춤 유발
-        // 변경: 단 한 번의 조인 통계 쿼리(RPC)로 데이터 다운로드량 99% 절감
-        const [ { data: studentsData, error: studentError }, { data: statsData, error: statsError } ] = await Promise.all([
-            supabase
-                .from('students')
-                .select('*')
-                .eq('class_id', classId)
-                .is('deleted_at', null)
-                .order('created_at', { ascending: true }),
-            supabase.rpc('get_class_activity_stats', { p_class_id: classId })
+        const [ studentsData, statsData ] = await Promise.all([
+            dataCache.get(`students_${classId}`, async () => {
+                const { data, error } = await supabase
+                    .from('students')
+                    .select('*')
+                    .eq('class_id', classId)
+                    .is('deleted_at', null)
+                    .order('created_at', { ascending: true });
+                if (error) throw error;
+                return data || [];
+            }, 120000),
+            dataCache.get(`stats_${classId}`, async () => {
+                const { data, error } = await supabase.rpc('get_class_activity_stats', { p_class_id: classId });
+                if (error) throw error;
+                return data || [];
+            }, 60000)
         ]);
 
-        if (studentError || !studentsData) {
-            console.error('학생 목록 로드 실패:', studentError);
+        if (!studentsData) {
+            console.error('학생 목록 로드 실패 (데이터 없음)');
             return;
         }
 
         const statsMap = {};
-        if (!statsError && statsData) {
+        if (statsData) {
             statsData.forEach(stat => {
                 statsMap[stat.student_id] = stat;
             });

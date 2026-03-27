@@ -25,10 +25,14 @@ const AgitManager = ({ activeClass, isMobile }) => {
     const [showIdeaMarket, setShowIdeaMarket] = useState(false);
 
     // 학생 화면과 동일한 온도 및 설정 실시간 동기화
-    const { temperature: liveTemperature, agitSettings: liveSettings, refresh } = useClassAgitClass(activeClass?.id, null);
+    const { 
+        temperature: liveTemperature, 
+        agitSettings: liveSettings, 
+        honorRollStats,
+        loading: statsLoading,
+        refresh 
+    } = useClassAgitClass(activeClass?.id, null);
 
-    const [honorRollStats, setHonorRollStats] = useState([]);
-    const [statsLoading, setStatsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('settings'); // 'settings' | 'history'
     const [seasonHistory, setSeasonHistory] = useState([]);
     const [historyLoading, setHistoryLoading] = useState(false);
@@ -46,45 +50,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
         }
     }, [liveSettings]);
 
-    const fetchHonorRollStats = useCallback(async (overrideResetAt = null) => {
-        if (!activeClass?.id) return;
-        try {
-            setStatsLoading(true);
-            const resetAt = overrideResetAt || liveSettings?.lastResetAt || '2000-01-01';
-            const { data, error } = await supabase
-                .from('agit_honor_roll')
-                .select(`
-                    student_id,
-                    students (name)
-                `)
-                .eq('class_id', activeClass.id)
-                .gte('created_at', resetAt); // 초기화 이후 시점 데이터만 조회
-
-            if (error) throw error;
-
-            const statsMap = {};
-            data.forEach(row => {
-                const sid = row.student_id;
-                const name = row.students?.name || '알 수 없는 학생';
-                if (!statsMap[sid]) {
-                    statsMap[sid] = { name, count: 0 };
-                }
-                statsMap[sid].count += 1;
-            });
-
-            const sortedStats = Object.values(statsMap).sort((a, b) => b.count - a.count);
-            setHonorRollStats(sortedStats);
-        } catch (err) {
-            console.error("통계 조회 실패:", err);
-        } finally {
-            setStatsLoading(false);
-        }
-    }, [activeClass?.id, liveSettings]);
-
-    // 명예의 전당 통계 불러오기
-    useEffect(() => {
-        fetchHonorRollStats();
-    }, [fetchHonorRollStats, liveSettings]);
+    // (명예의 전당 통계는 useClassAgitClass 훅에서 자동으로 동기화됨)
 
     const fetchSeasonHistory = useCallback(async () => {
         if (!activeClass?.id) return;
@@ -133,7 +99,6 @@ const AgitManager = ({ activeClass, isMobile }) => {
 
             // 즉시 데이터 갱신 요청
             refresh(true);
-            fetchHonorRollStats();
 
         } catch (error) {
             console.error("Error saving agit settings:", error);
@@ -201,8 +166,6 @@ const AgitManager = ({ activeClass, isMobile }) => {
             setSettings(resetSettings);
             refresh(true); // 강제 새로고침
             setIsSettingsModalOpen(false);
-            setHonorRollStats([]); // 로컬 상태 즉시 초기화
-            fetchHonorRollStats(resetSettings.lastResetAt); // 변경된 시점 즉시 반영
             fetchSeasonHistory();
 
         } catch (error) {
@@ -234,7 +197,6 @@ const AgitManager = ({ activeClass, isMobile }) => {
             alert('🚀 아지트 온 클래스 시즌을 시작합니다! 학생들의 입장이 허용되었습니다.');
             setSettings(updatedSettings);
             refresh(true); // 강제 새로고침
-            fetchHonorRollStats(updatedSettings.lastResetAt); // 변경된 시점 즉시 반영
         } catch (error) {
             console.error("Error starting season:", error);
             alert('시즌 시작 중 오류가 발생했습니다.');
