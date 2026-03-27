@@ -25,7 +25,7 @@ const VIEWER_BUTTON_STYLE = {
 // 개별 미션 아이템 컴포넌트 분리 및 memo 적용
 const MissionItem = memo(({
     mission, isMobile, completedCount, totalStudentCount,
-    handleEditClick, setArchiveModal, fetchPostsForMission, fetchMissions,
+    handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
     showEvaluationReport, handleEvaluationMode
 }) => {
     return (
@@ -59,9 +59,8 @@ const MissionItem = memo(({
                     <button onClick={async (e) => {
                         e.stopPropagation();
                         if (confirm('이 글쓰기 미션을 삭제하시겠습니까? 🗑️\n작성된 학생들의 글도 확인이 어려워질 수 있습니다.')) {
-                            const { error } = await supabase.from('writing_missions').delete().eq('id', mission.id);
-                            if (!error) fetchMissions();
-                            else alert('삭제 실패: ' + error.message);
+                            // [수정] 인라인 삭제 대신 훅의 전용 함수 사용 (캐시 무효화 포함)
+                            await handleDeleteMission(mission.id);
                         }
                     }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF5252', fontSize: '1.2rem', padding: '8px' }}>
                         🗑️
@@ -124,7 +123,7 @@ const MissionItem = memo(({
 
 const MissionList = ({
     missions, loading, submissionCounts, totalStudentCount,
-    handleEditClick, setArchiveModal, fetchPostsForMission, fetchMissions,
+    handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
     isMobile, showEvaluationReport, handleEvaluationMode
 }) => {
     if (loading) {
@@ -156,6 +155,7 @@ const MissionList = ({
                     totalStudentCount={totalStudentCount}
                     handleEditClick={handleEditClick}
                     setArchiveModal={setArchiveModal}
+                    handleDeleteMission={handleDeleteMission}
                     fetchPostsForMission={fetchPostsForMission}
                     fetchMissions={fetchMissions}
                     showEvaluationReport={showEvaluationReport}

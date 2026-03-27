@@ -27,7 +27,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         handleApprovePost, handleBulkApprove, handleRecovery, handleRecovery: handleRecoveryFunc,
         handleBulkRecovery,
         handleBulkRequestRewrite,
-        handleFinalArchive, fetchMissions,
+        handleFinalArchive, handleDeleteMission, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric, handleSaveDefaultSettings,
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
@@ -121,6 +121,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 totalStudentCount={totalStudentCount}
                 handleEditClick={handleEditClick}
                 setArchiveModal={setArchiveModal}
+                handleDeleteMission={handleDeleteMission}
                 fetchPostsForMission={fetchPostsForMission}
                 fetchMissions={fetchMissions}
                 isMobile={isMobile}

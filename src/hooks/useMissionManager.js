@@ -1025,6 +1025,34 @@ ${postArray.map((p, idx) => {
         }
     };
 
+    // [신규] 미션 하드 삭제 (🗑️ 버튼용)
+    const handleDeleteMission = async (missionId) => {
+        if (!missionId) return;
+        setLoading(true);
+        try {
+            const { error } = await supabase
+                .from('writing_missions')
+                .delete()
+                .eq('id', missionId);
+
+            if (error) throw error;
+
+            // [핵심] 캐시 무효화로 즉시 반영 보장
+            if (activeClass?.id) {
+                dataCache.invalidate(`missions_${activeClass.id}`);
+            }
+
+            fetchMissions();
+            return true;
+        } catch (err) {
+            console.error('미션 삭제 실패:', err.message);
+            alert('미션 삭제 중 오류가 발생했습니다: ' + err.message);
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // 교사 댓글 등록
     const addTeacherComment = async (postId, content) => {
         if (!content.trim() || !postId) return false;
@@ -1080,7 +1108,7 @@ ${postArray.map((p, idx) => {
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery, handleBulkRecovery,
         handleBulkRequestRewrite,
-        handleFinalArchive, fetchMissions,
+        handleFinalArchive, handleDeleteMission, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric,
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
