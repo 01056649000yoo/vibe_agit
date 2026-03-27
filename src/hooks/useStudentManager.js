@@ -188,6 +188,10 @@ export const useStudentManager = (classId) => {
                 .eq('id', deleteTarget.id);
 
             if (error) throw error;
+            
+            // [추가] 캐시 무효화: 소프트 딜리트 시에도 목록 갱신을 위해 캐시 무효화
+            dataCache.invalidate(`students_${classId}`);
+            dataCache.invalidate(`stats_${classId}`);
 
             setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
             setSelectedIds(prev => prev.filter(id => id !== deleteTarget.id));
