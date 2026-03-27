@@ -61,20 +61,31 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
             const { data: bindResult, error: bindError } = await supabase
                 .rpc('bind_student_auth', { p_student_code: code.toUpperCase() });
 
-            if (bindError) {
-                console.error('학생 바인딩 실패:', bindError);
-                setErrorMsg('서버 오류가 발생했어요. 잠시 후 다시 시도해주세요.');
-                setLoading(false);
-                return;
-            }
-
             if (!bindResult?.success) {
                 setErrorMsg(bindResult?.error || '코드가 일치하는 학생을 찾을 수 없어요. 다시 확인해볼까요? 🔍');
                 setLoading(false);
                 return;
             }
 
-            // ── Step 3: 세션 데이터 구성 및 콜백 ──
+            // ── Step 3: Edge Function을 통해 app_metadata 주입 (v15 최적화) ──
+            // RPC에서 직접 처리할 수 없는 권한 문제를 Edge Function(Admin SDK)으로 처리합니다.
+            const { data: funcData, error: funcError } = await supabase.functions.invoke('set-student-metadata', {
+                body: { studentCode: code.toUpperCase() }
+            });
+
+            if (funcError || !funcData?.success) {
+                console.error('메타데이터 주입 실패:', funcError || funcData?.error);
+                // 메타데이터 주입 실패는 치명적일 수 있으므로(RLS 작동 안 함) 에러 처리
+                setErrorMsg('보안 세션 구성에 실패했어요. 잠시 후 다시 시도해주세요.');
+                setLoading(false);
+                return;
+            }
+
+            // ── Step 4: 세션 새로고침 (새로운 JWT 클레임 반영) ──
+            // app_metadata가 변경되었으므로, 새로운 토큰을 발급받아야 RLS가 즉시 적용됩니다.
+            await supabase.auth.refreshSession();
+
+            // ── Step 5: 세션 데이터 구성 및 콜백 ──
             const studentInfo = bindResult.student;
             const sessionData = {
                 id: studentInfo.id,
