@@ -623,7 +623,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                                 style={{
                                                     width: '100%', minHeight: '60px',
                                                     border: '1px solid #E2E8F0', borderRadius: '10px',
-                                                    padding: '10px 14px', fontSize: '0.9rem',
+                                                    padding: '10px 14px', fontSize: '1.2rem',
                                                     outline: 'none', resize: 'vertical',
                                                     fontFamily: 'inherit', boxSizing: 'border-box',
                                                     transition: 'border-color 0.2s'
@@ -666,7 +666,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                     style={{
                                         width: '100%', padding: '12px 16px',
                                         border: '2px solid #E2E8F0', borderRadius: '14px',
-                                        fontSize: '1rem', fontWeight: '700',
+                                        fontSize: '1.3rem', fontWeight: '700',
                                         outline: 'none', boxSizing: 'border-box',
                                         transition: 'border-color 0.2s'
                                     }}
@@ -701,7 +701,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                     style={{
                                         width: '100%', minHeight: '300px',
                                         border: '2px solid #E2E8F0', borderRadius: '14px',
-                                        padding: '14px 16px', fontSize: '0.95rem',
+                                        padding: '14px 16px', fontSize: '1.25rem',
                                         lineHeight: '1.7', outline: 'none',
                                         resize: 'vertical', fontFamily: 'inherit',
                                         boxSizing: 'border-box',
@@ -853,7 +853,7 @@ const IdeaDetailView = ({ idea, meeting, studentSession, onBack, onVote, isMobil
                     <div style={{ fontSize: '0.75rem', color: '#7C3AED', fontWeight: '600' }}>
                         {meeting?.title}
                     </div>
-                    <h1 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '900', color: '#1E293B' }}>
+                    <h1 style={{ margin: 0, fontSize: '1.35rem', fontWeight: '900', color: '#1E293B' }}>
                         {idea.title}
                     </h1>
                 </div>
@@ -900,7 +900,7 @@ const IdeaDetailView = ({ idea, meeting, studentSession, onBack, onVote, isMobil
                     background: 'white', borderRadius: '20px',
                     padding: '24px', border: '1px solid #E2E8F0',
                     marginBottom: '24px', lineHeight: '1.8',
-                    fontSize: '0.95rem', color: '#2D3436',
+                    fontSize: '1.25rem', color: '#2D3436',
                     wordBreak: 'break-word'
                 }}>
                     {idea.content}
@@ -922,7 +922,7 @@ const IdeaDetailView = ({ idea, meeting, studentSession, onBack, onVote, isMobil
                                     Q{idx + 1}. {q}
                                 </div>
                                 <div style={{
-                                    fontSize: '0.9rem', color: '#4C1D95',
+                                    fontSize: '1.2rem', color: '#4C1D95',
                                     background: 'rgba(255,255,255,0.7)', padding: '10px 14px',
                                     borderRadius: '10px', lineHeight: '1.6'
                                 }}>
