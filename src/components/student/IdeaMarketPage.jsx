@@ -177,7 +177,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
     return (
         <div style={{
             height: '100%', width: '100%',
-            maxWidth: isMobile ? '100%' : '650px',
+            maxWidth: isMobile ? '100%' : (viewMode === 'write' ? (selectedMeeting?.guide_questions?.length > 0 ? '1200px' : '850px') : '650px'),
             margin: '0 auto',
             background: '#F8FAFC',
             display: 'flex', flexDirection: 'column', overflow: 'hidden'
@@ -825,7 +825,7 @@ const IdeaDetailView = ({ idea, meeting, studentSession, onBack, onVote, isMobil
     return (
         <div style={{
             height: '100%', width: '100%',
-            maxWidth: isMobile ? '100%' : '650px',
+            maxWidth: isMobile ? '100%' : '850px',
             margin: '0 auto',
             background: '#F8FAFC',
             display: 'flex', flexDirection: 'column', overflow: 'hidden'
