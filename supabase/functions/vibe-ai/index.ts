@@ -222,15 +222,24 @@ Deno.serve(async (req) => {
         // targetTeacherId는 위 인증 블록에서 이미 선언/할당되었음 (불필요한 DB 쿼리 제거됨)
 
         if (targetTeacherId) {
+            // 3. profiles 테이블 대신 전용 보안 테이블(profile_secrets)에서 키 조회
             const { data: profileData } = await supabaseAdmin
                 .from('profiles')
-                .select('api_mode, personal_openai_api_key')
+                .select('api_mode')
                 .eq('id', targetTeacherId)
                 .maybeSingle();
 
-            if (profileData?.api_mode === 'PERSONAL' && profileData?.personal_openai_api_key?.trim()) {
-                apiKey = profileData.personal_openai_api_key.trim();
-                currentMode = 'PERSONAL';
+            if (profileData?.api_mode === 'PERSONAL') {
+                const { data: secretData } = await supabaseAdmin
+                    .from("profile_secrets")
+                    .select("personal_openai_api_key")
+                    .eq("id", targetTeacherId)
+                    .maybeSingle();
+
+                if (secretData?.personal_openai_api_key?.trim()) {
+                    apiKey = secretData.personal_openai_api_key.trim();
+                    currentMode = 'PERSONAL';
+                }
             }
         }
 

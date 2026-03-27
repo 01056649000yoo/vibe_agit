@@ -297,20 +297,27 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 report: reportPromptTemplate.trim()
             });
 
-            // [보안 강화] API 키는 사용자가 새로 입력한 경우에만 전송
-            const updatePayload = {
+            // [보안 강화] API 키는 별도의 보안 테이블(profile_secrets)에 저장
+            const profileUpdatePayload = {
                 id: session.user.id,
                 ai_prompt_template: packedPrompt,
-                // API 키: 빈 문자열이면 변경하지 않음 (서버의 기존 키 유지)
-                ...(openaiKey.trim() && { personal_openai_api_key: openaiKey }),
                 ...(updatedProfile.api_mode && { api_mode: updatedProfile.api_mode }),
             };
 
-            const { error } = await supabase
-                .from('profiles')
-                .upsert(updatePayload, { onConflict: 'id' });
+            const secretsUpdatePayload = {
+                id: session.user.id,
+                ...(openaiKey.trim() && { personal_openai_api_key: openaiKey }),
+            };
 
-            if (error) throw error;
+            const [profileResult, secretsResult] = await Promise.all([
+                supabase.from('profiles').upsert(profileUpdatePayload, { onConflict: 'id' }),
+                openaiKey.trim() 
+                    ? supabase.from('profile_secrets').upsert(secretsUpdatePayload, { onConflict: 'id' })
+                    : Promise.resolve({ error: null })
+            ]);
+
+            if (profileResult.error) throw profileResult.error;
+            if (secretsResult.error) throw secretsResult.error;
 
             setOriginalPrompt(promptTemplate.trim());
             setOriginalReportPrompt(reportPromptTemplate.trim());
