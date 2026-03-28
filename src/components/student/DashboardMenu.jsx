@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -160,41 +160,39 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
         return () => clearTimeout(timerId);
     }, [studentSession?.class_id, studentSession?.classId, studentSession?.id]);
 
-    useEffect(() => {
+    const fetchRankings = useCallback(async () => {
         const classId = studentSession?.class_id || studentSession?.classId;
         if (!classId || !isVocabTowerEnabled) return;
 
-        const fetchRankings = async () => {
-            try {
-                let query = supabase
-                    .from('vocab_tower_rankings')
-                    .select(`
-                        max_floor,
-                        student_id,
-                        students:student_id ( name )
-                    `)
-                    .eq('class_id', classId);
+        try {
+            let query = supabase
+                .from('vocab_tower_rankings')
+                .select(`
+                    max_floor,
+                    student_id,
+                    students:student_id ( name )
+                `)
+                .eq('class_id', classId);
 
-                if (vocabTowerSettings?.rankingResetDate) {
-                    query = query.gte('updated_at', vocabTowerSettings.rankingResetDate);
-                }
-
-                const { data, error } = await query
-                    .order('max_floor', { ascending: false })
-                    .limit(5);
-
-                if (!error) setRankings(data || []);
-            } catch (err) {
-                console.error('랭킹 프리뷰 로드 실패:', err);
+            if (vocabTowerSettings?.rankingResetDate) {
+                query = query.gte('updated_at', vocabTowerSettings.rankingResetDate);
             }
-        };
 
-        const timerId = setTimeout(() => {
-            fetchRankings();
-        }, 1000); // [최적화] 로딩 지연
+            const { data, error } = await query
+                .order('max_floor', { ascending: false })
+                .limit(5);
 
-        return () => clearTimeout(timerId);
+            if (!error) setRankings(data || []);
+        } catch (err) {
+            console.error('랭킹 프리뷰 로드 실패:', err);
+        }
     }, [studentSession?.class_id, studentSession?.classId, isVocabTowerEnabled, vocabTowerSettings?.rankingResetDate]);
+
+    useEffect(() => {
+        if (!isVocabTowerEnabled) return;
+        const timerId = setTimeout(fetchRankings, 1000);
+        return () => clearTimeout(timerId);
+    }, [fetchRankings, isVocabTowerEnabled]);
 
     return (
         <>
@@ -280,7 +278,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                         }
                         setIsVocabTowerOpen(true);
                     }}
-                    onMouseEnter={() => isVocabTowerEnabled && setIsRankingHovered(true)}
+                    onMouseEnter={() => { if (isVocabTowerEnabled) { setIsRankingHovered(true); fetchRankings(); } }}
                     onMouseLeave={() => setIsRankingHovered(false)}
                     style={{
                         background: !isVocabTowerEnabled
