@@ -117,7 +117,8 @@ export const useStudentManager = (classId) => {
             if (fetchError) throw fetchError;
 
             if (newStudentData) {
-                setStudents(prev => [...prev, newStudentData]);
+                dataCache.invalidate(`students_${classId}`);
+                await fetchStudents();
                 setStudentName('');
             }
         } catch (err) {
