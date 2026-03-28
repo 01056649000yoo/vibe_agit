@@ -325,6 +325,16 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             setOriginalPrompt(promptTemplate.trim());
             setOriginalReportPrompt(reportPromptTemplate.trim());
 
+            // 새 키가 저장된 경우 즉시 UI 상태 반영 (새로고침 불필요)
+            if (cleanedKey) {
+                setHasApiKey(true);
+                setOpenaiKey('');
+                const effectiveMode = updatedProfile.api_mode || profile?.api_mode;
+                if (effectiveMode === 'PERSONAL') {
+                    setAiStatus('connected');
+                }
+            }
+
             // 프로필 상태 갱신을 위해 콜백 호출
             if (onProfileUpdate) {
                 await onProfileUpdate();
