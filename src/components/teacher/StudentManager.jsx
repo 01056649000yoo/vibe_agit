@@ -20,7 +20,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
 
     const {
-        students, studentName, setStudentName, isAdding, selectedIds,
+        students, studentName, setStudentName, isAdding, selectedIds, setSelectedIds,
         isPointModalOpen, setIsPointModalOpen, isHistoryModalOpen, setIsHistoryModalOpen,
         isDeleteModalOpen, setIsDeleteModalOpen, isCodeZoomModalOpen, setIsCodeZoomModalOpen,
         isAllCodesModalOpen, setIsAllCodesModalOpen, exportModalOpen, setExportModalOpen,
@@ -55,6 +55,11 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
         setExportTarget({ type: 'student', id: student.id, title: student.name });
         setExportModalOpen(true);
     }, [setExportTarget, setExportModalOpen]);
+
+    const handleOpenPointModal = useCallback((student) => {
+        setSelectedIds([student.id]);
+        setIsPointModalOpen(true);
+    }, [setSelectedIds, setIsPointModalOpen]);
 
     const handleOpenTrash = useCallback(async () => {
         const data = await fetchDeletedStudents();
@@ -102,6 +107,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                     setDeleteTarget={setDeleteTarget}
                     setIsDeleteModalOpen={setIsDeleteModalOpen}
                     onOpenRecordAssistant={(s) => setRecordStudent(s)}
+                    onOpenPointModal={handleOpenPointModal}
                 />
             ) : (
                 <StudentManagementList

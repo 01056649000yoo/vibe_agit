@@ -60,7 +60,8 @@ const StudentManagementList = ({
                             padding: '4px 8px',
                             borderRadius: '10px',
                             margin: '0 10px',
-                            minWidth: '100px'
+                            minWidth: '100px',
+                            position: 'relative'
                         }}>
                             {s.student_code}
                         </div>

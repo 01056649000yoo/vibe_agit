@@ -42,11 +42,12 @@ export const useStudentManager = (classId) => {
             dataCache.get(`students_${classId}`, async () => {
                 const { data, error } = await supabase
                     .from('students')
-                    // 학생 관리 목록에 필요한 기본 정보와 펫 데이터를 선택
-                    .select('id, name, total_points, student_code, created_at, pet_data')
+                    // 학생 관리 목록에 필요한 모든 필수 정보 선택
+                    .select('id, name, total_points, student_code, created_at, pet_data, class_id')
                     .eq('class_id', classId)
                     .is('deleted_at', null)
-                    .order('created_at', { ascending: true });
+                    .order('name');
+                
                 if (error) throw error;
                 return data || [];
             }, 120000),
@@ -323,7 +324,7 @@ export const useStudentManager = (classId) => {
     };
 
     return {
-        students, studentName, setStudentName, isAdding, selectedIds,
+        students, studentName, setStudentName, isAdding, selectedIds, setSelectedIds,
         isPointModalOpen, setIsPointModalOpen, isHistoryModalOpen, setIsHistoryModalOpen,
         isDeleteModalOpen, setIsDeleteModalOpen, isCodeZoomModalOpen, setIsCodeZoomModalOpen,
         isAllCodesModalOpen, setIsAllCodesModalOpen, exportModalOpen, setExportModalOpen,

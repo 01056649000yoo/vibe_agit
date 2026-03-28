@@ -13,7 +13,7 @@ const SCROLL_FADE_STYLE = {
 const RankingItem = memo(({
     student, index, isMobile, isSelected, copiedId,
     toggleSelection, setSelectedStudentForCode, setIsCodeZoomModalOpen,
-    copyCode, openHistoryModal, setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant
+    copyCode, openHistoryModal, setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant, onOpenPointModal
 }) => {
     const isFirst = index === 0;
     const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}위`;
@@ -27,11 +27,11 @@ const RankingItem = memo(({
             style={{
                 display: 'flex', alignItems: 'center',
                 padding: isMobile ? '10px 14px' : '12px 16px',
-                background: isFirst ? '#FFFDE7' : (isSelected ? '#EBF5FB' : '#FDFEFE'),
-                border: `1px solid ${isFirst ? '#F7DC6F' : (isSelected ? '#3498DB' : '#F1F3F5')}`,
+                background: isSelected ? '#EBF5FB' : (isFirst ? '#FFFDE7' : '#FDFEFE'),
+                border: isSelected ? '2px solid #3498DB' : `1px solid ${isFirst ? '#F7DC6F' : '#F1F3F5'}`,
                 borderRadius: '20px', cursor: 'pointer', transition: 'all 0.15s',
                 fontSize: isMobile ? '0.85rem' : '0.95rem', width: '100%', boxSizing: 'border-box',
-                boxShadow: isFirst ? '0 4px 12px rgba(247, 220, 111, 0.2)' : 'none'
+                boxShadow: isSelected ? '0 0 0 2px rgba(52, 152, 219, 0.2)' : (isFirst ? '0 4px 12px rgba(247, 220, 111, 0.2)' : 'none')
             }}
         >
             <div style={{
@@ -44,7 +44,11 @@ const RankingItem = memo(({
                 {rankIcon}
             </div>
 
-            <div style={{ flex: 1, fontWeight: '800', color: '#34495E', fontSize: '1rem' }}>{student.name}</div>
+            <div style={{ flex: '1 1 auto', marginLeft: '12px' }}>
+                <div style={{ fontWeight: '800', color: '#34495E', fontSize: '1.05rem', letterSpacing: '-0.3px' }}>
+                    {student.name}
+                </div>
+            </div>
 
             <div style={{ marginRight: '12px', textAlign: 'right' }}>
                 <span style={{
@@ -60,35 +64,11 @@ const RankingItem = memo(({
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedStudentForCode(student);
-                        setIsCodeZoomModalOpen(true);
-                    }}
-                    style={{ background: 'white', border: '1px solid #EEE', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
-                    title="코드 크게보기"
+                    onClick={(e) => { e.stopPropagation(); onOpenPointModal(student); }}
+                    style={{ background: '#FFF8E1', border: '1px solid #FFE082', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
+                    title="포인트 추가/차감"
                 >
-                    🔍
-                </button>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        copyCode(student.id, student.student_code);
-                    }}
-                    style={{ background: 'white', border: '1px solid #EEE', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', position: 'relative' }}
-                    title="코드 복사"
-                >
-                    📋
-                    <AnimatePresence>
-                        {copiedId === student.id && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: -35 }} exit={{ opacity: 0 }}
-                                style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', background: '#2ECC71', color: 'white', padding: '4px 8px', borderRadius: '6px', fontSize: '0.65rem', fontWeight: 'bold', whiteSpace: 'nowrap', zIndex: 10 }}
-                            >
-                                복사됨! ✅
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    💰
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); openHistoryModal(student); }}
@@ -96,20 +76,6 @@ const RankingItem = memo(({
                     title="포인트 기록"
                 >
                     📜
-                </button>
-                <button
-                    onClick={(e) => { e.stopPropagation(); onOpenRecordAssistant(student); }}
-                    style={{ background: '#EEF2FF', border: '1px solid #E0E7FF', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
-                    title="생기부 도우미"
-                >
-                    ✏️
-                </button>
-                <button
-                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(student); setIsDeleteModalOpen(true); }}
-                    style={{ background: '#FFF5F5', border: '1px solid #FFDada', cursor: 'pointer', padding: '6px', borderRadius: '8px', fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
-                    title="학생 삭제"
-                >
-                    🗑️
                 </button>
             </div>
         </motion.div>
@@ -119,7 +85,7 @@ const RankingItem = memo(({
 const StudentRankingList = ({
     displayStudents, isMobile, selectedIds, toggleSelection,
     setSelectedStudentForCode, setIsCodeZoomModalOpen, copyCode,
-    copiedId, openHistoryModal, setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant
+    copiedId, openHistoryModal, setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant, onOpenPointModal
 }) => {
     return (
         <div style={LIST_CONTAINER_STYLE}>
@@ -152,6 +118,7 @@ const StudentRankingList = ({
                         setDeleteTarget={setDeleteTarget}
                         setIsDeleteModalOpen={setIsDeleteModalOpen}
                         onOpenRecordAssistant={onOpenRecordAssistant}
+                        onOpenPointModal={onOpenPointModal}
                     />
                 ))}
             </div>

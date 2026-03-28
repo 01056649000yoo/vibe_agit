@@ -130,8 +130,16 @@ CREATE POLICY "Profile_Secrets_Owner_V18" ON public.profile_secrets
 -- 1. vocab_tower_rankings
 DROP POLICY IF EXISTS "Tower_Rankings_V18" ON public.vocab_tower_rankings;
 CREATE POLICY "Tower_Rankings_V18" ON public.vocab_tower_rankings FOR ALL TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+)
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 -- 2. announcements
 DROP POLICY IF EXISTS "Announcements_Read_V18" ON public.announcements;
@@ -226,11 +234,19 @@ USING (public.auth_user_role() = 'ADMIN');
 -- 8. post_reactions
 DROP POLICY IF EXISTS "Reaction_Select_V18" ON public.post_reactions;
 CREATE POLICY "Reaction_Select_V18" ON public.post_reactions FOR SELECT TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Reaction_Insert_V18" ON public.post_reactions;
 CREATE POLICY "Reaction_Insert_V18" ON public.post_reactions FOR INSERT TO authenticated 
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Reaction_Update_V18" ON public.post_reactions;
 CREATE POLICY "Reaction_Update_V18" ON public.post_reactions FOR UPDATE TO authenticated 
@@ -248,8 +264,16 @@ USING (
 -- 9. agit_honor_roll
 DROP POLICY IF EXISTS "Honor_Roll_V18" ON public.agit_honor_roll;
 CREATE POLICY "Honor_Roll_V18" ON public.agit_honor_roll FOR ALL TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+)
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 -- 10. classes
 DROP POLICY IF EXISTS "Classes_Select_V18" ON public.classes;
@@ -276,11 +300,19 @@ USING ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()));
 -- 11. post_comments
 DROP POLICY IF EXISTS "Comment_Select_V18" ON public.post_comments;
 CREATE POLICY "Comment_Select_V18" ON public.post_comments FOR SELECT TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Comment_Insert_V18" ON public.post_comments;
 CREATE POLICY "Comment_Insert_V18" ON public.post_comments FOR INSERT TO authenticated 
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Comment_Update_V18" ON public.post_comments;
 CREATE POLICY "Comment_Update_V18" ON public.post_comments FOR UPDATE TO authenticated 
@@ -306,11 +338,19 @@ USING (
 -- 12. student_posts
 DROP POLICY IF EXISTS "Post_Select_V18" ON public.student_posts;
 CREATE POLICY "Post_Select_V18" ON public.student_posts FOR SELECT TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Post_Insert_V18" ON public.student_posts;
 CREATE POLICY "Post_Insert_V18" ON public.student_posts FOR INSERT TO authenticated 
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Post_Update_V18" ON public.student_posts;
 CREATE POLICY "Post_Update_V18" ON public.student_posts FOR UPDATE TO authenticated 
@@ -350,7 +390,10 @@ USING ((public.auth_user_role() = 'ADMIN') OR (teacher_id = auth.uid()));
 -- 14. students
 DROP POLICY IF EXISTS "Student_Select_V18" ON public.students;
 CREATE POLICY "Student_Select_V18" ON public.students FOR SELECT TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+  (EXISTS (SELECT 1 FROM public.teachers WHERE id = auth.uid())) OR 
+  (class_id = public.auth_user_class_id())
+);
 
 DROP POLICY IF EXISTS "Student_Insert_V18" ON public.students;
 CREATE POLICY "Student_Insert_V18" ON public.students FOR INSERT TO authenticated 
@@ -361,8 +404,16 @@ WITH CHECK (
 
 DROP POLICY IF EXISTS "Student_Update_V18" ON public.students;
 CREATE POLICY "Student_Update_V18" ON public.students FOR UPDATE TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+)
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Student_Delete_V18" ON public.students;
 CREATE POLICY "Student_Delete_V18" ON public.students FOR DELETE TO authenticated 
@@ -374,16 +425,32 @@ USING (
 -- 15. point_logs
 DROP POLICY IF EXISTS "Point_Logs_Select_V18" ON public.point_logs;
 CREATE POLICY "Point_Logs_Select_V18" ON public.point_logs FOR SELECT TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Point_Logs_Insert_V18" ON public.point_logs;
 CREATE POLICY "Point_Logs_Insert_V18" ON public.point_logs FOR INSERT TO authenticated 
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Point_Logs_Update_V18" ON public.point_logs;
 CREATE POLICY "Point_Logs_Update_V18" ON public.point_logs FOR UPDATE TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+)
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 DROP POLICY IF EXISTS "Point_Logs_Delete_V18" ON public.point_logs;
 CREATE POLICY "Point_Logs_Delete_V18" ON public.point_logs FOR DELETE TO authenticated 
@@ -392,14 +459,30 @@ USING (public.auth_user_role() = 'ADMIN');
 -- 16. vocab_tower_history
 DROP POLICY IF EXISTS "Tower_History_V18" ON public.vocab_tower_history;
 CREATE POLICY "Tower_History_V18" ON public.vocab_tower_history FOR ALL TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+)
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 -- 17. agit_season_history
 DROP POLICY IF EXISTS "Season_History_V18" ON public.agit_season_history;
 CREATE POLICY "Season_History_V18" ON public.agit_season_history FOR ALL TO authenticated 
-USING ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()))
-WITH CHECK ((public.auth_user_role() = 'ADMIN') OR (class_id = public.auth_user_class_id()));
+USING (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+)
+WITH CHECK (
+    (public.auth_user_role() = 'ADMIN') OR 
+    (class_id = public.auth_user_class_id()) OR
+    EXISTS (SELECT 1 FROM public.classes WHERE id = class_id AND teacher_id = auth.uid())
+);
 
 -- [6] 스키마 캐시 새로고침
 NOTIFY pgrst, 'reload schema';
