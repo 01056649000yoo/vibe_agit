@@ -103,8 +103,10 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
                             headers: {
                                 'Content-Type': 'application/json',
                                 'apikey': anonKey,
+                                // 게이트웨이 통과를 위해 anon key를 Authorization에 사용
+                                // 실제 사용자 토큰은 X-Customer-Auth로 전달
+                                'Authorization': `Bearer ${anonKey}`,
                                 'X-Customer-Auth': token ? `Bearer ${token}` : '',
-                                // Authorization을 제외하여 게이트웨이 JWT 중복 체크 우회
                             },
                             body: JSON.stringify({ model: 'gpt-4o-mini', ...body })
                         });

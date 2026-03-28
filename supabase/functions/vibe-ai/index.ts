@@ -43,16 +43,15 @@ Deno.serve(async (req) => {
     }
 
     try {
-        // 2. 인증 헤더 확인 (Gateway JWT 이슈 대응을 위해 선택적으로 변경)
-        let authHeader = req.headers.get('Authorization');
-
-        // [신규] Gateway JWT 차단 우회를 위한 대체 헤더 확인
-        if (!authHeader || authHeader.includes('undefined')) {
-            const fallbackAuth = req.headers.get('X-Customer-Auth');
-            if (fallbackAuth) {
-                authHeader = fallbackAuth.startsWith('Bearer ') ? fallbackAuth : `Bearer ${fallbackAuth}`;
-                console.log("🛡️ Gateway 우회 헤더(X-Customer-Auth) 사용됨");
-            }
+        // 2. 인증 헤더 확인
+        // X-Customer-Auth가 있으면 우선 사용 (Gateway 우회 시 anon key로 통과하고 실제 유저 토큰을 이 헤더로 전달)
+        const customerAuth = req.headers.get('X-Customer-Auth');
+        let authHeader: string | null;
+        if (customerAuth) {
+            authHeader = customerAuth.startsWith('Bearer ') ? customerAuth : `Bearer ${customerAuth}`;
+            console.log("🛡️ X-Customer-Auth 헤더로 인증 처리");
+        } else {
+            authHeader = req.headers.get('Authorization');
         }
 
         // [보안] 민감 헤더 마스킹 로그
