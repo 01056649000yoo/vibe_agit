@@ -28,6 +28,7 @@ const TeacherSettingsTab = ({
     setReportPromptTemplate,
     originalReportPrompt,
     handleSaveTeacherSettings,
+    handleDeleteApiKey,
     runAIDiagnosis,
     fetchDeletedClasses,
     onRestoreClass
@@ -165,14 +166,40 @@ const TeacherSettingsTab = ({
                                                 background: 'white'
                                             }}
                                         />
-                                        {profile?.api_mode === 'PERSONAL' && !hasApiKey && (
-                                            <p style={{ margin: '5px 0 0', fontSize: '0.75rem', color: '#E74C3C', fontWeight: 'bold' }}>
-                                                ⚠️ 개인 API 키가 등록되지 않았습니다. AI 기능을 사용하려면 키를 입력하고 저장해 주세요.
-                                            </p>
-                                        )}
-                                        <p style={{ margin: '5px 0 0', fontSize: '0.75rem', color: '#95A5A6' }}>
-                                            * 입력한 키는 서버에 안전하게 저장되며, 클라이언트 코드에 노출되지 않습니다.
-                                        </p>
+                                        {/* 키 상태 메시지 + 삭제 버튼 */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '5px' }}>
+                                            <div>
+                                                {profile?.api_mode === 'PERSONAL' && !hasApiKey && (
+                                                    <p style={{ margin: '0', fontSize: '0.75rem', color: '#E74C3C', fontWeight: 'bold' }}>
+                                                        ⚠️ 개인 API 키가 등록되지 않았습니다. AI 기능을 사용하려면 키를 입력하고 저장해 주세요.
+                                                    </p>
+                                                )}
+                                                <p style={{ margin: '0', fontSize: '0.75rem', color: '#95A5A6' }}>
+                                                    * 입력한 키는 서버에 안전하게 저장되며, 클라이언트 코드에 노출되지 않습니다.
+                                                </p>
+                                            </div>
+                                            {hasApiKey && (
+                                                <button
+                                                    onClick={handleDeleteApiKey}
+                                                    title="저장된 개인 API 키 삭제"
+                                                    style={{
+                                                        flexShrink: 0,
+                                                        marginLeft: '8px',
+                                                        padding: '4px 10px',
+                                                        fontSize: '0.72rem',
+                                                        fontWeight: 'bold',
+                                                        color: '#C0392B',
+                                                        background: '#FDEDEC',
+                                                        border: '1px solid #FADBD8',
+                                                        borderRadius: '6px',
+                                                        cursor: 'pointer',
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                >
+                                                    🗑️ 키 삭제
+                                                </button>
+                                            )}
+                                        </div>
 
                                         {/* API 사용 안내 가이드 */}
                                         <div style={{ marginTop: '12px', background: '#E3F2FD', borderRadius: '8px', padding: '12px', border: '1px solid #BBDEFB' }}>

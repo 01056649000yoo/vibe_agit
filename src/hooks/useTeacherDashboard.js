@@ -378,6 +378,28 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     };
 
 
+    const handleDeleteApiKey = async () => {
+        if (!confirm('저장된 개인 API 키를 삭제하시겠습니까?\n삭제 후에는 개인 키 모드에서 AI 기능을 사용할 수 없습니다.')) return;
+        try {
+            const { error } = await supabase
+                .from('profile_secrets')
+                .update({ personal_openai_api_key: null })
+                .eq('id', session.user.id);
+
+            if (error) throw error;
+
+            setHasApiKey(false);
+            setOpenaiKey('');
+            if (profile?.api_mode === 'PERSONAL') {
+                setAiStatus('disconnected');
+            }
+            alert('✅ 개인 API 키가 삭제되었습니다.');
+        } catch (err) {
+            console.error('API 키 삭제 실패:', err.message);
+            alert('삭제 중 오류가 발생했습니다: ' + err.message);
+        }
+    };
+
     const handleSetPrimaryClass = async (classId) => {
         if (!classId) return;
         try {
@@ -459,7 +481,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         isKeyVisible, setIsKeyVisible,
         savingKey, testingKey, aiStatus,
-        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, runAIDiagnosis,
+        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, handleDeleteApiKey, runAIDiagnosis,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses, maskKey
     };
