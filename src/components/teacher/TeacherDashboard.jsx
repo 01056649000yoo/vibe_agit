@@ -41,7 +41,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         isKeyVisible, setIsKeyVisible,
         savingKey, testingKey, aiStatus,
-        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, runAIDiagnosis,
+        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, handleDeleteApiKey, runAIDiagnosis,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses, maskKey
     } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass);
