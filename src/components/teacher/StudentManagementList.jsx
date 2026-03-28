@@ -49,17 +49,10 @@ const StudentManagementList = ({
                         </div>
 
                         <div style={{
-                            flex: '1 1 auto',
-                            textAlign: 'center',
-                            fontSize: isMobile ? '1.1rem' : '1.3rem',
+                            fontSize: '1rem',
+                            fontWeight: '600',
                             color: '#3498DB',
-                            fontWeight: '900',
                             fontFamily: 'monospace',
-                            letterSpacing: '1px',
-                            background: '#F8F9FA',
-                            padding: '4px 8px',
-                            borderRadius: '10px',
-                            margin: '0 10px',
                             minWidth: '100px',
                             position: 'relative'
                         }}>

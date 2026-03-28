@@ -48,6 +48,9 @@ const RankingItem = memo(({
                 <div style={{ fontWeight: '800', color: '#34495E', fontSize: '1.05rem', letterSpacing: '-0.3px' }}>
                     {student.name}
                 </div>
+                <div style={{ fontSize: '0.8rem', color: '#7FB3D5', fontFamily: 'monospace' }}>
+                    {student.student_code}
+                </div>
             </div>
 
             <div style={{ marginRight: '12px', textAlign: 'right' }}>

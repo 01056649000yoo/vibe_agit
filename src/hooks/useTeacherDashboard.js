@@ -189,8 +189,9 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         dataCache.get(`students_${activeClass.id}`, async () => {
             const { data, error } = await supabase
                 .from('students')
-                // 학생 요약 정보(ID, 이름)만 프리페칭
-                .select('id, name, class_id')
+                // [수정] StudentManager와 캐시 키가 충돌하므로, 여기서도 필요한 필드(student_code 등)를 모두 가져오거나 키를 분리해야 함.
+                // 여기서는 StudentManager에서도 이 캐시를 재사용할 수 있도록 필드를 추가함.
+                .select('id, name, total_points, student_code, created_at, pet_data, class_id')
                 .eq('class_id', activeClass.id)
                 .is('deleted_at', null)
                 .order('name');
