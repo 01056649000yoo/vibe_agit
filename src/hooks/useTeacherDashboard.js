@@ -71,7 +71,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         }
     }, [session?.user?.id]);
 
-    const fetchGeminiKey = useCallback(async () => {
+    const fetchApiSettings = useCallback(async () => {
         if (!session?.user?.id) return;
         // [보안] API 키 원본을 클라이언트에 로드하지 않음
         // [최적화] 두 DB 요청을 병렬로 실행하여 순차 대기 제거
@@ -163,11 +163,11 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             // [async-parallel] 초기 데이터 로딩을 병렬로 처리하여 첫 로딩 속도 향상
             Promise.all([
                 fetchAllClasses(),
-                fetchGeminiKey(),
+                fetchApiSettings(),
                 fetchTeacherInfo()
             ]).catch(err => console.error("초기 로딩 중 오류:", err));
         }
-    }, [session?.user?.id, fetchAllClasses, fetchGeminiKey, fetchTeacherInfo]);
+    }, [session?.user?.id, fetchAllClasses, fetchApiSettings, fetchTeacherInfo]);
 
     // [Performance] 활성 학급 변경 시 미션/학생 데이터 백그라운드 프리페칭
     useEffect(() => {

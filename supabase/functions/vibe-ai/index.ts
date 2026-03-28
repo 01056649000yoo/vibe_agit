@@ -226,8 +226,11 @@ Deno.serve(async (req) => {
         let dbApiMode = 'UNKNOWN';
         let hasPersonalKey = false;
 
+        // 테스트/진단 요청 여부 (overrideApiKey 허용 범위 제한용)
+        const isTestRequest = type === 'CONNECTION_TEST' || type === 'DIAG';
+
         if (targetTeacherId) {
-            // (2) 해당 교사의 API 모드 확인
+            // (2) 해당 교사의 DB API 모드 확인 (항상 DB 기준이 우선)
             const { data: profileData } = await supabaseAdmin
                 .from('profiles')
                 .select('api_mode')
@@ -235,13 +238,20 @@ Deno.serve(async (req) => {
                 .maybeSingle();
 
             dbApiMode = profileData?.api_mode || 'PERSONAL'; // DB에 없으면 보안상 PERSONAL(제한적)로 간주
-            const effectiveApiMode = overrideApiMode || dbApiMode;
 
-            console.log(`🔍 [Auth Log] targetTeacherId: ${targetTeacherId} | DB Mode: ${dbApiMode} | Effective Mode: ${effectiveApiMode}`);
+            // [보안] overrideApiMode는 테스트 요청에서만 허용하되,
+            // SYSTEM 모드로의 변경(권한 상승)은 절대 허용 안 함
+            const effectiveApiMode = (isTestRequest && overrideApiMode && overrideApiMode !== 'SYSTEM')
+                ? overrideApiMode
+                : dbApiMode;
+
+            console.log(`🔍 [Auth Log] targetTeacherId: ${targetTeacherId} | DB Mode: ${dbApiMode} | Effective Mode: ${effectiveApiMode} | isTest: ${isTestRequest}`);
 
             if (effectiveApiMode === 'PERSONAL') {
-                let personalKey = overrideApiKey;
-                
+                // [보안] overrideApiKey(미저장 테스트 키)는 테스트 요청에서만 허용
+                const clientKey = isTestRequest ? overrideApiKey : null;
+                let personalKey = clientKey;
+
                 if (!personalKey) {
                     const { data: secretData } = await supabaseAdmin
                         .from("profile_secrets")

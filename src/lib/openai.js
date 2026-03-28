@@ -164,5 +164,4 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
     }
 };
 
-export const callGemini = callOpenAI;
 export const callAI = callOpenAI;
