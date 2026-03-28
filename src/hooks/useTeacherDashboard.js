@@ -304,14 +304,17 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 ...(updatedProfile.api_mode && { api_mode: updatedProfile.api_mode }),
             };
 
+            // API 키 정제: 줄바꿈, 유니코드 특수문자 등 HTTP 헤더 불허 문자 제거
+            const cleanedKey = openaiKey.replace(/[^\x20-\x7E]/g, '').trim();
+
             const secretsUpdatePayload = {
                 id: session.user.id,
-                ...(openaiKey.trim() && { personal_openai_api_key: openaiKey }),
+                ...(cleanedKey && { personal_openai_api_key: cleanedKey }),
             };
 
             const [profileResult, secretsResult] = await Promise.all([
                 supabase.from('profiles').upsert(profileUpdatePayload, { onConflict: 'id' }),
-                (openaiKey && openaiKey.trim())
+                cleanedKey
                     ? supabase.from('profile_secrets').upsert(secretsUpdatePayload, { onConflict: 'id' })
                     : Promise.resolve({ error: null })
             ]);

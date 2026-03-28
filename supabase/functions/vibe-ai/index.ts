@@ -308,14 +308,19 @@ Deno.serve(async (req) => {
 
         if (!apiKey) throw new Error('AI 서비스 연결을 위한 API 키를 찾을 수 없습니다.');
 
+        // [보안] API 키에서 HTTP 헤더에 허용되지 않는 문자 제거 (줄바꿈, 유니코드 등)
+        // 유효 범위: 출력 가능한 ASCII 문자(0x20-0x7E)만 허용
+        const cleanApiKey = apiKey.replace(/[^\x20-\x7E]/g, '').trim();
+        if (!cleanApiKey) throw new Error('API 키 형식이 올바르지 않습니다. 키에 특수문자나 줄바꿈이 포함되었는지 확인해 주세요.');
+
         // API 키 앞 7자리만 로그 (sk-xxx 형태 확인용)
-        console.log(`🤖 Mode: [${currentMode}] | Teacher: [${targetTeacherId || 'N/A'}] | Type: [${type || 'N/A'}] | Key: ${apiKey.slice(0, 7)}***`);
+        console.log(`🤖 Mode: [${currentMode}] | Teacher: [${targetTeacherId || 'N/A'}] | Type: [${type || 'N/A'}] | Key: ${cleanApiKey.slice(0, 7)}***`);
 
         // Deno 네이티브 fetch로 OpenAI API 직접 호출 (SDK 호환성 문제 우회)
         const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'Authorization': `Bearer ${cleanApiKey}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
