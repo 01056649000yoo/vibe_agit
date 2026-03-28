@@ -24,10 +24,8 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                     .is('students.deleted_at', null),
                 supabase
                     .from('post_comments')
-                    .select('*, students!inner(name, deleted_at), teacher_id')
+                    .select('*, students(name, deleted_at), teacher_id')
                     .eq('post_id', postId)
-                    .is('students.deleted_at', null)
-                    .or(`status.eq.approved,student_id.eq.${studentId}`)
                     .order('created_at', { ascending: true })
             ]);
 
@@ -36,7 +34,17 @@ export const usePostInteractions = (postId, studentId, studentName) => {
 
             console.log(`[usePostInteractions] 조회 성공 (postId: ${postId})`);
             setReactions(rxRes.data || []);
-            setComments(cmRes.data || []);
+            setComments(
+                (cmRes.data || []).filter((comment) => {
+                    const isTeacherComment = !!comment.teacher_id && !comment.student_id;
+                    const isOwnComment = comment.student_id === studentId;
+                    const isApprovedStudentComment =
+                        comment.status === 'approved' &&
+                        (!comment.students || comment.students.deleted_at == null);
+
+                    return isTeacherComment || isOwnComment || isApprovedStudentComment;
+                })
+            );
         } catch (err) {
             console.error('[usePostInteractions] 데이터 로드 실패:', err.message);
         } finally {
@@ -64,14 +72,18 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                     if (payload.eventType === 'INSERT') {
                         const { data: newComment } = await supabase
                             .from('post_comments')
-                            .select('*, students!inner(name, deleted_at), teacher_id')
+                            .select('*, students(name, deleted_at), teacher_id')
                             .eq('id', payload.new.id)
-                            .is('students.deleted_at', null)
                             .single();
                         
                         if (newComment) {
                             // [수정] 승인된 댓글이거나 내 댓글인 경우만 표시
-                            if (newComment.status !== 'approved' && newComment.student_id !== studentId) return;
+                            const isTeacherComment = !!newComment.teacher_id && !newComment.student_id;
+                            const isOwnComment = newComment.student_id === studentId;
+                            const isApprovedStudentComment =
+                                newComment.status === 'approved' &&
+                                (!newComment.students || newComment.students.deleted_at == null);
+                            if (!isTeacherComment && !isOwnComment && !isApprovedStudentComment) return;
 
                             setComments(prev => {
                                 const alreadyExists = prev.some(c => c.id === newComment.id);

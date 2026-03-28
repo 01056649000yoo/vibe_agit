@@ -5,6 +5,7 @@ import Card from '../common/Card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDataExport } from '../../hooks/useDataExport';
 import ExportSelectModal from '../common/ExportSelectModal';
+import { dataCache } from '../../lib/cache';
 
 /**
  * 역할: 선생님 - 보관된 미션 관리 및 글 모아보기 📂
@@ -232,6 +233,9 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                 .update({ is_archived: false, archived_at: null })
                 .eq('id', missionId);
             if (error) throw error;
+            if (activeClass?.id) {
+                dataCache.invalidate(`missions_v2_${activeClass.id}`);
+            }
             alert('미션이 복구되었습니다! ✨');
             fetchArchivedMissions();
         } catch (err) {
@@ -248,8 +252,10 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                 .from('writing_missions')
                 .delete()
                 .eq('id', missionId);
-
             if (error) throw error;
+            if (activeClass?.id) {
+                dataCache.invalidate(`missions_v2_${activeClass.id}`);
+            }
 
             alert('미션이 영구적으로 삭제되었습니다.');
             fetchArchivedMissions();

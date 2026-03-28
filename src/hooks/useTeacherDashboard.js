@@ -174,7 +174,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         if (!activeClass?.id) return;
 
         // 1. 미션 목록 프리페칭
-        dataCache.get(`missions_${activeClass.id}`, async () => {
+        dataCache.get(`missions_v2_${activeClass.id}`, async () => {
             const { data, error } = await supabase
                 .from('writing_missions')
                 // 대시보드 미션 요약 표시를 위해 ID, 제목, 타입, 보관여부 등 선택

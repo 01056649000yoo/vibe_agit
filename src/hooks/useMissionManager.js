@@ -130,6 +130,19 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
     const [formData, setFormData] = useState(getResetFormData);
 
+    const calculateApprovalPoints = useCallback((mission, post) => {
+        if (!mission || !post) return 0;
+
+        let totalPoints = mission.base_reward || 0;
+        const totalThreshold = (mission.min_chars || 0) + (mission.bonus_threshold || 0);
+
+        if (mission.bonus_threshold && post.char_count >= totalThreshold) {
+            totalPoints += (mission.bonus_reward || 0);
+        }
+
+        return totalPoints;
+    }, []);
+
     const handleSaveDefaultRubric = async () => {
         if (!formData.evaluation_rubric?.levels) return;
 
@@ -193,10 +206,10 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         setLoading(true);
         try {
             // [Performance] 캐시 적용 (Pre-fetch된 데이터와 동기화)
-            const missionsData = await dataCache.get(`missions_${activeClass.id}`, async () => {
+            const missionsData = await dataCache.get(`missions_v2_${activeClass.id}`, async () => {
                 const { data, error } = await supabase
                     .from('writing_missions')
-                    .select('id, title, guide, mission_type, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward')
+                    .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
                     .eq('class_id', activeClass.id)
                     .order('created_at', { ascending: false });
                 if (error) throw error;
@@ -354,7 +367,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
             // [추가] 캐시 무효화로 즉각 반영 보장
             if (activeClass?.id) {
-                dataCache.invalidate(`missions_${activeClass.id}`);
+                dataCache.invalidate(`missions_v2_${activeClass.id}`);
             }
 
             handleCancelEdit();
@@ -700,14 +713,8 @@ ${postArray.map((p, idx) => {
 
         try {
             setLoadingPosts(true);
-            let totalPointsToGive = selectedMission.base_reward || 0;
-            let isBonusAchieved = false;
-            const totalThreshold = (selectedMission.min_chars || 0) + (selectedMission.bonus_threshold || 0);
-            
-            if (selectedMission.bonus_threshold && post.char_count >= totalThreshold) {
-                totalPointsToGive += (selectedMission.bonus_reward || 0);
-                isBonusAchieved = true;
-            }
+            const totalPointsToGive = calculateApprovalPoints(selectedMission, post);
+            const isBonusAchieved = totalPointsToGive > (selectedMission.base_reward || 0);
 
             const { error: postError } = await supabase
                 .from('student_posts')
@@ -756,10 +763,8 @@ ${postArray.map((p, idx) => {
         try {
             // [최적화] N번의 글 승인 통신과 N번의 포인트 RPC 호출(총 2N회)을 하나의 데이터 배열로 묶어(Bulk) 서버리스 함수 1회 호출로 해결.
             const submissions = toApprove.map((post) => {
-                let amount = selectedMission.base_reward || 0;
-                const totalThreshold = (selectedMission.min_chars || 0) + (selectedMission.bonus_threshold || 0);
-                let isBonus = (selectedMission.bonus_threshold && post.char_count >= totalThreshold);
-                if (isBonus) amount += (selectedMission.bonus_reward || 0);
+                const amount = calculateApprovalPoints(selectedMission, post);
+                const isBonus = amount > (selectedMission.base_reward || 0);
 
                 return {
                     post_id: post.id,
@@ -802,7 +807,9 @@ ${postArray.map((p, idx) => {
                 // 포인트 회수 및 내역 조회를 위해 식별값, 금액, 사유, 일시 및 연관 ID만 선택
                 .select('id, amount, reason, created_at, student_id, mission_id, post_id')
                 .eq('post_id', post.id)
+                .eq('mission_id', post.mission_id)
                 .gt('amount', 0)
+                .ilike('reason', '%승인%')
                 .order('created_at', { ascending: false })
                 .limit(1);
 
@@ -819,6 +826,7 @@ ${postArray.map((p, idx) => {
                     .eq('student_id', post.student_id)
                     .eq('mission_id', selectedMission.id)
                     .gt('amount', 0)
+                    .ilike('reason', '%승인%')
                     .order('created_at', { ascending: false })
                     .limit(1);
                 if (step2.data && step2.data.length > 0) {
@@ -841,6 +849,7 @@ ${postArray.map((p, idx) => {
                     .eq('student_id', post.student_id)
                     .ilike('reason', searchPattern)
                     .gt('amount', 0)
+                    .ilike('reason', '%승인%')
                     .order('created_at', { ascending: false })
                     .limit(1);
 
@@ -875,7 +884,7 @@ ${postArray.map((p, idx) => {
                 console.warn('DB에 post_id 컬럼이 없습니다. SQL을 다시 실행해주세요.');
             }
 
-            let amountToRecover = 0;
+            let amountToRecover = calculateApprovalPoints(selectedMission, post);
             if (logs && logs.length > 0) {
                 amountToRecover = logs[0].amount;
             } else {
@@ -938,7 +947,9 @@ ${postArray.map((p, idx) => {
                     .from('point_logs')
                     .select('amount')
                     .eq('post_id', post.id)
+                    .eq('mission_id', post.mission_id)
                     .gt('amount', 0)
+                    .ilike('reason', '%승인%')
                     .order('created_at', { ascending: false })
                     .limit(1);
 
@@ -947,16 +958,19 @@ ${postArray.map((p, idx) => {
                         .from('point_logs')
                         .select('amount')
                         .eq('student_id', post.student_id)
+                        .eq('mission_id', post.mission_id)
                         .ilike('reason', `%${selectedMission.title}%`)
                         .gt('amount', 0)
+                        .ilike('reason', '%승인%')
                         .order('created_at', { ascending: false })
                         .limit(1);
                     logs = legacyResult.data;
                 }
 
-                if (logs && logs.length > 0) {
-                    const amount = logs[0].amount;
-                    if (amount > 0) {
+                const amount = logs && logs.length > 0
+                    ? logs[0].amount
+                    : calculateApprovalPoints(selectedMission, post);
+                if (amount > 0) {
                         // 1. 승인 상태 복구
                         await supabase.from('student_posts').update({ is_confirmed: false, is_submitted: true }).eq('id', post.id);
 
@@ -969,7 +983,6 @@ ${postArray.map((p, idx) => {
                             p_mission_id: post.mission_id
                         });
                     }
-                }
             });
 
             await Promise.all(recoveryPromises);
@@ -1042,7 +1055,7 @@ ${postArray.map((p, idx) => {
             
             // [추가] 캐시 무효화
             if (activeClass?.id) {
-                dataCache.invalidate(`missions_${activeClass.id}`);
+                dataCache.invalidate(`missions_v2_${activeClass.id}`);
             }
 
             setArchiveModal({ isOpen: false, mission: null, hasIncomplete: false });
@@ -1066,7 +1079,7 @@ ${postArray.map((p, idx) => {
 
             // [핵심] 캐시 무효화로 즉시 반영 보장
             if (activeClass?.id) {
-                dataCache.invalidate(`missions_${activeClass.id}`);
+                dataCache.invalidate(`missions_v2_${activeClass.id}`);
             }
 
             fetchMissions();
@@ -1091,9 +1104,11 @@ ${postArray.map((p, idx) => {
                 .from('post_comments')
                 .insert({
                     post_id: postId,
+                    class_id: activeClass?.id,
                     teacher_id: user.id,
                     student_id: null,
-                    content: content.trim()
+                    content: content.trim(),
+                    status: 'approved'
                 });
 
             if (error) throw error;
