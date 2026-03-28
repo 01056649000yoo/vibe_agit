@@ -110,6 +110,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
         try {
             const meetingData = {
                 class_id: activeClass.id,
+                teacher_id: activeClass.teacher_id,
                 title: formData.title,
                 guide: formData.guide,
                 genre: '회의',
