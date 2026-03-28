@@ -358,6 +358,22 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         }
     };
 
+    const runAIDiagnosis = async () => {
+        console.log("🛠️ AI 진단 시작...");
+        try {
+            const diagData = await callAI({
+                type: 'DIAG',
+                overrideApiMode: profile?.api_mode,
+                overrideApiKey: openaiKey
+            });
+            console.log("📋 서버측 AI 진단 결과:", diagData);
+            alert("콘솔(F12)에서 진단 결과를 확인해주세요.");
+        } catch (err) {
+            console.error("진단 실패:", err.message);
+            alert(`❌ 진단 실패: ${err.message}\n(브라우저 콘솔을 확인해주세요)`);
+        }
+    };
+
 
     const handleSetPrimaryClass = async (classId) => {
         if (!classId) return;
@@ -440,7 +456,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         isKeyVisible, setIsKeyVisible,
         savingKey, testingKey, aiStatus,
-        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection,
+        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, runAIDiagnosis,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses, maskKey
     };

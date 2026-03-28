@@ -41,7 +41,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         isKeyVisible, setIsKeyVisible,
         savingKey, testingKey, aiStatus,
-        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection,
+        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, runAIDiagnosis,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses, maskKey
     } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass);
@@ -185,6 +185,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 session={session} classes={classes} activeClass={activeClass} setActiveClass={setActiveClass}
                                 setClasses={setClasses} fetchAllClasses={fetchAllClasses} handleSetPrimaryClass={handleSetPrimaryClass}
                                 openaiKey={openaiKey} setOpenaiKey={setOpenaiKey} hasApiKey={hasApiKey} handleTestAIConnection={handleTestAIConnection}
+                                runAIDiagnosis={runAIDiagnosis}
                                 savingKey={savingKey} testingKey={testingKey} aiStatus={aiStatus} originalKey={originalKey} maskKey={maskKey}
                                 promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
                                 reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}

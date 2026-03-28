@@ -28,6 +28,7 @@ const TeacherSettingsTab = ({
     setReportPromptTemplate,
     originalReportPrompt,
     handleSaveTeacherSettings,
+    runAIDiagnosis,
     fetchDeletedClasses,
     onRestoreClass
 }) => {
@@ -125,7 +126,13 @@ const TeacherSettingsTab = ({
                                 {/* (0) API 모드 설정 */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '15px', background: '#F8F9FA', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <label style={{ fontSize: '0.85rem', color: '#2C3E50', fontWeight: 'bold' }}>🔑 AI 사용 모드</label>
+                                        <label 
+                                            onClick={runAIDiagnosis}
+                                            style={{ fontSize: '0.85rem', color: '#2C3E50', fontWeight: 'bold', cursor: 'pointer' }}
+                                            title="AI 서비스 진단 실행"
+                                        >
+                                            🔑 AI 사용 모드 (진단)
+                                        </label>
                                         <div style={{
                                             padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold',
                                             background: profile?.api_mode === 'PERSONAL' ? '#FFF3E0' : '#E3F2FD',

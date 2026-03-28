@@ -46,9 +46,12 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
         });
 
         // 3. 성공 시 즉시 반환
-        if (!invokeError && responseData?.text) {
-            if (retryCount > 0) console.log("✅ 재시도 끝에 AI 호출에 성공했습니다!");
-            return responseData.text;
+        if (!invokeError && responseData) {
+            if (body.type === 'DIAG') return responseData; // 진단 모드는 전체 데이터 반환
+            if (responseData.text) {
+                if (retryCount > 0) console.log("✅ 재시도 끝에 AI 호출에 성공했습니다!");
+                return responseData.text;
+            }
         }
 
         // 4. 에러 처리 및 재시도 로직
@@ -108,6 +111,7 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
 
                         if (directResp.ok) {
                             const resJson = await directResp.json();
+                            if (body.type === 'DIAG') return resJson;
                             if (resJson.text) {
                                 console.log("✅ 인증 우회 호출 성공!");
                                 return resJson.text;
