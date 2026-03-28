@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(supabase functions:*)",
+      "Bash(npx supabase:*)",
+      "Bash(ls /c/Users/yshgg/AppData/Roaming/npm/supabase*)"
+    ]
+  }
+}
