@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabaseClient';
 
+const PROFILE_FETCH_DEDUPE_MS = 15000;
+const LAST_LOGIN_TOUCH_MS = 10 * 60 * 1000;
+const profileFetchCache = new Map();
+const profileFetchInflight = new Map();
+const lastLoginTouchCache = new Map();
+
 /**
  * 전역 인증 및 프로필 상태 관리 스토어 (Zustand) 🔐
  */
@@ -17,61 +23,103 @@ export const useAuthStore = create((set, get) => ({
     setLoading: (loading) => set({ loading }),
 
     // 1. 프로필 정보 가져오기 (교사/관리자)
-    fetchProfile: async (userId) => {
+    fetchProfile: async (userId, options = {}) => {
         if (!userId) return;
-        
+
+        const { force = false, touchLogin = true } = options;
         const startTime = performance.now();
         console.log('⏱️ [AuthStore] 프로필 로드 시작...');
 
-        try {
-            const [updateResult, profileResult, teacherResult] = await Promise.all([
-                // (A) 최근 접속 시간 업데이트
-                supabase
-                    .from('profiles')
-                    .update({ last_login_at: new Date().toISOString() })
-                    .eq('id', userId),
-                
-                // (B) 프로필 정보 조회
-                supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', userId)
-                    .maybeSingle(),
-                
-                // (C) 교사 정보 조회
-                supabase
-                    .from('teachers')
-                    .select('name, school_name, phone')
-                    .eq('id', userId)
-                    .maybeSingle()
-            ]);
-
-            console.log(`✅ [AuthStore] 프로필 로드 완료 (${(performance.now() - startTime).toFixed(0)}ms)`);
-
-            const profileData = profileResult.data;
-            const teacherData = teacherResult.data;
-
-            if (profileData) {
-                const fullProfile = {
-                    ...profileData,
-                    role: profileData.role || 'TEACHER',
-                    teacherName: teacherData?.name,
-                    schoolName: teacherData?.school_name,
-                    phone: teacherData?.phone
-                };
-                set({ profile: fullProfile });
-                return fullProfile;
-            } else if (teacherData) {
-                const basicProfile = {
-                    role: 'TEACHER',
-                    teacherName: teacherData.name,
-                    schoolName: teacherData.school_name
-                };
-                set({ profile: basicProfile });
-                return basicProfile;
+        const cached = profileFetchCache.get(userId);
+        if (!force && cached && (Date.now() - cached.timestamp) < PROFILE_FETCH_DEDUPE_MS) {
+            if (cached.profile) {
+                set({ profile: cached.profile });
             }
+            return cached.profile;
+        }
+
+        const inflight = profileFetchInflight.get(userId);
+        if (!force && inflight) {
+            return inflight;
+        }
+
+        try {
+            const fetchPromise = (async () => {
+                const shouldTouchLogin = touchLogin && (
+                    !lastLoginTouchCache.has(userId) ||
+                    (Date.now() - lastLoginTouchCache.get(userId)) > LAST_LOGIN_TOUCH_MS
+                );
+
+                const requests = [];
+                if (shouldTouchLogin) {
+                    requests.push(
+                        supabase
+                            .from('profiles')
+                            .update({ last_login_at: new Date().toISOString() })
+                            .eq('id', userId)
+                    );
+                } else {
+                    requests.push(Promise.resolve({ data: null, error: null }));
+                }
+
+                requests.push(
+                    supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', userId)
+                        .maybeSingle()
+                );
+
+                requests.push(
+                    supabase
+                        .from('teachers')
+                        .select('name, school_name, phone')
+                        .eq('id', userId)
+                        .maybeSingle()
+                );
+
+                const [updateResult, profileResult, teacherResult] = await Promise.all(requests);
+
+                console.log(`✅ [AuthStore] 프로필 로드 완료 (${(performance.now() - startTime).toFixed(0)}ms)`);
+
+                if (shouldTouchLogin && !updateResult?.error) {
+                    lastLoginTouchCache.set(userId, Date.now());
+                }
+
+                const profileData = profileResult.data;
+                const teacherData = teacherResult.data;
+
+                if (profileData) {
+                    const fullProfile = {
+                        ...profileData,
+                        role: profileData.role || 'TEACHER',
+                        teacherName: teacherData?.name,
+                        schoolName: teacherData?.school_name,
+                        phone: teacherData?.phone
+                    };
+                    profileFetchCache.set(userId, { profile: fullProfile, timestamp: Date.now() });
+                    set({ profile: fullProfile });
+                    return fullProfile;
+                } else if (teacherData) {
+                    const basicProfile = {
+                        role: 'TEACHER',
+                        teacherName: teacherData.name,
+                        schoolName: teacherData.school_name
+                    };
+                    profileFetchCache.set(userId, { profile: basicProfile, timestamp: Date.now() });
+                    set({ profile: basicProfile });
+                    return basicProfile;
+                }
+
+                return null;
+            })();
+
+            profileFetchInflight.set(userId, fetchPromise);
+            return await fetchPromise;
         } catch (e) {
             console.warn("[AuthStore] 프로필 로드 중 오류 발생:", e);
+        } finally {
+            profileFetchInflight.delete(userId);
         }
         return null;
     },

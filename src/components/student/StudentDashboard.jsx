@@ -46,7 +46,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         agitSettings,
         temperature,
         vocabTowerSettings // [신규] 어휘의 탑 설정
-    } = useClassAgitClass(studentSession?.classId || studentSession?.class_id, studentSession?.id);
+    } = useClassAgitClass(
+        studentSession?.classId || studentSession?.class_id,
+        studentSession?.id,
+        { lightweight: true }
+    );
 
     // 전반적인 대시보드 데이터 및 비즈니스 로직
     const {

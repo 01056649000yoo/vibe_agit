@@ -14,7 +14,8 @@ const DEFAULT_SETTINGS = {
  * useClassAgitClass - 우리반 아지트의 온도와 성장 단계를 관리하는 훅
  * 초등학생들이 자기 효능감을 느낄 수 있도록 '우리들의 노력으로 아지트가 자라난다'는 컨셉
  */
-export const useClassAgitClass = (classId, currentStudentId) => {
+export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
+    const { lightweight = false } = options;
     console.log("🏫 [useClassAgitClass 훅 호출됨]", { classId, currentStudentId });
 
     const [loading, setLoading] = useState(false); // [최적화] 즉시 렌더링을 위해 초기 로딩을 false로 변경
@@ -197,6 +198,22 @@ export const useClassAgitClass = (classId, currentStudentId) => {
                 rankingResetDate: classData?.vocab_tower_ranking_reset_date || null
             });
 
+            if (lightweight) {
+                const lightweightTemp = currentSettings.currentTemperature || 0;
+                const lightweightLevel = calculateStage(lightweightTemp, currentSettings.targetScore);
+
+                setCounts({ posts: 0, feedbacks: 0 });
+                setTemperature(lightweightTemp);
+                setBoardMessages([]);
+                setDailyStats({ totalAddedTemp: 0 });
+                setMyMissionStatus({ post: 0, comment: 0, reaction: 0, achieved: false });
+                setAchievedStudentsList([]);
+                setHistoryStats([]);
+                setStageLevel(lightweightLevel);
+                updateUnlockedContent(lightweightLevel);
+                return;
+            }
+
             // 1. 집계 시작 시점 결정 (오늘 하루 단위로 달성 여부 판단)
             // 명예의 전당과 일일 활동은 '오늘 00시' 기준으로 초기화되어 재집계됨
             
@@ -352,6 +369,10 @@ export const useClassAgitClass = (classId, currentStudentId) => {
     useEffect(() => {
         // 딜레이 없이 즉각 로드 (체감 속도 향상)
         fetchData(true);
+
+        if (lightweight) {
+            return;
+        }
 
         // [최적화] 디바운싱: 여러 실시간 이벤트가 동시에 들어올 때 최후 1초 뒤에 한 번만 실행
         let timeoutId;

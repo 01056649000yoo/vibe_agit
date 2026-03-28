@@ -167,7 +167,6 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                     }, { onConflict: 'post_id,student_id' });
                 if (error) throw error;
             }
-            fetchInteractions();
         } catch (err) {
             console.error('[usePostInteractions] DB 동기화 실패:', err.message);
             fetchInteractions();
@@ -242,7 +241,6 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                         await supabase.from('post_comments').delete().eq('id', newCommentId);
                         console.log(`💬 [AI 보안관] 부적절한 표현 감지 -> 자동 삭제 완료: ${content}`);
                         alert(`잠깐! 🛡️\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n(방금 작성한 댓글은 삭제 처리 되었어요)`);
-                        fetchInteractions();
                     } else {
                         // [추가] 안전한 경우 승인 상태로 변경
                         await supabase
@@ -255,7 +253,6 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                                 console.log(`✨ [AI 보안관] 안전한 댓글 확인 -> +${data.points_awarded}P 지급 완료!`);
                             }
                         });
-                        fetchInteractions();
                     }
                 }).catch(err => {
                     console.error('AI Check failed:', err);

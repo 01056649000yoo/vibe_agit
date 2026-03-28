@@ -181,6 +181,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
             if (editingCommentId) {
                 const success = await updateComment(editingCommentId, commentInput);
                 if (success) {
+                    const pointsAwarded = false;
                     setEditingCommentId(null);
                     setCommentInput('');
                     alert('댓글이 수정되었습니다! ✨');
@@ -195,15 +196,8 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
 
                 const success = await addComment(commentInput);
                 if (success) {
-                    let pointsAwarded = false;
                     // [보안] reward_for_comment RPC 사용 (중복 방지 서버 처리)
                     try {
-                        const { data: rewardData } = await supabase.rpc('reward_for_comment', {
-                            p_post_id: post.id
-                        });
-                        if (rewardData?.success) {
-                            pointsAwarded = true;
-                        }
                     } catch (ptErr) {
                         console.error('포인트 지급 실패:', ptErr.message);
                     }

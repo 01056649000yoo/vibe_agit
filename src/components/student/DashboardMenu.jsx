@@ -43,6 +43,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
         const classId = studentSession?.class_id || studentSession?.classId;
         const studentId = studentSession?.id;
         if (!classId || !studentId) return;
+        const dashboardCheckKey = `dashboard_menu_check_${classId}_${studentId}`;
 
         const checkNewMissions = async () => {
             try {
@@ -50,13 +51,13 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                 const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
                 const { data: allRecent } = await supabase
                     .from('writing_missions')
-                    .select('id, mission_type')
+                    .select('id, mission_type, created_at')
                     .eq('class_id', classId)
                     .eq('is_archived', false)
-                    .gt('created_at', twentyFourHoursAgo);
+                    .order('created_at', { ascending: false });
 
                 // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장
-                const recentMissions = allRecent?.filter(m => m.mission_type !== 'meeting') || [];
+                const recentMissions = allRecent?.filter(m => m.mission_type !== 'meeting' && m.created_at > twentyFourHoursAgo) || [];
 
                 let unsubmittedNew = false;
                 if (recentMissions.length > 0) {
@@ -95,15 +96,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                 }
 
                 // [신규] 4. 아이디어 마켓 최신 안건/아이디어 확인
-                const { data: latestMeeting } = await supabase
-                    .from('writing_missions')
-                    .select('id, created_at')
-                    .eq('class_id', classId)
-                    .eq('mission_type', 'meeting')
-                    .eq('is_archived', false)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
+                const latestMeeting = allRecent?.find(m => m.mission_type === 'meeting') || null;
 
                 let latestIdea = null;
                 if (latestMeeting?.id) {
@@ -187,12 +180,6 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
             console.error('랭킹 프리뷰 로드 실패:', err);
         }
     }, [studentSession?.class_id, studentSession?.classId, isVocabTowerEnabled, vocabTowerSettings?.rankingResetDate]);
-
-    useEffect(() => {
-        if (!isVocabTowerEnabled) return;
-        const timerId = setTimeout(fetchRankings, 1000);
-        return () => clearTimeout(timerId);
-    }, [fetchRankings, isVocabTowerEnabled]);
 
     return (
         <>
