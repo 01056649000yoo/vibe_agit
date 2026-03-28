@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import OpenAI from 'jsr:@openai/openai@^4.28.0'
+import OpenAI from 'npm:openai@^4'
 
 // CORS: 허용 도메인은 Supabase Dashboard → Edge Functions → Secrets에서
 // ALLOWED_ORIGIN 환경 변수로 설정하세요. (예: https://your-app.vercel.app)
@@ -308,7 +308,8 @@ Deno.serve(async (req) => {
 
         if (!apiKey) throw new Error('AI 서비스 연결을 위한 API 키를 찾을 수 없습니다.');
 
-        console.log(`🤖 Mode: [${currentMode}] | Teacher: [${targetTeacherId || 'N/A'}] | Type: [${type || 'N/A'}]`);
+        // API 키 앞 7자리만 로그 (sk-xxx 형태 확인용)
+        console.log(`🤖 Mode: [${currentMode}] | Teacher: [${targetTeacherId || 'N/A'}] | Type: [${type || 'N/A'}] | Key: ${apiKey.slice(0, 7)}***`);
 
         const openai = new OpenAI({ apiKey: apiKey })
         const completion = await openai.chat.completions.create({
@@ -323,9 +324,11 @@ Deno.serve(async (req) => {
         )
 
     } catch (error) {
-        console.error("🔥 Error:", error.message);
+        const errMsg = error?.message ?? 'Unknown error';
+        const errType = error?.constructor?.name ?? 'Error';
+        console.error(`🔥 [${errType}] ${errMsg}`);
         return new Response(
-            JSON.stringify({ error: error.message }),
+            JSON.stringify({ error: errMsg, type: errType }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         )
     }
