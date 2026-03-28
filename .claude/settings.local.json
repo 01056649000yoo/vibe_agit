@@ -4,7 +4,9 @@
       "Bash(supabase functions:*)",
       "Bash(npx supabase:*)",
       "Bash(ls /c/Users/yshgg/AppData/Roaming/npm/supabase*)",
-      "Bash(find /c/Users/yshgg/VIBE_TEST/.claude/worktrees/blissful-galileo/supabase -name *.ts)"
+      "Bash(find /c/Users/yshgg/VIBE_TEST/.claude/worktrees/blissful-galileo/supabase -name *.ts)",
+      "Bash(find C:UsersyshggVIBE_TEST -name *.sql -type f)",
+      "Bash(supabase db:*)"
     ]
   }
 }
