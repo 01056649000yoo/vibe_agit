@@ -368,6 +368,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             // [추가] 캐시 무효화로 즉각 반영 보장
             if (activeClass?.id) {
                 dataCache.invalidate(`missions_v2_${activeClass.id}`);
+                dataCache.invalidate(`missions_${activeClass.id}`);
             }
 
             handleCancelEdit();
@@ -1056,6 +1057,7 @@ ${postArray.map((p, idx) => {
             // [추가] 캐시 무효화
             if (activeClass?.id) {
                 dataCache.invalidate(`missions_v2_${activeClass.id}`);
+                dataCache.invalidate(`missions_${activeClass.id}`);
             }
 
             setArchiveModal({ isOpen: false, mission: null, hasIncomplete: false });
@@ -1080,6 +1082,7 @@ ${postArray.map((p, idx) => {
             // [핵심] 캐시 무효화로 즉시 반영 보장
             if (activeClass?.id) {
                 dataCache.invalidate(`missions_v2_${activeClass.id}`);
+                dataCache.invalidate(`missions_${activeClass.id}`);
             }
 
             fetchMissions();

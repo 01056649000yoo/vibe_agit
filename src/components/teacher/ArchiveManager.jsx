@@ -235,6 +235,7 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
             if (error) throw error;
             if (activeClass?.id) {
                 dataCache.invalidate(`missions_v2_${activeClass.id}`);
+                dataCache.invalidate(`missions_${activeClass.id}`);
             }
             alert('미션이 복구되었습니다! ✨');
             fetchArchivedMissions();
@@ -255,6 +256,7 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
             if (error) throw error;
             if (activeClass?.id) {
                 dataCache.invalidate(`missions_v2_${activeClass.id}`);
+                dataCache.invalidate(`missions_${activeClass.id}`);
             }
 
             alert('미션이 영구적으로 삭제되었습니다.');
