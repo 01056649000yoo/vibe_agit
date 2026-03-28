@@ -86,11 +86,17 @@ export const useFriendsHideout = (studentSession, params) => {
         }
     }, [loadingMore, hasMore, selectedMission, fetchPosts]);
 
-    const fetchMissions = useCallback(async () => {
+    const fetchMissions = useCallback(async (forceRefresh = false) => {
         setLoading(true);
         try {
             const classId = studentSession.classId || studentSession.class_id;
-            const data = await dataCache.get(`missions_${classId}`, async () => {
+            const cacheKey = `missions_${classId}`;
+
+            if (forceRefresh) {
+                dataCache.invalidate(cacheKey);
+            }
+
+            const data = await dataCache.get(cacheKey, async () => {
                 const { data, error } = await supabase
                     .from('writing_missions')
                     .select('id, title, class_id, genre, allow_comments, is_archived, created_at, base_reward, bonus_threshold, bonus_reward')
@@ -104,16 +110,22 @@ export const useFriendsHideout = (studentSession, params) => {
 
             setMissions(data);
             if (data?.length > 0) {
-                const initialMission = data[0];
-                setSelectedMission(initialMission);
-                fetchPosts(initialMission.id);
+                const nextMission =
+                    data.find(m => m.id === selectedMission?.id) ||
+                    data[0];
+
+                setSelectedMission(nextMission);
+                fetchPosts(nextMission.id);
+            } else {
+                setSelectedMission(null);
+                setPosts([]);
             }
         } catch (err) {
             console.error('미션 로드 실패:', err.message);
         } finally {
             setLoading(false);
         }
-    }, [studentSession.classId, studentSession.class_id, fetchPosts]);
+    }, [studentSession.classId, studentSession.class_id, selectedMission?.id, fetchPosts]);
 
     const handleInitialPost = useCallback(async (postId) => {
         try {
@@ -133,7 +145,7 @@ export const useFriendsHideout = (studentSession, params) => {
     }, []);
 
     useEffect(() => {
-        fetchMissions();
+        fetchMissions(true);
         fetchClassmates();
         if (params?.initialPostId) {
             handleInitialPost(params.initialPostId);
@@ -163,7 +175,24 @@ export const useFriendsHideout = (studentSession, params) => {
             )
             .subscribe();
 
-        // [실시간 2] 새 글 알림 구독 (현재 선택된 미션에 대해서만)
+        // [실시간 2] 미션 복구/보관 반영
+        const missionsSubscription = supabase
+            .channel(`hideout_missions_${classId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'writing_missions',
+                    filter: `class_id=eq.${classId}`
+                },
+                () => {
+                    fetchMissions(true);
+                }
+            )
+            .subscribe();
+
+        // [실시간 3] 새 글 알림 구독 (현재 선택된 미션에 대해서만)
         const postsSubscription = supabase
             .channel(`posts_${classId}`)
             .on(
@@ -206,9 +235,10 @@ export const useFriendsHideout = (studentSession, params) => {
 
         return () => {
             supabase.removeChannel(classmateSubscription);
+            supabase.removeChannel(missionsSubscription);
             supabase.removeChannel(postsSubscription);
         };
-    }, [studentSession.class_id, studentSession.classId, studentSession.id, selectedMission?.id]);
+    }, [studentSession.class_id, studentSession.classId, studentSession.id, selectedMission?.id, fetchMissions]);
 
     const handleMissionChange = (mission) => {
         setSelectedMission(mission);
