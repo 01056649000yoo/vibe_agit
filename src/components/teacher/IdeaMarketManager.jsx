@@ -108,9 +108,10 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
         }
         setSaving(true);
         try {
+            const { data: { user } } = await supabase.auth.getUser();
             const meetingData = {
                 class_id: activeClass.id,
-                teacher_id: activeClass.teacher_id,
+                teacher_id: user?.id,
                 title: formData.title,
                 guide: formData.guide,
                 genre: '회의',
