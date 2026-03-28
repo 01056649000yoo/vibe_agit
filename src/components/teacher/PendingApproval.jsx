@@ -114,21 +114,42 @@ const PendingApproval = ({ onLogout }) => {
                     </div>
                 </div>
 
-                <Button
-                    onClick={onLogout}
-                    size="lg"
-                    style={{
-                        width: '100%',
-                        background: '#6366F1',
-                        padding: '18px',
-                        fontWeight: 'bold',
-                        borderRadius: '20px',
-                        boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)',
-                        fontSize: '1.1rem'
-                    }}
-                >
-                    홈으로 돌아가기
-                </Button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <Button
+                        onClick={onLogout}
+                        size="lg"
+                        variant="ghost"
+                        style={{
+                            flex: 1,
+                            padding: '16px',
+                            fontWeight: 'bold',
+                            borderRadius: '20px',
+                            fontSize: '1rem',
+                            border: '1px solid #E0E7FF'
+                        }}
+                    >
+                        로그아웃 🚪
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            if (confirm('입력하신 정보를 수정하시겠습니까?')) {
+                                onReEdit && onReEdit();
+                            }
+                        }}
+                        size="lg"
+                        style={{
+                            flex: 1,
+                            background: '#6366F1',
+                            padding: '16px',
+                            fontWeight: 'bold',
+                            borderRadius: '20px',
+                            boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)',
+                            fontSize: '1rem'
+                        }}
+                    >
+                        정보 수정하기 ✏️
+                    </Button>
+                </div>
             </Card>
 
             <style>

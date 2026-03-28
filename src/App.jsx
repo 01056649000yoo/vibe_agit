@@ -40,6 +40,7 @@ function App() {
   } = useAuthStore();
 
   const [activeClass, setActiveClass] = useState(null)
+  const [isReEditing, setIsReEditing] = useState(false)
   
   const { 
     internalPage, setInternalPage, 
@@ -186,14 +187,18 @@ function App() {
               onLogout={handleLogout}
               onSwitchToTeacherMode={() => setAdminModeHandler(false)}
             />
-          ) : (profile?.role !== 'ADMIN' && (!profile?.teacherName || !profile?.schoolName)) ? ( /* 일반 교사인데 정보가 없는 경우만 설정 페이지로 */
+          ) : (profile?.role !== 'ADMIN' && (!profile?.teacherName || !profile?.schoolName || isReEditing)) ? (
             <TeacherProfileSetup
               email={session.user.email}
-              onTeacherStart={handleTeacherStart}
+              profile={profile}
+              onTeacherStart={async () => {
+                await handleTeacherStart();
+                setIsReEditing(false);
+              }}
               onLogout={handleLogout}
             />
-          ) : (profile.role !== 'ADMIN' && !profile.is_approved) ? ( /* [1.5순위] 승인 대기 확인 (관리자는 우회) */
-            <PendingApproval onLogout={handleLogout} />
+          ) : (profile.role !== 'ADMIN' && !profile.is_approved) ? (
+            <PendingApproval onLogout={handleLogout} onReEdit={() => setIsReEditing(true)} />
           ) : (
               <TeacherDashboard
                 profile={profile}

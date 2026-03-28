@@ -157,6 +157,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const [pendingTeachers, setPendingTeachers] = useState([]);
     const [approvedTeachers, setApprovedTeachers] = useState([]);
     const [autoApproval, setAutoApproval] = useState(false);
+    const [publicAiEnabled, setPublicAiEnabled] = useState(true);
     const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
 
     // States for UI
@@ -196,9 +197,14 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
     const fetchSettings = async () => {
         try {
-            // .single() 대신 .maybeSingle()을 사용하여 데이터가 없을 때의 406 에러 차단
-            const { data } = await supabase.from('system_settings').select('value').eq('key', 'auto_approval').maybeSingle();
-            if (data) setAutoApproval(data.value === true);
+            const { data: settings } = await supabase.from('system_settings').select('key, value');
+            if (settings) {
+                const auto = settings.find(s => s.key === 'auto_approval');
+                if (auto) setAutoApproval(auto.value === true);
+                
+                const ai = settings.find(s => s.key === 'public_api_enabled');
+                if (ai) setPublicAiEnabled(ai.value === true);
+            }
         } catch (err) { console.error('설정 로드 실패:', err); }
     };
 
@@ -210,6 +216,21 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             if (error) throw error;
             setAutoApproval(newValue);
             alert(`교사 가입 방식이 ${newValue ? '자동 승인' : '관리자 직접 승인'}으로 변경되었습니다.`);
+        } catch (err) {
+            alert('설정 변경 중 오류가 발생했습니다: ' + err.message);
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
+
+    const handleTogglePublicAi = async () => {
+        setSettingsLoading(true);
+        const newValue = !publicAiEnabled;
+        try {
+            const { error } = await supabase.from('system_settings').upsert({ key: 'public_api_enabled', value: newValue });
+            if (error) throw error;
+            setPublicAiEnabled(newValue);
+            alert(`시스템 공용 AI 서비스가 ${newValue ? '활성화' : '비활성화'} 되었습니다.`);
         } catch (err) {
             alert('설정 변경 중 오류가 발생했습니다: ' + err.message);
         } finally {
@@ -574,16 +595,20 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                 <>
                                     {filterList(pendingTeachers)
                                         .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-                                        .map(profile => (
-                                            <TeacherItem
-                                                key={profile.id}
-                                                profile={profile}
-                                                onAction={() => handleApprove(profile.id, profile.teachers?.name || profile.full_name)}
-                                                actionLabel="가입 승인"
-                                                actionColor="#38A169"
-                                                onToggleApiMode={() => handleToggleApiMode(profile.id, profile.teachers?.name || profile.full_name, profile.api_mode)}
-                                            />
-                                        ))}
+                                        .map(profile => {
+                                            const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
+                                            const displayName = teacherInfo?.name || profile.full_name || '이름 없음';
+                                            return (
+                                                <TeacherItem
+                                                    key={profile.id}
+                                                    profile={profile}
+                                                    onAction={() => handleApprove(profile.id, displayName)}
+                                                    actionLabel="가입 승인"
+                                                    actionColor="#38A169"
+                                                    onToggleApiMode={() => handleToggleApiMode(profile.id, displayName, profile.api_mode)}
+                                                />
+                                            );
+                                        })}
 
                                     {/* Pagination for Pending */}
                                     {filterList(pendingTeachers).length > ITEMS_PER_PAGE && (
@@ -619,43 +644,84 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     )}
 
                     {!loading && currentTab === 'settings' && (
-                        <Card style={{ padding: '30px', borderLeft: '5px solid #4299E1' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: '#2D3748' }}>⚙️ 교사 가입 승인 정책</h3>
-                                    <p style={{ margin: 0, color: '#718096' }}>
-                                        신규 교사가 회원가입을 요청했을 때의 처리 방식을 설정합니다.
-                                    </p>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <span style={{ fontWeight: 'bold', color: autoApproval ? '#38A169' : '#718096' }}>
-                                        {autoApproval ? '자동 승인 (즉시 가입)' : '수동 승인 (관리자 확인)'}
-                                    </span>
-                                    <label style={{ position: 'relative', display: 'inline-block', width: '56px', height: '30px' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={autoApproval}
-                                            onChange={handleToggleAutoApproval}
-                                            disabled={settingsLoading}
-                                            style={{ opacity: 0, width: 0, height: 0 }}
-                                        />
-                                        <span style={{
-                                            position: 'absolute', cursor: 'pointer',
-                                            top: 0, left: 0, right: 0, bottom: 0,
-                                            backgroundColor: autoApproval ? '#48BB78' : '#CBD5E0',
-                                            transition: '.4s', borderRadius: '34px'
-                                        }}>
-                                            <span style={{
-                                                position: 'absolute', content: '""',
-                                                height: '22px', width: '22px',
-                                                left: autoApproval ? '30px' : '4px', bottom: '4px',
-                                                backgroundColor: 'white', transition: '.4s', borderRadius: '50%'
-                                            }}></span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <Card style={{ padding: '30px', borderLeft: '5px solid #4299E1' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: '#2D3748' }}>⚙️ 교사 가입 승인 정책</h3>
+                                        <p style={{ margin: 0, color: '#718096' }}>
+                                            신규 교사가 회원가입을 요청했을 때의 처리 방식을 설정합니다.
+                                        </p>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                        <span style={{ fontWeight: 'bold', color: autoApproval ? '#38A169' : '#718096' }}>
+                                            {autoApproval ? '자동 승인 (즉시 가입)' : '수동 승인 (관리자 확인)'}
                                         </span>
-                                    </label>
+                                        <label style={{ position: 'relative', display: 'inline-block', width: '56px', height: '30px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={autoApproval}
+                                                onChange={handleToggleAutoApproval}
+                                                disabled={settingsLoading}
+                                                style={{ opacity: 0, width: 0, height: 0 }}
+                                            />
+                                            <span style={{
+                                                position: 'absolute', cursor: 'pointer',
+                                                top: 0, left: 0, right: 0, bottom: 0,
+                                                backgroundColor: autoApproval ? '#48BB78' : '#CBD5E0',
+                                                transition: '.4s', borderRadius: '34px'
+                                            }}>
+                                                <span style={{
+                                                    position: 'absolute', content: '""',
+                                                    height: '22px', width: '22px',
+                                                    left: autoApproval ? '30px' : '4px', bottom: '4px',
+                                                    backgroundColor: 'white', transition: '.4s', borderRadius: '50%'
+                                                }}></span>
+                                            </span>
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
-                        </Card>
+                            </Card>
+
+                            <Card style={{ padding: '30px', borderLeft: '5px solid #F6AD55' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: '#2D3748' }}>🤖 시스템 공용 AI 서비스</h3>
+                                        <p style={{ margin: 0, color: '#718096' }}>
+                                            모든 교사에게 제공되는 시스템 공용 API 키 사용 여부를 설정합니다.<br/>
+                                            비활성화 시 '개인 키'를 등록한 교사만 AI 기능을 사용할 수 있습니다.
+                                        </p>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                        <span style={{ fontWeight: 'bold', color: publicAiEnabled ? '#38A169' : '#E53E3E' }}>
+                                            {publicAiEnabled ? '공용 AI 사용 가능' : '공용 AI 중단 (개인 키만 허용)'}
+                                        </span>
+                                        <label style={{ position: 'relative', display: 'inline-block', width: '56px', height: '30px' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={publicAiEnabled}
+                                                onChange={handleTogglePublicAi}
+                                                disabled={settingsLoading}
+                                                style={{ opacity: 0, width: 0, height: 0 }}
+                                            />
+                                            <span style={{
+                                                position: 'absolute', cursor: 'pointer',
+                                                top: 0, left: 0, right: 0, bottom: 0,
+                                                backgroundColor: publicAiEnabled ? '#48BB78' : '#CBD5E0',
+                                                transition: '.4s', borderRadius: '34px'
+                                            }}>
+                                                <span style={{
+                                                    position: 'absolute', content: '""',
+                                                    height: '22px', width: '22px',
+                                                    left: publicAiEnabled ? '30px' : '4px', bottom: '4px',
+                                                    backgroundColor: 'white', transition: '.4s', borderRadius: '50%'
+                                                }}></span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </Card>
+                        </div>
                     )}
 
                     {!loading && currentTab === 'feedback' && (

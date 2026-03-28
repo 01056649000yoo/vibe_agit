@@ -41,7 +41,7 @@ export const useAuthStore = create((set, get) => ({
                 // (C) 교사 정보 조회
                 supabase
                     .from('teachers')
-                    .select('name, school_name')
+                    .select('name, school_name, phone')
                     .eq('id', userId)
                     .maybeSingle()
             ]);
@@ -56,7 +56,8 @@ export const useAuthStore = create((set, get) => ({
                     ...profileData,
                     role: profileData.role || 'TEACHER',
                     teacherName: teacherData?.name,
-                    schoolName: teacherData?.school_name
+                    schoolName: teacherData?.school_name,
+                    phone: teacherData?.phone
                 };
                 set({ profile: fullProfile });
                 return fullProfile;

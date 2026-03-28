@@ -311,7 +311,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
             const [profileResult, secretsResult] = await Promise.all([
                 supabase.from('profiles').upsert(profileUpdatePayload, { onConflict: 'id' }),
-                openaiKey.trim() 
+                (openaiKey && openaiKey.trim())
                     ? supabase.from('profile_secrets').upsert(secretsUpdatePayload, { onConflict: 'id' })
                     : Promise.resolve({ error: null })
             ]);
@@ -323,7 +323,9 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             setOriginalReportPrompt(reportPromptTemplate.trim());
 
             // 프로필 상태 갱신을 위해 콜백 호출
-            if (onProfileUpdate) await onProfileUpdate();
+            if (onProfileUpdate) {
+                await onProfileUpdate();
+            }
 
             alert('설정이 안전하게 저장되었습니다! ✨');
         } catch (err) {
@@ -338,10 +340,15 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         setTestingKey(true);
         setAiStatus('testing');
         try {
-            // [변경] 이제 모든 키 조회 로직은 Edge Function 내부에서 처리되므로 프롬프트만 보냅니다.
-            const aiResponse = await callAI("정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘.");
-            setAiStatus('connected');
+            // [변경] 현재 UI상의 모드와 키를 함께 전달하여, 저장 전이라도 정확한 테스트가 가능하게 합니다.
+            const aiResponse = await callAI({
+                prompt: "정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘.",
+                overrideApiMode: profile?.api_mode,
+                overrideApiKey: openaiKey,
+                type: 'CONNECTION_TEST'
+            });
             alert(`✅ 연결 성공!\nAI 응답: ${aiResponse}`);
+            setAiStatus('connected');
         } catch (err) {
             console.error('API 테스트 실패:', err.message);
             setAiStatus('disconnected');

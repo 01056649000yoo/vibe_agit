@@ -96,6 +96,8 @@ const TeacherSettingsTab = ({
                                 <div style={{ fontSize: '0.85rem', color: '#7F8C8D', fontWeight: 'bold' }}>
                                     AI 시스템 상태: {aiStatus === 'testing' ? (
                                         <span style={{ color: '#F39C12' }}>● 연결 확인 중...</span>
+                                    ) : (profile?.api_mode === 'PERSONAL' && !hasApiKey) ? (
+                                        <span style={{ color: '#E74C3C' }}>● API 키 등록 필요</span>
                                     ) : aiStatus === 'connected' ? (
                                         <span style={{ color: '#27AE60' }}>● 연결됨</span>
                                     ) : (
@@ -109,9 +111,9 @@ const TeacherSettingsTab = ({
                                     style={{
                                         borderRadius: '12px',
                                         padding: '6px 12px',
-                                        background: aiStatus === 'disconnected' ? '#FDEDEC' : '#E8F5E9',
-                                        color: aiStatus === 'disconnected' ? '#E74C3C' : '#2E7D32',
-                                        border: aiStatus === 'disconnected' ? '1px solid #FADBD8' : '1px solid #C8E6C9',
+                                        background: (profile?.api_mode === 'PERSONAL' && !hasApiKey) ? '#FDEDEC' : '#E8F5E9',
+                                        color: (profile?.api_mode === 'PERSONAL' && !hasApiKey) ? '#E74C3C' : '#2E7D32',
+                                        border: (profile?.api_mode === 'PERSONAL' && !hasApiKey) ? '1px solid #FADBD8' : '1px solid #C8E6C9',
                                         fontSize: '0.75rem'
                                     }}
                                 >
@@ -120,27 +122,29 @@ const TeacherSettingsTab = ({
                             </div>
 
                             <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px dashed #DEE2E6', flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                {/* (0) API 모드 설정 (관리자 전용 기능 -> 선생님 키 입력 가능) */}
+                                {/* (0) API 모드 설정 */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '15px', background: '#F8F9FA', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <label style={{ fontSize: '0.85rem', color: '#2C3E50', fontWeight: 'bold' }}>🔑 AI 사용 모드</label>
                                         <div style={{
                                             padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold',
-                                            background: profile?.api_mode === 'PERSONAL' ? '#E8F5E9' : '#E3F2FD',
-                                            color: profile?.api_mode === 'PERSONAL' ? '#2E7D32' : '#1976D2',
-                                            border: profile?.api_mode === 'PERSONAL' ? '1px solid #C8E6C9' : '1px solid #BBDEFB'
+                                            background: profile?.api_mode === 'PERSONAL' ? '#FFF3E0' : '#E3F2FD',
+                                            color: profile?.api_mode === 'PERSONAL' ? '#E65100' : '#1976D2',
+                                            border: profile?.api_mode === 'PERSONAL' ? '1px solid #FFE0B2' : '1px solid #BBDEFB'
                                         }}>
                                             {profile?.api_mode === 'PERSONAL' ? '교사 개인 키 모드 적용 중' : '시스템 공용 키 모드 적용 중'}
                                         </div>
                                     </div>
 
                                     <p style={{ margin: '0 0 10px', fontSize: '0.8rem', color: '#7F8C8D', lineHeight: '1.4' }}>
-                                        모드 변경은 관리자에게 문의해주세요. 개인 키 모드일 경우 아래에 키를 등록해야 작동합니다.
+                                        {profile?.api_mode === 'PERSONAL' 
+                                            ? '현재 개인 API 키 모드입니다. 아래에 키를 등록하지 않으면 AI 기능을 사용할 수 없습니다.' 
+                                            : '현재 공용 API 키 모드입니다. 관리자가 공용 서비스를 활성화한 경우에만 작동합니다.'}
                                     </p>
 
                                     <div style={{ marginTop: '5px' }}>
                                         <label style={{ display: 'block', fontSize: '0.8rem', color: '#546E7A', marginBottom: '5px' }}>
-                                            등록된 개인 API 키 (필요 시 입력)
+                                            등록된 개인 API 키 {profile?.api_mode === 'PERSONAL' && <span style={{color: '#E74C3C', fontWeight:'bold'}}>(필수)</span>}
                                         </label>
                                         <input
                                             type="password"
@@ -149,10 +153,16 @@ const TeacherSettingsTab = ({
                                             placeholder={hasApiKey ? '●●●●●●●●  (기존 키 저장됨 — 변경 시에만 새 키 입력)' : 'sk-... 로 시작하는 OpenAI API 키 입력'}
                                             style={{
                                                 width: '100%', padding: '10px', borderRadius: '8px',
-                                                border: '1px solid #DEE2E6', fontSize: '0.85rem',
-                                                background: profile?.api_mode === 'PERSONAL' ? 'white' : '#F1F3F5'
+                                                border: profile?.api_mode === 'PERSONAL' && !hasApiKey ? '2px solid #E74C3C' : '1px solid #DEE2E6', 
+                                                fontSize: '0.85rem',
+                                                background: 'white'
                                             }}
                                         />
+                                        {profile?.api_mode === 'PERSONAL' && !hasApiKey && (
+                                            <p style={{ margin: '5px 0 0', fontSize: '0.75rem', color: '#E74C3C', fontWeight: 'bold' }}>
+                                                ⚠️ 개인 API 키가 등록되지 않았습니다. AI 기능을 사용하려면 키를 입력하고 저장해 주세요.
+                                            </p>
+                                        )}
                                         <p style={{ margin: '5px 0 0', fontSize: '0.75rem', color: '#95A5A6' }}>
                                             * 입력한 키는 서버에 안전하게 저장되며, 클라이언트 코드에 노출되지 않습니다.
                                         </p>

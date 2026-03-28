@@ -29,7 +29,7 @@ function getCorsHeaders(requestOrigin: string | null) {
 
     return {
         'Access-Control-Allow-Origin': allowedOrigin,
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-customer-auth',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
         'Vary': 'Origin',
     };
 }
@@ -47,22 +47,13 @@ Deno.serve(async (req) => {
     }
 
     try {
-        // 2. 인증 헤더 확인 (Gateway JWT 이슈 대응을 위해 선택적으로 변경)
-        let authHeader = req.headers.get('Authorization');
-
-        // [신규] Gateway JWT 차단 우회를 위한 대체 헤더 확인
-        if (!authHeader || authHeader.includes('undefined')) {
-            const fallbackAuth = req.headers.get('X-Customer-Auth');
-            if (fallbackAuth) {
-                authHeader = fallbackAuth.startsWith('Bearer ') ? fallbackAuth : `Bearer ${fallbackAuth}`;
-                console.log("🛡️ Gateway 우회 헤더(X-Customer-Auth) 사용됨");
-            }
-        }
+        // 2. 인증 헤더 확인
+        const authHeader = req.headers.get('Authorization');
 
         // [보안] 민감 헤더 마스킹 로그
         const safeHeaders: Record<string, string> = {};
         req.headers.forEach((v, k) => {
-            if (k.toLowerCase() === 'authorization' || k.toLowerCase() === 'x-customer-auth') {
+            if (k.toLowerCase() === 'authorization') {
                 safeHeaders[k] = `Bearer ***${v.slice(-8)}`;
             } else {
                 safeHeaders[k] = v;
@@ -84,29 +75,14 @@ Deno.serve(async (req) => {
         )
 
         // 4. 요청 바디 파싱
-        const { prompt, content, model, studentId, type } = await req.json()
+        const { prompt, content, model, studentId, type, overrideApiMode, overrideApiKey } = await req.json()
 
         // 5. 인증 검사 (교사 세션 또는 학생 ID)
-        const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : '';
-        let jwtUserId: string | null = null;
-
-        // [신규] JWT 수동 디코딩
-        if (token && token.length > 20 && token.includes('.')) {
-            try {
-                const payloadBase64 = token.split('.')[1];
-                const decodedPayload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
-                jwtUserId = decodedPayload.sub || null;
-                console.log(`🔑 인증 토큰 확인됨: ${jwtUserId}`);
-            } catch (e) {
-                console.warn("JWT 디코딩 실패:", e.message);
-            }
-        }
-
         let isAuthorized = false;
         let isStudentRequest = false;
         let authReason = "";
-        let authedUserId = jwtUserId;
-        let targetTeacherId: string | null = isStudentRequest ? null : jwtUserId;
+        let authedUserId: string | null = null;
+        let targetTeacherId: string | null = null;
 
         // --- 인증 통합 검사 ---
         if (authHeader) {
@@ -145,6 +121,7 @@ Deno.serve(async (req) => {
                     } else {
                         // (B) 교사/관리자
                         isAuthorized = true;
+                        targetTeacherId = user.id;
                         console.log(`✅ 교사/관리자 인증 성공: ${user.id}`);
                     }
                 } else if (userError) {
@@ -155,29 +132,15 @@ Deno.serve(async (req) => {
                 authReason = `인증 예외: ${e.message}`;
             }
         } else {
-            authReason = "Authorization 헤더 없음 (Bypass 대기)";
+            authReason = "Authorization 헤더 없음";
         }
 
         if (!isAuthorized) {
-            // [특수 허용 1] SAFETY_CHECK인 경우, 인증 실패해도 AI 분석 서비스는 제공합니다.
-            if (type === 'SAFETY_CHECK') {
-                isAuthorized = true;
-                console.warn(`⚠️ 인증 우회 허용(SAFETY_CHECK): ${authReason}`);
-
-            // [특수 허용 2] JWT 수동 디코딩으로 userId를 확인했지만 getUser()가 실패한 경우
-            } else if (jwtUserId && !studentId) {
-                isAuthorized = true;
-                authedUserId = jwtUserId;
-                targetTeacherId = jwtUserId; // 해당 교사의 API Key만 사용하도록 명시
-                console.warn(`⚠️ getUser() 실패하였으나 JWT 수동 인증 fallback 허용: ${jwtUserId} (사유: ${authReason})`);
-
-            } else {
-                console.error(`🚫 차단: ${authReason}`);
-                return new Response(
-                    JSON.stringify({ error: 'Unauthorized', details: authReason }),
-                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-                );
-            }
+            console.error(`🚫 차단: ${authReason}`);
+            return new Response(
+                JSON.stringify({ error: 'Unauthorized', details: authReason }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+            );
         }
 
         // 6. 용도별 모델 매핑 및 보안 제약
@@ -219,36 +182,72 @@ Deno.serve(async (req) => {
         // 7. API Key 결정
         let apiKey = '';
         let currentMode = 'SYSTEM';
-        // targetTeacherId는 위 인증 블록에서 이미 선언/할당되었음 (불필요한 DB 쿼리 제거됨)
+        let apiErrorMsg = '';
+
+        // (1) 먼저 시스템 설정에서 공용 API 활성화 여부 확인
+        const { data: globalSettings, error: settingsError } = await supabaseAdmin
+            .from('system_settings')
+            .select('value')
+            .eq('key', 'public_api_enabled')
+            .maybeSingle();
+        
+        // 데이터가 없거나 에러가 나면 기본적으로 'true'로 간주 (기본 서비스 보장)
+        const isPublicEnabled = globalSettings ? (globalSettings.value === true) : true;
 
         if (targetTeacherId) {
-            // 3. profiles 테이블 대신 전용 보안 테이블(profile_secrets)에서 키 조회
+            // (2) 해당 교사의 API 모드 확인
             const { data: profileData } = await supabaseAdmin
                 .from('profiles')
                 .select('api_mode')
                 .eq('id', targetTeacherId)
                 .maybeSingle();
 
-            if (profileData?.api_mode === 'PERSONAL') {
-                const { data: secretData } = await supabaseAdmin
-                    .from("profile_secrets")
-                    .select("personal_openai_api_key")
-                    .eq("id", targetTeacherId)
-                    .maybeSingle();
+            const effectiveApiMode = overrideApiMode || profileData?.api_mode || 'SYSTEM';
+            console.log(`🔍 [Auth Log] targetTeacherId: ${targetTeacherId} | DB Mode: ${profileData?.api_mode} | Effective Mode: ${effectiveApiMode}`);
 
-                if (secretData?.personal_openai_api_key?.trim()) {
-                    apiKey = secretData.personal_openai_api_key.trim();
-                    currentMode = 'PERSONAL';
+            if (effectiveApiMode === 'PERSONAL') {
+                let personalKey = overrideApiKey;
+                
+                if (!personalKey) {
+                    const { data: secretData } = await supabaseAdmin
+                        .from("profile_secrets")
+                        .select("personal_openai_api_key")
+                        .eq("id", targetTeacherId)
+                        .maybeSingle();
+                    personalKey = secretData?.personal_openai_api_key;
                 }
+
+                if (personalKey?.trim()) {
+                    apiKey = personalKey.trim();
+                    currentMode = 'PERSONAL';
+                } else {
+                    // [핵심 변경] 개인키 모드인데 키가 없으면 절대 폴백하지 않고 에러 리턴
+                    apiErrorMsg = '개인 API 키가 설정되지 않았습니다. [설정 > AI 자동 피드백 설정]에서 API 키를 입력하고 저장해 주세요.';
+                }
+            } else {
+                // SYSTEM 모드인 경우 공용 스위치 확인
+                if (isPublicEnabled) {
+                    apiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+                    currentMode = 'SYSTEM';
+                } else {
+                    apiErrorMsg = '현재 시스템 공용 AI 서비스가 비활성화 상태입니다. 관리자에게 문의하거나 개인 API 키를 사용해 주세요.';
+                }
+            }
+        } else {
+            // 교사 정보가 없는 경우 (익명 학생 요청 등) 시스템 설정에 따름
+            if (isPublicEnabled) {
+                apiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
+                currentMode = 'SYSTEM';
+            } else {
+                apiErrorMsg = '현재 시스템 공용 AI 서비스가 비활성화 상태입니다.';
             }
         }
 
-        if (!apiKey) {
-            apiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
-            currentMode = 'SYSTEM';
+        if (apiErrorMsg) {
+            throw new Error(apiErrorMsg);
         }
 
-        if (!apiKey) throw new Error('API Key missing');
+        if (!apiKey) throw new Error('AI 서비스 연결을 위한 API 키를 찾을 수 없습니다.');
 
         console.log(`🤖 Mode: [${currentMode}] | Teacher: [${targetTeacherId || 'N/A'}] | Type: [${type || 'N/A'}]`);
 
