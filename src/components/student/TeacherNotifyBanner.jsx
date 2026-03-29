@@ -27,7 +27,7 @@ const TeacherNotifyBanner = ({ returnedCount, teacherNotify, setTeacherNotify, h
                         boxSizing: 'border-box'
                     }}
                     onClick={() => {
-                        if (returnedCount > 0) handleDirectRewriteGo();
+                        if (returnedCount > 0 || teacherNotify?.type === 'rewrite') handleDirectRewriteGo();
                         else setTeacherNotify(null);
                     }}
                 >

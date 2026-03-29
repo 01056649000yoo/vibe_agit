@@ -246,16 +246,25 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
     const handleDirectRewriteGo = async () => {
         try {
-            const { data, error } = await supabase
-                .from('student_posts')
-                .select('id, mission_id')
-                .eq('student_id', studentSession.id)
-                .eq('is_returned', true)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+            const fetchLatestReturnedPost = async () => {
+                const { data, error } = await supabase
+                    .from('student_posts')
+                    .select('id, mission_id')
+                    .eq('student_id', studentSession.id)
+                    .eq('is_returned', true)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
 
-            if (error) throw error;
+                if (error) throw error;
+                return data;
+            };
+
+            let data = await fetchLatestReturnedPost();
+            if (!data) {
+                await new Promise(resolve => setTimeout(resolve, 250));
+                data = await fetchLatestReturnedPost();
+            }
             if (data) {
                 returnedCountCacheRef.current = {
                     value: Math.max(0, (returnedCountCacheRef.current?.value || 1) - 1),
@@ -269,6 +278,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 });
                 return;
             }
+            openFeedback(1);
         } catch (err) {
             console.error('다시 쓰기 페이지 이동 실패:', err.message);
             openFeedback();
