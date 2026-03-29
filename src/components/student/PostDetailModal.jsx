@@ -181,7 +181,6 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
             if (editingCommentId) {
                 const success = await updateComment(editingCommentId, commentInput);
                 if (success) {
-                    const pointsAwarded = false;
                     setEditingCommentId(null);
                     setCommentInput('');
                     alert('댓글이 수정되었습니다! ✨');
@@ -196,13 +195,8 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
 
                 const success = await addComment(commentInput);
                 if (success) {
-                    // [보안] reward_for_comment RPC 사용 (중복 방지 서버 처리)
-                    try {
-                    } catch (ptErr) {
-                        console.error('포인트 지급 실패:', ptErr.message);
-                    }
                     setCommentInput('');
-                    alert(pointsAwarded ? '의견이 등록되었습니다! 🎉\nAI 보안관이 확인 후 친구들에게 공개할게요!' : '의견이 등록되었습니다! 💬\nAI 보안관이 확인 후 친구들에게 공개할게요!');
+                    alert('의견이 등록되었습니다! 💬\nAI 보안관이 확인 후 친구들에게 공개할게요!');
                 }
             }
         } catch (err) {
