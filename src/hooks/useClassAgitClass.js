@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { dataCache } from '../lib/cache';
 
+const REALTIME_REFRESH_DEBOUNCE_MS = 1000;
+const REALTIME_REFRESH_COOLDOWN_MS = 5000;
+
 const DEFAULT_SETTINGS = {
     isMenuEnabled: false,
     isIdeaMarketEnabled: false,
@@ -38,6 +41,9 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
     const [historyStats, setHistoryStats] = useState([]); // [추가] 명예의 전당 누적 통계
 
     const agitSettings = useMemo(() => agitSettingsState, [agitSettingsState]);
+    const lastRealtimeRefreshAtRef = useRef(0);
+    const queuedRealtimeRefreshRef = useRef(false);
+    const cooldownTimerRef = useRef(null);
 
     // [신규] 어휘의 탑 게임 설정 상태
     const [vocabTowerSettings, setVocabTowerSettings] = useState({
@@ -358,7 +364,7 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
         } finally {
             // if (isInitial) setLoading(false); (이미 최상단에서 해제했으므로 생략)
         }
-    }, [classId, currentStudentId]);
+    }, [classId, currentStudentId, lightweight]);
 
     // [최적화] fetchData의 최신 참조를 유지하여 Realtime 재연결 방지
     const fetchDataRef = useRef(null);
@@ -379,8 +385,35 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
         const debouncedFetch = () => {
             if (timeoutId) clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
+                if (typeof document !== 'undefined' && document.hidden) {
+                    queuedRealtimeRefreshRef.current = true;
+                    return;
+                }
+
+                const now = Date.now();
+                const elapsed = now - lastRealtimeRefreshAtRef.current;
+
+                if (elapsed < REALTIME_REFRESH_COOLDOWN_MS) {
+                    queuedRealtimeRefreshRef.current = true;
+
+                    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+                    cooldownTimerRef.current = setTimeout(() => {
+                        cooldownTimerRef.current = null;
+                        if (!queuedRealtimeRefreshRef.current || !fetchDataRef.current) return;
+                        if (typeof document !== 'undefined' && document.hidden) return;
+
+                        queuedRealtimeRefreshRef.current = false;
+                        lastRealtimeRefreshAtRef.current = Date.now();
+                        fetchDataRef.current(false, true);
+                    }, REALTIME_REFRESH_COOLDOWN_MS - elapsed);
+
+                    return;
+                }
+
+                queuedRealtimeRefreshRef.current = false;
+                lastRealtimeRefreshAtRef.current = now;
                 if (fetchDataRef.current) fetchDataRef.current(false, true);
-            }, 1000);
+            }, REALTIME_REFRESH_DEBOUNCE_MS);
         };
 
         // [방어막] 기존 동일 이름의 채널이 있다면 명시적으로 제거하여 중복 구독 방지
@@ -392,9 +425,21 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
 
         const agitChannel = supabase
             .channel(`agit-realtime-events-${classId}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'student_posts' }, debouncedFetch)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'post_comments' }, debouncedFetch)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'post_reactions' }, debouncedFetch)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'student_posts', filter: `class_id=eq.${classId}` },
+                debouncedFetch
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'post_comments', filter: `class_id=eq.${classId}` },
+                debouncedFetch
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'post_reactions', filter: `class_id=eq.${classId}` },
+                debouncedFetch
+            )
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'classes', filter: `id=eq.${classId}` }, debouncedFetch)
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
@@ -416,17 +461,36 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
         // 2. 브라우저 탭 활성화 시 데이터 갱신 (오래 켜뒀다가 다시 볼 때 대비)
         const handleFocus = () => {
             console.log("👀 [윈도우 포커스] 최신 데이터 확인");
-            if (fetchDataRef.current) fetchDataRef.current(false, true);
+            if (!fetchDataRef.current) return;
+
+            const needsQueuedRefresh = queuedRealtimeRefreshRef.current;
+            const isStale = Date.now() - lastRealtimeRefreshAtRef.current >= REALTIME_REFRESH_COOLDOWN_MS;
+
+            if (needsQueuedRefresh || isStale) {
+                queuedRealtimeRefreshRef.current = false;
+                lastRealtimeRefreshAtRef.current = Date.now();
+                fetchDataRef.current(false, true);
+            }
+        };
+        const handleVisibilityChange = () => {
+            if (document.hidden || !queuedRealtimeRefreshRef.current || !fetchDataRef.current) return;
+
+            queuedRealtimeRefreshRef.current = false;
+            lastRealtimeRefreshAtRef.current = Date.now();
+            fetchDataRef.current(false, true);
         };
         window.addEventListener('focus', handleFocus);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
             supabase.removeChannel(agitChannel);
             if (timeoutId) clearTimeout(timeoutId);
+            if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
             clearInterval(dateCheckInterval); // 인터벌 정리
             window.removeEventListener('focus', handleFocus); // 이벤트 리스너 정리
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [classId]); // fetchData 의존성 제거
+    }, [classId, lightweight]); // fetchData 의존성 제거
 
     return {
         loading,

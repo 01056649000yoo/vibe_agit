@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
+const FETCH_DEBOUNCE_MS = 800;
+
 export const useRealtimeNotifications = (studentSession, setPoints, refetchDataControls) => {
     const [teacherNotify, setTeacherNotify] = useState(null);
 
@@ -9,18 +11,37 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
     const fetchTimerRef = useRef(null);
     const notifyTimerRef = useRef(null);
     const accumulatedPointsRef = useRef(0);
+    const pendingFetchTypesRef = useRef({ points: false, activity: false });
+    const visibilityQueuedFetchRef = useRef(false);
 
     // [최적화] 공통 fetch 디바운스 함수 (동시다발적인 refetch 방지)
     const debouncedFetch = (type) => {
+        if (type === 'points') {
+            pendingFetchTypesRef.current.points = true;
+        } else if (type === 'activity') {
+            pendingFetchTypesRef.current.activity = true;
+        }
+
+        if (typeof document !== 'undefined' && document.hidden) {
+            visibilityQueuedFetchRef.current = true;
+            return;
+        }
+
         if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
         fetchTimerRef.current = setTimeout(() => {
-            if (type === 'points') {
-                refetchDataControls?.fetchMyPoints?.();
-                refetchDataControls?.fetchStats?.();
-            } else if (type === 'activity') {
-                refetchDataControls?.checkActivity?.();
+            const { points, activity } = pendingFetchTypesRef.current;
+            pendingFetchTypesRef.current = { points: false, activity: false };
+            visibilityQueuedFetchRef.current = false;
+
+            if (points) {
+                callbacksRef.current.refetchDataControls?.fetchMyPoints?.();
+                callbacksRef.current.refetchDataControls?.fetchStats?.();
             }
-        }, 800);
+
+            if (activity) {
+                callbacksRef.current.refetchDataControls?.checkActivity?.();
+            }
+        }, FETCH_DEBOUNCE_MS);
     };
 
     // [최적화] 공통 notify 디바운스 함수 (연속된 알림을 마지막 1개만 노출)
@@ -36,6 +57,21 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
     useEffect(() => {
         callbacksRef.current = { setPoints, refetchDataControls };
     }, [setPoints, refetchDataControls]);
+
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden || !visibilityQueuedFetchRef.current) return;
+
+            const { points, activity } = pendingFetchTypesRef.current;
+            if (points) debouncedFetch('points');
+            if (activity) debouncedFetch('activity');
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
 
     useEffect(() => {
         if (!studentSession?.id) return;
@@ -157,7 +193,7 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
             if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current);
             if (notifyTimerRef.current) clearTimeout(notifyTimerRef.current);
         };
-    }, [studentSession?.id, setPoints, refetchDataControls]);
+    }, [studentSession?.id]);
 
     return {
         teacherNotify,

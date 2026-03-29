@@ -65,7 +65,7 @@ export const useAuthStore = create((set, get) => ({
                 requests.push(
                     supabase
                         .from('profiles')
-                        .select('*')
+                        .select('id, role, full_name, is_approved, primary_class_id, api_mode, created_at, last_login_at')
                         .eq('id', userId)
                         .maybeSingle()
                 );

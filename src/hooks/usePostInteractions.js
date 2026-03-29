@@ -50,7 +50,7 @@ export const usePostInteractions = (postId, studentId, studentName) => {
         } finally {
             setLoading(false);
         }
-    }, [postId]);
+    }, [postId, studentId]);
 
     useEffect(() => {
         fetchInteractions();
