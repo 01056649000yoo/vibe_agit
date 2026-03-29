@@ -12,6 +12,16 @@ export const usePostInteractions = (postId, studentId, studentName) => {
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    const shouldShowComment = useCallback((comment) => {
+        const isTeacherComment = !!comment.teacher_id && !comment.student_id;
+        const isOwnComment = comment.student_id === studentId;
+        const isApprovedStudentComment =
+            comment.status === 'approved' &&
+            (!comment.students || comment.students.deleted_at == null);
+
+        return isTeacherComment || isOwnComment || isApprovedStudentComment;
+    }, [studentId]);
+
     const fetchInteractions = useCallback(async () => {
         if (!postId) return;
         setLoading(true);
@@ -34,23 +44,13 @@ export const usePostInteractions = (postId, studentId, studentName) => {
 
             console.log(`[usePostInteractions] 조회 성공 (postId: ${postId})`);
             setReactions(rxRes.data || []);
-            setComments(
-                (cmRes.data || []).filter((comment) => {
-                    const isTeacherComment = !!comment.teacher_id && !comment.student_id;
-                    const isOwnComment = comment.student_id === studentId;
-                    const isApprovedStudentComment =
-                        comment.status === 'approved' &&
-                        (!comment.students || comment.students.deleted_at == null);
-
-                    return isTeacherComment || isOwnComment || isApprovedStudentComment;
-                })
-            );
+            setComments((cmRes.data || []).filter(shouldShowComment));
         } catch (err) {
             console.error('[usePostInteractions] 데이터 로드 실패:', err.message);
         } finally {
             setLoading(false);
         }
-    }, [postId, studentId]);
+    }, [postId, shouldShowComment]);
 
     useEffect(() => {
         fetchInteractions();
@@ -68,39 +68,44 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                     table: 'post_comments',
                     filter: `post_id=eq.${postId}`
                 },
-                async (payload) => {
+                (payload) => {
                     if (payload.eventType === 'INSERT') {
-                        const { data: newComment } = await supabase
-                            .from('post_comments')
-                            .select('*, students(name, deleted_at), teacher_id')
-                            .eq('id', payload.new.id)
-                            .single();
-                        
-                        if (newComment) {
-                            // [수정] 승인된 댓글이거나 내 댓글인 경우만 표시
-                            const isTeacherComment = !!newComment.teacher_id && !newComment.student_id;
-                            const isOwnComment = newComment.student_id === studentId;
-                            const isApprovedStudentComment =
-                                newComment.status === 'approved' &&
-                                (!newComment.students || newComment.students.deleted_at == null);
-                            if (!isTeacherComment && !isOwnComment && !isApprovedStudentComment) return;
+                        const newComment = {
+                            ...payload.new,
+                            students: payload.new.student_id === studentId
+                                ? { name: studentName || '익명 친구', deleted_at: null }
+                                : null
+                        };
+                        if (!shouldShowComment(newComment)) return;
 
-                            setComments(prev => {
-                                const alreadyExists = prev.some(c => c.id === newComment.id);
-                                if (alreadyExists) return prev;
+                        setComments(prev => {
+                            const alreadyExists = prev.some(c => c.id === newComment.id);
+                            if (alreadyExists) return prev;
 
-                                if (newComment.student_id === studentId) {
-                                    const filtered = prev.filter(c => 
-                                        !(c.isOptimistic && c.student_id === studentId && (c.content === newComment.content || c.id.toString().startsWith('temp-')))
-                                    );
-                                    return [...filtered, newComment];
-                                }
+                            if (newComment.student_id === studentId) {
+                                const filtered = prev.filter(c =>
+                                    !(c.isOptimistic && c.student_id === studentId && (c.content === newComment.content || c.id.toString().startsWith('temp-')))
+                                );
+                                return [...filtered, newComment];
+                            }
 
-                                return [...prev, newComment];
-                            });
-                        }
+                            return [...prev, newComment];
+                        });
                     } else if (payload.eventType === 'UPDATE') {
-                        setComments(prev => prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c));
+                        setComments(prev => {
+                            const existing = prev.find(c => c.id === payload.new.id);
+                            const updatedComment = existing ? { ...existing, ...payload.new } : payload.new;
+
+                            if (!shouldShowComment(updatedComment)) {
+                                return prev.filter(c => c.id !== payload.new.id);
+                            }
+
+                            if (!existing) {
+                                return [...prev, updatedComment];
+                            }
+
+                            return prev.map(c => c.id === payload.new.id ? updatedComment : c);
+                        });
                     } else if (payload.eventType === 'DELETE') {
                         setComments(prev => prev.filter(c => c.id !== payload.old.id));
                     }
@@ -119,22 +124,26 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                     table: 'post_reactions',
                     filter: `post_id=eq.${postId}`
                 },
-                async (payload) => {
+                (payload) => {
                     if (payload.eventType === 'INSERT') {
-                        const { data: newRx } = await supabase
-                            .from('post_reactions')
-                            .select('*, students!inner(name, deleted_at)')
-                            .eq('id', payload.new.id)
-                            .is('students.deleted_at', null)
-                            .single();
-                        if (newRx) setReactions(prev => [...prev.filter(r => r.id !== newRx.id), newRx]);
+                        const newReaction = {
+                            ...payload.new,
+                            students: payload.new.student_id === studentId
+                                ? { name: studentName || '익명 친구' }
+                                : null
+                        };
+                        setReactions(prev => [...prev.filter(r => r.id !== newReaction.id), newReaction]);
                     } else if (payload.eventType === 'UPDATE') {
-                        const { data: updatedRx } = await supabase
-                            .from('post_reactions')
-                            .select('*, students:student_id(name)')
-                            .eq('id', payload.new.id)
-                            .single();
-                        if (updatedRx) setReactions(prev => prev.map(r => r.id === updatedRx.id ? updatedRx : r));
+                        setReactions(prev => {
+                            const existing = prev.find(r => r.id === payload.new.id);
+                            const updatedReaction = existing ? { ...existing, ...payload.new } : payload.new;
+
+                            if (!existing) {
+                                return [...prev, updatedReaction];
+                            }
+
+                            return prev.map(r => r.id === updatedReaction.id ? updatedReaction : r);
+                        });
                     } else if (payload.eventType === 'DELETE') {
                         setReactions(prev => prev.filter(r => r.id !== payload.old.id));
                     }
@@ -146,7 +155,7 @@ export const usePostInteractions = (postId, studentId, studentName) => {
             supabase.removeChannel(commentsChannel);
             supabase.removeChannel(reactionsChannel);
         };
-    }, [postId, fetchInteractions, studentId]);
+    }, [postId, fetchInteractions, shouldShowComment, studentId, studentName]);
 
     const syncReactionWithDB = useMemo(() => debounce(async (type, isRemoving) => {
         try {
