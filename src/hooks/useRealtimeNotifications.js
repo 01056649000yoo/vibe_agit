@@ -40,6 +40,7 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
 
             if (activity) {
                 callbacksRef.current.refetchDataControls?.checkActivity?.();
+                callbacksRef.current.refetchDataControls?.fetchReturnedCount?.(true);
             }
         }, FETCH_DEBOUNCE_MS);
     };

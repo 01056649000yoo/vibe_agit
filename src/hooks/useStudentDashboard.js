@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { dataCache } from '../lib/cache';
 
 export const useStudentDashboard = (studentSession, onNavigate) => {
+    const RETURNED_COUNT_CACHE_MS = 30000;
     const [points, setPoints] = useState(0);
     const [hasActivity, setHasActivity] = useState(false);
     const [showFeedback, setShowFeedback] = useState(false);
@@ -18,6 +19,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const [dragonConfig, setDragonConfig] = useState({ feedCost: 80, degenDays: 14 });
 
     const lastCheckRef = useRef('1970-01-01T00:00:00.000Z');
+    const returnedCountCacheRef = useRef({ value: 0, fetchedAt: 0 });
 
     const getLevelInfo = (totalChars) => {
         if (totalChars >= 14001) return { level: 5, name: '전설의 작가', emoji: '✨', next: null };
@@ -162,7 +164,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
             const lastCheckTime = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
 
-            const [reactionsResult, studentCommentsResult, teacherCommentsResult, returnedResult] = await Promise.all([
+            const [reactionsResult, commentsResult] = await Promise.all([
                 supabase
                     .from('post_reactions')
                     .select('id, student_posts!inner(student_id)')
@@ -170,43 +172,57 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     .neq('student_id', studentSession.id)
                     .gt('created_at', lastCheckTime)
                     .limit(1),
-                // 친구 댓글
                 supabase
                     .from('post_comments')
-                    .select('id, student_posts!inner(student_id)')
+                    .select('id, student_id, teacher_id, student_posts!inner(student_id)')
                     .eq('student_posts.student_id', studentSession.id)
-                    .not('student_id', 'is', null)
-                    .neq('student_id', studentSession.id)
                     .gt('created_at', lastCheckTime)
-                    .limit(1),
-                // 교사 댓글
-                supabase
-                    .from('post_comments')
-                    .select('id, student_posts!inner(student_id)')
-                    .eq('student_posts.student_id', studentSession.id)
-                    .not('teacher_id', 'is', null)
-                    .gt('created_at', lastCheckTime)
-                    .limit(1),
-                supabase
-                    .from('student_posts')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('student_id', studentSession.id)
-                    .eq('is_returned', true)
+                    .order('created_at', { ascending: false })
+                    .limit(20)
             ]);
 
             if (reactionsResult.error) console.error("Reactions Check Error:", reactionsResult.error);
-            if (studentCommentsResult.error) console.error("Student Comments Check Error:", studentCommentsResult.error);
-            if (teacherCommentsResult.error) console.error("Teacher Comments Check Error:", teacherCommentsResult.error);
+            if (commentsResult.error) console.error("Comments Check Error:", commentsResult.error);
 
             const hasNewReaction = (reactionsResult.data?.length || 0) > 0;
-            const hasNewComment = (studentCommentsResult.data?.length || 0) > 0
-                || (teacherCommentsResult.data?.length || 0) > 0;
-            const returnedCountVal = returnedResult.count || 0;
+            const hasNewComment = (commentsResult.data || []).some(comment =>
+                comment.teacher_id != null ||
+                (comment.student_id != null && comment.student_id !== studentSession.id)
+            );
 
-            setReturnedCount(returnedCountVal);
             setHasActivity(hasNewReaction || hasNewComment);
         } catch (err) {
             console.error('활동 확인 실패:', err.message);
+        }
+    }, [studentSession?.id]);
+
+    const fetchReturnedCount = useCallback(async (forceRefresh = false) => {
+        if (!studentSession?.id) return 0;
+
+        const now = Date.now();
+        const cached = returnedCountCacheRef.current;
+
+        if (!forceRefresh && now - cached.fetchedAt < RETURNED_COUNT_CACHE_MS) {
+            setReturnedCount(cached.value);
+            return cached.value;
+        }
+
+        try {
+            const { count, error } = await supabase
+                .from('student_posts')
+                .select('id', { count: 'exact', head: true })
+                .eq('student_id', studentSession.id)
+                .eq('is_returned', true);
+
+            if (error) throw error;
+
+            const nextCount = count || 0;
+            returnedCountCacheRef.current = { value: nextCount, fetchedAt: now };
+            setReturnedCount(nextCount);
+            return nextCount;
+        } catch (err) {
+            console.error('반려 글 개수 로드 실패:', err.message);
+            return cached.value || 0;
         }
     }, [studentSession?.id]);
 
@@ -321,6 +337,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 // fetchMyPoints에서 lastCheckRef를 세팅한 이후에 활동 내역을 체크해야 함 (알림 메시지 버그 방지)
                 fetchMyPoints().then(() => {
                     checkActivity();
+                    fetchReturnedCount(true);
                 });
 
                 fetchClassSettings();
@@ -328,13 +345,13 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             };
             loadData();
         }
-    }, [studentSession?.id, fetchMyPoints, fetchClassSettings, fetchStats, checkActivity]);
+    }, [studentSession?.id, fetchMyPoints, fetchClassSettings, fetchStats, checkActivity, fetchReturnedCount]);
 
     return {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
         returnedCount, stats, levelInfo, isLoading, dragonConfig, initialPetData: petData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback,
-        fetchMyPoints, fetchStats, checkActivity // 새로운 훅에 넘기기 위한 내보내기
+        fetchMyPoints, fetchStats, checkActivity, fetchReturnedCount // 새로운 훅에 넘기기 위한 내보내기
     };
 };
