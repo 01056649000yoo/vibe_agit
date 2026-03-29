@@ -44,21 +44,18 @@ export const useFriendsHideout = (studentSession, params) => {
 
         const currentOffset = isAppend ? (pageRef.current + 1) * PAGE_SIZE : 0;
 
-        const classId = studentSession.classId || studentSession.class_id;
-
         try {
             const { data, error } = await supabase
                 .from('student_posts')
                 .select(`
                     id, title, content, student_id, mission_id, created_at, char_count, is_confirmed,
                     original_title, original_content,
-                    students:student_id!inner(name, class_id, pet_data),
+                    students:student_id(name, pet_data),
                     writing_missions(allow_comments)
                 `)
                 .eq('mission_id', missionId)
                 .eq('is_submitted', true)
                 .neq('student_id', studentSession.id)
-                .eq('students.class_id', classId)
                 .order('created_at', { ascending: false })
                 .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
@@ -215,7 +212,7 @@ export const useFriendsHideout = (studentSession, params) => {
                             .select(`
                                 id, title, content, student_id, mission_id, created_at, char_count, is_confirmed,
                                 original_title, original_content,
-                                students:student_id!inner(name, class_id, pet_data),
+                                students:student_id(name, pet_data),
                                 writing_missions(allow_comments)
                             `)
                             .eq('id', payload.new.id)

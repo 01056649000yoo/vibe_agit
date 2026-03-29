@@ -273,7 +273,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         try {
             const lastCheck = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
 
-            const [reactionsResult, studentCommentsResult, teacherCommentsResult] = await Promise.all([
+            const [reactionsResult, commentsResult] = await Promise.all([
                 // 반응
                 supabase
                     .from('post_reactions')
@@ -283,35 +283,24 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     .gt('created_at', lastCheck)
                     .order('created_at', { ascending: false })
                     .limit(50),
-                // 친구 댓글 (student_id 있음, teacher_id 없음)
                 supabase
                     .from('post_comments')
                     .select('*, students:student_id(name), student_posts!inner(title, id, student_id)')
                     .eq('student_posts.student_id', studentSession.id)
-                    .not('student_id', 'is', null)
-                    .neq('student_id', studentSession.id)
-                    .gt('created_at', lastCheck)
-                    .order('created_at', { ascending: false })
-                    .limit(50),
-                // 교사 댓글 (teacher_id 있음)
-                supabase
-                    .from('post_comments')
-                    .select('*, student_posts!inner(title, id, student_id)')
-                    .eq('student_posts.student_id', studentSession.id)
-                    .not('teacher_id', 'is', null)
                     .gt('created_at', lastCheck)
                     .order('created_at', { ascending: false })
                     .limit(50)
             ]);
 
             const reactions = reactionsResult.data || [];
-            const studentComments = studentCommentsResult.data || [];
-            const teacherComments = teacherCommentsResult.data || [];
+            const comments = (commentsResult.data || []).filter(comment =>
+                comment.teacher_id != null ||
+                (comment.student_id != null && comment.student_id !== studentSession.id)
+            );
 
             const combined = [
                 ...reactions.map(r => ({ ...r, type: 'reaction' })),
-                ...studentComments.map(c => ({ ...c, type: 'comment' })),
-                ...teacherComments.map(c => ({ ...c, type: 'comment' }))
+                ...comments.map(c => ({ ...c, type: 'comment' }))
             ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             setFeedbacks(combined);
