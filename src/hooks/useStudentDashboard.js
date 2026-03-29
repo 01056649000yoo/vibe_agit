@@ -82,6 +82,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 });
                 setLevelInfo(getLevelInfo(totalChars));
             }
+            openFeedback(1);
         } catch (err) {
             console.error('글쓰기 통계 로드 실패:', err.message);
         }
@@ -256,11 +257,17 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
             if (error) throw error;
             if (data) {
+                returnedCountCacheRef.current = {
+                    value: Math.max(0, (returnedCountCacheRef.current?.value || 1) - 1),
+                    fetchedAt: Date.now()
+                };
+                setReturnedCount(prev => Math.max(0, prev - 1));
                 onNavigate('writing', {
                     missionId: data.mission_id,
                     postId: data.id,
                     mode: 'edit'
                 });
+                return;
             }
         } catch (err) {
             console.error('다시 쓰기 페이지 이동 실패:', err.message);
