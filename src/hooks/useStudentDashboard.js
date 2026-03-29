@@ -53,7 +53,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 dataCache.get(`stats_monthly_${studentSession.id}`, async () => {
                     const { count, error } = await supabase
                         .from('student_posts')
-                        .select('*', { count: 'exact', head: true })
+                        .select('id', { count: 'exact', head: true })
                         .eq('student_id', studentSession.id)
                         .eq('is_confirmed', true)
                         .gte('created_at', firstDayOfMonth);

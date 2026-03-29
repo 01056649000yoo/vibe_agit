@@ -9,15 +9,11 @@ import { motion } from 'framer-motion';
  */
 const MissionList = ({ studentSession, onBack, onNavigate }) => {
     const [missions, setMissions] = useState([]);
-    const [posts, setPosts] = useState({}); // missionId -> post 객체
+    const [posts, setPosts] = useState({});
     const [loading, setLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        console.log("🔍 [MissionList] 데이터 로딩 시작...");
-
-        // 1. 세션 정보 확인 (prop 우선, 없으면 localStorage)
+    const getCurrentStudent = useCallback(() => {
         let currentStudent = studentSession;
         if (!currentStudent) {
             const saved = localStorage.getItem('student_session');
@@ -25,62 +21,65 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                 currentStudent = JSON.parse(saved);
             }
         }
+        return currentStudent;
+    }, [studentSession]);
 
-        console.log("👤 [MissionList] 현재 학생 정보:", currentStudent);
+    const fetchMissions = useCallback(async (currentStudent) => {
+        const classId = currentStudent.classId || currentStudent.class_id;
+        const { data: allMissions, error } = await supabase
+            .from('writing_missions')
+            .select('id, title, genre, created_at, mission_type, evaluation_rubric, guide, tags, base_reward')
+            .eq('class_id', classId)
+            .is('is_archived', false)
+            .order('created_at', { ascending: false });
 
+        if (error) throw error;
+
+        const filteredMissions = (allMissions || []).filter((mission) => mission.mission_type !== 'meeting');
+        setMissions(filteredMissions);
+        return filteredMissions;
+    }, []);
+
+    const fetchStudentPosts = useCallback(async (currentStudent) => {
+        const { data, error } = await supabase
+            .from('student_posts')
+            .select('id, mission_id, is_confirmed, is_submitted, is_returned, char_count, created_at')
+            .eq('student_id', currentStudent.id);
+
+        if (error) throw error;
+
+        const nextPosts = {};
+        (data || []).forEach((post) => {
+            nextPosts[post.mission_id] = post;
+        });
+
+        setPosts(nextPosts);
+        return nextPosts;
+    }, []);
+
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+
+        const currentStudent = getCurrentStudent();
         if (!currentStudent || (!currentStudent.classId && !currentStudent.class_id)) {
-            console.error("❌ [MissionList] 유효한 학생 세션이 없습니다.");
-            alert('로그인 정보가 올바르지 않습니다. 다시 로그인해 주세요! 🎒');
+            alert('로그인 정보가 올바르지 않습니다. 다시 로그인해 주세요.');
             if (onBack) onBack();
-            setLoading(false); // Ensure loading state is reset even on early exit
+            setLoading(false);
             return;
         }
 
-        const classId = currentStudent.classId || currentStudent.class_id;
-        const studentId = currentStudent.id;
-
         try {
-            // 2. 미션 목록 가져오기 (학생 소속 반 기준)
-            console.log(`📡 [MissionList] 미션 조회 중... (반 ID: ${classId})`);
-            const { data: allMissions, error: mError } = await supabase
-                .from('writing_missions')
-                .select('id, title, genre, created_at, mission_type, evaluation_rubric, guide, tags, base_reward')
-                .eq('class_id', classId)
-                .is('is_archived', false)
-                .order('created_at', { ascending: false });
-
-            if (mError) throw mError;
-
-            // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장 (아이디어 마켓 안건 제외)
-            const filteredMissions = allMissions?.filter(m => m.mission_type !== 'meeting') || [];
-            console.log(`✅ [MissionList] 미션 로드 성공: ${filteredMissions.length}건`);
-            setMissions(filteredMissions);
-
-            // 3. 학생의 해당 미션들에 대한 제출물 현황 가져오기
-            console.log(`📡 [MissionList] 학생 제출물 조회 중... (학생 ID: ${studentId})`);
-            const { data: pData, error: pError } = await supabase
-                .from('student_posts')
-                .select('id, mission_id, is_confirmed, char_count, created_at')
-                .eq('student_id', studentId);
-
-            if (pError) throw pError;
-
-            // mission_id를 키로 하는 맵 생성
-            const postMap = {};
-            if (pData) {
-                pData.forEach(p => postMap[p.mission_id] = p);
-            }
-            setPosts(postMap);
-            console.log(`✅ [MissionList] 제출 현황 로드 성공`);
-
+            await Promise.all([
+                fetchMissions(currentStudent),
+                fetchStudentPosts(currentStudent)
+            ]);
         } catch (err) {
-            console.error('❌ [MissionList] 데이터 로드 중 치명적 오류:', err.message);
-            alert('데이터를 불러오는데 실패했습니다. 😢');
+            console.error('[MissionList] 데이터 로드 실패:', err.message);
+            alert('데이터를 불러오는 데 실패했습니다.');
         } finally {
             setLoading(false);
-            console.log("🏁 [MissionList] 데이터 로딩 종료");
         }
-    }, [studentSession, onBack]);
+    }, [fetchMissions, fetchStudentPosts, getCurrentStudent, onBack]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 1024);
@@ -91,36 +90,29 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     useEffect(() => {
         fetchData();
 
-        // [실시간 연동] 미션 목록 변경 감지 (추가/수정/삭제)
-        const getSessionClassId = () => {
-            const s = studentSession || JSON.parse(localStorage.getItem('student_session'));
-            return s?.classId || s?.class_id;
-        };
-        const classId = getSessionClassId();
+        const currentStudent = getCurrentStudent();
+        const classId = currentStudent?.classId || currentStudent?.class_id;
 
-        if (classId) {
-            console.log(`📡 [MissionList] 실시간 채널 구독 시작... (classId: ${classId})`);
-            const channel = supabase
-                .channel(`mission_list_changes_${classId}`)
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'writing_missions',
-                    filter: `class_id=eq.${classId}`
-                }, (payload) => {
-                    console.log('📢 [MissionList] 미션 목록 변경 감지:', payload);
-                    fetchData();
-                })
-                .subscribe((status) => {
-                    console.log(`📡 [MissionList] 구독 상태: ${status}`);
+        if (!classId) return;
+
+        const channel = supabase
+            .channel(`mission_list_changes_${classId}`)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'writing_missions',
+                filter: `class_id=eq.${classId}`
+            }, () => {
+                fetchMissions(currentStudent).catch((err) => {
+                    console.error('[MissionList] 미션 목록 갱신 실패:', err.message);
                 });
+            })
+            .subscribe();
 
-            return () => {
-                supabase.removeChannel(channel);
-            };
-        }
-    }, [studentSession, fetchData]);
-
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [fetchData, fetchMissions, getCurrentStudent]);
 
     const handleMissionClick = (missionId) => {
         onNavigate('writing', { missionId });
@@ -129,10 +121,10 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     return (
         <Card style={isMobile ? {
             width: '100%',
-            maxWidth: '800px', // 태블릿 최적화
+            maxWidth: '800px',
             margin: '0 auto',
             minHeight: '100vh',
-            padding: '20px 20px 100px 20px', // 하단 탭바 고려
+            padding: '20px 20px 100px 20px',
             background: '#FFFDF7',
             border: 'none',
             borderRadius: 0,
@@ -145,9 +137,9 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
         }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px' }}>
                 <Button variant="ghost" size="sm" onClick={onBack} style={{ marginRight: '16px' }} disabled={loading}>
-                    ⬅️ 뒤로가기
+                    뒤로 가기
                 </Button>
-                <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#5D4037', fontWeight: '900' }}>📝 오늘은 어떤 글을 쓸까?</h2>
+                <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#5D4037', fontWeight: '900' }}>오늘은 어떤 글을 써볼까?</h2>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
@@ -158,9 +150,9 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                             transition={{ duration: 1.5, repeat: Infinity }}
                             style={{ fontSize: '3rem', marginBottom: '16px' }}
                         >
-                            🔍
+                            📚
                         </motion.div>
-                        <p style={{ color: '#8D6E63', fontWeight: 'bold', fontSize: '1.1rem' }}>선생님이 준비한 주제를 불러오는 중이야...</p>
+                        <p style={{ color: '#8D6E63', fontWeight: 'bold', fontSize: '1.1rem' }}>선생님이 준비한 주제를 불러오는 중이에요..</p>
                     </div>
                 ) : missions.length === 0 ? (
                     <div style={{
@@ -171,41 +163,41 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                         border: '2px dashed #FFE082',
                         boxShadow: '0 4px 12px rgba(255, 224, 130, 0.1)'
                     }}>
-                        <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>🎈</div>
-                        <h3 style={{ margin: '0 0 8px 0', color: '#5D4037' }}>아직 등록된 글쓰기 미션이 없어요!</h3>
+                        <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>📝</div>
+                        <h3 style={{ margin: '0 0 8px 0', color: '#5D4037' }}>아직 등록된 글쓰기 미션이 없어요</h3>
                         <p style={{ color: '#9E9E9E', fontSize: '0.95rem' }}>선생님이 새로운 주제를 주실 때까지 조금만 기다려볼까요?</p>
                     </div>
                 ) : (
-                    missions.map(mission => {
+                    missions.map((mission) => {
                         const post = posts[mission.id];
                         let statusBadge = null;
                         let borderColor = '#FFECB3';
-                        let buttonText = '글쓰기 ✍️';
+                        let buttonText = '글쓰기 시작';
 
                         if (post?.is_returned) {
                             statusBadge = (
                                 <div style={{ background: '#FFEBEE', color: '#D32F2F', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #FFCDD2' }}>
-                                    ♻️ 다시 쓰기 필요
+                                    다시 쓰기 필요
                                 </div>
                             );
                             borderColor = '#FFCDD2';
-                            buttonText = '다시 쓰기 ✍️';
+                            buttonText = '다시 쓰기 시작';
                         } else if (post?.is_submitted) {
                             statusBadge = (
                                 <div style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #C8E6C9' }}>
-                                    ✅ 제출 완료
+                                    제출 완료
                                 </div>
                             );
                             borderColor = '#C8E6C9';
-                            buttonText = '내 글 보기 📖';
+                            buttonText = '내 글 보기';
                         } else if (post) {
                             statusBadge = (
                                 <div style={{ background: '#FFF3E0', color: '#EF6C00', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #FFE0B2' }}>
-                                    📝 작성 중
+                                    작성 중
                                 </div>
                             );
                             borderColor = '#FFE0B2';
-                            buttonText = '계속 쓰기 ✍️';
+                            buttonText = '계속 쓰기';
                         } else {
                             statusBadge = (
                                 <div style={{ background: '#F5F5F5', color: '#9E9E9E', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #E0E0E0' }}>
@@ -232,7 +224,6 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                 }}
                                 onClick={() => handleMissionClick(mission.id)}
                             >
-                                {/* [신규] 새 미션 뱃지 (24시간 이내 && 제출 전) */}
                                 {(!post?.is_submitted && new Date(mission.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)) && (
                                     <div style={{
                                         position: 'absolute', top: '12px', right: '12px',
@@ -268,7 +259,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                         fontWeight: '900',
                                         color: '#F57F17'
                                     }}>
-                                        ✨ {mission.base_reward}P
+                                        ⭐ {mission.base_reward}P
                                     </div>
                                 </div>
                                 <h4 style={{ margin: '0 0 10px 0', color: '#2C3E50', fontSize: '1.2rem', fontWeight: '900' }}>
@@ -278,7 +269,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                     {mission.guide}
                                 </p>
                                 <Button
-                                    variant={post?.is_submitted && !post?.is_returned ? "secondary" : "primary"}
+                                    variant={post?.is_submitted && !post?.is_returned ? 'secondary' : 'primary'}
                                     style={{ width: '100%', borderRadius: '14px', fontWeight: '900' }}
                                 >
                                     {buttonText}
