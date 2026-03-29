@@ -10,16 +10,25 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
     .map(o => o.trim().replace(/\/$/, '')) // ✅ Remove trailing slash
     .filter(Boolean);
 
-function getCorsHeaders(requestOrigin: string | null) {
-    let allowedOrigin = '*'; // Default to wildcard for maximum compatibility during debugging
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 
-    if (requestOrigin) {
-        const cleanOrigin = requestOrigin.replace(/\/$/, '');
-        if (ALLOWED_ORIGINS.includes(cleanOrigin) ||
-            cleanOrigin.startsWith('http://localhost:') ||
-            cleanOrigin.startsWith('http://127.0.0.1:')) {
-            allowedOrigin = requestOrigin;
-        }
+function isAllowedOrigin(requestOrigin: string | null) {
+    if (!requestOrigin) return true;
+
+    const cleanOrigin = requestOrigin.replace(/\/$/, '');
+    return (
+        ALLOWED_ORIGINS.length === 0 ||
+        ALLOWED_ORIGINS.includes(cleanOrigin) ||
+        cleanOrigin.startsWith('http://localhost:') ||
+        cleanOrigin.startsWith('http://127.0.0.1:')
+    );
+}
+
+function getCorsHeaders(requestOrigin: string | null) {
+    let allowedOrigin = ALLOWED_ORIGINS.length === 0 ? '*' : 'null';
+
+    if (requestOrigin && isAllowedOrigin(requestOrigin)) {
+        allowedOrigin = requestOrigin;
     }
 
     return {
@@ -32,6 +41,11 @@ function getCorsHeaders(requestOrigin: string | null) {
     };
 }
 
+function isTrustedClientRequest(req: Request, requestOrigin: string | null) {
+    const apiKeyHeader = req.headers.get('apikey') ?? '';
+    return isAllowedOrigin(requestOrigin) && !!SUPABASE_ANON_KEY && apiKeyHeader === SUPABASE_ANON_KEY;
+}
+
 console.log("Hello from vibe-ai Functions!")
 
 Deno.serve(async (req) => {
@@ -40,6 +54,13 @@ Deno.serve(async (req) => {
 
     if (req.method === 'OPTIONS') {
         return new Response(null, { headers: corsHeaders, status: 204 })
+    }
+
+    if (!isAllowedOrigin(origin)) {
+        return new Response(
+            JSON.stringify({ error: 'Forbidden origin' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+        );
     }
 
     try {
@@ -153,12 +174,14 @@ Deno.serve(async (req) => {
             authReason = "Authorization 헤더 없음";
         }
 
+        const trustedClientRequest = isTrustedClientRequest(req, origin);
+
         if (!isAuthorized) {
             // [특수 허용] SAFETY_CHECK 또는 JWT fallback
-            if (type === 'SAFETY_CHECK') {
+            if (type === 'SAFETY_CHECK' && trustedClientRequest) {
                 isAuthorized = true;
                 console.warn(`⚠️ 인증 우회 허용(SAFETY_CHECK): ${authReason}`);
-            } else if (jwtUserId && !studentId) {
+            } else if (jwtUserId && !studentId && trustedClientRequest) {
                 isAuthorized = true;
                 authedUserId = jwtUserId;
                 targetTeacherId = jwtUserId;
