@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { dataCache } from '../lib/cache';
 
 export const useFriendsHideout = (studentSession, params) => {
+    const CLASSMATES_CACHE_MS = 300000;
     const [missions, setMissions] = useState([]);
     const [selectedMission, setSelectedMission] = useState(null);
     const [posts, setPosts] = useState([]);
@@ -19,15 +20,20 @@ export const useFriendsHideout = (studentSession, params) => {
     const fetchClassmates = useCallback(async () => {
         try {
             const classId = studentSession.classId || studentSession.class_id;
-            const { data, error } = await supabase
-                .from('students')
-                .select('id, name, pet_data')
-                .eq('class_id', classId)
-                .is('deleted_at', null)
-                .neq('id', studentSession.id)
-                .order('name');
+            const cacheKey = `classmates_${classId}`;
+            const data = await dataCache.get(cacheKey, async () => {
+                const { data, error } = await supabase
+                    .from('students')
+                    .select('id, name, pet_data')
+                    .eq('class_id', classId)
+                    .is('deleted_at', null)
+                    .neq('id', studentSession.id)
+                    .order('name');
 
-            if (error) throw error;
+                if (error) throw error;
+                return data || [];
+            }, CLASSMATES_CACHE_MS);
+
             setClassmates(data || []);
         } catch (err) {
             console.error('반 친구 목록 로드 실패:', err.message);
@@ -166,6 +172,7 @@ export const useFriendsHideout = (studentSession, params) => {
                 },
                 (payload) => {
                     if (payload.new.id !== studentSession.id) {
+                        dataCache.invalidate(`classmates_${classId}`);
                         setClassmates(prev => prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c));
                     }
                 }
