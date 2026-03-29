@@ -82,7 +82,6 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 });
                 setLevelInfo(getLevelInfo(totalChars));
             }
-            openFeedback(1);
         } catch (err) {
             console.error('글쓰기 통계 로드 실패:', err.message);
         }
