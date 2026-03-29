@@ -267,7 +267,10 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         }
         if (!confirm(`'${teacherName}' 선생님의 가입을 승인하시겠습니까?`)) return;
         try {
-            const { error } = await supabase.from('profiles').update({ is_approved: true }).eq('id', teacherId);
+            const { error } = await supabase.rpc('admin_set_teacher_approval', {
+                p_teacher_id: teacherId,
+                p_is_approved: true
+            });
             if (error) throw error;
             alert(`✅ '${teacherName}' 선생님이 승인되었습니다!`);
             fetchTeachers();
@@ -281,7 +284,10 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         }
         if (!confirm(`'${teacherName}' 선생님의 승인을 취소하시겠습니까?`)) return;
         try {
-            const { error } = await supabase.from('profiles').update({ is_approved: false }).eq('id', teacherId);
+            const { error } = await supabase.rpc('admin_set_teacher_approval', {
+                p_teacher_id: teacherId,
+                p_is_approved: false
+            });
             if (error) throw error;
             alert(`🚫 승인 취소 완료`);
             fetchTeachers();
@@ -295,7 +301,10 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         if (!confirm(`'${teacherName}' 선생님의 모드를 [${modeLabel}]로 변경하시겠습니까?`)) return;
 
         try {
-            const { error } = await supabase.from('profiles').update({ api_mode: newMode }).eq('id', teacherId);
+            const { error } = await supabase.rpc('admin_set_teacher_api_mode', {
+                p_teacher_id: teacherId,
+                p_api_mode: newMode
+            });
             if (error) throw error;
 
             // UI Optimistic Update
@@ -317,13 +326,11 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
         try {
             // [최적화] 여러 테이블의 삭제를 병렬로 처리
-            const [teacherResult, profileResult] = await Promise.all([
-                supabase.from('teachers').delete().eq('id', teacherId),
-                supabase.from('profiles').delete().eq('id', teacherId)
-            ]);
+            const { error } = await supabase.rpc('admin_force_teacher_withdrawal', {
+                p_teacher_id: teacherId
+            });
             
-            if (teacherResult.error) throw teacherResult.error;
-            if (profileResult.error) throw profileResult.error;
+            if (error) throw error;
 
             alert(`🗑️ 삭제 완료`);
             fetchTeachers();
