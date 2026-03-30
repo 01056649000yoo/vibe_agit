@@ -429,6 +429,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                 .select(`
                     id, title, content, student_id, mission_id, char_count, is_submitted, is_confirmed, is_returned, ai_feedback, created_at,
                     original_title, original_content, first_submitted_at, initial_eval, final_eval, eval_comment, student_answers,
+                    teacher_edited_title, teacher_edited_content, teacher_edited_at, teacher_edited_by, is_teacher_edited,
                     students!inner(name, class_id),
                     post_reactions(id, reaction_type, student_id, students(name)),
                     post_comments(id, content, student_id, teacher_id, created_at, students(name))
@@ -1143,6 +1144,33 @@ ${postArray.map((p, idx) => {
         }
     };
 
+    const handleTeacherEditPost = async (postId, title, content) => {
+        if (!postId) return false;
+        try {
+            const { error } = await supabase.rpc('teacher_edit_student_post', {
+                p_post_id: postId,
+                p_title: title,
+                p_content: content
+            });
+
+            if (error) throw error;
+
+            if (selectedMission) {
+                const refreshedPosts = await fetchPostsForMission(selectedMission);
+                const refreshedPost = refreshedPosts.find((post) => post.id === postId);
+                if (refreshedPost) {
+                    setSelectedPost(refreshedPost);
+                }
+            }
+
+            return true;
+        } catch (err) {
+            console.error('교사 글 수정 실패:', err.message);
+            alert('학생 글 수정 저장 중 오류가 발생했습니다: ' + err.message);
+            return false;
+        }
+    };
+
     return {
         missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, setPosts, selectedPost, setSelectedPost,
@@ -1159,6 +1187,6 @@ ${postArray.map((p, idx) => {
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
         frequentTags, saveFrequentTag, removeFrequentTag,
         handleSaveDefaultSettings,
-        addTeacherComment, deleteTeacherComment
+        addTeacherComment, deleteTeacherComment, handleTeacherEditPost
     };
 };

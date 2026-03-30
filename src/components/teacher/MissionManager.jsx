@@ -32,7 +32,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         handleSaveDefaultRubric, handleSaveDefaultSettings,
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
         frequentTags, saveFrequentTag, removeFrequentTag,
-        addTeacherComment, deleteTeacherComment
+        addTeacherComment, deleteTeacherComment, handleTeacherEditPost
     } = useMissionManager(activeClass);
 
     const [reportMission, setReportMission] = useState(null);
@@ -167,6 +167,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
                 posts={posts}
                 addTeacherComment={addTeacherComment}
                 deleteTeacherComment={deleteTeacherComment}
+                handleTeacherEditPost={handleTeacherEditPost}
             />
 
             {/* 보관 확인 커스텀 모달 */}

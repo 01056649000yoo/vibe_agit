@@ -16,6 +16,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const [aiFeedback, setAiFeedback] = useState(''); // 상시 피드백 내용
     const [originalTitle, setOriginalTitle] = useState('');
     const [originalContent, setOriginalContent] = useState('');
+    const [isTeacherEdited, setIsTeacherEdited] = useState(false);
+    const [teacherEditedAt, setTeacherEditedAt] = useState('');
     const [studentAnswers, setStudentAnswers] = useState([]); // [신규] 핵심 질문에 대한 답변들
 
     const fetchMission = useCallback(async () => {
@@ -44,7 +46,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             const currentStudentId = studentSession?.id;
             if (currentStudentId) {
                 // 학생이 기존에 작성하던 글의 제목, 내용, 제출 및 승인 상태, 피드백 정보만 로드
-                let query = supabase.from('student_posts').select('id, title, content, is_returned, is_confirmed, is_submitted, ai_feedback, original_title, original_content, student_answers, student_id, mission_id');
+                let query = supabase.from('student_posts').select('id, title, content, is_returned, is_confirmed, is_submitted, ai_feedback, original_title, original_content, teacher_edited_title, teacher_edited_content, teacher_edited_at, is_teacher_edited, student_answers, student_id, mission_id');
 
                 if (params?.postId) {
                     query = query.eq('id', params.postId);
@@ -56,14 +58,17 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
 
                 if (!postError && postData) {
                     console.log(`[useMissionSubmit] 기존 글 로드 성공 (ID: ${postData.id}, Title: ${postData.title})`);
-                    setTitle(postData.title || '');
-                    setContent(postData.content || '');
+                    const hasTeacherEditedDraft = postData.is_teacher_edited && postData.is_returned;
+                    setTitle(hasTeacherEditedDraft ? (postData.teacher_edited_title || postData.title || '') : (postData.title || ''));
+                    setContent(hasTeacherEditedDraft ? (postData.teacher_edited_content || postData.content || '') : (postData.content || ''));
                     setIsReturned(postData.is_returned || false);
                     setIsConfirmed(postData.is_confirmed || false);
                     setIsSubmitted(postData.is_submitted || false);
                     setAiFeedback(postData.ai_feedback || '');
                     setOriginalTitle(postData.original_title || '');
                     setOriginalContent(postData.original_content || '');
+                    setIsTeacherEdited(!!postData.is_teacher_edited);
+                    setTeacherEditedAt(postData.teacher_edited_at || '');
                     setStudentAnswers(postData.student_answers || []);
                     setPostId(postData.id);
                 } else if (params?.postId) {
@@ -135,6 +140,11 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     paragraph_count: content.split(/\n+/).filter(p => p.trim().length > 0).length,
                     is_submitted: isSubmitted, // [수정] 기존 제출 상태 유지 (false로 고정되어 버그 발생하던 부분 해결)
                     is_returned: isReturned,
+                    is_teacher_edited: false,
+                    teacher_edited_title: null,
+                    teacher_edited_content: null,
+                    teacher_edited_at: null,
+                    teacher_edited_by: null,
                     student_answers: studentAnswers // [신규] 답변 저장
                 }, { onConflict: 'student_id,mission_id' });
 
@@ -215,6 +225,11 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 is_submitted: true,
                 is_returned: false,
                 is_confirmed: false,
+                is_teacher_edited: false,
+                teacher_edited_title: null,
+                teacher_edited_content: null,
+                teacher_edited_at: null,
+                teacher_edited_by: null,
                 student_answers: studentAnswers // [신규] 답변 저장
             };
 
@@ -281,6 +296,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         aiFeedback,
         originalTitle,
         originalContent,
+        isTeacherEdited,
+        teacherEditedAt,
         studentAnswers,
         setStudentAnswers,
         handleSave,

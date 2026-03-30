@@ -9,7 +9,7 @@ const PostDetailViewer = ({
     handleGenerateSingleAI, tempFeedback, setTempFeedback,
     isGenerating, showCompleteToast, postReactions, postComments,
     reactionIcons, isMobile, onUpdate, isEvaluationMode, posts = [],
-    addTeacherComment, deleteTeacherComment
+    addTeacherComment, deleteTeacherComment, handleTeacherEditPost
 }) => {
     const { saveEvaluation, loading: evalLoading } = useEvaluation();
     const textareaRef = useRef(null);
@@ -18,6 +18,10 @@ const PostDetailViewer = ({
     const [teacherCommentInput, setTeacherCommentInput] = useState('');
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
     const [currentTeacherUid, setCurrentTeacherUid] = useState(null);
+    const [isTeacherEditMode, setIsTeacherEditMode] = useState(false);
+    const [editedTitle, setEditedTitle] = useState('');
+    const [editedContent, setEditedContent] = useState('');
+    const [isSavingTeacherEdit, setIsSavingTeacherEdit] = useState(false);
 
     // 현재 교사 uid 조회
     useEffect(() => {
@@ -40,8 +44,35 @@ const PostDetailViewer = ({
             setFinalEval(selectedPost.final_eval);
             setEvalComment(selectedPost.eval_comment || '');
             setShowOriginal(false);
+            setIsTeacherEditMode(false);
+            setEditedTitle(selectedPost.title || '');
+            setEditedContent(selectedPost.content || '');
         }
     }, [selectedPost]);
+
+    const handleSaveTeacherEdit = async () => {
+        if (!selectedPost || !handleTeacherEditPost || isSavingTeacherEdit) return;
+
+        if (!editedTitle.trim()) {
+            alert('제목을 입력해주세요.');
+            return;
+        }
+
+        if (!editedContent.trim()) {
+            alert('본문을 입력해주세요.');
+            return;
+        }
+
+        setIsSavingTeacherEdit(true);
+        const success = await handleTeacherEditPost(selectedPost.id, editedTitle.trim(), editedContent);
+        setIsSavingTeacherEdit(false);
+
+        if (success) {
+            setIsTeacherEditMode(false);
+            if (onUpdate) onUpdate();
+            alert('수정본을 학생에게 보냈습니다.');
+        }
+    };
 
     const handleSaveEval = async () => {
         const result = await saveEvaluation(selectedPost.id, {
@@ -226,6 +257,28 @@ const PostDetailViewer = ({
                                         📊 성장 평가
                                     </Button>
                                 )}
+                                {!selectedPost.is_confirmed && handleTeacherEditPost && (
+                                    <Button
+                                        onClick={() => {
+                                            if (isTeacherEditMode) {
+                                                setIsTeacherEditMode(false);
+                                                setEditedTitle(selectedPost.title || '');
+                                                setEditedContent(selectedPost.content || '');
+                                            } else {
+                                                setShowOriginal(false);
+                                                setIsTeacherEditMode(true);
+                                            }
+                                        }}
+                                        style={{
+                                            backgroundColor: isTeacherEditMode ? '#FEF3C7' : '#EEF2FF',
+                                            color: isTeacherEditMode ? '#92400E' : '#4338CA',
+                                            border: isTeacherEditMode ? '1px solid #FCD34D' : '1px solid #C7D2FE',
+                                            padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
+                                        }}
+                                    >
+                                        {isTeacherEditMode ? '수정 모드 종료' : '수정 모드'}
+                                    </Button>
+                                )}
                                 <div style={{ width: '1px', height: '24px', background: '#F1F3F5', margin: '0 4px' }} />
                                 <Button
                                     onClick={() => setIsFeedbackVisible(!isFeedbackVisible)}
@@ -261,7 +314,7 @@ const PostDetailViewer = ({
                                     }}>
                                         {showOriginal ? (selectedPost.original_title || selectedPost.title) : (selectedPost.title || '제목 없음')}
                                     </h2>
-                                    {selectedPost.original_content && (
+                                    {!isTeacherEditMode && selectedPost.original_content && (
                                         <button
                                             onClick={() => setShowOriginal(!showOriginal)}
                                             style={{
@@ -278,7 +331,90 @@ const PostDetailViewer = ({
                                     )}
                                 </div>
 
-                                {showOriginal ? (
+                                {isTeacherEditMode ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+                                        <div style={{
+                                            background: '#FFF8E1',
+                                            border: '1px solid #FDE68A',
+                                            borderRadius: '18px',
+                                            padding: '16px 18px',
+                                            color: '#8A5A00',
+                                            fontSize: '0.95rem',
+                                            lineHeight: '1.6'
+                                        }}>
+                                            학생 글을 직접 다듬은 뒤 저장하면 학생 화면에서 이 수정본을 이어서 볼 수 있습니다.
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={editedTitle}
+                                            onChange={(e) => setEditedTitle(e.target.value)}
+                                            placeholder="수정된 제목을 입력하세요"
+                                            style={{
+                                                width: '100%',
+                                                padding: '16px 18px',
+                                                borderRadius: '18px',
+                                                border: '1px solid #D1D5DB',
+                                                fontSize: isMobile ? '1.2rem' : '1.4rem',
+                                                fontWeight: '800',
+                                                color: '#1F2937',
+                                                outline: 'none',
+                                                boxSizing: 'border-box'
+                                            }}
+                                        />
+                                        <textarea
+                                            value={editedContent}
+                                            onChange={(e) => setEditedContent(e.target.value)}
+                                            placeholder="학생에게 전달할 수정본을 입력하세요"
+                                            style={{
+                                                width: '100%',
+                                                minHeight: isMobile ? '360px' : '520px',
+                                                padding: '20px',
+                                                borderRadius: '22px',
+                                                border: '1px solid #D1D5DB',
+                                                fontSize: isMobile ? '1.05rem' : '1.15rem',
+                                                lineHeight: '1.9',
+                                                color: '#374151',
+                                                outline: 'none',
+                                                resize: 'vertical',
+                                                boxSizing: 'border-box',
+                                                background: '#FFFFFF'
+                                            }}
+                                        />
+                                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                                            <Button
+                                                onClick={() => {
+                                                    setIsTeacherEditMode(false);
+                                                    setEditedTitle(selectedPost.title || '');
+                                                    setEditedContent(selectedPost.content || '');
+                                                }}
+                                                style={{
+                                                    backgroundColor: '#F8F9FA',
+                                                    color: '#4B5563',
+                                                    border: '1px solid #E5E7EB',
+                                                    padding: '10px 16px',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: 'bold'
+                                                }}
+                                            >
+                                                취소
+                                            </Button>
+                                            <Button
+                                                onClick={handleSaveTeacherEdit}
+                                                disabled={isSavingTeacherEdit}
+                                                style={{
+                                                    backgroundColor: '#2563EB',
+                                                    color: 'white',
+                                                    border: '1px solid #1D4ED8',
+                                                    padding: '10px 18px',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: 'bold'
+                                                }}
+                                            >
+                                                {isSavingTeacherEdit ? '저장 중...' : '수정본 저장'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : showOriginal ? (
                                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '30px', flex: 1 }}>
                                         {/* Left: Original Content */}
                                         <div style={{

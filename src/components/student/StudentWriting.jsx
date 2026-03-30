@@ -29,6 +29,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         aiFeedback,
         originalTitle,
         originalContent,
+        isTeacherEdited,
+        teacherEditedAt,
         studentAnswers,
         setStudentAnswers,
         handleSave,
@@ -209,6 +211,21 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             </AnimatePresence>
 
             {/* 가이드 박스 */}
+            <AnimatePresence>
+                {isTeacherEdited && isReturned && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ background: '#E8F5E9', padding: '16px 20px', borderRadius: '16px', marginBottom: '24px', border: '1px solid #C8E6C9', display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                        <span style={{ fontSize: '1.5rem' }}>알림</span>
+                        <div>
+                            <div style={{ fontWeight: '900', color: '#2E7D32', fontSize: '1rem' }}>선생님이 직접 다듬은 글이 도착했어요</div>
+                            <div style={{ fontSize: '0.85rem', color: '#388E3C' }}>
+                                아래 글은 선생님이 손봐서 보내준 버전이에요. 이 상태에서 이어서 수정하거나 다시 제출하면 돼요.
+                                {teacherEditedAt ? ` (${new Date(teacherEditedAt).toLocaleString()})` : ''}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div style={{ background: '#F8F9FA', padding: '24px', borderRadius: '20px', marginBottom: '32px', border: '1px solid #E9ECEF', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <div style={{ background: '#FFFFFF', padding: '2px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: '900', color: '#607D8B', border: '1px solid #E9ECEF' }}>선생님의 가이드 💡</div>
