@@ -36,7 +36,7 @@ const TermsOfService = lazy(() => import('./components/layout/TermsOfService'))
 function App() {
   const { 
     session, profile, studentSession, loading, 
-    checkSessions, fetchProfile, logout: handleLogout, studentLogout: handleStudentLogout 
+    checkSessions, fetchProfile, verifyStudentSession, logout: handleLogout, studentLogout: handleStudentLogout 
   } = useAuthStore();
 
   const [activeClass, setActiveClass] = useState(null)
@@ -75,6 +75,30 @@ function App() {
       }
     }
   }, [checkSessions])
+
+  useEffect(() => {
+    if (!studentSession) return undefined;
+
+    const verifyActiveStudent = () => {
+      useAuthStore.getState().verifyStudentSession({ notify: true });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        verifyActiveStudent();
+      }
+    };
+
+    const intervalId = window.setInterval(verifyActiveStudent, 60000);
+    window.addEventListener('focus', verifyActiveStudent);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', verifyActiveStudent);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [studentSession, verifyStudentSession]);
 
   // [보안 수정] 교사 프로필 설정 - 서버 사이드 RPC 사용
   const handleTeacherStart = async () => {

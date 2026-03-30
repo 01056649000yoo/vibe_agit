@@ -7,6 +7,21 @@ const profileFetchCache = new Map();
 const profileFetchInflight = new Map();
 const lastLoginTouchCache = new Map();
 
+const buildStudentSession = (student) => ({
+    id: student.id,
+    name: student.name,
+    code: student.code,
+    classId: student.classId,
+    className: student.className,
+    role: 'STUDENT'
+});
+
+const clearStudentClientState = () => {
+    localStorage.removeItem('student_session');
+    const sbKeys = Object.keys(localStorage).filter((key) => key.startsWith('sb-'));
+    sbKeys.forEach((key) => localStorage.removeItem(key));
+};
+
 /**
  * 전역 인증 및 프로필 상태 관리 스토어 (Zustand) 🔐
  */
@@ -146,15 +161,7 @@ export const useAuthStore = create((set, get) => ({
                     try {
                         const { data: studentResult } = await supabase.rpc('get_student_by_auth');
                         if (studentResult?.success) {
-                            const s = studentResult.student;
-                            const sessionData = {
-                                id: s.id,
-                                name: s.name,
-                                code: s.code,
-                                classId: s.classId,
-                                className: s.className,
-                                role: 'STUDENT'
-                            };
+                            const sessionData = buildStudentSession(studentResult.student);
                             set({ studentSession: sessionData, session: null, profile: null });
                             localStorage.setItem('student_session', JSON.stringify(sessionData));
                         } else {
@@ -185,6 +192,42 @@ export const useAuthStore = create((set, get) => ({
     },
 
     // 3. 교사/관리자 로그아웃
+    verifyStudentSession: async ({ notify = false } = {}) => {
+        if (!supabase) return false;
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || session.user?.is_anonymous !== true) return false;
+
+            const { data: studentResult, error } = await supabase.rpc('get_student_by_auth');
+            if (error) {
+                console.warn('[AuthStore] Student session verification failed:', error);
+                return true;
+            }
+
+            if (studentResult?.success) {
+                const sessionData = buildStudentSession(studentResult.student);
+                set({ studentSession: sessionData, session: null, profile: null });
+                localStorage.setItem('student_session', JSON.stringify(sessionData));
+                return true;
+            }
+
+            await supabase.auth.signOut();
+            clearStudentClientState();
+            set({ studentSession: null, session: null, profile: null });
+
+            if (notify) {
+                window.alert('다른 기기에서 이 학생 코드로 다시 로그인되어 현재 기기의 연결이 해제되었어요.');
+            }
+
+            window.location.href = '/';
+            return false;
+        } catch (e) {
+            console.warn('[AuthStore] Student session verification exception:', e);
+            return true;
+        }
+    },
+
     logout: async () => {
         try {
             if (supabase) await supabase.auth.signOut();
@@ -192,8 +235,7 @@ export const useAuthStore = create((set, get) => ({
             console.warn('[AuthStore] Logout failed:', err);
         } finally {
             set({ session: null, profile: null, studentSession: null });
-            const sbKeys = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
-            sbKeys.forEach(k => localStorage.removeItem(k));
+            clearStudentClientState();
             window.location.href = '/';
         }
     },
@@ -206,10 +248,8 @@ export const useAuthStore = create((set, get) => ({
         } catch (e) {
             console.warn('[AuthStore] 학생 로그아웃 실패:', e);
         } finally {
-            localStorage.removeItem('student_session');
             set({ studentSession: null, session: null, profile: null });
-            const sbKeys = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
-            sbKeys.forEach(k => localStorage.removeItem(k));
+            clearStudentClientState();
             window.location.href = '/';
         }
     }

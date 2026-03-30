@@ -61,6 +61,13 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
             const { data: bindResult, error: bindError } = await supabase
                 .rpc('bind_student_auth', { p_student_code: code.toUpperCase() });
 
+            if (bindError) {
+                console.error('학생 로그인 바인딩 실패:', bindError);
+                setErrorMsg('학생 로그인 처리 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.');
+                setLoading(false);
+                return;
+            }
+
             if (!bindResult?.success) {
                 setErrorMsg(bindResult?.error || '코드가 일치하는 학생을 찾을 수 없어요. 다시 확인해볼까요? 🔍');
                 setLoading(false);
