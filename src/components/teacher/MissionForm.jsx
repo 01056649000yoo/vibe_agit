@@ -3,9 +3,10 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { supabase } from '../../lib/supabaseClient';
 
 const MissionForm = ({
-    isFormOpen, isEditing, formData, setFormData,
+    isFormOpen, isEditing, editingMissionId, formData, setFormData,
     genreCategories, handleSubmit, handleCancelEdit, isMobile,
     handleGenerateQuestions, isGeneratingQuestions,
     handleSaveDefaultRubric, handleSaveDefaultSettings,
@@ -13,6 +14,7 @@ const MissionForm = ({
 }) => {
     const [isQuestionModalOpen, setIsQuestionModalOpen] = React.useState(false);
     const [tagInput, setTagInput] = React.useState('');
+    const [isLoadingEditMission, setIsLoadingEditMission] = React.useState(false);
     const useAIQuestions = (formData.guide_questions?.length > 0) || formData.use_ai_questions;
 
     const toggleAIQuestions = () => {
@@ -33,6 +35,66 @@ const MissionForm = ({
         }
     };
 
+    React.useEffect(() => {
+        if (!isFormOpen || !isEditing || !editingMissionId) return;
+
+        let isMounted = true;
+
+        const loadEditingMission = async () => {
+            setIsLoadingEditMission(true);
+
+            try {
+                const { data, error } = await supabase
+                    .from('writing_missions')
+                    .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
+                    .eq('id', editingMissionId)
+                    .maybeSingle();
+
+                if (error) throw error;
+                if (!data || !isMounted) return;
+
+                const savedLevels = localStorage.getItem('default_rubric_levels');
+                const defaultLevels = savedLevels ? JSON.parse(savedLevels) : [
+                    { score: 3, label: '우수' },
+                    { score: 2, label: '보통' },
+                    { score: 1, label: '노력' }
+                ];
+
+                setFormData({
+                    title: data.title || '',
+                    guide: data.guide || '',
+                    genre: data.genre || '글쓰기',
+                    min_chars: data.min_chars ?? 100,
+                    min_paragraphs: data.min_paragraphs ?? 1,
+                    base_reward: data.base_reward ?? 100,
+                    bonus_threshold: data.bonus_threshold ?? 100,
+                    bonus_reward: data.bonus_reward ?? 10,
+                    allow_comments: data.allow_comments ?? true,
+                    mission_type: data.mission_type || data.genre || '글쓰기',
+                    guide_questions: data.guide_questions || [],
+                    question_count: (data.guide_questions || []).length || 3,
+                    tags: data.tags || [],
+                    evaluation_rubric: data.evaluation_rubric || {
+                        use_rubric: false,
+                        levels: defaultLevels
+                    }
+                });
+            } catch (err) {
+                console.error('[MissionForm] 수정용 미션 로드 실패:', err.message);
+            } finally {
+                if (isMounted) {
+                    setIsLoadingEditMission(false);
+                }
+            }
+        };
+
+        loadEditingMission();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [isFormOpen, isEditing, editingMissionId, setFormData]);
+
     return (
         <>
 
@@ -48,6 +110,22 @@ const MissionForm = ({
                             boxSizing: 'border-box',
                             overflow: 'hidden'
                         }}>
+                            {isLoadingEditMission ? (
+                                <div style={{
+                                    minHeight: '220px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '12px',
+                                    color: '#64748B'
+                                }}>
+                                    <div style={{ fontSize: '2rem' }}>불러오는 중</div>
+                                    <div style={{ fontSize: '0.95rem', fontWeight: 'bold' }}>
+                                        저장된 미션 내용을 다시 읽고 있어요.
+                                    </div>
+                                </div>
+                            ) : (
                             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px' }}>
                                     <input
@@ -979,6 +1057,7 @@ const MissionForm = ({
                                     </Button>
                                 </div>
                             </form >
+                            )}
                         </Card >
                     </motion.div >
                 )}

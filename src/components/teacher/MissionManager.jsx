@@ -22,6 +22,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
         loadingPosts, isGenerating, showCompleteToast, setShowCompleteToast,
         tempFeedback, setTempFeedback, postReactions, postComments, totalStudentCount,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData,
+        editingMissionId,
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery, handleRecovery: handleRecoveryFunc,
@@ -98,6 +99,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
             <MissionForm
                 isFormOpen={isFormOpen}
                 isEditing={isEditing}
+                editingMissionId={editingMissionId}
                 formData={formData}
                 setFormData={setFormData}
                 genreCategories={genreCategories}

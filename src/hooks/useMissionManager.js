@@ -257,7 +257,68 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         }
     }, [activeClass?.id, fetchMissions]);
 
-    const handleEditClick = (mission) => {
+    const buildMissionFormData = useCallback((mission) => {
+        const savedLevels = localStorage.getItem('default_rubric_levels');
+        const defaultLevels = savedLevels ? JSON.parse(savedLevels) : [
+            { score: 3, label: '?곗닔' },
+            { score: 2, label: '蹂댄넻' },
+            { score: 1, label: '?몃젰' }
+        ];
+
+        return {
+            title: mission.title || '',
+            guide: mission.guide || '',
+            genre: mission.genre || '?쇨린',
+            min_chars: mission.min_chars ?? 100,
+            min_paragraphs: mission.min_paragraphs ?? 1,
+            base_reward: mission.base_reward ?? 100,
+            bonus_threshold: mission.bonus_threshold ?? 100,
+            bonus_reward: mission.bonus_reward ?? 10,
+            allow_comments: mission.allow_comments ?? true,
+            mission_type: mission.mission_type || mission.genre || '?쇨린',
+            guide_questions: mission.guide_questions || [],
+            tags: mission.tags || [],
+            evaluation_rubric: mission.evaluation_rubric || {
+                use_rubric: false,
+                levels: defaultLevels
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isEditing || !editingMissionId) return;
+
+        const editingMission = missions.find((mission) => mission.id === editingMissionId);
+        if (!editingMission) return;
+
+        setFormData(buildMissionFormData(editingMission));
+    }, [isEditing, editingMissionId, missions, buildMissionFormData]);
+
+    const handleEditClick = async (mission) => {
+        let missionForEdit = mission;
+
+        try {
+            const { data, error } = await supabase
+                .from('writing_missions')
+                .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
+                .eq('id', mission.id)
+                .maybeSingle();
+
+            if (error) throw error;
+            if (data) {
+                missionForEdit = data;
+            }
+        } catch (err) {
+            console.warn('[MissionManager] 수정용 미션 재조회 실패, 목록 데이터로 진행합니다:', err.message);
+        }
+
+        setIsEditing(true);
+        setEditingMissionId(mission.id);
+        setFormData(buildMissionFormData(missionForEdit));
+        setIsFormOpen(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+
         const savedLevels = localStorage.getItem('default_rubric_levels');
         const defaultLevels = savedLevels ? JSON.parse(savedLevels) : [
             { score: 3, label: '우수' },
@@ -1176,7 +1237,7 @@ ${postArray.map((p, idx) => {
         selectedMission, setSelectedMission, posts, setPosts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast, setShowCompleteToast,
         tempFeedback, setTempFeedback, postReactions, postComments, totalStudentCount,
-        archiveModal, setArchiveModal, progress, isEditing, formData, setFormData,
+        archiveModal, setArchiveModal, progress, isEditing, formData, setFormData, editingMissionId,
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery, handleBulkRecovery,
