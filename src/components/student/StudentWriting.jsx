@@ -55,6 +55,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const [showOriginal, setShowOriginal] = useState(false);
     const editorRef = useRef(null);
     const isMobile = window.innerWidth <= 768;
+    const [autoSaveAt, setAutoSaveAt] = useState(null);
+    const [autoSaveError, setAutoSaveError] = useState('');
 
     // 질문 개수가 변하면 studentAnswers 배열 초기화/유지 로직
     useEffect(() => {
@@ -113,6 +115,32 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
     // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)
     const isLocked = isConfirmed || (isSubmitted && !isReturned);
+
+    useEffect(() => {
+        if (loading || submitting || isLocked) return;
+
+        const hasDraftContent =
+            title.trim().length > 0 ||
+            content.trim().length > 0 ||
+            studentAnswers.some((answer) => answer?.trim());
+
+        if (!hasDraftContent) return;
+
+        const intervalId = window.setInterval(async () => {
+            try {
+                await handleSave(false);
+                setAutoSaveAt(new Date());
+                setAutoSaveError('');
+            } catch (err) {
+                console.error('자동 저장 실패:', err);
+                setAutoSaveError('자동 저장 중 잠시 문제가 생겼어요.');
+            }
+        }, 60000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [title, content, studentAnswers, loading, submitting, isLocked, handleSave]);
 
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
@@ -615,6 +643,18 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '0.8rem', color: '#8D6E63', marginBottom: '4px' }}>문단수</div>
                         <div style={{ fontSize: '1.2rem', fontWeight: '900', color: paragraphCount >= mission.min_paragraphs ? '#2E7D32' : '#F44336' }}>{paragraphCount} / {mission.min_paragraphs}</div>
+                    </div>
+                    <div style={{ width: '1px', background: '#FFE082' }} />
+                    <div style={{ textAlign: 'center', minWidth: isMobile ? '90px' : '120px' }}>
+                        <div style={{ fontSize: '0.8rem', color: '#8D6E63', marginBottom: '4px' }}>자동 저장</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: '900', color: autoSaveError ? '#D84315' : '#546E7A' }}>
+                            {autoSaveError || (autoSaveAt ? autoSaveAt.toLocaleTimeString() : '-')}
+                        </div>
+                        {!autoSaveError && (
+                            <div style={{ marginTop: '4px', fontSize: '0.72rem', color: '#8D6E63' }}>
+                                1분마다 자동 저장됨
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
