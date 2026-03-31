@@ -78,6 +78,7 @@ function App() {
 
   useEffect(() => {
     if (!studentSession) return undefined;
+    if (internalPage?.name === 'writing') return undefined;
 
     const verifyActiveStudent = () => {
       useAuthStore.getState().verifyStudentSession({ notify: true });
@@ -98,7 +99,7 @@ function App() {
       window.removeEventListener('focus', verifyActiveStudent);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [studentSession, verifyStudentSession]);
+  }, [studentSession, verifyStudentSession, internalPage?.name]);
 
   // [보안 수정] 교사 프로필 설정 - 서버 사이드 RPC 사용
   const handleTeacherStart = async () => {

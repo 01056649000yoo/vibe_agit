@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabaseClient';
+import { useAppStore } from './useAppStore';
 
 const PROFILE_FETCH_DEDUPE_MS = 15000;
 const LAST_LOGIN_TOUCH_MS = 10 * 60 * 1000;
@@ -20,6 +21,15 @@ const clearStudentClientState = () => {
     localStorage.removeItem('student_session');
     const sbKeys = Object.keys(localStorage).filter((key) => key.startsWith('sb-'));
     sbKeys.forEach((key) => localStorage.removeItem(key));
+};
+
+const moveToStudentEntry = () => {
+    try {
+        useAppStore.getState().setInternalPage('main');
+        useAppStore.getState().setIsStudentLoginMode(true);
+    } catch (_e) {
+        window.location.href = '/';
+    }
 };
 
 /**
@@ -199,10 +209,22 @@ export const useAuthStore = create((set, get) => ({
             const { data: { session } } = await supabase.auth.getSession();
             if (!session || session.user?.is_anonymous !== true) return false;
 
-            const { data: studentResult, error } = await supabase.rpc('get_student_by_auth');
-            if (error) {
-                console.warn('[AuthStore] Student session verification failed:', error);
-                return true;
+            let studentResult = null;
+            let error = null;
+
+            for (let attempt = 0; attempt < 2; attempt += 1) {
+                const response = await supabase.rpc('get_student_by_auth');
+                studentResult = response.data;
+                error = response.error;
+
+                if (studentResult?.success) break;
+                if (error) {
+                    console.warn('[AuthStore] Student session verification failed:', error);
+                    return true;
+                }
+                if (attempt === 0) {
+                    await new Promise((resolve) => window.setTimeout(resolve, 300));
+                }
             }
 
             if (studentResult?.success) {
@@ -214,13 +236,13 @@ export const useAuthStore = create((set, get) => ({
 
             await supabase.auth.signOut();
             clearStudentClientState();
-            set({ studentSession: null, session: null, profile: null });
+            set({ studentSession: null, session: null, profile: null, loading: false });
 
             if (notify) {
                 window.alert('다른 기기에서 이 학생 코드로 다시 로그인되어 현재 기기의 연결이 해제되었어요.');
             }
 
-            window.location.href = '/';
+            moveToStudentEntry();
             return false;
         } catch (e) {
             console.warn('[AuthStore] Student session verification exception:', e);
@@ -234,9 +256,9 @@ export const useAuthStore = create((set, get) => ({
         } catch (err) {
             console.warn('[AuthStore] Logout failed:', err);
         } finally {
-            set({ session: null, profile: null, studentSession: null });
+            set({ session: null, profile: null, studentSession: null, loading: false });
             clearStudentClientState();
-            window.location.href = '/';
+            moveToStudentEntry();
         }
     },
 
@@ -248,9 +270,9 @@ export const useAuthStore = create((set, get) => ({
         } catch (e) {
             console.warn('[AuthStore] 학생 로그아웃 실패:', e);
         } finally {
-            set({ studentSession: null, session: null, profile: null });
+            set({ studentSession: null, session: null, profile: null, loading: false });
             clearStudentClientState();
-            window.location.href = '/';
+            moveToStudentEntry();
         }
     }
 }));
