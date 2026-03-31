@@ -90,33 +90,30 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const fetchMyPoints = useCallback(async () => {
         if (!studentSession?.id) return;
         try {
-            // 포인트 정보는 실시간성이 중요하므로 캐시 없이 매번 최신 정보를 가져옵니다.
-            const { data, error } = await supabase
-                .from('students')
-                .select('total_points, pet_data, last_feedback_check')
-                .eq('id', studentSession.id)
-                .maybeSingle();
+            const { data: studentSnapshot, error: snapshotError } = await supabase
+                .rpc('get_student_dashboard_snapshot');
 
-            if (error) throw error;
+            if (snapshotError) throw snapshotError;
 
-            if (data) {
-                if (data.total_points !== null && data.total_points !== undefined) {
-                    setPoints(data.total_points);
+            if (studentSnapshot?.success && studentSnapshot.student) {
+                const currentStudent = studentSnapshot.student;
+
+                if (currentStudent.total_points !== null && currentStudent.total_points !== undefined) {
+                    setPoints(currentStudent.total_points);
                 }
-                if (data.pet_data) {
-                    setPetData(data.pet_data);
+                if (currentStudent.pet_data) {
+                    setPetData(currentStudent.pet_data);
                 }
-                if (data.last_feedback_check) {
-                    lastCheckRef.current = data.last_feedback_check;
+                if (currentStudent.last_feedback_check) {
+                    lastCheckRef.current = currentStudent.last_feedback_check;
                 }
-                return data;
+                return currentStudent;
             }
         } catch (err) {
-            console.error('포인트 로드 실패:', err.message);
+            console.error('학생 대시보드 상태 로드 실패:', err.message);
         }
         return null;
     }, [studentSession?.id]);
-
     const fetchClassSettings = useCallback(async () => {
         let classId = studentSession.classId || studentSession.class_id;
 
