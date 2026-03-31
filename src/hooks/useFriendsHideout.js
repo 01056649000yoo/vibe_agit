@@ -12,16 +12,57 @@ export const useFriendsHideout = (studentSession, params) => {
     const [loadingMore, setLoadingMore] = useState(false);
     const [viewingPost, setViewingPost] = useState(null);
     const [classmates, setClassmates] = useState([]);
+    const [resolvedClassId, setResolvedClassId] = useState(studentSession.classId || studentSession.class_id || null);
     const pageRef = useRef(0);
     const [hasMore, setHasMore] = useState(true);
 
     const PAGE_SIZE = 10;
 
+    const resolveClassId = useCallback(async () => {
+        const sessionClassId = studentSession.classId || studentSession.class_id;
+        if (sessionClassId) {
+            setResolvedClassId(sessionClassId);
+            return sessionClassId;
+        }
+
+        if (!studentSession?.id) return null;
+
+        try {
+            const { data, error } = await supabase
+                .from('students')
+                .select('class_id')
+                .eq('id', studentSession.id)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            const fallbackClassId = data?.class_id || null;
+            if (fallbackClassId) {
+                setResolvedClassId(fallbackClassId);
+            }
+            return fallbackClassId;
+        } catch (err) {
+            console.error('친구 아지트 반 정보 조회 실패:', err.message);
+            return null;
+        }
+    }, [studentSession.classId, studentSession.class_id, studentSession?.id]);
+
     const fetchClassmates = useCallback(async () => {
         try {
-            const classId = studentSession.classId || studentSession.class_id;
+            const classId = await resolveClassId();
+            if (!classId) {
+                setClassmates([]);
+                return;
+            }
             const cacheKey = `classmates_${classId}`;
             const data = await dataCache.get(cacheKey, async () => {
+                const { data: rpcData, error: rpcError } = await supabase
+                    .rpc('get_student_classmates_for_hideout');
+
+                if (!rpcError && Array.isArray(rpcData)) {
+                    return rpcData;
+                }
+
                 const { data, error } = await supabase
                     .from('students')
                     .select('id, name, pet_data')
@@ -38,7 +79,7 @@ export const useFriendsHideout = (studentSession, params) => {
         } catch (err) {
             console.error('반 친구 목록 로드 실패:', err.message);
         }
-    }, [studentSession.classId, studentSession.class_id, studentSession.id]);
+    }, [resolveClassId, studentSession.id]);
 
     const fetchPosts = useCallback(async (missionId, isAppend = false) => {
         if (!isAppend) {
@@ -92,7 +133,13 @@ export const useFriendsHideout = (studentSession, params) => {
     const fetchMissions = useCallback(async (forceRefresh = false) => {
         setLoading(true);
         try {
-            const classId = studentSession.classId || studentSession.class_id;
+            const classId = await resolveClassId();
+            if (!classId) {
+                setMissions([]);
+                setSelectedMission(null);
+                setPosts([]);
+                return;
+            }
             const cacheKey = `missions_${classId}`;
 
             if (forceRefresh) {
@@ -128,7 +175,7 @@ export const useFriendsHideout = (studentSession, params) => {
         } finally {
             setLoading(false);
         }
-    }, [studentSession.classId, studentSession.class_id, selectedMission?.id, fetchPosts]);
+    }, [resolveClassId, selectedMission?.id, fetchPosts]);
 
     const handleInitialPost = useCallback(async (postId) => {
         try {
@@ -148,6 +195,10 @@ export const useFriendsHideout = (studentSession, params) => {
     }, []);
 
     useEffect(() => {
+        setResolvedClassId(studentSession.classId || studentSession.class_id || null);
+    }, [studentSession.classId, studentSession.class_id]);
+
+    useEffect(() => {
         fetchMissions(true);
         fetchClassmates();
         if (params?.initialPostId) {
@@ -156,7 +207,7 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [fetchMissions, fetchClassmates, handleInitialPost, params?.initialPostId]);
 
     useEffect(() => {
-        const classId = studentSession.classId || studentSession.class_id;
+        const classId = resolvedClassId || studentSession.classId || studentSession.class_id;
         if (!classId) return;
 
         // [실시간 1] 친구들의 드래곤 데이터 및 프로필 업데이트 구독
@@ -242,7 +293,7 @@ export const useFriendsHideout = (studentSession, params) => {
             supabase.removeChannel(missionsSubscription);
             supabase.removeChannel(postsSubscription);
         };
-    }, [studentSession.class_id, studentSession.classId, studentSession.id, selectedMission?.id, fetchMissions]);
+    }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, selectedMission?.id, fetchMissions]);
 
     const handleMissionChange = (mission) => {
         setSelectedMission(mission);

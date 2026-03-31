@@ -34,7 +34,7 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                     .is('students.deleted_at', null),
                 supabase
                     .from('post_comments')
-                    .select('*, students(name, deleted_at), teacher_id')
+                    .select('*, students:student_id(name, deleted_at), teacher_id')
                     .eq('post_id', postId)
                     .order('created_at', { ascending: true })
             ]);
@@ -42,16 +42,65 @@ export const usePostInteractions = (postId, studentId, studentName) => {
             if (rxRes.error) throw rxRes.error;
             if (cmRes.error) throw cmRes.error;
 
-            console.log(`[usePostInteractions] 조회 성공 (postId: ${postId})`);
+            const rawComments = cmRes.data || [];
+            const missingStudentIds = [...new Set(
+                rawComments
+                    .filter((comment) => comment.student_id && !comment.students?.name)
+                    .map((comment) => comment.student_id)
+            )];
+
+            let studentNameMap = new Map();
+            if (missingStudentIds.length > 0) {
+                const { data: studentRows, error: studentError } = await supabase
+                    .from('students')
+                    .select('id, name, deleted_at')
+                    .in('id', missingStudentIds);
+
+                if (studentError) {
+                    console.warn('[usePostInteractions] ?? ??? ?? ?? ??:', studentError.message);
+                } else {
+                    studentNameMap = new Map((studentRows || []).map((student) => [student.id, student]));
+                }
+            }
+
+            const normalizedComments = rawComments.map((comment) => {
+                if (comment.students?.name || !comment.student_id) {
+                    return comment;
+                }
+
+                if (comment.student_id === studentId) {
+                    return {
+                        ...comment,
+                        students: {
+                            name: studentName || '내 댓글',
+                            deleted_at: null
+                        }
+                    };
+                }
+
+                const studentInfo = studentNameMap.get(comment.student_id);
+                if (!studentInfo) {
+                    return comment;
+                }
+
+                return {
+                    ...comment,
+                    students: {
+                        name: studentInfo.name,
+                        deleted_at: studentInfo.deleted_at ?? null
+                    }
+                };
+            });
+
+            console.log('[usePostInteractions] ?? ?? (postId: ' + postId + ')');
             setReactions(rxRes.data || []);
-            setComments((cmRes.data || []).filter(shouldShowComment));
+            setComments(normalizedComments.filter(shouldShowComment));
         } catch (err) {
-            console.error('[usePostInteractions] 데이터 로드 실패:', err.message);
+            console.error('[usePostInteractions] ??? ?? ??:', err.message);
         } finally {
             setLoading(false);
         }
-    }, [postId, shouldShowComment]);
-
+    }, [postId, shouldShowComment, studentId, studentName]);
     useEffect(() => {
         fetchInteractions();
 
@@ -68,44 +117,11 @@ export const usePostInteractions = (postId, studentId, studentName) => {
                     table: 'post_comments',
                     filter: `post_id=eq.${postId}`
                 },
-                (payload) => {
+                async (payload) => {
                     if (payload.eventType === 'INSERT') {
-                        const newComment = {
-                            ...payload.new,
-                            students: payload.new.student_id === studentId
-                                ? { name: studentName || '익명 친구', deleted_at: null }
-                                : null
-                        };
-                        if (!shouldShowComment(newComment)) return;
-
-                        setComments(prev => {
-                            const alreadyExists = prev.some(c => c.id === newComment.id);
-                            if (alreadyExists) return prev;
-
-                            if (newComment.student_id === studentId) {
-                                const filtered = prev.filter(c =>
-                                    !(c.isOptimistic && c.student_id === studentId && (c.content === newComment.content || c.id.toString().startsWith('temp-')))
-                                );
-                                return [...filtered, newComment];
-                            }
-
-                            return [...prev, newComment];
-                        });
+                        await fetchInteractions();
                     } else if (payload.eventType === 'UPDATE') {
-                        setComments(prev => {
-                            const existing = prev.find(c => c.id === payload.new.id);
-                            const updatedComment = existing ? { ...existing, ...payload.new } : payload.new;
-
-                            if (!shouldShowComment(updatedComment)) {
-                                return prev.filter(c => c.id !== payload.new.id);
-                            }
-
-                            if (!existing) {
-                                return [...prev, updatedComment];
-                            }
-
-                            return prev.map(c => c.id === payload.new.id ? updatedComment : c);
-                        });
+                        await fetchInteractions();
                     } else if (payload.eventType === 'DELETE') {
                         setComments(prev => prev.filter(c => c.id !== payload.old.id));
                     }

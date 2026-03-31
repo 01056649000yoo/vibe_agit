@@ -155,7 +155,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
         addComment,
         updateComment,
         deleteComment
-    } = usePostInteractions(post.id, studentSession?.id);
+    } = usePostInteractions(post.id, studentSession?.id, studentSession?.name);
 
     useEffect(() => {
         const checkTeacher = async () => {
