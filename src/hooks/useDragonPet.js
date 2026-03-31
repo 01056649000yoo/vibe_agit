@@ -15,11 +15,37 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
     const [isFlashing, setIsFlashing] = useState(false);
     const [isBusy, setIsBusy] = useState(false); 
 
+    const shouldAcceptIncomingPetData = (currentPetData, nextPetData) => {
+        if (!nextPetData) return false;
+        if (!currentPetData) return true;
+
+        const currentLevel = Number(currentPetData.level || 1);
+        const nextLevel = Number(nextPetData.level || 1);
+        if (nextLevel > currentLevel) return true;
+        if (nextLevel < currentLevel) return false;
+
+        const currentExp = Number(currentPetData.exp || 0);
+        const nextExp = Number(nextPetData.exp || 0);
+        if (nextExp > currentExp) return true;
+        if (nextExp < currentExp) return false;
+
+        const currentLastFed = currentPetData.lastFed || '';
+        const nextLastFed = nextPetData.lastFed || '';
+        if (nextLastFed > currentLastFed) return true;
+        if (nextLastFed < currentLastFed) return false;
+
+        return JSON.stringify(currentPetData) !== JSON.stringify(nextPetData);
+    };
+
     // [추가] 초기 데이터 동기화
     useEffect(() => {
-        if (initialPetData) {
-            setPetData(initialPetData);
-        }
+        if (!initialPetData) return;
+
+        setPetData((currentPetData) => (
+            shouldAcceptIncomingPetData(currentPetData, initialPetData)
+                ? initialPetData
+                : currentPetData
+        ));
     }, [initialPetData]);
 
     // [정밀 동기화] props로 전달된 설정값이 비동기로 업데이트될 때 훅 내부에서도 즉시 반영되도록 ref 사용
