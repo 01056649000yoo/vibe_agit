@@ -143,6 +143,22 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         return totalPoints;
     }, []);
 
+    const clearZeroPointLogsForPost = useCallback(async (post) => {
+        if (!post?.student_id || !post?.mission_id || !post?.id) return;
+
+        const { error } = await supabase
+            .from('point_logs')
+            .delete()
+            .eq('student_id', post.student_id)
+            .eq('mission_id', post.mission_id)
+            .eq('post_id', post.id)
+            .eq('amount', 0);
+
+        if (error) {
+            console.warn('[Approval] Failed to clear zero-point logs before approval:', error.message);
+        }
+    }, []);
+
     const handleSaveDefaultRubric = async () => {
         if (!formData.evaluation_rubric?.levels) return;
 
@@ -648,7 +664,6 @@ ${postArray.map((p, idx) => {
         setProgress({ current: 0, total: targetPosts.length });
 
         try {
-            const allLogs = [];
             const allUpdatePromises = [];
             const processedIds = [];
             const CHUNK_SIZE = 5; // [최적화] 한 번에 5개씩 AI 처리 (N+1 문제 완화)
@@ -688,13 +703,6 @@ ${postArray.map((p, idx) => {
                                 );
 
                                 // 2. 포인트 로그 데이터 수집 (일괄 처리를 위해 배열에 저장)
-                                allLogs.push({
-                                    student_id: post.student_id,
-                                    post_id: post.id,
-                                    mission_id: post.mission_id,
-                                    amount: 0,
-                                    reason: `[AI 일괄 요청] '${post.title}' 글에 대한 다시 쓰기가 도착했습니다. ♻️`
-                                });
                             }
                         }
                     }
@@ -715,9 +723,6 @@ ${postArray.map((p, idx) => {
 
             // [최종 최적화] 수집된 DB 작업들을 일괄 처리
             const dbTasks = [];
-            if (allLogs.length > 0) {
-                dbTasks.push(supabase.from('point_logs').insert(allLogs));
-            }
             if (allUpdatePromises.length > 0) {
                 dbTasks.push(Promise.all(allUpdatePromises));
             }
@@ -743,24 +748,13 @@ ${postArray.map((p, idx) => {
 
         try {
             // [최적화] 글 상태 업데이트와 포인트 로그 삽입을 병렬 처리
-            const [postResult, logResult] = await Promise.all([
-                supabase.from('student_posts').update({
-                    is_submitted: false,
-                    is_returned: true,
-                    ai_feedback: tempFeedback
-                }).eq('id', post.id),
-                
-                supabase.from('point_logs').insert({
-                    student_id: post.student_id,
-                    post_id: post.id,
-                    mission_id: post.mission_id,
-                    amount: 0,
-                    reason: `선생님께서 '${post.title}' 글에 대한 다시 쓰기를 요청하셨습니다. ♻️`
-                })
-            ]);
+            const { error: postError } = await supabase.from('student_posts').update({
+                is_submitted: false,
+                is_returned: true,
+                ai_feedback: tempFeedback
+            }).eq('id', post.id);
 
-            if (postResult.error) throw postResult.error;
-            if (logResult.error) throw logResult.error;
+            if (postError) throw postError;
 
             alert('다시 쓰기 요청을 전달했습니다! 📤');
             setSelectedPost(null);
@@ -776,6 +770,7 @@ ${postArray.map((p, idx) => {
 
         try {
             setLoadingPosts(true);
+            await clearZeroPointLogsForPost(post);
             const totalPointsToGive = calculateApprovalPoints(selectedMission, post);
             const isBonusAchieved = totalPointsToGive > (selectedMission.base_reward || 0);
 
@@ -824,6 +819,7 @@ ${postArray.map((p, idx) => {
 
         setLoadingPosts(true);
         try {
+            await Promise.all(toApprove.map((post) => clearZeroPointLogsForPost(post)));
             // [최적화] N번의 글 승인 통신과 N번의 포인트 RPC 호출(총 2N회)을 하나의 데이터 배열로 묶어(Bulk) 서버리스 함수 1회 호출로 해결.
             const submissions = toApprove.map((post) => {
                 const amount = calculateApprovalPoints(selectedMission, post);
@@ -1072,24 +1068,14 @@ ${postArray.map((p, idx) => {
         setLoadingPosts(true);
         try {
             const rewritePromises = toRewrite.map(async (post) => {
-                await Promise.all([
-                    supabase
-                        .from('student_posts')
-                        .update({
-                            is_submitted: false,
-                            is_returned: true,
-                            is_confirmed: false
-                        })
-                        .eq('id', post.id),
-
-                    supabase.from('point_logs').insert({
-                        student_id: post.student_id,
-                        post_id: post.id,
-                        mission_id: post.mission_id,
-                        amount: 0,
-                        reason: `[일괄 요청] '${post.title}' 글에 대한 다시 쓰기 요청이 도착했습니다. ♻️`
+                await supabase
+                    .from('student_posts')
+                    .update({
+                        is_submitted: false,
+                        is_returned: true,
+                        is_confirmed: false
                     })
-                ]);
+                    .eq('id', post.id);
             });
 
             await Promise.all(rewritePromises);
