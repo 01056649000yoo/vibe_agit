@@ -4,6 +4,7 @@ import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMissionSubmit } from '../../hooks/useMissionSubmit';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
+import { countContentChars } from '../../lib/textMetrics';
 
 const REACTION_ICONS = [
     { type: 'heart', label: '좋아요', emoji: '❤️' },
@@ -110,7 +111,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     };
 
     // 통계 계산
-    const charCount = content.length;
+    const charCount = countContentChars(content);
     const paragraphCount = content.split(/\n+/).filter(p => p.trim().length > 0).length;
 
     // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)

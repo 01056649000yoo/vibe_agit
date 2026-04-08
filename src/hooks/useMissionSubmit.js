@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { dataCache } from '../lib/cache';
 import confetti from 'canvas-confetti';
+import { countContentChars } from '../lib/textMetrics';
 
 export const useMissionSubmit = (studentSession, missionId, params, onBack, onNavigate) => {
     const [mission, setMission] = useState(null);
@@ -136,7 +137,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     mission_id: missionId,
                     title: title.trim(),
                     content: content,
-                    char_count: content.length,
+                    char_count: countContentChars(content),
                     paragraph_count: content.split(/\n+/).filter(p => p.trim().length > 0).length,
                     is_submitted: isSubmitted, // [수정] 기존 제출 상태 유지 (false로 고정되어 버그 발생하던 부분 해결)
                     is_returned: isReturned,
@@ -169,7 +170,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             return;
         }
 
-        const charCount = content.length;
+        const charCount = countContentChars(content);
         const paragraphCount = content.split(/\n+/).filter(p => p.trim().length > 0).length;
 
         if (charCount < (mission.min_chars || 0)) {
@@ -201,7 +202,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         setSubmitting(true);
         try {
             // 제출 전 최신 데이터로 다시 계산 (동기화 보장)
-            const finalCharCount = content.length;
+            const finalCharCount = countContentChars(content);
             const finalParagraphCount = content.split('\n').filter(p => p.trim().length > 0).length;
 
             // 2. 글 저장 (student_posts) - upsert 사용
