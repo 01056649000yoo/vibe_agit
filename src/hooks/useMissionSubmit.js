@@ -28,7 +28,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             const { data: missionData, error: missionError } = await supabase
                 .from('writing_missions')
                 // 미션 식별, 제목, 설명, 타입, 최소 글자/문단수 및 가이드 질문 등 필수 데이터만 로드
-                .select('id, title, guide, mission_type, min_chars, min_paragraphs, guide_questions, is_archived')
+                .select('id, title, guide, mission_type, min_chars, min_paragraphs, guide_questions, is_archived, base_reward, bonus_threshold, bonus_reward')
                 .eq('id', missionId)
                 .maybeSingle();
 
@@ -139,6 +139,9 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     content: content,
                     char_count: countContentChars(content),
                     paragraph_count: content.split(/\n+/).filter(p => p.trim().length > 0).length,
+                    awarded_base_reward: mission?.base_reward ?? null,
+                    awarded_bonus_reward: mission?.bonus_reward ?? null,
+                    awarded_bonus_threshold: mission?.bonus_threshold ?? null,
                     is_submitted: isSubmitted, // [수정] 기존 제출 상태 유지 (false로 고정되어 버그 발생하던 부분 해결)
                     is_returned: isReturned,
                     is_teacher_edited: false,
@@ -223,6 +226,9 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 content: content,
                 char_count: finalCharCount,
                 paragraph_count: finalParagraphCount,
+                awarded_base_reward: mission?.base_reward ?? null,
+                awarded_bonus_reward: mission?.bonus_reward ?? null,
+                awarded_bonus_threshold: mission?.bonus_threshold ?? null,
                 is_submitted: true,
                 is_returned: false,
                 is_confirmed: false,

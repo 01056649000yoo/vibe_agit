@@ -1,70 +1,84 @@
 import React, { useState, useEffect } from 'react';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
-import { AnnouncementModal, AnnouncementListModal } from './AnnouncementComponents';
-import { AnimatePresence } from 'framer-motion';
+import { AnnouncementListModal } from './AnnouncementComponents';
 import Button from '../common/Button';
 
 const TeacherAnnouncementManager = ({ isMobile }) => {
     const { announcements, latestAnnouncement, loading } = useAnnouncements('TEACHER');
-    const [showPopup, setShowPopup] = useState(false);
     const [showList, setShowList] = useState(false);
+    const [hasUnread, setHasUnread] = useState(false);
 
     useEffect(() => {
-        // 로딩 중이거나 공지사항이 없거나 팝업 설정이 없으면 무시
-        if (loading || !latestAnnouncement || !latestAnnouncement.is_popup) return;
+        if (loading || !latestAnnouncement?.id) return;
 
-        const popupKey = `announcement_popup_${latestAnnouncement.id}`;
-        const hasSeen = localStorage.getItem(popupKey);
-
-        // 아직 보지 않은 경우에만 팝업 표시
-        if (hasSeen !== 'true') {
-            setShowPopup(true);
-        }
-    }, [latestAnnouncement?.id, loading, latestAnnouncement?.is_popup]); // 의존성 배열 최적화
+        const latestSeenId = localStorage.getItem('teacher_latest_announcement_seen');
+        setHasUnread(latestSeenId !== latestAnnouncement.id);
+    }, [latestAnnouncement?.id, loading]);
 
     if (loading) return null;
 
+    const handleOpenList = () => {
+        if (latestAnnouncement?.id) {
+            localStorage.setItem('teacher_latest_announcement_seen', latestAnnouncement.id);
+            setHasUnread(false);
+        }
+        setShowList(true);
+    };
+
     return (
         <>
-            {/* 헤더용 간소화된 버튼 */}
             <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowList(true)}
+                onClick={handleOpenList}
                 style={{
                     fontSize: '0.8rem',
-                    color: '#6366F1',
-                    border: '1px solid #E0E7FF',
-                    background: '#F5F7FF',
+                    color: hasUnread ? '#4338CA' : '#6366F1',
+                    border: hasUnread ? '1px solid #C7D2FE' : '1px solid #E0E7FF',
+                    background: hasUnread ? '#EEF2FF' : '#F5F7FF',
                     borderRadius: '8px',
                     fontWeight: 'bold',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px'
+                    gap: '6px',
+                    boxShadow: hasUnread ? '0 0 0 3px rgba(99, 102, 241, 0.08)' : 'none',
+                    maxWidth: isMobile ? '52px' : '240px'
                 }}
+                title={latestAnnouncement ? latestAnnouncement.title : '공지사항'}
             >
-                {isMobile ? '🔔' : '🔔 공지사항'}
+                <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                    <span>{isMobile ? '🔔' : '📢'}</span>
+                    {hasUnread && (
+                        <span style={{
+                            position: 'absolute',
+                            top: '-4px',
+                            right: isMobile ? '-5px' : '-8px',
+                            minWidth: '8px',
+                            height: '8px',
+                            borderRadius: '999px',
+                            background: '#EF4444',
+                            border: '2px solid white'
+                        }} />
+                    )}
+                </span>
+                {isMobile ? null : (
+                    <span style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '180px'
+                    }}>
+                        {hasUnread && latestAnnouncement ? `새 공지: ${latestAnnouncement.title}` : '공지사항'}
+                    </span>
+                )}
             </Button>
 
-            <AnimatePresence>
-                {showPopup && latestAnnouncement && (
-                    <AnnouncementModal
-                        announcement={latestAnnouncement}
-                        onClose={() => setShowPopup(false)}
-                        onDoNotShowAgain={() => {
-                            const popupKey = `announcement_popup_${latestAnnouncement.id}`;
-                            localStorage.setItem(popupKey, 'true');
-                            setShowPopup(false); // 즉시 닫기
-                        }}
-                    />
-                )}
-                {showList && (
-                    <AnnouncementListModal
-                        announcements={announcements}
-                        onClose={() => setShowList(false)}
-                    />
-                )}
-            </AnimatePresence>
+            {showList && (
+                <AnnouncementListModal
+                    announcements={announcements}
+                    onClose={() => setShowList(false)}
+                />
+            )}
         </>
     );
 };

@@ -133,11 +133,16 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     const calculateApprovalPoints = useCallback((mission, post) => {
         if (!mission || !post) return 0;
 
-        let totalPoints = mission.base_reward || 0;
-        const totalThreshold = (mission.min_chars || 0) + (mission.bonus_threshold || 0);
+        const baseReward = post.awarded_base_reward ?? mission.base_reward ?? 0;
+        const bonusReward = post.awarded_bonus_reward ?? mission.bonus_reward ?? 0;
+        const bonusThreshold = post.awarded_bonus_threshold ?? mission.bonus_threshold ?? 0;
+        const minChars = mission.min_chars ?? 0;
 
-        if (mission.bonus_threshold && post.char_count >= totalThreshold) {
-            totalPoints += (mission.bonus_reward || 0);
+        let totalPoints = baseReward;
+        const totalThreshold = minChars + bonusThreshold;
+
+        if (bonusThreshold && post.char_count >= totalThreshold) {
+            totalPoints += bonusReward;
         }
 
         return totalPoints;
@@ -216,6 +221,19 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
     };
 
     const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+
+    const fetchMissionDetails = useCallback(async (missionId) => {
+        if (!missionId) return null;
+
+        const { data, error } = await supabase
+            .from('writing_missions')
+            .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
+            .eq('id', missionId)
+            .maybeSingle();
+
+        if (error) throw error;
+        return data;
+    }, []);
 
     const fetchMissions = useCallback(async () => {
         if (!activeClass?.id) return;
@@ -499,13 +517,17 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
 
     const fetchPostsForMission = async (mission) => {
         setLoadingPosts(true);
-        setSelectedMission(mission);
         try {
+            const detailedMission = await fetchMissionDetails(mission.id);
+            const missionForSelection = detailedMission || mission;
+            setSelectedMission(missionForSelection);
+
             const { data, error } = await supabase
                 .from('student_posts')
                 .select(`
                     id, title, content, student_id, mission_id, char_count, is_submitted, is_confirmed, is_returned, ai_feedback, created_at,
                     original_title, original_content, first_submitted_at, initial_eval, final_eval, eval_comment, student_answers,
+                    awarded_base_reward, awarded_bonus_reward, awarded_bonus_threshold,
                     teacher_edited_title, teacher_edited_content, teacher_edited_at, teacher_edited_by, is_teacher_edited,
                     students!inner(name, class_id),
                     post_reactions(id, reaction_type, student_id, students(name)),
@@ -771,8 +793,18 @@ ${postArray.map((p, idx) => {
         try {
             setLoadingPosts(true);
             await clearZeroPointLogsForPost(post);
-            const totalPointsToGive = calculateApprovalPoints(selectedMission, post);
-            const isBonusAchieved = totalPointsToGive > (selectedMission.base_reward || 0);
+            const missionDetails = await fetchMissionDetails(post.mission_id);
+            const rewardMission = missionDetails || selectedMission;
+            const totalPointsToGive = calculateApprovalPoints(rewardMission, post);
+            const appliedBaseReward = post.awarded_base_reward ?? rewardMission?.base_reward ?? 0;
+            const isBonusAchieved = totalPointsToGive > appliedBaseReward;
+
+            if (!rewardMission || rewardMission.base_reward == null) {
+                throw new Error('미션 보상 정보를 다시 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.');
+            }
+            if (totalPointsToGive <= 0) {
+                throw new Error('계산된 포인트가 0점입니다. 미션 보상 설정을 확인한 뒤 다시 시도해주세요.');
+            }
 
             const { error: postError } = await supabase
                 .from('student_posts')
@@ -789,7 +821,7 @@ ${postArray.map((p, idx) => {
             const { error: rpcError } = await supabase.rpc('increment_student_points', {
                 p_student_id: post.student_id,
                 p_amount: totalPointsToGive,
-                p_reason: `[${selectedMission.title}] 미션 승인 보상 ${isBonusAchieved ? '(보너스 달성! 🔥)' : ''}`,
+                p_reason: `[${rewardMission.title}] 미션 승인 보상 ${isBonusAchieved ? '(보너스 달성! 🔥)' : ''}`,
                 p_post_id: post.id,
                 p_mission_id: post.mission_id
             });
@@ -820,19 +852,32 @@ ${postArray.map((p, idx) => {
         setLoadingPosts(true);
         try {
             await Promise.all(toApprove.map((post) => clearZeroPointLogsForPost(post)));
+            const missionDetails = selectedMission?.id
+                ? await fetchMissionDetails(selectedMission.id)
+                : null;
+            const rewardMission = missionDetails || selectedMission;
+
+            if (!rewardMission || rewardMission.base_reward == null) {
+                throw new Error('미션 보상 정보를 다시 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.');
+            }
             // [최적화] N번의 글 승인 통신과 N번의 포인트 RPC 호출(총 2N회)을 하나의 데이터 배열로 묶어(Bulk) 서버리스 함수 1회 호출로 해결.
             const submissions = toApprove.map((post) => {
-                const amount = calculateApprovalPoints(selectedMission, post);
-                const isBonus = amount > (selectedMission.base_reward || 0);
+                const amount = calculateApprovalPoints(rewardMission, post);
+                const appliedBaseReward = post.awarded_base_reward ?? rewardMission.base_reward ?? 0;
+                const isBonus = amount > appliedBaseReward;
 
                 return {
                     post_id: post.id,
                     student_id: post.student_id,
                     mission_id: post.mission_id,
                     amount: amount,
-                    reason: `일괄 승인 보상: ${selectedMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`
+                    reason: `일괄 승인 보상: ${rewardMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`
                 };
             });
+
+            if (submissions.some((item) => item.amount <= 0)) {
+                throw new Error('일부 글의 계산 포인트가 0점입니다. 미션 보상 설정을 확인한 뒤 다시 시도해주세요.');
+            }
 
             const { error } = await supabase.rpc('bulk_approve_posts', {
                 p_submissions: submissions
