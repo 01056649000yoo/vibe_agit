@@ -5,6 +5,8 @@ import Button from '../common/Button';
 import AdminFeedbackList from './AdminFeedbackList';
 import AdminAnnouncementManager from './AdminAnnouncementManager';
 
+const TEACHER_REFRESH_INTERVAL_MS = 30000;
+
 // --- Components ---
 
 const StatCard = ({ label, value, color, icon }) => (
@@ -156,6 +158,7 @@ const formatLastLogin = (dateString) => {
 const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) => {
     const [pendingTeachers, setPendingTeachers] = useState([]);
     const [approvedTeachers, setApprovedTeachers] = useState([]);
+    const [registeredStudentCount, setRegisteredStudentCount] = useState(0);
     const [autoApproval, setAutoApproval] = useState(false);
     const [publicAiEnabled, setPublicAiEnabled] = useState(true);
     const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
@@ -170,16 +173,20 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const [settingsLoading, setSettingsLoading] = useState(false);
     const [_error, setError] = useState(null);
 
-    useEffect(() => {
-        fetchTeachers();
-        fetchSettings();
-        fetchFeedbackCount();
-    }, []);
+    const sortTeachersByRecentLogin = (list) => {
+        return [...list].sort((a, b) => {
+            const aLastLogin = a.last_login_at ? new Date(a.last_login_at).getTime() : 0;
+            const bLastLogin = b.last_login_at ? new Date(b.last_login_at).getTime() : 0;
 
-    // 탭이나 검색어가 바뀔 때 페이지 리셋
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [currentTab, searchTerm]);
+            if (aLastLogin !== bLastLogin) {
+                return bLastLogin - aLastLogin;
+            }
+
+            const aCreatedAt = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const bCreatedAt = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return bCreatedAt - aCreatedAt;
+        });
+    };
 
     const fetchFeedbackCount = async () => {
         try {
@@ -206,6 +213,20 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                 if (ai) setPublicAiEnabled(ai.value === true);
             }
         } catch (err) { console.error('설정 로드 실패:', err); }
+    };
+
+    const fetchRegisteredStudentCount = async () => {
+        try {
+            const { count, error } = await supabase
+                .from('students')
+                .select('id', { count: 'exact', head: true })
+                .is('deleted_at', null);
+
+            if (error) throw error;
+            setRegisteredStudentCount(count || 0);
+        } catch (err) {
+            console.error('등록 학생 수 조회 실패:', err);
+        }
     };
 
     const handleToggleAutoApproval = async () => {
@@ -238,8 +259,10 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         }
     };
 
-    const fetchTeachers = async () => {
-        setLoading(true);
+    const fetchTeachers = async ({ showLoading = true } = {}) => {
+        if (showLoading) {
+            setLoading(true);
+        }
         setError(null);
         try {
             const { data, error: fetchError } = await supabase
@@ -247,18 +270,55 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                 // [보안] select('*') 대신 필요한 컬럼만 명시 → personal_openai_api_key 등 민감정보 미노출
                 .select(`id, role, email, full_name, is_approved, api_mode, created_at, last_login_at, teachers!left(name, school_name, phone)`)
                 .in('role', ['TEACHER', 'ADMIN'])
+                .order('last_login_at', { ascending: false, nullsFirst: false })
                 .order('created_at', { ascending: false });
 
             if (fetchError) throw fetchError;
 
             setPendingTeachers(data.filter(p => p.is_approved !== true));
-            setApprovedTeachers(data.filter(p => p.is_approved === true));
+            setApprovedTeachers(sortTeachersByRecentLogin(data.filter(p => p.is_approved === true)));
         } catch (err) {
             setError(err.message);
         } finally {
-            setLoading(false);
+            if (showLoading) {
+                setLoading(false);
+            }
         }
     };
+
+    useEffect(() => {
+        fetchTeachers();
+        fetchSettings();
+        fetchFeedbackCount();
+        fetchRegisteredStudentCount();
+
+        const refreshTeachers = () => {
+            fetchTeachers({ showLoading: false });
+            fetchRegisteredStudentCount();
+        };
+
+        const intervalId = window.setInterval(refreshTeachers, TEACHER_REFRESH_INTERVAL_MS);
+        const handleFocus = () => refreshTeachers();
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refreshTeachers();
+            }
+        };
+
+        window.addEventListener('focus', handleFocus);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            window.clearInterval(intervalId);
+            window.removeEventListener('focus', handleFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
+
+    // 탭이나 검색어가 바뀔 때 페이지 리셋
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [currentTab, searchTerm]);
 
     const handleApprove = async (teacherId, teacherName) => {
         if (_session?.user?.id === teacherId) {
@@ -308,7 +368,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             if (error) throw error;
 
             // UI Optimistic Update
-            const updater = list => list.map(item => item.id === teacherId ? { ...item, api_mode: newMode } : item);
+            const updater = list => sortTeachersByRecentLogin(list.map(item => item.id === teacherId ? { ...item, api_mode: newMode } : item));
             setApprovedTeachers(prev => updater(prev));
             setPendingTeachers(prev => updater(prev));
 
@@ -339,12 +399,17 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
     // --- Search & Filter Logic ---
     const filterList = (list) => {
-        if (!searchTerm) return list;
-        return list.filter(t => {
+        const filtered = !searchTerm ? list : list.filter(t => {
             const info = Array.isArray(t.teachers) ? t.teachers[0] : t.teachers;
             const text = `${t.full_name} ${info?.name} ${info?.school_name} ${t.email}`.toLowerCase();
             return text.includes(searchTerm.toLowerCase());
         });
+
+        if (list === approvedTeachers) {
+            return sortTeachersByRecentLogin(filtered);
+        }
+
+        return filtered;
     };
 
     return (
@@ -374,8 +439,8 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     color="#48BB78" icon="✅"
                 />
                 <StatCard
-                    label="전체 회원" value={`${pendingTeachers.length + approvedTeachers.length}명`}
-                    color="#4299E1" icon="👥"
+                    label="등록 학생수" value={`${registeredStudentCount}명`}
+                    color="#4299E1" icon="🧑‍🎓"
                 />
             </div>
 
