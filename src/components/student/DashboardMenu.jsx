@@ -2,6 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 
+const getKstDateKey = () => {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(new Date());
+};
+
 const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsVocabTowerOpen, isMobile, agitSettings, vocabTowerSettings, studentSession }) => {
     // 어휘의 탑 활성화 여부
     const isVocabTowerEnabled = vocabTowerSettings?.enabled ?? false;
@@ -9,7 +18,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
 
     // [신규] 일일 시도 횟수 확인
     const getTodayKey = () => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getKstDateKey();
         // 교사가 설정을 리셋한 날짜정보(resetDate)를 키에 포함하여, 설정 변경 시 회수가 리셋되도록 함
         const resetSuffix = vocabTowerSettings?.resetDate ? `_${vocabTowerSettings.resetDate}` : '';
         return `vocab_tower_attempts_${studentSession?.id}_${today}${resetSuffix}`;

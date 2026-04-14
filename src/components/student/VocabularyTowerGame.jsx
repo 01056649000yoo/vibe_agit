@@ -29,6 +29,15 @@ const FLOOR_MESSAGES = {
     default: "점점 더 정상이 가까워지고 있어요! 💪"
 };
 
+const getKstDateKey = () => {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(new Date());
+};
+
 const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit = 3, timeLimit = 60, rewardPoints = 80, resetDate, rankingResetDate }) => {
     // 교사가 설정한 학년이 있으면 고정, 없으면 학생 학년 또는 4학년
     const [selectedGrade, setSelectedGrade] = useState(forcedGrade || studentSession?.grade || 4);
@@ -46,7 +55,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
     // [신규] 일일 시도 횟수 관리
     const getTodayKey = () => {
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+        const today = getKstDateKey(); // YYYY-MM-DD (KST)
         const resetSuffix = resetDate ? `_${resetDate}` : '';
         return `vocab_tower_attempts_${studentSession?.id}_${today}${resetSuffix}`;
     };
