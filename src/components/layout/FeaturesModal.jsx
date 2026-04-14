@@ -274,6 +274,9 @@ const FeaturesModal = ({ isOpen, onClose, mode = 'features' }) => {
                                     끄적끄적아지트 길잡이 바로가기
                                 </Button>
                             </a>
+                            <p style={{ margin: '12px 0 0 0', fontSize: '0.9rem', color: '#9A3412', fontWeight: '600' }}>
+                                이 프로그램은 별도의 회원가입이 필요합니다.
+                            </p>
                         </div>
                     ) : (
                         <Button
