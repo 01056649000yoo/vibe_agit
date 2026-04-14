@@ -4,7 +4,7 @@ import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
 import FeaturesModal from './FeaturesModal';
 const LandingPage = ({ onStudentLoginClick }) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalType, setModalType] = useState(null);
 
     return (
         <>
@@ -77,9 +77,47 @@ const LandingPage = ({ onStudentLoginClick }) => {
                     </Button>
                 </div>
 
+                {/* 길잡이 배너 */}
+                <div
+                    onClick={() => setModalType('guide')}
+                    style={{
+                        background: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)',
+                        padding: '16px 18px',
+                        borderRadius: '18px',
+                        marginTop: '1.5rem',
+                        border: '1px solid #FED7AA',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(194, 65, 12, 0.12)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                    }}
+                >
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', minHeight: '28px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', minWidth: 0 }}>
+                            <span style={{ fontSize: '1.2rem' }}>🧭</span>
+                            <span style={{ color: '#C2410C', fontWeight: '800', fontSize: '0.98rem', lineHeight: '1.35', wordBreak: 'keep-all' }}>
+                                끄적끄적 아지트 길잡이-글감만들기-
+                            </span>
+                        </div>
+                        <span style={{ color: '#C2410C', fontWeight: '700', fontSize: '0.84rem', whiteSpace: 'nowrap', justifySelf: 'end' }}>
+                            자세히 보기 〉
+                        </span>
+                    </div>
+                </div>
+
                 {/* 서비스 특징 배너 추가 (학생 로그인과 입장 문구 사이) */}
                 <div
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => setModalType('features')}
                     style={{
                         background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
                         padding: '12px 20px',
@@ -135,8 +173,9 @@ const LandingPage = ({ onStudentLoginClick }) => {
             </Card>
 
             <FeaturesModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                isOpen={Boolean(modalType)}
+                mode={modalType || 'features'}
+                onClose={() => setModalType(null)}
             />
         </>
     );
