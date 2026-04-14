@@ -533,6 +533,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>이름</th>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>학교</th>
                                             <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>최근 접속</th>
+                                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>가입일</th>
                                             <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>API 사용 권한</th>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>이메일</th>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>전화번호</th>
@@ -570,6 +571,9 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                                         <td style={{ padding: '16px', color: '#455A64' }}>{schoolName}</td>
                                                         <td style={{ padding: '16px', textAlign: 'center', color: '#546E7A', fontWeight: '500' }}>
                                                             {formatLastLogin(profile.last_login_at)}
+                                                        </td>
+                                                        <td style={{ padding: '16px', textAlign: 'center', color: '#546E7A', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                                                            {profile.created_at ? new Date(profile.created_at).toLocaleDateString('ko-KR') : '-'}
                                                         </td>
                                                         <td style={{ padding: '16px', textAlign: 'center' }}>
                                                             <button
