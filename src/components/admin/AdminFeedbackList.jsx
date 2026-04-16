@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 
-const AdminFeedbackList = () => {
+const AdminFeedbackList = ({ onFeedbackUpdated }) => {
     const [feedbacks, setFeedbacks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedIds, setExpandedIds] = useState(new Set());
@@ -55,6 +55,7 @@ const AdminFeedbackList = () => {
             setFeedbacks(prev => prev.map(f =>
                 f.id === id ? { ...f, status: newStatus } : f
             ));
+            onFeedbackUpdated?.();
         } catch (error) {
             alert('상태 업데이트 실패: ' + error.message);
         }
@@ -69,6 +70,7 @@ const AdminFeedbackList = () => {
 
             if (error) throw error;
             setFeedbacks(prev => prev.filter(f => f.id !== id));
+            onFeedbackUpdated?.();
         } catch (error) {
             alert('삭제 실패: ' + error.message);
         }

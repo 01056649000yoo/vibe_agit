@@ -801,7 +801,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     )}
 
                     {!loading && currentTab === 'feedback' && (
-                        <AdminFeedbackList />
+                        <AdminFeedbackList onFeedbackUpdated={fetchFeedbackCount} />
                     )}
 
                     {!loading && currentTab === 'announcements' && (
