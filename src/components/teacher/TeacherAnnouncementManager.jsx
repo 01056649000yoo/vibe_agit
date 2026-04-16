@@ -2,24 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
 import { AnnouncementListModal } from './AnnouncementComponents';
 import Button from '../common/Button';
+import { useAuthStore } from '../../store/useAuthStore';
 
 const TeacherAnnouncementManager = ({ isMobile }) => {
     const { announcements, latestAnnouncement, loading } = useAnnouncements('TEACHER');
+    const session = useAuthStore((state) => state.session);
     const [showList, setShowList] = useState(false);
     const [hasUnread, setHasUnread] = useState(false);
+
+    const storageKey = `teacher_latest_announcement_seen_${session?.user?.id || 'guest'}`;
 
     useEffect(() => {
         if (loading || !latestAnnouncement?.id) return;
 
-        const latestSeenId = localStorage.getItem('teacher_latest_announcement_seen');
-        setHasUnread(latestSeenId !== latestAnnouncement.id);
-    }, [latestAnnouncement?.id, loading]);
+        const latestSeenId = localStorage.getItem(storageKey);
+        setHasUnread(latestSeenId !== String(latestAnnouncement.id));
+    }, [latestAnnouncement?.id, loading, storageKey]);
 
     if (loading) return null;
 
     const handleOpenList = () => {
         if (latestAnnouncement?.id) {
-            localStorage.setItem('teacher_latest_announcement_seen', latestAnnouncement.id);
+            localStorage.setItem(storageKey, String(latestAnnouncement.id));
             setHasUnread(false);
         }
         setShowList(true);
