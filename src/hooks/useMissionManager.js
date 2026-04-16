@@ -266,15 +266,25 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
                 const missionIds = missionsData.map(m => m.id);
                 const { data: counts, error: countError } = await supabase
                     .from('student_posts')
-                    .select('mission_id, students!inner(id)')
+                    .select('mission_id, student_id, students!inner(id)')
                     .in('mission_id', missionIds)
+                    .eq('is_confirmed', true)
                     .is('students.deleted_at', null);
 
                 if (!countError && counts) {
-                    const stats = counts.reduce((acc, curr) => {
-                        acc[curr.mission_id] = (acc[curr.mission_id] || 0) + 1;
+                    const missionStudentSets = counts.reduce((acc, curr) => {
+                        if (!acc[curr.mission_id]) {
+                            acc[curr.mission_id] = new Set();
+                        }
+                        if (curr.student_id) {
+                            acc[curr.mission_id].add(curr.student_id);
+                        }
                         return acc;
                     }, {});
+
+                    const stats = Object.fromEntries(
+                        Object.entries(missionStudentSets).map(([missionId, studentSet]) => [missionId, studentSet.size])
+                    );
                     setSubmissionCounts(stats);
                 }
             }

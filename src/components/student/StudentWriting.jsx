@@ -14,6 +14,33 @@ const REACTION_ICONS = [
     { type: 'star', label: '최고야', emoji: '✨' }
 ];
 
+const PREVIEW_MODAL_STYLES = {
+    overlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(44, 62, 80, 0.55)',
+        backdropFilter: 'blur(3px)',
+        zIndex: 2000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px'
+    },
+    dialog: {
+        width: '100%',
+        maxWidth: '820px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        background: '#FFFFFF',
+        borderRadius: '28px',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.18)',
+        padding: '28px'
+    }
+};
+
 /**
  * 역할: 학생 - 글쓰기 에디터 (단계별 답변 및 본문 삽입 기능 포함) ✨
  */
@@ -54,6 +81,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const [hoveredType, setHoveredType] = useState(null);
 
     const [showOriginal, setShowOriginal] = useState(false);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const editorRef = useRef(null);
     const isMobile = window.innerWidth <= 768;
     const [autoSaveAt, setAutoSaveAt] = useState(null);
@@ -109,6 +137,12 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         const combined = validAnswers.join('\n\n');
         setContent(prev => prev ? prev + '\n\n' + combined : combined);
     };
+
+    const previewParagraphs = content
+        .split('\n')
+        .map((paragraph) => paragraph.trimEnd())
+        .filter((paragraph) => paragraph.trim().length > 0);
+    const previewLines = content.split('\n');
 
     // 통계 계산
     const charCount = countContentChars(content);
@@ -305,6 +339,12 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     value={studentAnswers[idx] || ''}
                                     onChange={(e) => handleAnswerChange(idx, e.target.value)}
                                     placeholder="여기에 생각을 적어보세요..."
+                                    spellCheck={true}
+                                    autoCorrect="on"
+                                    autoCapitalize="sentences"
+                                    lang="ko"
+                                    enterKeyHint="enter"
+                                    wrap="soft"
                                     style={{
                                         width: '100%',
                                         minHeight: '120px',
@@ -422,6 +462,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="글의 제목을 적어주세요..."
+                        spellCheck={true}
+                        autoCorrect="on"
+                        autoCapitalize="sentences"
+                        lang="ko"
                         style={{
                             width: '100%',
                             padding: '16px 0',
@@ -442,6 +486,12 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
                         placeholder="여기에 자유롭게 이야기를 시작해보세요..."
+                        spellCheck={true}
+                        autoCorrect="on"
+                        autoCapitalize="sentences"
+                        lang="ko"
+                        enterKeyHint="enter"
+                        wrap="soft"
                         style={{
                             width: '100%',
                             minHeight: '600px',
@@ -680,10 +730,185 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 <Button size="lg" onClick={() => handleSave(true)} disabled={submitting || isLocked} style={{ flex: 1, height: '64px', fontSize: '1.2rem', fontWeight: '800', background: isLocked ? '#F1F3F5' : '#ECEFF1', color: isLocked ? '#BDC3C7' : '#455A64', border: 'none' }}>
                     {isLocked ? '수정 불가 🔒' : '임시 저장 💾'}
                 </Button>
+                <Button
+                    size="lg"
+                    onClick={() => setIsPreviewOpen(true)}
+                    disabled={submitting || isLocked || (!title.trim() && !content.trim())}
+                    style={{
+                        flex: 1.2,
+                        height: '64px',
+                        fontSize: '1.2rem',
+                        fontWeight: '800',
+                        background: (submitting || isLocked || (!title.trim() && !content.trim())) ? '#E0E0E0' : '#E8F1FF',
+                        color: (submitting || isLocked || (!title.trim() && !content.trim())) ? '#9E9E9E' : '#1565C0',
+                        border: '1px solid #BBDEFB'
+                    }}
+                >
+                    제출 전 검토하기 👀
+                </Button>
                 <Button size="lg" onClick={handleSubmit} disabled={submitting || isLocked} style={{ flex: 2, height: '64px', fontSize: '1.3rem', fontWeight: '900', background: isLocked ? '#B0BEC5' : 'var(--primary-color)', color: 'white', border: 'none' }}>
                     {submitting ? '제출 중...' : isConfirmed ? '승인 완료 ✨' : (isSubmitted && isReturned) ? '수정해서 다시 제출! 🚀' : (isSubmitted && !isReturned) ? '확인 대기 중...' : '멋지게 제출하기! 🚀'}
                 </Button>
             </div>
+
+            <AnimatePresence>
+                {isPreviewOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={PREVIEW_MODAL_STYLES.overlay}
+                        onClick={() => setIsPreviewOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ y: 24, opacity: 0, scale: 0.98 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            exit={{ y: 24, opacity: 0, scale: 0.98 }}
+                            transition={{ duration: 0.2 }}
+                            style={PREVIEW_MODAL_STYLES.dialog}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '24px' }}>
+                                <div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#263238', marginBottom: '8px' }}>제출 전 검토하기</div>
+                                    <div style={{ color: '#607D8B', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                                        문단이 잘 나뉘었는지, 제목과 본문이 의도대로 보이는지 마지막으로 확인해보세요.
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsPreviewOpen(false)}
+                                    style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#90A4AE' }}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div style={{
+                                display: 'flex',
+                                gap: '12px',
+                                flexWrap: 'wrap',
+                                marginBottom: '24px'
+                            }}>
+                                <div style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: '14px', padding: '10px 14px', fontWeight: '800', color: '#8D6E63' }}>
+                                    글자 수 {charCount}자
+                                </div>
+                                <div style={{ background: '#E8F5E9', border: '1px solid #C8E6C9', borderRadius: '14px', padding: '10px 14px', fontWeight: '800', color: '#2E7D32' }}>
+                                    문단 수 {paragraphCount}개
+                                </div>
+                            </div>
+
+                            <div style={{ marginBottom: '18px' }}>
+                                <div style={{ fontSize: '0.9rem', color: '#78909C', fontWeight: '800', marginBottom: '8px' }}>제목</div>
+                                <div style={{
+                                    background: '#FAFAFA',
+                                    border: '1px solid #ECEFF1',
+                                    borderRadius: '18px',
+                                    padding: '18px 20px',
+                                    fontSize: '1.5rem',
+                                    fontWeight: '900',
+                                    color: '#263238',
+                                    lineHeight: '1.4'
+                                }}>
+                                    {title.trim() || '제목이 아직 비어 있어요.'}
+                                </div>
+                            </div>
+
+                            <div style={{ marginBottom: '28px' }}>
+                                <div style={{ fontSize: '0.9rem', color: '#78909C', fontWeight: '800', marginBottom: '8px' }}>본문 미리보기</div>
+                                <div style={{
+                                    background: '#FBFCFD',
+                                    border: '1px solid #ECEFF1',
+                                    borderRadius: '22px',
+                                    padding: '20px'
+                                }}>
+                                    {previewParagraphs.length > 0 ? (
+                                        <div style={{
+                                            background: '#FFFFFF',
+                                            border: '1px solid #E3F2FD',
+                                            borderRadius: '18px',
+                                            padding: '18px 20px',
+                                            fontSize: '1.05rem',
+                                            lineHeight: '1.9',
+                                            color: '#37474F',
+                                            whiteSpace: 'pre-wrap',
+                                            wordBreak: 'break-word',
+                                            overflowWrap: 'anywhere',
+                                            boxSizing: 'border-box',
+                                            width: '100%',
+                                            maxWidth: '100%',
+                                            overflowX: 'hidden',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+                                        }}>
+                                            {previewLines.map((line, index) => {
+                                                const isLastLine = index === previewLines.length - 1;
+
+                                                return (
+                                                    <React.Fragment key={`preview-line-${index}`}>
+                                                        <div style={{ minHeight: '1.9em' }}>
+                                                            {line.length > 0 ? line : '\u00A0'}
+                                                        </div>
+                                                        {!isLastLine && (
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'flex-end',
+                                                                margin: '8px 0 10px 0',
+                                                                borderTop: '1px dashed #FFCC80',
+                                                                paddingTop: '6px'
+                                                            }}>
+                                                                <span style={{
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    width: '22px',
+                                                                    height: '22px',
+                                                                    borderRadius: '999px',
+                                                                    background: '#FFF8E1',
+                                                                    border: '1px solid #FFE082',
+                                                                    color: '#FB8C00',
+                                                                    fontSize: '0.78rem',
+                                                                    fontWeight: '800'
+                                                                }}>
+                                                                    ↵
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div style={{ textAlign: 'center', color: '#90A4AE', padding: '36px 20px', fontWeight: '700' }}>
+                                            아직 본문이 비어 있어요. 내용을 조금 더 적고 검토해보세요.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <Button
+                                    size="lg"
+                                    onClick={() => setIsPreviewOpen(false)}
+                                    style={{ flex: 1, height: '58px', background: '#ECEFF1', color: '#455A64', border: 'none', fontWeight: '800' }}
+                                >
+                                    수정하기
+                                </Button>
+                                <Button
+                                    size="lg"
+                                    onClick={async () => {
+                                        setIsPreviewOpen(false);
+                                        await handleSubmit();
+                                    }}
+                                    disabled={submitting || isLocked}
+                                    style={{ flex: 1.4, height: '58px', background: 'var(--primary-color)', color: 'white', border: 'none', fontWeight: '900' }}
+                                >
+                                    이대로 제출하기 🚀
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </Card>
     );
 };
