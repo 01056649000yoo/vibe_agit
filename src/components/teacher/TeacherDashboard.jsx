@@ -30,6 +30,10 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [selectedActivityPost, setSelectedActivityPost] = useState(null);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    const [isAdminPasswordOpen, setIsAdminPasswordOpen] = useState(false);
+    const [adminPassword, setAdminPassword] = useState('');
+    const [adminPasswordError, setAdminPasswordError] = useState('');
+    const [isVerifyingAdminPassword, setIsVerifyingAdminPassword] = useState(false);
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
     const {
@@ -51,6 +55,63 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    const handleOpenAdminPasswordModal = useCallback(() => {
+        setAdminPassword('');
+        setAdminPasswordError('');
+        setIsAdminPasswordOpen(true);
+    }, []);
+
+    const handleConfirmAdminPassword = useCallback(async () => {
+        if (!adminPassword.trim()) {
+            setAdminPasswordError('비밀번호를 입력해주세요.');
+            return;
+        }
+
+        setIsVerifyingAdminPassword(true);
+        setAdminPasswordError('');
+
+        try {
+            const { data, error } = await supabase.functions.invoke('verify-admin-mode', {
+                body: { password: adminPassword }
+            });
+
+            if (error) {
+                let errorMessage = error.message || '관리자 모드 확인에 실패했습니다.';
+
+                if (error.context) {
+                    try {
+                        const errorText = await error.context.text();
+                        if (errorText) {
+                            try {
+                                const parsed = JSON.parse(errorText);
+                                errorMessage = parsed?.message || parsed?.error || errorMessage;
+                            } catch (_parseError) {
+                                errorMessage = errorText;
+                            }
+                        }
+                    } catch (_contextError) {
+                        // context를 읽지 못하면 기본 메시지를 유지합니다.
+                    }
+                }
+
+                throw new Error(errorMessage);
+            }
+
+            if (!data?.success) {
+                throw new Error(data?.message || '비밀번호가 올바르지 않습니다.');
+            }
+
+            setAdminPassword('');
+            setAdminPasswordError('');
+            setIsAdminPasswordOpen(false);
+            onSwitchToAdminMode();
+        } catch (err) {
+            setAdminPasswordError(err.message || '관리자 모드 확인에 실패했습니다.');
+        } finally {
+            setIsVerifyingAdminPassword(false);
+        }
+    }, [adminPassword, onSwitchToAdminMode]);
 
 
     const hasZeroClasses = classes.length === 0;
@@ -98,7 +159,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         </span>
                     )}
                     {isAdmin && (
-                        <Button variant="primary" size="sm" onClick={onSwitchToAdminMode} style={{ fontSize: '0.8rem', background: '#E67E22', border: 'none', borderRadius: '8px' }}>
+                        <Button variant="primary" size="sm" onClick={handleOpenAdminPasswordModal} style={{ fontSize: '0.8rem', background: '#E67E22', border: 'none', borderRadius: '8px' }}>
                             🛡️ 관리자
                         </Button>
                     )}
@@ -218,6 +279,110 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 onClose={() => setIsFeedbackOpen(false)}
                 userId={session.user.id}
             />
+
+            <AnimatePresence>
+                {isAdminPasswordOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            background: 'rgba(15, 23, 42, 0.55)',
+                            backdropFilter: 'blur(4px)',
+                            zIndex: 10010,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '20px'
+                        }}
+                        onClick={() => setIsAdminPasswordOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ y: 16, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 12, opacity: 0 }}
+                            transition={{ duration: 0.18 }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                width: '100%',
+                                maxWidth: '420px',
+                                background: 'white',
+                                borderRadius: '24px',
+                                padding: isMobile ? '24px' : '28px',
+                                boxShadow: '0 24px 60px rgba(15, 23, 42, 0.22)'
+                            }}
+                        >
+                            <div style={{ marginBottom: '18px' }}>
+                                <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🛡️</div>
+                                <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', color: '#1F2937', fontWeight: '900' }}>
+                                    관리자 모드 비밀번호 확인
+                                </h3>
+                                <p style={{ margin: 0, color: '#6B7280', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                                    관리자 대시보드로 들어가기 전에 서버에서 비밀번호를 한 번 더 확인합니다.
+                                </p>
+                            </div>
+
+                            <input
+                                type="password"
+                                value={adminPassword}
+                                onChange={(e) => {
+                                    setAdminPassword(e.target.value);
+                                    if (adminPasswordError) setAdminPasswordError('');
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        handleConfirmAdminPassword();
+                                    }
+                                }}
+                                placeholder="관리자 비밀번호 입력"
+                                autoFocus
+                                style={{
+                                    width: '100%',
+                                    padding: '14px 16px',
+                                    borderRadius: '14px',
+                                    border: adminPasswordError ? '1px solid #EF4444' : '1px solid #D1D5DB',
+                                    fontSize: '1rem',
+                                    outline: 'none',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+
+                            {adminPasswordError && (
+                                <div style={{
+                                    marginTop: '10px',
+                                    color: '#DC2626',
+                                    fontSize: '0.88rem',
+                                    fontWeight: '700',
+                                    lineHeight: '1.5'
+                                }}>
+                                    {adminPasswordError}
+                                </div>
+                            )}
+
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setIsAdminPasswordOpen(false)}
+                                    disabled={isVerifyingAdminPassword}
+                                    style={{ flex: 1, borderRadius: '14px' }}
+                                >
+                                    취소
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    onClick={handleConfirmAdminPassword}
+                                    disabled={isVerifyingAdminPassword}
+                                    style={{ flex: 1, borderRadius: '14px', background: '#E67E22', border: 'none' }}
+                                >
+                                    {isVerifyingAdminPassword ? '확인 중...' : '관리자 모드 열기'}
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

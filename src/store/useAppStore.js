@@ -15,14 +15,7 @@ export const useAppStore = create((set) => ({
     
     // UI 상태
     isStudentLoginMode: false,
-    isAdminMode: (() => {
-        try {
-            const saved = localStorage.getItem('app_admin_mode_v2');
-            return saved === 'true';
-        } catch (_e) {
-            return false;
-        }
-    })(),
+    isAdminMode: false,
 
     // 액션들
     setInternalPage: (name, params = {}) => set({ internalPage: { name, params } }),
@@ -40,10 +33,7 @@ export const useAppStore = create((set) => ({
 
     setIsStudentLoginMode: (isMode) => set({ isStudentLoginMode: isMode }),
     
-    setAdminMode: (mode) => {
-        set({ isAdminMode: mode });
-        localStorage.setItem('app_admin_mode_v2', JSON.stringify(mode));
-    },
+    setAdminMode: (mode) => set({ isAdminMode: mode }),
 
     resetNavigation: () => set({ internalPage: { name: 'main', params: {} }, directPath: null })
 }));
