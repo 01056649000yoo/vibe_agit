@@ -161,6 +161,11 @@ const FriendHideoutModal = memo(({ classmate, onClose, isMobile }) => {
 
 // 개별 포스트 카드 컴포넌트 분리 및 memo 적용
 const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
+    const authorName =
+        post.student_name ||
+        (Array.isArray(post.students) ? post.students[0]?.name : post.students?.name) ||
+        '알 수 없는 친구';
+
     return (
         <motion.div
             ref={isLast ? lastElementRef : null}
@@ -178,7 +183,7 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
                     fontSize: '0.8rem', padding: '4px 8px', background: '#E1F5FE',
                     color: '#0288D1', borderRadius: '8px', fontWeight: 'bold'
                 }}>
-                    {post.students?.name}
+                    {authorName}
                 </span>
             </div>
             <h4 style={{
@@ -372,6 +377,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                         reactionIcons={REACTION_ICONS}
                         isMobile={isMobile}
                         ACCESSORIES={ACCESSORIES}
+                        classmates={classmates}
                     />
                 )}
                 {viewingFriendHideout && (

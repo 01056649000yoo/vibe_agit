@@ -159,6 +159,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const [pendingTeachers, setPendingTeachers] = useState([]);
     const [approvedTeachers, setApprovedTeachers] = useState([]);
     const [registeredStudentCount, setRegisteredStudentCount] = useState(0);
+    const [teacherStudentCounts, setTeacherStudentCounts] = useState({});
     const [autoApproval, setAutoApproval] = useState(false);
     const [publicAiEnabled, setPublicAiEnabled] = useState(true);
     const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
@@ -229,6 +230,43 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         }
     };
 
+    const fetchTeacherStudentCounts = async () => {
+        try {
+            const { data: classes, error: classError } = await supabase
+                .from('classes')
+                .select('id, teacher_id');
+
+            if (classError) throw classError;
+
+            if (!classes || classes.length === 0) {
+                setTeacherStudentCounts({});
+                return;
+            }
+
+            const classTeacherMap = new Map(classes.map(item => [item.id, item.teacher_id]));
+            const classIds = classes.map(item => item.id);
+
+            const { data: students, error: studentError } = await supabase
+                .from('students')
+                .select('class_id')
+                .in('class_id', classIds)
+                .is('deleted_at', null);
+
+            if (studentError) throw studentError;
+
+            const counts = {};
+            (students || []).forEach(student => {
+                const teacherId = classTeacherMap.get(student.class_id);
+                if (!teacherId) return;
+                counts[teacherId] = (counts[teacherId] || 0) + 1;
+            });
+
+            setTeacherStudentCounts(counts);
+        } catch (err) {
+            console.error('교사별 등록 학생 수 조회 실패:', err);
+        }
+    };
+
     const handleToggleAutoApproval = async () => {
         setSettingsLoading(true);
         const newValue = !autoApproval;
@@ -291,10 +329,12 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         fetchSettings();
         fetchFeedbackCount();
         fetchRegisteredStudentCount();
+        fetchTeacherStudentCounts();
 
         const refreshTeachers = () => {
             fetchTeachers({ showLoading: false });
             fetchRegisteredStudentCount();
+            fetchTeacherStudentCounts();
         };
 
         const intervalId = window.setInterval(refreshTeachers, TEACHER_REFRESH_INTERVAL_MS);
@@ -534,6 +574,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>학교</th>
                                             <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>최근 접속</th>
                                             <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>가입일</th>
+                                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>등록 학생 수</th>
                                             <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>API 사용 권한</th>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>이메일</th>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>전화번호</th>
@@ -574,6 +615,9 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                                         </td>
                                                         <td style={{ padding: '16px', textAlign: 'center', color: '#546E7A', fontWeight: '500', whiteSpace: 'nowrap' }}>
                                                             {profile.created_at ? new Date(profile.created_at).toLocaleDateString('ko-KR') : '-'}
+                                                        </td>
+                                                        <td style={{ padding: '16px', textAlign: 'center', color: '#2C5282', fontWeight: '700', whiteSpace: 'nowrap' }}>
+                                                            {teacherStudentCounts[profile.id] || 0}명
                                                         </td>
                                                         <td style={{ padding: '16px', textAlign: 'center' }}>
                                                             <button

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabaseClient';
@@ -6,7 +6,7 @@ import { usePostInteractions } from '../../hooks/usePostInteractions';
 import Button from '../common/Button';
 
 // [최적화] 개별 댓글 컴포넌트 분리 및 메모이제이션 💬
-const CommentItem = memo(({ comment, studentId, isTeacher, onEdit, onDelete }) => {
+const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, isTeacher, onEdit, onDelete }) => {
     // [수정] 본인 확인 로직 강화
     const isMe = (comment.student_id === studentId && !!studentId) || (comment.teacher_id === studentId && !!studentId);
     
@@ -32,6 +32,12 @@ const CommentItem = memo(({ comment, studentId, isTeacher, onEdit, onDelete }) =
     };
 
     const isTeacherComment = !!comment.teacher_id;
+    const commentAuthorName =
+        comment.student_name ||
+        (Array.isArray(comment.students) ? comment.students[0]?.name : comment.students?.name) ||
+        (comment.student_id === studentId ? studentName : '') ||
+        classmateNameMap.get(comment.student_id) ||
+        '익명 친구';
 
     return (
         <motion.div
@@ -56,7 +62,7 @@ const CommentItem = memo(({ comment, studentId, isTeacher, onEdit, onDelete }) =
                         <span style={{ fontSize: '0.75rem', fontWeight: '900', background: '#3B82F6', color: 'white', padding: '2px 8px', borderRadius: '6px' }}>🍎 선생님</span>
                     ) : (
                         <span style={{ fontWeight: '900', fontSize: '0.9rem', color: isMe ? '#1976D2' : '#3498DB' }}>
-                            {comment.students?.name || '익명 친구'}
+                            {commentAuthorName}
                         </span>
                     )}
                 </div>
@@ -140,7 +146,7 @@ const ReactionButton = memo(({ icon, count, isMine, onClick, onMouseEnter, onMou
     );
 });
 
-const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons, isMobile, ACCESSORIES }) => {
+const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons, isMobile, ACCESSORIES, classmates = [] }) => {
     const [commentInput, setCommentInput] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
     const [editingCommentId, setEditingCommentId] = useState(null);
@@ -155,7 +161,12 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
         addComment,
         updateComment,
         deleteComment
-    } = usePostInteractions(post.id, studentSession?.id, studentSession?.name);
+    } = usePostInteractions(post.id, studentSession?.id, studentSession?.name, classmates);
+
+    const classmateNameMap = useMemo(
+        () => new Map((classmates || []).map((classmate) => [classmate.id, classmate.name])),
+        [classmates]
+    );
 
     useEffect(() => {
         const checkTeacher = async () => {
@@ -218,6 +229,10 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
     }, [deleteComment]);
 
     const getReactionCount = (type) => reactions.filter(r => r.reaction_type === type).length;
+    const postAuthorName =
+        post?.student_name ||
+        (Array.isArray(post?.students) ? post.students[0]?.name : post?.students?.name) ||
+        '알 수 없는 친구';
 
     return createPortal(
         <motion.div
@@ -300,7 +315,7 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                         )}
                         <div style={{ textAlign: 'left' }}>
                             <div style={{ fontSize: '0.85rem', color: '#3498DB', fontWeight: '900', marginBottom: '2px' }}>
-                                {post.students?.name} 학생의 소중한 이야기 ✍️
+                                {postAuthorName} 학생의 소중한 이야기 ✍️
                             </div>
                             <h3 style={{
                                 margin: 0, fontWeight: '900', color: '#2D3436',
@@ -495,6 +510,8 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
                                                     key={c.id}
                                                     comment={c}
                                                     studentId={studentSession?.id}
+                                                    studentName={studentSession?.name}
+                                                    classmateNameMap={classmateNameMap}
                                                     isTeacher={isTeacher}
                                                     onEdit={handleEditComment}
                                                     onDelete={handleDeleteCommentClick}
