@@ -5,38 +5,6 @@ import { supabase } from '../../lib/supabaseClient';
 import FeaturesModal from './FeaturesModal';
 const LandingPage = ({ onStudentLoginClick }) => {
     const [modalType, setModalType] = useState(null);
-    const [isTeacherLoginLoading, setIsTeacherLoginLoading] = useState(false);
-
-    const handleTeacherGoogleLogin = async () => {
-        if (!supabase) {
-            alert('로그인 설정을 불러오지 못했습니다. Supabase 환경변수를 확인해 주세요.');
-            return;
-        }
-
-        setIsTeacherLoginLoading(true);
-
-        try {
-            const { data: sessionData } = await supabase.auth.getSession();
-            if (sessionData?.session?.user?.is_anonymous) {
-                localStorage.removeItem('student_session');
-                await supabase.auth.signOut();
-            }
-
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin,
-                    queryParams: { prompt: 'select_account' }
-                }
-            });
-
-            if (error) throw error;
-        } catch (error) {
-            console.error('Google login failed:', error);
-            alert(`구글 로그인 시작에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
-            setIsTeacherLoginLoading(false);
-        }
-    };
 
     return (
         <>
@@ -73,9 +41,10 @@ const LandingPage = ({ onStudentLoginClick }) => {
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <Button
-                        onClick={handleTeacherGoogleLogin}
-                        loading={isTeacherLoginLoading}
-                        loadingText="로그인 연결 중..."
+                        onClick={() => supabase.auth.signInWithOAuth({
+                            provider: 'google',
+                            options: { redirectTo: window.location.origin }
+                        })}
                         style={{
                             width: '100%',
                             background: '#FFFFFF',

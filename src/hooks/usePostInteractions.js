@@ -4,31 +4,10 @@ import { checkBadWords } from '../constants/badWords';
 import { checkContentSafety } from '../utils/aiSafety';
 import { debounce } from '../utils/debounce';
 
-const LOW_EFFORT_COMMENTS = new Set([
-    '와', '우와', '오', '오오', '우웅', '헉', '대박', '굿', 'good', 'nice',
-    '멋져', '최고', '짱', 'ㅋㅋ', 'ㅎㅎ', '^^', '👍', '👏', '❤️', '😆', '😍', '😊',
-    '와!', '오!'
-]);
-
-const validateCommentQuality = (content) => {
-    const trimmed = content.trim();
-    const compact = trimmed.replace(/\s+/g, '');
-
-    if (compact.length < 8) {
-        return '댓글은 공백을 빼고 8자 이상으로 써야 해요.\n친구 글의 좋은 점이나 느낀 점을 조금 더 자세히 적어 볼까요?';
-    }
-
-    if (LOW_EFFORT_COMMENTS.has(compact.toLowerCase())) {
-        return '감탄만 있는 짧은 댓글보다는\n친구 글의 좋은 점이나 느낀 점을 함께 써 주세요!';
-    }
-
-    return null;
-};
-
 /**
  * 역할: 게시글의 반응(좋아요 등) 및 댓글을 관리하는 공통 훅 💬
  */
-export const usePostInteractions = (postId, studentId, studentName, classmates = []) => {
+export const usePostInteractions = (postId, studentId, studentName) => {
     const [reactions, setReactions] = useState([]);
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -63,18 +42,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
             if (rxRes.error) throw rxRes.error;
             if (cmRes.error) throw cmRes.error;
 
-            const normalizeEmbeddedStudent = (studentValue) => {
-                if (Array.isArray(studentValue)) {
-                    return studentValue[0] || null;
-                }
-                return studentValue || null;
-            };
-
-            const rawComments = (cmRes.data || []).map(comment => ({
-                ...comment,
-                students: normalizeEmbeddedStudent(comment.students)
-            }));
-            const classmateMap = new Map((classmates || []).map(classmate => [classmate.id, classmate]));
+            const rawComments = cmRes.data || [];
             const missingStudentIds = [...new Set(
                 rawComments
                     .filter((comment) => comment.student_id && !comment.students?.name)
@@ -103,21 +71,8 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                 if (comment.student_id === studentId) {
                     return {
                         ...comment,
-                        student_name: studentName || '내 댓글',
                         students: {
                             name: studentName || '내 댓글',
-                            deleted_at: null
-                        }
-                    };
-                }
-
-                const classmateInfo = classmateMap.get(comment.student_id);
-                if (classmateInfo?.name) {
-                    return {
-                        ...comment,
-                        student_name: classmateInfo.name,
-                        students: {
-                            name: classmateInfo.name,
                             deleted_at: null
                         }
                     };
@@ -130,7 +85,6 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
 
                 return {
                     ...comment,
-                    student_name: studentInfo.name,
                     students: {
                         name: studentInfo.name,
                         deleted_at: studentInfo.deleted_at ?? null
@@ -140,20 +94,13 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
 
             console.log('[usePostInteractions] ?? ?? (postId: ' + postId + ')');
             setReactions(rxRes.data || []);
-            setComments(
-                normalizedComments
-                    .map(comment => ({
-                        ...comment,
-                        student_name: comment.student_name || comment.students?.name || ''
-                    }))
-                    .filter(shouldShowComment)
-            );
+            setComments(normalizedComments.filter(shouldShowComment));
         } catch (err) {
             console.error('[usePostInteractions] ??? ?? ??:', err.message);
         } finally {
             setLoading(false);
         }
-    }, [classmates, postId, shouldShowComment, studentId, studentName]);
+    }, [postId, shouldShowComment, studentId, studentName]);
     useEffect(() => {
         fetchInteractions();
 
@@ -283,12 +230,6 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
     const addComment = useCallback(async (content) => {
         if (!content.trim() || !studentId || !postId) return;
 
-        const qualityMessage = validateCommentQuality(content);
-        if (qualityMessage) {
-            alert(`댓글을 조금 더 정성껏 써 주세요! ✍️\n${qualityMessage}`);
-            return false;
-        }
-
         if (checkBadWords(content)) {
             alert('깨끗한 교실을 위해 나쁜 말을 사용해 주세요! 🚫\n(비속어나 욕설은 등록할 수 없어요)');
             return false;
@@ -354,12 +295,6 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
 
     const updateComment = useCallback(async (commentId, newContent) => {
         if (!newContent.trim() || !studentId) return;
-
-        const qualityMessage = validateCommentQuality(newContent);
-        if (qualityMessage) {
-            alert(`댓글을 조금 더 정성껏 다듬어 주세요! ✍️\n${qualityMessage}`);
-            return false;
-        }
 
         if (checkBadWords(newContent)) {
             alert('깨끗한 교실을 위해 나쁜 말을 사용해 주세요! 🚫\n(비속어나 욕설은 입력할 수 없어요)');
