@@ -35,7 +35,6 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
     const isFetchingRef = useRef(false);
     const lastFetchAtRef = useRef(0);
     const latestContextRef = useRef({ classmates, studentId, studentName });
-    const shouldShowCommentRef = useRef(null);
 
     const shouldShowComment = useCallback((comment) => {
         const isTeacherComment = !!comment.teacher_id && !comment.student_id;
@@ -49,47 +48,8 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
 
     useEffect(() => {
         latestContextRef.current = { classmates, studentId, studentName };
-        shouldShowCommentRef.current = shouldShowComment;
-    }, [classmates, shouldShowComment, studentId, studentName]);
+    }, [classmates, studentId, studentName]);
 
-    const attachStudentInfo = useCallback((comment) => {
-        if (!comment) return comment;
-
-        const {
-            classmates: latestClassmates,
-            studentId: latestStudentId,
-            studentName: latestStudentName
-        } = latestContextRef.current;
-        const embeddedStudent = Array.isArray(comment.students) ? comment.students[0] : comment.students;
-
-        if (embeddedStudent?.name || !comment.student_id) {
-            return {
-                ...comment,
-                students: embeddedStudent || comment.students,
-                student_name: comment.student_name || embeddedStudent?.name || ''
-            };
-        }
-
-        if (comment.student_id === latestStudentId) {
-            const name = latestStudentName || '익명';
-            return {
-                ...comment,
-                student_name: name,
-                students: { name, deleted_at: null }
-            };
-        }
-
-        const classmateInfo = (latestClassmates || []).find(classmate => classmate.id === comment.student_id);
-        if (classmateInfo?.name) {
-            return {
-                ...comment,
-                student_name: classmateInfo.name,
-                students: { name: classmateInfo.name, deleted_at: null }
-            };
-        }
-
-        return comment;
-    }, []);
 
     const fetchInteractions = useCallback(async () => {
         if (!postId) return;
