@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { checkBadWords } from '../constants/badWords';
 import { checkContentSafety } from '../utils/aiSafety';
@@ -32,6 +32,10 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
     const [reactions, setReactions] = useState([]);
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(false);
+    const isFetchingRef = useRef(false);
+    const lastFetchAtRef = useRef(0);
+    const latestContextRef = useRef({ classmates, studentId, studentName });
+    const shouldShowCommentRef = useRef(null);
 
     const shouldShowComment = useCallback((comment) => {
         const isTeacherComment = !!comment.teacher_id && !comment.student_id;
@@ -43,8 +47,57 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         return isTeacherComment || isOwnComment || isApprovedStudentComment;
     }, [studentId]);
 
+    useEffect(() => {
+        latestContextRef.current = { classmates, studentId, studentName };
+        shouldShowCommentRef.current = shouldShowComment;
+    }, [classmates, shouldShowComment, studentId, studentName]);
+
+    const attachStudentInfo = useCallback((comment) => {
+        if (!comment) return comment;
+
+        const {
+            classmates: latestClassmates,
+            studentId: latestStudentId,
+            studentName: latestStudentName
+        } = latestContextRef.current;
+        const embeddedStudent = Array.isArray(comment.students) ? comment.students[0] : comment.students;
+
+        if (embeddedStudent?.name || !comment.student_id) {
+            return {
+                ...comment,
+                students: embeddedStudent || comment.students,
+                student_name: comment.student_name || embeddedStudent?.name || ''
+            };
+        }
+
+        if (comment.student_id === latestStudentId) {
+            const name = latestStudentName || '익명';
+            return {
+                ...comment,
+                student_name: name,
+                students: { name, deleted_at: null }
+            };
+        }
+
+        const classmateInfo = (latestClassmates || []).find(classmate => classmate.id === comment.student_id);
+        if (classmateInfo?.name) {
+            return {
+                ...comment,
+                student_name: classmateInfo.name,
+                students: { name: classmateInfo.name, deleted_at: null }
+            };
+        }
+
+        return comment;
+    }, []);
+
     const fetchInteractions = useCallback(async () => {
         if (!postId) return;
+        const now = Date.now();
+        if (isFetchingRef.current || now - lastFetchAtRef.current < 1500) return;
+
+        isFetchingRef.current = true;
+        lastFetchAtRef.current = now;
         setLoading(true);
         try {
             const [rxRes, cmRes] = await Promise.all([
@@ -74,7 +127,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                 ...comment,
                 students: normalizeEmbeddedStudent(comment.students)
             }));
-            const classmateMap = new Map((classmates || []).map(classmate => [classmate.id, classmate]));
+            const classmateMap = new Map((latestContextRef.current.classmates || []).map(classmate => [classmate.id, classmate]));
             const missingStudentIds = [...new Set(
                 rawComments
                     .filter((comment) => comment.student_id && !comment.students?.name)
@@ -100,7 +153,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                     return comment;
                 }
 
-                if (comment.student_id === studentId) {
+                if (comment.student_id === latestContextRef.current.studentId) {
                     return {
                         ...comment,
                         student_name: studentName || '내 댓글',
@@ -151,9 +204,10 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         } catch (err) {
             console.error('[usePostInteractions] ??? ?? ??:', err.message);
         } finally {
+            isFetchingRef.current = false;
             setLoading(false);
         }
-    }, [classmates, postId, shouldShowComment, studentId, studentName]);
+    }, [postId, shouldShowComment, studentName]);
     useEffect(() => {
         fetchInteractions();
 
@@ -170,11 +224,24 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                     table: 'post_comments',
                     filter: `post_id=eq.${postId}`
                 },
-                async (payload) => {
+                (payload) => {
                     if (payload.eventType === 'INSERT') {
-                        await fetchInteractions();
+                        const newComment = attachStudentInfo(payload.new);
+                        if ((shouldShowCommentRef.current || shouldShowComment)(newComment)) {
+                            setComments(prev => [
+                                ...prev.filter(c => c.id !== newComment.id),
+                                newComment
+                            ]);
+                        }
                     } else if (payload.eventType === 'UPDATE') {
-                        await fetchInteractions();
+                        const updatedComment = attachStudentInfo(payload.new);
+                        setComments(prev => {
+                            const next = prev.filter(c => c.id !== updatedComment.id);
+                            if ((shouldShowCommentRef.current || shouldShowComment)(updatedComment)) {
+                                return [...next, updatedComment].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                            }
+                            return next;
+                        });
                     } else if (payload.eventType === 'DELETE') {
                         setComments(prev => prev.filter(c => c.id !== payload.old.id));
                     }
@@ -224,7 +291,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
             supabase.removeChannel(commentsChannel);
             supabase.removeChannel(reactionsChannel);
         };
-    }, [postId, fetchInteractions, shouldShowComment, studentId, studentName]);
+    }, [attachStudentInfo, fetchInteractions, postId, shouldShowComment, studentId, studentName]);
 
     const syncReactionWithDB = useMemo(() => debounce(async (type, isRemoving) => {
         try {
