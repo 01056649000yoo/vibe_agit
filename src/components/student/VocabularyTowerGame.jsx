@@ -52,6 +52,8 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     const [rankings, setRankings] = useState([]); // [신규] 랭킹 정보
     const [isTowerCleared, setIsTowerCleared] = useState(false); // [신규] 10층 클리어 상태
     const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false); // [신규] 퇴장 확인 팝업 상태
+    const [classmates, setClassmates] = useState([]); // [신규] 성능 최적화를 위한 학생 명단 캐싱
+    const lastFetchTimeRef = React.useRef(0); // [신규] Throttling을 위한 타임스탬프
 
     // [신규] 일일 시도 횟수 관리
     const getTodayKey = () => {
@@ -126,6 +128,28 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         return () => clearInterval(timer);
     }, [hasStarted, timeLeft, showResult, isTimeUp, isFullyExhausted]);
 
+    // [신규] 학급 학생 명단 로드 (이름 매핑용 캐시 - DB 조인 부하 감소)
+    const fetchClassmates = React.useCallback(async () => {
+        const classId = studentSession?.class_id || studentSession?.classId;
+        if (!classId) return;
+
+        try {
+            // [보안/최적화] 학생들이 다른 학생 정보를 조회할 수 있도록 허용된 보안 우회 RPC 사용
+            const { data, error } = await supabase
+                .rpc('get_student_classmates_for_hideout');
+
+            if (error) throw error;
+            setClassmates(data || []);
+            console.log('👥 학생 명단 로드 완료 (RPC 캐싱):', data?.length);
+        } catch (err) {
+            console.error('❌ 학생 명단 로드 실패:', err);
+        }
+    }, [studentSession?.class_id, studentSession?.classId]);
+
+    useEffect(() => {
+        fetchClassmates();
+    }, [fetchClassmates]);
+
     // 보상 포인트 지급 로직
     const handleRewardPoints = async () => {
         const todayKey = getTodayKey();
@@ -181,17 +205,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                     if (error) {
                         console.error('❌ isFullyExhausted 시 쳕수 기록 실패:', error);
                     } else {
-                        // 랭킹 갱신
-                    .then(({ data }) => {
-                        if (data) {
-                            // [버그 수정] 데이터 정규화 추가
-                            const normalized = data.map(item => ({
-                                ...item,
-                                students: Array.isArray(item.students) ? item.students[0] : item.students
-                            }));
-                            setRankings(normalized);
-                        }
-                    });
+                        fetchRankings(true); // 강제 갱신 호출로 통합
                     }
                 });
             }
@@ -220,19 +234,23 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         }
     }, [isTowerCleared, studentSession?.id]);
 
-    // []
-    const fetchRankings = React.useCallback(async () => {
+    // [최적화] 랭킹 조회 함수 - 조인 제거 및 Throttling 적용
+    const fetchRankings = React.useCallback(async (isForced = false) => {
         const classId = studentSession?.class_id || studentSession?.classId;
         if (!classId) return;
 
+        // [스로틀링] 강제 호출이 아니면 10초 이내 중복 호출 방지 (DB 부하 방지)
+        const now = Date.now();
+        if (!isForced && now - lastFetchTimeRef.current < 10000) {
+            return;
+        }
+        lastFetchTimeRef.current = now;
+
         try {
+            console.log('🏆 랭킹 조회 수행 (DB 조인 없음)');
             let query = supabase
                 .from('vocab_tower_rankings')
-                .select(`
-                    max_floor,
-                    student_id,
-                    students:student_id ( name )
-                `)
+                .select('max_floor, student_id') // 조인 제거하여 쿼리 경량화
                 .eq('class_id', classId);
 
             if (rankingResetDate) {
@@ -242,17 +260,35 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
             const { data, error } = await query.order('max_floor', { ascending: false });
             if (error) throw error;
 
-            // [버그 수정] Supabase Join 결과가 배열 또는 객체인 경우 대응 (이름 미표시 해결)
-            const normalizedData = (data || []).map(item => ({
-                ...item,
-                students: Array.isArray(item.students) ? item.students[0] : item.students
-            }));
-
-            setRankings(normalizedData);
+            setRankings(data || []);
         } catch (err) {
             console.error('❌ 랭킹 로드 실패:', err);
         }
     }, [studentSession?.class_id, studentSession?.classId, rankingResetDate]);
+
+    // [신규/최적화] 실시간 이름 매핑 (메모리 연산)
+    // DB 호출 없이 명단이 로드되거나 랭킹이 바뀌면 즉시 이름을 입힙니다.
+    const displayRankings = React.useMemo(() => {
+        if (rankings.length === 0) return [];
+        
+        return rankings.map(item => {
+            const classmate = classmates.find(c => c.id === item.student_id);
+            let displayName = '조회 중...';
+            
+            if (classmate) {
+                displayName = classmate.name;
+            } else if (item.student_id === studentSession?.id) {
+                displayName = studentSession?.name || '나';
+            } else if (classmates.length > 0) {
+                displayName = '아지트 친구';
+            }
+
+            return {
+                ...item,
+                students: { name: displayName }
+            };
+        });
+    }, [rankings, classmates, studentSession?.id, studentSession?.name]);
 
     useEffect(() => {
         if (studentSession?.class_id || studentSession?.classId) {
@@ -958,8 +994,8 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {/* 랭킹 렌더링 (동일 로직 최적화) */}
                                 {(() => {
-                                    if (rankings.length === 0) return <p style={{ textAlign: 'center', color: '#999', fontSize: '0.8rem' }}>참여 기록 없음</p>;
-                                    const grouped = rankings.reduce((acc, curr) => {
+                                    if (displayRankings.length === 0) return <p style={{ textAlign: 'center', color: '#999', fontSize: '0.8rem' }}>참여 기록 없음</p>;
+                                    const grouped = displayRankings.reduce((acc, curr) => {
                                         const f = curr.max_floor;
                                         if (!acc[f]) acc[f] = [];
                                         acc[f].push(curr);

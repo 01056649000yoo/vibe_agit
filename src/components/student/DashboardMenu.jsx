@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -37,6 +37,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
     // [신규] 랭킹 실시간 프리뷰 상태
     const [rankings, setRankings] = useState([]);
     const [isRankingHovered, setIsRankingHovered] = useState(false);
+    const [classmates, setClassmates] = useState([]); // [신규] 이름 매핑용 캐시
 
     // [신규] 새 미션 존재 여부 확인 (최근 24시간)
     const [hasNewMission, setHasNewMission] = useState(false);
@@ -52,7 +53,6 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
         const classId = studentSession?.class_id || studentSession?.classId;
         const studentId = studentSession?.id;
         if (!classId || !studentId) return;
-        const dashboardCheckKey = `dashboard_menu_check_${classId}_${studentId}`;
 
         const checkNewMissions = async () => {
             try {
@@ -159,6 +159,16 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
             checkNewMissions();
         }, 1000); // [최적화] 대시보드 필수 데이터 로딩 대기
 
+        const fetchClassmatesForCache = async () => {
+            try {
+                // [보안/최적화] 보안 우회 RPC를 사용하여 명단 확보 (DB 조인 부하 감소)
+                const { data } = await supabase
+                    .rpc('get_student_classmates_for_hideout');
+                if (data) setClassmates(data);
+            } catch (e) { console.error(e); }
+        };
+        fetchClassmatesForCache();
+
         return () => clearTimeout(timerId);
     }, [studentSession?.class_id, studentSession?.classId, studentSession?.id]);
 
@@ -169,11 +179,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
         try {
             let query = supabase
                 .from('vocab_tower_rankings')
-                .select(`
-                    max_floor,
-                    student_id,
-                    students:student_id ( name )
-                `)
+                .select('max_floor, student_id') // 조인 제거하여 쿼리 경량화
                 .eq('class_id', classId);
 
             if (vocabTowerSettings?.rankingResetDate) {
@@ -184,18 +190,34 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                 .order('max_floor', { ascending: false })
                 .limit(5);
 
-            if (!error && data) {
-                // [버그 수정] 데이터 정규화 (이름 미표시 해결)
-                const normalizedData = data.map(item => ({
-                    ...item,
-                    students: Array.isArray(item.students) ? item.students[0] : item.students
-                }));
-                setRankings(normalizedData);
-            }
+            if (!error) setRankings(data || []);
         } catch (err) {
             console.error('랭킹 프리뷰 로드 실패:', err);
         }
     }, [studentSession?.class_id, studentSession?.classId, isVocabTowerEnabled, vocabTowerSettings?.rankingResetDate]);
+
+    // [신규/최적화] 실시간 이름 매핑 (메모리 연산)
+    const displayRankings = useMemo(() => {
+        if (rankings.length === 0) return [];
+        
+        return rankings.map(item => {
+            const classmate = classmates.find(c => c.id === item.student_id);
+            let displayName = '조회 중...';
+            
+            if (classmate) {
+                displayName = classmate.name;
+            } else if (item.student_id === studentSession?.id) {
+                displayName = studentSession?.name || '나';
+            } else if (classmates.length > 0) {
+                displayName = '아지트 친구';
+            }
+
+            return {
+                ...item,
+                students: { name: displayName }
+            };
+        });
+    }, [rankings, classmates, studentSession?.id, studentSession?.name]);
 
     return (
         <>
@@ -367,8 +389,8 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                                     🏆 우리 반 TOP 5
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    {rankings.length > 0 ? (
-                                        rankings.map((rank, idx) => (
+                                    {displayRankings.length > 0 ? (
+                                        displayRankings.map((rank, idx) => (
                                             <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: idx === 0 ? '#E3F2FD' : '#F8F9FA', borderRadius: '12px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <span style={{

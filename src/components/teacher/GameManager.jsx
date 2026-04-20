@@ -104,29 +104,31 @@ const GameManager = ({ activeClass, isMobile }) => {
         try {
             let query = supabase
                 .from('vocab_tower_rankings')
-                .select(`
-                    id,
-                    max_floor,
-                    student_id,
-                    students:student_id ( name ),
-                    updated_at
-                `)
+                .select('id, max_floor, student_id, updated_at') // 조인 제거한 경량 조회
                 .eq('class_id', activeClass.id);
 
-            // [신규] 랭킹 리셋 설정이 있다면 필터링
-            if (vocabTowerConfig.rankingResetDate) {
+            // [신규] 랭킹 리셋 설정이 있다면 필터링 복구 
+            if (vocabTowerConfig?.rankingResetDate) {
                 query = query.gte('updated_at', vocabTowerConfig.rankingResetDate);
             }
 
-            const { data, error } = await query.order('max_floor', { ascending: false });
+            const { data, error } = await query
+                .order('max_floor', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ 랭킹 조회 실패:', error);
+                return;
+            }
             
-            // [버그 수정] 데이터 정규화 (이름 미표시 해결)
-            const normalizedData = (data || []).map(item => ({
-                ...item,
-                students: Array.isArray(item.students) ? item.students[0] : item.students
-            }));
+            // [버그 수정/최적화] 데이터 정규화 및 이름 매핑 보강 (DB 조인 제거)
+            const normalizedData = (data || []).map(item => {
+                // [성능 최적화] 이미 로드된 students 목록에서 이름 찾기
+                const studentProfile = students.find(s => s.id === item.student_id);
+                return {
+                    ...item,
+                    students: { name: studentProfile?.name || '아지트 친구' }
+                };
+            });
             
             setTowerRankings(normalizedData);
         } catch (err) {
@@ -320,10 +322,10 @@ const GameManager = ({ activeClass, isMobile }) => {
         const now = new Date().toISOString();
         setSavingVocabTower(true);
         try {
-            // 1. 현재 랭킹 데이터 가져오기 (보관용)
+            // 1. 현재 랭킹 데이터 가져오기 (보관용 - DB 조인 제거)
             let query = supabase
                 .from('vocab_tower_rankings')
-                .select('max_floor, students:student_id ( name )')
+                .select('max_floor, student_id')
                 .eq('class_id', activeClass.id);
 
             if (vocabTowerConfig.rankingResetDate) {
