@@ -64,10 +64,12 @@ function App() {
 
           // 교사 로그인 시 상태 갱신
           useAuthStore.getState().setSession(session);
+          useAuthStore.getState().setLoading(false);
           useAuthStore.getState().fetchProfile(session.user.id);
         } else {
           useAuthStore.getState().setSession(null);
           useAuthStore.getState().setProfile(null);
+          useAuthStore.getState().setLoading(false);
         }
       });
       return () => {
