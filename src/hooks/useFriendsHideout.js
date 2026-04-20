@@ -18,6 +18,103 @@ export const useFriendsHideout = (studentSession, params) => {
 
     const PAGE_SIZE = 10;
 
+    const normalizePostsWithAuthors = useCallback(async (rawPosts = []) => {
+        if (!Array.isArray(rawPosts) || rawPosts.length === 0) {
+            return [];
+        }
+
+        const normalizeEmbeddedStudent = (studentValue) => {
+            if (Array.isArray(studentValue)) {
+                return studentValue[0] || null;
+            }
+            return studentValue || null;
+        };
+
+        const postsWithNormalizedShape = rawPosts.map(post => ({
+            ...post,
+            students: normalizeEmbeddedStudent(post?.students)
+        }));
+
+        const classmateMap = new Map(
+            (classmates || []).map(classmate => [classmate.id, classmate])
+        );
+
+        const postsWithClassmateFallback = postsWithNormalizedShape.map(post => {
+            if (post?.students?.name) {
+                return post;
+            }
+
+            const classmate = classmateMap.get(post.student_id);
+            if (!classmate?.name) {
+                return post;
+            }
+
+            return {
+                ...post,
+                student_name: classmate.name,
+                students: {
+                    name: classmate.name,
+                    pet_data: classmate.pet_data ?? null
+                }
+            };
+        });
+
+        const allStudentIds = [
+            ...new Set(
+                postsWithClassmateFallback
+                    .filter(post => post?.student_id)
+                    .map(post => post.student_id)
+            )
+        ];
+
+        if (allStudentIds.length === 0) {
+            return postsWithClassmateFallback.map(post => ({
+                ...post,
+                student_name: post?.student_name || post?.students?.name || ''
+            }));
+        }
+
+        try {
+            const { data: studentRows, error } = await supabase
+                .from('students')
+                .select('id, name, pet_data')
+                .in('id', allStudentIds);
+
+            if (error) throw error;
+
+            const studentMap = new Map((studentRows || []).map(student => [student.id, student]));
+
+            return postsWithClassmateFallback.map(post => {
+                const fallbackStudent = studentMap.get(post.student_id);
+                const resolvedName =
+                    post?.student_name ||
+                    post?.students?.name ||
+                    classmateMap.get(post.student_id)?.name ||
+                    fallbackStudent?.name ||
+                    '';
+
+                return {
+                    ...post,
+                    student_name: resolvedName,
+                    students: {
+                        name: resolvedName,
+                        pet_data:
+                            post?.students?.pet_data ??
+                            classmateMap.get(post.student_id)?.pet_data ??
+                            fallbackStudent?.pet_data ??
+                            null
+                    }
+                };
+            });
+        } catch (err) {
+            console.error('친구 글 작성자 보강 실패:', err.message);
+            return postsWithClassmateFallback.map(post => ({
+                ...post,
+                student_name: post?.student_name || post?.students?.name || ''
+            }));
+        }
+    }, [classmates]);
+
     const resolveClassId = useCallback(async () => {
         const sessionClassId = studentSession.classId || studentSession.class_id;
         if (sessionClassId) {
@@ -107,12 +204,13 @@ export const useFriendsHideout = (studentSession, params) => {
                 .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
             if (error) throw error;
+            const normalizedPosts = await normalizePostsWithAuthors(data || []);
 
             if (isAppend) {
-                setPosts(prev => [...prev, ...(data || [])]);
+                setPosts(prev => [...prev, ...normalizedPosts]);
                 pageRef.current += 1;
             } else {
-                setPosts(data || []);
+                setPosts(normalizedPosts);
             }
 
             setHasMore(prev => (data?.length === PAGE_SIZE));
@@ -122,7 +220,7 @@ export const useFriendsHideout = (studentSession, params) => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [studentSession.id]);
+    }, [studentSession.id, normalizePostsWithAuthors]);
 
     const loadMore = useCallback(() => {
         if (!loadingMore && hasMore && selectedMission) {
@@ -187,16 +285,53 @@ export const useFriendsHideout = (studentSession, params) => {
 
             if (error) throw error;
             if (data) {
-                setViewingPost(data);
+                const [normalizedPost] = await normalizePostsWithAuthors([data]);
+                setViewingPost(normalizedPost || data);
             }
         } catch (err) {
             console.error('초기 포스트 로드 실패:', err.message);
         }
-    }, []);
+    }, [normalizePostsWithAuthors]);
 
     useEffect(() => {
         setResolvedClassId(studentSession.classId || studentSession.class_id || null);
     }, [studentSession.classId, studentSession.class_id]);
+
+    useEffect(() => {
+        if (classmates.length === 0) return;
+
+        setPosts(prev =>
+            prev.map(post => {
+                if (post?.students?.name) return post;
+
+                const classmate = classmates.find(friend => friend.id === post.student_id);
+                if (!classmate?.name) return post;
+
+                return {
+                    ...post,
+                    students: {
+                        name: classmate.name,
+                        pet_data: classmate.pet_data ?? null
+                    }
+                };
+            })
+        );
+
+        setViewingPost(prev => {
+            if (!prev || prev?.students?.name) return prev;
+
+            const classmate = classmates.find(friend => friend.id === prev.student_id);
+            if (!classmate?.name) return prev;
+
+            return {
+                ...prev,
+                students: {
+                    name: classmate.name,
+                    pet_data: classmate.pet_data ?? null
+                }
+            };
+        });
+    }, [classmates]);
 
     useEffect(() => {
         fetchMissions(true);
@@ -277,10 +412,11 @@ export const useFriendsHideout = (studentSession, params) => {
                             .single();
                         
                         if (!error && newPost) {
+                            const [normalizedPost] = await normalizePostsWithAuthors([newPost]);
                             setPosts(prev => {
                                 // 중복 추가 방지
                                 if (prev.some(p => p.id === newPost.id)) return prev;
-                                return [newPost, ...prev];
+                                return [normalizedPost || newPost, ...prev];
                             });
                         }
                     }
@@ -293,7 +429,7 @@ export const useFriendsHideout = (studentSession, params) => {
             supabase.removeChannel(missionsSubscription);
             supabase.removeChannel(postsSubscription);
         };
-    }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, selectedMission?.id, fetchMissions]);
+    }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, selectedMission?.id, fetchMissions, normalizePostsWithAuthors]);
 
     const handleMissionChange = (mission) => {
         setSelectedMission(mission);
