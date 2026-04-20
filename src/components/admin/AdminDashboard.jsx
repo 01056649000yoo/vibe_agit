@@ -5,7 +5,7 @@ import Button from '../common/Button';
 import AdminFeedbackList from './AdminFeedbackList';
 import AdminAnnouncementManager from './AdminAnnouncementManager';
 
-const TEACHER_REFRESH_INTERVAL_MS = 30000;
+const TEACHER_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5분 — 교사 목록은 실시간 갱신 불필요
 
 // --- Components ---
 
@@ -331,10 +331,11 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         fetchRegisteredStudentCount();
         fetchTeacherStudentCounts();
 
+        // 학생 수 집계(fetchRegisteredStudentCount, fetchTeacherStudentCounts)는
+        // 마운트 시 1회만 실행. 자주 바뀌지 않는 통계를 폴링·이벤트에 포함하면
+        // 전체 학생 row 풀스캔이 반복되어 DB 타임아웃을 유발함.
         const refreshTeachers = () => {
             fetchTeachers({ showLoading: false });
-            fetchRegisteredStudentCount();
-            fetchTeacherStudentCounts();
         };
 
         const intervalId = window.setInterval(refreshTeachers, TEACHER_REFRESH_INTERVAL_MS);

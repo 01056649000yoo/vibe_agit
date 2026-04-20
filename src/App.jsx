@@ -90,7 +90,7 @@ function App() {
       }
     };
 
-    const intervalId = window.setInterval(verifyActiveStudent, 60000);
+    const intervalId = window.setInterval(verifyActiveStudent, 120000); // [최적화] 60초 → 120초: get_student_by_auth 호출 50% 감소
     window.addEventListener('focus', verifyActiveStudent);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
