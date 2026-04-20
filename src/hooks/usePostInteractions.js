@@ -63,12 +63,12 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
             const [rxRes, cmRes] = await Promise.all([
                 supabase
                     .from('post_reactions')
-                    .select('*, students!inner(name, deleted_at)')
+                    .select('id, reaction_type, student_id, students!inner(name)')
                     .eq('post_id', postId)
                     .is('students.deleted_at', null),
                 supabase
                     .from('post_comments')
-                    .select('*, students:student_id(name, deleted_at), teacher_id')
+                    .select('id, content, student_id, teacher_id, status, created_at, students:student_id(name)')
                     .eq('post_id', postId)
                     .order('created_at', { ascending: true })
             ]);

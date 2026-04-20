@@ -141,19 +141,19 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
                 }, 60000),
                 supabase
                     .from('student_posts')
-                    .select('student_id, students!inner(name, class_id)')
+                    .select('student_id, students!inner(name)')
                     .eq('students.class_id', classId)
                     .gte('created_at', todayStart.toISOString())
                     .lt('created_at', tomorrow.toISOString()),
                 supabase
                     .from('post_reactions')
-                    .select('student_id, students!inner(name, class_id)')
+                    .select('student_id, students!inner(name)')
                     .eq('students.class_id', classId)
                     .gte('created_at', todayStart.toISOString())
                     .lt('created_at', tomorrow.toISOString()),
                 supabase
                     .from('post_comments')
-                    .select('student_id, students!inner(name, class_id)')
+                    .select('student_id, students!inner(name)')
                     .eq('students.class_id', classId)
                     .gte('created_at', todayStart.toISOString())
                     .lt('created_at', tomorrow.toISOString()),

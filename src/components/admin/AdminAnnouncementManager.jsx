@@ -201,7 +201,7 @@ const AdminAnnouncementManager = () => {
             setLoading(true);
             const { data, error } = await supabase
                 .from('announcements')
-                .select('*')
+                .select('id, title, content, target_role, is_popup, created_at')
                 .order('created_at', { ascending: false });
             if (error) throw error;
             setAnnouncements(data || []);

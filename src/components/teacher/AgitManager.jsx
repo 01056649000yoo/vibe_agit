@@ -58,7 +58,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
             setHistoryLoading(true);
             const { data, error } = await supabase
                 .from('agit_season_history')
-                .select('*')
+                .select('id, season_name, target_score, achieved_score, surprise_gift, started_at, ended_at, rankings')
                 .eq('class_id', activeClass.id)
                 .order('ended_at', { ascending: false });
 
@@ -119,7 +119,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
             // 0. 현재 시즌 명칭 (기존 기록 수 + 1)
             const { count: historyCount } = await supabase
                 .from('agit_season_history')
-                .select('*', { count: 'exact', head: true })
+                .select('id', { count: 'exact', head: true })
                 .eq('class_id', activeClass.id);
 
             const seasonName = `${(historyCount || 0) + 1}번째 시즌`;

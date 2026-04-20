@@ -151,6 +151,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)
     const isLocked = isConfirmed || (isSubmitted && !isReturned);
 
+    const lastSavedDataRef = useRef({ title: '', content: '', studentAnswers: [] });
+
     useEffect(() => {
         if (loading || submitting || isLocked) return;
 
@@ -161,9 +163,36 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
         if (!hasDraftContent) return;
 
+        // 초기 로드 시점의 데이터를 기준점으로 설정 (최초 1회)
+        if (!lastSavedDataRef.current.initialized && !loading) {
+            lastSavedDataRef.current = {
+                title,
+                content,
+                studentAnswers: [...studentAnswers],
+                initialized: true
+            };
+        }
+
         const intervalId = window.setInterval(async () => {
+            // 변경 사항이 있는지 깊은 비교
+            const isChanged = 
+                lastSavedDataRef.current.title !== title ||
+                lastSavedDataRef.current.content !== content ||
+                JSON.stringify(lastSavedDataRef.current.studentAnswers) !== JSON.stringify(studentAnswers);
+
+            if (!isChanged) {
+                console.log('📝 [자동 저장] 변경 사항 없음 - 요청 건너뜀');
+                return;
+            }
+
             try {
                 await handleSave(false);
+                lastSavedDataRef.current = {
+                    title,
+                    content,
+                    studentAnswers: [...studentAnswers],
+                    initialized: true
+                };
                 setAutoSaveAt(new Date());
                 setAutoSaveError('');
             } catch (err) {
