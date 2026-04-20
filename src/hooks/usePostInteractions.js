@@ -179,7 +179,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         //         이미 구독 중이어서 이중 구독 발생, Realtime WAL 부하의 63%를 차지
         // 변경: 30초 폴링으로 다른 학생의 새 댓글·반응을 갱신
         //       자신의 액션(댓글 작성·반응)은 기존 optimistic 업데이트로 즉시 UI에 반영됨
-        const POLL_INTERVAL_MS = 30000;
+        const POLL_INTERVAL_MS = 15000;
         const pollId = window.setInterval(() => {
             if (!document.hidden) {
                 fetchInteractions();
