@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { checkBadWords } from '../constants/badWords';
 import { checkContentSafety } from '../utils/aiSafety';
@@ -11,6 +11,8 @@ export const usePostInteractions = (postId, studentId, studentName) => {
     const [reactions, setReactions] = useState([]);
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(false);
+    const isFetchingRef = useRef(false);
+    const lastFetchAtRef = useRef(0);
 
     const shouldShowComment = useCallback((comment) => {
         const isTeacherComment = !!comment.teacher_id && !comment.student_id;
@@ -24,6 +26,11 @@ export const usePostInteractions = (postId, studentId, studentName) => {
 
     const fetchInteractions = useCallback(async () => {
         if (!postId) return;
+        const now = Date.now();
+        if (isFetchingRef.current || now - lastFetchAtRef.current < 1500) return;
+
+        isFetchingRef.current = true;
+        lastFetchAtRef.current = now;
         setLoading(true);
         try {
             const [rxRes, cmRes] = await Promise.all([
@@ -98,6 +105,7 @@ export const usePostInteractions = (postId, studentId, studentName) => {
         } catch (err) {
             console.error('[usePostInteractions] ??? ?? ??:', err.message);
         } finally {
+            isFetchingRef.current = false;
             setLoading(false);
         }
     }, [postId, shouldShowComment, studentId, studentName]);
