@@ -5,13 +5,7 @@ import Button from '../common/Button';
 import AdminFeedbackList from './AdminFeedbackList';
 import AdminAnnouncementManager from './AdminAnnouncementManager';
 
-const normalizeTeacherStudentCounts = (counts) => {
-    if (!counts || typeof counts !== 'object') return {};
-
-    return Object.fromEntries(
-        Object.entries(counts).map(([teacherId, count]) => [teacherId, Number(count) || 0])
-    );
-};
+const TEACHER_REFRESH_INTERVAL_MS = 30000;
 
 // --- Components ---
 
@@ -154,7 +148,7 @@ const formatLastLogin = (dateString) => {
             hour: '2-digit',
             minute: '2-digit'
         });
-    } catch {
+    } catch (_e) {
         return '-';
     }
 };
@@ -195,30 +189,82 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         });
     };
 
-    const fetchAdminSnapshot = async () => {
+    const fetchFeedbackCount = async () => {
         try {
-            const { data, error } = await supabase.rpc('admin_dashboard_snapshot');
-            if (error) throw error;
-            if (!data?.success) throw new Error(data?.error || '관리자 현황을 불러오지 못했습니다.');
+            // count: 'exact'와 head: true를 사용하여 406 에러 방지 및 효율적인 조회
+            const { count, error } = await supabase
+                .from('feedback_reports')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'open');
 
-            setRegisteredStudentCount(data.registered_student_count || 0);
-            setTeacherStudentCounts(normalizeTeacherStudentCounts(data.teacher_student_counts));
-            setPendingFeedbackCount(data.pending_feedback_count || 0);
-
-            const settings = data.settings || {};
-            if (Object.prototype.hasOwnProperty.call(settings, 'auto_approval')) {
-                setAutoApproval(settings.auto_approval === true);
-            }
-            if (Object.prototype.hasOwnProperty.call(settings, 'public_api_enabled')) {
-                setPublicAiEnabled(settings.public_api_enabled === true);
-            }
+            if (!error) setPendingFeedbackCount(count || 0);
         } catch (err) {
-            console.error('관리자 현황 로드 실패:', err);
+            console.error('피드백 개수 확인 실패:', err);
         }
     };
 
-    const fetchFeedbackCount = async () => {
-        await fetchAdminSnapshot();
+    const fetchSettings = async () => {
+        try {
+            const { data: settings } = await supabase.from('system_settings').select('key, value');
+            if (settings) {
+                const auto = settings.find(s => s.key === 'auto_approval');
+                if (auto) setAutoApproval(auto.value === true);
+                
+                const ai = settings.find(s => s.key === 'public_api_enabled');
+                if (ai) setPublicAiEnabled(ai.value === true);
+            }
+        } catch (err) { console.error('설정 로드 실패:', err); }
+    };
+
+    const fetchRegisteredStudentCount = async () => {
+        try {
+            const { count, error } = await supabase
+                .from('students')
+                .select('id', { count: 'exact', head: true })
+                .is('deleted_at', null);
+
+            if (error) throw error;
+            setRegisteredStudentCount(count || 0);
+        } catch (err) {
+            console.error('등록 학생 수 조회 실패:', err);
+        }
+    };
+
+    const fetchTeacherStudentCounts = async () => {
+        try {
+            const { data: classes, error: classError } = await supabase
+                .from('classes')
+                .select('id, teacher_id');
+
+            if (classError) throw classError;
+
+            if (!classes || classes.length === 0) {
+                setTeacherStudentCounts({});
+                return;
+            }
+
+            const classTeacherMap = new Map(classes.map(item => [item.id, item.teacher_id]));
+            const classIds = classes.map(item => item.id);
+
+            const { data: students, error: studentError } = await supabase
+                .from('students')
+                .select('class_id')
+                .in('class_id', classIds)
+                .is('deleted_at', null);
+
+            if (studentError) throw studentError;
+
+            const counts = {};
+            (students || []).forEach(student => {
+                const teacherId = classTeacherMap.get(student.class_id);
+                if (!teacherId) return;
+                counts[teacherId] = (counts[teacherId] || 0) + 1;
+            });
+
+            setTeacherStudentCounts(counts);
+        } catch (err) {
+            console.error('교사별 등록 학생 수 조회 실패:', err);
+        }
     };
 
     const handleToggleAutoApproval = async () => {
@@ -280,8 +326,33 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
     useEffect(() => {
         fetchTeachers();
-        fetchAdminSnapshot();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        fetchSettings();
+        fetchFeedbackCount();
+        fetchRegisteredStudentCount();
+        fetchTeacherStudentCounts();
+
+        const refreshTeachers = () => {
+            fetchTeachers({ showLoading: false });
+            fetchRegisteredStudentCount();
+            fetchTeacherStudentCounts();
+        };
+
+        const intervalId = window.setInterval(refreshTeachers, TEACHER_REFRESH_INTERVAL_MS);
+        const handleFocus = () => refreshTeachers();
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refreshTeachers();
+            }
+        };
+
+        window.addEventListener('focus', handleFocus);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            window.clearInterval(intervalId);
+            window.removeEventListener('focus', handleFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, []);
 
     // 탭이나 검색어가 바뀔 때 페이지 리셋
@@ -514,7 +585,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                         {(() => {
                                             const filtered = filterList(approvedTeachers);
                                             const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-                                            return paginated.map((profile) => {
+                                            return paginated.map((profile, index) => {
                                                 const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
                                                 // teachers.name을 최우선 사용, 없으면 full_name에서 이메일 형태가 아닌 경우만 사용
                                                 const rawFullName = profile.full_name || '';
