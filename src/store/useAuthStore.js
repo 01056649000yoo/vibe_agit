@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { supabase } from '../lib/supabaseClient';
 import { useAppStore } from './useAppStore';
 
+const AUTH_BOOT_TIMEOUT_MS = 4500;
 const PROFILE_FETCH_DEDUPE_MS = 15000;
 const LAST_LOGIN_TOUCH_MS = 10 * 60 * 1000;
 const profileFetchCache = new Map();
@@ -27,89 +28,126 @@ const moveToStudentEntry = () => {
     try {
         useAppStore.getState().setInternalPage('main');
         useAppStore.getState().setIsStudentLoginMode(true);
-    } catch (_e) {
+    } catch {
         window.location.href = '/';
     }
 };
 
-/**
- * 전역 인증 및 프로필 상태 관리 스토어 (Zustand) 🔐
- */
+const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+const withTimeout = async (promise, ms, label) => {
+    let timeoutId;
+    try {
+        return await Promise.race([
+            promise,
+            new Promise((_, reject) => {
+                timeoutId = window.setTimeout(() => reject(new Error(`${label} timeout`)), ms);
+            })
+        ]);
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
+};
+
+const runAfterPaint = (task) => {
+    const run = () => {
+        task().catch((error) => console.warn('[AuthStore] background task failed:', error));
+    };
+
+    if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(run, { timeout: 3000 });
+    } else {
+        window.setTimeout(run, 0);
+    }
+};
+
+const touchLastLogin = async (userId) => {
+    if (
+        !userId ||
+        (lastLoginTouchCache.has(userId) &&
+            Date.now() - lastLoginTouchCache.get(userId) <= LAST_LOGIN_TOUCH_MS)
+    ) {
+        return;
+    }
+
+    const { error } = await supabase
+        .from('profiles')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', userId);
+
+    if (!error) {
+        lastLoginTouchCache.set(userId, Date.now());
+    }
+};
+
+const restoreStudentSession = async (set) => {
+    try {
+        const { data: studentResult } = await withTimeout(
+            supabase.rpc('get_student_by_auth'),
+            AUTH_BOOT_TIMEOUT_MS,
+            'student session restore'
+        );
+
+        if (studentResult?.success) {
+            const sessionData = buildStudentSession(studentResult.student);
+            set({ studentSession: sessionData, session: null, profile: null });
+            localStorage.setItem('student_session', JSON.stringify(sessionData));
+        } else {
+            console.warn('[AuthStore] Student auth binding is missing.');
+            localStorage.removeItem('student_session');
+            set({ studentSession: null });
+        }
+    } catch (e) {
+        console.warn('[AuthStore] Student session restore failed:', e);
+        localStorage.removeItem('student_session');
+        set({ studentSession: null });
+    }
+};
+
 export const useAuthStore = create((set, get) => ({
     session: null,
     profile: null,
     studentSession: null,
     loading: true,
 
-    // 상태 변경 액션들
     setSession: (session) => set({ session }),
     setProfile: (profile) => set({ profile }),
     setStudentSession: (studentSession) => set({ studentSession }),
     setLoading: (loading) => set({ loading }),
 
-    // 1. 프로필 정보 가져오기 (교사/관리자)
     fetchProfile: async (userId, options = {}) => {
-        if (!userId) return;
+        if (!userId || !supabase) return null;
 
         const { force = false, touchLogin = true } = options;
         const startTime = performance.now();
-        console.log('⏱️ [AuthStore] 프로필 로드 시작...');
+        console.log('[AuthStore] Profile load start...');
 
         const cached = profileFetchCache.get(userId);
-        if (!force && cached && (Date.now() - cached.timestamp) < PROFILE_FETCH_DEDUPE_MS) {
-            if (cached.profile) {
-                set({ profile: cached.profile });
-            }
+        if (!force && cached && Date.now() - cached.timestamp < PROFILE_FETCH_DEDUPE_MS) {
+            if (cached.profile) set({ profile: cached.profile });
+            if (touchLogin) runAfterPaint(() => touchLastLogin(userId));
             return cached.profile;
         }
 
         const inflight = profileFetchInflight.get(userId);
-        if (!force && inflight) {
-            return inflight;
-        }
+        if (!force && inflight) return inflight;
 
-        try {
-            const fetchPromise = (async () => {
-                const shouldTouchLogin = touchLogin && (
-                    !lastLoginTouchCache.has(userId) ||
-                    (Date.now() - lastLoginTouchCache.get(userId)) > LAST_LOGIN_TOUCH_MS
-                );
-
-                const requests = [];
-                if (shouldTouchLogin) {
-                    requests.push(
-                        supabase
-                            .from('profiles')
-                            .update({ last_login_at: new Date().toISOString() })
-                            .eq('id', userId)
-                    );
-                } else {
-                    requests.push(Promise.resolve({ data: null, error: null }));
-                }
-
-                requests.push(
+        const fetchPromise = (async () => {
+            try {
+                const [profileResult, teacherResult] = await Promise.all([
                     supabase
                         .from('profiles')
                         .select('id, role, full_name, is_approved, primary_class_id, api_mode, created_at, last_login_at')
                         .eq('id', userId)
-                        .maybeSingle()
-                );
-
-                requests.push(
+                        .maybeSingle(),
                     supabase
                         .from('teachers')
                         .select('name, school_name, phone')
                         .eq('id', userId)
                         .maybeSingle()
-                );
+                ]);
 
-                const [updateResult, profileResult, teacherResult] = await Promise.all(requests);
-
-                console.log(`✅ [AuthStore] 프로필 로드 완료 (${(performance.now() - startTime).toFixed(0)}ms)`);
-
-                if (shouldTouchLogin && !updateResult?.error) {
-                    lastLoginTouchCache.set(userId, Date.now());
-                }
+                console.log(`[AuthStore] Profile load complete (${(performance.now() - startTime).toFixed(0)}ms)`);
 
                 const profileData = profileResult.data;
                 const teacherData = teacherResult.data;
@@ -124,8 +162,11 @@ export const useAuthStore = create((set, get) => ({
                     };
                     profileFetchCache.set(userId, { profile: fullProfile, timestamp: Date.now() });
                     set({ profile: fullProfile });
+                    if (touchLogin) runAfterPaint(() => touchLastLogin(userId));
                     return fullProfile;
-                } else if (teacherData) {
+                }
+
+                if (teacherData) {
                     const basicProfile = {
                         role: 'TEACHER',
                         teacherName: teacherData.name,
@@ -133,75 +174,68 @@ export const useAuthStore = create((set, get) => ({
                     };
                     profileFetchCache.set(userId, { profile: basicProfile, timestamp: Date.now() });
                     set({ profile: basicProfile });
+                    if (touchLogin) runAfterPaint(() => touchLastLogin(userId));
                     return basicProfile;
                 }
+            } catch (e) {
+                console.warn('[AuthStore] Profile load failed:', e);
+            } finally {
+                profileFetchInflight.delete(userId);
+            }
+            return null;
+        })();
 
-                return null;
-            })();
-
-            profileFetchInflight.set(userId, fetchPromise);
-            return await fetchPromise;
-        } catch (e) {
-            console.warn("[AuthStore] 프로필 로드 중 오류 발생:", e);
-        } finally {
-            profileFetchInflight.delete(userId);
-        }
-        return null;
+        profileFetchInflight.set(userId, fetchPromise);
+        return fetchPromise;
     },
 
-    // 2. 초기 세션 확인 및 복구
     checkSessions: async () => {
         const start = performance.now();
-        console.log('🔍 [AuthStore] 세션 확인 중...');
+        console.log('[AuthStore] Checking session...');
 
         if (!supabase) {
             set({ loading: false });
             return;
         }
 
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            console.log(`🔐 [AuthStore] 세션 획득 완료 (${(performance.now() - start).toFixed(0)}ms)`);
+        const restore = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                console.log(`[AuthStore] Session loaded (${(performance.now() - start).toFixed(0)}ms)`);
 
-            if (session) {
-                const isAnonymous = session.user?.is_anonymous === true;
-
-                if (isAnonymous) {
-                    // 학생 익명 세션 복구
-                    try {
-                        const { data: studentResult } = await supabase.rpc('get_student_by_auth');
-                        if (studentResult?.success) {
-                            const sessionData = buildStudentSession(studentResult.student);
-                            set({ studentSession: sessionData, session: null, profile: null });
-                            localStorage.setItem('student_session', JSON.stringify(sessionData));
-                        } else {
-                            console.warn('[AuthStore] 학생 auth 바인딩 해제됨');
-                            localStorage.removeItem('student_session');
-                            set({ studentSession: null });
-                        }
-                    } catch (e) {
-                        console.warn('[AuthStore] 학생 세션 복구 실패:', e);
-                        localStorage.removeItem('student_session');
-                        set({ studentSession: null });
-                    }
-                } else {
-                    // 교사의 경우
+                if (!session) {
                     localStorage.removeItem('student_session');
-                    set({ session, studentSession: null });
-                    await get().fetchProfile(session.user.id);
+                    set({ session: null, profile: null, studentSession: null });
+                    return;
                 }
-            } else {
+
+                if (session.user?.is_anonymous === true) {
+                    await restoreStudentSession(set);
+                    return;
+                }
+
                 localStorage.removeItem('student_session');
-                set({ session: null, profile: null, studentSession: null });
+                set({ session, studentSession: null });
+                await withTimeout(get().fetchProfile(session.user.id), AUTH_BOOT_TIMEOUT_MS, 'profile fetch');
+            } catch (e) {
+                console.error('[AuthStore] Session check failed:', e);
+            } finally {
+                set({ loading: false });
             }
-        } catch (e) {
-            console.error("[AuthStore] 세션 체크 중 오류:", e);
-        } finally {
+        };
+
+        const restorePromise = restore();
+        const result = await Promise.race([
+            restorePromise.then(() => 'done'),
+            wait(AUTH_BOOT_TIMEOUT_MS).then(() => 'timeout')
+        ]);
+
+        if (result === 'timeout') {
+            console.warn('[AuthStore] Initial session check is slow. Showing the app first.');
             set({ loading: false });
         }
     },
 
-    // 3. 교사/관리자 로그아웃
     verifyStudentSession: async ({ notify = false } = {}) => {
         if (!supabase) return false;
 
@@ -222,9 +256,7 @@ export const useAuthStore = create((set, get) => ({
                     console.warn('[AuthStore] Student session verification failed:', error);
                     return true;
                 }
-                if (attempt === 0) {
-                    await new Promise((resolve) => window.setTimeout(resolve, 300));
-                }
+                if (attempt === 0) await wait(300);
             }
 
             if (studentResult?.success) {
@@ -262,13 +294,12 @@ export const useAuthStore = create((set, get) => ({
         }
     },
 
-    // 4. 학생 로그아웃
     studentLogout: async () => {
         try {
             await supabase.rpc('unbind_student_auth');
             await supabase.auth.signOut();
         } catch (e) {
-            console.warn('[AuthStore] 학생 로그아웃 실패:', e);
+            console.warn('[AuthStore] Student logout failed:', e);
         } finally {
             set({ studentSession: null, session: null, profile: null, loading: false });
             clearStudentClientState();

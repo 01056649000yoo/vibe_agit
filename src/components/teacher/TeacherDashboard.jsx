@@ -22,6 +22,23 @@ import ActivityDetailModal from './ActivityDetailModal';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
 
+const ADMIN_VERIFY_TIMEOUT_MS = 8000;
+const MotionDiv = motion.div;
+
+const withTimeout = async (promise, ms, label) => {
+    let timeoutId;
+    try {
+        return await Promise.race([
+            promise,
+            new Promise((_, reject) => {
+                timeoutId = window.setTimeout(() => reject(new Error(`${label} timeout`)), ms);
+            })
+        ]);
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
+};
+
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
  */
@@ -43,7 +60,6 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         openaiKey, setOpenaiKey, originalKey, hasApiKey,
         promptTemplate, setPromptTemplate, originalPrompt,
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
-        isKeyVisible, setIsKeyVisible,
         savingKey, testingKey, aiStatus,
         handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, handleDeleteApiKey, runAIDiagnosis,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
@@ -72,9 +88,13 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         setAdminPasswordError('');
 
         try {
-            const { data, error } = await supabase.functions.invoke('verify-admin-mode', {
-                body: { password: adminPassword }
-            });
+            const { data, error } = await withTimeout(
+                supabase.functions.invoke('verify-admin-mode', {
+                    body: { password: adminPassword }
+                }),
+                ADMIN_VERIFY_TIMEOUT_MS,
+                'admin verification'
+            );
 
             if (error) {
                 let errorMessage = error.message || '관리자 모드 확인에 실패했습니다.';
@@ -86,11 +106,11 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             try {
                                 const parsed = JSON.parse(errorText);
                                 errorMessage = parsed?.message || parsed?.error || errorMessage;
-                            } catch (_parseError) {
+                            } catch {
                                 errorMessage = errorText;
                             }
                         }
-                    } catch (_contextError) {
+                    } catch {
                         // context를 읽지 못하면 기본 메시지를 유지합니다.
                     }
                 }
@@ -107,7 +127,11 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
             setIsAdminPasswordOpen(false);
             onSwitchToAdminMode();
         } catch (err) {
-            setAdminPasswordError(err.message || '관리자 모드 확인에 실패했습니다.');
+            if (err.message?.includes('timeout')) {
+                setAdminPasswordError('관리자 확인 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.');
+            } else {
+                setAdminPasswordError(err.message || '관리자 모드 확인에 실패했습니다.');
+            }
         } finally {
             setIsVerifyingAdminPassword(false);
         }
@@ -282,7 +306,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
 
             <AnimatePresence>
                 {isAdminPasswordOpen && (
-                    <motion.div
+                    <MotionDiv
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -299,7 +323,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         }}
                         onClick={() => setIsAdminPasswordOpen(false)}
                     >
-                        <motion.div
+                        <MotionDiv
                             initial={{ y: 16, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             exit={{ y: 12, opacity: 0 }}
@@ -379,8 +403,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                     {isVerifyingAdminPassword ? '확인 중...' : '관리자 모드 열기'}
                                 </Button>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </MotionDiv>
+                    </MotionDiv>
                 )}
             </AnimatePresence>
         </div>
