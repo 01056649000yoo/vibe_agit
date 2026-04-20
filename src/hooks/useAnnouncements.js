@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
+
+const REFRESH_DEBOUNCE_MS = 3000;
 
 export const useAnnouncements = (role = 'TEACHER') => {
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
     const [latestAnnouncement, setLatestAnnouncement] = useState(null);
+    const debounceTimerRef = useRef(null);
 
     const fetchAnnouncements = async () => {
         try {
@@ -32,19 +35,38 @@ export const useAnnouncements = (role = 'TEACHER') => {
     useEffect(() => {
         fetchAnnouncements();
 
-        // 실시간 구독
+        // [Realtime] 채널 이름을 role로 분리하여 교사/학생/관리자가 서로의 이벤트로 refetch하지 않도록 함
+        // 관리자가 공지 1건만 수정해도 전원 동시 refetch로 썬더링 허드 유발하던 문제를 해결
+        const channelName = `announcements_${role}`;
+
+        const duplicate = supabase.getChannels().find(c => c.name === channelName);
+        if (duplicate) {
+            supabase.removeChannel(duplicate);
+        }
+
+        const scheduleRefresh = () => {
+            if (typeof document !== 'undefined' && document.hidden) return;
+            if (debounceTimerRef.current) return; // 이미 예약됨
+            debounceTimerRef.current = window.setTimeout(() => {
+                debounceTimerRef.current = null;
+                fetchAnnouncements();
+            }, REFRESH_DEBOUNCE_MS);
+        };
+
         const channel = supabase
-            .channel('announcements_realtime')
+            .channel(channelName)
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',
                 table: 'announcements'
-            }, () => {
-                fetchAnnouncements();
-            })
+            }, scheduleRefresh)
             .subscribe();
 
         return () => {
+            if (debounceTimerRef.current) {
+                window.clearTimeout(debounceTimerRef.current);
+                debounceTimerRef.current = null;
+            }
             supabase.removeChannel(channel);
         };
     }, [role]);

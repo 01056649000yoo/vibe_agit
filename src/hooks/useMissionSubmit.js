@@ -94,6 +94,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     useEffect(() => {
         if (!missionId) return;
 
+        let alertTimerId = null;
+
         const channel = supabase
             .channel(`mission_updates_${missionId}`)
             .on(
@@ -107,12 +109,20 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 (payload) => {
                     console.log('🔔 실시간 미션 정보 업데이트됨:', payload.new);
                     setMission(prev => ({ ...prev, ...payload.new }));
-                    alert('📢 선생님이 미션 내용을 수정하셨어요! 바뀐 기준을 확인해주세요.');
+                    // [썬더링 허드 방지] 교사가 미션을 수정하면 해당 미션을 수행 중인 모든 학생이 동시에
+                    // alert를 보고 동시에 반응(재저장/새로고침)할 수 있음. 0~4초 랜덤 지연으로 분산.
+                    if (alertTimerId) clearTimeout(alertTimerId);
+                    const jitterMs = Math.floor(Math.random() * 4000);
+                    alertTimerId = setTimeout(() => {
+                        alertTimerId = null;
+                        alert('📢 선생님이 미션 내용을 수정하셨어요! 바뀐 기준을 확인해주세요.');
+                    }, jitterMs);
                 }
             )
             .subscribe();
 
         return () => {
+            if (alertTimerId) clearTimeout(alertTimerId);
             supabase.removeChannel(channel);
         };
     }, [missionId]);

@@ -263,13 +263,19 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             else setTotalStudentCount(studentCount || 0);
 
             if (missionsData && missionsData.length > 0) {
-                const missionIds = missionsData.map(m => m.id);
+                // [DB 부하 방지] 최근 100개 미션에 한해서만 제출 카운트 집계.
+                // (목록은 최신순 정렬 + 아카이브 제외, 100개 이전은 학급에서 사실상 거의 노출되지 않음)
+                // 또한 select 결과에도 hard limit(50000)을 두어 악성/비정상 누적 데이터로부터 방어.
+                const SUBMISSION_COUNT_MISSION_CAP = 100;
+                const SUBMISSION_COUNT_ROW_CAP = 50000;
+                const missionIds = missionsData.slice(0, SUBMISSION_COUNT_MISSION_CAP).map(m => m.id);
                 const { data: counts, error: countError } = await supabase
                     .from('student_posts')
                     .select('mission_id, student_id, students!inner(id)')
                     .in('mission_id', missionIds)
                     .eq('is_confirmed', true)
-                    .is('students.deleted_at', null);
+                    .is('students.deleted_at', null)
+                    .limit(SUBMISSION_COUNT_ROW_CAP);
 
                 if (!countError && counts) {
                     const missionStudentSets = counts.reduce((acc, curr) => {

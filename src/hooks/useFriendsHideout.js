@@ -16,6 +16,10 @@ export const useFriendsHideout = (studentSession, params) => {
     const pageRef = useRef(0);
     const [hasMore, setHasMore] = useState(true);
 
+    // [Realtime] 구독 콜백이 최신 값을 읽되, deps로 인한 재구독은 피하기 위한 ref
+    const selectedMissionIdRef = useRef(null);
+    const normalizePostsRef = useRef(null);
+
     const PAGE_SIZE = 10;
 
     const normalizePostsWithAuthors = useCallback(async (rawPosts = []) => {
@@ -334,6 +338,14 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [classmates]);
 
     useEffect(() => {
+        selectedMissionIdRef.current = selectedMission?.id || null;
+    }, [selectedMission?.id]);
+
+    useEffect(() => {
+        normalizePostsRef.current = normalizePostsWithAuthors;
+    }, [normalizePostsWithAuthors]);
+
+    useEffect(() => {
         fetchMissions(true);
         fetchClassmates();
         if (params?.initialPostId) {
@@ -382,7 +394,7 @@ export const useFriendsHideout = (studentSession, params) => {
             )
             .subscribe();
 
-        // [실시간 3] 새 글 알림 구독 (현재 선택된 미션에 대해서만)
+        // [실시간 3] 새 글 알림 구독 (class_id 필터로 범위 제한 + 콜백 내부에서 현재 미션 체크)
         const postsSubscription = supabase
             .channel(`posts_${classId}`)
             .on(
@@ -390,16 +402,16 @@ export const useFriendsHideout = (studentSession, params) => {
                 {
                     event: 'INSERT',
                     schema: 'public',
-                    table: 'student_posts'
+                    table: 'student_posts',
+                    filter: `class_id=eq.${classId}`
                 },
                 async (payload) => {
-                    // 현재 내가 보고 있는 미션의 글이고, 내가 쓴 글이 아니며, 제출된 상태인 경우
+                    const currentMissionId = selectedMissionIdRef.current;
                     if (
-                        payload.new.mission_id === selectedMission?.id &&
+                        payload.new.mission_id === currentMissionId &&
                         payload.new.student_id !== studentSession.id &&
                         payload.new.is_submitted
                     ) {
-                        // 새 글의 경우 작성자 정보를 포함하여 상세 정보를 다시 가져와서 목록 상단에 추가
                         const { data: newPost, error } = await supabase
                             .from('student_posts')
                             .select(`
@@ -410,11 +422,11 @@ export const useFriendsHideout = (studentSession, params) => {
                             `)
                             .eq('id', payload.new.id)
                             .single();
-                        
+
                         if (!error && newPost) {
-                            const [normalizedPost] = await normalizePostsWithAuthors([newPost]);
+                            const normalizer = normalizePostsRef.current;
+                            const [normalizedPost] = normalizer ? await normalizer([newPost]) : [newPost];
                             setPosts(prev => {
-                                // 중복 추가 방지
                                 if (prev.some(p => p.id === newPost.id)) return prev;
                                 return [normalizedPost || newPost, ...prev];
                             });
@@ -429,7 +441,9 @@ export const useFriendsHideout = (studentSession, params) => {
             supabase.removeChannel(missionsSubscription);
             supabase.removeChannel(postsSubscription);
         };
-    }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, selectedMission?.id, fetchMissions, normalizePostsWithAuthors]);
+        // [주의] deps에는 구독 식별자(classId/studentId)만 둡니다.
+        // selectedMission.id / normalizePostsWithAuthors 변경 시 재구독하지 않도록 ref 사용.
+    }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, fetchMissions]);
 
     const handleMissionChange = (mission) => {
         setSelectedMission(mission);

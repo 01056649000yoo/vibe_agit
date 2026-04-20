@@ -334,7 +334,13 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         // 학생 수 집계(fetchRegisteredStudentCount, fetchTeacherStudentCounts)는
         // 마운트 시 1회만 실행. 자주 바뀌지 않는 통계를 폴링·이벤트에 포함하면
         // 전체 학생 row 풀스캔이 반복되어 DB 타임아웃을 유발함.
+        // focus + visibilitychange가 동시 발화해도 중복 호출되지 않도록 쿨다운 적용.
+        const REFRESH_COOLDOWN_MS = 3000;
+        let lastRefreshAt = 0;
         const refreshTeachers = () => {
+            const now = Date.now();
+            if (now - lastRefreshAt < REFRESH_COOLDOWN_MS) return;
+            lastRefreshAt = now;
             fetchTeachers({ showLoading: false });
         };
 
