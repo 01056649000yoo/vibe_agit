@@ -213,85 +213,23 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
 
         if (!postId) return;
 
-        // [실시간 1] 댓글 실시간 구독
-        const commentsChannel = supabase
-            .channel(`comments_${postId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'post_comments',
-                    filter: `post_id=eq.${postId}`
-                },
-                (payload) => {
-                    if (payload.eventType === 'INSERT') {
-                        const newComment = attachStudentInfo(payload.new);
-                        if ((shouldShowCommentRef.current || shouldShowComment)(newComment)) {
-                            setComments(prev => [
-                                ...prev.filter(c => c.id !== newComment.id),
-                                newComment
-                            ]);
-                        }
-                    } else if (payload.eventType === 'UPDATE') {
-                        const updatedComment = attachStudentInfo(payload.new);
-                        setComments(prev => {
-                            const next = prev.filter(c => c.id !== updatedComment.id);
-                            if ((shouldShowCommentRef.current || shouldShowComment)(updatedComment)) {
-                                return [...next, updatedComment].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                            }
-                            return next;
-                        });
-                    } else if (payload.eventType === 'DELETE') {
-                        setComments(prev => prev.filter(c => c.id !== payload.old.id));
-                    }
-                }
-            )
-            .subscribe();
-
-        // [실시간 2] 반응 실시간 구독
-        const reactionsChannel = supabase
-            .channel(`reactions_${postId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'post_reactions',
-                    filter: `post_id=eq.${postId}`
-                },
-                (payload) => {
-                    if (payload.eventType === 'INSERT') {
-                        const newReaction = {
-                            ...payload.new,
-                            students: payload.new.student_id === studentId
-                                ? { name: studentName || '익명 친구' }
-                                : null
-                        };
-                        setReactions(prev => [...prev.filter(r => r.id !== newReaction.id), newReaction]);
-                    } else if (payload.eventType === 'UPDATE') {
-                        setReactions(prev => {
-                            const existing = prev.find(r => r.id === payload.new.id);
-                            const updatedReaction = existing ? { ...existing, ...payload.new } : payload.new;
-
-                            if (!existing) {
-                                return [...prev, updatedReaction];
-                            }
-
-                            return prev.map(r => r.id === updatedReaction.id ? updatedReaction : r);
-                        });
-                    } else if (payload.eventType === 'DELETE') {
-                        setReactions(prev => prev.filter(r => r.id !== payload.old.id));
-                    }
-                }
-            )
-            .subscribe();
+        // [최적화] per-postId Realtime 채널 제거 → 30초 폴링으로 교체
+        // 기존: 게시글마다 comments_{postId}, reactions_{postId} 2개 채널 생성
+        //       → useClassAgitClass 의 class 레벨 채널이 동일 테이블(post_comments, post_reactions)을
+        //         이미 구독 중이어서 이중 구독 발생, Realtime WAL 부하의 63%를 차지
+        // 변경: 30초 폴링으로 다른 학생의 새 댓글·반응을 갱신
+        //       자신의 액션(댓글 작성·반응)은 기존 optimistic 업데이트로 즉시 UI에 반영됨
+        const POLL_INTERVAL_MS = 30000;
+        const pollId = window.setInterval(() => {
+            if (!document.hidden) {
+                fetchInteractions();
+            }
+        }, POLL_INTERVAL_MS);
 
         return () => {
-            supabase.removeChannel(commentsChannel);
-            supabase.removeChannel(reactionsChannel);
+            window.clearInterval(pollId);
         };
-    }, [attachStudentInfo, fetchInteractions, postId, shouldShowComment, studentId, studentName]);
+    }, [fetchInteractions, postId]);
 
     const syncReactionWithDB = useMemo(() => debounce(async (type, isRemoving) => {
         try {
