@@ -121,7 +121,14 @@ const GameManager = ({ activeClass, isMobile }) => {
             const { data, error } = await query.order('max_floor', { ascending: false });
 
             if (error) throw error;
-            setTowerRankings(data || []);
+            
+            // [버그 수정] 데이터 정규화 (이름 미표시 해결)
+            const normalizedData = (data || []).map(item => ({
+                ...item,
+                students: Array.isArray(item.students) ? item.students[0] : item.students
+            }));
+            
+            setTowerRankings(normalizedData);
         } catch (err) {
             console.error('어휘의 탑 랭킹 로드 실패:', err);
         }
@@ -328,10 +335,13 @@ const GameManager = ({ activeClass, isMobile }) => {
             if (currentRanks && currentRanks.length > 0) {
                 const startDate = vocabTowerConfig.rankingResetDate || vocabTowerConfig.createdAt || new Date().toISOString();
                 const seasonName = `${new Date(startDate).toLocaleDateString()} ~ ${new Date(now).toLocaleDateString()} 시즌 기록`;
-                const formattedRanks = currentRanks.map(r => ({
-                    name: r.students?.name || '학생',
-                    floor: r.max_floor
-                }));
+                const formattedRanks = currentRanks.map(r => {
+                    const student = Array.isArray(r.students) ? r.students[0] : r.students;
+                    return {
+                        name: student?.name || '학생',
+                        floor: r.max_floor
+                    };
+                });
 
                 // 기존 시즌 기록 모두 삭제 (최신 1건만 남기기 위해)
                 await supabase

@@ -184,7 +184,14 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                 .order('max_floor', { ascending: false })
                 .limit(5);
 
-            if (!error) setRankings(data || []);
+            if (!error && data) {
+                // [버그 수정] 데이터 정규화 (이름 미표시 해결)
+                const normalizedData = data.map(item => ({
+                    ...item,
+                    students: Array.isArray(item.students) ? item.students[0] : item.students
+                }));
+                setRankings(normalizedData);
+            }
         } catch (err) {
             console.error('랭킹 프리뷰 로드 실패:', err);
         }

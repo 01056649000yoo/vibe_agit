@@ -151,8 +151,15 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                 };
             });
 
-            console.log('[usePostInteractions] ?? ?? (postId: ' + postId + ')');
-            setReactions(rxRes.data || []);
+            console.log('[usePostInteractions] 데이터 로드 완료 (postId: ' + postId + ')');
+            
+            // [버그 수정] 반응(Reactions) 데이터 정규화 추가
+            const normalizedReactions = (rxRes.data || []).map(r => ({
+                ...r,
+                students: normalizeEmbeddedStudent(r.students)
+            }));
+
+            setReactions(normalizedReactions);
             setComments(
                 normalizedComments
                     .map(comment => ({

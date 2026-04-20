@@ -182,12 +182,16 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                         console.error('❌ isFullyExhausted 시 쳕수 기록 실패:', error);
                     } else {
                         // 랭킹 갱신
-                        supabase
-                            .from('vocab_tower_rankings')
-                            .select('max_floor, student_id, students:student_id ( name )')
-                            .eq('class_id', classId)
-                            .order('max_floor', { ascending: false })
-                            .then(({ data }) => { if (data) setRankings(data); });
+                    .then(({ data }) => {
+                        if (data) {
+                            // [버그 수정] 데이터 정규화 추가
+                            const normalized = data.map(item => ({
+                                ...item,
+                                students: Array.isArray(item.students) ? item.students[0] : item.students
+                            }));
+                            setRankings(normalized);
+                        }
+                    });
                     }
                 });
             }
@@ -237,7 +241,14 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
             const { data, error } = await query.order('max_floor', { ascending: false });
             if (error) throw error;
-            setRankings(data || []);
+
+            // [버그 수정] Supabase Join 결과가 배열 또는 객체인 경우 대응 (이름 미표시 해결)
+            const normalizedData = (data || []).map(item => ({
+                ...item,
+                students: Array.isArray(item.students) ? item.students[0] : item.students
+            }));
+
+            setRankings(normalizedData);
         } catch (err) {
             console.error('❌ 랭킹 로드 실패:', err);
         }

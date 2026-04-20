@@ -305,16 +305,28 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     .limit(50)
             ]);
 
-            const reactions = reactionsResult.data || [];
-            const comments = (commentsResult.data || []).filter(comment =>
-                comment.teacher_id != null ||
-                (comment.student_id != null && comment.student_id !== studentSession.id)
-            );
+            const normalizeEmbeddedStudent = (studentValue) => {
+                if (Array.isArray(studentValue)) return studentValue[0] || null;
+                return studentValue || null;
+            };
 
-            const combined = [
-                ...reactions.map(r => ({ ...r, type: 'reaction' })),
-                ...comments.map(c => ({ ...c, type: 'comment' }))
-            ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const reactions = (reactionsResult.data || []).map(r => ({
+                ...r,
+                type: 'reaction',
+                students: normalizeEmbeddedStudent(r.students)
+            }));
+            const comments = (commentsResult.data || [])
+                .filter(comment =>
+                    comment.teacher_id != null ||
+                    (comment.student_id != null && comment.student_id !== studentSession.id)
+                )
+                .map(c => ({
+                    ...c,
+                    type: 'comment',
+                    students: normalizeEmbeddedStudent(c.students)
+                }));
+
+            const combined = [...reactions, ...comments].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             setFeedbacks(combined);
         } catch (err) {
