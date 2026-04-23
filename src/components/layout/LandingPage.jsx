@@ -115,6 +115,44 @@ const LandingPage = ({ onStudentLoginClick }) => {
                     </div>
                 </div>
 
+                {/* 문해력 서바이벌 배너 */}
+                <div
+                    onClick={() => setModalType('survival')}
+                    style={{
+                        background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+                        padding: '16px 18px',
+                        borderRadius: '18px',
+                        marginTop: '1rem',
+                        border: '1px solid #A7F3D0',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(4, 120, 87, 0.15)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                    }}
+                >
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', minHeight: '28px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', minWidth: 0 }}>
+                            <span style={{ fontSize: '1.2rem' }}>🎮</span>
+                            <span style={{ color: '#047857', fontWeight: '800', fontSize: '0.98rem', lineHeight: '1.35', wordBreak: 'keep-all' }}>
+                                문해력 서바이벌
+                            </span>
+                        </div>
+                        <span style={{ color: '#047857', fontWeight: '700', fontSize: '0.84rem', whiteSpace: 'nowrap', justifySelf: 'end' }}>
+                            자세히 보기 〉
+                        </span>
+                    </div>
+                </div>
+
                 {/* 서비스 특징 배너 추가 (학생 로그인과 입장 문구 사이) */}
                 <div
                     onClick={() => setModalType('features')}

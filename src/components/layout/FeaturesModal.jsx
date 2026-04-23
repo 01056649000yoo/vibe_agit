@@ -5,6 +5,7 @@ import Button from '../common/Button';
  * 서비스 특징 소개 모달 ✨
  */
 const GUIDE_HELPER_URL = 'https://helper.xn--vz0ba242ncqcba79xhwx.site/';
+const SURVIVAL_URL = 'https://survival.xn--vz0ba242ncqcba79xhwx.site';
 
 const GUIDE_FEATURES = [
     {
@@ -29,6 +30,24 @@ const GUIDE_FEATURES = [
     }
 ];
 
+const SURVIVAL_FEATURES = [
+    {
+        icon: '🪑',
+        title: '학급 자리배치',
+        description: '학생들의 자리를 손쉽게 배치하여 활동 목적에 맞는 최적의 학습 환경을 만들어 줍니다.'
+    },
+    {
+        icon: '🎭',
+        title: '학급 역할 배치',
+        description: '학급 내 역할을 공정하고 편리하게 배정하여 모두가 주도적으로 참여하는 교실을 지원합니다.'
+    },
+    {
+        icon: '⚔️',
+        title: '단어 서바이벌 (개인전·팀전)',
+        description: '개인전은 물론, 앞서 설정한 자리배치 데이터를 그대로 활용해 바로 팀 단어 서바이벌 게임까지 진행할 수 있어, 어휘력과 문해력을 신나게 길러 갑니다.'
+    }
+];
+
 const FeaturesModal = ({ isOpen, onClose, mode = 'features' }) => {
     // Esc 키 누르면 닫기
     useEffect(() => {
@@ -42,6 +61,7 @@ const FeaturesModal = ({ isOpen, onClose, mode = 'features' }) => {
     if (!isOpen) return null;
 
     const isGuideMode = mode === 'guide';
+    const isSurvivalMode = mode === 'survival';
 
     return (
         <div style={{
@@ -130,6 +150,57 @@ const FeaturesModal = ({ isOpen, onClose, mode = 'features' }) => {
                                                 {section.title}
                                             </h4>
                                             <p style={{ margin: 0, fontSize: '0.96rem', color: '#9A3412', lineHeight: '1.7', wordBreak: 'keep-all' }}>
+                                                {section.description}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                ) : isSurvivalMode ? (
+                    <>
+                        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                            <div style={{ fontSize: '3.5rem', marginBottom: '15px' }}>🎮</div>
+                            <h2 style={{
+                                fontSize: '2rem',
+                                fontWeight: '900',
+                                color: '#1E293B',
+                                marginBottom: '10px',
+                                lineHeight: '1.35'
+                            }}>
+                                문해력 서바이벌
+                            </h2>
+                            <p style={{ color: '#047857', fontSize: '1.05rem', fontWeight: '700', margin: '0 0 14px 0' }}>
+                                "문제를 풀며 끝까지 살아남아라, 문해력이 쑥쑥 자라요!"
+                            </p>
+                            <p style={{ color: '#64748B', fontSize: '1rem', lineHeight: '1.7', wordBreak: 'keep-all', margin: 0 }}>
+                                제한시간 안에 단계별 문해력 문제를 해결하며 실력을 키우는 게임형 학습 앱입니다. 친구들과 경쟁하고 협력하며 공부가 놀이가 되는 즐거운 경험을 만나 보세요.
+                            </p>
+                        </div>
+
+                        <div style={{ marginBottom: '16px', color: '#065F46', fontSize: '1.05rem', fontWeight: '900' }}>
+                            🌟 핵심 기능
+                        </div>
+
+                        <div style={{ display: 'grid', gap: '18px', marginBottom: '35px' }}>
+                            {SURVIVAL_FEATURES.map((section) => (
+                                <div
+                                    key={section.title}
+                                    style={{
+                                        padding: '24px',
+                                        borderRadius: '24px',
+                                        background: '#F0FDF4',
+                                        border: '1px solid #A7F3D0'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                                        <div style={{ fontSize: '2rem', lineHeight: 1 }}>{section.icon}</div>
+                                        <div>
+                                            <h4 style={{ margin: '0 0 10px 0', fontSize: '1.2rem', color: '#065F46', fontWeight: '800' }}>
+                                                {section.title}
+                                            </h4>
+                                            <p style={{ margin: 0, fontSize: '0.96rem', color: '#047857', lineHeight: '1.7', wordBreak: 'keep-all' }}>
                                                 {section.description}
                                             </p>
                                         </div>
@@ -276,6 +347,32 @@ const FeaturesModal = ({ isOpen, onClose, mode = 'features' }) => {
                             </a>
                             <p style={{ margin: '12px 0 0 0', fontSize: '0.9rem', color: '#9A3412', fontWeight: '600' }}>
                                 이 프로그램은 별도의 회원가입이 필요합니다.
+                            </p>
+                        </div>
+                    ) : isSurvivalMode ? (
+                        <div>
+                            <a
+                                href={SURVIVAL_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ textDecoration: 'none' }}
+                            >
+                                <Button
+                                    style={{
+                                        width: '100%',
+                                        borderRadius: '20px',
+                                        height: '56px',
+                                        fontSize: '1.1rem',
+                                        background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                                        color: 'white',
+                                        border: 'none'
+                                    }}
+                                >
+                                    문해력 서바이벌 바로가기 🚀
+                                </Button>
+                            </a>
+                            <p style={{ margin: '12px 0 0 0', fontSize: '0.9rem', color: '#047857', fontWeight: '600', lineHeight: '1.6', wordBreak: 'keep-all' }}>
+                                별도의 회원가입 없이 바로 이용할 수 있으며, 모든 데이터는 선생님의 브라우저에 안전하게 저장됩니다.
                             </p>
                         </div>
                     ) : (
