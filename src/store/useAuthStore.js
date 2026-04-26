@@ -8,6 +8,16 @@ const profileFetchCache = new Map();
 const profileFetchInflight = new Map();
 const lastLoginTouchCache = new Map();
 
+// 로컬 스토리지에 세션 토큰이 있는지 동기적으로 확인
+// → 세션이 없으면 loading:false 로 초기화하여 랜딩페이지를 즉시 표시
+const hasStoredSession = (() => {
+    try {
+        const keys = Object.keys(localStorage);
+        return keys.some(k => k.startsWith('sb-') && k.endsWith('-auth-token')) ||
+               localStorage.getItem('student_session') !== null;
+    } catch (_) { return false; }
+})();
+
 const buildStudentSession = (student) => ({
     id: student.id,
     name: student.name,
@@ -39,7 +49,7 @@ export const useAuthStore = create((set, get) => ({
     session: null,
     profile: null,
     studentSession: null,
-    loading: true,
+    loading: hasStoredSession, // 저장된 세션이 없으면 즉시 false → 랜딩페이지 바로 표시
 
     // 상태 변경 액션들
     setSession: (session) => set({ session }),
