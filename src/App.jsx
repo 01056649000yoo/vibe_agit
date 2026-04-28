@@ -1,5 +1,6 @@
 import { useState, useEffect, Suspense, lazy } from 'react'
 import { supabase } from './lib/supabaseClient'
+import { Analytics } from '@vercel/analytics/react'
 import './App.css'
 
 // 레이아웃 및 공통 컴포넌트
@@ -303,8 +304,9 @@ function App() {
           /* [4순위] 비로그인 (랜딩 페이지) */
           <LandingPage onStudentLoginClick={() => setIsStudentLoginMode(true)} />
         )}
-      </Suspense>
+        </Suspense>
       </ErrorBoundary>
+      <Analytics />
     </Layout>
   )
 }
