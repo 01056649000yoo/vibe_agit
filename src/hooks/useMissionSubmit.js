@@ -167,6 +167,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         } catch (err) {
             console.error('임시 저장 실패:', err.message);
             if (showMsg) alert('저장 중 오류가 발생했습니다.');
+            throw err;
         }
     };
 

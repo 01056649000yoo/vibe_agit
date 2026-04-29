@@ -41,6 +41,21 @@ const PREVIEW_MODAL_STYLES = {
     }
 };
 
+const AUTO_SAVE_DEBOUNCE_MS = 30000;
+const AUTO_SAVE_THROTTLE_MS = 60000;
+
+const createDraftSnapshot = (title, content, studentAnswers) => ({
+    title,
+    content,
+    studentAnswers: [...studentAnswers]
+});
+
+const isSameDraft = (a, b) => (
+    a.title === b.title &&
+    a.content === b.content &&
+    JSON.stringify(a.studentAnswers) === JSON.stringify(b.studentAnswers)
+);
+
 /**
  * 역할: 학생 - 글쓰기 에디터 (단계별 답변 및 본문 삽입 기능 포함) ✨
  */
@@ -151,60 +166,123 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)
     const isLocked = isConfirmed || (isSubmitted && !isReturned);
 
-    const lastSavedDataRef = useRef({ title: '', content: '', studentAnswers: [] });
+    const latestDraftRef = useRef(createDraftSnapshot('', '', []));
+    const latestSaveRef = useRef(handleSave);
+    const lastSavedDataRef = useRef({ ...createDraftSnapshot('', '', []), initialized: false });
+    const autoSaveTimerRef = useRef(null);
+    const lastAutoSaveAtRef = useRef(0);
+    const isAutoSavingRef = useRef(false);
+    const autoSaveStateRef = useRef({ loading, submitting, isLocked });
+    const runAutoSaveRef = useRef(null);
+
+    latestSaveRef.current = handleSave;
+    latestDraftRef.current = createDraftSnapshot(title, content, studentAnswers);
+    autoSaveStateRef.current = { loading, submitting, isLocked };
 
     useEffect(() => {
-        if (loading || submitting || isLocked) return;
-
-        const hasDraftContent =
-            title.trim().length > 0 ||
-            content.trim().length > 0 ||
-            studentAnswers.some((answer) => answer?.trim());
-
-        if (!hasDraftContent) return;
-
-        // 초기 로드 시점의 데이터를 기준점으로 설정 (최초 1회)
-        if (!lastSavedDataRef.current.initialized && !loading) {
+        if (!loading && !lastSavedDataRef.current.initialized) {
             lastSavedDataRef.current = {
-                title,
-                content,
-                studentAnswers: [...studentAnswers],
+                ...latestDraftRef.current,
                 initialized: true
             };
         }
+    }, [loading]);
 
-        const intervalId = window.setInterval(async () => {
-            // 변경 사항이 있는지 깊은 비교
-            const isChanged = 
-                lastSavedDataRef.current.title !== title ||
-                lastSavedDataRef.current.content !== content ||
-                JSON.stringify(lastSavedDataRef.current.studentAnswers) !== JSON.stringify(studentAnswers);
+    const runAutoSave = async ({ ignoreThrottle = false } = {}) => {
+        if (loading || submitting || isLocked) return false;
 
-            if (!isChanged) {
-                console.log('📝 [자동 저장] 변경 사항 없음 - 요청 건너뜀');
-                return;
-            }
+        const draft = latestDraftRef.current;
+        const hasDraftContent =
+            draft.title.trim().length > 0 ||
+            draft.content.trim().length > 0 ||
+            draft.studentAnswers.some((answer) => answer?.trim());
 
-            try {
-                await handleSave(false);
-                lastSavedDataRef.current = {
-                    title,
-                    content,
-                    studentAnswers: [...studentAnswers],
-                    initialized: true
-                };
-                setAutoSaveAt(new Date());
-                setAutoSaveError('');
-            } catch (err) {
-                console.error('자동 저장 실패:', err);
-                setAutoSaveError('자동 저장 중 잠시 문제가 생겼어요.');
-            }
-        }, 60000);
+        if (!hasDraftContent || isSameDraft(lastSavedDataRef.current, draft)) return false;
+
+        const now = Date.now();
+        const elapsed = now - lastAutoSaveAtRef.current;
+        if (!ignoreThrottle && elapsed < AUTO_SAVE_THROTTLE_MS) {
+            return false;
+        }
+
+        if (isAutoSavingRef.current) {
+            return false;
+        }
+
+        isAutoSavingRef.current = true;
+        try {
+            await latestSaveRef.current(false);
+            lastSavedDataRef.current = {
+                ...latestDraftRef.current,
+                initialized: true
+            };
+            lastAutoSaveAtRef.current = Date.now();
+            setAutoSaveAt(new Date());
+            setAutoSaveError('');
+            return true;
+        } catch (err) {
+            console.error('자동 저장 실패:', err);
+            setAutoSaveError('자동 저장 중 잠시 문제가 생겼어요.');
+            throw err;
+        } finally {
+            isAutoSavingRef.current = false;
+        }
+    };
+    runAutoSaveRef.current = runAutoSave;
+
+    useEffect(() => {
+        if (autoSaveTimerRef.current) {
+            window.clearTimeout(autoSaveTimerRef.current);
+            autoSaveTimerRef.current = null;
+        }
+
+        if (loading || submitting || isLocked) return;
+
+        const draft = latestDraftRef.current;
+        const hasDraftContent =
+            draft.title.trim().length > 0 ||
+            draft.content.trim().length > 0 ||
+            draft.studentAnswers.some((answer) => answer?.trim());
+
+        if (!hasDraftContent || isSameDraft(lastSavedDataRef.current, draft)) return;
+
+        const elapsed = Date.now() - lastAutoSaveAtRef.current;
+        const throttleDelay = Math.max(0, AUTO_SAVE_THROTTLE_MS - elapsed);
+        const delay = Math.max(AUTO_SAVE_DEBOUNCE_MS, throttleDelay);
+
+        autoSaveTimerRef.current = window.setTimeout(() => {
+            runAutoSave().catch(() => {});
+        }, delay);
 
         return () => {
-            window.clearInterval(intervalId);
+            if (autoSaveTimerRef.current) {
+                window.clearTimeout(autoSaveTimerRef.current);
+                autoSaveTimerRef.current = null;
+            }
         };
-    }, [title, content, studentAnswers, loading, submitting, isLocked, handleSave]);
+    }, [title, content, studentAnswers, loading, submitting, isLocked]);
+
+    useEffect(() => {
+        const saveBeforeLeaving = () => {
+            const state = autoSaveStateRef.current;
+            if (!state.loading && !state.submitting && !state.isLocked) {
+                runAutoSaveRef.current?.({ ignoreThrottle: true }).catch(() => {});
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') saveBeforeLeaving();
+        };
+
+        window.addEventListener('pagehide', saveBeforeLeaving);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            saveBeforeLeaving();
+            window.removeEventListener('pagehide', saveBeforeLeaving);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
 
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
