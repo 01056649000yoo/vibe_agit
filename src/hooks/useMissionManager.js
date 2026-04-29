@@ -704,45 +704,62 @@ ${postArray.map((p, idx) => {
         try {
             const allUpdatePromises = [];
             const processedIds = [];
-            const CHUNK_SIZE = 5; // [최적화] 한 번에 5개씩 AI 처리 (N+1 문제 완화)
+            const CHUNK_SIZE = 2;
+
+            const toAIPayload = (p) => ({
+                id: p.id,
+                title: p.title,
+                content: p.content,
+                student_answers: p.student_answers,
+                student_name: p.students?.name
+            });
+
+            const queueFeedbackUpdate = (post, feedback) => {
+                if (!post || !feedback || processedIds.includes(post.id)) return;
+
+                processedIds.push(post.id);
+                allUpdatePromises.push(
+                    supabase
+                        .from('student_posts')
+                        .update({
+                            ai_feedback: feedback,
+                            is_submitted: false,
+                            is_returned: true
+                        })
+                        .eq('id', post.id)
+                );
+            };
+
+            const normalizeAIResults = (results, chunk) => {
+                if (!results) return [];
+                if (Array.isArray(results)) return results;
+                if (chunk.length === 1) {
+                    return [{ id: chunk[0].id, feedback: results }];
+                }
+                return [];
+            };
 
             for (let i = 0; i < targetPosts.length; i += CHUNK_SIZE) {
                 const chunk = targetPosts.slice(i, i + CHUNK_SIZE);
                 try {
-                    let results = await fetchAIFeedback(chunk.map(p => ({
-                        id: p.id,
-                        title: p.title,
-                        content: p.content,
-                        student_answers: p.student_answers,
-                        student_name: p.students?.name
-                    })));
+                    const results = normalizeAIResults(
+                        await fetchAIFeedback(chunk.map(toAIPayload)),
+                        chunk
+                    );
 
-                    // 결과 보정
-                    if (results && !Array.isArray(results)) {
-                        results = [{ id: chunk[0].id, feedback: results }];
+                    for (const res of results) {
+                        const post = chunk.find(p => p.id === res.id);
+                        queueFeedbackUpdate(post, res.feedback);
                     }
 
-                    if (results && Array.isArray(results)) {
-                        for (const res of results) {
-                            const post = chunk.find(p => p.id === res.id);
-                            if (post && res.feedback) {
-                                processedIds.push(post.id);
-
-                                // 1. 개별 업데이트 약속 수집 (피드백은 글마다 다르므로 Promise.all 활용)
-                                allUpdatePromises.push(
-                                    supabase
-                                        .from('student_posts')
-                                        .update({
-                                            ai_feedback: res.feedback,
-                                            is_submitted: false,
-                                            is_returned: true
-                                        })
-                                        .eq('id', post.id)
-                                );
-
-                                // 2. 포인트 로그 데이터 수집 (일괄 처리를 위해 배열에 저장)
-                            }
-                        }
+                    const missingPosts = chunk.filter(p => !processedIds.includes(p.id));
+                    for (const post of missingPosts) {
+                        const retryResults = normalizeAIResults(
+                            await fetchAIFeedback([toAIPayload(post)]),
+                            [post]
+                        );
+                        const retryFeedback = retryResults.find(res => res.id === post.id)?.feedback;
+                        queueFeedbackUpdate(post, retryFeedback);
                     }
                     
                     setProgress(prev => ({ 
