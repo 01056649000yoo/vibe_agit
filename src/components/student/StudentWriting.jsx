@@ -41,8 +41,8 @@ const PREVIEW_MODAL_STYLES = {
     }
 };
 
-const AUTO_SAVE_DEBOUNCE_MS = 30000;
-const AUTO_SAVE_THROTTLE_MS = 60000;
+const LOCAL_DRAFT_DEBOUNCE_MS = 3000;
+const DB_BACKUP_INTERVAL_MS = 120000;
 
 const createDraftSnapshot = (title, content, studentAnswers) => ({
     title,
@@ -55,6 +55,32 @@ const isSameDraft = (a, b) => (
     a.content === b.content &&
     JSON.stringify(a.studentAnswers) === JSON.stringify(b.studentAnswers)
 );
+
+const getDraftStorageKey = (studentId, missionId) => (
+    studentId && missionId ? `student_writing_draft_${studentId}_${missionId}` : null
+);
+
+const readLocalDraft = (key) => {
+    if (!key) return null;
+    try {
+        const raw = window.localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+        console.warn('로컬 임시 저장본을 읽지 못했습니다:', err);
+        return null;
+    }
+};
+
+const writeLocalDraft = (key, draft) => {
+    if (!key) return null;
+    const savedAt = new Date().toISOString();
+    window.localStorage.setItem(key, JSON.stringify({ ...draft, savedAt }));
+    return savedAt;
+};
+
+const removeLocalDraft = (key) => {
+    if (key) window.localStorage.removeItem(key);
+};
 
 /**
  * 역할: 학생 - 글쓰기 에디터 (단계별 답변 및 본문 삽입 기능 포함) ✨
@@ -166,30 +192,24 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)
     const isLocked = isConfirmed || (isSubmitted && !isReturned);
 
+    const draftStorageKey = getDraftStorageKey(studentSession?.id, missionId);
     const latestDraftRef = useRef(createDraftSnapshot('', '', []));
     const latestSaveRef = useRef(handleSave);
-    const lastSavedDataRef = useRef({ ...createDraftSnapshot('', '', []), initialized: false });
-    const autoSaveTimerRef = useRef(null);
-    const lastAutoSaveAtRef = useRef(0);
-    const isAutoSavingRef = useRef(false);
-    const autoSaveStateRef = useRef({ loading, submitting, isLocked });
-    const runAutoSaveRef = useRef(null);
+    const lastLocalSavedDataRef = useRef({ ...createDraftSnapshot('', '', []), initialized: false });
+    const lastDbSavedDataRef = useRef({ ...createDraftSnapshot('', '', []), initialized: false });
+    const localSaveTimerRef = useRef(null);
+    const isDbBackupSavingRef = useRef(false);
+    const autoSaveStateRef = useRef({ loading, submitting, isLocked, draftStorageKey });
+    const saveLocalDraftRef = useRef(null);
+    const runDbBackupRef = useRef(null);
 
     latestSaveRef.current = handleSave;
     latestDraftRef.current = createDraftSnapshot(title, content, studentAnswers);
-    autoSaveStateRef.current = { loading, submitting, isLocked };
+    autoSaveStateRef.current = { loading, submitting, isLocked, draftStorageKey };
 
-    useEffect(() => {
-        if (!loading && !lastSavedDataRef.current.initialized) {
-            lastSavedDataRef.current = {
-                ...latestDraftRef.current,
-                initialized: true
-            };
-        }
-    }, [loading]);
-
-    const runAutoSave = async ({ ignoreThrottle = false } = {}) => {
-        if (loading || submitting || isLocked) return false;
+    const saveLocalDraft = () => {
+        const { draftStorageKey: key, loading: isLoading, isLocked: locked } = autoSaveStateRef.current;
+        if (!key || isLoading || locked) return false;
 
         const draft = latestDraftRef.current;
         const hasDraftContent =
@@ -197,76 +217,130 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             draft.content.trim().length > 0 ||
             draft.studentAnswers.some((answer) => answer?.trim());
 
-        if (!hasDraftContent || isSameDraft(lastSavedDataRef.current, draft)) return false;
+        if (!hasDraftContent || isSameDraft(lastLocalSavedDataRef.current, draft)) return false;
 
-        const now = Date.now();
-        const elapsed = now - lastAutoSaveAtRef.current;
-        if (!ignoreThrottle && elapsed < AUTO_SAVE_THROTTLE_MS) {
-            return false;
+        const savedAt = writeLocalDraft(key, draft);
+        lastLocalSavedDataRef.current = {
+            ...draft,
+            initialized: true
+        };
+        if (savedAt) {
+            setAutoSaveAt(new Date(savedAt));
+            setAutoSaveError('');
         }
+        return true;
+    };
+    saveLocalDraftRef.current = saveLocalDraft;
 
-        if (isAutoSavingRef.current) {
-            return false;
-        }
+    const runDbBackup = async () => {
+        const { loading: isLoading, submitting: isSubmitting, isLocked: locked } = autoSaveStateRef.current;
+        if (isLoading || isSubmitting || locked || isDbBackupSavingRef.current) return false;
 
-        isAutoSavingRef.current = true;
+        const draft = latestDraftRef.current;
+        const hasDraftContent =
+            draft.title.trim().length > 0 ||
+            draft.content.trim().length > 0 ||
+            draft.studentAnswers.some((answer) => answer?.trim());
+
+        if (!hasDraftContent || isSameDraft(lastDbSavedDataRef.current, draft)) return false;
+
+        isDbBackupSavingRef.current = true;
         try {
             await latestSaveRef.current(false);
-            lastSavedDataRef.current = {
+            lastDbSavedDataRef.current = {
                 ...latestDraftRef.current,
                 initialized: true
             };
-            lastAutoSaveAtRef.current = Date.now();
-            setAutoSaveAt(new Date());
             setAutoSaveError('');
             return true;
         } catch (err) {
-            console.error('자동 저장 실패:', err);
-            setAutoSaveError('자동 저장 중 잠시 문제가 생겼어요.');
-            throw err;
+            console.error('DB 자동 백업 실패:', err);
+            setAutoSaveError('DB 백업 중 잠시 문제가 생겼어요.');
+            return false;
         } finally {
-            isAutoSavingRef.current = false;
+            isDbBackupSavingRef.current = false;
         }
     };
-    runAutoSaveRef.current = runAutoSave;
+    runDbBackupRef.current = runDbBackup;
 
     useEffect(() => {
-        if (autoSaveTimerRef.current) {
-            window.clearTimeout(autoSaveTimerRef.current);
-            autoSaveTimerRef.current = null;
+        if (loading) return;
+
+        const dbSnapshot = latestDraftRef.current;
+        if (!lastDbSavedDataRef.current.initialized) {
+            lastDbSavedDataRef.current = {
+                ...dbSnapshot,
+                initialized: true
+            };
         }
 
-        if (loading || submitting || isLocked) return;
+        const localDraft = readLocalDraft(draftStorageKey);
+        if (!localDraft || isLocked) {
+            if (!lastLocalSavedDataRef.current.initialized) {
+                lastLocalSavedDataRef.current = {
+                    ...dbSnapshot,
+                    initialized: true
+                };
+            }
+            return;
+        }
 
-        const draft = latestDraftRef.current;
-        const hasDraftContent =
-            draft.title.trim().length > 0 ||
-            draft.content.trim().length > 0 ||
-            draft.studentAnswers.some((answer) => answer?.trim());
+        const localSnapshot = createDraftSnapshot(
+            localDraft.title || '',
+            localDraft.content || '',
+            Array.isArray(localDraft.studentAnswers) ? localDraft.studentAnswers : []
+        );
 
-        if (!hasDraftContent || isSameDraft(lastSavedDataRef.current, draft)) return;
+        lastLocalSavedDataRef.current = {
+            ...localSnapshot,
+            initialized: true
+        };
 
-        const elapsed = Date.now() - lastAutoSaveAtRef.current;
-        const throttleDelay = Math.max(0, AUTO_SAVE_THROTTLE_MS - elapsed);
-        const delay = Math.max(AUTO_SAVE_DEBOUNCE_MS, throttleDelay);
+        if (!isSameDraft(dbSnapshot, localSnapshot)) {
+            setTitle(localSnapshot.title);
+            setContent(localSnapshot.content);
+            setStudentAnswers(localSnapshot.studentAnswers);
+            if (localDraft.savedAt) setAutoSaveAt(new Date(localDraft.savedAt));
+        }
+    }, [loading, draftStorageKey, isLocked, setTitle, setContent, setStudentAnswers]);
 
-        autoSaveTimerRef.current = window.setTimeout(() => {
-            runAutoSave().catch(() => {});
-        }, delay);
+    useEffect(() => {
+        if (localSaveTimerRef.current) {
+            window.clearTimeout(localSaveTimerRef.current);
+            localSaveTimerRef.current = null;
+        }
+
+        if (loading || isLocked) return;
+
+        localSaveTimerRef.current = window.setTimeout(() => {
+            saveLocalDraftRef.current?.();
+        }, LOCAL_DRAFT_DEBOUNCE_MS);
 
         return () => {
-            if (autoSaveTimerRef.current) {
-                window.clearTimeout(autoSaveTimerRef.current);
-                autoSaveTimerRef.current = null;
+            if (localSaveTimerRef.current) {
+                window.clearTimeout(localSaveTimerRef.current);
+                localSaveTimerRef.current = null;
             }
         };
-    }, [title, content, studentAnswers, loading, submitting, isLocked]);
+    }, [title, content, studentAnswers, loading, isLocked]);
+
+    useEffect(() => {
+        if (loading || submitting || isLocked) return;
+
+        const intervalId = window.setInterval(() => {
+            saveLocalDraftRef.current?.();
+            runDbBackupRef.current?.();
+        }, DB_BACKUP_INTERVAL_MS);
+
+        return () => window.clearInterval(intervalId);
+    }, [loading, submitting, isLocked]);
 
     useEffect(() => {
         const saveBeforeLeaving = () => {
             const state = autoSaveStateRef.current;
-            if (!state.loading && !state.submitting && !state.isLocked) {
-                runAutoSaveRef.current?.({ ignoreThrottle: true }).catch(() => {});
+            if (!state.loading && !state.isLocked) {
+                saveLocalDraftRef.current?.();
+                if (!state.submitting) runDbBackupRef.current?.();
             }
         };
 
@@ -283,6 +357,32 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, []);
+
+    const handleFinalSubmit = async () => {
+        saveLocalDraftRef.current?.();
+        const submitted = await handleSubmit();
+        if (submitted) removeLocalDraft(draftStorageKey);
+    };
+
+    const handleManualSave = async () => {
+        try {
+            await handleSave(true);
+            const draft = latestDraftRef.current;
+            writeLocalDraft(draftStorageKey, draft);
+            lastLocalSavedDataRef.current = {
+                ...draft,
+                initialized: true
+            };
+            lastDbSavedDataRef.current = {
+                ...draft,
+                initialized: true
+            };
+            setAutoSaveAt(new Date());
+            setAutoSaveError('');
+        } catch (err) {
+            console.error('수동 저장 실패:', err);
+        }
+    };
 
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
@@ -810,7 +910,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         </div>
                         {!autoSaveError && (
                             <div style={{ marginTop: '4px', fontSize: '0.72rem', color: '#8D6E63' }}>
-                                1분마다 자동 저장됨
+                                태블릿에 먼저 저장됨
                             </div>
                         )}
                     </div>
@@ -834,7 +934,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
             {/* 저장 및 제출 버튼 */}
             <div style={{ display: 'flex', gap: '12px' }}>
-                <Button size="lg" onClick={() => handleSave(true)} disabled={submitting || isLocked} style={{ flex: 1, height: '64px', fontSize: '1.2rem', fontWeight: '800', background: isLocked ? '#F1F3F5' : '#ECEFF1', color: isLocked ? '#BDC3C7' : '#455A64', border: 'none' }}>
+                <Button size="lg" onClick={handleManualSave} disabled={submitting || isLocked} style={{ flex: 1, height: '64px', fontSize: '1.2rem', fontWeight: '800', background: isLocked ? '#F1F3F5' : '#ECEFF1', color: isLocked ? '#BDC3C7' : '#455A64', border: 'none' }}>
                     {isLocked ? '수정 불가 🔒' : '임시 저장 💾'}
                 </Button>
                 <Button
@@ -853,7 +953,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 >
                     제출 전 검토하기 👀
                 </Button>
-                <Button size="lg" onClick={handleSubmit} disabled={submitting || isLocked} style={{ flex: 2, height: '64px', fontSize: '1.3rem', fontWeight: '900', background: isLocked ? '#B0BEC5' : 'var(--primary-color)', color: 'white', border: 'none' }}>
+                <Button size="lg" onClick={handleFinalSubmit} disabled={submitting || isLocked} style={{ flex: 2, height: '64px', fontSize: '1.3rem', fontWeight: '900', background: isLocked ? '#B0BEC5' : 'var(--primary-color)', color: 'white', border: 'none' }}>
                     {submitting ? '제출 중...' : isConfirmed ? '승인 완료 ✨' : (isSubmitted && isReturned) ? '수정해서 다시 제출! 🚀' : (isSubmitted && !isReturned) ? '확인 대기 중...' : '멋지게 제출하기! 🚀'}
                 </Button>
             </div>
@@ -1004,7 +1104,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     size="lg"
                                     onClick={async () => {
                                         setIsPreviewOpen(false);
-                                        await handleSubmit();
+                                        await handleFinalSubmit();
                                     }}
                                     disabled={submitting || isLocked}
                                     style={{ flex: 1.4, height: '58px', background: 'var(--primary-color)', color: 'white', border: 'none', fontWeight: '900' }}

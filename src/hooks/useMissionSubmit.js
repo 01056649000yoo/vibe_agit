@@ -176,12 +176,12 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         // [추가] 이미 제출된 상태인지 다시 한번 체크
         if (isConfirmed || (isSubmitted && !isReturned)) {
             alert('이미 제출되어 확인 중인 글입니다. ✨');
-            return;
+            return false;
         }
 
         if (!title.trim()) {
             alert('멋질 글의 제목을 지어주세요! ✍️');
-            return;
+            return false;
         }
 
         const charCount = countContentChars(content);
@@ -189,16 +189,16 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
 
         if (charCount < (mission.min_chars || 0)) {
             alert(`최소 ${mission.min_chars}자 이상 써야 해요! 조금 더 힘내볼까요? 💪`);
-            return;
+            return false;
         }
 
         if (paragraphCount < (mission.min_paragraphs || 0)) {
             alert(`최소 ${mission.min_paragraphs}문단 이상이 필요해요! 내용을 나눠서 적어보세요. 📏`);
-            return;
+            return false;
         }
 
         if (!window.confirm('정말 이대로 제출할까요? 제출 후에는 수정할 수 없어요!')) {
-            return;
+            return false;
         }
 
         // [보안 강화] Supabase 세션에서만 studentId 가져오기
@@ -208,7 +208,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         if (!currentStudentId) {
             alert('로그인 정보가 유실되었습니다. 편집한 내용을 복사한 후 다시 로그인하여 제출해 주세요. 😢');
             console.error('❌ 제출 중단: studentSession.id가 없습니다.');
-            return;
+            return false;
         }
 
         console.log("🚀 글 제출 시작 - 학생 ID(UUID):", currentStudentId, "미션 ID:", missionId);
@@ -288,6 +288,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             } else if (onBack) {
                 onBack(); // fallback
             }
+            return true;
 
         } catch (err) {
             console.error('❌ 최종 제출 실패 상세 정보:', err);
@@ -296,6 +297,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             } else {
                 alert(`글을 저장하는 중에 오류가 발생했어요. 😢\n원인: ${err.message || '알 수 없는 오류'}`);
             }
+            return false;
         } finally {
             setSubmitting(false);
         }
