@@ -88,7 +88,7 @@ const Layout = ({ children, fullHeight = true, full = false }) => {
                         fontSize: '0.95rem',
                         color: '#607D8B'
                     }}>
-                        <span><strong style={{ color: '#455A64' }}>운영책임자:</strong> 유쌤</span>
+                        <span><strong style={{ color: '#455A64' }}>운영책임자:</strong> 유승현</span>
                         <span style={{ color: '#ECEFF1' }}>•</span>
                         <span><strong style={{ color: '#455A64' }}>문의:</strong> yshgg@naver.com</span>
                     </div>
