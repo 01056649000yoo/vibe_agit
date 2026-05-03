@@ -50,14 +50,15 @@ const Layout = ({ children, fullHeight = true, full = false }) => {
                 borderTop: '1px solid #ECEFF1',
                 marginTop: 'auto'
             }}>
-                <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {/* 1열: 서비스 주요 링크 및 상호명 */}
+                <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                     <div style={{
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        gap: '24px',
-                        flexWrap: 'wrap'
+                        gap: '16px',
+                        flexWrap: 'wrap',
+                        fontSize: '0.95rem',
+                        color: '#607D8B'
                     }}>
                         <button
                             onClick={() => setModalContent('terms')}
@@ -65,31 +66,18 @@ const Layout = ({ children, fullHeight = true, full = false }) => {
                         >
                             이용약관
                         </button>
-                        <span style={{ color: '#CFD8DC' }}>|</span>
                         <button
                             onClick={() => setModalContent('privacy')}
                             style={{ background: 'none', border: 'none', padding: 0, textDecoration: 'none', fontSize: '1rem', color: '#37474F', cursor: 'pointer', fontWeight: '900' }}
                         >
                             개인정보 처리방침
                         </button>
-                        <span style={{ color: '#CFD8DC' }}>|</span>
                         <span style={{ fontSize: '1rem', color: '#37474F', fontWeight: '900' }}>
                             상호명: 끄적끄적 아지트
                         </span>
-                    </div>
-
-                    {/* 2열: 운영자 정보 및 고객 문의 */}
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        gap: '20px',
-                        flexWrap: 'wrap',
-                        fontSize: '0.95rem',
-                        color: '#607D8B'
-                    }}>
-                        <span><strong style={{ color: '#455A64' }}>운영책임자:</strong> 유승현</span>
-                        <span style={{ color: '#ECEFF1' }}>•</span>
+                        <span style={{ fontSize: '0.95rem', color: '#607D8B' }}>
+                            <strong style={{ color: '#455A64' }}>운영책임자:</strong> 유승현
+                        </span>
                         <span><strong style={{ color: '#455A64' }}>문의:</strong> yshgg@naver.com</span>
                     </div>
 
