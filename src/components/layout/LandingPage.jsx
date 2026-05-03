@@ -21,7 +21,7 @@ const quickActions = [
   {
     icon: '🎮',
     title: '문해력 서바이벌',
-    description: '퀴즈로 키우기',
+    description: '초4~6 퀴즈로 키우기',
     tone: 'sky',
     onClick: 'survival',
   },
@@ -39,14 +39,14 @@ const groupedActivities = [
     title: '글쓰기 전 활동',
     items: [
       { icon: '💡', name: '생각 열기', detail: '주제 아이디어 모으기', badge: '준비중' },
-      { icon: '💬', name: '질문 만들기', detail: '생각을 확장하는 질문', onClick: 'guide' },
+      { icon: '💬', name: '질문 만들기', detail: '생각을 확장하는 질문', badge: '준비중' },
     ],
   },
   {
     title: '글쓰기 후 활동',
     items: [
       { icon: '🌟', name: '한줄모아', detail: '친구들의 한줄글 모아보기', badge: '준비중' },
-      { icon: '🎮', name: '문해력 서바이벌', detail: '퀴즈로 문해력 키우기', onClick: 'survival' },
+      { icon: '🎮', name: '문해력 서바이벌', detail: '초4~6 퀴즈로 문해력 키우기', onClick: 'survival' },
     ],
   },
 ];
