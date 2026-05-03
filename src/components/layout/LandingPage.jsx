@@ -1,222 +1,211 @@
 import React, { useState } from 'react';
-import Card from '../common/Card';
-import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
 import FeaturesModal from './FeaturesModal';
+import './LandingPage.css';
+
+const quickActions = [
+  {
+    icon: '✍️',
+    title: '글쓰기 시작',
+    description: '바로 글쓰기',
+    tone: 'peach',
+    action: 'student-entry',
+  },
+  {
+    icon: '🔎',
+    title: '글감 찾기',
+    description: '아이디어 얻기',
+    tone: 'mint',
+    onClick: 'guide',
+  },
+  {
+    icon: '🎮',
+    title: '문해력 서바이벌',
+    description: '퀴즈로 키우기',
+    tone: 'sky',
+    onClick: 'survival',
+  },
+  {
+    icon: '🔳',
+    title: 'QR 도구',
+    description: 'QR 바로 만들기',
+    tone: 'lavender',
+    href: 'https://샘링크.Kr',
+  },
+];
+
+const groupedActivities = [
+  {
+    title: '글쓰기 전 활동',
+    items: [
+      { icon: '💡', name: '생각 열기', detail: '주제 아이디어 모으기', badge: '준비중' },
+      { icon: '💬', name: '질문 만들기', detail: '생각을 확장하는 질문', onClick: 'guide' },
+    ],
+  },
+  {
+    title: '글쓰기 후 활동',
+    items: [
+      { icon: '🌟', name: '한줄모아', detail: '친구들의 한줄글 모아보기', badge: '준비중' },
+      { icon: '🎮', name: '문해력 서바이벌', detail: '퀴즈로 문해력 키우기', onClick: 'survival' },
+    ],
+  },
+];
+
+const guideLinks = [
+  {
+    label: '교사용 가이드',
+    href: 'https://moduai.notion.site/_-2fb79937a97380148743fa935dfa768c',
+    icon: '📘',
+  },
+  {
+    label: '학생용 가이드',
+    href: 'https://moduai.notion.site/_-2fb79937a97380c99dacd9fe11182473',
+    icon: '📗',
+  },
+];
+
 const LandingPage = ({ onStudentLoginClick }) => {
-    const [modalType, setModalType] = useState(null);
+  const [modalType, setModalType] = useState(null);
 
-    return (
-        <>
-            <Card style={{
-                textAlign: 'center',
-                padding: '2.5rem',
-                maxWidth: '500px',
-                animation: 'fadeIn 0.8s ease-out'
-            }}>
-                {/* 메인 비주얼 이미지 */}
-                <div style={{
-                    marginBottom: '2rem',
-                    borderRadius: '24px',
-                    overflow: 'hidden',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
-                    border: '4px solid white'
-                }}>
-                    <img
-                        src="/assets/og-image.webp"
-                        alt="끄적끄적 아지트"
-                        style={{ width: '100%', display: 'block' }}
-                    />
+  const handleTeacherLogin = () => {
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+  };
+
+  return (
+    <>
+      <section className="landing-shell">
+        <div className="landing-halo landing-halo-left" />
+        <div className="landing-halo landing-halo-right" />
+
+        <div className="landing-showcase">
+          <main className="landing-device">
+            <div className="landing-device-notch" />
+
+            <section className="landing-device-hero">
+              <img
+                className="landing-device-hero-image"
+                src="/assets/landing-hero-reference.png"
+                alt="끄적끄적 아지트 상단 대표 이미지"
+              />
+            </section>
+
+            <section className="landing-entry-grid">
+              <button className="entry-card entry-card-student" onClick={onStudentLoginClick}>
+                <span className="entry-card-icon">✍️</span>
+                <strong>학생 글쓰기 입장</strong>
+                <span>내 글을 쓰고 생각을 키워요!</span>
+              </button>
+
+              <button className="entry-card entry-card-teacher" onClick={handleTeacherLogin}>
+                <span className="entry-card-icon">🧑‍🏫</span>
+                <strong>선생님으로 시작하기</strong>
+                <span>수업에 바로 활용해요!</span>
+              </button>
+            </section>
+
+            <button
+              className="landing-intro-banner"
+              onClick={() => setModalType('features')}
+              type="button"
+            >
+              <span className="landing-intro-icon">🏡</span>
+              <span className="landing-intro-text">
+                <strong>아지트 소개</strong>
+                <span>끄적끄적 아지트는 어떤 공간인지 한눈에 살펴보기</span>
+              </span>
+              <span className="landing-intro-arrow">자세히 보기 〉</span>
+            </button>
+
+            <section className="landing-section">
+              <div className="landing-section-head">
+                <h3>빠른 시작</h3>
+                <span>모두 보기 〉</span>
+              </div>
+              <div className="quick-action-grid">
+                {quickActions.map((action) => (
+                  <button
+                    key={action.title}
+                    className={`quick-action-card quick-action-${action.tone}`}
+                    onClick={() => {
+                      if (action.action === 'student-entry') {
+                        onStudentLoginClick();
+                        return;
+                      }
+                      if (action.href) {
+                        window.open(action.href, '_blank', 'noopener,noreferrer');
+                        return;
+                      }
+                      if (action.onClick) {
+                        setModalType(action.onClick);
+                      }
+                    }}
+                    type="button"
+                  >
+                    <span className="quick-action-icon">{action.icon}</span>
+                    <strong>{action.title}</strong>
+                    <span>{action.description}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {groupedActivities.map((section) => (
+              <section className="landing-section" key={section.title}>
+                <div className="landing-section-head">
+                  <h3>{section.title}</h3>
+                  <span>모두 보기 〉</span>
                 </div>
-
-                <p style={{
-                    color: 'var(--text-secondary)',
-                    fontSize: '1.2rem',
-                    marginBottom: '2.5rem',
-                    lineHeight: '1.7',
-                    wordBreak: 'keep-all'
-                }}>
-                    우리의 소중한 생각들이 무럭무럭 자라나는<br />
-                    <strong style={{ color: 'var(--primary-color)' }}>따뜻한 글쓰기 공간</strong>에 오신 걸 환영해요!
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <Button
-                        onClick={() => supabase.auth.signInWithOAuth({
-                            provider: 'google',
-                            options: { redirectTo: window.location.origin }
-                        })}
-                        style={{
-                            width: '100%',
-                            background: '#FFFFFF',
-                            color: '#757575',
-                            border: '1px solid #ddd',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                            height: '56px',
-                            fontSize: '1.05rem'
-                        }}
+                <div className="activity-grid">
+                  {section.items.map((item) => (
+                    <button
+                      className={`activity-card ${item.badge ? 'activity-card-disabled' : ''}`}
+                      key={item.name}
+                      onClick={() => item.onClick && setModalType(item.onClick)}
+                      type="button"
+                      disabled={!item.onClick}
                     >
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style={{ width: '18px', marginRight: '12px' }} />
-                        선생님 구글 로그인
-                    </Button>
-
-                    <Button
-                        variant="secondary"
-                        size="lg"
-                        style={{
-                            width: '100%',
-                            background: 'linear-gradient(135deg, #FBC02D 0%, #F9A825 100%)',
-                            color: 'white',
-                            height: '56px',
-                            fontSize: '1.1rem',
-                            fontWeight: '600',
-                            boxShadow: '0 4px 15px rgba(251, 192, 45, 0.3)'
-                        }}
-                        onClick={onStudentLoginClick}
-                    >
-                        🎒 학생 로그인 (코드 입력)
-                    </Button>
+                      {item.badge && <span className="activity-badge">{item.badge}</span>}
+                      <span className="activity-icon">{item.icon}</span>
+                      <strong>{item.name}</strong>
+                      <p>{item.detail}</p>
+                    </button>
+                  ))}
                 </div>
+              </section>
+            ))}
 
-                {/* 길잡이 배너 */}
-                <div
-                    onClick={() => setModalType('guide')}
-                    style={{
-                        background: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)',
-                        padding: '16px 18px',
-                        borderRadius: '18px',
-                        marginTop: '1.5rem',
-                        border: '1px solid #FED7AA',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={e => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(194, 65, 12, 0.12)';
-                    }}
-                    onMouseLeave={e => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                    }}
-                >
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', minHeight: '28px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', minWidth: 0 }}>
-                            <span style={{ fontSize: '1.2rem' }}>🧭</span>
-                            <span style={{ color: '#C2410C', fontWeight: '800', fontSize: '0.98rem', lineHeight: '1.35', wordBreak: 'keep-all' }}>
-                                끄적끄적 아지트 길잡이-글감만들기-
-                            </span>
-                        </div>
-                        <span style={{ color: '#C2410C', fontWeight: '700', fontSize: '0.84rem', whiteSpace: 'nowrap', justifySelf: 'end' }}>
-                            자세히 보기 〉
-                        </span>
-                    </div>
-                </div>
+            <section className="landing-section landing-guides">
+              <div className="landing-section-head">
+                <h3>안내 & 정보</h3>
+              </div>
+              <div className="guide-link-grid">
+                {guideLinks.map((link) => (
+                  <a
+                    key={link.label}
+                    className="guide-link-card"
+                    href={link.href}
+                    rel="noopener noreferrer"
+                  >
+                    <span>{link.icon}</span>
+                    <strong>{link.label}</strong>
+                  </a>
+                ))}
+              </div>
+            </section>
+          </main>
+        </div>
+      </section>
 
-                {/* 문해력 서바이벌 배너 */}
-                <div
-                    onClick={() => setModalType('survival')}
-                    style={{
-                        background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
-                        padding: '16px 18px',
-                        borderRadius: '18px',
-                        marginTop: '1rem',
-                        border: '1px solid #A7F3D0',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={e => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(4, 120, 87, 0.15)';
-                    }}
-                    onMouseLeave={e => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                    }}
-                >
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', minHeight: '28px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', minWidth: 0 }}>
-                            <span style={{ fontSize: '1.2rem' }}>🎮</span>
-                            <span style={{ color: '#047857', fontWeight: '800', fontSize: '0.98rem', lineHeight: '1.35', wordBreak: 'keep-all' }}>
-                                문해력 서바이벌
-                            </span>
-                        </div>
-                        <span style={{ color: '#047857', fontWeight: '700', fontSize: '0.84rem', whiteSpace: 'nowrap', justifySelf: 'end' }}>
-                            자세히 보기 〉
-                        </span>
-                    </div>
-                </div>
-
-                {/* 서비스 특징 배너 추가 (학생 로그인과 입장 문구 사이) */}
-                <div
-                    onClick={() => setModalType('features')}
-                    style={{
-                        background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
-                        padding: '12px 20px',
-                        borderRadius: '16px',
-                        marginTop: '1.5rem',
-                        cursor: 'pointer',
-                        border: '1px solid #C7D2FE',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '10px',
-                        transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={e => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.1)';
-                    }}
-                    onMouseLeave={e => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                    }}
-                >
-                    <span style={{ fontSize: '1.2rem' }}>✨</span>
-                    <span style={{ color: '#4338CA', fontWeight: '800', fontSize: '0.95rem' }}>끄적끄적 아지트는 어떤 곳인가요?</span>
-                    <span style={{ color: '#6366F1', fontSize: '0.8rem' }}>자세히 보기 〉</span>
-                </div>
-
-                <div style={{ marginTop: '1.5rem' }}>
-                    <p style={{ fontSize: '0.9rem', color: '#999', fontWeight: '500', marginBottom: '1rem' }}>
-                        나만의 글쓰기 아지트로 입장해요 🏠
-                    </p>
-
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', fontSize: '0.85rem' }}>
-                        <a
-                            href="https://moduai.notion.site/_-2fb79937a97380148743fa935dfa768c?source=copy_link"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: '#6366F1', textDecoration: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
-                            📚 교사용 가이드
-                        </a>
-                        <span style={{ color: '#DDD' }}>|</span>
-                        <a
-                            href="https://moduai.notion.site/_-2fb79937a97380c99dacd9fe11182473?source=copy_link"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: '#F59E0B', textDecoration: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}
-                        >
-                            📖 학생용 가이드
-                        </a>
-                    </div>
-                </div>
-            </Card>
-
-            <FeaturesModal
-                isOpen={Boolean(modalType)}
-                mode={modalType || 'features'}
-                onClose={() => setModalType(null)}
-            />
-        </>
-    );
+      <FeaturesModal
+        isOpen={Boolean(modalType)}
+        mode={modalType || 'features'}
+        onClose={() => setModalType(null)}
+      />
+    </>
+  );
 };
 
 export default LandingPage;
