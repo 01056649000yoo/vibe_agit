@@ -50,6 +50,7 @@ const groupedActivities = [
   {
     title: '글쓰기 후 활동',
     items: [
+      { icon: '🌟', name: '한줄모아', detail: '친구들의 한줄글 모아보기', badge: '준비중' },
       { icon: '🎮', name: '문해력 서바이벌', detail: '초4~6 퀴즈로 문해력 키우기', onClick: 'survival' },
     ],
   },
