@@ -200,10 +200,38 @@
   font-size: 1.02rem;
 }
 
+.landing-section-title-group {
+  display: grid;
+  gap: 2px;
+}
+
+.landing-section-title-group p {
+  margin: 0;
+  color: #4e8b8a;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .landing-section-head span {
   color: #7f756a;
   font-size: 0.82rem;
   text-align: right;
+}
+
+.landing-section-link {
+  border: 0;
+  background: transparent;
+  color: #4e8b8a;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 0;
+  box-shadow: none;
+}
+
+.landing-section-link:hover {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
 }
 
 .quick-action-grid,

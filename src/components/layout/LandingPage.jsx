@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabaseClient';
 import FeaturesModal from './FeaturesModal';
 import './LandingPage.css';
 
+const WRITING_LAB_URL = 'https://helper.xn--vz0ba242ncqcba79xhwx.site/';
+
 const quickActions = [
   {
     icon: '✍️',
@@ -16,7 +18,7 @@ const quickActions = [
     title: '글감 찾기',
     description: '아이디어 얻기',
     tone: 'mint',
-    onClick: 'guide',
+    href: WRITING_LAB_URL,
   },
   {
     icon: '🎮',
@@ -37,15 +39,17 @@ const quickActions = [
 const groupedActivities = [
   {
     title: '글쓰기 전 활동',
+    subtitle: '아지트 글쓰기 연구소',
+    portalHref: WRITING_LAB_URL,
     items: [
-      { icon: '💡', name: '생각 열기', detail: '주제 아이디어 모으기', badge: '준비중' },
-      { icon: '💬', name: '질문 만들기', detail: '생각을 확장하는 질문', badge: '준비중' },
+      { icon: '🔎', name: '글감 찾기', detail: '주제와 재료 아이디어 모으기', href: WRITING_LAB_URL },
+      { icon: '💬', name: '질문 만들기', detail: '생각을 넓히는 질문 생성하기', href: WRITING_LAB_URL },
+      { icon: '🧭', name: '질문 고르기', detail: '핵심 질문을 골라 글 방향 정하기', href: WRITING_LAB_URL },
     ],
   },
   {
     title: '글쓰기 후 활동',
     items: [
-      { icon: '🌟', name: '한줄모아', detail: '친구들의 한줄글 모아보기', badge: '준비중' },
       { icon: '🎮', name: '문해력 서바이벌', detail: '초4~6 퀴즈로 문해력 키우기', onClick: 'survival' },
     ],
   },
@@ -66,6 +70,10 @@ const guideLinks = [
 
 const LandingPage = ({ onStudentLoginClick }) => {
   const [modalType, setModalType] = useState(null);
+
+  const navigateToUrl = (href) => {
+    window.location.href = href;
+  };
 
   const handleTeacherLogin = () => {
     supabase.auth.signInWithOAuth({
@@ -135,7 +143,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
                         return;
                       }
                       if (action.href) {
-                        window.open(action.href, '_blank', 'noopener,noreferrer');
+                        navigateToUrl(action.href);
                         return;
                       }
                       if (action.onClick) {
@@ -155,17 +163,38 @@ const LandingPage = ({ onStudentLoginClick }) => {
             {groupedActivities.map((section) => (
               <section className="landing-section" key={section.title}>
                 <div className="landing-section-head">
-                  <h3>{section.title}</h3>
-                  <span>모두 보기 〉</span>
+                  <div className="landing-section-title-group">
+                    <h3>{section.title}</h3>
+                    {section.subtitle && <p>{section.subtitle}</p>}
+                  </div>
+                  {section.portalHref ? (
+                    <button
+                      className="landing-section-link"
+                      onClick={() => navigateToUrl(section.portalHref)}
+                      type="button"
+                    >
+                      연구소 전체 보기 〉
+                    </button>
+                  ) : (
+                    <span>모두 보기 〉</span>
+                  )}
                 </div>
                 <div className="activity-grid">
                   {section.items.map((item) => (
                     <button
                       className={`activity-card ${item.badge ? 'activity-card-disabled' : ''}`}
                       key={item.name}
-                      onClick={() => item.onClick && setModalType(item.onClick)}
+                      onClick={() => {
+                        if (item.href) {
+                          navigateToUrl(item.href);
+                          return;
+                        }
+                        if (item.onClick) {
+                          setModalType(item.onClick);
+                        }
+                      }}
                       type="button"
-                      disabled={!item.onClick}
+                      disabled={!item.onClick && !item.href}
                     >
                       {item.badge && <span className="activity-badge">{item.badge}</span>}
                       <span className="activity-icon">{item.icon}</span>
