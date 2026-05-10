@@ -38,20 +38,21 @@ const quickActions = [
 
 const groupedActivities = [
   {
-    title: '글쓰기 전 활동',
-    subtitle: '아지트 글쓰기 연구소',
-    portalHref: WRITING_LAB_URL,
+    title: '아지트 글쓰기 연구소',
+    banner: true,
+    bannerDescription: '글쓰기 전 활동을 한곳에서 이어서 준비해요.',
     items: [
       { icon: '🔎', name: '글감 찾기', detail: '주제와 재료 아이디어 모으기', href: WRITING_LAB_URL },
       { icon: '💬', name: '질문 만들기', detail: '생각을 넓히는 질문 생성하기', href: WRITING_LAB_URL },
       { icon: '🧭', name: '질문 고르기', detail: '핵심 질문을 골라 글 방향 정하기', href: WRITING_LAB_URL },
+      { icon: '🌟', name: '한줄모아', detail: '친구들의 한줄글 아이디어 모아보기', href: WRITING_LAB_URL },
     ],
   },
   {
-    title: '글쓰기 후 활동',
+    title: '문해력 활동',
     items: [
-      { icon: '🌟', name: '한줄모아', detail: '친구들의 한줄글 모아보기', badge: '준비중' },
       { icon: '🎮', name: '문해력 서바이벌', detail: '초4~6 퀴즈로 문해력 키우기', onClick: 'survival' },
+      { icon: '📝', name: '급수의 달인', detail: '받아쓰기 활동 앱 · 아직 열리지 않았어요', badge: '제작중' },
     ],
   },
 ];
@@ -131,7 +132,6 @@ const LandingPage = ({ onStudentLoginClick }) => {
             <section className="landing-section">
               <div className="landing-section-head">
                 <h3>빠른 시작</h3>
-                <span>모두 보기 〉</span>
               </div>
               <div className="quick-action-grid">
                 {quickActions.map((action) => (
@@ -166,44 +166,57 @@ const LandingPage = ({ onStudentLoginClick }) => {
                 <div className="landing-section-head">
                   <div className="landing-section-title-group">
                     <h3>{section.title}</h3>
-                    {section.subtitle && <p>{section.subtitle}</p>}
+                    {section.bannerDescription && <p>{section.bannerDescription}</p>}
                   </div>
-                  {section.portalHref ? (
-                    <button
-                      className="landing-section-link"
-                      onClick={() => navigateToUrl(section.portalHref)}
-                      type="button"
-                    >
-                      연구소 전체 보기 〉
-                    </button>
-                  ) : (
-                    <span>모두 보기 〉</span>
-                  )}
                 </div>
-                <div className="activity-grid">
-                  {section.items.map((item) => (
-                    <button
-                      className={`activity-card ${item.badge ? 'activity-card-disabled' : ''}`}
-                      key={item.name}
-                      onClick={() => {
-                        if (item.href) {
-                          navigateToUrl(item.href);
-                          return;
-                        }
-                        if (item.onClick) {
-                          setModalType(item.onClick);
-                        }
-                      }}
-                      type="button"
-                      disabled={!item.onClick && !item.href}
-                    >
-                      {item.badge && <span className="activity-badge">{item.badge}</span>}
-                      <span className="activity-icon">{item.icon}</span>
-                      <strong>{item.name}</strong>
-                      <p>{item.detail}</p>
-                    </button>
-                  ))}
-                </div>
+                {section.banner ? (
+                  <button
+                    className="activity-banner-card"
+                    onClick={() => navigateToUrl(WRITING_LAB_URL)}
+                    type="button"
+                  >
+                    <div className="activity-banner-head">
+                      <span className="activity-banner-icon">🧪</span>
+                      <div className="activity-banner-copy">
+                        <strong>{section.title}</strong>
+                        <span>{section.bannerDescription}</span>
+                      </div>
+                    </div>
+                    <div className="activity-banner-list">
+                      {section.items.map((item) => (
+                        <div className="activity-banner-pill" key={item.name}>
+                          <span>{item.icon}</span>
+                          <strong>{item.name}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </button>
+                ) : (
+                  <div className="activity-grid">
+                    {section.items.map((item) => (
+                      <button
+                        className={`activity-card ${item.badge ? 'activity-card-disabled' : ''}`}
+                        key={item.name}
+                        onClick={() => {
+                          if (item.href) {
+                            navigateToUrl(item.href);
+                            return;
+                          }
+                          if (item.onClick) {
+                            setModalType(item.onClick);
+                          }
+                        }}
+                        type="button"
+                        disabled={!item.onClick && !item.href}
+                      >
+                        {item.badge && <span className="activity-badge">{item.badge}</span>}
+                        <span className="activity-icon">{item.icon}</span>
+                        <strong>{item.name}</strong>
+                        <p>{item.detail}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </section>
             ))}
 

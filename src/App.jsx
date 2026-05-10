@@ -37,7 +37,7 @@ const TermsOfService = lazy(() => import('./components/layout/TermsOfService'))
  */
 function App() {
   const { 
-    session, profile, studentSession, loading, 
+    session, profile, studentSession, loading, profileLoading,
     checkSessions, fetchProfile, verifyStudentSession, logout: handleLogout, studentLogout: handleStudentLogout 
   } = useAuthStore();
 
@@ -202,7 +202,9 @@ function App() {
           </div>
         ) : session ? (
           /* [1순위] 교사 세션 존재 시 */
-          (!profile || !profile.role) ? (
+          profileLoading ? (
+            <Loading />
+          ) : (!profile || !profile.role) ? (
             <TeacherProfileSetup
               email={session.user.email}
               onTeacherStart={handleTeacherStart}

@@ -192,7 +192,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '📊 미션 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📋 AI쫑알이' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'agit' ? '🏠 아지트 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '📖 앱 사용법'}
+                        {tabId === 'dashboard' ? '📊 미션 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📋 AI쫑알이' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'agit' ? '🏠 아지트 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '🧰 수업 앱 모음'}
                     </button>
                 ))}
             </nav>

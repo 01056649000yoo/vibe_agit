@@ -36,7 +36,7 @@ const clearStudentClientState = () => {
 const moveToStudentEntry = () => {
     try {
         useAppStore.getState().setInternalPage('main');
-        useAppStore.getState().setIsStudentLoginMode(true);
+        useAppStore.getState().setIsStudentLoginMode(false);
     } catch (_e) {
         window.location.href = '/';
     }
@@ -49,12 +49,14 @@ export const useAuthStore = create((set, get) => ({
     session: null,
     profile: null,
     studentSession: null,
+    profileLoading: false,
     loading: hasStoredSession, // 저장된 세션이 없으면 즉시 false → 랜딩페이지 바로 표시
 
     // 상태 변경 액션들
     setSession: (session) => set({ session }),
     setProfile: (profile) => set({ profile }),
     setStudentSession: (studentSession) => set({ studentSession }),
+    setProfileLoading: (profileLoading) => set({ profileLoading }),
     setLoading: (loading) => set({ loading }),
 
     // 1. 프로필 정보 가져오기 (교사/관리자)
@@ -64,12 +66,14 @@ export const useAuthStore = create((set, get) => ({
         const { force = false, touchLogin = true } = options;
         const startTime = performance.now();
         console.log('⏱️ [AuthStore] 프로필 로드 시작...');
+        set({ profileLoading: true });
 
         const cached = profileFetchCache.get(userId);
         if (!force && cached && (Date.now() - cached.timestamp) < PROFILE_FETCH_DEDUPE_MS) {
             if (cached.profile) {
                 set({ profile: cached.profile });
             }
+            set({ profileLoading: false });
             return cached.profile;
         }
 
@@ -155,6 +159,7 @@ export const useAuthStore = create((set, get) => ({
             console.warn("[AuthStore] 프로필 로드 중 오류 발생:", e);
         } finally {
             profileFetchInflight.delete(userId);
+            set({ profileLoading: false });
         }
         return null;
     },
@@ -202,7 +207,7 @@ export const useAuthStore = create((set, get) => ({
                 }
             } else {
                 localStorage.removeItem('student_session');
-                set({ session: null, profile: null, studentSession: null });
+                set({ session: null, profile: null, studentSession: null, profileLoading: false });
             }
         } catch (e) {
             console.error("[AuthStore] 세션 체크 중 오류:", e);
@@ -246,7 +251,7 @@ export const useAuthStore = create((set, get) => ({
 
             await supabase.auth.signOut();
             clearStudentClientState();
-            set({ studentSession: null, session: null, profile: null, loading: false });
+            set({ studentSession: null, session: null, profile: null, profileLoading: false, loading: false });
 
             if (notify) {
                 window.alert('다른 기기에서 이 학생 코드로 다시 로그인되어 현재 기기의 연결이 해제되었어요.');
@@ -266,7 +271,7 @@ export const useAuthStore = create((set, get) => ({
         } catch (err) {
             console.warn('[AuthStore] Logout failed:', err);
         } finally {
-            set({ session: null, profile: null, studentSession: null, loading: false });
+            set({ session: null, profile: null, studentSession: null, profileLoading: false, loading: false });
             clearStudentClientState();
             moveToStudentEntry();
         }
@@ -280,7 +285,7 @@ export const useAuthStore = create((set, get) => ({
         } catch (e) {
             console.warn('[AuthStore] 학생 로그아웃 실패:', e);
         } finally {
-            set({ studentSession: null, session: null, profile: null, loading: false });
+            set({ studentSession: null, session: null, profile: null, profileLoading: false, loading: false });
             clearStudentClientState();
             moveToStudentEntry();
         }
