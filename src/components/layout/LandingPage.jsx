@@ -4,6 +4,7 @@ import FeaturesModal from './FeaturesModal';
 import './LandingPage.css';
 
 const WRITING_LAB_URL = 'https://helper.xn--vz0ba242ncqcba79xhwx.site/';
+const QR_TOOL_URL = 'https://샘링크.Kr';
 
 const quickActions = [
   {
@@ -32,7 +33,7 @@ const quickActions = [
     title: 'QR 도구',
     description: 'QR 바로 만들기',
     tone: 'lavender',
-    href: 'https://샘링크.Kr',
+    href: QR_TOOL_URL,
   },
 ];
 
@@ -75,6 +76,10 @@ const LandingPage = ({ onStudentLoginClick }) => {
 
   const navigateToUrl = (href) => {
     window.location.href = href;
+  };
+
+  const openExternalUrl = (href) => {
+    window.open(href, '_blank', 'noopener,noreferrer');
   };
 
   const handleTeacherLogin = () => {
@@ -144,6 +149,10 @@ const LandingPage = ({ onStudentLoginClick }) => {
                         return;
                       }
                       if (action.href) {
+                        if (action.href === WRITING_LAB_URL || action.href === QR_TOOL_URL) {
+                          openExternalUrl(action.href);
+                          return;
+                        }
                         navigateToUrl(action.href);
                         return;
                       }
@@ -172,7 +181,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
                 {section.banner ? (
                   <button
                     className="activity-banner-card"
-                    onClick={() => navigateToUrl(WRITING_LAB_URL)}
+                    onClick={() => openExternalUrl(WRITING_LAB_URL)}
                     type="button"
                   >
                     <div className="activity-banner-head">
@@ -199,6 +208,10 @@ const LandingPage = ({ onStudentLoginClick }) => {
                         key={item.name}
                         onClick={() => {
                           if (item.href) {
+                            if (item.href === WRITING_LAB_URL) {
+                              openExternalUrl(item.href);
+                              return;
+                            }
                             navigateToUrl(item.href);
                             return;
                           }

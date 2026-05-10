@@ -56,7 +56,7 @@ const supportApps = [
 const UsageGuide = ({ isMobile }) => {
   const openLink = (href) => {
     if (!href) return;
-    window.location.href = href;
+    window.open(href, '_blank', 'noopener,noreferrer');
   };
 
   const containerStyle = {
