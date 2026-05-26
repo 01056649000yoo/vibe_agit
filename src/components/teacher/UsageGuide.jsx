@@ -10,8 +10,8 @@ const STUDENT_GUIDE_URL = 'https://moduai.notion.site/_-2fb79937a97380c99dacd9fe
 const writingLabItems = [
   { icon: '🔎', name: '글감 찾기' },
   { icon: '💬', name: '질문 만들기' },
-  { icon: '🧭', name: '질문 고르기' },
   { icon: '🌟', name: '한줄모아' },
+  { icon: '📚', name: '과목별 글쓰기 준비하기' },
 ];
 
 const literacyApps = [
@@ -137,7 +137,28 @@ const UsageGuide = ({ isMobile }) => {
                 🧪
               </div>
               <div style={{ display: 'grid', gap: '2px' }}>
-                <strong style={{ fontSize: isMobile ? '1rem' : '1.08rem', color: '#215F5E' }}>아지트 글쓰기 연구소</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <strong style={{ fontSize: isMobile ? '1rem' : '1.08rem', color: '#215F5E' }}>아지트 글쓰기 연구소</strong>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minHeight: '24px',
+                      padding: '4px 10px',
+                      borderRadius: '999px',
+                      background: 'linear-gradient(135deg, #FFEDD5 0%, #FFF7ED 100%)',
+                      border: '1px solid rgba(251, 146, 60, 0.28)',
+                      color: '#C2410C',
+                      fontSize: '0.72rem',
+                      fontWeight: '900',
+                      letterSpacing: '0.02em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Beta
+                  </span>
+                </div>
                 <span style={{ fontSize: '0.82rem', color: '#557877', lineHeight: '1.45' }}>
                   글쓰기 전 활동을 한곳에서 이어서 준비해요.
                 </span>
