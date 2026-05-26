@@ -40,13 +40,14 @@ const quickActions = [
 const groupedActivities = [
   {
     title: '아지트 글쓰기 연구소',
+    badge: 'Beta',
     banner: true,
     bannerDescription: '글쓰기 전 활동을 한곳에서 이어서 준비해요.',
     items: [
       { icon: '🔎', name: '글감 찾기', detail: '주제와 재료 아이디어 모으기', href: WRITING_LAB_URL },
       { icon: '💬', name: '질문 만들기', detail: '생각을 넓히는 질문 생성하기', href: WRITING_LAB_URL },
-      { icon: '🧭', name: '질문 고르기', detail: '핵심 질문을 골라 글 방향 정하기', href: WRITING_LAB_URL },
       { icon: '🌟', name: '한줄모아', detail: '친구들의 한줄글 아이디어 모아보기', href: WRITING_LAB_URL },
+      { icon: '📚', name: '과목별 글쓰기 준비하기', detail: '수업 주제에 맞춰 글쓰기 재료 준비하기', href: WRITING_LAB_URL },
     ],
   },
   {
@@ -174,7 +175,10 @@ const LandingPage = ({ onStudentLoginClick }) => {
               <section className="landing-section" key={section.title}>
                 <div className="landing-section-head">
                   <div className="landing-section-title-group">
-                    <h3>{section.title}</h3>
+                    <div className="landing-section-title-row">
+                      <h3>{section.title}</h3>
+                      {section.badge && <span className="landing-beta-badge">{section.badge}</span>}
+                    </div>
                     {section.bannerDescription && <p>{section.bannerDescription}</p>}
                   </div>
                 </div>
@@ -187,7 +191,10 @@ const LandingPage = ({ onStudentLoginClick }) => {
                     <div className="activity-banner-head">
                       <span className="activity-banner-icon">🧪</span>
                       <div className="activity-banner-copy">
-                        <strong>{section.title}</strong>
+                        <div className="activity-banner-title-row">
+                          <strong>{section.title}</strong>
+                          {section.badge && <span className="landing-beta-badge">{section.badge}</span>}
+                        </div>
                         <span>{section.bannerDescription}</span>
                       </div>
                     </div>

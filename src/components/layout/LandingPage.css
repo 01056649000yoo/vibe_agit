@@ -205,11 +205,35 @@
   gap: 2px;
 }
 
+.landing-section-title-row,
+.activity-banner-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .landing-section-title-group p {
   margin: 0;
   color: #4e8b8a;
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+.landing-beta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffedd5 0%, #fff7ed 100%);
+  border: 1px solid rgba(251, 146, 60, 0.28);
+  color: #c2410c;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .quick-action-grid,
