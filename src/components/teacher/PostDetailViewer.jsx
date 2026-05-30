@@ -216,18 +216,24 @@ const PostDetailViewer = ({
                                     <>
                                         <Button
                                             onClick={() => handleRequestRewrite(selectedPost)}
+                                            disabled={isTeacherEditMode}
                                             style={{
                                                 backgroundColor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2',
-                                                padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
+                                                padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold',
+                                                opacity: isTeacherEditMode ? 0.4 : 1,
+                                                cursor: isTeacherEditMode ? 'not-allowed' : 'pointer'
                                             }}
                                         >
                                             ♻️ 다시 쓰기 요청
                                         </Button>
                                         <Button
                                             onClick={() => handleApprovePost(selectedPost)}
+                                            disabled={isTeacherEditMode}
                                             style={{
                                                 backgroundColor: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9',
-                                                padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
+                                                padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold',
+                                                opacity: isTeacherEditMode ? 0.4 : 1,
+                                                cursor: isTeacherEditMode ? 'not-allowed' : 'pointer'
                                             }}
                                         >
                                             ✅ 승인 및 포인트 지급
@@ -410,7 +416,7 @@ const PostDetailViewer = ({
                                                     fontWeight: 'bold'
                                                 }}
                                             >
-                                                {isSavingTeacherEdit ? '저장 중...' : '수정본 저장'}
+                                                {isSavingTeacherEdit ? '저장 중...' : '수정본 저장 및 되돌려주기'}
                                             </Button>
                                         </div>
                                     </div>
