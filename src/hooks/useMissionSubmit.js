@@ -20,6 +20,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const [isTeacherEdited, setIsTeacherEdited] = useState(false);
     const [teacherEditedAt, setTeacherEditedAt] = useState('');
     const [studentAnswers, setStudentAnswers] = useState([]); // [신규] 핵심 질문에 대한 답변들
+    const [postUpdatedAt, setPostUpdatedAt] = useState(null); // 로컬 임시본과의 최신성 비교용
 
     const fetchMission = useCallback(async () => {
         setLoading(true);
@@ -47,7 +48,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             const currentStudentId = studentSession?.id;
             if (currentStudentId) {
                 // 학생이 기존에 작성하던 글의 제목, 내용, 제출 및 승인 상태, 피드백 정보만 로드
-                let query = supabase.from('student_posts').select('id, title, content, is_returned, is_confirmed, is_submitted, ai_feedback, original_title, original_content, teacher_edited_title, teacher_edited_content, teacher_edited_at, is_teacher_edited, student_answers, student_id, mission_id');
+                let query = supabase.from('student_posts').select('id, title, content, is_returned, is_confirmed, is_submitted, ai_feedback, original_title, original_content, teacher_edited_title, teacher_edited_content, teacher_edited_at, is_teacher_edited, student_answers, student_id, mission_id, updated_at');
 
                 if (params?.postId) {
                     query = query.eq('id', params.postId);
@@ -72,6 +73,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     setTeacherEditedAt(postData.teacher_edited_at || '');
                     setStudentAnswers(postData.student_answers || []);
                     setPostId(postData.id);
+                    setPostUpdatedAt(postData.updated_at || null);
                 } else if (params?.postId) {
                     console.warn(`[useMissionSubmit] postId(${params.postId})에 해당하는 글을 찾을 수 없습니다.`);
                 }
@@ -131,7 +133,10 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const handleSave = async (showMsg = true) => {
         // [보안 강화] Supabase 세션에서만 studentId 가져오기 - localStorage 폴백 제거
         const currentStudentId = studentSession?.id;
-        if (!currentStudentId) return;
+        if (!currentStudentId) {
+            if (showMsg) alert('로그인 정보가 유실되었어요. 작성한 내용을 복사한 뒤 다시 로그인해 주세요. 😢');
+            return;
+        }
 
         // [추가] 제출 상태 확인: 이미 제출되었고 다시 쓰기 요청이 없는 경우 저장 불가
         if (isConfirmed || (isSubmitted && !isReturned)) {
@@ -320,6 +325,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         teacherEditedAt,
         studentAnswers,
         setStudentAnswers,
+        postUpdatedAt,
         handleSave,
         handleSubmit
     };

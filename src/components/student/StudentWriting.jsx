@@ -73,9 +73,15 @@ const readLocalDraft = (key) => {
 
 const writeLocalDraft = (key, draft) => {
     if (!key) return null;
-    const savedAt = new Date().toISOString();
-    window.localStorage.setItem(key, JSON.stringify({ ...draft, savedAt }));
-    return savedAt;
+    try {
+        const savedAt = new Date().toISOString();
+        window.localStorage.setItem(key, JSON.stringify({ ...draft, savedAt }));
+        return savedAt;
+    } catch (err) {
+        // 사파리 프라이빗 모드/쿼터 초과/보안 정책으로 localStorage 쓰기 실패 가능.
+        console.warn('로컬 임시 저장에 실패했습니다:', err);
+        return null;
+    }
 };
 
 const removeLocalDraft = (key) => {
@@ -102,6 +108,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         teacherEditedAt,
         studentAnswers,
         setStudentAnswers,
+        postUpdatedAt,
         handleSave,
         handleSubmit,
         postId
@@ -220,14 +227,16 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         if (!hasDraftContent || isSameDraft(lastLocalSavedDataRef.current, draft)) return false;
 
         const savedAt = writeLocalDraft(key, draft);
+        if (!savedAt) {
+            setAutoSaveError('이 단말의 임시저장 공간이 부족해요. 다른 단말이나 새 창에서 다시 시도해 주세요.');
+            return false;
+        }
         lastLocalSavedDataRef.current = {
             ...draft,
             initialized: true
         };
-        if (savedAt) {
-            setAutoSaveAt(new Date(savedAt));
-            setAutoSaveError('');
-        }
+        setAutoSaveAt(new Date(savedAt));
+        setAutoSaveError('');
         return true;
     };
     saveLocalDraftRef.current = saveLocalDraft;
@@ -291,6 +300,23 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             Array.isArray(localDraft.studentAnswers) ? localDraft.studentAnswers : []
         );
 
+        // DB(선생님 수정본 또는 다른 단말에서의 학생 저장)와 로컬 임시본 중 더 최신인 쪽을 사용한다.
+        // 다른 브라우저/단말에서 한 작업이 이 단말의 옛 임시본에 덮어쓰이지 않도록 한다.
+        const localSavedTime = localDraft.savedAt ? new Date(localDraft.savedAt).getTime() : 0;
+        const teacherEditedTime = teacherEditedAt ? new Date(teacherEditedAt).getTime() : 0;
+        const postUpdatedTime = postUpdatedAt ? new Date(postUpdatedAt).getTime() : 0;
+        const dbFreshestTime = Math.max(teacherEditedTime, postUpdatedTime);
+        if (dbFreshestTime > localSavedTime) {
+            removeLocalDraft(draftStorageKey);
+            lastLocalSavedDataRef.current = {
+                ...dbSnapshot,
+                initialized: true
+            };
+            const freshIso = teacherEditedTime >= postUpdatedTime ? teacherEditedAt : postUpdatedAt;
+            if (freshIso) setAutoSaveAt(new Date(freshIso));
+            return;
+        }
+
         lastLocalSavedDataRef.current = {
             ...localSnapshot,
             initialized: true
@@ -302,7 +328,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             setStudentAnswers(localSnapshot.studentAnswers);
             if (localDraft.savedAt) setAutoSaveAt(new Date(localDraft.savedAt));
         }
-    }, [loading, draftStorageKey, isLocked, setTitle, setContent, setStudentAnswers]);
+    }, [loading, draftStorageKey, isLocked, teacherEditedAt, postUpdatedAt, setTitle, setContent, setStudentAnswers]);
 
     useEffect(() => {
         if (localSaveTimerRef.current) {
@@ -368,7 +394,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         try {
             await handleSave(true);
             const draft = latestDraftRef.current;
-            writeLocalDraft(draftStorageKey, draft);
+            const localSavedAt = writeLocalDraft(draftStorageKey, draft);
             lastLocalSavedDataRef.current = {
                 ...draft,
                 initialized: true
@@ -378,7 +404,12 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 initialized: true
             };
             setAutoSaveAt(new Date());
-            setAutoSaveError('');
+            if (!localSavedAt && draftStorageKey) {
+                // DB 저장은 성공했지만 로컬 백업이 실패한 케이스.
+                setAutoSaveError('이 단말 임시저장이 실패했지만, 서버에는 안전하게 저장됐어요.');
+            } else {
+                setAutoSaveError('');
+            }
         } catch (err) {
             console.error('수동 저장 실패:', err);
         }
