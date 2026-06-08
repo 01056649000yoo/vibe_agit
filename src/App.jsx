@@ -109,7 +109,8 @@ function App() {
 
     const { data, error } = await supabase.rpc('setup_teacher_profile', {
       p_full_name: session.user.user_metadata.full_name,
-      p_email: session.user.email
+      p_email: session.user.email,
+      p_api_mode: 'SYSTEM'
     });
 
     if (!error && data?.success) {
