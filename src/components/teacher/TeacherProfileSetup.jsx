@@ -118,9 +118,17 @@ const TeacherProfileSetup = ({ email, profile, onTeacherStart, onLogout }) => {
 
             if (teacherInfoError) throw teacherInfoError;
 
-            // 3. 부모 컴포넌트 알림 및 새로고침
-            // [수정] 즉시 승인이 아니라 대기 메시지
-            alert('선생님 정보가 안전하게 저장되었습니다! 🎉\n관리자 승인 후 서비스를 이용하실 수 있습니다.');
+            // 3. 자동 승인 여부에 따라 안내 문구 분기
+            const { data: savedProfile } = await supabase
+                .from('profiles')
+                .select('is_approved')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            const isApproved = savedProfile?.is_approved === true;
+            alert(isApproved
+                ? '선생님 정보가 안전하게 저장되었습니다! 🎉\n바로 서비스를 이용하실 수 있어요.'
+                : '선생님 정보가 안전하게 저장되었습니다! 🎉\n관리자 승인 후 서비스를 이용하실 수 있습니다.');
             await onTeacherStart();
             window.location.reload();
         } catch (err) {
