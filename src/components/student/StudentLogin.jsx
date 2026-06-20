@@ -126,13 +126,21 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
                 placeholder="ABC123XY"
                 maxLength={8}
                 value={code}
+                // 한글 IME 조합 중 .toUpperCase()로 value를 덮어쓰면 조합 문자가 다시 append되어
+                // 매 타자마다 코드가 누적되는 증상이 발생함. 대문자 변환은 표시(textTransform)와
+                // 전송 직전(handleLogin의 toUpperCase)에서 처리.
                 onChange={(e) => {
-                    setCode(e.target.value.toUpperCase());
-                    setErrorMsg(''); // 입력 시 에러 메시지 초기화
+                    setCode(e.target.value);
+                    setErrorMsg('');
                 }}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' && !loading) handleLogin();
                 }}
+                autoComplete="one-time-code"
+                autoCorrect="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                inputMode="text"
                 style={{
                     width: '100%',
                     padding: '20px',
@@ -146,6 +154,7 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
                     outline: 'none',
                     background: '#FFFDE7',
                     color: '#795548',
+                    textTransform: 'uppercase',
                     transition: 'border-color 0.2s ease'
                 }}
             />
