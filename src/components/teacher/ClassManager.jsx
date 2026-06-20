@@ -4,6 +4,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import StudentManager from './StudentManager';
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateUnambiguousCode } from '../../lib/codeGenerator';
 
 /**
  * 역할: 선생님 - 학급 생성, 초대 코드 관리 및 학생 명단 통합 관리
@@ -43,14 +44,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
         }
     }, [classes.length]);
 
-    const generateInviteCode = () => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        for (let i = 0; i < 6; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return code;
-    };
+    const generateInviteCode = () => generateUnambiguousCode(6);
 
     const handleCreateClass = async () => {
         if (!className.trim()) {

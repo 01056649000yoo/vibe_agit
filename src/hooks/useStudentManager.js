@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useDataExport } from './useDataExport';
 import { dataCache } from '../lib/cache';
+import { generateUnambiguousCode } from '../lib/codeGenerator';
 
 export const useStudentManager = (classId) => {
     const [students, setStudents] = useState([]);
@@ -95,7 +96,7 @@ export const useStudentManager = (classId) => {
     const handleAddStudent = async () => {
         if (!studentName.trim()) return;
         setIsAdding(true);
-        const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+        const code = generateUnambiguousCode(8);
         try {
             // RPC 함수를 통해 학생 추가 및 초기 포인트 부여 (point_logs INSERT도 함수 내에서 처리)
             const { data: newStudentId, error } = await supabase.rpc('add_student_with_bonus', {

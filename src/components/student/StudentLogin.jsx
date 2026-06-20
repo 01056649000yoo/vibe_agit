@@ -146,6 +146,9 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
                     padding: '20px',
                     borderRadius: '16px',
                     border: errorMsg ? '2px solid #EF5350' : '2px solid #FFE082',
+                    // 영문 O와 숫자 0을 구분하기 위해 고정폭 + 슬래시 제로 폰트 피처 사용.
+                    fontFamily: '"JetBrains Mono", "Roboto Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace',
+                    fontFeatureSettings: '"zero" 1, "tnum" 1',
                     fontSize: '1.8rem',
                     textAlign: 'center',
                     fontWeight: '800',

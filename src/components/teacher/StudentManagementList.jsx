@@ -52,7 +52,8 @@ const StudentManagementList = ({
                             fontSize: '1rem',
                             fontWeight: '600',
                             color: '#3498DB',
-                            fontFamily: 'monospace',
+                            fontFamily: '"JetBrains Mono", "Roboto Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace',
+                            fontFeatureSettings: '"zero" 1, "tnum" 1',
                             minWidth: '100px',
                             position: 'relative'
                         }}>
