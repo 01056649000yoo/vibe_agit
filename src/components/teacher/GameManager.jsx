@@ -27,7 +27,7 @@ const HIDEOUT_BACKGROUNDS = {
 const GameManager = ({ activeClass, isMobile }) => {
     const [config, setConfig] = useState({
         dragon_feed_points: 50,
-        dragon_degen_days: 7
+        dragon_degen_days: 14
     });
     // [신규] 어휘의 탑 설정 상태
     const [vocabTowerConfig, setVocabTowerConfig] = useState({
@@ -64,7 +64,7 @@ const GameManager = ({ activeClass, isMobile }) => {
             if (data) {
                 setConfig({
                     dragon_feed_points: data.dragon_feed_points || 50,
-                    dragon_degen_days: data.dragon_degen_days || 7
+                    dragon_degen_days: data.dragon_degen_days || 14
                 });
                 // [신규] 어휘의 탑 설정 로드
                 setVocabTowerConfig({

@@ -56,7 +56,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
-        returnedCount, stats, levelInfo, isLoading, dragonConfig, initialPetData,
+        returnedCount, stats, levelInfo, isLoading, dragonConfig, dragonConfigLoaded, initialPetData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback,
         fetchMyPoints, fetchStats, checkActivity
     } = useStudentDashboard(studentSession, onNavigate);
@@ -75,7 +75,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     // 드래곤 관련 상태 및 액션
     const {
         petData, setPetData, isEvolving, isFlashing, isBusy,
-        handleFeed, buyItem, equipItem
+        handleFeed, checkPetDegeneration, buyItem, equipItem
     } = useDragonPet(
         studentSession?.id,
         points,
@@ -84,6 +84,17 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
         dragonConfig.degenDays,
         initialPetData // [수정] 충돌을 피하기 위해 이름을 변경하여 전달
     );
+
+    // 드래곤 퇴화 체크: 펫 데이터와 교사 설정이 모두 로드된 뒤 세션당 1회만 실행.
+    // (155d66d 리팩토링에서 호출부가 유실되어 퇴화가 전혀 동작하지 않던 버그 복원)
+    const degenCheckedRef = React.useRef(false);
+    useEffect(() => {
+        if (degenCheckedRef.current) return;
+        if (!initialPetData || !dragonConfigLoaded) return;
+        degenCheckedRef.current = true;
+        checkPetDegeneration(initialPetData, dragonConfig.degenDays);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialPetData, dragonConfigLoaded]);
 
     // [신규] 이미지 선행 로딩 (Optimization 4)
     useEffect(() => {

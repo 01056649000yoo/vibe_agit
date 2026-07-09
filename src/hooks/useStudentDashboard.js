@@ -17,6 +17,8 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', emoji: '🌱', next: 1401 });
     const [isLoading, setIsLoading] = useState(true);
     const [dragonConfig, setDragonConfig] = useState({ feedCost: 80, degenDays: 14 });
+    // 퇴화 체크는 교사 설정(degenDays) 로드가 끝난 뒤에만 실행되어야 함 (기본값 14일로 오판 방지)
+    const [dragonConfigLoaded, setDragonConfigLoaded] = useState(false);
 
     const lastCheckRef = useRef('1970-01-01T00:00:00.000Z');
     const returnedCountCacheRef = useRef({ value: 0, fetchedAt: 0 });
@@ -354,7 +356,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     fetchReturnedCount(true);
                 });
 
-                fetchClassSettings();
+                fetchClassSettings().finally(() => setDragonConfigLoaded(true));
                 fetchStats();
             };
             loadData();
@@ -364,7 +366,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     return {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
-        returnedCount, stats, levelInfo, isLoading, dragonConfig, initialPetData: petData,
+        returnedCount, stats, levelInfo, isLoading, dragonConfig, dragonConfigLoaded, initialPetData: petData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback,
         fetchMyPoints, fetchStats, checkActivity, fetchReturnedCount // 새로운 훅에 넘기기 위한 내보내기
     };
