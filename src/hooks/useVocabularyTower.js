@@ -108,9 +108,10 @@ const useVocabularyTower = (selectedGrade) => {
 
         const availableWords = getWordsForCurrentFloor();
 
-        // 사용하지 않은 단어 필터링
+        // 사용하지 않은 단어 필터링 (순번이 아닌 단어 자체를 키로 사용 —
+        // 필터된 배열의 index와 전체 단어장의 index가 어긋나 중복 방지가 깨지던 버그 수정)
         const unusedWords = availableWords.filter(
-            (_, index) => !usedWordIds.has(index)
+            (w) => !usedWordIds.has(w.word)
         );
 
         // 모든 단어를 사용했다면 초기화
@@ -161,8 +162,7 @@ const useVocabularyTower = (selectedGrade) => {
         ]);
 
         // 사용된 단어 기록
-        const wordIndex = vocabulary.findIndex(w => w.word === correctWord.word);
-        setUsedWordIds(prev => new Set([...prev, wordIndex]));
+        setUsedWordIds(prev => new Set([...prev, correctWord.word]));
 
         const quiz = {
             question: correctWord.definition,
