@@ -104,7 +104,7 @@ const PrivacyPolicy = () => {
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제9조 (개인정보 보호책임자)</h4>
                 <div style={{ padding: '15px', backgroundColor: '#F8F9FA', borderRadius: '8px' }}>
                     <p><strong>[개인정보 보호책임자]</strong></p>
-                    <p>성명: 유승현</p>
+                    <p>성명: 유O현</p>
                     <p>연락처: yshgg@naver.com</p>
                     <p style={{ marginTop: '10px', fontSize: '0.9rem', color: '#7F8C8D' }}>※ 개인정보 침해에 대한 상담은 개인정보침해신고센터(국번없이 118)를 통해 받을 수 있습니다.</p>
                 </div>

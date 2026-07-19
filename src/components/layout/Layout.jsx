@@ -76,7 +76,7 @@ const Layout = ({ children, fullHeight = true, full = false }) => {
                             상호명: 끄적끄적 아지트
                         </span>
                         <span style={{ fontSize: '0.95rem', color: '#607D8B' }}>
-                            <strong style={{ color: '#455A64' }}>운영책임자:</strong> 유승현
+                            <strong style={{ color: '#455A64' }}>운영책임자:</strong> 유O현
                         </span>
                         <span><strong style={{ color: '#455A64' }}>문의:</strong> yshgg@naver.com</span>
                     </div>
