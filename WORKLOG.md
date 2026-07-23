@@ -21,6 +21,15 @@
 
 ---
 
+## 2026-07-24 — Google OAuth 클라이언트 정합화·Auth 재배포 (Codex)
+- **한 일**: Google 콘솔 클라이언트와 운영 `agit-auth`의 클라이언트 ID가 달라 발생한 `redirect_uri_mismatch` 진단.
+  사용자가 git 밖 시크릿 파일에 올바른 Web OAuth ID·시크릿을 입력한 뒤 값 노출 없이 형식만 검증하고 `agit-auth`만 재생성.
+- **변경**: git 밖 인프라 — `~/agit-supabase/secrets.agit.env`의 Google OAuth 자격 증명 정합화(사용자 입력),
+  compose project `agit`의 `auth` 서비스만 `--no-deps --force-recreate` 적용. 시크릿 값은 기록하지 않음.
+- **결과/검증**: `agit-auth` healthy, 실제 authorize 요청이 새 클라이언트와
+  `https://api.xn--vz0ba242ncqcba79xhwx.site/auth/v1/callback`을 사용하는 것 확인. Google 응답 200, mismatch 문구 없음.
+- **남은 것 / 다음**: 실제 모바일/브라우저에서 교사 Google 로그인 후 아지트 대시보드 진입·세션 유지 1회 확인.
+
 ## 2026-07-24 — www DNS 별칭 TLS 복구·리디렉션 적용 (Codex)
 - **한 일**: 사용자가 가비아에 `www` CNAME을 apex로 추가한 뒤 발생한 `ERR_SSL_PROTOCOL_ERROR` 진단.
   공개 DNS 3곳에서 `www`가 apex와 새 IP로 전파된 것을 확인하고, 원인이 호스트 Caddy의 `www` 사이트 블록·인증서 부재임을 확인.

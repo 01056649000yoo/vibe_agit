@@ -343,3 +343,5 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
   앱·DB 컨테이너와 네트워크 제거. 복구를 위해 DB 볼륨·이미지·Compose 설정은 보존, Caddy/DNS 완전 정리는 추후 확정.
 - 2026-07-24: 모바일 `www` 접속 호환을 위해 가비아 CNAME 추가 후 Caddy에서 apex 영구 리디렉션 적용.
   런타임 TLS·HTTP/2 301 검증 완료, `/etc/caddy/Caddyfile` 영구 저장은 관리자 sudo 실행 대기.
+- 2026-07-24: 운영 Supabase Google OAuth 클라이언트를 Google 콘솔의 현행 Web 클라이언트와 정합화하고 `agit-auth`만 재생성.
+  Auth healthy·callback URI 일치·Google 승인 응답 확인, 실제 교사 로그인 최종 확인 대기.
