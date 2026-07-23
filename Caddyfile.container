@@ -1,0 +1,27 @@
+# 컨테이너 내부 Caddy — 정적 SPA 서빙 (외부 TLS는 호스트 Caddy가 담당)
+:80 {
+	root * /srv
+	encode zstd gzip
+
+	# 해시된 정적 자산은 장기 캐시 (Vite가 파일명에 해시 부여 → immutable)
+	@hashed path_regexp \.[0-9a-f]{8,}\.(js|css|woff2?|png|jpg|svg|webp)$
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+
+	# index.html은 항상 재검증 (새 배포 즉시 반영)
+	@html path /index.html /
+	header @html Cache-Control "no-cache"
+
+	# vercel.json 보안 헤더 5종 재현
+	header {
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		Cross-Origin-Opener-Policy "same-origin-allow-popups"
+		-Server
+	}
+
+	# SPA 폴백 (클라이언트 라우팅)
+	try_files {path} /index.html
+	file_server
+}

@@ -101,7 +101,7 @@
 - [x] RLS 검증 (2026-07-24): anon으로 students·student_posts 조회 시 **노출 0건**(`Content-Range: */0`), public 19/19 테이블 RLS 활성. 익명 signup 200 확인(학생 로그인 생명줄)
 
 ### Phase 2 — 호스팅 구성 (1~2일)
-- [ ] 아지트 Dockerfile 작성 (정적 빌드 → Caddy/nginx 서빙)
+- [x] 아지트 Dockerfile 작성 (2026-07-24) — `Dockerfile`(Vite 빌드 → Caddy 서빙, build-arg로 Supabase URL/키 주입) + `Caddyfile.container`(SPA 폴백·보안헤더 5종·zstd/gzip 압축·해시자산 immutable 캐시). **end-to-end 검증 완료**: 컨테이너 프론트→새 스택 익명로그인 200·bind_student_auth RPC 200
 - [ ] Caddy 라우팅: `/` → 아지트, `/lab/*` → writing-helper 컨테이너, `api.도메인` → Kong
 - [ ] Caddy에서 `vercel.json`의 SPA 폴백 + 보안 헤더 5종 재현 (4절 참조)
 - [ ] Caddy 압축(brotli/gzip) + 해시 자산 `Cache-Control: immutable` + HTTP/2 — **Vercel이 자동으로 해주던 것들.
