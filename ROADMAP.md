@@ -341,3 +341,5 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
   "글쓰기 동기부여" 목적에 종속·교육용 수위 유지. Stage 4d로 통합.
 - 2026-07-24: 미사용 **Umami Docker 서비스 중단·제거** — 자동 재생성하던 `com.jarvis.umami` LaunchAgent 비활성화 후
   앱·DB 컨테이너와 네트워크 제거. 복구를 위해 DB 볼륨·이미지·Compose 설정은 보존, Caddy/DNS 완전 정리는 추후 확정.
+- 2026-07-24: 모바일 `www` 접속 호환을 위해 가비아 CNAME 추가 후 Caddy에서 apex 영구 리디렉션 적용.
+  런타임 TLS·HTTP/2 301 검증 완료, `/etc/caddy/Caddyfile` 영구 저장은 관리자 sudo 실행 대기.

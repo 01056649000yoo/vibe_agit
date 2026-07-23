@@ -21,6 +21,15 @@
 
 ---
 
+## 2026-07-24 — www DNS 별칭 TLS 복구·리디렉션 적용 (Codex)
+- **한 일**: 사용자가 가비아에 `www` CNAME을 apex로 추가한 뒤 발생한 `ERR_SSL_PROTOCOL_ERROR` 진단.
+  공개 DNS 3곳에서 `www`가 apex와 새 IP로 전파된 것을 확인하고, 원인이 호스트 Caddy의 `www` 사이트 블록·인증서 부재임을 확인.
+  `www` 요청을 apex로 영구 리디렉션하는 검증된 설정을 실행 중인 Caddy 관리 API에 적용.
+- **변경**: git 밖 런타임 Caddy 설정 — `www.xn--vz0ba242ncqcba79xhwx.site` → apex `{uri}` HTTP 301.
+  영구 설정 후보는 `/private/tmp/Caddyfile.www-redirect`; `/etc/caddy/Caddyfile` 저장은 sudo 비밀번호가 필요해 아직 미반영.
+- **결과/검증**: `www` TLS 정상, HTTP/2 301 및 apex Location 확인. 기존 apex 서비스 영향 없음.
+- **남은 것 / 다음**: 사용자 터미널에서 현재 `/etc/caddy/Caddyfile` 백업 후 후보 파일을 복사하고 Caddy reload하여 재부팅 후에도 유지.
+
 ## 2026-07-24 — Umami Docker 서비스 중단·제거 (Codex)
 - **한 일**: 미사용 Umami 분석 서비스를 Docker에서 제거. 최초 `docker compose down` 후 macOS LaunchAgent가 즉시 재생성하는 것을 발견해
   `com.jarvis.umami`를 bootout하고 plist를 `com.jarvis.umami.plist.disabled`로 변경한 뒤 Umami 앱·PostgreSQL 컨테이너와 전용 네트워크를 제거.
