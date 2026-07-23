@@ -228,7 +228,6 @@ const PostDetailModal = ({ post, mission, studentSession, onClose, reactionIcons
         return await deleteComment(commentId);
     }, [deleteComment]);
 
-    const getReactionCount = (type) => reactions.filter(r => r.reaction_type === type).length;
     const postAuthorName =
         post?.student_name ||
         (Array.isArray(post?.students) ? post.students[0]?.name : post?.students?.name) ||

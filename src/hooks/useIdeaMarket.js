@@ -91,7 +91,7 @@ export const useIdeaMarket = (classId, studentId) => {
     }, [studentId]);
 
     // 3. 아이디어 제출 (새 게시물 생성)
-    const submitIdea = async ({ title, content, answers, isAnonymous }) => {
+    const submitIdea = async ({ title, content, answers }) => {
         if (!selectedMeeting?.id || !studentId) return false;
         setSubmitting(true);
         try {

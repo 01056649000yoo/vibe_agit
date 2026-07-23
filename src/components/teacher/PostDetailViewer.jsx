@@ -7,8 +7,8 @@ const PostDetailViewer = ({
     selectedPost, setSelectedPost, selectedMission,
     handleRequestRewrite, handleApprovePost, handleRecovery,
     handleGenerateSingleAI, tempFeedback, setTempFeedback,
-    isGenerating, showCompleteToast, postReactions, postComments,
-    reactionIcons, isMobile, onUpdate, isEvaluationMode, posts = [],
+    isGenerating, postComments,
+    isMobile, onUpdate, isEvaluationMode, posts = [],
     addTeacherComment, deleteTeacherComment, handleTeacherEditPost
 }) => {
     const { saveEvaluation, loading: evalLoading } = useEvaluation();

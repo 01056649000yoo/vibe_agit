@@ -25,7 +25,7 @@ export const dataCache = {
             if (stored) {
                 try {
                     cached = JSON.parse(stored);
-                } catch (e) {
+                } catch {
                     localStorage.removeItem(`cache_${key}`);
                 }
             }

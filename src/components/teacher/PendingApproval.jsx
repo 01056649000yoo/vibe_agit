@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
-import { supabase } from '../../lib/supabaseClient';
 
 const PendingApproval = ({ onLogout }) => {
     const [copiedEmail, setCopiedEmail] = useState(false);

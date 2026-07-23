@@ -217,7 +217,7 @@ export const useFriendsHideout = (studentSession, params) => {
                 setPosts(normalizedPosts);
             }
 
-            setHasMore(prev => (data?.length === PAGE_SIZE));
+            setHasMore(data?.length === PAGE_SIZE);
         } catch (err) {
             console.error('친구 글 로드 실패:', err.message);
         } finally {

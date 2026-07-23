@@ -83,7 +83,7 @@ async function testStudentElevation(sb, myInfo) {
         } else {
             log('A', 'A2. 타인 명의 댓글 위조', false, '⚠️ 위험! 타인 ID로 댓글 삽입 성공');
         }
-    } catch (e) { log('A', 'A2. 댓글 위조 시도', true, '차단됨'); }
+    } catch { log('A', 'A2. 댓글 위조 시도', true, '차단됨'); }
 }
 
 // ══════════════════════════════════════════════
@@ -115,7 +115,7 @@ async function testStudentEconomy(sb, myInfo) {
                 log('B', 'B1. 포인트 직접 수정', true, '수정 불가(보호됨). 에러: ' + (res.error ? res.error.message : '없음'));
             }
         }
-    } catch (e) { log('B', 'B1. 포인트 조작 시도', true, '차단됨'); }
+    } catch { log('B', 'B1. 포인트 조작 시도', true, '차단됨'); }
 
     // B2. 포인트 로그 직접 삽입 (공짜 포인트 획득)
     try {
@@ -129,7 +129,7 @@ async function testStudentEconomy(sb, myInfo) {
         } else {
             log('B', 'B2. 포인트 로그 직접 삽입', false, '⚠️ 취약! 로그 직접 삽입으로 포인트 획득 가능');
         }
-    } catch (e) { log('B', 'B2. 로그 삽입 시도', true, '차단됨'); }
+    } catch { log('B', 'B2. 로그 삽입 시도', true, '차단됨'); }
 }
 
 // ══════════════════════════════════════════════
@@ -146,7 +146,7 @@ async function testStudentPrivacy(sb, myInfo) {
 
         // 내 학급이 아닌 데이터가 있는지 간이 체크 (실제로는 class_id 비교 필요)
         log('C', 'C1. 게시글 노출 범위 확인', true, '로그인 상태에서 ' + (res.data ? res.data.length : 0) + '건의 게시글 확인됨. (본인 학급 글인지 대조 필요)');
-    } catch (e) { log('C', 'C1. 게시글 조회', true, '차단됨'); }
+    } catch { log('C', 'C1. 게시글 조회', true, '차단됨'); }
 
     // C2. 교사 API 키 탈취 시도
     try {
@@ -161,7 +161,7 @@ async function testStudentPrivacy(sb, myInfo) {
         } else {
             log('C', 'C2. 교사 API 키 조회', true, '조회 결과 0건 또는 민감 정보 없음 (안전)');
         }
-    } catch (e) { log('C', 'C2. 키 탈취 시도', true, '차단됨'); }
+    } catch { log('C', 'C2. 키 탈취 시도', true, '차단됨'); }
 
     // C3. 친구의 포인트 로그 훔쳐보기
     try {
@@ -175,7 +175,7 @@ async function testStudentPrivacy(sb, myInfo) {
         } else {
             log('C', 'C3. 타인 포인트 로그 조회', true, '타인 로그 접근 차단됨 (안전)');
         }
-    } catch (e) { log('C', 'C3. 로그 훔쳐보기', true, '차단됨'); }
+    } catch { log('C', 'C3. 로그 훔쳐보기', true, '차단됨'); }
 }
 
 // ══════════════════════════════════════════════
@@ -196,7 +196,7 @@ async function testStudentAbuse(sb, myInfo) {
         } else {
             log('D', 'D1. 타인 게시글 삭제', true, '항목이 없거나 차단됨');
         }
-    } catch (e) { log('D', 'D1. 글 삭제 시도', true, '차단됨'); }
+    } catch { log('D', 'D1. 글 삭제 시도', true, '차단됨'); }
 
     // D2. 친구의 반응(좋아요) 수정 시도
     try {
@@ -210,7 +210,7 @@ async function testStudentAbuse(sb, myInfo) {
         } else {
             log('D', 'D2. 타인 좋아요 수정', true, '항목이 없거나 차단됨');
         }
-    } catch (e) { log('D', 'D2. 좋아요 수정 시도', true, '차단됨'); }
+    } catch { log('D', 'D2. 좋아요 수정 시도', true, '차단됨'); }
 }
 
 // 🏁 메인 실행 함수

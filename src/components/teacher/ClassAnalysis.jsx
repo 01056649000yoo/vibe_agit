@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { motion } from 'framer-motion';
+import { supabase } from '../../lib/supabaseClient';
 
 // 학급 학습 현황 분석 컴포넌트
 const ClassAnalysis = ({ classId, isMobile }) => {
@@ -123,15 +123,6 @@ const ClassAnalysis = ({ classId, isMobile }) => {
             });
 
             const topStudents = studentStats.sort((a, b) => b.chars - a.chars).slice(0, 5);
-
-            // 미제출자 파악 (가장 최근 미션 기준)
-            let notSubmittedStudents = [];
-            if (missions && missions.length > 0) {
-                const latestMissionId = missions[0].id;
-                const submittedPosts = posts ? posts.filter(p => p.mission_id === latestMissionId && p.is_confirmed) : [];
-                const submittedIds = new Set(submittedPosts.map(p => p.student_id));
-                notSubmittedStudents = students.filter(s => !submittedIds.has(s.id)).map(s => s.name);
-            }
 
             // 제출 트렌드 (최근 7일)
             const trend = Array.from({ length: 7 }, (_, i) => {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
-import { motion } from 'framer-motion';
 
 /**
  * 역할: 학생 - 글쓰기 미션 목록 확인

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const PointLevelCard = ({ points, levelInfo, stats, isLoading, agitSettings, temperature }) => {
+const PointLevelCard = ({ points, levelInfo, stats, agitSettings, temperature }) => {
     const isAgitEnabled = agitSettings?.isEnabled !== false;
     const targetScore = agitSettings?.targetScore || 100;
 

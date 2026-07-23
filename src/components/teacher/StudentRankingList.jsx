@@ -11,9 +11,9 @@ const SCROLL_FADE_STYLE = {
 
 // 개별 아이템 컴포넌트 분리 및 memo 적용
 const RankingItem = memo(({
-    student, index, isMobile, isSelected, copiedId,
-    toggleSelection, setSelectedStudentForCode, setIsCodeZoomModalOpen,
-    copyCode, openHistoryModal, setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant, onOpenPointModal
+    student, index, isMobile, isSelected,
+    toggleSelection,
+    openHistoryModal, onOpenPointModal
 }) => {
     const isFirst = index === 0;
     const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}위`;

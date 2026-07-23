@@ -66,7 +66,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 setEditSchool(data.school_name || '');
                 setEditPhone(data.phone || '');
             }
-        } catch (err) {
+        } catch {
             console.log('선생님 정보 fetch 알림 (미등록 상태일 수 있음)');
         }
     }, [session?.user?.id]);
@@ -75,7 +75,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         if (!session?.user?.id) return;
         // [보안] API 키 원본을 클라이언트에 로드하지 않음
         // [최적화] 두 DB 요청을 병렬로 실행하여 순차 대기 제거
-        const [{ data, error }, { data: keyCheck }] = await Promise.all([
+        const [{ data }, { data: keyCheck }] = await Promise.all([
             supabase
                 .from('profiles')
                 .select('api_mode, ai_prompt_template')
@@ -118,7 +118,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                         setPromptTemplate(fVal);
                         setOriginalReportPrompt(rVal);
                         setReportPromptTemplate(rVal);
-                    } catch (e) {
+                    } catch {
                         // 파싱 실패 시 일반 텍스트로 처리
                         setOriginalPrompt(rawPrompt);
                         setPromptTemplate(rawPrompt);

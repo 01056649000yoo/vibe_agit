@@ -224,7 +224,6 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
 
         if (petData.ownedItems.includes(item.id)) return;
 
-        const newPoints = points - item.price;
         const newOwned = [...petData.ownedItems, item.id];
         const newPetData = { ...petData, ownedItems: newOwned };
 

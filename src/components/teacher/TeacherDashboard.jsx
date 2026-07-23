@@ -43,7 +43,6 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         openaiKey, setOpenaiKey, originalKey, hasApiKey,
         promptTemplate, setPromptTemplate, originalPrompt,
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
-        isKeyVisible, setIsKeyVisible,
         savingKey, testingKey, aiStatus,
         handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, handleDeleteApiKey, runAIDiagnosis,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
@@ -86,11 +85,11 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             try {
                                 const parsed = JSON.parse(errorText);
                                 errorMessage = parsed?.message || parsed?.error || errorMessage;
-                            } catch (_parseError) {
+                            } catch {
                                 errorMessage = errorText;
                             }
                         }
-                    } catch (_contextError) {
+                    } catch {
                         // context를 읽지 못하면 기본 메시지를 유지합니다.
                     }
                 }

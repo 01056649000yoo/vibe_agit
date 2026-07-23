@@ -43,10 +43,10 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
     const [hasNewMission, setHasNewMission] = useState(false);
 
     // [신규] 아지트 명예의 전당 새 소식 확인 (최근 24시간)
-    const [hasNewAgitHonor, setHasNewAgitHonor] = useState(false);
+    const [, setHasNewAgitHonor] = useState(false);
 
     // [신규] 아이디어 마켓 새 소식 확인
-    const [hasNewIdeaMarket, setHasNewIdeaMarket] = useState(false);
+    const [, setHasNewIdeaMarket] = useState(false);
     const [hasNewAgitUpdate, setHasNewAgitUpdate] = useState(false);
 
     useEffect(() => {

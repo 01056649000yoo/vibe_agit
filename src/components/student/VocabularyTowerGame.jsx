@@ -403,14 +403,6 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         actions.startGame();
     };
 
-    // 게임 재시작 (결과 화면 등에서 사용)
-    const handleRestart = () => {
-        setShowResult(false);
-        setSelectedAnswers([]);
-        setTimeLeft(timeLimit);
-        actions.startGame();
-    };
-
     // [신규] 게임 중 퇴장 핸들러 (커스텀 팝업 사용으로 안정성 강화)
     const handleExit = React.useCallback(() => {
         // 이미 모든 기회를 썼거나 시간 초과 상태면 그냥 나감
@@ -427,13 +419,6 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     const confirmExit = () => {
         setIsExitConfirmOpen(false);
         if (onBack) onBack();
-    };
-
-    // 학년 변경
-    const handleGradeChange = (grade) => {
-        setSelectedGrade(grade);
-        setShowResult(false);
-        setSelectedAnswers([]);
     };
 
     // 층수에 따른 배경색 결정

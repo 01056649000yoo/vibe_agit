@@ -148,7 +148,7 @@ const formatLastLogin = (dateString) => {
             hour: '2-digit',
             minute: '2-digit'
         });
-    } catch (_e) {
+    } catch {
         return '-';
     }
 };
@@ -592,7 +592,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                         {(() => {
                                             const filtered = filterList(approvedTeachers);
                                             const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-                                            return paginated.map((profile, index) => {
+                                            return paginated.map((profile) => {
                                                 const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
                                                 // teachers.name을 최우선 사용, 없으면 full_name에서 이메일 형태가 아닌 경우만 사용
                                                 const rawFullName = profile.full_name || '';

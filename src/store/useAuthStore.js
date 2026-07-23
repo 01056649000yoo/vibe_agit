@@ -15,7 +15,7 @@ const hasStoredSession = (() => {
         const keys = Object.keys(localStorage);
         return keys.some(k => k.startsWith('sb-') && k.endsWith('-auth-token')) ||
                localStorage.getItem('student_session') !== null;
-    } catch (_) { return false; }
+    } catch { return false; }
 })();
 
 const buildStudentSession = (student) => ({
@@ -37,7 +37,7 @@ const moveToStudentEntry = () => {
     try {
         useAppStore.getState().setInternalPage('main');
         useAppStore.getState().setIsStudentLoginMode(false);
-    } catch (_e) {
+    } catch {
         window.location.href = '/';
     }
 };

@@ -40,7 +40,7 @@ const GameManager = ({ activeClass, isMobile }) => {
     });
     const [savingVocabTower, setSavingVocabTower] = useState(false);
     const [students, setStudents] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [showMonitoring, setShowMonitoring] = useState(false);
     const [previewStudent, setPreviewStudent] = useState(null);

@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
 import { dataCache } from '../lib/cache';
 
-export const useMissionManager = (activeClass, fetchMissionsCallback) => {
+export const useMissionManager = (activeClass) => {
     const [missions, setMissions] = useState([]);
     const [submissionCounts, setSubmissionCounts] = useState({});
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -32,7 +32,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('profiles')
                 .select('frequent_tags, default_rubric, mission_default_settings')
                 .eq('id', user.id)
@@ -566,7 +566,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
         }
     };
 
-    const fetchAIFeedback = async (postArray, retryCount = 0) => {
+    const fetchAIFeedback = async (postArray) => {
         // postArray는 [{id, title, content}, ...] 형식
         const isBulk = postArray.length > 1;
         const { data: { user } } = await supabase.auth.getUser();
@@ -583,7 +583,7 @@ export const useMissionManager = (activeClass, fetchMissionsCallback) => {
             try {
                 const parsed = JSON.parse(customTemplate);
                 customTemplate = parsed.feedback;
-            } catch (e) {
+            } catch {
                 console.warn('프롬프트 JSON 파싱 실패, 원문 사용');
             }
         }
@@ -790,7 +790,7 @@ ${postArray.map((p, idx) => {
             setTimeout(() => setShowCompleteToast(false), 3000);
             alert('모든 글에 대한 일괄 처리가 완료되었습니다! ✨');
             fetchPostsForMission(selectedMission);
-        } catch (err) {
+        } catch {
             alert('일괄 처리 중 오류가 발생했습니다.');
         } finally {
             setIsGenerating(false);

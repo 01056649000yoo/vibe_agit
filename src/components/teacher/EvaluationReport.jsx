@@ -5,7 +5,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 
 const EvaluationReport = ({ mission, onClose, isMobile }) => {
-    const { fetchMissionReport, loading } = useEvaluation();
+    const { fetchMissionReport } = useEvaluation();
     const [reportData, setReportData] = useState([]);
     const [filterScore, setFilterScore] = useState(0); // 0 means no filter
     const [sortBy, setSortBy] = useState('name'); // 'name', 'growth', 'final'

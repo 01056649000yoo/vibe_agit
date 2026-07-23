@@ -436,7 +436,7 @@ async function testApiKeyExposure(sb) {
                 if (typeof val === 'string' && /^sk-/.test(val)) {
                     suspicious.push(key);
                 }
-            } catch (e) { /* 접근 불가 속성 무시 */ }
+            } catch { /* 접근 불가 속성 무시 */ }
         }
 
         if (suspicious.length > 0) {
@@ -446,7 +446,7 @@ async function testApiKeyExposure(sb) {
             log('D', 'D4. window 전역변수 API 키 노출', true,
                 'window 전역 변수에 API 키 미노출 (안전)');
         }
-    } catch (e) {
+    } catch {
         log('D', 'D4. window 전역변수 확인', true, '확인 완료');
     }
 }

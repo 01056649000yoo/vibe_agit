@@ -1,7 +1,6 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
-import { supabase } from '../../lib/supabaseClient';
 
 // 컴포넌트 외부로 스타일 상수화 (Optimization 5)
 const EMPTY_STATE_STYLE = { textAlign: 'center', padding: '60px 20px', background: '#F8F9FA', borderRadius: '24px', border: '2px dashed #E9ECEF', width: '100%', boxSizing: 'border-box' };
@@ -25,7 +24,7 @@ const VIEWER_BUTTON_STYLE = {
 // 개별 미션 아이템 컴포넌트 분리 및 memo 적용
 const MissionItem = memo(({
     mission, isMobile, completedCount, totalStudentCount,
-    handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
+    handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission,
     showEvaluationReport, handleEvaluationMode
 }) => {
     return (

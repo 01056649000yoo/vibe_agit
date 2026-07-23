@@ -23,7 +23,7 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
 
     try {
         // 1. 세션 확인 및 진단
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         const studentRaw = localStorage.getItem('student_session');
         const studentSession = studentRaw ? JSON.parse(studentRaw) : null;
 
@@ -69,10 +69,10 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
                         const errBody = JSON.parse(text);
                         serverMsg = errBody.message || errBody.error || serverMsg;
                         serverDetails = errBody.details || "";
-                    } catch (e) {
+                    } catch {
                         if (text.length < 100) serverDetails = text;
                     }
-                } catch (e) {
+                } catch {
                     console.warn("에러 바디 추출 불가");
                 }
             }

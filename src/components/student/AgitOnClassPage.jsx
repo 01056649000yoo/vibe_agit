@@ -16,9 +16,6 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
     const {
         loading,
         temperature,
-        stageLevel,
-        stageInfo,
-        unlockedContent,
         boardMessages,
         myMissionStatus,
         agitSettings,

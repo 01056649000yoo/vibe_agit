@@ -31,7 +31,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
     const {
         meetings, selectedMeeting, setSelectedMeeting,
         ideas, myIdea, loading, ideasLoading, submitting, stats,
-        submitIdea, handleVote, refresh
+        submitIdea, handleVote
     } = useIdeaMarket(classId, studentId);
 
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
@@ -42,7 +42,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
     const [ideaTitle, setIdeaTitle] = useState('');
     const [ideaContent, setIdeaContent] = useState('');
     const [answers, setAnswers] = useState([]);
-    const [isAnonymous, setIsAnonymous] = useState(false);
+    const [isAnonymous] = useState(false);
     const editorRef = useRef(null);
 
     const insertToBody = (text) => {
@@ -407,11 +407,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
                                             {ideas.map((idea, index) => {
                                                 const statusStyle = STATUS_COLORS[idea.status] || STATUS_COLORS['제안중'];
                                                 const myVote = getMyVote(idea);
-                                                const agreeCount = getVoteCount(idea, 'agree');
-                                                const disagreeCount = getVoteCount(idea, 'disagree');
-                                                const supplementCount = getVoteCount(idea, 'supplement');
-                                                const totalVotes = agreeCount + disagreeCount + supplementCount;
-                                                const commentCount = (idea.post_comments || []).length;
+                                                                                                const commentCount = (idea.post_comments || []).length;
 
                                                 return (
                                                     <motion.div
@@ -748,11 +744,11 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
 /**
  * 🏛️ 아이디어 상세 보기 + 토론
  */
-const IdeaDetailView = ({ idea, meeting, studentSession, onBack, onVote, isMobile }) => {
+const IdeaDetailView = ({ idea, meeting, studentSession, onBack, isMobile }) => {
     const studentId = studentSession?.id;
     const {
         reactions, comments, handleReaction,
-        addComment, updateComment, deleteComment, refresh
+        addComment, updateComment, deleteComment
     } = usePostInteractions(idea.id, studentId);
 
     const [commentInput, setCommentInput] = useState('');

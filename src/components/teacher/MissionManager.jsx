@@ -13,25 +13,25 @@ import EvaluationReport from './EvaluationReport';
 /**
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
-const MissionManager = ({ activeClass, isDashboardMode = true, profile }) => {
+const MissionManager = ({ activeClass, isDashboardMode = true }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
 
     const {
         missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
-        selectedMission, setSelectedMission, posts, setPosts, selectedPost, setSelectedPost,
-        loadingPosts, isGenerating, showCompleteToast, setShowCompleteToast,
+        selectedMission, setSelectedMission, posts, selectedPost, setSelectedPost,
+        loadingPosts, isGenerating, showCompleteToast,
         tempFeedback, setTempFeedback, postReactions, postComments, totalStudentCount,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData,
         editingMissionId,
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
-        handleApprovePost, handleBulkApprove, handleRecovery, handleRecovery: handleRecoveryFunc,
+        handleApprovePost, handleBulkApprove, handleRecovery: handleRecoveryFunc,
         handleBulkRecovery,
         handleBulkRequestRewrite,
         handleFinalArchive, handleDeleteMission, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric, handleSaveDefaultSettings,
-        isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
+        isEvaluationMode, handleEvaluationMode,
         frequentTags, saveFrequentTag, removeFrequentTag,
         addTeacherComment, deleteTeacherComment, handleTeacherEditPost
     } = useMissionManager(activeClass);

@@ -74,7 +74,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     // 드래곤 관련 상태 및 액션
     const {
-        petData, setPetData, isEvolving, isFlashing, isBusy,
+        petData, isEvolving, isFlashing, isBusy,
         handleFeed, checkPetDegeneration, buyItem, equipItem
     } = useDragonPet(
         studentSession?.id,

@@ -20,7 +20,7 @@ const DEFAULT_AGIT_SETTINGS = {
 };
 
 const AgitManager = ({ activeClass, isMobile }) => {
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [showIdeaMarket, setShowIdeaMarket] = useState(false);
 
@@ -868,7 +868,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                         {historyLoading ? (
                                             <div style={{ textAlign: 'center', padding: '40px', color: '#64748B' }}>시즌 기록을 불러오는 중...</div>
                                         ) : seasonHistory.length > 0 ? (
-                                            seasonHistory.map((history, idx) => (
+                                            seasonHistory.map((history) => (
                                                 <div key={history.id} style={{
                                                     background: 'white', border: '1px solid #E2E8F0', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
                                                 }}>

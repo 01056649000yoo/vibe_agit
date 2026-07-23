@@ -10,10 +10,10 @@ import { searchSchools } from '../../utils/schoolApi';
  * 역할: 로그인 후 선생님 필수 정보(이름, 학교, 연락처) 설정 페이지 ✨
  * 단계: 1. 약관 동의 -> 2. 정보 입력
  */
-const TeacherProfileSetup = ({ email, profile, onTeacherStart, onLogout }) => {
+const TeacherProfileSetup = ({ profile, onTeacherStart, onLogout }) => {
     const [step, setStep] = useState(1); // 1: 약관동의, 2: 정보입력
     const [loading, setLoading] = useState(false);
-    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+    const [, setIsMobile] = useState(() => window.innerWidth < 1024);
 
     // 약관 동의 상태
     const [agreedToTerms, setAgreedToTerms] = useState(false);

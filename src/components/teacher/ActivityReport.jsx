@@ -3,7 +3,6 @@ import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import Card from '../common/Card';
-import { useEvaluation } from '../../hooks/useEvaluation';
 import { callAI } from '../../lib/openai';
 // xlsx는 exportToExcel() 호출 시 동적 로드 (429KB 초기 로드 제거)
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2, X } from 'lucide-react';
@@ -18,8 +17,8 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     const [missions, setMissions] = useState([]);
     const [selectedMissionIds, setSelectedMissionIds] = useState([]);
     const [studentPosts, setStudentPosts] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [loadingDetails, setLoadingDetails] = useState(false);
+    const [, setLoading] = useState(false);
+    const [, setLoadingDetails] = useState(false);
     const [isGenerating, setIsGenerating] = useState({});
     const [batchLoading, setBatchLoading] = useState(false);
     const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
@@ -71,7 +70,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         const fetchTeacherAndHistory = async () => {
             if (!activeClass?.id) return;
 
-            const { data: { user } } = await supabase.auth.getUser();
+            await supabase.auth.getUser();
             if (!user) return;
 
             const { data: teacherData } = await supabase
@@ -258,7 +257,7 @@ ${activitiesInfo}`;
     const generateCombinedReview = async (studentData) => {
         setIsGenerating(prev => ({ ...prev, [studentData.student.id]: true }));
         try {
-            const { data: { user } } = await supabase.auth.getUser();
+            await supabase.auth.getUser();
             // [보안] gemini_api_key 조회 제거 — Edge Function이 서버에서 키를 관리하므로 클라이언트 불필요
 
             const prompt = getStudentPrompt(studentData.student.name, studentData.posts);
@@ -300,7 +299,7 @@ ${activitiesInfo}`;
         let updatedPosts = [...studentPosts];
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
+            await supabase.auth.getUser();
             // [보안] gemini_api_key 조회 제거 — Edge Function이 서버에서 키를 관리
 
             for (let i = 0; i < studentPosts.length; i++) {
