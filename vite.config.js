@@ -2,13 +2,17 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'unsafe-none',
       'Cross-Origin-Embedder-Policy': 'unsafe-none',
     },
+  },
+  // 프로덕션 빌드에서 console 제거 (학생 정보 콘솔 노출 차단), 개발 모드는 그대로
+  esbuild: {
+    drop: command === 'build' ? ['console', 'debugger'] : [],
   },
   build: {
     rollupOptions: {
@@ -23,4 +27,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))
