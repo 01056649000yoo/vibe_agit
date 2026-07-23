@@ -66,7 +66,10 @@
 
 ### Phase 0 — 사전 준비 (방학 전~1일차)
 - [x] **(최우선 관문) 학교 태블릿에서 연구소 도메인 접속 품질 테스트** — 학교에서 정상 접속 확인 (2026-07-24, 기호스팅 중인 연구소로 검증)
-- [ ] Supabase Cloud 전체 백업 (`pg_dump`), Vercel 설정 기록
+- [x] Supabase Cloud 전체 백업 + Vercel 설정 기록 (2026-07-24) — `~/backups/agit-cloud-20260724/`
+  (public+auth+storage 덤프 5.4MB, 행수 검증 완료. 상세·복원법은 그 폴더 README 참조)
+  ⚠️ 발견: 클라우드 **PG 17.6** vs 로컬 스택 **PG 15.8** → Phase 1 복원 전 로컬 스택 버전 정합 필요.
+  접속은 direct host 불가(IPv6 전용), Session pooler `aws-1-ap-northeast-2` 사용
 - [x] 맥미니 Supabase 접미사 스택(`supabase_*_writing-helper`) 제거 — 완료 (2026-07-24, 빈 DB 재확인 후 `supabase stop --no-backup`. writing-helper-app이 무접미사 스택 사용 중임을 env로 재확인, 서비스 정상)
 - [x] 도메인 계획 확정 (2026-07-24):
   - 본 도메인 `끄적끄적아지트.site` — 컷오버 시 Vercel→맥미니 전환, Caddy `/`→아지트, `/lab/*`→연구소

@@ -96,7 +96,7 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
 
 **상세 절차는 [INTEGRATION_PLAN.md](INTEGRATION_PLAN.md) Phase 0~5.** 여기는 요약 체크포인트만.
 
-- [ ] Phase 0: 학교망 테스트 / Cloud 백업 / 빈 접미사 스택 제거 / 도메인 계획 / 연구소 데이터 유지·리셋 결정
+- [x] Phase 0 완료 (2026-07-24): 학교망 테스트 ✓ / Cloud 백업 ✓(`~/backups/agit-cloud-20260724/`) / 빈 접미사 스택 제거 ✓ / 도메인 계획 ✓ / 연구소 데이터 결정 ✓
 - [ ] Phase 2 (선행 가능): 아지트 Docker화 + Caddy 라우팅(`/`, `/lab`) + writing-helper `basePath` + 테스트 서브도메인
 - [ ] Phase 1: DB 이관 — **클라우드 전체 덤프 기준** (마이그레이션 파일 드리프트 주의) / auth append 이관 /
       익명 로그인 활성화 + **IP당 속도제한 상향** / Edge Functions / 연구소 UUID 수동 매핑 / RLS 검증
@@ -258,3 +258,5 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
   (`/`아지트+`/lab`연구소), 테스트=`test.`, API=`api.끄적끄적아지트.site` 신설(Kong, `supabase.샘링크.kr` 병행 유지),
   `helper.`→`/lab` 301 ③연구소 데이터: 유승현·최원진 계정만 UUID 매핑, 나머지 삭제 ④빈 접미사 스택 제거 완료.
   잔여: Cloud 전체 백업(pg_dump), Vercel 설정 기록
+- 2026-07-24: Phase 0 완료 — Cloud 백업 완료(행수 검증 포함). ⚠️ 클라우드 PG 17.6 vs 로컬 스택 PG 15.8 확인
+  → Phase 1에 "로컬 스택 PG 버전 정합" 선행 작업 추가 필요. Storage는 비어 있어 파일 백업 불필요
