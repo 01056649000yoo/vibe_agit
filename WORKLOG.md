@@ -21,6 +21,14 @@
 
 ---
 
+## 2026-07-24 — Umami Docker 서비스 중단·제거 (Codex)
+- **한 일**: 미사용 Umami 분석 서비스를 Docker에서 제거. 최초 `docker compose down` 후 macOS LaunchAgent가 즉시 재생성하는 것을 발견해
+  `com.jarvis.umami`를 bootout하고 plist를 `com.jarvis.umami.plist.disabled`로 변경한 뒤 Umami 앱·PostgreSQL 컨테이너와 전용 네트워크를 제거.
+- **변경**: git 밖 인프라 — `umami-umami-1`, `umami-db-1`, `umami_default` 제거. 자동실행 비활성화.
+  복구 가능하도록 `~/umami/docker-compose.yml`, Docker 이미지, `umami_umami-db-data` 볼륨, 실행 스크립트는 보존.
+- **결과/검증**: Umami 컨테이너 0개, LaunchAgent 미등록, 비활성화 plist 존재, DB 볼륨 보존 확인. 아지트 코드는 Umami를 사용하지 않아 앱 영향 없음.
+- **남은 것 / 다음**: 완전 폐기 확정 시 Caddy의 `umami.` 블록·가비아 DNS A 레코드·보존 이미지/볼륨/설정·스크립트를 별도 정리.
+
 ## 2026-07-24 — 컷오버 모니터링 및 정적 자산 캐시 규칙 수정 (Codex)
 - **한 일**: README·ROADMAP 기준으로 컷오버 후 상태를 점검. 가비아 NS와 apex/API A 레코드가 새 공인 IP로 전파된 것을 확인하고,
   로컬 Caddy 경유 앱 HTTP/2 200·SPA 폴백·zstd 압축·보안 헤더 및 `agit-*` 컨테이너 상태를 확인. 실응답에서 Vite 해시 자산에
