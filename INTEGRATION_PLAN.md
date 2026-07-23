@@ -96,7 +96,8 @@
   학교 공용 IP에서 학급 동시 로그인을 차단하던 원인 (2026-07-09 진단, 아래 8절 참조). 학급 규모 고려해 넉넉히(예: 300/hr) 설정
 - [ ] JWT 시크릿·키는 **교체 불필요** (로컬 스택이 이미 커스텀 시크릿 사용 중 확인). 아지트 프론트를 로컬 스택의 URL·anon 키로 다시 빌드하면 됨. 아지트 사용자는 인스턴스가 바뀌므로 어차피 재로그인 필요(공지), 연구소·타 서비스 세션은 영향 없음
 - [~] Edge Functions 4개 로컬 배포 완료 (2026-07-24): send-feedback/set-student-metadata/verify-admin-mode/vibe-ai를 `~/agit-supabase/volumes/functions/`에 배치, main 라우터 동적 디스패치로 실행 확인(함수 자체 코드까지 도달). AI 개인키는 `profile_secrets`(9/20 교사) 이관 완료. **잔여: 전역 시크릿 2개** — `RESEND_API_KEY`(피드백 메일), `ADMIN_MODE_PASSWORD`(관리자 모드) → `~/agit-supabase/secrets.agit.env`에 채우면 됨. OPENAI 공용키·ALLOWED_ORIGIN은 설정됨
-- [ ] Realtime publication 확인
+- [x] Realtime publication 확인 (2026-07-24) — 통합 스택 네트워크 별칭·Kong upstream 정합화,
+  앱 구독 8개 RLS 테이블 publication 등록, WebSocket 101·supabase-js SUBSCRIBED 검증
 - [x] 연구소 UUID 매핑 완료 (2026-07-24): 유승현 `098d553a`→`2f5e2cf5`(01056649000yoo@gmail.com, 방27), 최원진 `4507af34`→`bbf421da`(wonjinchoi0126@gmail.com, 방10). 나머지 13명 연구소 데이터 삭제. `rooms.teacher_id` FK 재생성, 고아 참조 0
 - [x] RLS 검증 (2026-07-24): anon으로 students·student_posts 조회 시 **노출 0건**(`Content-Range: */0`), public 19/19 테이블 RLS 활성. 익명 signup 200 확인(학생 로그인 생명줄)
 

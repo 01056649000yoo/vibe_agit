@@ -21,6 +21,20 @@
 
 ---
 
+## 2026-07-24 — 로그인 후 무한 로딩 진단·Realtime 완전 복구 (Codex)
+- **한 일**: Google 로그인 후 “아지트 문을 열고 있어요”가 지속되는 현상 진단. Auth callback·세션 `/user`·프로필/교사 조회는 모두
+  200이고 관리자 프로필도 정상임을 확인. 같은 시각 Realtime WebSocket이 503을 반복한 원인을 Kong의 이전 upstream 이름과
+  통합 스택 Realtime 컨테이너 이름 불일치로 확정. 구 연구소 스택이 공식 컨테이너 이름을 이미 사용하므로 통합 스택 내부에만
+  `realtime-dev.supabase-realtime` 네트워크 별칭을 추가하고 Kong upstream을 정합화. 비어 있던 `supabase_realtime` publication에는
+  코드가 실제 구독하며 RLS가 활성화된 8개 테이블만 등록.
+- **변경**: git 밖 인프라 — `~/agit-supabase/docker-compose.yml` Realtime 네트워크 별칭,
+  `~/agit-supabase/volumes/api/kong.yml` Realtime WS/REST upstream, DB publication 8개
+  (`announcements`, `classes`, `point_logs`, `post_comments`, `post_reactions`, `student_posts`, `students`, `writing_missions`).
+  변경 전 Compose/Kong 파일은 같은 경로의 `*.pre-realtime-*-20260724`로 보존.
+- **결과/검증**: `agit-realtime`·`agit-kong` healthy, Auth health·REST OpenAPI 200, WebSocket 101 Switching Protocols,
+  DNS/TenantNotFound 오류 0, 실제 supabase-js `announcements` 구독 `SUBSCRIBED` 확인.
+- **남은 것 / 다음**: 사용자 모바일 브라우저 새로고침 후 교사 대시보드 진입과 실시간 채널 재연결 최종 확인.
+
 ## 2026-07-24 — Google OAuth 클라이언트 정합화·Auth 재배포 (Codex)
 - **한 일**: Google 콘솔 클라이언트와 운영 `agit-auth`의 클라이언트 ID가 달라 발생한 `redirect_uri_mismatch` 진단.
   사용자가 git 밖 시크릿 파일에 올바른 Web OAuth ID·시크릿을 입력한 뒤 값 노출 없이 형식만 검증하고 `agit-auth`만 재생성.

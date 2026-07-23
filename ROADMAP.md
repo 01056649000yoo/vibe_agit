@@ -345,3 +345,5 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
   런타임 TLS·HTTP/2 301 검증 완료, `/etc/caddy/Caddyfile` 영구 저장은 관리자 sudo 실행 대기.
 - 2026-07-24: 운영 Supabase Google OAuth 클라이언트를 Google 콘솔의 현행 Web 클라이언트와 정합화하고 `agit-auth`만 재생성.
   Auth healthy·callback URI 일치·Google 승인 응답 확인, 실제 교사 로그인 최종 확인 대기.
+- 2026-07-24: 통합 스택 Realtime 503/tenant 오류 수정 — 구 연구소 스택과 컨테이너 이름 충돌을 피하기 위해
+  `agit_default` 내부 DNS 별칭으로 공식 tenant host를 제공. publication 8개 테이블 복원 후 WS 101·실구독 확인.
