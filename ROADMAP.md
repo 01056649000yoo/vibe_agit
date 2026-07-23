@@ -45,15 +45,16 @@
 
 ---
 
-## 🧭 현재 위치 (2026-07-16 기준)
+## 🧭 현재 위치 (2026-07-23 기준)
 
-**Stage 0 진행 전.** 이관 준비 단계. 완료된 사전 작업:
+**Stage 0 완료 → Stage 1 (맥미니 완전 이관) 진행 전.** 완료된 사전 작업:
 - [x] 통합 계획 수립 및 검증 (INTEGRATION_PLAN.md)
 - [x] 운영 장애 진단 — Auth 속도제한 + DB 부하 확정, Realtime 무혐의 (INTEGRATION_PLAN.md 8절)
 - [x] 드래곤 퇴화 버그 복원 + 기본 14일 통일 (`88ba628`)
 - [x] 어휘의 탑 중복 방지 인덱스 버그 수정 (`9a835fe`)
 - [x] 학생 로그인 IME 중복 입력 수정 (`252d04d`), O/0 혼동 해결 (`365c08a`)
 - [x] 로드맵 구체화 — 비전 4대 방향 + 목표 아키텍처 확정 (2026-07-16)
+- [x] Stage 0 대청소 완료 (2026-07-23, 커밋 fb694e9~aec63f4)
 
 ---
 
@@ -83,12 +84,12 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
 
 코드를 깨끗한 상태로 이삿짐 싸기. 동작 변경 없음.
 
-- [ ] 루트 잡동사니 삭제: `check_*.js`(14), `inspect_*.js`(4), `test_*.js`(6), `debug_missions.js`, `deep_inspect.js`, `create_table.js`, `run_migration_dummy.js`, `output.txt`, `help.txt`, `performance_report.html`, `temp_mission_form_backup.jsx`, `playwright-report/`, `test-results/`, 빈 파일 `.claude/worktrees/blissful-galileo`
-- [ ] `security-test-plan.js`, `security-test-student.js` → `scripts/`로 이동 (이관 후 RLS 검증에 재사용)
-- [ ] `.gitignore`에 `playwright-report/`, `test-results/`, `.DS_Store` 추가
-- [ ] 미사용 의존성 제거: `openai`, `react-router-dom` → 빌드 확인
-- [ ] 린트 `no-unused-vars` 118건 정리 → 빌드 확인
-- [ ] vite 프로덕션 빌드에서 console 제거 (`esbuild: { drop: ['console'] }`) — 학생 정보 콘솔 노출 차단
+- [x] 루트 잡동사니 삭제: `check_*.js`(14), `inspect_*.js`(4), `test_*.js`(6), `debug_missions.js`, `deep_inspect.js`, `create_table.js`, `run_migration_dummy.js`, `output.txt`, `help.txt`, `performance_report.html`, `temp_mission_form_backup.jsx`, `playwright-report/`, `test-results/`, 빈 파일 `.claude/worktrees/blissful-galileo`
+- [x] `security-test-plan.js`, `security-test-student.js` → `scripts/`로 이동 (이관 후 RLS 검증에 재사용)
+- [x] `.gitignore`에 `playwright-report/`, `test-results/`, `.DS_Store` 추가
+- [x] 미사용 의존성 제거: `openai`, `react-router-dom` → 빌드 확인
+- [x] 린트 `no-unused-vars` 정리 (실측 132건 → 0건) → 빌드 확인
+- [x] vite 프로덕션 빌드에서 console 제거 (`esbuild: { drop: ['console'] }`) — 학생 정보 콘솔 노출 차단
 - [ ] ❌ 하지 말 것: `exhaustive-deps` 경고 수정, 1000줄+ 파일 리팩토링 (Stage 3에서)
 
 ## Stage 1 — 맥미니 완전 이관: 앱 + Supabase DB (예상 7~10일) 【비전 1】
@@ -249,3 +250,7 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
   연구소 입장 방식 개편 확정 — QR+수동 입력 → **아지트 JWT 인증 시 명단 자동 매칭 입장** (미인증 접속은 기존 방식 폴백).
   저장 위치 조사 완료: 개요=`student_sessions.answers`+`outline_queue.result`, 한줄=`one_line_entries.content`,
   질문=`selections[].remixedQuestion`
+- 2026-07-23: Stage 0 대청소 완료. 발견 사항 — eslint에 `react/jsx-uses-vars` 규칙이 빠져 있어
+  `<motion.div>`처럼 JSX 멤버 표현식으로만 쓰이는 소문자 import(~44건)가 미사용으로 오탐되고 있었음.
+  규칙 추가로 해결. `scripts/`(브라우저 콘솔용 보안 테스트)는 린트 대상에서 제외.
+  console 제거는 프로덕션 빌드에만 적용(dev는 유지). 남은 린트 경고(exhaustive-deps 19건 등)는 계획대로 Stage 3 이후.
