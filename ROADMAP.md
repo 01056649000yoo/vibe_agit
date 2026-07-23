@@ -266,3 +266,8 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
   클라우드 덤프(users 2,896·students 1,398·posts 2,769·point_logs 17,286) + 연구소 스키마 복원. 익명로그인 ON·속도제한 300.
   연구소 UUID 매핑(유승현→yoo, 최원진→wonjin) + 나머지 삭제. 검증: 행수 일치·RLS anon 노출 0·익명signup 200.
   잔여: Edge Functions 4개 로컬 배포+시크릿, 아지트 프론트를 로컬 스택 URL/anon키로 재빌드(Phase 2와 연계)
+- 2026-07-24: **🎉 컷오버 완료** — 본 도메인 `끄적끄적아지트.site`가 맥미니를 가리킴. 가비아 네임서버로 이전(Vercel→가비아),
+  A레코드 5개(apex/api/helper/survival/umami→180.228.70.202). Caddy가 Let's Encrypt 인증서 발급 완료.
+  전수 검증 통과: 학생 익명로그인(signup 200·bind_student_auth 200)·교사 구글OAuth 리다이렉트·HTTPS 5개 도메인.
+  ⚠️ 8.8.8.8 apex 전파 진행중(구글 리졸버 NS캐시) — 완료 전까지 일부 사용자는 구 Vercel 앱을 봄.
+  잔여: 전파 완료 확인 → 1~2주 모니터링 → Vercel/클라우드 해지. 교사 AI피드백 실사용 1건 확인 권장(공용키 167명)
