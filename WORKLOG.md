@@ -21,6 +21,18 @@
 
 ---
 
+## 2026-07-24 — 컷오버 모니터링 및 정적 자산 캐시 규칙 수정 (Codex)
+- **한 일**: README·ROADMAP 기준으로 컷오버 후 상태를 점검. 가비아 NS와 apex/API A 레코드가 새 공인 IP로 전파된 것을 확인하고,
+  로컬 Caddy 경유 앱 HTTP/2 200·SPA 폴백·zstd 압축·보안 헤더 및 `agit-*` 컨테이너 상태를 확인. 실응답에서 Vite 해시 자산에
+  `Cache-Control: immutable`이 누락된 원인을 찾아 `Caddyfile.container`의 해시 정규식을 실제 Vite 파일명 형식에 맞게 수정.
+- **변경**: `Caddyfile.container`, `ROADMAP.md`. git 밖 운영 앱을 후보 이미지 `agit-app:cache-fix-20260724`로 교체하고
+  `agit-app:prod` 태그 적용. 이전 이미지 `agit-app:pre-cache-fix-20260724`와 중지 컨테이너 `agit-app-pre-cache-fix-20260724`를 롤백용으로 보존.
+- **결과/검증**: `npm run build` 통과(기존 duplicate key·청크 경고 유지), Caddy 설정 검증 통과. 임시 컨테이너와 후보 이미지 모두
+  해시 JS 응답에 `Cache-Control: public, max-age=31536000, immutable` 적용 확인. 배포 후 실제 도메인 경유 앱 HTTP/2 200,
+  anon 키 포함 API health 200, 새 컨테이너 로그 오류 없음.
+- **남은 것 / 다음**: 외부 공인 IP 접속은 맥미니의 NAT 루프백 제약으로 로컬에서 타임아웃되므로 외부망/업타임 모니터로 별도 확인.
+  안정 확인 후 롤백용 이전 컨테이너·이미지 정리.
+
 ## 2026-07-24 — 방향 확정: 3대 기둥 + 방학 계획 로드맵 반영 (Claude)
 - **한 일**: 제품 집중 "3대 기둥"(교사 글쓰기 지도 / 학생 자율 글쓰기·제출 / 포인트 동기부여) 확정.
   방학 우선순위 4가지와 기능 정리(3기둥 밖 4종: 아지트온클래스·친구 아지트·한줄 모으기·아이디어마켓)를 로드맵에 반영.
