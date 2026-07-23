@@ -85,20 +85,20 @@
 > ②로컬 덤프(연구소 유지분)를 복원한 뒤, 검증 완료 시 Kong/Caddy 라우팅만 전환한다.
 > 기존 스택은 롤백용으로 보존 후 제거 (blue-green — 연구소 무중단, 실패 시 즉시 복귀).
 
-- [ ] 새 PG 17 Supabase 스택 신설 (별도 compose 프로젝트·포트, 기존 JWT 시크릿·anon/service 키 재사용)
-- [ ] 로컬 기존 스택 덤프: auth 사용자 + `writing_helper` 관련 스키마 (유지 대상: 유승현·최원진)
+- [x] 새 PG 17 Supabase 스택 신설 (2026-07-24) — `~/agit-supabase/`, compose project `agit`, 포트 Kong 8100 / DB 5433 / pooler 6544, 컨테이너 `agit-*`. **익명 로그인 ON + 속도제한 300/hr**(`docker-compose.agit.yml`). JWT 시크릿·anon/service 키는 기존 스택 값 재사용
+- [x] 로컬 기존 스택 `writing_helper`+`writing_helper_internal` 덤프 → 새 스택 복원 (행수 100% 일치 검증)
 - [ ] **클라우드 전체 스키마 덤프 기준으로 이관** (마이그레이션 파일 적용 금지 — RPC 13개 누락 드리프트, 4절 참조)
   - `pg_dump --schema-only`(public) + 데이터 덤프 + auth 스키마(교사 비밀번호 해시 보존, 재가입 불필요)
 - [ ] **덤프 청소**(클라우드 전용 소유자/롤 구문 제거) → 로컬 복원. 청소·복원을 **반복 실행 가능한 스크립트**로 만들 것 (최종 컷오버 때 재사용)
-- [ ] **auth 병합**: 새 스택에 클라우드 사용자(2,896명) + 로컬 유지 사용자 복원. 이메일 중복(본인 계정 등)은 아지트 계정 기준으로 해소
+- [x] **auth 병합**: 클라우드 users 2,896 + identities 429 복원. 연구소 유지 2명은 아지트 계정으로 UUID 매핑(아래)이라 로컬 auth 사용자 append는 불필요
 - [ ] GoTrue **익명 로그인 활성화**: `GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED=true` (현재 false 확인됨. 학생 코드 로그인의 생명줄. 스택 재시작 필요 → 야간 작업)
 - [ ] GoTrue **익명 로그인 IP당 속도 제한 상향** (`GOTRUE_RATE_LIMIT_ANONYMOUS_USERS`) — 클라우드 기본값(시간당 30회/IP)이
   학교 공용 IP에서 학급 동시 로그인을 차단하던 원인 (2026-07-09 진단, 아래 8절 참조). 학급 규모 고려해 넉넉히(예: 300/hr) 설정
 - [ ] JWT 시크릿·키는 **교체 불필요** (로컬 스택이 이미 커스텀 시크릿 사용 중 확인). 아지트 프론트를 로컬 스택의 URL·anon 키로 다시 빌드하면 됨. 아지트 사용자는 인스턴스가 바뀌므로 어차피 재로그인 필요(공지), 연구소·타 서비스 세션은 영향 없음
 - [ ] Edge Functions 4개 로컬 edge-runtime 배포 + 시크릿(OpenAI 키 등) 이전
 - [ ] Realtime publication 확인
-- [ ] 연구소 소수 사용자 UUID 수동 매핑: `writing_helper.teacher_profiles`, `classes`, `rooms` 등의 FK를 아지트 계정 UUID로 UPDATE
-- [ ] RLS 검증: anon 키로 타 학생/타 반 데이터 조회 시도 (`security-test-student.js`를 로컬 대상으로 재활용)
+- [x] 연구소 UUID 매핑 완료 (2026-07-24): 유승현 `098d553a`→`2f5e2cf5`(01056649000yoo@gmail.com, 방27), 최원진 `4507af34`→`bbf421da`(wonjinchoi0126@gmail.com, 방10). 나머지 13명 연구소 데이터 삭제. `rooms.teacher_id` FK 재생성, 고아 참조 0
+- [x] RLS 검증 (2026-07-24): anon으로 students·student_posts 조회 시 **노출 0건**(`Content-Range: */0`), public 19/19 테이블 RLS 활성. 익명 signup 200 확인(학생 로그인 생명줄)
 
 ### Phase 2 — 호스팅 구성 (1~2일)
 - [ ] 아지트 Dockerfile 작성 (정적 빌드 → Caddy/nginx 서빙)
