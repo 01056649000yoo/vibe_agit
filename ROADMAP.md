@@ -231,7 +231,7 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
 |---|---|
 | Postgres 에러 130건의 메시지 확인 (Logs → Postgres) | 대기 — timeout/connection이면 이관으로 해소, RPC exception이면 코드 수정 |
 | `reward_for_vocab_tower` 서버 검증 여부 (클라우드 SQL 에디터) | 대기 |
-| 연구소 기존 데이터: 유지(UUID 매핑) vs 리셋 | Stage 1 Phase 0에서 결정 |
+| 연구소 기존 데이터: 유지(UUID 매핑) vs 리셋 | ✅ 결정(2026-07-24) — 유승현·최원진만 매핑, 나머지 삭제 |
 | 기존 기능 중 삭제/기본OFF 목록 | Stage 3에서 결정 |
 | 자유 글쓰기 포인트 정책 | Stage 4c에서 결정 |
 
@@ -254,3 +254,7 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
   `<motion.div>`처럼 JSX 멤버 표현식으로만 쓰이는 소문자 import(~44건)가 미사용으로 오탐되고 있었음.
   규칙 추가로 해결. `scripts/`(브라우저 콘솔용 보안 테스트)는 린트 대상에서 제외.
   console 제거는 프로덕션 빌드에만 적용(dev는 유지). 남은 린트 경고(exhaustive-deps 19건 등)는 계획대로 Stage 3 이후.
+- 2026-07-24: Phase 0 진척 — ①학교망 관문 통과(기호스팅 연구소로 검증) ②도메인 계획 확정: 본=`끄적끄적아지트.site`
+  (`/`아지트+`/lab`연구소), 테스트=`test.`, API=`api.끄적끄적아지트.site` 신설(Kong, `supabase.샘링크.kr` 병행 유지),
+  `helper.`→`/lab` 301 ③연구소 데이터: 유승현·최원진 계정만 UUID 매핑, 나머지 삭제 ④빈 접미사 스택 제거 완료.
+  잔여: Cloud 전체 백업(pg_dump), Vercel 설정 기록
