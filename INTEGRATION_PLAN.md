@@ -193,6 +193,21 @@
 | 로컬 DB가 타 서비스와 공유 (app/literacy 스키마) | auth 이관은 append만, 스택 재시작은 야간에 |
 | 정전 | UPS 연결됨 + 자동 부팅 + restart 정책 |
 
+## 9.5 컷오버 런북 (2026-07-24, 방학 중 본 도메인 직접 전환)
+
+**전제**: 새 스택·앱 컨테이너·구글 OAuth·Edge 시크릿 모두 준비/검증 완료. 연구소는 구 스택에서 무중단 유지(통합은 Stage 2).
+
+**적용 순서 (반드시 Caddy 먼저, DNS 나중)**:
+1. Caddy 블록 2개 적용 (apex→`127.0.0.1:8300` 앱, `api.`→`127.0.0.1:8100` Kong):
+   - `sudo cp ~/agit-supabase/Caddyfile.proposed /etc/caddy/Caddyfile`
+   - `sudo caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`
+2. 구글 콘솔 승인 리디렉션 URI 추가: `https://api.xn--vz0ba242ncqcba79xhwx.site/auth/v1/callback` ✅(완료)
+3. DNS 전환 → 맥미니 `180.228.70.202`:
+   - `끄적끄적아지트.site` (apex) A: Vercel → 180.228.70.202
+   - `api.끄적끄적아지트.site` A: → 180.228.70.202
+4. 전환 후 검증: 학생 익명로그인 / 교사 구글로그인→대시보드 / AI 피드백(SYSTEM·PERSONAL) / 연구소 정상
+**롤백**: DNS를 Vercel로 되돌리면 즉시 원복 (Caddy 블록은 남겨둬도 무해).
+
 ## 10. 일정 (실작업 10~14일)
 
 | 시기 | 작업 |
