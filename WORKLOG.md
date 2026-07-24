@@ -21,6 +21,15 @@
 
 ---
 
+## 2026-07-24 — dev 서버 구글 로그인 복구 (redirect allow-list) (Claude)
+- **한 일**: `npm run dev`(localhost:5173)에서 교사 구글 로그인이 인증 후 되돌아오지 못하던 문제 해결.
+  원인=GoTrue `ADDITIONAL_REDIRECT_URLS`에 아지트 dev 포트 5173 누락(연구소 3000·3002만 있었음).
+- **변경**: git 밖 인프라 — `~/agit-supabase/.env`의 `ADDITIONAL_REDIRECT_URLS`에 `http://localhost:5173/**`,
+  `http://192.168.219.102:5173/**` 추가 후 `agit-auth`만 재생성.
+- **결과/검증**: 허용 목록 반영 확인, dev에서 "선생님으로 시작" → accounts.google.com 정상 이동.
+- **남은 것 / 다음**: dev 구글 로그인은 구글 콜백이 `api.끄적끄적아지트.site`(→ hosts로 127.0.0.1)로 오므로,
+  개발 중엔 `/etc/hosts`의 api 매핑을 유지해야 함(제거 시 dev OAuth 깨짐, 학생 익명로그인은 무관).
+
 ## 2026-07-24 — Stage 2 착수: 연구소↔아지트 학생 매핑 (Claude)
 - **한 일**: 연구소 통합(Stage 2) 시작. 두 앱이 아직 다른 DB(아지트=새 스택 8100, 연구소=구 스택 8000)지만 JWT 시크릿·anon 키
   동일 확인(SSO 기반). 새 스택의 이관된 연구소 스키마에 학생/학급 매핑 컬럼 추가·채움 (운영 연구소 무영향).
