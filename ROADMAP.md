@@ -166,8 +166,8 @@ Stage 5    이후 개선 과제              (순서 무관, 여유 시)
 이를 **아지트 JWT로 인증된 학생이면 명단 자동 매칭 → 바로 활동 참여**로 바꾼다.
 이 매핑이 2c(학생별 결과물 불러오기)의 선행 조건이다.
 
-- [ ] 학생 신원 매핑 설계: 아지트 `public.students.id`(JWT 메타데이터) ↔ 연구소 `room_students`/`student_sessions`
-      — 매핑 컬럼(`agit_student_id`) 추가 방식 권장 (이름 문자열 매칭은 동명이인·개명에 취약)
+- [~] 학생 신원 매핑 (2026-07-24 착수): 새 스택에 `writing_helper.class_students.agit_student_id`·`classes.agit_class_id` 추가.
+      유승현·최원진 확정 학급쌍 내 이름 매칭으로 27/29명 연결(동명이인 신율희 수동확인 대기). 세션 레벨(`student_sessions`) 연결은 2c에서.
 - [ ] 연구소 방 입장 흐름 수정: JWT에 student_id 있으면 번호·이름 입력 화면 생략, 세션 자동 생성/재접속
 - [ ] JWT 없는 접속(외부 학급, 손님)은 기존 QR+수동 입력 방식 유지 (폴백)
 - [ ] 아지트 학급 ↔ 연구소 class/room 연결 (교사가 방 만들 때 아지트 학급 선택 → 명단 자동 구성)
