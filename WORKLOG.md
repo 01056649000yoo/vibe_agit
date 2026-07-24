@@ -21,6 +21,21 @@
 
 ---
 
+## 2026-07-24 — 🚨 Docker SSD 이동 실패 → 전 서비스 복구 (Claude)
+- **한 일**: 사용자가 Docker를 외장 SSD로 옮기려다 실패한 상황 점검·복구. Docker Desktop이 데이터 폴더를
+  `~/DockerDesktop`(빈 새 Docker.raw, sparse 9.5M)로 바뀌어 재시작 → **모든 컨테이너·이미지·네임드볼륨 소실, 사이트 502**.
+  원본 Docker.raw는 유실(내장/외장/휴지통 어디에도 없음). **원인=수동 이동 중 원본 소실, 외장 SSD엔 실제로 안 옮겨짐.**
+  - **데이터 생존 확인**: 모든 DB 스택이 **bind mount** 사용 → DB 실데이터는 Docker.raw 밖(디스크)에 있어 무사.
+    (`~/agit-supabase/volumes/db/data` 162M, `~/Jarvis_Brain_Local/self-hosted-supabase/volumes/db/data` 278M)
+  - **복구**: 각 스택 `docker compose up -d`로 재구축(이미지 재다운로드, 살아있는 bind-mount DB 연결) + `agit-app:prod` 이미지 재빌드.
+- **변경**: git 밖 인프라만 — agit 스택(15)·구 supabase 스택(14)·앱 5종(agit-app/writing-helper/classroom-tools/jarvis/samlink) 전부 재생성.
+  코드/커밋 변경 없음. Docker 데이터는 현재 **내장 디스크**에 있음(SSD 이동은 안 됨).
+- **결과/검증**: 전 도메인 외부 200/307 정상(아지트·helper·survival). DB 데이터 온전 — 오히려 이관 스냅샷보다 최신
+  (auth.users 2896→2918, students 1398→1415, point_logs 17286→17510, 연구소 학생매핑 27/40 보존). 익명 로그인 200. 전 앱 restart=unless-stopped.
+- **남은 것 / 다음**: ⚠️ **SSD 이동 재시도 시 수동 금지** — 반드시 ①Docker Desktop Settings→Resources 디스크 위치 변경(안전)
+  또는 ②bind-mount 볼륨 디렉토리를 SSD로 옮기고 compose 경로 수정, 둘 다 **사전 백업·컨테이너 정지 후**. survival 웹훅(9000)은
+  LaunchAgent(`com.jarvis.survival`)/별도 프로세스라 미기동 상태(사이트 서빙 무관). dev OAuth 작업(.env.local api도메인 전환)은 이 사고로 중단됨 — 재개 필요.
+
 ## 2026-07-24 — dev 서버 구글 로그인 복구 (redirect allow-list) (Claude)
 - **한 일**: `npm run dev`(localhost:5173)에서 교사 구글 로그인이 인증 후 되돌아오지 못하던 문제 해결.
   원인=GoTrue `ADDITIONAL_REDIRECT_URLS`에 아지트 dev 포트 5173 누락(연구소 3000·3002만 있었음).
