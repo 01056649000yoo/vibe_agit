@@ -21,6 +21,16 @@
 
 ---
 
+## 2026-07-25 — 재부팅 안전장치: SSD 마운트 가드 (Claude)
+- **한 일**: Docker 데이터가 외장 SSD(USB 인클로저)에 있어, 재부팅 시 Docker가 SSD 마운트보다 먼저 뜨면
+  빈 데이터로 시작해 컨테이너가 사라질 위험(이번에 실제 겪음) → 방지 안전장치 구축.
+- **변경**: git 밖 — Docker Desktop AutoStart=False로 변경. `~/scripts/docker_ssd_guard.sh`(신규) +
+  LaunchAgent `com.agit.docker-guard`(RunAtLoad). 부팅 시 SSD의 `DockerDesktop/Docker.raw`가 보일 때까지 최대 5분 대기 →
+  확인되면 `open -a Docker`, 미마운트면 Docker 시작 안 함 + 화면 알림.
+- **결과/검증**: AutoStart False 확인, 가드 실행 테스트에서 SSD 감지→Docker 시작 정상. 현 서비스 무영향.
+- **남은 것 / 다음**: 다음 재부팅 때 가드가 정상 동작하는지 로그(`~/backups/auto/docker_guard.log`) 확인 권장.
+  외장 SSD는 인클로저로 맥미니에 고정(분리 위험 낮음).
+
 ## 2026-07-25 — 자동 백업 체계 구축 (구글 드라이브, 압축 방식) (Claude)
 - **한 일**: 백업 범위를 "GitHub에 없는 것만"으로 압축. 끄적끄적아지트·연구소·샘링크·서바이벌은 GitHub 버전관리 확인 → 제외.
   백업 대상=①자비스(Jarvis_Brain_Local, 원격 없음) ②agit-supabase 설정·시크릿(git 아님) ③양 스택 DB 덤프.
