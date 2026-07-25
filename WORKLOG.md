@@ -28,7 +28,7 @@
 - **변경**: git 밖 — `~/scripts/sh_mirror_backup.sh`(신규), LaunchAgent `com.agit.backup`(매일 04:00) 이 스크립트 실행.
   rclone remote `gdrive`(구글드라이브, scope=drive). 업로드 경로 `gdrive:SH맥미니/<날짜>/`, 30일 보존.
 - **결과/검증**: 전체 백업 **~15초 완료**(자비스 34MB + 설정 60KB + DB덤프 7MB). 드라이브 `SH맥미니/20260725/` 확인.
-- **남은 것 / 다음**: ⚠️ rclone이 공용 client_id 사용 중 → **2026년 중 종료 예정**. 장기 안정성 위해 본인 Google Cloud client_id 발급 권장.
+- **후속(2026-07-25 완료)**: rclone 전용 Google Cloud client_id(project 989537889976) 발급·등록 완료. OAuth 동의화면 Production 게시(토큰 만료 없음), Drive API 활성화. 공용키 경고 사라짐 → 백업 장기 안정. rclone 설정 백업 `~/.config/rclone/rclone.conf.bak`.
   대안: 자비스를 private GitHub에 올리면 드라이브 백업은 DB덤프+시크릿(~7MB)만 남아 더 가벼워짐.
   복원: DB=`pg_restore`, 자비스/설정=tar 해제. DB는 raw 파일이 아닌 논리 덤프라 일관성 보장.
 
