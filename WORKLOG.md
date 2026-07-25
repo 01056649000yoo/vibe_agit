@@ -21,6 +21,17 @@
 
 ---
 
+## 2026-07-25 — 자동 백업 체계 구축 (구글 드라이브, 압축 방식) (Claude)
+- **한 일**: 백업 범위를 "GitHub에 없는 것만"으로 압축. 끄적끄적아지트·연구소·샘링크·서바이벌은 GitHub 버전관리 확인 → 제외.
+  백업 대상=①자비스(Jarvis_Brain_Local, 원격 없음) ②agit-supabase 설정·시크릿(git 아님) ③양 스택 DB 덤프.
+  최초에 rclone이 `.git` 소파일 수천개를 개별 업로드해 매우 느렸던 문제 → **tar.gz 압축 방식으로 전환**(앱당 파일 1개).
+- **변경**: git 밖 — `~/scripts/sh_mirror_backup.sh`(신규), LaunchAgent `com.agit.backup`(매일 04:00) 이 스크립트 실행.
+  rclone remote `gdrive`(구글드라이브, scope=drive). 업로드 경로 `gdrive:SH맥미니/<날짜>/`, 30일 보존.
+- **결과/검증**: 전체 백업 **~15초 완료**(자비스 34MB + 설정 60KB + DB덤프 7MB). 드라이브 `SH맥미니/20260725/` 확인.
+- **남은 것 / 다음**: ⚠️ rclone이 공용 client_id 사용 중 → **2026년 중 종료 예정**. 장기 안정성 위해 본인 Google Cloud client_id 발급 권장.
+  대안: 자비스를 private GitHub에 올리면 드라이브 백업은 DB덤프+시크릿(~7MB)만 남아 더 가벼워짐.
+  복원: DB=`pg_restore`, 자비스/설정=tar 해제. DB는 raw 파일이 아닌 논리 덤프라 일관성 보장.
+
 ## 2026-07-25 — Docker 데이터 SSD 이전 성공 (수동 복사 방식) (Claude)
 - **한 일**: Docker 데이터(이미지·컨테이너, Docker.raw 20GB)를 내장→외장 SSD(APFS, `/Volumes/SHmaegmini`)로 이전.
   Docker Desktop GUI 디스크이동이 3회 실패(12GB·3.3GB·0에서 revert)한 원인은 앱이 `Docker 2.app`이라는 비정상 이름으로 설치돼 있던 것.
