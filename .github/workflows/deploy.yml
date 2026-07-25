@@ -3,6 +3,9 @@ name: Deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'supabase/integration/**'
   workflow_dispatch:
 
 concurrency:

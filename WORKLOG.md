@@ -21,6 +21,16 @@
 
 ---
 
+## 2026-07-25 — CI/CD 자동 배포 구축 (push→러너→Docker) (Claude)
+- **한 일**: "어디서든 git push → 맥미니 러너 → Docker 자동 배포" 구축. gh 인증 후 vibe_agit 밀린 35커밋 push(최신화).
+  기존에 writing-helper·URL·classroom-tools는 이미 self-hosted 러너+deploy.yml 있었음(online). **vibe_agit만 신규 설치**.
+  처음 러너를 외장SSD에 설치했으나 launchd가 외장 실행파일을 못 돌려 exit126 → **내장 `~/actions-runner-agit`로 재설치**(기존 정상 러너들과 동일).
+- **변경**: `.github/workflows/deploy.yml`(신규, vibe_agit). git 밖 — 내장에 러너 서비스 `actions.runner.…macmini-agit`.
+  워크플로우: push(main)→checkout→`docker build`(anon키는 러너가 `~/agit-supabase/.env`에서 읽음)→agit-app 재시작→200 검증. 문서(.md)·정수SQL 변경은 배포 스킵.
+- **결과/검증**: 첫 자동배포 성공(run success, agit-app 재생성, 사이트 200). 4개 앱 러너 전부 online.
+- **남은 것 / 다음**: writing-helper에 커밋 안 된 기능 개발 909줄(한자쓰기·워드게임 등) 존재 → 선생님 확인 후 커밋·push(그럼 연구소 자동배포 트리거).
+  러너는 내장 설치(외장SSD launchd 불가). 배포 시 앱 컨테이너 ~10초 재시작 다운.
+
 ## 2026-07-25 — 개발 캐시 SSD 오프로드 (내장 안정화) (Claude)
 - **한 일**: 개발 시 계속 쌓이는 캐시를 SSD로 이전해 내장 디스크가 현재 수준을 유지하도록.
   주범은 npm 캐시 6.1GB(+무한증가)와 `~/.cache` 1.5GB였음.
