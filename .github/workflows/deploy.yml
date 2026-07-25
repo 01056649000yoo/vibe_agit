@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    timeout-minutes: 20
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v4
+
+      - name: Show deployed commit
+        run: git rev-parse --short HEAD
+
+      - name: Build agit-app image (Supabase URL·anon from local stack)
+        run: |
+          ANON=$(grep '^ANON_KEY=' "$HOME/agit-supabase/.env" | cut -d= -f2)
+          test -n "$ANON" || { echo "anon key not found"; exit 1; }
+          docker build \
+            --build-arg VITE_SUPABASE_URL=https://api.xn--vz0ba242ncqcba79xhwx.site \
+            --build-arg VITE_SUPABASE_ANON_KEY="$ANON" \
+            -t agit-app:prod .
+
+      - name: Restart container
+        run: |
+          docker rm -f agit-app 2>/dev/null || true
+          docker run -d --name agit-app --restart unless-stopped -p 127.0.0.1:8300:80 agit-app:prod
+
+      - name: Verify
+        run: |
+          sleep 4
+          docker ps --filter name=agit-app --format "{{.Status}}"
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8300/ --max-time 10)
+          echo "app HTTP: $code"
+          [ "$code" = "200" ] || exit 1
