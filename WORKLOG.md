@@ -21,6 +21,20 @@
 
 ---
 
+## 2026-07-25 — Docker 데이터 SSD 이전 성공 (수동 복사 방식) (Claude)
+- **한 일**: Docker 데이터(이미지·컨테이너, Docker.raw 20GB)를 내장→외장 SSD(APFS, `/Volumes/SHmaegmini`)로 이전.
+  Docker Desktop GUI 디스크이동이 3회 실패(12GB·3.3GB·0에서 revert)한 원인은 앱이 `Docker 2.app`이라는 비정상 이름으로 설치돼 있던 것.
+  → 앱을 `Docker.app`으로 개명 후, **수동 복사 방식**으로 이전: Docker 정상종료 → Docker.raw를 SSD로 rsync 복사(원본 보존)
+  → settings-store.json의 DataFolder를 SSD로 변경 → Docker 시작(복사본 인식) → 전수 검증 통과 후 내장 원본 삭제.
+- **변경**: git 밖 인프라 — Docker DataFolder `~/DockerDesktop` → `/Volumes/SHmaegmini/DockerDesktop`.
+  설정 백업 `settings-store.json.bak-before-ssd` 보존. **DB는 여전히 내장 bind mount**(B안: 이미지만 SSD, 운영DB 내장 유지).
+- **결과/검증**: 이미지 22·컨테이너 36개 전부 SSD raw에서 정상 기동. DB 데이터 온전(users 2919·students 1415),
+  bind mount 경로 내장 확인, 프로덕션 200 OK. **내장 여유 58GB→78GB**(20GB 확보). SSD 사용 20GB/911GB 여유.
+- **남은 것 / 다음**: ①docker CLI 심링크가 옛 이름(`Docker 2.app`) 가리켜 깨짐 → sudo로 재연결 필요(사용자).
+  ②rclone 구글드라이브 인증(`rclone config`, 브라우저) → 자동백업 업로드 활성화(스크립트·매일4시 스케줄은 이미 등록됨).
+  ③80GB+ 완전 달성 및 "프로그래밍 파일 SSD" 위해 개발 레포·node_modules SSD 이동은 추후(현재 78GB).
+  ⚠️ 운영 Docker가 외장 SSD 의존 → SSD 절대 분리 금지. 분리 시 서비스 다운(단 내장 DB데이터는 안전).
+
 ## 2026-07-24 — 🚨 Docker SSD 이동 실패 → 전 서비스 복구 (Claude)
 - **한 일**: 사용자가 Docker를 외장 SSD로 옮기려다 실패한 상황 점검·복구. Docker Desktop이 데이터 폴더를
   `~/DockerDesktop`(빈 새 Docker.raw, sparse 9.5M)로 바뀌어 재시작 → **모든 컨테이너·이미지·네임드볼륨 소실, 사이트 502**.
