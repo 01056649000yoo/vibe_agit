@@ -21,6 +21,16 @@
 
 ---
 
+## 2026-07-25 — 개발 캐시 SSD 오프로드 (내장 안정화) (Claude)
+- **한 일**: 개발 시 계속 쌓이는 캐시를 SSD로 이전해 내장 디스크가 현재 수준을 유지하도록.
+  주범은 npm 캐시 6.1GB(+무한증가)와 `~/.cache` 1.5GB였음.
+- **변경**: git 밖 — `~/.npm` → `/Volumes/SHmaegmini/dev/cache/npm`(mv) + `npm config set cache`(~/.npmrc 영속).
+  `~/.cache` → SSD 이동 후 심링크. SSD에 `/Volumes/SHmaegmini/dev/{cache,repos}` 구조 생성(앞으로 새 개발은 repos에서).
+- **결과/검증**: 내장 여유 78GB→**85GB**(목표 80GB 초과). 이후 npm install·도구 캐시는 SSD에 누적 → 내장 안정.
+  node_modules(548MB)는 내장 잔류하나 크기 고정이라 무방.
+- **남은 것 / 다음**: (선택) 기존 레포를 `/Volumes/SHmaegmini/dev/repos`로 옮기면 node_modules까지 SSD.
+  ⚠️ npm캐시·~/.cache가 SSD 의존(가드+인클로저로 안정, 캐시는 재생성 가능).
+
 ## 2026-07-25 — 재부팅 안전장치: SSD 마운트 가드 (Claude)
 - **한 일**: Docker 데이터가 외장 SSD(USB 인클로저)에 있어, 재부팅 시 Docker가 SSD 마운트보다 먼저 뜨면
   빈 데이터로 시작해 컨테이너가 사라질 위험(이번에 실제 겪음) → 방지 안전장치 구축.
