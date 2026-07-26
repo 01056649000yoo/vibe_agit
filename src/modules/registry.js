@@ -6,6 +6,9 @@
  * 기능은 Stage 3b에서 하나씩 이 목록으로 옮긴다(옮길 때마다 동작 검증 후 커밋).
  */
 import { validateManifest } from './types';
+
+/** 교사가 실제로 설정을 저장했음을 나타내는 표식 (빈 목록과 미설정을 구분) */
+export const CONFIGURED_MARK = '__configured__';
 import { dragonManifest } from './game/dragon/manifest';
 import { vocabTowerManifest } from './game/vocab-tower/manifest';
 
@@ -37,9 +40,14 @@ export function getAllModules() {
  * @param {'student'|'teacher'} audience  현재 화면 대상
  */
 export function getEnabledModules(enabledIds, audience) {
-  // 빈 배열은 "설정 안 함"과 구분이 어렵고, 실수로 저장되면 학생 메뉴가 통째로 비어버린다.
-  // 안전하게 미설정(defaultEnabled 적용)으로 취급한다 — 모두 끄려면 교사 UI에서 개별 OFF.
-  const list = Array.isArray(enabledIds) && enabledIds.length > 0 ? enabledIds : null;
+  // 교사가 모든 모듈을 끈 상태(빈 목록)와 "아직 설정 안 함"(NULL)을 구분해야 한다.
+  // 저장 시 CONFIGURED 표식을 함께 넣으므로, 표식이 있으면 빈 목록도 의도된 설정으로 본다.
+  // 표식 없는 빈 배열은 사고(잘못된 쓰기)로 보고 미설정 취급 → 메뉴가 통째로 비지 않음.
+  const arr = Array.isArray(enabledIds) ? enabledIds : null;
+  const configured = arr?.includes(CONFIGURED_MARK);
+  const list = arr && (arr.length > 0 || configured)
+    ? arr.filter((x) => x !== CONFIGURED_MARK)
+    : null;
   return manifests.filter((m) => {
     if (m.audience !== 'both' && m.audience !== audience) return false;
     if (m.core) return true;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAllModules } from './registry';
+import { getAllModules, CONFIGURED_MARK } from './registry';
 import { PART_LABELS } from './types';
 import { supabase } from '../lib/supabaseClient';
 import { saveEnabledModules } from './useEnabledModules';
@@ -25,7 +25,12 @@ const ModuleToggles = ({ activeClass, isMobile }) => {
                 .from('classes').select('enabled_modules').eq('id', classId).maybeSingle();
             if (cancelled) return;
             // 미설정이면 모듈별 기본값으로 초기화 (현재 화면과 동일하게 보이도록)
-            setEnabled(data?.enabled_modules ?? all.filter(m => m.defaultEnabled).map(m => m.id));
+            const saved = data?.enabled_modules;
+            setEnabled(
+                Array.isArray(saved)
+                    ? saved.filter((x) => x !== CONFIGURED_MARK)      // 저장된 설정 그대로
+                    : all.filter(m => m.defaultEnabled).map(m => m.id) // 미설정 → 기본값
+            );
         })();
         return () => { cancelled = true; };
     }, [classId]); // eslint-disable-line react-hooks/exhaustive-deps

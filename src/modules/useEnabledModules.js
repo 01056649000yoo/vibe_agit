@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { getEnabledModules, groupByPart } from './registry';
+import { getEnabledModules, groupByPart, CONFIGURED_MARK } from './registry';
 
 export function useEnabledModules(classId, audience = 'student') {
   const [enabledIds, setEnabledIds] = useState(null);
@@ -35,8 +35,13 @@ export function useEnabledModules(classId, audience = 'student') {
   return { modules, grouped: groupByPart(modules), enabledIds, loading };
 }
 
-/** 교사가 모듈 on/off를 저장할 때 사용 */
+/**
+ * 교사가 모듈 on/off를 저장할 때 사용.
+ * 모두 끈 경우에도 "설정했음"이 남도록 표식을 함께 저장한다
+ * (표식이 없으면 빈 배열이 미설정으로 취급돼 기본 모듈이 다시 켜진다).
+ */
 export async function saveEnabledModules(classId, ids) {
   if (!supabase || !classId) return { error: new Error('classId/supabase 없음') };
-  return supabase.from('classes').update({ enabled_modules: ids }).eq('id', classId);
+  const payload = [CONFIGURED_MARK, ...ids.filter((x) => x !== CONFIGURED_MARK)];
+  return supabase.from('classes').update({ enabled_modules: payload }).eq('id', classId);
 }
