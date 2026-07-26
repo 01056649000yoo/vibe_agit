@@ -18,6 +18,7 @@ const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHi
 const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/BackgroundShopModal'));
 // [bundle-dynamic-imports] 조건부 렌더링되는 대형 컴포넌트를 lazy loading으로 전환
 const AgitOnClassPage = lazy(() => import('./AgitOnClassPage'));
+const PlaygroundPanel = lazy(() => import('../../modules/PlaygroundPanel'));
 const VocabularyTowerGame = lazy(() => import('../../modules/game/vocab-tower/VocabularyTowerGame'));
 
 // [신규] 드래곤 아지트 배경 목록 (상수 외부 이동)
@@ -33,6 +34,7 @@ const HIDEOUT_BACKGROUNDS = {
 
 // [신규] 아지트 실시간 데이터 연동 훅
 import { useClassAgitClass } from '../../hooks/useClassAgitClass';
+import { useEnabledModules } from '../../modules/useEnabledModules';
 
 const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
@@ -40,6 +42,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isAgitOpen, setIsAgitOpen] = useState(false); // [신규] 아지트 오픈 상태
     const [isVocabTowerOpen, setIsVocabTowerOpen] = useState(false); // [신규] 어휘의 탑 오픈 상태
+    const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false); // 아지트 놀이터(포인트 콘텐츠 모음)
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
     // [신규] 아지트 온도 및 활성화 정보 실시간 동기화
@@ -139,6 +142,30 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const dragonInfo = getDragonStage(petData.level);
     const daysSinceLastFed = getDaysSinceLastFed();
 
+    // 아지트 놀이터: 학급에서 켜진 포인트 콘텐츠를 모아 보여준다.
+    // 어휘의 탑은 모듈 설정을 저장한 학급이면 모듈 값을, 아니면 기존 게임설정을 따른다(DashboardMenu와 동일 규칙).
+    const { modules: enabledModules, enabledIds } = useEnabledModules(
+        studentSession?.classId || studentSession?.class_id, 'student'
+    );
+    const hasModuleConfig = Array.isArray(enabledIds) && enabledIds.length > 0;
+    const isOn = (id) => enabledModules.some((m) => m.id === id);
+    const isVocabOn = hasModuleConfig ? isOn('vocab-tower') : (vocabTowerSettings?.enabled ?? false);
+
+    const playgroundItems = [
+        isOn('dragon') && {
+            id: 'dragon', icon: '🐉', name: '나의 드래곤 파트너',
+            description: '포인트로 먹이를 주고 키우기',
+            badge: `${dragonInfo.name} · LV.${petData.level}`,
+            onOpen: () => { setIsPlaygroundOpen(false); setIsDragonModalOpen(true); },
+        },
+        isVocabOn && {
+            id: 'vocab-tower', icon: '🏰', name: '어휘의 탑',
+            description: '어휘 퀴즈로 탑을 오르고 포인트 받기',
+            background: 'linear-gradient(135deg, #E3F2FD 0%, #F1F8FF 100%)',
+            onOpen: () => { setIsPlaygroundOpen(false); setIsVocabTowerOpen(true); },
+        },
+    ].filter(Boolean);
+
     return (
         <>
             <StudentGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
@@ -202,6 +229,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 <DashboardMenu
                     onNavigate={onNavigate}
                     setIsDragonModalOpen={setIsDragonModalOpen}
+                    setIsPlaygroundOpen={setIsPlaygroundOpen}
+                    playgroundCount={playgroundItems.length}
                     setIsAgitOpen={setIsAgitOpen} // [추가]
                     setIsVocabTowerOpen={setIsVocabTowerOpen} // [추가] 어휘의탑
                     isMobile={isMobile}
@@ -271,6 +300,32 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             </Card>
 
             {/* [신규] 우리반 아지트 독립 창 (전체 화면 오버레이) */}
+            {/* 아지트 놀이터 — 포인트로 즐기는 콘텐츠 모음 (모듈로 늘어남) */}
+            <AnimatePresence>
+                {isPlaygroundOpen && (
+                    <motion.div
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        style={{
+                            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                            background: 'linear-gradient(180deg, #FFFDF5 0%, #FFF8E1 100%)',
+                            zIndex: 20000, overflowY: 'auto'
+                        }}
+                    >
+                        <Suspense fallback={null}>
+                            <PlaygroundPanel
+                                items={playgroundItems}
+                                points={points}
+                                isMobile={isMobile}
+                                onClose={() => setIsPlaygroundOpen(false)}
+                            />
+                        </Suspense>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <AnimatePresence>
                 {isAgitOpen && (
                     <motion.div
