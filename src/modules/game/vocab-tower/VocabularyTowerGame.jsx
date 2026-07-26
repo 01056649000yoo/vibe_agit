@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../../lib/supabaseClient';
-import useVocabularyTower from '../../hooks/useVocabularyTower';
+import { supabase } from '../../../lib/supabaseClient';
+import useVocabularyTower from './useVocabularyTower';
 
 /**
  * 어휘의 탑 게임 컴포넌트

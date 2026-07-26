@@ -18,7 +18,7 @@ const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHi
 const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/BackgroundShopModal'));
 // [bundle-dynamic-imports] 조건부 렌더링되는 대형 컴포넌트를 lazy loading으로 전환
 const AgitOnClassPage = lazy(() => import('./AgitOnClassPage'));
-const VocabularyTowerGame = lazy(() => import('./VocabularyTowerGame'));
+const VocabularyTowerGame = lazy(() => import('../../modules/game/vocab-tower/VocabularyTowerGame'));
 
 // [신규] 드래곤 아지트 배경 목록 (상수 외부 이동)
 const HIDEOUT_BACKGROUNDS = {
