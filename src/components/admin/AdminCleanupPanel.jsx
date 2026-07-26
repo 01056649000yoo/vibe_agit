@@ -18,8 +18,8 @@ const GROUPS = [
     {
         id: USAGE_STATUS.NO_STUDENT,
         label: '학생 미등록',
-        description: '학급은 만들었지만 학생을 한 명도 등록하지 않은 계정입니다. 학급 자료가 남아 있어 삭제 대신 승인 취소만 제공합니다.',
-        deletable: false
+        description: '학급은 만들었지만 학생을 한 명도 등록하지 않은 계정입니다. 빈 학급은 함께 정리되고, 학생 글은 애초에 존재하지 않습니다.',
+        deletable: true
     }
 ];
 
@@ -27,8 +27,12 @@ const GROUPS = [
  * 유령 계정 정리 패널.
  *
  * 삭제는 되돌릴 수 없으므로 두 단계로 좁힌다.
- *  1) 학급도 학생도 없는 계정만 삭제 대상으로 본다 (서버 RPC도 p_only_empty로 한 번 더 막는다)
+ *  1) 학생 0명이면서 학생 글도 0건인 계정만 삭제 대상으로 본다
+ *     (서버 admin_bulk_force_teacher_withdrawal 이 p_only_empty 로 한 번 더 막는다)
  *  2) 가입 직후 계정을 실수로 지우지 않도록 "가입 후 N일 지난 계정"만 보여준다
+ *
+ * 삭제는 빈 학급 → 프로필 → 로그인 계정(auth.users)까지 지우는 완전 탈퇴다.
+ * 로그인 계정을 남기면 재로그인 시 프로필이 다시 만들어져 되살아나므로 함께 지운다.
  */
 const AdminCleanupPanel = ({ cleanupCandidates, loading, onRefresh }) => {
     const [groupId, setGroupId] = useState(USAGE_STATUS.NEVER_STARTED);
@@ -90,8 +94,8 @@ const AdminCleanupPanel = ({ cleanupCandidates, loading, onRefresh }) => {
         const preview = selectedNames.slice(0, 10).join(', ');
         const more = selectedNames.length > 10 ? ` 외 ${selectedNames.length - 10}명` : '';
 
-        if (!confirm(`🚨 선택한 ${selectedIds.length}개 계정을 영구 삭제합니다.\n\n${preview}${more}\n\n되돌릴 수 없습니다. 계속할까요?`)) return;
-        if (!confirm(`⚠️ 마지막 확인입니다.\n\n학급이나 학생이 하나라도 있는 계정은 서버에서 자동으로 제외됩니다.\n정말 삭제하시겠습니까?`)) return;
+        if (!confirm(`🚨 선택한 ${selectedIds.length}개 계정을 영구 삭제합니다.\n\n${preview}${more}\n\n빈 학급과 로그인 계정까지 함께 지워집니다(완전 탈퇴).\n되돌릴 수 없습니다. 계속할까요?`)) return;
+        if (!confirm(`⚠️ 마지막 확인입니다.\n\n학생이나 학생 글이 하나라도 있는 계정은 서버에서 자동으로 제외됩니다.\n정말 삭제하시겠습니까?`)) return;
 
         setWorking(true);
         setLastResult(null);
@@ -105,7 +109,8 @@ const AdminCleanupPanel = ({ cleanupCandidates, loading, onRefresh }) => {
             setLastResult({
                 type: 'delete',
                 deleted: data?.deleted_count ?? 0,
-                skipped: data?.skipped_count ?? 0
+                skipped: data?.skipped_count ?? 0,
+                removedClasses: data?.removed_classes ?? 0
             });
             clear();
             await onRefresh({ showLoading: false });
@@ -195,8 +200,8 @@ const AdminCleanupPanel = ({ cleanupCandidates, loading, onRefresh }) => {
             {lastResult && (
                 <div style={{ padding: '14px 20px', background: '#F0FFF4', color: '#276749', fontSize: '0.88rem', borderBottom: '1px solid #C6F6D5' }}>
                     {lastResult.type === 'revoke'
-                        ? `✅ ${lastResult.updated}명의 승인을 취소했습니다.`
-                        : `✅ ${lastResult.deleted}개 계정을 삭제했습니다.${lastResult.skipped ? ` (데이터가 있어 제외됨: ${lastResult.skipped}개)` : ''}`}
+                        ? `✅ ${lastResult.updated}명의 승인을 취소했습니다. 본인이 정보를 다시 저장해도 되살아나지 않습니다.`
+                        : `✅ ${lastResult.deleted}개 계정을 탈퇴 처리했습니다. (빈 학급 ${lastResult.removedClasses}개 함께 정리)${lastResult.skipped ? ` · 학생·글이 있어 제외됨 ${lastResult.skipped}개` : ''}`}
                 </div>
             )}
 

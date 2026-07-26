@@ -21,6 +21,32 @@
 
 ---
 
+## 2026-07-27 — 강제 탈퇴 완결성·승인 취소 우회 차단 + Tailscale SSH 구축 (Claude)
+- **인프라 (git 밖)**:
+  - **Tailscale 사설망 구축** — 맥미니(`macmini` 100.89.88.108)와 작업 PC(`jinnam` 100.88.144.119) 연결.
+    공유기 포트 개방 없음. macOS 원격 로그인 + ed25519 키 인증(`jinnam-claude`)으로 작업 PC에서 맥미니 운영 가능.
+    INTEGRATION_PLAN 6절 `관리 접속(Studio, SSH)은 Tailscale로만` 항목 충족.
+  - 맥미니에 `~/.zshenv` 신규 생성 — SSH 비대화형 실행 시 PATH에 `/usr/local/bin`·`/opt/homebrew/bin` 추가(docker 미검출 해결).
+  - **전체 백업** `~/backups/agit-20260727-0203.dump` (5.1MB, `pg_restore -l` 1216 객체, auth.users·profiles·classes·students·student_posts 포함 확인).
+- **발견한 결함 2가지** (운영 DB 외래키·함수 실측):
+  1. `classes.teacher_id` → `auth.users`, 삭제 규칙 `NO ACTION`. 기존 `admin_force_teacher_withdrawal`은
+     `teachers`·`profiles`만 삭제해 **빈 학급이 고아로 잔존**. `point_logs.teacher_id`도 동일 구조.
+  2. `profiles` 삭제 후에도 `auth.users`가 남아, 재로그인 시 `setup_teacher_profile`이 프로필을 재생성하고
+     `auto_approval=true`라 **즉시 승인 상태로 부활**. 승인 취소도 대기 화면의 `정보 다시 입력`으로 같은 경로 우회 가능.
+- **한 일**:
+  - `profiles.approval_revoked_at` 추가. 승인 취소 시 기록, 승인 시 해제(`admin_set_teacher_approval`·`admin_bulk_set_teacher_approval`).
+  - `setup_teacher_profile`이 취소 이력 있는 계정을 자동승인에서 제외. 기존 파라미터 기본값 3개를 그대로 유지해야 `CREATE OR REPLACE` 통과.
+  - `admin_withdraw_teacher_internal` 신설 — point_logs → classes → profiles → `auth.users` 순으로 완전 탈퇴.
+    안전조건을 `학급 없음`에서 **`학생 0명 AND 학생 글 0건`**으로 변경(빈 학급은 보호 대상이 아니라 정리 대상).
+  - 정리 탭에서 `학생 미등록` 그룹도 삭제 가능하게 변경. 승인 대기 탭을 `신규 가입 대기` / `관리자 정리함`으로 분리.
+- **변경**: 마이그레이션 `20260727_teacher_withdrawal_and_revoke_fix.sql`, `AdminCleanupPanel.jsx`, `AdminDashboard.jsx`, 가이드 문서.
+- **결과/검증**:
+  - 정리 대상 실측: 학생 0명 교사 199명(학급없음 11 + 빈학급 188), 그중 **학생 글 보유 0명**, 포인트로그·연구소·제보·공지 전부 0건.
+  - 트랜잭션 롤백 검증 4건 통과 — ①빈 계정 탈퇴 성공(빈 학급 1개 함께 삭제) ②학생 24명 교사 `HAS_DATA` 거부
+    ③`approval_revoked_at` 기록 ④취소 계정이 프로필 재저장해도 `is_approved=false` 유지(부활 차단).
+  - 변경 파일 ESLint 0에러, 프로덕션 빌드 통과. 마이그레이션은 운영 `agit-db`에 적용 완료.
+- **남은 것 / 다음**: 실제 계정 삭제는 관리자가 화면에서 직접 확인 후 실행(미실시). 야간 자동 백업은 여전히 미구축.
+
 ## 2026-07-27 — 관리자 대시보드 사용량·장기 미접속·유령 계정 정리 구조 (Claude)
 - **배경**: 관리자 화면이 "승인/거절"만 다루고 있어, 가입한 선생님이 실제로 쓰고 있는지·오래 안 왔는지·
   가입만 하고 방치된 계정인지 구분할 방법이 없었음. 기존 교사별 학생 수 집계는 `classes`·`students`를
