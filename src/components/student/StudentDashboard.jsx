@@ -257,7 +257,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 />
 
                 {/* 드래곤 아지트 모달 (모듈: game/dragon) — 열릴 때만 로드 */}
-                {isDragonModalOpen && (
+                {isDragonModalOpen && isOn('dragon') && (
                     <Suspense fallback={null}>
                         <DragonHideoutModal
                             isOpen={isDragonModalOpen}
@@ -279,7 +279,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                 )}
 
                 {/* 배경 상점 모달 (모듈: game/dragon) — 열릴 때만 로드 */}
-                {isShopOpen && (
+                {isShopOpen && isOn('dragon') && (
                     <Suspense fallback={null}>
                         <BackgroundShopModal
                             isOpen={isShopOpen}
@@ -298,7 +298,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             {/* [신규] 우리반 아지트 독립 창 (전체 화면 오버레이) */}
             {/* 아지트 놀이터 — 포인트로 즐기는 콘텐츠 모음 (모듈로 늘어남) */}
             <AnimatePresence>
-                {isPlaygroundOpen && (
+                {isPlaygroundOpen && playgroundItems.length > 0 && (
                     <motion.div
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}
@@ -355,7 +355,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
             {/* [신규] 어휘의 탑 게임 (전체 화면 오버레이) */}
             <AnimatePresence>
-                {isVocabTowerOpen && (
+                {isVocabTowerOpen && isOn('vocab-tower') && (
                     <motion.div
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}

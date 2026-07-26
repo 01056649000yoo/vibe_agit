@@ -16,15 +16,17 @@ import {
 } from './registry';
 
 export function useEnabledModules(classId, audience = 'student') {
-  const [enabledIds, setEnabledIds] = useState(null);
-  // classId/supabase가 없으면 조회 자체를 안 하므로 처음부터 로딩 아님
-  const [loading, setLoading] = useState(() => !!classId && !!supabase);
+  const [moduleState, setModuleState] = useState({
+    classId: null,
+    enabledIds: null,
+    error: null,
+  });
 
   useEffect(() => {
     let cancelled = false;
     if (!classId || !supabase) return;
 
-    (async () => {
+    const loadModules = async () => {
       const fields = ['enabled_modules', ...getLegacyModuleFields()].join(', ');
       const { data, error } = await supabase
         .from('classes')
@@ -32,17 +34,50 @@ export function useEnabledModules(classId, audience = 'student') {
         .eq('id', classId)
         .maybeSingle();
       if (cancelled) return;
-      if (!error) {
-        setEnabledIds(resolveEnabledModuleIds(data?.enabled_modules, data));
-      }
-      setLoading(false);
-    })();
+      setModuleState({
+        classId,
+        enabledIds: error ? null : resolveEnabledModuleIds(data?.enabled_modules, data),
+        error: error ?? null,
+      });
+    };
 
-    return () => { cancelled = true; };
+    loadModules();
+
+    // 교사가 다른 화면/기기에서 토글하면 열린 학생 화면에도 즉시 반영한다.
+    const channel = supabase
+      .channel(`module_settings_${classId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'classes', filter: `id=eq.${classId}` },
+        () => loadModules()
+      )
+      .subscribe();
+
+    // Realtime 연결이 끊겼던 경우 탭으로 돌아올 때 최종 상태를 다시 확인한다.
+    const handleFocus = () => loadModules();
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', handleFocus);
+      supabase.removeChannel(channel);
+    };
   }, [classId]);
 
-  const modules = getEnabledModules(enabledIds, audience);
-  return { modules, grouped: groupByPart(modules), enabledIds, loading };
+  const loaded = moduleState.classId === classId;
+  const enabledIds = loaded ? moduleState.enabledIds : null;
+  // 선택 기능은 설정 조회가 확인되기 전/실패했을 때 숨긴다(fail closed).
+  // NULL 설정의 기본값은 조회 성공 후 resolveEnabledModuleIds가 적용한다.
+  const modules = loaded && !moduleState.error
+    ? getEnabledModules(enabledIds, audience)
+    : [];
+  return {
+    modules,
+    grouped: groupByPart(modules),
+    enabledIds,
+    loading: !!classId && !loaded,
+    error: loaded ? moduleState.error : null,
+  };
 }
 
 /**
@@ -61,5 +96,7 @@ export async function saveEnabledModules(classId, ids) {
   return supabase
     .from('classes')
     .update({ enabled_modules: payload, ...legacyUpdates })
-    .eq('id', classId);
+    .eq('id', classId)
+    .select('enabled_modules')
+    .maybeSingle();
 }

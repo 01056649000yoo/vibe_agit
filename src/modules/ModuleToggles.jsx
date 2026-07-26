@@ -21,15 +21,22 @@ const ModuleToggles = ({ activeClass, isMobile }) => {
     const all = getAllModules();
     const [enabled, setEnabled] = useState(null); // null = 로딩 중
     const [saving, setSaving] = useState(false);
+    const [loadError, setLoadError] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
         if (!classId || !supabase) return;
         (async () => {
             const fields = ['enabled_modules', ...getLegacyModuleFields()].join(', ');
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('classes').select(fields).eq('id', classId).maybeSingle();
             if (cancelled) return;
+            if (error || !data) {
+                setLoadError(true);
+                setEnabled([]);
+                return;
+            }
+            setLoadError(false);
             // 미설정이면 모듈 기본값 + 기존 개별 플래그로 초기화한다.
             setEnabled(resolveEnabledModuleIds(data?.enabled_modules, data)
                 .filter((x) => x !== CONFIGURED_MARK));
@@ -44,11 +51,11 @@ const ModuleToggles = ({ activeClass, isMobile }) => {
         const next = enabled.includes(id) ? enabled.filter(x => x !== id) : [...enabled, id];
         setEnabled(next);
         setSaving(true);
-        const { error } = await saveEnabledModules(classId, next);
+        const { data, error } = await saveEnabledModules(classId, next);
         setSaving(false);
-        if (error) {
+        if (error || !data) {
             setEnabled(enabled); // 실패 시 되돌리기
-            alert('모듈 설정 저장에 실패했습니다.');
+            alert('모듈 설정 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
         }
     };
 
@@ -61,7 +68,9 @@ const ModuleToggles = ({ activeClass, isMobile }) => {
                 끈 기능은 학생 화면에서 보이지 않습니다. 학급마다 따로 설정됩니다.
             </p>
 
-            {enabled === null ? (
+            {loadError ? (
+                <div style={{ color: '#C62828', fontSize: '0.9rem' }}>모듈 설정을 불러오지 못했습니다. 화면을 새로고침해 주세요.</div>
+            ) : enabled === null ? (
                 <div style={{ color: '#95A5A6', fontSize: '0.9rem' }}>불러오는 중…</div>
             ) : (
                 Object.entries(grouped).map(([part, mods]) => (
