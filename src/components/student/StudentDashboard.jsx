@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Card from '../common/Card';
 import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
-import { useDragonPet } from '../../hooks/useDragonPet';
+import { useDragonPet } from '../../modules/game/dragon/useDragonPet';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useRealtimeNotifications } from '../../hooks/useRealtimeNotifications'; // [신규] 분리된 리얼타임 훅
 
@@ -13,8 +13,9 @@ import TeacherNotifyBanner from './TeacherNotifyBanner';
 import StudentStatsCards from './StudentStatsCards';
 import PointLevelCard from './PointLevelCard';
 import DashboardMenu from './DashboardMenu';
-import DragonHideoutModal from './DragonHideoutModal';
-import BackgroundShopModal from './BackgroundShopModal';
+// 드래곤 모듈 — 모달을 열 때만 코드를 받도록 지연 로딩 (src/modules/game/dragon)
+const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHideoutModal'));
+const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/BackgroundShopModal'));
 // [bundle-dynamic-imports] 조건부 렌더링되는 대형 컴포넌트를 lazy loading으로 전환
 const AgitOnClassPage = lazy(() => import('./AgitOnClassPage'));
 const VocabularyTowerGame = lazy(() => import('./VocabularyTowerGame'));
@@ -230,35 +231,43 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     onClear={handleClearFeedback}
                 />
 
-                {/* 드래곤 아지트 모달 */}
-                <DragonHideoutModal
-                    isOpen={isDragonModalOpen}
-                    onClose={() => setIsDragonModalOpen(false)}
-                    isMobile={isMobile}
-                    petData={petData}
-                    dragonInfo={dragonInfo}
-                    HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
-                    daysSinceLastFed={daysSinceLastFed}
-                    dragonConfig={dragonConfig}
-                    handleFeed={handleFeed}
-                    setIsShopOpen={setIsShopOpen}
-                    isEvolving={isEvolving}
-                    isFlashing={isFlashing}
-                    isBusy={isBusy}
-                    currentPoints={points}
-                />
+                {/* 드래곤 아지트 모달 (모듈: game/dragon) — 열릴 때만 로드 */}
+                {isDragonModalOpen && (
+                    <Suspense fallback={null}>
+                        <DragonHideoutModal
+                            isOpen={isDragonModalOpen}
+                            onClose={() => setIsDragonModalOpen(false)}
+                            isMobile={isMobile}
+                            petData={petData}
+                            dragonInfo={dragonInfo}
+                            HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
+                            daysSinceLastFed={daysSinceLastFed}
+                            dragonConfig={dragonConfig}
+                            handleFeed={handleFeed}
+                            setIsShopOpen={setIsShopOpen}
+                            isEvolving={isEvolving}
+                            isFlashing={isFlashing}
+                            isBusy={isBusy}
+                            currentPoints={points}
+                        />
+                    </Suspense>
+                )}
 
-                {/* 배경 상점 모달 */}
-                <BackgroundShopModal
-                    isOpen={isShopOpen}
-                    onClose={() => setIsShopOpen(false)}
-                    points={points}
-                    petData={petData}
-                    buyItem={buyItem}
-                    equipItem={equipItem}
-                    isBusy={isBusy}
-                    HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
-                />
+                {/* 배경 상점 모달 (모듈: game/dragon) — 열릴 때만 로드 */}
+                {isShopOpen && (
+                    <Suspense fallback={null}>
+                        <BackgroundShopModal
+                            isOpen={isShopOpen}
+                            onClose={() => setIsShopOpen(false)}
+                            points={points}
+                            petData={petData}
+                            buyItem={buyItem}
+                            equipItem={equipItem}
+                            isBusy={isBusy}
+                            HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
+                        />
+                    </Suspense>
+                )}
             </Card>
 
             {/* [신규] 우리반 아지트 독립 창 (전체 화면 오버레이) */}

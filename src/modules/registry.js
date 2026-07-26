@@ -6,12 +6,12 @@
  * 기능은 Stage 3b에서 하나씩 이 목록으로 옮긴다(옮길 때마다 동작 검증 후 커밋).
  */
 import { validateManifest } from './types';
+import { dragonManifest } from './game/dragon/manifest';
 
 /** 등록된 모듈 매니페스트 목록 */
 const manifests = [
-  // 예시(아직 미등록):
-  // dragonManifest,   // src/modules/game/dragon/manifest.js
-  // vocabTowerManifest,
+  dragonManifest, // src/modules/game/dragon/
+  // vocabTowerManifest,  // 다음 이전 대상
 ];
 
 // 개발 중 매니페스트 실수 조기 발견 (프로덕션 빌드에서는 console이 제거됨)
