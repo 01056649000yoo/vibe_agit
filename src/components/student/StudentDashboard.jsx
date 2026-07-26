@@ -164,7 +164,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
             <StudentGuideModal
                 isOpen={isGuideOpen}
                 onClose={() => setIsGuideOpen(false)}
-                friendsHideoutEnabled={isOn('friends-hideout')}
             />
 
             {/* [모바일 최적화] 모바일에서는 전체 폭, PC에서는 카드 형태 유지 */}
@@ -232,7 +231,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     isMobile={isMobile}
                     agitSettings={agitSettings}
                     studentSession={studentSession}
-                    friendsHideoutEnabled={isOn('friends-hideout')}
                 />
 
                 {/* 오늘의 목표 하단 문구 */}
@@ -254,7 +252,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     onNavigate={onNavigate}
                     initialTab={feedbackInitialTab}
                     onClear={handleClearFeedback}
-                    friendsHideoutEnabled={isOn('friends-hideout')}
                 />
 
                 {/* 드래곤 아지트 모달 (모듈: game/dragon) — 열릴 때만 로드 */}
@@ -344,7 +341,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             <AgitOnClassPage
                                 studentSession={studentSession}
                                 onBack={() => setIsAgitOpen(false)}
-                                friendsHideoutEnabled={isOn('friends-hideout')}
                                 onNavigate={(path) => {
                                     setIsAgitOpen(false);
                                     onNavigate(path);

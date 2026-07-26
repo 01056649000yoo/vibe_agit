@@ -9,6 +9,10 @@ import { PART_LABELS } from './types';
 import { supabase } from '../lib/supabaseClient';
 import { saveEnabledModules } from './useEnabledModules';
 
+// core 모듈은 구조상 레지스트리에 남지만 항상 켜지므로 교사 토글에 노출하지 않는다.
+const TOGGLEABLE_MODULES = getAllModules().filter((module) => !module.core);
+const TOGGLEABLE_IDS = new Set(TOGGLEABLE_MODULES.map((module) => module.id));
+
 /**
  * 교사용 모듈 on/off 패널 (Stage 3a)
  *
@@ -18,7 +22,7 @@ import { saveEnabledModules } from './useEnabledModules';
  */
 const ModuleToggles = ({ activeClass, isMobile }) => {
     const classId = activeClass?.id;
-    const all = getAllModules();
+    const all = TOGGLEABLE_MODULES;
     const [enabled, setEnabled] = useState(null); // null = 로딩 중
     const [saving, setSaving] = useState(false);
     const [loadError, setLoadError] = useState(false);
@@ -39,7 +43,7 @@ const ModuleToggles = ({ activeClass, isMobile }) => {
             setLoadError(false);
             // 미설정이면 모듈 기본값 + 기존 개별 플래그로 초기화한다.
             setEnabled(resolveEnabledModuleIds(data?.enabled_modules, data)
-                .filter((x) => x !== CONFIGURED_MARK));
+                .filter((id) => id !== CONFIGURED_MARK && TOGGLEABLE_IDS.has(id)));
         })();
         return () => { cancelled = true; };
     }, [classId]);

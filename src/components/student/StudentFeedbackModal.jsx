@@ -6,7 +6,7 @@ import Button from '../common/Button';
  * 역할: 학생 - 내 글 소식(알림) 모달 🔔
  * 선생님의 피드백, 친구들의 반응/댓글을 한눈에 확인하고 바로 이동합니다.
  */
-const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate, initialTab = 0, onClear, friendsHideoutEnabled }) => {
+const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate, initialTab = 0, onClear }) => {
     const [activeTab, setActiveTab] = React.useState(initialTab);
 
     // 탭 변경 시 상태 업데이트 (initialTab이 바뀌면 동기화)
@@ -16,7 +16,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
 
     const handleNotificationClick = (item) => {
         // 소셜 알림(리액션/댓글) 클릭 시 해당 글 보기
-        if (friendsHideoutEnabled && (item.type === 'reaction' || item.type === 'comment')) {
+        if (item.type === 'reaction' || item.type === 'comment') {
             onNavigate('friends_hideout', { initialPostId: item.post_id || item.student_posts?.id });
             onClose();
         }
@@ -139,7 +139,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                                 background: bgColor,
                                                 borderRadius: '20px',
                                                 border: `1px solid ${borderColor}`,
-                                                cursor: friendsHideoutEnabled ? 'pointer' : 'default',
+                                                cursor: 'pointer',
                                                 transition: 'all 0.2s',
                                                 position: 'relative'
                                             }}

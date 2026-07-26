@@ -2,7 +2,7 @@
  * 친구 아지트 모듈 (Stage 3b — 학급 커뮤니티)
  *
  * 학생이 같은 반 친구의 제출 글을 읽고 반응·댓글을 남기며,
- * 친구가 꾸민 드래곤 아지트를 구경하는 선택 기능이다.
+ * 친구가 꾸민 드래곤 아지트를 구경하는 고정 기능이다.
  */
 export const friendsHideoutManifest = {
   id: 'friends-hideout',
@@ -11,7 +11,7 @@ export const friendsHideoutManifest = {
   icon: '👀',
   part: 'community',
   audience: 'student',
-  defaultEnabled: true, // 기존에는 모든 학급에 노출되던 기능
+  core: true, // 모듈 구조·지연 로딩은 유지하지만 학급별로 끌 수 없다.
   studentRoute: 'friends_hideout',
   studentEntry: () => import('./FriendsHideout'),
 };

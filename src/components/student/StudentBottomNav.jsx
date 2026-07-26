@@ -5,14 +5,14 @@ import { motion } from 'framer-motion';
  * 역할: 모바일 환경에서 학생들의 빠른 메뉴 이동을 돕는 하단 탭바 📱
  * 특징: 768px 미만에서만 표시됨
  */
-const StudentBottomNav = ({ activeTab, onNavigate, friendsHideoutEnabled }) => {
+const StudentBottomNav = ({ activeTab, onNavigate }) => {
     // 탭 메뉴 설정
     const tabs = [
         { id: 'main', label: '홈', icon: '🏠', target: 'main' },
         { id: 'mission_list', label: '글쓰기', icon: '📝', target: 'mission_list' },
-        friendsHideoutEnabled && { id: 'friends_hideout', label: '친구들', icon: '👀', target: 'friends_hideout' },
+        { id: 'friends_hideout', label: '친구들', icon: '👀', target: 'friends_hideout' },
         // { id: 'market', label: '상점', icon: '🛍️', target: 'market' } // 향후 추가 가능
-    ].filter(Boolean);
+    ];
 
     return (
         <>

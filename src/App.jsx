@@ -53,16 +53,11 @@ function App() {
     isAdminMode, setAdminMode: setAdminModeHandler
   } = useAppStore();
 
-  // 학생 모듈 상태를 앱 셸에서 한 번만 읽어 메뉴와 라우트를 함께 게이팅한다.
+  // 학생 선택 모듈 상태를 앱 셸에서 한 번만 읽어 놀이터 진입점을 게이팅한다.
   const { modules: enabledStudentModules } = useEnabledModules(
     studentSession?.classId || studentSession?.class_id,
     'student'
   );
-  const friendsHideoutEnabled = enabledStudentModules.some((module) => module.id === 'friends-hideout');
-  const studentPageName = internalPage.name === 'friends_hideout' && !friendsHideoutEnabled
-    ? 'main'
-    : internalPage.name;
-
   // 상태 변경 감지 로그
   useEffect(() => {
   }, [isAdminMode]);
@@ -259,7 +254,7 @@ function App() {
           ) : studentSession ? (
             /* [2순위] 학생 모드 (교사 세션이 없을 때) */
             <>
-              {studentPageName === 'main' && (
+              {internalPage.name === 'main' && (
                 <StudentDashboard
                   studentSession={studentSession}
                   onLogout={handleStudentLogout}
@@ -267,14 +262,14 @@ function App() {
                   enabledModules={enabledStudentModules}
                 />
               )}
-              {studentPageName === 'mission_list' && (
+              {internalPage.name === 'mission_list' && (
                 <MissionList
                   studentSession={studentSession}
                   onBack={() => setInternalPage('main')}
                   onNavigate={setInternalPage}
                 />
               )}
-              {studentPageName === 'writing' && (
+              {internalPage.name === 'writing' && (
                 <StudentWriting
                   studentSession={studentSession}
                   missionId={internalPage.params.missionId}
@@ -283,7 +278,7 @@ function App() {
                   onNavigate={setInternalPage}
                 />
               )}
-              {studentPageName === 'friends_hideout' && friendsHideoutEnabled && (
+              {internalPage.name === 'friends_hideout' && (
                 <FriendsHideout
                   studentSession={studentSession}
                   params={internalPage.params}
@@ -294,9 +289,8 @@ function App() {
               {/* [신규] 학생용 하단 모바일 내비게이션 (모바일에서만 표시됨) */}
               <Suspense fallback={null}>
                 <StudentBottomNav
-                  activeTab={studentPageName}
+                  activeTab={internalPage.name}
                   onNavigate={setInternalPage}
-                  friendsHideoutEnabled={friendsHideoutEnabled}
                 />
               </Suspense>
             </>

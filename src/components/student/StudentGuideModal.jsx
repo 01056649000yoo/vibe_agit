@@ -5,7 +5,7 @@ import Button from '../common/Button';
 /**
  * 🐉 학생 전용 사용법 가이드 모달
  */
-const StudentGuideModal = ({ isOpen, onClose, friendsHideoutEnabled }) => {
+const StudentGuideModal = ({ isOpen, onClose }) => {
     const steps = [
         {
             icon: '📝',
@@ -26,15 +26,13 @@ const StudentGuideModal = ({ isOpen, onClose, friendsHideoutEnabled }) => {
             title: '친구 아지트 놀러 가기',
             description: '친구들은 드래곤을 어떻게 키웠을까? 친구 아지트도 구경해 봐요!',
             bg: 'linear-gradient(135deg, #F1F8E9 0%, #DCEDC8 100%)',
-            borderColor: '#C5E1A5',
-            requiresFriendsHideout: true
+            borderColor: '#C5E1A5'
         },
         {
             icon: '🐉',
             title: '내 드래곤 자랑하기',
             description: '내가 꾸민 멋진 아지트를 친구들에게 보여주세요!',
-            bg: 'linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%)',
-            requiresFriendsHideout: true
+            bg: 'linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%)'
         },
         {
             icon: '🏰',
@@ -43,7 +41,7 @@ const StudentGuideModal = ({ isOpen, onClose, friendsHideoutEnabled }) => {
             bg: 'linear-gradient(135deg, #E8EAF6 0%, #C5CAE9 100%)',
             borderColor: '#7986CB'
         }
-    ].filter((step) => friendsHideoutEnabled || !step.requiresFriendsHideout);
+    ];
 
     return (
         <AnimatePresence>
