@@ -21,6 +21,28 @@
 
 ---
 
+## 2026-07-26 — 아지트 놀이터 도입 (포인트 콘텐츠 허브) (Claude)
+- **기획 배경(사용자)**: 포인트로 즐기는 콘텐츠를 **"아지트 놀이터"** 라는 고정 항목 하나로 묶고, 교사가 취사선택한
+  놀거리가 그 안에서 열리게. 콘텐츠가 늘어도 학생 메뉴가 길어지지 않도록.
+- **한 일**:
+  - `src/modules/PlaygroundPanel.jsx` 신설 — 켜진 게임 모듈을 카드 그리드로 보여주는 전체화면 패널(포인트 표시 포함).
+  - `StudentDashboard`에 놀이터 상태·항목 구성(`playgroundItems`) 추가. 항목 클릭 → 놀이터 닫고 해당 기능(드래곤 모달/어휘의탑) 오픈.
+  - `DashboardMenu`에서 **드래곤·어휘의탑 개별 카드 제거 → 놀이터 카드 1개**로 교체(280~438줄 구간). 놀거리 0개면 카드 자체 숨김.
+- **변경**: 커밋 `cfceee9`. 파일: `PlaygroundPanel.jsx`(신규), `StudentDashboard.jsx`, `DashboardMenu.jsx`.
+- **결과/검증**: 메뉴에 놀이터 카드 표시 ✅ / 놀이터 안 드래곤·어휘의탑 카드 ✅ / 드래곤 클릭→모달 열림 ✅ /
+  전체화면 오버레이 정상(뷰포트 캡처 확인) / 빌드·브라우저 에러 0. 학급 미설정(NULL)+어휘의탑 게임설정 ON 상태로 검증.
+- **⚠️ 남은 것 (GPT 인수인계)**:
+  1. **`DashboardMenu.jsx`에 미사용 변수 7개** — 카드를 놀이터로 옮기며 쓰이지 않게 된 것들
+     (`hasModuleConfig`, `isModuleOn`, `isExhausted`, `isRankingHovered`/`setIsRankingHovered`, `fetchRankings`, `displayRankings`
+     + 관련 `rankings`/`classmates` 상태·`getTodayKey`/`getAttempts`). **동작에는 문제 없음**(빌드 통과), 린트 에러만 남음.
+     → 제거 시도했다가 JSX/문법 깨져 원복함. **한 번에 지우지 말고 하나씩 지우며 `npm run build` 확인 권장.**
+     주의: 이 코드들(랭킹 프리뷰·시도 횟수)은 **어휘의 탑 게임 내부에 동일 기능이 이미 있음**(각 14곳·13곳 참조) → 삭제해도 기능 손실 없음.
+  2. 어휘의 탑이 여전히 **두 곳**에서 제어됨: 모듈 토글(ModuleToggles) + 기존 게임설정(`vocab_tower_enabled`).
+     현재 규칙 = 모듈 설정을 저장한 학급이면 모듈 우선, 미설정이면 기존 플래그 존중. **교사 혼란 소지 → 일원화 필요.**
+  3. 드래곤 모달의 선행 린트 에러 3건(`Math.random` in render) 미수정 — 이전 작업과 무관한 기존 이슈.
+- **테스트 정보**: 테스트 학급 `테스트`(id `c748b950-...`), 학생코드 `NPU6KAN5`(유지현). dev는 `npm run dev`(localhost:5173),
+  교사 구글로그인 하려면 `/etc/hosts`에 `127.0.0.1 api.xn--vz0ba242ncqcba79xhwx.site` 필요.
+
 ## 2026-07-26 — 모듈 토글 버그 2건 수정 (사용자 신고) (Claude)
 - **신고1**: "전부 OFF하면 도로 켜짐" — 원인: 마지막 모듈을 끄면 빈 배열이 되는데, 직전에 넣은 안전장치가
   빈 배열을 '미설정'으로 보고 defaultEnabled로 되돌림. → **`__configured__` 표식**을 저장에 포함해
