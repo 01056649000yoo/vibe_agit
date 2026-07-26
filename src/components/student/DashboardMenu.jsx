@@ -16,10 +16,12 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
     // [모듈 시스템] 학급에서 켜진 모듈 목록 (src/modules/registry.js).
     // enabled_modules가 NULL이면 각 모듈의 defaultEnabled를 따르므로 기존 동작이 유지된다.
     // 카드 UI는 그대로 두고 "보여줄지" 판단만 레지스트리로 옮기는 중 (Stage 3b 점진 전환).
-    const { modules: enabledModules } = useEnabledModules(
+    const { modules: enabledModules, enabledIds } = useEnabledModules(
         studentSession?.classId || studentSession?.class_id,
         'student'
     );
+    // 교사가 모듈 설정을 저장한 학급인지 (미설정이면 기존 개별 플래그를 존중)
+    const hasModuleConfig = Array.isArray(enabledIds) && enabledIds.length > 0;
     const isModuleOn = useCallback(
         (id) => enabledModules.some((m) => m.id === id),
         [enabledModules]
@@ -303,8 +305,9 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                 </motion.div>
                 )}
 
-                {/* 모듈 ON + 교사 게임설정 ON 둘 다일 때만 노출 (한쪽만 꺼도 숨김) */}
-                {isModuleOn('vocab-tower') && isVocabTowerEnabled && (
+                {/* 어휘의 탑은 아직 기존 게임설정(vocab_tower_enabled)이 주 스위치다.
+                    모듈 설정을 저장한 학급은 모듈 값을 따르고, 미설정 학급은 기존 설정을 그대로 따른다. */}
+                {(hasModuleConfig ? isModuleOn('vocab-tower') : isVocabTowerEnabled) && (
                 <motion.div
                     whileHover={(isVocabTowerEnabled && !isExhausted) ? { scale: 1.02, y: -5 } : {}}
                     whileTap={(isVocabTowerEnabled && !isExhausted) ? { scale: 0.98 } : {}}
