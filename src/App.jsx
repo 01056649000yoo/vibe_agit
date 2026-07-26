@@ -11,6 +11,7 @@ import ErrorBoundary from './components/common/ErrorBoundary'
 import { useAuthStore } from './store/useAuthStore';
 import { useAppStore } from './store/useAppStore';
 import { getModule } from './modules/registry';
+import { useEnabledModules } from './modules/useEnabledModules';
 
 // 지연 로딩 (Lazy Loading) 적용
 const LandingPage = lazy(() => import('./components/layout/LandingPage'))
@@ -51,6 +52,16 @@ function App() {
     isStudentLoginMode, setIsStudentLoginMode,
     isAdminMode, setAdminMode: setAdminModeHandler
   } = useAppStore();
+
+  // 학생 모듈 상태를 앱 셸에서 한 번만 읽어 메뉴와 라우트를 함께 게이팅한다.
+  const { modules: enabledStudentModules } = useEnabledModules(
+    studentSession?.classId || studentSession?.class_id,
+    'student'
+  );
+  const friendsHideoutEnabled = enabledStudentModules.some((module) => module.id === 'friends-hideout');
+  const studentPageName = internalPage.name === 'friends_hideout' && !friendsHideoutEnabled
+    ? 'main'
+    : internalPage.name;
 
   // 상태 변경 감지 로그
   useEffect(() => {
@@ -248,21 +259,22 @@ function App() {
           ) : studentSession ? (
             /* [2순위] 학생 모드 (교사 세션이 없을 때) */
             <>
-              {internalPage.name === 'main' && (
+              {studentPageName === 'main' && (
                 <StudentDashboard
                   studentSession={studentSession}
                   onLogout={handleStudentLogout}
                   onNavigate={setInternalPage}
+                  enabledModules={enabledStudentModules}
                 />
               )}
-              {internalPage.name === 'mission_list' && (
+              {studentPageName === 'mission_list' && (
                 <MissionList
                   studentSession={studentSession}
                   onBack={() => setInternalPage('main')}
                   onNavigate={setInternalPage}
                 />
               )}
-              {internalPage.name === 'writing' && (
+              {studentPageName === 'writing' && (
                 <StudentWriting
                   studentSession={studentSession}
                   missionId={internalPage.params.missionId}
@@ -271,7 +283,7 @@ function App() {
                   onNavigate={setInternalPage}
                 />
               )}
-              {internalPage.name === 'friends_hideout' && (
+              {studentPageName === 'friends_hideout' && friendsHideoutEnabled && (
                 <FriendsHideout
                   studentSession={studentSession}
                   params={internalPage.params}
@@ -282,8 +294,9 @@ function App() {
               {/* [신규] 학생용 하단 모바일 내비게이션 (모바일에서만 표시됨) */}
               <Suspense fallback={null}>
                 <StudentBottomNav
-                  activeTab={internalPage.name}
+                  activeTab={studentPageName}
                   onNavigate={setInternalPage}
+                  friendsHideoutEnabled={friendsHideoutEnabled}
                 />
               </Suspense>
             </>

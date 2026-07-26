@@ -34,9 +34,8 @@ const HIDEOUT_BACKGROUNDS = {
 
 // [신규] 아지트 실시간 데이터 연동 훅
 import { useClassAgitClass } from '../../hooks/useClassAgitClass';
-import { useEnabledModules } from '../../modules/useEnabledModules';
 
-const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
+const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules = [] }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
@@ -142,11 +141,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const dragonInfo = getDragonStage(petData.level);
     const daysSinceLastFed = getDaysSinceLastFed();
 
-    // 아지트 놀이터: 학급에서 켜진 포인트 콘텐츠를 모아 보여준다.
-    // 미설정 학급의 기존 플래그 호환까지 useEnabledModules에서 한 번에 처리한다.
-    const { modules: enabledModules } = useEnabledModules(
-        studentSession?.classId || studentSession?.class_id, 'student'
-    );
+    // 앱 셸이 읽은 동일한 모듈 목록으로 모든 학생 진입점을 게이팅한다.
     const isOn = (id) => enabledModules.some((m) => m.id === id);
 
     const playgroundItems = [
@@ -166,7 +161,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
 
     return (
         <>
-            <StudentGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+            <StudentGuideModal
+                isOpen={isGuideOpen}
+                onClose={() => setIsGuideOpen(false)}
+                friendsHideoutEnabled={isOn('friends-hideout')}
+            />
 
             {/* [모바일 최적화] 모바일에서는 전체 폭, PC에서는 카드 형태 유지 */}
             <Card style={isMobile ? {
@@ -233,6 +232,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     isMobile={isMobile}
                     agitSettings={agitSettings}
                     studentSession={studentSession}
+                    friendsHideoutEnabled={isOn('friends-hideout')}
                 />
 
                 {/* 오늘의 목표 하단 문구 */}
@@ -254,6 +254,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     onNavigate={onNavigate}
                     initialTab={feedbackInitialTab}
                     onClear={handleClearFeedback}
+                    friendsHideoutEnabled={isOn('friends-hideout')}
                 />
 
                 {/* 드래곤 아지트 모달 (모듈: game/dragon) — 열릴 때만 로드 */}
@@ -343,6 +344,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                             <AgitOnClassPage
                                 studentSession={studentSession}
                                 onBack={() => setIsAgitOpen(false)}
+                                friendsHideoutEnabled={isOn('friends-hideout')}
                                 onNavigate={(path) => {
                                     setIsAgitOpen(false);
                                     onNavigate(path);

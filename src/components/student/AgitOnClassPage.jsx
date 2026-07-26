@@ -9,7 +9,7 @@ import IdeaMarketPage from './IdeaMarketPage';
 // 교실 속 비밀 아지트 느낌의 수채화 배경
 const CLASSROOM_BG = "/agit_hideout_bg.png";
 
-const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
+const AgitOnClassPage = ({ studentSession, onBack, onNavigate, friendsHideoutEnabled }) => {
     console.log("🎓 [학생 아지트 페이지] studentSession:", studentSession);
 
     const classId = studentSession?.classId || studentSession?.class_id;
@@ -719,7 +719,7 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                         <div style={{
                             padding: '16px', background: 'rgba(15, 23, 42, 0.95)',
                             borderTop: '1px solid rgba(255,255,255,0.1)', zIndex: 110,
-                            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px'
+                            display: 'grid', gridTemplateColumns: friendsHideoutEnabled ? '1fr 1fr 1fr' : '1fr 1fr', gap: '8px'
                         }}>
                             <motion.button
                                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
@@ -733,7 +733,7 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                             >
                                 <span style={{ fontSize: '1.4rem' }}>✏️</span> 오늘 글쓰기
                             </motion.button>
-                            <motion.button
+                            {friendsHideoutEnabled && <motion.button
                                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                                 onClick={() => onNavigate('friends_hideout')}
                                 style={{
@@ -744,7 +744,7 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                 }}
                             >
                                 <span style={{ fontSize: '1.4rem' }}>❤️</span> 친구 응원
-                            </motion.button>
+                            </motion.button>}
                             <motion.button
                                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                                 onClick={() => {

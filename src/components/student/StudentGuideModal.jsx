@@ -5,43 +5,45 @@ import Button from '../common/Button';
 /**
  * 🐉 학생 전용 사용법 가이드 모달
  */
-const StudentGuideModal = ({ isOpen, onClose }) => {
+const StudentGuideModal = ({ isOpen, onClose, friendsHideoutEnabled }) => {
     const steps = [
         {
             icon: '📝',
-            title: '1단계: 미션 확인하고 글쓰기',
+            title: '미션 확인하고 글쓰기',
             description: '선생님이 내주신 미션을 확인하고, 멋진 글을 써서 포인트를 받아요!',
             bg: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
             borderColor: '#90CAF9'
         },
         {
             icon: '💰',
-            title: '2단계: 포인트로 드래곤 키우기',
+            title: '포인트로 드래곤 키우기',
             description: '모은 포인트로 상점에서 예쁜 배경을 사고, 우리 드래곤을 멋지게 진화시켜요!',
             bg: 'linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%)',
             borderColor: '#FFF176'
         },
         {
             icon: '🏠',
-            title: '3단계: 친구 아지트 놀러 가기',
+            title: '친구 아지트 놀러 가기',
             description: '친구들은 드래곤을 어떻게 키웠을까? 친구 아지트도 구경해 봐요!',
             bg: 'linear-gradient(135deg, #F1F8E9 0%, #DCEDC8 100%)',
-            borderColor: '#C5E1A5'
+            borderColor: '#C5E1A5',
+            requiresFriendsHideout: true
         },
         {
             icon: '🐉',
-            title: '4단계: 내 드래곤 자랑하기',
+            title: '내 드래곤 자랑하기',
             description: '내가 꾸민 멋진 아지트를 친구들에게 보여주세요!',
             bg: 'linear-gradient(135deg, #F3E5F5 0%, #E1BEE7 100%)',
+            requiresFriendsHideout: true
         },
         {
             icon: '🏰',
-            title: '5단계: 어휘의 탑 도전하기',
+            title: '어휘의 탑 도전하기',
             description: '퀴즈를 풀어 탑을 올라가세요! 오답이어도 층수는 깎이지 않으니 걱정 마세요. 높은 층에 올라갈수록 보너스 시간도 받는답니다! ⏱️',
             bg: 'linear-gradient(135deg, #E8EAF6 0%, #C5CAE9 100%)',
             borderColor: '#7986CB'
         }
-    ];
+    ].filter((step) => friendsHideoutEnabled || !step.requiresFriendsHideout);
 
     return (
         <AnimatePresence>
@@ -158,7 +160,7 @@ const StudentGuideModal = ({ isOpen, onClose }) => {
                                     </div>
                                     <div style={{ flex: 1 }}>
                                         <h3 style={{ margin: '0 0 6px 0', fontSize: '1.3rem', color: '#333', fontWeight: '900' }}>
-                                            {step.title}
+                                            {index + 1}단계: {step.title}
                                         </h3>
                                         <p style={{ margin: 0, fontSize: '1rem', color: '#555', lineHeight: '1.5', fontWeight: '600' }}>
                                             {step.description}
@@ -198,4 +200,3 @@ const StudentGuideModal = ({ isOpen, onClose }) => {
 };
 
 export default StudentGuideModal;
-
