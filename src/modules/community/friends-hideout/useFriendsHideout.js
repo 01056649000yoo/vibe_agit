@@ -259,22 +259,46 @@ export const useFriendsHideout = (studentSession, params) => {
             }
 
             const data = await dataCache.get(cacheKey, async () => {
-                const { data, error } = await supabase
+                const { data: missionRows, error } = await supabase
                     .from('writing_missions')
-                    .select('id, title, class_id, genre, allow_comments, is_archived, created_at, base_reward, bonus_threshold, bonus_reward')
+                    .select('id, title, class_id, genre, mission_type, input_template, allow_comments, is_archived, created_at, base_reward, bonus_threshold, bonus_reward')
                     .eq('class_id', classId)
                     .eq('is_archived', false)
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
-                return data || [];
+                return (missionRows || []).filter(mission =>
+                    mission.mission_type !== 'meeting' && mission.input_template !== 'meeting'
+                );
             });
 
             setMissions(data);
             if (data?.length > 0) {
-                const nextMission =
-                    data.find(m => m.id === selectedMission?.id) ||
-                    data[0];
+                let nextMission = data.find(m => m.id === selectedMission?.id);
+
+                // 처음 들어왔을 때는 단순히 최신 미션이 아니라,
+                // 실제로 다른 학생의 제출 글이 있는 최신 미션을 먼저 보여준다.
+                if (!nextMission) {
+                    const missionIds = data.map(mission => mission.id);
+                    const { data: friendPostRows, error: friendPostError } = await supabase
+                        .from('student_posts')
+                        .select('mission_id')
+                        .eq('class_id', classId)
+                        .eq('is_submitted', true)
+                        .neq('student_id', studentSession.id)
+                        .in('mission_id', missionIds);
+
+                    if (friendPostError) {
+                        console.warn('친구 글이 있는 미션 확인 실패:', friendPostError.message);
+                    }
+
+                    const missionsWithFriendPosts = new Set(
+                        (friendPostRows || []).map(post => post.mission_id)
+                    );
+                    nextMission =
+                        data.find(mission => missionsWithFriendPosts.has(mission.id)) ||
+                        data[0];
+                }
 
                 setSelectedMission(nextMission);
                 fetchPosts(nextMission.id);
@@ -287,7 +311,7 @@ export const useFriendsHideout = (studentSession, params) => {
         } finally {
             setLoading(false);
         }
-    }, [resolveClassId, selectedMission?.id, fetchPosts]);
+    }, [resolveClassId, selectedMission?.id, fetchPosts, studentSession.id]);
 
     const handleInitialPost = useCallback(async (postId) => {
         try {
