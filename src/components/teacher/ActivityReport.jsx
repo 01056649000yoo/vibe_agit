@@ -165,7 +165,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                 // 2. 선택된 미션들에 대한 제출물 가져오기 (컬럼 최적화 + DB 필터링 + 리미트)
                 const { data: postsData, error: postsError } = await supabase
                     .from('student_posts')
-                    .select('id, student_id, mission_id, content, final_eval, initial_eval, eval_comment, is_submitted, is_confirmed, char_count, writing_missions(id, title, evaluation_rubric)')
+                    .select('id, student_id, mission_id, content, final_eval, initial_eval, eval_comment, is_submitted, is_confirmed, char_count, writing_missions(id, title, is_archived, evaluation_rubric)')
                     .in('mission_id', selectedMissionIds)
                     .eq('is_submitted', true)
                     .limit(200);
@@ -199,7 +199,10 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
 
                 // 학생 ID별로 포스트 그룹화
                 const evaluablePosts = (postsData || []).filter((post) => (
-                    post.is_confirmed || post.initial_eval !== null || post.final_eval !== null
+                    post.writing_missions?.is_archived
+                    || post.is_confirmed
+                    || post.initial_eval !== null
+                    || post.final_eval !== null
                 ));
                 const postMap = evaluablePosts.reduce((acc, p) => {
                     if (!acc[p.student_id]) acc[p.student_id] = [];
@@ -526,6 +529,11 @@ ${activitiesInfo}`;
                                         <span style={{ display: 'block', fontWeight: selectedMissionIds.includes(m.id) ? 'bold' : 'normal', color: selectedMissionIds.includes(m.id) ? '#312E81' : '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {m.title} {m.is_archived && <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 'normal' }}>(보관됨)</span>}
                                         </span>
+                                        {m.is_archived && (
+                                            <span style={{ display: 'block', marginTop: '3px', color: '#B45309', fontSize: '0.68rem', fontWeight: '800' }}>
+                                                보관 미션 · 제출 완료 글 전체 포함
+                                            </span>
+                                        )}
                                         {m.evaluation_rubric?.curriculum?.achievement_standard_codes?.length > 0 && (
                                             <span style={{ display: 'block', marginTop: '3px', color: '#6366F1', fontSize: '0.68rem', fontWeight: '800' }}>
                                                 {m.evaluation_rubric.curriculum.grade}학년 · 성취기준 {m.evaluation_rubric.curriculum.achievement_standard_codes.length}개
