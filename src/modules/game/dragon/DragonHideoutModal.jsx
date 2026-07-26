@@ -264,9 +264,9 @@ const DragonHideoutModal = ({
                                                                 opacity: [0, 0.5, 0]
                                                             }}
                                                             transition={{
-                                                                duration: 0.5 + Math.random() * 0.5,
+                                                                duration: 0.5 + ((i * 37) % 10) / 20,
                                                                 repeat: Infinity,
-                                                                delay: Math.random() * 2
+                                                                delay: ((i * 73) % 20) / 10
                                                             }}
                                                             style={{
                                                                 position: 'absolute',
@@ -367,7 +367,7 @@ const DragonHideoutModal = ({
                                                             transition={{
                                                                 duration: 0.2,
                                                                 repeat: Infinity,
-                                                                delay: Math.random() * 6
+                                                                delay: (i * 1.47) % 6
                                                             }}
                                                             style={{
                                                                 position: 'absolute',
