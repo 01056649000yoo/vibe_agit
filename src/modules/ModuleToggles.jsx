@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { getAllModules, CONFIGURED_MARK } from './registry';
+import {
+    getAllModules,
+    getLegacyModuleFields,
+    resolveEnabledModuleIds,
+    CONFIGURED_MARK,
+} from './registry';
 import { PART_LABELS } from './types';
 import { supabase } from '../lib/supabaseClient';
 import { saveEnabledModules } from './useEnabledModules';
@@ -21,19 +26,16 @@ const ModuleToggles = ({ activeClass, isMobile }) => {
         let cancelled = false;
         if (!classId || !supabase) return;
         (async () => {
+            const fields = ['enabled_modules', ...getLegacyModuleFields()].join(', ');
             const { data } = await supabase
-                .from('classes').select('enabled_modules').eq('id', classId).maybeSingle();
+                .from('classes').select(fields).eq('id', classId).maybeSingle();
             if (cancelled) return;
-            // 미설정이면 모듈별 기본값으로 초기화 (현재 화면과 동일하게 보이도록)
-            const saved = data?.enabled_modules;
-            setEnabled(
-                Array.isArray(saved)
-                    ? saved.filter((x) => x !== CONFIGURED_MARK)      // 저장된 설정 그대로
-                    : all.filter(m => m.defaultEnabled).map(m => m.id) // 미설정 → 기본값
-            );
+            // 미설정이면 모듈 기본값 + 기존 개별 플래그로 초기화한다.
+            setEnabled(resolveEnabledModuleIds(data?.enabled_modules, data)
+                .filter((x) => x !== CONFIGURED_MARK));
         })();
         return () => { cancelled = true; };
-    }, [classId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [classId]);
 
     if (!classId || all.length === 0) return null;
 

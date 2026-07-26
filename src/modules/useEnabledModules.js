@@ -6,7 +6,14 @@
  */
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { getEnabledModules, groupByPart, CONFIGURED_MARK } from './registry';
+import {
+  getAllModules,
+  getEnabledModules,
+  getLegacyModuleFields,
+  groupByPart,
+  resolveEnabledModuleIds,
+  CONFIGURED_MARK,
+} from './registry';
 
 export function useEnabledModules(classId, audience = 'student') {
   const [enabledIds, setEnabledIds] = useState(null);
@@ -18,13 +25,16 @@ export function useEnabledModules(classId, audience = 'student') {
     if (!classId || !supabase) return;
 
     (async () => {
+      const fields = ['enabled_modules', ...getLegacyModuleFields()].join(', ');
       const { data, error } = await supabase
         .from('classes')
-        .select('enabled_modules')
+        .select(fields)
         .eq('id', classId)
         .maybeSingle();
       if (cancelled) return;
-      if (!error) setEnabledIds(data?.enabled_modules ?? null);
+      if (!error) {
+        setEnabledIds(resolveEnabledModuleIds(data?.enabled_modules, data));
+      }
       setLoading(false);
     })();
 
@@ -43,5 +53,13 @@ export function useEnabledModules(classId, audience = 'student') {
 export async function saveEnabledModules(classId, ids) {
   if (!supabase || !classId) return { error: new Error('classId/supabase 없음') };
   const payload = [CONFIGURED_MARK, ...ids.filter((x) => x !== CONFIGURED_MARK)];
-  return supabase.from('classes').update({ enabled_modules: payload }).eq('id', classId);
+  const legacyUpdates = Object.fromEntries(
+    getAllModules()
+      .filter((m) => m.legacyFlag)
+      .map((m) => [m.legacyFlag, ids.includes(m.id)])
+  );
+  return supabase
+    .from('classes')
+    .update({ enabled_modules: payload, ...legacyUpdates })
+    .eq('id', classId);
 }

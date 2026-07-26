@@ -34,6 +34,30 @@ export function getAllModules() {
   return manifests;
 }
 
+/** 이전 개별 on/off 컬럼을 가진 모듈의 컬럼명 목록 (점진 마이그레이션용) */
+export function getLegacyModuleFields() {
+  return manifests.map((m) => m.legacyFlag).filter(Boolean);
+}
+
+/**
+ * 저장된 모듈 설정이 없을 때 기존 개별 플래그를 반영한 초기 목록을 만든다.
+ * 반환값의 CONFIGURED_MARK는 메모리에서 "명시적 목록"으로 해석하기 위한 것이며,
+ * 교사가 토글하기 전에는 DB에 기록되지 않는다.
+ */
+export function resolveEnabledModuleIds(enabledIds, legacySettings = {}) {
+  const saved = Array.isArray(enabledIds) ? enabledIds : null;
+  if (saved && saved.length > 0) return saved;
+
+  const defaults = manifests
+    .filter((m) => {
+      const legacyValue = m.legacyFlag ? Reflect.get(legacySettings, m.legacyFlag) : undefined;
+      return typeof legacyValue === 'boolean' ? legacyValue : !!m.defaultEnabled;
+    })
+    .map((m) => m.id);
+
+  return [CONFIGURED_MARK, ...defaults];
+}
+
 /**
  * 특정 학급에서 켜진 모듈만 반환.
  * @param {string[]|null|undefined} enabledIds  학급의 enabled_modules (없으면 defaultEnabled 기준)

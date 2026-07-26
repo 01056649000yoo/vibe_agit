@@ -47,7 +47,6 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
 
     // [신규] 어휘의 탑 게임 설정 상태
     const [vocabTowerSettings, setVocabTowerSettings] = useState({
-        enabled: false,
         grade: 3,
         dailyLimit: 3,
         timeLimit: 40,
@@ -134,7 +133,7 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
                 dataCache.get(cacheKey, async () => {
                     const { data, error } = await supabase
                         .from('classes')
-                        .select('agit_settings, vocab_tower_enabled, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_reset_date, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
+                        .select('agit_settings, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_reset_date, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
                         .eq('id', classId)
                         .single();
                     return { classData: data, classError: error };
@@ -195,7 +194,6 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
 
             // [신규] 어휘의 탑 설정 동기화
             setVocabTowerSettings({
-                enabled: classData?.vocab_tower_enabled ?? false,
                 grade: classData?.vocab_tower_grade || 3,
                 dailyLimit: classData?.vocab_tower_daily_limit ?? 3,
                 timeLimit: classData?.vocab_tower_time_limit ?? 40,

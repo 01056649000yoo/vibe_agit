@@ -143,13 +143,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
     const daysSinceLastFed = getDaysSinceLastFed();
 
     // 아지트 놀이터: 학급에서 켜진 포인트 콘텐츠를 모아 보여준다.
-    // 어휘의 탑은 모듈 설정을 저장한 학급이면 모듈 값을, 아니면 기존 게임설정을 따른다(DashboardMenu와 동일 규칙).
-    const { modules: enabledModules, enabledIds } = useEnabledModules(
+    // 미설정 학급의 기존 플래그 호환까지 useEnabledModules에서 한 번에 처리한다.
+    const { modules: enabledModules } = useEnabledModules(
         studentSession?.classId || studentSession?.class_id, 'student'
     );
-    const hasModuleConfig = Array.isArray(enabledIds) && enabledIds.length > 0;
     const isOn = (id) => enabledModules.some((m) => m.id === id);
-    const isVocabOn = hasModuleConfig ? isOn('vocab-tower') : (vocabTowerSettings?.enabled ?? false);
 
     const playgroundItems = [
         isOn('dragon') && {
@@ -158,7 +156,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
             badge: `${dragonInfo.name} · LV.${petData.level}`,
             onOpen: () => { setIsPlaygroundOpen(false); setIsDragonModalOpen(true); },
         },
-        isVocabOn && {
+        isOn('vocab-tower') && {
             id: 'vocab-tower', icon: '🏰', name: '어휘의 탑',
             description: '어휘 퀴즈로 탑을 오르고 포인트 받기',
             background: 'linear-gradient(135deg, #E3F2FD 0%, #F1F8FF 100%)',
@@ -232,11 +230,9 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate }) => {
                     setIsPlaygroundOpen={setIsPlaygroundOpen}
                     playgroundCount={playgroundItems.length}
                     setIsAgitOpen={setIsAgitOpen} // [추가]
-                    setIsVocabTowerOpen={setIsVocabTowerOpen} // [추가] 어휘의탑
                     isMobile={isMobile}
                     agitSettings={agitSettings}
-                    vocabTowerSettings={vocabTowerSettings} // [신규] 어휘의 탑 설정
-                    studentSession={studentSession} // [신규] 시도 횟수 확인용
+                    studentSession={studentSession}
                 />
 
                 {/* 오늘의 목표 하단 문구 */}

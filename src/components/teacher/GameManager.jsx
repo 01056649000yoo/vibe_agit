@@ -32,7 +32,6 @@ const GameManager = ({ activeClass, isMobile }) => {
     });
     // [신규] 어휘의 탑 설정 상태
     const [vocabTowerConfig, setVocabTowerConfig] = useState({
-        enabled: false,
         grade: 3,
         dailyLimit: 3,
         timeLimit: 40,
@@ -57,7 +56,7 @@ const GameManager = ({ activeClass, isMobile }) => {
         try {
             const { data, error } = await supabase
                 .from('classes')
-                .select('created_at, dragon_feed_points, dragon_degen_days, vocab_tower_enabled, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
+                .select('created_at, dragon_feed_points, dragon_degen_days, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
                 .eq('id', activeClass.id)
                 .single();
 
@@ -69,7 +68,6 @@ const GameManager = ({ activeClass, isMobile }) => {
                 });
                 // [신규] 어휘의 탑 설정 로드
                 setVocabTowerConfig({
-                    enabled: data.vocab_tower_enabled ?? false,
                     grade: data.vocab_tower_grade || 3,
                     dailyLimit: data.vocab_tower_daily_limit ?? 3,
                     timeLimit: data.vocab_tower_time_limit ?? 40,
@@ -297,7 +295,6 @@ const GameManager = ({ activeClass, isMobile }) => {
             const { error } = await supabase
                 .from('classes')
                 .update({
-                    vocab_tower_enabled: vocabTowerConfig.enabled,
                     vocab_tower_grade: Number(vocabTowerConfig.grade),
                     vocab_tower_daily_limit: Number(vocabTowerConfig.dailyLimit),
                     vocab_tower_time_limit: Number(vocabTowerConfig.timeLimit),
@@ -307,7 +304,7 @@ const GameManager = ({ activeClass, isMobile }) => {
                 .eq('id', activeClass.id);
 
             if (error) throw error;
-            alert(`어휘의 탑 설정이 저장되었습니다!\n${vocabTowerConfig.enabled ? '🎮 게임이 활성화되었습니다.' : '⏸️ 게임이 비활성화되었습니다.'}\n📊 학생들의 오늘 시도 횟수가 초기화되었습니다.`);
+            alert('어휘의 탑 설정이 저장되었습니다!\n📊 학생들의 오늘 시도 횟수가 초기화되었습니다.');
         } catch (err) {
             console.error('어휘의 탑 설정 저장 실패:', err);
             alert('설정 저장에 실패했습니다.');
@@ -599,49 +596,21 @@ const GameManager = ({ activeClass, isMobile }) => {
 
                 {/* 2. 어휘의 탑 게임 제어판 */}
                 <Card style={{ padding: 0, border: '1px solid #E9ECEF', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
-                    <div style={{ padding: '24px', background: vocabTowerConfig.enabled ? 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)' : 'linear-gradient(135deg, #F5F5F5 0%, #EEEEEE 100%)', borderBottom: `1px solid ${vocabTowerConfig.enabled ? '#A5D6A7' : '#E0E0E0'}`, display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: `0 4px 12px rgba(${vocabTowerConfig.enabled ? '76, 175, 80' : '158, 158, 158'}, 0.2)`, filter: vocabTowerConfig.enabled ? 'none' : 'grayscale(0.5)' }}>🏰</div>
+                    <div style={{ padding: '24px', background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)', borderBottom: '1px solid #A5D6A7', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)' }}>🏰</div>
                         <div style={{ flex: 1 }}>
-                            <h3 style={{ margin: 0, fontSize: '1.3rem', color: vocabTowerConfig.enabled ? '#2E7D32' : '#757575', fontWeight: '900' }}>어휘의 탑 게임</h3>
-                            <span style={{ fontSize: '0.85rem', color: vocabTowerConfig.enabled ? '#558B2F' : '#9E9E9E', fontWeight: 'bold' }}>어휘력 향상 퀴즈 게임</span>
+                            <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2E7D32', fontWeight: '900' }}>어휘의 탑 게임</h3>
+                            <span style={{ fontSize: '0.85rem', color: '#558B2F', fontWeight: 'bold' }}>어휘력 향상 퀴즈 게임</span>
                         </div>
                     </div>
 
                     <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        {/* 게임 활성화 토글 */}
+                        {/* 게임 세부 설정 — 노출 여부는 상단 모듈 토글에서만 관리 */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <h4 style={{ margin: 0, fontSize: '1rem', color: '#2E7D32', borderLeft: '4px solid #4CAF50', paddingLeft: '10px' }}>⚙️ 게임 설정</h4>
 
-                            {/* 활성화 토글 */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#F8F9FA', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
-                                <div>
-                                    <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#2C3E50' }}>🎮 게임 활성화</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#7F8C8D', marginTop: '2px' }}>비활성화 시 학생에게 "준비중" 표시</div>
-                                </div>
-                                <div
-                                    onClick={() => setVocabTowerConfig(prev => ({ ...prev, enabled: !prev.enabled }))}
-                                    style={{
-                                        width: '56px',
-                                        height: '30px',
-                                        background: vocabTowerConfig.enabled ? '#4CAF50' : '#E0E0E0',
-                                        borderRadius: '15px',
-                                        cursor: 'pointer',
-                                        position: 'relative',
-                                        transition: 'background 0.3s ease'
-                                    }}
-                                >
-                                    <div style={{
-                                        width: '26px',
-                                        height: '26px',
-                                        background: 'white',
-                                        borderRadius: '50%',
-                                        position: 'absolute',
-                                        top: '2px',
-                                        left: vocabTowerConfig.enabled ? '28px' : '2px',
-                                        transition: 'left 0.3s ease',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                    }} />
-                                </div>
+                            <div style={{ padding: '12px 14px', background: '#E3F2FD', borderRadius: '10px', border: '1px solid #BBDEFB', color: '#1565C0', fontSize: '0.8rem', lineHeight: '1.45' }}>
+                                학생 화면에 보일지는 위 <strong>학급 기능 켜기 / 끄기</strong>에서 관리합니다.
                             </div>
 
                             {/* [설계 변경] 2열 그리드 레이아웃으로 공간 효율화 */}
@@ -806,19 +775,19 @@ const GameManager = ({ activeClass, isMobile }) => {
 
                             <div style={{
                                 padding: '10px',
-                                background: vocabTowerConfig.enabled ? '#E8F5E9' : '#FFF3E0',
+                                background: '#E8F5E9',
                                 borderRadius: '10px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <div style={{ width: '8px', height: '8px', background: vocabTowerConfig.enabled ? '#4CAF50' : '#FF9800', borderRadius: '50%' }}></div>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: vocabTowerConfig.enabled ? '#2E7D32' : '#E65100' }}>
-                                        {vocabTowerConfig.enabled ? `${vocabTowerConfig.grade}학년 활성화` : '비활성 상태'}
+                                    <div style={{ width: '8px', height: '8px', background: '#4CAF50', borderRadius: '50%' }}></div>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#2E7D32' }}>
+                                        {vocabTowerConfig.grade}학년 설정
                                     </span>
                                 </div>
-                                <span style={{ fontSize: '0.75rem', color: vocabTowerConfig.enabled ? '#66BB6A' : '#FFA726', textAlign: 'right' }}>
+                                <span style={{ fontSize: '0.75rem', color: '#66BB6A', textAlign: 'right' }}>
                                     {vocabTowerConfig.dailyLimit}회 / {vocabTowerConfig.timeLimit}s / {vocabTowerConfig.rewardPoints}P<br />
                                     {vocabTowerConfig.rankingResetDate ? `최근 랭킹 리셋: ${new Date(vocabTowerConfig.rankingResetDate).toLocaleDateString()}` : '랭킹 리셋 기록 없음'}
                                 </span>
