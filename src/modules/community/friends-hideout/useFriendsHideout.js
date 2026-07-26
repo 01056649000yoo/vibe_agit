@@ -276,7 +276,9 @@ export const useFriendsHideout = (studentSession, params) => {
 
             setMissions(data);
             if (data?.length > 0) {
-                let nextMission = data.find(m => m.id === selectedMissionIdRef.current);
+                let nextMission =
+                    data.find(m => m.id === selectedMissionIdRef.current) ||
+                    data.find(m => m.id === params?.missionId);
 
                 // 처음 들어왔을 때는 단순히 최신 미션이 아니라,
                 // 실제로 다른 학생의 제출 글이 있는 최신 미션을 먼저 보여준다.
@@ -314,7 +316,7 @@ export const useFriendsHideout = (studentSession, params) => {
         } finally {
             setLoading(false);
         }
-    }, [resolveClassId, fetchPosts, studentSession.id]);
+    }, [resolveClassId, fetchPosts, params?.missionId, studentSession.id]);
 
     const handleMeetingPick = useCallback(async (postId) => {
         if (!postId || !studentSession.id || !selectedMission?.id) return false;

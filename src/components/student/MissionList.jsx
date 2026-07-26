@@ -115,11 +115,15 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     }, [fetchData, fetchMissions, getCurrentStudent]);
 
     const handleMissionClick = (mission) => {
-        if (mission.mission_type === 'meeting') {
-            onNavigate('idea_market', { meetingId: mission.id });
-            return;
-        }
         onNavigate('writing', { missionId: mission.id });
+    };
+
+    const handleFriendIdeasClick = (event, mission) => {
+        event.stopPropagation();
+        onNavigate('friends_hideout', {
+            missionId: mission.id,
+            returnTo: 'mission_list'
+        });
     };
 
     return (
@@ -178,7 +182,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                         const isPoemMission = mission.input_template === 'poem';
                         let statusBadge = null;
                         let borderColor = '#FFECB3';
-                        let buttonText = isMeetingMission ? '회의 의견 쓰기' : '글쓰기 시작';
+                        let buttonText = isMeetingMission ? '안건 작성하기' : '글쓰기 시작';
 
                         if (post?.is_returned) {
                             statusBadge = (
@@ -274,12 +278,28 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                 <p style={{ fontSize: '0.95rem', color: '#607D8B', margin: '0 0 20px 0', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                     {mission.guide}
                                 </p>
-                                <Button
-                                    variant={post?.is_submitted && !post?.is_returned ? 'secondary' : 'primary'}
-                                    style={{ width: '100%', borderRadius: '14px', fontWeight: '900' }}
-                                >
-                                    {buttonText}
-                                </Button>
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+                                    <Button
+                                        variant={post?.is_submitted && !post?.is_returned ? 'secondary' : 'primary'}
+                                        style={{ flex: 1, minWidth: '160px', borderRadius: '14px', fontWeight: '900' }}
+                                    >
+                                        {buttonText}
+                                    </Button>
+                                    {isMeetingMission && (
+                                        <Button
+                                            variant="ghost"
+                                            onClick={(event) => handleFriendIdeasClick(event, mission)}
+                                            style={{
+                                                flex: isMobile ? '1 1 100%' : '0 0 auto',
+                                                borderRadius: '14px', fontWeight: '900',
+                                                background: '#FAF5FF', color: '#7E22CE',
+                                                border: '1px solid #D8B4FE'
+                                            }}
+                                        >
+                                            친구 안건 보기 🏛️
+                                        </Button>
+                                    )}
+                                </div>
                             </motion.div>
                         );
                     })

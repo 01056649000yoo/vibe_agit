@@ -156,6 +156,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         }
 
         try {
+            const missionType = getGenreMissionType(mission?.input_template);
             const { error } = await supabase
                 .from('student_posts')
                 .upsert({
@@ -176,7 +177,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     teacher_edited_at: null,
                     teacher_edited_by: null,
                     student_answers: studentAnswers, // [신규] 답변 저장
-                    structured_content: structuredContent
+                    structured_content: structuredContent,
+                    ...(missionType?.postStatus ? { status: missionType.postStatus } : {})
                 }, { onConflict: 'student_id,mission_id' });
 
             if (error) throw error;
@@ -197,7 +199,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         }
 
         if (!title.trim()) {
-            alert('멋질 글의 제목을 지어주세요! ✍️');
+            const missionType = getGenreMissionType(mission?.input_template);
+            alert(missionType?.studentLabels?.titleRequiredMessage || '멋질 글의 제목을 지어주세요! ✍️');
             return false;
         }
 
@@ -224,7 +227,10 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             return false;
         }
 
-        if (!window.confirm('정말 이대로 제출할까요? 제출 후에는 수정할 수 없어요!')) {
+        if (!window.confirm(
+            missionType?.studentLabels?.submitConfirmMessage ||
+            '정말 이대로 제출할까요? 제출 후에는 수정할 수 없어요!'
+        )) {
             return false;
         }
 
@@ -276,7 +282,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 teacher_edited_at: null,
                 teacher_edited_by: null,
                 student_answers: studentAnswers, // [신규] 답변 저장
-                structured_content: structuredContent
+                structured_content: structuredContent,
+                ...(missionType?.postStatus ? { status: missionType.postStatus } : {})
             };
 
             // 최초 제출인 경우 원본 데이터 기록
@@ -295,6 +302,21 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 throw postError;
             }
 
+            let extensionResult = null;
+            if (missionType?.afterSubmit) {
+                try {
+                    extensionResult = await missionType.afterSubmit({
+                        missionId,
+                        studentId: currentStudentId,
+                        mission,
+                        isFirstTime
+                    });
+                } catch (extensionError) {
+                    // 글 제출은 성공했으므로 장르별 후속 처리 실패가 제출 자체를 되돌리지는 않는다.
+                    console.error(`[useMissionSubmit] ${missionType.id} 제출 후 처리 실패:`, extensionError.message);
+                }
+            }
+
             // 5. 성공 피드백 (폭죽 효과)
             confetti({
                 particleCount: 150,
@@ -308,7 +330,12 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 dataCache.invalidate(`stats_${currentStudentId}`);
             }
 
-            alert(`🎉 제출 성공! 선생님이 확인하신 후 포인트가 지급될 거예요!`);
+            const successMessage = missionType?.getSubmitSuccessMessage?.({
+                extensionResult,
+                mission,
+                isFirstTime
+            }) || '🎉 제출 성공! 선생님이 확인하신 후 포인트가 지급될 거예요!';
+            alert(successMessage);
 
             // 6. 대시보드로 이동
             if (onNavigate) {

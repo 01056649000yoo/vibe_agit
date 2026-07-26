@@ -284,7 +284,7 @@ function App() {
                 <FriendsHideout
                   studentSession={studentSession}
                   params={internalPage.params}
-                  onBack={() => setInternalPage('main')}
+                  onBack={() => setInternalPage(internalPage.params?.returnTo || 'main')}
                 />
               )}
               {studentPageName === 'idea_market' && (

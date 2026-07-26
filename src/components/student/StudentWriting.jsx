@@ -152,6 +152,9 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const [autoSaveError, setAutoSaveError] = useState('');
     const genreMissionType = getGenreMissionType(mission?.input_template);
     const GenreEditor = GENRE_EDITORS.get(mission?.input_template) || null;
+    const studentLabels = genreMissionType?.studentLabels || {};
+    const activeReactionIcons = genreMissionType?.reactionIcons || REACTION_ICONS;
+    const ownPostReactionsReadOnly = genreMissionType?.ownPostReactionsReadOnly === true;
 
     // 질문 개수가 변하면 studentAnswers 배열 초기화/유지 로직
     useEffect(() => {
@@ -663,7 +666,9 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                     <div style={{ borderBottom: '2px solid #3498DB', width: '120px', paddingBottom: '8px' }}>
-                        <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.1rem' }}>✍️ 본격 글쓰기</span>
+                        <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.1rem' }}>
+                            {studentLabels.editorHeading || '✍️ 본격 글쓰기'}
+                        </span>
                     </div>
                     {originalContent && (
                         <button
@@ -741,7 +746,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                placeholder="글의 제목을 적어주세요..."
+                                placeholder={studentLabels.titlePlaceholder || '글의 제목을 적어주세요...'}
                                 spellCheck={true}
                                 autoCorrect="on"
                                 autoCapitalize="sentences"
@@ -765,7 +770,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                 ref={editorRef}
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
-                                placeholder="여기에 자유롭게 이야기를 시작해보세요..."
+                                placeholder={studentLabels.contentPlaceholder || '여기에 자유롭게 이야기를 시작해보세요...'}
                                 spellCheck={true}
                                 autoCorrect="on"
                                 autoCapitalize="sentences"
@@ -816,7 +821,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             marginBottom: '40px',
                             overflowX: 'visible'
                         }}>
-                            {REACTION_ICONS.map((icon) => {
+                            {activeReactionIcons.map((icon) => {
                                 const typeReactions = reactions.filter(r => r.reaction_type === icon.type);
                                 const isMine = typeReactions.some(r => r.student_id === studentSession?.id);
                                 const reactorNames = typeReactions.map(r => r.students?.name).filter(Boolean);
@@ -829,7 +834,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                         onMouseLeave={() => setHoveredType(null)}
                                     >
                                         <button
-                                            onClick={() => handleReaction(icon.type)}
+                                            onClick={() => {
+                                                if (!ownPostReactionsReadOnly) handleReaction(icon.type);
+                                            }}
+                                            disabled={ownPostReactionsReadOnly}
                                             style={{
                                                 width: '100%',
                                                 display: 'flex',
@@ -840,7 +848,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                                 border: isMine ? '2px solid #3498DB' : '1px solid #ECEFF1',
                                                 background: isMine ? '#E3F2FD' : 'white',
                                                 borderRadius: '16px',
-                                                cursor: 'pointer',
+                                                cursor: ownPostReactionsReadOnly ? 'default' : 'pointer',
                                                 transition: 'all 0.2s ease'
                                             }}
                                         >
@@ -1029,7 +1037,15 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     제출 전 검토하기 👀
                 </Button>
                 <Button size="lg" onClick={handleFinalSubmit} disabled={submitting || isLocked} style={{ flex: 2, height: '64px', fontSize: '1.3rem', fontWeight: '900', background: isLocked ? '#B0BEC5' : 'var(--primary-color)', color: 'white', border: 'none' }}>
-                    {submitting ? '제출 중...' : isConfirmed ? '승인 완료 ✨' : (isSubmitted && isReturned) ? '수정해서 다시 제출! 🚀' : (isSubmitted && !isReturned) ? '확인 대기 중...' : '멋지게 제출하기! 🚀'}
+                    {submitting
+                        ? '제출 중...'
+                        : isConfirmed
+                            ? '승인 완료 ✨'
+                            : (isSubmitted && isReturned)
+                                ? '수정해서 다시 제출! 🚀'
+                                : (isSubmitted && !isReturned)
+                                    ? '확인 대기 중...'
+                                    : (studentLabels.submitLabel || '멋지게 제출하기! 🚀')}
                 </Button>
             </div>
 
@@ -1052,9 +1068,11 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '24px' }}>
                                 <div>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#263238', marginBottom: '8px' }}>제출 전 검토하기</div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#263238', marginBottom: '8px' }}>
+                                        {studentLabels.previewHeading || '제출 전 검토하기'}
+                                    </div>
                                     <div style={{ color: '#607D8B', fontSize: '0.95rem', lineHeight: '1.6' }}>
-                                        문단이 잘 나뉘었는지, 제목과 본문이 의도대로 보이는지 마지막으로 확인해보세요.
+                                        {studentLabels.previewDescription || '문단이 잘 나뉘었는지, 제목과 본문이 의도대로 보이는지 마지막으로 확인해보세요.'}
                                     </div>
                                 </div>
                                 <button
@@ -1080,7 +1098,9 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             </div>
 
                             <div style={{ marginBottom: '18px' }}>
-                                <div style={{ fontSize: '0.9rem', color: '#78909C', fontWeight: '800', marginBottom: '8px' }}>제목</div>
+                                <div style={{ fontSize: '0.9rem', color: '#78909C', fontWeight: '800', marginBottom: '8px' }}>
+                                    {studentLabels.titleLabel || '제목'}
+                                </div>
                                 <div style={{
                                     background: '#FAFAFA',
                                     border: '1px solid #ECEFF1',
@@ -1096,7 +1116,9 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             </div>
 
                             <div style={{ marginBottom: '28px' }}>
-                                <div style={{ fontSize: '0.9rem', color: '#78909C', fontWeight: '800', marginBottom: '8px' }}>본문 미리보기</div>
+                                <div style={{ fontSize: '0.9rem', color: '#78909C', fontWeight: '800', marginBottom: '8px' }}>
+                                    {studentLabels.contentLabel || '본문 미리보기'}
+                                </div>
                                 <div style={{
                                     background: '#FBFCFD',
                                     border: '1px solid #ECEFF1',
@@ -1184,7 +1206,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     disabled={submitting || isLocked}
                                     style={{ flex: 1.4, height: '58px', background: 'var(--primary-color)', color: 'white', border: 'none', fontWeight: '900' }}
                                 >
-                                    이대로 제출하기 🚀
+                                    {studentLabels.previewSubmitLabel || '이대로 제출하기 🚀'}
                                 </Button>
                             </div>
                         </motion.div>
