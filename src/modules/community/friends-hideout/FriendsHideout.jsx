@@ -14,6 +14,12 @@ const REACTION_ICONS = [
     { type: 'star', label: '최고야', emoji: '✨' }
 ];
 
+const MEETING_REACTION_ICONS = [
+    { type: 'agree', label: '마음에 들어요', emoji: '💜' },
+    { type: 'supplement', label: '더 이야기해요', emoji: '🔧' },
+    { type: 'disagree', label: '다른 생각이에요', emoji: '💭' }
+];
+
 const ACCESSORIES = [
     { id: 'crown', emoji: '👑', pos: { top: '-25%', left: '25%', fontSize: '2.5rem' } },
     { id: 'sunglasses', emoji: '🕶️', pos: { top: '15%', left: '15%', fontSize: '2rem' } },
@@ -160,11 +166,13 @@ const FriendHideoutModal = memo(({ classmate, onClose, isMobile }) => {
 });
 
 // 개별 포스트 카드 컴포넌트 분리 및 memo 적용
-const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
+const PostCard = memo(({ post, isLast, lastElementRef, onClick, isMeeting, studentId, onMeetingPick }) => {
     const authorName =
         post.student_name ||
         (Array.isArray(post.students) ? post.students[0]?.name : post.students?.name) ||
         '알 수 없는 친구';
+    const agreeReactions = (post.post_reactions || []).filter(reaction => reaction.reaction_type === 'agree');
+    const isMyPick = agreeReactions.some(reaction => reaction.student_id === studentId);
 
     return (
         <motion.div
@@ -172,19 +180,45 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
             whileHover={{ y: -5 }}
             onClick={() => onClick(post)}
             style={{
-                background: 'white', padding: '24px', borderRadius: '24px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.03)', cursor: 'pointer',
-                border: '1px solid #E9ECEF',
-                height: '200px', display: 'flex', flexDirection: 'column'
+                background: isMeeting
+                    ? 'linear-gradient(145deg, #FAF5FF 0%, #F3E8FF 100%)'
+                    : 'white',
+                padding: '24px',
+                borderRadius: isMeeting ? '30px 10px 30px 10px' : '24px',
+                boxShadow: isMeeting
+                    ? '0 10px 24px rgba(126, 34, 206, 0.12)'
+                    : '0 4px 12px rgba(0,0,0,0.03)',
+                cursor: 'pointer',
+                border: isMeeting ? '2px solid #C084FC' : '1px solid #E9ECEF',
+                minHeight: isMeeting ? '240px' : '200px',
+                display: 'flex', flexDirection: 'column',
+                position: 'relative', overflow: 'hidden'
             }}
         >
-            <div style={{ marginBottom: '12px' }}>
+            {isMeeting && (
+                <div style={{
+                    position: 'absolute', top: '-28px', right: '-28px',
+                    width: '86px', height: '86px', borderRadius: '50%',
+                    background: 'rgba(168, 85, 247, 0.12)'
+                }} />
+            )}
+            <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                 <span style={{
-                    fontSize: '0.8rem', padding: '4px 8px', background: '#E1F5FE',
-                    color: '#0288D1', borderRadius: '8px', fontWeight: 'bold'
+                    fontSize: '0.8rem', padding: '4px 8px',
+                    background: isMeeting ? '#EDE9FE' : '#E1F5FE',
+                    color: isMeeting ? '#7E22CE' : '#0288D1',
+                    borderRadius: '8px', fontWeight: 'bold'
                 }}>
                     {authorName}
                 </span>
+                {isMeeting && (
+                    <span style={{
+                        fontSize: '0.72rem', padding: '4px 9px', borderRadius: '999px',
+                        background: '#7E22CE', color: 'white', fontWeight: '900'
+                    }}>
+                        🏛️ 안건 후보
+                    </span>
+                )}
             </div>
             <h4 style={{
                 margin: '0 0 8px 0', fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900',
@@ -197,6 +231,28 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick }) => {
             }}>
                 {post.content && post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content}
             </p>
+            {isMeeting && (
+                <button
+                    type="button"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onMeetingPick(post.id);
+                    }}
+                    style={{
+                        marginTop: 'auto', padding: '10px 14px', borderRadius: '14px',
+                        border: isMyPick ? '2px solid #7E22CE' : '1px solid #D8B4FE',
+                        background: isMyPick ? '#7E22CE' : 'rgba(255,255,255,0.8)',
+                        color: isMyPick ? 'white' : '#7E22CE',
+                        fontSize: '0.85rem', fontWeight: '900', cursor: 'pointer',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '7px'
+                    }}
+                    aria-pressed={isMyPick}
+                    aria-label={`${post.title} 안건 마음에 들어요`}
+                >
+                    <span>{isMyPick ? '💜 선택했어요' : '🤍 마음에 들어요'}</span>
+                    <span>{agreeReactions.length}</span>
+                </button>
+            )}
         </motion.div>
     );
 });
@@ -212,8 +268,10 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 
     const {
         missions, selectedMission, posts, classmates, loading, loadingMore, hasMore, loadMore,
-        viewingPost, setViewingPost, handleMissionChange
+        viewingPost, setViewingPost, handleMissionChange, handleMeetingPick
     } = useFriendsHideout(studentSession, params);
+    const isMeetingMission =
+        selectedMission?.mission_type === 'meeting' || selectedMission?.input_template === 'meeting';
 
     const lastElementRef = useCallback(node => {
         if (loading || loadingMore) return;
@@ -232,8 +290,11 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 
     const handleCloseModal = useCallback(() => {
         if (params?.initialPostId) onBack();
-        else setViewingPost(null);
-    }, [params, onBack, setViewingPost]);
+        else {
+            setViewingPost(null);
+            if (selectedMission) handleMissionChange(selectedMission);
+        }
+    }, [params, onBack, setViewingPost, selectedMission, handleMissionChange]);
 
     return (
         <>
@@ -274,16 +335,34 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                     onClick={() => handleMissionChange(m)}
                                     style={{
                                         padding: '10px 20px', borderRadius: '16px', border: 'none',
-                                        background: selectedMission?.id === m.id ? 'var(--primary-color)' : 'white',
-                                        color: selectedMission?.id === m.id ? 'white' : '#607D8B',
+                                        background: selectedMission?.id === m.id
+                                            ? (m.mission_type === 'meeting' || m.input_template === 'meeting' ? '#7E22CE' : 'var(--primary-color)')
+                                            : (m.mission_type === 'meeting' || m.input_template === 'meeting' ? '#FAF5FF' : 'white'),
+                                        color: selectedMission?.id === m.id
+                                            ? 'white'
+                                            : (m.mission_type === 'meeting' || m.input_template === 'meeting' ? '#7E22CE' : '#607D8B'),
                                         fontWeight: 'bold', whiteSpace: 'nowrap', cursor: 'pointer',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)', transition: 'all 0.2s'
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)', transition: 'all 0.2s',
+                                        outline: m.mission_type === 'meeting' || m.input_template === 'meeting' ? '1px solid #D8B4FE' : 'none'
                                     }}
                                 >
-                                    {m.title}
+                                    {m.mission_type === 'meeting' || m.input_template === 'meeting' ? '🏛️ ' : ''}{m.title}
                                 </button>
                             ))}
                         </div>
+
+                        {isMeetingMission && (
+                            <div style={{
+                                margin: '-8px 0 20px', padding: '14px 18px',
+                                borderRadius: '18px 8px 18px 8px',
+                                background: 'linear-gradient(135deg, #F5F3FF, #FAF5FF)',
+                                border: '1px solid #D8B4FE', color: '#6B21A8',
+                                fontWeight: '800', fontSize: '0.9rem', lineHeight: '1.5'
+                            }}>
+                                🏛️ 친구들의 안건을 읽고 마음에 드는 제안을 골라 보세요.
+                                선택 수는 모든 친구에게 함께 보여요.
+                            </div>
+                        )}
 
                         <div style={GRID_STYLE}>
                             {loading ? (
@@ -302,6 +381,9 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                             isLast={index === posts.length - 1}
                                             lastElementRef={lastElementRef}
                                             onClick={setViewingPost}
+                                            isMeeting={isMeetingMission}
+                                            studentId={studentSession.id}
+                                            onMeetingPick={handleMeetingPick}
                                         />
                                     ))}
                                     {loadingMore && (
@@ -374,7 +456,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                         mission={selectedMission || viewingPost?.writing_missions}
                         studentSession={studentSession}
                         onClose={handleCloseModal}
-                        reactionIcons={REACTION_ICONS}
+                        reactionIcons={isMeetingMission ? MEETING_REACTION_ICONS : REACTION_ICONS}
                         isMobile={isMobile}
                         ACCESSORIES={ACCESSORIES}
                         classmates={classmates}

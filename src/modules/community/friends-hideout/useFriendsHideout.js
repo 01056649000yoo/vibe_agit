@@ -209,7 +209,8 @@ export const useFriendsHideout = (studentSession, params) => {
                     id, title, content, student_id, mission_id, created_at, char_count, is_confirmed,
                     original_title, original_content,
                     students:student_id(name, pet_data),
-                    writing_missions(allow_comments)
+                    writing_missions(allow_comments, mission_type, input_template),
+                    post_reactions(id, reaction_type, student_id)
                 `)
                 .eq('mission_id', missionId)
                 .eq('is_submitted', true)
@@ -267,9 +268,7 @@ export const useFriendsHideout = (studentSession, params) => {
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
-                return (missionRows || []).filter(mission =>
-                    mission.mission_type !== 'meeting' && mission.input_template !== 'meeting'
-                );
+                return missionRows || [];
             });
 
             setMissions(data);
@@ -313,11 +312,55 @@ export const useFriendsHideout = (studentSession, params) => {
         }
     }, [resolveClassId, selectedMission?.id, fetchPosts, studentSession.id]);
 
+    const handleMeetingPick = useCallback(async (postId) => {
+        if (!postId || !studentSession.id || !selectedMission?.id) return false;
+
+        try {
+            const { data: existingReaction, error: existingError } = await supabase
+                .from('post_reactions')
+                .select('id, reaction_type')
+                .eq('post_id', postId)
+                .eq('student_id', studentSession.id)
+                .maybeSingle();
+
+            if (existingError) throw existingError;
+
+            if (existingReaction?.reaction_type === 'agree') {
+                const { error } = await supabase
+                    .from('post_reactions')
+                    .delete()
+                    .eq('id', existingReaction.id);
+                if (error) throw error;
+            } else if (existingReaction?.id) {
+                const { error } = await supabase
+                    .from('post_reactions')
+                    .update({ reaction_type: 'agree' })
+                    .eq('id', existingReaction.id);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase
+                    .from('post_reactions')
+                    .insert({
+                        post_id: postId,
+                        student_id: studentSession.id,
+                        reaction_type: 'agree'
+                    });
+                if (error) throw error;
+            }
+
+            await fetchPosts(selectedMission.id);
+            return true;
+        } catch (err) {
+            console.error('회의 안건 선택 실패:', err.message);
+            return false;
+        }
+    }, [fetchPosts, selectedMission?.id, studentSession.id]);
+
     const handleInitialPost = useCallback(async (postId) => {
         try {
             const { data, error } = await supabase
                 .from('student_posts')
-                .select('*, students:student_id(name, pet_data), writing_missions(allow_comments)')
+                .select('*, students:student_id(name, pet_data), writing_missions(allow_comments, mission_type, input_template), post_reactions(id, reaction_type, student_id)')
                 .eq('id', postId)
                 .maybeSingle();
 
@@ -495,6 +538,7 @@ export const useFriendsHideout = (studentSession, params) => {
         loadMore,
         viewingPost,
         setViewingPost,
-        handleMissionChange
+        handleMissionChange,
+        handleMeetingPick
     };
 };
