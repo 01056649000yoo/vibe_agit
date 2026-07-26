@@ -21,6 +21,21 @@
 
 ---
 
+## 2026-07-26 — 친구 아지트 모듈화 + ON/OFF 전 진입점 통일 (GPT/Codex)
+- **한 일**:
+  - `FriendsHideout`·전용 훅을 `src/modules/community/friends-hideout/`로 옮기고 매니페스트·레지스트리에 등록.
+  - 앱 셸에서 학생 모듈 상태를 한 번 읽어 대시보드 카드, 모바일 하단 탭, 학생 가이드, 교실 아지트의 친구 응원,
+    소셜 알림 이동, `friends_hideout` 직접 진입을 같은 ON/OFF 값으로 게이팅.
+  - `한줄모아`는 내부 모듈이 아니라 연구소 연결 항목임을 확인해 Stage 3 후보에서 제외하고 Stage 2d/4b로 정리.
+- **변경**: 코드 커밋 `a04f55e`(모듈 본체 이전), `7140cfa`(모든 진입점 게이트).
+  git 밖 운영 DB에서 기존 설정 학급 2곳의 `enabled_modules`에 `friends-hideout`을 추가했으며,
+  동일 내용을 `20260726_enable_friends_hideout_module.sql`로 저장해 기존 노출 동작과 롤백 가능성을 보존.
+- **결과/검증**: 운영 DB 마이그레이션 `UPDATE 2`, 적용 후 대상 누락 0. 프로덕션 빌드 통과,
+  친구 아지트 독립 lazy chunk 31.82KB 확인, 변경 파일 ESLint 0에러 및 `git diff --check` 통과.
+  `AgitOnClassPage.jsx` 전체 린트에는 이번 범위 밖의 기존 렌더 중 `Math.random` 순수성 오류 4건이 남아 있음.
+- **남은 것 / 다음**: 교사 토글에서 친구 아지트를 OFF한 뒤 학생 실기기에서 각 진입점이 사라지고 ON 복구되는지 확인.
+  다음 Stage 3b 후보는 아지트온클래스 또는 아이디어마켓이며, 친구 아지트의 기본 OFF/삭제 여부는 Stage 3c에서 결정.
+
 ## 2026-07-26 — 놀이터 OFF 수정 운영 배포 (GPT/Codex)
 - **한 일**: 로컬 `main`의 놀이터 후속 작업 6커밋(`549e784`~`9fb5699`)을 원격 `main`에 push해 맥미니 자동 배포 실행.
 - **변경**: GitHub Actions Deploy run `30200668684` 성공. 운영 `agit-app:prod` 컨테이너 재생성,
