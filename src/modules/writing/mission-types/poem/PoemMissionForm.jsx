@@ -12,16 +12,43 @@ const getInitialForm = (mission) => ({
     allow_comments: mission?.allow_comments ?? true,
 });
 
-const NumberSetting = ({ label, value, min, onChange, description }) => (
+const normalizeStepValue = (value, min, step) => {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) return min;
+    return Math.max(min, min + Math.round((numericValue - min) / step) * step);
+};
+
+const NumberSetting = ({ label, value, min, step = 1, onChange, description }) => (
     <label style={{ display: 'block' }}>
         <span style={{ display: 'block', marginBottom: '7px', color: '#475569', fontSize: '0.85rem', fontWeight: '800' }}>{label}</span>
-        <input
-            type="number"
-            min={min}
-            value={value}
-            onChange={(event) => onChange(Math.max(min, Number(event.target.value) || min))}
-            style={{ width: '100%', boxSizing: 'border-box', padding: '12px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '1rem' }}
-        />
+        <div style={{ display: 'flex', gap: '6px' }}>
+            {step > 1 && (
+                <button
+                    type="button"
+                    onClick={() => onChange(Math.max(min, normalizeStepValue(value, min, step) - step))}
+                    disabled={Number(value) <= min}
+                    aria-label={`${label} ${step} 줄이기`}
+                    style={{ width: '42px', borderRadius: '10px', border: '1px solid #CBD5E1', background: '#F8FAFC', color: '#475569', fontWeight: '900', cursor: Number(value) <= min ? 'not-allowed' : 'pointer' }}
+                >−</button>
+            )}
+            <input
+                type="number"
+                min={min}
+                step={step}
+                value={value}
+                onChange={(event) => onChange(Math.max(min, Number(event.target.value) || min))}
+                onBlur={() => onChange(normalizeStepValue(value, min, step))}
+                style={{ width: '100%', minWidth: 0, boxSizing: 'border-box', padding: '12px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '1rem', textAlign: step > 1 ? 'center' : 'left' }}
+            />
+            {step > 1 && (
+                <button
+                    type="button"
+                    onClick={() => onChange(normalizeStepValue(value, min, step) + step)}
+                    aria-label={`${label} ${step} 늘리기`}
+                    style={{ width: '42px', borderRadius: '10px', border: '1px solid #CBD5E1', background: '#F0FDF4', color: '#15803D', fontWeight: '900', cursor: 'pointer' }}
+                >＋</button>
+            )}
+        </div>
         <span style={{ display: 'block', marginTop: '5px', color: '#94A3B8', fontSize: '0.72rem' }}>{description}</span>
     </label>
 );
@@ -56,7 +83,7 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                 },
                 min_chars: 0,
                 min_paragraphs: form.min_stanzas,
-                base_reward: form.base_reward,
+                base_reward: normalizeStepValue(form.base_reward, 0, 10),
                 bonus_threshold: 0,
                 bonus_reward: 0,
                 allow_comments: form.allow_comments,
@@ -106,7 +133,7 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '12px' }}>
                         <NumberSetting label="최소 연 수" value={form.min_stanzas} min={1} onChange={(value) => update('min_stanzas', value)} description="학생 화면에 이 수만큼 연 입력칸이 먼저 열립니다." />
                         <NumberSetting label="연별 최소 행" value={form.min_lines_per_stanza} min={1} onChange={(value) => update('min_lines_per_stanza', value)} description="각 연에 필요한 최소 줄 수입니다." />
-                        <NumberSetting label="완료 포인트" value={form.base_reward} min={0} onChange={(value) => update('base_reward', value)} description="교사 승인 후 지급되는 기본 포인트입니다." />
+                        <NumberSetting label="완료 포인트" value={form.base_reward} min={0} step={10} onChange={(value) => update('base_reward', value)} description="10P 단위로 조정하며 교사 승인 후 지급합니다." />
                     </div>
 
                     <button type="button" onClick={() => update('allow_comments', !form.allow_comments)} style={{ padding: '13px', borderRadius: '12px', border: form.allow_comments ? '2px solid #4ADE80' : '1px solid #CBD5E1', background: form.allow_comments ? '#F0FDF4' : '#F8FAFC', color: '#334155', cursor: 'pointer', fontWeight: '800' }}>
