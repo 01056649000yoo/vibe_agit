@@ -21,6 +21,49 @@
 
 ---
 
+## 2026-07-27 — 관리자 대시보드 보안 점검: 함수 실행 권한 하드닝 (Claude)
+- **발견 경위**: 관리자 대시보드 보안 점검 요청. 운영 DB에 일반 교사 JWT를 주입해 직접 침투 테스트.
+- **🔴 심각 — 권한 상승 (당일 발생, 당일 수정)**:
+  - `admin_withdraw_teacher_internal`을 **일반 교사 권한으로 직접 호출 가능**했음.
+    `p_only_empty=FALSE`로 넘기면 임의 교사의 학급·학생·학생 글·로그인 계정까지 삭제 가능한 상태였음.
+  - **근본 원인**: Supabase 자체호스팅 스택은 `public` 스키마 함수에 `anon`·`authenticated`로 EXECUTE를
+    기본 부여한다. 따라서 `REVOKE ALL ... FROM PUBLIC`만으로는 회수되지 않는다. **역할을 명시해야 한다.**
+    같은 날 추가한 함수인데 "내부 구현이니 호출자가 검사한다"고 판단해 내부 ADMIN 검사를 생략한 것이 겹쳤음.
+  - 조치: 역할 명시 REVOKE(`FROM PUBLIC, anon, authenticated`) + 함수 내부 ADMIN 검사 추가(이중 방어).
+- **🟠 함께 발견·수정**:
+  - `cleanup_expired_deletions()` — 검사 없음. 누구나 호출해 **3일 복구 유예분을 즉시 영구 삭제** 가능했음.
+    → ADMIN 또는 `auth.uid() IS NULL`(서버 배치)만 허용, `service_role`에만 EXECUTE 부여.
+  - `get_class_activity_stats(class_id)` — 검사 없음. 학급 UUID만 알면 **남의 학급 학생 포인트 통계** 조회 가능.
+    → 담당 교사 / 해당 학급 학생 / ADMIN 으로 제한.
+  - `test_auth_update()` — `auth.users.raw_app_meta_data`를 수정하는 시험용 잔재가 anon에게도 열려 있었음.
+    app_metadata는 RLS가 신뢰하는 `role`·`class_id`·`student_id`를 담으므로 **DROP**.
+  - 모든 `admin_*` 함수에서 `anon` EXECUTE 회수.
+- **점검했으나 문제 없던 것**: `profiles`·`teachers` SELECT는 `ADMIN 또는 본인`, `system_settings` 쓰기는 ADMIN 전용,
+  `profile_secrets`는 본인 전용(관리자도 불가), 관리자 모드 진입은 Edge Function이 service_role로 역할 확인 후 비밀번호 검사,
+  점검 대상 9개 테이블 모두 RLS 활성.
+- **변경**: 마이그레이션 `20260727_admin_function_privilege_hardening.sql` (커밋 `674f112`). 운영 `agit-db` 적용 완료.
+- **결과/검증**: 교사 JWT 재침투 3건 전부 차단(`permission denied` 2건, 권한 예외 1건), 본인 학급 통계 조회는 정상 유지.
+  ※ 1차 재검증에서 "남의 학급 조회가 뚫림"으로 보였으나, RLS 때문에 표적 학급 UUID를 못 찾아 NULL이 전달된 **테스트 오류**였음.
+    세션 변수로 UUID를 미리 확보해 재시험한 결과 정상 차단 확인.
+- **남은 것 / 다음**: `anon`에게 EXECUTE가 열린 `SECURITY DEFINER` 함수가 **54개** 남아 있음.
+  대부분 트리거 함수로 보이나 **전수 점검은 미실시**. 다음 세션에서 하나씩 확인 필요.
+
+## 2026-07-27 — 옛 강제 탈퇴가 남긴 고아 데이터 정리 (Claude)
+- **증상**: 정리 후 관리자 화면에서 "이름은 없는데 학급 숫자는 남아 있는" 항목이 관측됨.
+- **원인**: 옛 `admin_force_teacher_withdrawal`이 `teachers`·`profiles`만 삭제해,
+  **학급 23개와 로그인 계정 23개가 주인 없이 잔존**. 프로필이 없으니 관리자 화면 목록에는 뜨지 않고
+  학급 수 통계에만 잡혀 "이름 없는 숫자"로 보였음. 생성일 2026-02~06으로 이번 정리와 무관한 과거 이력.
+- **정리 실행 결과** (관리자가 화면에서 실행한 일괄 탈퇴 포함):
+  - 교사 프로필 274 → **80**, 로그인 계정 2,942 → **2,725**, 살아있는 학급 318 → **103**, 정리 대상 199 → **5**
+  - 고아 정리분: 학급 23개 · 로그인 계정 23개 · 포인트 로그 3건 · 학생 2명. **학생 글 0건**.
+  - 남은 고아 학급 **0개** 확인.
+- **안전장치**: 가드 5종(대상 규모 40 초과 시 중단, 학생 글 존재, 살아있는 프로필 혼입, 학생 계정 혼입,
+  연구소 데이터 존재)을 걸고 하나라도 걸리면 트랜잭션 전체 취소. 전부 통과 후 COMMIT.
+- **백업**: 작업 전 `~/backups/agit-20260727-0203.dump`(정리 전), `~/backups/agit-20260727-0220.dump`(고아 정리 전).
+- **정정**: 직전 항목에 "야간 자동 백업 미구축"이라고 적었으나 **사실과 다름**.
+  `~/backups/auto/`에 launchd 자동 백업이 이미 동작 중(날짜별 폴더·`sync.log`·`launchd.err` 확인).
+  INTEGRATION_PLAN.md Phase 5 체크박스가 `[ ]`로 남아 있어 미구축으로 오독한 것. **문서만 실제와 불일치.**
+
 ## 2026-07-27 — 강제 탈퇴 완결성·승인 취소 우회 차단 + Tailscale SSH 구축 (Claude)
 - **인프라 (git 밖)**:
   - **Tailscale 사설망 구축** — 맥미니(`macmini` 100.89.88.108)와 작업 PC(`jinnam` 100.88.144.119) 연결.
