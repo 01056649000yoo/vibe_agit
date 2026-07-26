@@ -219,7 +219,10 @@ export const useFriendsHideout = (studentSession, params) => {
                 .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
             if (error) throw error;
-            const normalizedPosts = await normalizePostsWithAuthors(data || []);
+            const normalizer = normalizePostsRef.current;
+            const normalizedPosts = normalizer
+                ? await normalizer(data || [])
+                : (data || []);
 
             if (isAppend) {
                 setPosts(prev => [...prev, ...normalizedPosts]);
@@ -235,7 +238,7 @@ export const useFriendsHideout = (studentSession, params) => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [studentSession.id, normalizePostsWithAuthors]);
+    }, [studentSession.id]);
 
     const loadMore = useCallback(() => {
         if (!loadingMore && hasMore && selectedMission) {
@@ -273,7 +276,7 @@ export const useFriendsHideout = (studentSession, params) => {
 
             setMissions(data);
             if (data?.length > 0) {
-                let nextMission = data.find(m => m.id === selectedMission?.id);
+                let nextMission = data.find(m => m.id === selectedMissionIdRef.current);
 
                 // 처음 들어왔을 때는 단순히 최신 미션이 아니라,
                 // 실제로 다른 학생의 제출 글이 있는 최신 미션을 먼저 보여준다.
@@ -299,6 +302,7 @@ export const useFriendsHideout = (studentSession, params) => {
                         data[0];
                 }
 
+                selectedMissionIdRef.current = nextMission.id;
                 setSelectedMission(nextMission);
                 fetchPosts(nextMission.id);
             } else {
@@ -310,7 +314,7 @@ export const useFriendsHideout = (studentSession, params) => {
         } finally {
             setLoading(false);
         }
-    }, [resolveClassId, selectedMission?.id, fetchPosts, studentSession.id]);
+    }, [resolveClassId, fetchPosts, studentSession.id]);
 
     const handleMeetingPick = useCallback(async (postId) => {
         if (!postId || !studentSession.id || !selectedMission?.id) return false;
@@ -366,13 +370,14 @@ export const useFriendsHideout = (studentSession, params) => {
 
             if (error) throw error;
             if (data) {
-                const [normalizedPost] = await normalizePostsWithAuthors([data]);
+                const normalizer = normalizePostsRef.current;
+                const [normalizedPost] = normalizer ? await normalizer([data]) : [data];
                 setViewingPost(normalizedPost || data);
             }
         } catch (err) {
             console.error('초기 포스트 로드 실패:', err.message);
         }
-    }, [normalizePostsWithAuthors]);
+    }, []);
 
     useEffect(() => {
         setResolvedClassId(studentSession.classId || studentSession.class_id || null);
@@ -523,6 +528,7 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, fetchMissions]);
 
     const handleMissionChange = (mission) => {
+        selectedMissionIdRef.current = mission.id;
         setSelectedMission(mission);
         fetchPosts(mission.id);
     };
