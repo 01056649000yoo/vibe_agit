@@ -82,6 +82,8 @@ export function getEnabledModules(enabledIds, audience) {
     ? arr.filter((x) => x !== CONFIGURED_MARK)
     : null;
   return manifests.filter((m) => {
+    // 보관 중인 모듈은 기존 학급 설정에 ON 값이 남아 있어도 어느 화면에도 노출하지 않는다.
+    if (m.available === false) return false;
     if (m.audience !== 'both' && m.audience !== audience) return false;
     if (m.core) return true;
     return list ? list.includes(m.id) : !!m.defaultEnabled;

@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import ModuleToggles from '../../modules/ModuleToggles';
 import { supabase } from '../../lib/supabaseClient';
+import {
+    CONFIGURED_MARK,
+    getLegacyModuleFields,
+    resolveEnabledModuleIds
+} from '../../modules/registry';
+import { saveEnabledModules } from '../../modules/useEnabledModules';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import Card from '../common/Card';
@@ -39,6 +44,9 @@ const GameManager = ({ activeClass, isMobile }) => {
         rankingResetDate: null
     });
     const [savingVocabTower, setSavingVocabTower] = useState(false);
+    const [enabledModuleIds, setEnabledModuleIds] = useState(null);
+    const [savingModuleId, setSavingModuleId] = useState(null);
+    const [moduleLoadError, setModuleLoadError] = useState(false);
     const [students, setStudents] = useState([]);
     const [, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -53,15 +61,32 @@ const GameManager = ({ activeClass, isMobile }) => {
 
     const fetchGameConfig = useCallback(async () => {
         setLoading(true);
+        setEnabledModuleIds(null);
+        setModuleLoadError(false);
         try {
+            const moduleFields = ['enabled_modules', ...getLegacyModuleFields()];
             const { data, error } = await supabase
                 .from('classes')
-                .select('created_at, dragon_feed_points, dragon_degen_days, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
+                .select([
+                    'created_at',
+                    'dragon_feed_points',
+                    'dragon_degen_days',
+                    'vocab_tower_grade',
+                    'vocab_tower_daily_limit',
+                    'vocab_tower_time_limit',
+                    'vocab_tower_reward_points',
+                    'vocab_tower_ranking_reset_date',
+                    ...moduleFields
+                ].join(', '))
                 .eq('id', activeClass.id)
                 .single();
 
             if (error) throw error;
             if (data) {
+                setEnabledModuleIds(
+                    resolveEnabledModuleIds(data.enabled_modules, data)
+                        .filter((id) => id !== CONFIGURED_MARK)
+                );
                 setConfig({
                     dragon_feed_points: data.dragon_feed_points || 50,
                     dragon_degen_days: data.dragon_degen_days || 14
@@ -78,6 +103,7 @@ const GameManager = ({ activeClass, isMobile }) => {
             }
         } catch (err) {
             console.error('게임 설정 로드 실패:', err);
+            setModuleLoadError(true);
         } finally {
             setLoading(false);
         }
@@ -288,6 +314,61 @@ const GameManager = ({ activeClass, isMobile }) => {
         setConfig(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleToggleModule = async (moduleId, moduleName) => {
+        if (!enabledModuleIds || savingModuleId) return;
+
+        const previousIds = enabledModuleIds;
+        const nextIds = previousIds.includes(moduleId)
+            ? previousIds.filter((id) => id !== moduleId)
+            : [...previousIds, moduleId];
+
+        setEnabledModuleIds(nextIds);
+        setSavingModuleId(moduleId);
+        const { data, error } = await saveEnabledModules(activeClass.id, nextIds);
+        setSavingModuleId(null);
+
+        if (error || !data) {
+            setEnabledModuleIds(previousIds);
+            alert(`${moduleName} 기능 설정 저장에 실패했습니다. 잠시 후 다시 시도해주세요.`);
+        }
+    };
+
+    const renderModulePowerButton = (moduleId, moduleName, activeColor) => {
+        const isOn = enabledModuleIds?.includes(moduleId) ?? false;
+        const isLoading = enabledModuleIds === null && !moduleLoadError;
+        const isSaving = savingModuleId === moduleId;
+        const disabled = isLoading || moduleLoadError || !!savingModuleId;
+        const statusText = moduleLoadError ? '불러오기 실패' : isLoading ? '확인 중' : isSaving ? '저장 중' : isOn ? 'ON' : 'OFF';
+
+        return (
+            <button
+                type="button"
+                onClick={() => handleToggleModule(moduleId, moduleName)}
+                disabled={disabled}
+                aria-pressed={isOn}
+                title={moduleLoadError ? '기능 설정을 불러오지 못했습니다. 화면을 새로고침해주세요.' : `${moduleName} 학생 화면 노출 ${isOn ? '끄기' : '켜기'}`}
+                style={{
+                    minWidth: isMobile ? '112px' : '130px',
+                    padding: '9px 12px',
+                    borderRadius: '12px',
+                    border: `2px solid ${isOn ? activeColor : '#D5D9DD'}`,
+                    background: isOn ? 'rgba(255,255,255,0.92)' : '#F8F9FA',
+                    color: isOn ? activeColor : '#7F8C8D',
+                    cursor: disabled ? 'wait' : 'pointer',
+                    opacity: disabled && !isSaving ? 0.65 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                    fontWeight: '900'
+                }}
+            >
+                <span style={{ fontSize: '0.72rem' }}>학생 화면</span>
+                <span style={{ fontSize: '0.82rem' }}>{statusText}</span>
+            </button>
+        );
+    };
+
     // [신규] 어휘의 탑 설정 저장 (설정 변경 시 학생 시도 횟수 리셋)
     const handleSaveVocabTower = async () => {
         setSavingVocabTower(true);
@@ -486,21 +567,19 @@ const GameManager = ({ activeClass, isMobile }) => {
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '10px' : '0' }}>
             <div style={{ marginBottom: '2.5rem' }}>
                 <h1 style={{ fontSize: '1.8rem', color: '#2C3E50', margin: '0 0 8px 0', fontWeight: '900' }}>🎢 아지트 놀이터 관리</h1>
-                <p style={{ color: '#7F8C8D', margin: 0 }}>학급의 모든 활동 게임과 성장 시스템을 관리합니다.</p>
+                <p style={{ color: '#7F8C8D', margin: 0 }}>각 카드에서 학생 화면 노출과 세부 설정을 함께 관리합니다.</p>
             </div>
-
-            {/* 모듈 on/off (src/modules/registry.js 등록 기준) */}
-            <ModuleToggles activeClass={activeClass} isMobile={isMobile} />
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '32px' }}>
                 {/* 1. 드래곤 키우기 통합 카드 */}
                 <Card style={{ padding: 0, border: '1px solid #E9ECEF', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
-                    <div style={{ padding: '24px', background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)', borderBottom: '1px solid #FFE0B2', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ padding: '24px', background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)', borderBottom: '1px solid #FFE0B2', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: '0 4px 12px rgba(255, 145, 0, 0.2)' }}>🐉</div>
                         <div style={{ flex: 1 }}>
                             <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#5D4037', fontWeight: '900' }}>드래곤 키우기 관리</h3>
                             <span style={{ fontSize: '0.85rem', color: '#8D6E63', fontWeight: 'bold' }}>성장 밸런스 및 시즌 운영</span>
                         </div>
+                        {renderModulePowerButton('dragon', '드래곤 키우기', '#E65100')}
                     </div>
 
                     <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -596,22 +675,19 @@ const GameManager = ({ activeClass, isMobile }) => {
 
                 {/* 2. 어휘의 탑 게임 제어판 */}
                 <Card style={{ padding: 0, border: '1px solid #E9ECEF', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
-                    <div style={{ padding: '24px', background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)', borderBottom: '1px solid #A5D6A7', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ padding: '24px', background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)', borderBottom: '1px solid #A5D6A7', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)' }}>🏰</div>
                         <div style={{ flex: 1 }}>
-                            <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2E7D32', fontWeight: '900' }}>어휘의 탑 게임</h3>
+                            <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2E7D32', fontWeight: '900' }}>어휘의 탑 관리</h3>
                             <span style={{ fontSize: '0.85rem', color: '#558B2F', fontWeight: 'bold' }}>어휘력 향상 퀴즈 게임</span>
                         </div>
+                        {renderModulePowerButton('vocab-tower', '어휘의 탑', '#2E7D32')}
                     </div>
 
                     <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        {/* 게임 세부 설정 — 노출 여부는 상단 모듈 토글에서만 관리 */}
+                        {/* 게임 노출과 세부 설정을 한 카드에서 함께 관리 */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <h4 style={{ margin: 0, fontSize: '1rem', color: '#2E7D32', borderLeft: '4px solid #4CAF50', paddingLeft: '10px' }}>⚙️ 게임 설정</h4>
-
-                            <div style={{ padding: '12px 14px', background: '#E3F2FD', borderRadius: '10px', border: '1px solid #BBDEFB', color: '#1565C0', fontSize: '0.8rem', lineHeight: '1.45' }}>
-                                학생 화면에 보일지는 위 <strong>학급 기능 켜기 / 끄기</strong>에서 관리합니다.
-                            </div>
 
                             {/* [설계 변경] 2열 그리드 레이아웃으로 공간 효율화 */}
                             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>

@@ -1,8 +1,8 @@
 /**
  * 아지트온클래스 격리 모듈.
  *
- * 현재 활용도가 낮아 기본 OFF로 보관한다. 교사가 다시 켜기 전에는 학생 메뉴,
- * Realtime 구독, 학생·교사 전용 청크를 로드하지 않는다.
+ * 현재 활용도가 낮아 UI에서 완전히 숨겨 보관한다. 코드와 기존 설정 데이터는 유지하며,
+ * 추후 필요할 때 available만 true로 되돌려 다시 연결할 수 있다.
  */
 export const agitOnClassManifest = {
   id: 'agit-on-class',
@@ -12,6 +12,7 @@ export const agitOnClassManifest = {
   part: 'community',
   audience: 'both',
   defaultEnabled: false,
+  available: false,
   studentEntry: () => import('./AgitOnClassPage'),
   teacherEntry: () => import('./AgitManager'),
 };
