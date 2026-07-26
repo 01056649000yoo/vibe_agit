@@ -99,3 +99,42 @@ export const resolveKoreanStandards = (codes = []) => {
     return KOREAN_ACHIEVEMENT_STANDARDS.filter((standard) => codeSet.has(standard.code));
 };
 
+const includesAnyKeyword = (text, keywords) => keywords.some((keyword) => text.includes(keyword));
+
+// 미션 정보로 관련 성취기준을 추천하되, 최종 선택은 교사가 한다.
+export const getRecommendedStandardCodesForMission = (mission = {}) => {
+    const tags = Array.isArray(mission.tags) ? mission.tags : [];
+    const context = [
+        mission.title,
+        mission.genre,
+        mission.mission_type,
+        mission.input_template,
+        ...tags
+    ].filter(Boolean).join(' ').toLowerCase();
+    const isPoemMission = mission.mission_type === 'poem'
+        || mission.input_template === 'poem'
+        || ['시', '동시'].includes(mission.genre)
+        || tags.includes('시쓰기');
+
+    if (isPoemMission) {
+        return ['4국05-04', '6국05-05'];
+    }
+
+    if (includesAnyKeyword(context, ['설명', '보고', '관찰', '절차', '방법', '소개', '기사', '사실'])) {
+        return ['4국03-02', '6국03-01'];
+    }
+
+    if (includesAnyKeyword(context, ['주장', '논설', '의견', '토론', '토의', '회의', '안건', 'meeting'])) {
+        return ['4국03-03', '6국03-02'];
+    }
+
+    if (includesAnyKeyword(context, ['경험', '체험', '감상', '독후', '서평', '일기', '생활문'])) {
+        return ['6국03-03'];
+    }
+
+    if (includesAnyKeyword(context, ['편지', '마음', '감사', '위로', '축하'])) {
+        return ['4국03-04'];
+    }
+
+    return ['4국03-01', '4국03-05', '6국03-04', '6국03-05', '6국03-06'];
+};

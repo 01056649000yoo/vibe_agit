@@ -2,12 +2,16 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
-import Card from '../common/Card';
 import { callAI } from '../../lib/openai';
 // xlsx는 exportToExcel() 호출 시 동적 로드 (429KB 초기 로드 제거)
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import BulkAIProgressModal from './BulkAIProgressModal';
-import { resolveKoreanStandards } from '../../modules/writing/evaluation/koreanAchievementStandards';
+import RubricSettings, { createDefaultEvaluationRubric } from '../../modules/writing/evaluation/RubricSettings';
+import MissionEvaluationEntry from '../../modules/writing/evaluation/MissionEvaluationEntry';
+import {
+    getRecommendedStandardCodesForMission,
+    resolveKoreanStandards
+} from '../../modules/writing/evaluation/koreanAchievementStandards';
 
 /**
  * 역할: 선생님 - 활동별 리포트 (통합 분석 & 내보내기 버전) 📊
@@ -29,12 +33,20 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     const [mainListLimit, setMainListLimit] = useState(20); // [성능 최적화] 메인 리스트 지연 렌더링
     const ITEMS_PER_PAGE = 5;
     const [teacherId, setTeacherId] = useState(null);
+    const [rubricMission, setRubricMission] = useState(null);
+    const [rubricDraft, setRubricDraft] = useState(null);
+    const [evaluationMission, setEvaluationMission] = useState(null);
+    const [dataRefreshToken, setDataRefreshToken] = useState(0);
+    const [evaluationGaps, setEvaluationGaps] = useState({
+        unevaluatedSubmissions: [],
+        missingSubmissions: []
+    });
 
     // 로컬 스토리지 키 생성 (해당 학급 + 선택된 미션 조합별 유니크 키)
     const persistenceKey = useMemo(() => {
         if (!activeClass?.id || selectedMissionIds.length === 0) return null;
         const sortedIds = [...selectedMissionIds].sort().join(',');
-        return `vibe_report_${activeClass.id}_${sortedIds}`;
+        return `vibe_korean_comment_v2_${activeClass.id}_${sortedIds}`;
     }, [activeClass?.id, selectedMissionIds]);
 
     // 1. 초기 데이터 로드 (미션 목록)
@@ -44,7 +56,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('id, title, tags, is_archived, evaluation_rubric')
+                .select('id, title, genre, mission_type, input_template, tags, is_archived, evaluation_rubric')
                 .eq('class_id', activeClass.id)
                 // .or('is_archived.eq.false,is_archived.is.null') // 보관함 미션도 선택 가능하도록 필터 제거
                 .order('created_at', { ascending: false });
@@ -125,6 +137,75 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         }
     };
 
+    const selectedMissions = useMemo(
+        () => missions.filter((mission) => selectedMissionIds.includes(mission.id)),
+        [missions, selectedMissionIds]
+    );
+
+    const missionsWithoutStandards = useMemo(() => selectedMissions.filter((mission) => (
+        !mission.evaluation_rubric?.use_rubric
+        || resolveKoreanStandards(
+            mission.evaluation_rubric?.curriculum?.achievement_standard_codes
+        ).length === 0
+    )), [selectedMissions]);
+
+    const openRubricSettings = (mission) => {
+        setRubricMission(mission);
+        setRubricDraft(createDefaultEvaluationRubric(mission.evaluation_rubric));
+    };
+
+    const handleSaveMissionRubric = async () => {
+        if (!rubricMission || !rubricDraft) return;
+
+        const standards = resolveKoreanStandards(
+            rubricDraft.curriculum?.achievement_standard_codes
+        );
+        if (!rubricDraft.use_rubric || !rubricDraft.curriculum?.grade || standards.length === 0) {
+            alert('평가 루브릭을 켜고 학년과 관련 국어 성취기준을 1개 이상 선택해주세요.');
+            return;
+        }
+
+        const { error } = await supabase
+            .from('writing_missions')
+            .update({ evaluation_rubric: rubricDraft })
+            .eq('id', rubricMission.id);
+
+        if (error) {
+            console.error('평가·성취기준 저장 실패:', error.message);
+            alert('평가 설정을 저장하지 못했습니다.');
+            return;
+        }
+
+        setMissions((current) => current.map((mission) => (
+            mission.id === rubricMission.id
+                ? { ...mission, evaluation_rubric: rubricDraft }
+                : mission
+        )));
+        if (persistenceKey) localStorage.removeItem(persistenceKey);
+        setStudentPosts((current) => current.map((student) => ({ ...student, ai_synthesis: '' })));
+        setDataRefreshToken((current) => current + 1);
+        setRubricMission(null);
+        setRubricDraft(null);
+        alert('성취기준과 평가 루브릭을 저장했습니다.');
+    };
+
+    const openEvaluationEntry = (mission) => {
+        const standards = resolveKoreanStandards(
+            mission.evaluation_rubric?.curriculum?.achievement_standard_codes
+        );
+        if (!mission.evaluation_rubric?.use_rubric || standards.length === 0) {
+            alert('먼저 해당 글의 학년과 관련 성취기준을 선택해주세요.');
+            openRubricSettings(mission);
+            return;
+        }
+        setEvaluationMission(mission);
+    };
+
+    const handleEvaluationSaved = () => {
+        if (persistenceKey) localStorage.removeItem(persistenceKey);
+        setDataRefreshToken((current) => current + 1);
+    };
+
     // 2. 태그 필터링
     const filteredMissions = missions.filter(m => {
         if (selectedTags.length === 0) return true;
@@ -149,6 +230,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         const loadAndSynthesize = async () => {
             if (selectedMissionIds.length === 0) {
                 setStudentPosts([]);
+                setEvaluationGaps({ unevaluatedSubmissions: [], missingSubmissions: [] });
                 return;
             }
             setLoadingDetails(true);
@@ -158,6 +240,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                     .from('students')
                     .select('id, name')
                     .eq('class_id', activeClass.id)
+                    .is('deleted_at', null)
                     .order('name', { ascending: true });
 
                 if (studentsError) throw studentsError;
@@ -168,7 +251,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                     .select('id, student_id, mission_id, content, final_eval, initial_eval, eval_comment, is_submitted, is_confirmed, char_count, writing_missions(id, title, is_archived, evaluation_rubric)')
                     .in('mission_id', selectedMissionIds)
                     .eq('is_submitted', true)
-                    .limit(200);
+                    .limit(1000);
 
                 if (postsError) throw postsError;
 
@@ -197,13 +280,38 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                     pendingHistoryRef.current = null; // 사용 후 초기화
                 }
 
-                // 학생 ID별로 포스트 그룹화
-                const evaluablePosts = (postsData || []).filter((post) => (
-                    post.writing_missions?.is_archived
-                    || post.is_confirmed
-                    || post.initial_eval !== null
-                    || post.final_eval !== null
+                // 평어는 보관 여부와 관계없이 평가 결과가 있는 글만 근거로 사용한다.
+                const submittedPosts = postsData || [];
+                const evaluablePosts = submittedPosts.filter((post) => (
+                    post.initial_eval !== null || post.final_eval !== null
                 ));
+                const missionMap = new Map(selectedMissions.map((mission) => [mission.id, mission]));
+                const unevaluatedSubmissions = submittedPosts
+                    .filter((post) => post.initial_eval === null && post.final_eval === null)
+                    .map((post) => ({
+                        studentId: post.student_id,
+                        missionId: post.mission_id,
+                        missionTitle: missionMap.get(post.mission_id)?.title || post.writing_missions?.title || '미션'
+                    }));
+                const submittedKeys = new Set(
+                    submittedPosts.map((post) => `${post.student_id}:${post.mission_id}`)
+                );
+                const missingSubmissions = [];
+                classStudents.forEach((student) => {
+                    selectedMissionIds.forEach((missionId) => {
+                        if (!submittedKeys.has(`${student.id}:${missionId}`)) {
+                            missingSubmissions.push({
+                                studentId: student.id,
+                                studentName: student.name,
+                                missionId,
+                                missionTitle: missionMap.get(missionId)?.title || '미션'
+                            });
+                        }
+                    });
+                });
+                setEvaluationGaps({ unevaluatedSubmissions, missingSubmissions });
+
+                // 학생 ID별로 평가 완료 포스트 그룹화
                 const postMap = evaluablePosts.reduce((acc, p) => {
                     if (!acc[p.student_id]) acc[p.student_id] = [];
                     acc[p.student_id].push(p);
@@ -229,7 +337,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
             }
         };
         loadAndSynthesize();
-    }, [selectedMissionIds, persistenceKey]);
+    }, [activeClass.id, dataRefreshToken, persistenceKey, selectedMissionIds, selectedMissions]);
 
     // 4. 저장 로직 (로컬 스토리지)
     const saveToPersistence = (studentId, synthesis) => {
@@ -273,8 +381,45 @@ ${activitiesInfo}`;
         return `학생 '${studentName}'의 활동 기록과 교사 평가를 바탕으로 2022 개정 국어과 성취기준에 연결된 국어 교과 평어를 작성해줘. 학생 이름과 성취기준 코드는 결과에 쓰지 말고, 실제 글에서 확인되는 강점과 성장 정도를 관찰 중심의 평어체(~함, ~임)로 180자 안팎 한 문단으로 작성해줘. 근거가 없는 능력은 추측하지 마.\n\n${contextData.trim()}`;
     };
 
+    const validateGenerationReadiness = (studentId = null) => {
+        if (missionsWithoutStandards.length > 0) {
+            const mission = missionsWithoutStandards[0];
+            alert(`"${mission.title}" 미션의 관련 국어 성취기준을 먼저 선택해주세요.`);
+            openRubricSettings(mission);
+            return false;
+        }
+
+        const unevaluated = evaluationGaps.unevaluatedSubmissions.filter((item) => (
+            !studentId || item.studentId === studentId
+        ));
+        if (unevaluated.length > 0) {
+            const mission = missions.find((item) => item.id === unevaluated[0].missionId);
+            alert('평가결과가 없습니다. 평가결과를 입력해주세요.');
+            if (mission) openEvaluationEntry(mission);
+            return false;
+        }
+
+        const missing = evaluationGaps.missingSubmissions.filter((item) => (
+            !studentId || item.studentId === studentId
+        ));
+        if (missing.length > 0) {
+            const studentNames = [...new Set(missing.map((item) => item.studentName))];
+            const visibleNames = studentNames.slice(0, 8).join(', ');
+            const extraCount = Math.max(0, studentNames.length - 8);
+            const nameSummary = `${visibleNames}${extraCount > 0 ? ` 외 ${extraCount}명` : ''}`;
+            const shouldExclude = window.confirm(
+                `선택한 미션에 제출 글이 없는 학생이 있습니다: ${nameSummary}\n\n`
+                + '결석 등으로 평가 대상이 아닌 학생을 제외하고 나머지 학생의 평어를 작성할까요?'
+            );
+            if (!shouldExclude) return false;
+        }
+
+        return true;
+    };
+
     // 5. 단일 생성
     const generateCombinedReview = async (studentData) => {
+        if (!validateGenerationReadiness(studentData.student.id)) return;
         setIsGenerating(prev => ({ ...prev, [studentData.student.id]: true }));
         try {
             await supabase.auth.getUser();
@@ -303,12 +448,16 @@ ${activitiesInfo}`;
 
     // 6. 일괄 생성 및 재생성
     const handleBatchGenerate = async () => {
-        if (studentPosts.length === 0) return;
+        if (!validateGenerationReadiness()) return;
+        if (studentPosts.length === 0) {
+            alert('평가결과가 없습니다. 평가결과를 입력해주세요.');
+            return;
+        }
 
         const isRegen = generatedCount > 0;
         const msg = isRegen
             ? '기존 내용은 삭제되고 재생성됩니다. 진행하시겠습니까?'
-            : '학급 전체 학생의 통합 리포트를 일괄 생성하시겠습니까?';
+            : `평가 완료 학생 ${studentPosts.length}명의 국어 평어를 일괄 작성하시겠습니까?`;
 
         if (!confirm(msg)) return;
 
@@ -529,16 +678,38 @@ ${activitiesInfo}`;
                                         <span style={{ display: 'block', fontWeight: selectedMissionIds.includes(m.id) ? 'bold' : 'normal', color: selectedMissionIds.includes(m.id) ? '#312E81' : '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {m.title} {m.is_archived && <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 'normal' }}>(보관됨)</span>}
                                         </span>
-                                        {m.is_archived && (
-                                            <span style={{ display: 'block', marginTop: '3px', color: '#B45309', fontSize: '0.68rem', fontWeight: '800' }}>
-                                                보관 미션 · 제출 완료 글 전체 포함
-                                            </span>
-                                        )}
                                         {m.evaluation_rubric?.curriculum?.achievement_standard_codes?.length > 0 && (
                                             <span style={{ display: 'block', marginTop: '3px', color: '#6366F1', fontSize: '0.68rem', fontWeight: '800' }}>
                                                 {m.evaluation_rubric.curriculum.grade}학년 · 성취기준 {m.evaluation_rubric.curriculum.achievement_standard_codes.length}개
                                             </span>
                                         )}
+                                        {(!m.evaluation_rubric?.use_rubric || !m.evaluation_rubric?.curriculum?.achievement_standard_codes?.length) && (
+                                            <span style={{ display: 'block', marginTop: '3px', color: '#DC2626', fontSize: '0.68rem', fontWeight: '900' }}>
+                                                성취기준 선택 필요
+                                            </span>
+                                        )}
+                                        <span style={{ display: 'flex', gap: '5px', marginTop: '7px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    openRubricSettings(m);
+                                                }}
+                                                style={{ padding: '5px 7px', borderRadius: '8px', border: '1px solid #C7D2FE', background: 'white', color: '#4338CA', fontSize: '0.66rem', fontWeight: '900', cursor: 'pointer' }}
+                                            >
+                                                📚 성취기준
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    openEvaluationEntry(m);
+                                                }}
+                                                style={{ padding: '5px 7px', borderRadius: '8px', border: '1px solid #BBF7D0', background: 'white', color: '#15803D', fontSize: '0.66rem', fontWeight: '900', cursor: 'pointer' }}
+                                            >
+                                                🎯 평가 입력
+                                            </button>
+                                        </span>
                                     </span>
                                 </div>
                             ))}
@@ -675,19 +846,57 @@ ${activitiesInfo}`;
                     {selectedMissionIds.length === 0 ? (
                         <div style={{ padding: '80px', textAlign: 'center', background: '#F8FAFC', borderRadius: '24px', border: '2px dashed #E2E8F0' }}>
                             <RefreshCw size={48} style={{ color: '#CBD5E1', marginBottom: '16px' }} />
-                            <h3 style={{ margin: 0, color: '#64748B' }}>미션을 선택하여 분석을 시작하세요</h3>
+                            <h3 style={{ margin: 0, color: '#64748B' }}>미션을 선택하여 평어 작성을 시작하세요</h3>
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {missionsWithoutStandards.length > 0 && (
+                                <div style={{ padding: '16px 18px', borderRadius: '16px', background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                    <div>
+                                        <strong>관련 성취기준을 선택해주세요.</strong>
+                                        <div style={{ marginTop: '3px', fontSize: '0.8rem' }}>{missionsWithoutStandards.map((mission) => mission.title).join(', ')}</div>
+                                    </div>
+                                    <Button size="sm" onClick={() => openRubricSettings(missionsWithoutStandards[0])} style={{ background: '#B91C1C', color: 'white', fontWeight: '900' }}>
+                                        성취기준 선택
+                                    </Button>
+                                </div>
+                            )}
+
+                            {evaluationGaps.unevaluatedSubmissions.length > 0 && (
+                                <div style={{ padding: '16px 18px', borderRadius: '16px', background: '#FFF7ED', border: '1px solid #FED7AA', color: '#C2410C', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                    <div>
+                                        <strong>평가결과가 없습니다. 평가결과를 입력해주세요.</strong>
+                                        <div style={{ marginTop: '3px', fontSize: '0.8rem' }}>평가 필요 제출물 {evaluationGaps.unevaluatedSubmissions.length}건</div>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => {
+                                            const firstGap = evaluationGaps.unevaluatedSubmissions[0];
+                                            const mission = missions.find((item) => item.id === firstGap.missionId);
+                                            if (mission) openEvaluationEntry(mission);
+                                        }}
+                                        style={{ background: '#C2410C', color: 'white', fontWeight: '900' }}
+                                    >
+                                        평가결과 입력
+                                    </Button>
+                                </div>
+                            )}
+
+                            {evaluationGaps.missingSubmissions.length > 0 && (
+                                <div style={{ padding: '13px 18px', borderRadius: '16px', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', fontSize: '0.82rem', fontWeight: '800' }}>
+                                    제출 글이 없는 학생이 있습니다. 일괄 작성 시 결석 등으로 제외할지 확인합니다.
+                                </div>
+                            )}
+
                             {/* 상황바 */}
                             <div style={{ background: '#F1F5F9', padding: '16px 24px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 'bold' }}>
-                                    총 <span style={{ color: '#1E293B' }}>{studentPosts.length}명</span>의 학생 중 <span style={{ color: '#6366F1' }}>{generatedCount}명</span> 분석 완료
+                                    평가 완료 <span style={{ color: '#1E293B' }}>{studentPosts.length}명</span> 중 <span style={{ color: '#6366F1' }}>{generatedCount}명</span> 평어 작성 완료
                                 </div>
                                 <Button
                                     size="sm"
                                     onClick={handleBatchGenerate}
-                                    disabled={batchLoading || studentPosts.length === 0}
+                                    disabled={batchLoading}
                                     style={{
                                         borderRadius: '12px',
                                         fontWeight: 'bold',
@@ -715,7 +924,7 @@ ${activitiesInfo}`;
                                 <div style={{ textAlign: 'center' }}>번호</div>
                                 <div>학생 이름</div>
                                 <div style={{ textAlign: 'center' }}>참여 활동</div>
-                                <div style={{ textAlign: 'center' }}>분석 상태</div>
+                                <div style={{ textAlign: 'center' }}>작성 상태</div>
                                 <div style={{ textAlign: 'center' }}>평어 작성</div>
                                 <div></div>
                             </div>
@@ -767,7 +976,7 @@ ${activitiesInfo}`;
                                                     onMouseEnter={e => { if (!isGenerating[data.student.id]) { e.currentTarget.style.background = '#6366F1'; e.currentTarget.style.color = 'white'; } }}
                                                     onMouseLeave={e => { if (!isGenerating[data.student.id]) { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#6366F1'; } }}
                                                 >
-                                                    {isGenerating[data.student.id] ? '분석 중...' : '생성하기'}
+                                                    {isGenerating[data.student.id] ? '작성 중...' : '평어 작성'}
                                                 </button>
                                             </div>
                                             <div style={{ textAlign: 'center', color: '#CBD5E1' }}>
@@ -835,7 +1044,7 @@ ${activitiesInfo}`;
                                                                     boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.02)'
                                                                 }}>
                                                                     {data.ai_synthesis || (
-                                                                        <span style={{ color: '#D97706', fontStyle: 'italic' }}>상단의 '분석' 버튼을 눌러 결과물을 생성하세요.</span>
+                                                                        <span style={{ color: '#D97706', fontStyle: 'italic' }}>평어 작성 버튼을 눌러 초안을 작성하세요.</span>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -873,12 +1082,79 @@ ${activitiesInfo}`;
                             )}
 
                             <footer style={{ textAlign: 'center', padding: '20px', color: '#94A3B8', fontSize: '0.85rem' }}>
-                                * 생성된 분석 결과는 선택된 미션 조합별로 이 브라우저에 안전하게 저장됩니다.
+                                * 작성된 평어 초안은 선택된 미션 조합별로 이 브라우저에 저장됩니다.
                             </footer>
                         </div>
                     )}
                 </main>
             </div>
+
+            <AnimatePresence>
+                {rubricMission && rubricDraft && (
+                    <div
+                        style={{
+                            position: 'fixed', inset: 0, zIndex: 2500, background: 'rgba(15, 23, 42, 0.55)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '0' : '24px'
+                        }}
+                        onClick={() => {
+                            setRubricMission(null);
+                            setRubricDraft(null);
+                        }}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 20, scale: 0.98 }}
+                            onClick={(event) => event.stopPropagation()}
+                            style={{
+                                width: '100%', maxWidth: '920px', maxHeight: isMobile ? '100%' : '90vh',
+                                overflowY: 'auto', background: 'white', borderRadius: isMobile ? 0 : '28px',
+                                padding: isMobile ? '18px' : '28px', boxSizing: 'border-box'
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '20px' }}>
+                                <div>
+                                    <h3 style={{ margin: 0, color: '#1E293B', fontSize: '1.3rem' }}>📚 미션별 성취기준 선택</h3>
+                                    <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.84rem' }}>
+                                        {rubricMission.title} · 글의 종류와 수업 내용에 맞는 기준을 교사가 선택합니다.
+                                    </p>
+                                </div>
+                                <Button variant="ghost" onClick={() => {
+                                    setRubricMission(null);
+                                    setRubricDraft(null);
+                                }}>✕ 닫기</Button>
+                            </div>
+
+                            <RubricSettings
+                                rubric={rubricDraft}
+                                onChange={setRubricDraft}
+                                isMobile={isMobile}
+                                recommendedCodes={getRecommendedStandardCodesForMission(rubricMission)}
+                            />
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                                <Button variant="ghost" onClick={() => {
+                                    setRubricMission(null);
+                                    setRubricDraft(null);
+                                }}>취소</Button>
+                                <Button onClick={handleSaveMissionRubric} style={{ background: '#4F46E5', color: 'white', fontWeight: '900' }}>
+                                    성취기준·평가 설정 저장
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {evaluationMission && (
+                <MissionEvaluationEntry
+                    mission={evaluationMission}
+                    activeClass={activeClass}
+                    isMobile={isMobile}
+                    onClose={() => setEvaluationMission(null)}
+                    onSaved={handleEvaluationSaved}
+                />
+            )}
 
             {/* AI 일괄 생성 진행 모달 */}
             <BulkAIProgressModal isGenerating={batchLoading} progress={batchProgress} />
