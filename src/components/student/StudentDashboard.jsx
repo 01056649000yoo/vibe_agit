@@ -6,6 +6,7 @@ import StudentFeedbackModal from './StudentFeedbackModal';
 import { useDragonPet } from '../../modules/game/dragon/useDragonPet';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useRealtimeNotifications } from '../../hooks/useRealtimeNotifications'; // [신규] 분리된 리얼타임 훅
+import { getModule } from '../../modules/registry';
 
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
@@ -17,7 +18,7 @@ import DashboardMenu from './DashboardMenu';
 const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHideoutModal'));
 const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/BackgroundShopModal'));
 // [bundle-dynamic-imports] 조건부 렌더링되는 대형 컴포넌트를 lazy loading으로 전환
-const AgitOnClassPage = lazy(() => import('./AgitOnClassPage'));
+const AgitOnClassPage = lazy(getModule('agit-on-class').studentEntry);
 const PlaygroundPanel = lazy(() => import('../../modules/PlaygroundPanel'));
 const VocabularyTowerGame = lazy(() => import('../../modules/game/vocab-tower/VocabularyTowerGame'));
 
@@ -231,6 +232,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     isMobile={isMobile}
                     agitSettings={agitSettings}
                     studentSession={studentSession}
+                    enabledModules={enabledModules}
                 />
 
                 {/* 오늘의 목표 하단 문구 */}
@@ -321,7 +323,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
             </AnimatePresence>
 
             <AnimatePresence>
-                {isAgitOpen && (
+                {isAgitOpen && isOn('agit-on-class') && (
                     <motion.div
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}

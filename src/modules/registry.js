@@ -11,12 +11,16 @@ export const CONFIGURED_MARK = '__configured__';
 import { dragonManifest } from './game/dragon/manifest';
 import { vocabTowerManifest } from './game/vocab-tower/manifest';
 import { friendsHideoutManifest } from './community/friends-hideout/manifest';
+import { agitOnClassManifest } from './community/agit-on-class/manifest';
+import { ideaMarketManifest } from './writing/idea-market/manifest';
 
 /** 등록된 모듈 매니페스트 목록 */
 const manifests = [
   dragonManifest, // src/modules/game/dragon/
   vocabTowerManifest, // src/modules/game/vocab-tower/
   friendsHideoutManifest, // src/modules/community/friends-hideout/
+  agitOnClassManifest, // src/modules/community/agit-on-class/
+  ideaMarketManifest, // src/modules/writing/idea-market/
 ];
 
 // 개발 중 매니페스트 실수 조기 발견 (프로덕션 빌드에서는 console이 제거됨)
@@ -37,7 +41,7 @@ export function getAllModules() {
 
 /** 이전 개별 on/off 컬럼을 가진 모듈의 컬럼명 목록 (점진 마이그레이션용) */
 export function getLegacyModuleFields() {
-  return manifests.map((m) => m.legacyFlag).filter(Boolean);
+  return [...new Set(manifests.flatMap((m) => [m.legacyFlag, ...(m.legacyFields || [])]).filter(Boolean))];
 }
 
 /**
@@ -51,7 +55,11 @@ export function resolveEnabledModuleIds(enabledIds, legacySettings = {}) {
 
   const defaults = manifests
     .filter((m) => {
-      const legacyValue = m.legacyFlag ? Reflect.get(legacySettings, m.legacyFlag) : undefined;
+      const legacyValue = m.resolveLegacyEnabled
+        ? m.resolveLegacyEnabled(legacySettings)
+        : m.legacyFlag
+          ? Reflect.get(legacySettings, m.legacyFlag)
+          : undefined;
       return typeof legacyValue === 'boolean' ? legacyValue : !!m.defaultEnabled;
     })
     .map((m) => m.id);

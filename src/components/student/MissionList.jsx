@@ -7,7 +7,7 @@ import Button from '../common/Button';
 /**
  * 역할: 학생 - 글쓰기 미션 목록 확인
  */
-const MissionList = ({ studentSession, onBack, onNavigate }) => {
+const MissionList = ({ studentSession, onBack, onNavigate, ideaMarketEnabled = false }) => {
     const [missions, setMissions] = useState([]);
     const [posts, setPosts] = useState({});
     const [loading, setLoading] = useState(true);
@@ -35,10 +35,12 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
 
         if (error) throw error;
 
-        const filteredMissions = (allMissions || []).filter((mission) => mission.mission_type !== 'meeting');
+        const filteredMissions = (allMissions || []).filter((mission) =>
+            mission.mission_type !== 'meeting' || ideaMarketEnabled
+        );
         setMissions(filteredMissions);
         return filteredMissions;
-    }, []);
+    }, [ideaMarketEnabled]);
 
     const fetchStudentPosts = useCallback(async (currentStudent) => {
         const { data, error } = await supabase
@@ -114,8 +116,12 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
         };
     }, [fetchData, fetchMissions, getCurrentStudent]);
 
-    const handleMissionClick = (missionId) => {
-        onNavigate('writing', { missionId });
+    const handleMissionClick = (mission) => {
+        if (mission.mission_type === 'meeting') {
+            onNavigate('idea_market', { meetingId: mission.id });
+            return;
+        }
+        onNavigate('writing', { missionId: mission.id });
     };
 
     return (
@@ -170,9 +176,10 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                 ) : (
                     missions.map((mission) => {
                         const post = posts[mission.id];
+                        const isIdeaMission = mission.mission_type === 'meeting';
                         let statusBadge = null;
                         let borderColor = '#FFECB3';
-                        let buttonText = '글쓰기 시작';
+                        let buttonText = isIdeaMission ? '아이디어 제안하기' : '글쓰기 시작';
 
                         if (post?.is_returned) {
                             statusBadge = (
@@ -222,7 +229,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                     position: 'relative',
                                     overflow: 'hidden'
                                 }}
-                                onClick={() => handleMissionClick(mission.id)}
+                                onClick={() => handleMissionClick(mission)}
                             >
                                 {(!post?.is_submitted && new Date(mission.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)) && (
                                     <div style={{
@@ -243,7 +250,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                             fontSize: '0.75rem',
                                             fontWeight: '900'
                                         }}>
-                                            {mission.genre}
+                                            {isIdeaMission ? '🏛️ 아이디어 입력미션' : mission.genre}
                                         </div>
                                         {statusBadge}
                                     </div>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useIdeaMarket } from '../../hooks/useIdeaMarket';
-import { usePostInteractions } from '../../hooks/usePostInteractions';
-import { supabase } from '../../lib/supabaseClient';
-import Card from '../common/Card';
-import Button from '../common/Button';
+import { useIdeaMarket } from './useIdeaMarket';
+import { usePostInteractions } from '../../../hooks/usePostInteractions';
+import { supabase } from '../../../lib/supabaseClient';
+import Card from '../../../components/common/Card';
+import Button from '../../../components/common/Button';
 
 // 투표 아이콘
 const VOTE_ICONS = [
@@ -24,7 +24,7 @@ const STATUS_COLORS = {
  * 🏛️ 아지트 아이디어 마켓 - 학생 메인 페이지
  * 학급 회의 안건 목록 + 아이디어 제출 + 토론 + 투표
  */
-const IdeaMarketPage = ({ studentSession, onBack }) => {
+const IdeaMarketPage = ({ studentSession, onBack, params }) => {
     const classId = studentSession?.classId || studentSession?.class_id;
     const studentId = studentSession?.id;
 
@@ -32,7 +32,7 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
         meetings, selectedMeeting, setSelectedMeeting,
         ideas, myIdea, loading, ideasLoading, submitting, stats,
         submitIdea, handleVote
-    } = useIdeaMarket(classId, studentId);
+    } = useIdeaMarket(classId, studentId, params?.meetingId);
 
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
     const [viewMode, setViewMode] = useState('list'); // 'list' | 'write' | 'detail'
@@ -87,24 +87,32 @@ const IdeaMarketPage = ({ studentSession, onBack }) => {
     // 가이드 질문 초기화 및 알림 확인 시간 갱신
     useEffect(() => {
         if (selectedMeeting?.id) {
-            setAnswers(selectedMeeting.guide_questions?.map(() => '') || []);
+            const timerId = window.setTimeout(() => {
+                setAnswers(selectedMeeting.guide_questions?.map(() => '') || []);
+            }, 0);
 
             // [신규] 안건 확인 시점 기록 (알림 제거용)
             if (classId) {
                 localStorage.setItem(`last_visit_idea_market_${classId}`, new Date().toISOString());
             }
+            return () => window.clearTimeout(timerId);
         }
-    }, [selectedMeeting?.id, classId]);
+        return undefined;
+    }, [selectedMeeting?.id, selectedMeeting?.guide_questions, classId]);
 
     // 내 아이디어가 있으면 폼에 미리 채워넣기
     useEffect(() => {
         if (myIdea && viewMode === 'write') {
-            setIdeaTitle(myIdea.title || '');
-            setIdeaContent(myIdea.content || '');
-            if (myIdea.student_answers?.length > 0) {
-                setAnswers(myIdea.student_answers);
-            }
+            const timerId = window.setTimeout(() => {
+                setIdeaTitle(myIdea.title || '');
+                setIdeaContent(myIdea.content || '');
+                if (myIdea.student_answers?.length > 0) {
+                    setAnswers(myIdea.student_answers);
+                }
+            }, 0);
+            return () => window.clearTimeout(timerId);
         }
+        return undefined;
     }, [myIdea, viewMode]);
 
     const handleSubmitIdea = async () => {

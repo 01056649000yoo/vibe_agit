@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 
-const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgroundCount = 0, isMobile, agitSettings, studentSession }) => {
+const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgroundCount = 0, isMobile, agitSettings, studentSession, enabledModules = [] }) => {
+    const agitOnClassEnabled = enabledModules.some((module) => module.id === 'agit-on-class');
+    const ideaMarketEnabled = enabledModules.some((module) => module.id === 'idea-market');
     // [신규] 새 미션 존재 여부 확인 (최근 24시간)
     const [hasNewMission, setHasNewMission] = useState(false);
 
     // [신규] 아지트 명예의 전당 새 소식 확인 (최근 24시간)
     const [, setHasNewAgitHonor] = useState(false);
 
-    // [신규] 아이디어 마켓 새 소식 확인
-    const [, setHasNewIdeaMarket] = useState(false);
     const [hasNewAgitUpdate, setHasNewAgitUpdate] = useState(false);
 
     useEffect(() => {
@@ -30,7 +30,10 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                     .order('created_at', { ascending: false });
 
                 // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장
-                const recentMissions = allRecent?.filter(m => m.mission_type !== 'meeting' && m.created_at > twentyFourHoursAgo) || [];
+                const recentMissions = allRecent?.filter(m =>
+                    (m.mission_type !== 'meeting' || ideaMarketEnabled) &&
+                    m.created_at > twentyFourHoursAgo
+                ) || [];
 
                 let unsubmittedNew = false;
                 if (recentMissions.length > 0) {
@@ -48,14 +51,18 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                 }
                 setHasNewMission(unsubmittedNew);
 
-                // [신규] 3. 아지트 명예의 전당 최신 글 조회 및 확인 여부 체크
-                const { data: latestHonor } = await supabase
-                    .from('agit_honor_roll')
-                    .select('created_at')
-                    .eq('class_id', classId)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
+                // 아지트온클래스가 켜진 경우에만 전용 테이블을 조회한다.
+                let latestHonor = null;
+                if (agitOnClassEnabled) {
+                    const { data } = await supabase
+                        .from('agit_honor_roll')
+                        .select('created_at')
+                        .eq('class_id', classId)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+                    latestHonor = data;
+                }
 
                 if (latestHonor) {
                     const lastCheck = localStorage.getItem(`last_visit_agit_honor_${classId}`);
@@ -68,43 +75,9 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                     }
                 }
 
-                // [신규] 4. 아이디어 마켓 최신 안건/아이디어 확인
-                const latestMeeting = allRecent?.find(m => m.mission_type === 'meeting') || null;
-
-                let latestIdea = null;
-                if (latestMeeting?.id) {
-                    const { data: ideaData } = await supabase
-                        .from('student_posts')
-                        .select('created_at')
-                        .eq('mission_id', latestMeeting.id)
-                        .eq('is_submitted', true)
-                        .order('created_at', { ascending: false })
-                        .limit(1)
-                        .maybeSingle();
-                    latestIdea = ideaData;
-                }
-
-                const latestMeetingTime = latestMeeting ? new Date(latestMeeting.created_at) : new Date(0);
-                const latestIdeaTime = latestIdea ? new Date(latestIdea.created_at) : new Date(0);
-                const mostRecentMarketTime = new Date(Math.max(latestMeetingTime, latestIdeaTime));
-
-                if (mostRecentMarketTime.getTime() > 0) {
-                    const lastCheckMarket = localStorage.getItem(`last_visit_idea_market_${classId}`);
-                    // 최근 24시간 이내의 소식이면서, 마지막 확인보다 최신일 때만 NEW 표시
-                    const isRecentMarket = mostRecentMarketTime > new Date(Date.now() - 24 * 60 * 60 * 1000);
-                    const isUncheckedMarket = !lastCheckMarket || mostRecentMarketTime > new Date(lastCheckMarket);
-
-                    if (isRecentMarket && isUncheckedMarket) {
-                        setHasNewIdeaMarket(true);
-                    }
-                }
-
-                // [신규] 5. 아지트 메뉴 전체 알림 상태 (대시보드 배너용)
+                // 아지트온클래스 전용 알림 상태
                 const lastAccessMenu = localStorage.getItem(`last_visit_agit_menu_${classId}`);
-                const latestAgitTime = new Date(Math.max(
-                    latestHonor ? new Date(latestHonor.created_at) : 0,
-                    mostRecentMarketTime
-                ));
+                const latestAgitTime = new Date(latestHonor ? latestHonor.created_at : 0);
 
                 if (latestAgitTime.getTime() > 0) {
                     const hasUnseenUpdate = !lastAccessMenu || latestAgitTime > new Date(lastAccessMenu);
@@ -124,7 +97,7 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
         }, 1000); // [최적화] 대시보드 필수 데이터 로딩 대기
 
         return () => clearTimeout(timerId);
-    }, [studentSession?.class_id, studentSession?.classId, studentSession?.id]);
+    }, [studentSession?.class_id, studentSession?.classId, studentSession?.id, agitOnClassEnabled, ideaMarketEnabled]);
 
     return (
         <>
@@ -194,8 +167,8 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                 )}
 
 
-                {/* [신규] 두근두근 우리반 아지트 배너 */}
-                <motion.div
+                {/* 기본 OFF 격리 모듈: 켜진 학급에서만 진입점을 렌더한다. */}
+                {agitOnClassEnabled && <motion.div
                     whileHover={agitSettings?.isMenuEnabled !== false ? { scale: 1.01, y: -5 } : {}}
                     whileTap={agitSettings?.isMenuEnabled !== false ? { scale: 0.99 } : {}}
                     onClick={() => {
@@ -269,7 +242,7 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                     }}>
                         {agitSettings?.isMenuEnabled === false ? '입장 불가 🔒' : '아지트 입장하기 🚀'}
                     </div>
-                </motion.div>
+                </motion.div>}
             </div >
         </>
     );

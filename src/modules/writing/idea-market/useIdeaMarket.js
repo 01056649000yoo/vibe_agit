@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { dataCache } from '../lib/cache';
+import { supabase } from '../../../lib/supabaseClient';
+import { dataCache } from '../../../lib/cache';
 
 /**
  * 역할: 아지트 아이디어 마켓 - 학급 회의 & 아이디어 제안 관리 훅 🏛️
@@ -9,7 +9,7 @@ import { dataCache } from '../lib/cache';
  * - 투표(찬성/반대/보완) 및 댓글 관리
  * - 상태 전환 (제안중 → 검토중 → 결정됨)
  */
-export const useIdeaMarket = (classId, studentId) => {
+export const useIdeaMarket = (classId, studentId, initialMeetingId = null) => {
     const [meetings, setMeetings] = useState([]);          // meeting 타입 미션 목록
     const [selectedMeeting, setSelectedMeeting] = useState(null);
     const [ideas, setIdeas] = useState([]);                // 선택된 미션의 아이디어 목록
@@ -35,16 +35,20 @@ export const useIdeaMarket = (classId, studentId) => {
             if (error) throw error;
             setMeetings(data || []);
 
-            // 가장 최근 회의를 자동 선택
+            // 미션 목록에서 선택해 들어온 안건을 우선하고, 없으면 가장 최근 회의를 선택한다.
             if (data && data.length > 0) {
-                setSelectedMeeting(prev => prev || data[0]);
+                setSelectedMeeting(prev =>
+                    data.find(meeting => meeting.id === initialMeetingId) ||
+                    data.find(meeting => meeting.id === prev?.id) ||
+                    data[0]
+                );
             }
         } catch (err) {
             console.error('[useIdeaMarket] 회의 목록 로드 실패:', err.message);
         } finally {
             setLoading(false);
         }
-    }, [classId]);
+    }, [classId, initialMeetingId]);
 
     // 2. 선택된 미션에 대한 아이디어(제안) 목록 조회
     const fetchIdeas = useCallback(async (meetingId) => {

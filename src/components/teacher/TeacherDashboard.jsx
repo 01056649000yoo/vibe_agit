@@ -3,6 +3,8 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getModule } from '../../modules/registry';
+import { useEnabledModules } from '../../modules/useEnabledModules';
 
 // 지연 로딩 적용
 const ClassManager = lazy(() => import('./ClassManager'));
@@ -11,7 +13,8 @@ const UsageGuide = lazy(() => import('./UsageGuide'));
 const GameManager = lazy(() => import('./GameManager'));
 const TeacherEvaluationTab = lazy(() => import('./TeacherEvaluationTab'));
 const ActivityReport = lazy(() => import('./ActivityReport'));
-const AgitManager = lazy(() => import('./AgitManager'));
+const AgitManager = lazy(getModule('agit-on-class').teacherEntry);
+const IdeaMarketManager = lazy(getModule('idea-market').teacherEntry);
 
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
@@ -114,6 +117,16 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
 
 
     const hasZeroClasses = classes.length === 0;
+    const { modules: enabledTeacherModules } = useEnabledModules(activeClass?.id, 'teacher');
+    const agitOnClassEnabled = enabledTeacherModules.some((module) => module.id === 'agit-on-class');
+    const ideaMarketEnabled = enabledTeacherModules.some((module) => module.id === 'idea-market');
+    const teacherTabs = [
+        'dashboard', 'archive', 'evaluation', 'activity', 'playground',
+        ...(ideaMarketEnabled ? ['idea-market'] : []),
+        ...(agitOnClassEnabled ? ['agit'] : []),
+        'settings', 'guide'
+    ];
+    const visibleTab = teacherTabs.includes(currentTab) ? currentTab : 'dashboard';
 
     return (
         <div style={{
@@ -180,18 +193,18 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 display: 'flex', background: 'white', borderBottom: '1px solid #E9ECEF',
                 padding: isMobile ? '0 12px' : '0 24px', flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box'
             }}>
-                {['dashboard', 'archive', 'evaluation', 'activity', 'playground', 'agit', 'settings', 'guide'].map((tabId) => (
+                {teacherTabs.map((tabId) => (
                     <button
                         key={tabId}
                         onClick={() => setCurrentTab(tabId)}
                         style={{
                             padding: isMobile ? '10px 14px' : '12px 20px', border: 'none', background: 'transparent',
-                            borderBottom: currentTab === tabId ? '3px solid #3498DB' : '3px solid transparent',
-                            color: currentTab === tabId ? '#3498DB' : '#ADB5BD',
+                            borderBottom: visibleTab === tabId ? '3px solid #3498DB' : '3px solid transparent',
+                            color: visibleTab === tabId ? '#3498DB' : '#ADB5BD',
                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '📊 미션 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📋 AI쫑알이' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'agit' ? '🏠 아지트 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '🧰 수업 앱 모음'}
+                        {tabId === 'dashboard' ? '📊 미션 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📋 AI쫑알이' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'idea-market' ? '🏛️ 아이디어마켓' : tabId === 'agit' ? '🏠 아지트 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '🧰 수업 앱 모음'}
                     </button>
                 ))}
             </nav>
@@ -216,13 +229,15 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 <div key={i} className="skeleton" style={{ height: '80px', marginBottom: '12px' }} />
                             ))}
                         </div>
-                    ) : currentTab === 'guide' ? (
+                    ) : visibleTab === 'guide' ? (
                         <UsageGuide isMobile={isMobile} />
-                    ) : currentTab === 'archive' ? (
+                    ) : visibleTab === 'archive' ? (
                         <ArchiveManager activeClass={activeClass} isMobile={isMobile} />
-                    ) : currentTab === 'playground' ? (
+                    ) : visibleTab === 'playground' ? (
                         <GameManager activeClass={activeClass} isMobile={isMobile} />
-                    ) : currentTab === 'agit' ? (
+                    ) : visibleTab === 'idea-market' ? (
+                        <IdeaMarketManager activeClass={activeClass} isMobile={isMobile} onBack={() => setCurrentTab('dashboard')} />
+                    ) : visibleTab === 'agit' ? (
                         <AgitManager activeClass={activeClass} isMobile={isMobile} />
                     ) : (!activeClass || hasZeroClasses) ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
@@ -234,11 +249,11 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             />
                         </div>
                     ) : (
-                        currentTab === 'dashboard' ? (
+                        visibleTab === 'dashboard' ? (
                             <TeacherMissionTab activeClass={activeClass} isMobile={isMobile} setSelectedActivityPost={setSelectedActivityPost} />
-                        ) : currentTab === 'evaluation' ? (
+                        ) : visibleTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
-                        ) : currentTab === 'activity' ? (
+                        ) : visibleTab === 'activity' ? (
                             <ActivityReport activeClass={activeClass} isMobile={isMobile} promptTemplate={reportPromptTemplate} />
                         ) : (
                             <TeacherSettingsTab

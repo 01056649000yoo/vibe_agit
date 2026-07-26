@@ -1,13 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useClassAgitClass } from '../../hooks/useClassAgitClass';
-import { supabase } from '../../lib/supabaseClient';
-import Button from '../common/Button';
-import Card from '../common/Card';
-import IdeaMarketPage from './IdeaMarketPage';
+import { useClassAgitClass } from '../../../hooks/useClassAgitClass';
+import { supabase } from '../../../lib/supabaseClient';
+import Button from '../../../components/common/Button';
+import Card from '../../../components/common/Card';
 
 // 교실 속 비밀 아지트 느낌의 수채화 배경
 const CLASSROOM_BG = "/agit_hideout_bg.png";
+const CONFETTI_COLORS = ['#FFD700', '#FF6B6B', '#4ADE80', '#60A5FA', '#F472B6'];
+const CONFETTI_PARTICLES = [...Array(20)].map((_, i) => ({
+    id: i,
+    x: ((i * 37) % 101) - 50,
+    y: ((i * 61) % 101) - 50,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    delay: (i % 10) * 0.05
+}));
 
 const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
     console.log("🎓 [학생 아지트 페이지] studentSession:", studentSession);
@@ -22,8 +29,7 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
         achievedStudents
     } = useClassAgitClass(classId, studentSession?.id);
 
-    // [신규] 아이디어 마켓 및 명예의 전당 새 소식 확인
-    const [hasNewIdeaMarket, setHasNewIdeaMarket] = useState(false);
+    // 명예의 전당 새 소식 확인
     const [hasNewAgitHonor, setHasNewAgitHonor] = useState(false);
 
     useEffect(() => {
@@ -49,43 +55,6 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                     }
                 }
 
-                // 2. 아이디어 마켓 최신 안건/아이디어 확인
-                const { data: latestMeeting } = await supabase
-                    .from('writing_missions')
-                    .select('id, created_at')
-                    .eq('class_id', classId)
-                    .eq('mission_type', 'meeting')
-                    .eq('is_archived', false)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-
-                let latestIdea = null;
-                if (latestMeeting?.id) {
-                    const { data: ideaData } = await supabase
-                        .from('student_posts')
-                        .select('created_at')
-                        .eq('mission_id', latestMeeting.id)
-                        .eq('is_submitted', true)
-                        .order('created_at', { ascending: false })
-                        .limit(1)
-                        .maybeSingle();
-                    latestIdea = ideaData;
-                }
-
-                const latestMeetingTime = latestMeeting ? new Date(latestMeeting.created_at) : new Date(0);
-                const latestIdeaTime = latestIdea ? new Date(latestIdea.created_at) : new Date(0);
-                const mostRecentMarketTime = new Date(Math.max(latestMeetingTime, latestIdeaTime));
-
-                if (mostRecentMarketTime.getTime() > 0) {
-                    const lastCheckMarket = localStorage.getItem(`last_visit_idea_market_${classId}`);
-                    const isRecentMarket = mostRecentMarketTime > new Date(Date.now() - 24 * 60 * 60 * 1000);
-                    const isUncheckedMarket = !lastCheckMarket || mostRecentMarketTime > new Date(lastCheckMarket);
-
-                    if (isRecentMarket && isUncheckedMarket) {
-                        setHasNewIdeaMarket(true);
-                    }
-                }
             } catch (err) {
                 console.error('새 소식 확인 실패:', err);
             }
@@ -122,14 +91,8 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
     const displayRow1 = row1Messages.length > 0 ? row1Messages : boardMessages;
     const displayRow2 = row2Messages.length > 0 ? row2Messages : (boardMessages.length > 0 ? boardMessages : ["..."]);
 
-    // 폭죽 효과를 위한 파티클 생성
-    const confettiParticles = useRef([...Array(20)].map((_, i) => ({
-        id: i,
-        x: Math.random() * 100 - 50,
-        y: Math.random() * 100 - 50,
-        color: ['#FFD700', '#FF6B6B', '#4ADE80', '#60A5FA', '#F472B6'][Math.floor(Math.random() * 5)],
-        delay: Math.random() * 0.5
-    }))).current;
+    // 폭죽 효과를 위한 결정적 파티클(렌더마다 위치가 바뀌지 않음)
+    const confettiParticles = CONFETTI_PARTICLES;
 
     // 온도를 0-100 사이로 맵핑
     const currentVisualTemp = Math.min(100, Math.max(0, temperature || 0));
@@ -173,16 +136,6 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
         if (subTab === 'hub') onBack();
         else setSubTab('hub');
     };
-
-    // 아이디어 마켓 뷰일 경우 별도 페이지 렌더링
-    if (subTab === 'ideaMarket') {
-        return (
-            <IdeaMarketPage
-                studentSession={studentSession}
-                onBack={() => setSubTab('hub')}
-            />
-        );
-    }
 
     return (
         <div style={{
@@ -339,71 +292,6 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                 </div>
                             </div>
                         </Card>
-
-                        {/* [신규] 아이디어 마켓 카드 - 아지트 온 클래스 바로 아래 */}
-                        <motion.div whileHover={agitSettings?.isIdeaMarketEnabled !== false ? { scale: 1.02 } : {}} whileTap={agitSettings?.isIdeaMarketEnabled !== false ? { scale: 0.98 } : {}} style={{ marginTop: '12px' }}>
-                            <Card
-                                onClick={() => {
-                                    if (agitSettings?.isIdeaMarketEnabled === false) {
-                                        alert('🔒 현재 아지트 아이디어 마켓 기능이 준비 중입니다.');
-                                        return;
-                                    }
-                                    // [신규] 확인 시점 기록 및 뱃지 제거
-                                    if (classId) {
-                                        localStorage.setItem(`last_visit_idea_market_${classId}`, new Date().toISOString());
-                                        setHasNewIdeaMarket(false);
-                                    }
-                                    setSubTab('ideaMarket');
-                                }}
-                                style={{
-                                    background: agitSettings?.isIdeaMarketEnabled === false ? 'linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%)' : 'linear-gradient(135deg, #EDE9FE 0%, #F5F3FF 100%)',
-                                    border: agitSettings?.isIdeaMarketEnabled === false ? '1px solid #CBD5E1' : '1px solid #DDD6FE',
-                                    cursor: agitSettings?.isIdeaMarketEnabled === false ? 'default' : 'pointer', padding: '20px', margin: 0,
-                                    boxShadow: agitSettings?.isIdeaMarketEnabled === false ? 'none' : '0 4px 12px rgba(124, 58, 237, 0.1)',
-                                    position: 'relative',
-                                    opacity: agitSettings?.isIdeaMarketEnabled === false ? 0.7 : 1
-                                }}
-                            >
-                                {hasNewIdeaMarket && agitSettings?.isIdeaMarketEnabled !== false && (
-                                    <div style={{
-                                        position: 'absolute', top: '10px', right: '10px',
-                                        background: '#FF5252',
-                                        color: 'white', fontSize: '0.65rem',
-                                        padding: '2px 8px', borderRadius: '8px', fontWeight: 'bold',
-                                        boxShadow: '0 2px 4px rgba(255, 82, 82, 0.3)',
-                                        animation: 'bounce 1s infinite',
-                                        zIndex: 10
-                                    }}>NEW</div>
-                                )}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <div style={{
-                                        width: '48px', height: '48px',
-                                        background: agitSettings?.isIdeaMarketEnabled === false ? '#94A3B8' : 'linear-gradient(135deg, #A855F7, #7C3AED)',
-                                        borderRadius: '12px', display: 'flex',
-                                        alignItems: 'center', justifyContent: 'center',
-                                        fontSize: '1.5rem', boxShadow: agitSettings?.isIdeaMarketEnabled === false ? 'none' : '0 4px 10px rgba(124, 58, 237, 0.3)',
-                                        filter: agitSettings?.isIdeaMarketEnabled === false ? 'grayscale(100%)' : 'none'
-                                    }}>{agitSettings?.isIdeaMarketEnabled === false ? '🔒' : '🏛️'}</div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                                            <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: agitSettings?.isIdeaMarketEnabled === false ? '#64748B' : '#4C1D95' }}>
-                                                아지트 아이디어 마켓 {agitSettings?.isIdeaMarketEnabled === false && <span style={{ fontSize: '0.7rem', color: '#EF4444' }}>[준비중]</span>}
-                                            </h3>
-                                        </div>
-                                        <p style={{ margin: 0, fontSize: '0.75rem', color: agitSettings?.isIdeaMarketEnabled === false ? '#94A3B8' : '#7C3AED' }}>
-                                            {agitSettings?.isIdeaMarketEnabled === false ? '지금은 준비 중이에요. 선생님이 열어주실 때까지 기다려주세요!' : '우리 반 민주주의 광장! 제안하는 글쓰기를 통해 아이디어를 제안해요.'}
-                                        </p>
-                                    </div>
-                                    <div style={{
-                                        fontSize: '0.9rem', color: agitSettings?.isIdeaMarketEnabled === false ? '#94A3B8' : '#8B5CF6',
-                                        fontWeight: '900', padding: '6px 16px', background: 'rgba(255, 255, 255, 0.8)',
-                                        borderRadius: '16px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
-                                    }}>
-                                        {agitSettings?.isIdeaMarketEnabled === false ? '입장 불가' : '입장하기'}
-                                    </div>
-                                </div>
-                            </Card>
-                        </motion.div>
 
                         <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', color: '#64748B', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>

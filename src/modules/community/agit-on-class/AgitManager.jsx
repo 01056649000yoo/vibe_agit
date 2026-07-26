@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../lib/supabaseClient';
-import Card from '../common/Card';
-import Button from '../common/Button';
+import { supabase } from '../../../lib/supabaseClient';
+import Card from '../../../components/common/Card';
+import Button from '../../../components/common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useClassAgitClass } from '../../hooks/useClassAgitClass';
-import IdeaMarketManager from './IdeaMarketManager';
+import { useClassAgitClass } from '../../../hooks/useClassAgitClass';
 
 const DEFAULT_AGIT_SETTINGS = {
     isMenuEnabled: false,
-    isIdeaMarketEnabled: false,
     isEnabled: false,
     targetScore: 100,
     surpriseGift: '',
@@ -22,7 +20,6 @@ const DEFAULT_AGIT_SETTINGS = {
 const AgitManager = ({ activeClass, isMobile }) => {
     const [, setLoading] = useState(true);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-    const [showIdeaMarket, setShowIdeaMarket] = useState(false);
 
     // 학생 화면과 동일한 온도 및 설정 실시간 동기화
     const { 
@@ -249,42 +246,11 @@ const AgitManager = ({ activeClass, isMobile }) => {
         }
     };
 
-    const handleToggleIdeaMarketEnable = async () => {
-        try {
-            setLoading(true);
-            const updatedSettings = { ...settings, isIdeaMarketEnabled: !settings.isIdeaMarketEnabled };
-            const { error } = await supabase
-                .from('classes')
-                .update({ agit_settings: updatedSettings })
-                .eq('id', activeClass.id);
-
-            if (error) throw error;
-            setSettings(updatedSettings);
-            refresh(true);
-        } catch (error) {
-            console.error("Error toggling idea market:", error);
-            alert('아이디어 마켓 활성화 변경 중 오류가 발생했습니다.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const displayTargetScore = liveSettings?.targetScore || settings.targetScore || 100;
     const displaySurpriseGift = liveSettings?.surpriseGift || settings.surpriseGift;
 
     const isGoalReached = liveTemperature >= displayTargetScore;
     const isSeasonLocked = !isGoalReached && (liveSettings?.targetScore > 0) && (liveTemperature > 0);
-
-    // 아이디어 마켓 관리 화면
-    if (showIdeaMarket) {
-        return (
-            <IdeaMarketManager
-                activeClass={activeClass}
-                onBack={() => setShowIdeaMarket(false)}
-                isMobile={isMobile}
-            />
-        );
-    }
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -431,120 +397,6 @@ const AgitManager = ({ activeClass, isMobile }) => {
                         >
                             <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: '600' }}>설정 및 미션 관리</span>
                             <span style={{ color: '#6366F1', fontWeight: '800', fontSize: '0.9rem' }}>관리하기 →</span>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* 2. 아지트 아이디어 마켓 */}
-                <motion.div
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    style={{ height: '100%', cursor: 'pointer' }}
-                    onClick={() => setShowIdeaMarket(true)}
-                >
-                    <div style={{
-                        height: '100%',
-                        background: 'white',
-                        borderRadius: '24px',
-                        border: '1px solid #E2E8F0',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                        overflow: 'hidden',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        opacity: 1
-                    }}>
-                        <div style={{
-                            background: 'linear-gradient(135deg, #A18CD1 0%, #FBC2EB 100%)',
-                            padding: '24px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start'
-                        }}>
-                            <div>
-                                <div style={{
-                                    background: 'rgba(255,255,255,0.3)',
-                                    backdropFilter: 'blur(8px)',
-                                    padding: '6px 12px',
-                                    borderRadius: '8px',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    marginBottom: '8px',
-                                    border: '1px solid rgba(255,255,255,0.2)'
-                                }}>
-                                    <span style={{ fontSize: '1.2rem' }}>💡</span>
-                                    <span style={{ color: '#4C1D95', fontWeight: '800', fontSize: '0.75rem', letterSpacing: '0.05em' }}>IDEA MARKET</span>
-                                </div>
-                                <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#4C1D95', letterSpacing: '-0.02em' }}>아지트 아이디어 마켓</h3>
-                            </div>
-                            <div style={{
-                                background: '#7C3AED',
-                                color: 'white',
-                                padding: '4px 10px',
-                                borderRadius: '20px',
-                                fontSize: '0.75rem',
-                                fontWeight: '900'
-                            }}>OPEN</div>
-                        </div>
-
-                        <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center', textAlign: 'center' }}>
-                            <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🏛️</div>
-                            <p style={{ margin: 0, fontSize: '1rem', color: '#1E1B4B', fontWeight: '800', lineHeight: '1.5' }}>
-                                우리 반 민주주의 광장!<br />더 즐거운 학급을 위한 제안을 모아요.
-                            </p>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', fontWeight: '500' }}>
-                                학생들의 창의적인 건의사항을 확인하고 소통하는 공간입니다.
-                            </p>
-                        </div>
-
-                        {/* 활성화 토글 (카드 내부) */}
-                        <div
-                            onClick={e => e.stopPropagation()}
-                            style={{
-                                padding: '14px 24px',
-                                borderTop: '1px solid #EDE9FE',
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                background: settings.isIdeaMarketEnabled ? '#F5F3FF' : '#F8FAFC',
-                                transition: 'background 0.3s'
-                            }}
-                        >
-                            <div>
-                                <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#4C1D95' }}>
-                                    {settings.isIdeaMarketEnabled ? '🟣 학생 메뉴 활성화됨' : '⚪ 학생 메뉴 잠김'}
-                                </div>
-                                <div style={{ fontSize: '0.75rem', color: '#7C3AED', marginTop: '2px' }}>
-                                    {settings.isIdeaMarketEnabled ? '학생들이 아이디어 마켓에 입장할 수 있습니다' : '학생들에게는 잠금 표시가 보입니다'}
-                                </div>
-                            </div>
-                            <div
-                                onClick={handleToggleIdeaMarketEnable}
-                                style={{
-                                    width: '50px', height: '28px',
-                                    background: settings.isIdeaMarketEnabled ? '#8B5CF6' : '#CBD5E1',
-                                    borderRadius: '14px', position: 'relative',
-                                    cursor: 'pointer', transition: 'background 0.3s', flexShrink: 0
-                                }}
-                            >
-                                <motion.div
-                                    animate={{ x: settings.isIdeaMarketEnabled ? 24 : 2 }}
-                                    style={{
-                                        width: '24px', height: '24px', background: 'white',
-                                        borderRadius: '50%', position: 'absolute', top: '2px',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        <div style={{
-                            padding: '16px 24px',
-                            background: '#F5F3FF',
-                            borderTop: '1px solid #EDE9FE',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            cursor: 'pointer'
-                        }}>
-                            <span style={{ fontSize: '0.85rem', color: '#7C3AED', fontWeight: '700' }}>회의 안건 관리하기 →</span>
                         </div>
                     </div>
                 </motion.div>

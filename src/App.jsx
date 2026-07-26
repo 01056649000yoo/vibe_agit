@@ -24,6 +24,7 @@ const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard')) /
 const StudentWriting = lazy(() => import('./components/student/StudentWriting'))
 const MissionList = lazy(() => import('./components/student/MissionList'))
 const FriendsHideout = lazy(getModule('friends-hideout').studentEntry)
+const IdeaMarketPage = lazy(getModule('idea-market').studentEntry)
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
 const PrivacyPolicy = lazy(() => import('./components/layout/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('./components/layout/TermsOfService'))
@@ -58,6 +59,10 @@ function App() {
     studentSession?.classId || studentSession?.class_id,
     'student'
   );
+  const ideaMarketEnabled = enabledStudentModules.some((module) => module.id === 'idea-market');
+  const studentPageName = internalPage.name === 'idea_market' && !ideaMarketEnabled
+    ? 'main'
+    : internalPage.name;
   // 상태 변경 감지 로그
   useEffect(() => {
   }, [isAdminMode]);
@@ -254,7 +259,7 @@ function App() {
           ) : studentSession ? (
             /* [2순위] 학생 모드 (교사 세션이 없을 때) */
             <>
-              {internalPage.name === 'main' && (
+              {studentPageName === 'main' && (
                 <StudentDashboard
                   studentSession={studentSession}
                   onLogout={handleStudentLogout}
@@ -262,14 +267,15 @@ function App() {
                   enabledModules={enabledStudentModules}
                 />
               )}
-              {internalPage.name === 'mission_list' && (
+              {studentPageName === 'mission_list' && (
                 <MissionList
                   studentSession={studentSession}
                   onBack={() => setInternalPage('main')}
                   onNavigate={setInternalPage}
+                  ideaMarketEnabled={ideaMarketEnabled}
                 />
               )}
-              {internalPage.name === 'writing' && (
+              {studentPageName === 'writing' && (
                 <StudentWriting
                   studentSession={studentSession}
                   missionId={internalPage.params.missionId}
@@ -278,18 +284,25 @@ function App() {
                   onNavigate={setInternalPage}
                 />
               )}
-              {internalPage.name === 'friends_hideout' && (
+              {studentPageName === 'friends_hideout' && (
                 <FriendsHideout
                   studentSession={studentSession}
                   params={internalPage.params}
                   onBack={() => setInternalPage('main')}
                 />
               )}
+              {studentPageName === 'idea_market' && ideaMarketEnabled && (
+                <IdeaMarketPage
+                  studentSession={studentSession}
+                  params={internalPage.params}
+                  onBack={() => setInternalPage('mission_list')}
+                />
+              )}
   
               {/* [신규] 학생용 하단 모바일 내비게이션 (모바일에서만 표시됨) */}
               <Suspense fallback={null}>
                 <StudentBottomNav
-                  activeTab={internalPage.name}
+                  activeTab={studentPageName}
                   onNavigate={setInternalPage}
                 />
               </Suspense>

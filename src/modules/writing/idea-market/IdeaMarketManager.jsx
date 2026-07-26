@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../../lib/supabaseClient';
-import Card from '../common/Card';
-import Button from '../common/Button';
+import { supabase } from '../../../lib/supabaseClient';
+import Card from '../../../components/common/Card';
+import Button from '../../../components/common/Button';
 
 // 상태 뱃지 색상
 const STATUS_COLORS = {

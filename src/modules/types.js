@@ -14,8 +14,11 @@
  * @property {() => Promise<any>} [studentEntry]  학생 진입 컴포넌트 (React.lazy용 동적 import)
  * @property {() => Promise<any>} [teacherEntry]  교사 설정/관리 컴포넌트
  * @property {string}   [studentRoute] 학생 화면 내부 라우트 이름
+ * @property {string[]} [writingMissionTypes] 이 모듈이 처리하는 글쓰기 입력 미션 유형
  * @property {boolean}  [defaultEnabled]  학급 설정이 없을 때 기본 노출 여부 (기본 false)
  * @property {boolean}  [core]    true면 항상 켜짐(끌 수 없음). 코어 인접 기능용
+ * @property {string[]} [legacyFields] 기존 노출 상태를 초기값으로 읽을 classes 컬럼
+ * @property {(settings: Object) => boolean|undefined} [resolveLegacyEnabled] 기존 설정에서 초기 ON/OFF를 계산
  */
 
 /** 파트 표시 이름 (메뉴 그룹 헤더) */
