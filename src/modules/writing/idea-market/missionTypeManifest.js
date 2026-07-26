@@ -8,6 +8,7 @@ export const meetingMissionType = {
     teacherEntry: () => import('./IdeaMarketManager'),
     teacherReview: true,
     reviewLabel: '학생 제안 보기',
+    supportsEvaluation: true,
     studentRoute: 'writing',
     postStatus: '제안중',
     studentLabels: {

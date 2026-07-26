@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../../../../lib/supabaseClient';
 import Card from '../../../../components/common/Card';
 import Button from '../../../../components/common/Button';
+import RubricSettings, { createDefaultEvaluationRubric } from '../../evaluation/RubricSettings';
 
 const getInitialForm = (mission) => ({
     title: mission?.title || '',
@@ -10,6 +11,7 @@ const getInitialForm = (mission) => ({
     min_lines_per_stanza: mission?.template_config?.min_lines_per_stanza ?? 1,
     base_reward: mission?.base_reward ?? 100,
     allow_comments: mission?.allow_comments ?? true,
+    evaluation_rubric: createDefaultEvaluationRubric(mission?.evaluation_rubric),
 });
 
 const normalizeStepValue = (value, min, step) => {
@@ -89,7 +91,7 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                 allow_comments: form.allow_comments,
                 guide_questions: [],
                 tags: ['시쓰기'],
-                evaluation_rubric: { use_rubric: false, levels: [] },
+                evaluation_rubric: form.evaluation_rubric,
                 is_archived: false,
             };
 
@@ -119,7 +121,7 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                 </div>
             </div>
 
-            <Card style={{ maxWidth: '760px', padding: isMobile ? '20px' : '28px', borderRadius: '22px', border: '1px solid #DCFCE7' }}>
+            <Card style={{ maxWidth: 'none', width: '100%', padding: isMobile ? '20px' : '28px', borderRadius: '22px', border: '1px solid #DCFCE7', boxSizing: 'border-box' }}>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                     <label>
                         <span style={{ display: 'block', marginBottom: '7px', color: '#334155', fontWeight: '800' }}>시 쓰기 주제 *</span>
@@ -135,6 +137,13 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                         <NumberSetting label="연별 최소 행" value={form.min_lines_per_stanza} min={1} onChange={(value) => update('min_lines_per_stanza', value)} description="각 연에 필요한 최소 줄 수입니다." />
                         <NumberSetting label="완료 포인트" value={form.base_reward} min={0} step={10} onChange={(value) => update('base_reward', value)} description="10P 단위로 조정하며 교사 승인 후 지급합니다." />
                     </div>
+
+                    <RubricSettings
+                        rubric={form.evaluation_rubric}
+                        onChange={(evaluationRubric) => update('evaluation_rubric', evaluationRubric)}
+                        isMobile={isMobile}
+                        recommendedCodes={['4국05-04', '6국05-05']}
+                    />
 
                     <button type="button" onClick={() => update('allow_comments', !form.allow_comments)} style={{ padding: '13px', borderRadius: '12px', border: form.allow_comments ? '2px solid #4ADE80' : '1px solid #CBD5E1', background: form.allow_comments ? '#F0FDF4' : '#F8FAFC', color: '#334155', cursor: 'pointer', fontWeight: '800' }}>
                         {form.allow_comments ? '💬 친구 댓글 허용함' : '🔒 친구 댓글 사용 안 함'}

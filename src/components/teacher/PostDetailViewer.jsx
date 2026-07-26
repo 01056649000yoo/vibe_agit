@@ -137,7 +137,6 @@ const PostDetailViewer = ({
                                             padding: '12px 16px',
                                             marginBottom: '8px',
                                             borderRadius: '12px',
-                                            border: 'none',
                                             textAlign: 'left',
                                             cursor: 'pointer',
                                             background: selectedPost.id === post.id ? 'white' : 'transparent',

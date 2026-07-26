@@ -30,6 +30,7 @@ const MissionItem = memo(({
 }) => {
     const genreMissionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
     const isMeetingMission = genreMissionType?.id === 'meeting';
+    const supportsEvaluation = genreMissionType?.supportsEvaluation !== false;
     const progressLabel = isMeetingMission ? `💡 제안 ${completedCount}건` : `✍️ ${completedCount}명 완료`;
 
     return (
@@ -108,7 +109,7 @@ const MissionItem = memo(({
                 >
                     {isMeetingMission ? `💡 ${genreMissionType.reviewLabel} (${completedCount})` : '📝 학생 글 확인'}
                 </Button>
-                {!isMeetingMission && mission.evaluation_rubric?.use_rubric && (
+                {supportsEvaluation && mission.evaluation_rubric?.use_rubric && (
                     <>
                         <Button
                             onClick={() => handleEvaluationMode(mission)}

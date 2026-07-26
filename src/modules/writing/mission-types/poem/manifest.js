@@ -12,6 +12,7 @@ export const poemMissionType = {
     description: '제목과 쓴이를 표시하고 연을 나누어 시를 씁니다.',
     teacherEntry: () => import('./PoemMissionForm'),
     studentEditorEntry: () => import('./PoemEditor'),
+    supportsEvaluation: true,
     unitLabel: '연 수',
     skipGenericParagraphValidation: true,
     countParagraphs: ({ structuredContent, content }) => (

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import EvaluationReport from './EvaluationReport';
+import { resolveKoreanStandards } from '../../modules/writing/evaluation/koreanAchievementStandards';
 
 const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
     const [missions, setMissions] = useState([]);
@@ -53,7 +54,11 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
                 </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
-                    {evaluationMissions.map((mission) => (
+                    {evaluationMissions.map((mission) => {
+                        const curriculum = mission.evaluation_rubric?.curriculum;
+                        const standardCount = resolveKoreanStandards(curriculum?.achievement_standard_codes).length;
+
+                        return (
                         <motion.div
                             key={mission.id}
                             whileHover={{ y: -5 }}
@@ -79,6 +84,14 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
                                     <span style={{ color: '#0369A1', fontWeight: '900' }}>{mission.evaluation_rubric?.levels?.length || 0}단계</span>
                                 </div>
                             </div>
+                            {standardCount > 0 && (
+                                <div style={{
+                                    padding: '10px 12px', borderRadius: '14px', background: '#EEF2FF',
+                                    color: '#4338CA', fontSize: '0.8rem', fontWeight: '800'
+                                }}>
+                                    📚 2022 국어 · {curriculum.grade}학년 · 성취기준 {standardCount}개
+                                </div>
+                            )}
                             <Button
                                 onClick={() => setSelectedMission(mission)}
                                 style={{
@@ -89,7 +102,8 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
                                 분석 리포트 열기 ✨
                             </Button>
                         </motion.div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 

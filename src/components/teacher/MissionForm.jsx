@@ -4,6 +4,7 @@ import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabaseClient';
+import RubricSettings from '../../modules/writing/evaluation/RubricSettings';
 
 const MissionForm = ({
     isFormOpen, isEditing, editingMissionId, formData, setFormData,
@@ -553,7 +554,6 @@ const MissionForm = ({
                                                                 }}
                                                                 style={{
                                                                     flex: 1,
-                                                                    border: 'none',
                                                                     background: '#F8FAFC',
                                                                     padding: '20px 24px',
                                                                     borderRadius: '20px',
@@ -877,171 +877,15 @@ const MissionForm = ({
                                     </div>
                                 </div>
 
-                                {/* [신규] 평가 루브릭 설정 섹션 */}
-                                <div style={{
-                                    background: '#FFF8F0',
-                                    padding: '20px',
-                                    borderRadius: '20px',
-                                    border: formData.evaluation_rubric?.use_rubric ? '2px solid #F39C12' : '1px dashed #E67E22',
-                                    marginBottom: '8px',
-                                    transition: 'all 0.3s'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: formData.evaluation_rubric?.use_rubric ? '20px' : '0' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div
-                                                onClick={() => setFormData({
-                                                    ...formData,
-                                                    evaluation_rubric: {
-                                                        ...formData.evaluation_rubric,
-                                                        use_rubric: !formData.evaluation_rubric?.use_rubric
-                                                    }
-                                                })}
-                                                style={{
-                                                    width: '50px', height: '26px',
-                                                    background: formData.evaluation_rubric?.use_rubric ? '#F39C12' : '#BDC3C7',
-                                                    borderRadius: '13px', position: 'relative', cursor: 'pointer'
-                                                }}
-                                            >
-                                                <div style={{
-                                                    width: '20px', height: '20px', background: 'white', borderRadius: '50%',
-                                                    position: 'absolute', top: '3px',
-                                                    left: formData.evaluation_rubric?.use_rubric ? '27px' : '3px',
-                                                    transition: 'all 0.3s'
-                                                }} />
-                                            </div>
-                                            <div>
-                                                <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#2C3E50' }}>
-                                                    📊 글쓰기 평가 루브릭 {formData.evaluation_rubric?.use_rubric ? '(사용 중)' : '(선택)'}
-                                                </div>
-                                                <div style={{ fontSize: '0.8rem', color: '#7F8C8D' }}>
-                                                    글쓰기 완료 후 학생의 성취도를 {formData.evaluation_rubric?.levels?.length || 3}단계로 평가합니다.
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {formData.evaluation_rubric?.use_rubric && (
-                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                                                <div style={{ display: 'flex', gap: '8px' }}>
-                                                    {[3, 4, 5].map(lvl => {
-                                                        const colors = {
-                                                            3: { main: '#10B981', border: '#D1FAE5' },
-                                                            4: { main: '#3B82F6', border: '#DBEAFE' },
-                                                            5: { main: '#8B5CF6', border: '#EDE9FE' }
-                                                        };
-                                                        const theme = colors[lvl];
-                                                        const isSelected = formData.evaluation_rubric.levels?.length === lvl;
-
-                                                        return (
-                                                            <button
-                                                                key={lvl}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    let newLevels = [];
-                                                                    if (lvl === 3) {
-                                                                        newLevels = [
-                                                                            { score: 3, label: '우수' },
-                                                                            { score: 2, label: '보통' },
-                                                                            { score: 1, label: '노력' }
-                                                                        ];
-                                                                    } else if (lvl === 4) {
-                                                                        newLevels = [
-                                                                            { score: 4, label: '매우 우수' },
-                                                                            { score: 3, label: '우수' },
-                                                                            { score: 2, label: '보통' },
-                                                                            { score: 1, label: '노력' }
-                                                                        ];
-                                                                    } else {
-                                                                        newLevels = [
-                                                                            { score: 5, label: '매우 우수' },
-                                                                            { score: 4, label: '우수' },
-                                                                            { score: 3, label: '보통' },
-                                                                            { score: 2, label: '기초' },
-                                                                            { score: 1, label: '노력' }
-                                                                        ];
-                                                                    }
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        evaluation_rubric: { ...formData.evaluation_rubric, levels: newLevels }
-                                                                    });
-                                                                }}
-                                                                style={{
-                                                                    padding: '6px 14px',
-                                                                    borderRadius: '12px',
-                                                                    border: `2px solid ${isSelected ? theme.main : '#E2E8F0'}`,
-                                                                    background: isSelected ? theme.main : 'white',
-                                                                    color: isSelected ? 'white' : '#64748B',
-                                                                    fontSize: '0.85rem',
-                                                                    fontWeight: '900',
-                                                                    cursor: 'pointer',
-                                                                    transition: 'all 0.2s',
-                                                                    boxShadow: isSelected ? `0 4px 12px ${theme.main}40` : 'none'
-                                                                }}
-                                                            >
-                                                                {lvl}단계
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                                <Button
-                                                    type="button"
-                                                    onClick={handleSaveDefaultRubric}
-                                                    style={{
-                                                        background: '#FFFFFF',
-                                                        border: '1px solid #F39C12',
-                                                        color: '#F39C12',
-                                                        padding: '6px 12px',
-                                                        fontSize: '0.8rem',
-                                                        borderRadius: '10px',
-                                                        fontWeight: 'bold',
-                                                        minHeight: 'auto'
-                                                    }}
-                                                >
-                                                    💾 기본값으로 저장
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {formData.evaluation_rubric?.use_rubric && (
-                                        <div style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: isMobile ? '1fr' : `repeat(${formData.evaluation_rubric.levels.length}, 1fr)`,
-                                            gap: '10px',
-                                            width: '100%',
-                                            boxSizing: 'border-box'
-                                        }}>
-                                            {formData.evaluation_rubric.levels.map((level, idx) => (
-                                                <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                                                    <span style={{ fontSize: '0.7rem', color: '#E67E22', fontWeight: 'bold' }}>{level.score}점 명칭</span>
-                                                    <input
-                                                        type="text"
-                                                        value={level.label}
-                                                        onChange={e => {
-                                                            const newLevels = [...formData.evaluation_rubric.levels];
-                                                            newLevels[idx].label = e.target.value;
-                                                            setFormData({
-                                                                ...formData,
-                                                                evaluation_rubric: { ...formData.evaluation_rubric, levels: newLevels }
-                                                            });
-                                                        }}
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '10px',
-                                                            borderRadius: '10px',
-                                                            border: '1px solid #FAD7A0',
-                                                            fontSize: '0.85rem',
-                                                            textAlign: 'center',
-                                                            outline: 'none',
-                                                            background: 'white',
-                                                            boxSizing: 'border-box',
-                                                            minWidth: 0
-                                                        }}
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                                <RubricSettings
+                                    rubric={formData.evaluation_rubric}
+                                    onChange={(evaluationRubric) => setFormData({
+                                        ...formData,
+                                        evaluation_rubric: evaluationRubric
+                                    })}
+                                    isMobile={isMobile}
+                                    onSaveDefaultRubric={handleSaveDefaultRubric}
+                                />
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     {isEditing && (
                                         <Button

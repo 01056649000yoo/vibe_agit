@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEvaluation } from '../../hooks/useEvaluation';
-import Card from '../common/Card';
 import Button from '../common/Button';
+import { resolveKoreanStandards } from '../../modules/writing/evaluation/koreanAchievementStandards';
 
 const EvaluationReport = ({ mission, onClose, isMobile }) => {
     const { fetchMissionReport } = useEvaluation();
@@ -12,20 +12,26 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
     const [displayLimit, setDisplayLimit] = useState(50); // [성능 최적화] 지연 렌더링을 위한 표시 개수
 
     useEffect(() => {
-        if (mission?.id) {
-            loadReport();
-        }
-    }, [mission?.id]);
+        let isMounted = true;
 
-    const loadReport = async () => {
-        const result = await fetchMissionReport(mission.id);
-        if (result.success) {
-            setReportData(result.data || []);
-        }
-    };
+        const loadReport = async () => {
+            if (!mission?.id) return;
+            const result = await fetchMissionReport(mission.id);
+            if (isMounted && result.success) {
+                setReportData(result.data || []);
+            }
+        };
+
+        loadReport();
+        return () => {
+            isMounted = false;
+        };
+    }, [mission?.id, fetchMissionReport]);
 
     const maxScore = mission?.evaluation_rubric?.levels?.length || 3;
     const requiredGrowth = maxScore === 3 ? 2 : maxScore === 4 ? 3 : 4;
+    const curriculum = mission?.evaluation_rubric?.curriculum;
+    const linkedStandards = resolveKoreanStandards(curriculum?.achievement_standard_codes);
 
     // 통계 계산
     const stats = useMemo(() => {
@@ -104,6 +110,26 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                 flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '40px',
                 maxWidth: '1100px', margin: '0 auto', width: '100%', boxSizing: 'border-box'
             }}>
+                {linkedStandards.length > 0 && (
+                    <section style={{
+                        background: '#EEF2FF', border: '1px solid #C7D2FE', borderRadius: '20px',
+                        padding: isMobile ? '16px' : '18px 22px', marginBottom: '24px'
+                    }}>
+                        <div style={{ color: '#3730A3', fontWeight: '900', marginBottom: '8px' }}>
+                            📚 2022 개정 국어과 · {curriculum.grade}학년 · 성취기준 {linkedStandards.length}개 연결
+                        </div>
+                        <div style={{ display: 'grid', gap: '5px', color: '#4338CA', fontSize: '0.82rem', lineHeight: 1.5 }}>
+                            {linkedStandards.map((standard) => (
+                                <div key={standard.code}>
+                                    <strong>[{standard.code}]</strong> {standard.description}
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ marginTop: '9px', color: '#6366F1', fontSize: '0.76rem', fontWeight: 'bold' }}>
+                            이 평가 결과와 교사 의견은 ‘국어 평어’ 작성의 근거로 활용됩니다.
+                        </div>
+                    </section>
+                )}
                 {/* 상단 통계 차트 영역 */}
                 <section style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: '24px', marginBottom: '32px' }}>
                     <div style={{ background: '#F8FAFC', padding: '20px 24px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>

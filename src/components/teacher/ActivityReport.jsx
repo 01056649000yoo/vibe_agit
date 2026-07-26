@@ -7,6 +7,7 @@ import { callAI } from '../../lib/openai';
 // xlsx는 exportToExcel() 호출 시 동적 로드 (429KB 초기 로드 제거)
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import BulkAIProgressModal from './BulkAIProgressModal';
+import { resolveKoreanStandards } from '../../modules/writing/evaluation/koreanAchievementStandards';
 
 /**
  * 역할: 선생님 - 활동별 리포트 (통합 분석 & 내보내기 버전) 📊
@@ -43,7 +44,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('id, title')
+                .select('id, title, tags, is_archived, evaluation_rubric')
                 .eq('class_id', activeClass.id)
                 // .or('is_archived.eq.false,is_archived.is.null') // 보관함 미션도 선택 가능하도록 필터 제거
                 .order('created_at', { ascending: false });
@@ -70,7 +71,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         const fetchTeacherAndHistory = async () => {
             if (!activeClass?.id) return;
 
-            await supabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
             const { data: teacherData } = await supabase
@@ -166,7 +167,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                     .from('student_posts')
                     .select('id, student_id, mission_id, content, final_eval, initial_eval, eval_comment, is_submitted, is_confirmed, char_count, writing_missions(id, title, evaluation_rubric)')
                     .in('mission_id', selectedMissionIds)
-                    .eq('is_confirmed', true)
+                    .eq('is_submitted', true)
                     .limit(200);
 
                 if (postsError) throw postsError;
@@ -197,7 +198,10 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                 }
 
                 // 학생 ID별로 포스트 그룹화
-                const postMap = (postsData || []).reduce((acc, p) => {
+                const evaluablePosts = (postsData || []).filter((post) => (
+                    post.is_confirmed || post.initial_eval !== null || post.final_eval !== null
+                ));
+                const postMap = evaluablePosts.reduce((acc, p) => {
                     if (!acc[p.student_id]) acc[p.student_id] = [];
                     acc[p.student_id].push(p);
                     return acc;
@@ -235,11 +239,24 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
 
     // AI에게 보낼 학생 활동 데이터 및 프롬프트 구성 (공통 사용)
     const getStudentPrompt = (studentName, posts) => {
-        const activitiesInfo = posts.map(p => `
+        const activitiesInfo = posts.map(p => {
+            const rubric = p.writing_missions?.evaluation_rubric || {};
+            const score = p.final_eval ?? p.initial_eval;
+            const level = rubric.levels?.find((item) => item.score === score);
+            const standards = resolveKoreanStandards(rubric.curriculum?.achievement_standard_codes);
+            const standardsText = standards.length > 0
+                ? standards.map((standard) => `[${standard.code}] ${standard.description}`).join('\n')
+                : '연결된 국어 성취기준 없음';
+
+            return `
 [미션명]: ${p.writing_missions?.title || '정보없음'}
-[성취수준]: ${p.final_eval || p.initial_eval || '평가 전'}
+[적용 학년]: ${rubric.curriculum?.grade ? `${rubric.curriculum.grade}학년` : '미지정'}
+[국어 성취기준]:
+${standardsText}
+[교사 평가]: ${score ? `${level?.label || `${score}점`} (${score}점)` : '평가 전'}
 [작성내용]: ${p.content}
-[교사코멘트]: ${p.eval_comment || '없음'}`).join('\n\n---\n');
+[교사코멘트]: ${p.eval_comment || '없음'}`;
+        }).join('\n\n---\n');
 
         const contextData = `
 [분석 대상 학생]: ${studentName}
@@ -247,10 +264,10 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
 ${activitiesInfo}`;
 
         if (promptTemplate && promptTemplate.trim()) {
-            return `${promptTemplate.trim()}\n\n${contextData.trim()}`;
+            return `${promptTemplate.trim()}\n\n[국어 평어 작성 추가 규칙]\n- 연결된 2022 개정 국어과 성취기준과 교사 평가 결과를 핵심 근거로 삼을 것.\n- 학생 이름과 성취기준 코드는 결과 문장에 직접 쓰지 않을 것.\n- 실제 글과 평가에서 확인되지 않은 능력은 추측하지 않을 것.\n- 관찰 중심의 평어체(~함, ~임)로 180자 안팎의 한 문단을 작성할 것.\n\n${contextData.trim()}`;
         }
 
-        return `학생 '${studentName}'의 활동 기록들을 바탕으로 학교생활기록부용 성취 수준 분석 리포트를 200자 내외 평어체(~함.)로 작성해줘.\n\n${contextData.trim()}`;
+        return `학생 '${studentName}'의 활동 기록과 교사 평가를 바탕으로 2022 개정 국어과 성취기준에 연결된 국어 교과 평어를 작성해줘. 학생 이름과 성취기준 코드는 결과에 쓰지 말고, 실제 글에서 확인되는 강점과 성장 정도를 관찰 중심의 평어체(~함, ~임)로 180자 안팎 한 문단으로 작성해줘. 근거가 없는 능력은 추측하지 마.\n\n${contextData.trim()}`;
     };
 
     // 5. 단일 생성
@@ -340,7 +357,7 @@ ${activitiesInfo}`;
                 await saveGenerationHistory(updatedPosts);
             }, 1000);
 
-            alert(isRegen ? '일괄 AI 쫑알이 재생성이 완료되었습니다! ✨' : '일괄 AI쫑알이 생성이 완료되었습니다! ✨');
+            alert(isRegen ? '국어 평어 일괄 재작성이 완료되었습니다! ✨' : '국어 평어 일괄 작성이 완료되었습니다! ✨');
         }
     };
 
@@ -422,18 +439,18 @@ ${activitiesInfo}`;
                 '이름': s.student.name,
                 '참여 활동수': s.posts.length,
                 '활동별 성취': achievements,
-                '통합 생기부 코멘트': s.ai_synthesis || '(미생성)'
+                '국어 교과 평어': s.ai_synthesis || '(미생성)'
             };
         });
 
         const worksheet = XLSX.utils.json_to_sheet(data);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "종합 리포트");
+        XLSX.utils.book_append_sheet(workbook, worksheet, "국어 평어");
 
         // 컬럼 너비 설정
         worksheet['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 40 }, { wch: 60 }];
 
-        XLSX.writeFile(workbook, `통합리포트_${activeClass.name}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        XLSX.writeFile(workbook, `국어평어_${activeClass.name}_${new Date().toISOString().slice(0, 10)}.xlsx`);
     };
 
     // 8. 구글 문서용 클립보드 복사
@@ -468,9 +485,9 @@ ${activitiesInfo}`;
             }}>
                 <div>
                     <h2 style={{ margin: '0 0 4px 0', fontSize: '1.6rem', fontWeight: '950', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '1.8rem' }}>🐣</span> AI쫑알이 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>생기부 도움자료</span>
+                        <span style={{ fontSize: '1.8rem' }}>📘</span> 국어 평어 도우미 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>2022 성취기준 연동</span>
                     </h2>
-                    <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>활동 기록을 연결하여 나만의 교육과정 성취 기준 리포트를 완성하세요.</p>
+                    <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>미션의 국어 성취기준과 평가 결과를 연결해 교과 평어 초안을 작성합니다.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                     <Button variant="outline" size="sm" onClick={exportToExcel} style={{ borderRadius: '12px', borderColor: '#10B981', color: '#059669', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}>
@@ -505,8 +522,15 @@ ${activitiesInfo}`;
                             {filteredMissions.map(m => (
                                 <div key={m.id} onClick={() => toggleMissionSelection(m.id)} style={{ padding: '10px 14px', background: selectedMissionIds.includes(m.id) ? '#EEF2FF' : '#F8FAFC', borderRadius: '12px', border: selectedMissionIds.includes(m.id) ? '1px solid #6366F1' : '1px solid #E2E8F0', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     {selectedMissionIds.includes(m.id) ? <CheckCircle2 size={16} color="#6366F1" /> : <Circle size={16} color="#CBD5E1" />}
-                                    <span style={{ fontWeight: selectedMissionIds.includes(m.id) ? 'bold' : 'normal', color: selectedMissionIds.includes(m.id) ? '#312E81' : '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {m.title} {m.is_archived && <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 'normal' }}>(보관됨)</span>}
+                                    <span style={{ minWidth: 0, flex: 1 }}>
+                                        <span style={{ display: 'block', fontWeight: selectedMissionIds.includes(m.id) ? 'bold' : 'normal', color: selectedMissionIds.includes(m.id) ? '#312E81' : '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {m.title} {m.is_archived && <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 'normal' }}>(보관됨)</span>}
+                                        </span>
+                                        {m.evaluation_rubric?.curriculum?.achievement_standard_codes?.length > 0 && (
+                                            <span style={{ display: 'block', marginTop: '3px', color: '#6366F1', fontSize: '0.68rem', fontWeight: '800' }}>
+                                                {m.evaluation_rubric.curriculum.grade}학년 · 성취기준 {m.evaluation_rubric.curriculum.achievement_standard_codes.length}개
+                                            </span>
+                                        )}
                                     </span>
                                 </div>
                             ))}
@@ -664,7 +688,7 @@ ${activitiesInfo}`;
                                 >
                                     {batchLoading
                                         ? `작업 중... (${batchProgress.current}/${batchProgress.total})`
-                                        : (generatedCount > 0 ? '🔄 일괄 AI 쫑알이 재생성' : '🪄 일괄 AI쫑알이 생성')}
+                                        : (generatedCount > 0 ? '🔄 국어 평어 일괄 재작성' : '🪄 국어 평어 일괄 작성')}
                                 </Button>
                             </div>
 
@@ -684,7 +708,7 @@ ${activitiesInfo}`;
                                 <div>학생 이름</div>
                                 <div style={{ textAlign: 'center' }}>참여 활동</div>
                                 <div style={{ textAlign: 'center' }}>분석 상태</div>
-                                <div style={{ textAlign: 'center' }}>AI 분석</div>
+                                <div style={{ textAlign: 'center' }}>평어 작성</div>
                                 <div></div>
                             </div>
 
@@ -784,7 +808,7 @@ ${activitiesInfo}`;
                                                             {/* AI 분석 결과 (메인 영역) */}
                                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                                                    <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6366F1' }}>✨ 통합 생기부 문구 분석 결과</div>
+                                                                    <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6366F1' }}>✨ 국어 교과 평어 초안</div>
                                                                     {data.ai_synthesis && (
                                                                         <button
                                                                             onClick={() => { navigator.clipboard.writeText(data.ai_synthesis); alert('복사되었습니다! 📋'); }}

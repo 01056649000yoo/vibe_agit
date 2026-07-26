@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../../lib/supabaseClient';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
+import RubricSettings, { createDefaultEvaluationRubric } from '../evaluation/RubricSettings';
 
 // 상태 뱃지 색상
 const STATUS_COLORS = {
@@ -19,7 +20,8 @@ const createMeetingForm = (meeting = null) => ({
     decided_reward: meeting?.bonus_reward ?? 50,
     min_chars: meeting?.min_chars ?? 100,
     bonus_threshold: meeting?.bonus_threshold ?? 100,
-    min_paragraphs: meeting?.min_paragraphs ?? 1
+    min_paragraphs: meeting?.min_paragraphs ?? 1,
+    evaluation_rubric: createDefaultEvaluationRubric(meeting?.evaluation_rubric)
 });
 
 const MEETING_SELECT_FIELDS = 'id, title, guide, guide_questions, created_at, is_archived, mission_type, input_template, template_config, base_reward, bonus_reward, min_chars, min_paragraphs, bonus_threshold, allow_comments, tags, evaluation_rubric';
@@ -50,7 +52,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('id, title, guide, guide_questions, created_at, is_archived, mission_type, base_reward, bonus_reward, min_chars, min_paragraphs, bonus_threshold')
+                .select(MEETING_SELECT_FIELDS)
                 .eq('class_id', activeClass.id)
                 .eq('is_archived', false)
                 .eq('mission_type', 'meeting')
@@ -169,7 +171,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                 allow_comments: true,
                 is_archived: false,
                 tags: ['회의안건'],
-                evaluation_rubric: { use_rubric: false, levels: [] }
+                evaluation_rubric: formData.evaluation_rubric
             };
 
             let savedMeeting;
@@ -216,16 +218,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
     // 수정 모드 시작
     const handleStartEdit = (meeting) => {
         setEditingMeetingId(meeting.id);
-        setFormData({
-            title: meeting.title || '',
-            guide: meeting.guide || '',
-            guide_questions: meeting.guide_questions || [],
-            submit_reward: meeting.base_reward || 30,
-            decided_reward: meeting.bonus_reward || 50,
-            min_chars: meeting.min_chars || 100,
-            bonus_threshold: meeting.bonus_threshold || 100,
-            min_paragraphs: meeting.min_paragraphs || 1
-        });
+        setFormData(createMeetingForm(meeting));
         setActiveTab('create');
     };
 
@@ -380,15 +373,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                     onClick={() => {
                         setActiveTab('create');
                         if (!editingMeetingId) {
-                            setFormData({
-                                title: '',
-                                guide: '',
-                                guide_questions: ['이 아이디어를 제안하는 이유는 무엇인가요?', '예상되는 문제점과 해결 방법은 무엇인가요?'],
-                                submit_reward: 30,
-                                decided_reward: 50,
-                                min_chars: 100,
-                                min_paragraphs: 1
-                            });
+                            setFormData(createMeetingForm());
                         }
                     }}
                     style={{
@@ -756,6 +741,16 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                     </div>
                                 </div>
                             </div>
+
+                            <RubricSettings
+                                rubric={formData.evaluation_rubric}
+                                onChange={(evaluationRubric) => setFormData((current) => ({
+                                    ...current,
+                                    evaluation_rubric: evaluationRubric
+                                }))}
+                                isMobile={isMobile}
+                                recommendedCodes={['4국03-03', '6국03-02']}
+                            />
 
                             {/* 등록 버튼 */}
                             <motion.button
