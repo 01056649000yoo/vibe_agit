@@ -4,6 +4,8 @@ export const meetingMissionType = {
     icon: '🏛️',
     description: '학급 회의 안건에 대한 학생들의 의견과 제안을 모읍니다.',
     teacherEntry: () => import('./IdeaMarketManager'),
+    teacherReview: true,
+    reviewLabel: '학생 제안 보기',
     studentRoute: 'idea_market',
 };
 

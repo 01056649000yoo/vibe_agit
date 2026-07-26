@@ -1,7 +1,8 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
-import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
+import { dataCache } from '../../lib/cache';
+import { getGenreMissionType, getGenreMissionTypes, resolveGenreMissionTypeId } from '../../modules/writing/mission-types/registry';
 import { useMissionManager } from '../../hooks/useMissionManager';
 import MissionForm from './MissionForm';
 import MissionTypePicker from './MissionTypePicker';
@@ -26,6 +27,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
     const [isMissionTypePickerOpen, setIsMissionTypePickerOpen] = useState(false);
     const [activeGenreMissionId, setActiveGenreMissionId] = useState(null);
     const [editingGenreMission, setEditingGenreMission] = useState(null);
+    const [activeGenreMode, setActiveGenreMode] = useState('create');
+    const [highlightedMissionId, setHighlightedMissionId] = useState(null);
 
     const {
         missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
@@ -55,6 +58,12 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    useEffect(() => {
+        if (!highlightedMissionId) return undefined;
+        const timerId = window.setTimeout(() => setHighlightedMissionId(null), 5000);
+        return () => window.clearTimeout(timerId);
+    }, [highlightedMissionId]);
+
     const genreCategories = [
         { label: '❤️ 마음을 표현하는 글', genres: ['일기', '생활문', '편지'] },
         { label: '🔍 사실을 전달하는 글', genres: ['설명문', '보고서(관찰 기록문)', '기사문'] },
@@ -74,22 +83,41 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
     const activeGenreMission = getGenreMissionType(activeGenreMissionId);
     const ActiveGenreMissionBuilder = GENRE_MISSION_BUILDERS.get(activeGenreMissionId) || null;
 
-    const closeGenreMissionBuilder = () => {
+    const closeGenreMissionBuilder = (savedMission = null) => {
+        if (activeClass?.id) {
+            dataCache.invalidate(`missions_v2_${activeClass.id}`);
+            dataCache.invalidate(`missions_summary_${activeClass.id}`);
+        }
+        if (savedMission?.id) setHighlightedMissionId(savedMission.id);
         setActiveGenreMissionId(null);
         setEditingGenreMission(null);
+        setActiveGenreMode('create');
         fetchMissions();
     };
 
     const handleMissionEditClick = (mission) => {
-        const templateId = mission.input_template || (mission.mission_type === 'poem' ? 'poem' : 'freeform');
-        if (templateId !== 'freeform' && getGenreMissionType(templateId)?.teacherEntry) {
+        const templateId = resolveGenreMissionTypeId(mission);
+        if (templateId && getGenreMissionType(templateId)?.teacherEntry) {
             setEditingGenreMission(mission);
             setActiveGenreMissionId(templateId);
+            setActiveGenreMode('edit');
             setIsMissionTypePickerOpen(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
         setIsMissionTypePickerOpen(false);
         handleEditClick(mission);
+    };
+
+    const handleReviewMission = (mission) => {
+        const templateId = resolveGenreMissionTypeId(mission);
+        const missionType = getGenreMissionType(templateId);
+        if (!missionType?.teacherReview) return;
+        setEditingGenreMission(mission);
+        setActiveGenreMissionId(templateId);
+        setActiveGenreMode('review');
+        setIsMissionTypePickerOpen(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     if (ActiveGenreMissionBuilder) {
@@ -99,6 +127,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                     activeClass,
                     isMobile,
                     mission: editingGenreMission,
+                    mode: activeGenreMode,
                     onBack: closeGenreMissionBuilder,
                     onSaved: closeGenreMissionBuilder,
                 })}
@@ -158,6 +187,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                     onSelectGenre={(id) => {
                         setIsMissionTypePickerOpen(false);
                         setEditingGenreMission(null);
+                        setActiveGenreMode('create');
                         setActiveGenreMissionId(id);
                     }}
                 />
@@ -197,6 +227,8 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                 isMobile={isMobile}
                 showEvaluationReport={(m) => setReportMission(m)}
                 handleEvaluationMode={handleEvaluationMode}
+                onReviewMission={handleReviewMission}
+                highlightedMissionId={highlightedMissionId}
             />
 
             {/* 학생 제출 현황 모달 */}

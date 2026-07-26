@@ -247,7 +247,7 @@ export const useMissionManager = (activeClass) => {
                     .eq('class_id', activeClass.id)
                     .order('created_at', { ascending: false });
                 if (error) throw error;
-                return (data || []).filter(m => !m.is_archived && m.mission_type !== 'meeting');
+                return (data || []).filter(m => !m.is_archived);
             }, 120000);
 
             setMissions(missionsData || []);
@@ -269,16 +269,21 @@ export const useMissionManager = (activeClass) => {
                 const SUBMISSION_COUNT_MISSION_CAP = 100;
                 const SUBMISSION_COUNT_ROW_CAP = 50000;
                 const missionIds = missionsData.slice(0, SUBMISSION_COUNT_MISSION_CAP).map(m => m.id);
+                const missionTypeById = new Map(
+                    missionsData.map((mission) => [mission.id, mission.mission_type])
+                );
                 const { data: counts, error: countError } = await supabase
                     .from('student_posts')
-                    .select('mission_id, student_id, students!inner(id)')
+                    .select('mission_id, student_id, is_submitted, is_confirmed, students!inner(id)')
                     .in('mission_id', missionIds)
-                    .eq('is_confirmed', true)
                     .is('students.deleted_at', null)
                     .limit(SUBMISSION_COUNT_ROW_CAP);
 
                 if (!countError && counts) {
                     const missionStudentSets = counts.reduce((acc, curr) => {
+                        const isMeetingMission = missionTypeById.get(curr.mission_id) === 'meeting';
+                        const shouldCount = isMeetingMission ? curr.is_submitted : curr.is_confirmed;
+                        if (!shouldCount) return acc;
                         if (!acc[curr.mission_id]) {
                             acc[curr.mission_id] = new Set();
                         }

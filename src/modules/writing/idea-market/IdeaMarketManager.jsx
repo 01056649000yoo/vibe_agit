@@ -11,33 +11,37 @@ const STATUS_COLORS = {
     '결정됨': { bg: '#E8F5E9', color: '#2E7D32', border: '#C8E6C9', icon: '✅' }
 };
 
+const createMeetingForm = (meeting = null) => ({
+    title: meeting?.title || '',
+    guide: meeting?.guide || '',
+    guide_questions: meeting?.guide_questions || ['이 아이디어를 제안하는 이유는 무엇인가요?', '예상되는 문제점과 해결 방법은 무엇인가요?'],
+    submit_reward: meeting?.base_reward ?? 30,
+    decided_reward: meeting?.bonus_reward ?? 50,
+    min_chars: meeting?.min_chars ?? 100,
+    bonus_threshold: meeting?.bonus_threshold ?? 100,
+    min_paragraphs: meeting?.min_paragraphs ?? 1
+});
+
+const MEETING_SELECT_FIELDS = 'id, title, guide, guide_questions, created_at, is_archived, mission_type, input_template, template_config, base_reward, bonus_reward, min_chars, min_paragraphs, bonus_threshold, allow_comments, tags, evaluation_rubric';
+
 /**
  * 🏛️ 학급 회의 안건 관리자 (교사용)
  * - 4열 그리드로 한 화면에 12명 아이디어 한눈에 확인 가능
  * - 클릭 시 상세보기 모달에서 가이드 질문 답변 + 상태 변경
  */
-const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
-    const [activeTab, setActiveTab] = useState('create'); // 'create' | 'manage'
-    const [meetings, setMeetings] = useState([]);
-    const [selectedMeeting, setSelectedMeeting] = useState(null);
+const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = null, mode = 'create' }) => {
+    const [activeTab, setActiveTab] = useState(mode === 'review' ? 'manage' : 'create'); // legacy 화면 호환용
+    const [meetings, setMeetings] = useState(() => mission ? [mission] : []);
+    const [selectedMeeting, setSelectedMeeting] = useState(() => mode === 'review' ? mission : null);
     const [ideas, setIdeas] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(mode === 'legacy');
     const [ideasLoading, setIdeasLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [editingMeetingId, setEditingMeetingId] = useState(null); // 수정 중인 안건 ID
+    const [editingMeetingId, setEditingMeetingId] = useState(mode === 'edit' ? mission?.id : null); // 수정 중인 안건 ID
     const [detailModal, setDetailModal] = useState(null); // 상세보기 모달용
 
     // 새 회의 안건 폼
-    const [formData, setFormData] = useState({
-        title: '',
-        guide: '',
-        guide_questions: ['이 아이디어를 제안하는 이유는 무엇인가요?', '예상되는 문제점과 해결 방법은 무엇인가요?'],
-        submit_reward: 30,
-        decided_reward: 50,
-        min_chars: 100,
-        bonus_threshold: 100,
-        min_paragraphs: 1
-    });
+    const [formData, setFormData] = useState(() => createMeetingForm(mode === 'edit' ? mission : null));
 
     // 회의 목록 가져오기
     const fetchMeetings = useCallback(async () => {
@@ -91,8 +95,29 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
     }, []);
 
     useEffect(() => {
-        fetchMeetings();
-    }, [fetchMeetings]);
+        if (mode === 'legacy') {
+            fetchMeetings();
+            return;
+        }
+
+        setLoading(false);
+        setMeetings(mission ? [mission] : []);
+        if (mode === 'review') {
+            setActiveTab('manage');
+            setSelectedMeeting(mission);
+            setEditingMeetingId(null);
+        } else if (mode === 'edit') {
+            setActiveTab('create');
+            setSelectedMeeting(null);
+            setEditingMeetingId(mission?.id || null);
+            setFormData(createMeetingForm(mission));
+        } else {
+            setActiveTab('create');
+            setSelectedMeeting(null);
+            setEditingMeetingId(null);
+            setFormData(createMeetingForm());
+        }
+    }, [fetchMeetings, mission, mode]);
 
     useEffect(() => {
         if (selectedMeeting?.id) {
@@ -130,36 +155,39 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 evaluation_rubric: { use_rubric: false, levels: [] }
             };
 
+            let savedMeeting;
             if (editingMeetingId) {
                 // 수정 모드
-                const { error } = await supabase
+                const { data, error } = await supabase
                     .from('writing_missions')
                     .update(meetingData)
-                    .eq('id', editingMeetingId);
+                    .eq('id', editingMeetingId)
+                    .select(MEETING_SELECT_FIELDS)
+                    .single();
                 if (error) throw error;
+                savedMeeting = data;
                 alert('회의 안건이 수정되었습니다! ✨');
             } else {
                 // 생성 모드
-                const { error } = await supabase
+                const { data, error } = await supabase
                     .from('writing_missions')
-                    .insert(meetingData);
+                    .insert(meetingData)
+                    .select(MEETING_SELECT_FIELDS)
+                    .single();
                 if (error) throw error;
+                savedMeeting = data;
                 alert('회의 안건이 성공적으로 등록되었습니다! 🏛️');
             }
 
-            setFormData({
-                title: '',
-                guide: '',
-                guide_questions: ['이 아이디어를 제안하는 이유는 무엇인가요?', '예상되는 문제점과 해결 방법은 무엇인가요?'],
-                submit_reward: 30,
-                decided_reward: 50,
-                min_chars: 100,
-                bonus_threshold: 100,
-                min_paragraphs: 1
-            });
+            setFormData(createMeetingForm());
             setEditingMeetingId(null);
-            fetchMeetings();
-            setActiveTab('manage');
+            if (onSaved) {
+                onSaved(savedMeeting);
+            } else {
+                fetchMeetings();
+                setSelectedMeeting(savedMeeting);
+                setActiveTab('manage');
+            }
         } catch (err) {
             console.error('[IdeaMarketManager] 회의 저장 실패:', err.message);
             alert('회의 안건 저장에 실패했습니다. 다시 시도해주세요.');
@@ -313,17 +341,20 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 display: 'flex', alignItems: 'center', gap: '16px',
                 marginBottom: '24px', flexWrap: 'wrap'
             }}>
-                <Button variant="ghost" size="sm" onClick={onBack}>⬅️ 돌아가기</Button>
+                <Button variant="ghost" size="sm" onClick={onBack}>⬅️ 미션 목록</Button>
                 <h2 style={{
                     margin: 0, fontSize: '1.5rem', fontWeight: '900',
                     color: '#4C1D95', display: 'flex', alignItems: 'center', gap: '8px'
                 }}>
-                    🏛️ 학급 회의 안건 관리
+                    {mode === 'review' ? '💡 학생 제안 관리' : editingMeetingId ? '✏️ 회의 안건 미션 수정' : '🏛️ 회의 안건 미션 만들기'}
                 </h2>
+                {mode === 'review' && selectedMeeting && (
+                    <span style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{selectedMeeting.title}</span>
+                )}
             </div>
 
             {/* 탭 */}
-            <div style={{
+            {mode === 'legacy' && <div style={{
                 display: 'flex', gap: '8px', marginBottom: '20px',
                 background: '#F1F5F9', padding: '6px', borderRadius: '16px',
                 maxWidth: '500px'
@@ -370,7 +401,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 >
                     🗂️ 안건 관리 ({meetings.length})
                 </button>
-            </div>
+            </div>}
 
             <AnimatePresence mode="wait">
                 {activeTab === 'create' ? (
@@ -750,8 +781,8 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                             </div>
                         ) : (
                             <div>
-                                {/* 회의 안건 선택 바 */}
-                                <div style={{
+                                {/* 레거시 전체 관리 화면에서만 회의 안건을 다시 선택한다. */}
+                                {mode === 'legacy' && <div style={{
                                     display: 'flex', gap: '10px', marginBottom: '20px',
                                     flexWrap: 'wrap', alignItems: 'center'
                                 }}>
@@ -805,7 +836,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                                             >🗑️ 완전 삭제</button>
                                         </div>
                                     )}
-                                </div>
+                                </div>}
 
                                 {/* 선택된 안건의 아이디어 목록 */}
                                 {selectedMeeting ? (
