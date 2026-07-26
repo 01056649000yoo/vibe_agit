@@ -21,6 +21,22 @@
 
 ---
 
+## 2026-07-26 — 아지트온클래스 격리 + 아이디어마켓 입력미션 모듈 분리 (GPT/Codex)
+- **한 일**:
+  - `AgitOnClassPage`·`AgitManager`를 `src/modules/community/agit-on-class/`로 이전하고 학생·교사 매니페스트 등록.
+    활용도가 낮은 기능이라 `defaultEnabled: false`; OFF면 학생 카드·오버레이·교사 탭·전용 DB 조회가 모두 사라짐.
+  - 아이디어마켓 학생/교사 화면·훅을 `src/modules/writing/idea-market/`로 이전하고 아지트온클래스의 import·카드·중복 토글 제거.
+  - 기존 `mission_type='meeting'`과 `student_posts`를 그대로 사용. 모듈 ON 시 학생 글쓰기 미션 목록에
+    `🏛️ 아이디어 입력미션`으로 표시해 선택한 안건으로 진입하고, 교사 대시보드에는 독립 `아이디어마켓` 관리 탭 표시.
+  - 기존 `agit_settings.isIdeaMarketEnabled`를 미설정 학급 초기값으로 해석해 기존 ON 상태를 보존.
+- **변경**: 커밋 `a17efd3`. 마이그레이션 `20260726_preserve_idea_market_module.sql` 운영 적용(`UPDATE 0` —
+  기존 ON 5학급은 모두 `enabled_modules` 미설정이라 legacy resolver로 보존, 명시 설정 대상 없음).
+- **결과/검증**: 프로덕션 빌드·`git diff --check` 통과, 변경 범위 ESLint 0에러(기존 보안 경고 15건).
+  독립 lazy 청크 확인: 아지트온클래스 학생 20.34KB/교사 25.84KB, 아이디어마켓 학생 29.01KB/교사 26.13KB.
+  HTML modulepreload에 네 청크가 없어 OFF·미진입 시 다운로드되지 않음. 아지트온클래스 렌더 난수와 아이디어마켓 effect 선행 린트 오류 6건도 동작 동일하게 정리.
+- **남은 것 / 다음**: 아직 원격 push·운영 앱 배포 전. 배포 후 ①아지트온클래스 기본 OFF ②기존 아이디어마켓 ON 학급 유지
+  ③교사 독립 관리 탭 ④학생 미션 목록→해당 아이디어 안건 진입·제출을 실기기로 확인.
+
 ## 2026-07-26 — 친구 아지트 학생 전환 캐시 오염 수정 (GPT/Codex)
 - **한 일**: 친구 목록 5분 캐시 키를 학급 단위에서 `학급+현재 학생` 단위로 분리하고,
   RPC·직접 조회·최종 상태 반영 세 지점에서 현재 학생 ID를 제거하는 방어 필터 추가.
