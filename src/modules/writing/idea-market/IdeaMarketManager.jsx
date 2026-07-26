@@ -125,6 +125,23 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
         }
     }, [selectedMeeting?.id, fetchIdeas]);
 
+    useEffect(() => {
+        if (!detailModal?.id) return undefined;
+
+        const previousOverflow = document.body.style.overflow;
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') setDetailModal(null);
+        };
+
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [detailModal?.id]);
+
     // 회의 안건 생성 또는 수정
     const handleCreateOrUpdateMeeting = async () => {
         if (!formData.title.trim()) {
@@ -897,116 +914,56 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                                 gap: '12px'
                                             }}>
                                                 {ideas.map(idea => {
-                                                    const status = idea.status || '제안중';
-                                                    const sc = STATUS_COLORS[status] || STATUS_COLORS['제안중'];
-                                                    const agreeCount = getVoteCount(idea, 'agree');
-                                                    const disagreeCount = getVoteCount(idea, 'disagree');
-                                                    const supplementCount = getVoteCount(idea, 'supplement');
-                                                    const commentCount = (idea.post_comments || []).length;
-                                                    // 내용 미리보기 최대 60자
-                                                    const preview = (idea.content || '').slice(0, 60) + ((idea.content || '').length > 60 ? '...' : '');
-
                                                     return (
-                                                        <motion.div
+                                                        <motion.button
                                                             key={idea.id}
                                                             whileHover={{ scale: 1.03, boxShadow: '0 8px 24px rgba(124,58,237,0.15)' }}
                                                             whileTap={{ scale: 0.98 }}
+                                                            type="button"
                                                             onClick={() => setDetailModal(idea)}
+                                                            aria-label={`${idea.students?.name || '학생'}의 제안 ${idea.title || '제목 없음'} 크게 보기`}
                                                             style={{
                                                                 background: 'white',
                                                                 borderRadius: '14px',
-                                                                border: '1px solid #E2E8F0',
-                                                                padding: '14px',
+                                                                border: '2px solid #EDE9FE',
+                                                                padding: '18px',
                                                                 cursor: 'pointer',
                                                                 display: 'flex',
                                                                 flexDirection: 'column',
-                                                                gap: '6px',
+                                                                justifyContent: 'center',
+                                                                gap: '10px',
                                                                 position: 'relative',
                                                                 transition: 'box-shadow 0.2s',
-                                                                height: '180px',
+                                                                height: isMobile ? '128px' : '140px',
                                                                 overflow: 'hidden',
-                                                                boxSizing: 'border-box'
+                                                                boxSizing: 'border-box',
+                                                                textAlign: 'left',
+                                                                fontFamily: 'inherit'
                                                             }}
                                                         >
-                                                            {/* 상태 뱃지 (우상단) */}
-                                                            <span style={{
-                                                                position: 'absolute', top: '8px', right: '8px',
-                                                                background: sc.bg, color: sc.color,
-                                                                border: `1px solid ${sc.border}`,
-                                                                padding: '2px 8px', borderRadius: '6px',
-                                                                fontSize: '0.6rem', fontWeight: '800',
-                                                                lineHeight: '1.4', zIndex: 1
-                                                            }}>
-                                                                {status}
-                                                            </span>
 
                                                             {/* 학생 이름 */}
                                                             <div style={{
-                                                                fontSize: '0.7rem', color: '#94A3B8',
-                                                                fontWeight: '700',
+                                                                fontSize: '0.88rem', color: '#7C3AED',
+                                                                fontWeight: '900',
                                                                 whiteSpace: 'nowrap', overflow: 'hidden',
                                                                 textOverflow: 'ellipsis', flexShrink: 0
                                                             }}>
-                                                                {idea.students?.name}
+                                                                👤 {idea.students?.name}
                                                             </div>
 
                                                             {/* 제목 */}
                                                             <div style={{
-                                                                fontSize: '0.85rem', fontWeight: '800',
-                                                                color: '#1E293B', lineHeight: '1.3',
+                                                                fontSize: isMobile ? '0.95rem' : '1.05rem', fontWeight: '900',
+                                                                color: '#1E293B', lineHeight: '1.45',
                                                                 overflow: 'hidden', textOverflow: 'ellipsis',
                                                                 display: '-webkit-box',
-                                                                WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                                                                paddingRight: '40px', flexShrink: 0,
-                                                                wordBreak: 'break-all'
+                                                                WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+                                                                flexShrink: 0, wordBreak: 'break-word'
                                                             }}>
-                                                                {idea.title}
+                                                                {idea.title || '제목 없는 제안'}
                                                             </div>
-
-                                                            {/* 내용 미리보기 */}
-                                                            <div style={{
-                                                                fontSize: '0.73rem', color: '#64748B',
-                                                                lineHeight: '1.5', flex: 1,
-                                                                overflow: 'hidden', textOverflow: 'ellipsis',
-                                                                display: '-webkit-box',
-                                                                WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                                                                wordBreak: 'break-all', minHeight: 0
-                                                            }}>
-                                                                {preview}
-                                                            </div>
-
-                                                            {/* 투표·댓글 수치 바 */}
-                                                            <div style={{
-                                                                display: 'flex', gap: '4px',
-                                                                flexWrap: 'nowrap', marginTop: 'auto',
-                                                                flexShrink: 0
-                                                            }}>
-                                                                <span style={{
-                                                                    fontSize: '0.65rem', padding: '2px 6px',
-                                                                    borderRadius: '6px', background: '#E8F5E9',
-                                                                    color: '#4CAF50', fontWeight: '700',
-                                                                    whiteSpace: 'nowrap'
-                                                                }}>👍{agreeCount}</span>
-                                                                <span style={{
-                                                                    fontSize: '0.65rem', padding: '2px 6px',
-                                                                    borderRadius: '6px', background: '#FFEBEE',
-                                                                    color: '#F44336', fontWeight: '700',
-                                                                    whiteSpace: 'nowrap'
-                                                                }}>👎{disagreeCount}</span>
-                                                                <span style={{
-                                                                    fontSize: '0.65rem', padding: '2px 6px',
-                                                                    borderRadius: '6px', background: '#FFF3E0',
-                                                                    color: '#FF9800', fontWeight: '700',
-                                                                    whiteSpace: 'nowrap'
-                                                                }}>🔧{supplementCount}</span>
-                                                                <span style={{
-                                                                    fontSize: '0.65rem', padding: '2px 6px',
-                                                                    borderRadius: '6px', background: '#F1F5F9',
-                                                                    color: '#64748B', fontWeight: '700',
-                                                                    whiteSpace: 'nowrap'
-                                                                }}>💬{commentCount}</span>
-                                                            </div>
-                                                        </motion.div>
+                                                        </motion.button>
                                                     );
                                                 })}
                                             </div>
@@ -1040,9 +997,9 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                         onClick={() => setDetailModal(null)}
                         style={{
                             position: 'fixed', inset: 0, zIndex: 10000,
-                            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
+                            background: 'rgba(15, 23, 42, 0.72)', backdropFilter: 'blur(8px)',
                             display: 'flex', justifyContent: 'center', alignItems: 'center',
-                            padding: '20px'
+                            padding: isMobile ? '8px' : '24px'
                         }}
                     >
                         <motion.div
@@ -1050,11 +1007,14 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby={`meeting-proposal-title-${detailModal.id}`}
                             style={{
-                                background: 'white', borderRadius: '24px',
-                                padding: '32px', maxWidth: '600px', width: '100%',
-                                maxHeight: '85vh', overflowY: 'auto', overflowX: 'hidden',
-                                boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+                                background: 'white', borderRadius: isMobile ? '18px' : '28px',
+                                padding: isMobile ? '20px' : '40px', maxWidth: '1100px', width: '100%',
+                                maxHeight: isMobile ? '94vh' : '92vh', overflowY: 'auto', overflowX: 'hidden',
+                                boxShadow: '0 28px 80px rgba(0,0,0,0.3)',
                                 boxSizing: 'border-box', wordBreak: 'break-word'
                             }}
                         >
@@ -1064,34 +1024,39 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                 alignItems: 'flex-start', marginBottom: '20px'
                             }}>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontSize: '0.8rem', color: '#7C3AED', fontWeight: '700', marginBottom: '4px' }}>
-                                        {detailModal.students?.name}
+                                    <div style={{ fontSize: isMobile ? '0.9rem' : '1.05rem', color: '#7C3AED', fontWeight: '900', marginBottom: '8px' }}>
+                                        👤 {detailModal.students?.name} 학생의 제안
                                     </div>
-                                    <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: '#1E293B', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                                        {detailModal.title}
+                                    <h3
+                                        id={`meeting-proposal-title-${detailModal.id}`}
+                                        style={{ margin: 0, fontSize: isMobile ? '1.35rem' : '1.85rem', fontWeight: '900', color: '#1E293B', lineHeight: '1.35', wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                                    >
+                                        {detailModal.title || '제목 없는 제안'}
                                     </h3>
                                 </div>
                                 <button
                                     onClick={() => setDetailModal(null)}
                                     style={{
                                         background: '#F1F5F9', border: 'none',
-                                        borderRadius: '10px', padding: '8px 12px',
-                                        cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold',
-                                        color: '#64748B'
+                                        borderRadius: '12px', padding: isMobile ? '8px 12px' : '10px 15px',
+                                        cursor: 'pointer', fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: 'bold',
+                                        color: '#64748B', marginLeft: '16px', flexShrink: 0
                                     }}
+                                    aria-label="제안 상세창 닫기"
                                 >✕</button>
                             </div>
 
                             {/* 내용 */}
                             <div style={{
-                                background: '#F8FAFC', borderRadius: '14px',
-                                padding: '16px', marginBottom: '16px',
-                                border: '1px solid #E2E8F0',
+                                background: '#FFFEF8', borderRadius: isMobile ? '14px' : '20px',
+                                padding: isMobile ? '20px' : '32px', marginBottom: '20px',
+                                border: '2px solid #FEF3C7',
+                                minHeight: isMobile ? '140px' : '240px',
                                 overflow: 'hidden'
                             }}>
                                 <p style={{
-                                    margin: 0, fontSize: '0.9rem', color: '#334155',
-                                    lineHeight: '1.8', whiteSpace: 'pre-wrap',
+                                    margin: 0, fontSize: isMobile ? '1.05rem' : '1.25rem', color: '#1E293B',
+                                    lineHeight: '1.9', whiteSpace: 'pre-wrap', fontWeight: '600',
                                     wordBreak: 'break-word', overflowWrap: 'anywhere'
                                 }}>
                                     {detailModal.content}
@@ -1102,12 +1067,12 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                             {detailModal.student_answers?.length > 0 && selectedMeeting?.guide_questions?.length > 0 && (
                                 <div style={{
                                     background: '#F5F3FF', borderRadius: '14px',
-                                    padding: '16px', marginBottom: '16px',
+                                    padding: isMobile ? '18px' : '24px', marginBottom: '20px',
                                     border: '1px solid #EDE9FE'
                                 }}>
                                     <div style={{
-                                        fontSize: '0.8rem', fontWeight: '800', color: '#7C3AED',
-                                        marginBottom: '12px'
+                                        fontSize: isMobile ? '0.9rem' : '1.05rem', fontWeight: '900', color: '#7C3AED',
+                                        marginBottom: '16px'
                                     }}>📌 생각 정리 답변</div>
                                     {selectedMeeting.guide_questions.map((q, idx) => (
                                         <div key={idx} style={{
@@ -1115,10 +1080,10 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                             paddingBottom: idx < selectedMeeting.guide_questions.length - 1 ? '12px' : 0,
                                             borderBottom: idx < selectedMeeting.guide_questions.length - 1 ? '1px solid #EDE9FE' : 'none'
                                         }}>
-                                            <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#7C3AED', marginBottom: '4px' }}>
+                                            <div style={{ fontSize: isMobile ? '0.85rem' : '1rem', fontWeight: '800', color: '#7C3AED', marginBottom: '6px' }}>
                                                 Q{idx + 1}. {q}
                                             </div>
-                                            <div style={{ fontSize: '0.85rem', color: '#4C1D95', lineHeight: '1.6' }}>
+                                            <div style={{ fontSize: isMobile ? '0.95rem' : '1.1rem', color: '#4C1D95', lineHeight: '1.75', fontWeight: '600' }}>
                                                 {detailModal.student_answers[idx] || '(답변 없음)'}
                                             </div>
                                         </div>
@@ -1137,16 +1102,16 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                     { type: 'supplement', label: '🔧 보완', bg: '#FFF3E0', color: '#FF9800' },
                                 ].map(v => (
                                     <span key={v.type} style={{
-                                        padding: '6px 14px', borderRadius: '10px',
-                                        background: v.bg, fontSize: '0.85rem',
+                                        padding: '8px 16px', borderRadius: '10px',
+                                        background: v.bg, fontSize: isMobile ? '0.85rem' : '1rem',
                                         fontWeight: '800', color: v.color
                                     }}>
                                         {v.label} {getVoteCount(detailModal, v.type)}
                                     </span>
                                 ))}
                                 <span style={{
-                                    padding: '6px 14px', borderRadius: '10px',
-                                    background: '#F1F5F9', fontSize: '0.85rem',
+                                    padding: '8px 16px', borderRadius: '10px',
+                                    background: '#F1F5F9', fontSize: isMobile ? '0.85rem' : '1rem',
                                     fontWeight: '800', color: '#64748B'
                                 }}>
                                     💬 댓글 {(detailModal.post_comments || []).length}
@@ -1156,7 +1121,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                             {/* 상태 변경 */}
                             <div style={{ marginBottom: '8px' }}>
                                 <div style={{
-                                    fontSize: '0.8rem', fontWeight: '800', color: '#4C1D95',
+                                    fontSize: isMobile ? '0.85rem' : '1rem', fontWeight: '900', color: '#4C1D95',
                                     marginBottom: '10px'
                                 }}>📋 상태 변경</div>
                                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -1177,7 +1142,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                                     background: isActive ? bsc.bg : 'white',
                                                     color: isActive ? bsc.color : '#94A3B8',
                                                     fontWeight: isActive ? '900' : '600',
-                                                    fontSize: '0.9rem',
+                                                    fontSize: isMobile ? '0.85rem' : '1rem',
                                                     cursor: isActive ? 'default' : 'pointer',
                                                     transition: 'all 0.2s',
                                                     display: 'flex', alignItems: 'center',
