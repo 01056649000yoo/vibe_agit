@@ -3,6 +3,8 @@ import { supabase } from '../../../lib/supabaseClient';
 
 import { dataCache } from '../../../lib/cache';
 
+const getClassmatesCacheKey = (classId, studentId) => `classmates_${classId}_${studentId}`;
+
 export const useFriendsHideout = (studentSession, params) => {
     const CLASSMATES_CACHE_MS = 300000;
     const [missions, setMissions] = useState([]);
@@ -155,13 +157,21 @@ export const useFriendsHideout = (studentSession, params) => {
                 setClassmates([]);
                 return;
             }
-            const cacheKey = `classmates_${classId}`;
+            const currentStudentId = studentSession.id;
+            if (!currentStudentId) {
+                setClassmates([]);
+                return;
+            }
+
+            const excludeCurrentStudent = (rows = []) =>
+                rows.filter((student) => student?.id !== currentStudentId);
+            const cacheKey = getClassmatesCacheKey(classId, currentStudentId);
             const data = await dataCache.get(cacheKey, async () => {
                 const { data: rpcData, error: rpcError } = await supabase
                     .rpc('get_student_classmates_for_hideout');
 
                 if (!rpcError && Array.isArray(rpcData)) {
-                    return rpcData;
+                    return excludeCurrentStudent(rpcData);
                 }
 
                 const { data, error } = await supabase
@@ -173,10 +183,10 @@ export const useFriendsHideout = (studentSession, params) => {
                     .order('name');
 
                 if (error) throw error;
-                return data || [];
+                return excludeCurrentStudent(data || []);
             }, CLASSMATES_CACHE_MS);
 
-            setClassmates(data || []);
+            setClassmates(excludeCurrentStudent(data || []));
         } catch (err) {
             console.error('반 친구 목록 로드 실패:', err.message);
         }
@@ -370,7 +380,7 @@ export const useFriendsHideout = (studentSession, params) => {
                 },
                 (payload) => {
                     if (payload.new.id !== studentSession.id) {
-                        dataCache.invalidate(`classmates_${classId}`);
+                        dataCache.invalidate(getClassmatesCacheKey(classId, studentSession.id));
                         setClassmates(prev => prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c));
                     }
                 }
