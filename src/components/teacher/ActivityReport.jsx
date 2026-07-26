@@ -14,7 +14,7 @@ import {
 } from '../../modules/writing/evaluation/koreanAchievementStandards';
 
 /**
- * 역할: 선생님 - 활동별 리포트 (통합 분석 & 내보내기 버전) 📊
+ * 역할: 선생님 - 글쓰기 평가 덧붙임 문장 작성 및 내보내기 📊
  */
 const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     const [allTags, setAllTags] = useState([]);
@@ -46,7 +46,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     const persistenceKey = useMemo(() => {
         if (!activeClass?.id || selectedMissionIds.length === 0) return null;
         const sortedIds = [...selectedMissionIds].sort().join(',');
-        return `vibe_korean_comment_v2_${activeClass.id}_${sortedIds}`;
+        return `vibe_korean_writing_append_v3_${activeClass.id}_${sortedIds}`;
     }, [activeClass?.id, selectedMissionIds]);
 
     // 1. 초기 데이터 로드 (미션 목록)
@@ -348,8 +348,8 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         localStorage.setItem(persistenceKey, JSON.stringify(data));
     };
 
-    // AI에게 보낼 학생 활동 데이터 및 프롬프트 구성 (공통 사용)
-    const getStudentPrompt = (studentName, posts) => {
+    // AI에게 보낼 글쓰기 평가 데이터 및 덧붙임 문장 프롬프트 구성 (공통 사용)
+    const getWritingAppendPrompt = (posts) => {
         const activitiesInfo = posts.map(p => {
             const rubric = p.writing_missions?.evaluation_rubric || {};
             const score = p.final_eval ?? p.initial_eval;
@@ -370,15 +370,24 @@ ${standardsText}
         }).join('\n\n---\n');
 
         const contextData = `
-[분석 대상 학생]: ${studentName}
-[활동 기록 데이터]:
+[글쓰기 평가 자료]:
 ${activitiesInfo}`;
 
+        const outputRules = `[최우선 출력 규칙]
+- 결과는 교사가 이미 작성한 국어 교과 평어의 앞이나 뒤에 그대로 붙일 수 있는 '글쓰기 평가 덧붙임 문장'임.
+- 제목, 번호, 해설, 인사말 없이 완성된 문장 1~2개만 출력할 것.
+- 학생 이름 및 '학생', '이 학생은', '해당 학생은'이라는 표현을 쓰지 말 것.
+- '또한', '그리고', '한편'처럼 앞 문맥에 의존하는 접속어로 시작하지 말고, 확인된 글쓰기 능력이나 수행 모습으로 바로 시작할 것.
+- 성취기준 코드는 쓰지 말되, 선택된 성취기준의 핵심 능력과 교사의 평가 수준·의견을 자연스럽게 반영할 것.
+- 실제 글과 교사 평가에서 확인되지 않은 능력은 추측하지 말 것.
+- 다른 교과 평어 문장과 자연스럽게 이어지도록 90~140자 안팎의 관찰 중심 평어체(~함, ~임)로 끝낼 것.
+- 문장 예시: 대상의 특징이 잘 드러나도록 알맞은 내용을 선정하고, 설명 순서를 고려하여 글을 체계적으로 작성함.`;
+
         if (promptTemplate && promptTemplate.trim()) {
-            return `${promptTemplate.trim()}\n\n[국어 평어 작성 추가 규칙]\n- 연결된 2022 개정 국어과 성취기준과 교사 평가 결과를 핵심 근거로 삼을 것.\n- 학생 이름과 성취기준 코드는 결과 문장에 직접 쓰지 않을 것.\n- 실제 글과 평가에서 확인되지 않은 능력은 추측하지 않을 것.\n- 관찰 중심의 평어체(~함, ~임)로 180자 안팎의 한 문단을 작성할 것.\n\n${contextData.trim()}`;
+            return `${promptTemplate.trim()}\n\n${contextData.trim()}\n\n${outputRules}`;
         }
 
-        return `학생 '${studentName}'의 활동 기록과 교사 평가를 바탕으로 2022 개정 국어과 성취기준에 연결된 국어 교과 평어를 작성해줘. 학생 이름과 성취기준 코드는 결과에 쓰지 말고, 실제 글에서 확인되는 강점과 성장 정도를 관찰 중심의 평어체(~함, ~임)로 180자 안팎 한 문단으로 작성해줘. 근거가 없는 능력은 추측하지 마.\n\n${contextData.trim()}`;
+        return `아래 글쓰기 평가 자료를 바탕으로 선택된 2022 개정 국어과 성취기준을 반영한 글쓰기 평가 덧붙임 문장을 작성해줘.\n\n${contextData.trim()}\n\n${outputRules}`;
     };
 
     const validateGenerationReadiness = (studentId = null) => {
@@ -425,7 +434,7 @@ ${activitiesInfo}`;
             await supabase.auth.getUser();
             // [보안] gemini_api_key 조회 제거 — Edge Function이 서버에서 키를 관리하므로 클라이언트 불필요
 
-            const prompt = getStudentPrompt(studentData.student.name, studentData.posts);
+            const prompt = getWritingAppendPrompt(studentData.posts);
             const review = await callAI({ prompt, type: 'AI_FEEDBACK' });
 
             if (review) {
@@ -457,7 +466,7 @@ ${activitiesInfo}`;
         const isRegen = generatedCount > 0;
         const msg = isRegen
             ? '기존 내용은 삭제되고 재생성됩니다. 진행하시겠습니까?'
-            : `평가 완료 학생 ${studentPosts.length}명의 국어 평어를 일괄 작성하시겠습니까?`;
+            : `평가 완료 학생 ${studentPosts.length}명의 글쓰기 평어 덧붙임 문장을 일괄 작성하시겠습니까?`;
 
         if (!confirm(msg)) return;
 
@@ -479,7 +488,7 @@ ${activitiesInfo}`;
                     continue;
                 }
                 try {
-                    const prompt = getStudentPrompt(data.student.name, data.posts);
+                    const prompt = getWritingAppendPrompt(data.posts);
                     const review = await callAI({ prompt, type: 'AI_FEEDBACK' });
                     if (review) {
                         setStudentPosts(prev => prev.map((s, idx) =>
@@ -509,7 +518,7 @@ ${activitiesInfo}`;
                 await saveGenerationHistory(updatedPosts);
             }, 1000);
 
-            alert(isRegen ? '국어 평어 일괄 재작성이 완료되었습니다! ✨' : '국어 평어 일괄 작성이 완료되었습니다! ✨');
+            alert(isRegen ? '글쓰기 평어 덧붙임 문장 일괄 재작성이 완료되었습니다! ✨' : '글쓰기 평어 덧붙임 문장 일괄 작성이 완료되었습니다! ✨');
         }
     };
 
@@ -591,28 +600,28 @@ ${activitiesInfo}`;
                 '이름': s.student.name,
                 '참여 활동수': s.posts.length,
                 '활동별 성취': achievements,
-                '국어 교과 평어': s.ai_synthesis || '(미생성)'
+                '글쓰기 평가 덧붙임 문장': s.ai_synthesis || '(미생성)'
             };
         });
 
         const worksheet = XLSX.utils.json_to_sheet(data);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "국어 평어");
+        XLSX.utils.book_append_sheet(workbook, worksheet, "글쓰기 평어 문장");
 
         // 컬럼 너비 설정
         worksheet['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 40 }, { wch: 60 }];
 
-        XLSX.writeFile(workbook, `국어평어_${activeClass.name}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        XLSX.writeFile(workbook, `글쓰기평어_덧붙임문장_${activeClass.name}_${new Date().toISOString().slice(0, 10)}.xlsx`);
     };
 
     // 8. 구글 문서용 클립보드 복사
     const copyToDocs = () => {
         const text = studentPosts.map(s => {
-            return `[${s.student.name}]\n- 활동건수: ${s.posts.length}건\n- 종합 분석: ${s.ai_synthesis || '미생성'}\n`;
+            return `[${s.student.name}]\n- 활동건수: ${s.posts.length}건\n- 글쓰기 평가 덧붙임 문장: ${s.ai_synthesis || '미생성'}\n`;
         }).join('\n---\n\n');
 
         navigator.clipboard.writeText(text);
-        alert('전체 학생의 종합 분석 결과가 클립보드에 복사되었습니다! 📋\n구글 문서나 한글(HWP) 등에 붙여넣어 사용하세요.');
+        alert('전체 학생의 글쓰기 평가 덧붙임 문장이 클립보드에 복사되었습니다! 📋\n작성 중인 국어 평어의 앞이나 뒤에 붙여넣어 사용하세요.');
     };
 
     const toggleTag = (tag) => {
@@ -637,9 +646,9 @@ ${activitiesInfo}`;
             }}>
                 <div>
                     <h2 style={{ margin: '0 0 4px 0', fontSize: '1.6rem', fontWeight: '950', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '1.8rem' }}>📘</span> 국어 평어 도우미 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>2022 성취기준 연동</span>
+                        <span style={{ fontSize: '1.8rem' }}>📘</span> 글쓰기 평어 덧붙임 도우미 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>2022 성취기준 연동</span>
                     </h2>
-                    <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>미션의 국어 성취기준과 평가 결과를 연결해 교과 평어 초안을 작성합니다.</p>
+                    <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>작성 중인 국어 평어의 앞이나 뒤에 붙일 글쓰기 평가 문장을 만듭니다.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                     <Button variant="outline" size="sm" onClick={exportToExcel} style={{ borderRadius: '12px', borderColor: '#10B981', color: '#059669', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}>
@@ -797,7 +806,7 @@ ${activitiesInfo}`;
                                                     </button>
                                                 </div>
                                                 <div style={{ fontSize: '0.85rem', color: '#1E293B', fontWeight: 'bold', marginBottom: '8px' }}>
-                                                    🎯 {record.activity_count}명 분석 완료
+                                                    🎯 {record.activity_count}명 문장 작성 완료
                                                 </div>
                                                 <div style={{
                                                     fontSize: '0.75rem',
@@ -846,7 +855,7 @@ ${activitiesInfo}`;
                     {selectedMissionIds.length === 0 ? (
                         <div style={{ padding: '80px', textAlign: 'center', background: '#F8FAFC', borderRadius: '24px', border: '2px dashed #E2E8F0' }}>
                             <RefreshCw size={48} style={{ color: '#CBD5E1', marginBottom: '16px' }} />
-                            <h3 style={{ margin: 0, color: '#64748B' }}>미션을 선택하여 평어 작성을 시작하세요</h3>
+                            <h3 style={{ margin: 0, color: '#64748B' }}>미션을 선택하여 글쓰기 평어 문장 작성을 시작하세요</h3>
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -891,7 +900,7 @@ ${activitiesInfo}`;
                             {/* 상황바 */}
                             <div style={{ background: '#F1F5F9', padding: '16px 24px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 'bold' }}>
-                                    평가 완료 <span style={{ color: '#1E293B' }}>{studentPosts.length}명</span> 중 <span style={{ color: '#6366F1' }}>{generatedCount}명</span> 평어 작성 완료
+                                    평가 완료 <span style={{ color: '#1E293B' }}>{studentPosts.length}명</span> 중 <span style={{ color: '#6366F1' }}>{generatedCount}명</span> 덧붙임 문장 작성 완료
                                 </div>
                                 <Button
                                     size="sm"
@@ -905,7 +914,7 @@ ${activitiesInfo}`;
                                 >
                                     {batchLoading
                                         ? `작업 중... (${batchProgress.current}/${batchProgress.total})`
-                                        : (generatedCount > 0 ? '🔄 국어 평어 일괄 재작성' : '🪄 국어 평어 일괄 작성')}
+                                        : (generatedCount > 0 ? '🔄 덧붙임 문장 일괄 재작성' : '🪄 덧붙임 문장 일괄 작성')}
                                 </Button>
                             </div>
 
@@ -925,7 +934,7 @@ ${activitiesInfo}`;
                                 <div>학생 이름</div>
                                 <div style={{ textAlign: 'center' }}>참여 활동</div>
                                 <div style={{ textAlign: 'center' }}>작성 상태</div>
-                                <div style={{ textAlign: 'center' }}>평어 작성</div>
+                                <div style={{ textAlign: 'center' }}>문장 작성</div>
                                 <div></div>
                             </div>
 
@@ -976,7 +985,7 @@ ${activitiesInfo}`;
                                                     onMouseEnter={e => { if (!isGenerating[data.student.id]) { e.currentTarget.style.background = '#6366F1'; e.currentTarget.style.color = 'white'; } }}
                                                     onMouseLeave={e => { if (!isGenerating[data.student.id]) { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#6366F1'; } }}
                                                 >
-                                                    {isGenerating[data.student.id] ? '작성 중...' : '평어 작성'}
+                                                    {isGenerating[data.student.id] ? '작성 중...' : '문장 작성'}
                                                 </button>
                                             </div>
                                             <div style={{ textAlign: 'center', color: '#CBD5E1' }}>
@@ -1025,7 +1034,7 @@ ${activitiesInfo}`;
                                                             {/* AI 분석 결과 (메인 영역) */}
                                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                                                    <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6366F1' }}>✨ 국어 교과 평어 초안</div>
+                                                                    <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6366F1' }}>✨ 글쓰기 평가 덧붙임 문장</div>
                                                                     {data.ai_synthesis && (
                                                                         <button
                                                                             onClick={() => { navigator.clipboard.writeText(data.ai_synthesis); alert('복사되었습니다! 📋'); }}
@@ -1044,7 +1053,7 @@ ${activitiesInfo}`;
                                                                     boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.02)'
                                                                 }}>
                                                                     {data.ai_synthesis || (
-                                                                        <span style={{ color: '#D97706', fontStyle: 'italic' }}>평어 작성 버튼을 눌러 초안을 작성하세요.</span>
+                                                                        <span style={{ color: '#D97706', fontStyle: 'italic' }}>문장 작성 버튼을 눌러 덧붙임 문장을 작성하세요.</span>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -1082,7 +1091,7 @@ ${activitiesInfo}`;
                             )}
 
                             <footer style={{ textAlign: 'center', padding: '20px', color: '#94A3B8', fontSize: '0.85rem' }}>
-                                * 작성된 평어 초안은 선택된 미션 조합별로 이 브라우저에 저장됩니다.
+                                * 작성된 덧붙임 문장은 국어 평어의 앞이나 뒤에 그대로 붙여 쓸 수 있으며, 선택한 미션 조합별로 이 브라우저에 저장됩니다.
                             </footer>
                         </div>
                     )}
