@@ -118,7 +118,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
         onNavigate('writing', { missionId: mission.id });
     };
 
-    const handleFriendIdeasClick = (event, mission) => {
+    const handleFriendPostsClick = (event, mission) => {
         event.stopPropagation();
         onNavigate('friends_hideout', {
             missionId: mission.id,
@@ -285,20 +285,19 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                     >
                                         {buttonText}
                                     </Button>
-                                    {isMeetingMission && (
-                                        <Button
-                                            variant="ghost"
-                                            onClick={(event) => handleFriendIdeasClick(event, mission)}
-                                            style={{
-                                                flex: isMobile ? '1 1 100%' : '0 0 auto',
-                                                borderRadius: '14px', fontWeight: '900',
-                                                background: '#FAF5FF', color: '#7E22CE',
-                                                border: '1px solid #D8B4FE'
-                                            }}
-                                        >
-                                            친구 안건 보기 🏛️
-                                        </Button>
-                                    )}
+                                    <Button
+                                        variant="ghost"
+                                        onClick={(event) => handleFriendPostsClick(event, mission)}
+                                        style={{
+                                            flex: isMobile ? '1 1 100%' : '0 0 auto',
+                                            borderRadius: '14px', fontWeight: '900',
+                                            background: isMeetingMission ? '#FAF5FF' : '#F0F9FF',
+                                            color: isMeetingMission ? '#7E22CE' : '#0369A1',
+                                            border: `1px solid ${isMeetingMission ? '#D8B4FE' : '#BAE6FD'}`
+                                        }}
+                                    >
+                                        {isMeetingMission ? '친구 안건 보기 🏛️' : '친구 글 보기 👀'}
+                                    </Button>
                                 </div>
                             </motion.div>
                         );

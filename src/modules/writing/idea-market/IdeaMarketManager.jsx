@@ -410,12 +410,15 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        style={{ maxWidth: '700px' }}
+                        style={{ width: '100%', maxWidth: 'none' }}
                     >
                         {/* 안건 생성 폼 */}
                         <Card style={{
                             background: 'white', borderRadius: '24px',
-                            padding: '32px', border: '1px solid #E2E8F0'
+                            padding: isMobile ? '20px' : '32px',
+                            border: '1px solid #E2E8F0',
+                            width: '100%', maxWidth: 'none',
+                            margin: 0, boxSizing: 'border-box'
                         }}>
                             <div style={{
                                 display: 'flex', alignItems: 'center', gap: '12px',
