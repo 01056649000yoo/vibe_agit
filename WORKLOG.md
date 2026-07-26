@@ -21,6 +21,19 @@
 
 ---
 
+## 2026-07-26 — Stage 3a/3b 착수: 모듈 시스템 + 드래곤 첫 이전 (Claude)
+- **한 일**: 기능별 모듈화 기반 공사 후 첫 모듈(드래곤) 이전.
+  - **3a 기반**: `src/modules/`에 매니페스트 규격(`types.js`)·레지스트리(`registry.js`)·학급별 on/off 훅(`useEnabledModules.js`) 신설.
+    DB `classes.enabled_modules text[]` 추가(NULL=모듈별 defaultEnabled → 기존 동작 보존).
+  - **3b 첫 이전**: DragonHideoutModal·BackgroundShopModal·useDragonPet → `src/modules/game/dragon/` + manifest 등록.
+    StudentDashboard가 두 모달을 `lazy()`+조건부 렌더로 전환 → **별도 청크 분리(17KB·4KB), 열 때만 다운로드**.
+  - 판단: `pet_data`는 친구목록·글 작성자 아바타 등 여러 곳이 쓰므로 **코어 데이터로 잔류**, "드래곤 기르기 기능"만 모듈화.
+- **변경**: 커밋 `32f1f53`(기반), `48dd818`(드래곤 이전). 마이그레이션 `supabase/migrations/20260726_add_enabled_modules.sql`(운영 DB 적용 완료).
+- **결과/검증**: 빌드·린트 통과, 브라우저 에러 0, 앱 정상. 드래곤 청크 분리 확인. 모달에 exit 애니메이션 없어 조건부 렌더로 인한 연출 변화 없음(동작 동일).
+- **남은 것 / 다음**: ①메뉴(DashboardMenu 501줄, 기능 하드코딩 12곳)를 레지스트리 기반 렌더로 전환 ②어휘의 탑(1397줄) 등 순차 이전
+  ③교사 GameManager의 드래곤/어휘 설정도 모듈로 이전 ④기존 개별 플래그(vocab_tower_enabled)를 enabled_modules로 흡수.
+  ⚠️ DragonHideoutModal에 기존 린트 에러 3건(Math.random in render) 존재 — 이전과 무관한 선행 이슈라 별도 커밋으로 처리 예정.
+
 ## 2026-07-26 — 자동 백업 실패 수정 (launchd 외장SSD 권한 문제) (Claude)
 - **한 일**: 07-26 04:00 예약 백업이 전부 실패한 것 발견. 원인=**macOS가 launchd 실행에서 외장 SSD(/Volumes/SHmaegmini) 쓰기 차단**
   (`mkdir Operation not permitted`, TCC). 수동 실행(Terminal/Claude)은 권한 있어 되지만 예약은 안 됨.
