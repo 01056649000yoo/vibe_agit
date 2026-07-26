@@ -7,7 +7,7 @@ import Button from '../common/Button';
 /**
  * 역할: 학생 - 글쓰기 미션 목록 확인
  */
-const MissionList = ({ studentSession, onBack, onNavigate, ideaMarketEnabled = false }) => {
+const MissionList = ({ studentSession, onBack, onNavigate }) => {
     const [missions, setMissions] = useState([]);
     const [posts, setPosts] = useState({});
     const [loading, setLoading] = useState(true);
@@ -35,12 +35,10 @@ const MissionList = ({ studentSession, onBack, onNavigate, ideaMarketEnabled = f
 
         if (error) throw error;
 
-        const filteredMissions = (allMissions || []).filter((mission) =>
-            mission.mission_type !== 'meeting' || ideaMarketEnabled
-        );
-        setMissions(filteredMissions);
-        return filteredMissions;
-    }, [ideaMarketEnabled]);
+        const nextMissions = allMissions || [];
+        setMissions(nextMissions);
+        return nextMissions;
+    }, []);
 
     const fetchStudentPosts = useCallback(async (currentStudent) => {
         const { data, error } = await supabase

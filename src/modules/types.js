@@ -17,6 +17,7 @@
  * @property {string[]} [writingMissionTypes] 이 모듈이 처리하는 글쓰기 입력 미션 유형
  * @property {boolean}  [defaultEnabled]  학급 설정이 없을 때 기본 노출 여부 (기본 false)
  * @property {boolean}  [core]    true면 항상 켜짐(끌 수 없음). 코어 인접 기능용
+ * @property {boolean}  [toggleable] false면 학급 ON/OFF 대신 자체 조건(예: 미션 생성)으로 활성화
  * @property {string[]} [legacyFields] 기존 노출 상태를 초기값으로 읽을 classes 컬럼
  * @property {(settings: Object) => boolean|undefined} [resolveLegacyEnabled] 기존 설정에서 초기 ON/OFF를 계산
  */

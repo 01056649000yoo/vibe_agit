@@ -14,7 +14,6 @@ const GameManager = lazy(() => import('./GameManager'));
 const TeacherEvaluationTab = lazy(() => import('./TeacherEvaluationTab'));
 const ActivityReport = lazy(() => import('./ActivityReport'));
 const AgitManager = lazy(getModule('agit-on-class').teacherEntry);
-const IdeaMarketManager = lazy(getModule('idea-market').teacherEntry);
 
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
@@ -119,10 +118,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     const hasZeroClasses = classes.length === 0;
     const { modules: enabledTeacherModules } = useEnabledModules(activeClass?.id, 'teacher');
     const agitOnClassEnabled = enabledTeacherModules.some((module) => module.id === 'agit-on-class');
-    const ideaMarketEnabled = enabledTeacherModules.some((module) => module.id === 'idea-market');
     const teacherTabs = [
         'dashboard', 'archive', 'evaluation', 'activity', 'playground',
-        ...(ideaMarketEnabled ? ['idea-market'] : []),
         ...(agitOnClassEnabled ? ['agit'] : []),
         'settings', 'guide'
     ];
@@ -204,7 +201,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '📊 미션 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📋 AI쫑알이' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'idea-market' ? '🏛️ 아이디어마켓' : tabId === 'agit' ? '🏠 아지트 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '🧰 수업 앱 모음'}
+                        {tabId === 'dashboard' ? '📊 미션 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📋 AI쫑알이' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'agit' ? '🏠 아지트 관리' : tabId === 'settings' ? '⚙️ 관리 설정' : '🧰 수업 앱 모음'}
                     </button>
                 ))}
             </nav>
@@ -235,8 +232,6 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         <ArchiveManager activeClass={activeClass} isMobile={isMobile} />
                     ) : visibleTab === 'playground' ? (
                         <GameManager activeClass={activeClass} isMobile={isMobile} />
-                    ) : visibleTab === 'idea-market' ? (
-                        <IdeaMarketManager activeClass={activeClass} isMobile={isMobile} onBack={() => setCurrentTab('dashboard')} />
                     ) : visibleTab === 'agit' ? (
                         <AgitManager activeClass={activeClass} isMobile={isMobile} />
                     ) : (!activeClass || hasZeroClasses) ? (

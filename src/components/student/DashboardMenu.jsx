@@ -4,7 +4,6 @@ import { supabase } from '../../lib/supabaseClient';
 
 const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgroundCount = 0, isMobile, agitSettings, studentSession, enabledModules = [] }) => {
     const agitOnClassEnabled = enabledModules.some((module) => module.id === 'agit-on-class');
-    const ideaMarketEnabled = enabledModules.some((module) => module.id === 'idea-market');
     // [신규] 새 미션 존재 여부 확인 (최근 24시간)
     const [hasNewMission, setHasNewMission] = useState(false);
 
@@ -31,7 +30,6 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
 
                 // [수정] JS 필터링으로 NULL 처리 및 정확한 제외 보장
                 const recentMissions = allRecent?.filter(m =>
-                    (m.mission_type !== 'meeting' || ideaMarketEnabled) &&
                     m.created_at > twentyFourHoursAgo
                 ) || [];
 
@@ -97,7 +95,7 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
         }, 1000); // [최적화] 대시보드 필수 데이터 로딩 대기
 
         return () => clearTimeout(timerId);
-    }, [studentSession?.class_id, studentSession?.classId, studentSession?.id, agitOnClassEnabled, ideaMarketEnabled]);
+    }, [studentSession?.class_id, studentSession?.classId, studentSession?.id, agitOnClassEnabled]);
 
     return (
         <>

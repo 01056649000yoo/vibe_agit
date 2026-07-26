@@ -9,8 +9,8 @@ import { PART_LABELS } from './types';
 import { supabase } from '../lib/supabaseClient';
 import { saveEnabledModules } from './useEnabledModules';
 
-// core 모듈은 구조상 레지스트리에 남지만 항상 켜지므로 교사 토글에 노출하지 않는다.
-const TOGGLEABLE_MODULES = getAllModules().filter((module) => !module.core);
+// 고정 기능과 미션 생성으로 활성화되는 기능은 학급 ON/OFF 대상이 아니다.
+const TOGGLEABLE_MODULES = getAllModules().filter((module) => !module.core && module.toggleable !== false);
 const TOGGLEABLE_IDS = new Set(TOGGLEABLE_MODULES.map((module) => module.id));
 
 /**

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
+import { getModule } from '../../modules/registry';
 import { useMissionManager } from '../../hooks/useMissionManager';
 import MissionForm from './MissionForm';
 import MissionList from './MissionList';
@@ -10,11 +11,14 @@ import ArchiveConfirmModal from './ArchiveConfirmModal';
 import BulkAIProgressModal from './BulkAIProgressModal';
 import EvaluationReport from './EvaluationReport';
 
+const IdeaMarketManager = lazy(getModule('idea-market').teacherEntry);
+
 /**
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
 const MissionManager = ({ activeClass, isDashboardMode = true }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+    const [showIdeaMissionManager, setShowIdeaMissionManager] = useState(false);
 
     const {
         missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
@@ -60,6 +64,21 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
         { type: 'star', label: '최고야', emoji: '✨' }
     ];
 
+    if (showIdeaMissionManager) {
+        return (
+            <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#7C3AED' }}>🏛️ 아이디어 입력 미션을 불러오는 중...</div>}>
+                <IdeaMarketManager
+                    activeClass={activeClass}
+                    isMobile={isMobile}
+                    onBack={() => {
+                        setShowIdeaMissionManager(false);
+                        fetchMissions();
+                    }}
+                />
+            </Suspense>
+        );
+    }
+
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
             {/* Sticky Header 영역 */}
@@ -78,21 +97,35 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                 <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.3rem', color: '#2C3E50', fontWeight: '900' }}>
                     {isDashboardMode ? '✍️ 글쓰기 미션 현황' : '✍️ 글쓰기 미션 관리'}
                 </h3>
-                <Button
-                    onClick={() => {
-                        if (isFormOpen) handleCancelEdit();
-                        else setIsFormOpen(true);
-                    }}
-                    style={{
-                        background: isFormOpen ? '#FF5252' : '#3498DB',
-                        color: 'white', padding: isMobile ? '8px 16px' : '10px 20px',
-                        fontSize: '0.9rem',
-                        minHeight: '44px',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    {isFormOpen ? '✖ 닫기' : '➕ 등록'}
-                </Button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {!isFormOpen && (
+                        <Button
+                            onClick={() => setShowIdeaMissionManager(true)}
+                            style={{
+                                background: '#7C3AED', color: 'white',
+                                padding: isMobile ? '8px 12px' : '10px 18px',
+                                fontSize: isMobile ? '0.82rem' : '0.9rem', minHeight: '44px', fontWeight: 'bold'
+                            }}
+                        >
+                            🏛️ 아이디어 입력 미션 만들기
+                        </Button>
+                    )}
+                    <Button
+                        onClick={() => {
+                            if (isFormOpen) handleCancelEdit();
+                            else setIsFormOpen(true);
+                        }}
+                        style={{
+                            background: isFormOpen ? '#FF5252' : '#3498DB',
+                            color: 'white', padding: isMobile ? '8px 12px' : '10px 18px',
+                            fontSize: isMobile ? '0.82rem' : '0.9rem',
+                            minHeight: '44px',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        {isFormOpen ? '✖ 닫기' : '➕ 일반 글쓰기 미션 만들기'}
+                    </Button>
+                </div>
             </div>
 
             {/* 미션 등록/수정 폼 */}

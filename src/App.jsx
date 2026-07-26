@@ -59,10 +59,7 @@ function App() {
     studentSession?.classId || studentSession?.class_id,
     'student'
   );
-  const ideaMarketEnabled = enabledStudentModules.some((module) => module.id === 'idea-market');
-  const studentPageName = internalPage.name === 'idea_market' && !ideaMarketEnabled
-    ? 'main'
-    : internalPage.name;
+  const studentPageName = internalPage.name;
   // 상태 변경 감지 로그
   useEffect(() => {
   }, [isAdminMode]);
@@ -272,7 +269,6 @@ function App() {
                   studentSession={studentSession}
                   onBack={() => setInternalPage('main')}
                   onNavigate={setInternalPage}
-                  ideaMarketEnabled={ideaMarketEnabled}
                 />
               )}
               {studentPageName === 'writing' && (
@@ -291,7 +287,7 @@ function App() {
                   onBack={() => setInternalPage('main')}
                 />
               )}
-              {studentPageName === 'idea_market' && ideaMarketEnabled && (
+              {studentPageName === 'idea_market' && (
                 <IdeaMarketPage
                   studentSession={studentSession}
                   params={internalPage.params}
