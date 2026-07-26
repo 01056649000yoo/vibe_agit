@@ -21,6 +21,38 @@
 
 ---
 
+## 2026-07-27 — 관리자 대시보드 사용량·장기 미접속·유령 계정 정리 구조 (Claude)
+- **배경**: 관리자 화면이 "승인/거절"만 다루고 있어, 가입한 선생님이 실제로 쓰고 있는지·오래 안 왔는지·
+  가입만 하고 방치된 계정인지 구분할 방법이 없었음. 기존 교사별 학생 수 집계는 `classes`·`students`를
+  브라우저로 전량 받아 세는 방식이라 코드 주석에도 DB 타임아웃 유발이 적혀 있었음.
+- **한 일**:
+  - **집계를 DB로 이동**: `admin_get_teacher_usage`(교사별 학급·학생·미션·글·최근활동·상태 판정),
+    `admin_get_usage_overview`(상단 요약), `admin_get_student_activity`(학생별 활동) RPC 신설.
+    전부 `SECURITY DEFINER` + `auth_user_role() = 'ADMIN'` 검사. 프론트는 결과 줄만 받는다.
+  - **상태 판정 5단계**: `NEVER_STARTED`(학급 미개설) > `NO_STUDENT`(학생 미등록) > `DORMANT`(장기 미접속)
+    > `ACTIVE`(최근 글 있음) > `IDLE`. 기준일은 화면에서 활동 7/30/90일, 미접속 30/60/90/180일로 선택.
+  - **탭 4개 추가**: 📊 사용량 / 🧑‍🎓 학생 활동 / 😴 장기 미접속 / 🧹 정리 대상. 상단 통계 카드에도
+    장기 미접속·정리 대상 수를 노출.
+  - **정리 흐름(3중 안전장치)**: ① `학급 미개설`만 영구 삭제 버튼 노출(`학생 미등록`은 승인 취소만)
+    ② `가입 후 경과일`(기본 14일) 필터로 신규 가입자 보호 ③ 서버 `admin_bulk_force_teacher_withdrawal`이
+    `p_only_empty=TRUE`로 학급·학생이 있는 계정을 자동 제외하고 `skipped`로 반환.
+    장기 미접속 탭에는 삭제 버튼을 두지 않고 `admin_bulk_set_teacher_approval`로 승인 취소/복구만 제공.
+  - 기존 `fetchTeacherStudentCounts` 전량 스캔 제거, 활동 중 선생님 표의 학생 수도 RPC 결과를 재사용.
+- **변경**: 신규 SQL 마이그레이션 `20260727_admin_usage_dashboard_rpc.sql`, 신규 컴포넌트 5개
+  (`AdminUsagePanel`, `AdminStudentActivityPanel`, `AdminDormantPanel`, `AdminCleanupPanel`,
+  `SelectableTeacherTable`) + `adminUsageUi.jsx`, 훅 2개(`useAdminUsage`, `useRowSelection`),
+  `AdminDashboard.jsx` 수정, 안내 문서 `ADMIN_DASHBOARD_GUIDE.md`. DB·운영 인프라 적용은 아직 없음.
+- **결과/검증**: 변경·신규 파일 ESLint 0에러(기존 `exhaustive-deps` 경고 1건), 프로덕션 빌드 통과.
+  **SQL은 실행 검증하지 못함** — 작업 환경에 psql·docker가 없어 파서 확인만 수동으로 함.
+- **남은 것 / 다음**:
+  1. 맥미니 `agit-db`에 마이그레이션 적용 (**앱 배포보다 먼저** — 순서가 바뀌면 새 탭에서 함수 없음 오류).
+     `main` push는 앱만 자동 배포하고 마이그레이션은 적용하지 않으므로, DB 적용 → 확인 → push 순서로 진행.
+     확인은 psql에서 그냥 호출하면 JWT가 없어 `Only admins ...` 예외가 나므로 `request.jwt.claims`에
+     ADMIN 클레임을 넣고 트랜잭션 안에서 실행 후 롤백 (절차는 `ADMIN_DASHBOARD_GUIDE.md` 4절).
+  2. 관리자 계정으로 탭 4개 렌더링, 기준일 변경, 학생 활동 모달, 승인 취소/복구, 빈 계정 삭제 시
+     `skipped` 동작을 실계정으로 확인.
+  3. 비관리자 계정으로 RPC 직접 호출 시 예외 발생 확인.
+
 ## 2026-07-27 — 핵심 글쓰기 흐름 DB/RLS 롤백 통합 테스트 (GPT/Codex)
 - **테스트 범위**: 운영 맥미니 통합 스택의 `테스트` 학급과 유지담 학생을 대상으로 실제 교사·학생 JWT 조건을 DB 세션에 적용. 모든 쓰기 검증은 트랜잭션 안에서 실행 후 `ROLLBACK`하여 운영 데이터에 남기지 않음.
 - **통과 항목**:

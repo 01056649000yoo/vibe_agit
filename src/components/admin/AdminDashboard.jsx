@@ -1,9 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import AdminFeedbackList from './AdminFeedbackList';
 import AdminAnnouncementManager from './AdminAnnouncementManager';
+import AdminUsagePanel from './AdminUsagePanel';
+import AdminStudentActivityPanel from './AdminStudentActivityPanel';
+import AdminDormantPanel from './AdminDormantPanel';
+import AdminCleanupPanel from './AdminCleanupPanel';
+import useAdminUsage from '../../hooks/useAdminUsage';
 
 const TEACHER_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5분 — 교사 목록은 실시간 갱신 불필요
 
@@ -159,13 +164,22 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const [pendingTeachers, setPendingTeachers] = useState([]);
     const [approvedTeachers, setApprovedTeachers] = useState([]);
     const [registeredStudentCount, setRegisteredStudentCount] = useState(0);
-    const [teacherStudentCounts, setTeacherStudentCounts] = useState({});
     const [autoApproval, setAutoApproval] = useState(false);
     const [publicAiEnabled, setPublicAiEnabled] = useState(true);
     const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
 
+    // 사용량·장기 미접속·정리 대상은 DB에서 한 번에 집계해서 받는다 (useAdminUsage)
+    const usage = useAdminUsage();
+
+    // 교사별 학생 수는 사용량 집계 결과를 재사용 — 예전처럼 students 전 row를 끌어오지 않는다
+    const teacherUsageMap = useMemo(
+        () => new Map(usage.teachers.map(row => [row.teacher_id, row])),
+        [usage.teachers]
+    );
+
     // States for UI
-    const [currentTab, setCurrentTab] = useState('active'); // 'active', 'pending', 'settings', 'feedback', 'announcements'
+    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'feedback' | 'announcements' | 'settings'
+    const [currentTab, setCurrentTab] = useState('active');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 10;
@@ -227,43 +241,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             setRegisteredStudentCount(count || 0);
         } catch (err) {
             console.error('등록 학생 수 조회 실패:', err);
-        }
-    };
-
-    const fetchTeacherStudentCounts = async () => {
-        try {
-            const { data: classes, error: classError } = await supabase
-                .from('classes')
-                .select('id, teacher_id');
-
-            if (classError) throw classError;
-
-            if (!classes || classes.length === 0) {
-                setTeacherStudentCounts({});
-                return;
-            }
-
-            const classTeacherMap = new Map(classes.map(item => [item.id, item.teacher_id]));
-            const classIds = classes.map(item => item.id);
-
-            const { data: students, error: studentError } = await supabase
-                .from('students')
-                .select('class_id')
-                .in('class_id', classIds)
-                .is('deleted_at', null);
-
-            if (studentError) throw studentError;
-
-            const counts = {};
-            (students || []).forEach(student => {
-                const teacherId = classTeacherMap.get(student.class_id);
-                if (!teacherId) return;
-                counts[teacherId] = (counts[teacherId] || 0) + 1;
-            });
-
-            setTeacherStudentCounts(counts);
-        } catch (err) {
-            console.error('교사별 등록 학생 수 조회 실패:', err);
         }
     };
 
@@ -329,11 +306,9 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         fetchSettings();
         fetchFeedbackCount();
         fetchRegisteredStudentCount();
-        fetchTeacherStudentCounts();
 
-        // 학생 수 집계(fetchRegisteredStudentCount, fetchTeacherStudentCounts)는
-        // 마운트 시 1회만 실행. 자주 바뀌지 않는 통계를 폴링·이벤트에 포함하면
-        // 전체 학생 row 풀스캔이 반복되어 DB 타임아웃을 유발함.
+        // 학생 수 집계(fetchRegisteredStudentCount)는 마운트 시 1회만 실행.
+        // 교사별 상세 집계는 useAdminUsage의 서버 RPC가 담당하며, 관리자가 새로고침을 누를 때만 다시 돈다.
         // focus + visibilitychange가 동시 발화해도 중복 호출되지 않도록 쿨다운 적용.
         const REFRESH_COOLDOWN_MS = 3000;
         let lastRefreshAt = 0;
@@ -381,6 +356,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             if (error) throw error;
             alert(`✅ '${teacherName}' 선생님이 승인되었습니다!`);
             fetchTeachers();
+            usage.refresh({ showLoading: false });
         } catch (err) { alert('오류: ' + err.message); }
     };
 
@@ -398,6 +374,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             if (error) throw error;
             alert(`🚫 승인 취소 완료`);
             fetchTeachers();
+            usage.refresh({ showLoading: false });
         } catch (err) { alert('오류: ' + err.message); }
     };
 
@@ -441,6 +418,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
             alert(`🗑️ 삭제 완료`);
             fetchTeachers();
+            usage.refresh({ showLoading: false });
         } catch (err) { alert('삭제 실패: ' + err.message); }
     };
 
@@ -486,8 +464,19 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     color="#48BB78" icon="✅"
                 />
                 <StatCard
-                    label="등록 학생수" value={`${registeredStudentCount}명`}
+                    label="등록 학생수"
+                    value={`${usage.overview?.student_total ?? registeredStudentCount}명`}
                     color="#4299E1" icon="🧑‍🎓"
+                />
+                <StatCard
+                    label={`장기 미접속 (${usage.dormantDays}일)`}
+                    value={`${usage.dormantTeachers.length}명`}
+                    color="#D69E2E" icon="😴"
+                />
+                <StatCard
+                    label="정리 대상"
+                    value={`${usage.cleanupCandidates.length}명`}
+                    color="#E53E3E" icon="🧹"
                 />
             </div>
 
@@ -495,11 +484,15 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                 {/* Tabs & Controls */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #E2E8F0', paddingBottom: '16px' }}>
-                    <div style={{ display: 'flex', gap: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', borderBottom: '2px solid #E2E8F0', paddingBottom: '16px' }}>
+                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', rowGap: '12px' }}>
                         {[
                             { id: 'active', label: '✅ 활동 중인 선생님' },
                             { id: 'pending', label: `⏳ 승인 대기 (${pendingTeachers.length})` },
+                            { id: 'usage', label: '📊 사용량' },
+                            { id: 'students', label: '🧑‍🎓 학생 활동' },
+                            { id: 'dormant', label: `😴 장기 미접속 (${usage.dormantTeachers.length})` },
+                            { id: 'cleanup', label: `🧹 정리 대상 (${usage.cleanupCandidates.length})` },
                             {
                                 id: 'feedback',
                                 label: (
@@ -541,7 +534,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                         ))}
                     </div>
 
-                    {currentTab !== 'settings' && (
+                    {(currentTab === 'active' || currentTab === 'pending') && (
                         <input
                             type="text"
                             placeholder="🔍 선생님 검색 (이름, 학교, 이메일)"
@@ -567,7 +560,9 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
                 {/* Tab Content */}
                 <div style={{ minHeight: '400px' }}>
-                    {loading && <div style={{ padding: '40px', textAlign: 'center', color: '#A0AEC0' }}>데이터 불러오는 중...</div>}
+                    {loading && (currentTab === 'active' || currentTab === 'pending') && (
+                        <div style={{ padding: '40px', textAlign: 'center', color: '#A0AEC0' }}>데이터 불러오는 중...</div>
+                    )}
 
                     {!loading && currentTab === 'active' && (
                         <div style={{ overflowX: 'auto', background: 'white', borderRadius: '12px', border: '1px solid #E9ECEF', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
@@ -624,7 +619,9 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                                             {profile.created_at ? new Date(profile.created_at).toLocaleDateString('ko-KR') : '-'}
                                                         </td>
                                                         <td style={{ padding: '16px', textAlign: 'center', color: '#2C5282', fontWeight: '700', whiteSpace: 'nowrap' }}>
-                                                            {teacherStudentCounts[profile.id] || 0}명
+                                                            {teacherUsageMap.has(profile.id)
+                                                                ? `${teacherUsageMap.get(profile.id).student_count}명`
+                                                                : '-'}
                                                         </td>
                                                         <td style={{ padding: '16px', textAlign: 'center' }}>
                                                             <button
@@ -768,6 +765,48 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                 </>
                             )}
                         </div>
+                    )}
+
+                    {currentTab === 'usage' && (
+                        <AdminUsagePanel
+                            teachers={usage.teachers}
+                            overview={usage.overview}
+                            loading={usage.loading}
+                            error={usage.error}
+                            dormantDays={usage.dormantDays}
+                            setDormantDays={usage.setDormantDays}
+                            activityDays={usage.activityDays}
+                            setActivityDays={usage.setActivityDays}
+                            onRefresh={usage.refresh}
+                        />
+                    )}
+
+                    {currentTab === 'students' && (
+                        <AdminStudentActivityPanel defaultActivityDays={usage.activityDays} />
+                    )}
+
+                    {currentTab === 'dormant' && (
+                        <AdminDormantPanel
+                            dormantTeachers={usage.dormantTeachers}
+                            dormantDays={usage.dormantDays}
+                            setDormantDays={usage.setDormantDays}
+                            loading={usage.loading}
+                            onRefresh={async (options) => {
+                                await usage.refresh(options);
+                                fetchTeachers({ showLoading: false });
+                            }}
+                        />
+                    )}
+
+                    {currentTab === 'cleanup' && (
+                        <AdminCleanupPanel
+                            cleanupCandidates={usage.cleanupCandidates}
+                            loading={usage.loading}
+                            onRefresh={async (options) => {
+                                await usage.refresh(options);
+                                fetchTeachers({ showLoading: false });
+                            }}
+                        />
                     )}
 
                     {!loading && currentTab === 'settings' && (
