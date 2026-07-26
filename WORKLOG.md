@@ -21,6 +21,15 @@
 
 ---
 
+## 2026-07-26 — 자동 백업 실패 수정 (launchd 외장SSD 권한 문제) (Claude)
+- **한 일**: 07-26 04:00 예약 백업이 전부 실패한 것 발견. 원인=**macOS가 launchd 실행에서 외장 SSD(/Volumes/SHmaegmini) 쓰기 차단**
+  (`mkdir Operation not permitted`, TCC). 수동 실행(Terminal/Claude)은 권한 있어 되지만 예약은 안 됨.
+- **변경**: `~/scripts/sh_mirror_backup.sh` 재작성 — **내장(`~/backups/auto/<날짜>`)에 스테이징 → 드라이브 업로드**(둘 다 launchd에서 확실)
+  → **외장SSD 복사는 best-effort**(권한 있으면 성공, 없으면 스킵+로그). 옛 `agit_backup.sh` 삭제. 각 단계 ✓/✗ 로깅.
+- **결과/검증**: 수동 재실행으로 오늘분 3곳(내장·외장SSD·드라이브) 각 5파일 복구. 어제(0725)분도 정상 확인.
+- **남은 것 / 다음**: 예약 4시 실행은 이제 **내장+드라이브는 확실**, 외장SSD는 Full Disk Access 부여 시 자동.
+  → `/bin/bash`를 시스템 설정>개인정보 보호>전체 디스크 접근 권한에 추가하면 외장SSD도 자동 복사됨(선택).
+
 ## 2026-07-25 — CI/CD 자동 배포 구축 (push→러너→Docker) (Claude)
 - **한 일**: "어디서든 git push → 맥미니 러너 → Docker 자동 배포" 구축. gh 인증 후 vibe_agit 밀린 35커밋 push(최신화).
   기존에 writing-helper·URL·classroom-tools는 이미 self-hosted 러너+deploy.yml 있었음(online). **vibe_agit만 신규 설치**.
