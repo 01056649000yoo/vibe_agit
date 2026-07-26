@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabaseClient';
 import { dataCache } from '../../../lib/cache';
 
 /**
- * 역할: 아지트 아이디어 마켓 - 학급 회의 & 아이디어 제안 관리 훅 🏛️
+ * 역할: 학급 회의 안건 - 의견 제안·토론 관리 훅 🏛️
  * - meeting 타입 미션 조회
  * - 아이디어(student_posts) 조회 및 제출
  * - 투표(찬성/반대/보완) 및 댓글 관리

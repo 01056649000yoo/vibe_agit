@@ -227,7 +227,7 @@ export const useMissionManager = (activeClass) => {
 
         const { data, error } = await supabase
             .from('writing_missions')
-            .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
+            .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
             .eq('id', missionId)
             .maybeSingle();
 
@@ -243,7 +243,7 @@ export const useMissionManager = (activeClass) => {
             const missionsData = await dataCache.get(`missions_v2_${activeClass.id}`, async () => {
                 const { data, error } = await supabase
                     .from('writing_missions')
-                    .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
+                    .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
                     .eq('class_id', activeClass.id)
                     .order('created_at', { ascending: false });
                 if (error) throw error;
@@ -350,7 +350,7 @@ export const useMissionManager = (activeClass) => {
         try {
             const { data, error } = await supabase
                 .from('writing_missions')
-                .select('id, title, guide, genre, mission_type, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
+                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
                 .eq('id', mission.id)
                 .maybeSingle();
 

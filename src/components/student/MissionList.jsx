@@ -28,7 +28,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
         const classId = currentStudent.classId || currentStudent.class_id;
         const { data: allMissions, error } = await supabase
             .from('writing_missions')
-            .select('id, title, genre, created_at, mission_type, evaluation_rubric, guide, tags, base_reward')
+            .select('id, title, genre, created_at, mission_type, input_template, evaluation_rubric, guide, tags, base_reward')
             .eq('class_id', classId)
             .is('is_archived', false)
             .order('created_at', { ascending: false });
@@ -174,10 +174,11 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                 ) : (
                     missions.map((mission) => {
                         const post = posts[mission.id];
-                        const isIdeaMission = mission.mission_type === 'meeting';
+                        const isMeetingMission = mission.mission_type === 'meeting';
+                        const isPoemMission = mission.input_template === 'poem';
                         let statusBadge = null;
                         let borderColor = '#FFECB3';
-                        let buttonText = isIdeaMission ? '아이디어 제안하기' : '글쓰기 시작';
+                        let buttonText = isMeetingMission ? '회의 의견 쓰기' : '글쓰기 시작';
 
                         if (post?.is_returned) {
                             statusBadge = (
@@ -248,7 +249,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                             fontSize: '0.75rem',
                                             fontWeight: '900'
                                         }}>
-                                            {isIdeaMission ? '🏛️ 아이디어 입력미션' : mission.genre}
+                                            {isMeetingMission ? '🏛️ 회의 안건 미션' : isPoemMission ? '🌿 시 쓰기' : mission.genre}
                                         </div>
                                         {statusBadge}
                                     </div>

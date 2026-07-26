@@ -1,9 +1,10 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
-import { getModule } from '../../modules/registry';
+import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
 import { useMissionManager } from '../../hooks/useMissionManager';
 import MissionForm from './MissionForm';
+import MissionTypePicker from './MissionTypePicker';
 import MissionList from './MissionList';
 import SubmissionStatusModal from './SubmissionStatusModal';
 import PostDetailViewer from './PostDetailViewer';
@@ -11,14 +12,20 @@ import ArchiveConfirmModal from './ArchiveConfirmModal';
 import BulkAIProgressModal from './BulkAIProgressModal';
 import EvaluationReport from './EvaluationReport';
 
-const IdeaMarketManager = lazy(getModule('idea-market').teacherEntry);
+const GENRE_MISSION_BUILDERS = new Map(
+    getGenreMissionTypes()
+        .filter((missionType) => missionType.teacherEntry)
+        .map((missionType) => [missionType.id, lazy(missionType.teacherEntry)])
+);
 
 /**
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
 const MissionManager = ({ activeClass, isDashboardMode = true }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
-    const [showIdeaMissionManager, setShowIdeaMissionManager] = useState(false);
+    const [isMissionTypePickerOpen, setIsMissionTypePickerOpen] = useState(false);
+    const [activeGenreMissionId, setActiveGenreMissionId] = useState(null);
+    const [editingGenreMission, setEditingGenreMission] = useState(null);
 
     const {
         missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
@@ -64,17 +71,37 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
         { type: 'star', label: '최고야', emoji: '✨' }
     ];
 
-    if (showIdeaMissionManager) {
+    const activeGenreMission = getGenreMissionType(activeGenreMissionId);
+    const ActiveGenreMissionBuilder = GENRE_MISSION_BUILDERS.get(activeGenreMissionId) || null;
+
+    const closeGenreMissionBuilder = () => {
+        setActiveGenreMissionId(null);
+        setEditingGenreMission(null);
+        fetchMissions();
+    };
+
+    const handleMissionEditClick = (mission) => {
+        const templateId = mission.input_template || (mission.mission_type === 'poem' ? 'poem' : 'freeform');
+        if (templateId !== 'freeform' && getGenreMissionType(templateId)?.teacherEntry) {
+            setEditingGenreMission(mission);
+            setActiveGenreMissionId(templateId);
+            setIsMissionTypePickerOpen(false);
+            return;
+        }
+        setIsMissionTypePickerOpen(false);
+        handleEditClick(mission);
+    };
+
+    if (ActiveGenreMissionBuilder) {
         return (
-            <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#7C3AED' }}>🏛️ 아이디어 입력 미션을 불러오는 중...</div>}>
-                <IdeaMarketManager
-                    activeClass={activeClass}
-                    isMobile={isMobile}
-                    onBack={() => {
-                        setShowIdeaMissionManager(false);
-                        fetchMissions();
-                    }}
-                />
+            <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#7C3AED' }}>{activeGenreMission.icon} 장르 미션을 불러오는 중...</div>}>
+                {React.createElement(ActiveGenreMissionBuilder, {
+                    activeClass,
+                    isMobile,
+                    mission: editingGenreMission,
+                    onBack: closeGenreMissionBuilder,
+                    onSaved: closeGenreMissionBuilder,
+                })}
             </Suspense>
         );
     }
@@ -98,35 +125,43 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                     {isDashboardMode ? '✍️ 글쓰기 미션 현황' : '✍️ 글쓰기 미션 관리'}
                 </h3>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    {!isFormOpen && (
-                        <Button
-                            onClick={() => setShowIdeaMissionManager(true)}
-                            style={{
-                                background: '#7C3AED', color: 'white',
-                                padding: isMobile ? '8px 12px' : '10px 18px',
-                                fontSize: isMobile ? '0.82rem' : '0.9rem', minHeight: '44px', fontWeight: 'bold'
-                            }}
-                        >
-                            🏛️ 아이디어 입력 미션 만들기
-                        </Button>
-                    )}
                     <Button
                         onClick={() => {
-                            if (isFormOpen) handleCancelEdit();
-                            else setIsFormOpen(true);
+                            if (isFormOpen) {
+                                handleCancelEdit();
+                                setIsMissionTypePickerOpen(false);
+                            } else {
+                                setIsMissionTypePickerOpen((open) => !open);
+                            }
                         }}
                         style={{
-                            background: isFormOpen ? '#FF5252' : '#3498DB',
+                            background: isFormOpen || isMissionTypePickerOpen ? '#FF5252' : '#3498DB',
                             color: 'white', padding: isMobile ? '8px 12px' : '10px 18px',
                             fontSize: isMobile ? '0.82rem' : '0.9rem',
                             minHeight: '44px',
                             fontWeight: 'bold'
                         }}
                     >
-                        {isFormOpen ? '✖ 닫기' : '➕ 일반 글쓰기 미션 만들기'}
+                        {isFormOpen || isMissionTypePickerOpen ? '✖ 닫기' : '➕ 미션 만들기'}
                     </Button>
                 </div>
             </div>
+
+            {isMissionTypePickerOpen && (
+                <MissionTypePicker
+                    isMobile={isMobile}
+                    onClose={() => setIsMissionTypePickerOpen(false)}
+                    onSelectFreeform={() => {
+                        setIsMissionTypePickerOpen(false);
+                        setIsFormOpen(true);
+                    }}
+                    onSelectGenre={(id) => {
+                        setIsMissionTypePickerOpen(false);
+                        setEditingGenreMission(null);
+                        setActiveGenreMissionId(id);
+                    }}
+                />
+            )}
 
             {/* 미션 등록/수정 폼 */}
             <MissionForm
@@ -154,7 +189,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                 loading={loading}
                 submissionCounts={submissionCounts}
                 totalStudentCount={totalStudentCount}
-                handleEditClick={handleEditClick}
+                handleEditClick={handleMissionEditClick}
                 setArchiveModal={setArchiveModal}
                 handleDeleteMission={handleDeleteMission}
                 fetchPostsForMission={fetchPostsForMission}

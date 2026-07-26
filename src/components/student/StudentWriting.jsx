@@ -1,10 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useRef, useEffect } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMissionSubmit } from '../../hooks/useMissionSubmit';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
 import { countContentChars } from '../../lib/textMetrics';
+import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
+
+const GENRE_EDITORS = new Map(
+    getGenreMissionTypes()
+        .filter((missionType) => missionType.studentEditorEntry)
+        .map((missionType) => [missionType.id, lazy(missionType.studentEditorEntry)])
+);
 
 const REACTION_ICONS = [
     { type: 'heart', label: '좋아요', emoji: '❤️' },
@@ -44,16 +51,23 @@ const PREVIEW_MODAL_STYLES = {
 const LOCAL_DRAFT_DEBOUNCE_MS = 3000;
 const DB_BACKUP_INTERVAL_MS = 120000;
 
-const createDraftSnapshot = (title, content, studentAnswers) => ({
+const createDraftSnapshot = (title, content, studentAnswers, structuredContent = null) => ({
     title,
     content,
-    studentAnswers: [...studentAnswers]
+    studentAnswers: [...studentAnswers],
+    structuredContent
 });
 
 const isSameDraft = (a, b) => (
     a.title === b.title &&
     a.content === b.content &&
-    JSON.stringify(a.studentAnswers) === JSON.stringify(b.studentAnswers)
+    JSON.stringify(a.studentAnswers) === JSON.stringify(b.studentAnswers) &&
+    JSON.stringify(a.structuredContent) === JSON.stringify(b.structuredContent)
+);
+
+const hasStructuredDraftContent = (structuredContent) => (
+    Array.isArray(structuredContent?.stanzas) &&
+    structuredContent.stanzas.some((stanza) => stanza?.trim())
 );
 
 const getDraftStorageKey = (studentId, missionId) => (
@@ -108,6 +122,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         teacherEditedAt,
         studentAnswers,
         setStudentAnswers,
+        structuredContent,
+        setStructuredContent,
         postUpdatedAt,
         handleSave,
         handleSubmit,
@@ -134,6 +150,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const isMobile = window.innerWidth <= 768;
     const [autoSaveAt, setAutoSaveAt] = useState(null);
     const [autoSaveError, setAutoSaveError] = useState('');
+    const genreMissionType = getGenreMissionType(mission?.input_template);
+    const GenreEditor = GENRE_EDITORS.get(mission?.input_template) || null;
 
     // 질문 개수가 변하면 studentAnswers 배열 초기화/유지 로직
     useEffect(() => {
@@ -194,7 +212,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
     // 통계 계산
     const charCount = countContentChars(content);
-    const paragraphCount = content.split(/\n+/).filter(p => p.trim().length > 0).length;
+    const genreParagraphCount = genreMissionType?.countParagraphs?.({ structuredContent, content });
+    const paragraphCount = Number.isFinite(genreParagraphCount)
+        ? genreParagraphCount
+        : content.split(/\n+/).filter((paragraph) => paragraph.trim().length > 0).length;
 
     // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)
     const isLocked = isConfirmed || (isSubmitted && !isReturned);
@@ -211,7 +232,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const runDbBackupRef = useRef(null);
 
     latestSaveRef.current = handleSave;
-    latestDraftRef.current = createDraftSnapshot(title, content, studentAnswers);
+    latestDraftRef.current = createDraftSnapshot(title, content, studentAnswers, structuredContent);
     autoSaveStateRef.current = { loading, submitting, isLocked, draftStorageKey };
 
     const saveLocalDraft = () => {
@@ -222,7 +243,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         const hasDraftContent =
             draft.title.trim().length > 0 ||
             draft.content.trim().length > 0 ||
-            draft.studentAnswers.some((answer) => answer?.trim());
+            draft.studentAnswers.some((answer) => answer?.trim()) ||
+            hasStructuredDraftContent(draft.structuredContent);
 
         if (!hasDraftContent || isSameDraft(lastLocalSavedDataRef.current, draft)) return false;
 
@@ -249,7 +271,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         const hasDraftContent =
             draft.title.trim().length > 0 ||
             draft.content.trim().length > 0 ||
-            draft.studentAnswers.some((answer) => answer?.trim());
+            draft.studentAnswers.some((answer) => answer?.trim()) ||
+            hasStructuredDraftContent(draft.structuredContent);
 
         if (!hasDraftContent || isSameDraft(lastDbSavedDataRef.current, draft)) return false;
 
@@ -297,7 +320,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         const localSnapshot = createDraftSnapshot(
             localDraft.title || '',
             localDraft.content || '',
-            Array.isArray(localDraft.studentAnswers) ? localDraft.studentAnswers : []
+            Array.isArray(localDraft.studentAnswers) ? localDraft.studentAnswers : [],
+            localDraft.structuredContent || null
         );
 
         // DB(선생님 수정본 또는 다른 단말에서의 학생 저장)와 로컬 임시본 중 더 최신인 쪽을 사용한다.
@@ -326,9 +350,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             setTitle(localSnapshot.title);
             setContent(localSnapshot.content);
             setStudentAnswers(localSnapshot.studentAnswers);
+            setStructuredContent(localSnapshot.structuredContent);
             if (localDraft.savedAt) setAutoSaveAt(new Date(localDraft.savedAt));
         }
-    }, [loading, draftStorageKey, isLocked, teacherEditedAt, postUpdatedAt, setTitle, setContent, setStudentAnswers]);
+    }, [loading, draftStorageKey, isLocked, teacherEditedAt, postUpdatedAt, setTitle, setContent, setStudentAnswers, setStructuredContent]);
 
     useEffect(() => {
         if (localSaveTimerRef.current) {
@@ -348,7 +373,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 localSaveTimerRef.current = null;
             }
         };
-    }, [title, content, studentAnswers, loading, isLocked]);
+    }, [title, content, studentAnswers, structuredContent, loading, isLocked]);
 
     useEffect(() => {
         if (loading || submitting || isLocked) return;
@@ -695,55 +720,74 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             }}>{originalContent || '기록된 내용이 없습니다.'}</div>
                         </div>
                     )}
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="글의 제목을 적어주세요..."
-                        spellCheck={true}
-                        autoCorrect="on"
-                        autoCapitalize="sentences"
-                        lang="ko"
-                        style={{
-                            width: '100%',
-                            padding: '16px 0',
-                            fontSize: isMobile ? '1.5rem' : '2rem',
-                            fontWeight: '900',
-                            border: 'none',
-                            borderBottom: '2px solid #F1F3F5',
-                            marginBottom: '24px',
-                            outline: 'none',
-                            color: isLocked ? '#546E7A' : '#2C3E50',
-                            background: 'transparent',
-                            lineHeight: '1.4'
-                        }}
-                        disabled={submitting || isLocked}
-                    />
-                    <textarea
-                        ref={editorRef}
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="여기에 자유롭게 이야기를 시작해보세요..."
-                        spellCheck={true}
-                        autoCorrect="on"
-                        autoCapitalize="sentences"
-                        lang="ko"
-                        enterKeyHint="enter"
-                        wrap="soft"
-                        style={{
-                            width: '100%',
-                            minHeight: '600px',
-                            padding: '10px 0',
-                            border: 'none',
-                            fontSize: isMobile ? '1.1rem' : '1.25rem',
-                            lineHeight: '1.8',
-                            outline: 'none',
-                            color: isLocked ? '#546E7A' : '#444',
-                            resize: 'none',
-                            background: 'transparent'
-                        }}
-                        disabled={submitting || isLocked}
-                    />
+                    {GenreEditor ? (
+                        <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#64748B' }}>장르 글쓰기 틀을 준비하는 중...</div>}>
+                            <GenreEditor
+                                title={title}
+                                setTitle={setTitle}
+                                content={content}
+                                setContent={setContent}
+                                structuredContent={structuredContent}
+                                setStructuredContent={setStructuredContent}
+                                studentName={studentSession?.name}
+                                config={mission.template_config || {}}
+                                disabled={submitting || isLocked}
+                                isMobile={isMobile}
+                            />
+                        </Suspense>
+                    ) : (
+                        <>
+                            <input
+                                type="text"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder="글의 제목을 적어주세요..."
+                                spellCheck={true}
+                                autoCorrect="on"
+                                autoCapitalize="sentences"
+                                lang="ko"
+                                style={{
+                                    width: '100%',
+                                    padding: '16px 0',
+                                    fontSize: isMobile ? '1.5rem' : '2rem',
+                                    fontWeight: '900',
+                                    border: 'none',
+                                    borderBottom: '2px solid #F1F3F5',
+                                    marginBottom: '24px',
+                                    outline: 'none',
+                                    color: isLocked ? '#546E7A' : '#2C3E50',
+                                    background: 'transparent',
+                                    lineHeight: '1.4'
+                                }}
+                                disabled={submitting || isLocked}
+                            />
+                            <textarea
+                                ref={editorRef}
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                placeholder="여기에 자유롭게 이야기를 시작해보세요..."
+                                spellCheck={true}
+                                autoCorrect="on"
+                                autoCapitalize="sentences"
+                                lang="ko"
+                                enterKeyHint="enter"
+                                wrap="soft"
+                                style={{
+                                    width: '100%',
+                                    minHeight: '600px',
+                                    padding: '10px 0',
+                                    border: 'none',
+                                    fontSize: isMobile ? '1.1rem' : '1.25rem',
+                                    lineHeight: '1.8',
+                                    outline: 'none',
+                                    color: isLocked ? '#546E7A' : '#444',
+                                    resize: 'none',
+                                    background: 'transparent'
+                                }}
+                                disabled={submitting || isLocked}
+                            />
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -930,7 +974,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     </div>
                     <div style={{ width: '1px', background: '#FFE082' }} />
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.8rem', color: '#8D6E63', marginBottom: '4px' }}>문단수</div>
+                        <div style={{ fontSize: '0.8rem', color: '#8D6E63', marginBottom: '4px' }}>{genreMissionType?.unitLabel || '문단수'}</div>
                         <div style={{ fontSize: '1.2rem', fontWeight: '900', color: paragraphCount >= mission.min_paragraphs ? '#2E7D32' : '#F44336' }}>{paragraphCount} / {mission.min_paragraphs}</div>
                     </div>
                     <div style={{ width: '1px', background: '#FFE082' }} />

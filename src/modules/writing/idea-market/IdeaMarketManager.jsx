@@ -12,7 +12,7 @@ const STATUS_COLORS = {
 };
 
 /**
- * 🏛️ 아이디어 마켓 관리자 (교사용)
+ * 🏛️ 학급 회의 안건 관리자 (교사용)
  * - 4열 그리드로 한 화면에 12명 아이디어 한눈에 확인 가능
  * - 클릭 시 상세보기 모달에서 가이드 질문 답변 + 상태 변경
  */
@@ -116,6 +116,8 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 guide: formData.guide,
                 genre: '회의',
                 mission_type: 'meeting',
+                input_template: 'meeting',
+                template_config: {},
                 guide_questions: formData.guide_questions.filter(q => q.trim()),
                 min_chars: formData.min_chars || 100,
                 min_paragraphs: formData.min_paragraphs || 1,
@@ -124,7 +126,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                 bonus_reward: formData.decided_reward || 50,
                 allow_comments: true,
                 is_archived: false,
-                tags: ['아이디어마켓'],
+                tags: ['회의안건'],
                 evaluation_rubric: { use_rubric: false, levels: [] }
             };
 
@@ -223,7 +225,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                         await supabase.rpc('increment_student_points', {
                             p_student_id: idea.student_id,
                             p_amount: decidedReward,
-                            p_reason: `아이디어 마켓 결정! "${(idea.title || '').slice(0, 20)}" 🏛️✅`
+                            p_reason: `회의 안건 결정! "${(idea.title || '').slice(0, 20)}" 🏛️✅`
                         });
                     } catch (ptErr) {
                         console.error('[IdeaMarketManager] 결정 포인트 지급 실패:', ptErr.message);
@@ -316,7 +318,7 @@ const IdeaMarketManager = ({ activeClass, onBack, isMobile }) => {
                     margin: 0, fontSize: '1.5rem', fontWeight: '900',
                     color: '#4C1D95', display: 'flex', alignItems: 'center', gap: '8px'
                 }}>
-                    🏛️ 아이디어 마켓 관리
+                    🏛️ 학급 회의 안건 관리
                 </h2>
             </div>
 

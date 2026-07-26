@@ -132,8 +132,8 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
                             if (newLog.reason?.includes('승인 취소')) bannerMsg = `⚠️ 앗! 글 승인이 취소되어 ${newLog.amount}P가 회수되었습니다.`;
                             else bannerMsg = `⚠️ ${cleanReason} (${newLog.amount}P)`;
                             bannerIcon = "⚠️";
-                        } else if (newLog.reason?.includes('아이디어 마켓') && newLog.reason?.includes('결정')) {
-                            bannerMsg = `🏛️✅ 아이디어가 최종 결정되었습니다! (+${newLog.amount}P)`;
+                        } else if ((newLog.reason?.includes('아이디어 마켓') || newLog.reason?.includes('회의 안건')) && newLog.reason?.includes('결정')) {
+                            bannerMsg = `🏛️✅ 회의 안건이 최종 결정되었습니다! (+${newLog.amount}P)`;
                             bannerIcon = "🏛️";
                         } else if (newLog.reason?.includes('승인')) {
                             bannerMsg = `🎉 글이 승인되어 +${newLog.amount}P를 얻었습니다!`;
@@ -171,9 +171,9 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
                         debouncedNotify({ type: 'rewrite', message: "♻️ 선생님의 다시 쓰기 요청이 있습니다.", icon: "♻️", timestamp: Date.now() });
                         debouncedFetch('activity');
                     } else if (updatedPost.is_confirmed && !oldPost.is_confirmed) {
-                        // [수정] 아이디어 마켓 결정 시 전용 문구 노출
+                        // 회의 안건 결정 시 전용 문구 노출
                         const isIdea = updatedPost.status === '결정됨';
-                        const message = isIdea ? "🎉 아이디어가 최종 결정되었습니다!" : "🎉 글이 승인되었습니다! 축하해요!";
+                        const message = isIdea ? "🎉 회의 안건이 최종 결정되었습니다!" : "🎉 글이 승인되었습니다! 축하해요!";
                         const icon = isIdea ? "🏛️" : "🎉";
                         
                         debouncedNotify({ type: isIdea ? 'idea_decided' : 'approve', message, icon, timestamp: Date.now() });

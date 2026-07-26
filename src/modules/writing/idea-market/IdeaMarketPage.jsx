@@ -21,7 +21,7 @@ const STATUS_COLORS = {
 };
 
 /**
- * 🏛️ 아지트 아이디어 마켓 - 학생 메인 페이지
+ * 🏛️ 학급 회의 안건 - 학생 메인 페이지
  * 학급 회의 안건 목록 + 아이디어 제출 + 토론 + 투표
  */
 const IdeaMarketPage = ({ studentSession, onBack, params }) => {
@@ -162,7 +162,7 @@ const IdeaMarketPage = ({ studentSession, onBack, params }) => {
             <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#F8FAFC' }}>
                 <div style={{ textAlign: 'center' }}>
                     <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} style={{ fontSize: '3rem' }}>💡</motion.div>
-                    <p style={{ marginTop: '20px', fontWeight: '900', color: '#7C3AED' }}>아이디어 마켓을 여는 중...</p>
+                    <p style={{ marginTop: '20px', fontWeight: '900', color: '#7C3AED' }}>학급 회의를 여는 중...</p>
                 </div>
             </div>
         );
@@ -211,7 +211,7 @@ const IdeaMarketPage = ({ studentSession, onBack, params }) => {
                 </motion.button>
                 <div style={{ flex: 1 }}>
                     <h1 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        🏛️ 아이디어 마켓
+                        🏛️ 학급 회의 안건
                     </h1>
                 </div>
                 {viewMode === 'list' && selectedMeeting && (
@@ -794,7 +794,7 @@ const IdeaDetailView = ({ idea, meeting, studentSession, onBack, isMobile }) => 
                     // [수정] RPC를 사용하여 포인트 지급 (중복 수령 방지 로직 추가)
                     if (studentId) {
                         try {
-                            const detailReason = `아이디어 마켓에서 토론에 참여했어요! 🏛️ (PostID:${idea.id})`;
+                            const detailReason = `학급 회의에서 토론에 참여했어요! 🏛️ (PostID:${idea.id})`;
 
                             const { data: existingReward } = await supabase
                                 .from('point_logs')

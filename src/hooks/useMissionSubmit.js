@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { dataCache } from '../lib/cache';
 import confetti from 'canvas-confetti';
 import { countContentChars } from '../lib/textMetrics';
+import { getGenreMissionType, validateGenreMissionSubmission } from '../modules/writing/mission-types/registry';
 
 export const useMissionSubmit = (studentSession, missionId, params, onBack, onNavigate) => {
     const [mission, setMission] = useState(null);
@@ -20,7 +21,15 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const [isTeacherEdited, setIsTeacherEdited] = useState(false);
     const [teacherEditedAt, setTeacherEditedAt] = useState('');
     const [studentAnswers, setStudentAnswers] = useState([]); // [신규] 핵심 질문에 대한 답변들
+    const [structuredContent, setStructuredContent] = useState(null);
     const [postUpdatedAt, setPostUpdatedAt] = useState(null); // 로컬 임시본과의 최신성 비교용
+
+    const getParagraphCount = () => {
+        const missionType = getGenreMissionType(mission?.input_template);
+        const genreCount = missionType?.countParagraphs?.({ structuredContent, content });
+        if (Number.isFinite(genreCount)) return genreCount;
+        return content.split(/\n+/).filter((paragraph) => paragraph.trim().length > 0).length;
+    };
 
     const fetchMission = useCallback(async () => {
         setLoading(true);
@@ -29,7 +38,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             const { data: missionData, error: missionError } = await supabase
                 .from('writing_missions')
                 // 미션 식별, 제목, 설명, 타입, 최소 글자/문단수 및 가이드 질문 등 필수 데이터만 로드
-                .select('id, title, guide, mission_type, min_chars, min_paragraphs, guide_questions, is_archived, base_reward, bonus_threshold, bonus_reward')
+                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, base_reward, bonus_threshold, bonus_reward')
                 .eq('id', missionId)
                 .maybeSingle();
 
@@ -48,7 +57,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             const currentStudentId = studentSession?.id;
             if (currentStudentId) {
                 // 학생이 기존에 작성하던 글의 제목, 내용, 제출 및 승인 상태, 피드백 정보만 로드
-                let query = supabase.from('student_posts').select('id, title, content, is_returned, is_confirmed, is_submitted, ai_feedback, original_title, original_content, teacher_edited_title, teacher_edited_content, teacher_edited_at, is_teacher_edited, student_answers, student_id, mission_id, updated_at');
+                let query = supabase.from('student_posts').select('id, title, content, structured_content, is_returned, is_confirmed, is_submitted, ai_feedback, original_title, original_content, teacher_edited_title, teacher_edited_content, teacher_edited_at, is_teacher_edited, student_answers, student_id, mission_id, updated_at');
 
                 if (params?.postId) {
                     query = query.eq('id', params.postId);
@@ -72,6 +81,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     setIsTeacherEdited(!!postData.is_teacher_edited);
                     setTeacherEditedAt(postData.teacher_edited_at || '');
                     setStudentAnswers(postData.student_answers || []);
+                    // 교사가 일반 텍스트로 직접 고친 경우에는 수정된 본문에서 장르 구조를 다시 만든다.
+                    setStructuredContent(hasTeacherEditedDraft ? null : (postData.structured_content || null));
                     setPostId(postData.id);
                     setPostUpdatedAt(postData.updated_at || null);
                 } else if (params?.postId) {
@@ -153,7 +164,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     title: title.trim(),
                     content: content,
                     char_count: countContentChars(content),
-                    paragraph_count: content.split(/\n+/).filter(p => p.trim().length > 0).length,
+                    paragraph_count: getParagraphCount(),
                     awarded_base_reward: mission?.base_reward ?? null,
                     awarded_bonus_reward: mission?.bonus_reward ?? null,
                     awarded_bonus_threshold: mission?.bonus_threshold ?? null,
@@ -164,7 +175,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     teacher_edited_content: null,
                     teacher_edited_at: null,
                     teacher_edited_by: null,
-                    student_answers: studentAnswers // [신규] 답변 저장
+                    student_answers: studentAnswers, // [신규] 답변 저장
+                    structured_content: structuredContent
                 }, { onConflict: 'student_id,mission_id' });
 
             if (error) throw error;
@@ -189,15 +201,25 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             return false;
         }
 
+        const templateError = validateGenreMissionSubmission(
+            mission?.input_template,
+            { title, content, structuredContent, config: mission?.template_config || {} }
+        );
+        if (templateError) {
+            alert(templateError);
+            return false;
+        }
+
         const charCount = countContentChars(content);
-        const paragraphCount = content.split(/\n+/).filter(p => p.trim().length > 0).length;
+        const paragraphCount = getParagraphCount();
 
         if (charCount < (mission.min_chars || 0)) {
             alert(`최소 ${mission.min_chars}자 이상 써야 해요! 조금 더 힘내볼까요? 💪`);
             return false;
         }
 
-        if (paragraphCount < (mission.min_paragraphs || 0)) {
+        const missionType = getGenreMissionType(mission?.input_template);
+        if (!missionType?.skipGenericParagraphValidation && paragraphCount < (mission.min_paragraphs || 0)) {
             alert(`최소 ${mission.min_paragraphs}문단 이상이 필요해요! 내용을 나눠서 적어보세요. 📏`);
             return false;
         }
@@ -222,7 +244,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         try {
             // 제출 전 최신 데이터로 다시 계산 (동기화 보장)
             const finalCharCount = countContentChars(content);
-            const finalParagraphCount = content.split('\n').filter(p => p.trim().length > 0).length;
+            const finalParagraphCount = getParagraphCount();
 
             // 2. 글 저장 (student_posts) - upsert 사용
             // 최초 제출 시의 데이터를 보존하기 위해 original_title, original_content를 조건부로 업데이트합니다.
@@ -253,7 +275,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 teacher_edited_content: null,
                 teacher_edited_at: null,
                 teacher_edited_by: null,
-                student_answers: studentAnswers // [신규] 답변 저장
+                student_answers: studentAnswers, // [신규] 답변 저장
+                structured_content: structuredContent
             };
 
             // 최초 제출인 경우 원본 데이터 기록
@@ -325,6 +348,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         teacherEditedAt,
         studentAnswers,
         setStudentAnswers,
+        structuredContent,
+        setStructuredContent,
         postUpdatedAt,
         handleSave,
         handleSubmit
