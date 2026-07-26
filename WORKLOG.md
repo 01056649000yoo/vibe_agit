@@ -30,7 +30,9 @@
   - 판단: `pet_data`는 친구목록·글 작성자 아바타 등 여러 곳이 쓰므로 **코어 데이터로 잔류**, "드래곤 기르기 기능"만 모듈화.
 - **변경**: 커밋 `32f1f53`(기반), `48dd818`(드래곤 이전). 마이그레이션 `supabase/migrations/20260726_add_enabled_modules.sql`(운영 DB 적용 완료).
 - **결과/검증**: 빌드·린트 통과, 브라우저 에러 0, 앱 정상. 드래곤 청크 분리 확인. 모달에 exit 애니메이션 없어 조건부 렌더로 인한 연출 변화 없음(동작 동일).
-- **남은 것 / 다음**: ①메뉴(DashboardMenu 501줄, 기능 하드코딩 12곳)를 레지스트리 기반 렌더로 전환 ②어휘의 탑(1397줄) 등 순차 이전
+- **후속(2026-07-26, `73aeda9`)**: **어휘의 탑 이전 완료** — VocabularyTowerGame·useVocabularyTower → `src/modules/game/vocab-tower/` + manifest 등록.
+  이미 lazy 로드 중이라 청크(30KB) 유지. 교사 설정(GameManager의 vocab_tower_* 컬럼)·학급설정 로딩(useClassAgitClass)은 기존 위치 잔류 → 후속 이전 대상.
+- **남은 것 / 다음**: ①메뉴(DashboardMenu 501줄, 기능 하드코딩 12곳)를 레지스트리 기반 렌더로 전환 ②나머지 모듈(커뮤니티·수업도구) 순차 이전
   ③교사 GameManager의 드래곤/어휘 설정도 모듈로 이전 ④기존 개별 플래그(vocab_tower_enabled)를 enabled_modules로 흡수.
   ⚠️ DragonHideoutModal에 기존 린트 에러 3건(Math.random in render) 존재 — 이전과 무관한 선행 이슈라 별도 커밋으로 처리 예정.
 
