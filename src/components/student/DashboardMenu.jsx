@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
+import { useEnabledModules } from '../../modules/useEnabledModules';
 
 const getKstDateKey = () => {
     return new Intl.DateTimeFormat('en-CA', {
@@ -12,6 +13,17 @@ const getKstDateKey = () => {
 };
 
 const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsVocabTowerOpen, isMobile, agitSettings, vocabTowerSettings, studentSession }) => {
+    // [모듈 시스템] 학급에서 켜진 모듈 목록 (src/modules/registry.js).
+    // enabled_modules가 NULL이면 각 모듈의 defaultEnabled를 따르므로 기존 동작이 유지된다.
+    // 카드 UI는 그대로 두고 "보여줄지" 판단만 레지스트리로 옮기는 중 (Stage 3b 점진 전환).
+    const { modules: enabledModules } = useEnabledModules(
+        studentSession?.classId || studentSession?.class_id,
+        'student'
+    );
+    const isModuleOn = useCallback(
+        (id) => enabledModules.some((m) => m.id === id),
+        [enabledModules]
+    );
     // 어휘의 탑 활성화 여부
     const isVocabTowerEnabled = vocabTowerSettings?.enabled ?? false;
     const dailyLimit = vocabTowerSettings?.dailyLimit ?? 3;
@@ -263,6 +275,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px', marginTop: '24px' }}>
+                {isModuleOn('dragon') && (
                 <motion.div
                     whileHover={{ scale: 1.02, y: -5 }}
                     whileTap={{ scale: 0.98 }}
@@ -288,6 +301,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                     <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#5D4037', marginBottom: '6px' }}>나의 드래곤 파트너</div>
                     <div style={{ fontSize: '0.9rem', color: '#FBC02D', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>나의 드래곤 아지트 가기</div>
                 </motion.div>
+                )}
 
                 <motion.div
                     whileHover={(isVocabTowerEnabled && !isExhausted) ? { scale: 1.02, y: -5 } : {}}
