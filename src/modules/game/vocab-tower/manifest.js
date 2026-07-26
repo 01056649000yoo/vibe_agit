@@ -16,6 +16,9 @@ export const vocabTowerManifest = {
   part: 'game',
   audience: 'student',
   defaultEnabled: false, // 기존 동작 보존: vocab_tower_enabled 기본값이 false
+  // 이 모듈은 아직 학급 컬럼 `vocab_tower_enabled`로도 켜고 끈다(교사 설정 화면).
+  // 메뉴는 두 설정을 함께 보고 판단한다 — 자세한 내용은 DashboardMenu 참조.
+  legacyFlag: 'vocab_tower_enabled',
   studentEntry: () => import('./VocabularyTowerGame'),
 };
 

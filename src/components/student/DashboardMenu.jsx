@@ -24,7 +24,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
         (id) => enabledModules.some((m) => m.id === id),
         [enabledModules]
     );
-    // 어휘의 탑 활성화 여부
+    // 어휘의 탑 활성화 여부 (교사의 게임 설정 화면에서 켜는 기존 플래그)
     const isVocabTowerEnabled = vocabTowerSettings?.enabled ?? false;
     const dailyLimit = vocabTowerSettings?.dailyLimit ?? 3;
 
@@ -303,6 +303,8 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                 </motion.div>
                 )}
 
+                {/* 모듈 ON + 교사 게임설정 ON 둘 다일 때만 노출 (한쪽만 꺼도 숨김) */}
+                {isModuleOn('vocab-tower') && isVocabTowerEnabled && (
                 <motion.div
                     whileHover={(isVocabTowerEnabled && !isExhausted) ? { scale: 1.02, y: -5 } : {}}
                     whileTap={(isVocabTowerEnabled && !isExhausted) ? { scale: 0.98 } : {}}
@@ -430,6 +432,7 @@ const DashboardMenu = ({ onNavigate, setIsDragonModalOpen, setIsAgitOpen, setIsV
                         )}
                     </AnimatePresence>
                 </motion.div>
+                )}
 
                 {/* [신규] 두근두근 우리반 아지트 배너 */}
                 <motion.div

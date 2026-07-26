@@ -37,7 +37,9 @@ export function getAllModules() {
  * @param {'student'|'teacher'} audience  현재 화면 대상
  */
 export function getEnabledModules(enabledIds, audience) {
-  const list = Array.isArray(enabledIds) ? enabledIds : null;
+  // 빈 배열은 "설정 안 함"과 구분이 어렵고, 실수로 저장되면 학생 메뉴가 통째로 비어버린다.
+  // 안전하게 미설정(defaultEnabled 적용)으로 취급한다 — 모두 끄려면 교사 UI에서 개별 OFF.
+  const list = Array.isArray(enabledIds) && enabledIds.length > 0 ? enabledIds : null;
   return manifests.filter((m) => {
     if (m.audience !== 'both' && m.audience !== audience) return false;
     if (m.core) return true;
