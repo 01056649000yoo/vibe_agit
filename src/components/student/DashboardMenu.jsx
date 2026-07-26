@@ -1,58 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
-import { useEnabledModules } from '../../modules/useEnabledModules';
 
-const getKstDateKey = () => {
-    return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Seoul',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).format(new Date());
-};
-
-const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgroundCount = 0, isMobile, agitSettings, vocabTowerSettings, studentSession }) => {
-    // [모듈 시스템] 학급에서 켜진 모듈 목록 (src/modules/registry.js).
-    // enabled_modules가 NULL이면 각 모듈의 defaultEnabled를 따르므로 기존 동작이 유지된다.
-    // 카드 UI는 그대로 두고 "보여줄지" 판단만 레지스트리로 옮기는 중 (Stage 3b 점진 전환).
-    const { modules: enabledModules, enabledIds } = useEnabledModules(
-        studentSession?.classId || studentSession?.class_id,
-        'student'
-    );
-    // 교사가 모듈 설정을 저장한 학급인지 (미설정이면 기존 개별 플래그를 존중)
-    const hasModuleConfig = Array.isArray(enabledIds) && enabledIds.length > 0;
-    const isModuleOn = useCallback(
-        (id) => enabledModules.some((m) => m.id === id),
-        [enabledModules]
-    );
-    // 어휘의 탑 활성화 여부 (교사의 게임 설정 화면에서 켜는 기존 플래그)
-    const isVocabTowerEnabled = vocabTowerSettings?.enabled ?? false;
-    const dailyLimit = vocabTowerSettings?.dailyLimit ?? 3;
-
-    // [신규] 일일 시도 횟수 확인
-    const getTodayKey = () => {
-        const today = getKstDateKey();
-        // 교사가 설정을 리셋한 날짜정보(resetDate)를 키에 포함하여, 설정 변경 시 회수가 리셋되도록 함
-        const resetSuffix = vocabTowerSettings?.resetDate ? `_${vocabTowerSettings.resetDate}` : '';
-        return `vocab_tower_attempts_${studentSession?.id}_${today}${resetSuffix}`;
-    };
-
-    const getAttempts = () => {
-        const key = getTodayKey();
-        const stored = localStorage.getItem(key);
-        return stored ? parseInt(stored, 10) : 0;
-    };
-
-    const currentAttempts = getAttempts();
-    const remainingAttempts = Math.max(0, dailyLimit - currentAttempts);
-    const isExhausted = remainingAttempts <= 0;
-
-    // [신규] 랭킹 실시간 프리뷰 상태
-    const [rankings, setRankings] = useState([]);
-    const [isRankingHovered, setIsRankingHovered] = useState(false);
-    const [classmates, setClassmates] = useState([]); // [신규] 이름 매핑용 캐시
-
+const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgroundCount = 0, isMobile, agitSettings, studentSession }) => {
     // [신규] 새 미션 존재 여부 확인 (최근 24시간)
     const [hasNewMission, setHasNewMission] = useState(false);
 
@@ -173,65 +123,8 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
             checkNewMissions();
         }, 1000); // [최적화] 대시보드 필수 데이터 로딩 대기
 
-        const fetchClassmatesForCache = async () => {
-            try {
-                // [보안/최적화] 보안 우회 RPC를 사용하여 명단 확보 (DB 조인 부하 감소)
-                const { data } = await supabase
-                    .rpc('get_student_classmates_for_hideout');
-                if (data) setClassmates(data);
-            } catch (e) { console.error(e); }
-        };
-        fetchClassmatesForCache();
-
         return () => clearTimeout(timerId);
     }, [studentSession?.class_id, studentSession?.classId, studentSession?.id]);
-
-    const fetchRankings = useCallback(async () => {
-        const classId = studentSession?.class_id || studentSession?.classId;
-        if (!classId || !isVocabTowerEnabled) return;
-
-        try {
-            let query = supabase
-                .from('vocab_tower_rankings')
-                .select('max_floor, student_id') // 조인 제거하여 쿼리 경량화
-                .eq('class_id', classId);
-
-            if (vocabTowerSettings?.rankingResetDate) {
-                query = query.gte('updated_at', vocabTowerSettings.rankingResetDate);
-            }
-
-            const { data, error } = await query
-                .order('max_floor', { ascending: false })
-                .limit(5);
-
-            if (!error) setRankings(data || []);
-        } catch (err) {
-            console.error('랭킹 프리뷰 로드 실패:', err);
-        }
-    }, [studentSession?.class_id, studentSession?.classId, isVocabTowerEnabled, vocabTowerSettings?.rankingResetDate]);
-
-    // [신규/최적화] 실시간 이름 매핑 (메모리 연산)
-    const displayRankings = useMemo(() => {
-        if (rankings.length === 0) return [];
-        
-        return rankings.map(item => {
-            const classmate = classmates.find(c => c.id === item.student_id);
-            let displayName = '조회 중...';
-            
-            if (classmate) {
-                displayName = classmate.name;
-            } else if (item.student_id === studentSession?.id) {
-                displayName = studentSession?.name || '나';
-            } else if (classmates.length > 0) {
-                displayName = '아지트 친구';
-            }
-
-            return {
-                ...item,
-                students: { name: displayName }
-            };
-        });
-    }, [rankings, classmates, studentSession?.id, studentSession?.name]);
 
     return (
         <>
