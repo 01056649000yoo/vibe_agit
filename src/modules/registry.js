@@ -11,11 +11,13 @@ import { validateManifest } from './types';
 export const CONFIGURED_MARK = '__configured__';
 import { dragonManifest } from './game/dragon/manifest';
 import { vocabTowerManifest } from './game/vocab-tower/manifest';
+import { friendsHideoutManifest } from './community/friends-hideout/manifest';
 
 /** 등록된 모듈 매니페스트 목록 */
 const manifests = [
   dragonManifest, // src/modules/game/dragon/
   vocabTowerManifest, // src/modules/game/vocab-tower/
+  friendsHideoutManifest, // src/modules/community/friends-hideout/
 ];
 
 // 개발 중 매니페스트 실수 조기 발견 (프로덕션 빌드에서는 console이 제거됨)

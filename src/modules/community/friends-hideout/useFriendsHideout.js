@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../../../lib/supabaseClient';
 
-import { dataCache } from '../lib/cache';
+import { dataCache } from '../../../lib/cache';
 
 export const useFriendsHideout = (studentSession, params) => {
     const CLASSMATES_CACHE_MS = 300000;

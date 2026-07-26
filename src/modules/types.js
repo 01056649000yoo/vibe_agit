@@ -13,6 +13,7 @@
  * @property {'student'|'teacher'|'both'} audience  누구에게 보이는가
  * @property {() => Promise<any>} [studentEntry]  학생 진입 컴포넌트 (React.lazy용 동적 import)
  * @property {() => Promise<any>} [teacherEntry]  교사 설정/관리 컴포넌트
+ * @property {string}   [studentRoute] 학생 화면 내부 라우트 이름
  * @property {boolean}  [defaultEnabled]  학급 설정이 없을 때 기본 노출 여부 (기본 false)
  * @property {boolean}  [core]    true면 항상 켜짐(끌 수 없음). 코어 인접 기능용
  */

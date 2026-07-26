@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import Card from '../common/Card';
-import Button from '../common/Button';
+import Card from '../../../components/common/Card';
+import Button from '../../../components/common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useFriendsHideout } from '../../hooks/useFriendsHideout';
-import PostDetailModal from './PostDetailModal';
+import { useFriendsHideout } from './useFriendsHideout';
+import PostDetailModal from '../../../components/student/PostDetailModal';
 
 // 상수 및 아이콘 설정 (Optimization 5: 외부 상수화)
 const REACTION_ICONS = [

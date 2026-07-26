@@ -10,6 +10,7 @@ import Loading from './components/common/Loading'
 import ErrorBoundary from './components/common/ErrorBoundary'
 import { useAuthStore } from './store/useAuthStore';
 import { useAppStore } from './store/useAppStore';
+import { getModule } from './modules/registry';
 
 // 지연 로딩 (Lazy Loading) 적용
 const LandingPage = lazy(() => import('./components/layout/LandingPage'))
@@ -21,7 +22,7 @@ const PendingApproval = lazy(() => import('./components/teacher/PendingApproval'
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard')) // [추가] 관리자 대시보드
 const StudentWriting = lazy(() => import('./components/student/StudentWriting'))
 const MissionList = lazy(() => import('./components/student/MissionList'))
-const FriendsHideout = lazy(() => import('./components/student/FriendsHideout'))
+const FriendsHideout = lazy(getModule('friends-hideout').studentEntry)
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
 const PrivacyPolicy = lazy(() => import('./components/layout/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('./components/layout/TermsOfService'))
