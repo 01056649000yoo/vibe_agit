@@ -32,7 +32,7 @@
   - 기존 독서록 목록을 **나의 책장**으로 변경: 표지 카드, `전체/읽는 중/다 읽음`, 책/독서록/공개 수,
     한 책에 여러 독서록 작성, 책별 독서록 접기·열기·삭제 제공.
 - **변경**:
-  - 기능 커밋 `77d9834`(`feat: add API-backed reading bookshelf`). 원격 push·앱 자동 배포는 이 로그 작성 시점 대기.
+  - 기능 커밋 `77d9834`(`feat: add API-backed reading bookshelf`)과 운영 기록 커밋 `72864f4`를 원격 `main`에 push.
   - git 밖 운영 변경: 통합 DB `agit-db`에 `20260730_reading_library_catalog.sql` 적용,
     `~/agit-supabase/volumes/functions/book-search/index.ts` 배치, `agit-edge-functions`만 재생성.
     카카오 키는 값 노출 없이 git 밖 시크릿 파일의 지정 환경변수 설정·런타임 반영 여부만 확인.
@@ -45,10 +45,11 @@
     검증용 책 잔존 0건 확인. 임시 DB는 모두 삭제.
   - 함수 컨테이너에서 카카오 키 런타임 설정 확인, 운영 Kong의 `book-search` 경로가 실제 함수로 라우팅되고 미인증 요청 401 차단 확인.
   - 변경 React 파일 targeted ESLint 0에러, 프로덕션 빌드 성공, `git diff --check` 통과.
+  - GitHub Actions Deploy run `30268976269` 성공(체크아웃·이미지 빌드·컨테이너 재시작·HTTP 검증 전 단계 통과).
+    운영 `agit-app`은 새 번들 `index-DEDlvdt3.js` 제공, Caddy 실도메인 경로 HTTP/2 200 확인.
 - **남은 것 / 다음**:
-  1. `main` push 후 GitHub Actions 앱 자동 배포 성공 확인.
-  2. 실제 학생 로그인으로 카카오 검색 선택·직접 입력·읽는 중/완독·책별 복수 독서록·공개 전환 확인.
-  3. 다음 단계 4c-2에서 친구 아지트 공개 책장·기존 반응/댓글 연결.
+  1. 실제 학생 로그인으로 카카오 검색 선택·직접 입력·읽는 중/완독·책별 복수 독서록·공개 전환 확인.
+  2. 다음 단계 4c-2에서 친구 아지트 공개 책장·기존 반응/댓글 연결.
 
 ## 2026-07-27 — 학생 자율 독서록 1차 + 글/댓글/반응 소유권 강화 (GPT/Codex)
 - **한 일**:
