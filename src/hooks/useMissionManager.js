@@ -668,6 +668,59 @@ ${postArray.map((p, idx) => {
         }
     };
 
+    /**
+     * 다시쓰기 강제 회수.
+     *
+     * 다시쓰기를 보낸 뒤 학생이 제출하지 않으면 교사가 글을 되돌려받을 수 없어
+     * 학생 계정으로 로그인해야 했다. 지금 저장돼 있는 내용 그대로 제출 처리하되,
+     * 학생이 스스로 낸 글과 구분되도록 회수 표시를 남긴다(포인트는 지급하지 않음).
+     */
+    const handleRecallPosts = async (targets) => {
+        const list = (Array.isArray(targets) ? targets : [targets]).filter(
+            (p) => p && p.is_returned && !p.is_submitted
+        );
+        if (list.length === 0) return { count: 0 };
+
+        const { data: { user } } = await supabase.auth.getUser();
+        const { error } = await supabase
+            .from('student_posts')
+            .update({
+                is_submitted: true,
+                is_returned: false,
+                recalled_at: new Date().toISOString(),
+                recalled_by: user?.id ?? null,
+            })
+            .in('id', list.map((p) => p.id));
+
+        if (error) {
+            console.error('회수 실패:', error.message);
+            return { count: 0, error };
+        }
+        await fetchPostsForMission(selectedMission?.id);
+        return { count: list.length };
+    };
+
+    /** 회수 되돌리기 — 다시 학생에게 넘겨 이어 쓰게 한다 */
+    const handleUndoRecall = async (post) => {
+        if (!post?.recalled_at) return { ok: false };
+        const { error } = await supabase
+            .from('student_posts')
+            .update({
+                is_submitted: false,
+                is_returned: true,
+                recalled_at: null,
+                recalled_by: null,
+            })
+            .eq('id', post.id);
+
+        if (error) {
+            console.error('회수 취소 실패:', error.message);
+            return { ok: false, error };
+        }
+        await fetchPostsForMission(selectedMission?.id);
+        return { ok: true };
+    };
+
     const handleGenerateSingleAI = async () => {
         if (!selectedPost) return;
         setIsGenerating(true);
@@ -1318,6 +1371,7 @@ ${postArray.map((p, idx) => {
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
         handleGenerateSingleAI, handleBulkAIAction, handleRequestRewrite,
         handleApprovePost, handleBulkApprove, handleRecovery, handleBulkRecovery,
+        handleRecallPosts, handleUndoRecall,
         handleBulkRequestRewrite,
         handleFinalArchive, handleDeleteMission, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,

@@ -43,7 +43,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     const fetchStudentPosts = useCallback(async (currentStudent) => {
         const { data, error } = await supabase
             .from('student_posts')
-            .select('id, mission_id, is_confirmed, is_submitted, is_returned, char_count, created_at')
+            .select('id, mission_id, is_confirmed, is_submitted, is_returned, recalled_at, char_count, created_at')
             .eq('student_id', currentStudent.id);
 
         if (error) throw error;
@@ -184,7 +184,16 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                         let borderColor = '#FFECB3';
                         let buttonText = isMeetingMission ? '안건 작성하기' : '글쓰기 시작';
 
-                        if (post?.is_returned) {
+                        if (post?.recalled_at) {
+                            // 다시쓰기 기한이 지나 선생님이 걷어간 글 — 학생이 이유를 알 수 있게 표시
+                            statusBadge = (
+                                <div style={{ background: '#EDE7F6', color: '#5E35B1', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #D1C4E9' }}>
+                                    선생님이 걷어감
+                                </div>
+                            );
+                            borderColor = '#D1C4E9';
+                            buttonText = '내 글 보기';
+                        } else if (post?.is_returned) {
                             statusBadge = (
                                 <div style={{ background: '#FFEBEE', color: '#D32F2F', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #FFCDD2' }}>
                                     다시 쓰기 필요

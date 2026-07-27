@@ -6,7 +6,8 @@ import PromptRuleButton from './PromptRuleButton';
 const SubmissionStatusModal = ({
     selectedMission, setSelectedMission, posts, loadingPosts,
     handleBulkAIAction, handleBulkApprove, handleBulkRecovery,
-    handleBulkRequestRewrite, setSelectedPost, setTempFeedback, isGenerating, isMobile
+    handleBulkRequestRewrite, setSelectedPost, setTempFeedback, isGenerating, isMobile,
+    handleRecallPosts
 }) => {
     const [isCollectViewOpen, setIsCollectViewOpen] = React.useState(false);
     const [isReactionViewOpen, setIsReactionViewOpen] = React.useState(false);
@@ -98,6 +99,30 @@ const SubmissionStatusModal = ({
                                         >
                                             📊 학생 반응 모아보기 ✨
                                         </Button>
+
+                                        {/* 다시쓰기를 보냈지만 학생이 내지 않은 글을 한 번에 걷기 */}
+                                        {handleRecallPosts && posts.some(p => p.is_returned && !p.is_submitted) && (
+                                            <Button
+                                                onClick={async () => {
+                                                    const targets = posts.filter(p => p.is_returned && !p.is_submitted);
+                                                    if (!window.confirm(`다시쓰기 중인 ${targets.length}명의 글을 지금 상태로 걷어올까요?\n(학생이 아직 제출하지 않은 글입니다. 포인트는 지급되지 않습니다.)`)) return;
+                                                    const { count } = await handleRecallPosts(targets);
+                                                    if (count) alert(`${count}건을 회수했습니다.`);
+                                                }}
+                                                disabled={isGenerating || loadingPosts}
+                                                style={{
+                                                    flex: '1 1 100%',
+                                                    backgroundColor: '#EDE7F6',
+                                                    color: '#5E35B1',
+                                                    border: '2px solid #D1C4E9',
+                                                    fontWeight: '900',
+                                                    fontSize: '0.85rem',
+                                                    padding: '12px 8px'
+                                                }}
+                                            >
+                                                📥 미제출 글 일괄 회수 ({posts.filter(p => p.is_returned && !p.is_submitted).length}명)
+                                            </Button>
+                                        )}
 
                                         {/* Row 2: 일괄 요청/승인 버튼들 */}
                                         {posts.some(p => p.is_submitted && !p.is_confirmed) && (
@@ -206,6 +231,8 @@ const SubmissionStatusModal = ({
                                                         <span style={{ fontWeight: '900', color: '#2C3E50' }}>{post.students?.name}</span>
                                                         {post.is_confirmed ? (
                                                             <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E8F5E9', color: '#2E7D32', borderRadius: '4px', fontWeight: 'bold' }}>✅ 지급 완료</span>
+                                                        ) : post.recalled_at ? (
+                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#EDE7F6', color: '#5E35B1', borderRadius: '4px', fontWeight: 'bold' }}>📥 회수됨 (학생 미제출)</span>
                                                         ) : post.is_submitted ? (
                                                             <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E3F2FD', color: '#1565C0', borderRadius: '4px', fontWeight: 'bold' }}>⏳ 승인 대기</span>
                                                         ) : post.is_returned ? (
@@ -218,7 +245,26 @@ const SubmissionStatusModal = ({
                                                         {post.char_count}자 · {new Date(post.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                     </div>
                                                 </div>
-                                                <div style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.85rem' }}>읽어보기 ➔</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    {post.is_returned && !post.is_submitted && handleRecallPosts && (
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                if (!window.confirm(`${post.students?.name || '학생'}의 글을 지금 상태로 걷어올까요?\n(학생이 아직 제출하지 않은 글입니다. 포인트는 지급되지 않습니다.)`)) return;
+                                                                const { count } = await handleRecallPosts(post);
+                                                                if (count) alert('글을 회수했습니다.');
+                                                            }}
+                                                            style={{
+                                                                border: '1px solid #7E57C2', background: 'white', color: '#5E35B1',
+                                                                borderRadius: '8px', padding: '5px 10px', fontSize: '0.78rem',
+                                                                fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap'
+                                                            }}
+                                                        >
+                                                            📥 회수
+                                                        </button>
+                                                    )}
+                                                    <div style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.85rem' }}>읽어보기 ➔</div>
+                                                </div>
                                             </motion.div>
                                         ))}
                                     </div>
