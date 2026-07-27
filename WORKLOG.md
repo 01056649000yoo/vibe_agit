@@ -32,7 +32,7 @@
   - `writing-footprint` 코어 모듈과 학생 대시보드 `글쓰기 발자국` 진입점 추가. 본인 화면은 완성 글·고쳐쓰기·피드백·활동일·
     댓글·반응을 표시하고, 친구 아지트에는 별도 지연 로딩 요약 카드로 공개 가능한 수치만 표시.
 - **변경**:
-  - 앱·마이그레이션은 커밋·배포 전 작업 트리에 반영.
+  - 기능 커밋 `aac9973`(`feat: add daily writing footprints`)을 원격 `main`에 push.
   - git 밖 운영 변경: 통합 DB `agit-db`에 `20260801_writing_footprints.sql` 적용.
     `/Users/seunghyeonmaegmini/Library/LaunchAgents/site.agit.writing-footprint-snapshot.plist`를 설치해 매일 00:10 전날 스냅샷 계산.
 - **결과/검증**:
@@ -41,6 +41,7 @@
   - 운영 시작 이벤트 0건에서 활성 학생 1,405명의 기준 스냅샷을 생성. LaunchAgent 시험 실행 1회와 종료 코드 0 확인.
   - 변경 React 파일 targeted ESLint 0에러, `git diff --check` 통과, 프로덕션 빌드 성공.
     본인 화면·친구 카드·공통 요약이 각각 별도 lazy chunk로 생성되고 개발 서버가 신규 화면 코드를 제공하는지 확인.
+  - GitHub Actions Deploy run `30273603624` 성공. 이미지 빌드·컨테이너 재시작·검증 완료.
 - **남은 것 / 다음**:
   1. 학생 실기기에서 새 글·고쳐쓰기·댓글·반응 후 다음날 본인 발자국과 친구 아지트 요약 확인.
   2. 댓글 관계의 대표 친구 표시는 실제 표본을 본 뒤 최소 표본·동률·교사 공개 설정과 함께 추가.
