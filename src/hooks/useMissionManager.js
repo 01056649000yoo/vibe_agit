@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
+import { sanitizeFeedback } from '../utils/aiFeedbackGuard';
 import { dataCache } from '../lib/cache';
 
 export const useMissionManager = (activeClass) => {
@@ -649,11 +650,18 @@ ${postArray.map((p, idx) => {
 
             if (isBulk) {
                 const jsonMatch = responseText.match(/\[\s*\{.*\}\s*\]/s);
-                if (jsonMatch) return JSON.parse(jsonMatch[0]);
+                if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    // 지적할 게 없을 때 모델이 학생 글을 그대로 되돌려주는 경우가 있어 걸러낸다
+                    return parsed.map((item) => {
+                        const source = postArray.find((p) => String(p.id) === String(item.id));
+                        return { ...item, feedback: sanitizeFeedback(item.feedback, source?.content) };
+                    });
+                }
                 throw new Error('AI 응답 형식이 일괄 처리에 적합하지 않습니다.');
             }
 
-            return responseText;
+            return sanitizeFeedback(responseText, postArray[0]?.content);
         } catch (err) {
             console.error('AI 피드백 생성 실패:', err.message);
             return null;

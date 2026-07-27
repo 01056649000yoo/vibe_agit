@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { refinePromptWithAI } from '../../utils/refinePrompt';
 import Button from '../common/Button';
 import useAiPromptPresets, { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 import { DEFAULT_FEEDBACK_PROMPT, DEFAULT_REPORT_PROMPT } from '../../constants/aiPrompts';
@@ -26,6 +27,10 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied }) => {
     const [draftOverride, setDraftOverride] = useState(null);
     const [selectedOverride, setSelectedOverride] = useState(null);
     const [newName, setNewName] = useState('');
+    // AI 다듬기: 원문을 건드리지 않고 제안을 따로 받아 교사가 채택 여부를 고른다
+    const [refining, setRefining] = useState(false);
+    const [refined, setRefined] = useState(null);
+    const [refineError, setRefineError] = useState('');
     const [notice, setNotice] = useState('');
 
     const isReport = kind === PRESET_KIND.REPORT;
@@ -244,15 +249,37 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied }) => {
                                     </span>
                                 )}
                             </span>
-                            <button
-                                onClick={() => setDraftOverride(defaultPrompt)}
-                                style={{
-                                    border: '1px solid #E9ECEF', background: 'white', borderRadius: '8px',
-                                    padding: '5px 10px', fontSize: '0.78rem', color: '#6B7280', cursor: 'pointer'
-                                }}
-                            >
-                                기본값 불러오기
-                            </button>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                    onClick={async () => {
+                                        setRefineError(''); setRefined(null); setRefining(true);
+                                        try {
+                                            setRefined(await refinePromptWithAI(draft));
+                                        } catch (err) {
+                                            setRefineError(err?.message || 'AI 다듬기에 실패했습니다.');
+                                        } finally {
+                                            setRefining(false);
+                                        }
+                                    }}
+                                    disabled={refining || !draft.trim()}
+                                    style={{
+                                        border: `1px solid ${accent}`, background: 'white', borderRadius: '8px',
+                                        padding: '5px 10px', fontSize: '0.78rem', color: accent,
+                                        cursor: refining ? 'wait' : 'pointer', fontWeight: 700
+                                    }}
+                                >
+                                    {refining ? '다듬는 중…' : '✨ AI로 다듬기'}
+                                </button>
+                                <button
+                                    onClick={() => setDraftOverride(defaultPrompt)}
+                                    style={{
+                                        border: '1px solid #E9ECEF', background: 'white', borderRadius: '8px',
+                                        padding: '5px 10px', fontSize: '0.78rem', color: '#6B7280', cursor: 'pointer'
+                                    }}
+                                >
+                                    기본값 불러오기
+                                </button>
+                            </div>
                         </div>
 
                         <textarea
@@ -267,6 +294,53 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied }) => {
                                 fontFamily: 'inherit', outline: 'none'
                             }}
                         />
+
+                        {/* AI 다듬기 결과 — 원문은 그대로 두고, 교사가 확인 후 채택 */}
+                        {refineError && (
+                            <div style={{
+                                marginTop: '10px', padding: '10px 12px', borderRadius: '10px',
+                                background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', fontSize: '0.82rem'
+                            }}>
+                                {refineError}
+                            </div>
+                        )}
+                        {refined && (
+                            <div style={{
+                                marginTop: '10px', padding: '12px', borderRadius: '12px',
+                                background: '#F0FDF4', border: `1px solid #BBF7D0`
+                            }}>
+                                <div style={{ fontSize: '0.8rem', color: '#15803D', fontWeight: 700, marginBottom: '6px' }}>
+                                    ✨ AI가 다듬은 규칙 (아직 적용 전)
+                                </div>
+                                <div style={{
+                                    maxHeight: '160px', overflowY: 'auto', whiteSpace: 'pre-wrap',
+                                    fontSize: '0.83rem', lineHeight: 1.6, color: '#2C3E50',
+                                    background: 'white', padding: '10px', borderRadius: '8px', border: '1px solid #DCFCE7'
+                                }}>
+                                    {refined}
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                                    <button
+                                        onClick={() => { setDraftOverride(refined); setRefined(null); }}
+                                        style={{
+                                            border: 'none', background: '#16A34A', color: 'white', borderRadius: '8px',
+                                            padding: '7px 14px', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer'
+                                        }}
+                                    >
+                                        이걸로 교체
+                                    </button>
+                                    <button
+                                        onClick={() => setRefined(null)}
+                                        style={{
+                                            border: '1px solid #E9ECEF', background: 'white', color: '#6B7280',
+                                            borderRadius: '8px', padding: '7px 14px', fontSize: '0.82rem', cursor: 'pointer'
+                                        }}
+                                    >
+                                        취소
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* 이름 붙여 저장 */}
                         <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
