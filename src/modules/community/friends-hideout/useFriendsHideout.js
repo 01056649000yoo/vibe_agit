@@ -38,7 +38,9 @@ export const useFriendsHideout = (studentSession, params) => {
 
         const postsWithNormalizedShape = rawPosts.map(post => ({
             ...post,
-            students: normalizeEmbeddedStudent(post?.students)
+            students: normalizeEmbeddedStudent(post?.students),
+            original_title: post?.show_original ? post.original_title : null,
+            original_content: post?.show_original ? post.original_content : null
         }));
 
         const classmateMap = new Map(
@@ -206,7 +208,8 @@ export const useFriendsHideout = (studentSession, params) => {
             const { data, error } = await supabase
                 .from('student_posts')
                 .select(`
-                    id, title, content, student_id, mission_id, created_at, char_count, is_confirmed,
+                    id, title, content, student_id, mission_id, created_at, updated_at, char_count, is_confirmed,
+                    writing_context, self_writing_type, visibility, structured_content, show_original,
                     original_title, original_content,
                     students:student_id(name, pet_data),
                     writing_missions(allow_comments, mission_type, input_template),
@@ -499,7 +502,8 @@ export const useFriendsHideout = (studentSession, params) => {
                         const { data: newPost, error } = await supabase
                             .from('student_posts')
                             .select(`
-                                id, title, content, student_id, mission_id, created_at, char_count, is_confirmed,
+                                id, title, content, student_id, mission_id, created_at, updated_at, char_count, is_confirmed,
+                                writing_context, self_writing_type, visibility, structured_content, show_original,
                                 original_title, original_content,
                                 students:student_id(name, pet_data),
                                 writing_missions(allow_comments)

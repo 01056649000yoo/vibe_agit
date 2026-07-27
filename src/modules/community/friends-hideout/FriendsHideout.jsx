@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, lazy, memo, Suspense } from 'react';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFriendsHideout } from './useFriendsHideout';
 import PostDetailModal from '../../../components/student/PostDetailModal';
+
+const FriendWritingShelf = lazy(() => import('./FriendWritingShelf'));
 
 // 상수 및 아이콘 설정 (Optimization 5: 외부 상수화)
 const REACTION_ICONS = [
@@ -51,7 +53,7 @@ const getDragonStage = (level) => {
 };
 
 // [신규] 친구 아지트 구경 모달 (읽기 전용 - 잘림 방지 및 가독성 개선)
-const FriendHideoutModal = memo(({ classmate, onClose, isMobile }) => {
+const FriendHideoutModal = memo(({ classmate, onClose, onOpenPost, isMobile }) => {
     if (!classmate) return null;
     const petData = classmate.pet_data || { name: '친구 드래곤', level: 1, background: 'default' };
     const bg = HIDEOUT_BACKGROUNDS[petData.background] || HIDEOUT_BACKGROUNDS.default;
@@ -152,6 +154,14 @@ const FriendHideoutModal = memo(({ classmate, onClose, isMobile }) => {
                         <strong>{classmate.name}</strong> 친구가 정성을 다해 드래곤을 키우고 있어요! <br />
                         멋진 드래곤으로 성장할 수 있게 응원해주세요.
                     </div>
+
+                    <Suspense fallback={(
+                        <div style={{ marginTop: '32px', padding: '40px 20px', borderRadius: '24px', background: '#F8F9FA', color: '#90A4AE', textAlign: 'center', fontWeight: '800' }}>
+                            공개 글 책장을 준비하는 중... 📚
+                        </div>
+                    )}>
+                        <FriendWritingShelf friend={classmate} onOpenPost={onOpenPost} />
+                    </Suspense>
                 </div>
 
                 {/* 하단 버튼 (이머시브 강화) */}
@@ -272,6 +282,11 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
     } = useFriendsHideout(studentSession, params);
     const isMeetingMission =
         selectedMission?.mission_type === 'meeting' || selectedMission?.input_template === 'meeting';
+    const viewingMission = viewingPost
+        ? (viewingPost.mission_id ? (viewingPost.writing_missions || selectedMission) : null)
+        : selectedMission;
+    const viewingIsMeeting =
+        viewingMission?.mission_type === 'meeting' || viewingMission?.input_template === 'meeting';
 
     const lastElementRef = useCallback(node => {
         if (loading || loadingMore) return;
@@ -295,6 +310,11 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
             if (selectedMission) handleMissionChange(selectedMission);
         }
     }, [params, onBack, setViewingPost, selectedMission, handleMissionChange]);
+
+    const handleOpenFriendPost = useCallback((post) => {
+        setViewingFriendHideout(null);
+        setViewingPost(post);
+    }, [setViewingPost]);
 
     return (
         <>
@@ -322,7 +342,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                         <button
                             onClick={() => setActiveMainTab('dragons')}
                             style={{ padding: '8px 16px', border: 'none', borderRadius: '12px', background: activeMainTab === 'dragons' ? 'white' : 'transparent', fontWeight: 'bold', color: activeMainTab === 'dragons' ? '#2C3E50' : '#7F8C8D', cursor: 'pointer', transition: 'all 0.2s', boxShadow: activeMainTab === 'dragons' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}
-                        >🐉 드래곤 친구들</button>
+                        >🏠 친구 아지트</button>
                     </div>
                 </div>
 
@@ -452,20 +472,23 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
             <AnimatePresence>
                 {viewingPost && (
                     <PostDetailModal
+                        key={viewingPost.id}
                         post={viewingPost}
-                        mission={selectedMission || viewingPost?.writing_missions}
+                        mission={viewingMission}
                         studentSession={studentSession}
                         onClose={handleCloseModal}
-                        reactionIcons={isMeetingMission ? MEETING_REACTION_ICONS : REACTION_ICONS}
+                        reactionIcons={viewingIsMeeting ? MEETING_REACTION_ICONS : REACTION_ICONS}
                         isMobile={isMobile}
                         ACCESSORIES={ACCESSORIES}
                         classmates={classmates}
+                        enforcePublicAccess={viewingPost.student_id !== studentSession.id}
                     />
                 )}
                 {viewingFriendHideout && (
                     <FriendHideoutModal
                         classmate={viewingFriendHideout}
                         onClose={() => setViewingFriendHideout(null)}
+                        onOpenPost={handleOpenFriendPost}
                         isMobile={isMobile}
                     />
                 )}

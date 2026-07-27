@@ -222,7 +222,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                 <span style={{ fontSize: '1.6rem' }}>{form.visibility === 'class' ? '📚' : '🔒'}</span>
                 <span>
                     <strong>{form.visibility === 'class' ? '친구 공개로 저장' : '나만 보기'}</strong>
-                    <small>{form.visibility === 'class' ? '친구 아지트 공개 책장이 연결되면 친구들이 볼 수 있어요.' : '처음에는 나만 볼 수 있어요. 원할 때 공개할 수 있어요.'}</small>
+                    <small>{form.visibility === 'class' ? '친구들이 내 아지트의 글 책장에서 보고 반응과 댓글을 남길 수 있어요.' : '처음에는 나만 볼 수 있어요. 원할 때 공개할 수 있어요.'}</small>
                 </span>
             </label>
 

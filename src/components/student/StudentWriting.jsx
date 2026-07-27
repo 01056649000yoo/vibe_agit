@@ -119,6 +119,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         aiFeedback,
         originalTitle,
         originalContent,
+        showOriginalToFriends,
         isTeacherEdited,
         teacherEditedAt,
         studentAnswers,
@@ -128,6 +129,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         postUpdatedAt,
         handleSave,
         handleSubmit,
+        handleShowOriginalChange,
         postId
     } = useMissionSubmit(studentSession, missionId, params, onBack, onNavigate);
 
@@ -146,6 +148,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const [hoveredType, setHoveredType] = useState(null);
 
     const [showOriginal, setShowOriginal] = useState(false);
+    const [savingOriginalSharing, setSavingOriginalSharing] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const editorRef = useRef(null);
     const isMobile = window.innerWidth <= 768;
@@ -223,6 +226,21 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
     // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)
     const isLocked = isConfirmed || (isSubmitted && !isReturned);
+    const hasRevisedVersion = Boolean(originalContent) && (
+        originalTitle !== title || originalContent !== content
+    );
+
+    const handleOriginalSharingToggle = async (event) => {
+        const nextValue = event.target.checked;
+        setSavingOriginalSharing(true);
+        const saved = await handleShowOriginalChange(nextValue);
+        setSavingOriginalSharing(false);
+        if (saved) {
+            alert(nextValue
+                ? '친구들이 처음글과 마지막글을 비교해서 볼 수 있어요. 📜'
+                : '친구들에게는 마지막글만 보여요. 🔒');
+        }
+    };
 
     const draftStorageKey = getDraftStorageKey(studentSession?.id, missionId);
     const latestDraftRef = useRef(createDraftSnapshot('', '', []));
@@ -539,6 +557,25 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {isSubmitted && hasRevisedVersion && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '24px', padding: '16px 18px', borderRadius: '16px', border: showOriginalToFriends ? '2px solid #FFB74D' : '1px solid #E0E0E0', background: showOriginalToFriends ? '#FFF8E1' : '#FAFAFA', cursor: savingOriginalSharing ? 'wait' : 'pointer' }}>
+                    <input
+                        type="checkbox"
+                        checked={showOriginalToFriends}
+                        onChange={handleOriginalSharingToggle}
+                        disabled={savingOriginalSharing}
+                        style={{ width: '20px', height: '20px', accentColor: '#FB8C00' }}
+                    />
+                    <span style={{ fontSize: '1.5rem' }}>📜</span>
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <strong style={{ color: '#5D4037' }}>친구에게 처음글과 마지막글 비교 공개</strong>
+                        <small style={{ color: '#8D6E63' }}>
+                            {savingOriginalSharing ? '설정을 저장하는 중...' : '끄면 친구들에게는 완성한 마지막글만 보여요.'}
+                        </small>
+                    </span>
+                </label>
+            )}
 
             {/* 가이드 박스 */}
             <AnimatePresence>
