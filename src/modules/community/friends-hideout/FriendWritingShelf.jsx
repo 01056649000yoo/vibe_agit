@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import BookCover from '../../writing/reading-log/BookCover';
 import { supabase } from '../../../lib/supabaseClient';
+import { dataCache } from '../../../lib/cache';
 
 const FILTERS = [
     { id: 'all', label: '전체' },
@@ -14,7 +15,9 @@ const isReadingLog = (post) => (
     post?.writing_context === 'self' && post?.self_writing_type === 'reading_log'
 );
 
-const FriendWritingShelf = ({ friend, onOpenPost }) => {
+const SHELF_CACHE_MS = 120000;
+
+const FriendWritingShelf = ({ friend, viewerId, onOpenPost }) => {
     const friendId = friend?.id;
     const [posts, setPosts] = useState([]);
     const [filter, setFilter] = useState('all');
@@ -22,35 +25,44 @@ const FriendWritingShelf = ({ friend, onOpenPost }) => {
     const [errorMessage, setErrorMessage] = useState('');
     const [openingPostId, setOpeningPostId] = useState(null);
 
-    const fetchShelf = useCallback(async () => {
-        if (!friendId) return;
+    const fetchShelf = useCallback(async (forceRefresh = false) => {
+        if (!friendId || !viewerId) return;
 
         setLoading(true);
         setErrorMessage('');
-        const { data, error } = await supabase
-            .from('student_posts')
-            .select(`
-                id, title, student_id, mission_id, created_at, updated_at, published_at,
-                writing_context, self_writing_type, visibility, structured_content,
-                writing_missions(id, title, mission_type, input_template),
-                post_reactions(id, reaction_type)
-            `)
-            .eq('student_id', friendId)
-            .eq('is_submitted', true)
-            .eq('visibility', 'class')
-            .order('published_at', { ascending: false, nullsFirst: false })
-            .order('updated_at', { ascending: false })
-            .limit(36);
+        const cacheKey = `friend_writing_shelf_${viewerId}_${friendId}`;
+        if (forceRefresh) dataCache.invalidate(cacheKey);
 
-        if (error) {
+        try {
+            const data = await dataCache.get(cacheKey, async () => {
+                const { data: shelfRows, error } = await supabase
+                    .from('student_posts')
+                    .select(`
+                        id, title, student_id, mission_id, created_at, updated_at, published_at,
+                        writing_context, self_writing_type, visibility, structured_content,
+                        writing_missions(id, title, mission_type, input_template),
+                        post_reactions(id, reaction_type)
+                    `)
+                    .eq('student_id', friendId)
+                    .eq('is_submitted', true)
+                    .eq('visibility', 'class')
+                    .order('published_at', { ascending: false, nullsFirst: false })
+                    .order('updated_at', { ascending: false })
+                    .limit(36);
+
+                if (error) throw error;
+                return shelfRows || [];
+            }, SHELF_CACHE_MS);
+
+            setPosts(data || []);
+        } catch (error) {
             console.error('친구 공개 글 책장 로드 실패:', error.message);
             setPosts([]);
             setErrorMessage('친구의 글 책장을 불러오지 못했어요. 잠시 후 다시 열어주세요.');
-        } else {
-            setPosts(data || []);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
-    }, [friendId]);
+    }, [friendId, viewerId]);
 
     useEffect(() => {
         const timerId = window.setTimeout(fetchShelf, 0);
@@ -116,7 +128,7 @@ const FriendWritingShelf = ({ friend, onOpenPost }) => {
                     <h3>📚 {friend?.name}의 공개 글</h3>
                     <p>친구가 공개한 과제 글과 독서록만 보여요.</p>
                 </div>
-                <button type="button" onClick={fetchShelf} disabled={loading}>새로고침</button>
+                <button type="button" onClick={() => fetchShelf(true)} disabled={loading}>새로고침</button>
             </div>
 
             <div className="friend-writing-shelf-filters" role="tablist" aria-label="공개 글 종류">
