@@ -21,6 +21,35 @@
 
 ---
 
+## 2026-07-27 — API 도서 정보 기반 나의 책장 구현·운영 적용 (GPT/Codex)
+- **한 일**:
+  - 독서록을 `책 정보 → 학생 책장 → 독서록 글`로 분리하는 마이그레이션 `20260730_reading_library_catalog.sql` 작성.
+    `book_catalog`·`student_library_items`·`reading_log_entries`와 학생 본인 전용 트랜잭션 RPC `upsert_my_reading_log` 추가.
+    이미 작성된 자율 독서록은 수동 등록 책으로 자동 연결하며 기존 `student_posts` 글쓰기 코어는 유지.
+  - `book-search` Edge Function 작성: 학생 JWT 확인, 허용 Origin, 2자/80자 검색어 제한, 사용자별 최소 호출 간격,
+    카카오 REST 키 서버 보관. 학생 글 복사를 막기 위해 책 소개는 반환하지 않고 표지·제목·저자·출판사·ISBN만 정규화.
+  - 책 검색 결과 선택과 `직접 입력` 폴백을 같은 화면에 제공. 표지 오류 시 기본 표지를 표시.
+  - 기존 독서록 목록을 **나의 책장**으로 변경: 표지 카드, `전체/읽는 중/다 읽음`, 책/독서록/공개 수,
+    한 책에 여러 독서록 작성, 책별 독서록 접기·열기·삭제 제공.
+- **변경**:
+  - 기능 커밋 `77d9834`(`feat: add API-backed reading bookshelf`). 원격 push·앱 자동 배포는 이 로그 작성 시점 대기.
+  - git 밖 운영 변경: 통합 DB `agit-db`에 `20260730_reading_library_catalog.sql` 적용,
+    `~/agit-supabase/volumes/functions/book-search/index.ts` 배치, `agit-edge-functions`만 재생성.
+    카카오 키는 값 노출 없이 git 밖 시크릿 파일의 지정 환경변수 설정·런타임 반영 여부만 확인.
+- **결과/검증**:
+  - 오래된 운영 스키마 덤프에 직전 독서록 마이그레이션을 먼저 적용한 임시 PG17 DB에서 신규 마이그레이션 전체 성공.
+    학생 2명 fixture로 본인 저장·친구 비공개 0건·공개 후 1건 조회·anon RPC 차단·authenticated 직접 쓰기 차단을 ROLLBACK 검증.
+  - 점검 중 자체호스팅 기본 테이블 쓰기 권한 잔존을 발견해 authenticated 권한을 SELECT 전용으로 강화.
+    같은 ISBN의 기존 공통 도서 정보를 학생 입력으로 덮어쓰지 못하도록 RPC도 보강.
+  - 운영 기존 독서록 1건은 책/책장/연결 1건씩 무손실 백필. 실제 운영 학생 JWT 역할 2명으로 같은 흐름을 ROLLBACK 검증했고
+    검증용 책 잔존 0건 확인. 임시 DB는 모두 삭제.
+  - 함수 컨테이너에서 카카오 키 런타임 설정 확인, 운영 Kong의 `book-search` 경로가 실제 함수로 라우팅되고 미인증 요청 401 차단 확인.
+  - 변경 React 파일 targeted ESLint 0에러, 프로덕션 빌드 성공, `git diff --check` 통과.
+- **남은 것 / 다음**:
+  1. `main` push 후 GitHub Actions 앱 자동 배포 성공 확인.
+  2. 실제 학생 로그인으로 카카오 검색 선택·직접 입력·읽는 중/완독·책별 복수 독서록·공개 전환 확인.
+  3. 다음 단계 4c-2에서 친구 아지트 공개 책장·기존 반응/댓글 연결.
+
 ## 2026-07-27 — 학생 자율 독서록 1차 + 글/댓글/반응 소유권 강화 (GPT/Codex)
 - **한 일**:
   - 학생 자율 글쓰기 1차 범위를 **독서록만**으로 확정하고 `writing/reading-log` 코어 모듈 추가.
