@@ -6,6 +6,7 @@ import { callAI } from '../../lib/openai';
 // xlsx는 exportToExcel() 호출 시 동적 로드 (429KB 초기 로드 제거)
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import BulkAIProgressModal from './BulkAIProgressModal';
+import PromptRuleButton from './PromptRuleButton';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../modules/writing/evaluation/RubricSettings';
 import MissionEvaluationEntry from '../../modules/writing/evaluation/MissionEvaluationEntry';
 import {
@@ -17,6 +18,10 @@ import {
  * 역할: 선생님 - 글쓰기 평가 덧붙임 문장 작성 및 내보내기 📊
  */
 const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
+    // 규칙 보관함에서 방금 적용한 내용을 즉시 반영하기 위한 덮어쓰기 값.
+    // (promptTemplate 은 대시보드가 마운트될 때 읽어온 값이라 바로 갱신되지 않는다)
+    const [livePromptTemplate, setLivePromptTemplate] = useState(null);
+    const effectivePrompt = livePromptTemplate ?? promptTemplate;
     const [allTags, setAllTags] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
     const [missions, setMissions] = useState([]);
@@ -383,8 +388,8 @@ ${activitiesInfo}`;
 - 다른 교과 평어 문장과 자연스럽게 이어지도록 90~140자 안팎의 관찰 중심 평어체(~함, ~임)로 끝낼 것.
 - 문장 예시: 대상의 특징이 잘 드러나도록 알맞은 내용을 선정하고, 설명 순서를 고려하여 글을 체계적으로 작성함.`;
 
-        if (promptTemplate && promptTemplate.trim()) {
-            return `${promptTemplate.trim()}\n\n${contextData.trim()}\n\n${outputRules}`;
+        if (effectivePrompt && effectivePrompt.trim()) {
+            return `${effectivePrompt.trim()}\n\n${contextData.trim()}\n\n${outputRules}`;
         }
 
         return `아래 글쓰기 평가 자료를 바탕으로 선택된 2022 개정 국어과 성취기준을 반영한 글쓰기 평가 덧붙임 문장을 작성해줘.\n\n${contextData.trim()}\n\n${outputRules}`;
@@ -902,20 +907,28 @@ ${activitiesInfo}`;
                                 <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 'bold' }}>
                                     평가 완료 <span style={{ color: '#1E293B' }}>{studentPosts.length}명</span> 중 <span style={{ color: '#6366F1' }}>{generatedCount}명</span> 덧붙임 문장 작성 완료
                                 </div>
-                                <Button
-                                    size="sm"
-                                    onClick={handleBatchGenerate}
-                                    disabled={batchLoading}
-                                    style={{
-                                        borderRadius: '12px',
-                                        fontWeight: 'bold',
-                                        background: generatedCount > 0 ? '#F59E0B' : '#6366F1'
-                                    }}
-                                >
-                                    {batchLoading
-                                        ? `작업 중... (${batchProgress.current}/${batchProgress.total})`
-                                        : (generatedCount > 0 ? '🔄 덧붙임 문장 일괄 재작성' : '🪄 덧붙임 문장 일괄 작성')}
-                                </Button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                    {/* 작성 직전에 평어 규칙을 고르고 고칠 수 있게 한다 */}
+                                    <PromptRuleButton
+                                        kind="report"
+                                        isMobile={isMobile}
+                                        onApplied={(content) => setLivePromptTemplate(content)}
+                                    />
+                                    <Button
+                                        size="sm"
+                                        onClick={handleBatchGenerate}
+                                        disabled={batchLoading}
+                                        style={{
+                                            borderRadius: '12px',
+                                            fontWeight: 'bold',
+                                            background: generatedCount > 0 ? '#F59E0B' : '#6366F1'
+                                        }}
+                                    >
+                                        {batchLoading
+                                            ? `작업 중... (${batchProgress.current}/${batchProgress.total})`
+                                            : (generatedCount > 0 ? '🔄 덧붙임 문장 일괄 재작성' : '🪄 덧붙임 문장 일괄 작성')}
+                                    </Button>
+                                </div>
                             </div>
 
                             {/* 리스트 헤더 - 더 타이트하게 조정 */}

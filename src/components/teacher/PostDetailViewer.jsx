@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
+import PromptRuleButton from './PromptRuleButton';
 import { useEvaluation } from '../../hooks/useEvaluation';
 
 const PostDetailViewer = ({
@@ -484,16 +485,20 @@ const PostDetailViewer = ({
                                             <h4 style={{ margin: 0, color: '#1F2937', fontWeight: '900', fontSize: '1.05rem' }}>
                                                 📝 선생님 피드백
                                             </h4>
-                                            <Button
-                                                onClick={handleGenerateSingleAI}
-                                                disabled={isGenerating}
-                                                style={{
-                                                    backgroundColor: '#3498DB', color: 'white', padding: '6px 12px',
-                                                    fontSize: '0.8rem', borderRadius: '10px'
-                                                }}
-                                            >
-                                                {isGenerating ? '✨ 분석 중...' : '✨ AI 생성'}
-                                            </Button>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                {/* 규칙을 이 자리에서 바로 고르고 고칠 수 있게 한다 */}
+                                                <PromptRuleButton kind="feedback" style={{ padding: '6px 10px', fontSize: '0.78rem' }} />
+                                                <Button
+                                                    onClick={handleGenerateSingleAI}
+                                                    disabled={isGenerating}
+                                                    style={{
+                                                        backgroundColor: '#3498DB', color: 'white', padding: '6px 12px',
+                                                        fontSize: '0.8rem', borderRadius: '10px'
+                                                    }}
+                                                >
+                                                    {isGenerating ? '✨ 분석 중...' : '✨ AI 생성'}
+                                                </Button>
+                                            </div>
                                         </div>
                                         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
                                             <textarea

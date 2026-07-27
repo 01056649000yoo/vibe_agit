@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
+import PromptRuleButton from './PromptRuleButton';
 
 const SubmissionStatusModal = ({
     selectedMission, setSelectedMission, posts, loadingPosts,
@@ -135,21 +136,25 @@ const SubmissionStatusModal = ({
                                         )}
 
                                         {/* Row 3: AI 피드백 및 승인 취소 버튼들 */}
-                                        <Button
-                                            onClick={handleBulkAIAction}
-                                            disabled={isGenerating || loadingPosts}
-                                            style={{
-                                                flex: '1 1 48%',
-                                                backgroundColor: '#F3E5F5',
-                                                color: '#7B1FA2',
-                                                border: '2px solid #E1BEE7',
-                                                fontWeight: '900',
-                                                fontSize: '0.85rem',
-                                                padding: '12px 8px'
-                                            }}
-                                        >
-                                            {isGenerating ? '🤖 피드백 생성 중...' : '🤖 일괄 AI 피드백'}
-                                        </Button>
+                                        <div style={{ flex: '1 1 48%', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <Button
+                                                onClick={handleBulkAIAction}
+                                                disabled={isGenerating || loadingPosts}
+                                                style={{
+                                                    width: '100%',
+                                                    backgroundColor: '#F3E5F5',
+                                                    color: '#7B1FA2',
+                                                    border: '2px solid #E1BEE7',
+                                                    fontWeight: '900',
+                                                    fontSize: '0.85rem',
+                                                    padding: '12px 8px'
+                                                }}
+                                            >
+                                                {isGenerating ? '🤖 피드백 생성 중...' : '🤖 일괄 AI 피드백'}
+                                            </Button>
+                                            {/* 실행 직전에 규칙을 고칠 수 있도록 버튼 바로 아래에 둔다 */}
+                                            <PromptRuleButton kind="feedback" isMobile={isMobile} style={{ width: '100%', justifyContent: 'center' }} />
+                                        </div>
 
                                         {posts.some(p => p.is_confirmed) && (
                                             <Button
