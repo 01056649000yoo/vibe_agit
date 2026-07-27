@@ -21,6 +21,41 @@
 
 ---
 
+## 2026-07-27 — 🚨 익명 포인트 조작 취약점 차단 + DEFINER 함수 전수 점검 완료 (Claude)
+- **경위**: 직전 항목에서 남겨둔 "anon 실행 가능 DEFINER 함수 전수 점검"을 이어서 수행.
+  분류 결과 실제 점검 대상은 3개였으나, 확인 과정에서 **훨씬 심각한 결함**이 드러남.
+- **🚨 실증된 취약점 — 익명 사용자의 학생 포인트 임의 조작**:
+  - `SET ROLE anon` 상태에서 `teacher_manage_points(<실제 학생 id>, 99999, ...)` 호출 →
+    학생 포인트가 **15 → 100,014 로 변경됨**(검증 후 ROLLBACK). anon 키는 프론트 번들에 포함된
+    공개 값이므로 **인터넷의 누구나 실행 가능**한 상태였다.
+  - 원인 두 가지가 겹침:
+    1) 함수에 `anon=X` **명시적** 실행 권한이 부여되어 있었음.
+    2) 권한 검사가 `IF auth.uid() IS NULL THEN v_is_authorized := true` 형태. service_role 배치 호출을
+       허용하려는 의도였으나 anon 요청도 `auth.uid()` 가 NULL 이라 그대로 통과. **같은 패턴이 11개 함수**에 존재.
+  - 영향 가능 범위: 포인트 지급/회수, 어휘의 탑 층수, 학생 추가, 글 일괄 승인, 학생 정보 조회, 학생 인증 해제.
+- **🔴 앞선 조치의 오류(정정)**: 같은 날 `admin_function_privilege_hardening` 에서 `REVOKE ... FROM anon` 을
+  돌렸으나 **실효가 없었다.** 대상 함수 다수는 PUBLIC 이 EXECUTE 를 쥐고 있었고, PUBLIC 권한이 남으면
+  anon 은 계속 호출 가능하다. **PUBLIC 과 역할 양쪽 모두에서 회수해야 한다.**
+- **한 일**:
+  - `fn_get_students_for_rls_check()` **DROP** — 필터·권한검사 없이 **학생 1,413명 전원**의 id·class_id·auth_id 를
+    anon 에게 덤프. RLS 점검용 잔재로 앱·함수 어디서도 미참조.
+  - `custom_access_token_hook(jsonb)` — 임의 user_id 의 `role`(ADMIN 여부)·class_id 노출. 함수 자체는 안전하게
+    작성됐고 GoTrue 설정에서 비활성(주석)이나, 호출 권한이 열려 있었음. → `supabase_auth_admin` 전용으로 제한.
+  - `check_points_integrity(uuid,int)` — 임의 학생 포인트를 boolean 오라클로 특정 가능. 참조처 없음 → 권한 회수.
+  - **PUBLIC 회수 26개** + **anon 회수 24개** (트리거 함수 및 RLS 정책이 호출하는 헬퍼 3종
+    `auth_user_role`·`auth_user_class_id`·`auth_student_id` 는 제외 — 회수 시 비로그인 조회가 permission denied 로 깨짐).
+- **변경**: 마이그레이션 3종 — `20260727_anon_readable_function_hardening.sql`,
+  `20260727_revoke_public_execute_on_definer_rpc.sql`, `20260727_revoke_anon_execute_on_definer_rpc.sql`. 운영 적용 완료.
+- **결과/검증** (전부 트랜잭션 롤백):
+  - 포인트 조작 공격 재현 → `permission denied`, 포인트 15 유지.
+  - anon 실행 가능 non-trigger DEFINER 함수: **27개 → 3개**(정책 헬퍼만 잔존).
+  - **정상 기능 무손상 확인**: 담당 교사의 자기 학생 포인트 지급 성공, 남의 학생은 `[보안] 권한이 없습니다` 차단,
+    `bind_student_auth`·`get_student_by_auth`(학생 로그인·세션 복구) 실행 권한 정상.
+  - `agit-auth`·`agit-rest` 오류 로그 없음, 앱 HTTP 200.
+- **남은 것 / 다음**: `auth.uid() IS NULL → 통과` 패턴 **11개 함수의 로직 자체는 그대로**다.
+  anon 을 회수해 남은 호출자가 authenticated(=sub 가 항상 존재)와 service_role 뿐이므로 현재는 도달 불가하지만,
+  향후 누군가 anon 권한을 다시 부여하면 즉시 재현된다. **`current_user = 'service_role'` 검사로 교체 권장.**
+
 ## 2026-07-27 — 관리자 대시보드 보안 점검: 함수 실행 권한 하드닝 (Claude)
 - **발견 경위**: 관리자 대시보드 보안 점검 요청. 운영 DB에 일반 교사 JWT를 주입해 직접 침투 테스트.
 - **🔴 심각 — 권한 상승 (당일 발생, 당일 수정)**:
