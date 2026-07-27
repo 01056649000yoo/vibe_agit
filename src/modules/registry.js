@@ -14,6 +14,7 @@ import { friendsHideoutManifest } from './community/friends-hideout/manifest';
 import { agitOnClassManifest } from './community/agit-on-class/manifest';
 import { ideaMarketManifest } from './writing/idea-market/manifest';
 import { readingLogManifest } from './writing/reading-log/manifest';
+import { writingFootprintManifest } from './writing/writing-footprint/manifest';
 
 /** 등록된 모듈 매니페스트 목록 */
 const manifests = [
@@ -23,6 +24,7 @@ const manifests = [
   agitOnClassManifest, // src/modules/community/agit-on-class/
   ideaMarketManifest, // src/modules/writing/idea-market/
   readingLogManifest, // src/modules/writing/reading-log/
+  writingFootprintManifest, // src/modules/writing/writing-footprint/
 ];
 
 // 개발 중 매니페스트 실수 조기 발견 (프로덕션 빌드에서는 console이 제거됨)

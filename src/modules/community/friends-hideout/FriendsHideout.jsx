@@ -6,6 +6,7 @@ import { useFriendsHideout } from './useFriendsHideout';
 import PostDetailModal from '../../../components/student/PostDetailModal';
 
 const FriendWritingShelf = lazy(() => import('./FriendWritingShelf'));
+const FriendWritingFootprintCard = lazy(() => import('../../writing/writing-footprint/FriendWritingFootprintCard'));
 
 // 상수 및 아이콘 설정 (Optimization 5: 외부 상수화)
 const REACTION_ICONS = [
@@ -170,6 +171,14 @@ const FriendHideoutModal = memo(({ classmate, onClose, onOpenPost, isMobile }) =
                         <strong>{classmate.name}</strong> 친구가 정성을 다해 드래곤을 키우고 있어요! <br />
                         멋진 드래곤으로 성장할 수 있게 응원해주세요.
                     </div>
+
+                    <Suspense fallback={(
+                        <div style={{ marginTop: '32px', padding: '36px 20px', borderRadius: '24px', background: '#FFF8E1', color: '#A1887F', textAlign: 'center', fontWeight: '800' }}>
+                            글쓰기 발자국을 모으는 중... 👣
+                        </div>
+                    )}>
+                        <FriendWritingFootprintCard friendId={classmate.id} friendName={classmate.name} />
+                    </Suspense>
 
                     <Suspense fallback={(
                         <div style={{ marginTop: '32px', padding: '40px 20px', borderRadius: '24px', background: '#F8F9FA', color: '#90A4AE', textAlign: 'center', fontWeight: '800' }}>

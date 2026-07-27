@@ -26,6 +26,7 @@ const MissionList = lazy(() => import('./components/student/MissionList'))
 const FriendsHideout = lazy(getModule('friends-hideout').studentEntry)
 const IdeaMarketPage = lazy(getModule('idea-market').studentEntry)
 const ReadingLogPage = lazy(getModule('reading-log').studentEntry)
+const WritingFootprintPage = lazy(getModule('writing-footprint').studentEntry)
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
 const PrivacyPolicy = lazy(() => import('./components/layout/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('./components/layout/TermsOfService'))
@@ -287,6 +288,11 @@ function App() {
                   params={internalPage.params}
                   onBack={() => setInternalPage('main')}
                   onNavigate={setInternalPage}
+                />
+              )}
+              {studentPageName === 'writing_footprint' && (
+                <WritingFootprintPage
+                  onBack={() => setInternalPage('main')}
                 />
               )}
               {studentPageName === 'friends_hideout' && (
