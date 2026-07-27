@@ -682,7 +682,8 @@ ${postArray.map((p, idx) => {
         if (list.length === 0) return { count: 0 };
 
         const { data: { user } } = await supabase.auth.getUser();
-        const { error } = await supabase
+        // 실제로 바뀐 행을 돌려받아, 일부만 성공한 경우도 교사가 알 수 있게 한다
+        const { data: updated, error } = await supabase
             .from('student_posts')
             .update({
                 is_submitted: true,
@@ -690,14 +691,18 @@ ${postArray.map((p, idx) => {
                 recalled_at: new Date().toISOString(),
                 recalled_by: user?.id ?? null,
             })
-            .in('id', list.map((p) => p.id));
+            .in('id', list.map((p) => p.id))
+            .select('id');
+
+        await fetchPostsForMission(selectedMission?.id);
 
         if (error) {
             console.error('회수 실패:', error.message);
-            return { count: 0, error };
+            return { count: 0, failed: list.length, error };
         }
-        await fetchPostsForMission(selectedMission?.id);
-        return { count: list.length };
+
+        const count = updated?.length ?? 0;
+        return { count, failed: list.length - count };
     };
 
     /** 회수 되돌리기 — 다시 학생에게 넘겨 이어 쓰게 한다 */

@@ -9,6 +9,54 @@ const SubmissionStatusModal = ({
     handleBulkRequestRewrite, setSelectedPost, setTempFeedback, isGenerating, isMobile,
     handleRecallPosts
 }) => {
+    /**
+     * 회수 전 교사에게 보여줄 안내문.
+     * 학생 글은 2분마다 서버에 자동 저장되므로, 걷히는 내용은 '마지막 저장 시점' 기준이다.
+     * 학생이 방금까지 쓰고 있었다면 마지막 몇 분은 빠질 수 있어 그 점을 분명히 알린다.
+     */
+    const buildRecallNotice = (targets) => {
+        const fmt = (d) => new Date(d).toLocaleString('ko-KR', {
+            month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        const lines = targets.slice(0, 8).map(
+            (p) => `· ${p.students?.name || '학생'} — 마지막 저장: ${fmt(p.updated_at || p.created_at)}`
+        );
+        const more = targets.length > 8 ? `\n… 외 ${targets.length - 8}명` : '';
+        const empty = targets.filter((p) => !p.content || !p.content.trim()).length;
+
+        // null 만 걸러내고 빈 문자열('')은 문단 구분용으로 남긴다
+        return [
+            `다시쓰기 중인 글 ${targets.length}건을 걷어옵니다.`,
+            '',
+            '[걷히는 내용]',
+            ...lines,
+            more || null,
+            '',
+            '· 글은 서버에 2분마다 자동 저장됩니다. 학생이 방금까지 쓰고 있었다면',
+            '  마지막 몇 분 분량은 빠질 수 있습니다.',
+            empty > 0 ? `· 아직 아무것도 쓰지 않은 글 ${empty}건이 포함돼 있습니다.` : null,
+            '· 회수한 글에는 포인트가 지급되지 않습니다.',
+            '· 통신 상태에 따라 일부만 회수될 수 있으며, 실패한 건은 다시 시도할 수 있습니다.',
+            '',
+            '회수할까요?',
+        ].filter((l) => l !== null).join('\n');
+    };
+
+    /** 회수 실행 + 결과 보고 (부분 실패도 알린다) */
+    const runRecall = async (targets) => {
+        if (!window.confirm(buildRecallNotice(targets))) return;
+        const { count, failed, error } = await handleRecallPosts(targets);
+        if (error) {
+            alert(`회수하지 못했습니다.\n${error.message || ''}\n잠시 후 다시 시도해 주세요.`);
+            return;
+        }
+        if (failed > 0) {
+            alert(`${count}건을 회수했습니다.\n${failed}건은 실패해 그대로 남아 있습니다. 다시 시도해 주세요.`);
+        } else {
+            alert(`${count}건을 회수했습니다.`);
+        }
+    };
+
     const [isCollectViewOpen, setIsCollectViewOpen] = React.useState(false);
     const [isReactionViewOpen, setIsReactionViewOpen] = React.useState(false);
 
@@ -104,10 +152,7 @@ const SubmissionStatusModal = ({
                                         {handleRecallPosts && posts.some(p => p.is_returned && !p.is_submitted) && (
                                             <Button
                                                 onClick={async () => {
-                                                    const targets = posts.filter(p => p.is_returned && !p.is_submitted);
-                                                    if (!window.confirm(`다시쓰기 중인 ${targets.length}명의 글을 지금 상태로 걷어올까요?\n(학생이 아직 제출하지 않은 글입니다. 포인트는 지급되지 않습니다.)`)) return;
-                                                    const { count } = await handleRecallPosts(targets);
-                                                    if (count) alert(`${count}건을 회수했습니다.`);
+                                                    await runRecall(posts.filter(p => p.is_returned && !p.is_submitted));
                                                 }}
                                                 disabled={isGenerating || loadingPosts}
                                                 style={{
@@ -250,9 +295,7 @@ const SubmissionStatusModal = ({
                                                         <button
                                                             onClick={async (e) => {
                                                                 e.stopPropagation();
-                                                                if (!window.confirm(`${post.students?.name || '학생'}의 글을 지금 상태로 걷어올까요?\n(학생이 아직 제출하지 않은 글입니다. 포인트는 지급되지 않습니다.)`)) return;
-                                                                const { count } = await handleRecallPosts(post);
-                                                                if (count) alert('글을 회수했습니다.');
+                                                                await runRecall([post]);
                                                             }}
                                                             style={{
                                                                 border: '1px solid #7E57C2', background: 'white', color: '#5E35B1',
