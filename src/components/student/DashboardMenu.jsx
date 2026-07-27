@@ -99,7 +99,7 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
 
     return (
         <>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div className="student-writing-menu-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '20px' }}>
                 <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -120,8 +120,23 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                         }}>NEW</div>
                     )}
                     <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📝</div>
-                    <h3 style={{ margin: 0, color: '#5D4037' }}>글쓰기 미션</h3>
-                    <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>선생님의 주제 확인</p>
+                    <h3 style={{ margin: 0, color: '#5D4037' }}>선생님 과제</h3>
+                    <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>자유글·시·회의 안건 쓰기</p>
+                </motion.div>
+
+                <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{
+                        background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #C5E1A5',
+                        textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
+                        boxShadow: '0 4px 8px rgba(124, 179, 66, 0.14)'
+                    }}
+                    onClick={() => onNavigate('reading_logs')}
+                >
+                    <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📚</div>
+                    <h3 style={{ margin: 0, color: '#33691E' }}>나의 독서록</h3>
+                    <p style={{ fontSize: '0.85rem', color: '#8D9F7A', marginTop: '8px' }}>언제든 책과 생각 기록하기</p>
                 </motion.div>
 
                 <motion.div
@@ -139,6 +154,14 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                     <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>친구들의 글 읽기</p>
                 </motion.div>
             </div>
+
+            <style>{`
+                @media (max-width: 760px) {
+                    .student-writing-menu-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
+            `}</style>
 
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px', marginTop: '24px' }}>
                 {/* 아지트 놀이터 — 포인트로 즐기는 콘텐츠 모음.

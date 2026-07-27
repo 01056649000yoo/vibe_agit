@@ -6,6 +6,7 @@ import { useMissionSubmit } from '../../hooks/useMissionSubmit';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
 import { countContentChars } from '../../lib/textMetrics';
 import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
+import WritingEditorFields from '../writing/WritingEditorFields';
 
 const GENRE_EDITORS = new Map(
     getGenreMissionTypes()
@@ -741,57 +742,17 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             />
                         </Suspense>
                     ) : (
-                        <>
-                            <input
-                                type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder={studentLabels.titlePlaceholder || '글의 제목을 적어주세요...'}
-                                spellCheck={true}
-                                autoCorrect="on"
-                                autoCapitalize="sentences"
-                                lang="ko"
-                                style={{
-                                    width: '100%',
-                                    padding: '16px 0',
-                                    fontSize: isMobile ? '1.5rem' : '2rem',
-                                    fontWeight: '900',
-                                    border: 'none',
-                                    borderBottom: '2px solid #F1F3F5',
-                                    marginBottom: '24px',
-                                    outline: 'none',
-                                    color: isLocked ? '#546E7A' : '#2C3E50',
-                                    background: 'transparent',
-                                    lineHeight: '1.4'
-                                }}
-                                disabled={submitting || isLocked}
-                            />
-                            <textarea
-                                ref={editorRef}
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                placeholder={studentLabels.contentPlaceholder || '여기에 자유롭게 이야기를 시작해보세요...'}
-                                spellCheck={true}
-                                autoCorrect="on"
-                                autoCapitalize="sentences"
-                                lang="ko"
-                                enterKeyHint="enter"
-                                wrap="soft"
-                                style={{
-                                    width: '100%',
-                                    minHeight: '600px',
-                                    padding: '10px 0',
-                                    border: 'none',
-                                    fontSize: isMobile ? '1.1rem' : '1.25rem',
-                                    lineHeight: '1.8',
-                                    outline: 'none',
-                                    color: isLocked ? '#546E7A' : '#444',
-                                    resize: 'none',
-                                    background: 'transparent'
-                                }}
-                                disabled={submitting || isLocked}
-                            />
-                        </>
+                        <WritingEditorFields
+                            ref={editorRef}
+                            title={title}
+                            onTitleChange={setTitle}
+                            content={content}
+                            onContentChange={setContent}
+                            titlePlaceholder={studentLabels.titlePlaceholder || '글의 제목을 적어주세요...'}
+                            contentPlaceholder={studentLabels.contentPlaceholder || '여기에 자유롭게 이야기를 시작해보세요...'}
+                            disabled={submitting || isLocked}
+                            isMobile={isMobile}
+                        />
                     )}
                 </div>
             </div>

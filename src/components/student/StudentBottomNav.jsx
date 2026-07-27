@@ -9,7 +9,8 @@ const StudentBottomNav = ({ activeTab, onNavigate }) => {
     // 탭 메뉴 설정
     const tabs = [
         { id: 'main', label: '홈', icon: '🏠', target: 'main' },
-        { id: 'mission_list', label: '글쓰기', icon: '📝', target: 'mission_list' },
+        { id: 'mission_list', label: '과제', icon: '📝', target: 'mission_list' },
+        { id: 'reading_logs', label: '독서록', icon: '📚', target: 'reading_logs' },
         { id: 'friends_hideout', label: '친구들', icon: '👀', target: 'friends_hideout' },
         // { id: 'market', label: '상점', icon: '🛍️', target: 'market' } // 향후 추가 가능
     ];
