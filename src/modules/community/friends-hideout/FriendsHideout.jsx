@@ -32,6 +32,22 @@ const ACCESSORIES = [
 const CONTAINER_STYLE = { maxWidth: '900px', padding: '32px', background: '#F8F9FA', border: 'none' };
 const TAB_CONTAINER_STYLE = { display: 'flex', gap: '12px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'none' };
 const GRID_STYLE = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' };
+const MAIN_TABS = [
+    {
+        id: 'posts',
+        step: '1',
+        icon: '📖',
+        title: '우리 반 글 나눔',
+        description: '선생님 과제로 쓴 글을 바로 함께 읽어요.'
+    },
+    {
+        id: 'hideouts',
+        step: '2',
+        icon: '🏠',
+        title: '친구 아지트 방문',
+        description: '친구를 골라 드래곤과 공개 책장을 구경해요.'
+    }
+];
 
 const HIDEOUT_BACKGROUNDS = {
     default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63', glow: 'rgba(255, 241, 118, 0.3)' },
@@ -55,7 +71,7 @@ const getDragonStage = (level) => {
 // [신규] 친구 아지트 구경 모달 (읽기 전용 - 잘림 방지 및 가독성 개선)
 const FriendHideoutModal = memo(({ classmate, onClose, onOpenPost, isMobile }) => {
     if (!classmate) return null;
-    const petData = classmate.pet_data || { name: '친구 드래곤', level: 1, background: 'default' };
+    const petData = { name: '친구 드래곤', level: 1, background: 'default', exp: 0, ...(classmate.pet_data || {}) };
     const bg = HIDEOUT_BACKGROUNDS[petData.background] || HIDEOUT_BACKGROUNDS.default;
     const dragonInfo = getDragonStage(petData.level);
 
@@ -177,7 +193,9 @@ const FriendHideoutModal = memo(({ classmate, onClose, onOpenPost, isMobile }) =
 
 // 개별 포스트 카드 컴포넌트 분리 및 memo 적용
 const PostCard = memo(({ post, isLast, lastElementRef, onClick, isMeeting, studentId, onMeetingPick }) => {
+    const isMine = post.student_id === studentId;
     const authorName =
+        (isMine ? '내 글' : '') ||
         post.student_name ||
         (Array.isArray(post.students) ? post.students[0]?.name : post.students?.name) ||
         '알 수 없는 친구';
@@ -215,11 +233,11 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick, isMeeting, stude
             <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                 <span style={{
                     fontSize: '0.8rem', padding: '4px 8px',
-                    background: isMeeting ? '#EDE9FE' : '#E1F5FE',
-                    color: isMeeting ? '#7E22CE' : '#0288D1',
+                    background: isMine ? '#FFF3E0' : (isMeeting ? '#EDE9FE' : '#E1F5FE'),
+                    color: isMine ? '#E65100' : (isMeeting ? '#7E22CE' : '#0288D1'),
                     borderRadius: '8px', fontWeight: 'bold'
                 }}>
-                    {authorName}
+                    {isMine ? '✍️ 내 글' : authorName}
                 </span>
                 {isMeeting && (
                     <span style={{
@@ -272,7 +290,7 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick, isMeeting, stude
  */
 const FriendsHideout = ({ studentSession, onBack, params }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
-    const [activeMainTab, setActiveMainTab] = useState('posts'); // 'posts' or 'dragons'
+    const [activeMainTab, setActiveMainTab] = useState('posts'); // 'posts' or 'hideouts'
     const [viewingFriendHideout, setViewingFriendHideout] = useState(null);
     const observer = useRef();
 
@@ -329,22 +347,64 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                 borderRadius: 0,
                 boxSizing: 'border-box'
             } : CONTAINER_STYLE}>
-                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', marginBottom: '32px', gap: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <Button variant="ghost" size="sm" onClick={onBack}>⬅️ 돌아가기</Button>
-                        <h2 style={{ margin: 0, color: '#2C3E50', fontWeight: '900', fontSize: '1.8rem' }}>👀 친구 아지트</h2>
-                    </div>
-                    <div style={{ background: '#E9ECEF', padding: '6px', borderRadius: '16px', display: 'flex', gap: '4px' }}>
-                        <button
-                            onClick={() => setActiveMainTab('posts')}
-                            style={{ padding: '8px 16px', border: 'none', borderRadius: '12px', background: activeMainTab === 'posts' ? 'white' : 'transparent', fontWeight: 'bold', color: activeMainTab === 'posts' ? '#2C3E50' : '#7F8C8D', cursor: 'pointer', transition: 'all 0.2s', boxShadow: activeMainTab === 'posts' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}
-                        >🏷️ 친구들의 글</button>
-                        <button
-                            onClick={() => setActiveMainTab('dragons')}
-                            style={{ padding: '8px 16px', border: 'none', borderRadius: '12px', background: activeMainTab === 'dragons' ? 'white' : 'transparent', fontWeight: 'bold', color: activeMainTab === 'dragons' ? '#2C3E50' : '#7F8C8D', cursor: 'pointer', transition: 'all 0.2s', boxShadow: activeMainTab === 'dragons' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none' }}
-                        >🏠 친구 아지트</button>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '22px' }}>
+                    <Button variant="ghost" size="sm" onClick={onBack}>⬅️ 돌아가기</Button>
+                    <div>
+                        <h2 style={{ margin: 0, color: '#2C3E50', fontWeight: '950', fontSize: isMobile ? '1.5rem' : '1.8rem' }}>🌈 우리 반 글과 아지트</h2>
+                        <p style={{ margin: '7px 0 0', color: '#78909C', fontSize: '0.9rem', fontWeight: '700' }}>
+                            먼저 친구들의 글을 함께 읽고, 더 알고 싶은 친구의 아지트도 방문해 보세요.
+                        </p>
                     </div>
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '12px', marginBottom: '30px' }} role="tablist" aria-label="우리 반 글과 친구 아지트">
+                    {MAIN_TABS.map((tab) => {
+                        const selected = activeMainTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                role="tab"
+                                aria-selected={selected}
+                                onClick={() => setActiveMainTab(tab.id)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '14px', padding: '16px',
+                                    borderRadius: '20px', textAlign: 'left', cursor: 'pointer',
+                                    border: selected ? '2px solid #5C6BC0' : '1px solid #DDE4EA',
+                                    background: selected ? 'linear-gradient(135deg,#EEF2FF,#FFFFFF)' : 'white',
+                                    boxShadow: selected ? '0 10px 24px rgba(92,107,192,.14)' : '0 4px 12px rgba(38,50,56,.04)'
+                                }}
+                            >
+                                <span style={{
+                                    display: 'flex', width: '42px', height: '42px', flex: '0 0 42px',
+                                    alignItems: 'center', justifyContent: 'center', borderRadius: '14px',
+                                    background: selected ? '#5C6BC0' : '#ECEFF1', color: selected ? 'white' : '#607D8B',
+                                    fontSize: '1.05rem', fontWeight: '950'
+                                }}>{tab.step}</span>
+                                <span style={{ minWidth: 0 }}>
+                                    <strong style={{ display: 'block', color: '#263238', fontSize: '1rem' }}>{tab.icon} {tab.title}</strong>
+                                    <small style={{ display: 'block', marginTop: '4px', color: '#78909C', lineHeight: '1.35' }}>{tab.description}</small>
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {activeMainTab === 'posts' ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ marginBottom: '18px' }}>
+                            <span style={{ color: '#5C6BC0', fontSize: '0.75rem', fontWeight: '950' }}>1순위 · 지금 바로 함께 읽기</span>
+                            <h3 style={{ margin: '5px 0 3px', color: '#263238', fontSize: '1.25rem' }}>📖 선생님 과제 글 모아보기</h3>
+                            <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>과제를 고르면 제출된 우리 반 글이 보여요. 내가 쓴 글도 함께 확인할 수 있어요.</p>
+                        </div>
+                    </div>
+                ) : (
+                    <div style={{ marginBottom: '18px' }}>
+                        <span style={{ color: '#8E24AA', fontSize: '0.75rem', fontWeight: '950' }}>2순위 · 친구를 더 알아보기</span>
+                        <h3 style={{ margin: '5px 0 3px', color: '#263238', fontSize: '1.25rem' }}>🏠 누구의 아지트로 갈까요?</h3>
+                        <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>학생마다 꾸민 아지트에서 드래곤과 공개한 글 책장을 함께 볼 수 있어요.</p>
+                    </div>
+                )}
 
                 {activeMainTab === 'posts' ? (
                     <>
@@ -386,11 +446,11 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 
                         <div style={GRID_STYLE}>
                             {loading ? (
-                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px' }}>친구들의 글을 불러오는 중... ✨</div>
+                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px' }}>우리 반이 나눈 글을 불러오는 중... ✨</div>
                             ) : posts.length === 0 ? (
                                 <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px', background: 'white', borderRadius: '24px' }}>
                                     <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🌵</div>
-                                    <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>아직 제출된 친구의 글이 없어요.</p>
+                                    <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>아직 이 과제에 제출된 글이 없어요.</p>
                                 </div>
                             ) : (
                                 <>
@@ -408,7 +468,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                     ))}
                                     {loadingMore && (
                                         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '20px', color: '#3498DB', fontWeight: 'bold' }}>
-                                            친구들의 소중한 글을 더 가져오고 있어요... ✨
+                                            우리 반의 소중한 글을 더 가져오고 있어요... ✨
                                         </div>
                                     )}
                                     {!hasMore && posts.length > 0 && (
@@ -429,7 +489,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                             </div>
                         ) : (
                             classmates.map(friend => {
-                                const pet = friend.pet_data || { name: '친구 드래곤', level: 1, background: 'default' };
+                                const pet = { name: '친구 드래곤', level: 1, background: 'default', exp: 0, ...(friend.pet_data || {}) };
                                 const dragon = getDragonStage(pet.level);
                                 const bg = HIDEOUT_BACKGROUNDS[pet.background] || HIDEOUT_BACKGROUNDS.default;
 
@@ -439,28 +499,31 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                         whileHover={{ scale: 1.02 }}
                                         onClick={() => setViewingFriendHideout(friend)}
                                         style={{
-                                            background: 'white', padding: '20px', borderRadius: '24px',
-                                            boxShadow: '0 4px 15px rgba(0,0,0,0.05)', cursor: 'pointer',
-                                            border: '1px solid #E9ECEF', display: 'flex', alignItems: 'center', gap: '16px'
+                                            position: 'relative', overflow: 'hidden', background: bg.color,
+                                            padding: '22px', borderRadius: '26px', minHeight: '150px',
+                                            boxShadow: `0 8px 22px ${bg.glow}`, cursor: 'pointer',
+                                            border: `2px solid ${bg.border}`, display: 'flex', alignItems: 'center', gap: '16px'
                                         }}
                                     >
+                                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(110deg,rgba(255,255,255,.18),transparent 55%)', pointerEvents: 'none' }} />
                                         <div style={{
                                             width: '64px', height: '64px', background: bg.color,
                                             borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            overflow: 'hidden', border: `1px solid ${bg.border}`
+                                            overflow: 'hidden', border: `1px solid ${bg.border}`, position: 'relative', zIndex: 1,
+                                            boxShadow: '0 6px 16px rgba(0,0,0,.12)'
                                         }}>
                                             <img src={dragon.image} alt="D" style={{ width: '45px', height: '45px', objectFit: 'contain' }} />
                                         </div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontSize: '0.8rem', color: '#7F8C8D', fontWeight: 'bold' }}>{friend.name} 친구</div>
-                                            <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#2C3E50' }}>{pet.name}</div>
+                                        <div style={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
+                                            <div style={{ fontSize: '0.8rem', color: bg.subColor, fontWeight: '900' }}>🏠 {friend.name}의 아지트</div>
+                                            <div style={{ marginTop: '3px', fontSize: '1.1rem', fontWeight: '950', color: bg.textColor }}>{pet.name}</div>
                                             <div style={{ fontSize: '0.75rem', color: bg.subColor, fontWeight: 'bold' }}>Lv.{pet.level} {dragon.name}</div>
                                             {/* [추가] 미니 경험치 바 */}
                                             <div style={{ height: '4px', background: '#F1F3F5', borderRadius: '2px', overflow: 'hidden', marginTop: '6px', width: '80%' }}>
                                                 <div style={{ width: `${pet.exp}%`, height: '100%', background: pet.exp >= 100 ? 'linear-gradient(90deg, #FFD700, #BA68C8)' : '#FBC02D', transition: 'width 0.5s ease' }} />
                                             </div>
                                         </div>
-                                        <div style={{ fontSize: '1.2rem' }}>🏠</div>
+                                        <div style={{ position: 'relative', zIndex: 1, color: bg.textColor, fontSize: '1.2rem' }}>→</div>
                                     </motion.div>
                                 );
                             })

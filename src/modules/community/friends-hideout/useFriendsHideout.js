@@ -217,7 +217,7 @@ export const useFriendsHideout = (studentSession, params) => {
                 `)
                 .eq('mission_id', missionId)
                 .eq('is_submitted', true)
-                .neq('student_id', studentSession.id)
+                .eq('visibility', 'class')
                 .order('created_at', { ascending: false })
                 .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
@@ -241,7 +241,7 @@ export const useFriendsHideout = (studentSession, params) => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [studentSession.id]);
+    }, []);
 
     const loadMore = useCallback(() => {
         if (!loadingMore && hasMore && selectedMission) {
@@ -284,26 +284,26 @@ export const useFriendsHideout = (studentSession, params) => {
                     data.find(m => m.id === params?.missionId);
 
                 // 처음 들어왔을 때는 단순히 최신 미션이 아니라,
-                // 실제로 다른 학생의 제출 글이 있는 최신 미션을 먼저 보여준다.
+                // 실제로 우리 반의 제출 글이 있는 최신 미션을 먼저 보여준다.
                 if (!nextMission) {
                     const missionIds = data.map(mission => mission.id);
-                    const { data: friendPostRows, error: friendPostError } = await supabase
+                    const { data: sharedPostRows, error: sharedPostError } = await supabase
                         .from('student_posts')
                         .select('mission_id')
                         .eq('class_id', classId)
                         .eq('is_submitted', true)
-                        .neq('student_id', studentSession.id)
+                        .eq('visibility', 'class')
                         .in('mission_id', missionIds);
 
-                    if (friendPostError) {
-                        console.warn('친구 글이 있는 미션 확인 실패:', friendPostError.message);
+                    if (sharedPostError) {
+                        console.warn('공유 글이 있는 미션 확인 실패:', sharedPostError.message);
                     }
 
-                    const missionsWithFriendPosts = new Set(
-                        (friendPostRows || []).map(post => post.mission_id)
+                    const missionsWithSharedPosts = new Set(
+                        (sharedPostRows || []).map(post => post.mission_id)
                     );
                     nextMission =
-                        data.find(mission => missionsWithFriendPosts.has(mission.id)) ||
+                        data.find(mission => missionsWithSharedPosts.has(mission.id)) ||
                         data[0];
                 }
 
@@ -319,7 +319,7 @@ export const useFriendsHideout = (studentSession, params) => {
         } finally {
             setLoading(false);
         }
-    }, [resolveClassId, fetchPosts, params?.missionId, studentSession.id]);
+    }, [resolveClassId, fetchPosts, params?.missionId]);
 
     const handleMeetingPick = useCallback(async (postId) => {
         if (!postId || !studentSession.id || !selectedMission?.id) return false;
@@ -496,8 +496,8 @@ export const useFriendsHideout = (studentSession, params) => {
                     const currentMissionId = selectedMissionIdRef.current;
                     if (
                         payload.new.mission_id === currentMissionId &&
-                        payload.new.student_id !== studentSession.id &&
-                        payload.new.is_submitted
+                        payload.new.is_submitted &&
+                        payload.new.visibility === 'class'
                     ) {
                         const { data: newPost, error } = await supabase
                             .from('student_posts')
