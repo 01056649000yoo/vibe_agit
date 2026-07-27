@@ -31,7 +31,7 @@
     학생은 자기 독서록의 확인 결과만 나의 책장에서 볼 수 있도록 RLS와 학생 UI 연결.
   - 학생 비공개 문구를 `친구에게 비공개 · 선생님은 확인 가능`으로 바로잡음. 자동 평가·AI·포인트·승인 흐름은 추가하지 않음.
 - **변경**:
-  - 신규 마이그레이션 `20260803_teacher_reading_log_reviews.sql`, `TeacherWritingHub`,
+  - 기능 커밋 `242195a`와 기록 커밋 `6de37d6`. 신규 마이그레이션 `20260803_teacher_reading_log_reviews.sql`, `TeacherWritingHub`,
     `reading-log/teacher/TeacherReadingLogManager` 및 학생 책장 확인 카드 추가.
   - git 밖 운영 변경: 통합 DB `agit-db`에 마이그레이션 적용 완료. 실제 교사/학생 역할 검증 데이터는 전부 ROLLBACK.
 - **결과/검증**:
@@ -56,7 +56,7 @@
     `get_friend_point_activity_summary` RPC와 독립 lazy 프로필 카드 추가. 잔액·획득액·환영 포인트·교사 조정 금액/사유는 반환하지 않음.
   - 친구를 선택할 때만 대상 학생 요약을 조회하고 `보는 학생 + 대상 친구` 기준 5분 메모리 캐시·수동 새로고침 적용.
 - **변경**:
-  - 로컬 기능 커밋 `ef1cffe`(`feat: add private-safe friend point activity`).
+  - 기능 커밋 `ef1cffe`(`feat: add private-safe friend point activity`)와 기록 커밋 `3c8b065`.
     신규 마이그레이션 `20260802_friend_point_activity_summary.sql`, 신규 `FriendPointActivityCard`, 프로필 카드 매니페스트 활성화.
   - git 밖 운영 변경: 통합 DB `agit-db`에 마이그레이션 적용 완료(17,519건 activity_type 백필, NULL 0건).
 - **결과/검증**:
@@ -66,7 +66,7 @@
   - 프론트 targeted ESLint 0에러, `git diff --check` 통과, 프로덕션 빌드 성공. 포인트 카드는 별도 lazy chunk 3.91kB(gzip 1.92kB).
   - 직전 프로필 셸 푸시 `52b12a4`의 GitHub Actions Deploy run `30274838695` 성공.
 - **남은 것 / 다음**:
-  1. 이 변경은 로컬 커밋 상태이며 아직 미푸시. 배포 후 학생 실기기에서 활동 카드 횟수와 비공개 안내 확인.
+  1. 배포 후 학생 실기기에서 활동 카드 횟수와 비공개 안내 확인.
   2. 댓글 관계 대표 친구는 최소 표본·동률·교사 공개 설정 확정 뒤 `relationships` 슬롯 활성화.
   3. Stage 4d 다음은 교사용 포인트 관리 동선과 게임 보상 서버 검증을 현행 RPC 기준으로 점검.
 
