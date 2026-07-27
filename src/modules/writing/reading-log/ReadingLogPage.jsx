@@ -154,7 +154,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
         setInitialForm(form);
         alert(form.visibility === 'class'
             ? '독서록을 친구 공개로 저장했어요! 📚'
-            : '나만 보는 독서록으로 저장했어요! 🔒');
+            : '친구에게 비공개로 저장했어요. 선생님은 확인할 수 있어요. 🔒');
         onDone();
     };
 
@@ -221,8 +221,8 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                 />
                 <span style={{ fontSize: '1.6rem' }}>{form.visibility === 'class' ? '📚' : '🔒'}</span>
                 <span>
-                    <strong>{form.visibility === 'class' ? '친구 공개로 저장' : '나만 보기'}</strong>
-                    <small>{form.visibility === 'class' ? '친구들이 내 아지트의 글 책장에서 보고 반응과 댓글을 남길 수 있어요.' : '처음에는 나만 볼 수 있어요. 원할 때 공개할 수 있어요.'}</small>
+                    <strong>{form.visibility === 'class' ? '친구 공개로 저장' : '친구에게 비공개'}</strong>
+                    <small>{form.visibility === 'class' ? '친구들이 내 아지트의 글 책장에서 보고 반응과 댓글을 남길 수 있어요.' : '친구에게는 보이지 않지만 선생님은 확인할 수 있어요. 원할 때 공개할 수 있어요.'}</small>
                 </span>
             </label>
 
@@ -259,6 +259,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     const [logs, setLogs] = useState([]);
     const [libraryItems, setLibraryItems] = useState([]);
     const [logLinks, setLogLinks] = useState([]);
+    const [teacherReviews, setTeacherReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('all');
     const [expandedBookId, setExpandedBookId] = useState(null);
@@ -266,7 +267,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
 
     const fetchLogs = useCallback(async () => {
         setLoading(true);
-        const [logsResult, libraryResult, linksResult] = await Promise.all([
+        const [logsResult, libraryResult, linksResult, reviewsResult] = await Promise.all([
             supabase
                 .from('student_posts')
                 .select('id, title, content, structured_content, visibility, published_at, created_at, updated_at')
@@ -282,6 +283,10 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
             supabase
                 .from('reading_log_entries')
                 .select('post_id, library_item_id')
+                .eq('student_id', studentSession.id),
+            supabase
+                .from('reading_log_teacher_reviews')
+                .select('post_id, review_status, teacher_comment, reviewed_at')
                 .eq('student_id', studentSession.id)
         ]);
 
@@ -290,10 +295,17 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
             setLogs([]);
             setLibraryItems([]);
             setLogLinks([]);
+            setTeacherReviews([]);
         } else {
             setLogs(logsResult.data || []);
             setLibraryItems(libraryResult.data || []);
             setLogLinks(linksResult.data || []);
+            if (reviewsResult.error) {
+                console.error('독서록 선생님 확인 로드 실패:', reviewsResult.error.message);
+                setTeacherReviews([]);
+            } else {
+                setTeacherReviews(reviewsResult.data || []);
+            }
         }
         setLoading(false);
     }, [studentSession.id]);
@@ -392,8 +404,13 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
         logs: logs.length,
         public: logs.filter((log) => log.visibility === 'class').length,
         reading: shelfBooks.filter((shelf) => shelf.readingStatus === 'reading').length,
-        completed: shelfBooks.filter((shelf) => shelf.readingStatus === 'completed').length
-    }), [logs, shelfBooks]);
+        completed: shelfBooks.filter((shelf) => shelf.readingStatus === 'completed').length,
+        reviewed: teacherReviews.length
+    }), [logs, shelfBooks, teacherReviews.length]);
+
+    const teacherReviewByPost = useMemo(() => (
+        new Map(teacherReviews.map((review) => [review.post_id, review]))
+    ), [teacherReviews]);
 
     if (isEditing) {
         return (
@@ -422,6 +439,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                 <span><strong>{counts.books}</strong>권의 책</span>
                 <span><strong>{counts.logs}</strong>개의 독서록</span>
                 <span><strong>{counts.public}</strong>개를 친구 공개로 설정</span>
+                {counts.reviewed > 0 && <span><strong>{counts.reviewed}</strong>개를 선생님이 확인</span>}
             </div>
 
             <div className="reading-shelf-tabs" role="tablist" aria-label="책장 독서 상태 필터">
@@ -492,7 +510,9 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                                 <div className="reading-shelf-log-list">
                                     {shelf.logs.length === 0 ? (
                                         <p>이 책에 쓴 독서록이 아직 없어요.</p>
-                                    ) : shelf.logs.map((log) => (
+                                    ) : shelf.logs.map((log) => {
+                                        const teacherReview = teacherReviewByPost.get(log.id);
+                                        return (
                                         <div key={log.id} className="reading-shelf-log-row">
                                             <div>
                                                 <span>{log.visibility === 'class' ? '📚' : '🔒'}</span>
@@ -500,12 +520,18 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                                                 <small>{formatDate(log.updated_at || log.created_at)}</small>
                                             </div>
                                             <p>{log.content || '아직 내용이 없어요.'}</p>
+                                            {teacherReview && (
+                                                <div className="reading-log-teacher-review">
+                                                    <strong>{teacherReview.review_status === 'commented' ? '💬 선생님 한마디' : '✅ 선생님이 확인했어요'}</strong>
+                                                    {teacherReview.teacher_comment && <p>{teacherReview.teacher_comment}</p>}
+                                                </div>
+                                            )}
                                             <div>
                                                 <Button size="sm" onClick={() => onNavigate('reading_logs', { mode: 'editor', postId: log.id })}>열어보기</Button>
                                                 <Button variant="ghost" size="sm" onClick={() => handleDelete(log)}>삭제</Button>
                                             </div>
                                         </div>
-                                    ))}
+                                    );})}
                                 </div>
                             )}
                         </motion.article>
@@ -545,6 +571,9 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                 .reading-shelf-log-row strong { color:#37474F; font-size:.92rem; }
                 .reading-shelf-log-row small { margin-left:auto; color:#B0BEC5; font-size:.72rem; }
                 .reading-shelf-log-row > p { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin:8px 0; color:#78909C; font-size:.82rem; line-height:1.5; white-space:pre-wrap; }
+                .reading-log-teacher-review { margin:10px 0; padding:10px 12px; border-radius:11px; background:#EEF2FF; color:#4338CA; }
+                .reading-log-teacher-review strong { font-size:.78rem; }
+                .reading-log-teacher-review p { margin:5px 0 0; color:#475569; font-size:.82rem; line-height:1.5; white-space:pre-wrap; }
                 .reading-shelf-log-row > div:last-child { display:flex; justify-content:flex-end; gap:6px; }
                 @media (max-width: 720px) {
                     .reading-log-page { width:min(100% - 24px, 1080px); margin-top:14px; }

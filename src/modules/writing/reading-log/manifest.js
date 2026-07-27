@@ -11,7 +11,8 @@ export const readingLogManifest = {
     audience: 'student',
     core: true,
     studentRoute: 'reading_logs',
-    studentEntry: () => import('./ReadingLogPage')
+    studentEntry: () => import('./ReadingLogPage'),
+    teacherEntry: () => import('./teacher/TeacherReadingLogManager')
 };
 
 export default readingLogManifest;

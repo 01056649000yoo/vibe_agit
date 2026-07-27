@@ -14,7 +14,7 @@ const ActivityReport = lazy(() => import('./ActivityReport'));
 
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
-import TeacherMissionTab from './TeacherMissionTab';
+import TeacherWritingHub from './TeacherWritingHub';
 import TeacherSettingsTab from './TeacherSettingsTab';
 import TeacherProfileModal from './TeacherProfileModal';
 import ActivityDetailModal from './ActivityDetailModal';
@@ -195,7 +195,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '📊 미션 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📘 국어 평어' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'settings' ? '⚙️ 관리 설정' : '🧰 수업 앱 모음'}
+                        {tabId === 'dashboard' ? '✍️ 글쓰기 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📘 국어 평어' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'settings' ? '⚙️ 관리 설정' : '🧰 수업 앱 모음'}
                     </button>
                 ))}
             </nav>
@@ -237,7 +237,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         </div>
                     ) : (
                         visibleTab === 'dashboard' ? (
-                            <TeacherMissionTab activeClass={activeClass} isMobile={isMobile} setSelectedActivityPost={setSelectedActivityPost} />
+                            <TeacherWritingHub key={activeClass.id} activeClass={activeClass} isMobile={isMobile} setSelectedActivityPost={setSelectedActivityPost} />
                         ) : visibleTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
                         ) : visibleTab === 'activity' ? (
