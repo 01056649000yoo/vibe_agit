@@ -31,7 +31,8 @@
     친구를 선택한 뒤에만 프로필 셸과 공개 책장·발자국 청크를 지연 로드.
   - 카드별 오류 경계를 추가해 한 카드 렌더링 오류가 전체 정보창을 닫지 않게 하고, 공개 책장·발자국 조회에
     `보는 학생 id + 대상 친구 id` 캐시 키와 수동 새로고침 무효화를 적용해 반복 방문 DB 조회와 세션 간 캐시 혼입을 방지.
-- **변경**: `community/friends-hideout/profile/` 신규 셸·미리보기·드래곤 카드·매니페스트·오류 경계,
+- **변경**: 로컬 커밋 `e780471`(`refactor: modularize friend profile cards`).
+  `community/friends-hideout/profile/` 신규 셸·미리보기·드래곤 카드·매니페스트·오류 경계,
   `FriendsHideout` 연결 축소, `FriendWritingShelf`·`FriendWritingFootprintCard` 캐시 보강. DB/운영 인프라 변경 없음.
 - **결과/검증**:
   - 변경 파일 targeted ESLint 0에러, `git diff --check` 통과, 프로덕션 빌드 성공.
