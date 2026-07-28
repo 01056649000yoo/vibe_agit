@@ -1,3 +1,4 @@
+import { TEACHER_NAV_GROUPS } from '../../constants/teacherNav';
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -35,53 +36,6 @@ const loadWritingCardLayout = () => {
     }
 };
 
-const TEACHER_NAV_GROUPS = [
-    {
-        id: 'writing',
-        label: '글쓰기',
-        icon: '✍️',
-        defaultTab: 'dashboard',
-        tabs: [
-            { id: 'dashboard', label: '선생님 과제' },
-            { id: 'reading-logs', label: '학생 독서록' },
-            { id: 'archive', label: '보관함' }
-        ]
-    },
-    {
-        id: 'students',
-        label: '학생',
-        icon: '👥',
-        defaultTab: 'students',
-        tabs: [{ id: 'students', label: '학생 관리' }]
-    },
-    {
-        id: 'records',
-        label: '평가·기록',
-        icon: '📝',
-        defaultTab: 'evaluation',
-        tabs: [
-            { id: 'evaluation', label: '학생 평가' },
-            { id: 'activity', label: '국어 평어' }
-        ]
-    },
-    {
-        id: 'playground',
-        label: '포인트·놀이',
-        icon: '🎮',
-        defaultTab: 'playground',
-        tabs: [{ id: 'playground', label: '포인트·놀이' }]
-    },
-    {
-        id: 'settings',
-        label: '설정',
-        icon: '⚙️',
-        defaultTab: 'settings',
-        tabs: [
-            { id: 'settings', label: '관리 설정' },
-            { id: 'guide', label: '사용 안내' }
-        ]
-    }
-];
 
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨

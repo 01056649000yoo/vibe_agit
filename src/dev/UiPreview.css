@@ -184,3 +184,41 @@
 @media (prefers-reduced-motion: reduce) {
   .ui-preview__spinner { animation: none; }
 }
+
+/* 교사 상단 업무 영역 미리보기 */
+.ui-preview__teacher-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+.ui-preview__teacher-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: 1px solid #E9ECEF;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #495057;
+  cursor: pointer;
+}
+.ui-preview__teacher-nav button.is-active {
+  border-color: #4C6EF5;
+  background: #EDF2FF;
+  color: #364FC7;
+}
+.ui-preview__teacher-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ui-preview__teacher-tabs span {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #F1F3F5;
+  font-size: 0.85rem;
+  color: #495057;
+}

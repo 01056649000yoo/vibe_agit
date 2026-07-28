@@ -5,6 +5,8 @@ import Card from '../components/common/Card'
 import '../App.css'
 import './UiPreview.css'
 
+import { TEACHER_NAV_GROUPS } from '../constants/teacherNav'
+
 const previewStates = [
   {
     id: 'empty',
@@ -27,6 +29,7 @@ const previewStates = [
 function UiPreview() {
   const [activeState, setActiveState] = useState('empty')
   const [showLoading, setShowLoading] = useState(false)
+  const [activeNav, setActiveNav] = useState(TEACHER_NAV_GROUPS[0].id)
   const state = previewStates.find((item) => item.id === activeState)
   const StateIcon = state.icon
 
@@ -114,6 +117,40 @@ function UiPreview() {
               {showLoading ? '로딩 멈추기' : '로딩 시작'}
             </Button>
           </article>
+        </div>
+      </section>
+
+      <section className="ui-preview__section" aria-labelledby="teacher-nav-title">
+        <div className="ui-preview__section-heading">
+          <div>
+            <p className="ui-preview__eyebrow">04 · 교사 화면</p>
+            <h2 id="teacher-nav-title">상단 업무 영역</h2>
+          </div>
+        </div>
+        <p className="ui-preview__note">
+          교사 대시보드가 쓰는 정의(<code>src/constants/teacherNav.js</code>)를 그대로 그립니다.
+          영역을 누르면 그 안의 화면 목록이 바뀝니다.
+        </p>
+
+        <nav className="ui-preview__teacher-nav" aria-label="업무 영역">
+          {TEACHER_NAV_GROUPS.map((group) => (
+            <button
+              type="button"
+              key={group.id}
+              className={activeNav === group.id ? 'is-active' : ''}
+              aria-pressed={activeNav === group.id}
+              onClick={() => setActiveNav(group.id)}
+            >
+              <span aria-hidden="true">{group.icon}</span>
+              {group.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="ui-preview__teacher-tabs" aria-label="선택한 영역의 화면">
+          {(TEACHER_NAV_GROUPS.find((g) => g.id === activeNav)?.tabs ?? []).map((tab) => (
+            <span key={tab.id}>{tab.label}</span>
+          ))}
         </div>
       </section>
     </main>
