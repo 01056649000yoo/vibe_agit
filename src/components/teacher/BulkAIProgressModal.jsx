@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 const BulkAIProgressModal = ({
     isGenerating,
     progress,
-    title = "열심히 AI쫑알이 작성중이에요",
+    title = "열심히 문장을 쓰고 있어요",
     description = "학생들의 기록을 꼼꼼히 검토하고 있어요."
 }) => {
     // SSR 대응 (서버 사이드 환경에서는 포탈을 사용하지 않음)

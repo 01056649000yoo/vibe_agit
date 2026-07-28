@@ -471,7 +471,7 @@ ${activitiesInfo}`;
         const isRegen = generatedCount > 0;
         const msg = isRegen
             ? '기존 내용은 삭제되고 재생성됩니다. 진행하시겠습니까?'
-            : `평가 완료 학생 ${studentPosts.length}명의 글쓰기 평어 덧붙임 문장을 일괄 작성하시겠습니까?`;
+            : `평가 완료 학생 ${studentPosts.length}명의 덧붙임 문장을 일괄 작성하시겠습니까?`;
 
         if (!confirm(msg)) return;
 
@@ -523,7 +523,7 @@ ${activitiesInfo}`;
                 await saveGenerationHistory(updatedPosts);
             }, 1000);
 
-            alert(isRegen ? '글쓰기 평어 덧붙임 문장 일괄 재작성이 완료되었습니다! ✨' : '글쓰기 평어 덧붙임 문장 일괄 작성이 완료되었습니다! ✨');
+            alert(isRegen ? '덧붙임 문장 일괄 재작성이 완료되었습니다! ✨' : '덧붙임 문장 일괄 작성이 완료되었습니다! ✨');
         }
     };
 
@@ -626,7 +626,7 @@ ${activitiesInfo}`;
         }).join('\n---\n\n');
 
         navigator.clipboard.writeText(text);
-        alert('전체 학생의 글쓰기 평가 덧붙임 문장이 클립보드에 복사되었습니다! 📋\n작성 중인 국어 평어의 앞이나 뒤에 붙여넣어 사용하세요.');
+        alert('전체 학생의 덧붙임 문장이 클립보드에 복사되었습니다! 📋\n작성 중인 국어 평어의 앞이나 뒤에 붙여넣어 사용하세요.');
     };
 
     const toggleTag = (tag) => {
@@ -651,7 +651,7 @@ ${activitiesInfo}`;
             }}>
                 <div>
                     <h2 style={{ margin: '0 0 4px 0', fontSize: '1.6rem', fontWeight: '950', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '1.8rem' }}>📘</span> 글쓰기 평어 덧붙임 도우미 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>2022 성취기준 연동</span>
+                        <span style={{ fontSize: '1.8rem' }}>📘</span> 평어 도우미 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>2022 성취기준 연동</span>
                     </h2>
                     <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>작성 중인 국어 평어의 앞이나 뒤에 붙일 글쓰기 평가 문장을 만듭니다.</p>
                 </div>

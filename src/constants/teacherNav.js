@@ -30,7 +30,7 @@ export const TEACHER_NAV_GROUPS = [
         defaultTab: 'evaluation',
         tabs: [
             { id: 'evaluation', label: '학생 평가' },
-            { id: 'activity', label: '국어 평어' }
+            { id: 'activity', label: '평어 도우미' }
         ]
     },
     {

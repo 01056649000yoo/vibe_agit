@@ -27,11 +27,11 @@ const TeacherSettingsTab = ({
 
             <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid #DCE6EE', marginBottom: '18px' }}>
                 <button type="button" onClick={() => setActivePromptTab('feedback')} style={{ padding: '11px 15px', border: 'none', borderBottom: isFeedback ? '3px solid #2563EB' : '3px solid transparent', background: 'transparent', color: isFeedback ? '#1D4ED8' : '#64748B', fontWeight: '800', cursor: 'pointer' }}>💬 학생 AI 피드백</button>
-                <button type="button" onClick={() => setActivePromptTab('report')} style={{ padding: '11px 15px', border: 'none', borderBottom: !isFeedback ? '3px solid #059669' : '3px solid transparent', background: 'transparent', color: !isFeedback ? '#047857' : '#64748B', fontWeight: '800', cursor: 'pointer' }}>📋 AI쫑알이 생성</button>
+                <button type="button" onClick={() => setActivePromptTab('report')} style={{ padding: '11px 15px', border: 'none', borderBottom: !isFeedback ? '3px solid #059669' : '3px solid transparent', background: 'transparent', color: !isFeedback ? '#047857' : '#64748B', fontWeight: '800', cursor: 'pointer' }}>📋 평어 도우미</button>
             </div>
 
             <label style={{ display: 'block', color: '#334155', fontWeight: '800', marginBottom: '10px' }}>
-                {isFeedback ? '학생에게 줄 피드백 규칙' : '생기부 도움자료 생성 규칙'}
+                {isFeedback ? '학생에게 줄 피드백 규칙' : '평어 도우미 규칙'}
             </label>
             <textarea
                 value={isFeedback ? promptTemplate : reportPromptTemplate}
