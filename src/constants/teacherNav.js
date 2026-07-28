@@ -21,7 +21,9 @@ export const TEACHER_NAV_GROUPS = [
         label: '학생',
         icon: '👥',
         defaultTab: 'students',
-        tabs: [{ id: 'students', label: '학생 관리' }]
+        tabs: [{ id: 'students', label: '학생 관리' }],
+        // 화면 안에서 다시 나뉘는 구조 (UI 작업실 표시용)
+        inner: '학생 명단 / 최근 활동 / 학급 분석 / 학급 설정 좌측 메뉴로 나뉩니다.'
     },
     {
         id: 'records',
@@ -38,7 +40,8 @@ export const TEACHER_NAV_GROUPS = [
         label: '포인트·놀이',
         icon: '🎮',
         defaultTab: 'playground',
-        tabs: [{ id: 'playground', label: '포인트·놀이' }]
+        tabs: [{ id: 'playground', label: '포인트·놀이' }],
+        inner: '드래곤 키우기·어휘의 탑 관리 카드와 모듈 on/off로 구성됩니다.'
     },
     {
         id: 'settings',

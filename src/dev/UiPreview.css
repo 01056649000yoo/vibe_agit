@@ -222,3 +222,22 @@
   font-size: 0.85rem;
   color: #495057;
 }
+
+.ui-preview__nav-shape {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  color: #868E96;
+}
+.ui-preview__teacher-tabs.is-sidebar {
+  flex-direction: column;
+  align-items: flex-start;
+  width: 180px;
+  padding: 6px;
+  border: 1px solid #E9ECEF;
+  border-radius: 12px;
+  background: #F8F9FA;
+}
+.ui-preview__teacher-tabs.is-sidebar span {
+  width: 100%;
+  background: #fff;
+}

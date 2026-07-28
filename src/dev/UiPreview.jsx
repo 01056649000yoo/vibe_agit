@@ -147,11 +147,30 @@ function UiPreview() {
           ))}
         </nav>
 
-        <div className="ui-preview__teacher-tabs" aria-label="선택한 영역의 화면">
-          {(TEACHER_NAV_GROUPS.find((g) => g.id === activeNav)?.tabs ?? []).map((tab) => (
-            <span key={tab.id}>{tab.label}</span>
-          ))}
-        </div>
+        {(() => {
+          const group = TEACHER_NAV_GROUPS.find((g) => g.id === activeNav)
+          if (!group) return null
+          // 실제 대시보드는 글쓰기 영역만 PC에서 좌측 세로 메뉴를 쓴다(usesWritingSidebar).
+          const isSidebar = group.id === 'writing'
+          return (
+            <>
+              <p className="ui-preview__nav-shape">
+                {isSidebar
+                  ? 'PC에서 좌측 세로 메뉴로 표시됩니다.'
+                  : '상단 가로 메뉴로 표시됩니다.'}
+                {group.inner ? ` 화면 안에서 ${group.inner}` : ''}
+              </p>
+              <div
+                className={`ui-preview__teacher-tabs ${isSidebar ? 'is-sidebar' : ''}`}
+                aria-label="선택한 영역의 화면"
+              >
+                {group.tabs.map((tab) => (
+                  <span key={tab.id}>{tab.label}</span>
+                ))}
+              </div>
+            </>
+          )
+        })()}
       </section>
     </main>
   )
