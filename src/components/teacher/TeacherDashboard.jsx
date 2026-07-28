@@ -29,7 +29,8 @@ const TEACHER_NAV_GROUPS = [
         icon: '✍️',
         defaultTab: 'dashboard',
         tabs: [
-            { id: 'dashboard', label: '글쓰기 관리' },
+            { id: 'dashboard', label: '선생님 과제' },
+            { id: 'reading-logs', label: '학생 독서록' },
             { id: 'archive', label: '보관함' }
         ]
     },
@@ -317,11 +318,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             />
                         </div>
                     ) : (
-                        visibleTab === 'dashboard' ? (
+                        visibleTab === 'dashboard' || visibleTab === 'reading-logs' ? (
                             <TeacherWritingHub
                                 key={activeClass.id}
                                 activeClass={activeClass}
                                 isMobile={isMobile}
+                                section={visibleTab === 'reading-logs' ? 'reading-logs' : 'missions'}
                             />
                         ) : visibleTab === 'students' ? (
                             <TeacherStudentHub
