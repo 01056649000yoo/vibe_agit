@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../../../../components/common/Button';
 import { supabase } from '../../../../lib/supabaseClient';
 import { classKey, classScope, dataCache } from '../../../../lib/cache';
@@ -29,8 +29,9 @@ const reviewLabel = (status) => {
     return '🕓 미확인';
 };
 
-const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
+const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onNavigationHandled }) => {
     const classId = activeClass?.id;
+    const handledNavigationRef = useRef(null);
 
     // 탭을 열면 "확인할 것"부터 보여준다. 전체 목록은 한 번 더 눌러서 본다.
     const [reviewFilter, setReviewFilter] = useState('unreviewed');
@@ -277,7 +278,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
         ));
     };
 
-    const openDetail = async (item) => {
+    const openDetail = useCallback(async (item) => {
         setSelected(item);
         setDetail(null);
         setComment('');
@@ -311,7 +312,26 @@ const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
             setComment(reviewResult.data?.teacher_comment || '');
         }
         setDetailLoading(false);
-    };
+    }, [classId]);
+
+    useEffect(() => {
+        const requestId = navigationTarget?.requestId;
+        if (!requestId || navigationTarget.kind !== 'reading-review' || handledNavigationRef.current === requestId) return;
+
+        const timerId = window.setTimeout(() => {
+            if (handledNavigationRef.current === requestId) return;
+            handledNavigationRef.current = requestId;
+            const targetItem = navigationTarget.item;
+            if (!targetItem?.post_id) {
+                onNavigationHandled?.(requestId);
+                return;
+            }
+
+            openDetail(targetItem).finally(() => onNavigationHandled?.(requestId));
+        }, 0);
+
+        return () => window.clearTimeout(timerId);
+    }, [navigationTarget, onNavigationHandled, openDetail]);
 
     const saveReview = async (teacherComment) => {
         if (!selected) return;

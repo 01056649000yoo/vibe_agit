@@ -50,6 +50,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     const [adminPasswordError, setAdminPasswordError] = useState('');
     const [isVerifyingAdminPassword, setIsVerifyingAdminPassword] = useState(false);
     const [writingCardLayout, setWritingCardLayout] = useState(loadWritingCardLayout);
+    const [workspaceTarget, setWorkspaceTarget] = useState(null);
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
     const {
@@ -73,6 +74,24 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     useEffect(() => {
         window.localStorage.setItem('teacher-writing-card-layout-v1', JSON.stringify(writingCardLayout));
     }, [writingCardLayout]);
+
+    const handleTabChange = useCallback((tabId) => {
+        setWorkspaceTarget(null);
+        setCurrentTab(tabId);
+    }, []);
+
+    const handleWorkspaceNavigate = useCallback((target) => {
+        if (!target?.tab) return;
+        setWorkspaceTarget({
+            ...target,
+            requestId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+        });
+        setCurrentTab(target.tab);
+    }, []);
+
+    const handleWorkspaceNavigationHandled = useCallback((requestId) => {
+        setWorkspaceTarget((current) => current?.requestId === requestId ? null : current);
+    }, []);
 
     const handleOpenAdminPasswordModal = useCallback(() => {
         setAdminPassword('');
@@ -210,7 +229,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         type="button"
                         role="tab"
                         aria-selected={activeNavGroup.id === group.id}
-                        onClick={() => setCurrentTab(group.defaultTab)}
+                        onClick={() => handleTabChange(group.defaultTab)}
                         style={{
                             padding: isMobile ? '10px 12px' : '12px 22px', border: 'none',
                             background: activeNavGroup.id === group.id ? '#EFF6FF' : 'transparent',
@@ -282,7 +301,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 type="button"
                                 role="tab"
                                 aria-selected={visibleTab === tab.id}
-                                onClick={() => setCurrentTab(tab.id)}
+                                onClick={() => handleTabChange(tab.id)}
                                 style={{
                                     flex: isMobile ? '1 0 auto' : 'none', padding: usesWritingSidebar ? '13px 14px' : '9px 16px', border: 'none', borderRadius: '11px',
                                     background: visibleTab === tab.id ? 'white' : 'transparent',
@@ -336,6 +355,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 isMobile={isMobile}
                                 section={visibleTab === 'reading-logs' ? 'reading-logs' : 'missions'}
                                 cardLayout={writingCardLayout}
+                                navigationTarget={workspaceTarget}
+                                onNavigationHandled={handleWorkspaceNavigationHandled}
                             />
                         ) : visibleTab === 'students' ? (
                             <TeacherStudentHub
@@ -343,6 +364,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 activeClass={activeClass}
                                 isMobile={isMobile}
                                 setSelectedActivityPost={setSelectedActivityPost}
+                                onNavigate={handleWorkspaceNavigate}
                             />
                         ) : visibleTab === 'classes' ? (
                             <ClassManager

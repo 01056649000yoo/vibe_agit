@@ -72,17 +72,31 @@ const MetricCard = ({ icon, label, value, note, background, color }) => (
     </div>
 );
 
-const ActionCard = ({ icon, title, description, action, tone, renderDetail }) => {
+const ActionCard = ({ icon, title, description, action, tone, renderDetail, onActivate, actionLabel }) => {
     const items = Array.isArray(action?.items) ? action.items : [];
     const count = Number(action?.count || 0);
 
+    const handleKeyDown = (event) => {
+        if (!onActivate || (event.key !== 'Enter' && event.key !== ' ')) return;
+        event.preventDefault();
+        onActivate();
+    };
+
     return (
-        <article style={{
+        <article
+            role={onActivate ? 'button' : undefined}
+            tabIndex={onActivate ? 0 : undefined}
+            aria-label={onActivate ? `${title} 화면으로 이동` : undefined}
+            onClick={onActivate}
+            onKeyDown={handleKeyDown}
+            style={{
             minWidth: 0,
             padding: '15px',
             borderRadius: '16px',
             border: `1px solid ${tone.border}`,
-            background: tone.background
+            background: tone.background,
+            cursor: onActivate ? 'pointer' : 'default',
+            transition: 'transform 0.18s ease, box-shadow 0.18s ease'
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'flex-start' }}>
                 <div style={{ minWidth: 0 }}>
@@ -120,11 +134,16 @@ const ActionCard = ({ icon, title, description, action, tone, renderDetail }) =>
                     지금 확인할 항목이 없습니다.
                 </div>
             )}
+            {onActivate && (
+                <div style={{ marginTop: '10px', color: tone.text, fontSize: '0.7rem', fontWeight: '900', textAlign: 'right' }}>
+                    {actionLabel || '관리 화면으로 이동'} →
+                </div>
+            )}
         </article>
     );
 };
 
-const ClassAnalysis = ({ classId, isMobile }) => {
+const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
     const [period, setPeriod] = useState('7d');
     const [data, setData] = useState(EMPTY_DATA);
     const [loading, setLoading] = useState(true);
@@ -265,24 +284,44 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                         action={data.actions.assignment_pending}
                         tone={{ background: '#EFF6FF', border: '#BFDBFE', badge: '#DBEAFE', text: '#1D4ED8' }}
                         renderDetail={(item) => item.mission_title || item.title || '선생님 과제'}
+                        actionLabel="제출 글 확인"
+                        onActivate={() => onNavigate?.({
+                            tab: 'dashboard',
+                            kind: 'assignment-review',
+                            item: data.actions.assignment_pending?.items?.[0] || null
+                        })}
                     />
                     <ActionCard
                         icon="📚" title="독서록 확인" description="학생이 등록한 미확인 독서록"
                         action={data.actions.reading_pending}
                         tone={{ background: '#F0FDF4', border: '#BBF7D0', badge: '#DCFCE7', text: '#15803D' }}
                         renderDetail={(item) => item.title || '제목 없는 독서록'}
+                        actionLabel="독서록 확인"
+                        onActivate={() => onNavigate?.({
+                            tab: 'reading-logs',
+                            kind: 'reading-review',
+                            item: data.actions.reading_pending?.items?.[0] || null
+                        })}
                     />
                     <ActionCard
                         icon="🧭" title="평가 입력" description="루브릭은 설정됐지만 평가가 없는 글"
                         action={data.actions.evaluation_pending}
                         tone={{ background: '#FFF7ED', border: '#FED7AA', badge: '#FFEDD5', text: '#C2410C' }}
                         renderDetail={(item) => item.mission_title || item.title || '평가 과제'}
+                        actionLabel="평가 입력"
+                        onActivate={() => onNavigate?.({
+                            tab: 'dashboard',
+                            kind: 'evaluation-entry',
+                            item: data.actions.evaluation_pending?.items?.[0] || null
+                        })}
                     />
                     <ActionCard
                         icon="🌙" title="최근 활동 없음" description="7일 넘게 글쓰기 활동이 없는 학생"
                         action={data.actions.inactive_students}
                         tone={{ background: '#FAF5FF', border: '#E9D5FF', badge: '#F3E8FF', text: '#7E22CE' }}
                         renderDetail={(item) => item.last_activity_at ? `마지막 ${formatDate(item.last_activity_at)}` : '활동 기록 없음'}
+                        actionLabel="학생 명단 보기"
+                        onActivate={() => onNavigate?.({ tab: 'students', kind: 'student-roster' })}
                     />
                 </div>
             </section>
@@ -307,10 +346,21 @@ const ClassAnalysis = ({ classId, isMobile }) => {
                             </thead>
                             <tbody>
                                 {data.missions.map((mission) => (
-                                    <tr key={mission.id} style={{ borderTop: '1px solid #E2E8F0', color: '#334155', textAlign: 'center' }}>
+                                    <tr
+                                        key={mission.id}
+                                        tabIndex={0}
+                                        aria-label={`${mission.title || '제목 없는 미션'} 제출 현황 열기`}
+                                        onClick={() => onNavigate?.({ tab: 'dashboard', kind: 'mission-review', missionId: mission.id })}
+                                        onKeyDown={(event) => {
+                                            if (event.key !== 'Enter' && event.key !== ' ') return;
+                                            event.preventDefault();
+                                            onNavigate?.({ tab: 'dashboard', kind: 'mission-review', missionId: mission.id });
+                                        }}
+                                        style={{ borderTop: '1px solid #E2E8F0', color: '#334155', textAlign: 'center', cursor: 'pointer' }}
+                                    >
                                         <td style={{ padding: '11px 12px', textAlign: 'left', maxWidth: '250px' }}>
                                             <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.77rem' }}>{mission.title || '제목 없는 미션'}</strong>
-                                            <small style={{ color: '#94A3B8', fontSize: '0.64rem' }}>{missionTypeLabel(mission.mission_type)} · {formatDate(mission.created_at)}</small>
+                                            <small style={{ color: '#94A3B8', fontSize: '0.64rem' }}>{missionTypeLabel(mission.mission_type)} · {formatDate(mission.created_at)} · 열기 ›</small>
                                         </td>
                                         <td style={{ padding: '11px 8px', fontWeight: '850', color: '#1D4ED8' }}>{mission.submitted_count || 0}/{totalStudents}</td>
                                         <td style={{ padding: '11px 8px' }}>{mission.confirmed_count || 0}</td>

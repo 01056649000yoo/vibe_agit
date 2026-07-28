@@ -14,9 +14,17 @@ const cardStyle = (isMobile) => ({
     border: '1px solid #E2E8F0', boxShadow: '0 3px 12px rgba(15, 23, 42, 0.04)'
 });
 
-const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost }) => {
+const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost, onNavigate }) => {
     const classId = activeClass?.id;
     const [section, setSection] = useState('overview');
+
+    const handleAnalysisNavigate = (target) => {
+        if (target?.tab === 'students') {
+            setSection('students');
+            return;
+        }
+        onNavigate?.(target);
+    };
 
     if (!classId) return null;
 
@@ -90,7 +98,7 @@ const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost }) =
                 {section === 'overview' ? (
                     <section role="tabpanel" aria-label="학급 운영 현황" style={cardStyle(isMobile)}>
                         <Suspense fallback={<PanelLoading>학급 운영 현황을 준비하는 중...</PanelLoading>}>
-                            <ClassAnalysis classId={classId} isMobile={isMobile} />
+                            <ClassAnalysis classId={classId} isMobile={isMobile} onNavigate={handleAnalysisNavigate} />
                         </Suspense>
                     </section>
                 ) : section === 'students' ? (

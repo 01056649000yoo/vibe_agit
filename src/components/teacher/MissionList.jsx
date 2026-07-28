@@ -35,7 +35,7 @@ const MissionItem = memo(({
     const isDense = cardLayout?.density === 'compact' || cardLayout?.columns >= 5;
 
     return (
-        <motion.div whileHover={isMobile ? {} : { y: -4 }} style={{
+        <motion.div data-mission-id={mission.id} whileHover={isMobile ? {} : { y: -4 }} style={{
             background: isHighlighted ? '#FFFBEB' : 'white', padding: isMobile ? '16px' : (isDense ? '10px' : '14px'),
             borderRadius: '16px', border: isHighlighted ? '2px solid #F59E0B' : isMeetingMission ? '1px solid #DDD6FE' : '1px solid #ECEFF1',
             boxShadow: isHighlighted ? '0 8px 20px rgba(245, 158, 11, 0.16)' : '0 3px 9px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: isDense ? '6px' : '8px',

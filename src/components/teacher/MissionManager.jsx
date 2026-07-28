@@ -1,7 +1,8 @@
-import React, { lazy, Suspense, useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import { dataCache } from '../../lib/cache';
+import { supabase } from '../../lib/supabaseClient';
 import { getGenreMissionType, getGenreMissionTypes, resolveGenreMissionTypeId } from '../../modules/writing/mission-types/registry';
 import { useMissionManager } from '../../hooks/useMissionManager';
 import MissionForm from './MissionForm';
@@ -22,13 +23,17 @@ const GENRE_MISSION_BUILDERS = new Map(
 /**
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
-const MissionManager = ({ activeClass, isDashboardMode = true, cardLayout }) => {
+const MissionManager = ({
+    activeClass, isDashboardMode = true, cardLayout,
+    navigationTarget, onNavigationHandled
+}) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [isMissionTypePickerOpen, setIsMissionTypePickerOpen] = useState(false);
     const [activeGenreMissionId, setActiveGenreMissionId] = useState(null);
     const [editingGenreMission, setEditingGenreMission] = useState(null);
     const [activeGenreMode, setActiveGenreMode] = useState('create');
     const [highlightedMissionId, setHighlightedMissionId] = useState(null);
+    const handledNavigationRef = useRef(null);
 
     const {
         missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
@@ -46,7 +51,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true, cardLayout }) => 
         handleFinalArchive, handleDeleteMission, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric, handleSaveDefaultSettings,
-        isEvaluationMode, handleEvaluationMode,
+        isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
         frequentTags, saveFrequentTag, removeFrequentTag,
         addTeacherComment, deleteTeacherComment, handleTeacherEditPost
     } = useMissionManager(activeClass);
@@ -120,6 +125,66 @@ const MissionManager = ({ activeClass, isDashboardMode = true, cardLayout }) => 
         setIsMissionTypePickerOpen(false);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    useEffect(() => {
+        const requestId = navigationTarget?.requestId;
+        const supportedKinds = ['assignment-review', 'evaluation-entry', 'mission-review'];
+        if (!requestId || handledNavigationRef.current === requestId || loading || missions.length === 0) return;
+        if (!supportedKinds.includes(navigationTarget.kind)) return;
+
+        handledNavigationRef.current = requestId;
+
+        const openNavigationTarget = async () => {
+            try {
+                let missionId = navigationTarget.missionId || null;
+                const postId = navigationTarget.item?.post_id || null;
+
+                if (!missionId && postId) {
+                    const { data, error } = await supabase
+                        .from('student_posts')
+                        .select('mission_id')
+                        .eq('id', postId)
+                        .eq('class_id', activeClass.id)
+                        .maybeSingle();
+                    if (error) throw error;
+                    missionId = data?.mission_id || null;
+                }
+
+                const mission = missions.find((item) => item.id === missionId);
+                if (!mission) return;
+
+                setHighlightedMissionId(mission.id);
+                window.setTimeout(() => {
+                    document.querySelector(`[data-mission-id="${mission.id}"]`)
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 80);
+
+                const missionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
+                if (navigationTarget.kind !== 'evaluation-entry' && missionType?.teacherReview) {
+                    handleReviewMission(mission);
+                    return;
+                }
+
+                const fetchedPosts = await fetchPostsForMission(mission);
+                if (navigationTarget.kind === 'mission-review' || !postId) return;
+
+                const targetPost = fetchedPosts.find((post) => post.id === postId) || fetchedPosts[0];
+                if (!targetPost) return;
+
+                setSelectedPost(targetPost);
+                setIsEvaluationMode(navigationTarget.kind === 'evaluation-entry');
+            } catch (error) {
+                console.error('운영 현황 바로가기 처리 실패:', error.message);
+            } finally {
+                onNavigationHandled?.(requestId);
+            }
+        };
+
+        openNavigationTarget();
+    }, [
+        activeClass?.id, fetchPostsForMission, loading, missions, navigationTarget,
+        onNavigationHandled, setIsEvaluationMode, setSelectedPost
+    ]);
 
     if (ActiveGenreMissionBuilder) {
         return (
