@@ -33,6 +33,24 @@
 - 도메인: `끄적끄적아지트.site`(apex, 앱) / `api.…`(Supabase Kong) / `helper.…`(연구소, 별도 구 스택) — 가비아 네임서버.
 - 구 스택(`supabase-db` PG15.8 + writing-helper)은 연구소용으로 계속 가동. 통합(SSO)은 Stage 2에서.
 
+## 현재 확장 규칙 (2026-07-29 갱신)
+
+### 포인트·놀이 모듈
+- 신규 게임은 `src/modules/game/<module-id>/`에 두고 `manifest.js`를 `src/modules/registry.js`에 등록한다.
+- 교사 관리는 `teacherEntry`, 학생 놀이터 진입은 `studentEntry`로 연결한다. **`GameManager.jsx`나
+  `StudentDashboard.jsx`에 신규 게임 전용 카드·열기 상태·DB 조회를 하드코딩하지 않는다.**
+- 공통 셸이 학급 ON/OFF(`classes.enabled_modules`)·카드·지연 로딩·오류 격리를 담당하고, 모듈은 자기 설정·기록·RPC만 소유한다.
+- OFF는 학생 노출만 중단하며 기존 데이터는 삭제하지 않는다. 포인트 지급·차감은 권한 검증 RPC를 사용한다.
+- 기존 드래곤·어휘의 탑 교사 관리는 `src/modules/game/legacy/LegacyGameManager.jsx`의 운영 호환 영역이다.
+  실기기 스모크 전에는 기능을 섣불리 분할하지 말고, 이후 각각의 `teacherEntry`로 옮긴다.
+- 상세 계약과 예시는 `src/modules/game/README.md`를 읽는다.
+
+### 평가·평어
+- 성취기준은 **2022 개정 국어과만** 사용하고 `3~4학년군 / 5~6학년군`으로 적용한다.
+- 새 설정은 `evaluation_rubric.curriculum.grade_band`에 저장한다. 기존 `curriculum.grade`는 읽기 호환을 유지한다.
+- 글쓰기를 독립 교과처럼 평가하지 않는다. 실제 평가 결과·교사 의견과 교사가 고른 국어 성취기준으로
+  기존 국어 평어의 앞뒤에 붙일 짧은 문장만 생성한다.
+
 ## 빌드/실행 요령
 - 프론트 빌드: `npm run build` (Vite). 프로덕션 이미지: 레포 `Dockerfile`(build-arg로 `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` 주입).
 - 로컬에서 실도메인 테스트: `/etc/hosts`에 apex·api를 `127.0.0.1`로 매핑(NAT 루프백 우회). 테스트 후 제거.
