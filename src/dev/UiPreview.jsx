@@ -186,6 +186,9 @@ function UiPreview() {
                       <span key={item}>{item}</span>
                     ))}
                   </div>
+                  {group.innerNote && (
+                    <p className="ui-preview__inner-note">{group.innerNote}</p>
+                  )}
                 </div>
               )}
             </>

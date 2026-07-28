@@ -261,3 +261,10 @@
   font-weight: 700;
   color: #495057;
 }
+
+/* 카드 안에 딸린 켜기/끄기처럼, 항목으로 세우면 곤란한 설명 */
+.ui-preview__inner-note {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
