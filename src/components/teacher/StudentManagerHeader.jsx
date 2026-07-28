@@ -4,7 +4,8 @@ import Button from '../common/Button';
 const StudentManagerHeader = ({
     isDashboardMode, isMobile, toggleSelectAll, setIsPointModalOpen,
     selectedIds, students, studentName, setStudentName, handleAddStudent,
-    isAdding, setIsAllCodesModalOpen, onOpenTrash, setIsRankingModalOpen
+    isAdding, setIsAllCodesModalOpen, onOpenTrash, setIsRankingModalOpen,
+    searchTerm, setSearchTerm, sortMode, setSortMode
 }) => {
     const [showRankingInfo, setShowRankingInfo] = React.useState(false);
 
@@ -135,15 +136,19 @@ const StudentManagerHeader = ({
             top: '-24px',
             zIndex: 10,
             background: 'white',
-            padding: '4px 0 16px 0',
+            padding: '2px 0 12px 0',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             borderBottom: '1px solid #F1F3F5',
-            marginBottom: '16px'
+            marginBottom: '10px', gap: '12px', flexWrap: 'wrap'
         }}>
-            <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#212529', fontWeight: '900' }}>🎒 학생 명단 및 계정 관리</h3>
+            <h3 style={{ margin: 0, fontSize: '1.12rem', color: '#212529', fontWeight: '900' }}>👥 학생 명단 <span style={{ color: '#94A3B8', fontSize: '0.8rem' }}>{students.length}명</span></h3>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-end' }}>
+                <input type="search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="학생 이름 검색" aria-label="학생 이름 검색" style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.82rem', width: '140px' }} />
+                <select value={sortMode} onChange={(e) => setSortMode(e.target.value)} aria-label="학생 정렬" style={{ padding: '6px 9px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'white', color: '#475569', fontSize: '0.82rem', fontWeight: '700' }}>
+                    <option value="number">번호순</option><option value="name">이름순</option><option value="points">포인트순</option><option value="recent">최근 등록순</option>
+                </select>
                 <div style={{ display: 'flex', gap: '4px' }}>
                     <input
                         type="text"

@@ -35,6 +35,8 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
     const [recordStudent, setRecordStudent] = useState(null);
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
     const [deletedStudents, setDeletedStudents] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortMode, setSortMode] = useState('number');
 
     // [js-batch-dom-css] 동적 style 태그 삽입 대신 CSS 파일로 분리 (StudentManager.css)
     useEffect(() => {
@@ -45,10 +47,13 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
 
     // [rerender-memo] 정렬 연산을 useMemo로 메모이제이션하여 불필요한 재정렬 방지
     const displayStudents = useMemo(() => {
-        return isDashboardMode
-            ? [...students].sort((a, b) => (b.activity_score || 0) - (a.activity_score || 0))
-            : [...students].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    }, [students, isDashboardMode]);
+        const filtered = students.filter((student) => student.name?.toLowerCase().includes(searchTerm.trim().toLowerCase()));
+        if (isDashboardMode) return filtered.sort((a, b) => (b.activity_score || 0) - (a.activity_score || 0));
+        if (sortMode === 'name') return filtered.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+        if (sortMode === 'points') return filtered.sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
+        if (sortMode === 'recent') return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        return filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    }, [students, isDashboardMode, searchTerm, sortMode]);
 
     // [rerender-functional-setstate] useCallback으로 핸들러 안정화
     const handleExportClick = useCallback((student) => {
@@ -90,6 +95,10 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                 setIsAllCodesModalOpen={setIsAllCodesModalOpen}
                 onOpenTrash={handleOpenTrash}
                 setIsRankingModalOpen={setIsRankingModalOpen} // [신규] 프롭 전달
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                sortMode={sortMode}
+                setSortMode={setSortMode}
             />
 
             {/* 메인 리스트 섹션 */}
@@ -122,6 +131,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                     setDeleteTarget={setDeleteTarget}
                     setIsDeleteModalOpen={setIsDeleteModalOpen}
                     onOpenRecordAssistant={(s) => setRecordStudent(s)}
+                    onOpenPointModal={handleOpenPointModal}
                 />
             )}
 
