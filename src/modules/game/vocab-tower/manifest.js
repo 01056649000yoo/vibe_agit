@@ -19,6 +19,21 @@ export const vocabTowerManifest = {
   // enabled_modules가 아직 NULL인 학급의 기존 상태 및 롤백 호환용 미러 컬럼.
   legacyFlag: 'vocab_tower_enabled',
   studentEntry: () => import('./VocabularyTowerGame'),
+  playground: {
+    name: '어휘의 탑',
+    description: '어휘 퀴즈로 탑을 오르고 포인트 받기',
+    background: 'linear-gradient(135deg, #E3F2FD 0%, #F1F8FF 100%)',
+    borderColor: '#BBDEFB',
+    order: 20,
+    entryMode: 'legacy'
+  },
+  management: {
+    title: '어휘의 탑 관리',
+    subtitle: '어휘력 향상 퀴즈 게임',
+    order: 20,
+    activeColor: '#2E7D32',
+    legacy: true
+  }
 };
 
 export default vocabTowerManifest;

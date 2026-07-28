@@ -40,7 +40,7 @@ const PlaygroundPanel = ({ items, points, isMobile, onClose }) => {
                         onClick={item.onOpen}
                         style={{
                             background: item.background ?? 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
-                            border: '2px solid #FFE082',
+                            border: `2px solid ${item.borderColor ?? '#FFE082'}`,
                             borderRadius: '20px',
                             padding: '26px 20px',
                             textAlign: 'center',

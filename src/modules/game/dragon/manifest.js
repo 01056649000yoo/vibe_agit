@@ -16,6 +16,21 @@ export const dragonManifest = {
   audience: 'student',
   defaultEnabled: true, // 기존 동작 보존: 지금까지 모든 학급에 노출돼 있었음
   studentEntry: () => import('./DragonHideoutModal'),
+  playground: {
+    name: '나의 드래곤 파트너',
+    description: '포인트로 먹이를 주고 키우기',
+    background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
+    borderColor: '#FFE082',
+    order: 10,
+    entryMode: 'legacy'
+  },
+  management: {
+    title: '드래곤 키우기 관리',
+    subtitle: '성장 밸런스 및 시즌 운영',
+    order: 10,
+    activeColor: '#E65100',
+    legacy: true
+  }
 };
 
 export default dragonManifest;

@@ -7,6 +7,7 @@ import { useDragonPet } from '../../modules/game/dragon/useDragonPet';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useRealtimeNotifications } from '../../hooks/useRealtimeNotifications'; // [신규] 분리된 리얼타임 훅
 import { getModule } from '../../modules/registry';
+import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
 
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
@@ -43,6 +44,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const [isAgitOpen, setIsAgitOpen] = useState(false); // [신규] 아지트 오픈 상태
     const [isVocabTowerOpen, setIsVocabTowerOpen] = useState(false); // [신규] 어휘의 탑 오픈 상태
     const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false); // 아지트 놀이터(포인트 콘텐츠 모음)
+    const [activeGameModuleId, setActiveGameModuleId] = useState(null);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
 
     // [신규] 아지트 온도 및 활성화 정보 실시간 동기화
@@ -145,20 +147,31 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     // 앱 셸이 읽은 동일한 모듈 목록으로 모든 학생 진입점을 게이팅한다.
     const isOn = (id) => enabledModules.some((m) => m.id === id);
 
-    const playgroundItems = [
-        isOn('dragon') && {
-            id: 'dragon', icon: '🐉', name: '나의 드래곤 파트너',
-            description: '포인트로 먹이를 주고 키우기',
-            badge: `${dragonInfo.name} · LV.${petData.level}`,
-            onOpen: () => { setIsPlaygroundOpen(false); setIsDragonModalOpen(true); },
-        },
-        isOn('vocab-tower') && {
-            id: 'vocab-tower', icon: '🏰', name: '어휘의 탑',
-            description: '어휘 퀴즈로 탑을 오르고 포인트 받기',
-            background: 'linear-gradient(135deg, #E3F2FD 0%, #F1F8FF 100%)',
-            onOpen: () => { setIsPlaygroundOpen(false); setIsVocabTowerOpen(true); },
-        },
-    ].filter(Boolean);
+    const gameModules = enabledModules
+        .filter((module) => module.part === 'game' && module.playground !== false)
+        .sort((a, b) => (a.playground?.order ?? 100) - (b.playground?.order ?? 100));
+    const activeGameModule = gameModules.find((module) => module.id === activeGameModuleId) || null;
+
+    const openGameModule = (module) => {
+        setIsPlaygroundOpen(false);
+        if (module.playground?.entryMode !== 'legacy') {
+            setActiveGameModuleId(module.id);
+            return;
+        }
+        if (module.id === 'dragon') setIsDragonModalOpen(true);
+        if (module.id === 'vocab-tower') setIsVocabTowerOpen(true);
+    };
+
+    const playgroundItems = gameModules.map((module) => ({
+        id: module.id,
+        icon: module.icon || '🎮',
+        name: module.playground?.name || module.name,
+        description: module.playground?.description || module.description,
+        background: module.playground?.background,
+        borderColor: module.playground?.borderColor,
+        badge: module.id === 'dragon' ? `${dragonInfo.name} · LV.${petData.level}` : null,
+        onOpen: () => openGameModule(module)
+    }));
 
     return (
         <>
@@ -225,7 +238,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                 {/* 주요 활동 메뉴 */}
                 <DashboardMenu
                     onNavigate={onNavigate}
-                    setIsDragonModalOpen={setIsDragonModalOpen}
                     setIsPlaygroundOpen={setIsPlaygroundOpen}
                     playgroundCount={playgroundItems.length}
                     setIsAgitOpen={setIsAgitOpen} // [추가]
@@ -318,6 +330,35 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                                 onClose={() => setIsPlaygroundOpen(false)}
                             />
                         </Suspense>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 신규 포인트·놀이 모듈 공통 진입점 — manifest.studentEntry를 지연 로딩 */}
+            <AnimatePresence>
+                {activeGameModule && activeGameModule.playground?.entryMode !== 'legacy' && (
+                    <motion.div
+                        key={activeGameModule.id}
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        style={{
+                            position: 'fixed', inset: 0, width: '100vw', height: '100vh',
+                            background: 'white', zIndex: 20000, overflow: 'auto'
+                        }}
+                    >
+                        <StudentGameModuleHost
+                            module={activeGameModule}
+                            studentSession={studentSession}
+                            isMobile={isMobile}
+                            points={points}
+                            onPointsChange={setPoints}
+                            onBack={() => {
+                                setActiveGameModuleId(null);
+                                setIsPlaygroundOpen(true);
+                            }}
+                        />
                     </motion.div>
                 )}
             </AnimatePresence>

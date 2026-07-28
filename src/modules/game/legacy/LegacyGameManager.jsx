@@ -1,0 +1,1266 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../../../lib/supabaseClient';
+import {
+    CONFIGURED_MARK,
+    getLegacyModuleFields,
+    resolveEnabledModuleIds
+} from '../../registry';
+import { saveEnabledModules } from '../../useEnabledModules';
+import { motion, AnimatePresence } from 'framer-motion';
+import Button from '../../../components/common/Button';
+import Card from '../../../components/common/Card';
+
+// [재사용] 드래곤 단계 로직
+const getDragonStage = (level) => {
+    const basePath = '/assets/dragons';
+    if (level >= 5) return { name: '전설의 수호신룡', image: `${basePath}/dragon_stage_5.webp` };
+    if (level === 4) return { name: '불을 내뿜는 성장한 용', image: `${basePath}/dragon_stage_4.webp` };
+    if (level === 3) return { name: '푸른 빛의 어린 용', image: `${basePath}/dragon_stage_3.webp` };
+    if (level === 2) return { name: '갓 태어난 용', image: `${basePath}/dragon_stage_2.webp` };
+    return { name: '신비로운 알', image: `${basePath}/dragon_stage_1.webp` };
+};
+
+const HIDEOUT_BACKGROUNDS = {
+    default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', glow: 'rgba(255, 241, 118, 0.3)' },
+    volcano: { id: 'volcano', name: '🌋 화산 동굴', color: 'linear-gradient(135deg, #4A0000 0%, #8B0000 100%)', border: '#FF5722', glow: 'rgba(255, 87, 34, 0.4)' },
+    sky: { id: 'sky', name: '☁️ 천상 전당', color: 'linear-gradient(135deg, #B3E5FC 0%, #E1F5FE 100%)', border: '#4FC3F7', glow: 'rgba(79, 195, 247, 0.3)' },
+    crystal: { id: 'crystal', name: '💎 수정 궁전', color: 'linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%)', border: '#BA68C8', glow: 'rgba(186, 104, 200, 0.4)' },
+    storm: { id: 'storm', name: '🌩️ 번개 폭풍', color: 'linear-gradient(135deg, #1A237E 0%, #000000 100%)', border: '#7986CB', glow: 'rgba(121, 134, 203, 0.5)' },
+    galaxy: { id: 'galaxy', name: '🌌 달빛 은하수', color: 'linear-gradient(135deg, #0D47A1 0%, #000000 100%)', border: '#90CAF9', glow: 'rgba(144, 202, 249, 0.4)' },
+    legend: { id: 'legend', name: '🌈 무지개 성소', color: 'linear-gradient(135deg, #FF9A9E 0%, #FAD0C4 99%, #FAD0C4 100%)', border: '#FFD700', glow: 'rgba(255, 215, 0, 0.6)' }
+};
+
+const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules }) => {
+    const [config, setConfig] = useState({
+        dragon_feed_points: 50,
+        dragon_degen_days: 14
+    });
+    // [신규] 어휘의 탑 설정 상태
+    const [vocabTowerConfig, setVocabTowerConfig] = useState({
+        grade: 3,
+        dailyLimit: 3,
+        timeLimit: 40,
+        rewardPoints: 80,
+        rankingResetDate: null
+    });
+    const [savingVocabTower, setSavingVocabTower] = useState(false);
+    const [enabledModuleIds, setEnabledModuleIds] = useState(null);
+    const [savingModuleId, setSavingModuleId] = useState(null);
+    const [moduleLoadError, setModuleLoadError] = useState(false);
+    const [students, setStudents] = useState([]);
+    const [, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [showMonitoring, setShowMonitoring] = useState(false);
+    const [previewStudent, setPreviewStudent] = useState(null);
+    const [towerRankings, setTowerRankings] = useState([]); // [신규] 어휘의 탑 랭킹 데이터
+    const [towerHistory, setTowerHistory] = useState([]); // [히스토리] 어휘의 탑 과거 기록
+    const [showHistory, setShowHistory] = useState(false); // 히스토리 표시 여부
+    const [dragonHistory, setDragonHistory] = useState([]); // [히스토리] 드래곤 시즌 기록
+    const [showDragonHistory, setShowDragonHistory] = useState(false); // 드래곤 히스토리 표시 여부
+    const [subTab, setSubTab] = useState('dragon'); // [신규] 모니터링 서브탭 ('dragon' | 'tower')
+
+    const fetchGameConfig = useCallback(async () => {
+        setLoading(true);
+        setEnabledModuleIds(null);
+        setModuleLoadError(false);
+        try {
+            const moduleFields = ['enabled_modules', ...getLegacyModuleFields()];
+            const { data, error } = await supabase
+                .from('classes')
+                .select([
+                    'created_at',
+                    'dragon_feed_points',
+                    'dragon_degen_days',
+                    'vocab_tower_grade',
+                    'vocab_tower_daily_limit',
+                    'vocab_tower_time_limit',
+                    'vocab_tower_reward_points',
+                    'vocab_tower_ranking_reset_date',
+                    ...moduleFields
+                ].join(', '))
+                .eq('id', activeClass.id)
+                .single();
+
+            if (error) throw error;
+            if (data) {
+                setEnabledModuleIds(
+                    resolveEnabledModuleIds(data.enabled_modules, data)
+                        .filter((id) => id !== CONFIGURED_MARK)
+                );
+                setConfig({
+                    dragon_feed_points: data.dragon_feed_points || 50,
+                    dragon_degen_days: data.dragon_degen_days || 14
+                });
+                // [신규] 어휘의 탑 설정 로드
+                setVocabTowerConfig({
+                    grade: data.vocab_tower_grade || 3,
+                    dailyLimit: data.vocab_tower_daily_limit ?? 3,
+                    timeLimit: data.vocab_tower_time_limit ?? 40,
+                    rewardPoints: data.vocab_tower_reward_points ?? 80,
+                    rankingResetDate: data.vocab_tower_ranking_reset_date || null,
+                    createdAt: data.created_at // 시작일 추적용 추가
+                });
+            }
+        } catch (err) {
+            console.error('게임 설정 로드 실패:', err);
+            setModuleLoadError(true);
+        } finally {
+            setLoading(false);
+        }
+    }, [activeClass?.id]);
+
+    const fetchStudents = useCallback(async () => {
+        try {
+            const { data, error } = await supabase
+                .from('students')
+                .select('id, name, pet_data')
+                .eq('class_id', activeClass.id)
+                .order('name');
+
+            if (error) throw error;
+            setStudents(data || []);
+        } catch (err) {
+            console.error('학생 목록 로드 실패:', err);
+        }
+    }, [activeClass?.id]);
+
+    const fetchTowerRankings = useCallback(async () => {
+        if (!activeClass?.id) return;
+        try {
+            let query = supabase
+                .from('vocab_tower_rankings')
+                .select('id, max_floor, student_id, updated_at') // 조인 제거한 경량 조회
+                .eq('class_id', activeClass.id);
+
+            // [신규] 랭킹 리셋 설정이 있다면 필터링 복구
+            if (vocabTowerConfig?.rankingResetDate) {
+                query = query.gte('updated_at', vocabTowerConfig.rankingResetDate);
+            }
+
+            const { data, error } = await query
+                .order('max_floor', { ascending: false });
+
+            if (error) {
+                console.error('❌ 랭킹 조회 실패:', error);
+                return;
+            }
+
+            // [버그 수정/최적화] 데이터 정규화 및 이름 매핑 보강 (DB 조인 제거)
+            const normalizedData = (data || []).map(item => {
+                // [성능 최적화] 이미 로드된 students 목록에서 이름 찾기
+                const studentProfile = students.find(s => s.id === item.student_id);
+                return {
+                    ...item,
+                    students: { name: studentProfile?.name || '아지트 친구' }
+                };
+            });
+
+            setTowerRankings(normalizedData);
+        } catch (err) {
+            console.error('어휘의 탑 랭킹 로드 실패:', err);
+        }
+    }, [activeClass?.id]);
+
+    const fetchTowerHistory = useCallback(async () => {
+        if (!activeClass?.id) return;
+        try {
+            const { data, error } = await supabase
+                .from('vocab_tower_history')
+                .select('id, season_name, rankings, started_at, ended_at')
+                .eq('class_id', activeClass.id)
+                .order('ended_at', { ascending: false });
+
+            if (error) throw error;
+            setTowerHistory(data || []);
+        } catch (err) {
+            console.error('어휘의 탑 히스토리 로드 실패:', err);
+        }
+    }, [activeClass?.id]);
+
+    const fetchDragonHistory = useCallback(async () => {
+        if (!activeClass?.id) return;
+        try {
+            const { data, error } = await supabase
+                .from('agit_season_history')
+                .select('id, season_name, rankings, started_at, ended_at')
+                .eq('class_id', activeClass.id)
+                .order('ended_at', { ascending: false });
+
+            if (error) throw error;
+            setDragonHistory(data || []);
+        } catch (err) {
+            console.error('드래곤 히스토리 로드 실패:', err);
+        }
+    }, [activeClass?.id]);
+
+    useEffect(() => {
+        if (!activeClass?.id) return;
+
+        fetchGameConfig();
+        fetchStudents();
+        fetchTowerRankings();
+        fetchTowerHistory();
+        fetchDragonHistory();
+
+        // [실시간] 학생 데이터(드래곤 성장 등) 실시간 구독
+        const studentSubscription = supabase
+            .channel(`monitoring_${activeClass.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'students',
+                    filter: `class_id=eq.${activeClass.id}`
+                },
+                (payload) => {
+                    if (payload.event === 'UPDATE') {
+                        setStudents(prev => prev.map(s => s.id === payload.new.id ? payload.new : s));
+                    } else if (payload.event === 'INSERT') {
+                        setStudents(prev => [...prev, payload.new].sort((a, b) => a.name.localeCompare(b.name)));
+                    } else if (payload.event === 'DELETE') {
+                        setStudents(prev => prev.filter(s => s.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(studentSubscription);
+        };
+    }, [activeClass?.id, fetchGameConfig, fetchStudents, fetchTowerRankings, fetchTowerHistory, fetchDragonHistory]);
+
+    // [신규] 랭킹 초기화 함수
+    const handleResetTowerRanking = async (studentId, studentName = '전체') => {
+        const isAll = studentId === 'all';
+        const msg = isAll
+            ? '⚠️ 현재 학급의 모든 어휘의 탑 랭킹 기록을 초기화하시겠습니까?'
+            : `⚠️ ${studentName} 학생의 어휘의 탑 기록을 초기화하시겠습니까?`;
+
+        if (!window.confirm(msg)) return;
+
+        try {
+            if (isAll) {
+                const { error } = await supabase
+                    .from('vocab_tower_rankings')
+                    .delete()
+                    .eq('class_id', activeClass.id);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase
+                    .from('vocab_tower_rankings')
+                    .delete()
+                    .eq('student_id', studentId)
+                    .eq('class_id', activeClass.id);
+                if (error) throw error;
+            }
+
+            alert('기록이 초기화되었습니다.');
+            fetchTowerRankings();
+        } catch (err) {
+            console.error('랭킹 초기화 실패:', err);
+            alert('초기화에 실패했습니다.');
+        }
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const { error } = await supabase
+                .from('classes')
+                .update({
+                    dragon_feed_points: Number(config.dragon_feed_points),
+                    dragon_degen_days: Number(config.dragon_degen_days)
+                })
+                .eq('id', activeClass.id);
+
+            if (error) throw error;
+            alert('설정이 저장되었습니다! 학생들의 아지트에 즉시 반영됩니다. ⚡');
+        } catch (err) {
+            console.error('게임 설정 저장 실패:', err);
+            alert('설정 저장에 실패했습니다.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleUpdatePet = async (studentId, studentName, newPetData, actionLabel) => {
+        if (!window.confirm(`${studentName} 학생의 드래곤을 ${actionLabel} 하시겠습니까?`)) return;
+
+        try {
+            const { error } = await supabase
+                .from('students')
+                .update({ pet_data: newPetData })
+                .eq('id', studentId);
+
+            if (error) throw error;
+
+            await supabase.from('point_logs').insert({
+                student_id: studentId,
+                amount: 0,
+                reason: `[선생님 관리] 드래곤 ${actionLabel} 패널티 적용`
+            });
+
+            alert(`${actionLabel} 처리가 완료되었습니다.`);
+            fetchStudents();
+        } catch (err) {
+            console.error('패널티 적용 실패:', err);
+            alert('처리에 실패했습니다.');
+        }
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setConfig(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleToggleModule = async (moduleId, moduleName) => {
+        if (!enabledModuleIds || savingModuleId) return;
+
+        const previousIds = enabledModuleIds;
+        const nextIds = previousIds.includes(moduleId)
+            ? previousIds.filter((id) => id !== moduleId)
+            : [...previousIds, moduleId];
+
+        setEnabledModuleIds(nextIds);
+        setSavingModuleId(moduleId);
+        const { data, error } = await saveEnabledModules(activeClass.id, nextIds);
+        setSavingModuleId(null);
+
+        if (error || !data) {
+            setEnabledModuleIds(previousIds);
+            alert(`${moduleName} 기능 설정 저장에 실패했습니다. 잠시 후 다시 시도해주세요.`);
+        }
+    };
+
+    const renderModulePowerButton = (moduleId, moduleName, activeColor) => {
+        const isOn = enabledModuleIds?.includes(moduleId) ?? false;
+        const isLoading = enabledModuleIds === null && !moduleLoadError;
+        const isSaving = savingModuleId === moduleId;
+        const disabled = isLoading || moduleLoadError || !!savingModuleId;
+        const statusText = moduleLoadError ? '불러오기 실패' : isLoading ? '확인 중' : isSaving ? '저장 중' : isOn ? 'ON' : 'OFF';
+
+        return (
+            <button
+                type="button"
+                onClick={() => handleToggleModule(moduleId, moduleName)}
+                disabled={disabled}
+                aria-pressed={isOn}
+                title={moduleLoadError ? '기능 설정을 불러오지 못했습니다. 화면을 새로고침해주세요.' : `${moduleName} 학생 화면 노출 ${isOn ? '끄기' : '켜기'}`}
+                style={{
+                    minWidth: isMobile ? '112px' : '130px',
+                    padding: '9px 12px',
+                    borderRadius: '12px',
+                    border: `2px solid ${isOn ? activeColor : '#D5D9DD'}`,
+                    background: isOn ? 'rgba(255,255,255,0.92)' : '#F8F9FA',
+                    color: isOn ? activeColor : '#7F8C8D',
+                    cursor: disabled ? 'wait' : 'pointer',
+                    opacity: disabled && !isSaving ? 0.65 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                    fontWeight: '900'
+                }}
+            >
+                <span style={{ fontSize: '0.72rem' }}>학생 화면</span>
+                <span style={{ fontSize: '0.82rem' }}>{statusText}</span>
+            </button>
+        );
+    };
+
+    // [신규] 어휘의 탑 설정 저장 (설정 변경 시 학생 시도 횟수 리셋)
+    const handleSaveVocabTower = async () => {
+        setSavingVocabTower(true);
+        try {
+            const { error } = await supabase
+                .from('classes')
+                .update({
+                    vocab_tower_grade: Number(vocabTowerConfig.grade),
+                    vocab_tower_daily_limit: Number(vocabTowerConfig.dailyLimit),
+                    vocab_tower_time_limit: Number(vocabTowerConfig.timeLimit),
+                    vocab_tower_reward_points: Number(vocabTowerConfig.rewardPoints),
+                    vocab_tower_reset_date: new Date().toISOString() // [신규] 리셋 타임스탬프
+                })
+                .eq('id', activeClass.id);
+
+            if (error) throw error;
+            alert('어휘의 탑 설정이 저장되었습니다!\n📊 학생들의 오늘 시도 횟수가 초기화되었습니다.');
+        } catch (err) {
+            console.error('어휘의 탑 설정 저장 실패:', err);
+            alert('설정 저장에 실패했습니다.');
+        } finally {
+            setSavingVocabTower(false);
+        }
+    };
+
+    // [신규] 랭킹 시스템 타임스탬프 초기화 (데이터를 삭제하지 않고 기준일만 변경)
+    const handleResetTowerRankingDate = async () => {
+        if (!window.confirm('🏆 실시간 탑 랭킹을 현재 시점으로 초기화하시겠습니까?\n이전의 모든 기록은 [지난 시즌 기록]으로 보관됩니다.')) return;
+
+        const now = new Date().toISOString();
+        setSavingVocabTower(true);
+        try {
+            // 1. 현재 랭킹 데이터 가져오기 (보관용 - DB 조인 제거)
+            let query = supabase
+                .from('vocab_tower_rankings')
+                .select('max_floor, student_id')
+                .eq('class_id', activeClass.id);
+
+            if (vocabTowerConfig.rankingResetDate) {
+                query = query.gte('updated_at', vocabTowerConfig.rankingResetDate);
+            }
+            const { data: currentRanks } = await query.order('max_floor', { ascending: false });
+
+            // 2. 히스토리 테이블에 저장 (랭킹이 있을 경우만) - [수정] 기존 기록 삭제 후 최신 1건만 유지
+            if (currentRanks && currentRanks.length > 0) {
+                const startDate = vocabTowerConfig.rankingResetDate || vocabTowerConfig.createdAt || new Date().toISOString();
+                const seasonName = `${new Date(startDate).toLocaleDateString()} ~ ${new Date(now).toLocaleDateString()} 시즌 기록`;
+                const formattedRanks = currentRanks.map(r => {
+                    const student = Array.isArray(r.students) ? r.students[0] : r.students;
+                    return {
+                        name: student?.name || '학생',
+                        floor: r.max_floor
+                    };
+                });
+
+                // 기존 시즌 기록 모두 삭제 (최신 1건만 남기기 위해)
+                await supabase
+                    .from('vocab_tower_history')
+                    .delete()
+                    .eq('class_id', activeClass.id);
+
+                // 신규 시즌 기록 추가
+                await supabase.from('vocab_tower_history').insert({
+                    class_id: activeClass.id,
+                    season_name: seasonName,
+                    rankings: formattedRanks,
+                    started_at: startDate,
+                    ended_at: now
+                });
+            }
+
+            // 3. 기존 랭킹 데이터 삭제 (새 시즌 시작을 위해)
+            await supabase
+                .from('vocab_tower_rankings')
+                .delete()
+                .eq('class_id', activeClass.id);
+
+            // 4. 클래스 설정 업데이트 (리셋 날짜)
+            const { error } = await supabase
+                .from('classes')
+                .update({ vocab_tower_ranking_reset_date: now })
+                .eq('id', activeClass.id);
+
+            if (error) throw error;
+            setVocabTowerConfig(prev => ({ ...prev, rankingResetDate: now }));
+            alert('랭킹 시스템이 초기화되고 이전 기록이 보관되었습니다. ✨');
+            fetchTowerRankings();
+            fetchTowerHistory();
+        } catch (err) {
+            console.error('랭킹 리셋 실패:', err);
+            alert('초기화에 실패했습니다.');
+        } finally {
+            setSavingVocabTower(false);
+        }
+    };
+
+    // [신규] 드래곤 아지트 시즌 초기화 및 기록 저장
+    const handleResetAgitSeason = async () => {
+        if (!activeClass?.id) return;
+        if (!window.confirm('🐉 드래곤 키우기 시즌을 종료하고 초기화하시겠습니까?\n모든 학생의 드래곤 레벨과 아이템이 초기화되며, 현재 순위는 [지난 시즌 기록]으로 보관됩니다.')) return;
+
+        const now = new Date().toISOString();
+        setSavingVocabTower(true);
+        try {
+            // 1. 현재 드래곤 성장 데이터 수집
+            const sortedStudents = [...students].sort((a, b) => {
+                const petA = a.pet_data || { level: 1, exp: 0 };
+                const petB = b.pet_data || { level: 1, exp: 0 };
+                if (petB.level !== petA.level) return petB.level - petA.level;
+                return petB.exp - petA.exp;
+            });
+
+            const topStudents = sortedStudents.slice(0, 10).map(s => ({
+                name: s.name,
+                level: s.pet_data?.level || 1,
+                exp: s.pet_data?.exp || 0
+            }));
+
+            // 2. 히스토리 저장
+            await supabase.from('agit_season_history').insert({
+                class_id: activeClass.id,
+                season_name: `${new Date().toLocaleDateString()} 종료 시즌`,
+                rankings: topStudents,
+                started_at: activeClass.season_started_at || activeClass.created_at,
+                ended_at: now
+            });
+
+            // 3. 데이터 초기화
+            const { error: resetError } = await supabase
+                .from('students')
+                .update({
+                    pet_data: {
+                        name: '나의 드래곤',
+                        level: 1,
+                        exp: 0,
+                        lastFed: now.split('T')[0],
+                        ownedItems: [],
+                        background: 'default'
+                    }
+                })
+                .eq('class_id', activeClass.id);
+
+            if (resetError) throw resetError;
+
+            // 4. 시즌 업데이트
+            await supabase
+                .from('classes')
+                .update({ season_started_at: now })
+                .eq('id', activeClass.id);
+
+            alert('드래곤 아지트 시즌이 초기화되었습니다! 🐉✨');
+            fetchStudents();
+            fetchDragonHistory();
+        } finally {
+            setSavingVocabTower(false);
+        }
+    };
+
+    // [신규] 드래곤 시즌 기록 삭제
+    const handleDeleteDragonHistory = async (historyId) => {
+        if (!window.confirm('🗑️ 이 시즌의 기록을 영구적으로 삭제하시겠습니까?')) return;
+        try {
+            const { error } = await supabase
+                .from('agit_season_history')
+                .delete()
+                .eq('id', historyId);
+            if (error) throw error;
+            alert('기록이 삭제되었습니다.');
+            fetchDragonHistory();
+        } catch (err) {
+            console.error('기록 삭제 실패:', err);
+            alert('삭제에 실패했습니다.');
+        }
+    };
+
+    // [신규] 어휘의 탑 시즌 기록 삭제
+    const handleDeleteTowerHistory = async (historyId) => {
+        if (!window.confirm('🗑️ 이 시즌의 기록을 영구적으로 삭제하시겠습니까?')) return;
+        try {
+            const { error } = await supabase
+                .from('vocab_tower_history')
+                .delete()
+                .eq('id', historyId);
+            if (error) throw error;
+            alert('기록이 삭제되었습니다.');
+            fetchTowerHistory();
+        } catch (err) {
+            console.error('기록 삭제 실패:', err);
+            alert('삭제에 실패했습니다.');
+        }
+    };
+
+    if (!activeClass) return <div style={{ padding: '60px', textAlign: 'center', color: '#7F8C8D' }}>학급을 먼저 선택해주세요.</div>;
+
+    return (
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '10px' : '0' }}>
+            <div style={{ marginBottom: '2.5rem' }}>
+                <h1 style={{ fontSize: '1.8rem', color: '#2C3E50', margin: '0 0 8px 0', fontWeight: '900' }}>🎢 아지트 놀이터 관리</h1>
+                <p style={{ color: '#7F8C8D', margin: 0 }}>각 카드에서 학생 화면 노출과 세부 설정을 함께 관리합니다.</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '32px' }}>
+                {/* 1. 드래곤 키우기 통합 카드 */}
+                <Card style={{ padding: 0, border: '1px solid #E9ECEF', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                    <div style={{ padding: '24px', background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)', borderBottom: '1px solid #FFE0B2', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                        <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: '0 4px 12px rgba(255, 145, 0, 0.2)' }}>🐉</div>
+                        <div style={{ flex: 1 }}>
+                            <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#5D4037', fontWeight: '900' }}>드래곤 키우기 관리</h3>
+                            <span style={{ fontSize: '0.85rem', color: '#8D6E63', fontWeight: 'bold' }}>성장 밸런스 및 시즌 운영</span>
+                        </div>
+                        {renderModulePowerButton('dragon', '드래곤 키우기', '#E65100')}
+                    </div>
+
+                    <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {/* 1.1 운영 정책 설정 */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <h4 style={{ margin: 0, fontSize: '1rem', color: '#5D4037', borderLeft: '4px solid #FBC02D', paddingLeft: '10px' }}>⚙️ 시스템 밸런스 설정</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div style={{ background: '#F8F9FA', padding: '14px', borderRadius: '12px', border: '1px solid #EEE' }}>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#7F8C8D', marginBottom: '8px', fontWeight: 'bold' }}>🥩 먹이 주기 비용</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <input type="number" name="dragon_feed_points" value={config.dragon_feed_points} onChange={handleChange} style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '1.2rem', fontWeight: '900', color: '#2C3E50', outline: 'none' }} />
+                                        <span style={{ fontWeight: 'bold', color: '#ADB5BD' }}>P/회</span>
+                                    </div>
+                                    <div style={{ fontSize: '0.7rem', color: '#ADB5BD', marginTop: '4px' }}>먹이 1회당 소모 포인트</div>
+                                </div>
+                                <div style={{ background: '#F8F9FA', padding: '14px', borderRadius: '12px', border: '1px solid #EEE' }}>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#7F8C8D', marginBottom: '8px', fontWeight: 'bold' }}>📉 자동 퇴화 기준</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <input type="number" name="dragon_degen_days" value={config.dragon_degen_days} onChange={handleChange} style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '1.2rem', fontWeight: '900', color: '#2C3E50', outline: 'none' }} />
+                                        <span style={{ fontWeight: 'bold', color: '#ADB5BD' }}>일</span>
+                                    </div>
+                                    <div style={{ fontSize: '0.7rem', color: '#ADB5BD', marginTop: '4px' }}>미접속 시 레벨 하락 기준</div>
+                                </div>
+                            </div>
+                            <Button onClick={handleSave} disabled={saving} size="sm" style={{ alignSelf: 'flex-end', background: '#5D4037', color: 'white', borderRadius: '8px', padding: '8px 20px', fontWeight: 'bold' }}>
+                                {saving ? '저장 중...' : '설정값 적용'}
+                            </Button>
+                        </div>
+
+                        <div style={{ height: '1px', background: '#F1F3F5' }} />
+
+                        {/* 1.2 관리 및 실행 메뉴 */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div style={{ background: '#FFF9C4', padding: '14px', borderRadius: '14px', border: '1px solid #FFE082' }}>
+                                <div style={{ fontSize: '0.85rem', color: '#F57F17', fontWeight: '900', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span>💡</span> 시즌 관리 팁
+                                </div>
+                                <p style={{ margin: 0, fontSize: '0.75rem', color: '#8D6E63', lineHeight: '1.5' }}>
+                                    매 학기/달이 끝날 때 시즌을 종료하고 초기화하세요.<br />
+                                    모든 기록은 기록 탭에 안전하게 보관됩니다.
+                                </p>
+                            </div>
+
+                            <Button
+                                variant="primary"
+                                onClick={() => {
+                                    setSubTab('dragon');
+                                    setShowDragonHistory(false);
+                                    setShowMonitoring(true);
+                                }}
+                                style={{
+                                    width: '100%', height: '48px', fontSize: '1rem',
+                                    fontWeight: '950', borderRadius: '12px',
+                                    background: '#FF9100', color: 'white',
+                                    marginTop: '5px'
+                                }}
+                            >
+                                📊 실시간 성장 모니터링 관리
+                            </Button>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                <Button
+                                    onClick={() => handleResetAgitSeason()}
+                                    title="현재 시즌을 종료하고 데이터를 보관한 뒤 기초 레벨로 초기화합니다."
+                                    style={{
+                                        height: '44px', fontSize: '0.85rem',
+                                        fontWeight: 'bold', borderRadius: '10px',
+                                        background: 'white', color: '#F44336',
+                                        border: '1px solid #F44336'
+                                    }}
+                                >
+                                    ⚠️ 시즌 종료/리셋
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        setSubTab('dragon');
+                                        setShowDragonHistory(true);
+                                        setShowMonitoring(true);
+                                    }}
+                                    style={{
+                                        height: '44px', fontSize: '0.85rem',
+                                        fontWeight: 'bold', borderRadius: '10px',
+                                        background: '#ECEFF1', color: '#455A64',
+                                        border: 'none'
+                                    }}
+                                >
+                                    📜 지난 시즌 기록
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* 2. 어휘의 탑 게임 제어판 */}
+                <Card style={{ padding: 0, border: '1px solid #E9ECEF', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                    <div style={{ padding: '24px', background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)', borderBottom: '1px solid #A5D6A7', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                        <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)' }}>🏰</div>
+                        <div style={{ flex: 1 }}>
+                            <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2E7D32', fontWeight: '900' }}>어휘의 탑 관리</h3>
+                            <span style={{ fontSize: '0.85rem', color: '#558B2F', fontWeight: 'bold' }}>어휘력 향상 퀴즈 게임</span>
+                        </div>
+                        {renderModulePowerButton('vocab-tower', '어휘의 탑', '#2E7D32')}
+                    </div>
+
+                    <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {/* 게임 노출과 세부 설정을 한 카드에서 함께 관리 */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <h4 style={{ margin: 0, fontSize: '1rem', color: '#2E7D32', borderLeft: '4px solid #4CAF50', paddingLeft: '10px' }}>⚙️ 게임 설정</h4>
+
+                            {/* [설계 변경] 2열 그리드 레이아웃으로 공간 효율화 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
+                                {/* 학년 선택 */}
+                                <div style={{ padding: '14px', background: '#F8F9FA', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#2C3E50', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <span>📚</span> 출제 학년
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '5px' }}>
+                                        {[3, 4, 5, 6].map(grade => (
+                                            <div
+                                                key={grade}
+                                                onClick={() => setVocabTowerConfig(prev => ({ ...prev, grade }))}
+                                                style={{
+                                                    flex: 1,
+                                                    padding: '8px 0',
+                                                    textAlign: 'center',
+                                                    borderRadius: '8px',
+                                                    cursor: 'pointer',
+                                                    background: vocabTowerConfig.grade === grade ? '#2E7D32' : 'white',
+                                                    color: vocabTowerConfig.grade === grade ? 'white' : '#666',
+                                                    border: `1px solid ${vocabTowerConfig.grade === grade ? '#2E7D32' : '#E0E0E0'}`,
+                                                    fontWeight: 'bold',
+                                                    fontSize: '0.85rem',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                            >
+                                                {grade}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* 일일 시도 횟수 (슬라이더로 변경) */}
+                                <div style={{ padding: '14px', background: '#F8F9FA', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#2C3E50', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <span>🎯</span> 일일 기회
+                                        </div>
+                                        <span style={{ fontSize: '1rem', color: '#1565C0', fontWeight: '900' }}>{vocabTowerConfig.dailyLimit}회</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="1"
+                                        max="10"
+                                        step="1"
+                                        value={vocabTowerConfig.dailyLimit}
+                                        onChange={(e) => setVocabTowerConfig(prev => ({ ...prev, dailyLimit: parseInt(e.target.value) }))}
+                                        style={{ width: '100%', cursor: 'pointer', accentColor: '#1565C0' }}
+                                    />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#9E9E9E', marginTop: '5px' }}>
+                                        <span>1회</span>
+                                        <span>10회</span>
+                                    </div>
+                                </div>
+
+                                {/* 게임 시간 제한 (증감 버튼으로 변경) */}
+                                <div style={{ padding: '14px', background: '#F8F9FA', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#2C3E50', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <span>⏱️</span> 제한 시간
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+                                        <button
+                                            onClick={() => setVocabTowerConfig(prev => ({ ...prev, timeLimit: Math.max(30, prev.timeLimit - 10) }))}
+                                            style={{ width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #E0E0E0', background: 'white', color: '#FF9800', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.05))' }}
+                                        >
+                                            <span style={{ fontSize: '1.2rem' }}>−</span>
+                                        </button>
+                                        <div style={{ fontSize: '1.2rem', fontWeight: '1000', color: '#FF9800', minWidth: '80px', textAlign: 'center' }}>
+                                            {vocabTowerConfig.timeLimit === 120 ? '2분' : `${vocabTowerConfig.timeLimit}초`}
+                                        </div>
+                                        <button
+                                            onClick={() => setVocabTowerConfig(prev => ({ ...prev, timeLimit: Math.min(120, prev.timeLimit + 10) }))}
+                                            style={{ width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #FF9800', background: 'white', color: '#FF9800', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.05))' }}
+                                        >
+                                            <span style={{ fontSize: '1.2rem' }}>+</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* 최종 완료 보상 (증감 버튼으로 변경) */}
+                                <div style={{ padding: '14px', background: '#F8F9FA', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#2C3E50', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <span>🎁</span> 완료 보너스
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+                                        <button
+                                            onClick={() => setVocabTowerConfig(prev => ({ ...prev, rewardPoints: Math.max(50, prev.rewardPoints - 10) }))}
+                                            style={{ width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #E0E0E0', background: 'white', color: '#E91E63', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.05))' }}
+                                        >
+                                            <span style={{ fontSize: '1.2rem' }}>−</span>
+                                        </button>
+                                        <div style={{ fontSize: '1.2rem', fontWeight: '1000', color: '#E91E63', minWidth: '80px', textAlign: 'center' }}>
+                                            {vocabTowerConfig.rewardPoints}P
+                                        </div>
+                                        <button
+                                            onClick={() => setVocabTowerConfig(prev => ({ ...prev, rewardPoints: prev.rewardPoints + 10 }))}
+                                            style={{ width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #2E7D32', background: 'white', color: '#2E7D32', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.05))' }}
+                                        >
+                                            <span style={{ fontSize: '1.2rem' }}>+</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 하단 안내 및 실행 영역 (더 조밀하게) */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div style={{ background: '#E3F2FD', padding: '12px', borderRadius: '10px', border: '1px solid #BBDEFB' }}>
+                                <p style={{ margin: 0, fontSize: '0.75rem', color: '#1565C0', lineHeight: '1.4' }}>
+                                    💡 저장 시 시도 횟수 리셋
+                                </p>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: '#1565C0', lineHeight: '1.4' }}>
+                                    🏆 랭킹 초기화 시 현재 기록 보관 및 새 시즌 시작
+                                </p>
+                            </div>
+
+                            <Button
+                                onClick={handleSaveVocabTower}
+                                disabled={savingVocabTower}
+                                title="학년 및 난이도 설정을 저장하고, 학생들의 '오늘의 도전 횟수'를 0회로 초기화합니다."
+                                style={{
+                                    width: '100%', height: '44px', fontSize: '0.9rem',
+                                    fontWeight: 'bold', borderRadius: '10px',
+                                    background: '#2E7D32', color: 'white'
+                                }}
+                            >
+                                {savingVocabTower ? '저장 중...' : '🏰 설정 저장 및 데이터 리셋'}
+                            </Button>
+
+                            <Button
+                                onClick={handleResetTowerRankingDate}
+                                disabled={savingVocabTower}
+                                title="현재 기록을 [지난 시즌 기록]으로 안전하게 보관한 뒤 새로운 시즌을 시작합니다. (추천)"
+                                style={{
+                                    width: '100%', height: '44px', fontSize: '0.9rem',
+                                    fontWeight: 'bold', borderRadius: '10px',
+                                    background: 'white', color: '#F44336',
+                                    border: '1px solid #F44336',
+                                    marginBottom: '5px'
+                                }}
+                            >
+                                🏆 랭킹 시스템 초기화 (현재 시점 기준)
+                            </Button>
+
+                            <Button
+                                onClick={() => {
+                                    setSubTab('tower');
+                                    setShowHistory(true);
+                                    setShowMonitoring(true);
+                                }}
+                                style={{
+                                    width: '100%', height: '44px', fontSize: '0.9rem',
+                                    fontWeight: 'bold', borderRadius: '10px',
+                                    background: '#ECEFF1', color: '#455A64',
+                                    border: 'none'
+                                }}
+                            >
+                                📜 지난 시즌 기록 전체 보기
+                            </Button>
+
+                            <div style={{
+                                padding: '10px',
+                                background: '#E8F5E9',
+                                borderRadius: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ width: '8px', height: '8px', background: '#4CAF50', borderRadius: '50%' }}></div>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#2E7D32' }}>
+                                        {vocabTowerConfig.grade}학년 설정
+                                    </span>
+                                </div>
+                                <span style={{ fontSize: '0.75rem', color: '#66BB6A', textAlign: 'right' }}>
+                                    {vocabTowerConfig.dailyLimit}회 / {vocabTowerConfig.timeLimit}s / {vocabTowerConfig.rewardPoints}P<br />
+                                    {vocabTowerConfig.rankingResetDate ? `최근 랭킹 리셋: ${new Date(vocabTowerConfig.rankingResetDate).toLocaleDateString()}` : '랭킹 리셋 기록 없음'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {renderAdditionalModules?.({
+                    enabledModuleIds,
+                    savingModuleId,
+                    moduleLoadError,
+                    onToggle: handleToggleModule
+                })}
+            </div>
+
+            {/* 📊 성장 모니터링 & 패널티 통합 대시보드 (풀스크린 모달) */}
+            <AnimatePresence>
+                {showMonitoring && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: '#F8F9FA', zIndex: 3000, overflowY: 'auto' }}>
+                        <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '20px' : '40px 20px' }}>
+                            {/* 모달 헤더 */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', borderBottom: '2px solid #E9ECEF', paddingBottom: '24px' }}>
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                                        <span style={{ fontSize: '2rem' }}>📊</span>
+                                        <h2 style={{ fontSize: '2rem', fontWeight: '1000', color: '#2C3E50', margin: 0 }}>학생 성장 모니터링 대시보드</h2>
+                                    </div>
+                                    <p style={{ margin: 0, color: '#7F8C8D', fontSize: '1.1rem' }}>드래곤 키우기 현황 확인 및 패널티 관리 (총 {students.length}명)</p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    {/* [신규] 모니터링 서브탭 전환 */}
+                                    <div style={{ display: 'flex', background: 'white', padding: '4px', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
+                                        <button
+                                            onClick={() => setSubTab('dragon')}
+                                            style={{
+                                                padding: '8px 16px', borderRadius: '10px', border: 'none',
+                                                background: subTab === 'dragon' ? '#2C3E50' : 'transparent',
+                                                color: subTab === 'dragon' ? 'white' : '#7F8C8D',
+                                                fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            🐉 드래곤
+                                        </button>
+                                        <button
+                                            onClick={() => setSubTab('tower')}
+                                            style={{
+                                                padding: '8px 16px', borderRadius: '10px', border: 'none',
+                                                background: subTab === 'tower' ? '#1565C0' : 'transparent',
+                                                color: subTab === 'tower' ? 'white' : '#7F8C8D',
+                                                fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            🏰 어휘의 탑
+                                        </button>
+                                    </div>
+                                    <Button size="lg" variant="ghost" onClick={() => setShowMonitoring(false)} style={{ background: 'white', borderRadius: '16px', fontWeight: '900', color: '#E53935', border: '1px solid #FFEBEE' }}>닫기 ✕</Button>
+                                </div>
+                            </div>
+
+                            {/* [신규] 서브탭에 따른 콘텐츠 렌더링 */}
+                            {subTab === 'dragon' ? (
+                                <div style={{ width: '100%' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#5D4037', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            🐉 실시간 드래곤 성장 모니터링
+                                        </h3>
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            <Button
+                                                onClick={() => setShowDragonHistory(!showDragonHistory)}
+                                                style={{ background: '#ECEFF1', color: '#455A64', borderRadius: '12px', padding: '10px 20px', fontWeight: 'bold', border: 'none' }}
+                                            >
+                                                {showDragonHistory ? '📊 현재 현황 보기' : '📜 지난 시즌 기록'}
+                                            </Button>
+                                            <Button
+                                                onClick={handleResetAgitSeason}
+                                                title="현재 모든 학생의 드래곤 성장을 [지난 시즌 기록]으로 보관한 뒤 기초 레벨(1)로 초기화합니다."
+                                                style={{ background: '#F44336', color: 'white', borderRadius: '12px', padding: '10px 20px', fontWeight: 'bold' }}
+                                            >
+                                                ⚠️ 시즌 종료 및 초기화
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {!showDragonHistory ? (
+                                        <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))',
+                                            gap: '16px',
+                                            width: '100%'
+                                        }}>
+                                            {students.map(s => {
+                                                const pet = s.pet_data || { name: '나의 드래곤', level: 1, exp: 0, background: 'default', ownedItems: [] };
+                                                const stage = getDragonStage(pet.level);
+                                                const bg = HIDEOUT_BACKGROUNDS[pet.background] || HIDEOUT_BACKGROUNDS.default;
+                                                const isMaster = pet.level >= 5 && pet.exp >= 100;
+
+                                                return (
+                                                    <motion.div
+                                                        key={s.id}
+                                                        whileHover={{ y: -2, boxShadow: '0 8px 16px rgba(0,0,0,0.05)' }}
+                                                        style={{
+                                                            background: 'white',
+                                                            padding: '16px',
+                                                            borderRadius: '20px',
+                                                            border: '1px solid #E9ECEF',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            gap: '12px',
+                                                            transition: 'all 0.2s ease'
+                                                        }}
+                                                    >
+                                                        {/* 상단: 학생 정보 및 요약 상태 */}
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <div style={{
+                                                                width: '56px', height: '56px',
+                                                                background: bg.color,
+                                                                borderRadius: '14px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                border: `1.5px solid ${bg.border}`,
+                                                                flexShrink: 0
+                                                            }}>
+                                                                <img src={stage.image} alt="D" style={{ width: '42px', height: '42px', objectFit: 'contain' }} />
+                                                            </div>
+                                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                    <div style={{ fontSize: '1.15rem', fontWeight: '900', color: '#2C3E50', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
+                                                                    <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#ADB5BD' }}>Lv.{pet.level}</span>
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
+                                                                    <span style={{ fontSize: '0.75rem', color: '#7F8C8D', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stage.name}</span>
+                                                                    {isMaster && <span style={{ fontSize: '10px', background: '#FFD700', color: '#5D4037', padding: '1px 5px', borderRadius: '10px' }}>⭐</span>}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 중단: 경험치 바 */}
+                                                        <div style={{ width: '100%' }}>
+                                                            <div style={{ height: '6px', background: '#F1F3F5', borderRadius: '3px', overflow: 'hidden' }}>
+                                                                <motion.div initial={{ width: 0 }} animate={{ width: `${pet.exp}%` }} style={{ height: '100%', background: isMaster ? 'linear-gradient(90deg, #FFD700, #BA68C8)' : '#FBC02D' }} />
+                                                            </div>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', fontWeight: 'bold', color: '#ADB5BD' }}>
+                                                                <span>EXP {pet.exp}%</span>
+                                                                <span>{bg.name}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* 하단: 컴팩트 버튼 그룹 */}
+                                                        <div style={{
+                                                            display: 'grid',
+                                                            gridTemplateColumns: '1fr 1fr 1fr',
+                                                            gap: '6px',
+                                                            marginTop: '4px'
+                                                        }}>
+                                                            <Button size="xs" onClick={() => setPreviewStudent(s)} style={{ background: '#F0F4F8', color: '#546E7A', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '0.75rem' }}>구경</Button>
+                                                            <Button size="xs" onClick={() => handleUpdatePet(s.id, s.name, { ...pet, level: Math.max(1, pet.level - 1), exp: 0 }, "레벨 패널티")} style={{ background: '#FFEBEE', color: '#D32F2F', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '0.75rem' }}>🚨 패널티</Button>
+                                                            <Button size="xs" onClick={() => handleUpdatePet(s.id, s.name, { name: '나의 드래곤', level: 1, exp: 0, lastFed: new Date().toISOString().split('T')[0], ownedItems: [], background: 'default' }, "데이터 초기화")} style={{ background: '#F5F5F5', color: '#9E9E9E', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '0.75rem' }}>🔄 초기화</Button>
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        /* 드래곤 히스토리 뷰 */
+                                        <div>
+                                            {dragonHistory.length > 0 ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                                    {dragonHistory.map((history) => (
+                                                        <div key={history.id} style={{ background: '#FFFDF0', borderRadius: '24px', padding: '24px', border: '1px solid #FFE082' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                                                <div>
+                                                                    <div style={{ fontWeight: '900', color: '#5D4037', fontSize: '1.2rem' }}>
+                                                                        📅 {new Date(history.ended_at).toLocaleDateString()} 종료 시즌
+                                                                    </div>
+                                                                    <div style={{ fontSize: '0.85rem', color: '#8D6E63' }}>
+                                                                        시즌 기간: {new Date(history.started_at).toLocaleDateString()} ~ {new Date(history.ended_at).toLocaleDateString()}
+                                                                    </div>
+                                                                </div>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => handleDeleteDragonHistory(history.id)}
+                                                                    style={{ background: '#FFEBEE', color: '#D32F2F', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8rem', fontWeight: 'bold' }}
+                                                                >
+                                                                    삭제 🗑️
+                                                                </Button>
+                                                            </div>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+                                                                {history.rankings?.map((r, i) => (
+                                                                    <div key={i} style={{ padding: '10px 16px', background: 'white', border: '1px solid #FFE082', borderRadius: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                                        <span style={{
+                                                                            width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                            borderRadius: '50%', background: i < 3 ? '#FBC02D' : '#F5F5F5', color: i < 3 ? 'white' : '#9E9E9E', fontWeight: 'bold', fontSize: '0.8rem'
+                                                                        }}>
+                                                                            {i + 1}
+                                                                        </span>
+                                                                        <div style={{ flex: 1 }}>
+                                                                            <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#2C3E50' }}>{r.name}</div>
+                                                                            <div style={{ fontSize: '0.8rem', color: '#fbc02d', fontWeight: '900' }}>Lv.{r.level} ({r.exp}%)</div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div style={{ padding: '80px', textAlign: 'center', color: '#ADB5BD' }}>
+                                                    <div style={{ fontSize: '3.5rem', marginBottom: '20px' }}>📁</div>
+                                                    아직 저장된 지난 시즌 드래곤 성장 기록이 없습니다.
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                /* 어휘의 탑 랭킹 대시보드 */
+                                <div style={{ background: 'white', border: '1px solid #E9ECEF', borderRadius: '24px', padding: '30px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#1565C0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            🏰 실시간 어휘의 탑 랭킹 관리
+                                        </h3>
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            <Button
+                                                onClick={() => setShowHistory(!showHistory)}
+                                                style={{ background: '#ECEFF1', color: '#455A64', borderRadius: '12px', padding: '10px 20px', fontWeight: 'bold', border: 'none' }}
+                                            >
+                                                {showHistory ? '📊 현재 랭킹 보기' : '📜 지난 시즌 기록'}
+                                            </Button>
+                                            <Button
+                                                onClick={() => handleResetTowerRanking('all')}
+                                                title="기록을 보관하지 않고 현재 실시간 데이터를 영구적으로 삭제합니다. 시즌 기록을 남기려면 '랭킹 시스템 초기화' 기능을 이용하세요."
+                                                style={{ background: '#F44336', color: 'white', borderRadius: '12px', padding: '10px 20px', fontWeight: 'bold' }}
+                                            >
+                                                ⚠️ 전체 랭킹 초기화
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {!showHistory ? (
+                                        <div style={{ overflowX: 'auto' }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                                <thead>
+                                                    <tr style={{ borderBottom: '2px solid #F8F9FA' }}>
+                                                        <th style={{ padding: '15px', color: '#7F8C8D', fontSize: '0.9rem' }}>순위</th>
+                                                        <th style={{ padding: '15px', color: '#7F8C8D', fontSize: '0.9rem' }}>이름</th>
+                                                        <th style={{ padding: '15px', color: '#7F8C8D', fontSize: '0.9rem' }}>최고 도달 층수</th>
+                                                        <th style={{ padding: '15px', color: '#7F8C8D', fontSize: '0.9rem', textAlign: 'right' }}>관리</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {towerRankings.length > 0 ? (
+                                                        towerRankings.map((rank, index) => (
+                                                            <tr key={rank.id} style={{ borderBottom: '1px solid #F1F3F5', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFF'} onMouseLeave={(e) => e.currentTarget.style.background = 'white'}>
+                                                                <td style={{ padding: '15px' }}>
+                                                                    <span style={{
+                                                                        width: '24px', height: '24px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                                        borderRadius: '50%', background: index === 0 ? '#FFD700' : index === 1 ? '#E0E0E0' : index === 2 ? '#FFCC80' : 'transparent',
+                                                                        color: index <= 2 ? 'white' : '#7F8C8D', fontWeight: 'bold', fontSize: '0.85rem'
+                                                                    }}>
+                                                                        {index + 1}
+                                                                    </span>
+                                                                </td>
+                                                                <td style={{ padding: '15px', fontWeight: 'bold', color: '#2C3E50' }}>{rank.students?.name || '학생'}</td>
+                                                                <td style={{ padding: '15px' }}>
+                                                                    <span style={{ padding: '4px 12px', background: '#E3F2FD', color: '#1565C0', borderRadius: '20px', fontWeight: '900', fontSize: '0.9rem' }}>
+                                                                        {rank.max_floor}F
+                                                                    </span>
+                                                                </td>
+                                                                <td style={{ padding: '15px', textAlign: 'right' }}>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        onClick={() => handleResetTowerRanking(rank.student_id, rank.students?.name)}
+                                                                        style={{ background: '#EEEEEE', color: '#757575', borderRadius: '8px', fontSize: '0.8rem' }}
+                                                                    >
+                                                                        초기화
+                                                                    </Button>
+                                                                </td>
+                                                            </tr>
+                                                        ))
+                                                    ) : (
+                                                        <tr>
+                                                            <td colSpan="4" style={{ padding: '60px', textAlign: 'center', color: '#ADB5BD' }}>
+                                                                <div style={{ fontSize: '3rem', marginBottom: '15px' }}>🔭</div>
+                                                                아직 도달 기록이 있는 학생이 없습니다.
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ) : (
+                                        /* 히스토리 뷰 */
+                                        <div>
+                                            {towerHistory.length > 0 ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                                    {towerHistory.map((history) => (
+                                                        <div key={history.id} style={{ background: '#F8F9FA', borderRadius: '20px', padding: '24px', border: '1px solid #E9ECEF' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                                                <div>
+                                                                    <div style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.1rem' }}>
+                                                                        📅 {new Date(history.ended_at).toLocaleDateString()} 종료 시즌
+                                                                    </div>
+                                                                    <div style={{ fontSize: '0.85rem', color: '#7F8C8D' }}>
+                                                                        {new Date(history.started_at).toLocaleDateString()} ~ {new Date(history.ended_at).toLocaleDateString()}
+                                                                    </div>
+                                                                </div>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => handleDeleteTowerHistory(history.id)}
+                                                                    style={{ background: '#F5F5F5', color: '#7F8C8D', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8rem', fontWeight: 'bold' }}
+                                                                >
+                                                                    삭제 🗑️
+                                                                </Button>
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                                                {history.rankings?.map((r, i) => (
+                                                                    <div key={i} style={{ padding: '8px 16px', background: 'white', border: '1px solid #E9ECEF', borderRadius: '12px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                        <span style={{ fontWeight: 'bold', color: i < 3 ? '#FF9800' : '#7F8C8D' }}>{i + 1}위</span>
+                                                                        <span style={{ fontWeight: '900' }}>{r.name}</span>
+                                                                        <span style={{ color: '#1565C0', fontWeight: 'bold' }}>{r.floor}F</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div style={{ padding: '60px', textAlign: 'center', color: '#ADB5BD' }}>
+                                                    <div style={{ fontSize: '3rem', marginBottom: '15px' }}>📁</div>
+                                                    아직 저장된 과거 시즌 기록이 없습니다.
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 아지트 상세 미리보기 (선생님 관점) */}
+            <AnimatePresence>
+                {previewStudent && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 4000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }} onClick={() => setPreviewStudent(null)}>
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} onClick={e => e.stopPropagation()} style={{ background: 'white', width: '100%', maxWidth: '500px', borderRadius: '32px', overflow: 'hidden', boxShadow: '0 30px 60px rgba(0,0,0,0.5)' }}>
+                            <TeacherHideoutPreview student={previewStudent} onClose={() => setPreviewStudent(null)} />
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div >
+    );
+};
+
+// 교사용 아지트 미리보기 컴포넌트
+const TeacherHideoutPreview = ({ student, onClose }) => {
+    const pet = student.pet_data || { name: '친구 드래곤', level: 1, background: 'default', exp: 0 };
+    const bg = HIDEOUT_BACKGROUNDS[pet.background] || HIDEOUT_BACKGROUNDS.default;
+    const dragon = getDragonStage(pet.level);
+
+    return (
+        <div style={{ position: 'relative' }}>
+            <div style={{ background: bg.color, padding: '50px 20px', textAlign: 'center', borderBottom: `6px solid ${bg.border}`, position: 'relative' }}>
+                <button onClick={onClose} style={{ position: 'absolute', top: '24px', right: '24px', background: 'white', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)', fontSize: '1.2rem' }}>✕</button>
+                <div style={{ marginBottom: '32px' }}>
+                    <span style={{ background: 'rgba(255,255,255,0.9)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '900', color: '#7F8C8D', border: '1px solid #EEE' }}>{student.name} 학생의 아지트 내부</span>
+                    <h2 style={{ margin: '16px 0 0 0', color: '#2C3E50', fontSize: '2rem', fontWeight: '1000' }}>{pet.name}</h2>
+                    <div style={{ color: '#5D4037', fontWeight: 'bold', marginTop: '4px', marginBottom: '12px' }}>Lv.{pet.level} {dragon.name}</div>
+                    {/* [추가] 경험치 바 */}
+                    <div style={{ maxWidth: '280px', margin: '0 auto' }}>
+                        <div style={{ height: '8px', background: 'rgba(255,255,255,0.3)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${pet.exp}%` }} style={{ height: '100%', background: pet.level >= 5 && pet.exp >= 100 ? 'linear-gradient(90deg, #FFD700, #BA68C8)' : 'white' }} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.75rem', fontWeight: '900', color: 'rgba(255,255,255,0.8)' }}>
+                            <span>EXP {pet.exp}%</span>
+                            <span>{pet.level >= 5 && pet.exp >= 100 ? 'MAX' : `${100 - pet.exp}% 남음`}</span>
+                        </div>
+                    </div>
+                </div>
+                <div style={{ height: '280px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <motion.img animate={{ y: [0, -15, 0] }} transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }} src={dragon.image} alt="Dragon" style={{ width: '240px', height: '240px', objectFit: 'contain', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.2))' }} />
+                </div>
+            </div>
+            <div style={{ padding: '32px', background: 'white', textAlign: 'center' }}>
+                <div style={{ padding: '20px', background: '#F8F9FA', borderRadius: '20px', border: '1px solid #E9ECEF', marginBottom: '24px' }}>
+                    <p style={{ margin: 0, color: '#607D8B', fontSize: '1rem', lineHeight: '1.6' }}>
+                        👀 현재 <strong>관리자 실시간 확인 모드</strong>입니다.<br />
+                        학생이 꾸민 배경과 드래곤 상태를 점검하세요.
+                    </p>
+                </div>
+                <Button size="lg" onClick={onClose} style={{ width: '100%', borderRadius: '16px', fontWeight: '1000', height: '56px', fontSize: '1.1rem' }}>대시보드로 돌아가기</Button>
+            </div>
+        </div>
+    );
+};
+
+export default LegacyGameManager;
