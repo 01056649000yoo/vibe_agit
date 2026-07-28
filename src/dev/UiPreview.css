@@ -241,3 +241,23 @@
   width: 100%;
   background: #fff;
 }
+
+.ui-preview__inner {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed #DEE2E6;
+}
+.ui-preview__inner-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+.ui-preview__inner-cards span {
+  padding: 16px 14px;
+  border: 1px solid #E9ECEF;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #495057;
+}

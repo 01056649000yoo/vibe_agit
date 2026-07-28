@@ -158,7 +158,6 @@ function UiPreview() {
                 {isSidebar
                   ? 'PC에서 좌측 세로 메뉴로 표시됩니다.'
                   : '상단 가로 메뉴로 표시됩니다.'}
-                {group.inner ? ` 화면 안에서 ${group.inner}` : ''}
               </p>
               <div
                 className={`ui-preview__teacher-tabs ${isSidebar ? 'is-sidebar' : ''}`}
@@ -168,6 +167,27 @@ function UiPreview() {
                   <span key={tab.id}>{tab.label}</span>
                 ))}
               </div>
+
+              {group.innerItems && (
+                <div className="ui-preview__inner">
+                  <p className="ui-preview__nav-shape">
+                    {group.innerShape === 'cards'
+                      ? '화면을 열면 아래 카드들이 나옵니다.'
+                      : '화면을 열면 아래 좌측 메뉴로 다시 나뉩니다.'}
+                  </p>
+                  <div
+                    className={
+                      group.innerShape === 'cards'
+                        ? 'ui-preview__inner-cards'
+                        : 'ui-preview__teacher-tabs is-sidebar'
+                    }
+                  >
+                    {group.innerItems.map((item) => (
+                      <span key={item}>{item}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )
         })()}
