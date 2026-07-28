@@ -21,6 +21,113 @@
 
 ---
 
+## 학급 글 조회 기준 (2026-07-28 확정) — ⭐ 앞으로 모든 DB 조회는 이 방식으로 통일
+
+> **새 글쓰기 콘텐츠(독후감·일기·토론글 등)를 붙일 때도 이 4가지를 그대로 따른다.**
+> 아래는 규칙이고, 왜 이렇게 정했는지와 실측치는 바로 다음 항목들에 있다.
+
+**① 학급은 그 테이블의 `class_id` 로 직접 좁힌다. 조인한 테이블을 거쳐 걸지 않는다.**
+
+```js
+// ❌ 하지 말 것 — students 를 거쳐 학급을 건다
+.from('student_posts').select('*, students!inner(name, class_id)')
+.eq('students.class_id', classId)
+
+// ✅ 이렇게 — student_posts 가 가진 class_id 로 직접
+.from('student_posts').select('*, students!inner(name)')
+.eq('class_id', classId)
+```
+
+조인을 거치면 학급 인덱스를 쓰지 못해 **그 학급 글을 전부 가져와 정렬한 뒤** `limit` 을 적용한다.
+직접 걸면 인덱스가 필터와 정렬을 함께 처리해 `limit` 개에서 멈춘다.
+`student_posts`·`post_reactions`·`post_comments`·`reading_log_entries`·`reading_log_teacher_reviews`
+**전부 `class_id` 를 이미 갖고 있다**(NULL 0건, `students.class_id` 와 불일치 0건 확인).
+
+**② 학급이 있는 테이블끼리 조인하면 조인 조건에도 `class_id` 를 넣는다.**
+
+```sql
+-- ❌ 계획기가 학급 몫을 고를 방법이 없어 전 학급 기록을 Seq Scan 한다
+LEFT JOIN public.reading_log_teacher_reviews rr ON rr.post_id = p.id
+-- ✅
+LEFT JOIN public.reading_log_teacher_reviews rr
+       ON rr.post_id = p.id AND rr.class_id = p_class_id
+```
+
+`post_id` 가 PK 라 안전해 보이지만, 그 테이블이 커지면 계획기가 **해시 조인 + 전체 Seq Scan** 으로 갈아탄다.
+
+**③ `(class_id, 정렬열 DESC)` 인덱스를 두고, 목록에는 반드시 상한을 건다.**
+조회 조건이 고정적이면 부분 인덱스(`WHERE writing_context=... AND ...`)로 더 좁힌다.
+`limit` 없는 목록 조회를 만들지 않는다. 상한이 있으면 `.range()`/`offset` 으로 "더 보기"를 잇되,
+**총계와 비교해 남은 게 있을 때만** 버튼을 노출한다(예전 독서록은 100건에서 조용히 잘렸다).
+
+**④ 캐시는 `src/lib/cache.js` 의 `dataCache` 로만. 컴포넌트마다 따로 만들지 않는다.**
+
+```js
+import { classKey, classScope, dataCache } from '@/lib/cache';
+
+const key = classKey(classId, 'reading-log-list', { filter, student, q });
+const data = await dataCache.get(key, fetcher, 20000);   // 20초
+dataCache.invalidatePrefix(classScope(classId));          // 글을 고치면 그 학급만 비운다
+```
+
+- 키는 항상 `classKey()` 로 만든다 → 앞이 `posts:<classId>` 로 고정돼 **학급끼리 절대 섞이지 않고**,
+  `invalidatePrefix(classScope(classId))` 한 번으로 그 학급 것만 버릴 수 있다.
+- **TTL 은 짧게(20초 안팎).** 학생은 계속 글을 쓰고 교사는 다른 기기에서 확인 표시를 남긴다.
+  **늦게 보이는 것보다 안 보이는 것이 훨씬 나쁘다.**
+- **쓰기 뒤에는 반드시 무효화한다.** 저장·회수·확인 표시 후 `invalidatePrefix` 호출.
+- `dataCache.get` 은 같은 키의 동시 요청을 하나로 합쳐 준다(중복 호출 걱정 없음).
+
+**하지 않기로 한 것 — "확인 안 한 지점부터만 조회"(워터마크/커서)**
+학생이 옛 글을 고치면 `updated_at` 이 올라가 워터마크 뒤로 숨고, 교사가 다른 기기에서 확인하면 어긋난다.
+**교사가 학생 글을 못 보는 것이 최악의 실패**라, 질의를 빠르게 만드는 쪽(①~③)으로 해결한다.
+
+---
+
+## 2026-07-28 — 전체 조회 경로 점검: 학급 범위 일원화 + 캐시 통일 (Claude)
+- **배경**: 사용자 지시 — "일반 미션 글·독서록·친구아지트 등 DB 조회를 전체 점검해 앞서 본 문제가 없도록 일원화.
+  학급 글은 해당 학급에서만 조회, 글이 많아지면 이미 조회한 것은 캐싱으로 가볍게."
+- **전수 조사**: `student_posts` 를 다루는 곳 **51곳**(읽기 33 / 쓰기 18)을 기계적으로 분류.
+
+  | 분류 | 곳 | 판정 |
+  |---|---|---|
+  | `student_posts.class_id` 직접 | 3 | ✅ |
+  | **조인한 테이블의 `class_id` 경유** | **4** | ⚠️ **고침** |
+  | 미션/학생/글 id 로 좁힘(학급 안에 자연히 들어감) | 26 | ✅ |
+  | 아무 범위 없음 | **0** | ✅ 다행히 없음 |
+
+- **고친 4곳**: `RecentActivity.jsx`(최근 활동), `useMissionManager.js`(미션 제출 글 목록),
+  `MissionEvaluationEntry.jsx`(평가 대상), `useClassAgitClass.js`(오늘의 활동 — 글·반응·댓글 3개 질의).
+  모두 `.eq('students.class_id', …)` → `.eq('class_id', …)`.
+  **안전성 확인 후 변경**: 세 테이블 모두 `class_id` NULL 0건, `students.class_id` 와 불일치 0건.
+- **실측** (15만 행 사본, 한 학급 1401편, `LIMIT 20`. 측정 후 DB 삭제):
+
+  | | 조인 경유(전) | 직접 필터(후) |
+  |---|---|---|
+  | 읽은 행 | **1425행 전부 가져와 정렬** | 20행에서 중단 |
+  | Buffers | 1467 | **77** |
+  | 실행 시간(3회) | 8.3 / 1.7 / 1.6 ms | **0.12 / 0.17 / 0.09 ms** |
+
+  핵심은 정렬이 사라지는 것 — `(class_id, created_at DESC)` 인덱스가 필터와 정렬을 함께 처리해 `LIMIT` 에서 멈춘다.
+- **친구아지트 확인**: 문제 없음. `mission_id`(미션→학급) 또는 `class_id` 직접 또는 글 id 로 좁히고 있다.
+  `FriendWritingShelf` 는 친구 1명(`student_id`) 기준 + `limit(36)` 이라 규모 위험 없음.
+- **캐시 일원화**: 앞 항목에서 독서록에 급히 만들었던 컴포넌트 전용 캐시를 걷어내고
+  기존 `src/lib/cache.js` 의 `dataCache` 로 옮겼다. 공용 유틸에 3가지 추가:
+  - `set(key, data)` — "더 보기"로 이어 붙인 목록을 다시 요청 없이 담아 두기 위해
+  - `invalidatePrefix(prefix)` — 글 하나 고치면 그 학급의 목록·집계·현황이 함께 틀어지는데,
+    어떤 키가 떠 있는지 부르는 쪽이 알 수 없어서
+  - `classKey(classId, name, params)` / `classScope(classId)` — 키 앞을 `posts:<classId>` 로 고정.
+    **학급끼리 캐시가 섞이지 않는 것을 코드로 보장**(다른 학급 키가 접두사에 안 걸림을 확인).
+- **결과/검증**: 린트 0(에러), 빌드 통과. 캐시 키 형식 확인 —
+  `posts:CLS1:reading-log-list:filter=unreviewed&q=&student=all`, 접두사 `posts:CLS1`.
+- **남은 것**:
+  - RPC 안의 `LEFT JOIN reading_log_entries re ON re.post_id = p.id` 는 아직 학급을 안 건다.
+    `reading_log_entries` 에 `class_id` 는 있으나 **인덱스가 없어**, 조인 조건만 추가하면 오히려 나빠질 수 있다.
+    확인 기록 테이블처럼 실제로 문제가 되는지 **측정한 뒤** 인덱스와 함께 고칠 것.
+  - 브라우저 확인은 사용자 몫(로그인 필요). 특히 **최근 활동 / 오늘의 활동 / 미션 제출 글 목록 / 평가 화면**이
+    이번에 조회 조건이 바뀐 곳이라 눈으로 한 번 봐야 한다.
+
+---
+
 ## 2026-07-28 — 독서록 조회: 전 학급 확인기록 Seq Scan 제거 + 짧은 캐시 (Claude)
 - **배경**: 사용자 제안 — "매번 전체를 검색하지 말고, 이미 확인한 건 캐싱으로 넘기고
   확인 안 한 지점부터만 조회하면 어떻겠냐". 캐시를 붙이기 전에 **무엇이 실제로 비싼지** 다시 측정했고,

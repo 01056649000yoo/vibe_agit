@@ -138,22 +138,24 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
                         .single();
                     return { classData: data, classError: error };
                 }, 60000),
+                // 세 테이블 모두 class_id 를 직접 들고 있다. students 를 거쳐 걸면
+                // 학급 인덱스를 못 써서 전 학급 분량을 훑고 나서 버리게 된다.
                 supabase
                     .from('student_posts')
                     .select('student_id, students!inner(name)')
-                    .eq('students.class_id', classId)
+                    .eq('class_id', classId)
                     .gte('created_at', todayStart.toISOString())
                     .lt('created_at', tomorrow.toISOString()),
                 supabase
                     .from('post_reactions')
                     .select('student_id, students!inner(name)')
-                    .eq('students.class_id', classId)
+                    .eq('class_id', classId)
                     .gte('created_at', todayStart.toISOString())
                     .lt('created_at', tomorrow.toISOString()),
                 supabase
                     .from('post_comments')
                     .select('student_id, students!inner(name)')
-                    .eq('students.class_id', classId)
+                    .eq('class_id', classId)
                     .gte('created_at', todayStart.toISOString())
                     .lt('created_at', tomorrow.toISOString()),
                 supabase

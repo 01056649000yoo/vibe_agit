@@ -35,7 +35,8 @@ const MissionEvaluationEntry = ({ mission, activeClass, isMobile, onClose, onSav
                 .select('id, title, content, student_id, initial_eval, final_eval, eval_comment, is_submitted, students!inner(id, name, class_id)')
                 .eq('mission_id', mission.id)
                 .eq('is_submitted', true)
-                .eq('students.class_id', activeClass.id)
+                // 학급은 student_posts.class_id 로 직접 좁힌다 (students 경유 금지).
+                .eq('class_id', activeClass.id)
                 .is('students.deleted_at', null);
 
             if (!isMounted) return;

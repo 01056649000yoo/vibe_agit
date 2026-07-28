@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../../components/common/Button';
 import { supabase } from '../../../../lib/supabaseClient';
+import { classKey, classScope, dataCache } from '../../../../lib/cache';
 
 const EMPTY_COUNTS = { total: 0, unreviewed: 0, reviewed: 0, students: 0 };
 
@@ -95,22 +96,6 @@ const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
         return () => window.clearTimeout(timerId);
     }, [classId, reviewFilter, debouncedQuery]);
 
-    const cacheRef = useRef(new Map());
-
-    const readCache = useCallback((key) => {
-        const hit = cacheRef.current.get(key);
-        if (!hit) return null;
-        if (Date.now() - hit.at > CACHE_TTL_MS) {
-            cacheRef.current.delete(key);
-            return null;
-        }
-        return hit.value;
-    }, []);
-
-    const writeCache = useCallback((key, value) => {
-        cacheRef.current.set(key, { at: Date.now(), value });
-    }, []);
-
     const fetchPage = useCallback(async (offset) => {
         return supabase.rpc('get_teacher_reading_log_overview', {
             p_class_id: classId,
@@ -122,78 +107,65 @@ const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
         });
     }, [classId, reviewFilter, studentFilter, debouncedQuery]);
 
-    const recentKey = `recent|${classId}|${reviewFilter}|${studentFilter}|${debouncedQuery}`;
-    const summaryKey = `summary|${classId}|${debouncedQuery}`;
+    const recentKey = classKey(classId, 'reading-log-list', {
+        filter: reviewFilter, student: studentFilter, q: debouncedQuery
+    });
+    const summaryKey = classKey(classId, 'reading-log-by-student', { q: debouncedQuery });
 
     const fetchRecent = useCallback(async () => {
         if (!classId) return;
-
-        const cached = readCache(recentKey);
-        if (cached) {
-            setItems(cached.items);
-            setCounts(cached.counts);
-            setLoadError('');
-            setLoading(false);
-            return;
-        }
-
-        setLoading(true);
         setLoadError('');
 
-        const { data, error } = await fetchPage(0);
-
-        if (error) {
+        try {
+            const cached = await dataCache.get(recentKey, async () => {
+                setLoading(true);
+                const { data, error } = await fetchPage(0);
+                if (error) throw error;
+                return {
+                    items: Array.isArray(data?.items) ? data.items : [],
+                    counts: { ...EMPTY_COUNTS, ...(data?.counts || {}) }
+                };
+            }, CACHE_TTL_MS);
+            setItems(cached.items);
+            setCounts(cached.counts);
+        } catch (error) {
             console.error('교사 독서록 목록 로드 실패:', error.message);
             setItems([]);
             setCounts(EMPTY_COUNTS);
             setLoadError('학생 독서록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
-        } else {
-            const nextItems = Array.isArray(data?.items) ? data.items : [];
-            const nextCounts = { ...EMPTY_COUNTS, ...(data?.counts || {}) };
-            setItems(nextItems);
-            setCounts(nextCounts);
-            writeCache(recentKey, { items: nextItems, counts: nextCounts });
         }
         setLoading(false);
-    }, [classId, fetchPage, recentKey, readCache, writeCache]);
+    }, [classId, fetchPage, recentKey]);
 
     const fetchSummary = useCallback(async () => {
         if (!classId) return;
-
-        const cached = readCache(summaryKey);
-        if (cached) {
-            setSummary(cached);
-            setLoadError('');
-            setLoading(false);
-            return;
-        }
-
-        setLoading(true);
         setLoadError('');
 
-        const { data, error } = await supabase.rpc('get_teacher_reading_log_student_summary', {
-            p_class_id: classId,
-            p_query: debouncedQuery || null
-        });
-
-        if (error) {
+        try {
+            const rows = await dataCache.get(summaryKey, async () => {
+                setLoading(true);
+                const { data, error } = await supabase.rpc('get_teacher_reading_log_student_summary', {
+                    p_class_id: classId,
+                    p_query: debouncedQuery || null
+                });
+                if (error) throw error;
+                return Array.isArray(data?.students) ? data.students : [];
+            }, CACHE_TTL_MS);
+            setSummary(rows);
+        } catch (error) {
             console.error('학생별 독서록 요약 로드 실패:', error.message);
             setSummary([]);
             setLoadError('학생별 현황을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
-        } else {
-            const rows = Array.isArray(data?.students) ? data.students : [];
-            setSummary(rows);
-            writeCache(summaryKey, rows);
         }
         setLoading(false);
-    }, [classId, debouncedQuery, summaryKey, readCache, writeCache]);
+    }, [classId, debouncedQuery, summaryKey]);
 
     const refresh = useCallback(async () => {
-        cacheRef.current.clear();
+        dataCache.invalidatePrefix(classScope(classId));
         setStudentLogs(new Map());
         if (viewMode === 'student') await fetchSummary();
         else await fetchRecent();
-    }, [viewMode, fetchSummary, fetchRecent]);
+    }, [classId, viewMode, fetchSummary, fetchRecent]);
 
     // 보기별로 나눈 이유: 하나로 두면 필터를 누를 때마다 fetchRecent 의 정체가 바뀌어,
     // 학생별 보기에서도(그쪽은 필터를 화면에서 처리하는데) 요약을 다시 받아왔다.
@@ -250,7 +222,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
             setCounts(nextCounts);
             // 더 받은 만큼까지 캐시에 담아 둔다. 보기를 바꿨다 돌아왔을 때
             // 첫 50편으로 되돌아가 다시 눌러야 하는 일이 없도록.
-            writeCache(recentKey, { items: merged, counts: nextCounts });
+            dataCache.set(recentKey, { items: merged, counts: nextCounts });
         }
         setLoadingMore(false);
     };

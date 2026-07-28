@@ -556,7 +556,8 @@ export const useMissionManager = (activeClass) => {
                     post_comments(id, content, student_id, teacher_id, created_at, students(name))
                 `)
                 .eq('mission_id', mission.id)
-                .eq('students.class_id', activeClass.id)
+                // 학급은 student_posts.class_id 로 직접 좁힌다 (students 경유 금지).
+                .eq('class_id', activeClass.id)
                 .is('students.deleted_at', null)
                 .order('created_at', { ascending: false });
 

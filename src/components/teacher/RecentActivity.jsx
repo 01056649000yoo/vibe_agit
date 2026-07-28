@@ -20,7 +20,9 @@ const RecentActivity = ({ classId, onPostClick }) => {
                     students!inner(name, class_id),
                     writing_missions!inner(title)
                 `)
-                .eq('students.class_id', classId)
+                // 학급은 student_posts.class_id 로 직접 좁힌다. students 를 거쳐 걸면
+                // 학급 인덱스를 못 써서 다른 학급 글까지 훑고 나서 버리게 된다.
+                .eq('class_id', classId)
                 .is('students.deleted_at', null)
                 .order('created_at', { ascending: false })
                 .limit(20);

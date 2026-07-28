@@ -62,6 +62,13 @@ export const dataCache = {
         pendingRequests.set(key, promise);
         return promise;
     },
+    /**
+     * 이미 손에 있는 결과를 캐시에 직접 넣는다.
+     * "더 보기"처럼 이어 받아 합친 목록을 다시 요청하지 않고 담아 둘 때 쓴다.
+     */
+    set(key, data) {
+        cache.set(key, { data, timestamp: Date.now() });
+    },
     invalidate(key) {
         if (key) {
             cache.delete(key);
@@ -72,5 +79,39 @@ export const dataCache = {
                 if (k.startsWith('cache_')) localStorage.removeItem(k);
             });
         }
+    },
+    /**
+     * 앞부분이 같은 키를 한꺼번에 버린다.
+     * 글 한 편을 고치면 그 학급의 목록·집계·현황이 같이 틀어지는데, 어떤 키가 떠 있는지
+     * 부르는 쪽이 일일이 알 수 없다. `classKey()` 로 키를 만들어 두면 학급 하나만 비울 수 있다.
+     * @param {string} prefix 예: `posts:<classId>`
+     */
+    invalidatePrefix(prefix) {
+        if (!prefix) return;
+        cache.forEach((_, key) => {
+            if (key.startsWith(prefix)) cache.delete(key);
+        });
+        Object.keys(localStorage).forEach((k) => {
+            if (k.startsWith(`cache_${prefix}`)) localStorage.removeItem(k);
+        });
     }
 };
+
+/**
+ * 학급에 매인 조회의 캐시 키를 만든다. **학급 글 조회의 캐시 키는 모두 이걸로 만든다.**
+ * 앞이 `posts:<classId>` 로 고정되므로 `dataCache.invalidatePrefix(classScope(classId))`
+ * 한 번으로 그 학급 것만 비울 수 있다.
+ *
+ * @param {string} classId 학급 id
+ * @param {string} name 조회 이름 (예: 'reading-log-list')
+ * @param {object} params 조회를 가르는 값들 (필터·검색어·페이지 등)
+ */
+export const classKey = (classId, name, params = {}) => {
+    const parts = Object.entries(params)
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([k, v]) => `${k}=${v ?? ''}`);
+    return `posts:${classId}:${name}${parts.length ? `:${parts.join('&')}` : ''}`;
+};
+
+/** 그 학급의 캐시를 전부 가리키는 접두사. */
+export const classScope = (classId) => `posts:${classId}`;
