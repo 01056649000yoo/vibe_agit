@@ -21,6 +21,20 @@
 
 ---
 
+## 2026-07-28 — 공용 AI 전용 전환 마무리 (PERSONAL 잔여 2명 정리) (Claude)
+- **경위**: 맥미니에서 원격 10개 커밋 pull 후 상태 점검 중, `20260804_system_ai_only` 마이그레이션이 적용됐음에도
+  `api_mode='PERSONAL'` 교사 2명이 남아 있는 것을 발견(마이그레이션 이후 재설정된 것으로 추정).
+- **확인**: 두 계정 모두 **개인 OpenAI 키가 없는 상태** — PERSONAL 모드인데 키가 없어 **AI 피드백이 동작하지 않던 상태**였음.
+  공용 전환이 오히려 정상화에 해당.
+- **조치**: `UPDATE public.profiles SET api_mode='SYSTEM' WHERE COALESCE(api_mode,'SYSTEM') <> 'SYSTEM'` (2건) →
+  **전체 79명 SYSTEM 통일**. 컬럼 기본값은 이미 `'SYSTEM'`.
+- **동작 조건 검증**: `system_settings.use_central_api = true` ✅ / 공용 OpenAI 키 유효(OpenAI API 200) ✅.
+- **함께 확인한 것(코드 최신화)**: 원격 10커밋 pull(HEAD `eb52f12`), 커밋 안 된 변경 0건, 빌드 통과,
+  최근 마이그레이션 8개가 만든 테이블·함수 30개 **전수 대조 결과 모두 적용됨**, 배포 success, 서비스 200·컨테이너 15개 정상.
+  ※ 점검 초반 `reading_log_reviews`(오타)로 조회해 '미적용'으로 오판했으나, 실제 이름 `reading_log_teacher_reviews`로 재확인해 정상 확인.
+- **남은 것 / 다음**: `profile_secrets.personal_openai_api_key` 잔여 값은 마이그레이션 주석대로
+  **공용 AI 안정화·비용 모니터링 뒤 별도 승인으로 파기**(현재 보존).
+
 ## 2026-07-28 — 학생 관리 좌측 메뉴·고밀도 명단 UI (GPT/Codex)
 - **한 일**: 학생 관리 화면을 `학생 명단 / 최근 활동 / 학급 분석 / 학급 설정` 좌측 세로 메뉴로 재구성하고,
   모바일에서는 가로 메뉴로 유지. 첫 진입은 학생 명단이며 큰 학급 정보 카드는 학급 설정을 선택할 때만 마운트한다.
