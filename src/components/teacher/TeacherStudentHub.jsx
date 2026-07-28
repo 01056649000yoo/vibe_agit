@@ -36,16 +36,16 @@ const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost, onN
             description: '활동과 학급 분석'
         },
         {
-            id: 'students',
-            icon: '👥',
-            label: '학생 명단 관리',
-            description: '학생·코드·포인트'
-        },
-        {
             id: 'activity',
             icon: '🔔',
             label: '최근 활동',
             description: '과제·독서록·댓글'
+        },
+        {
+            id: 'students',
+            icon: '👥',
+            label: '학생 명단 관리',
+            description: '학생·코드·포인트'
         }
     ];
 
