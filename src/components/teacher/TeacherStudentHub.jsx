@@ -77,30 +77,18 @@ const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost }) =
                 <SummaryStat icon="📊" label="평균 글자 수" value={`${summary.avg_chars}자`} />
             </div>
 
-            {/* 명단은 넓게, 최근 활동은 원래 좁고 긴 모양이라 옆에 세운다. */}
-            <div style={{
-                display: isMobile ? 'flex' : 'grid',
-                flexDirection: isMobile ? 'column' : undefined,
-                gridTemplateColumns: isMobile ? undefined : 'minmax(0, 1fr) 320px',
-                gap: '16px',
-                alignItems: 'start'
-            }}>
-                <section aria-label="학생 명단" style={cardStyle(isMobile)}>
-                    <Suspense fallback={<PanelLoading>학생 명단을 준비하는 중...</PanelLoading>}>
-                        <StudentManager activeClass={activeClass} classId={classId} isDashboardMode={false} />
-                    </Suspense>
-                </section>
+            {/* 두 영역 모두 전체 폭을 쓰고, 내부 항목을 PC 2열로 배치한다. */}
+            <section aria-label="학생 명단" style={cardStyle(isMobile)}>
+                <Suspense fallback={<PanelLoading>학생 명단을 준비하는 중...</PanelLoading>}>
+                    <StudentManager activeClass={activeClass} classId={classId} isDashboardMode={false} />
+                </Suspense>
+            </section>
 
-                <section aria-label="최근 활동" style={{
-                    ...cardStyle(isMobile),
-                    position: isMobile ? undefined : 'sticky',
-                    top: isMobile ? undefined : '8px'
-                }}>
-                    <Suspense fallback={<PanelLoading>최근 활동을 준비하는 중...</PanelLoading>}>
-                        <RecentActivity classId={classId} onPostClick={(post) => setSelectedActivityPost(post)} />
-                    </Suspense>
-                </section>
-            </div>
+            <section aria-label="최근 활동" style={cardStyle(isMobile)}>
+                <Suspense fallback={<PanelLoading>최근 활동을 준비하는 중...</PanelLoading>}>
+                    <RecentActivity classId={classId} isMobile={isMobile} onPostClick={(post) => setSelectedActivityPost(post)} />
+                </Suspense>
+            </section>
 
             <section aria-label="학급 분석" style={{
                 background: 'white', borderRadius: '18px', border: '1px solid #E2E8F0',

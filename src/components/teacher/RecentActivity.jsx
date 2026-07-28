@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
 // 최근 활동 요약 컴포넌트
-const RecentActivity = ({ classId, onPostClick }) => {
+const RecentActivity = ({ classId, isMobile, onPostClick }) => {
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -49,24 +49,26 @@ const RecentActivity = ({ classId, onPostClick }) => {
     return (
         <div style={{ width: '100%' }}>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: '#212529', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🔔 최근 활동
+                🔔 최근 활동 <span style={{ color: '#94A3B8', fontSize: '0.78rem' }}>{activities.length}건</span>
             </h3>
             <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                maxHeight: '400px',
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))',
+                gridAutoRows: 'minmax(70px, auto)',
+                maxHeight: '440px',
                 overflowY: 'auto',
                 gap: '8px',
                 paddingRight: '4px', // 스크롤바 공간
                 scrollbarWidth: 'thin'
             }}>
                 {loading ? (
-                    <p style={{ textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem', padding: '20px' }}>로딩 중...</p>
+                    <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem', padding: '20px' }}>로딩 중...</p>
                 ) : activities.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem', padding: '40px' }}>아직 활동 내용이 없어요. ✍️</p>
+                    <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem', padding: '40px' }}>아직 활동 내용이 없어요. ✍️</p>
                 ) : (
                     activities.map((act) => (
-                        <div
+                        <button
+                            type="button"
                             key={act.id}
                             onClick={() => onPostClick && onPostClick(act)}
                             style={{
@@ -76,16 +78,18 @@ const RecentActivity = ({ classId, onPostClick }) => {
                                 border: '1px solid #F1F3F5',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                boxSizing: 'border-box'
+                                boxSizing: 'border-box',
+                                minWidth: 0,
+                                textAlign: 'left'
                             }}
                             onMouseEnter={e => {
                                 e.currentTarget.style.background = '#F8F9FA';
-                                e.currentTarget.style.transform = 'translateX(4px)';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
                                 e.currentTarget.style.borderColor = '#3498DB';
                             }}
                             onMouseLeave={e => {
                                 e.currentTarget.style.background = '#FFFFFF';
-                                e.currentTarget.style.transform = 'translateX(0)';
+                                e.currentTarget.style.transform = 'translateY(0)';
                                 e.currentTarget.style.borderColor = '#F1F3F5';
                             }}
                         >
@@ -106,7 +110,7 @@ const RecentActivity = ({ classId, onPostClick }) => {
                             <div style={{ fontSize: '0.7rem', color: '#3498DB', marginTop: '2px' }}>
                                 미션: {act.writing_missions?.title || act.writing_missions?.[0]?.title || '미션 정보 없음'}
                             </div>
-                        </div>
+                        </button>
                     ))
                 )}
             </div>
