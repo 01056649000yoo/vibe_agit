@@ -10,6 +10,8 @@ import PromptRuleButton from './PromptRuleButton';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../modules/writing/evaluation/RubricSettings';
 import MissionEvaluationEntry from '../../modules/writing/evaluation/MissionEvaluationEntry';
 import {
+    formatKoreanGradeBand,
+    getCurriculumGradeBand,
     getRecommendedStandardCodesForMission,
     resolveKoreanStandards
 } from '../../modules/writing/evaluation/koreanAchievementStandards';
@@ -149,8 +151,10 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
 
     const missionsWithoutStandards = useMemo(() => selectedMissions.filter((mission) => (
         !mission.evaluation_rubric?.use_rubric
+        || !getCurriculumGradeBand(mission.evaluation_rubric?.curriculum)
         || resolveKoreanStandards(
-            mission.evaluation_rubric?.curriculum?.achievement_standard_codes
+            mission.evaluation_rubric?.curriculum?.achievement_standard_codes,
+            mission.evaluation_rubric?.curriculum
         ).length === 0
     )), [selectedMissions]);
 
@@ -163,10 +167,11 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         if (!rubricMission || !rubricDraft) return;
 
         const standards = resolveKoreanStandards(
-            rubricDraft.curriculum?.achievement_standard_codes
+            rubricDraft.curriculum?.achievement_standard_codes,
+            rubricDraft.curriculum
         );
-        if (!rubricDraft.use_rubric || !rubricDraft.curriculum?.grade || standards.length === 0) {
-            alert('평가 루브릭을 켜고 학년과 관련 국어 성취기준을 1개 이상 선택해주세요.');
+        if (!rubricDraft.use_rubric || !getCurriculumGradeBand(rubricDraft.curriculum) || standards.length === 0) {
+            alert('평가 루브릭을 켜고 학년군과 관련 국어 성취기준을 1개 이상 선택해주세요.');
             return;
         }
 
@@ -196,10 +201,15 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
 
     const openEvaluationEntry = (mission) => {
         const standards = resolveKoreanStandards(
-            mission.evaluation_rubric?.curriculum?.achievement_standard_codes
+            mission.evaluation_rubric?.curriculum?.achievement_standard_codes,
+            mission.evaluation_rubric?.curriculum
         );
-        if (!mission.evaluation_rubric?.use_rubric || standards.length === 0) {
-            alert('먼저 해당 글의 학년과 관련 성취기준을 선택해주세요.');
+        if (
+            !mission.evaluation_rubric?.use_rubric
+            || !getCurriculumGradeBand(mission.evaluation_rubric?.curriculum)
+            || standards.length === 0
+        ) {
+            alert('먼저 해당 글의 학년군과 관련 국어 성취기준을 선택해주세요.');
             openRubricSettings(mission);
             return;
         }
@@ -359,14 +369,17 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
             const rubric = p.writing_missions?.evaluation_rubric || {};
             const score = p.final_eval ?? p.initial_eval;
             const level = rubric.levels?.find((item) => item.score === score);
-            const standards = resolveKoreanStandards(rubric.curriculum?.achievement_standard_codes);
+            const standards = resolveKoreanStandards(
+                rubric.curriculum?.achievement_standard_codes,
+                rubric.curriculum
+            );
             const standardsText = standards.length > 0
                 ? standards.map((standard) => `[${standard.code}] ${standard.description}`).join('\n')
                 : '연결된 국어 성취기준 없음';
 
             return `
 [미션명]: ${p.writing_missions?.title || '정보없음'}
-[적용 학년]: ${rubric.curriculum?.grade ? `${rubric.curriculum.grade}학년` : '미지정'}
+[적용 학년군]: ${formatKoreanGradeBand(rubric.curriculum)}
 [국어 성취기준]:
 ${standardsText}
 [교사 평가]: ${score ? `${level?.label || `${score}점`} (${score}점)` : '평가 전'}
@@ -692,12 +705,19 @@ ${activitiesInfo}`;
                                         <span style={{ display: 'block', fontWeight: selectedMissionIds.includes(m.id) ? 'bold' : 'normal', color: selectedMissionIds.includes(m.id) ? '#312E81' : '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {m.title} {m.is_archived && <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 'normal' }}>(보관됨)</span>}
                                         </span>
-                                        {m.evaluation_rubric?.curriculum?.achievement_standard_codes?.length > 0 && (
+                                        {m.evaluation_rubric?.use_rubric
+                                            && getCurriculumGradeBand(m.evaluation_rubric?.curriculum)
+                                            && resolveKoreanStandards(
+                                                m.evaluation_rubric?.curriculum?.achievement_standard_codes,
+                                                m.evaluation_rubric?.curriculum
+                                            ).length > 0 ? (
                                             <span style={{ display: 'block', marginTop: '3px', color: '#6366F1', fontSize: '0.68rem', fontWeight: '800' }}>
-                                                {m.evaluation_rubric.curriculum.grade}학년 · 성취기준 {m.evaluation_rubric.curriculum.achievement_standard_codes.length}개
+                                                {formatKoreanGradeBand(m.evaluation_rubric.curriculum)} · 성취기준 {resolveKoreanStandards(
+                                                    m.evaluation_rubric.curriculum.achievement_standard_codes,
+                                                    m.evaluation_rubric.curriculum
+                                                ).length}개
                                             </span>
-                                        )}
-                                        {(!m.evaluation_rubric?.use_rubric || !m.evaluation_rubric?.curriculum?.achievement_standard_codes?.length) && (
+                                        ) : (
                                             <span style={{ display: 'block', marginTop: '3px', color: '#DC2626', fontSize: '0.68rem', fontWeight: '900' }}>
                                                 성취기준 선택 필요
                                             </span>

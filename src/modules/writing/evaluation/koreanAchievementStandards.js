@@ -1,5 +1,10 @@
 export const KOREAN_CURRICULUM_VERSION = '2022';
 
+export const KOREAN_GRADE_BANDS = [
+    { value: '3-4', label: '3~4학년군' },
+    { value: '5-6', label: '5~6학년군' }
+];
+
 // 2022 개정 국어과 교육과정 중 글쓰기 미션으로 직접 관찰할 수 있는
 // 쓰기 영역과 시 창작 관련 문학 영역 성취기준만 제공한다.
 export const KOREAN_ACHIEVEMENT_STANDARDS = [
@@ -83,20 +88,50 @@ export const KOREAN_ACHIEVEMENT_STANDARDS = [
     }
 ];
 
-export const getGradeBand = (grade) => (
-    Number(grade) >= 5 ? '5-6' : Number(grade) >= 3 ? '3-4' : null
+export const getGradeBand = (value) => {
+    if (value === '3-4' || value === '5-6') return value;
+
+    const grade = Number(value);
+    if (grade >= 5 && grade <= 6) return '5-6';
+    if (grade >= 3 && grade <= 4) return '3-4';
+    return null;
+};
+
+// 기존 미션은 curriculum.grade(3~6), 새 미션은 curriculum.grade_band를 쓴다.
+// 읽을 때 둘 다 지원해 운영 중인 평가 설정이 끊기지 않게 한다.
+export const getCurriculumGradeBand = (curriculum = {}) => (
+    getGradeBand(curriculum?.grade_band ?? curriculum?.gradeBand ?? curriculum?.grade)
 );
 
-export const getKoreanStandardsForGrade = (grade) => {
-    const gradeBand = getGradeBand(grade);
+export const formatKoreanGradeBand = (value) => {
+    const gradeBand = value && typeof value === 'object'
+        ? getCurriculumGradeBand(value)
+        : getGradeBand(value);
+    return gradeBand ? `${gradeBand.replace('-', '~')}학년군` : '학년군 미지정';
+};
+
+export const getKoreanStandardsForGradeBand = (value) => {
+    const gradeBand = value && typeof value === 'object'
+        ? getCurriculumGradeBand(value)
+        : getGradeBand(value);
     return gradeBand
         ? KOREAN_ACHIEVEMENT_STANDARDS.filter((standard) => standard.gradeBand === gradeBand)
         : [];
 };
 
-export const resolveKoreanStandards = (codes = []) => {
+// 이전 호출부와 저장 데이터 호환용 별칭. 새 화면은 학년군 API를 사용한다.
+export const getKoreanStandardsForGrade = (grade) => {
+    return getKoreanStandardsForGradeBand(grade);
+};
+
+export const resolveKoreanStandards = (codes = [], gradeBandValue = null) => {
     const codeSet = new Set(Array.isArray(codes) ? codes : []);
-    return KOREAN_ACHIEVEMENT_STANDARDS.filter((standard) => codeSet.has(standard.code));
+    const gradeBand = gradeBandValue && typeof gradeBandValue === 'object'
+        ? getCurriculumGradeBand(gradeBandValue)
+        : getGradeBand(gradeBandValue);
+    return KOREAN_ACHIEVEMENT_STANDARDS.filter((standard) => (
+        codeSet.has(standard.code) && (!gradeBand || standard.gradeBand === gradeBand)
+    ));
 };
 
 const includesAnyKeyword = (text, keywords) => keywords.some((keyword) => text.includes(keyword));

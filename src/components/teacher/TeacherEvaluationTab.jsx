@@ -3,7 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import EvaluationReport from './EvaluationReport';
-import { resolveKoreanStandards } from '../../modules/writing/evaluation/koreanAchievementStandards';
+import {
+    formatKoreanGradeBand,
+    resolveKoreanStandards
+} from '../../modules/writing/evaluation/koreanAchievementStandards';
 
 const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
     const [missions, setMissions] = useState([]);
@@ -56,7 +59,10 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
                     {evaluationMissions.map((mission) => {
                         const curriculum = mission.evaluation_rubric?.curriculum;
-                        const standardCount = resolveKoreanStandards(curriculum?.achievement_standard_codes).length;
+                        const standardCount = resolveKoreanStandards(
+                            curriculum?.achievement_standard_codes,
+                            curriculum
+                        ).length;
 
                         return (
                         <motion.div
@@ -89,7 +95,7 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
                                     padding: '10px 12px', borderRadius: '14px', background: '#EEF2FF',
                                     color: '#4338CA', fontSize: '0.8rem', fontWeight: '800'
                                 }}>
-                                    📚 2022 국어 · {curriculum.grade}학년 · 성취기준 {standardCount}개
+                                    📚 2022 국어 · {formatKoreanGradeBand(curriculum)} · 성취기준 {standardCount}개
                                 </div>
                             )}
                             <Button

@@ -2,7 +2,10 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEvaluation } from '../../hooks/useEvaluation';
 import Button from '../common/Button';
-import { resolveKoreanStandards } from '../../modules/writing/evaluation/koreanAchievementStandards';
+import {
+    formatKoreanGradeBand,
+    resolveKoreanStandards
+} from '../../modules/writing/evaluation/koreanAchievementStandards';
 
 const EvaluationReport = ({ mission, onClose, isMobile }) => {
     const { fetchMissionReport } = useEvaluation();
@@ -31,7 +34,10 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
     const maxScore = mission?.evaluation_rubric?.levels?.length || 3;
     const requiredGrowth = maxScore === 3 ? 2 : maxScore === 4 ? 3 : 4;
     const curriculum = mission?.evaluation_rubric?.curriculum;
-    const linkedStandards = resolveKoreanStandards(curriculum?.achievement_standard_codes);
+    const linkedStandards = resolveKoreanStandards(
+        curriculum?.achievement_standard_codes,
+        curriculum
+    );
 
     // 통계 계산
     const stats = useMemo(() => {
@@ -116,7 +122,7 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                         padding: isMobile ? '16px' : '18px 22px', marginBottom: '24px'
                     }}>
                         <div style={{ color: '#3730A3', fontWeight: '900', marginBottom: '8px' }}>
-                            📚 2022 개정 국어과 · {curriculum.grade}학년 · 성취기준 {linkedStandards.length}개 연결
+                            📚 2022 개정 국어과 · {formatKoreanGradeBand(curriculum)} · 성취기준 {linkedStandards.length}개 연결
                         </div>
                         <div style={{ display: 'grid', gap: '5px', color: '#4338CA', fontSize: '0.82rem', lineHeight: 1.5 }}>
                             {linkedStandards.map((standard) => (

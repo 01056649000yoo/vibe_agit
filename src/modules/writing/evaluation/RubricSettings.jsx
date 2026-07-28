@@ -1,8 +1,9 @@
 import React from 'react';
 import Button from '../../../components/common/Button';
 import {
-    getGradeBand,
-    getKoreanStandardsForGrade,
+    getCurriculumGradeBand,
+    getKoreanStandardsForGradeBand,
+    KOREAN_GRADE_BANDS,
     KOREAN_CURRICULUM_VERSION,
 } from './koreanAchievementStandards';
 
@@ -32,6 +33,13 @@ export const createDefaultEvaluationRubric = (rubric = null) => {
         ? rubric.levels.map((level) => ({ ...level }))
         : LEVEL_PRESETS[3].map((level) => ({ ...level }));
     const curriculum = rubric?.curriculum || {};
+    const gradeBand = getCurriculumGradeBand(curriculum);
+    const availableCodes = new Set(
+        getKoreanStandardsForGradeBand(gradeBand).map((standard) => standard.code)
+    );
+    const selectedCodes = Array.isArray(curriculum.achievement_standard_codes)
+        ? curriculum.achievement_standard_codes.filter((code) => availableCodes.has(code))
+        : [];
 
     return {
         ...(rubric || {}),
@@ -40,10 +48,8 @@ export const createDefaultEvaluationRubric = (rubric = null) => {
         curriculum: {
             version: curriculum.version || KOREAN_CURRICULUM_VERSION,
             subject: '국어',
-            grade: [3, 4, 5, 6].includes(Number(curriculum.grade)) ? Number(curriculum.grade) : null,
-            achievement_standard_codes: Array.isArray(curriculum.achievement_standard_codes)
-                ? [...curriculum.achievement_standard_codes]
-                : []
+            grade_band: gradeBand,
+            achievement_standard_codes: selectedCodes
         }
     };
 };
@@ -57,7 +63,7 @@ const RubricSettings = ({
 }) => {
     const normalized = createDefaultEvaluationRubric(rubric);
     const curriculum = normalized.curriculum;
-    const availableStandards = getKoreanStandardsForGrade(curriculum.grade);
+    const availableStandards = getKoreanStandardsForGradeBand(curriculum.grade_band);
     const selectedCodes = curriculum.achievement_standard_codes;
 
     const updateRubric = (patch) => onChange({ ...normalized, ...patch });
@@ -65,14 +71,16 @@ const RubricSettings = ({
         curriculum: { ...curriculum, ...patch }
     });
 
-    const handleGradeChange = (event) => {
-        const grade = event.target.value ? Number(event.target.value) : null;
-        const keepCodes = getGradeBand(grade) === getGradeBand(curriculum.grade);
-        const gradeStandardCodes = new Set(getKoreanStandardsForGrade(grade).map((standard) => standard.code));
-        const recommendedForGrade = recommendedCodes.filter((code) => gradeStandardCodes.has(code));
+    const handleGradeBandChange = (event) => {
+        const gradeBand = event.target.value || null;
+        const keepCodes = gradeBand === curriculum.grade_band;
+        const gradeBandStandardCodes = new Set(
+            getKoreanStandardsForGradeBand(gradeBand).map((standard) => standard.code)
+        );
+        const recommendedForGradeBand = recommendedCodes.filter((code) => gradeBandStandardCodes.has(code));
         updateCurriculum({
-            grade,
-            achievement_standard_codes: keepCodes ? selectedCodes : recommendedForGrade
+            grade_band: gradeBand,
+            achievement_standard_codes: keepCodes ? selectedCodes : recommendedForGradeBand
         });
     };
 
@@ -205,27 +213,29 @@ const RubricSettings = ({
                                     📚 국어 성취기준 연결
                                 </div>
                                 <div style={{ color: '#9A3412', opacity: 0.75, fontSize: '0.75rem', marginTop: '3px' }}>
-                                    국가 성취기준은 학년군 공통이며 실제 지도 학년을 함께 저장합니다. 장르 추천 기준은 학년 선택 시 자동 선택됩니다.
+                                    2022 개정 국어과 교육과정의 학년군을 선택합니다. 장르 관련 기준은 학년군 선택 시 추천됩니다.
                                 </div>
                             </div>
                             <select
-                                value={curriculum.grade || ''}
-                                onChange={handleGradeChange}
-                                aria-label="국어 성취기준 적용 학년"
+                                value={curriculum.grade_band || ''}
+                                onChange={handleGradeBandChange}
+                                aria-label="국어 성취기준 적용 학년군"
                                 style={{
                                     minWidth: '150px', padding: '10px 12px', borderRadius: '12px',
                                     border: '1px solid #FDBA74', background: 'white', color: '#9A3412',
                                     fontWeight: '800', fontSize: '0.85rem'
                                 }}
                             >
-                                <option value="">학년 선택</option>
-                                {[3, 4, 5, 6].map((grade) => <option key={grade} value={grade}>{grade}학년</option>)}
+                                <option value="">학년군 선택</option>
+                                {KOREAN_GRADE_BANDS.map((gradeBand) => (
+                                    <option key={gradeBand.value} value={gradeBand.value}>{gradeBand.label}</option>
+                                ))}
                             </select>
                         </div>
 
-                        {!curriculum.grade ? (
+                        {!curriculum.grade_band ? (
                             <div style={{ padding: '16px', borderRadius: '12px', background: '#FFFBEB', color: '#A16207', fontSize: '0.82rem', textAlign: 'center' }}>
-                                지도 학년을 선택하면 글쓰기 관련 국어 성취기준이 나타납니다.
+                                학년군을 선택하면 글쓰기 관련 국어 성취기준이 나타납니다.
                             </div>
                         ) : (
                             <div style={{ display: 'grid', gap: '8px' }}>

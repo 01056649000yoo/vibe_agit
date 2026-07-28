@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import Button from '../../../components/common/Button';
 import { supabase } from '../../../lib/supabaseClient';
 import { useEvaluation } from '../../../hooks/useEvaluation';
-import { resolveKoreanStandards } from './koreanAchievementStandards';
+import { formatKoreanGradeBand, resolveKoreanStandards } from './koreanAchievementStandards';
 
 const hasEvaluation = (post) => post?.final_eval != null || post?.initial_eval != null;
 
@@ -19,8 +19,10 @@ const MissionEvaluationEntry = ({ mission, activeClass, isMobile, onClose, onSav
         () => posts.find((post) => post.id === selectedPostId) || null,
         [posts, selectedPostId]
     );
+    const curriculum = mission?.evaluation_rubric?.curriculum;
     const standards = resolveKoreanStandards(
-        mission?.evaluation_rubric?.curriculum?.achievement_standard_codes
+        curriculum?.achievement_standard_codes,
+        curriculum
     );
     const levels = mission?.evaluation_rubric?.levels || [];
     const evaluatedCount = posts.filter(hasEvaluation).length;
@@ -133,7 +135,7 @@ const MissionEvaluationEntry = ({ mission, activeClass, isMobile, onClose, onSav
 
                 {standards.length > 0 && (
                     <div style={{ padding: '10px 26px', background: '#EEF2FF', color: '#4338CA', fontSize: '0.78rem', lineHeight: 1.5 }}>
-                        <strong>{mission.evaluation_rubric.curriculum.grade}학년 성취기준:</strong>{' '}
+                        <strong>{formatKoreanGradeBand(curriculum)} 성취기준:</strong>{' '}
                         {standards.map((standard) => `[${standard.code}] ${standard.description}`).join(' · ')}
                     </div>
                 )}
