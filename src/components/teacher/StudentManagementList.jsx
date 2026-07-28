@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 
 const DESKTOP_GRID_COLUMNS = '48px minmax(110px, 0.8fr) 128px 90px minmax(340px, 2.4fr)';
@@ -31,13 +31,20 @@ const actionButtonStyle = (tone = 'neutral') => {
     };
 };
 
+const actionIconButtonStyle = (tone = 'neutral') => ({
+    ...actionButtonStyle(tone),
+    width: '36px',
+    minWidth: '36px',
+    height: '34px',
+    padding: 0,
+    fontSize: '0.9rem'
+});
+
 const StudentManagementList = ({
     displayStudents, isMobile, setSelectedStudentForCode, setIsCodeZoomModalOpen,
     openHistoryModal, handleExportClick, copyCode, copiedId,
     setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant, onOpenPointModal
 }) => {
-    const [openMenuId, setOpenMenuId] = useState(null);
-
     return (
         <div
             className="ranking-scroll"
@@ -57,14 +64,7 @@ const StudentManagementList = ({
             )}
             {displayStudents.map((s, idx) => {
                 const studentNo = idx + 1;
-                const moreActions = [
-                    ['🔍 코드 크게 보기', () => { setSelectedStudentForCode(s); setIsCodeZoomModalOpen(true); }],
-                    ['📜 포인트 기록', () => openHistoryModal(s)],
-                    ['📤 데이터 내보내기', () => handleExportClick(s)],
-                    ['✏️ 기록 도우미', () => onOpenRecordAssistant(s)],
-                    ['🗑️ 학생 삭제', () => { setDeleteTarget(s); setIsDeleteModalOpen(true); }]
-                ];
-                const desktopActions = [
+                const studentActions = [
                     { id: 'copy', icon: copiedId === s.id ? '✅' : '📋', label: copiedId === s.id ? '복사됨' : '코드 복사', action: () => copyCode(s.id, s.student_code) },
                     { id: 'point', icon: '⚡', label: '포인트 조정', action: () => onOpenPointModal(s), tone: 'point' },
                     { id: 'zoom', icon: '🔍', label: '코드 크게', action: () => { setSelectedStudentForCode(s); setIsCodeZoomModalOpen(true); }, tone: 'info' },
@@ -82,7 +82,7 @@ const StudentManagementList = ({
                         transition={{ delay: idx * 0.05 }}
                         style={{
                             display: 'grid', gridTemplateColumns: isMobile ? '36px minmax(90px, 1fr) auto' : DESKTOP_GRID_COLUMNS,
-                            alignItems: 'center', padding: isMobile ? '10px' : '8px 12px', gap: '10px',
+                            alignItems: isMobile ? 'center' : 'start', padding: isMobile ? '10px' : '8px 12px', gap: '10px',
                             background: 'white',
                             border: '1px solid #E9ECEF',
                             borderRadius: '12px', minHeight: isMobile ? '58px' : '50px',
@@ -93,11 +93,11 @@ const StudentManagementList = ({
                         <div style={{ display: 'contents' }}>
                             <div style={{
                                 fontWeight: '900', color: '#ADB5BD',
-                                fontSize: '0.9rem', display: 'flex', justifyContent: 'center'
+                                fontSize: '0.9rem', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '32px'
                             }}>
                                 {studentNo}
                             </div>
-                            <span style={{ fontWeight: '800', color: '#34495E', fontSize: '1rem', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</span>
+                            <span style={{ fontWeight: '800', color: '#34495E', fontSize: '1rem', letterSpacing: '-0.3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', minHeight: '32px' }}>{s.name}</span>
                         </div>
 
                         <div style={{
@@ -107,13 +107,16 @@ const StudentManagementList = ({
                             fontFamily: '"JetBrains Mono", "Roboto Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace',
                             fontFeatureSettings: '"zero" 1, "tnum" 1',
                             minWidth: 0,
-                            position: 'relative'
+                            position: 'relative',
+                            minHeight: '32px',
+                            display: 'flex',
+                            alignItems: 'center'
                         }}>
                             {s.student_code}
                         </div>
 
                         <div style={{ display: isMobile ? 'none' : 'contents' }}>
-                            <div style={{ textAlign: 'right' }}>
+                            <div style={{ textAlign: 'right', minHeight: '32px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                                 <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.1rem' }}>
                                     {(s.total_points || 0).toLocaleString()}
                                 </span>
@@ -121,7 +124,7 @@ const StudentManagementList = ({
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexWrap: 'wrap', gap: '5px' }}>
-                                {desktopActions.map((item) => (
+                                {studentActions.map((item) => (
                                     <button
                                         key={item.id}
                                         type="button"
@@ -136,17 +139,19 @@ const StudentManagementList = ({
                             </div>
                         </div>
                         {isMobile && (
-                            <div style={{ gridColumn: '2 / -1', display: 'flex', justifyContent: 'flex-end', gap: '6px', position: 'relative' }}>
-                                <button type="button" onClick={() => copyCode(s.id, s.student_code)} style={{ height: '30px', padding: '0 9px', border: '1px solid #E2E8F0', borderRadius: '8px', background: '#F8FAFC', cursor: 'pointer' }}>{copiedId === s.id ? '✅ 복사됨' : '📋 코드 복사'}</button>
-                                <button type="button" onClick={() => onOpenPointModal(s)} style={{ height: '30px', padding: '0 9px', border: '1px solid #FFECB3', borderRadius: '8px', background: '#FFF8E1', cursor: 'pointer' }}>⚡ 포인트</button>
-                                <button type="button" onClick={() => setOpenMenuId(openMenuId === s.id ? null : s.id)} style={{ width: '34px', height: '30px', border: '1px solid #CBD5E1', borderRadius: '8px', background: 'white', cursor: 'pointer' }}>⋯</button>
-                                {openMenuId === s.id && (
-                                    <div style={{ position: 'absolute', top: '36px', right: 0, width: '170px', padding: '6px', borderRadius: '12px', background: 'white', border: '1px solid #E2E8F0', boxShadow: '0 12px 28px rgba(15,23,42,.16)', zIndex: 30 }}>
-                                        {moreActions.map(([label, action]) => (
-                                            <button key={label} type="button" onClick={() => { action(); setOpenMenuId(null); }} style={{ width: '100%', padding: '8px 9px', border: 'none', borderRadius: '8px', background: 'transparent', color: label.includes('삭제') ? '#DC2626' : '#334155', textAlign: 'left', cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem' }}>{label}</button>
-                                        ))}
-                                    </div>
-                                )}
+                            <div style={{ gridColumn: '2 / -1', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', gap: '6px' }}>
+                                {studentActions.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={item.action}
+                                        style={actionIconButtonStyle(item.tone)}
+                                        aria-label={item.label}
+                                        title={item.label}
+                                    >
+                                        <span aria-hidden="true">{item.icon}</span>
+                                    </button>
+                                ))}
                             </div>
                         )}
                     </motion.div>
