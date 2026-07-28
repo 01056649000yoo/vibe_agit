@@ -1,5 +1,11 @@
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
 
-createRoot(document.getElementById('root')).render(<App />)
+const isUiPreview = import.meta.env.DEV
+  && new URLSearchParams(window.location.search).get('ui-preview') === '1'
+
+const { default: RootComponent } = isUiPreview
+  ? await import('./dev/UiPreview.jsx')
+  : await import('./App.jsx')
+
+createRoot(document.getElementById('root')).render(<RootComponent />)

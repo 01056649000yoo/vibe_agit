@@ -153,38 +153,6 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         }
     }, [session?.user?.id, fetchAllClasses, fetchApiSettings, fetchTeacherInfo]);
 
-    // [Performance] 활성 학급 변경 시 미션/학생 데이터 백그라운드 프리페칭
-    useEffect(() => {
-        if (!activeClass?.id) return;
-
-        // 1. 미션 목록 프리페칭
-        dataCache.get(`missions_summary_${activeClass.id}`, async () => {
-            const { data, error } = await supabase
-                .from('writing_missions')
-                // 대시보드 미션 요약 표시를 위해 ID, 제목, 타입, 보관여부 등 선택
-                .select('id, title, mission_type, is_archived, created_at')
-                .eq('class_id', activeClass.id)
-                .order('created_at', { ascending: false });
-            if (error) throw error;
-            return (data || []).filter(m => !m.is_archived && m.mission_type !== 'meeting');
-        }, 120000); // 2분 캐시
-
-        // 2. 학생 목록 프리페칭
-        dataCache.get(`students_${activeClass.id}`, async () => {
-            const { data, error } = await supabase
-                .from('students')
-                // [수정] StudentManager와 캐시 키가 충돌하므로, 여기서도 필요한 필드(student_code 등)를 모두 가져오거나 키를 분리해야 함.
-                // 여기서는 StudentManager에서도 이 캐시를 재사용할 수 있도록 필드를 추가함.
-                .select('id, name, total_points, student_code, created_at, pet_data, class_id')
-                .eq('class_id', activeClass.id)
-                .is('deleted_at', null)
-                .order('name');
-            if (error) throw error;
-            return data || [];
-        }, 120000);
-
-    }, [activeClass?.id]);
-
     // 활성 학급 자동 선택 로직
     useEffect(() => {
         if (!loadingClasses && classes.length > 0 && !activeClass) {

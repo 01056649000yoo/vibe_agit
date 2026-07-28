@@ -18,7 +18,8 @@ const Button = ({
     onClick,
     style,
     loadingText = '기다려요...',
-    className = ''
+    className = '',
+    ...props
 }) => {
     const baseDefaultStyles = {
         display: 'inline-flex',
@@ -80,6 +81,8 @@ const Button = ({
             style={currentStyle}
             onClick={!disabled && !loading ? onClick : undefined}
             disabled={disabled || loading}
+            aria-busy={loading || undefined}
+            {...props}
         >
             {loading ? loadingText : children}
 
@@ -91,6 +94,18 @@ const Button = ({
         }
         .custom-button:active:not(:disabled) {
           transform: translateY(0) scale(0.98);
+        }
+        .custom-button:focus-visible {
+          outline: 3px solid rgba(33, 105, 133, 0.42);
+          outline-offset: 3px;
+        }
+        .custom-button:disabled {
+          opacity: 0.58;
+          box-shadow: none;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .custom-button { transition: none !important; }
+          .custom-button:hover:not(:disabled) { transform: none; }
         }
       `}</style>
         </button>
