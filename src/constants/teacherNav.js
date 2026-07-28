@@ -22,9 +22,11 @@ export const TEACHER_NAV_GROUPS = [
         icon: '👥',
         defaultTab: 'students',
         tabs: [{ id: 'students', label: '학생 관리' }],
-        // 화면 안에서 다시 나뉘는 구조 (TeacherStudentHub의 좌측 메뉴)
+        // 화면 안에서 다시 나뉘는 구조 (TeacherStudentHub의 좌측 메뉴).
+        // 셋 다 "지금 이 학급 안"을 본다. 학급 자체를 만들고 지우는 일은
+        // 성격이 달라 설정 > 학급 관리로 옮겼다.
         innerShape: 'sidebar',
-        innerItems: ['학생 명단', '최근 활동', '학급 분석', '학급 설정']
+        innerItems: ['학생 명단', '최근 활동', '학급 분석']
     },
     {
         id: 'records',
@@ -54,7 +56,11 @@ export const TEACHER_NAV_GROUPS = [
         icon: '⚙️',
         defaultTab: 'settings',
         tabs: [
+            // 맨 앞은 defaultTab 과 같아야 한다. 설정을 누르면 여기로 들어온다.
             { id: 'settings', label: '관리 설정' },
+            // 학급을 새로 만들고 지우고 되살리는 곳. 학기 초에 몇 번 쓰는 일이라
+            // 매일 보는 학생 화면이 아니라 설정에 둔다. 학급 전환은 상단 드롭다운.
+            { id: 'classes', label: '학급 관리' },
             { id: 'guide', label: '사용 안내' }
         ]
     }

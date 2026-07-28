@@ -1,26 +1,22 @@
 import React, { lazy, Suspense, useState } from 'react';
 
-const ClassManager = lazy(() => import('./ClassManager'));
 const StudentManager = lazy(() => import('./StudentManager'));
 const RecentActivity = lazy(() => import('./RecentActivity'));
 const ClassAnalysis = lazy(() => import('./ClassAnalysis'));
 
+// 셋 다 "지금 이 학급 안"을 본다. 학급 자체를 만들고 지우고 되살리는 일은
+// 성격이 달라 설정 > 학급 관리로 옮겼다 (학급 전환은 상단 드롭다운).
 const sections = [
     { id: 'roster', icon: '👥', label: '학생 명단' },
     { id: 'recent', icon: '🕘', label: '최근 활동' },
-    { id: 'analysis', icon: '📊', label: '학급 분석' },
-    { id: 'class', icon: '⚙️', label: '학급 설정' }
+    { id: 'analysis', icon: '📊', label: '학급 분석' }
 ];
 
 const PanelLoading = ({ children }) => (
     <div role="status" style={{ minHeight: '180px', display: 'grid', placeItems: 'center', color: '#64748B', fontWeight: '700' }}>{children}</div>
 );
 
-const TeacherStudentHub = ({
-    session, classes, activeClass, setActiveClass, setClasses, fetchAllClasses,
-    primaryClassId, handleSetPrimaryClass, fetchDeletedClasses, onRestoreClass,
-    isMobile, setSelectedActivityPost
-}) => {
+const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost }) => {
     const [activeSection, setActiveSection] = useState('roster');
     const activeSectionLabel = sections.find((item) => item.id === activeSection)?.label;
 
@@ -52,15 +48,8 @@ const TeacherStudentHub = ({
                         <StudentManager activeClass={activeClass} classId={activeClass.id} isDashboardMode={false} />
                     ) : activeSection === 'recent' ? (
                         <RecentActivity classId={activeClass.id} onPostClick={(post) => setSelectedActivityPost(post)} />
-                    ) : activeSection === 'analysis' ? (
-                        <ClassAnalysis classId={activeClass.id} isMobile={isMobile} />
                     ) : (
-                        <ClassManager
-                            userId={session.user.id} classes={classes} activeClass={activeClass}
-                            setActiveClass={setActiveClass} setClasses={setClasses} onClassDeleted={fetchAllClasses}
-                            isMobile={isMobile} primaryClassId={primaryClassId} onSetPrimaryClass={handleSetPrimaryClass}
-                            fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={onRestoreClass}
-                        />
+                        <ClassAnalysis classId={activeClass.id} isMobile={isMobile} />
                     )}
                 </Suspense>
             </section>

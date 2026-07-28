@@ -339,18 +339,17 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             />
                         ) : visibleTab === 'students' ? (
                             <TeacherStudentHub
-                                session={session}
-                                classes={classes}
                                 activeClass={activeClass}
-                                setActiveClass={setActiveClass}
-                                setClasses={setClasses}
-                                fetchAllClasses={fetchAllClasses}
-                                primaryClassId={profile?.primary_class_id}
-                                handleSetPrimaryClass={handleSetPrimaryClass}
-                                fetchDeletedClasses={fetchDeletedClasses}
-                                onRestoreClass={handleRestoreClass}
                                 isMobile={isMobile}
                                 setSelectedActivityPost={setSelectedActivityPost}
+                            />
+                        ) : visibleTab === 'classes' ? (
+                            <ClassManager
+                                userId={session.user.id} classes={classes} activeClass={activeClass}
+                                setActiveClass={setActiveClass} setClasses={setClasses}
+                                onClassDeleted={fetchAllClasses} isMobile={isMobile}
+                                primaryClassId={profile?.primary_class_id} onSetPrimaryClass={handleSetPrimaryClass}
+                                fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
                             />
                         ) : visibleTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
