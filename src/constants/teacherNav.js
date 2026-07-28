@@ -25,7 +25,7 @@ export const TEACHER_NAV_GROUPS = [
         // 학급 현황과 학생 개별 관리를 분리한다. 학급 자체를 만들고 지우는 일은
         // 성격이 달라 설정 > 학급 관리에 둔다.
         innerShape: 'sidebar',
-        innerItems: ['학급 운영 현황 (기본)', '학생 명단 관리'],
+        innerItems: ['학급 운영 현황 (기본)', '학생 명단 관리', '최근 활동'],
         innerNote: 'PC는 좌측 메뉴, 모바일은 상단 가로 탭으로 표시됩니다.'
     },
     {

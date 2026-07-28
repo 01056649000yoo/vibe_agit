@@ -32,6 +32,12 @@ const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost }) =
             icon: '👥',
             label: '학생 명단 관리',
             description: '학생·코드·포인트'
+        },
+        {
+            id: 'activity',
+            icon: '🔔',
+            label: '최근 활동',
+            description: '과제·독서록·댓글'
         }
     ];
 
@@ -82,34 +88,25 @@ const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost }) =
 
             <div style={{ minWidth: 0 }}>
                 {section === 'overview' ? (
-                    <div role="tabpanel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div style={{
-                            display: isMobile ? 'flex' : 'grid',
-                            flexDirection: isMobile ? 'column' : undefined,
-                            gridTemplateColumns: isMobile ? undefined : 'minmax(0, 1fr) 320px',
-                            gap: '16px', alignItems: 'start'
-                        }}>
-                            <section aria-label="학급 분석" style={cardStyle(isMobile)}>
-                                <Suspense fallback={<PanelLoading>학급 분석을 준비하는 중...</PanelLoading>}>
-                                    <ClassAnalysis classId={classId} isMobile={isMobile} />
-                                </Suspense>
-                            </section>
-
-                            <section aria-label="최근 활동" style={{
-                                ...cardStyle(isMobile),
-                                position: isMobile ? undefined : 'sticky',
-                                top: isMobile ? undefined : '8px'
-                            }}>
-                                <Suspense fallback={<PanelLoading>최근 활동을 준비하는 중...</PanelLoading>}>
-                                    <RecentActivity classId={classId} onPostClick={(post) => setSelectedActivityPost(post)} />
-                                </Suspense>
-                            </section>
-                        </div>
-                    </div>
-                ) : (
+                    <section role="tabpanel" aria-label="학급 운영 현황" style={cardStyle(isMobile)}>
+                        <Suspense fallback={<PanelLoading>학급 운영 현황을 준비하는 중...</PanelLoading>}>
+                            <ClassAnalysis classId={classId} isMobile={isMobile} />
+                        </Suspense>
+                    </section>
+                ) : section === 'students' ? (
                     <section role="tabpanel" aria-label="학생 명단 관리" style={cardStyle(isMobile)}>
                         <Suspense fallback={<PanelLoading>학생 명단을 준비하는 중...</PanelLoading>}>
                             <StudentManager activeClass={activeClass} classId={classId} isDashboardMode={false} />
+                        </Suspense>
+                    </section>
+                ) : (
+                    <section role="tabpanel" aria-label="최근 활동" style={cardStyle(isMobile)}>
+                        <Suspense fallback={<PanelLoading>최근 활동을 준비하는 중...</PanelLoading>}>
+                            <RecentActivity
+                                classId={classId}
+                                isMobile={isMobile}
+                                onPostClick={(post) => setSelectedActivityPost(post)}
+                            />
                         </Suspense>
                     </section>
                 )}
