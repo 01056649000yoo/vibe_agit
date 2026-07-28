@@ -42,7 +42,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
         handleApprovePost, handleBulkApprove, handleRecovery: handleRecoveryFunc,
         handleBulkRecovery,
         handleBulkRequestRewrite,
-        handleRecallPosts,
+        handleRecallPosts, handleUndoRecall,
         handleFinalArchive, handleDeleteMission, fetchMissions,
         handleGenerateQuestions, isGeneratingQuestions,
         handleSaveDefaultRubric, handleSaveDefaultSettings,
@@ -243,6 +243,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                 handleBulkRecovery={handleBulkRecovery}
                 handleBulkRequestRewrite={handleBulkRequestRewrite}
                 handleRecallPosts={handleRecallPosts}
+                handleUndoRecall={handleUndoRecall}
                 setSelectedPost={setSelectedPost}
                 setTempFeedback={setTempFeedback}
                 isGenerating={isGenerating}

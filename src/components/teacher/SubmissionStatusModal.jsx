@@ -7,7 +7,7 @@ const SubmissionStatusModal = ({
     selectedMission, setSelectedMission, posts, loadingPosts,
     handleBulkAIAction, handleBulkApprove, handleBulkRecovery,
     handleBulkRequestRewrite, setSelectedPost, setTempFeedback, isGenerating, isMobile,
-    handleRecallPosts
+    handleRecallPosts, handleUndoRecall
 }) => {
     /**
      * 회수 전 교사에게 보여줄 안내문.
@@ -40,6 +40,34 @@ const SubmissionStatusModal = ({
             '',
             '회수할까요?',
         ].filter((l) => l !== null).join('\n');
+    };
+
+    /**
+     * 회수 되돌리기 — 걷어온 글을 학생에게 다시 넘겨 이어 쓰게 한다.
+     * 글 내용은 건드리지 않고 상태만 '다시 쓰기 중'으로 되돌린다.
+     * 다만 회수는 마지막 서버 저장(2분 주기) 기준이라 그 사이 분량은 이미 없을 수 있어 미리 알린다.
+     */
+    const runUndoRecall = async (post) => {
+        const name = post.students?.name || '학생';
+        const notice = [
+            `${name} 학생에게 글을 다시 돌려줍니다.`,
+            '',
+            '· 상태가 `다시 쓰기 중`으로 돌아가 학생이 이어서 쓸 수 있습니다.',
+            '· 글 내용은 그대로이며 포인트도 지급되지 않습니다.',
+            '· 다만 회수는 마지막 자동 저장(2분 주기) 시점 기준이라,',
+            '  걷을 때 빠졌던 마지막 몇 분 분량은 되살아나지 않습니다.',
+            '',
+            '되돌릴까요?',
+        ].join('\n');
+
+        if (!window.confirm(notice)) return;
+
+        const { ok, error } = await handleUndoRecall(post);
+        if (!ok) {
+            alert(`되돌리지 못했습니다.\n${error?.message || ''}\n잠시 후 다시 시도해 주세요.`);
+            return;
+        }
+        alert(`${name} 학생에게 글을 다시 돌려줬습니다.`);
     };
 
     /** 회수 실행 + 결과 보고 (부분 실패도 알린다) */
@@ -304,6 +332,22 @@ const SubmissionStatusModal = ({
                                                             }}
                                                         >
                                                             📥 회수
+                                                        </button>
+                                                    )}
+                                                    {/* 실수로 걷었을 때 학생에게 다시 돌려준다 (다시쓰기 중 상태로 복귀) */}
+                                                    {post.recalled_at && !post.is_confirmed && handleUndoRecall && (
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                await runUndoRecall(post);
+                                                            }}
+                                                            style={{
+                                                                border: '1px solid #FB8C00', background: 'white', color: '#E65100',
+                                                                borderRadius: '8px', padding: '5px 10px', fontSize: '0.78rem',
+                                                                fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap'
+                                                            }}
+                                                        >
+                                                            ↩️ 되돌리기
                                                         </button>
                                                     )}
                                                     <div style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.85rem' }}>읽어보기 ➔</div>
