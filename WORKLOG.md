@@ -21,6 +21,18 @@
 
 ---
 
+## 2026-07-28 — 교사 관리·공용 AI 전환 준비 커밋 및 맥미니 이관 기록 (GPT/Codex)
+- **한 일**: 현재 작업 결과를 `main`에 커밋·푸시하고, 로컬 Vite 서버가 `http://127.0.0.1:5173/`에서 HTTP 200으로 응답함을 확인.
+- **변경**: 기능 커밋 `611a40d` (`feat: consolidate teacher management and public AI`)를 `origin/main`으로 푸시.
+  이 커밋에는 교사 관리 탭 통합, 공용 AI 전용 UI·함수 코드, V24 마이그레이션 초안, ROADMAP/WORKLOG가 포함됨.
+- **결과/검증**: 변경 대상 ESLint 0에러(기존 `AdminDashboard` exhaustive-deps 경고 1건), `git diff --check` 통과,
+  프로덕션 빌드 성공. 원격 `main`과 동기화됨.
+- **남은 것 / 다음**:
+  1. 맥미니에서 `git pull origin main` 후 앱 배포 상태와 교사 화면을 확인.
+  2. Git 푸시만으로는 통합 DB 마이그레이션과 `vibe-ai` Edge Function이 적용되지 않음. 운영 DB에 V24를 적용하고
+     Edge Function을 별도 배포한 뒤 공용 AI 호출·긴급 중지 스위치를 실계정으로 검증.
+  3. 문제가 생기면 앱 코드 기준으로 `git revert 611a40d`를 새 커밋으로 만들어 되돌림. 기존 개인 키 데이터는 아직 삭제하지 않음.
+
 ## 2026-07-28 — 학생 관리 통합·공용 AI 전용 전환 준비 (GPT/Codex)
 - **한 일**:
   - 대시보드 상위 작업 탭을 `글쓰기 관리 / 학생 관리`로 재구성. 글쓰기 관리는 선생님 과제·학생 독서록만 보이고,
