@@ -11,6 +11,7 @@ const UsageGuide = lazy(() => import('./UsageGuide'));
 const GameManager = lazy(() => import('./GameManager'));
 const TeacherEvaluationTab = lazy(() => import('./TeacherEvaluationTab'));
 const ActivityReport = lazy(() => import('./ActivityReport'));
+const TeacherStudentHub = lazy(() => import('./TeacherStudentHub'));
 
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
@@ -25,7 +26,7 @@ import TeacherAnnouncementManager from './TeacherAnnouncementManager';
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
  */
 const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onProfileUpdate, isAdmin, onSwitchToAdminMode, onLogout }) => {
-    const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'settings', 'playground', 'archive', 'guide'
+    const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'students', 'settings', 'playground', 'archive', 'guide'
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [selectedActivityPost, setSelectedActivityPost] = useState(null);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -113,7 +114,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
 
     const hasZeroClasses = classes.length === 0;
     const teacherTabs = [
-        'dashboard', 'archive', 'evaluation', 'activity', 'playground',
+        'dashboard', 'students', 'archive', 'evaluation', 'activity', 'playground',
         'settings', 'guide'
     ];
     const visibleTab = teacherTabs.includes(currentTab) ? currentTab : 'dashboard';
@@ -181,7 +182,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
             {/* 탭 네비게이션 */}
             <nav style={{
                 display: 'flex', background: 'white', borderBottom: '1px solid #E9ECEF',
-                padding: isMobile ? '0 12px' : '0 24px', flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box'
+                padding: isMobile ? '0 12px' : '0 24px', flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box', overflowX: 'auto'
             }}>
                 {teacherTabs.map((tabId) => (
                     <button
@@ -194,7 +195,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
                         }}
                     >
-                        {tabId === 'dashboard' ? '✍️ 글쓰기 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📘 국어 평어' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'settings' ? '⚙️ 관리 설정' : '🧰 수업 앱 모음'}
+                        {tabId === 'dashboard' ? '✍️ 글쓰기 관리' : tabId === 'students' ? '👥 학생 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📘 국어 평어' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'settings' ? '⚙️ 관리 설정' : '🧰 수업 앱 모음'}
                     </button>
                 ))}
             </nav>
@@ -240,17 +241,21 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 key={activeClass.id}
                                 activeClass={activeClass}
                                 isMobile={isMobile}
+                            />
+                        ) : visibleTab === 'students' ? (
+                            <TeacherStudentHub
+                                session={session}
+                                classes={classes}
+                                activeClass={activeClass}
+                                setActiveClass={setActiveClass}
+                                setClasses={setClasses}
+                                fetchAllClasses={fetchAllClasses}
+                                primaryClassId={profile?.primary_class_id}
+                                handleSetPrimaryClass={handleSetPrimaryClass}
+                                fetchDeletedClasses={fetchDeletedClasses}
+                                onRestoreClass={handleRestoreClass}
+                                isMobile={isMobile}
                                 setSelectedActivityPost={setSelectedActivityPost}
-                                studentManagement={{
-                                    session,
-                                    classes,
-                                    setClasses,
-                                    fetchAllClasses,
-                                    primaryClassId: profile?.primary_class_id,
-                                    handleSetPrimaryClass,
-                                    fetchDeletedClasses,
-                                    onRestoreClass: handleRestoreClass
-                                }}
                             />
                         ) : visibleTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
