@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const DESKTOP_GRID_COLUMNS = '48px minmax(110px, 0.8fr) 128px 90px minmax(340px, 2.4fr)';
+const DESKTOP_GRID_COLUMNS = '42px minmax(82px, 0.75fr) minmax(104px, 124px) minmax(70px, 86px) minmax(260px, 2.5fr)';
 
 const getActionColors = (tone) => {
     if (tone === 'point') return { background: '#FFF8E1', border: '#FFECB3', color: '#B45309' };
@@ -11,34 +11,14 @@ const getActionColors = (tone) => {
     return { background: '#F8FAFC', border: '#E2E8F0', color: '#475569' };
 };
 
-const actionButtonStyle = (tone = 'neutral') => {
+const actionButtonToneStyle = (tone = 'neutral') => {
     const colors = getActionColors(tone);
     return {
-        height: '32px',
-        padding: '0 9px',
         border: `1px solid ${colors.border}`,
-        borderRadius: '8px',
         background: colors.background,
-        color: colors.color,
-        cursor: 'pointer',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '4px',
-        fontSize: '0.74rem',
-        fontWeight: '800',
-        whiteSpace: 'nowrap'
+        color: colors.color
     };
 };
-
-const actionIconButtonStyle = (tone = 'neutral') => ({
-    ...actionButtonStyle(tone),
-    width: '36px',
-    minWidth: '36px',
-    height: '34px',
-    padding: 0,
-    fontSize: '0.9rem'
-});
 
 const StudentManagementList = ({
     displayStudents, isMobile, setSelectedStudentForCode, setIsCodeZoomModalOpen,
@@ -123,33 +103,36 @@ const StudentManagementList = ({
                                 <span style={{ fontSize: '0.75rem', color: '#ADB5BD', marginLeft: '2px', fontWeight: 'bold' }}>P</span>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexWrap: 'wrap', gap: '5px' }}>
+                            <div className="student-action-grid">
                                 {studentActions.map((item) => (
                                     <button
                                         key={item.id}
                                         type="button"
                                         onClick={item.action}
-                                        style={actionButtonStyle(item.tone)}
+                                        className="student-action-button"
+                                        style={actionButtonToneStyle(item.tone)}
+                                        aria-label={item.label}
                                         title={item.label}
                                     >
-                                        <span aria-hidden="true">{item.icon}</span>
-                                        <span>{item.label}</span>
+                                        <span className="student-action-icon" aria-hidden="true">{item.icon}</span>
+                                        <span className="student-action-label">{item.label}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
                         {isMobile && (
-                            <div style={{ gridColumn: '2 / -1', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', gap: '6px' }}>
+                            <div className="student-action-grid student-action-grid--mobile" style={{ gridColumn: '2 / -1' }}>
                                 {studentActions.map((item) => (
                                     <button
                                         key={item.id}
                                         type="button"
                                         onClick={item.action}
-                                        style={actionIconButtonStyle(item.tone)}
+                                        className="student-action-button"
+                                        style={actionButtonToneStyle(item.tone)}
                                         aria-label={item.label}
                                         title={item.label}
                                     >
-                                        <span aria-hidden="true">{item.icon}</span>
+                                        <span className="student-action-icon" aria-hidden="true">{item.icon}</span>
                                     </button>
                                 ))}
                             </div>
