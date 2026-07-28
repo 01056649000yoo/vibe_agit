@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
         )
 
         // 4. 요청 바디 파싱
-        const { prompt, content, model, studentId, type, overrideApiMode, overrideApiKey } = await req.json()
+        const { prompt, content, studentId, type } = await req.json()
 
         // 5. 인증 검사 (교사 세션 또는 학생 ID)
         const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : '';
@@ -197,18 +197,14 @@ Deno.serve(async (req) => {
 
         // 6. 용도별 모델 매핑 및 보안 제약
         let finalPrompt = prompt || content;
-        let selectedModel = model;
 
         const MAX_PROMPT_LENGTH = isStudentRequest ? 300 : 10000;
         if (finalPrompt && finalPrompt.length > MAX_PROMPT_LENGTH) {
             throw new Error(`길이 제한 초과`);
         }
 
-        if (type === 'SAFETY_CHECK' || isStudentRequest) {
-            selectedModel = 'gpt-4o-mini';
-        }
-
-        const finalModel = selectedModel || 'gpt-4o-mini';
+        // 비용과 동작을 예측 가능하게 유지하기 위해 클라이언트 모델 지정은 허용하지 않는다.
+        const finalModel = 'gpt-4o-mini';
 
         if (isStudentRequest || type === 'SAFETY_CHECK') {
             const textToCheck = content || prompt || '';
@@ -231,12 +227,8 @@ Deno.serve(async (req) => {
 `;
         }
 
-        // 7. API Key 결정
-        let apiKey = '';
-        let currentMode = 'SYSTEM';
-        let apiErrorMsg = '';
-
-        // (1) 먼저 시스템 설정에서 공용 API 활성화 여부 확인
+        // 7. 공용 AI 키 결정: 개인 키와 클라이언트 모드 오버라이드는 지원하지 않는다.
+        // 키 원문은 Edge Function 환경 변수에서만 읽는다.
         const { data: globalSettings } = await supabaseAdmin
             .from('system_settings')
             .select('value')
@@ -245,80 +237,17 @@ Deno.serve(async (req) => {
         
         const isPublicEnabled = globalSettings ? (globalSettings.value === true) : true;
 
-        let dbApiMode = 'UNKNOWN';
-        let hasPersonalKey = false;
-
-        // 테스트/진단 요청 여부 (overrideApiKey 허용 범위 제한용)
-        const isTestRequest = type === 'CONNECTION_TEST' || type === 'DIAG';
-
-        if (targetTeacherId) {
-            // (2) 해당 교사의 DB API 모드 확인 (항상 DB 기준이 우선)
-            const { data: profileData } = await supabaseAdmin
-                .from('profiles')
-                .select('api_mode')
-                .eq('id', targetTeacherId)
-                .maybeSingle();
-
-            dbApiMode = profileData?.api_mode || 'PERSONAL'; // DB에 없으면 보안상 PERSONAL(제한적)로 간주
-
-            // [보안] overrideApiMode는 테스트 요청에서만 허용하되,
-            // SYSTEM 모드로의 변경(권한 상승)은 절대 허용 안 함
-            const effectiveApiMode = (isTestRequest && overrideApiMode && overrideApiMode !== 'SYSTEM')
-                ? overrideApiMode
-                : dbApiMode;
-
-            console.log(`🔍 [Auth Log] targetTeacherId: ${targetTeacherId} | DB Mode: ${dbApiMode} | Effective Mode: ${effectiveApiMode} | isTest: ${isTestRequest}`);
-
-            if (effectiveApiMode === 'PERSONAL') {
-                // [보안] overrideApiKey(미저장 테스트 키)는 테스트 요청에서만 허용
-                const clientKey = isTestRequest ? overrideApiKey : null;
-                let personalKey = clientKey;
-
-                if (!personalKey) {
-                    const { data: secretData } = await supabaseAdmin
-                        .from("profile_secrets")
-                        .select("personal_openai_api_key")
-                        .eq("id", targetTeacherId)
-                        .maybeSingle();
-                    personalKey = secretData?.personal_openai_api_key;
-                }
-
-                if (personalKey?.trim()) {
-                    apiKey = personalKey.trim();
-                    currentMode = 'PERSONAL';
-                    hasPersonalKey = true;
-                } else {
-                    apiErrorMsg = '개인 API 키가 등록되지 않았습니다. [설정 > AI 자동 피드백 설정]에서 API 키를 입력하고 저장해 주세요.';
-                }
-            } else {
-                // SYSTEM 모드인 경우 공용 스위치 확인
-                if (isPublicEnabled) {
-                    apiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
-                    currentMode = 'SYSTEM';
-                } else {
-                    apiErrorMsg = '현재 시스템 공용 AI 서비스가 비활성화 상태입니다. 관리자에게 문의하거나 개인 API 키를 사용해 주세요.';
-                }
-            }
-        } else {
-            // 교사 정보가 없는 경우 (익명 학생 요청 등) 시스템 설정에 따름
-            if (isPublicEnabled) {
-                apiKey = Deno.env.get('OPENAI_API_KEY') ?? '';
-                currentMode = 'SYSTEM';
-            } else {
-                apiErrorMsg = '현재 시스템 공용 AI 서비스가 비활성화 상태입니다.';
-            }
-        }
+        const currentMode = 'SYSTEM';
+        const apiKey = isPublicEnabled ? (Deno.env.get('OPENAI_API_KEY') ?? '') : '';
+        const apiErrorMsg = isPublicEnabled ? '' : '현재 시스템 공용 AI 서비스가 비활성화 상태입니다.';
 
         // [신규] 진단 모드 응답
         if (type === 'DIAG') {
             return new Response(
                 JSON.stringify({
                     targetTeacherId,
-                    dbApiMode,
-                    overrideApiMode,
                     currentMode,
                     isPublicEnabled,
-                    hasPersonalKey,
                     apiErrorMsg
                 }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }

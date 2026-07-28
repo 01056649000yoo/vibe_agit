@@ -39,13 +39,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
         editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
-        openaiKey, setOpenaiKey, originalKey, hasApiKey,
         promptTemplate, setPromptTemplate, originalPrompt,
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
         savingKey, testingKey, aiStatus,
-        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, handleDeleteApiKey, runAIDiagnosis,
+        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, runAIDiagnosis,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
-        fetchAllClasses, fetchDeletedClasses, maskKey
+        fetchAllClasses, fetchDeletedClasses
     } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass);
 
     useEffect(() => {
@@ -237,24 +236,34 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         </div>
                     ) : (
                         visibleTab === 'dashboard' ? (
-                            <TeacherWritingHub key={activeClass.id} activeClass={activeClass} isMobile={isMobile} setSelectedActivityPost={setSelectedActivityPost} />
+                            <TeacherWritingHub
+                                key={activeClass.id}
+                                activeClass={activeClass}
+                                isMobile={isMobile}
+                                setSelectedActivityPost={setSelectedActivityPost}
+                                studentManagement={{
+                                    session,
+                                    classes,
+                                    setClasses,
+                                    fetchAllClasses,
+                                    primaryClassId: profile?.primary_class_id,
+                                    handleSetPrimaryClass,
+                                    fetchDeletedClasses,
+                                    onRestoreClass: handleRestoreClass
+                                }}
+                            />
                         ) : visibleTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
                         ) : visibleTab === 'activity' ? (
                             <ActivityReport activeClass={activeClass} isMobile={isMobile} promptTemplate={reportPromptTemplate} />
                         ) : (
                             <TeacherSettingsTab
-                                session={session} classes={classes} activeClass={activeClass} setActiveClass={setActiveClass}
-                                setClasses={setClasses} fetchAllClasses={fetchAllClasses} handleSetPrimaryClass={handleSetPrimaryClass}
-                                openaiKey={openaiKey} setOpenaiKey={setOpenaiKey} hasApiKey={hasApiKey} handleTestAIConnection={handleTestAIConnection}
+                                handleTestAIConnection={handleTestAIConnection}
                                 runAIDiagnosis={runAIDiagnosis}
-                                savingKey={savingKey} testingKey={testingKey} aiStatus={aiStatus} originalKey={originalKey} maskKey={maskKey}
+                                savingKey={savingKey} testingKey={testingKey} aiStatus={aiStatus}
                                 promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
                                 reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}
                                 handleSaveTeacherSettings={handleSaveTeacherSettings}
-                                handleDeleteApiKey={handleDeleteApiKey}
-                                fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
-                                profile={profile}
                             />
                         )
                     )}

@@ -7,7 +7,7 @@ const PrivacyPolicy = () => {
     return (
         <div style={{ textAlign: 'left', lineHeight: '1.6', color: '#444' }}>
             <p style={{ fontSize: '0.9rem', color: '#95A5A6', marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-                최종 수정일: 2026년 1월 29일
+                최종 수정일: 2026년 7월 28일
             </p>
 
             <section style={{ marginBottom: '30px' }}>
@@ -32,7 +32,7 @@ const PrivacyPolicy = () => {
                 <div style={{ marginTop: '10px', padding: '15px', backgroundColor: '#F8F9FA', borderRadius: '8px' }}>
                     <p><strong>1. 수집 항목</strong></p>
                     <ul style={{ paddingLeft: '20px', marginBottom: '10px' }}>
-                        <li><strong>교사 (관리자):</strong> 필수항목 - 이메일 주소(아이디), 성명(또는 닉네임), <strong>GPT API 키(선택 저장 시)</strong></li>
+                        <li><strong>교사 (관리자):</strong> 필수항목 - 이메일 주소(아이디), 성명(또는 닉네임)</li>
                         <li><strong>학생 (이용자):</strong> 필수항목 - 닉네임, 출석 번호 (모두 가명 처리, 개인식별 어려운 가상 번호 사용 필수, 교사가 생성)</li>
                         <li><strong>선택 항목:</strong> 포인트 정보, 퀘스트 정보, 학급 활동 데이터 등 서비스 이용 과정에서 생성되는 정보</li>
                     </ul>
@@ -95,7 +95,7 @@ const PrivacyPolicy = () => {
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제8조 (개인정보의 안전성 확보 조치)</h4>
                 <ul style={{ paddingLeft: '20px' }}>
                     <li><strong>개인정보의 암호화:</strong> 이용자의 비밀번호는 단방향 암호화되어 저장됩니다.</li>
-                    <li><strong>GPT API 키 보안:</strong> 입력된 API 키는 서버측(Edge Functions)에서만 처리되며, RLS 정책을 통해 본인 외 접근이 불가능하도록 격리 보호됩니다.</li>
+                        <li><strong>AI 서비스 보안:</strong> AI 서비스 키는 서버측(Edge Functions) 환경 변수에서만 관리되며, 이용자 브라우저와 데이터베이스에 노출하지 않습니다.</li>
                     <li><strong>기술적 대책:</strong> SSL(HTTPS) 인증서를 통한 구간 암호화 통신을 의무화하고 있습니다.</li>
                 </ul>
             </section>

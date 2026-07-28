@@ -34,7 +34,7 @@ const StatCard = ({ label, value, color, icon }) => (
     </div>
 );
 
-const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, onForceWithdrawal, onToggleApiMode }) => {
+const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, onForceWithdrawal }) => {
     const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
     // teachers.name을 최우선 사용, 없으면 full_name에서 이메일 형태가 아닌 경우만 사용
     const rawFullName = profile.full_name || '';
@@ -42,8 +42,6 @@ const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, on
     const displayName = teacherInfo?.name || (!isEmailLike ? rawFullName : '') || '이름 없음';
     const schoolName = teacherInfo?.school_name || '학교 정보 없음';
     const displayPhone = teacherInfo?.phone || '-';
-    // API 모드 (기본값 SYSTEM)
-    const apiMode = profile.api_mode || 'SYSTEM';
 
     return (
         <div style={{
@@ -71,21 +69,6 @@ const TeacherItem = ({ profile, onAction, actionLabel, actionColor, isRevoke, on
                         {schoolName}
                     </span>
 
-                    {/* API 모드 배지 */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onToggleApiMode && onToggleApiMode(); }}
-                        title="클릭하여 AI API 모드 변경"
-                        style={{
-                            fontSize: '0.75rem', fontWeight: 'bold',
-                            padding: '4px 10px', borderRadius: '20px', cursor: 'pointer',
-                            border: apiMode === 'PERSONAL' ? '1px solid #A5D6A7' : '1px solid #90CAF9',
-                            background: apiMode === 'PERSONAL' ? '#E8F5E9' : '#E3F2FD',
-                            color: apiMode === 'PERSONAL' ? '#2E7D32' : '#1976D2',
-                            display: 'flex', alignItems: 'center', gap: '4px'
-                        }}
-                    >
-                        {apiMode === 'PERSONAL' ? '🔑 개인 키' : '🌐 공용 키'}
-                    </button>
                 </div>
                 <div style={{ fontSize: '0.9rem', color: '#78909C', lineHeight: '1.5' }}>
                     <span style={{ display: 'inline-block', marginRight: '12px' }}>📧 {profile.email}</span>
@@ -391,28 +374,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         } catch (err) { alert('오류: ' + err.message); }
     };
 
-    const handleToggleApiMode = async (teacherId, teacherName, currentMode) => {
-        const newMode = currentMode === 'PERSONAL' ? 'SYSTEM' : 'PERSONAL';
-        const modeLabel = newMode === 'PERSONAL' ? '교사 개인 키' : '시스템 공용 키';
-
-        if (!confirm(`'${teacherName}' 선생님의 모드를 [${modeLabel}]로 변경하시겠습니까?`)) return;
-
-        try {
-            const { error } = await supabase.rpc('admin_set_teacher_api_mode', {
-                p_teacher_id: teacherId,
-                p_api_mode: newMode
-            });
-            if (error) throw error;
-
-            // UI Optimistic Update
-            const updater = list => sortTeachersByRecentLogin(list.map(item => item.id === teacherId ? { ...item, api_mode: newMode } : item));
-            setApprovedTeachers(prev => updater(prev));
-            setPendingTeachers(prev => updater(prev));
-
-            alert(`✅ 변경 완료: ${modeLabel}`);
-        } catch (err) { alert('변경 실패: ' + err.message); }
-    };
-
     const handleForceWithdrawal = async (teacherId, teacherName) => {
         if (_session?.user?.id === teacherId) {
             alert('관리자 대시보드에서 본인을 삭제할 수 없습니다. 대신 회원 탈퇴 설정을 이용해주세요.');
@@ -590,7 +551,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                             <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>최근 접속</th>
                                             <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>가입일</th>
                                             <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>등록 학생 수</th>
-                                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>API 사용 권한</th>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>이메일</th>
                                             <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold' }}>전화번호</th>
                                             <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold' }}>관리</th>
@@ -608,7 +568,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                                 const displayName = teacherInfo?.name || (!isEmailLike ? rawFullName : '') || '이름 없음';
                                                 const schoolName = teacherInfo?.school_name || '-';
                                                 const displayPhone = teacherInfo?.phone || '-';
-                                                const apiMode = profile.api_mode || 'SYSTEM';
 
                                                 return (
                                                     <tr key={profile.id} style={{ borderBottom: '1px solid #F1F3F5', transition: 'background 0.2s', background: 'white' }}>
@@ -635,22 +594,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                                             {teacherUsageMap.has(profile.id)
                                                                 ? `${teacherUsageMap.get(profile.id).student_count}명`
                                                                 : '-'}
-                                                        </td>
-                                                        <td style={{ padding: '16px', textAlign: 'center' }}>
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); handleToggleApiMode(profile.id, displayName, apiMode); }}
-                                                                title="클릭하여 모드 변경"
-                                                                style={{
-                                                                    fontSize: '0.8rem', fontWeight: 'bold',
-                                                                    padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
-                                                                    border: apiMode === 'PERSONAL' ? '1px solid #A5D6A7' : '1px solid #90CAF9',
-                                                                    background: apiMode === 'PERSONAL' ? '#E8F5E9' : '#E3F2FD',
-                                                                    color: apiMode === 'PERSONAL' ? '#2E7D32' : '#1976D2',
-                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px'
-                                                                }}
-                                                            >
-                                                                {apiMode === 'PERSONAL' ? '🔑 개인 키' : '🌐 공용 키'}
-                                                            </button>
                                                         </td>
                                                         <td style={{ padding: '16px', color: '#546E7A' }}>{profile.email}</td>
                                                         <td style={{ padding: '16px', color: '#546E7A' }}>{displayPhone}</td>
@@ -779,7 +722,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                                     onAction={() => handleApprove(profile.id, displayName)}
                                                     actionLabel="가입 승인"
                                                     actionColor="#38A169"
-                                                    onToggleApiMode={() => handleToggleApiMode(profile.id, displayName, profile.api_mode)}
                                                 />
                                             );
                                         })}
@@ -904,13 +846,12 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                     <div>
                                         <h3 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: '#2D3748' }}>🤖 시스템 공용 AI 서비스</h3>
                                         <p style={{ margin: 0, color: '#718096' }}>
-                                            모든 교사에게 제공되는 시스템 공용 API 키 사용 여부를 설정합니다.<br/>
-                                            비활성화 시 '개인 키'를 등록한 교사만 AI 기능을 사용할 수 있습니다.
+                                            모든 교사에게 제공되는 시스템 공용 AI 서비스의 사용 여부를 설정합니다.
                                         </p>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                         <span style={{ fontWeight: 'bold', color: publicAiEnabled ? '#38A169' : '#E53E3E' }}>
-                                            {publicAiEnabled ? '공용 AI 사용 가능' : '공용 AI 중단 (개인 키만 허용)'}
+                                            {publicAiEnabled ? '공용 AI 사용 가능' : '공용 AI 일시 중단'}
                                         </span>
                                         <label style={{ position: 'relative', display: 'inline-block', width: '56px', height: '30px' }}>
                                             <input

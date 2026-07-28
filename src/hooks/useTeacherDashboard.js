@@ -10,13 +10,10 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     const [loadingClasses, setLoadingClasses] = useState(true);
 
     // AI 설정 관련 상태
-    const [openaiKey, setOpenaiKey] = useState('시스템 설정 활성화됨');
-    const [originalKey, setOriginalKey] = useState('');
     const [promptTemplate, setPromptTemplate] = useState(DEFAULT_FEEDBACK_PROMPT);
     const [originalPrompt, setOriginalPrompt] = useState(""); // 초기에 저장이 가능하도록 빈값으로 설정
     const [reportPromptTemplate, setReportPromptTemplate] = useState(DEFAULT_REPORT_PROMPT);
     const [originalReportPrompt, setOriginalReportPrompt] = useState(""); // 초기에 저장이 가능하도록 빈값으로 설정
-    const [isKeyVisible, setIsKeyVisible] = useState(false);
     const [savingKey, setSavingKey] = useState(false);
     const [testingKey, setTestingKey] = useState(false);
 
@@ -29,7 +26,6 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
     // AI 상태 관련
     const [aiStatus, setAiStatus] = useState('disconnected'); // 초기값은 안전하게 '연결되지 않음'으로 시작
-    const [hasApiKey, setHasApiKey] = useState(false); // [보안] 키 존재 여부만 추적 (실제 키 값은 저장 안 함)
 
     const fetchTeacherInfo = useCallback(async () => {
         if (!session?.user?.id) return;
@@ -57,37 +53,14 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
     const fetchApiSettings = useCallback(async () => {
         if (!session?.user?.id) return;
-        // [보안] API 키 원본을 클라이언트에 로드하지 않음
-        // [최적화] 두 DB 요청을 병렬로 실행하여 순차 대기 제거
-        const [{ data }, { data: keyCheck }] = await Promise.all([
-            supabase
-                .from('profiles')
-                .select('api_mode, ai_prompt_template')
-                .eq('id', session.user.id)
-                .single(),
-            supabase.rpc('check_my_api_key_exists')
-        ]);
+        const { data } = await supabase
+            .from('profiles')
+            .select('ai_prompt_template')
+            .eq('id', session.user.id)
+            .single();
 
         if (data) {
-            setOriginalKey(data.api_mode === 'PERSONAL' ? 'Personal Key Active' : 'System Key Active');
-
-            // [보안 강화] API 키 원본을 state에 저장하지 않음
-            // 입력란은 항상 빈 상태로 시작 (새 키 입력 시에만 변경)
-            setOpenaiKey('');
-
-            // [보안] 키 존재 여부(boolean)만으로 AI 연결 상태 판단
-            const hasKey = keyCheck?.has_key === true;
-            setHasApiKey(hasKey);
-
-            if (data.api_mode === 'PERSONAL') {
-                if (!hasKey) {
-                    setAiStatus('disconnected');
-                } else {
-                    setAiStatus('connected');
-                }
-            } else {
-                setAiStatus('connected');
-            }
+            setAiStatus('connected');
 
             if (data.ai_prompt_template) {
                 const rawPrompt = data.ai_prompt_template.trim();
@@ -241,7 +214,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         });
     };
 
-    const handleSaveTeacherSettings = async (updatedProfile = {}) => {
+    const handleSaveTeacherSettings = async () => {
         setSavingKey(true);
         try {
             // 여러 프롬프트를 하나의 컬럼에 JSON으로 패킹하여 저장
@@ -250,50 +223,24 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 report: reportPromptTemplate.trim()
             });
 
-            // [보안 강화] API 키는 별도의 보안 테이블(profile_secrets)에 저장
             const profileUpdatePayload = {
                 id: session.user.id,
                 ai_prompt_template: packedPrompt,
-                ...(updatedProfile.api_mode && { api_mode: updatedProfile.api_mode }),
             };
 
-            // API 키 정제: 줄바꿈, 유니코드 특수문자 등 HTTP 헤더 불허 문자 제거
-            const cleanedKey = openaiKey.replace(/[^\x20-\x7E]/g, '').trim();
-
-            const secretsUpdatePayload = {
-                id: session.user.id,
-                ...(cleanedKey && { personal_openai_api_key: cleanedKey }),
-            };
-
-            const [profileResult, secretsResult] = await Promise.all([
-                supabase.from('profiles').upsert(profileUpdatePayload, { onConflict: 'id' }),
-                cleanedKey
-                    ? supabase.from('profile_secrets').upsert(secretsUpdatePayload, { onConflict: 'id' })
-                    : Promise.resolve({ error: null })
-            ]);
+            const profileResult = await supabase.from('profiles').upsert(profileUpdatePayload, { onConflict: 'id' });
 
             if (profileResult.error) throw profileResult.error;
-            if (secretsResult.error) throw secretsResult.error;
 
             setOriginalPrompt(promptTemplate.trim());
             setOriginalReportPrompt(reportPromptTemplate.trim());
-
-            // 새 키가 저장된 경우 즉시 UI 상태 반영 (새로고침 불필요)
-            if (cleanedKey) {
-                setHasApiKey(true);
-                setOpenaiKey('');
-                const effectiveMode = updatedProfile.api_mode || profile?.api_mode;
-                if (effectiveMode === 'PERSONAL') {
-                    setAiStatus('connected');
-                }
-            }
 
             // 프로필 상태 갱신을 위해 콜백 호출
             if (onProfileUpdate) {
                 await onProfileUpdate();
             }
 
-            alert('설정이 안전하게 저장되었습니다! ✨');
+            alert('AI 규칙이 저장되었습니다! ✨');
         } catch (err) {
             console.error('설정 저장 실패:', err.message);
             alert('저장 중 오류가 발생했습니다: ' + err.message);
@@ -306,11 +253,8 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         setTestingKey(true);
         setAiStatus('testing');
         try {
-            // [변경] 현재 UI상의 모드와 키를 함께 전달하여, 저장 전이라도 정확한 테스트가 가능하게 합니다.
             const aiResponse = await callAI({
                 prompt: "정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘.",
-                overrideApiMode: profile?.api_mode,
-                overrideApiKey: openaiKey,
                 type: 'CONNECTION_TEST'
             });
             alert(`✅ 연결 성공!\nAI 응답: ${aiResponse}`);
@@ -328,9 +272,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         console.log("🛠️ AI 진단 시작...");
         try {
             const diagData = await callAI({
-                type: 'DIAG',
-                overrideApiMode: profile?.api_mode,
-                overrideApiKey: openaiKey
+                type: 'DIAG'
             });
             console.log("📋 서버측 AI 진단 결과:", diagData);
             alert("콘솔(F12)에서 진단 결과를 확인해주세요.");
@@ -340,28 +282,6 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         }
     };
 
-
-    const handleDeleteApiKey = async () => {
-        if (!confirm('저장된 개인 API 키를 삭제하시겠습니까?\n삭제 후에는 개인 키 모드에서 AI 기능을 사용할 수 없습니다.')) return;
-        try {
-            const { error } = await supabase
-                .from('profile_secrets')
-                .update({ personal_openai_api_key: null })
-                .eq('id', session.user.id);
-
-            if (error) throw error;
-
-            setHasApiKey(false);
-            setOpenaiKey('');
-            if (profile?.api_mode === 'PERSONAL') {
-                setAiStatus('disconnected');
-            }
-            alert('✅ 개인 API 키가 삭제되었습니다.');
-        } catch (err) {
-            console.error('API 키 삭제 실패:', err.message);
-            alert('삭제 중 오류가 발생했습니다: ' + err.message);
-        }
-    };
 
     const handleSetPrimaryClass = async (classId) => {
         if (!classId) return;
@@ -429,23 +349,15 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         }
     };
 
-    const maskKey = (key) => {
-        if (!key) return '';
-        if (key.length <= 4) return '****';
-        return `${key.slice(0, 2)}...${key.slice(-2)}`;
-    };
-
     return {
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
         editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
-        openaiKey, setOpenaiKey, originalKey, hasApiKey,
         promptTemplate, setPromptTemplate, originalPrompt,
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
-        isKeyVisible, setIsKeyVisible,
         savingKey, testingKey, aiStatus,
-        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, handleDeleteApiKey, runAIDiagnosis,
+        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, runAIDiagnosis,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
-        fetchAllClasses, fetchDeletedClasses, maskKey
+        fetchAllClasses, fetchDeletedClasses
     };
 };
