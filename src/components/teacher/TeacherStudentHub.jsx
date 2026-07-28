@@ -37,8 +37,7 @@ const SummaryStat = ({ icon, label, value, tone }) => (
 const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost }) => {
     const classId = activeClass?.id;
     const [summary, setSummary] = useState(EMPTY_SUMMARY);
-    // 분석은 열기 전까지 아예 불러오지 않는다. 셋 중 가장 무겁고 가장 덜 본다.
-    const [analysisOpen, setAnalysisOpen] = useState(false);
+    const [section, setSection] = useState('overview');
 
     const summaryKey = classKey(classId, 'student-hub-summary');
 
@@ -58,80 +57,118 @@ const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost }) =
     }, [classId, summaryKey]);
 
     useEffect(() => {
+        if (section !== 'overview') return undefined;
         const timerId = window.setTimeout(loadSummary, 0);
         return () => window.clearTimeout(timerId);
-    }, [loadSummary]);
+    }, [loadSummary, section]);
 
     if (!classId) return null;
 
+    const sections = [
+        {
+            id: 'overview',
+            icon: '📊',
+            label: '학급 운영 현황',
+            description: '활동과 학급 분석'
+        },
+        {
+            id: 'students',
+            icon: '👥',
+            label: '학생 명단 관리',
+            description: '학생·코드·포인트'
+        }
+    ];
+
     return (
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
-                gap: '10px'
-            }}>
-                <SummaryStat icon="👥" label="학생" value={`${summary.students}명`} />
-                <SummaryStat icon="✍️" label="오늘 쓴 글" value={`${summary.today_posts}편`} tone="#EFF6FF" />
-                <SummaryStat icon="🗓️" label="최근 7일" value={`${summary.week_posts}편`} />
-                <SummaryStat icon="📊" label="평균 글자 수" value={`${summary.avg_chars}자`} />
-            </div>
+        <div style={{
+            width: '100%', display: isMobile ? 'flex' : 'grid',
+            flexDirection: isMobile ? 'column' : undefined,
+            gridTemplateColumns: isMobile ? undefined : '190px minmax(0, 1fr)',
+            gap: '18px', alignItems: 'start'
+        }}>
+            <nav
+                role="tablist"
+                aria-label="학생 관리 메뉴"
+                style={{
+                    display: 'flex', flexDirection: isMobile ? 'row' : 'column', gap: '7px',
+                    position: isMobile ? undefined : 'sticky', top: isMobile ? undefined : '8px',
+                    padding: '7px', border: '1px solid #E2E8F0', borderRadius: '16px',
+                    background: '#F8FAFC', overflowX: isMobile ? 'auto' : undefined
+                }}
+            >
+                {sections.map((item) => {
+                    const active = section === item.id;
+                    return (
+                        <button
+                            key={item.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={active}
+                            onClick={() => setSection(item.id)}
+                            style={{
+                                minWidth: isMobile ? '170px' : 0, padding: isMobile ? '11px 14px' : '13px 12px',
+                                border: active ? '1px solid #BFDBFE' : '1px solid transparent',
+                                borderRadius: '12px', background: active ? 'white' : 'transparent',
+                                boxShadow: active ? '0 4px 12px rgba(37, 99, 235, 0.09)' : 'none',
+                                color: active ? '#1D4ED8' : '#64748B', cursor: 'pointer', textAlign: 'left'
+                            }}
+                        >
+                            <strong style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '0.9rem' }}>
+                                <span aria-hidden="true">{item.icon}</span>{item.label}
+                            </strong>
+                            <small style={{ display: 'block', margin: '4px 0 0 25px', color: active ? '#60A5FA' : '#94A3B8', fontSize: '0.7rem' }}>
+                                {item.description}
+                            </small>
+                        </button>
+                    );
+                })}
+            </nav>
 
-            {/* 명단은 넓게, 최근 활동은 원래 좁고 긴 모양이라 옆에 세운다. */}
-            <div style={{
-                display: isMobile ? 'flex' : 'grid',
-                flexDirection: isMobile ? 'column' : undefined,
-                gridTemplateColumns: isMobile ? undefined : 'minmax(0, 1fr) 320px',
-                gap: '16px',
-                alignItems: 'start'
-            }}>
-                <section aria-label="학생 명단" style={cardStyle(isMobile)}>
-                    <Suspense fallback={<PanelLoading>학생 명단을 준비하는 중...</PanelLoading>}>
-                        <StudentManager activeClass={activeClass} classId={classId} isDashboardMode={false} />
-                    </Suspense>
-                </section>
+            <div style={{ minWidth: 0 }}>
+                {section === 'overview' ? (
+                    <div role="tabpanel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
+                            gap: '10px'
+                        }}>
+                            <SummaryStat icon="👥" label="학생" value={`${summary.students}명`} />
+                            <SummaryStat icon="✍️" label="오늘 쓴 글" value={`${summary.today_posts}편`} tone="#EFF6FF" />
+                            <SummaryStat icon="🗓️" label="최근 7일" value={`${summary.week_posts}편`} />
+                            <SummaryStat icon="📊" label="평균 글자 수" value={`${summary.avg_chars}자`} />
+                        </div>
 
-                <section aria-label="최근 활동" style={{
-                    ...cardStyle(isMobile),
-                    position: isMobile ? undefined : 'sticky',
-                    top: isMobile ? undefined : '8px'
-                }}>
-                    <Suspense fallback={<PanelLoading>최근 활동을 준비하는 중...</PanelLoading>}>
-                        <RecentActivity classId={classId} onPostClick={(post) => setSelectedActivityPost(post)} />
-                    </Suspense>
-                </section>
-            </div>
+                        <div style={{
+                            display: isMobile ? 'flex' : 'grid',
+                            flexDirection: isMobile ? 'column' : undefined,
+                            gridTemplateColumns: isMobile ? undefined : 'minmax(0, 1fr) 320px',
+                            gap: '16px', alignItems: 'start'
+                        }}>
+                            <section aria-label="학급 분석" style={cardStyle(isMobile)}>
+                                <Suspense fallback={<PanelLoading>학급 분석을 준비하는 중...</PanelLoading>}>
+                                    <ClassAnalysis classId={classId} isMobile={isMobile} />
+                                </Suspense>
+                            </section>
 
-            <section aria-label="학급 분석" style={{
-                background: 'white', borderRadius: '18px', border: '1px solid #E2E8F0',
-                boxShadow: '0 3px 12px rgba(15, 23, 42, 0.04)', overflow: 'hidden'
-            }}>
-                <button
-                    type="button"
-                    onClick={() => setAnalysisOpen((open) => !open)}
-                    aria-expanded={analysisOpen}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-                        padding: isMobile ? '14px' : '16px 18px', border: 0, background: 'transparent',
-                        color: '#334155', fontWeight: '900', fontSize: '1rem', cursor: 'pointer', textAlign: 'left'
-                    }}
-                >
-                    <span aria-hidden="true" style={{ color: '#94A3B8' }}>{analysisOpen ? '▾' : '▸'}</span>
-                    📊 학급 분석 자세히 보기
-                    {!isMobile && (
-                        <span style={{ marginLeft: 'auto', fontSize: '0.78rem', fontWeight: '800', color: '#94A3B8' }}>
-                            열정 작가 TOP 5 · 미제출자 · 미션별 평균
-                        </span>
-                    )}
-                </button>
-                {analysisOpen && (
-                    <div style={{ padding: isMobile ? '0 14px 14px' : '0 18px 18px', borderTop: '1px solid #E2E8F0' }}>
-                        <Suspense fallback={<PanelLoading>학급 분석을 준비하는 중...</PanelLoading>}>
-                            <ClassAnalysis classId={classId} isMobile={isMobile} />
-                        </Suspense>
+                            <section aria-label="최근 활동" style={{
+                                ...cardStyle(isMobile),
+                                position: isMobile ? undefined : 'sticky',
+                                top: isMobile ? undefined : '8px'
+                            }}>
+                                <Suspense fallback={<PanelLoading>최근 활동을 준비하는 중...</PanelLoading>}>
+                                    <RecentActivity classId={classId} onPostClick={(post) => setSelectedActivityPost(post)} />
+                                </Suspense>
+                            </section>
+                        </div>
                     </div>
+                ) : (
+                    <section role="tabpanel" aria-label="학생 명단 관리" style={cardStyle(isMobile)}>
+                        <Suspense fallback={<PanelLoading>학생 명단을 준비하는 중...</PanelLoading>}>
+                            <StudentManager activeClass={activeClass} classId={classId} isDashboardMode={false} />
+                        </Suspense>
+                    </section>
                 )}
-            </section>
+            </div>
         </div>
     );
 };

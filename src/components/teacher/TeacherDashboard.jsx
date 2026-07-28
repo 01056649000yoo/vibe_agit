@@ -339,6 +339,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             />
                         ) : visibleTab === 'students' ? (
                             <TeacherStudentHub
+                                key={activeClass.id}
                                 activeClass={activeClass}
                                 isMobile={isMobile}
                                 setSelectedActivityPost={setSelectedActivityPost}
