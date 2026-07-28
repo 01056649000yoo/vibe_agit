@@ -269,6 +269,35 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         <span aria-hidden="true">{group.icon}</span> {group.label}
                     </button>
                 ))}
+                {usesWritingSidebar && (
+                    <div role="group" aria-label="글쓰기 카드 배열 설정" style={{
+                        display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', paddingLeft: '18px',
+                        borderLeft: '1px solid #E2E8F0', color: '#64748B', fontSize: '0.76rem', fontWeight: '800', flexShrink: 0
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span>한 줄</span>
+                            {[3, 4, 5, 6].map(columns => (
+                                <button key={columns} type="button" onClick={() => setWritingCardLayout(current => ({ ...current, columns }))} aria-pressed={writingCardLayout.columns === columns} style={{
+                                    width: '28px', height: '28px', borderRadius: '8px', cursor: 'pointer', fontWeight: '900',
+                                    border: writingCardLayout.columns === columns ? '1px solid #2563EB' : '1px solid #CBD5E1',
+                                    background: writingCardLayout.columns === columns ? '#EFF6FF' : 'white',
+                                    color: writingCardLayout.columns === columns ? '#1D4ED8' : '#64748B'
+                                }}>{columns}</button>
+                            ))}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', paddingRight: '4px' }}>
+                            <span>크기</span>
+                            {[{ id: 'comfortable', label: '보통' }, { id: 'compact', label: '작게' }].map(option => (
+                                <button key={option.id} type="button" onClick={() => setWritingCardLayout(current => ({ ...current, density: option.id }))} aria-pressed={writingCardLayout.density === option.id} style={{
+                                    height: '28px', padding: '0 9px', borderRadius: '8px', cursor: 'pointer', fontWeight: '800',
+                                    border: writingCardLayout.density === option.id ? '1px solid #2563EB' : '1px solid #CBD5E1',
+                                    background: writingCardLayout.density === option.id ? '#EFF6FF' : 'white',
+                                    color: writingCardLayout.density === option.id ? '#1D4ED8' : '#64748B'
+                                }}>{option.label}</button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </nav>
 
             {/* 메인 콘텐츠 영역 */}
@@ -315,35 +344,6 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                     </div>
                 )}
                 <div style={{ minWidth: 0 }}>
-                {usesWritingSidebar && (
-                    <div role="group" aria-label="글쓰기 카드 배열 설정" style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '14px',
-                        minHeight: '38px', marginBottom: '10px', padding: '0 2px', color: '#64748B', fontSize: '0.78rem', fontWeight: '800'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <span>한 줄</span>
-                            {[3, 4, 5, 6].map(columns => (
-                                <button key={columns} type="button" onClick={() => setWritingCardLayout(current => ({ ...current, columns }))} aria-pressed={writingCardLayout.columns === columns} style={{
-                                    width: '30px', height: '30px', borderRadius: '8px', cursor: 'pointer', fontWeight: '900',
-                                    border: writingCardLayout.columns === columns ? '1px solid #2563EB' : '1px solid #CBD5E1',
-                                    background: writingCardLayout.columns === columns ? '#EFF6FF' : 'white',
-                                    color: writingCardLayout.columns === columns ? '#1D4ED8' : '#64748B'
-                                }}>{columns}</button>
-                            ))}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <span>크기</span>
-                            {[{ id: 'comfortable', label: '보통' }, { id: 'compact', label: '작게' }].map(option => (
-                                <button key={option.id} type="button" onClick={() => setWritingCardLayout(current => ({ ...current, density: option.id }))} aria-pressed={writingCardLayout.density === option.id} style={{
-                                    height: '30px', padding: '0 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: '800',
-                                    border: writingCardLayout.density === option.id ? '1px solid #2563EB' : '1px solid #CBD5E1',
-                                    background: writingCardLayout.density === option.id ? '#EFF6FF' : 'white',
-                                    color: writingCardLayout.density === option.id ? '#1D4ED8' : '#64748B'
-                                }}>{option.label}</button>
-                            ))}
-                        </div>
-                    </div>
-                )}
                 <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>로딩 중... ✨</div>}>
                     {/* 학급 데이터 로딩 중이면 스켈레톤 표시 */}
                     {loadingClasses ? (
