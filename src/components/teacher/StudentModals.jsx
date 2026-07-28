@@ -21,6 +21,18 @@ const StudentModals = ({
         const scoreKey = rankingTab === 'week' ? 'score_week' : rankingTab === 'month' ? 'score_month' : 'score_all';
         return [...displayStudents].sort((a, b) => (b[scoreKey] || 0) - (a[scoreKey] || 0));
     }, [displayStudents, rankingTab, isRankingModalOpen]);
+
+    const allCodesLayout = React.useMemo(() => {
+        const studentCount = students.length;
+        if (studentCount > 32) {
+            return { minCardWidth: 120, gap: 8, cardPadding: '8px 7px', nameSize: '0.72rem', codeSize: '1rem' };
+        }
+        if (studentCount > 20) {
+            return { minCardWidth: 135, gap: 10, cardPadding: '10px 8px', nameSize: '0.78rem', codeSize: '1.15rem' };
+        }
+        return { minCardWidth: 175, gap: 14, cardPadding: '14px 12px', nameSize: '0.88rem', codeSize: '1.4rem' };
+    }, [students.length]);
+
     return (
         <AnimatePresence>
             {isPointModalOpen && (
@@ -189,24 +201,53 @@ const StudentModals = ({
             )}
 
             {isAllCodesModalOpen && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, backdropFilter: 'blur(4px)' }}>
-                    <Card style={{ width: '90%', maxWidth: '1000px', maxHeight: '90vh', padding: '40px', borderRadius: '32px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                            <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#2C3E50', fontWeight: '900' }}>🔑 우리 반 접속 코드 전체 확인</h2>
-                            <Button variant="ghost" onClick={() => setIsAllCodesModalOpen(false)}>닫기</Button>
+                <div
+                    onClick={() => setIsAllCodesModalOpen(false)}
+                    style={{
+                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999,
+                        backdropFilter: 'blur(4px)', padding: 'clamp(8px, 2vw, 24px)', boxSizing: 'border-box'
+                    }}
+                >
+                    <motion.div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="all-student-codes-title"
+                        initial={{ scale: 0.96, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.96, opacity: 0 }}
+                        onClick={(event) => event.stopPropagation()}
+                        style={{
+                            width: 'min(96vw, 1120px)', height: 'min(90dvh, 820px)', maxHeight: 'calc(100dvh - 16px)',
+                            padding: 'clamp(14px, 2.2vw, 30px)', borderRadius: 'clamp(20px, 3vw, 32px)',
+                            background: 'white', border: '1px solid #E2E8F0', boxShadow: '0 25px 70px rgba(15,23,42,0.24)',
+                            display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', boxSizing: 'border-box'
+                        }}
+                    >
+                        <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: 'clamp(10px, 1.8vh, 20px)' }}>
+                            <div style={{ minWidth: 0 }}>
+                                <h2 id="all-student-codes-title" style={{ margin: 0, fontSize: 'clamp(1.15rem, 2.4vw, 1.8rem)', color: '#2C3E50', fontWeight: '900', lineHeight: 1.25 }}>🔑 우리 반 접속 코드 전체 확인</h2>
+                                <small style={{ display: 'block', marginTop: '4px', color: '#94A3B8', fontSize: '0.75rem', fontWeight: '800' }}>{students.length}명</small>
+                            </div>
+                            <Button variant="ghost" onClick={() => setIsAllCodesModalOpen(false)} style={{ flex: '0 0 auto' }}>닫기</Button>
                         </div>
-                        <div style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', padding: '10px' }}>
+                        <div style={{
+                            flex: '1 1 auto', minHeight: 0, overflowY: 'auto', overflowX: 'hidden',
+                            display: 'grid', alignContent: 'start',
+                            gridTemplateColumns: `repeat(auto-fit, minmax(${allCodesLayout.minCardWidth}px, 1fr))`,
+                            gap: `${allCodesLayout.gap}px`, padding: '2px 4px 8px'
+                        }}>
                             {students.map(s => (
-                                <div key={s.id} style={{ padding: '16px', borderRadius: '16px', background: '#F8F9FA', border: '1px solid #E9ECEF', textAlign: 'center' }}>
-                                    <div style={{ fontWeight: 'bold', color: '#7F8C8D', fontSize: '0.9rem', marginBottom: '8px' }}>{s.name}</div>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#3498DB', fontFamily: '"JetBrains Mono", "Roboto Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace', fontFeatureSettings: '"zero" 1, "tnum" 1', letterSpacing: '1px' }}>{s.student_code}</div>
+                                <div key={s.id} style={{ minWidth: 0, padding: allCodesLayout.cardPadding, borderRadius: '13px', background: '#F8FAFC', border: '1px solid #E2E8F0', textAlign: 'center', boxSizing: 'border-box' }}>
+                                    <div title={s.name} style={{ fontWeight: '850', color: '#64748B', fontSize: allCodesLayout.nameSize, marginBottom: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
+                                    <div style={{ fontSize: allCodesLayout.codeSize, lineHeight: 1.1, fontWeight: '900', color: '#2563EB', fontFamily: '"JetBrains Mono", "Roboto Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace', fontFeatureSettings: '"zero" 1, "tnum" 1', letterSpacing: 'clamp(0.2px, 0.15vw, 1px)', whiteSpace: 'nowrap' }}>{s.student_code}</div>
                                 </div>
                             ))}
                         </div>
-                        <div style={{ marginTop: '20px', textAlign: 'center', color: '#95A5A6', fontSize: '0.9rem' }}>
+                        <div style={{ flex: '0 0 auto', marginTop: 'clamp(8px, 1.5vh, 16px)', textAlign: 'center', color: '#94A3B8', fontSize: 'clamp(0.72rem, 1.4vw, 0.86rem)', lineHeight: 1.4 }}>
                             화면을 캡처하거나 크게 띄워 아이들에게 안내해 주세요. ✨
                         </div>
-                    </Card>
+                    </motion.div>
                 </div>
             )}
 
