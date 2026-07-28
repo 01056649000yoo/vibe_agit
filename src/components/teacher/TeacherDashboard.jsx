@@ -156,7 +156,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     const visibleTab = teacherTabs.includes(currentTab) ? currentTab : 'dashboard';
     const activeNavGroup = TEACHER_NAV_GROUPS.find(group => group.tabs.some(tab => tab.id === visibleTab)) || TEACHER_NAV_GROUPS[0];
     const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
-    const usesWritingSidebar = !isMobile && activeNavGroup.id === 'writing';
+    const usesSecondarySidebar = !isMobile && activeNavGroup.secondaryShape === 'sidebar';
+    const showsWritingLayoutControls = !isMobile && activeNavGroup.id === 'writing';
 
     return (
         <div style={{
@@ -242,7 +243,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         <span aria-hidden="true">{group.icon}</span> {group.label}
                     </button>
                 ))}
-                {usesWritingSidebar && (
+                {showsWritingLayoutControls && (
                     <div role="group" aria-label="글쓰기 카드 배열 설정" style={{
                         display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', paddingLeft: '18px',
                         borderLeft: '1px solid #E2E8F0', color: '#64748B', fontSize: '0.76rem', fontWeight: '800', flexShrink: 0
@@ -279,9 +280,9 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 boxSizing: 'border-box', overflowY: 'auto'
             }}>
                 <div style={{
-                    display: usesWritingSidebar ? 'grid' : 'block',
-                    gridTemplateColumns: usesWritingSidebar ? '180px minmax(0, 1fr)' : undefined,
-                    gap: usesWritingSidebar ? '20px' : undefined,
+                    display: usesSecondarySidebar ? 'grid' : 'block',
+                    gridTemplateColumns: usesSecondarySidebar ? '180px minmax(0, 1fr)' : undefined,
+                    gap: usesSecondarySidebar ? '20px' : undefined,
                     alignItems: 'start'
                 }}>
                 {secondaryTabs.length > 0 && (
@@ -289,10 +290,10 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         role="tablist"
                         aria-label={`${activeNavGroup.label} 세부 메뉴`}
                         style={{
-                            display: 'flex', flexDirection: usesWritingSidebar ? 'column' : 'row', gap: '6px', padding: '6px',
-                            marginBottom: usesWritingSidebar ? 0 : (isMobile ? '16px' : '22px'),
-                            width: usesWritingSidebar || isMobile ? '100%' : 'fit-content', overflowX: 'auto', boxSizing: 'border-box',
-                            borderRadius: '16px', background: '#E2E8F0', position: usesWritingSidebar ? 'sticky' : undefined, top: usesWritingSidebar ? 0 : undefined
+                            display: 'flex', flexDirection: usesSecondarySidebar ? 'column' : 'row', gap: '6px', padding: '6px',
+                            marginBottom: usesSecondarySidebar ? 0 : (isMobile ? '16px' : '22px'),
+                            width: usesSecondarySidebar || isMobile ? '100%' : 'fit-content', overflowX: 'auto', boxSizing: 'border-box',
+                            borderRadius: '16px', background: '#E2E8F0', position: usesSecondarySidebar ? 'sticky' : undefined, top: usesSecondarySidebar ? 0 : undefined
                         }}
                     >
                         {secondaryTabs.map(tab => (
@@ -303,12 +304,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 aria-selected={visibleTab === tab.id}
                                 onClick={() => handleTabChange(tab.id)}
                                 style={{
-                                    flex: isMobile ? '1 0 auto' : 'none', padding: usesWritingSidebar ? '13px 14px' : '9px 16px', border: 'none', borderRadius: '11px',
+                                    flex: isMobile ? '1 0 auto' : 'none', padding: usesSecondarySidebar ? '13px 14px' : '9px 16px', border: 'none', borderRadius: '11px',
                                     background: visibleTab === tab.id ? 'white' : 'transparent',
                                     color: visibleTab === tab.id ? '#1D4ED8' : '#64748B',
                                     boxShadow: visibleTab === tab.id ? '0 1px 4px rgba(15, 23, 42, 0.12)' : 'none',
                                     fontWeight: '800', fontSize: isMobile ? '0.85rem' : '0.9rem', cursor: 'pointer', whiteSpace: 'nowrap',
-                                    textAlign: usesWritingSidebar ? 'left' : 'center'
+                                    textAlign: usesSecondarySidebar ? 'left' : 'center'
                                 }}
                             >
                                 {tab.label}

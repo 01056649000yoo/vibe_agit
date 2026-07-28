@@ -10,6 +10,7 @@ export const TEACHER_NAV_GROUPS = [
         label: '글쓰기',
         icon: '✍️',
         defaultTab: 'dashboard',
+        secondaryShape: 'sidebar',
         tabs: [
             { id: 'dashboard', label: '선생님 과제' },
             { id: 'reading-logs', label: '학생 독서록' },
@@ -33,6 +34,7 @@ export const TEACHER_NAV_GROUPS = [
         label: '평가·기록',
         icon: '📝',
         defaultTab: 'evaluation',
+        secondaryShape: 'sidebar',
         tabs: [
             { id: 'evaluation', label: '학생 평가' },
             { id: 'activity', label: '평어 도우미' }

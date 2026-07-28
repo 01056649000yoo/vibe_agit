@@ -150,8 +150,8 @@ function UiPreview() {
         {(() => {
           const group = TEACHER_NAV_GROUPS.find((g) => g.id === activeNav)
           if (!group) return null
-          // 실제 대시보드는 글쓰기 영역만 PC에서 좌측 세로 메뉴를 쓴다(usesWritingSidebar).
-          const isSidebar = group.id === 'writing'
+          // 실제 대시보드와 같은 세부 메뉴 배치 정의를 사용한다.
+          const isSidebar = group.secondaryShape === 'sidebar'
           return (
             <>
               <p className="ui-preview__nav-shape">
