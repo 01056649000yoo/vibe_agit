@@ -22,6 +22,53 @@ import ActivityDetailModal from './ActivityDetailModal';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
 
+const TEACHER_NAV_GROUPS = [
+    {
+        id: 'writing',
+        label: '글쓰기',
+        icon: '✍️',
+        defaultTab: 'dashboard',
+        tabs: [
+            { id: 'dashboard', label: '글쓰기 관리' },
+            { id: 'archive', label: '보관함' }
+        ]
+    },
+    {
+        id: 'students',
+        label: '학생',
+        icon: '👥',
+        defaultTab: 'students',
+        tabs: [{ id: 'students', label: '학생 관리' }]
+    },
+    {
+        id: 'records',
+        label: '평가·기록',
+        icon: '📝',
+        defaultTab: 'evaluation',
+        tabs: [
+            { id: 'evaluation', label: '학생 평가' },
+            { id: 'activity', label: '국어 평어' }
+        ]
+    },
+    {
+        id: 'playground',
+        label: '포인트·놀이',
+        icon: '🎮',
+        defaultTab: 'playground',
+        tabs: [{ id: 'playground', label: '포인트·놀이' }]
+    },
+    {
+        id: 'settings',
+        label: '설정',
+        icon: '⚙️',
+        defaultTab: 'settings',
+        tabs: [
+            { id: 'settings', label: '관리 설정' },
+            { id: 'guide', label: '사용 안내' }
+        ]
+    }
+];
+
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
  */
@@ -113,11 +160,10 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
 
 
     const hasZeroClasses = classes.length === 0;
-    const teacherTabs = [
-        'dashboard', 'students', 'archive', 'evaluation', 'activity', 'playground',
-        'settings', 'guide'
-    ];
+    const teacherTabs = TEACHER_NAV_GROUPS.flatMap(group => group.tabs.map(tab => tab.id));
     const visibleTab = teacherTabs.includes(currentTab) ? currentTab : 'dashboard';
+    const activeNavGroup = TEACHER_NAV_GROUPS.find(group => group.tabs.some(tab => tab.id === visibleTab)) || TEACHER_NAV_GROUPS[0];
+    const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
 
     return (
         <div style={{
@@ -179,23 +225,28 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 </div>
             </header>
 
-            {/* 탭 네비게이션 */}
+            {/* 교사 업무 영역 네비게이션 */}
             <nav style={{
                 display: 'flex', background: 'white', borderBottom: '1px solid #E9ECEF',
-                padding: isMobile ? '0 12px' : '0 24px', flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box', overflowX: 'auto'
-            }}>
-                {teacherTabs.map((tabId) => (
+                padding: isMobile ? '0 8px' : '0 24px', flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box', overflowX: 'auto'
+            }} role="tablist" aria-label="교사 업무 메뉴">
+                {TEACHER_NAV_GROUPS.map((group) => (
                     <button
-                        key={tabId}
-                        onClick={() => setCurrentTab(tabId)}
+                        key={group.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={activeNavGroup.id === group.id}
+                        onClick={() => setCurrentTab(group.defaultTab)}
                         style={{
-                            padding: isMobile ? '10px 14px' : '12px 20px', border: 'none', background: 'transparent',
-                            borderBottom: visibleTab === tabId ? '3px solid #3498DB' : '3px solid transparent',
-                            color: visibleTab === tabId ? '#3498DB' : '#ADB5BD',
-                            fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', fontSize: isMobile ? '0.85rem' : '0.95rem'
+                            padding: isMobile ? '10px 12px' : '12px 22px', border: 'none',
+                            background: activeNavGroup.id === group.id ? '#EFF6FF' : 'transparent',
+                            borderBottom: activeNavGroup.id === group.id ? '3px solid #3498DB' : '3px solid transparent',
+                            color: activeNavGroup.id === group.id ? '#2563EB' : '#64748B',
+                            fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s',
+                            fontSize: isMobile ? '0.82rem' : '0.95rem', whiteSpace: 'nowrap'
                         }}
                     >
-                        {tabId === 'dashboard' ? '✍️ 글쓰기 관리' : tabId === 'students' ? '👥 학생 관리' : tabId === 'archive' ? '📂 보관함' : tabId === 'evaluation' ? '📈 학생 평가' : tabId === 'activity' ? '📘 국어 평어' : tabId === 'playground' ? '🎢 놀이터' : tabId === 'settings' ? '⚙️ 관리 설정' : '🧰 수업 앱 모음'}
+                        <span aria-hidden="true">{group.icon}</span> {group.label}
                     </button>
                 ))}
             </nav>
@@ -205,6 +256,36 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                 flex: 1, width: '100%', maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '16px' : '24px',
                 boxSizing: 'border-box', overflowY: 'auto'
             }}>
+                {secondaryTabs.length > 0 && (
+                    <div
+                        role="tablist"
+                        aria-label={`${activeNavGroup.label} 세부 메뉴`}
+                        style={{
+                            display: 'flex', gap: '8px', padding: '5px', marginBottom: isMobile ? '16px' : '22px',
+                            width: isMobile ? '100%' : 'fit-content', overflowX: 'auto', boxSizing: 'border-box',
+                            borderRadius: '14px', background: '#E2E8F0'
+                        }}
+                    >
+                        {secondaryTabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                role="tab"
+                                aria-selected={visibleTab === tab.id}
+                                onClick={() => setCurrentTab(tab.id)}
+                                style={{
+                                    flex: isMobile ? '1 0 auto' : 'none', padding: '9px 16px', border: 'none', borderRadius: '10px',
+                                    background: visibleTab === tab.id ? 'white' : 'transparent',
+                                    color: visibleTab === tab.id ? '#1D4ED8' : '#64748B',
+                                    boxShadow: visibleTab === tab.id ? '0 1px 4px rgba(15, 23, 42, 0.12)' : 'none',
+                                    fontWeight: '800', fontSize: isMobile ? '0.85rem' : '0.9rem', cursor: 'pointer', whiteSpace: 'nowrap'
+                                }}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
                 <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>로딩 중... ✨</div>}>
                     {/* 학급 데이터 로딩 중이면 스켈레톤 표시 */}
                     {loadingClasses ? (
