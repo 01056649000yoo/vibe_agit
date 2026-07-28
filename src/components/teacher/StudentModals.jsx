@@ -24,13 +24,20 @@ const StudentModals = ({
 
     const allCodesLayout = React.useMemo(() => {
         const studentCount = students.length;
-        if (studentCount > 32) {
-            return { minCardWidth: 120, gap: 8, cardPadding: '8px 7px', nameSize: '0.72rem', codeSize: '1rem' };
-        }
         if (studentCount > 20) {
-            return { minCardWidth: 135, gap: 10, cardPadding: '10px 8px', nameSize: '0.78rem', codeSize: '1.15rem' };
+            const gap = 10;
+            const columns = 5;
+            const fittedRows = Math.ceil(Math.min(studentCount, 30) / columns);
+            return {
+                fitToThirty: true,
+                gap,
+                rowSize: `calc((100% - ${(fittedRows - 1) * gap}px) / ${fittedRows})`,
+                cardPadding: '10px 8px',
+                nameSize: '0.86rem',
+                codeSize: '1.35rem'
+            };
         }
-        return { minCardWidth: 175, gap: 14, cardPadding: '14px 12px', nameSize: '0.88rem', codeSize: '1.4rem' };
+        return { fitToThirty: false, minCardWidth: 175, gap: 14, cardPadding: '14px 12px', nameSize: '0.88rem', codeSize: '1.4rem' };
     }, [students.length]);
 
     return (
@@ -231,14 +238,17 @@ const StudentModals = ({
                             </div>
                             <Button variant="ghost" onClick={() => setIsAllCodesModalOpen(false)} style={{ flex: '0 0 auto' }}>닫기</Button>
                         </div>
-                        <div style={{
+                        <div
+                            className={allCodesLayout.fitToThirty ? 'all-codes-grid all-codes-grid--fit-thirty' : 'all-codes-grid'}
+                            style={{
                             flex: '1 1 auto', minHeight: 0, overflowY: 'auto', overflowX: 'hidden',
                             display: 'grid', alignContent: 'start',
-                            gridTemplateColumns: `repeat(auto-fit, minmax(${allCodesLayout.minCardWidth}px, 1fr))`,
+                            gridTemplateColumns: allCodesLayout.fitToThirty ? undefined : `repeat(auto-fit, minmax(${allCodesLayout.minCardWidth}px, 1fr))`,
+                            '--all-codes-row-size': allCodesLayout.rowSize,
                             gap: `${allCodesLayout.gap}px`, padding: '2px 4px 8px'
                         }}>
                             {students.map(s => (
-                                <div key={s.id} style={{ minWidth: 0, padding: allCodesLayout.cardPadding, borderRadius: '13px', background: '#F8FAFC', border: '1px solid #E2E8F0', textAlign: 'center', boxSizing: 'border-box' }}>
+                                <div key={s.id} style={{ minWidth: 0, padding: allCodesLayout.cardPadding, borderRadius: '13px', background: '#F8FAFC', border: '1px solid #E2E8F0', textAlign: 'center', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                                     <div title={s.name} style={{ fontWeight: '850', color: '#64748B', fontSize: allCodesLayout.nameSize, marginBottom: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
                                     <div style={{ fontSize: allCodesLayout.codeSize, lineHeight: 1.1, fontWeight: '900', color: '#2563EB', fontFamily: '"JetBrains Mono", "Roboto Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace', fontFeatureSettings: '"zero" 1, "tnum" 1', letterSpacing: 'clamp(0.2px, 0.15vw, 1px)', whiteSpace: 'nowrap' }}>{s.student_code}</div>
                                 </div>

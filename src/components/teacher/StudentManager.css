@@ -17,6 +17,20 @@
     background: #ADB5BD;
 }
 
+/* 전원 코드 확대: 21~30명은 PC에서 5열 기준으로 목록 영역을 채운다.
+   30명 초과분은 같은 행 높이를 유지해 모달 안에서만 스크롤한다. */
+.all-codes-grid--fit-thirty {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-auto-rows: var(--all-codes-row-size);
+}
+
+@media (max-width: 720px) {
+    .all-codes-grid--fit-thirty {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: minmax(68px, auto);
+    }
+}
+
 /* 작업 7종은 화면 폭과 무관하게 같은 행을 유지한다. */
 .student-action-grid {
     container: student-actions / inline-size;
