@@ -1,6 +1,36 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
+const DESKTOP_GRID_COLUMNS = '48px minmax(110px, 0.8fr) 128px 90px minmax(340px, 2.4fr)';
+
+const getActionColors = (tone) => {
+    if (tone === 'point') return { background: '#FFF8E1', border: '#FFECB3', color: '#B45309' };
+    if (tone === 'info') return { background: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' };
+    if (tone === 'record') return { background: '#F0FDF4', border: '#BBF7D0', color: '#15803D' };
+    if (tone === 'danger') return { background: '#FFF1F2', border: '#FECDD3', color: '#DC2626' };
+    return { background: '#F8FAFC', border: '#E2E8F0', color: '#475569' };
+};
+
+const actionButtonStyle = (tone = 'neutral') => {
+    const colors = getActionColors(tone);
+    return {
+        height: '32px',
+        padding: '0 9px',
+        border: `1px solid ${colors.border}`,
+        borderRadius: '8px',
+        background: colors.background,
+        color: colors.color,
+        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '4px',
+        fontSize: '0.74rem',
+        fontWeight: '800',
+        whiteSpace: 'nowrap'
+    };
+};
+
 const StudentManagementList = ({
     displayStudents, isMobile, setSelectedStudentForCode, setIsCodeZoomModalOpen,
     openHistoryModal, handleExportClick, copyCode, copiedId,
@@ -21,8 +51,8 @@ const StudentManagementList = ({
             }}
         >
             {!isMobile && displayStudents.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: '48px minmax(130px, 1fr) 130px 100px 132px', gap: '10px', padding: '0 12px 4px', color: '#94A3B8', fontSize: '0.72rem', fontWeight: '800' }}>
-                    <span style={{ textAlign: 'center' }}>번호</span><span>이름</span><span>로그인 코드</span><span style={{ textAlign: 'right' }}>포인트</span><span style={{ textAlign: 'right' }}>작업</span>
+                <div style={{ display: 'grid', gridTemplateColumns: DESKTOP_GRID_COLUMNS, gap: '10px', padding: '0 12px 4px', color: '#94A3B8', fontSize: '0.72rem', fontWeight: '800' }}>
+                    <span style={{ textAlign: 'center' }}>번호</span><span>이름</span><span>로그인 코드</span><span style={{ textAlign: 'right' }}>포인트</span><span>작업</span>
                 </div>
             )}
             {displayStudents.map((s, idx) => {
@@ -34,6 +64,15 @@ const StudentManagementList = ({
                     ['✏️ 기록 도우미', () => onOpenRecordAssistant(s)],
                     ['🗑️ 학생 삭제', () => { setDeleteTarget(s); setIsDeleteModalOpen(true); }]
                 ];
+                const desktopActions = [
+                    { id: 'copy', icon: copiedId === s.id ? '✅' : '📋', label: copiedId === s.id ? '복사됨' : '코드 복사', action: () => copyCode(s.id, s.student_code) },
+                    { id: 'point', icon: '⚡', label: '포인트 조정', action: () => onOpenPointModal(s), tone: 'point' },
+                    { id: 'zoom', icon: '🔍', label: '코드 크게', action: () => { setSelectedStudentForCode(s); setIsCodeZoomModalOpen(true); }, tone: 'info' },
+                    { id: 'history', icon: '📜', label: '포인트 기록', action: () => openHistoryModal(s) },
+                    { id: 'export', icon: '📤', label: '내보내기', action: () => handleExportClick(s) },
+                    { id: 'record', icon: '✏️', label: '기록 도우미', action: () => onOpenRecordAssistant(s), tone: 'record' },
+                    { id: 'delete', icon: '🗑️', label: '삭제', action: () => { setDeleteTarget(s); setIsDeleteModalOpen(true); }, tone: 'danger' }
+                ];
 
                 return (
                     <motion.div
@@ -42,7 +81,7 @@ const StudentManagementList = ({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         style={{
-                            display: 'grid', gridTemplateColumns: isMobile ? '36px minmax(90px, 1fr) auto' : '48px minmax(130px, 1fr) 130px 100px 132px',
+                            display: 'grid', gridTemplateColumns: isMobile ? '36px minmax(90px, 1fr) auto' : DESKTOP_GRID_COLUMNS,
                             alignItems: 'center', padding: isMobile ? '10px' : '8px 12px', gap: '10px',
                             background: 'white',
                             border: '1px solid #E9ECEF',
@@ -81,60 +120,19 @@ const StudentManagementList = ({
                                 <span style={{ fontSize: '0.75rem', color: '#ADB5BD', marginLeft: '2px', fontWeight: 'bold' }}>P</span>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', position: 'relative' }}>
-                                <button
-                                    onClick={() => copyCode(s.id, s.student_code)}
-                                    style={{ background: '#F8F9FA', border: '1px solid #E9ECEF', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', transition: 'all 0.2s' }}
-                                    title="코드 복사" > {copiedId === s.id ? '✅' : '📋'} </button>
-
-                                <button
-                                    onClick={() => onOpenPointModal(s)}
-                                    style={{
-                                        background: '#FFF8E1',
-                                        border: '1px solid #FFECB3',
-                                        color: '#F39C12',
-                                        cursor: 'pointer',
-                                        width: '32px',
-                                        height: '32px',
-                                        borderRadius: '8px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '1rem',
-                                        transition: 'all 0.2s',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                                    }}
-                                    title="포인트 조정"
-                                >
-                                    ⚡
-                                </button>
-
-                                <button
-                                    onClick={() => setOpenMenuId(openMenuId === s.id ? null : s.id)}
-                                    style={{
-                                        background: '#F8FAFC', border: '1px solid #CBD5E1', color: '#475569',
-                                        cursor: 'pointer',
-                                        width: '32px',
-                                        height: '32px',
-                                        borderRadius: '8px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '1rem',
-                                        transition: 'all 0.2s',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                                    }}
-                                    title="더보기"
-                                >
-                                    ⋯
-                                </button>
-                                {openMenuId === s.id && (
-                                    <div style={{ position: 'absolute', top: '38px', right: 0, width: '170px', padding: '6px', borderRadius: '12px', background: 'white', border: '1px solid #E2E8F0', boxShadow: '0 12px 28px rgba(15,23,42,.16)', zIndex: 30 }}>
-                                        {moreActions.map(([label, action]) => (
-                                            <button key={label} type="button" onClick={() => { action(); setOpenMenuId(null); }} style={{ width: '100%', padding: '8px 9px', border: 'none', borderRadius: '8px', background: 'transparent', color: label.includes('삭제') ? '#DC2626' : '#334155', textAlign: 'left', cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem' }}>{label}</button>
-                                        ))}
-                                    </div>
-                                )}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', flexWrap: 'wrap', gap: '5px' }}>
+                                {desktopActions.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={item.action}
+                                        style={actionButtonStyle(item.tone)}
+                                        title={item.label}
+                                    >
+                                        <span aria-hidden="true">{item.icon}</span>
+                                        <span>{item.label}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
                         {isMobile && (
