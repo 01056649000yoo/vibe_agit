@@ -268,3 +268,17 @@
   font-size: 0.82rem;
   color: #64748b;
 }
+
+/* 한 화면에 위아래로 쌓이는 구조 (좌측 메뉴로 나뉘지 않음) */
+.ui-preview__inner-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ui-preview__inner-stack span {
+  padding: 10px 14px;
+  border: 1px solid var(--ui-preview-border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--ui-preview-surface, #fff);
+  font-size: 0.86rem;
+}

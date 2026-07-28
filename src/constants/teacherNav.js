@@ -22,11 +22,11 @@ export const TEACHER_NAV_GROUPS = [
         icon: '👥',
         defaultTab: 'students',
         tabs: [{ id: 'students', label: '학생 관리' }],
-        // 화면 안에서 다시 나뉘는 구조 (TeacherStudentHub의 좌측 메뉴).
-        // 셋 다 "지금 이 학급 안"을 본다. 학급 자체를 만들고 지우는 일은
-        // 성격이 달라 설정 > 학급 관리로 옮겼다.
-        innerShape: 'sidebar',
-        innerItems: ['학생 명단', '최근 활동', '학급 분석']
+        // 좌측 메뉴로 나뉘어 있던 셋을 한 화면에 모았다(2026-07-28).
+        // 학급 자체를 만들고 지우는 일은 성격이 달라 설정 > 학급 관리로 옮겼다.
+        innerShape: 'stack',
+        innerItems: ['요약 띠 (학생·오늘·최근 7일·평균 글자)', '학생 명단', '최근 활동', '학급 분석 (접힘)'],
+        innerNote: '한 화면에 위아래로 놓입니다. 명단과 최근 활동은 좌우 2단, 분석은 눌러서 폅니다.'
     },
     {
         id: 'records',

@@ -173,13 +173,17 @@ function UiPreview() {
                   <p className="ui-preview__nav-shape">
                     {group.innerShape === 'cards'
                       ? '화면을 열면 아래 카드들이 나옵니다.'
-                      : '화면을 열면 아래 좌측 메뉴로 다시 나뉩니다.'}
+                      : group.innerShape === 'stack'
+                        ? '화면 하나에 아래 순서대로 놓입니다. 더 눌러 들어가지 않습니다.'
+                        : '화면을 열면 아래 좌측 메뉴로 다시 나뉩니다.'}
                   </p>
                   <div
                     className={
                       group.innerShape === 'cards'
                         ? 'ui-preview__inner-cards'
-                        : 'ui-preview__teacher-tabs is-sidebar'
+                        : group.innerShape === 'stack'
+                          ? 'ui-preview__inner-stack'
+                          : 'ui-preview__teacher-tabs is-sidebar'
                     }
                   >
                     {group.innerItems.map((item) => (
