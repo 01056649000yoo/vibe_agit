@@ -22,7 +22,7 @@ const GENRE_MISSION_BUILDERS = new Map(
 /**
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
-const MissionManager = ({ activeClass, isDashboardMode = true }) => {
+const MissionManager = ({ activeClass, isDashboardMode = true, cardLayout }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [isMissionTypePickerOpen, setIsMissionTypePickerOpen] = useState(false);
     const [activeGenreMissionId, setActiveGenreMissionId] = useState(null);
@@ -144,15 +144,15 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                 top: isMobile ? '88px' : '-24px',
                 zIndex: 10,
                 background: 'white',
-                padding: '8px 0 16px 0',
+                padding: '2px 0 12px 0',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 borderBottom: '1px solid #F1F3F5',
-                marginBottom: '16px'
+                marginBottom: '12px'
             }}>
-                <h3 style={{ margin: 0, fontSize: isMobile ? '1.1rem' : '1.3rem', color: '#2C3E50', fontWeight: '900' }}>
-                    {isDashboardMode ? '✍️ 글쓰기 미션 현황' : '✍️ 글쓰기 미션 관리'}
+                <h3 style={{ margin: 0, fontSize: isMobile ? '1.05rem' : '1.15rem', color: '#2C3E50', fontWeight: '900' }}>
+                    {isDashboardMode ? '✍️ 선생님 과제' : '✍️ 글쓰기 미션 관리'}
                 </h3>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                     <Button
@@ -166,9 +166,9 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                         }}
                         style={{
                             background: isFormOpen || isMissionTypePickerOpen ? '#FF5252' : '#3498DB',
-                            color: 'white', padding: isMobile ? '8px 12px' : '10px 18px',
+                            color: 'white', padding: isMobile ? '8px 12px' : '8px 14px',
                             fontSize: isMobile ? '0.82rem' : '0.9rem',
-                            minHeight: '44px',
+                            minHeight: isMobile ? '44px' : '38px',
                             fontWeight: 'bold'
                         }}
                     >
@@ -230,6 +230,7 @@ const MissionManager = ({ activeClass, isDashboardMode = true }) => {
                 handleEvaluationMode={handleEvaluationMode}
                 onReviewMission={handleReviewMission}
                 highlightedMissionId={highlightedMissionId}
+                cardLayout={cardLayout}
             />
 
             {/* 학생 제출 현황 모달 */}

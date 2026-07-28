@@ -11,8 +11,8 @@ const PROGRESS_COUNT_BADGE_STYLE = { background: '#E8F5E9', color: '#2E7D32', pa
 const VIEWER_BUTTON_STYLE = {
     flex: 1,
     marginTop: 0,
-    padding: '10px 0',
-    fontSize: '0.85rem',
+    padding: '8px 4px',
+    fontSize: '0.76rem',
     fontWeight: '900',
     borderRadius: '12px',
     transition: 'all 0.2s',
@@ -26,18 +26,19 @@ const VIEWER_BUTTON_STYLE = {
 const MissionItem = memo(({
     mission, isMobile, completedCount, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission,
-    showEvaluationReport, handleEvaluationMode, onReviewMission, isHighlighted
+    showEvaluationReport, handleEvaluationMode, onReviewMission, isHighlighted, cardLayout
 }) => {
     const genreMissionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
     const isMeetingMission = genreMissionType?.id === 'meeting';
     const supportsEvaluation = genreMissionType?.supportsEvaluation !== false;
     const progressLabel = isMeetingMission ? `💡 제안 ${completedCount}건` : `✍️ ${completedCount}명 완료`;
+    const isDense = cardLayout?.density === 'compact' || cardLayout?.columns >= 5;
 
     return (
         <motion.div whileHover={isMobile ? {} : { y: -4 }} style={{
-            background: isHighlighted ? '#FFFBEB' : 'white', padding: isMobile ? '16px' : '20px',
-            borderRadius: '20px', border: isHighlighted ? '2px solid #F59E0B' : isMeetingMission ? '1px solid #DDD6FE' : '1px solid #ECEFF1',
-            boxShadow: isHighlighted ? '0 10px 28px rgba(245, 158, 11, 0.18)' : '0 4px 12px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '12px',
+            background: isHighlighted ? '#FFFBEB' : 'white', padding: isMobile ? '16px' : (isDense ? '10px' : '14px'),
+            borderRadius: '16px', border: isHighlighted ? '2px solid #F59E0B' : isMeetingMission ? '1px solid #DDD6FE' : '1px solid #ECEFF1',
+            boxShadow: isHighlighted ? '0 8px 20px rgba(245, 158, 11, 0.16)' : '0 3px 9px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: isDense ? '6px' : '8px',
             width: '100%', boxSizing: 'border-box',
             wordBreak: 'keep-all', overflowWrap: 'break-word', transition: 'all 0.25s ease'
         }}>
@@ -49,7 +50,7 @@ const MissionItem = memo(({
                     <button onClick={(e) => {
                         e.stopPropagation();
                         handleEditClick(mission);
-                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F39C12', fontSize: '1.2rem', padding: '8px' }} title="수정">
+                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F39C12', fontSize: '1rem', padding: '4px' }} title="수정">
                         ✏️
                     </button>
                     <button onClick={(e) => {
@@ -60,7 +61,7 @@ const MissionItem = memo(({
                             mission: mission,
                             hasIncomplete: hasIncomplete
                         });
-                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3498DB', fontSize: '1.2rem', padding: '8px' }}>
+                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3498DB', fontSize: '1rem', padding: '4px' }} title="보관">
                         📂
                     </button>
                     <button onClick={async (e) => {
@@ -69,16 +70,16 @@ const MissionItem = memo(({
                             // [수정] 인라인 삭제 대신 훅의 전용 함수 사용 (캐시 무효화 포함)
                             await handleDeleteMission(mission.id);
                         }
-                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF5252', fontSize: '1.2rem', padding: '8px' }}>
+                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#FF5252', fontSize: '1rem', padding: '4px' }} title="삭제">
                         🗑️
                     </button>
                 </div>
             </div>
-            <h4 style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.1rem', color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
+            <h4 style={{ margin: 0, fontSize: '1rem', lineHeight: 1.35, color: '#2C3E50', fontWeight: '900' }}>{mission.title}</h4>
 
             {mission.tags && mission.tags.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '-4px' }}>
-                    {mission.tags.map((tag, idx) => (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '-4px', maxHeight: isDense ? '18px' : 'none', overflow: 'hidden' }}>
+                    {mission.tags.slice(0, isDense ? 2 : mission.tags.length).map((tag, idx) => (
                         <span key={idx} style={{
                             fontSize: '0.7rem',
                             background: '#F3E5F5',
@@ -100,14 +101,14 @@ const MissionItem = memo(({
                     {progressLabel}
                 </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+            <div style={{ display: 'flex', gap: '6px', marginTop: '3px' }}>
                 <Button
                     onClick={() => isMeetingMission ? onReviewMission(mission) : fetchPostsForMission(mission)}
                     style={isMeetingMission
                         ? { ...VIEWER_BUTTON_STYLE, backgroundColor: '#7C3AED', color: 'white', border: '1px solid #7C3AED' }
                         : { ...VIEWER_BUTTON_STYLE, backgroundColor: '#F1F3F5', color: '#495057', border: '1px solid #E9ECEF' }}
                 >
-                    {isMeetingMission ? `💡 ${genreMissionType.reviewLabel} (${completedCount})` : '📝 학생 글 확인'}
+                    {isMeetingMission ? `💡 ${isDense ? '검토' : genreMissionType.reviewLabel} (${completedCount})` : `📝 ${isDense ? '글 확인' : '학생 글 확인'}`}
                 </Button>
                 {supportsEvaluation && mission.evaluation_rubric?.use_rubric && (
                     <>
@@ -133,7 +134,7 @@ const MissionItem = memo(({
 const MissionList = ({
     missions, loading, submissionCounts, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
-    isMobile, showEvaluationReport, handleEvaluationMode, onReviewMission, highlightedMissionId
+    isMobile, showEvaluationReport, handleEvaluationMode, onReviewMission, highlightedMissionId, cardLayout
 }) => {
     const [activeFilter, setActiveFilter] = useState('all');
 
@@ -193,8 +194,9 @@ const MissionList = ({
             ) : (
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))',
-                    gap: '16px'
+                    gridTemplateColumns: isMobile ? '1fr' : `repeat(${cardLayout?.columns || 4}, minmax(0, 1fr))`,
+                    gap: '12px',
+                    justifyContent: 'start'
                 }}>
                     {visibleMissions.map(mission => (
                         <MissionItem
@@ -212,6 +214,7 @@ const MissionList = ({
                             handleEvaluationMode={handleEvaluationMode}
                             onReviewMission={onReviewMission}
                             isHighlighted={mission.id === highlightedMissionId}
+                            cardLayout={cardLayout}
                         />
                     ))}
                 </div>

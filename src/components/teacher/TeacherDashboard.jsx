@@ -22,6 +22,19 @@ import ActivityDetailModal from './ActivityDetailModal';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
 
+const DEFAULT_WRITING_CARD_LAYOUT = { columns: 4, density: 'comfortable' };
+
+const loadWritingCardLayout = () => {
+    try {
+        const saved = JSON.parse(window.localStorage.getItem('teacher-writing-card-layout-v1'));
+        const columns = [3, 4, 5, 6].includes(saved?.columns) ? saved.columns : DEFAULT_WRITING_CARD_LAYOUT.columns;
+        const density = ['comfortable', 'compact'].includes(saved?.density) ? saved.density : DEFAULT_WRITING_CARD_LAYOUT.density;
+        return { columns, density };
+    } catch {
+        return DEFAULT_WRITING_CARD_LAYOUT;
+    }
+};
+
 const TEACHER_NAV_GROUPS = [
     {
         id: 'writing',
@@ -82,6 +95,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     const [adminPassword, setAdminPassword] = useState('');
     const [adminPasswordError, setAdminPasswordError] = useState('');
     const [isVerifyingAdminPassword, setIsVerifyingAdminPassword] = useState(false);
+    const [writingCardLayout, setWritingCardLayout] = useState(loadWritingCardLayout);
 
     // [리팩토링] 커스텀 훅을 통한 상태 및 비즈니스 로직 관리
     const {
@@ -101,6 +115,10 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    useEffect(() => {
+        window.localStorage.setItem('teacher-writing-card-layout-v1', JSON.stringify(writingCardLayout));
+    }, [writingCardLayout]);
 
     const handleOpenAdminPasswordModal = useCallback(() => {
         setAdminPassword('');
@@ -165,6 +183,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     const visibleTab = teacherTabs.includes(currentTab) ? currentTab : 'dashboard';
     const activeNavGroup = TEACHER_NAV_GROUPS.find(group => group.tabs.some(tab => tab.id === visibleTab)) || TEACHER_NAV_GROUPS[0];
     const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
+    const usesWritingSidebar = !isMobile && activeNavGroup.id === 'writing';
 
     return (
         <div style={{
@@ -254,17 +273,24 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
 
             {/* 메인 콘텐츠 영역 */}
             <main style={{
-                flex: 1, width: '100%', maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '16px' : '24px',
+                flex: 1, width: '100%', maxWidth: '1600px', margin: '0 auto', padding: isMobile ? '16px' : '20px 24px',
                 boxSizing: 'border-box', overflowY: 'auto'
             }}>
+                <div style={{
+                    display: usesWritingSidebar ? 'grid' : 'block',
+                    gridTemplateColumns: usesWritingSidebar ? '180px minmax(0, 1fr)' : undefined,
+                    gap: usesWritingSidebar ? '20px' : undefined,
+                    alignItems: 'start'
+                }}>
                 {secondaryTabs.length > 0 && (
                     <div
                         role="tablist"
                         aria-label={`${activeNavGroup.label} 세부 메뉴`}
                         style={{
-                            display: 'flex', gap: '8px', padding: '5px', marginBottom: isMobile ? '16px' : '22px',
-                            width: isMobile ? '100%' : 'fit-content', overflowX: 'auto', boxSizing: 'border-box',
-                            borderRadius: '14px', background: '#E2E8F0'
+                            display: 'flex', flexDirection: usesWritingSidebar ? 'column' : 'row', gap: '6px', padding: '6px',
+                            marginBottom: usesWritingSidebar ? 0 : (isMobile ? '16px' : '22px'),
+                            width: usesWritingSidebar || isMobile ? '100%' : 'fit-content', overflowX: 'auto', boxSizing: 'border-box',
+                            borderRadius: '16px', background: '#E2E8F0', position: usesWritingSidebar ? 'sticky' : undefined, top: usesWritingSidebar ? 0 : undefined
                         }}
                     >
                         {secondaryTabs.map(tab => (
@@ -275,16 +301,47 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 aria-selected={visibleTab === tab.id}
                                 onClick={() => setCurrentTab(tab.id)}
                                 style={{
-                                    flex: isMobile ? '1 0 auto' : 'none', padding: '9px 16px', border: 'none', borderRadius: '10px',
+                                    flex: isMobile ? '1 0 auto' : 'none', padding: usesWritingSidebar ? '13px 14px' : '9px 16px', border: 'none', borderRadius: '11px',
                                     background: visibleTab === tab.id ? 'white' : 'transparent',
                                     color: visibleTab === tab.id ? '#1D4ED8' : '#64748B',
                                     boxShadow: visibleTab === tab.id ? '0 1px 4px rgba(15, 23, 42, 0.12)' : 'none',
-                                    fontWeight: '800', fontSize: isMobile ? '0.85rem' : '0.9rem', cursor: 'pointer', whiteSpace: 'nowrap'
+                                    fontWeight: '800', fontSize: isMobile ? '0.85rem' : '0.9rem', cursor: 'pointer', whiteSpace: 'nowrap',
+                                    textAlign: usesWritingSidebar ? 'left' : 'center'
                                 }}
                             >
                                 {tab.label}
                             </button>
                         ))}
+                    </div>
+                )}
+                <div style={{ minWidth: 0 }}>
+                {usesWritingSidebar && (
+                    <div role="group" aria-label="글쓰기 카드 배열 설정" style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '14px',
+                        minHeight: '38px', marginBottom: '10px', padding: '0 2px', color: '#64748B', fontSize: '0.78rem', fontWeight: '800'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span>한 줄</span>
+                            {[3, 4, 5, 6].map(columns => (
+                                <button key={columns} type="button" onClick={() => setWritingCardLayout(current => ({ ...current, columns }))} aria-pressed={writingCardLayout.columns === columns} style={{
+                                    width: '30px', height: '30px', borderRadius: '8px', cursor: 'pointer', fontWeight: '900',
+                                    border: writingCardLayout.columns === columns ? '1px solid #2563EB' : '1px solid #CBD5E1',
+                                    background: writingCardLayout.columns === columns ? '#EFF6FF' : 'white',
+                                    color: writingCardLayout.columns === columns ? '#1D4ED8' : '#64748B'
+                                }}>{columns}</button>
+                            ))}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span>크기</span>
+                            {[{ id: 'comfortable', label: '보통' }, { id: 'compact', label: '작게' }].map(option => (
+                                <button key={option.id} type="button" onClick={() => setWritingCardLayout(current => ({ ...current, density: option.id }))} aria-pressed={writingCardLayout.density === option.id} style={{
+                                    height: '30px', padding: '0 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: '800',
+                                    border: writingCardLayout.density === option.id ? '1px solid #2563EB' : '1px solid #CBD5E1',
+                                    background: writingCardLayout.density === option.id ? '#EFF6FF' : 'white',
+                                    color: writingCardLayout.density === option.id ? '#1D4ED8' : '#64748B'
+                                }}>{option.label}</button>
+                            ))}
+                        </div>
                     </div>
                 )}
                 <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>로딩 중... ✨</div>}>
@@ -305,7 +362,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                     ) : visibleTab === 'guide' ? (
                         <UsageGuide isMobile={isMobile} />
                     ) : visibleTab === 'archive' ? (
-                        <ArchiveManager activeClass={activeClass} isMobile={isMobile} />
+                        <ArchiveManager activeClass={activeClass} isMobile={isMobile} cardLayout={writingCardLayout} />
                     ) : visibleTab === 'playground' ? (
                         <GameManager activeClass={activeClass} isMobile={isMobile} />
                     ) : (!activeClass || hasZeroClasses) ? (
@@ -324,6 +381,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 activeClass={activeClass}
                                 isMobile={isMobile}
                                 section={visibleTab === 'reading-logs' ? 'reading-logs' : 'missions'}
+                                cardLayout={writingCardLayout}
                             />
                         ) : visibleTab === 'students' ? (
                             <TeacherStudentHub
@@ -356,6 +414,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         )
                     )}
                 </Suspense>
+                </div>
+                </div>
             </main>
 
             {/* 별도 컴포넌트 모달들 */}

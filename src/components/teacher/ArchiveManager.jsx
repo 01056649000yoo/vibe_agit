@@ -10,7 +10,8 @@ import { dataCache } from '../../lib/cache';
 /**
  * 역할: 선생님 - 보관된 미션 관리 및 글 모아보기 📂
  */
-const ArchiveManager = ({ activeClass, isMobile }) => {
+const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
+    const isDenseCard = cardLayout?.density === 'compact' || cardLayout?.columns >= 5;
     const [archivedMissions, setArchivedMissions] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
     const [allTags, setAllTags] = useState([]);
@@ -271,13 +272,13 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
 
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
-            <h3 style={{ margin: '0 0 24px 0', fontSize: '1.5rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                📂 글 보관함 <span style={{ fontSize: '1rem', fontWeight: 'normal', color: '#95A5A6' }}>지난 미션과 아이들의 글을 소중히 보관합니다.</span>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: isMobile ? '1.25rem' : '1.2rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                📂 보관함 <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#95A5A6' }}>지난 과제와 학생 글</span>
             </h3>
 
             {/* 태그 필터링 UI */}
             {allTags.length > 0 && (
-                <div style={{ marginBottom: '24px' }}>
+                <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '0.85rem', color: '#7F8C8D', marginBottom: '10px', fontWeight: 'bold' }}>🏷️ 태그로 필터링 (다중 선택 가능)</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                         <button
@@ -325,13 +326,13 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
             {/* 다중 선택 및 액션 바 */}
             {filteredMissions.length > 0 && (
                 <div style={{
-                    marginBottom: '20px',
+                    marginBottom: '14px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '16px 24px',
+                    padding: isMobile ? '12px' : '10px 14px',
                     background: 'white',
-                    borderRadius: '20px',
+                    borderRadius: '14px',
                     border: '1px solid #E9ECEF',
                     boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
                 }}>
@@ -386,8 +387,9 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
             ) : (
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                    gap: '20px'
+                    gridTemplateColumns: isMobile ? '1fr' : `repeat(${cardLayout?.columns || 4}, minmax(0, 1fr))`,
+                    gap: '12px',
+                    justifyContent: 'start'
                 }}>
                     {filteredMissions.map((mission) => (
                         <motion.div
@@ -398,8 +400,8 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                             style={{
                                 background: 'white',
                                 border: selectedMissionIds.includes(mission.id) ? '2px solid #3498DB' : '1px solid #E9ECEF',
-                                borderRadius: '20px',
-                                padding: '20px',
+                                borderRadius: '16px',
+                                padding: isMobile ? '16px' : (isDenseCard ? '10px' : '14px'),
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'space-between',
@@ -425,8 +427,8 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                                 }}
                                 style={{
                                     position: 'absolute',
-                                    top: '15px',
-                                    right: '15px',
+                                    top: '11px',
+                                    right: '11px',
                                     width: '24px',
                                     height: '24px',
                                     borderRadius: '50%',
@@ -448,11 +450,11 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                             </div>
 
                             {/* 헤더: 제목 및 날짜 */}
-                            <div style={{ marginBottom: '16px', paddingRight: '25px' }}>
+                            <div style={{ marginBottom: '10px', paddingRight: '25px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                                     <h4 style={{
                                         margin: 0,
-                                        fontSize: '1.15rem',
+                                        fontSize: '1rem',
                                         color: '#2C3E50',
                                         fontWeight: '800',
                                         lineHeight: '1.4',
@@ -495,8 +497,8 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                                     </span>
                                 </div>
                                 {mission.tags && mission.tags.length > 0 && (
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px' }}>
-                                        {mission.tags.map((tag, idx) => (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px', maxHeight: isDenseCard ? '18px' : 'none', overflow: 'hidden' }}>
+                                        {mission.tags.slice(0, isDenseCard ? 2 : mission.tags.length).map((tag, idx) => (
                                             <span key={idx} style={{
                                                 fontSize: '0.7rem',
                                                 background: '#F3E5F5',
@@ -518,9 +520,9 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 background: '#F8F9FA',
-                                padding: '12px 16px',
-                                borderRadius: '12px',
-                                marginBottom: '16px'
+                                padding: '9px 10px',
+                                borderRadius: '10px',
+                                marginBottom: '10px'
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <span style={{ fontSize: '1.2rem' }}>👥</span>
@@ -542,7 +544,7 @@ const ArchiveManager = ({ activeClass, isMobile }) => {
                             </div>
 
                             {/* 푸터: 액션 버튼 */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                                 <Button
                                     size="sm"
                                     onClick={() => fetchPostsForMission(mission)}
