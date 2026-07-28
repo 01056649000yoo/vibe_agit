@@ -55,7 +55,7 @@ const timeAgo = (value) => {
 
 const RecentActivity = ({ classId, onPostClick, isMobile }) => {
     const [filter, setFilter] = useState('all');
-    const [period, setPeriod] = useState('1d');
+    const [period, setPeriod] = useState('7d');
     const [columns, setColumns] = useState(loadSavedColumns);
     const [activities, setActivities] = useState([]);
     const [counts, setCounts] = useState(EMPTY_COUNTS);
@@ -220,7 +220,8 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
                                     aria-pressed={selected}
                                     onClick={() => setColumns(count)}
                                     style={{
-                                        width: '29px', height: '29px', borderRadius: '8px', cursor: 'pointer', fontWeight: '900',
+                                        width: '29px', height: '29px', padding: 0, borderRadius: '8px', cursor: 'pointer', fontWeight: '900',
+                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, boxSizing: 'border-box',
                                         border: selected ? '1px solid #2563EB' : '1px solid #CBD5E1',
                                         background: selected ? '#EFF6FF' : 'white', color: selected ? '#1D4ED8' : '#64748B'
                                     }}
