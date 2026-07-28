@@ -21,6 +21,36 @@
 
 ---
 
+## 2026-07-28 — 독서록 조회 인덱스: 남의 학급까지 훑던 구조 해소 (Claude)
+- **배경**: 사용자 질문 — "제출 편수가 많으면 조회할 때마다 모든 DB를 재조회하는 경우가 생기는 것 아니냐".
+  **맞는 지적이었다.** 실행계획을 뜯어 확인함.
+- **원인**: 교사 화면은 항상 `class_id + writing_context='self' + self_writing_type='reading_log' + is_submitted`
+  로 조회하는데 **이 조건에 맞는 인덱스가 0개**였다. 그래서 계획기가
+  `idx_student_posts_self_writing_list (student_id, self_writing_type, updated_at DESC) WHERE writing_context='self'`
+  를 골랐다. 이 인덱스의 **첫 열은 student_id 인데 조회 조건에는 student_id 가 없다**(전체 학생 보기).
+  결국 인덱스 전체 = **모든 학급의 자율 글**을 훑고 나서 class_id 로 걸러내는 꼴. 지금은 독서록이 2건뿐이라 드러나지 않았을 뿐이다.
+- **변경**: `supabase/migrations/20260728_reading_log_class_index.sql` —
+  `idx_student_posts_reading_log_class (class_id, updated_at DESC)` 부분 인덱스(조회 조건 3개를 그대로 WHERE 에).
+  `ORDER BY updated_at DESC` 도 인덱스가 처리하므로 정렬 단계가 사라진다.
+  운영 중 쓰기를 막지 않으려 `CONCURRENTLY` 사용 → **트랜잭션 블록 없이** 작성(BEGIN/COMMIT 없음. 다른 마이그레이션과 형식이 다른 이유).
+- **결과/검증**: 운영 데이터가 2건뿐이라 **별도 시험용 DB(perftest)에 15만 행(독서록 8만, 한 학급 평균 748편)을
+  만들어 전후를 측정**하고 삭제했다. 운영 데이터는 건드리지 않음.
+
+  | 항목 | 전 | 후 |
+  |---|---|---|
+  | 목록 50편 조회 | 1405 buffer · 1402행 읽어 654행 버림 · top-N 정렬 · **3.13ms** | 53 buffer · Index Scan · 정렬 없음 · **0.24ms** |
+  | counts 집계 | 755 buffer · Bitmap Heap Scan · **3.17ms** | 8 buffer · **Index Only Scan** · **0.85ms** |
+
+  운영 적용 후 인덱스 `valid=true` 확인.
+- **남은 것 / 다음**:
+  - counts 는 설계상 **매 호출 다시 센다**(머리 숫자를 항상 최신으로 두려는 의도). `더 보기` 한 번마다
+    Index Only Scan 1회(748편 기준 0.85ms)가 추가된다. 지금 규모에선 문제 없다고 판단해 그대로 둠.
+  - 남은 비용: `base` CTE 가 책 정보 조인(`reading_log_entries`→`student_library_items`→`book_catalog`)을
+    **페이지 50편이 아니라 그 학급 전체 독서록**에 대해 수행한다(검색어가 책 제목도 훑기 때문에 조인이 필요).
+    한 학급이 수천 편을 넘기면 이때 손볼 것.
+
+---
+
 ## 2026-07-28 — UI 작업 3: 학생 독서록 목록 가독성 (미확인 기본 + 학생별 보기 + 더 보기) (Claude)
 - **배경**: 사용자 지적 — "학생들이 1편씩만 써도 전체 목록이 너무 길어 가독성이 떨어진다".
   확인 결과 목록은 한 편=한 줄 평면 구조에 **기본 필터가 '전체'** 라, 탭을 열면 늘 가장 긴 화면부터 봤다.
