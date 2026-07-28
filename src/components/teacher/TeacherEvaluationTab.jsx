@@ -45,8 +45,8 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
     return (
         <div style={{ width: '100%' }}>
             <div style={{ marginBottom: '32px' }}>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#2C3E50', marginBottom: '8px' }}>📈 학생 평가 관리</h2>
-                <p style={{ color: '#7F8C8D', fontSize: '1rem' }}>미션별 학생들의 성장도와 분석 리포트를 한눈에 확인하세요.</p>
+                <h2 style={{ margin: '0 0 8px', fontSize: '1.8rem', fontWeight: '900', color: '#2C3E50' }}>📈 학생 평가 관리</h2>
+                <p style={{ margin: 0, color: '#7F8C8D', fontSize: '1rem' }}>미션별 학생들의 성장도와 분석 리포트를 한눈에 확인하세요.</p>
             </div>
 
             {evaluationMissions.length === 0 ? (

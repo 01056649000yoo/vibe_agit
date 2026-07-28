@@ -650,7 +650,7 @@ ${activitiesInfo}`;
     const generatedCount = studentPosts.filter(s => s.ai_synthesis).length;
 
     return (
-        <div style={{ width: '100%', boxSizing: 'border-box', padding: isMobile ? '0' : '10px 0' }}>
+        <div style={{ width: '100%', boxSizing: 'border-box' }}>
             <header style={{
                 marginBottom: '32px',
                 display: 'flex',
