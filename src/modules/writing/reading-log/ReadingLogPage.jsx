@@ -11,7 +11,9 @@ const EMPTY_FORM = {
     title: '',
     selectedBook: null,
     content: '',
-    visibility: 'private',
+    // 기본은 친구 공개 — 독서록을 서로 보며 읽을거리를 찾게 한다.
+    // 남기고 싶지 않은 글은 저장 화면에서 비공개로 바꿀 수 있다.
+    visibility: 'class',
     readingStatus: 'completed'
 };
 
@@ -79,7 +81,8 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                 title: data.title || '',
                 selectedBook: loadedBook.title ? loadedBook : null,
                 content: data.content || '',
-                visibility: data.visibility === 'class' ? 'class' : 'private',
+                // 이미 저장된 글은 학생이 고른 값을 그대로 유지한다
+                visibility: data.visibility === 'private' ? 'private' : 'class',
                 readingStatus: data.structured_content?.readingStatus === 'reading' ? 'reading' : 'completed'
             };
             setForm(loadedForm);
