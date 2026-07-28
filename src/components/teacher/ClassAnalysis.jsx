@@ -1,319 +1,334 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 
-// 학급 학습 현황 분석 컴포넌트
+const CACHE_TTL_MS = 30000;
+
+const PERIOD_OPTIONS = [
+    { id: '7d', label: '최근 7일' },
+    { id: '30d', label: '최근 30일' },
+    { id: 'all', label: '전체' }
+];
+
+const EMPTY_DATA = {
+    summary: {
+        students: 0,
+        active_students: 0,
+        submitted_posts: 0,
+        revisions: 0,
+        comments: 0,
+        feedbacks: 0,
+        avg_chars: 0
+    },
+    actions: {
+        assignment_pending: { count: 0, items: [] },
+        reading_pending: { count: 0, items: [] },
+        evaluation_pending: { count: 0, items: [] },
+        inactive_students: { count: 0, items: [] }
+    },
+    missions: []
+};
+
+const normalizeData = (value) => ({
+    ...EMPTY_DATA,
+    ...(value || {}),
+    summary: { ...EMPTY_DATA.summary, ...(value?.summary || {}) },
+    actions: {
+        ...EMPTY_DATA.actions,
+        ...(value?.actions || {})
+    },
+    missions: Array.isArray(value?.missions) ? value.missions : []
+});
+
+const formatDate = (value) => {
+    if (!value) return '활동 기록 없음';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '날짜 확인 필요';
+    return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+};
+
+const missionTypeLabel = (type) => {
+    if (type === 'meeting') return '회의 안건';
+    if (type === 'poem') return '시 쓰기';
+    return '자유 글쓰기';
+};
+
+const MetricCard = ({ icon, label, value, note, background, color }) => (
+    <div style={{
+        minWidth: 0,
+        padding: '14px',
+        borderRadius: '15px',
+        border: '1px solid #E2E8F0',
+        background: background || '#F8FAFC'
+    }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: '#64748B', fontSize: '0.75rem', fontWeight: '800' }}>
+            <span aria-hidden="true">{icon}</span>
+            <span>{label}</span>
+        </div>
+        <div style={{ marginTop: '7px', color: color || '#0F172A', fontSize: '1.35rem', fontWeight: '900', lineHeight: 1.15 }}>
+            {value}
+        </div>
+        {note && <div style={{ marginTop: '5px', color: '#94A3B8', fontSize: '0.68rem', lineHeight: 1.35 }}>{note}</div>}
+    </div>
+);
+
+const ActionCard = ({ icon, title, description, action, tone, renderDetail }) => {
+    const items = Array.isArray(action?.items) ? action.items : [];
+    const count = Number(action?.count || 0);
+
+    return (
+        <article style={{
+            minWidth: 0,
+            padding: '15px',
+            borderRadius: '16px',
+            border: `1px solid ${tone.border}`,
+            background: tone.background
+        }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0 }}>
+                    <strong style={{ display: 'flex', gap: '7px', alignItems: 'center', color: tone.text, fontSize: '0.9rem' }}>
+                        <span aria-hidden="true">{icon}</span>{title}
+                    </strong>
+                    <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.7rem', lineHeight: 1.4 }}>{description}</p>
+                </div>
+                <span style={{
+                    flex: '0 0 auto', minWidth: '34px', padding: '5px 8px', borderRadius: '999px',
+                    background: count > 0 ? tone.badge : '#E2E8F0', color: count > 0 ? tone.text : '#64748B',
+                    fontSize: '0.82rem', fontWeight: '900', textAlign: 'center'
+                }}>{count}건</span>
+            </div>
+
+            {items.length > 0 ? (
+                <div style={{ marginTop: '11px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {items.slice(0, 4).map((item, index) => (
+                        <div key={item.post_id || item.student_id || index} style={{
+                            minWidth: 0, padding: '8px 9px', borderRadius: '10px',
+                            background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(148,163,184,0.16)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                <strong style={{ color: '#334155', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>{item.student_name || '이름 없음'}</strong>
+                                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#64748B', fontSize: '0.7rem' }}>
+                                    {renderDetail(item)}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                    {count > 4 && <small style={{ color: '#64748B', fontSize: '0.68rem', fontWeight: '700' }}>외 {count - 4}건이 더 있습니다.</small>}
+                </div>
+            ) : (
+                <div style={{ marginTop: '11px', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.65)', color: '#64748B', fontSize: '0.73rem', textAlign: 'center' }}>
+                    지금 확인할 항목이 없습니다.
+                </div>
+            )}
+        </article>
+    );
+};
+
 const ClassAnalysis = ({ classId, isMobile }) => {
+    const [period, setPeriod] = useState('7d');
+    const [data, setData] = useState(EMPTY_DATA);
     const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({
-        studentCount: 0,
-        avgChars: 0,
-        submissionRate: 0,
-        topStudents: [],
-        notSubmitted: [],
-        trendData: [],
-        todayRate: 0
-    });
-    const [selectedMissionId, setSelectedMissionId] = useState(null);
-    const [missionNotSubmittedMap, setMissionNotSubmittedMap] = useState({});
-    const [missionTopStudentsMap, setMissionTopStudentsMap] = useState({});
-    const [missionAvgCharsMap, setMissionAvgCharsMap] = useState({});
+    const [refreshing, setRefreshing] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
-    useEffect(() => {
+    const cacheKey = useMemo(
+        () => classKey(classId, 'operations-dashboard', { period }),
+        [classId, period]
+    );
+
+    const loadDashboard = useCallback(async ({ force = false } = {}) => {
         if (!classId) return;
-        
-        fetchAnalysisData();
+        if (force) {
+            dataCache.invalidate(cacheKey);
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+        }
+        setErrorMessage('');
 
-        // [추가] 미션 및 제출물 변경 시 실시간 통계 갱신
-        const channel = supabase
-            .channel(`class_analysis_${classId}`)
-            .on('postgres_changes', { 
-                event: '*', 
-                schema: 'public', 
-                table: 'writing_missions',
-                filter: `class_id=eq.${classId}`
-            }, () => fetchAnalysisData())
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'student_posts'
-            }, () => fetchAnalysisData())
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [classId]);
-
-    const fetchAnalysisData = async () => {
-        setLoading(true);
         try {
-            // 1. 기초 데이터 로드 (학생, 미션, 제출물) - 삭제되지 않은 학생만 조회
-            const { data: students, error: sErr } = await supabase
-                .from('students')
-                .select('id, name')
-                .eq('class_id', classId)
-                .is('deleted_at', null);
-
-            if (sErr || !students || students.length === 0) {
-                setStats({
-                    studentCount: 0,
-                    avgChars: 0,
-                    submissionRate: 0,
-                    topStudents: [],
-                    notSubmitted: [],
-                    trendData: [],
-                    missionRates: [],
-                    todayRate: 0
+            const result = await dataCache.get(cacheKey, async () => {
+                const { data: dashboard, error } = await supabase.rpc('get_class_operations_dashboard', {
+                    p_class_id: classId,
+                    p_period: period
                 });
-                setLoading(false);
-                return;
-            }
-
-            // [수정] 미션은 보관되지 않은 것만 조회 (아이디어 마켓 안건 제외)
-            const { data: missions } = await supabase
-                .from('writing_missions')
-                .select('id, title, created_at')
-                .eq('class_id', classId)
-                .is('is_archived', false)
-                .neq('mission_type', 'meeting')
-                .order('created_at', { ascending: false });
-
-            // [수정] posts는 현재 살아있는 미션에 속한 것만 조회
-            // 삭제/보관된 미션의 posts가 완료율 통계에 포함되는 버그 수정
-            const activeMissionIds = (missions || []).map(m => m.id);
-            const { data: posts } = activeMissionIds.length > 0
-                ? await supabase
-                    .from('student_posts')
-                    .select('id, student_id, mission_id, is_confirmed, is_submitted, created_at, char_count')
-                    .in('student_id', students.map(s => s.id))
-                    .in('mission_id', activeMissionIds)
-                    .eq('is_confirmed', true) // DB 레벨에서 확정된 포스트만 필터링
-                : { data: [] };
-
-            // 2. 통계 계산 (미션별 최종 제출물만 필터링)
-            const getFinalPosts = (postList) => {
-                const map = new Map();
-                postList.forEach(p => {
-                    const key = `${p.student_id}_${p.mission_id}`;
-                    const existing = map.get(key);
-
-                    let isBetter = false;
-                    if (!existing) isBetter = true;
-                    else if (p.is_confirmed && !existing.is_confirmed) isBetter = true;
-                    else if (!existing.is_confirmed && p.is_submitted && !existing.is_submitted) isBetter = true;
-                    else if (p.is_submitted === existing.is_submitted && p.is_confirmed === existing.is_confirmed) {
-                        if (new Date(p.created_at) > new Date(existing.created_at)) isBetter = true;
-                    }
-
-                    if (isBetter) map.set(key, p);
-                });
-                return Array.from(map.values()); // 이미 DB에서 is_confirmed 필터링됨
-            };
-
-            const finalPosts = getFinalPosts(posts || []);
-            const totalChars = finalPosts.reduce((sum, p) => sum + (p.char_count || 0), 0);
-            const avgChars = students.length > 0 ? Math.round(totalChars / students.length) : 0;
-
-            // 학생별 제출 현황 및 랭킹
-            const studentStats = students.map(s => {
-                const myFinalPosts = finalPosts.filter(p => p.student_id === s.id);
-                const myChars = myFinalPosts.reduce((sum, p) => sum + (p.char_count || 0), 0);
-                return { name: s.name, count: myFinalPosts.length, chars: myChars };
-            });
-
-            const topStudents = studentStats.sort((a, b) => b.chars - a.chars).slice(0, 5);
-
-            // 제출 트렌드 (최근 7일)
-            const trend = Array.from({ length: 7 }, (_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const dayStr = d.toISOString().split('T')[0];
-                const count = posts ? posts.filter(p => p.is_confirmed && p.created_at?.startsWith(dayStr)).length : 0;
-                return { date: dayStr, count };
-            }).reverse();
-
-            // 최근 미션별 완료율 (상위 2개), 미제출자 맵, 미션별 TOP 5, 미션별 평균 글자수 구성
-            const recentMissions = missions ? missions.slice(0, 2) : [];
-            const missionNotSubmitted = {};
-            const missionTopMap = {};
-            const missionAvgMap = {};
-
-            const missionRates = recentMissions.map(m => {
-                const missionPosts = posts ? posts.filter(p => p.mission_id === m.id && p.is_confirmed) : [];
-                const submittedCount = missionPosts.length;
-                const rate = students.length > 0 ? Math.round((submittedCount / students.length) * 100) : 0;
-
-                const submittedIds = new Set(missionPosts.map(p => p.student_id));
-                missionNotSubmitted[m.id] = students.filter(s => !submittedIds.has(s.id)).map(s => s.name);
-
-                // 미션별 TOP 5 (글자 수 기준)
-                missionTopMap[m.id] = missionPosts
-                    .map(p => {
-                        const student = students.find(s => s.id === p.student_id);
-                        return { name: student?.name || '익명', chars: p.char_count || 0 };
-                    })
-                    .sort((a, b) => b.chars - a.chars)
-                    .slice(0, 5);
-
-                // 미션별 평균 글자수 계산
-                const missionTotalChars = missionPosts.reduce((sum, p) => sum + (p.char_count || 0), 0);
-                missionAvgMap[m.id] = submittedCount > 0 ? Math.round(missionTotalChars / submittedCount) : 0;
-
-                return { id: m.id, title: m.title, rate };
-            });
-
-            if (recentMissions.length > 0 && !selectedMissionId) {
-                setSelectedMissionId(recentMissions[0].id);
-            }
-
-            setMissionNotSubmittedMap(missionNotSubmitted);
-            setMissionTopStudentsMap(missionTopMap);
-            setMissionAvgCharsMap(missionAvgMap);
-            setStats({
-                studentCount: students.length,
-                avgChars, // 글로벌 평균 (전체)
-                submissionRate: posts?.length || 0,
-                topStudents, // 글로벌 TOP 5 (전체 미션 합산)
-                notSubmitted: missions?.length > 0 ? missionNotSubmitted[missions[0].id] || [] : [],
-                trendData: trend,
-                missionRates
-            });
-        } catch (err) {
-            console.error('분석 데이터 로드 실패:', err.message);
+                if (error) throw error;
+                return normalizeData(dashboard);
+            }, CACHE_TTL_MS);
+            setData(normalizeData(result));
+        } catch (error) {
+            console.error('학급 운영 현황 로드 실패:', error.message);
+            setData(EMPTY_DATA);
+            setErrorMessage('학급 운영 현황을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
-    };
+    }, [cacheKey, classId, period]);
+
+    useEffect(() => {
+        loadDashboard();
+    }, [loadDashboard]);
+
+    const summary = data.summary;
+    const totalStudents = Number(summary.students || 0);
+    const activeStudents = Number(summary.active_students || 0);
+    const activeRate = totalStudents > 0 ? Math.round((activeStudents / totalStudents) * 100) : 0;
+    const periodLabel = PERIOD_OPTIONS.find((option) => option.id === period)?.label || '조회 기간';
 
     if (loading) {
         return (
-            <div style={{ padding: '24px', background: 'white', borderRadius: '24px', border: '1px solid #E9ECEF', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
-                <div style={{ height: '24px', width: '200px', background: '#F1F3F5', borderRadius: '4px', marginBottom: '24px', animation: 'pulse 1.5s infinite' }} />
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
-                    {[1, 2, 3].map(i => (
-                        <div key={i} style={{ height: '120px', background: '#F8F9FA', borderRadius: '16px', animation: 'pulse 1.5s infinite' }} />
-                    ))}
+            <div role="status" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ height: '32px', width: '210px', borderRadius: '9px', background: '#F1F5F9' }} />
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: '9px' }}>
+                    {[1, 2, 3, 4, 5, 6].map((key) => <div key={key} style={{ height: '92px', borderRadius: '15px', background: '#F8FAFC' }} />)}
                 </div>
+                <span style={{ color: '#64748B', fontSize: '0.75rem' }}>학급 운영 현황을 집계하는 중...</span>
             </div>
         );
     }
 
     return (
-        <section style={{
-            background: 'white', borderRadius: '24px', padding: isMobile ? '20px' : '28px',
-            border: '1px solid #E9ECEF', boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-            width: '100%', boxSizing: 'border-box'
-        }}>
-            <h3 style={{ margin: '0 0 24px 0', fontSize: '1.2rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                📊 학급 학습 활동 분석판
-            </h3>
-
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '24px' }}>
-                {/* 1. 핵심 지표 */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div style={{ background: '#E3F2FD', padding: '20px', borderRadius: '20px', border: '1px solid #BBDEFB' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#1976D2', fontWeight: 'bold', marginBottom: '8px' }}>
-                            ✍️ {selectedMissionId ? '선택 미션 평균 글자 수' : '학급 전체 평균 글자 수'}
-                        </div>
-                        <div style={{ fontSize: '1.8rem', fontWeight: '900', color: '#0D47A1' }}>
-                            {(selectedMissionId ? (missionAvgCharsMap[selectedMissionId] || 0) : stats.avgChars).toLocaleString()}자
-                        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
+            <header style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', gap: '12px', alignItems: isMobile ? 'stretch' : 'flex-start' }}>
+                <div>
+                    <h3 style={{ margin: 0, color: '#1E293B', fontSize: '1.05rem', fontWeight: '900' }}>📊 학급 운영 현황</h3>
+                    <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.74rem', lineHeight: 1.45 }}>
+                        활동량과 지금 확인해야 할 일을 한 화면에서 살펴봅니다.
+                    </p>
+                </div>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div role="group" aria-label="운영 현황 조회 기간" style={{ display: 'flex', gap: '4px', padding: '3px', borderRadius: '10px', background: '#F1F5F9' }}>
+                        {PERIOD_OPTIONS.map((option) => {
+                            const selected = period === option.id;
+                            return (
+                                <button
+                                    key={option.id}
+                                    type="button"
+                                    aria-pressed={selected}
+                                    onClick={() => setPeriod(option.id)}
+                                    style={{
+                                        border: 0, borderRadius: '8px', padding: '7px 9px', cursor: 'pointer',
+                                        background: selected ? 'white' : 'transparent', color: selected ? '#1D4ED8' : '#64748B',
+                                        boxShadow: selected ? '0 1px 4px rgba(15,23,42,0.1)' : 'none', fontSize: '0.7rem', fontWeight: '850'
+                                    }}
+                                >{option.label}</button>
+                            );
+                        })}
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => loadDashboard({ force: true })}
+                        disabled={refreshing}
+                        aria-label="학급 운영 현황 새로고침"
+                        style={{
+                            border: '1px solid #CBD5E1', borderRadius: '10px', padding: '7px 10px',
+                            background: 'white', color: '#475569', cursor: refreshing ? 'wait' : 'pointer',
+                            fontSize: '0.7rem', fontWeight: '800', opacity: refreshing ? 0.65 : 1
+                        }}
+                    >{refreshing ? '갱신 중...' : '↻ 새로고침'}</button>
+                </div>
+            </header>
 
-                    <div style={{ background: '#F8F9FA', padding: '16px', borderRadius: '20px', border: '1px solid #E9ECEF', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'bold', marginBottom: '12px' }}>📝 최근 미션 완료율</div>
-                        {stats.missionRates && stats.missionRates.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {stats.missionRates.map(m => (
-                                    <div
-                                        key={m.id}
-                                        onClick={() => setSelectedMissionId(m.id)}
-                                        style={{
-                                            cursor: 'pointer',
-                                            padding: '8px',
-                                            borderRadius: '12px',
-                                            background: selectedMissionId === m.id ? '#E3F2FD' : 'transparent',
-                                            transition: 'all 0.2s',
-                                            border: selectedMissionId === m.id ? '1px solid #90CAF9' : '1px solid transparent'
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '4px', color: '#495057' }}>
-                                            <span style={{ fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>{m.title}</span>
-                                            <span style={{ color: '#3498DB', fontWeight: '900' }}>{m.rate}%</span>
-                                        </div>
-                                        <div style={{ height: '8px', background: '#E0E0E0', borderRadius: '10px', overflow: 'hidden' }}>
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${m.rate}%` }}
-                                                transition={{ duration: 1, ease: 'easeOut' }}
-                                                style={{ height: '100%', background: selectedMissionId === m.id ? 'linear-gradient(90deg, #1976D2, #64B5F6)' : 'linear-gradient(90deg, #3498DB, #5CC6FF)' }}
-                                            />
-                                        </div>
-                                    </div>
+            {errorMessage && (
+                <div role="alert" style={{ padding: '12px', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', fontSize: '0.75rem', fontWeight: '700' }}>
+                    {errorMessage}
+                </div>
+            )}
+
+            <section aria-labelledby="class-summary-title">
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'baseline', marginBottom: '9px' }}>
+                    <h4 id="class-summary-title" style={{ margin: 0, color: '#334155', fontSize: '0.86rem', fontWeight: '900' }}>핵심 활동 요약</h4>
+                    <small style={{ color: '#94A3B8', fontSize: '0.66rem' }}>{periodLabel} 기준</small>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: '9px' }}>
+                    <MetricCard icon="👥" label="활동 학생" value={`${activeStudents}/${totalStudents}명`} note={`참여율 ${activeRate}%`} background="#EFF6FF" color="#1D4ED8" />
+                    <MetricCard icon="📝" label="작성 완료 글" value={`${Number(summary.submitted_posts || 0).toLocaleString()}편`} />
+                    <MetricCard icon="♻️" label="고쳐쓰기" value={`${Number(summary.revisions || 0).toLocaleString()}회`} background="#F0FDF4" color="#15803D" />
+                    <MetricCard icon="💬" label="댓글 활동" value={`${Number(summary.comments || 0).toLocaleString()}회`} />
+                    <MetricCard icon="💡" label="받은 피드백" value={`${Number(summary.feedbacks || 0).toLocaleString()}회`} background="#FFF7ED" color="#C2410C" />
+                    <MetricCard icon="🔤" label="평균 글자 수" value={`${Number(summary.avg_chars || 0).toLocaleString()}자`} />
+                </div>
+                <p style={{ margin: '7px 2px 0', color: '#94A3B8', fontSize: '0.64rem', lineHeight: 1.4 }}>
+                    고쳐쓰기·댓글·피드백은 글쓰기 발자국 기록을 시작한 이후 활동부터 집계합니다.
+                </p>
+            </section>
+
+            <section aria-labelledby="teacher-actions-title">
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'baseline', marginBottom: '9px' }}>
+                    <h4 id="teacher-actions-title" style={{ margin: 0, color: '#334155', fontSize: '0.86rem', fontWeight: '900' }}>선생님이 확인할 일</h4>
+                    <small style={{ color: '#94A3B8', fontSize: '0.66rem' }}>현재 상태 기준</small>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '9px' }}>
+                    <ActionCard
+                        icon="📥" title="과제 제출 확인" description="제출했지만 아직 확인하지 않은 글"
+                        action={data.actions.assignment_pending}
+                        tone={{ background: '#EFF6FF', border: '#BFDBFE', badge: '#DBEAFE', text: '#1D4ED8' }}
+                        renderDetail={(item) => item.mission_title || item.title || '선생님 과제'}
+                    />
+                    <ActionCard
+                        icon="📚" title="독서록 확인" description="학생이 등록한 미확인 독서록"
+                        action={data.actions.reading_pending}
+                        tone={{ background: '#F0FDF4', border: '#BBF7D0', badge: '#DCFCE7', text: '#15803D' }}
+                        renderDetail={(item) => item.title || '제목 없는 독서록'}
+                    />
+                    <ActionCard
+                        icon="🧭" title="평가 입력" description="루브릭은 설정됐지만 평가가 없는 글"
+                        action={data.actions.evaluation_pending}
+                        tone={{ background: '#FFF7ED', border: '#FED7AA', badge: '#FFEDD5', text: '#C2410C' }}
+                        renderDetail={(item) => item.mission_title || item.title || '평가 과제'}
+                    />
+                    <ActionCard
+                        icon="🌙" title="최근 활동 없음" description="7일 넘게 글쓰기 활동이 없는 학생"
+                        action={data.actions.inactive_students}
+                        tone={{ background: '#FAF5FF', border: '#E9D5FF', badge: '#F3E8FF', text: '#7E22CE' }}
+                        renderDetail={(item) => item.last_activity_at ? `마지막 ${formatDate(item.last_activity_at)}` : '활동 기록 없음'}
+                    />
+                </div>
+            </section>
+
+            <section aria-labelledby="mission-status-title">
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'baseline', marginBottom: '9px' }}>
+                    <h4 id="mission-status-title" style={{ margin: 0, color: '#334155', fontSize: '0.86rem', fontWeight: '900' }}>진행 중 미션 현황</h4>
+                    <small style={{ color: '#94A3B8', fontSize: '0.66rem' }}>최근 미션 6개</small>
+                </div>
+                {data.missions.length > 0 ? (
+                    <div style={{ overflowX: 'auto', border: '1px solid #E2E8F0', borderRadius: '14px' }}>
+                        <table style={{ width: '100%', minWidth: '660px', borderCollapse: 'collapse', fontSize: '0.73rem' }}>
+                            <thead>
+                                <tr style={{ background: '#F8FAFC', color: '#64748B', textAlign: 'center' }}>
+                                    <th scope="col" style={{ padding: '10px 12px', textAlign: 'left' }}>미션</th>
+                                    <th scope="col" style={{ padding: '10px 8px' }}>제출</th>
+                                    <th scope="col" style={{ padding: '10px 8px' }}>확인</th>
+                                    <th scope="col" style={{ padding: '10px 8px' }}>평가</th>
+                                    <th scope="col" style={{ padding: '10px 8px' }}>현재 미제출</th>
+                                    <th scope="col" style={{ padding: '10px 8px' }}>평균 글자</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {data.missions.map((mission) => (
+                                    <tr key={mission.id} style={{ borderTop: '1px solid #E2E8F0', color: '#334155', textAlign: 'center' }}>
+                                        <td style={{ padding: '11px 12px', textAlign: 'left', maxWidth: '250px' }}>
+                                            <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.77rem' }}>{mission.title || '제목 없는 미션'}</strong>
+                                            <small style={{ color: '#94A3B8', fontSize: '0.64rem' }}>{missionTypeLabel(mission.mission_type)} · {formatDate(mission.created_at)}</small>
+                                        </td>
+                                        <td style={{ padding: '11px 8px', fontWeight: '850', color: '#1D4ED8' }}>{mission.submitted_count || 0}/{totalStudents}</td>
+                                        <td style={{ padding: '11px 8px' }}>{mission.confirmed_count || 0}</td>
+                                        <td style={{ padding: '11px 8px' }}>{mission.rubric_enabled ? (mission.evaluated_count || 0) : '—'}</td>
+                                        <td style={{ padding: '11px 8px', color: Number(mission.missing_count) > 0 ? '#DC2626' : '#15803D', fontWeight: '850' }}>{mission.missing_count || 0}명</td>
+                                        <td style={{ padding: '11px 8px' }}>{Number(mission.avg_chars || 0).toLocaleString()}자</td>
+                                    </tr>
                                 ))}
-                            </div>
-                        ) : (
-                            <div style={{ textAlign: 'center', color: '#ADB5BD', fontSize: '0.8rem', marginTop: '20px' }}>미션 데이터가 없습니다.</div>
-                        )}
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-
-                {/* 2. 학생 랭킹 (열정 TOP 5) */}
-                <div style={{ background: '#FDFCF0', padding: '20px', borderRadius: '24px', border: '1px solid #FFE082', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <h4 style={{ margin: '0 0 12px 0', fontSize: '1.15rem', color: '#795548', fontWeight: '900' }}>🔥 열정 작가 TOP 5</h4>
-                    <div style={{ fontSize: '1rem', color: '#8D6E63', marginBottom: '16px', fontWeight: '900', borderBottom: '1px solid rgba(121, 85, 72, 0.2)', paddingBottom: '8px' }}>
-                        {selectedMissionId ? `[${stats.missionRates.find(m => m.id === selectedMissionId)?.title}]` : '전체 활동 기준'}
+                ) : (
+                    <div style={{ padding: '24px', borderRadius: '14px', background: '#F8FAFC', border: '1px dashed #CBD5E1', color: '#64748B', textAlign: 'center', fontSize: '0.75rem' }}>
+                        현재 진행 중인 글쓰기 미션이 없습니다.
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-                        {(selectedMissionId ? missionTopStudentsMap[selectedMissionId] : stats.topStudents)?.map((s, i) => (
-                            <div key={i} style={{
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                fontSize: '0.92rem', padding: '6px 0',
-                                borderBottom: '1px dashed rgba(121, 85, 72, 0.15)'
-                            }}>
-                                <span style={{ color: '#5D4037', fontWeight: '800' }}>{i + 1}. {s.name}</span>
-                                <span style={{ color: '#EA580C', fontWeight: '900' }}>{s.chars.toLocaleString()}자</span>
-                            </div>
-                        ))}
-                        {((selectedMissionId ? missionTopStudentsMap[selectedMissionId] : stats.topStudents)?.length === 0) && (
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9E9E9E', fontSize: '1rem', textAlign: 'center' }}>
-                                아직 활동 내역이 없습니다. 🌱
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* 3. 주의 깊게 볼 내용 (미제출 알림) */}
-                <div style={{ background: '#FFEBEE', padding: '20px', borderRadius: '24px', border: '1px solid #FFCDD2', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <h4 style={{ margin: '0 0 12px 0', fontSize: '1.15rem', color: '#D32F2F', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        ⚠️ 미제출 알림
-                    </h4>
-                    <div style={{ fontSize: '1rem', color: '#E53935', marginBottom: '16px', fontWeight: '900', borderBottom: '1px solid #FFCDD2', paddingBottom: '8px' }}>
-                        {selectedMissionId ? `[${stats.missionRates.find(m => m.id === selectedMissionId)?.title}]` : '미션을 선택해주세요.'}
-                    </div>
-                    <div style={{ fontSize: '0.9rem', color: '#C62828', lineHeight: '1.6', flex: 1, overflowY: 'auto' }}>
-                        {selectedMissionId && missionNotSubmittedMap[selectedMissionId]?.length > 0 ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                {missionNotSubmittedMap[selectedMissionId].map(name => (
-                                    <span key={name} style={{ background: 'white', padding: '6px 12px', borderRadius: '12px', border: '1px solid #FFCDD2', fontWeight: 'bold', boxShadow: '0 2px 4px rgba(211, 47, 47, 0.05)' }}>{name}</span>
-                                ))}
-                            </div>
-                        ) : selectedMissionId ? (
-                            <div style={{
-                                height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                textAlign: 'center', padding: '20px', gap: '10px'
-                            }}>
-                                <div style={{ fontSize: '3rem' }}>🎉</div>
-                                <div style={{ fontSize: '1.4rem', color: '#B71C1C', fontWeight: '900', wordBreak: 'keep-all' }}>모든 학생이 제출했습니다!</div>
-                            </div>
-                        ) : (
-                            <div style={{ textAlign: 'center', color: '#EF9A9A', marginTop: '40px', fontWeight: 'bold' }}>미션 목록을 클릭하여 확인하세요.</div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </section>
+                )}
+            </section>
+        </div>
     );
 };
 
