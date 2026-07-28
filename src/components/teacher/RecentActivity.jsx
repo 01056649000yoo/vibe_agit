@@ -4,6 +4,25 @@ import { supabase } from '../../lib/supabaseClient';
 
 const PAGE_SIZE = 20;
 const CACHE_TTL_MS = 30000;
+const DEFAULT_COLUMNS = 2;
+
+const PERIODS = [
+    { id: '1d', label: '1일 이내' },
+    { id: '7d', label: '7일 이내' },
+    { id: '14d', label: '14일 이내' },
+    { id: '30d', label: '1달 이내' }
+];
+
+const COLUMN_OPTIONS = [2, 3, 4, 5, 6];
+
+const loadSavedColumns = () => {
+    try {
+        const saved = Number(window.localStorage.getItem('teacher-recent-activity-columns-v1'));
+        return COLUMN_OPTIONS.includes(saved) ? saved : DEFAULT_COLUMNS;
+    } catch {
+        return DEFAULT_COLUMNS;
+    }
+};
 
 const FILTERS = [
     { id: 'all', label: '전체', icon: '🔔' },
@@ -36,6 +55,8 @@ const timeAgo = (value) => {
 
 const RecentActivity = ({ classId, onPostClick, isMobile }) => {
     const [filter, setFilter] = useState('all');
+    const [period, setPeriod] = useState('1d');
+    const [columns, setColumns] = useState(loadSavedColumns);
     const [activities, setActivities] = useState([]);
     const [counts, setCounts] = useState(EMPTY_COUNTS);
     const [nextOffset, setNextOffset] = useState(0);
@@ -48,7 +69,7 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
 
     const fetchPage = useCallback(async ({ offset = 0, append = false, force = false } = {}) => {
         if (!classId) return;
-        const cacheKey = classKey(classId, 'recent-activity', { filter, offset });
+        const cacheKey = classKey(classId, 'recent-activity', { filter, offset, period });
         if (force) dataCache.invalidate(cacheKey);
 
         if (append) setLoadingMore(true);
@@ -62,7 +83,8 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
                     p_class_id: classId,
                     p_kind: filter,
                     p_limit: PAGE_SIZE,
-                    p_offset: offset
+                    p_offset: offset,
+                    p_period: period
                 });
                 if (error) throw error;
                 return data || {};
@@ -82,11 +104,19 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
             setLoadingMore(false);
             setRefreshing(false);
         }
-    }, [classId, filter]);
+    }, [classId, filter, period]);
 
     useEffect(() => {
         fetchPage({ offset: 0 });
     }, [fetchPage]);
+
+    useEffect(() => {
+        try {
+            window.localStorage.setItem('teacher-recent-activity-columns-v1', String(columns));
+        } catch {
+            // 저장 공간을 사용할 수 없어도 현재 화면 설정은 유지한다.
+        }
+    }, [columns]);
 
     const openActivity = async (activity) => {
         if (!activity?.post_id || openingId) return;
@@ -152,6 +182,55 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
                 >{refreshing ? '갱신 중...' : '↻ 새로고침'}</button>
             </header>
 
+            <div style={{
+                display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between',
+                alignItems: isMobile ? 'stretch' : 'center', gap: '10px', marginBottom: '13px',
+                padding: '10px', borderRadius: '13px', border: '1px solid #E2E8F0', background: '#F8FAFC'
+            }}>
+                <div role="group" aria-label="최근 활동 조회 기간" style={{ display: 'flex', alignItems: 'center', gap: '5px', overflowX: 'auto' }}>
+                    <span style={{ flex: '0 0 auto', color: '#64748B', fontSize: '0.7rem', fontWeight: '850', marginRight: '2px' }}>기간</span>
+                    {PERIODS.map((option) => {
+                        const selected = period === option.id;
+                        return (
+                            <button
+                                key={option.id}
+                                type="button"
+                                aria-pressed={selected}
+                                onClick={() => setPeriod(option.id)}
+                                style={{
+                                    flex: '0 0 auto', height: '29px', padding: '0 9px', borderRadius: '8px', cursor: 'pointer',
+                                    border: selected ? '1px solid #2563EB' : '1px solid #CBD5E1',
+                                    background: selected ? '#EFF6FF' : 'white', color: selected ? '#1D4ED8' : '#64748B',
+                                    fontSize: '0.69rem', fontWeight: '850'
+                                }}
+                            >{option.label}</button>
+                        );
+                    })}
+                </div>
+
+                {!isMobile && (
+                    <div role="group" aria-label="최근 활동 카드 배열 설정" style={{ display: 'flex', alignItems: 'center', gap: '5px', flex: '0 0 auto' }}>
+                        <span style={{ color: '#64748B', fontSize: '0.7rem', fontWeight: '850', marginRight: '2px' }}>한 줄</span>
+                        {COLUMN_OPTIONS.map((count) => {
+                            const selected = columns === count;
+                            return (
+                                <button
+                                    key={count}
+                                    type="button"
+                                    aria-pressed={selected}
+                                    onClick={() => setColumns(count)}
+                                    style={{
+                                        width: '29px', height: '29px', borderRadius: '8px', cursor: 'pointer', fontWeight: '900',
+                                        border: selected ? '1px solid #2563EB' : '1px solid #CBD5E1',
+                                        background: selected ? '#EFF6FF' : 'white', color: selected ? '#1D4ED8' : '#64748B'
+                                    }}
+                                >{count}</button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
             <div role="tablist" aria-label="최근 활동 유형" style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '3px', marginBottom: '14px' }}>
                 {FILTERS.map((item) => {
                     const selected = filter === item.id;
@@ -185,14 +264,18 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
                 </div>
             ) : activities.length === 0 ? (
                 <div style={{ minHeight: '220px', display: 'grid', placeItems: 'center', borderRadius: '14px', border: '1px dashed #CBD5E1', background: '#F8FAFC', color: '#64748B', fontSize: '0.78rem', textAlign: 'center', padding: '20px' }}>
-                    선택한 유형의 활동이 아직 없습니다.
+                    <div>
+                        <div>선택한 유형의 활동이 아직 없습니다.</div>
+                        {period === '1d' && <small style={{ display: 'block', marginTop: '7px', color: '#94A3B8' }}>최근 7일로 기간을 넓혀 확인해보세요.</small>}
+                    </div>
                 </div>
             ) : (
                 <>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '9px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${columns}, minmax(0, 1fr))`, gap: columns >= 5 ? '7px' : '9px' }}>
                         {activities.map((activity) => {
                             const meta = ACTIVITY_META[activity.kind] || ACTIVITY_META.assignment;
                             const opening = openingId === activity.activity_id;
+                            const compact = !isMobile && columns >= 4;
                             return (
                                 <button
                                     key={`${activity.kind}-${activity.activity_id}`}
@@ -200,27 +283,27 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
                                     onClick={() => openActivity(activity)}
                                     disabled={Boolean(openingId)}
                                     style={{
-                                        minWidth: 0, padding: '13px', borderRadius: '14px', border: `1px solid ${meta.border}`,
+                                        minWidth: 0, padding: compact ? '10px' : '13px', borderRadius: '14px', border: `1px solid ${meta.border}`,
                                         background: meta.background, cursor: openingId ? 'wait' : 'pointer', textAlign: 'left',
                                         opacity: openingId && !opening ? 0.72 : 1
                                     }}
                                 >
                                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'flex-start' }}>
                                         <div style={{ minWidth: 0 }}>
-                                            <strong style={{ color: '#334155', fontSize: '0.82rem' }}>{meta.icon} {activity.actor_name || '이름 없음'}</strong>
-                                            <div style={{ marginTop: '3px', color: meta.color, fontSize: '0.7rem', fontWeight: '800' }}>{meta.label}</div>
+                                            <strong style={{ color: '#334155', fontSize: compact ? '0.74rem' : '0.82rem' }}>{meta.icon} {activity.actor_name || '이름 없음'}</strong>
+                                            <div style={{ marginTop: '3px', color: meta.color, fontSize: compact ? '0.64rem' : '0.7rem', fontWeight: '800' }}>{meta.label}</div>
                                         </div>
                                         <time style={{ flex: '0 0 auto', color: '#94A3B8', fontSize: '0.66rem', fontWeight: '700' }}>{timeAgo(activity.occurred_at)}</time>
                                     </div>
-                                    <div style={{ marginTop: '10px', color: '#1E293B', fontSize: '0.78rem', fontWeight: '850', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <div style={{ marginTop: compact ? '7px' : '10px', color: '#1E293B', fontSize: compact ? '0.72rem' : '0.78rem', fontWeight: '850', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {activity.title}
                                     </div>
                                     {activity.kind === 'comment' && activity.preview && (
-                                        <p style={{ margin: '6px 0 0', color: '#475569', fontSize: '0.72rem', lineHeight: 1.45, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                        <p style={{ margin: '6px 0 0', color: '#475569', fontSize: compact ? '0.66rem' : '0.72rem', lineHeight: 1.45, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: compact ? 1 : 2, WebkitBoxOrient: 'vertical' }}>
                                             “{activity.preview}”
                                         </p>
                                     )}
-                                    <div style={{ marginTop: '8px', color: '#64748B', fontSize: '0.66rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <div style={{ marginTop: compact ? '6px' : '8px', color: '#64748B', fontSize: compact ? '0.61rem' : '0.66rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {activity.kind === 'comment' && activity.post_owner_name && `${activity.post_owner_name}의 글 · `}{activity.context_title}
                                     </div>
                                     {opening && <div style={{ marginTop: '7px', color: meta.color, fontSize: '0.68rem', fontWeight: '800' }}>상세 내용 여는 중...</div>}
