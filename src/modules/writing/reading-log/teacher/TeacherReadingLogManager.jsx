@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../../../../components/common/Button';
 import { supabase } from '../../../../lib/supabaseClient';
 
@@ -8,6 +8,12 @@ const EMPTY_COUNTS = { total: 0, unreviewed: 0, reviewed: 0, students: 0 };
 const PAGE_SIZE = 50;
 // 한 학생이 쓴 독서록은 펼칠 때 한 번에 받는다. 100편을 넘기는 경우는 없다고 본다.
 const STUDENT_LOG_LIMIT = 100;
+
+// 보기를 오가거나 필터를 눌렀을 때 같은 결과를 다시 받아오지 않기 위한 짧은 캐시.
+// 길게 잡지 않는 이유: 학생은 계속 글을 쓰고 있고, 교사가 다른 기기에서 확인 표시를
+// 남길 수도 있다. 늦게 보이는 것보다 안 보이는 것이 훨씬 나쁘므로 20초만 둔다.
+// 확인 표시를 저장하거나 새로고침을 누르면 즉시 버린다.
+const CACHE_TTL_MS = 20000;
 
 const formatDate = (value) => {
     if (!value) return '-';
@@ -89,6 +95,22 @@ const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
         return () => window.clearTimeout(timerId);
     }, [classId, reviewFilter, debouncedQuery]);
 
+    const cacheRef = useRef(new Map());
+
+    const readCache = useCallback((key) => {
+        const hit = cacheRef.current.get(key);
+        if (!hit) return null;
+        if (Date.now() - hit.at > CACHE_TTL_MS) {
+            cacheRef.current.delete(key);
+            return null;
+        }
+        return hit.value;
+    }, []);
+
+    const writeCache = useCallback((key, value) => {
+        cacheRef.current.set(key, { at: Date.now(), value });
+    }, []);
+
     const fetchPage = useCallback(async (offset) => {
         return supabase.rpc('get_teacher_reading_log_overview', {
             p_class_id: classId,
@@ -100,8 +122,21 @@ const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
         });
     }, [classId, reviewFilter, studentFilter, debouncedQuery]);
 
+    const recentKey = `recent|${classId}|${reviewFilter}|${studentFilter}|${debouncedQuery}`;
+    const summaryKey = `summary|${classId}|${debouncedQuery}`;
+
     const fetchRecent = useCallback(async () => {
         if (!classId) return;
+
+        const cached = readCache(recentKey);
+        if (cached) {
+            setItems(cached.items);
+            setCounts(cached.counts);
+            setLoadError('');
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         setLoadError('');
 
@@ -113,14 +148,26 @@ const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
             setCounts(EMPTY_COUNTS);
             setLoadError('학생 독서록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
         } else {
-            setItems(Array.isArray(data?.items) ? data.items : []);
-            setCounts({ ...EMPTY_COUNTS, ...(data?.counts || {}) });
+            const nextItems = Array.isArray(data?.items) ? data.items : [];
+            const nextCounts = { ...EMPTY_COUNTS, ...(data?.counts || {}) };
+            setItems(nextItems);
+            setCounts(nextCounts);
+            writeCache(recentKey, { items: nextItems, counts: nextCounts });
         }
         setLoading(false);
-    }, [classId, fetchPage]);
+    }, [classId, fetchPage, recentKey, readCache, writeCache]);
 
     const fetchSummary = useCallback(async () => {
         if (!classId) return;
+
+        const cached = readCache(summaryKey);
+        if (cached) {
+            setSummary(cached);
+            setLoadError('');
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         setLoadError('');
 
@@ -134,24 +181,33 @@ const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
             setSummary([]);
             setLoadError('학생별 현황을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
         } else {
-            setSummary(Array.isArray(data?.students) ? data.students : []);
+            const rows = Array.isArray(data?.students) ? data.students : [];
+            setSummary(rows);
+            writeCache(summaryKey, rows);
         }
         setLoading(false);
-    }, [classId, debouncedQuery]);
+    }, [classId, debouncedQuery, summaryKey, readCache, writeCache]);
 
     const refresh = useCallback(async () => {
+        cacheRef.current.clear();
         setStudentLogs(new Map());
         if (viewMode === 'student') await fetchSummary();
         else await fetchRecent();
     }, [viewMode, fetchSummary, fetchRecent]);
 
+    // 보기별로 나눈 이유: 하나로 두면 필터를 누를 때마다 fetchRecent 의 정체가 바뀌어,
+    // 학생별 보기에서도(그쪽은 필터를 화면에서 처리하는데) 요약을 다시 받아왔다.
     useEffect(() => {
-        const timerId = window.setTimeout(() => {
-            if (viewMode === 'student') fetchSummary();
-            else fetchRecent();
-        }, 0);
+        if (viewMode !== 'recent') return undefined;
+        const timerId = window.setTimeout(fetchRecent, 0);
         return () => window.clearTimeout(timerId);
-    }, [viewMode, fetchSummary, fetchRecent]);
+    }, [viewMode, fetchRecent]);
+
+    useEffect(() => {
+        if (viewMode !== 'student') return undefined;
+        const timerId = window.setTimeout(fetchSummary, 0);
+        return () => window.clearTimeout(timerId);
+    }, [viewMode, fetchSummary]);
 
     // 학생별 보기에서는 요약만으로 합계를 낼 수 있어 목록 RPC를 부르지 않는다.
     const summaryCounts = useMemo(() => {
@@ -187,11 +243,14 @@ const TeacherReadingLogManager = ({ activeClass, isMobile }) => {
             alert('다음 목록을 불러오지 못했습니다.');
         } else {
             const next = Array.isArray(data?.items) ? data.items : [];
-            setItems((current) => {
-                const seen = new Set(current.map((row) => row.post_id));
-                return [...current, ...next.filter((row) => !seen.has(row.post_id))];
-            });
-            setCounts({ ...EMPTY_COUNTS, ...(data?.counts || {}) });
+            const nextCounts = { ...EMPTY_COUNTS, ...(data?.counts || {}) };
+            const seen = new Set(items.map((row) => row.post_id));
+            const merged = [...items, ...next.filter((row) => !seen.has(row.post_id))];
+            setItems(merged);
+            setCounts(nextCounts);
+            // 더 받은 만큼까지 캐시에 담아 둔다. 보기를 바꿨다 돌아왔을 때
+            // 첫 50편으로 되돌아가 다시 눌러야 하는 일이 없도록.
+            writeCache(recentKey, { items: merged, counts: nextCounts });
         }
         setLoadingMore(false);
     };
