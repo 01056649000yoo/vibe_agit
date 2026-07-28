@@ -12,15 +12,19 @@ const StudentManagementList = ({
         <div
             className="ranking-scroll"
             style={{
-                maxHeight: isMobile ? 'calc(100vh - 300px)' : '700px',
+                maxHeight: isMobile ? 'calc(100vh - 300px)' : '820px',
                 overflowY: 'auto',
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))',
-                alignItems: 'start',
+                display: 'flex',
+                flexDirection: 'column',
                 gap: '6px',
                 paddingRight: '6px'
             }}
         >
+            {!isMobile && displayStudents.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '48px minmax(130px, 1fr) 130px 100px 132px', gap: '10px', padding: '0 12px 4px', color: '#94A3B8', fontSize: '0.72rem', fontWeight: '800' }}>
+                    <span style={{ textAlign: 'center' }}>번호</span><span>이름</span><span>로그인 코드</span><span style={{ textAlign: 'right' }}>포인트</span><span style={{ textAlign: 'right' }}>작업</span>
+                </div>
+            )}
             {displayStudents.map((s, idx) => {
                 const studentNo = idx + 1;
                 const moreActions = [
@@ -38,8 +42,8 @@ const StudentManagementList = ({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         style={{
-                            display: 'grid', gridTemplateColumns: isMobile ? '36px minmax(90px, 1fr) auto' : '38px minmax(90px, 1fr) 112px auto',
-                            alignItems: 'center', padding: isMobile ? '10px' : '8px 10px', gap: isMobile ? '10px' : '8px',
+                            display: 'grid', gridTemplateColumns: isMobile ? '36px minmax(90px, 1fr) auto' : '48px minmax(130px, 1fr) 130px 100px 132px',
+                            alignItems: 'center', padding: isMobile ? '10px' : '8px 12px', gap: '10px',
                             background: 'white',
                             border: '1px solid #E9ECEF',
                             borderRadius: '12px', minHeight: isMobile ? '58px' : '50px',
@@ -70,10 +74,14 @@ const StudentManagementList = ({
                         </div>
 
                         <div style={{ display: isMobile ? 'none' : 'contents' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '7px', position: 'relative' }}>
-                                <span style={{ whiteSpace: 'nowrap', fontWeight: '900', color: '#2C3E50', fontSize: '0.92rem' }}>
-                                    {(s.total_points || 0).toLocaleString()}<small style={{ color: '#ADB5BD', marginLeft: '2px' }}>P</small>
+                            <div style={{ textAlign: 'right' }}>
+                                <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.1rem' }}>
+                                    {(s.total_points || 0).toLocaleString()}
                                 </span>
+                                <span style={{ fontSize: '0.75rem', color: '#ADB5BD', marginLeft: '2px', fontWeight: 'bold' }}>P</span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', position: 'relative' }}>
                                 <button
                                     onClick={() => copyCode(s.id, s.student_code)}
                                     style={{ background: '#F8F9FA', border: '1px solid #E9ECEF', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', transition: 'all 0.2s' }}
@@ -147,7 +155,7 @@ const StudentManagementList = ({
                 );
             })}
             {displayStudents.length === 0 && (
-                <div style={{ gridColumn: '1 / -1', padding: '48px 20px', textAlign: 'center', color: '#94A3B8', fontWeight: '700' }}>조건에 맞는 학생이 없습니다.</div>
+                <div style={{ padding: '48px 20px', textAlign: 'center', color: '#94A3B8', fontWeight: '700' }}>조건에 맞는 학생이 없습니다.</div>
             )}
         </div>
     );
