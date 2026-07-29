@@ -6,7 +6,7 @@ import { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 const TeacherSettingsTab = ({
     isMobile, testingKey, aiStatus,
     setPromptTemplate, setReportPromptTemplate,
-    handleTestAIConnection, runAIDiagnosis,
+    handleTestAIConnection,
     promptKind = PRESET_KIND.FEEDBACK, compact = false
 }) => {
     const isFeedback = promptKind === PRESET_KIND.FEEDBACK;
@@ -47,9 +47,6 @@ const TeacherSettingsTab = ({
                 onApplied={handleApplied}
             />
 
-            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '16px' }}>
-                <button type="button" onClick={runAIDiagnosis} style={{ border: 'none', background: 'transparent', color: '#64748B', fontSize: '0.76rem', textDecoration: 'underline', cursor: 'pointer' }}>연결 진단 보기</button>
-            </div>
         </section>
     );
 };

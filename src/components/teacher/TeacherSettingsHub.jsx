@@ -13,7 +13,7 @@ const SETTINGS_ITEMS = [
 const TeacherSettingsHub = ({
     isMobile, session, classes, activeClass, setActiveClass, setClasses,
     profile, fetchAllClasses, fetchDeletedClasses, handleRestoreClass, handleSetPrimaryClass,
-    handleTestAIConnection, runAIDiagnosis, testingKey, aiStatus,
+    handleTestAIConnection, testingKey, aiStatus,
     setPromptTemplate, setReportPromptTemplate, onNavigate
 }) => {
     const [section, setSection] = useState('class');
@@ -86,7 +86,7 @@ const TeacherSettingsHub = ({
                 ) : (
                     <TeacherSettingsTab
                         isMobile={isMobile} promptKind={section} compact
-                        handleTestAIConnection={handleTestAIConnection} runAIDiagnosis={runAIDiagnosis}
+                        handleTestAIConnection={handleTestAIConnection}
                         testingKey={testingKey} aiStatus={aiStatus}
                         setPromptTemplate={setPromptTemplate} setReportPromptTemplate={setReportPromptTemplate}
                     />
