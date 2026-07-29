@@ -22,16 +22,6 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
     const [isSaving, setIsSaving] = useState(false);
     const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 
-    const handleCopyInviteCode = async () => {
-        if (!activeClass?.invite_code) return;
-        try {
-            await navigator.clipboard.writeText(activeClass.invite_code);
-            alert('학급 접속 코드를 복사했습니다.');
-        } catch {
-            alert(`학급 접속 코드: ${activeClass.invite_code}`);
-        }
-    };
-
     const handleOpenTrash = async () => {
         if (fetchDeletedClasses) {
             const data = await fetchDeletedClasses();
@@ -245,14 +235,9 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                                     {activeClass.id === primaryClassId && <span style={badgeStyle}>⭐ 주 학급</span>}
                                     <span style={{ ...badgeStyle, background: '#DCFCE7', color: '#15803D' }}>● 운영 중</span>
                                 </div>
-                                <div style={{ marginTop: '9px', display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap', color: '#64748B', fontSize: '0.8rem' }}>
-                                    <span>학생 접속 코드</span>
-                                    <code style={{ padding: '4px 8px', borderRadius: '8px', background: '#F1F5F9', color: '#334155', fontWeight: '900', letterSpacing: '0.08em' }}>{activeClass.invite_code || '확인 필요'}</code>
-                                </div>
                             </div>
 
                             <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', position: 'relative' }}>
-                                <button type="button" onClick={handleCopyInviteCode} style={smallActionStyle}>코드 복사</button>
                                 {onNavigate && <button type="button" onClick={() => onNavigate({ tab: 'students', section: 'students' })} style={smallActionStyle}>학생 관리</button>}
                                 {activeClass.id !== primaryClassId && <button type="button" onClick={() => onSetPrimaryClass?.(activeClass.id)} style={smallActionStyle}>주 학급 설정</button>}
                                 <button type="button" onClick={() => setIsActionMenuOpen((current) => !current)} aria-label="학급 추가 관리" style={{ ...smallActionStyle, width: '36px', padding: 0 }}>⋮</button>
