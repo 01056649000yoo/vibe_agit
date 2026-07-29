@@ -12,7 +12,6 @@ import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
 import TeacherNotifyBanner from './TeacherNotifyBanner';
-import PointLevelCard from './PointLevelCard';
 import DashboardMenu from './DashboardMenu';
 import StudentTodoCard from './StudentTodoCard';
 // 드래곤 모듈 — 모달을 열 때만 코드를 받도록 지연 로딩 (src/modules/game/dragon)
@@ -66,10 +65,10 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     }, [isPlaygroundOpen]);
 
     // [신규] 아지트 온도 및 활성화 정보 실시간 동기화
+    // 아지트 설정·어휘의 탑 설정. 우리 반 온도는 학생 홈에서 쓰지 않아 받지 않는다.
     const {
         agitSettings,
-        temperature,
-        vocabTowerSettings // [신규] 어휘의 탑 설정
+        vocabTowerSettings
     } = useClassAgitClass(
         studentSession?.classId || studentSession?.class_id,
         studentSession?.id,
@@ -80,7 +79,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
-        returnedCount, stats, levelInfo, isLoading, dragonConfig, dragonConfigLoaded, initialPetData,
+        returnedCount, dragonConfig, dragonConfigLoaded, initialPetData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback,
         fetchMyPoints, fetchStats, checkActivity
     } = useStudentDashboard(studentSession, onNavigate);
@@ -248,15 +247,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     onGoRewrite={handleDirectRewriteGo}
                 />
 
-                {/* 포인트 및 레벨 카드 */}
-                <PointLevelCard
-                    points={points}
-                    levelInfo={levelInfo}
-                    stats={stats}
-                    isLoading={isLoading}
-                    agitSettings={agitSettings}
-                    temperature={temperature}
-                />
 
                 {/* 주요 활동 메뉴 */}
                 <DashboardMenu

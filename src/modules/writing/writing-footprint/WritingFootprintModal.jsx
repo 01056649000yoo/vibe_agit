@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ModalPortal from '../../../components/common/ModalPortal';
 import { supabase } from '../../../lib/supabaseClient';
+import { getWriterLevel } from '../../../constants/writerLevels';
 
 /**
  * 나의 글쓰기 발자국 — 학생이 자기 활동을 한 자리에서 돌아보는 화면.
@@ -342,6 +343,11 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
     const t = detail.totals || EMPTY_DETAIL.totals;
     const sh = detail.sharing || EMPTY_DETAIL.sharing;
+    const level = getWriterLevel(t.total_chars);
+    const toNext = level.next ? Math.max(0, level.next - (t.total_chars || 0)) : 0;
+    const levelPercent = level.next
+        ? Math.min(100, Math.round(((t.total_chars || 0) / level.next) * 100))
+        : 100;
 
     return (
         <ModalPortal>
@@ -376,6 +382,41 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
                             <p style={{ padding: '60px 0', textAlign: 'center', color: '#C62828', fontWeight: 800 }}>{errorMessage}</p>
                         ) : (
                             <>
+                                {/* 홈에 있던 보유 포인트·작가 레벨·나의 성장을 여기로 모았다. */}
+                                <section aria-label="작가 레벨" style={{
+                                    marginTop: '18px', padding: '18px 20px', borderRadius: '22px',
+                                    background: 'linear-gradient(135deg,#FFF8E1,#FFFFFF)', border: '1px solid #FFE082'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                                        <div>
+                                            <div style={{ fontSize: '.8rem', fontWeight: 800, color: INK_SOFT }}>보유 포인트 ✨</div>
+                                            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#FBC02D', lineHeight: 1.1 }}>
+                                                {num(t.total_points)}<span style={{ fontSize: '.95rem', color: INK_SOFT, fontWeight: 800 }}>점</span>
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ fontSize: '.9rem', fontWeight: 900, color: INK }}>{level.emoji} {level.name}</div>
+                                            <div style={{
+                                                display: 'inline-block', marginTop: '4px', padding: '3px 10px', borderRadius: '10px',
+                                                background: '#FDFCF0', border: '1px solid #FFF9C4',
+                                                fontSize: '.74rem', fontWeight: 900, color: '#F9A825'
+                                            }}>LV. {level.level}</div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginTop: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                            <span style={{ fontSize: '.75rem', fontWeight: 800, color: INK_SOFT }}>나의 성장 🌱</span>
+                                            <span style={{ fontSize: '.72rem', fontWeight: 800, color: INK_SOFT }}>
+                                                {level.next ? `다음 레벨까지 ${num(toNext)}자` : '가장 높은 단계예요!'}
+                                            </span>
+                                        </div>
+                                        <div style={{ height: '8px', background: '#F1F3F5', borderRadius: '4px', overflow: 'hidden' }}>
+                                            <div style={{ height: '100%', width: `${levelPercent}%`, background: 'linear-gradient(90deg,#FBC02D,#FFD54F)', borderRadius: '4px' }} />
+                                        </div>
+                                    </div>
+                                </section>
+
                                 <Section title="지금까지" hint="글을 쓰면 바로 반영돼요.">
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: '9px' }}>
                                         <StatTile icon="📝" label="쓴 글자 수" value={num(t.total_chars)} unit="자" />

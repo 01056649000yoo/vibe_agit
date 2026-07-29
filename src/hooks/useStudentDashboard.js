@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { getWriterLevel } from '../constants/writerLevels';
 import { supabase } from '../lib/supabaseClient';
 
 import { dataCache } from '../lib/cache';
@@ -38,13 +39,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     );
     const returnedCountCacheRef = useRef({ value: 0, fetchedAt: 0 });
 
-    const getLevelInfo = (totalChars) => {
-        if (totalChars >= 14001) return { level: 5, name: '전설의 작가', emoji: '✨', next: null };
-        if (totalChars >= 8401) return { level: 4, name: '대문호', emoji: '👑', next: 14001 };
-        if (totalChars >= 4201) return { level: 3, name: '숙련 작가', emoji: '🌳', next: 8401 };
-        if (totalChars >= 1401) return { level: 2, name: '초보 작가', emoji: '🌿', next: 4201 };
-        return { level: 1, name: '새싹 작가', emoji: '🌱', next: 1401 };
-    };
+    const getLevelInfo = getWriterLevel;   // 정의는 constants/writerLevels.js 한 곳에
 
     const fetchStats = useCallback(async () => {
         if (!studentSession?.id) return;
