@@ -28,6 +28,8 @@ AS $$
 DECLARE
     v_student_id UUID := public.auth_student_id();
     v_class_id UUID;
+    v_today DATE;
+    v_year_start DATE;   -- 학년도 시작 (3월 1일)
     v_result JSONB;
 BEGIN
     IF v_student_id IS NULL THEN
@@ -35,6 +37,15 @@ BEGIN
     END IF;
 
     SELECT class_id INTO v_class_id FROM public.students WHERE id = v_student_id;
+
+    -- 달력은 학년도(3월 ~ 다음 해 1월) 단위로 본다. 최근 N일로 자르면
+    -- 학년 후반에 3~5월이 잘려 "1학기에 쓴 기록"이 사라진다.
+    v_today := (NOW() AT TIME ZONE 'Asia/Seoul')::date;
+    v_year_start := make_date(
+        CASE WHEN extract(month FROM v_today) >= 3
+             THEN extract(year FROM v_today)::int
+             ELSE extract(year FROM v_today)::int - 1 END,
+        3, 1);
 
     WITH my_posts AS (
         SELECT p.id, p.mission_id, p.char_count, p.created_at
@@ -96,6 +107,10 @@ BEGIN
             'points_earned', COALESCE((SELECT sum(amount) FROM my_points WHERE amount > 0), 0),
             'points_spent', COALESCE((SELECT -sum(amount) FROM my_points WHERE amount < 0), 0)
         ),
+        'school_year', jsonb_build_object(
+            'start', v_year_start,
+            'end', (v_year_start + INTERVAL '11 months' - INTERVAL '1 day')::date  -- 다음 해 1월 말
+        ),
         'sharing', (
             SELECT jsonb_build_object(
                 'comments_received', comments_received,
@@ -110,7 +125,7 @@ BEGIN
             FROM (
                 SELECT (created_at AT TIME ZONE 'Asia/Seoul')::date AS d, count(*)::INTEGER AS c
                 FROM my_posts
-                WHERE created_at >= NOW() - INTERVAL '180 days'
+                WHERE (created_at AT TIME ZONE 'Asia/Seoul')::date >= v_year_start
                 GROUP BY 1
             ) q
         ), '[]'::JSONB),
@@ -121,7 +136,7 @@ BEGIN
                        count(*)::INTEGER AS c,
                        COALESCE(round(avg(NULLIF(char_count, 0)))::INTEGER, 0) AS a
                 FROM my_posts
-                WHERE created_at >= date_trunc('month', NOW()) - INTERVAL '11 months'
+                WHERE (created_at AT TIME ZONE 'Asia/Seoul')::date >= v_year_start
                 GROUP BY 1
             ) q
         ), '[]'::JSONB),
@@ -132,7 +147,7 @@ BEGIN
                        COALESCE(sum(amount) FILTER (WHERE amount > 0), 0)::INTEGER AS e,
                        COALESCE(-sum(amount) FILTER (WHERE amount < 0), 0)::INTEGER AS s
                 FROM my_points
-                WHERE created_at >= date_trunc('month', NOW()) - INTERVAL '11 months'
+                WHERE (created_at AT TIME ZONE 'Asia/Seoul')::date >= v_year_start
                 GROUP BY 1
             ) q
         ), '[]'::JSONB),

@@ -38,6 +38,7 @@ const EMPTY_DETAIL = {
         total_points: 0, points_earned: 0, points_spent: 0
     },
     sharing: { comments_received: 0, comments_given: 0, reactions_received: 0, reactions_given: 0 },
+    school_year: null,
     daily: [], monthly: [], points_monthly: [], points_by_type: []
 };
 
@@ -66,47 +67,63 @@ const StatTile = ({ icon, label, value, unit }) => (
     </div>
 );
 
-/** 글쓰기 달력 — 날짜마다 칸 하나, 많이 쓴 날일수록 진하게.
- *  달 이름과 요일을 같이 적는다. 칸만 있으면 언제가 언제인지 알 수 없다. */
-const WritingCalendar = ({ daily }) => {
+/** 글쓰기 달력 — 한 학년도(3월 ~ 다음 해 1월)를 한 판에 놓는다.
+ *  아직 오지 않은 날도 빈칸으로 남겨 둔다 — 채워 갈 자리가 보이는 편이 낫다. */
+const WritingCalendar = ({ daily, schoolYear }) => {
     const { weeks, maxCount, monthMarks } = useMemo(() => {
         const byDay = new Map(daily.map((row) => [row.d, row.posts]));
+        const toKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+        const first = schoolYear?.start ? new Date(`${schoolYear.start}T00:00:00`) : new Date();
+        const last = schoolYear?.end ? new Date(`${schoolYear.end}T00:00:00`) : new Date();
         const today = new Date();
-        const start = new Date(today);
-        start.setDate(start.getDate() - 181);
-        start.setDate(start.getDate() - start.getDay()); // 일요일에 맞춤
+
+        // 격자는 학년도 첫날이 든 주의 일요일부터 시작한다.
+        const cursor = new Date(first);
+        cursor.setDate(cursor.getDate() - cursor.getDay());
 
         const cols = [];
         let col = [];
-        const cursor = new Date(start);
         let max = 0;
-        while (cursor <= today) {
-            const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
-            const count = byDay.get(key) || 0;
+        while (cursor <= last) {
+            const inRange = cursor >= first && cursor <= last;
+            const future = cursor > today;
+            const count = inRange && !future ? (byDay.get(toKey(cursor)) || 0) : 0;
             if (count > max) max = count;
-            col.push({ key, count, month: cursor.getMonth(), label: `${cursor.getMonth() + 1}월 ${cursor.getDate()}일` });
+            col.push({
+                key: toKey(cursor), count, inRange, future,
+                month: cursor.getMonth(),
+                label: `${cursor.getMonth() + 1}월 ${cursor.getDate()}일`
+            });
             if (col.length === 7) { cols.push(col); col = []; }
             cursor.setDate(cursor.getDate() + 1);
         }
-        if (col.length) cols.push(col);
+        if (col.length) {
+            while (col.length < 7) col.push({ key: `pad-${col.length}`, count: 0, inRange: false, future: true, month: -1, label: '' });
+            cols.push(col);
+        }
 
         // 달이 바뀌는 첫 열에만 달 이름을 적는다.
         const marks = [];
         let seen = -1;
         cols.forEach((weekCol, x) => {
-            const m = weekCol[0].month;
-            if (m !== seen) { marks.push({ x, text: `${m + 1}월` }); seen = m; }
+            const day = weekCol.find((c) => c.inRange);
+            if (!day) return;
+            if (day.month !== seen) { marks.push({ x, text: `${day.month + 1}월` }); seen = day.month; }
         });
         return { weeks: cols, maxCount: max, monthMarks: marks };
-    }, [daily]);
+    }, [daily, schoolYear]);
 
-    const cell = 11, gap = 2, padTop = 16, padLeft = 22;
+    // 학년도 49주 × (8+2) + 왼쪽 요일 20 = 510px. 모달 안(≈512px)에 딱 들어가
+    // 가로 스크롤 없이 한 판이 보인다.
+    const cell = 8, gap = 2, padTop = 16, padLeft = 20;
     const step = cell + gap;
     const width = padLeft + weeks.length * step;
-    const shade = (count) => {
-        if (!count) return HEAT[0];
+    const shade = (day) => {
+        if (!day.inRange) return 'transparent';
+        if (!day.count) return day.future ? 'rgba(62,46,35,.045)' : HEAT[0];
         if (maxCount <= 1) return HEAT[3];
-        const ratio = count / maxCount;
+        const ratio = day.count / maxCount;
         if (ratio <= 0.34) return HEAT[1];
         if (ratio <= 0.67) return HEAT[2];
         if (ratio < 1) return HEAT[3];
@@ -114,31 +131,33 @@ const WritingCalendar = ({ daily }) => {
     };
 
     return (
-        <div style={{ overflowX: 'auto' }}>
-            <svg width={width} height={padTop + 7 * step} role="img" aria-label="날짜별 글쓰기 기록">
+        <div style={{ overflowX: 'auto', paddingBottom: '4px' }}>
+            <svg width={width} height={padTop + 7 * step} role="img" aria-label="학년도 글쓰기 기록">
                 {monthMarks.map((mk) => (
                     <text key={`${mk.x}-${mk.text}`} x={padLeft + mk.x * step} y={11}
-                        fontSize="10.5" fontWeight="800" fill={INK_SOFT}>{mk.text}</text>
+                        fontSize="10" fontWeight="800" fill={INK_SOFT}>{mk.text}</text>
                 ))}
                 {['월', '수', '금'].map((d, idx) => (
-                    <text key={d} x={0} y={padTop + (idx * 2 + 1) * step + 9}
-                        fontSize="9.5" fontWeight="800" fill={INK_SOFT}>{d}</text>
+                    <text key={d} x={0} y={padTop + (idx * 2 + 1) * step + 8}
+                        fontSize="9" fontWeight="800" fill={INK_SOFT}>{d}</text>
                 ))}
                 {weeks.map((weekCol, x) => weekCol.map((day, y) => (
                     <rect
                         key={day.key}
                         x={padLeft + x * step} y={padTop + y * step}
-                        width={cell} height={cell} rx="3"
-                        fill={shade(day.count)}
+                        width={cell} height={cell} rx="2.5"
+                        fill={shade(day)}
                     >
-                        <title>{day.label} · {day.count ? `${day.count}편` : '쉬어 간 날'}</title>
+                        {day.inRange && (
+                            <title>{day.label} · {day.future ? '아직 오지 않은 날' : (day.count ? `${day.count}편` : '쉬어 간 날')}</title>
+                        )}
                     </rect>
                 )))}
             </svg>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '.72rem', color: INK_SOFT, fontWeight: 800 }}>
                 <span>적게</span>
                 {HEAT.map((c) => (
-                    <span key={c} style={{ width: '11px', height: '11px', borderRadius: '3px', background: c, display: 'inline-block' }} />
+                    <span key={c} style={{ width: '9px', height: '9px', borderRadius: '2.5px', background: c, display: 'inline-block' }} />
                 ))}
                 <span>많이</span>
             </div>
@@ -322,8 +341,8 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
                                     </div>
                                 </Section>
 
-                                <Section title="🔥 글쓰기 달력" hint="최근 6개월 · 많이 쓴 날일수록 진해져요.">
-                                    <WritingCalendar daily={detail.daily || []} />
+                                <Section title="🔥 글쓰기 달력" hint="이번 학년도(3월~1월) · 많이 쓴 날일수록 진해져요.">
+                                    <WritingCalendar daily={detail.daily || []} schoolYear={detail.school_year} />
                                 </Section>
 
                                 <Section title="📈 달마다 쓴 글">
