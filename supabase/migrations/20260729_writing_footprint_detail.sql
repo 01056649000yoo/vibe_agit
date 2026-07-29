@@ -47,6 +47,26 @@ BEGIN
         FROM public.point_logs l
         WHERE l.class_id = v_class_id
           AND l.student_id = v_student_id
+    ), my_sharing AS (
+        -- 친구와 나눈 기록. 스냅샷(writing_activity_events 기반)은 기능 도입 이후만 세므로
+        -- 1학기를 통째로 쓴 학생도 0으로 보였다. 실제 테이블에서 직접 센다.
+        SELECT
+            (SELECT count(*) FROM public.post_comments c
+              JOIN public.student_posts p2 ON p2.id = c.post_id
+             WHERE c.class_id = v_class_id AND p2.student_id = v_student_id
+               AND c.student_id IS DISTINCT FROM v_student_id)::INTEGER AS comments_received,
+            (SELECT count(*) FROM public.post_comments c
+             WHERE c.class_id = v_class_id AND c.student_id = v_student_id)::INTEGER AS comments_given,
+            (SELECT count(*) FROM public.post_reactions r
+              JOIN public.student_posts p2 ON p2.id = r.post_id
+             WHERE r.class_id = v_class_id AND p2.student_id = v_student_id
+               AND r.student_id IS DISTINCT FROM v_student_id)::INTEGER AS reactions_received,
+            (SELECT count(*) FROM public.post_reactions r
+             WHERE r.class_id = v_class_id AND r.student_id = v_student_id)::INTEGER AS reactions_given,
+            (SELECT count(*) FROM public.post_comments c
+              JOIN public.student_posts p2 ON p2.id = c.post_id
+             WHERE c.class_id = v_class_id AND p2.student_id = v_student_id
+               AND c.teacher_id IS NOT NULL)::INTEGER AS teacher_comments
     ), active_days AS (
         -- 글을 쓴 날. 연속 기록(streak)을 세기 위해 날짜만 남긴다.
         SELECT DISTINCT (created_at AT TIME ZONE 'Asia/Seoul')::date AS d FROM my_posts
@@ -75,6 +95,15 @@ BEGIN
             'total_points', COALESCE((SELECT sum(amount) FROM my_points), 0),
             'points_earned', COALESCE((SELECT sum(amount) FROM my_points WHERE amount > 0), 0),
             'points_spent', COALESCE((SELECT -sum(amount) FROM my_points WHERE amount < 0), 0)
+        ),
+        'sharing', (
+            SELECT jsonb_build_object(
+                'comments_received', comments_received,
+                'comments_given', comments_given,
+                'reactions_received', reactions_received,
+                'reactions_given', reactions_given,
+                'teacher_comments', teacher_comments
+            ) FROM my_sharing
         ),
         'daily', COALESCE((
             SELECT jsonb_agg(jsonb_build_object('d', d, 'posts', c) ORDER BY d)

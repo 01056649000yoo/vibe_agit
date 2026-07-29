@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ModalPortal from '../../../components/common/ModalPortal';
 import { supabase } from '../../../lib/supabaseClient';
-import WritingFootprintSummary, { EMPTY_FOOTPRINT, formatSnapshotDate } from './WritingFootprintSummary';
 
 /**
  * 나의 글쓰기 발자국 — 학생이 자기 활동을 한 자리에서 돌아보는 화면.
@@ -38,6 +37,7 @@ const EMPTY_DETAIL = {
         active_days: 0, best_streak: 0, current_streak: 0,
         total_points: 0, points_earned: 0, points_spent: 0
     },
+    sharing: { comments_received: 0, comments_given: 0, reactions_received: 0, reactions_given: 0 },
     daily: [], monthly: [], points_monthly: [], points_by_type: []
 };
 
@@ -66,9 +66,10 @@ const StatTile = ({ icon, label, value, unit }) => (
     </div>
 );
 
-/** 글쓰기 달력 — 날짜마다 칸 하나, 많이 쓴 날일수록 진하게. */
+/** 글쓰기 달력 — 날짜마다 칸 하나, 많이 쓴 날일수록 진하게.
+ *  달 이름과 요일을 같이 적는다. 칸만 있으면 언제가 언제인지 알 수 없다. */
 const WritingCalendar = ({ daily }) => {
-    const { weeks, maxCount } = useMemo(() => {
+    const { weeks, maxCount, monthMarks } = useMemo(() => {
         const byDay = new Map(daily.map((row) => [row.d, row.posts]));
         const today = new Date();
         const start = new Date(today);
@@ -80,19 +81,28 @@ const WritingCalendar = ({ daily }) => {
         const cursor = new Date(start);
         let max = 0;
         while (cursor <= today) {
-            const key = cursor.toISOString().slice(0, 10);
+            const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
             const count = byDay.get(key) || 0;
             if (count > max) max = count;
-            col.push({ key, count, label: `${cursor.getMonth() + 1}월 ${cursor.getDate()}일` });
+            col.push({ key, count, month: cursor.getMonth(), label: `${cursor.getMonth() + 1}월 ${cursor.getDate()}일` });
             if (col.length === 7) { cols.push(col); col = []; }
             cursor.setDate(cursor.getDate() + 1);
         }
         if (col.length) cols.push(col);
-        return { weeks: cols, maxCount: max };
+
+        // 달이 바뀌는 첫 열에만 달 이름을 적는다.
+        const marks = [];
+        let seen = -1;
+        cols.forEach((weekCol, x) => {
+            const m = weekCol[0].month;
+            if (m !== seen) { marks.push({ x, text: `${m + 1}월` }); seen = m; }
+        });
+        return { weeks: cols, maxCount: max, monthMarks: marks };
     }, [daily]);
 
-    const cell = 11, gap = 2;
-    const width = weeks.length * (cell + gap);
+    const cell = 11, gap = 2, padTop = 16, padLeft = 22;
+    const step = cell + gap;
+    const width = padLeft + weeks.length * step;
     const shade = (count) => {
         if (!count) return HEAT[0];
         if (maxCount <= 1) return HEAT[3];
@@ -105,11 +115,19 @@ const WritingCalendar = ({ daily }) => {
 
     return (
         <div style={{ overflowX: 'auto' }}>
-            <svg width={width} height={7 * (cell + gap)} role="img" aria-label="날짜별 글쓰기 기록">
+            <svg width={width} height={padTop + 7 * step} role="img" aria-label="날짜별 글쓰기 기록">
+                {monthMarks.map((mk) => (
+                    <text key={`${mk.x}-${mk.text}`} x={padLeft + mk.x * step} y={11}
+                        fontSize="10.5" fontWeight="800" fill={INK_SOFT}>{mk.text}</text>
+                ))}
+                {['월', '수', '금'].map((d, idx) => (
+                    <text key={d} x={0} y={padTop + (idx * 2 + 1) * step + 9}
+                        fontSize="9.5" fontWeight="800" fill={INK_SOFT}>{d}</text>
+                ))}
                 {weeks.map((weekCol, x) => weekCol.map((day, y) => (
                     <rect
                         key={day.key}
-                        x={x * (cell + gap)} y={y * (cell + gap)}
+                        x={padLeft + x * step} y={padTop + y * step}
                         width={cell} height={cell} rx="3"
                         fill={shade(day.count)}
                     >
@@ -218,25 +236,18 @@ const SourceBars = ({ rows }) => {
 
 const WritingFootprintModal = ({ isOpen, onClose }) => {
     const [detail, setDetail] = useState(EMPTY_DETAIL);
-    const [footprint, setFootprint] = useState(EMPTY_FOOTPRINT);
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
 
     const load = useCallback(async () => {
         setLoading(true);
         setErrorMessage('');
-        const [detailResult, snapshotResult] = await Promise.all([
-            supabase.rpc('get_my_writing_footprint_detail'),
-            supabase.rpc('get_my_writing_footprint')
-        ]);
+        const detailResult = await supabase.rpc('get_my_writing_footprint_detail');
         if (detailResult.error) {
             console.error('글쓰기 발자국 로드 실패:', detailResult.error.message);
             setErrorMessage('발자국을 불러오지 못했어요. 잠시 후 다시 열어 주세요.');
         } else {
             setDetail({ ...EMPTY_DETAIL, ...(detailResult.data || {}) });
-        }
-        if (!snapshotResult.error) {
-            setFootprint({ ...EMPTY_FOOTPRINT, ...(snapshotResult.data || {}) });
         }
         setLoading(false);
     }, []);
@@ -265,6 +276,7 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
 
     if (!isOpen) return null;
     const t = detail.totals || EMPTY_DETAIL.totals;
+    const sh = detail.sharing || EMPTY_DETAIL.sharing;
 
     return (
         <ModalPortal>
@@ -334,8 +346,13 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
                                     <SourceBars rows={detail.points_by_type || []} />
                                 </Section>
 
-                                <Section title="💬 친구와 나눈 기록" hint={`${formatSnapshotDate(footprint.snapshot_date)} 기준 · 매일 한 번 갱신돼요.`}>
-                                    <WritingFootprintSummary data={footprint} />
+                                <Section title="💬 친구와 나눈 기록" hint="친구 아지트에서 주고받은 댓글과 반응이에요.">
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: '9px' }}>
+                                        <StatTile icon="💬" label="남긴 댓글" value={num(sh.comments_given)} unit="개" />
+                                        <StatTile icon="🗨️" label="받은 댓글" value={num(sh.comments_received)} unit="개" />
+                                        <StatTile icon="🙌" label="보낸 반응" value={num(sh.reactions_given)} unit="개" />
+                                        <StatTile icon="💖" label="받은 반응" value={num(sh.reactions_received)} unit="개" />
+                                    </div>
                                 </Section>
                             </>
                         )}
