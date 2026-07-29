@@ -34,9 +34,10 @@
     `classKey()` + `dataCache` 30초 캐시를 적용했다. 서재 목록은 기존 60개 상한을 유지한다.
   - 작가 칭호와 성장률은 서재 일부 합계 대신 `useStudentDashboard`의 전체 승인 글 통계를 공유하도록 통일하고,
     성장률도 현재 레벨 시작점부터 다음 레벨까지의 구간 비율로 바로잡았다.
-- **변경**: `MyAgitPanel.jsx`, `StudentDashboard.jsx`, 신규 `MyShelfPostDetail.jsx`.
+- **변경**: 커밋 `07563df` — `MyAgitPanel.jsx`, `StudentDashboard.jsx`, 신규 `MyShelfPostDetail.jsx`.
 - **결과/검증**: 변경 파일 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과. 상세 화면은 별도 lazy 청크
-  6.42kB( gzip 2.55kB)로 분리. 로컬 Vite 서버 HTTP 200 확인. 인앱 브라우저 세션이 제공되지 않아 로그인 학생의 실제 클릭 검증은 못 했다.
+  6.42kB(gzip 2.55kB)로 분리. 로컬 Vite 서버 HTTP 200 확인. GitHub Actions Deploy run `30469348440` 성공(20초):
+  앱 이미지 빌드·`agit-app` 재시작·내부 HTTP 검증 통과. 인앱 브라우저 세션이 제공되지 않아 로그인 학생의 실제 클릭 검증은 못 했다.
 - **남은 것 / 다음**: 운영 배포 후 학생 계정에서 과제·독서록·비공개 글·보관된 과제 각각의 상세와
   상세→서재→대시보드 뒤로가기를 실기기 스모크한다.
 
