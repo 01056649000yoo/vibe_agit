@@ -12,9 +12,11 @@ export const ideaMarketManifest = {
   part: 'writing',
   audience: 'both',
   toggleable: false,
-  studentRoute: 'idea_market',
   writingMissionTypes: ['meeting'],
-  studentEntry: () => import('./IdeaMarketPage'),
+  // 학생은 별도 페이지가 아니라 **'제안하는 글' 미션**으로 들어온다.
+  // 교사가 회의 미션을 내면 과제 목록에 뜨고, 학생은 일반 글쓰기 화면에서 안건을 낸다.
+  // (missionTypeManifest.js 의 meetingMissionType — studentRoute: 'writing')
+  // 교사 화면은 그 미션의 teacherEntry 로 열린다: 미션 목록의 '학생 제안 보기'.
   teacherEntry: () => import('./IdeaMarketManager'),
 };
 

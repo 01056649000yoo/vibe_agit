@@ -21,6 +21,27 @@
 
 ---
 
+## 2026-07-29 — 아이디어 마켓 잔재 정리 (미션 유형만 남김) (Claude)
+- **배경**: 사용자 확인 — "아이디어 마켓은 현재 **글쓰기 종류 중 '제안하는 글' 미션**으로 넣어놨다."
+  앞 항목에서 "살릴지 접을지 판단 필요"로 남겨 뒀던 것에 대한 답.
+- **정리 전 확인 (지우기 전에 무엇이 살아 있는지)**:
+  - `IdeaMarketManager`(교사) → **미션 유형의 `teacherEntry` 로 실제 사용 중**.
+    `MissionManager.jsx` 가 `missionType.teacherEntry` 를 lazy 로 등록하고,
+    미션 목록의 **`학생 제안 보기`** 버튼(`reviewLabel`)으로 열린다. → **유지**.
+  - `IdeaMarketPage`(학생 독립 페이지) → 이동시키는 코드 0곳. 옛 설계 잔재.
+  - `useIdeaMarket` → `IdeaMarketPage` 에서만 쓰였고 `IdeaMarketManager` 는 쓰지 않는다.
+- **한 일**:
+  - `App.jsx` 의 `idea_market` 라우트·lazy 임포트 제거 (고아 라우트를 남기지 않는다).
+  - **파일 삭제**: `IdeaMarketPage.jsx`, `useIdeaMarket.js`.
+  - `manifest.js` 에서 `studentRoute`·`studentEntry` 제거하고, **학생은 '제안하는 글' 미션으로 들어온다**는 것을
+    주석으로 남겼다(`missionTypeManifest.js` 의 `meetingMissionType`, `studentRoute: 'writing'`).
+    매니페스트 규칙(`studentEntry`/`teacherEntry` 중 하나)은 `teacherEntry` 로 충족.
+- **결과/검증**: 린트 0(에러), 빌드 통과.
+  회의 미션 흐름 확인 — 미션 유형 등록 있음 / 교사 검토 진입 있음 / 학생 작성 경로 `writing`.
+  `idea_market` 참조 전체 0건. 남은 파일은 `IdeaMarketManager.jsx · manifest.js · missionTypeManifest.js` 셋.
+
+---
+
 ## 2026-07-29 — 학생 홈에서 회의 안건 카드 제거 (내 오판 정정) (Claude)
 - **배경**: 사용자 질문 — "학생 대시보드에 회의 안건이 왜 있지?" 확인해 보니 **내가 잘못 넣은 것**이었다.
 - **경위**: 앞서 학생 대시보드를 점검하면서 `idea_market` 페이지가 App 에 연결돼 있는데

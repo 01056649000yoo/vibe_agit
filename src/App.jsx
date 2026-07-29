@@ -24,7 +24,6 @@ const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard')) /
 const StudentWriting = lazy(() => import('./components/student/StudentWriting'))
 const MissionList = lazy(() => import('./components/student/MissionList'))
 const FriendsHideout = lazy(getModule('friends-hideout').studentEntry)
-const IdeaMarketPage = lazy(getModule('idea-market').studentEntry)
 const ReadingLogPage = lazy(getModule('reading-log').studentEntry)
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
 const PrivacyPolicy = lazy(() => import('./components/layout/PrivacyPolicy'))
@@ -329,13 +328,6 @@ function App() {
                   studentSession={studentSession}
                   params={internalPage.params}
                   onBack={() => setInternalPage(internalPage.params?.returnTo || 'main')}
-                />
-              )}
-              {studentPageName === 'idea_market' && (
-                <IdeaMarketPage
-                  studentSession={studentSession}
-                  params={internalPage.params}
-                  onBack={() => setInternalPage('mission_list')}
                 />
               )}
   
