@@ -21,6 +21,32 @@
 
 ---
 
+## 2026-07-29 — GPT 작업분 최신화 + 조회 기준 위반 1건 교정 (Claude)
+- **한 일**: 로컬이 origin/main 보다 16커밋 뒤에 있어 fast-forward 로 최신화(`ce090c7` → `b1cd275`).
+  로컬 고유 커밋 0개라 충돌·유실 없음. 2026-07-28 Claude 커밋 6개가 모두 origin/main 의 조상임을 확인.
+  이후 들어온 GPT 작업분(교사 설정 통합·수업 도구·학급 운영 대시보드·최근 활동 피드 등)을 점검했다.
+- **점검 결과 — 기준이 잘 지켜지고 있다**:
+  - 클라이언트에서 `.eq('<테이블>.class_id', …)`(조인 경유) **0곳** 유지.
+  - 새 RPC 3개(`get_class_operations_dashboard`, `get_class_recent_activity`)는 `class_id = p_class_id` 로 직접 좁힌다.
+  - **`classKey`/`dataCache` 표준을 새 코드가 채택했다** — `RecentActivity.jsx`, `ClassAnalysis.jsx`.
+  - 새 마이그레이션 3개(`20260805`·`20260806`·`20260807`)는 이미 운영 DB에 적용돼 있었다.
+- **고친 것 ① — 조회 기준 ② 위반**: `get_class_operations_dashboard` 가 확인 기록을
+  `LEFT JOIN reading_log_teacher_reviews review ON review.post_id = p.id` 로만 붙이고 있었다(2곳).
+  **7/28 에 측정으로 잡았던 바로 그 패턴** — 조인 조건에 학급이 없으면 계획기가 전 학급 확인 기록을 Seq Scan 한다.
+  → `20260728_scope_dashboard_review_join.sql`. 운영 DB의 현재 정의(`pg_get_functiondef`)를 그대로 가져와
+  조인 2줄만 고쳐 `CREATE OR REPLACE`. **적용 전후 응답 JSON 을 `generated_at` 만 빼고 비교해 완전히 동일함을 확인**(회귀 없음).
+  - 만들다 걸린 함정: `pg_get_functiondef` 출력은 끝에 세미콜론이 없어 그대로 쓰면 `COMMIT` 에서 문법 오류가 난다.
+    첫 시도는 **적용되지 않은 채 "적용 완료"로 보였다.** `$function$;` 로 닫고 재적용해 반영을 실제로 확인했다.
+- **고친 것 ② — 죽은 함수 제거**: `get_class_student_summary`(7/28 학생 탭 요약 띠용)는 이후 학생 탭이
+  다시 개편되며 `get_class_operations_dashboard` 로 대체돼 **부르는 곳이 0곳**이 됐다.
+  → `20260728_drop_class_student_summary.sql` 로 DROP. 쓰지 않는 SECURITY DEFINER 함수를 남기지 않는다.
+- **결과/검증**: 빌드 통과. 린트 에러 2건은 이번 변경과 무관한 기존 파일
+  (`LandingPage.jsx`, `TeacherAnnouncementManager.jsx`) — 손대지 않음.
+- **남은 것**: ⚠️ **브라우저 확인은 계속 사용자 몫**(로그인 필요). 7/28~29 로 교사 화면이 크게 바뀌었다.
+  `reading_log_entries` 조인 학급 범위는 여전히 미해결 — 인덱스가 없어 측정 후 함께 고칠 것.
+
+---
+
 ## 2026-07-29 — AI 피드백·평어 프리셋 편집 UI 구조화 (GPT/Codex)
 - **한 일**: 프리셋 작성 순서를 `제목 → 프롬프트`로 명확히 하고 교사가 빠르게 수정할 수 있는 개조식 편집 UI로 개선.
 - **변경**: 새 프리셋 버튼, 제목 입력란, 200자 실시간 카운터·초과 차단·작성 안내를 추가. 기본 피드백(174자)·평어(162자) 프롬프트와 AI 다듬기 지침을 역할·내용·말투·제한 중심 개조식으로 재작성.
