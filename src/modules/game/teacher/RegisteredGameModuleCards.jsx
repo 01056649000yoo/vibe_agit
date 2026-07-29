@@ -40,6 +40,7 @@ class ModuleErrorBoundary extends React.Component {
 }
 
 const ModulePowerButton = ({ module, enabledModuleIds, savingModuleId, moduleLoadError, onToggle, isMobile }) => {
+    if (typeof onToggle !== 'function') return null;
     const theme = module.management || {};
     const activeColor = theme.activeColor || '#4F46E5';
     const isOn = enabledModuleIds?.includes(module.id) ?? false;
@@ -73,6 +74,16 @@ const ModulePowerButton = ({ module, enabledModuleIds, savingModuleId, moduleLoa
 const RegisteredGameModuleCard = ({ module, TeacherEntry, activeClass, isMobile, controls }) => {
     const [isOpen, setIsOpen] = useState(false);
     const theme = module.management || {};
+
+    if (theme.ownsCard) {
+        return (
+            <ModuleErrorBoundary moduleName={module.name}>
+                <Suspense fallback={<div style={{ padding: '28px', textAlign: 'center', color: '#94A3B8' }}>{module.icon} 관리 화면을 불러오는 중입니다...</div>}>
+                    <TeacherEntry activeClass={activeClass} isMobile={isMobile} module={module} />
+                </Suspense>
+            </ModuleErrorBoundary>
+        );
+    }
 
     return (
         <Card style={{

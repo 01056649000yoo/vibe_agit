@@ -30,7 +30,7 @@ const HIDEOUT_BACKGROUNDS = {
     legend: { id: 'legend', name: '🌈 무지개 성소', color: 'linear-gradient(135deg, #FF9A9E 0%, #FAD0C4 99%, #FAD0C4 100%)', border: '#FFD700', glow: 'rgba(255, 215, 0, 0.6)' }
 };
 
-const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules }) => {
+const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, moduleFilter = null, embedded = false, onCollapse }) => {
     const [config, setConfig] = useState({
         dragon_feed_points: 50,
         dragon_degen_days: 14
@@ -57,7 +57,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules }) =
     const [showHistory, setShowHistory] = useState(false); // 히스토리 표시 여부
     const [dragonHistory, setDragonHistory] = useState([]); // [히스토리] 드래곤 시즌 기록
     const [showDragonHistory, setShowDragonHistory] = useState(false); // 드래곤 히스토리 표시 여부
-    const [subTab, setSubTab] = useState('dragon'); // [신규] 모니터링 서브탭 ('dragon' | 'tower')
+    const [subTab, setSubTab] = useState(moduleFilter === 'vocab-tower' ? 'tower' : 'dragon'); // [신규] 모니터링 서브탭 ('dragon' | 'tower')
 
     const fetchGameConfig = useCallback(async () => {
         setLoading(true);
@@ -564,14 +564,15 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules }) =
     if (!activeClass) return <div style={{ padding: '60px', textAlign: 'center', color: '#7F8C8D' }}>학급을 먼저 선택해주세요.</div>;
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '10px' : '0' }}>
-            <div style={{ marginBottom: '2.5rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: embedded ? 0 : (isMobile ? '10px' : '0') }}>
+            {!embedded && <div style={{ marginBottom: '2.5rem' }}>
                 <h1 style={{ fontSize: '1.8rem', color: '#2C3E50', margin: '0 0 8px 0', fontWeight: '900' }}>🎢 아지트 놀이터 관리</h1>
                 <p style={{ color: '#7F8C8D', margin: 0 }}>각 카드에서 학생 화면 노출과 세부 설정을 함께 관리합니다.</p>
-            </div>
+            </div>}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '32px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: embedded ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))', gap: embedded ? '16px' : '32px' }}>
                 {/* 1. 드래곤 키우기 통합 카드 */}
+                {(!moduleFilter || moduleFilter === 'dragon') && (
                 <Card style={{ padding: 0, border: '1px solid #E9ECEF', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
                     <div style={{ padding: '24px', background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)', borderBottom: '1px solid #FFE0B2', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: '0 4px 12px rgba(255, 145, 0, 0.2)' }}>🐉</div>
@@ -672,8 +673,10 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules }) =
                         </div>
                     </div>
                 </Card>
+                )}
 
                 {/* 2. 어휘의 탑 게임 제어판 */}
+                {(!moduleFilter || moduleFilter === 'vocab-tower') && (
                 <Card style={{ padding: 0, border: '1px solid #E9ECEF', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
                     <div style={{ padding: '24px', background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)', borderBottom: '1px solid #A5D6A7', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)' }}>🏰</div>
@@ -871,6 +874,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules }) =
                         </div>
                     </div>
                 </Card>
+                )}
 
                 {renderAdditionalModules?.({
                     enabledModuleIds,
@@ -879,6 +883,12 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules }) =
                     onToggle: handleToggleModule
                 })}
             </div>
+
+            {embedded && onCollapse && (
+                <Button type="button" onClick={onCollapse} variant="ghost" style={{ width: '100%', marginTop: '12px' }}>
+                    관리 접기
+                </Button>
+            )}
 
             {/* 📊 성장 모니터링 & 패널티 통합 대시보드 (풀스크린 모달) */}
             <AnimatePresence>
@@ -896,7 +906,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules }) =
                                 </div>
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     {/* [신규] 모니터링 서브탭 전환 */}
-                                    <div style={{ display: 'flex', background: 'white', padding: '4px', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
+                                    {!moduleFilter && <div style={{ display: 'flex', background: 'white', padding: '4px', borderRadius: '12px', border: '1px solid #E9ECEF' }}>
                                         <button
                                             onClick={() => setSubTab('dragon')}
                                             style={{
@@ -919,7 +929,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules }) =
                                         >
                                             🏰 어휘의 탑
                                         </button>
-                                    </div>
+                                    </div>}
                                     <Button size="lg" variant="ghost" onClick={() => setShowMonitoring(false)} style={{ background: 'white', borderRadius: '16px', fontWeight: '900', color: '#E53935', border: '1px solid #FFEBEE' }}>닫기 ✕</Button>
                                 </div>
                             </div>
