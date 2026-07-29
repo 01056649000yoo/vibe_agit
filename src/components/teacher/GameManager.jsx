@@ -15,9 +15,7 @@ const GameManager = ({ activeClass, isMobile }) => {
                 <h1 style={{ fontSize: '1.8rem', color: '#2C3E50', margin: '0 0 8px 0', fontWeight: '900' }}>🎢 아지트 놀이터 관리</h1>
                 <p style={{ color: '#7F8C8D', margin: 0 }}>각 카드에서 학생 화면 노출과 세부 설정을 함께 관리합니다.</p>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '32px' }}>
-                <RegisteredGameModuleCards activeClass={activeClass} isMobile={isMobile} />
-            </div>
+            <RegisteredGameModuleCards activeClass={activeClass} isMobile={isMobile} />
         </div>
     );
 };

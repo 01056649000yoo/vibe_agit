@@ -7,6 +7,7 @@ const VocabularyTowerTeacherManager = ({ activeClass, isMobile }) => (
         isMobile={isMobile}
         moduleFilter="vocab-tower"
         embedded
+        detailOnly
     />
 );
 

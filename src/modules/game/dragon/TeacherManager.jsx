@@ -7,6 +7,7 @@ const DragonTeacherManager = ({ activeClass, isMobile }) => (
         isMobile={isMobile}
         moduleFilter="dragon"
         embedded
+        detailOnly
     />
 );
 

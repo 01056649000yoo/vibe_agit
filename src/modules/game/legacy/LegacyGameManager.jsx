@@ -30,7 +30,7 @@ const HIDEOUT_BACKGROUNDS = {
     legend: { id: 'legend', name: '🌈 무지개 성소', color: 'linear-gradient(135deg, #FF9A9E 0%, #FAD0C4 99%, #FAD0C4 100%)', border: '#FFD700', glow: 'rgba(255, 215, 0, 0.6)' }
 };
 
-const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, moduleFilter = null, embedded = false, onCollapse }) => {
+const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, moduleFilter = null, embedded = false, detailOnly = false, onCollapse }) => {
     const [config, setConfig] = useState({
         dragon_feed_points: 50,
         dragon_degen_days: 14
@@ -574,6 +574,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                 {/* 1. 드래곤 키우기 통합 카드 */}
                 {(!moduleFilter || moduleFilter === 'dragon') && (
                 <Card style={{ padding: 0, border: '1px solid #E9ECEF', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                    {!detailOnly && (
                     <div style={{ padding: '24px', background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)', borderBottom: '1px solid #FFE0B2', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: '0 4px 12px rgba(255, 145, 0, 0.2)' }}>🐉</div>
                         <div style={{ flex: 1 }}>
@@ -582,6 +583,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                         </div>
                         {renderModulePowerButton('dragon', '드래곤 키우기', '#E65100')}
                     </div>
+                    )}
 
                     <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {/* 1.1 운영 정책 설정 */}
@@ -678,6 +680,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                 {/* 2. 어휘의 탑 게임 제어판 */}
                 {(!moduleFilter || moduleFilter === 'vocab-tower') && (
                 <Card style={{ padding: 0, border: '1px solid #E9ECEF', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+                    {!detailOnly && (
                     <div style={{ padding: '24px', background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)', borderBottom: '1px solid #A5D6A7', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)' }}>🏰</div>
                         <div style={{ flex: 1 }}>
@@ -686,6 +689,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                         </div>
                         {renderModulePowerButton('vocab-tower', '어휘의 탑', '#2E7D32')}
                     </div>
+                    )}
 
                     <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {/* 게임 노출과 세부 설정을 한 카드에서 함께 관리 */}
