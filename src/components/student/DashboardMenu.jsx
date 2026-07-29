@@ -144,21 +144,6 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     style={{
-                        background: 'linear-gradient(145deg,#FFF8E1,#FFFFFF)', padding: '24px', borderRadius: '24px', border: '2px solid #FFCC80',
-                        textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
-                        boxShadow: '0 4px 8px rgba(239, 108, 0, 0.12)'
-                    }}
-                    onClick={() => onNavigate('writing_footprint')}
-                >
-                    <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👣</div>
-                    <h3 style={{ margin: 0, color: '#E65100' }}>글쓰기 발자국</h3>
-                    <p style={{ fontSize: '0.85rem', color: '#A1887F', marginTop: '8px' }}>쓰고 고치고 나눈 기록 보기</p>
-                </motion.div>
-
-                <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
                         background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #FFE082',
                         textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
                         boxShadow: '0 4px 6px rgba(255, 224, 130, 0.2)'

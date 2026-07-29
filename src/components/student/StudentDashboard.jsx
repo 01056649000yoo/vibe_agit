@@ -12,7 +12,6 @@ import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
 import TeacherNotifyBanner from './TeacherNotifyBanner';
-import StudentStatsCards from './StudentStatsCards';
 import PointLevelCard from './PointLevelCard';
 import DashboardMenu from './DashboardMenu';
 import StudentTodoCard from './StudentTodoCard';
@@ -22,6 +21,7 @@ const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/Backgro
 // [bundle-dynamic-imports] 조건부 렌더링되는 대형 컴포넌트를 lazy loading으로 전환
 const AgitOnClassPage = lazy(getModule('agit-on-class').studentEntry);
 const PlaygroundPanel = lazy(() => import('../../modules/PlaygroundPanel'));
+const WritingFootprintModal = lazy(() => import('../../modules/writing/writing-footprint/WritingFootprintModal'));
 const VocabularyTowerGame = lazy(() => import('../../modules/game/vocab-tower/VocabularyTowerGame'));
 
 // [신규] 드래곤 아지트 배경 목록 (상수 외부 이동)
@@ -47,6 +47,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false); // 아지트 놀이터(포인트 콘텐츠 모음)
     const [activeGameModuleId, setActiveGameModuleId] = useState(null);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
+    const [isFootprintOpen, setIsFootprintOpen] = useState(false);
 
     // 하단 내비의 '놀이터'를 누르면 홈으로 온 뒤 이 신호가 올라온다.
     useEffect(() => {
@@ -216,6 +217,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                 {/* 헤더 섹션 */}
                 <StudentHeader
                     hasActivity={hasActivity}
+                    onOpenFootprint={() => setIsFootprintOpen(true)}
                     openFeedback={openFeedback}
                     setIsGuideOpen={setIsGuideOpen}
                     onLogout={onLogout}
@@ -245,9 +247,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     onOpenFeedback={openFeedback}
                     onGoRewrite={handleDirectRewriteGo}
                 />
-
-                {/* 성장 통계 카드 — 지나간 실적이라 할 일 아래로 */}
-                <StudentStatsCards stats={stats} />
 
                 {/* 포인트 및 레벨 카드 */}
                 <PointLevelCard
@@ -280,6 +279,15 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                         🚩 오늘의 목표: 멋진 글 완성하고 포인트 더 받기!
                     </p>
                 </div>
+
+                <Suspense fallback={null}>
+                    {isFootprintOpen && (
+                        <WritingFootprintModal
+                            isOpen={isFootprintOpen}
+                            onClose={() => setIsFootprintOpen(false)}
+                        />
+                    )}
+                </Suspense>
 
                 {/* 피드백 모아보기 모달 */}
                 <StudentFeedbackModal

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
 
-const StudentHeader = ({ hasActivity, openFeedback, setIsGuideOpen, onLogout }) => {
+const StudentHeader = ({ hasActivity, openFeedback, setIsGuideOpen, onLogout, onOpenFootprint }) => {
     return (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', gap: '8px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -40,6 +40,20 @@ const StudentHeader = ({ hasActivity, openFeedback, setIsGuideOpen, onLogout }) 
                             border: '2px solid white'
                         }}></span>
                     )}
+                </motion.button>
+
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={onOpenFootprint}
+                    style={{
+                        background: 'white', color: '#5D4037', border: '2px solid #FFECB3',
+                        padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold',
+                        cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                        display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap'
+                    }}
+                >
+                    👣 발자국
                 </motion.button>
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>

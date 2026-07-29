@@ -10,8 +10,8 @@ export const writingFootprintManifest = {
     part: 'writing',
     audience: 'student',
     core: true,
-    studentRoute: 'writing_footprint',
-    studentEntry: () => import('./WritingFootprintPage')
+    // 페이지가 아니라 모달로 연다 — 학생이 헤더 버튼으로 수시로 열어 본다.
+    studentEntry: () => import('./WritingFootprintModal')
 };
 
 export default writingFootprintManifest;
