@@ -14,7 +14,6 @@ import StudentHeader from './StudentHeader';
 import TeacherNotifyBanner from './TeacherNotifyBanner';
 import DashboardMenu from './DashboardMenu';
 import StudentTodoCard from './StudentTodoCard';
-import MyAgitPanel from './MyAgitPanel';
 import AgitPlayground from './AgitPlayground';
 // 드래곤 모듈 — 모달을 열 때만 코드를 받도록 지연 로딩 (src/modules/game/dragon)
 const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHideoutModal'));
@@ -23,6 +22,7 @@ const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/Backgro
 const AgitOnClassPage = lazy(getModule('agit-on-class').studentEntry);
 const WritingFootprintModal = lazy(() => import('../../modules/writing/writing-footprint/WritingFootprintModal'));
 const VocabularyTowerGame = lazy(() => import('../../modules/game/vocab-tower/VocabularyTowerGame'));
+const MyAgitPanel = lazy(() => import('./MyAgitPanel'));
 
 // [신규] 드래곤 아지트 배경 목록 (상수 외부 이동)
 const HIDEOUT_BACKGROUNDS = {
@@ -275,14 +275,18 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     items={playgroundItems}
                 />
 
-                <MyAgitPanel
-                    isOpen={isMyAgitOpen}
-                    onClose={() => setIsMyAgitOpen(false)}
-                    studentSession={studentSession}
-                    points={points}
-                    writerStats={stats}
-                    writerLevel={levelInfo}
-                />
+                {isMyAgitOpen && (
+                    <Suspense fallback={null}>
+                        <MyAgitPanel
+                            isOpen={isMyAgitOpen}
+                            onClose={() => setIsMyAgitOpen(false)}
+                            studentSession={studentSession}
+                            points={points}
+                            writerStats={stats}
+                            writerLevel={levelInfo}
+                        />
+                    </Suspense>
+                )}
 
                 <Suspense fallback={null}>
                     {isFootprintOpen && (

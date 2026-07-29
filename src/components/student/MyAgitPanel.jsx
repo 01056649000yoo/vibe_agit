@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import ModalPortal from '../common/ModalPortal';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
-import { getWriterLevel } from '../../constants/writerLevels';
+import { calculateReaderScore, getReaderLevel, getWriterLevel } from '../../constants/writerLevels';
 
 const MyShelfPostDetail = lazy(() => import('./MyShelfPostDetail'));
 
@@ -22,6 +22,7 @@ const INK = '#3E2E23';
 const INK_SOFT = '#8D7B6C';
 const LINE = 'rgba(62,46,35,.10)';
 const SHELF_TTL_MS = 30000;
+const READER_ACTIVITY_LIMIT = 1000;
 
 const num = (v) => Number(v || 0).toLocaleString('ko-KR');
 
@@ -51,6 +52,44 @@ const Row = ({ icon, title, desc, right, onClick }) => (
     </button>
 );
 
+const TitleTrack = ({ label, level, value, unit, accent, surface, loading, errorMessage }) => {
+    const levelStart = level.from || 0;
+    const toNext = level.next ? Math.max(0, level.next - value) : 0;
+    const percent = level.next
+        ? Math.max(0, Math.min(100, Math.round(((value - levelStart) / Math.max(1, level.next - levelStart)) * 100)))
+        : 100;
+
+    return (
+        <div style={{ padding: '14px', borderRadius: '17px', background: surface, border: `1px solid ${accent}30` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '.7rem', color: INK_SOFT, fontWeight: 900 }}>{label}</div>
+                    <div style={{ marginTop: '3px', color: INK, fontSize: '1rem', fontWeight: 950 }}>
+                        {loading ? '기록을 살펴보는 중...' : errorMessage ? '칭호를 불러오지 못했어요' : `${level.emoji} ${level.name}`}
+                    </div>
+                </div>
+                {!loading && !errorMessage && (
+                    <span style={{ flexShrink: 0, padding: '3px 9px', borderRadius: '9px', background: '#FFFFFF', color: accent, fontSize: '.72rem', fontWeight: 950 }}>
+                        LV. {level.level}
+                    </span>
+                )}
+            </div>
+            {!loading && !errorMessage && (
+                <div style={{ marginTop: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '5px', color: INK_SOFT, fontSize: '.7rem', fontWeight: 850 }}>
+                        <span>{num(value)}{unit}</span>
+                        <span>{level.next ? `다음 칭호까지 ${num(toNext)}${unit}` : '가장 높은 칭호예요!'}</span>
+                    </div>
+                    <div style={{ height: '7px', overflow: 'hidden', borderRadius: '99px', background: 'rgba(62,46,35,.08)' }}>
+                        <div style={{ width: `${percent}%`, height: '100%', borderRadius: '99px', background: accent }} />
+                    </div>
+                </div>
+            )}
+            {errorMessage && <div style={{ marginTop: '7px', color: '#C62828', fontSize: '.7rem', fontWeight: 800 }}>{errorMessage}</div>}
+        </div>
+    );
+};
+
 const MyAgitPanel = ({
     isOpen, onClose, studentSession, points = 0,
     writerStats, writerLevel
@@ -60,6 +99,9 @@ const MyAgitPanel = ({
 
     const [shelf, setShelf] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [readerActivity, setReaderActivity] = useState({ score: 0, postCount: 0 });
+    const [readerLoading, setReaderLoading] = useState(true);
+    const [readerError, setReaderError] = useState('');
     const [selectedSummary, setSelectedSummary] = useState(null);
     const [selectedPost, setSelectedPost] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -92,6 +134,73 @@ const MyAgitPanel = ({
             setShelf([]);
         }
         setLoading(false);
+    }, [classId, studentId]);
+
+    const loadReaderActivity = useCallback(async () => {
+        if (!classId || !studentId) return;
+        setReaderLoading(true);
+        setReaderError('');
+        try {
+            const activity = await dataCache.get(
+                classKey(classId, 'my-reader-title', { student: studentId }),
+                async () => {
+                    const { data: rpcData, error: rpcError } = await supabase.rpc('get_my_reader_title');
+                    if (!rpcError && rpcData) {
+                        return {
+                            score: Number(rpcData.score || 0),
+                            postCount: Number(rpcData.post_count || 0)
+                        };
+                    }
+
+                    // 앱 배포와 운영 SQL 적용 사이에도 화면을 비우지 않는다.
+                    // 함수가 아직 없으면 같은 학급·본인 직접 필터와 상한을 둔 조회로 임시 계산한다.
+                    if (rpcError && !['PGRST202', '42883'].includes(rpcError.code)) {
+                        console.warn('독자 칭호 RPC 폴백:', rpcError.message);
+                    }
+                    const [commentResult, reactionResult, ownPostResult] = await Promise.all([
+                        supabase
+                            .from('post_comments')
+                            .select('post_id, content, created_at')
+                            .eq('class_id', classId)
+                            .eq('student_id', studentId)
+                            .eq('status', 'approved')
+                            .order('created_at', { ascending: false })
+                            .limit(READER_ACTIVITY_LIMIT),
+                        supabase
+                            .from('post_reactions')
+                            .select('post_id, created_at')
+                            .eq('class_id', classId)
+                            .eq('student_id', studentId)
+                            .order('created_at', { ascending: false })
+                            .limit(READER_ACTIVITY_LIMIT),
+                        supabase
+                            .from('student_posts')
+                            .select('id, created_at')
+                            .eq('class_id', classId)
+                            .eq('student_id', studentId)
+                            .order('created_at', { ascending: false })
+                            .limit(READER_ACTIVITY_LIMIT)
+                    ]);
+
+                    if (commentResult.error) throw commentResult.error;
+                    if (reactionResult.error) throw reactionResult.error;
+                    if (ownPostResult.error) throw ownPostResult.error;
+
+                    return calculateReaderScore({
+                        comments: commentResult.data || [],
+                        reactions: reactionResult.data || [],
+                        ownPostIds: (ownPostResult.data || []).map((post) => post.id)
+                    });
+                },
+                SHELF_TTL_MS
+            );
+            setReaderActivity(activity);
+        } catch (error) {
+            console.error('독자 칭호 로드 실패:', error.message);
+            setReaderError('잠시 후 나의 아지트를 다시 열어 주세요.');
+        } finally {
+            setReaderLoading(false);
+        }
     }, [classId, studentId]);
 
     const openShelfPost = useCallback(async (summary, forceRefresh = false) => {
@@ -163,9 +272,12 @@ const MyAgitPanel = ({
 
     useEffect(() => {
         if (!isOpen) return undefined;
-        const timerId = window.setTimeout(load, 0);
+        const timerId = window.setTimeout(() => {
+            load();
+            loadReaderActivity();
+        }, 0);
         return () => window.clearTimeout(timerId);
-    }, [isOpen, load]);
+    }, [isOpen, load, loadReaderActivity]);
 
     // 화면을 덮는 판이라 뒤로가기로 닫히게 한다.
     // onClose 는 부모에서 인라인 화살표로 넘어와 **매 렌더 새 함수**다.
@@ -198,12 +310,8 @@ const MyAgitPanel = ({
     }), [shelf]);
 
     const totalChars = writerStats?.totalChars || 0;
-    const level = writerLevel || getWriterLevel(totalChars);
-    const levelStart = level.from || 0;
-    const toNext = level.next ? Math.max(0, level.next - totalChars) : 0;
-    const percent = level.next
-        ? Math.min(100, Math.round(((totalChars - levelStart) / Math.max(1, level.next - levelStart)) * 100))
-        : 100;
+    const writerTitle = writerLevel || getWriterLevel(totalChars);
+    const readerTitle = getReaderLevel(readerActivity.score);
 
     if (!isOpen) return null;
 
@@ -225,41 +333,45 @@ const MyAgitPanel = ({
                             style={{ border: 'none', background: 'none', fontSize: '1.5rem', color: INK_SOFT, cursor: 'pointer' }}>✕</button>
                     </header>
 
-                    {/* 칭호 — 상태창 머리 */}
-                    <section aria-label="작가 칭호" style={{
+                    {/* 칭호 — 쓰는 성장과 읽는 성장을 서로 다른 축으로 인정한다. */}
+                    <section aria-label="나의 작가·독자 칭호" style={{
                         padding: '18px 20px', borderRadius: '22px', border: '1px solid #FFE082',
                         background: 'linear-gradient(135deg,#FFF8E1,#FFFFFF)', marginBottom: '14px'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
                             <div>
-                                <div style={{ fontSize: '1.05rem', fontWeight: 900, color: INK }}>
-                                    {level.emoji} {level.name}
-                                </div>
-                                <div style={{ marginTop: '3px', fontSize: '.78rem', fontWeight: 800, color: INK_SOFT }}>
-                                    {studentSession?.name} 작가
-                                </div>
+                                <div style={{ fontSize: '1.02rem', fontWeight: 950, color: INK }}>{studentSession?.name}의 두 가지 성장</div>
+                                <div style={{ marginTop: '3px', fontSize: '.74rem', fontWeight: 800, color: INK_SOFT }}>쓰는 힘과 읽고 나누는 힘을 따로 키워요.</div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#FBC02D', lineHeight: 1.1 }}>
                                     {num(points)}<span style={{ fontSize: '.85rem', color: INK_SOFT }}>P</span>
                                 </div>
-                                <div style={{
-                                    display: 'inline-block', marginTop: '3px', padding: '2px 9px', borderRadius: '9px',
-                                    background: '#FDFCF0', border: '1px solid #FFF9C4', fontSize: '.72rem', fontWeight: 900, color: '#F9A825'
-                                }}>LV. {level.level}</div>
                             </div>
                         </div>
-                        <div style={{ marginTop: '14px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                <span style={{ fontSize: '.74rem', fontWeight: 800, color: INK_SOFT }}>나의 성장 🌱</span>
-                                <span style={{ fontSize: '.72rem', fontWeight: 800, color: INK_SOFT }}>
-                                    {level.next ? `다음 칭호까지 ${num(toNext)}자` : '가장 높은 칭호예요!'}
-                                </span>
-                            </div>
-                            <div style={{ height: '8px', background: '#F1F3F5', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${percent}%`, background: 'linear-gradient(90deg,#FBC02D,#FFD54F)', borderRadius: '4px' }} />
-                            </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', marginTop: '14px' }}>
+                            <TitleTrack
+                                label="✍️ 작가 칭호"
+                                level={writerTitle}
+                                value={totalChars}
+                                unit="자"
+                                accent="#F9A825"
+                                surface="#FFFDF5"
+                            />
+                            <TitleTrack
+                                label={`📖 독자 칭호 · 친구 글 ${num(readerActivity.postCount)}편`}
+                                level={readerTitle}
+                                value={readerActivity.score}
+                                unit="점"
+                                accent="#2A78D6"
+                                surface="#F5F9FF"
+                                loading={readerLoading}
+                                errorMessage={readerError}
+                            />
                         </div>
+                        <p style={{ margin: '10px 2px 0', color: INK_SOFT, fontSize: '.7rem', fontWeight: 750, lineHeight: 1.5 }}>
+                            친구의 서로 다른 글에 공감하거나 댓글을 남기면 독자 점수가 올라요. 댓글은 20자마다 보너스가 붙어요.
+                        </p>
                     </section>
 
                     {/* 내 서재 */}
