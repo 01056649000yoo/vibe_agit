@@ -15,6 +15,8 @@ import {
   CONFIGURED_MARK,
 } from './registry';
 
+const MODULE_SETTINGS_REFRESH_MS = 10000;
+
 export function useEnabledModules(classId, audience = 'student') {
   const [moduleState, setModuleState] = useState({
     classId: null,
@@ -53,13 +55,25 @@ export function useEnabledModules(classId, audience = 'student') {
       )
       .subscribe();
 
-    // Realtime 연결이 끊겼던 경우 탭으로 돌아올 때 최종 상태를 다시 확인한다.
+    // 운영 Realtime publication/연결 상태와 무관하게 학생 화면이 최종 설정으로 수렴하도록
+    // 보이는 탭에서만 가벼운 단일 행 조회를 주기적으로 수행한다.
+    const refreshTimer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') loadModules();
+    }, MODULE_SETTINGS_REFRESH_MS);
+
+    // Realtime 연결이 끊겼던 경우 탭으로 돌아올 때 최종 상태를 즉시 다시 확인한다.
     const handleFocus = () => loadModules();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') loadModules();
+    };
     window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       cancelled = true;
+      window.clearInterval(refreshTimer);
       window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       supabase.removeChannel(channel);
     };
   }, [classId]);
