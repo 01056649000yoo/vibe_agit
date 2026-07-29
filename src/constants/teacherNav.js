@@ -53,17 +53,19 @@ export const TEACHER_NAV_GROUPS = [
         innerNote: '각 카드 머리의 "학생 화면 ON/OFF" 버튼으로 켜고 끕니다.'
     },
     {
+        id: 'tools',
+        label: '수업 도구',
+        icon: '🧰',
+        defaultTab: 'tools',
+        tabs: [{ id: 'tools', label: '수업 도구' }]
+    },
+    {
         id: 'settings',
         label: '설정',
         icon: '⚙️',
         defaultTab: 'settings',
-        tabs: [
-            // 맨 앞은 defaultTab 과 같아야 한다. 설정을 누르면 여기로 들어온다.
-            { id: 'settings', label: '관리 설정' },
-            // 학급을 새로 만들고 지우고 되살리는 곳. 학기 초에 몇 번 쓰는 일이라
-            // 매일 보는 학생 화면이 아니라 설정에 둔다. 학급 전환은 상단 드롭다운.
-            { id: 'classes', label: '학급 관리' },
-            { id: 'guide', label: '사용 안내' }
-        ]
+        // 학급 자체 관리와 서비스 설정은 한 화면에서 관리한다.
+        // 학생 명단은 자주 쓰는 업무이므로 학생 메뉴에 그대로 둔다.
+        tabs: [{ id: 'settings', label: '통합 설정' }]
     }
 ];

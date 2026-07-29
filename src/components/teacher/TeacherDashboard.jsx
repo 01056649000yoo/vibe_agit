@@ -8,8 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 // 지연 로딩 적용
 const ClassManager = lazy(() => import('./ClassManager'));
 const ArchiveManager = lazy(() => import('./ArchiveManager'));
-const UsageGuide = lazy(() => import('./UsageGuide'));
 const GameManager = lazy(() => import('./GameManager'));
+const TeachingToolsHub = lazy(() => import('./TeachingToolsHub'));
 const TeacherEvaluationTab = lazy(() => import('./TeacherEvaluationTab'));
 const ActivityReport = lazy(() => import('./ActivityReport'));
 const TeacherStudentHub = lazy(() => import('./TeacherStudentHub'));
@@ -41,7 +41,7 @@ const loadWritingCardLayout = () => {
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
  */
 const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onProfileUpdate, isAdmin, onSwitchToAdminMode, onLogout }) => {
-    const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'students', 'settings', 'playground', 'archive', 'guide'
+    const [currentTab, setCurrentTab] = useState('dashboard');
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [selectedActivityPost, setSelectedActivityPost] = useState(null);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -333,12 +333,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 <div key={i} className="skeleton" style={{ height: '80px', marginBottom: '12px' }} />
                             ))}
                         </div>
-                    ) : visibleTab === 'guide' ? (
-                        <UsageGuide isMobile={isMobile} />
                     ) : visibleTab === 'archive' ? (
                         <ArchiveManager activeClass={activeClass} isMobile={isMobile} cardLayout={writingCardLayout} />
                     ) : visibleTab === 'playground' ? (
                         <GameManager activeClass={activeClass} isMobile={isMobile} />
+                    ) : visibleTab === 'tools' ? (
+                        <TeachingToolsHub activeClass={activeClass} isMobile={isMobile} />
                     ) : (!activeClass || hasZeroClasses) ? (
                         <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
                             <ClassManager
@@ -367,27 +367,41 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 setSelectedActivityPost={setSelectedActivityPost}
                                 onNavigate={handleWorkspaceNavigate}
                             />
-                        ) : visibleTab === 'classes' ? (
-                            <ClassManager
-                                userId={session.user.id} classes={classes} activeClass={activeClass}
-                                setActiveClass={setActiveClass} setClasses={setClasses}
-                                onClassDeleted={fetchAllClasses} isMobile={isMobile}
-                                primaryClassId={profile?.primary_class_id} onSetPrimaryClass={handleSetPrimaryClass}
-                                fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
-                            />
                         ) : visibleTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
                         ) : visibleTab === 'activity' ? (
                             <ActivityReport activeClass={activeClass} isMobile={isMobile} promptTemplate={reportPromptTemplate} />
                         ) : (
-                            <TeacherSettingsTab
-                                handleTestAIConnection={handleTestAIConnection}
-                                runAIDiagnosis={runAIDiagnosis}
-                                savingKey={savingKey} testingKey={testingKey} aiStatus={aiStatus}
-                                promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
-                                reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}
-                                handleSaveTeacherSettings={handleSaveTeacherSettings}
-                            />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                                <section>
+                                    <div style={{ marginBottom: '14px' }}>
+                                        <span style={{ color: '#2563EB', fontSize: '0.76rem', fontWeight: '950' }}>학급 설정</span>
+                                        <h2 style={{ margin: '5px 0 0', color: '#172033', fontSize: '1.35rem' }}>학급 생성·전환·보관</h2>
+                                    </div>
+                                    <ClassManager
+                                        userId={session.user.id} classes={classes} activeClass={activeClass}
+                                        setActiveClass={setActiveClass} setClasses={setClasses}
+                                        onClassDeleted={fetchAllClasses} isMobile={isMobile}
+                                        primaryClassId={profile?.primary_class_id} onSetPrimaryClass={handleSetPrimaryClass}
+                                        fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
+                                    />
+                                </section>
+                                <section>
+                                    <div style={{ marginBottom: '14px' }}>
+                                        <span style={{ color: '#059669', fontSize: '0.76rem', fontWeight: '950' }}>서비스 설정</span>
+                                        <h2 style={{ margin: '5px 0 0', color: '#172033', fontSize: '1.35rem' }}>AI 피드백·평어 규칙</h2>
+                                    </div>
+                                    <TeacherSettingsTab
+                                        isMobile={isMobile}
+                                        handleTestAIConnection={handleTestAIConnection}
+                                        runAIDiagnosis={runAIDiagnosis}
+                                        savingKey={savingKey} testingKey={testingKey} aiStatus={aiStatus}
+                                        promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
+                                        reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}
+                                        handleSaveTeacherSettings={handleSaveTeacherSettings}
+                                    />
+                                </section>
+                            </div>
                         )
                     )}
                 </Suspense>
