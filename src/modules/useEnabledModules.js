@@ -4,7 +4,7 @@
  * 사용처: 학생 대시보드 메뉴 / 교사 설정 화면.
  * enabled_modules가 NULL이면 각 모듈의 defaultEnabled를 따른다(기존 동작 보존).
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import {
   getAllModules,
@@ -16,6 +16,14 @@ import {
 } from './registry';
 
 const MODULE_SETTINGS_REFRESH_MS = 10000;
+
+const sameIds = (left, right) => {
+  if (left === right) return true;
+  if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
+  return JSON.stringify(left) === JSON.stringify(right);
+};
+
+const errorKey = (error) => error ? `${error.code || ''}:${error.message || ''}` : '';
 
 export function useEnabledModules(classId, audience = 'student') {
   const [moduleState, setModuleState] = useState({
@@ -36,11 +44,20 @@ export function useEnabledModules(classId, audience = 'student') {
         .eq('id', classId)
         .maybeSingle();
       if (cancelled) return;
-      setModuleState({
+      const nextState = {
         classId,
         enabledIds: error ? null : resolveEnabledModuleIds(data?.enabled_modules, data),
         error: error ?? null,
-      });
+      };
+      // 10초 안전 폴링이 같은 값을 매번 새 객체로 넣으면 App 전체가 다시 렌더된다.
+      // 글쓰기처럼 입력 상태가 중요한 화면은 부모 렌더와 무관해야 하지만, 셸에서도 불필요한 파동을 차단한다.
+      setModuleState((previous) => (
+        previous.classId === nextState.classId &&
+        sameIds(previous.enabledIds, nextState.enabledIds) &&
+        errorKey(previous.error) === errorKey(nextState.error)
+          ? previous
+          : nextState
+      ));
     };
 
     loadModules();
@@ -82,12 +99,15 @@ export function useEnabledModules(classId, audience = 'student') {
   const enabledIds = loaded ? moduleState.enabledIds : null;
   // 선택 기능은 설정 조회가 확인되기 전/실패했을 때 숨긴다(fail closed).
   // NULL 설정의 기본값은 조회 성공 후 resolveEnabledModuleIds가 적용한다.
-  const modules = loaded && !moduleState.error
-    ? getEnabledModules(enabledIds, audience)
-    : [];
+  const modules = useMemo(() => (
+    loaded && !moduleState.error
+      ? getEnabledModules(enabledIds, audience)
+      : []
+  ), [loaded, moduleState.error, enabledIds, audience]);
+  const grouped = useMemo(() => groupByPart(modules), [modules]);
   return {
     modules,
-    grouped: groupByPart(modules),
+    grouped,
     enabledIds,
     loading: !!classId && !loaded,
     error: loaded ? moduleState.error : null,

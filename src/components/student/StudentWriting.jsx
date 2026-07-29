@@ -100,7 +100,12 @@ const writeLocalDraft = (key, draft) => {
 };
 
 const removeLocalDraft = (key) => {
-    if (key) window.localStorage.removeItem(key);
+    if (!key) return;
+    try {
+        window.localStorage.removeItem(key);
+    } catch (err) {
+        console.warn('로컬 임시 저장본을 지우지 못했습니다:', err);
+    }
 };
 
 /**
@@ -127,11 +132,17 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         structuredContent,
         setStructuredContent,
         postUpdatedAt,
+        loadError,
+        retryLoad,
         handleSave,
         handleSubmit,
         handleShowOriginalChange,
         postId
     } = useMissionSubmit(studentSession, missionId, params, onBack, onNavigate);
+
+    // 수정 가능한 동안에는 아래 반응·댓글 영역 자체가 보이지 않는다.
+    // 편집 중 15초 상호작용 폴링까지 돌리면 입력 화면에 불필요한 주기 렌더가 생기므로 잠긴 글에서만 조회한다.
+    const isLocked = Boolean(loadError) || Boolean(mission?.is_archived) || isConfirmed || (isSubmitted && !isReturned);
 
     const {
         reactions,
@@ -140,7 +151,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         addComment,
         updateComment,
         deleteComment
-    } = usePostInteractions(postId, studentSession?.id);
+    } = usePostInteractions(isLocked ? postId : null, studentSession?.id);
 
     const [commentInput, setCommentInput] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
@@ -224,8 +235,6 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         ? genreParagraphCount
         : content.split(/\n+/).filter((paragraph) => paragraph.trim().length > 0).length;
 
-    // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)
-    const isLocked = Boolean(mission?.is_archived) || isConfirmed || (isSubmitted && !isReturned);
     const hasRevisedVersion = Boolean(originalContent) && (
         originalTitle !== title || originalContent !== content
     );
@@ -300,9 +309,12 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
         isDbBackupSavingRef.current = true;
         try {
-            await latestSaveRef.current(false);
+            // 저장을 시작한 순간의 스냅샷을 그대로 서버에 보내고 그 스냅샷만 저장 완료로 표시한다.
+            // 요청 중 학생이 더 입력한 내용까지 저장됐다고 잘못 판단하면 다음 백업을 건너뛸 수 있다.
+            const saved = await latestSaveRef.current(false, draft);
+            if (!saved) return false;
             lastDbSavedDataRef.current = {
-                ...latestDraftRef.current,
+                ...draft,
                 initialized: true
             };
             setAutoSaveError('');
@@ -316,6 +328,13 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         }
     };
     runDbBackupRef.current = runDbBackup;
+
+    useEffect(() => {
+        lastLocalSavedDataRef.current = { ...createDraftSnapshot('', '', []), initialized: false };
+        lastDbSavedDataRef.current = { ...createDraftSnapshot('', '', []), initialized: false };
+        setAutoSaveAt(null);
+        setAutoSaveError('');
+    }, [draftStorageKey]);
 
     useEffect(() => {
         if (loading) return;
@@ -439,8 +458,9 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
     const handleManualSave = async () => {
         try {
-            await handleSave(true);
             const draft = latestDraftRef.current;
+            const saved = await handleSave(true, draft);
+            if (!saved) return;
             const localSavedAt = writeLocalDraft(draftStorageKey, draft);
             lastLocalSavedDataRef.current = {
                 ...draft,
@@ -492,6 +512,17 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     };
 
     if (loading) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 도구를 준비하는 중... ✍️</p></Card>;
+    if (loadError) return (
+        <Card style={{ maxWidth: '680px', margin: '40px auto', textAlign: 'center', padding: '36px' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🛟</div>
+            <h2 style={{ color: '#C62828', marginBottom: '10px' }}>글을 안전하게 불러오지 못했어요</h2>
+            <p style={{ color: '#607D8B', lineHeight: 1.7 }}>{loadError}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '22px' }}>
+                <Button variant="ghost" onClick={onBack}>과제 목록으로</Button>
+                <Button onClick={retryLoad}>다시 불러오기</Button>
+            </div>
+        </Card>
+    );
     if (!mission) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 미션을 찾을 수 없습니다.</p><Button onClick={onBack}>돌아가기</Button></Card>;
 
     const hasQuestions = mission?.guide_questions?.length > 0;

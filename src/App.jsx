@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Suspense, lazy } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react'
 import { supabase } from './lib/supabaseClient'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -64,6 +64,12 @@ function App() {
   // 홈으로 보낸 뒤 이 값을 올려 대시보드에 "열어라"라고 알린다.
   const [myAgitSignal, setMyAgitSignal] = useState(0);
   const [playgroundSignal, setPlaygroundSignal] = useState(0);
+  // 입력 화면에 넘기는 라우팅 콜백은 안정된 참조를 유지한다.
+  // 주기적인 앱 셸 갱신이 글 초기 로드의 신호로 오인되는 회귀를 이 경계에서도 막는다.
+  const handleStudentWritingBack = useCallback(
+    () => setInternalPage('mission_list'),
+    [setInternalPage]
+  );
 
   // 학생 화면 뒤로가기: 그동안 처리가 없어 태블릿·폰에서 뒤로가기를 누르면 앱이 닫혔다.
   // 페이지가 바뀔 때 히스토리를 쌓고, 뒤로가기가 오면 그 페이지로 되돌린다.
@@ -313,7 +319,7 @@ function App() {
                   studentSession={studentSession}
                   missionId={internalPage.params.missionId}
                   params={internalPage.params}
-                  onBack={() => setInternalPage('mission_list')}
+                  onBack={handleStudentWritingBack}
                   onNavigate={setInternalPage}
                 />
               )}

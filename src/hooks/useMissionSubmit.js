@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { dataCache } from '../lib/cache';
 import confetti from 'canvas-confetti';
@@ -6,6 +6,9 @@ import { countContentChars } from '../lib/textMetrics';
 import { getGenreMissionType, validateGenreMissionSubmission } from '../modules/writing/mission-types/registry';
 
 export const useMissionSubmit = (studentSession, missionId, params, onBack, onNavigate) => {
+    const studentId = studentSession?.id || null;
+    const classId = studentSession?.classId || studentSession?.class_id || null;
+    const requestedPostId = params?.postId || null;
     const [mission, setMission] = useState(null);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
@@ -24,18 +27,27 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const [studentAnswers, setStudentAnswers] = useState([]); // [신규] 핵심 질문에 대한 답변들
     const [structuredContent, setStructuredContent] = useState(null);
     const [postUpdatedAt, setPostUpdatedAt] = useState(null); // 로컬 임시본과의 최신성 비교용
+    const [loadError, setLoadError] = useState('');
+    const loadRequestIdRef = useRef(0);
+    const onBackRef = useRef(onBack);
+    onBackRef.current = onBack;
 
-    const getParagraphCount = () => {
+    const getParagraphCount = (contentValue = content, structuredValue = structuredContent) => {
         const missionType = getGenreMissionType(mission?.input_template);
-        const genreCount = missionType?.countParagraphs?.({ structuredContent, content });
+        const genreCount = missionType?.countParagraphs?.({
+            structuredContent: structuredValue,
+            content: contentValue
+        });
         if (Number.isFinite(genreCount)) return genreCount;
-        return content.split(/\n+/).filter((paragraph) => paragraph.trim().length > 0).length;
+        return contentValue.split(/\n+/).filter((paragraph) => paragraph.trim().length > 0).length;
     };
 
     const fetchMission = useCallback(async () => {
+        const requestId = ++loadRequestIdRef.current;
         setLoading(true);
+        setLoadError('');
+        setMission(null);
         try {
-            const classId = studentSession?.classId || studentSession?.class_id;
             // 1. 미션 정보 가져오기
             let missionQuery = supabase
                 .from('writing_missions')
@@ -46,32 +58,52 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             const { data: missionData, error: missionError } = await missionQuery.maybeSingle();
 
             if (missionError) throw missionError;
+            if (requestId !== loadRequestIdRef.current) return;
 
             if (missionData && missionData.is_archived) {
                 alert('보관된 미션입니다. 글을 수정하거나 제출할 수 없어요! 📂');
-                if (onBack) onBack();
+                onBackRef.current?.();
                 return;
             }
 
             setMission(missionData);
 
+            // 같은 StudentWriting 인스턴스에서 다른 미션으로 이동해도 이전 글이 남지 않게 한다.
+            setTitle('');
+            setContent('');
+            setIsReturned(false);
+            setIsConfirmed(false);
+            setIsSubmitted(false);
+            setAiFeedback('');
+            setOriginalTitle('');
+            setOriginalContent('');
+            setShowOriginalToFriends(false);
+            setIsTeacherEdited(false);
+            setTeacherEditedAt('');
+            setStudentAnswers([]);
+            setStructuredContent(null);
+            setPostId(null);
+            setPostUpdatedAt(null);
+
             // 2. 이미 작성 중인 글 확인
             // [보안 강화] localStorage 폴백 제거 - Supabase 세션에서만 studentId 가져오기
-            const currentStudentId = studentSession?.id;
-            if (currentStudentId) {
+            if (studentId) {
                 // 학생이 기존에 작성하던 글의 제목, 내용, 제출 및 승인 상태, 피드백 정보만 로드
                 let query = supabase.from('student_posts').select('id, title, content, structured_content, is_returned, is_confirmed, is_submitted, ai_feedback, original_title, original_content, show_original, teacher_edited_title, teacher_edited_content, teacher_edited_at, is_teacher_edited, student_answers, student_id, mission_id, updated_at');
 
-                if (params?.postId) {
-                    query = query.eq('id', params.postId);
+                if (requestedPostId) {
+                    query = query.eq('id', requestedPostId);
                 } else {
-                    query = query.eq('mission_id', missionId).eq('student_id', currentStudentId);
+                    query = query.eq('mission_id', missionId);
                 }
+                query = query.eq('student_id', studentId);
                 if (classId) query = query.eq('class_id', classId);
 
                 const { data: postData, error: postError } = await query.maybeSingle();
+                if (postError) throw postError;
+                if (requestId !== loadRequestIdRef.current) return;
 
-                if (!postError && postData) {
+                if (postData) {
                     console.log(`[useMissionSubmit] 기존 글 로드 성공 (ID: ${postData.id}, Title: ${postData.title})`);
                     const hasTeacherEditedDraft = postData.is_teacher_edited && postData.is_returned;
                     setTitle(hasTeacherEditedDraft ? (postData.teacher_edited_title || postData.title || '') : (postData.title || ''));
@@ -90,22 +122,27 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     setStructuredContent(hasTeacherEditedDraft ? null : (postData.structured_content || null));
                     setPostId(postData.id);
                     setPostUpdatedAt(postData.updated_at || null);
-                } else if (params?.postId) {
-                    console.warn(`[useMissionSubmit] postId(${params.postId})에 해당하는 글을 찾을 수 없습니다.`);
+                } else if (requestedPostId) {
+                    console.warn(`[useMissionSubmit] postId(${requestedPostId})에 해당하는 글을 찾을 수 없습니다.`);
                 }
             }
         } catch (err) {
+            if (requestId !== loadRequestIdRef.current) return;
             console.error('데이터 로드 실패:', err.message);
+            setLoadError('글쓰기 자료를 불러오지 못했어요. 빈 화면에서 새로 쓰지 말고 다시 불러와 주세요.');
         } finally {
-            setLoading(false);
+            if (requestId === loadRequestIdRef.current) setLoading(false);
         }
-    }, [missionId, params, studentSession?.id, studentSession?.classId, studentSession?.class_id, onBack]);
+    }, [missionId, requestedPostId, studentId, classId]);
 
     // 1. 미션 및 데이터 로딩
     useEffect(() => {
         if (missionId) {
             fetchMission();
         }
+        return () => {
+            loadRequestIdRef.current += 1;
+        };
     }, [missionId, fetchMission]);
 
     // 2. 선생님의 미션 수정 실시간 감지 (의존성 최소화로 웹소켓 폭탄 방지)
@@ -148,12 +185,12 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     }, [missionId]);
 
     // 임시 저장 처리
-    const handleSave = async (showMsg = true) => {
+    const handleSave = async (showMsg = true, draftOverride = null) => {
         // [보안 강화] Supabase 세션에서만 studentId 가져오기 - localStorage 폴백 제거
-        const currentStudentId = studentSession?.id;
+        const currentStudentId = studentId;
         if (!currentStudentId) {
             if (showMsg) alert('로그인 정보가 유실되었어요. 작성한 내용을 복사한 뒤 다시 로그인해 주세요. 😢');
-            return;
+            return false;
         }
 
         if (mission?.is_archived) {
@@ -164,20 +201,21 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         // [추가] 제출 상태 확인: 이미 제출되었고 다시 쓰기 요청이 없는 경우 저장 불가
         if (isConfirmed || (isSubmitted && !isReturned)) {
             if (showMsg) alert('이미 제출된 글은 수정할 수 없어요! ✋');
-            return;
+            return false;
         }
 
         try {
+            const draft = draftOverride || { title, content, studentAnswers, structuredContent };
             const missionType = getGenreMissionType(mission?.input_template);
             const { error } = await supabase
                 .from('student_posts')
                 .upsert({
                     student_id: currentStudentId,
                     mission_id: missionId,
-                    title: title.trim(),
-                    content: content,
-                    char_count: countContentChars(content),
-                    paragraph_count: getParagraphCount(),
+                    title: draft.title.trim(),
+                    content: draft.content,
+                    char_count: countContentChars(draft.content),
+                    paragraph_count: getParagraphCount(draft.content, draft.structuredContent),
                     awarded_base_reward: mission?.base_reward ?? null,
                     awarded_bonus_reward: mission?.bonus_reward ?? null,
                     awarded_bonus_threshold: mission?.bonus_threshold ?? null,
@@ -188,13 +226,14 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     teacher_edited_content: null,
                     teacher_edited_at: null,
                     teacher_edited_by: null,
-                    student_answers: studentAnswers, // [신규] 답변 저장
-                    structured_content: structuredContent,
+                    student_answers: draft.studentAnswers, // [신규] 답변 저장
+                    structured_content: draft.structuredContent,
                     ...(missionType?.postStatus ? { status: missionType.postStatus } : {})
                 }, { onConflict: 'student_id,mission_id' });
 
             if (error) throw error;
             if (showMsg) alert('안전하게 임시 저장되었습니다! 💾');
+            return true;
         } catch (err) {
             console.error('임시 저장 실패:', err.message);
             if (showMsg) alert('저장 중 오류가 발생했습니다.');
@@ -253,7 +292,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
 
         // [보안 강화] Supabase 세션에서만 studentId 가져오기
         // localStorage를 신뢰하면 위조된 student_id로 게시글 업로드 가능
-        let currentStudentId = studentSession?.id;
+        let currentStudentId = studentId;
 
         if (!currentStudentId) {
             alert('로그인 정보가 유실되었습니다. 편집한 내용을 복사한 후 다시 로그인하여 제출해 주세요. 😢');
@@ -271,12 +310,14 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
 
             // 2. 글 저장 (student_posts) - upsert 사용
             // 최초 제출 시의 데이터를 보존하기 위해 original_title, original_content를 조건부로 업데이트합니다.
-            const { data: existingPost } = await supabase
+            let existingPostQuery = supabase
                 .from('student_posts')
                 .select('original_content')
                 .eq('student_id', currentStudentId)
-                .eq('mission_id', missionId)
-                .maybeSingle();
+                .eq('mission_id', missionId);
+            if (classId) existingPostQuery = existingPostQuery.eq('class_id', classId);
+            const { data: existingPost, error: existingPostError } = await existingPostQuery.maybeSingle();
+            if (existingPostError) throw existingPostError;
 
             const isFirstTime = !existingPost || !existingPost.original_content;
 
@@ -376,18 +417,18 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     };
 
     const handleShowOriginalChange = async (nextValue) => {
-        if (!postId || !studentSession?.id || !originalContent) return false;
+        if (!postId || !studentId || !originalContent) return false;
 
         const previousValue = showOriginalToFriends;
         setShowOriginalToFriends(nextValue);
-        const { data, error } = await supabase
+        let query = supabase
             .from('student_posts')
             .update({ show_original: nextValue })
             .eq('id', postId)
-            .eq('student_id', studentSession.id)
-            .eq('writing_context', 'assignment')
-            .select('id')
-            .maybeSingle();
+            .eq('student_id', studentId)
+            .eq('writing_context', 'assignment');
+        if (classId) query = query.eq('class_id', classId);
+        const { data, error } = await query.select('id').maybeSingle();
 
         if (error || !data) {
             setShowOriginalToFriends(previousValue);
@@ -419,6 +460,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         structuredContent,
         setStructuredContent,
         postUpdatedAt,
+        loadError,
+        retryLoad: fetchMission,
         handleSave,
         handleSubmit,
         handleShowOriginalChange
