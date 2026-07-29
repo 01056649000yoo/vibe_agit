@@ -12,6 +12,14 @@ import { supabase } from '../lib/supabaseClient';
  */
 
 export const PRESET_KIND = { FEEDBACK: 'feedback', REPORT: 'report' };
+const MAX_PROMPT_LENGTH = 200;
+
+const validatePrompt = (content) => {
+    const value = String(content || '').trim();
+    if (!value) throw new Error('프롬프트 내용을 입력해주세요.');
+    if (value.length > MAX_PROMPT_LENGTH) throw new Error('프롬프트는 200자 이내로 작성해주세요.');
+    return value;
+};
 
 /** profiles.ai_prompt_template 은 {feedback, report} JSON 문자열로 저장된다 */
 const parsePacked = (raw) => {
@@ -105,7 +113,8 @@ const useAiPromptPresets = (kind = PRESET_KIND.FEEDBACK) => {
         setSaving(true);
         setError(null);
         try {
-            const teacherId = await writeAppliedContent(content);
+            const validated = validatePrompt(content);
+            const teacherId = await writeAppliedContent(validated);
             // 어떤 프리셋과도 일치하지 않으므로 활성 표시를 해제한다
             await supabase
                 .from('ai_prompt_presets')
@@ -162,6 +171,7 @@ const useAiPromptPresets = (kind = PRESET_KIND.FEEDBACK) => {
         setSaving(true);
         setError(null);
         try {
+            const validated = validatePrompt(content);
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('로그인이 필요합니다.');
 
@@ -173,13 +183,13 @@ const useAiPromptPresets = (kind = PRESET_KIND.FEEDBACK) => {
             if (existing) {
                 const { error: updateError } = await supabase
                     .from('ai_prompt_presets')
-                    .update({ content })
+                    .update({ content: validated })
                     .eq('id', existing.id);
                 if (updateError) throw updateError;
             } else {
                 const { error: insertError } = await supabase
                     .from('ai_prompt_presets')
-                    .insert({ teacher_id: user.id, kind, name: trimmed, content });
+                    .insert({ teacher_id: user.id, kind, name: trimmed, content: validated });
                 if (insertError) throw insertError;
             }
 

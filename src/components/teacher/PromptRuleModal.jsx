@@ -5,6 +5,8 @@ import Button from '../common/Button';
 import useAiPromptPresets, { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 import { DEFAULT_FEEDBACK_PROMPT, DEFAULT_REPORT_PROMPT } from '../../constants/aiPrompts';
 
+const MAX_PROMPT_LENGTH = 200;
+
 /**
  * AI 규칙 보관함 모달.
  *
@@ -25,8 +27,8 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
 
     // 사용자가 손대기 전에는 null. 화면에는 "지금 적용 중인 내용"이 보인다.
     const [draftOverride, setDraftOverride] = useState(null);
-    const [selectedOverride, setSelectedOverride] = useState(null);
-    const [newName, setNewName] = useState('');
+    const [selectedOverride, setSelectedOverride] = useState(undefined);
+    const [newName, setNewName] = useState(null);
     // AI 다듬기: 원문을 건드리지 않고 제안을 따로 받아 교사가 채택 여부를 고른다
     const [refining, setRefining] = useState(false);
     const [refined, setRefined] = useState(null);
@@ -39,8 +41,10 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
     const defaultPrompt = isReport ? DEFAULT_REPORT_PROMPT : DEFAULT_FEEDBACK_PROMPT;
 
     const draft = draftOverride ?? (appliedContent || defaultPrompt);
-    const selectedId = selectedOverride ?? activePreset?.id ?? null;
+    const selectedId = selectedOverride === undefined ? (activePreset?.id ?? null) : selectedOverride;
+    const presetTitle = newName ?? activePreset?.name ?? '';
     const isDirty = draft.trim() !== (appliedContent || '').trim();
+    const isTooLong = draft.length > MAX_PROMPT_LENGTH;
 
     const flash = (message) => {
         setNotice(message);
@@ -50,10 +54,19 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
     const handleSelectPreset = (preset) => {
         setSelectedOverride(preset.id);
         setDraftOverride(preset.content);
+        setNewName(preset.name);
+        setRefined(null);
+    };
+
+    const handleCreateNew = () => {
+        setSelectedOverride(null);
+        setNewName('');
+        setDraftOverride(defaultPrompt);
+        setRefined(null);
     };
 
     const handleApplyEdited = async () => {
-        if (!draft.trim()) return;
+        if (!draft.trim() || isTooLong) return;
         const ok = await applyContent(draft);
         if (ok) {
             // 프롬프트를 props 로 받아 쓰는 화면(평어 탭)이 즉시 반영되도록 알린다
@@ -64,7 +77,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
     };
 
     const handleApplySelected = async () => {
-        if (!selectedId) return;
+        if (!selectedId || isTooLong) return;
         const target = presets.find(p => p.id === selectedId);
         const ok = await applyPreset(selectedId);
         if (ok) {
@@ -75,15 +88,19 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
     };
 
     const handleSaveAsNew = async () => {
-        const name = newName.trim();
+        const name = presetTitle.trim();
         if (!name) {
-            flash('규칙 이름을 입력해주세요.');
+            flash('프리셋 제목을 입력해주세요.');
+            return;
+        }
+        if (!draft.trim() || isTooLong) {
+            flash('프롬프트를 200자 이내로 작성해주세요.');
             return;
         }
         const ok = await savePreset(name, draft);
         if (ok) {
-            setNewName('');
-            flash(`'${name}' 규칙을 저장했습니다.`);
+            setNewName(name);
+            flash(`'${name}' 프리셋을 저장했습니다.`);
         }
     };
 
@@ -91,7 +108,10 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
         const next = prompt('새 이름을 입력하세요.', preset.name);
         if (!next || !next.trim() || next.trim() === preset.name) return;
         const ok = await renamePreset(preset.id, next);
-        if (ok) flash('이름을 바꿨습니다.');
+        if (ok) {
+            if (selectedId === preset.id) setNewName(next.trim());
+            flash('이름을 바꿨습니다.');
+        }
     };
 
     const handleDelete = async (preset) => {
@@ -140,7 +160,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             🗂️ {label} 보관함
                         </h3>
                         <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', color: '#6B7280' }}>
-                            규칙을 이름 붙여 저장해두고 필요할 때 불러 쓰세요.
+                            제목을 먼저 정하고 200자 이내 개조식 프롬프트를 저장해두세요.
                             <strong style={{ color: accent }}> {embedded ? '선택해 적용한 규칙이 AI 실행에 사용됩니다.' : '그냥 닫으면 지금 규칙이 그대로 쓰입니다.'}</strong>
                         </p>
                     </div>
@@ -178,16 +198,25 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                         padding: '16px', overflowY: 'auto',
                         maxHeight: isMobile ? '180px' : 'none', background: '#FCFCFD'
                     }}>
-                        <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#9CA3AF', marginBottom: '10px' }}>
-                            저장된 규칙 {presets.length}개
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#9CA3AF' }}>
+                                저장된 프리셋 {presets.length}개
+                            </span>
+                            <button
+                                type="button"
+                                onClick={handleCreateNew}
+                                style={{ border: `1px solid ${accent}`, background: 'white', color: accent, borderRadius: '8px', padding: '5px 9px', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer' }}
+                            >
+                                + 새 프리셋
+                            </button>
                         </div>
 
                         {loading ? (
                             <div style={{ color: '#ADB5BD', fontSize: '0.85rem' }}>불러오는 중…</div>
                         ) : presets.length === 0 ? (
                             <div style={{ color: '#ADB5BD', fontSize: '0.82rem', lineHeight: 1.6 }}>
-                                아직 저장된 규칙이 없습니다.<br />
-                                오른쪽에서 내용을 다듬고 이름을 붙여 저장해보세요.
+                                아직 저장된 프리셋이 없습니다.<br />
+                                제목과 프롬프트를 작성해 저장해보세요.
                             </div>
                         ) : presets.map(preset => {
                             const isSelected = selectedId === preset.id;
@@ -284,18 +313,44 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             </div>
                         </div>
 
+                        <label style={{ display: 'block', marginBottom: '12px' }}>
+                            <span style={{ display: 'block', marginBottom: '6px', color: '#374151', fontSize: '0.8rem', fontWeight: 800 }}>
+                                1. 프리셋 제목
+                            </span>
+                            <input
+                                type="text"
+                                value={presetTitle}
+                                onChange={(e) => setNewName(e.target.value)}
+                                placeholder="예: 3학년 다정한 피드백"
+                                maxLength={40}
+                                style={{ width: '100%', padding: '11px 12px', borderRadius: '10px', border: '1px solid #D1D5DB', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }}
+                            />
+                        </label>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                            <span style={{ color: '#374151', fontSize: '0.8rem', fontWeight: 800 }}>2. AI 프롬프트</span>
+                            <span style={{ color: isTooLong ? '#DC2626' : draft.length >= 180 ? '#D97706' : '#6B7280', fontSize: '0.76rem', fontWeight: 800 }}>
+                                {draft.length}/{MAX_PROMPT_LENGTH}자
+                            </span>
+                        </div>
+
                         <textarea
                             value={draft}
                             onChange={(e) => setDraftOverride(e.target.value)}
                             spellCheck={false}
+                            maxLength={draft.length > MAX_PROMPT_LENGTH ? undefined : MAX_PROMPT_LENGTH}
+                            placeholder={'- 역할: AI가 맡을 역할\n- 내용: 확인하고 작성할 내용\n- 말투: 학생에게 보여줄 말투\n- 제한: 분량과 금지할 내용'}
                             style={{
-                                flex: 1, minHeight: isMobile ? '180px' : '260px', width: '100%',
-                                padding: '14px', borderRadius: '12px', border: '1px solid #E9ECEF',
+                                flex: 1, minHeight: isMobile ? '180px' : '220px', width: '100%',
+                                padding: '14px', borderRadius: '12px', border: `1px solid ${isTooLong ? '#EF4444' : '#D1D5DB'}`,
                                 background: '#F8F9FA', fontSize: '0.88rem', lineHeight: 1.6,
                                 color: '#2C3E50', resize: 'none', boxSizing: 'border-box',
                                 fontFamily: 'inherit', outline: 'none'
                             }}
                         />
+                        <div style={{ marginTop: '6px', color: isTooLong ? '#DC2626' : '#6B7280', fontSize: '0.75rem', lineHeight: 1.5 }}>
+                            {isTooLong ? '기존 프롬프트가 200자를 넘습니다. 핵심만 남겨 줄여야 저장하거나 적용할 수 있습니다.' : '역할·내용·말투·제한을 줄바꿈한 개조식으로 적으면 수정하기 쉽습니다.'}
+                        </div>
 
                         {/* AI 다듬기 결과 — 원문은 그대로 두고, 교사가 확인 후 채택 */}
                         {refineError && (
@@ -324,9 +379,11 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                 <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                                     <button
                                         onClick={() => { setDraftOverride(refined); setRefined(null); }}
+                                        disabled={refined.length > MAX_PROMPT_LENGTH}
                                         style={{
                                             border: 'none', background: '#16A34A', color: 'white', borderRadius: '8px',
-                                            padding: '7px 14px', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer'
+                                            padding: '7px 14px', fontSize: '0.82rem', fontWeight: 700,
+                                            cursor: refined.length > MAX_PROMPT_LENGTH ? 'not-allowed' : 'pointer', opacity: refined.length > MAX_PROMPT_LENGTH ? 0.5 : 1
                                         }}
                                     >
                                         이걸로 교체
@@ -344,29 +401,17 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             </div>
                         )}
 
-                        {/* 이름 붙여 저장 */}
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
-                            <input
-                                type="text"
-                                value={newName}
-                                onChange={(e) => setNewName(e.target.value)}
-                                placeholder="예: 3학년 다정한 말투"
-                                maxLength={40}
-                                style={{
-                                    flex: '1 1 200px', padding: '10px 12px', borderRadius: '10px',
-                                    border: '1px solid #E9ECEF', fontSize: '0.85rem', outline: 'none'
-                                }}
-                            />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
                             <Button
                                 onClick={handleSaveAsNew}
-                                disabled={saving || !newName.trim()}
+                                disabled={saving || !presetTitle.trim() || !draft.trim() || isTooLong}
                                 size="sm"
                                 style={{
                                     background: 'white', color: accent, border: `1px solid ${accent}`,
                                     boxShadow: 'none', padding: '10px 16px', fontSize: '0.85rem'
                                 }}
                             >
-                                이름 붙여 저장
+                                {selectedId ? '프리셋 저장' : '새 프리셋 저장'}
                             </Button>
                         </div>
                     </div>
@@ -390,7 +435,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                         {selectedId && (
                             <Button
                                 onClick={handleApplySelected}
-                                disabled={saving}
+                                disabled={saving || isTooLong}
                                 size="sm"
                                 style={{
                                     background: 'white', color: '#374151', border: '1px solid #D1D5DB',
@@ -402,7 +447,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                         )}
                         <Button
                             onClick={handleApplyEdited}
-                            disabled={saving || !isDirty || !draft.trim()}
+                            disabled={saving || !isDirty || !draft.trim() || isTooLong}
                             size="sm"
                             style={{
                                 background: accent, color: 'white', border: 'none',
