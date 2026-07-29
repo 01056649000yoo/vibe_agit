@@ -17,7 +17,7 @@ import { DEFAULT_FEEDBACK_PROMPT, DEFAULT_REPORT_PROMPT } from '../../constants/
  * 그래야 effect 로 상태를 되돌리지 않고도 항상 "지금 적용 중인 내용"에서 시작한다.
  */
 
-const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied }) => {
+const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = false }) => {
     const {
         presets, activePreset, appliedContent, loading, saving, error,
         applyContent, applyPreset, savePreset, renamePreset, deletePreset
@@ -108,11 +108,12 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={embedded ? undefined : onClose}
             style={{
-                position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)',
-                backdropFilter: 'blur(4px)', zIndex: 10050,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px'
+                position: embedded ? 'relative' : 'fixed', inset: embedded ? undefined : 0,
+                background: embedded ? 'transparent' : 'rgba(15,23,42,0.55)',
+                backdropFilter: embedded ? 'none' : 'blur(4px)', zIndex: embedded ? 'auto' : 10050,
+                display: embedded ? 'block' : 'flex', alignItems: 'center', justifyContent: 'center', padding: embedded ? 0 : '16px'
             }}
         >
             <motion.div
@@ -122,10 +123,11 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied }) => {
                 transition={{ duration: 0.18 }}
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                    width: '100%', maxWidth: '980px', maxHeight: '88vh',
+                    width: '100%', maxWidth: embedded ? 'none' : '980px', maxHeight: embedded ? 'none' : '88vh',
                     background: 'white', borderRadius: '20px', overflow: 'hidden',
                     display: 'flex', flexDirection: 'column',
-                    boxShadow: '0 24px 60px rgba(15,23,42,0.25)'
+                    border: embedded ? '1px solid #DCE6EE' : 'none',
+                    boxShadow: embedded ? '0 4px 18px rgba(15,23,42,.04)' : '0 24px 60px rgba(15,23,42,0.25)'
                 }}
             >
                 {/* 헤더 */}
@@ -139,10 +141,10 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied }) => {
                         </h3>
                         <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', color: '#6B7280' }}>
                             규칙을 이름 붙여 저장해두고 필요할 때 불러 쓰세요.
-                            <strong style={{ color: accent }}> 그냥 닫으면 지금 규칙이 그대로 쓰입니다.</strong>
+                            <strong style={{ color: accent }}> {embedded ? '선택해 적용한 규칙이 AI 실행에 사용됩니다.' : '그냥 닫으면 지금 규칙이 그대로 쓰입니다.'}</strong>
                         </p>
                     </div>
-                    <button
+                    {!embedded && <button
                         onClick={onClose}
                         style={{
                             background: '#F1F3F5', border: 'none', width: '36px', height: '36px',
@@ -150,7 +152,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied }) => {
                         }}
                     >
                         ✕
-                    </button>
+                    </button>}
                 </div>
 
                 {notice && (
@@ -375,14 +377,14 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied }) => {
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px',
                     padding: '16px 24px', borderTop: '1px solid #F1F3F5', background: '#FAFBFC', flexWrap: 'wrap'
                 }}>
-                    <Button
+                    {!embedded && <Button
                         onClick={onClose}
                         variant="ghost"
                         size="sm"
                         style={{ boxShadow: 'none', padding: '10px 16px', fontSize: '0.85rem' }}
                     >
                         그냥 닫기 (지금 규칙 유지)
-                    </Button>
+                    </Button>}
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {selectedId && (
@@ -427,6 +429,16 @@ const PromptRuleModal = ({ isOpen, onClose, kind = PRESET_KIND.FEEDBACK, isMobil
             />
         )}
     </AnimatePresence>
+);
+
+export const PromptRuleManager = ({ kind = PRESET_KIND.FEEDBACK, isMobile = false, onApplied }) => (
+    <PromptRuleModalBody
+        onClose={() => {}}
+        kind={kind}
+        isMobile={isMobile}
+        onApplied={onApplied}
+        embedded
+    />
 );
 
 export default PromptRuleModal;

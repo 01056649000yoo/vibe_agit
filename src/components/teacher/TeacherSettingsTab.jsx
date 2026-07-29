@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
-import PromptRuleButton from './PromptRuleButton';
+import { PromptRuleManager } from './PromptRuleModal';
 import { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 
 const TeacherSettingsTab = ({
@@ -11,7 +11,6 @@ const TeacherSettingsTab = ({
 }) => {
     const isFeedback = promptKind === PRESET_KIND.FEEDBACK;
     const label = isFeedback ? 'AI 피드백' : '평어 도우미';
-    const accent = isFeedback ? '#4F46E5' : '#059669';
 
     const handleApplied = (content) => {
         if (isFeedback) setPromptTemplate?.(content);
@@ -41,24 +40,12 @@ const TeacherSettingsTab = ({
                 </div>
             </div>
 
-            <div style={{ padding: isMobile ? '18px' : '22px', borderRadius: '18px', background: `${accent}0A`, border: `1px solid ${accent}24` }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <span aria-hidden="true" style={{ fontSize: '1.8rem' }}>{isFeedback ? '🤖' : '📋'}</span>
-                    <div>
-                        <h3 style={{ margin: 0, color: '#1E293B', fontSize: '1.05rem' }}>{label} 규칙 보관함</h3>
-                        <p style={{ margin: '6px 0 0', color: '#64748B', fontSize: '0.8rem', lineHeight: 1.55 }}>
-                            규칙을 여러 개 저장하고, 이름을 바꾸거나 삭제하고, 수업에 맞는 규칙을 선택해 적용할 수 있습니다.
-                        </p>
-                    </div>
-                </div>
-
-                <PromptRuleButton
-                    kind={isFeedback ? PRESET_KIND.FEEDBACK : PRESET_KIND.REPORT}
-                    isMobile={isMobile}
-                    onApplied={handleApplied}
-                    style={{ marginTop: '18px', minWidth: isMobile ? '100%' : '220px', justifyContent: 'center', background: 'white' }}
-                />
-            </div>
+            <PromptRuleManager
+                key={label}
+                kind={isFeedback ? PRESET_KIND.FEEDBACK : PRESET_KIND.REPORT}
+                isMobile={isMobile}
+                onApplied={handleApplied}
+            />
 
             <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '16px' }}>
                 <button type="button" onClick={runAIDiagnosis} style={{ border: 'none', background: 'transparent', color: '#64748B', fontSize: '0.76rem', textDecoration: 'underline', cursor: 'pointer' }}>연결 진단 보기</button>
