@@ -39,9 +39,10 @@
   - DB 자동 백업은 요청 시작 순간의 제목·본문·답변·장르 구조 스냅샷을 저장하고 그 스냅샷만 저장 완료로 표시한다.
     저장 요청 중 추가 입력까지 저장됐다고 오판해 다음 백업을 건너뛰던 경쟁 조건을 제거했다.
   - 글 초기 조회·제출 전 원본 확인·처음글 공개 변경에 `student_posts.class_id`와 본인 `student_id` 직접 조건을 적용했다.
-- **변경**: `App.jsx`, `StudentWriting.jsx`, `useMissionSubmit.js`, `useEnabledModules.js`.
+- **변경**: 커밋 `9bda574` — `App.jsx`, `StudentWriting.jsx`, `useMissionSubmit.js`, `useEnabledModules.js`.
 - **결과/검증**: 변경 파일 ESLint 0에러(기존 보안 휴리스틱 경고 5건), `npm run build`, `git diff --check` 통과.
   전체 ESLint는 이번 변경과 무관한 기존 오류 2건(`LandingPage`, `TeacherAnnouncementManager`)이 그대로 남아 실패.
+  GitHub Actions Deploy run `30470176248` 성공(21초): 앱 이미지 빌드·`agit-app` 재시작·내부 HTTP 검증 통과.
   연결 가능한 인앱 브라우저가 없어 로그인 학생의 시간 경과 실클릭 검증은 못 했다.
 - **남은 것 / 다음**: 운영 배포 후 실제 학생 계정에서 ①작성 중 30초 이상 입력 유지 ②2분 DB 백업 전후 커서·내용 유지
   ③탭 숨김/복귀 ④임시저장 실패 재시도 ⑤제출 완료 글의 댓글·반응 갱신을 스모크한다.
