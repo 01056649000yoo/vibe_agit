@@ -155,7 +155,8 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 
     const {
         missions, selectedMission, posts, classmates, loading, loadingMore, hasMore, loadMore,
-        viewingPost, setViewingPost, handleMissionChange, handleMeetingPick
+        viewingPost, setViewingPost, handleMissionChange, handleMeetingPick,
+        resolvedClassId
     } = useFriendsHideout(studentSession, params);
     const isMeetingMission =
         selectedMission?.mission_type === 'meeting' || selectedMission?.input_template === 'meeting';
@@ -383,6 +384,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                         <FriendProfileShell
                             friend={viewingFriendHideout}
                             viewerId={studentSession.id}
+                            classId={resolvedClassId}
                             onClose={() => setViewingFriendHideout(null)}
                             onOpenPost={handleOpenFriendPost}
                             isMobile={isMobile}

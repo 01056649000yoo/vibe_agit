@@ -207,6 +207,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                 {/* 헤더 섹션 */}
                 <StudentHeader
                     hasActivity={hasActivity}
+                    onOpenFootprint={() => setIsFootprintOpen(true)}
                     openFeedback={openFeedback}
                     setIsGuideOpen={setIsGuideOpen}
                     onLogout={onLogout}
@@ -266,7 +267,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     studentSession={studentSession}
                     points={points}
                     playgroundItems={playgroundItems}
-                    onOpenFootprint={() => { setIsMyAgitOpen(false); setIsFootprintOpen(true); }}
                     onOpenPost={() => { setIsMyAgitOpen(false); onNavigate('friends_hideout'); }}
                 />
 

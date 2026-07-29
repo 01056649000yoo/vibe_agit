@@ -11,7 +11,7 @@ const LoadingCard = ({ message }) => (
     </div>
 );
 
-const FriendProfileShell = ({ friend, viewerId, onClose, onOpenPost, isMobile }) => {
+const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost, isMobile }) => {
     if (!friend?.id || !viewerId) return null;
 
     const pet = normalizeFriendPet(friend.pet_data);
@@ -79,6 +79,7 @@ const FriendProfileShell = ({ friend, viewerId, onClose, onOpenPost, isMobile })
                                         friendId={friend.id}
                                         friendName={friend.name}
                                         viewerId={viewerId}
+                                        classId={classId}
                                         onOpenPost={onOpenPost}
                                     />
                                 </Suspense>

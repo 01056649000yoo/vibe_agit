@@ -544,6 +544,7 @@ export const useFriendsHideout = (studentSession, params) => {
         selectedMission,
         posts,
         classmates,
+        resolvedClassId,   // 친구 서재 등 학급 범위 조회에 쓴다
         loading,
         loadingMore,
         hasMore,

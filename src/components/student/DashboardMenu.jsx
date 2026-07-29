@@ -155,8 +155,25 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, playgroundCoun
                     <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>친구들의 글 읽기</p>
                 </motion.div>
 
-                {/* 회의 안건 만들기 — 페이지는 App 에 연결돼 있었지만 들어갈 입구가 없었다.
-                    교사가 켠 학급에서만 보인다. */}
+                {/* 내 것을 모아 보는 곳. 친구 아지트 바로 옆에 짝으로 둔다. */}
+                <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{
+                        background: 'linear-gradient(145deg,#FFF9C4,#FFFFFF)', padding: '24px', borderRadius: '24px', border: '2px solid #FFE082',
+                        textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
+                        boxShadow: '0 4px 8px rgba(251, 192, 45, 0.16)'
+                    }}
+                    onClick={onOpenMyAgit}
+                >
+                    <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🏡</div>
+                    <h3 style={{ margin: 0, color: '#5D4037' }}>나의 아지트</h3>
+                    <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>
+                        내 서재·칭호{playgroundCount > 0 ? ` · 놀거리 ${playgroundCount}개` : ''}
+                    </p>
+                </motion.div>
+
+                {/* 회의 안건 만들기 — 교사가 켠 학급에서만 보인다. */}
                 {ideaMarketEnabled && (
                     <motion.div
                         whileHover={{ scale: 1.05 }}
@@ -173,39 +190,7 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, playgroundCoun
                         <p style={{ fontSize: '0.85rem', color: '#9575CD', marginTop: '8px' }}>학급 회의에 의견 내기</p>
                     </motion.div>
                 )}
-            </div>
 
-            <style>{`
-                @media (max-width: 760px) {
-                    .student-writing-menu-grid {
-                        grid-template-columns: 1fr !important;
-                    }
-                }
-            `}</style>
-
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px', marginTop: '24px' }}>
-                {/* 아지트 놀이터 — 포인트로 즐기는 콘텐츠 모음.
-                    드래곤·어휘의 탑 등 포인트 활동은 이 안에서 열린다(메뉴가 길어지지 않도록).
-                    켜진 놀거리가 없으면 카드 자체를 숨긴다. */}
-                {(
-                    <motion.div
-                        whileHover={{ scale: 1.02, y: -5 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={onOpenMyAgit}
-                        style={{
-                            background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
-                            borderRadius: '24px', padding: '30px 24px', cursor: 'pointer',
-                            border: '2px solid #FFF176', boxShadow: '0 8px 24px rgba(255, 241, 118, 0.2)',
-                            textAlign: 'center', gridColumn: isMobile ? 'auto' : '1 / -1'
-                        }}
-                    >
-                        <div style={{ fontSize: '3.5rem', marginBottom: '10px' }}>🏡</div>
-                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#5D4037', marginBottom: '6px' }}>나의 아지트</div>
-                        <div style={{ fontSize: '0.9rem', color: '#FBC02D', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>
-                            내 서재 · 칭호 · 발자국{playgroundCount > 0 ? ` · 놀거리 ${playgroundCount}개` : ''}
-                        </div>
-                    </motion.div>
-                )}
 
 
                 {/* 기본 OFF 격리 모듈: 켜진 학급에서만 진입점을 렌더한다. */}

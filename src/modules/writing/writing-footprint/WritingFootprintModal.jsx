@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ModalPortal from '../../../components/common/ModalPortal';
 import { supabase } from '../../../lib/supabaseClient';
 import { getWriterLevel } from '../../../constants/writerLevels';
@@ -314,13 +314,19 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
     }, [isOpen, load]);
 
     // 화면을 덮는 판이라 뒤로가기로 닫히게 한다.
+    // onClose 는 부모에서 인라인 화살표로 넘어와 **매 렌더 새 함수**다.
+    // 이걸 의존성에 두면 부모가 리렌더될 때마다 effect 가 다시 돌아 pushState 가 쌓이고,
+    // 뒤로가기를 여러 번 눌러야 닫히게 된다. ref 에 담아 두고 isOpen 에만 반응시킨다.
+    const onCloseRef = useRef(onClose);
+    useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+
     useEffect(() => {
         if (!isOpen) return undefined;
         window.history.pushState({ studentPage: 'main', overlay: 'footprint' }, '');
-        const closeOnBack = () => onClose();
+        const closeOnBack = () => onCloseRef.current?.();
         window.addEventListener('popstate', closeOnBack);
         return () => window.removeEventListener('popstate', closeOnBack);
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     const monthsAxis = useMemo(
         () => fillSchoolYearMonths(detail.monthly, detail.school_year),

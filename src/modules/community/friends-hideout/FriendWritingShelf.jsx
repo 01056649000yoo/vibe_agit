@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import BookCover from '../../writing/reading-log/BookCover';
 import { supabase } from '../../../lib/supabaseClient';
-import { dataCache } from '../../../lib/cache';
+import { classKey, dataCache } from '../../../lib/cache';
 
 const FILTERS = [
     { id: 'all', label: '전체' },
@@ -17,7 +17,7 @@ const isReadingLog = (post) => (
 
 const SHELF_CACHE_MS = 120000;
 
-const FriendWritingShelf = ({ friend, viewerId, onOpenPost }) => {
+const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
     const friendId = friend?.id;
     const [posts, setPosts] = useState([]);
     const [filter, setFilter] = useState('all');
@@ -26,11 +26,11 @@ const FriendWritingShelf = ({ friend, viewerId, onOpenPost }) => {
     const [openingPostId, setOpeningPostId] = useState(null);
 
     const fetchShelf = useCallback(async (forceRefresh = false) => {
-        if (!friendId || !viewerId) return;
+        if (!friendId || !viewerId || !classId) return;
 
         setLoading(true);
         setErrorMessage('');
-        const cacheKey = `friend_writing_shelf_${viewerId}_${friendId}`;
+        const cacheKey = classKey(classId, 'friend-shelf', { viewer: viewerId, friend: friendId });
         if (forceRefresh) dataCache.invalidate(cacheKey);
 
         try {
@@ -43,6 +43,9 @@ const FriendWritingShelf = ({ friend, viewerId, onOpenPost }) => {
                         writing_missions(id, title, mission_type, input_template),
                         post_reactions(id, reaction_type)
                     `)
+                    // 학급을 직접 건다. student_id 만으로 거르면 학급 인덱스를 못 쓰고,
+                    // 전학 온 친구의 **예전 학급 글**까지 딸려 온다 (WORKLOG '학급 글 조회 기준' ①).
+                    .eq('class_id', classId)
                     .eq('student_id', friendId)
                     .eq('is_submitted', true)
                     .eq('visibility', 'class')
@@ -62,7 +65,7 @@ const FriendWritingShelf = ({ friend, viewerId, onOpenPost }) => {
         } finally {
             setLoading(false);
         }
-    }, [friendId, viewerId]);
+    }, [friendId, viewerId, classId]);
 
     useEffect(() => {
         const timerId = window.setTimeout(fetchShelf, 0);
