@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
+import ModalPortal from '../common/ModalPortal';
 
 /**
  * 역할: 학생 - 내 글 소식(알림) 모달 🔔
@@ -32,6 +33,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
     if (!isOpen) return null;
 
     return (
+        <ModalPortal>
         <AnimatePresence>
             <motion.div
                 initial={{ opacity: 0 }}
@@ -63,7 +65,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => {
-                                    if (window.confirm('모든 소식을 읽음 처리하고 목록을 비울까요?')) {
+                                    if (window.confirm('소식을 모두 비울까요?\n\n비우면 지금 목록에 있는 소식은 다시 볼 수 없어요.\n(친구들이 남긴 반응과 댓글은 글에 그대로 남아 있어요.)')) {
                                         onClear();
                                     }
                                 }}
@@ -201,6 +203,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                 </motion.div>
             </motion.div>
         </AnimatePresence>
+        </ModalPortal>
     );
 };
 

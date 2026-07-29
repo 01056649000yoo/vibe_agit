@@ -215,7 +215,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
             }}>
                 {/* 헤더 섹션 */}
                 <StudentHeader
-                    studentSession={studentSession}
                     hasActivity={hasActivity}
                     openFeedback={openFeedback}
                     setIsGuideOpen={setIsGuideOpen}

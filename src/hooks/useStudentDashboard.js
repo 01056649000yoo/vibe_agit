@@ -21,6 +21,21 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const [dragonConfigLoaded, setDragonConfigLoaded] = useState(false);
 
     const lastCheckRef = useRef('1970-01-01T00:00:00.000Z');
+    // 기준선(last_feedback_check)을 **실제로 읽었는지** 표시한다.
+    // 못 읽었는데 1970년 기본값으로 조회하면 지난 소식이 전부 다시 뜬다.
+    // 스냅샷 RPC 는 students.auth_id = auth.uid() 로 학생을 찾는데, 학생 로그인은
+    // 기기마다 새 익명 세션을 만들어 auth_id 를 덮어쓴다 → 바인딩 직후나 다른 기기에서
+    // 이 조회가 실패할 수 있다. 실패하면 학생 id 로 직접 읽는 폴백을 탄다.
+    const lastCheckLoadedRef = useRef(false);
+    // 소식 조회는 학급으로 먼저 좁힌다. student_posts 를 거쳐서만 거르면
+    // 학급 인덱스를 못 써 전 학급 반응·댓글을 훑는다 (WORKLOG '학급 글 조회 기준' ①).
+    // 다만 세션에 학급이 아직 없을 수 있어(아래 폴백 조회 참고) **있을 때만** 건다 —
+    // null 로 걸면 소식이 통째로 안 보인다.
+    const sessionClassId = studentSession?.classId || studentSession?.class_id || null;
+    const scopeToClass = useCallback(
+        (query) => (sessionClassId ? query.eq('class_id', sessionClassId) : query),
+        [sessionClassId]
+    );
     const returnedCountCacheRef = useRef({ value: 0, fetchedAt: 0 });
 
     const getLevelInfo = (totalChars) => {
@@ -108,6 +123,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 }
                 if (currentStudent.last_feedback_check) {
                     lastCheckRef.current = currentStudent.last_feedback_check;
+                    lastCheckLoadedRef.current = true;
                 }
                 return currentStudent;
             }
@@ -116,6 +132,24 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         }
         return null;
     }, [studentSession?.id]);
+    // 스냅샷이 기준선을 못 준 경우의 폴백. 학생 id 로 직접 읽는다.
+    const ensureLastCheckLoaded = useCallback(async () => {
+        if (lastCheckLoadedRef.current || !studentSession?.id) return;
+        const { data, error } = await supabase
+            .from('students')
+            .select('last_feedback_check')
+            .eq('id', studentSession.id)
+            .maybeSingle();
+        if (error) {
+            console.error('소식 기준 시각 로드 실패:', error.message);
+            return;
+        }
+        if (data) {
+            lastCheckRef.current = data.last_feedback_check || '1970-01-01T00:00:00.000Z';
+            lastCheckLoadedRef.current = true;
+        }
+    }, [studentSession?.id]);
+
     const fetchClassSettings = useCallback(async () => {
         let classId = studentSession.classId || studentSession.class_id;
 
@@ -164,16 +198,16 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             const lastCheckTime = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
 
             const [reactionsResult, commentsResult] = await Promise.all([
-                supabase
+                scopeToClass(supabase
                     .from('post_reactions')
-                    .select('id, student_posts!inner(student_id)')
+                    .select('id, student_posts!inner(student_id)'))
                     .eq('student_posts.student_id', studentSession.id)
                     .neq('student_id', studentSession.id)
                     .gt('created_at', lastCheckTime)
                     .limit(1),
-                supabase
+                scopeToClass(supabase
                     .from('post_comments')
-                    .select('id, student_id, teacher_id, student_posts!inner(student_id)')
+                    .select('id, student_id, teacher_id, student_posts!inner(student_id)'))
                     .eq('student_posts.student_id', studentSession.id)
                     .gt('created_at', lastCheckTime)
                     .order('created_at', { ascending: false })
@@ -193,7 +227,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         } catch (err) {
             console.error('활동 확인 실패:', err.message);
         }
-    }, [studentSession?.id]);
+    }, [studentSession?.id, scopeToClass]);
 
     const fetchReturnedCount = useCallback(async (forceRefresh = false) => {
         if (!studentSession?.id) return 0;
@@ -235,6 +269,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             if (error) throw error;
 
             lastCheckRef.current = new Date().toISOString();
+            lastCheckLoadedRef.current = true;
             setFeedbacks([]);
             setHasActivity(false);
         } catch (err) {
@@ -290,17 +325,17 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
             const [reactionsResult, commentsResult] = await Promise.all([
                 // 반응
-                supabase
+                scopeToClass(supabase
                     .from('post_reactions')
-                    .select('*, students:student_id(name), student_posts!inner(title, id, student_id)')
+                    .select('*, students:student_id(name), student_posts!inner(title, id, student_id)'))
                     .eq('student_posts.student_id', studentSession.id)
                     .neq('student_id', studentSession.id)
                     .gt('created_at', lastCheck)
                     .order('created_at', { ascending: false })
                     .limit(50),
-                supabase
+                scopeToClass(supabase
                     .from('post_comments')
-                    .select('*, students:student_id(name), student_posts!inner(title, id, student_id)')
+                    .select('*, students:student_id(name), student_posts!inner(title, id, student_id)'))
                     .eq('student_posts.student_id', studentSession.id)
                     .gt('created_at', lastCheck)
                     .order('created_at', { ascending: false })
@@ -338,9 +373,11 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         }
     };
 
-    const openFeedback = (tabIndex = 0) => {
+    const openFeedback = async (tabIndex = 0) => {
         setFeedbackInitialTab(tabIndex);
         setShowFeedback(true);
+        // 기준선을 못 읽은 채 조회하면 1970년 기준이 되어 지난 소식이 전부 뜬다.
+        await ensureLastCheckLoaded();
         fetchFeedbacks();
     };
 
@@ -351,7 +388,8 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 setIsLoading(false); // 즉시 렌더링을 허용 (데이터는 각자 도착하는 대로 채워짐)
 
                 // fetchMyPoints에서 lastCheckRef를 세팅한 이후에 활동 내역을 체크해야 함 (알림 메시지 버그 방지)
-                fetchMyPoints().then(() => {
+                fetchMyPoints().then(async () => {
+                    await ensureLastCheckLoaded();
                     checkActivity();
                     fetchReturnedCount(true);
                 });
@@ -361,7 +399,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             };
             loadData();
         }
-    }, [studentSession?.id, fetchMyPoints, fetchClassSettings, fetchStats, checkActivity, fetchReturnedCount]);
+    }, [studentSession?.id, fetchMyPoints, fetchClassSettings, fetchStats, checkActivity, fetchReturnedCount, ensureLastCheckLoaded]);
 
     return {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,

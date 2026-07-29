@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import ModalPortal from '../../../components/common/ModalPortal';
 import Button from '../../../components/common/Button';
 
 const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipItem, isBusy, HIDEOUT_BACKGROUNDS }) => {
     if (!isOpen) return null;
 
     return (
+        <ModalPortal>
         <div style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.6)', zIndex: 3000,
@@ -133,6 +135,7 @@ const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipI
                 </div>
             </motion.div>
         </div>
+        </ModalPortal>
     );
 };
 

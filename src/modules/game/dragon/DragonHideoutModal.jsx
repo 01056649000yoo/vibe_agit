@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ModalPortal from '../../../components/common/ModalPortal';
 
 const DragonHideoutModal = ({
     isOpen, onClose, isMobile, petData, dragonInfo,
@@ -10,6 +11,8 @@ const DragonHideoutModal = ({
     const [showConfirm, setShowConfirm] = useState(false);
 
     return (
+
+        <ModalPortal>
         <AnimatePresence>
             {isOpen && (
                 <div style={{
@@ -720,6 +723,8 @@ const DragonHideoutModal = ({
                 </div>
             )}
         </AnimatePresence>
+
+        </ModalPortal>
     );
 };
 

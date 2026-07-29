@@ -2,23 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
 
-const StudentHeader = ({ studentSession, hasActivity, openFeedback, setIsGuideOpen, onLogout }) => {
+const StudentHeader = ({ hasActivity, openFeedback, setIsGuideOpen, onLogout }) => {
     return (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', gap: '8px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <div style={{
-                    background: '#FFE082',
-                    color: '#795548',
-                    padding: '6px 16px',
-                    borderRadius: '20px',
-                    fontSize: '0.9rem',
-                    fontWeight: 'bold',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                    whiteSpace: 'nowrap'
-                }}>
-                    🎒 {studentSession.className || '우리 반'} 친구
-                </div>
-
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
