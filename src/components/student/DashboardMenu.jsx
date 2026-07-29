@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 
 const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgroundCount = 0, isMobile, agitSettings, studentSession, enabledModules = [] }) => {
     const agitOnClassEnabled = enabledModules.some((module) => module.id === 'agit-on-class');
+    const ideaMarketEnabled = enabledModules.some((module) => module.id === 'idea-market');
     // [신규] 새 미션 존재 여부 확인 (최근 24시간)
     const [hasNewMission, setHasNewMission] = useState(false);
 
@@ -120,8 +121,8 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                         }}>NEW</div>
                     )}
                     <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📝</div>
-                    <h3 style={{ margin: 0, color: '#5D4037' }}>선생님 과제</h3>
-                    <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>자유글·시·회의 안건 쓰기</p>
+                    <h3 style={{ margin: 0, color: '#5D4037' }}>과제</h3>
+                    <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>선생님이 낸 글쓰기</p>
                 </motion.div>
 
                 <motion.div
@@ -135,7 +136,7 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                     onClick={() => onNavigate('reading_logs')}
                 >
                     <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📚</div>
-                    <h3 style={{ margin: 0, color: '#33691E' }}>나의 독서록</h3>
+                    <h3 style={{ margin: 0, color: '#33691E' }}>독서록</h3>
                     <p style={{ fontSize: '0.85rem', color: '#8D9F7A', marginTop: '8px' }}>언제든 책과 생각 기록하기</p>
                 </motion.div>
 
@@ -165,9 +166,28 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                     onClick={() => onNavigate('friends_hideout')}
                 >
                     <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👀</div>
-                    <h3 style={{ margin: 0, color: '#5D4037' }}>친구 아지트</h3>
+                    <h3 style={{ margin: 0, color: '#5D4037' }}>친구들</h3>
                     <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>친구들의 글 읽기</p>
                 </motion.div>
+
+                {/* 회의 안건 만들기 — 페이지는 App 에 연결돼 있었지만 들어갈 입구가 없었다.
+                    교사가 켠 학급에서만 보인다. */}
+                {ideaMarketEnabled && (
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{
+                            background: 'white', padding: '24px', borderRadius: '24px', border: '2px solid #B39DDB',
+                            textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
+                            boxShadow: '0 4px 8px rgba(126, 87, 194, 0.14)'
+                        }}
+                        onClick={() => onNavigate('idea_market')}
+                    >
+                        <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🏛️</div>
+                        <h3 style={{ margin: 0, color: '#4527A0' }}>회의 안건</h3>
+                        <p style={{ fontSize: '0.85rem', color: '#9575CD', marginTop: '8px' }}>학급 회의에 의견 내기</p>
+                    </motion.div>
+                )}
             </div>
 
             <style>{`
@@ -195,7 +215,7 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                         }}
                     >
                         <div style={{ fontSize: '3.5rem', marginBottom: '10px' }}>🎡</div>
-                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#5D4037', marginBottom: '6px' }}>아지트 놀이터</div>
+                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#5D4037', marginBottom: '6px' }}>놀이터</div>
                         <div style={{ fontSize: '0.9rem', color: '#FBC02D', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>
                             포인트로 즐기는 놀거리 {playgroundCount}개
                         </div>

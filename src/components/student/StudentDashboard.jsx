@@ -15,6 +15,7 @@ import TeacherNotifyBanner from './TeacherNotifyBanner';
 import StudentStatsCards from './StudentStatsCards';
 import PointLevelCard from './PointLevelCard';
 import DashboardMenu from './DashboardMenu';
+import StudentTodoCard from './StudentTodoCard';
 // 드래곤 모듈 — 모달을 열 때만 코드를 받도록 지연 로딩 (src/modules/game/dragon)
 const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHideoutModal'));
 const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/BackgroundShopModal'));
@@ -37,7 +38,7 @@ const HIDEOUT_BACKGROUNDS = {
 // [신규] 아지트 실시간 데이터 연동 훅
 import { useClassAgitClass } from '../../hooks/useClassAgitClass';
 
-const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules = [] }) => {
+const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules = [], playgroundSignal = 0 }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
@@ -46,6 +47,22 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false); // 아지트 놀이터(포인트 콘텐츠 모음)
     const [activeGameModuleId, setActiveGameModuleId] = useState(null);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+    // 하단 내비의 '놀이터'를 누르면 홈으로 온 뒤 이 신호가 올라온다.
+    useEffect(() => {
+        if (!playgroundSignal) return;
+        setIsPlaygroundOpen(true);
+    }, [playgroundSignal]);
+
+    // 놀이터는 화면을 덮는 판이라, 뒤로가기로 닫히지 않으면 학생이 빠져나갈 길을 잃는다.
+    // 열 때 히스토리를 하나 쌓아 두고 뒤로가기가 오면 닫는다.
+    useEffect(() => {
+        if (!isPlaygroundOpen) return undefined;
+        window.history.pushState({ studentPage: 'main', overlay: 'playground' }, '');
+        const closeOnBack = () => setIsPlaygroundOpen(false);
+        window.addEventListener('popstate', closeOnBack);
+        return () => window.removeEventListener('popstate', closeOnBack);
+    }, [isPlaygroundOpen]);
 
     // [신규] 아지트 온도 및 활성화 정보 실시간 동기화
     const {
@@ -205,24 +222,32 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     onLogout={onLogout}
                 />
 
-                {/* 인사말 섹션 */}
-                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '5px' }}>🌟</div>
-                    <h1 style={{ fontSize: '2rem', color: '#5D4037', marginBottom: '0.4rem' }}>
-                        안녕, <span style={{ color: '#FBC02D' }}>{studentSession.name}</span>!
+                {/* 인사말 — 할 일을 첫 화면에 올리려고 한 줄로 줄였다 */}
+                <div style={{ textAlign: 'center', marginBottom: '1.1rem' }}>
+                    <h1 style={{ fontSize: '1.5rem', color: '#5D4037', margin: 0 }}>
+                        🌟 안녕, <span style={{ color: '#FBC02D' }}>{studentSession.name}</span>!
                     </h1>
-                    <p style={{ color: '#8D6E63', fontSize: '1rem' }}>벌써 이만큼이나 성장했어! 🚀</p>
                 </div>
 
-                {/* 선생님 알림 배너 */}
+                {/* 선생님의 실시간 알림(포인트·승인·회수). 상시 상태인 '다시 쓸 글'은
+                    아래 할 일 카드가 맡는다 — 같은 것을 두 군데서 세지 않도록. */}
                 <TeacherNotifyBanner
-                    returnedCount={returnedCount}
                     teacherNotify={teacherNotify}
                     setTeacherNotify={setTeacherNotify}
                     handleDirectRewriteGo={handleDirectRewriteGo}
                 />
 
-                {/* 성장 통계 카드 */}
+                {/* 오늘 할 일 — 홈에서 가장 먼저 보여야 하는 것 */}
+                <StudentTodoCard
+                    studentSession={studentSession}
+                    returnedCount={returnedCount}
+                    hasActivity={hasActivity}
+                    onNavigate={onNavigate}
+                    onOpenFeedback={openFeedback}
+                    onGoRewrite={handleDirectRewriteGo}
+                />
+
+                {/* 성장 통계 카드 — 지나간 실적이라 할 일 아래로 */}
                 <StudentStatsCards stats={stats} />
 
                 {/* 포인트 및 레벨 카드 */}

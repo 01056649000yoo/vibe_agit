@@ -5,14 +5,16 @@ import { motion } from 'framer-motion';
  * 역할: 모바일 환경에서 학생들의 빠른 메뉴 이동을 돕는 하단 탭바 📱
  * 특징: 768px 미만에서만 표시됨
  */
-const StudentBottomNav = ({ activeTab, onNavigate }) => {
-    // 탭 메뉴 설정
+const StudentBottomNav = ({ activeTab, onNavigate, onOpenPlayground }) => {
+    // 이름·아이콘은 홈 카드(DashboardMenu)와 **똑같이** 맞춘다.
+    // 같은 곳인데 아래는 "과제", 홈에서는 "선생님 과제"로 부르면 학생이 다른 곳으로 안다.
     const tabs = [
         { id: 'main', label: '홈', icon: '🏠', target: 'main' },
         { id: 'mission_list', label: '과제', icon: '📝', target: 'mission_list' },
         { id: 'reading_logs', label: '독서록', icon: '📚', target: 'reading_logs' },
         { id: 'friends_hideout', label: '친구들', icon: '👀', target: 'friends_hideout' },
-        // { id: 'market', label: '상점', icon: '🛍️', target: 'market' } // 향후 추가 가능
+        // 놀이터는 홈에서 펼쳐지는 구역이라 페이지 이동이 아니다. 눌리면 홈으로 간 뒤 펼친다.
+        { id: 'playground', label: '놀이터', icon: '🎮', target: 'playground' }
     ];
 
     return (
@@ -26,7 +28,14 @@ const StudentBottomNav = ({ activeTab, onNavigate }) => {
                         <motion.button
                             key={tab.id}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => onNavigate(tab.target)}
+                            onClick={() => {
+                                if (tab.target === 'playground') {
+                                    onNavigate('main');
+                                    onOpenPlayground?.();
+                                    return;
+                                }
+                                onNavigate(tab.target);
+                            }}
                             className={`nav-item ${isActive ? 'active' : ''}`}
                         >
                             <span className="nav-icon">{tab.icon}</span>

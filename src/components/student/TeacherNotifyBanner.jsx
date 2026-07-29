@@ -1,10 +1,15 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const TeacherNotifyBanner = ({ returnedCount, teacherNotify, setTeacherNotify, handleDirectRewriteGo }) => {
+/**
+ * 선생님이 방금 한 일을 알리는 **순간 알림**만 담당한다.
+ * "다시 쓸 글이 N개 있다" 같은 **상시 상태**는 홈 맨 위 할 일 카드가 센다.
+ * 예전에는 둘 다 여기서 보여 줘서 같은 것이 두 번 보였다.
+ */
+const TeacherNotifyBanner = ({ teacherNotify, setTeacherNotify, handleDirectRewriteGo }) => {
     return (
         <AnimatePresence>
-            {(returnedCount > 0 || teacherNotify) && (
+            {teacherNotify && (
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -27,7 +32,7 @@ const TeacherNotifyBanner = ({ returnedCount, teacherNotify, setTeacherNotify, h
                         boxSizing: 'border-box'
                     }}
                     onClick={() => {
-                        if (returnedCount > 0 || teacherNotify?.type === 'rewrite') handleDirectRewriteGo();
+                        if (teacherNotify?.type === 'rewrite') handleDirectRewriteGo();
                         else setTeacherNotify(null);
                     }}
                 >
@@ -53,15 +58,6 @@ const TeacherNotifyBanner = ({ returnedCount, teacherNotify, setTeacherNotify, h
                             {teacherNotify?.type === 'point' ? "포인트 내역은 상단 지갑(P)을 눌러 확인할 수 있어요! ✨" : "지금 바로 확인하고 완벽한 글을 완성해봐요! ✨"}
                         </div>
                     </div>
-                    {returnedCount > 0 && (
-                        <div style={{
-                            width: '36px', height: '36px', background: '#FFB74D',
-                            borderRadius: '50%', display: 'flex', justifyContent: 'center',
-                            alignItems: 'center', color: 'white', fontWeight: 'bold'
-                        }}>
-                            {returnedCount}
-                        </div>
-                    )}
                 </motion.div>
             )}
         </AnimatePresence>
