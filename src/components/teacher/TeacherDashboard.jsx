@@ -17,7 +17,7 @@ const TeacherStudentHub = lazy(() => import('./TeacherStudentHub'));
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
 import TeacherWritingHub from './TeacherWritingHub';
-import TeacherSettingsTab from './TeacherSettingsTab';
+import TeacherSettingsHub from './TeacherSettingsHub';
 import TeacherProfileModal from './TeacherProfileModal';
 import ActivityDetailModal from './ActivityDetailModal';
 import FeedbackModal from './FeedbackModal';
@@ -372,36 +372,17 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                         ) : visibleTab === 'activity' ? (
                             <ActivityReport activeClass={activeClass} isMobile={isMobile} promptTemplate={reportPromptTemplate} />
                         ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-                                <section>
-                                    <div style={{ marginBottom: '14px' }}>
-                                        <span style={{ color: '#2563EB', fontSize: '0.76rem', fontWeight: '950' }}>학급 설정</span>
-                                        <h2 style={{ margin: '5px 0 0', color: '#172033', fontSize: '1.35rem' }}>학급 생성·전환·보관</h2>
-                                    </div>
-                                    <ClassManager
-                                        userId={session.user.id} classes={classes} activeClass={activeClass}
-                                        setActiveClass={setActiveClass} setClasses={setClasses}
-                                        onClassDeleted={fetchAllClasses} isMobile={isMobile}
-                                        primaryClassId={profile?.primary_class_id} onSetPrimaryClass={handleSetPrimaryClass}
-                                        fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
-                                    />
-                                </section>
-                                <section>
-                                    <div style={{ marginBottom: '14px' }}>
-                                        <span style={{ color: '#059669', fontSize: '0.76rem', fontWeight: '950' }}>서비스 설정</span>
-                                        <h2 style={{ margin: '5px 0 0', color: '#172033', fontSize: '1.35rem' }}>AI 피드백·평어 규칙</h2>
-                                    </div>
-                                    <TeacherSettingsTab
-                                        isMobile={isMobile}
-                                        handleTestAIConnection={handleTestAIConnection}
-                                        runAIDiagnosis={runAIDiagnosis}
-                                        savingKey={savingKey} testingKey={testingKey} aiStatus={aiStatus}
-                                        promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
-                                        reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}
-                                        handleSaveTeacherSettings={handleSaveTeacherSettings}
-                                    />
-                                </section>
-                            </div>
+                            <TeacherSettingsHub
+                                isMobile={isMobile} session={session} classes={classes} activeClass={activeClass}
+                                setActiveClass={setActiveClass} setClasses={setClasses} profile={profile}
+                                fetchAllClasses={fetchAllClasses} fetchDeletedClasses={fetchDeletedClasses}
+                                handleRestoreClass={handleRestoreClass} handleSetPrimaryClass={handleSetPrimaryClass}
+                                handleTestAIConnection={handleTestAIConnection} runAIDiagnosis={runAIDiagnosis}
+                                savingKey={savingKey} testingKey={testingKey} aiStatus={aiStatus}
+                                promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
+                                reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}
+                                handleSaveTeacherSettings={handleSaveTeacherSettings}
+                            />
                         )
                     )}
                 </Suspense>
