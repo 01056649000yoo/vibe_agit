@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
+import { isPendingRewrite } from '../../lib/writingStatus';
 
 /**
  * 홈 맨 위 "오늘 할 일".
@@ -58,19 +59,32 @@ const StudentTodoCard = ({ studentSession, returnedCount = 0, hasActivity, onNav
                         .from('writing_missions')
                         .select('id')
                         .eq('class_id', classId)
-                        .eq('is_archived', false),
+                        .eq('is_archived', false)
+                        .order('created_at', { ascending: false })
+                        .limit(500),
                     supabase
                         .from('student_posts')
-                        .select('mission_id')
+                        .select('mission_id, is_submitted, is_confirmed, is_returned, recalled_at')
                         .eq('class_id', classId)
                         .eq('student_id', studentId)
-                        .eq('is_submitted', true)
                         .not('mission_id', 'is', null)
+                        .limit(500)
                 ]);
                 if (missionResult.error) throw missionResult.error;
                 if (mineResult.error) throw mineResult.error;
-                const done = new Set((mineResult.data || []).map((row) => row.mission_id));
-                return (missionResult.data || []).filter((m) => !done.has(m.id)).length;
+                const done = new Set(
+                    (mineResult.data || [])
+                        .filter((row) => row.is_submitted || row.is_confirmed)
+                        .map((row) => row.mission_id)
+                );
+                const rewrites = new Set(
+                    (mineResult.data || [])
+                        .filter(isPendingRewrite)
+                        .map((row) => row.mission_id)
+                );
+                return (missionResult.data || []).filter((m) => (
+                    !done.has(m.id) && !rewrites.has(m.id)
+                )).length;
             }, CACHE_TTL_MS);
             setPendingMissions(count);
         } catch (error) {

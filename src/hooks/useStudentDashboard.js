@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient';
 
 import { classKey, dataCache } from '../lib/cache';
 
+const ACTIVE_MISSION_LIMIT = 500;
+
 export const useStudentDashboard = (studentSession, onNavigate) => {
     const RETURNED_COUNT_CACHE_MS = 30000;
     const [points, setPoints] = useState(0);
@@ -38,6 +40,21 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         [sessionClassId]
     );
     const returnedCountCacheRef = useRef({ value: 0, fetchedAt: 0 });
+
+    const fetchActiveMissionIds = useCallback(async () => {
+        if (!sessionClassId) return [];
+
+        const { data, error } = await supabase
+            .from('writing_missions')
+            .select('id')
+            .eq('class_id', sessionClassId)
+            .eq('is_archived', false)
+            .order('created_at', { ascending: false })
+            .limit(ACTIVE_MISSION_LIMIT);
+
+        if (error) throw error;
+        return (data || []).map((mission) => mission.id);
+    }, [sessionClassId]);
 
 
     const fetchStats = useCallback(async () => {
@@ -230,7 +247,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     }, [studentSession?.id, scopeToClass]);
 
     const fetchReturnedCount = useCallback(async (forceRefresh = false) => {
-        if (!studentSession?.id) return 0;
+        if (!studentSession?.id || !sessionClassId) return 0;
 
         const now = Date.now();
         const cached = returnedCountCacheRef.current;
@@ -241,11 +258,23 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         }
 
         try {
+            const activeMissionIds = await fetchActiveMissionIds();
+            if (activeMissionIds.length === 0) {
+                returnedCountCacheRef.current = { value: 0, fetchedAt: now };
+                setReturnedCount(0);
+                return 0;
+            }
+
             const { count, error } = await supabase
                 .from('student_posts')
                 .select('id', { count: 'exact', head: true })
+                .eq('class_id', sessionClassId)
                 .eq('student_id', studentSession.id)
-                .eq('is_returned', true);
+                .in('mission_id', activeMissionIds)
+                .eq('is_returned', true)
+                .eq('is_submitted', false)
+                .eq('is_confirmed', false)
+                .is('recalled_at', null);
 
             if (error) throw error;
 
@@ -257,7 +286,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             console.error('반려 글 개수 로드 실패:', err.message);
             return cached.value || 0;
         }
-    }, [studentSession?.id]);
+    }, [studentSession?.id, sessionClassId, fetchActiveMissionIds]);
 
     const handleClearFeedback = async () => {
         try {
@@ -280,12 +309,20 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const handleDirectRewriteGo = async () => {
         try {
             const fetchLatestReturnedPost = async () => {
+                const activeMissionIds = await fetchActiveMissionIds();
+                if (activeMissionIds.length === 0) return null;
+
                 const { data, error } = await supabase
                     .from('student_posts')
                     .select('id, mission_id')
+                    .eq('class_id', sessionClassId)
                     .eq('student_id', studentSession.id)
+                    .in('mission_id', activeMissionIds)
                     .eq('is_returned', true)
-                    .order('created_at', { ascending: false })
+                    .eq('is_submitted', false)
+                    .eq('is_confirmed', false)
+                    .is('recalled_at', null)
+                    .order('updated_at', { ascending: false })
                     .limit(1)
                     .maybeSingle();
 
@@ -299,11 +336,6 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 data = await fetchLatestReturnedPost();
             }
             if (data) {
-                returnedCountCacheRef.current = {
-                    value: Math.max(0, (returnedCountCacheRef.current?.value || 1) - 1),
-                    fetchedAt: Date.now()
-                };
-                setReturnedCount(prev => Math.max(0, prev - 1));
                 onNavigate('writing', {
                     missionId: data.mission_id,
                     postId: data.id,

@@ -36,8 +36,8 @@ const ArchiveConfirmModal = ({ archiveModal, setArchiveModal, handleFinalArchive
                         </h3>
                         <p style={{ margin: '0 0 24px 0', color: '#7F8C8D', lineHeight: '1.6', fontSize: '0.95rem' }}>
                             {archiveModal.hasIncomplete
-                                ? '아직 글을 제출하지 않은 학생이 있습니다. 그래도 보관하시겠습니까? (제출된 글만 보관함으로 이동하고, 학생들에게는 더 이상 보이지 않게 됩니다.)'
-                                : '보관하면 학생들의 대시보드에서 미션이 사라지고 보관함으로 이동합니다.'}
+                                ? '아직 제출 또는 선생님 확인이 끝나지 않은 학생이 있습니다. 그래도 보관하면 학생 화면과 할 일에서 미션이 사라집니다. 작성 중인 초안은 삭제하지 않으며, 나중에 미션을 복구하면 이어 쓸 수 있습니다. 교사 보관함에는 제출된 글만 표시됩니다.'
+                                : '보관하면 학생 화면과 할 일에서 미션이 사라집니다. 학생 글은 삭제되지 않으며, 교사 보관함에서 계속 확인할 수 있습니다.'}
                         </p>
                         <div style={{ display: 'flex', gap: '12px' }}>
                             <Button

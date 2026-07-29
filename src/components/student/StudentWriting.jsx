@@ -225,7 +225,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         : content.split(/\n+/).filter((paragraph) => paragraph.trim().length > 0).length;
 
     // 수정 권한 체크 (이미 제출되었고 다시 쓰기 요청이 없는 경우 수정 불가)
-    const isLocked = isConfirmed || (isSubmitted && !isReturned);
+    const isLocked = Boolean(mission?.is_archived) || isConfirmed || (isSubmitted && !isReturned);
     const hasRevisedVersion = Boolean(originalContent) && (
         originalTitle !== title || originalContent !== content
     );

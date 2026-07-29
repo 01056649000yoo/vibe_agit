@@ -35,13 +35,15 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     const fetchMission = useCallback(async () => {
         setLoading(true);
         try {
+            const classId = studentSession?.classId || studentSession?.class_id;
             // 1. 미션 정보 가져오기
-            const { data: missionData, error: missionError } = await supabase
+            let missionQuery = supabase
                 .from('writing_missions')
                 // 미션 식별, 제목, 설명, 타입, 최소 글자/문단수 및 가이드 질문 등 필수 데이터만 로드
                 .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, base_reward, bonus_threshold, bonus_reward')
-                .eq('id', missionId)
-                .maybeSingle();
+                .eq('id', missionId);
+            if (classId) missionQuery = missionQuery.eq('class_id', classId);
+            const { data: missionData, error: missionError } = await missionQuery.maybeSingle();
 
             if (missionError) throw missionError;
 
@@ -65,6 +67,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 } else {
                     query = query.eq('mission_id', missionId).eq('student_id', currentStudentId);
                 }
+                if (classId) query = query.eq('class_id', classId);
 
                 const { data: postData, error: postError } = await query.maybeSingle();
 
@@ -96,7 +99,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         } finally {
             setLoading(false);
         }
-    }, [missionId, params, studentSession?.id, onBack]);
+    }, [missionId, params, studentSession?.id, studentSession?.classId, studentSession?.class_id, onBack]);
 
     // 1. 미션 및 데이터 로딩
     useEffect(() => {
@@ -130,7 +133,9 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     const jitterMs = Math.floor(Math.random() * 4000);
                     alertTimerId = setTimeout(() => {
                         alertTimerId = null;
-                        alert('📢 선생님이 미션 내용을 수정하셨어요! 바뀐 기준을 확인해주세요.');
+                        alert(payload.new?.is_archived
+                            ? '📂 선생님이 이 미션을 보관했어요. 작성 중인 내용은 보존되지만 더 이상 수정하거나 제출할 수 없어요.'
+                            : '📢 선생님이 미션 내용을 수정하셨어요! 바뀐 기준을 확인해주세요.');
                     }, jitterMs);
                 }
             )
@@ -149,6 +154,11 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         if (!currentStudentId) {
             if (showMsg) alert('로그인 정보가 유실되었어요. 작성한 내용을 복사한 뒤 다시 로그인해 주세요. 😢');
             return;
+        }
+
+        if (mission?.is_archived) {
+            if (showMsg) alert('선생님이 보관한 미션이라 더 이상 수정하거나 제출할 수 없어요. 📂');
+            return false;
         }
 
         // [추가] 제출 상태 확인: 이미 제출되었고 다시 쓰기 요청이 없는 경우 저장 불가
@@ -194,6 +204,11 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
 
     // 제출 전 유효성 검사 및 포인트 처리
     const handleSubmit = async () => {
+        if (mission?.is_archived) {
+            alert('선생님이 보관한 미션이라 더 이상 수정하거나 제출할 수 없어요. 📂');
+            return false;
+        }
+
         // [추가] 이미 제출된 상태인지 다시 한번 체크
         if (isConfirmed || (isSubmitted && !isReturned)) {
             alert('이미 제출되어 확인 중인 글입니다. ✨');

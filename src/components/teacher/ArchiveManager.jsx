@@ -135,7 +135,8 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                 .select('id, title, archived_at, genre, allow_comments, tags, min_chars, max_chars')
                 .eq('class_id', activeClass.id)
                 .eq('is_archived', true)
-                .order('archived_at', { ascending: false });
+                .order('archived_at', { ascending: false })
+                .limit(500);
 
             if (missionError) throw missionError;
 
@@ -150,6 +151,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                 const { count: submittedCount } = await supabase
                     .from('student_posts')
                     .select('*', { count: 'exact', head: true })
+                    .eq('class_id', activeClass.id)
                     .eq('mission_id', m.id)
                     .eq('is_submitted', true);
 
@@ -207,18 +209,34 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
         setSelectedMission(mission);
         setLoadingPosts(true);
         try {
-            const { data, error } = await supabase
+            const { data: postRows, error } = await supabase
                 .from('student_posts')
-                .select(`
-                    *,
-                    students(name)
-                `)
+                .select('*')
+                .eq('class_id', activeClass.id)
                 .eq('mission_id', mission.id)
                 .eq('is_submitted', true)
-                .order('created_at', { ascending: true });
+                .order('created_at', { ascending: true })
+                .limit(500);
 
             if (error) throw error;
-            setPosts(data || []);
+
+            const studentIds = [...new Set((postRows || []).map((post) => post.student_id).filter(Boolean))];
+            let namesById = new Map();
+            if (studentIds.length > 0) {
+                const { data: studentRows, error: studentError } = await supabase
+                    .from('students')
+                    .select('id, name')
+                    .eq('class_id', activeClass.id)
+                    .in('id', studentIds)
+                    .limit(500);
+                if (studentError) throw studentError;
+                namesById = new Map((studentRows || []).map((student) => [student.id, student.name]));
+            }
+
+            setPosts((postRows || []).map((post) => ({
+                ...post,
+                students: { name: namesById.get(post.student_id) || '이름 없음' }
+            })));
         } catch (err) {
             console.error('글 불러오기 실패:', err.message);
         } finally {

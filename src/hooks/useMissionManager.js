@@ -914,7 +914,9 @@ ${postArray.map((p, idx) => {
             const { error: postError } = await supabase
                 .from('student_posts')
                 .update({
+                    is_submitted: true,
                     is_confirmed: true,
+                    is_returned: false,
                     ai_feedback: tempFeedback
                 })
                 .eq('id', post.id);

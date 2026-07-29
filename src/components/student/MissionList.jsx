@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import { isPendingRewrite } from '../../lib/writingStatus';
 
 /**
  * 역할: 학생 - 글쓰기 미션 목록 확인
@@ -31,7 +32,8 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
             .select('id, title, genre, created_at, mission_type, input_template, evaluation_rubric, guide, tags, base_reward')
             .eq('class_id', classId)
             .is('is_archived', false)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(500);
 
         if (error) throw error;
 
@@ -41,10 +43,14 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     }, []);
 
     const fetchStudentPosts = useCallback(async (currentStudent) => {
+        const classId = currentStudent.classId || currentStudent.class_id;
         const { data, error } = await supabase
             .from('student_posts')
             .select('id, mission_id, is_confirmed, is_submitted, is_returned, recalled_at, char_count, created_at')
-            .eq('student_id', currentStudent.id);
+            .eq('class_id', classId)
+            .eq('student_id', currentStudent.id)
+            .order('created_at', { ascending: false })
+            .limit(500);
 
         if (error) throw error;
 
@@ -193,7 +199,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                             );
                             borderColor = '#D1C4E9';
                             buttonText = '내 글 보기';
-                        } else if (post?.is_returned) {
+                        } else if (isPendingRewrite(post)) {
                             statusBadge = (
                                 <div style={{ background: '#FFEBEE', color: '#D32F2F', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #FFCDD2' }}>
                                     다시 쓰기 필요
@@ -201,7 +207,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                             );
                             borderColor = '#FFCDD2';
                             buttonText = '다시 쓰기 시작';
-                        } else if (post?.is_submitted) {
+                        } else if (post?.is_submitted || post?.is_confirmed) {
                             statusBadge = (
                                 <div style={{ background: '#E8F5E9', color: '#2E7D32', padding: '4px 10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900', border: '1px solid #C8E6C9' }}>
                                     제출 완료
@@ -243,7 +249,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                 }}
                                 onClick={() => handleMissionClick(mission)}
                             >
-                                {(!post?.is_submitted && new Date(mission.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)) && (
+                                {(!post?.is_submitted && !post?.is_confirmed && new Date(mission.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)) && (
                                     <div style={{
                                         position: 'absolute', top: '12px', right: '12px',
                                         background: '#FF5252', color: 'white', fontSize: '0.7rem',
@@ -289,7 +295,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                 </p>
                                 <div style={{ display: 'flex', gap: '10px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
                                     <Button
-                                        variant={post?.is_submitted && !post?.is_returned ? 'secondary' : 'primary'}
+                                        variant={(post?.is_submitted || post?.is_confirmed) && !isPendingRewrite(post) ? 'secondary' : 'primary'}
                                         style={{ flex: 1, minWidth: '160px', borderRadius: '14px', fontWeight: '900' }}
                                     >
                                         {buttonText}
