@@ -42,8 +42,25 @@ const EMPTY_DETAIL = {
     daily: [], monthly: [], points_monthly: [], points_by_type: []
 };
 
+// 달력·막대·꺾은선이 모두 같은 폭을 쓰면 위아래로 눈이 자연스럽게 이어진다.
+// 학년도 49주 × 10 + 요일 20 = 510px 에 맞춘다.
+const CHART_W = 510;
+const AXIS_L = 20;   // 달력 요일 칸과 왼쪽을 맞춘다
+
 const num = (v) => Number(v || 0).toLocaleString('ko-KR');
-const monthLabel = (m) => `${Number(String(m).slice(5, 7))}월`;
+
+/** 3월~다음 해 1월(11칸) 축을 만들고, 값이 없는 달은 0으로 채운다. */
+const fillSchoolYearMonths = (rows, schoolYear) => {
+    const startYear = schoolYear?.start ? Number(String(schoolYear.start).slice(0, 4)) : new Date().getFullYear();
+    const byMonth = new Map((rows || []).map((r) => [r.m, r]));
+    return Array.from({ length: 11 }, (unused, i) => {
+        const month = 3 + i;                       // 3월 → 13월(= 다음 해 1월)
+        const y = month > 12 ? startYear + 1 : startYear;
+        const mm = String(month > 12 ? month - 12 : month).padStart(2, '0');
+        const key = `${y}-${mm}`;
+        return { m: key, monthNo: Number(mm), ...(byMonth.get(key) || {}) };
+    });
+};
 
 const Section = ({ title, hint, children }) => (
     <section style={{ marginTop: '26px' }}>
@@ -165,69 +182,87 @@ const WritingCalendar = ({ daily, schoolYear }) => {
     );
 };
 
-/** 세로 막대 — 달마다 쓴 글 수. 값은 막대 위에 직접 적는다. */
+/** 세로 막대 — 3월~1월 축 고정. 값은 있는 달에만 적는다(모든 점에 숫자를 달지 않는다). */
 const MonthlyBars = ({ rows, valueKey, unit }) => {
-    if (!rows.length) return <p style={{ color: INK_SOFT, fontSize: '.85rem' }}>아직 기록이 없어요.</p>;
-    const max = Math.max(...rows.map((r) => r[valueKey]), 1);
-    const h = 118, barW = 30, gap = 14;
-    const width = rows.length * (barW + gap);
+    const h = 118;
+    const slot = (CHART_W - AXIS_L) / rows.length;
+    const barW = Math.min(26, slot - 12);
+    const max = Math.max(...rows.map((r) => r[valueKey] || 0), 1);
+    const hasAny = rows.some((r) => (r[valueKey] || 0) > 0);
+
     return (
         <div style={{ overflowX: 'auto' }}>
-            <svg width={Math.max(width, 120)} height={h + 40} role="img" aria-label="달마다 쓴 글">
-                <line x1="0" y1={h} x2={Math.max(width, 120)} y2={h} stroke={GRID} strokeWidth="1" />
+            <svg width={CHART_W} height={h + 38} role="img" aria-label="달마다 쓴 글">
+                <line x1={AXIS_L} y1={h} x2={CHART_W} y2={h} stroke={GRID} strokeWidth="1" />
                 {rows.map((r, i) => {
-                    const v = r[valueKey];
-                    const barH = Math.max((v / max) * (h - 22), v > 0 ? 4 : 0);
-                    const x = i * (barW + gap);
+                    const v = r[valueKey] || 0;
+                    const barH = v > 0 ? Math.max((v / max) * (h - 24), 4) : 0;
+                    const cx = AXIS_L + i * slot + slot / 2;
                     return (
                         <g key={r.m}>
-                            <rect x={x} y={h - barH} width={barW} height={barH} rx="4" fill={SERIES}>
-                                <title>{monthLabel(r.m)} · {num(v)}{unit}</title>
-                            </rect>
-                            <text x={x + barW / 2} y={h - barH - 7} textAnchor="middle"
-                                fontSize="11" fontWeight="800" fill={INK}>{num(v)}</text>
-                            <text x={x + barW / 2} y={h + 17} textAnchor="middle"
-                                fontSize="11" fontWeight="800" fill={INK_SOFT}>{monthLabel(r.m)}</text>
+                            {v > 0 && (
+                                <>
+                                    <rect x={cx - barW / 2} y={h - barH} width={barW} height={barH} rx="4" fill={SERIES}>
+                                        <title>{r.monthNo}월 · {num(v)}{unit}</title>
+                                    </rect>
+                                    <text x={cx} y={h - barH - 6} textAnchor="middle"
+                                        fontSize="10.5" fontWeight="800" fill={INK}>{num(v)}</text>
+                                </>
+                            )}
+                            <text x={cx} y={h + 16} textAnchor="middle"
+                                fontSize="10" fontWeight="800" fill={INK_SOFT}>{r.monthNo}</text>
                         </g>
                     );
                 })}
+                <text x={AXIS_L} y={h + 32} fontSize="9.5" fontWeight="800" fill={INK_SOFT}>월</text>
             </svg>
+            {!hasAny && <p style={{ margin: '4px 0 0', color: INK_SOFT, fontSize: '.82rem' }}>아직 기록이 없어요.</p>}
         </div>
     );
 };
 
-/** 꺾은선 — 추이용. 점은 8px 이상, 선은 2px. */
-const TrendLine = ({ rows, valueKey, unit, formatValue = num }) => {
-    if (rows.length < 2) {
-        return <p style={{ color: INK_SOFT, fontSize: '.85rem' }}>두 달 이상 쌓이면 그래프로 보여 줄게요.</p>;
-    }
-    const max = Math.max(...rows.map((r) => r[valueKey]), 1);
-    const h = 118, stepX = 62, padL = 6;
-    const width = padL + (rows.length - 1) * stepX + 30;
-    const pt = (r, i) => [padL + i * stepX, h - 16 - (r[valueKey] / max) * (h - 40)];
-    const path = rows.map((r, i) => `${i ? 'L' : 'M'}${pt(r, i).join(' ')}`).join(' ');
+/** 꺾은선 — 3월~1월 축 고정. 값이 있는 구간만 잇고, 숫자는 최고점과 마지막에만 적는다. */
+const TrendLine = ({ rows, valueKey, unit }) => {
+    const h = 118;
+    const slot = (CHART_W - AXIS_L) / rows.length;
+    const max = Math.max(...rows.map((r) => r[valueKey] || 0), 1);
+    const points = rows
+        .map((r, i) => ({ ...r, i, v: r[valueKey] || 0 }))
+        .filter((r) => r.v > 0);
+
+    const cx = (i) => AXIS_L + i * slot + slot / 2;
+    const cy = (v) => h - 14 - (v / max) * (h - 40);
+    const path = points.map((r, k) => `${k ? 'L' : 'M'}${cx(r.i)} ${cy(r.v)}`).join(' ');
+
+    const peak = points.reduce((a, b) => (b.v > (a?.v ?? -1) ? b : a), null);
+    const lastPoint = points.length ? points[points.length - 1] : null;
+    const labelled = new Set([peak?.i, lastPoint?.i].filter((v) => v !== undefined));
+
     return (
         <div style={{ overflowX: 'auto' }}>
-            <svg width={Math.max(width, 140)} height={h + 26} role="img" aria-label="추이">
-                <line x1="0" y1={h} x2={Math.max(width, 140)} y2={h} stroke={GRID} strokeWidth="1" />
-                <path d={path} fill="none" stroke={SERIES} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                {rows.map((r, i) => {
-                    const [x, y] = pt(r, i);
-                    return (
-                        <g key={r.m}>
-                            <circle cx={x} cy={y} r="4.5" fill={SERIES} stroke="#FFFDF7" strokeWidth="2">
-                                <title>{monthLabel(r.m)} · {formatValue(r[valueKey])}{unit}</title>
-                            </circle>
-                            <text x={x} y={y - 11} textAnchor="middle" fontSize="10.5" fontWeight="800" fill={INK}>
-                                {formatValue(r[valueKey])}
-                            </text>
-                            <text x={x} y={h + 17} textAnchor="middle" fontSize="11" fontWeight="800" fill={INK_SOFT}>
-                                {monthLabel(r.m)}
-                            </text>
-                        </g>
-                    );
-                })}
+            <svg width={CHART_W} height={h + 38} role="img" aria-label="달마다 추이">
+                <line x1={AXIS_L} y1={h} x2={CHART_W} y2={h} stroke={GRID} strokeWidth="1" />
+                {points.length > 1 && (
+                    <path d={path} fill="none" stroke={SERIES} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                )}
+                {rows.map((r, i) => (
+                    <text key={`x-${r.m}`} x={cx(i)} y={h + 16} textAnchor="middle"
+                        fontSize="10" fontWeight="800" fill={INK_SOFT}>{r.monthNo}</text>
+                ))}
+                {points.map((r) => (
+                    <g key={r.m}>
+                        <circle cx={cx(r.i)} cy={cy(r.v)} r="4.5" fill={SERIES} stroke="#FFFDF7" strokeWidth="2">
+                            <title>{r.monthNo}월 · {num(r.v)}{unit}</title>
+                        </circle>
+                        {labelled.has(r.i) && (
+                            <text x={cx(r.i)} y={cy(r.v) - 10} textAnchor="middle"
+                                fontSize="10.5" fontWeight="800" fill={INK}>{num(r.v)}</text>
+                        )}
+                    </g>
+                ))}
+                <text x={AXIS_L} y={h + 32} fontSize="9.5" fontWeight="800" fill={INK_SOFT}>월</text>
             </svg>
+            {!points.length && <p style={{ margin: '4px 0 0', color: INK_SOFT, fontSize: '.82rem' }}>아직 기록이 없어요.</p>}
         </div>
     );
 };
@@ -286,12 +321,23 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
         return () => window.removeEventListener('popstate', closeOnBack);
     }, [isOpen, onClose]);
 
-    const cumulative = useMemo(() => (
-        (detail.points_monthly || []).reduce((acc, r) => {
+    const monthsAxis = useMemo(
+        () => fillSchoolYearMonths(detail.monthly, detail.school_year),
+        [detail.monthly, detail.school_year]
+    );
+
+    // 포인트 누적: 학년도 11칸 위에서 달마다 더해 나간다. 활동이 없는 달은 직전 값을 잇는다.
+    const cumulative = useMemo(() => {
+        const filled = fillSchoolYearMonths(detail.points_monthly, detail.school_year);
+        const today = new Date();
+        return filled.reduce((acc, r) => {
             const prev = acc.length ? acc[acc.length - 1].total : 0;
-            return [...acc, { m: r.m, total: prev + (r.earned || 0) - (r.spent || 0) }];
-        }, [])
-    ), [detail.points_monthly]);
+            const started = (r.earned || 0) + (r.spent || 0) > 0;
+            const future = new Date(`${r.m}-01T00:00:00`) > today;
+            const total = future ? 0 : prev + (r.earned || 0) - (r.spent || 0);
+            return [...acc, { ...r, total: started || prev > 0 ? total : 0 }];
+        }, []);
+    }, [detail.points_monthly, detail.school_year]);
 
     if (!isOpen) return null;
     const t = detail.totals || EMPTY_DETAIL.totals;
@@ -346,11 +392,11 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
                                 </Section>
 
                                 <Section title="📈 달마다 쓴 글">
-                                    <MonthlyBars rows={detail.monthly || []} valueKey="posts" unit="편" />
+                                    <MonthlyBars rows={monthsAxis} valueKey="posts" unit="편" />
                                 </Section>
 
                                 <Section title="✍️ 글이 길어지고 있어요" hint="달마다 글 한 편의 평균 글자 수예요.">
-                                    <TrendLine rows={detail.monthly || []} valueKey="avg_chars" unit="자" />
+                                    <TrendLine rows={monthsAxis} valueKey="avg_chars" unit="자" />
                                 </Section>
 
                                 <Section title="💰 포인트가 쌓인 길" hint="쓴 포인트를 뺀 나머지가 지금 내 포인트예요.">
