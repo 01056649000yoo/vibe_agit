@@ -31,10 +31,11 @@
     나의 아지트와 글쓰기 발자국이 같은 진행값·구간 진행률·다음 목표를 표시하도록 통일했다.
   - 학생 누적 통계에 학급 직접 필터·최근순·1,000건 상한을 추가했다. 과제 글은 미션별 한 편으로, `mission_id=null`인 자율 글은
     각 글을 별도 한 편으로 세어 여러 자율 글이 하나로 합쳐지던 통계 경계를 바로잡았다.
-- **변경**: `writerLevels.js`, `useStudentDashboard.js`, `MyAgitPanel.jsx`, `WritingFootprintModal.jsx`.
+- **변경**: 커밋 `c0b331f` — `writerLevels.js`, `useStudentDashboard.js`, `MyAgitPanel.jsx`,
+  `WritingFootprintModal.jsx`, 로드맵·작업로그.
 - **결과/검증**: 작가 10개 단계 문턱 11케이스와 기존 독자 7단계·점수 회귀 테스트 통과. 변경 파일 ESLint 0에러
   (발자국 그래프의 기존 보안 휴리스틱 경고 5건), `npm run build`, `git diff --check` 통과. 연결 가능한 인앱 브라우저가 없어
-  로그인 학생의 시각 검증은 못 했다.
+  로그인 학생의 시각 검증은 못 했다. GitHub Actions Deploy run `30471721849` 성공: 앱 이미지 빌드·`agit-app` 재시작·Verify 통과.
 - **남은 것 / 다음**: 앱 배포 후 학생 계정에서 글 0편·첫 승인 글·300자 전후의 칭호와 `편→자` 목표 전환을 스모크한다.
   별도 제작할 작가 10종·독자 7종 뱃지 이미지는 결과물이 정해지면 현재 이모지 자리에 교체한다.
 
