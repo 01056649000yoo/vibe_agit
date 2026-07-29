@@ -1,9 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import ModalPortal from '../common/ModalPortal';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 import { getWriterLevel } from '../../constants/writerLevels';
+
+const MyShelfPostDetail = lazy(() => import('./MyShelfPostDetail'));
 
 /**
  * 나의 아지트 — 학생이 자기 것을 모아 보는 공간.
@@ -51,14 +53,18 @@ const Row = ({ icon, title, desc, right, onClick }) => (
 
 const MyAgitPanel = ({
     isOpen, onClose, studentSession, points = 0,
-    onOpenPost
+    writerStats, writerLevel
 }) => {
     const classId = studentSession?.class_id || studentSession?.classId;
     const studentId = studentSession?.id;
 
     const [shelf, setShelf] = useState([]);
-    const [totalChars, setTotalChars] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [selectedSummary, setSelectedSummary] = useState(null);
+    const [selectedPost, setSelectedPost] = useState(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState('');
+    const selectedSummaryRef = useRef(null);
 
     const load = useCallback(async () => {
         if (!classId || !studentId) return;
@@ -69,7 +75,7 @@ const MyAgitPanel = ({
                 async () => {
                     const { data, error } = await supabase
                         .from('student_posts')
-                        .select('id, title, writing_context, self_writing_type, char_count, visibility, created_at')
+                        .select('id, title, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at')
                         .eq('class_id', classId)
                         .eq('student_id', studentId)
                         .eq('is_submitted', true)
@@ -81,12 +87,78 @@ const MyAgitPanel = ({
                 SHELF_TTL_MS
             );
             setShelf(rows);
-            setTotalChars(rows.reduce((sum, r) => sum + (r.char_count || 0), 0));
         } catch (error) {
             console.error('내 서재 로드 실패:', error.message);
             setShelf([]);
         }
         setLoading(false);
+    }, [classId, studentId]);
+
+    const openShelfPost = useCallback(async (summary, forceRefresh = false) => {
+        if (!summary?.id || !classId || !studentId) return;
+
+        if (!selectedSummaryRef.current) {
+            window.history.pushState({ studentPage: 'main', overlay: 'my-shelf-detail' }, '');
+        }
+        selectedSummaryRef.current = summary;
+        setSelectedSummary(summary);
+        setSelectedPost(null);
+        setDetailError('');
+        setDetailLoading(true);
+
+        const detailKey = classKey(classId, 'my-shelf-detail', { student: studentId, post: summary.id });
+        if (forceRefresh) dataCache.invalidate(detailKey);
+
+        try {
+            const detail = await dataCache.get(detailKey, async () => {
+                const [postResult, reviewResult] = await Promise.all([
+                    supabase
+                        .from('student_posts')
+                        .select('id, title, content, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at, structured_content, ai_feedback, original_title, original_content, is_confirmed')
+                        .eq('class_id', classId)
+                        .eq('student_id', studentId)
+                        .eq('id', summary.id)
+                        .eq('is_submitted', true)
+                        .maybeSingle(),
+                    supabase
+                        .from('reading_log_teacher_reviews')
+                        .select('post_id, review_status, teacher_comment, reviewed_at')
+                        .eq('class_id', classId)
+                        .eq('student_id', studentId)
+                        .eq('post_id', summary.id)
+                        .maybeSingle()
+                ]);
+
+                if (postResult.error) throw postResult.error;
+                if (!postResult.data) throw new Error('글을 찾지 못했어요.');
+                if (reviewResult.error) throw reviewResult.error;
+
+                let mission = null;
+                if (postResult.data.mission_id) {
+                    const { data: missionData, error: missionError } = await supabase
+                        .from('writing_missions')
+                        .select('id, title, is_archived, mission_type, input_template')
+                        .eq('class_id', classId)
+                        .eq('id', postResult.data.mission_id)
+                        .maybeSingle();
+                    if (missionError) throw missionError;
+                    mission = missionData || null;
+                }
+
+                return {
+                    ...postResult.data,
+                    mission,
+                    teacherReview: reviewResult.data || null
+                };
+            }, SHELF_TTL_MS);
+
+            setSelectedPost(detail);
+        } catch (error) {
+            console.error('내 서재 글 상세 로드 실패:', error.message);
+            setDetailError('글을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+        } finally {
+            setDetailLoading(false);
+        }
     }, [classId, studentId]);
 
     useEffect(() => {
@@ -105,7 +177,16 @@ const MyAgitPanel = ({
     useEffect(() => {
         if (!isOpen) return undefined;
         window.history.pushState({ studentPage: 'main', overlay: 'my-agit' }, '');
-        const closeOnBack = () => onCloseRef.current?.();
+        const closeOnBack = () => {
+            if (selectedSummaryRef.current) {
+                selectedSummaryRef.current = null;
+                setSelectedSummary(null);
+                setSelectedPost(null);
+                setDetailError('');
+                return;
+            }
+            onCloseRef.current?.();
+        };
         window.addEventListener('popstate', closeOnBack);
         return () => window.removeEventListener('popstate', closeOnBack);
     }, [isOpen]);
@@ -116,9 +197,13 @@ const MyAgitPanel = ({
         free: shelf.filter((p) => p.writing_context === 'self' && p.self_writing_type !== 'reading_log').length
     }), [shelf]);
 
-    const level = getWriterLevel(totalChars);
+    const totalChars = writerStats?.totalChars || 0;
+    const level = writerLevel || getWriterLevel(totalChars);
+    const levelStart = level.from || 0;
     const toNext = level.next ? Math.max(0, level.next - totalChars) : 0;
-    const percent = level.next ? Math.min(100, Math.round((totalChars / level.next) * 100)) : 100;
+    const percent = level.next
+        ? Math.min(100, Math.round(((totalChars - levelStart) / Math.max(1, level.next - levelStart)) * 100))
+        : 100;
 
     if (!isOpen) return null;
 
@@ -201,7 +286,7 @@ const MyAgitPanel = ({
                                     <button
                                         key={post.id}
                                         type="button"
-                                        onClick={() => onOpenPost?.(post)}
+                                        onClick={() => openShelfPost(post)}
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
                                             padding: '10px 12px', border: `1px solid ${LINE}`, borderRadius: '13px',
@@ -220,6 +305,7 @@ const MyAgitPanel = ({
                                         {post.visibility !== 'class' && (
                                             <span style={{ fontSize: '.7rem', fontWeight: 800, color: INK_SOFT }}>🔒</span>
                                         )}
+                                        <span aria-hidden="true" style={{ color: '#B0BEC5', fontWeight: 900 }}>›</span>
                                     </button>
                                 ))}
                             </div>
@@ -227,6 +313,24 @@ const MyAgitPanel = ({
                     </section>
 
                 </div>
+
+                {selectedSummary && (
+                    <Suspense fallback={(
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 3200, display: 'grid', placeItems: 'center', background: '#F8FBFF', color: INK_SOFT, fontWeight: 900 }}>
+                            내 글 화면을 준비하는 중... 📖
+                        </div>
+                    )}>
+                        <MyShelfPostDetail
+                            key={selectedSummary.id}
+                            summary={selectedSummary}
+                            post={selectedPost}
+                            loading={detailLoading}
+                            errorMessage={detailError}
+                            onClose={() => window.history.back()}
+                            onRetry={() => openShelfPost(selectedSummary, true)}
+                        />
+                    </Suspense>
+                )}
             </motion.div>
         </ModalPortal>
     );

@@ -77,7 +77,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
-        returnedCount, dragonConfig, dragonConfigLoaded, initialPetData,
+        returnedCount, stats, levelInfo, dragonConfig, dragonConfigLoaded, initialPetData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback,
         fetchMyPoints, fetchStats, checkActivity
     } = useStudentDashboard(studentSession, onNavigate);
@@ -280,7 +280,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     onClose={() => setIsMyAgitOpen(false)}
                     studentSession={studentSession}
                     points={points}
-                    onOpenPost={() => { setIsMyAgitOpen(false); onNavigate('friends_hideout'); }}
+                    writerStats={stats}
+                    writerLevel={levelInfo}
                 />
 
                 <Suspense fallback={null}>
