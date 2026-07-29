@@ -31,6 +31,7 @@ const SHELF_TTL_MS = 30000;
 const READER_ACTIVITY_LIMIT = 1000;
 
 const num = (v) => Number(v || 0).toLocaleString('ko-KR');
+const titleBadgeSrc = (kind, level) => `/assets/title-badges/${kind}-level-${level}.png`;
 
 const typeLabel = (post) => {
     if (post.writing_context === 'self') {
@@ -58,7 +59,7 @@ const Row = ({ icon, title, desc, right, onClick }) => (
     </button>
 );
 
-const BadgeButton = ({ kind, badgeSrc, level, loading, errorMessage, onClick }) => {
+const BadgeButton = ({ kind, level, loading, errorMessage, onClick }) => {
     const writer = kind === 'writer';
     const accent = writer ? '#C77712' : '#2768B7';
     return (
@@ -72,7 +73,7 @@ const BadgeButton = ({ kind, badgeSrc, level, loading, errorMessage, onClick }) 
             }}
         >
             <span style={{ position: 'relative', display: 'inline-block' }}>
-                <img src={badgeSrc} alt="" aria-hidden="true" width="76" height="76"
+                <img src={titleBadgeSrc(kind, level.level)} alt="" aria-hidden="true" width="76" height="76"
                     style={{ display: 'block', width: '76px', height: '76px', objectFit: 'contain', filter: 'drop-shadow(0 5px 7px rgba(62,46,35,.14))' }} />
                 {!loading && !errorMessage && (
                     <span style={{
@@ -103,7 +104,7 @@ const TitleGuide = ({ kind, currentLevel, currentValue, currentUnit, onClose }) 
     if (!kind) return null;
     const writer = kind === 'writer';
     const levels = writer ? WRITER_LEVELS : READER_LEVELS;
-    const badgeSrc = writer ? '/assets/title-badges/writer-badge.png' : '/assets/title-badges/reader-badge.png';
+    const badgeSrc = titleBadgeSrc(kind, currentLevel.level);
     const accent = writer ? '#C77712' : '#2768B7';
 
     return (
@@ -148,14 +149,27 @@ const TitleGuide = ({ kind, currentLevel, currentValue, currentUnit, onClose }) 
                                 const achieved = item.level <= currentLevel.level;
                                 return (
                                     <div key={item.level} style={{
-                                        display: 'grid', gridTemplateColumns: '34px minmax(0,1fr) auto', alignItems: 'center', gap: '9px',
+                                        display: 'grid', gridTemplateColumns: '42px minmax(0,1fr) auto', alignItems: 'center', gap: '9px',
                                         padding: '9px 11px', borderRadius: '13px', background: current ? `${accent}12` : '#FFFFFF',
                                         border: current ? `1.5px solid ${accent}70` : `1px solid ${LINE}`
                                     }}>
                                         <span style={{
-                                            width: '30px', height: '30px', display: 'grid', placeItems: 'center', borderRadius: '10px',
-                                            background: achieved ? `${accent}18` : '#F3F0EB', fontSize: '.95rem'
-                                        }}>{achieved ? item.emoji : '🔒'}</span>
+                                            position: 'relative', width: '40px', height: '40px', display: 'grid', placeItems: 'center'
+                                        }}>
+                                            <img
+                                                src={titleBadgeSrc(kind, item.level)}
+                                                alt=""
+                                                aria-hidden="true"
+                                                width="40"
+                                                height="40"
+                                                loading="lazy"
+                                                style={{
+                                                    width: '40px', height: '40px', objectFit: 'contain',
+                                                    filter: achieved ? 'none' : 'grayscale(1)', opacity: achieved ? 1 : .42
+                                                }}
+                                            />
+                                            {!achieved && <span aria-hidden="true" style={{ position: 'absolute', right: '-2px', bottom: '-2px', fontSize: '.7rem' }}>🔒</span>}
+                                        </span>
                                         <span style={{ minWidth: 0 }}>
                                             <span style={{ display: 'block', color: INK, fontSize: '.8rem', fontWeight: current ? 950 : 850 }}>
                                                 LV.{item.level} {item.name}
@@ -449,13 +463,11 @@ const MyAgitPanel = ({
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '10px', marginTop: '10px' }}>
                             <BadgeButton
                                 kind="writer"
-                                badgeSrc="/assets/title-badges/writer-badge.png"
                                 level={writerTitle}
                                 onClick={() => setActiveTitleGuide('writer')}
                             />
                             <BadgeButton
                                 kind="reader"
-                                badgeSrc="/assets/title-badges/reader-badge.png"
                                 level={readerTitle}
                                 loading={readerLoading}
                                 errorMessage={readerError}
