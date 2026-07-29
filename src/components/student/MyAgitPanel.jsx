@@ -3,7 +3,13 @@ import { motion } from 'framer-motion';
 import ModalPortal from '../common/ModalPortal';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
-import { calculateReaderScore, getReaderLevel, getWriterLevel } from '../../constants/writerLevels';
+import {
+    calculateReaderScore,
+    getReaderLevel,
+    getWriterLevel,
+    READER_LEVELS,
+    WRITER_LEVELS
+} from '../../constants/writerLevels';
 
 const MyShelfPostDetail = lazy(() => import('./MyShelfPostDetail'));
 
@@ -52,43 +58,121 @@ const Row = ({ icon, title, desc, right, onClick }) => (
     </button>
 );
 
-const TitleTrack = ({ label, level, value, unit, accent, surface, loading, errorMessage }) => {
-    const levelStart = level.progressFrom ?? level.from ?? 0;
-    const progressValue = level.progressValue ?? value;
-    const progressUnit = level.nextUnit || unit;
-    const toNext = level.next ? Math.max(0, level.next - progressValue) : 0;
-    const percent = level.next
-        ? Math.max(0, Math.min(100, Math.round(((progressValue - levelStart) / Math.max(1, level.next - levelStart)) * 100)))
-        : 100;
+const BadgeButton = ({ kind, badgeSrc, level, loading, errorMessage, onClick }) => {
+    const writer = kind === 'writer';
+    const accent = writer ? '#C77712' : '#2768B7';
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-label={`${writer ? '작가' : '독자'} 칭호 설명 보기`}
+            style={{
+                position: 'relative', minWidth: 0, padding: '2px 4px 6px', border: 'none', borderRadius: '18px',
+                background: 'transparent', cursor: 'pointer', color: INK, fontFamily: 'inherit'
+            }}
+        >
+            <span style={{ position: 'relative', display: 'inline-block' }}>
+                <img src={badgeSrc} alt="" aria-hidden="true" width="76" height="76"
+                    style={{ display: 'block', width: '76px', height: '76px', objectFit: 'contain', filter: 'drop-shadow(0 5px 7px rgba(62,46,35,.14))' }} />
+                {!loading && !errorMessage && (
+                    <span style={{
+                        position: 'absolute', right: '-2px', bottom: '2px', minWidth: '29px', height: '29px', padding: '0 4px',
+                        display: 'grid', placeItems: 'center', boxSizing: 'border-box', borderRadius: '99px',
+                        background: '#FFFFFF', border: `2px solid ${accent}`, color: accent, fontSize: '.68rem', fontWeight: 950,
+                        boxShadow: '0 2px 6px rgba(62,46,35,.16)'
+                    }}>L{level.level}</span>
+                )}
+            </span>
+            <span style={{ display: 'block', marginTop: '1px', color: INK_SOFT, fontSize: '.68rem', fontWeight: 900 }}>
+                {writer ? '작가 칭호' : '독자 칭호'}
+            </span>
+            <span style={{ display: 'block', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: INK, fontSize: '.88rem', fontWeight: 950 }}>
+                {loading ? '살펴보는 중...' : errorMessage ? '확인 필요' : level.name}
+            </span>
+        </button>
+    );
+};
+
+const titleRequirement = (kind, item) => {
+    if (item.from === 0) return '시작';
+    if (kind === 'writer' && item.criterion === 'posts') return `승인 글 ${num(item.from)}편`;
+    return `${num(item.from)}${kind === 'writer' ? '자' : '점'}`;
+};
+
+const TitleGuide = ({ kind, currentLevel, currentValue, currentUnit, onClose }) => {
+    if (!kind) return null;
+    const writer = kind === 'writer';
+    const levels = writer ? WRITER_LEVELS : READER_LEVELS;
+    const badgeSrc = writer ? '/assets/title-badges/writer-badge.png' : '/assets/title-badges/reader-badge.png';
+    const accent = writer ? '#C77712' : '#2768B7';
 
     return (
-        <div style={{ padding: '14px', borderRadius: '17px', background: surface, border: `1px solid ${accent}30` }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '.7rem', color: INK_SOFT, fontWeight: 900 }}>{label}</div>
-                    <div style={{ marginTop: '3px', color: INK, fontSize: '1rem', fontWeight: 950 }}>
-                        {loading ? '기록을 살펴보는 중...' : errorMessage ? '칭호를 불러오지 못했어요' : `${level.emoji} ${level.name}`}
+        <ModalPortal>
+            <div onClick={onClose} role="presentation" style={{
+                position: 'fixed', inset: 0, zIndex: 3600, display: 'grid', placeItems: 'center', padding: '18px',
+                background: 'rgba(45,32,24,.58)', backdropFilter: 'blur(5px)'
+            }}>
+                <section
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`${writer ? '작가' : '독자'} 칭호 단계 설명`}
+                    onClick={(event) => event.stopPropagation()}
+                    style={{
+                        width: 'min(440px,100%)', maxHeight: '84vh', overflowY: 'auto', borderRadius: '26px',
+                        background: '#FFFDF7', boxShadow: '0 24px 60px rgba(45,32,24,.3)'
+                    }}
+                >
+                    <header style={{
+                        position: 'sticky', top: 0, zIndex: 1, display: 'flex', alignItems: 'center', gap: '12px',
+                        padding: '16px 18px 13px', background: 'rgba(255,253,247,.96)', borderBottom: `1px solid ${LINE}`
+                    }}>
+                        <img src={badgeSrc} alt="" aria-hidden="true" width="62" height="62" style={{ width: '62px', height: '62px', objectFit: 'contain' }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ color: INK_SOFT, fontSize: '.7rem', fontWeight: 900 }}>{writer ? '✍️ 작가 칭호' : '📖 독자 칭호'}</div>
+                            <h3 style={{ margin: '2px 0 0', color: INK, fontSize: '1.08rem', fontWeight: 950 }}>{currentLevel.name}</h3>
+                            <div style={{ marginTop: '2px', color: accent, fontSize: '.72rem', fontWeight: 900 }}>LV. {currentLevel.level} · {num(currentValue)}{currentUnit}</div>
+                        </div>
+                        <button type="button" onClick={onClose} aria-label="칭호 설명 닫기"
+                            style={{ alignSelf: 'flex-start', border: 'none', background: 'none', color: INK_SOFT, cursor: 'pointer', fontSize: '1.35rem' }}>✕</button>
+                    </header>
+
+                    <div style={{ padding: '14px 18px 20px' }}>
+                        <p style={{ margin: '0 0 13px', color: INK_SOFT, fontSize: '.78rem', fontWeight: 750, lineHeight: 1.55 }}>
+                            {writer
+                                ? '승인된 글을 한 편 완성하면 첫 칭호가 열리고, 그다음부터는 지금까지 쓴 글자 수로 성장해요.'
+                                : '친구의 서로 다른 글에 공감하거나 댓글을 남기면 1점, 댓글은 20자마다 보너스 1점이 붙어요. 한 글에서는 최대 4점까지 얻어요.'}
+                        </p>
+                        <div style={{ display: 'grid', gap: '7px' }}>
+                            {levels.map((item) => {
+                                const current = item.level === currentLevel.level;
+                                const achieved = item.level <= currentLevel.level;
+                                return (
+                                    <div key={item.level} style={{
+                                        display: 'grid', gridTemplateColumns: '34px minmax(0,1fr) auto', alignItems: 'center', gap: '9px',
+                                        padding: '9px 11px', borderRadius: '13px', background: current ? `${accent}12` : '#FFFFFF',
+                                        border: current ? `1.5px solid ${accent}70` : `1px solid ${LINE}`
+                                    }}>
+                                        <span style={{
+                                            width: '30px', height: '30px', display: 'grid', placeItems: 'center', borderRadius: '10px',
+                                            background: achieved ? `${accent}18` : '#F3F0EB', fontSize: '.95rem'
+                                        }}>{achieved ? item.emoji : '🔒'}</span>
+                                        <span style={{ minWidth: 0 }}>
+                                            <span style={{ display: 'block', color: INK, fontSize: '.8rem', fontWeight: current ? 950 : 850 }}>
+                                                LV.{item.level} {item.name}
+                                            </span>
+                                            {current && <span style={{ display: 'block', marginTop: '1px', color: accent, fontSize: '.64rem', fontWeight: 900 }}>지금 나의 칭호</span>}
+                                        </span>
+                                        <span style={{ color: achieved ? accent : INK_SOFT, fontSize: '.69rem', fontWeight: 900, whiteSpace: 'nowrap' }}>
+                                            {titleRequirement(kind, item)}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-                {!loading && !errorMessage && (
-                    <span style={{ flexShrink: 0, padding: '3px 9px', borderRadius: '9px', background: '#FFFFFF', color: accent, fontSize: '.72rem', fontWeight: 950 }}>
-                        LV. {level.level}
-                    </span>
-                )}
+                </section>
             </div>
-            {!loading && !errorMessage && (
-                <div style={{ marginTop: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '5px', color: INK_SOFT, fontSize: '.7rem', fontWeight: 850 }}>
-                        <span>{num(progressValue)}{progressUnit}</span>
-                        <span>{level.next ? `다음 칭호까지 ${num(toNext)}${progressUnit}` : '가장 높은 칭호예요!'}</span>
-                    </div>
-                    <div style={{ height: '7px', overflow: 'hidden', borderRadius: '99px', background: 'rgba(62,46,35,.08)' }}>
-                        <div style={{ width: `${percent}%`, height: '100%', borderRadius: '99px', background: accent }} />
-                    </div>
-                </div>
-            )}
-            {errorMessage && <div style={{ marginTop: '7px', color: '#C62828', fontSize: '.7rem', fontWeight: 800 }}>{errorMessage}</div>}
-        </div>
+        </ModalPortal>
     );
 };
 
@@ -104,11 +188,21 @@ const MyAgitPanel = ({
     const [readerActivity, setReaderActivity] = useState({ score: 0, postCount: 0 });
     const [readerLoading, setReaderLoading] = useState(true);
     const [readerError, setReaderError] = useState('');
+    const [activeTitleGuide, setActiveTitleGuide] = useState(null);
     const [selectedSummary, setSelectedSummary] = useState(null);
     const [selectedPost, setSelectedPost] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailError, setDetailError] = useState('');
     const selectedSummaryRef = useRef(null);
+
+    useEffect(() => {
+        if (!activeTitleGuide) return undefined;
+        const closeOnEscape = (event) => {
+            if (event.key === 'Escape') setActiveTitleGuide(null);
+        };
+        window.addEventListener('keydown', closeOnEscape);
+        return () => window.removeEventListener('keydown', closeOnEscape);
+    }, [activeTitleGuide]);
 
     const load = useCallback(async () => {
         if (!classId || !studentId) return;
@@ -336,15 +430,15 @@ const MyAgitPanel = ({
                             style={{ border: 'none', background: 'none', fontSize: '1.5rem', color: INK_SOFT, cursor: 'pointer' }}>✕</button>
                     </header>
 
-                    {/* 칭호 — 쓰는 성장과 읽는 성장을 서로 다른 축으로 인정한다. */}
+                    {/* 칭호 — 긴 상태표 대신 프로필에 다는 두 개의 훈장으로 보여 준다. */}
                     <section aria-label="나의 작가·독자 칭호" style={{
-                        padding: '18px 20px', borderRadius: '22px', border: '1px solid #FFE082',
+                        padding: '15px 16px 13px', borderRadius: '22px', border: '1px solid #FFE082',
                         background: 'linear-gradient(135deg,#FFF8E1,#FFFFFF)', marginBottom: '14px'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
                             <div>
-                                <div style={{ fontSize: '1.02rem', fontWeight: 950, color: INK }}>{studentSession?.name}의 두 가지 성장</div>
-                                <div style={{ marginTop: '3px', fontSize: '.74rem', fontWeight: 800, color: INK_SOFT }}>쓰는 힘과 읽고 나누는 힘을 따로 키워요.</div>
+                                <div style={{ fontSize: '1.02rem', fontWeight: 950, color: INK }}>{studentSession?.name}의 두 가지 칭호</div>
+                                <div style={{ marginTop: '3px', fontSize: '.7rem', fontWeight: 800, color: INK_SOFT }}>뱃지를 눌러 성장 단계를 봐요.</div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#FBC02D', lineHeight: 1.1 }}>
@@ -352,29 +446,22 @@ const MyAgitPanel = ({
                                 </div>
                             </div>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', marginTop: '14px' }}>
-                            <TitleTrack
-                                label="✍️ 작가 칭호"
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '10px', marginTop: '10px' }}>
+                            <BadgeButton
+                                kind="writer"
+                                badgeSrc="/assets/title-badges/writer-badge.png"
                                 level={writerTitle}
-                                value={writerTitle.progressValue}
-                                unit={writerTitle.nextUnit}
-                                accent="#F9A825"
-                                surface="#FFFDF5"
+                                onClick={() => setActiveTitleGuide('writer')}
                             />
-                            <TitleTrack
-                                label={`📖 독자 칭호 · 친구 글 ${num(readerActivity.postCount)}편`}
+                            <BadgeButton
+                                kind="reader"
+                                badgeSrc="/assets/title-badges/reader-badge.png"
                                 level={readerTitle}
-                                value={readerActivity.score}
-                                unit="점"
-                                accent="#2A78D6"
-                                surface="#F5F9FF"
                                 loading={readerLoading}
                                 errorMessage={readerError}
+                                onClick={() => setActiveTitleGuide('reader')}
                             />
                         </div>
-                        <p style={{ margin: '10px 2px 0', color: INK_SOFT, fontSize: '.7rem', fontWeight: 750, lineHeight: 1.5 }}>
-                            친구의 서로 다른 글에 공감하거나 댓글을 남기면 독자 점수가 올라요. 댓글은 20자마다 보너스가 붙어요.
-                        </p>
                     </section>
 
                     {/* 내 서재 */}
@@ -446,6 +533,14 @@ const MyAgitPanel = ({
                         />
                     </Suspense>
                 )}
+
+                <TitleGuide
+                    kind={activeTitleGuide}
+                    currentLevel={activeTitleGuide === 'reader' ? readerTitle : writerTitle}
+                    currentValue={activeTitleGuide === 'reader' ? readerActivity.score : writerTitle.progressValue}
+                    currentUnit={activeTitleGuide === 'reader' ? '점' : writerTitle.nextUnit}
+                    onClose={() => setActiveTitleGuide(null)}
+                />
             </motion.div>
         </ModalPortal>
     );
