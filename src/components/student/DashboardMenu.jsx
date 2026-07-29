@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 
-const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgroundCount = 0, isMobile, agitSettings, studentSession, enabledModules = [] }) => {
+const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, playgroundCount = 0, isMobile, agitSettings, studentSession, enabledModules = [] }) => {
     const agitOnClassEnabled = enabledModules.some((module) => module.id === 'agit-on-class');
     const ideaMarketEnabled = enabledModules.some((module) => module.id === 'idea-market');
     // [신규] 새 미션 존재 여부 확인 (최근 24시간)
@@ -151,7 +151,7 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                     onClick={() => onNavigate('friends_hideout')}
                 >
                     <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>👀</div>
-                    <h3 style={{ margin: 0, color: '#5D4037' }}>친구들</h3>
+                    <h3 style={{ margin: 0, color: '#5D4037' }}>친구 아지트</h3>
                     <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>친구들의 글 읽기</p>
                 </motion.div>
 
@@ -187,11 +187,11 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                 {/* 아지트 놀이터 — 포인트로 즐기는 콘텐츠 모음.
                     드래곤·어휘의 탑 등 포인트 활동은 이 안에서 열린다(메뉴가 길어지지 않도록).
                     켜진 놀거리가 없으면 카드 자체를 숨긴다. */}
-                {playgroundCount > 0 && (
+                {(
                     <motion.div
                         whileHover={{ scale: 1.02, y: -5 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setIsPlaygroundOpen(true)}
+                        onClick={onOpenMyAgit}
                         style={{
                             background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
                             borderRadius: '24px', padding: '30px 24px', cursor: 'pointer',
@@ -199,10 +199,10 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, setIsPlaygroundOpen, playgro
                             textAlign: 'center', gridColumn: isMobile ? 'auto' : '1 / -1'
                         }}
                     >
-                        <div style={{ fontSize: '3.5rem', marginBottom: '10px' }}>🎡</div>
-                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#5D4037', marginBottom: '6px' }}>놀이터</div>
+                        <div style={{ fontSize: '3.5rem', marginBottom: '10px' }}>🏡</div>
+                        <div style={{ fontSize: '1.3rem', fontWeight: '900', color: '#5D4037', marginBottom: '6px' }}>나의 아지트</div>
                         <div style={{ fontSize: '0.9rem', color: '#FBC02D', fontWeight: 'bold', background: 'white', padding: '4px 12px', borderRadius: '10px', display: 'inline-block' }}>
-                            포인트로 즐기는 놀거리 {playgroundCount}개
+                            내 서재 · 칭호 · 발자국{playgroundCount > 0 ? ` · 놀거리 ${playgroundCount}개` : ''}
                         </div>
                     </motion.div>
                 )}

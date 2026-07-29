@@ -61,9 +61,9 @@ function App() {
     'student'
   );
   const studentPageName = internalPage.name;
-  // 하단 내비의 '놀이터'는 페이지가 아니라 홈에서 펼쳐지는 구역이라,
-  // 홈으로 보낸 뒤 이 값을 올려 대시보드에 "펼쳐라"라고 알린다.
-  const [playgroundSignal, setPlaygroundSignal] = useState(0);
+  // 하단 내비의 '나의 아지트'는 페이지가 아니라 홈 위에 뜨는 판이라,
+  // 홈으로 보낸 뒤 이 값을 올려 대시보드에 "열어라"라고 알린다.
+  const [myAgitSignal, setMyAgitSignal] = useState(0);
 
   // 학생 화면 뒤로가기: 그동안 처리가 없어 태블릿·폰에서 뒤로가기를 누르면 앱이 닫혔다.
   // 페이지가 바뀔 때 히스토리를 쌓고, 뒤로가기가 오면 그 페이지로 되돌린다.
@@ -297,7 +297,7 @@ function App() {
                   onLogout={handleStudentLogout}
                   onNavigate={setInternalPage}
                   enabledModules={enabledStudentModules}
-                  playgroundSignal={playgroundSignal}
+                  myAgitSignal={myAgitSignal}
                 />
               )}
               {studentPageName === 'mission_list' && (
@@ -344,7 +344,7 @@ function App() {
                 <StudentBottomNav
                   activeTab={studentPageName}
                   onNavigate={setInternalPage}
-                  onOpenPlayground={() => setPlaygroundSignal((n) => n + 1)}
+                  onOpenMyAgit={() => setMyAgitSignal((n) => n + 1)}
                 />
               </Suspense>
             </>

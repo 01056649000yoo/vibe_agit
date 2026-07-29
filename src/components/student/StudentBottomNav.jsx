@@ -5,16 +5,18 @@ import { motion } from 'framer-motion';
  * 역할: 모바일 환경에서 학생들의 빠른 메뉴 이동을 돕는 하단 탭바 📱
  * 특징: 768px 미만에서만 표시됨
  */
-const StudentBottomNav = ({ activeTab, onNavigate, onOpenPlayground }) => {
+const StudentBottomNav = ({ activeTab, onNavigate, onOpenMyAgit }) => {
     // 이름·아이콘은 홈 카드(DashboardMenu)와 **똑같이** 맞춘다.
     // 같은 곳인데 아래는 "과제", 홈에서는 "선생님 과제"로 부르면 학생이 다른 곳으로 안다.
     const tabs = [
         { id: 'main', label: '홈', icon: '🏠', target: 'main' },
         { id: 'mission_list', label: '과제', icon: '📝', target: 'mission_list' },
         { id: 'reading_logs', label: '독서록', icon: '📚', target: 'reading_logs' },
-        { id: 'friends_hideout', label: '친구들', icon: '👀', target: 'friends_hideout' },
-        // 놀이터는 홈에서 펼쳐지는 구역이라 페이지 이동이 아니다. 눌리면 홈으로 간 뒤 펼친다.
-        { id: 'playground', label: '놀이터', icon: '🎮', target: 'playground' }
+        // 내 것을 모아 보는 곳. 놀이터·드래곤·발자국이 이 안에 들어간다.
+        // 페이지가 아니라 홈 위에 뜨는 판이라 홈으로 보낸 뒤 연다.
+        { id: 'my_agit', label: '나의 아지트', icon: '🏡', target: 'my_agit' },
+        // 남의 것을 보는 곳. 나의 아지트와 짝을 이룬다.
+        { id: 'friends_hideout', label: '친구 아지트', icon: '👀', target: 'friends_hideout' }
     ];
 
     return (
@@ -29,9 +31,9 @@ const StudentBottomNav = ({ activeTab, onNavigate, onOpenPlayground }) => {
                             key={tab.id}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => {
-                                if (tab.target === 'playground') {
+                                if (tab.target === 'my_agit') {
                                     onNavigate('main');
-                                    onOpenPlayground?.();
+                                    onOpenMyAgit?.();
                                     return;
                                 }
                                 onNavigate(tab.target);

@@ -14,12 +14,12 @@ import StudentHeader from './StudentHeader';
 import TeacherNotifyBanner from './TeacherNotifyBanner';
 import DashboardMenu from './DashboardMenu';
 import StudentTodoCard from './StudentTodoCard';
+import MyAgitPanel from './MyAgitPanel';
 // 드래곤 모듈 — 모달을 열 때만 코드를 받도록 지연 로딩 (src/modules/game/dragon)
 const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHideoutModal'));
 const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/BackgroundShopModal'));
 // [bundle-dynamic-imports] 조건부 렌더링되는 대형 컴포넌트를 lazy loading으로 전환
 const AgitOnClassPage = lazy(getModule('agit-on-class').studentEntry);
-const PlaygroundPanel = lazy(() => import('../../modules/PlaygroundPanel'));
 const WritingFootprintModal = lazy(() => import('../../modules/writing/writing-footprint/WritingFootprintModal'));
 const VocabularyTowerGame = lazy(() => import('../../modules/game/vocab-tower/VocabularyTowerGame'));
 
@@ -37,32 +37,23 @@ const HIDEOUT_BACKGROUNDS = {
 // [신규] 아지트 실시간 데이터 연동 훅
 import { useClassAgitClass } from '../../hooks/useClassAgitClass';
 
-const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules = [], playgroundSignal = 0 }) => {
+const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules = [], myAgitSignal = 0 }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isAgitOpen, setIsAgitOpen] = useState(false); // [신규] 아지트 오픈 상태
     const [isVocabTowerOpen, setIsVocabTowerOpen] = useState(false); // [신규] 어휘의 탑 오픈 상태
-    const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false); // 아지트 놀이터(포인트 콘텐츠 모음)
     const [activeGameModuleId, setActiveGameModuleId] = useState(null);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [isFootprintOpen, setIsFootprintOpen] = useState(false);
+    const [isMyAgitOpen, setIsMyAgitOpen] = useState(false);
 
-    // 하단 내비의 '놀이터'를 누르면 홈으로 온 뒤 이 신호가 올라온다.
+    // 하단 내비의 '나의 아지트'를 누르면 홈으로 온 뒤 이 신호가 올라온다.
     useEffect(() => {
-        if (!playgroundSignal) return;
-        setIsPlaygroundOpen(true);
-    }, [playgroundSignal]);
+        if (!myAgitSignal) return;
+        setIsMyAgitOpen(true);
+    }, [myAgitSignal]);
 
-    // 놀이터는 화면을 덮는 판이라, 뒤로가기로 닫히지 않으면 학생이 빠져나갈 길을 잃는다.
-    // 열 때 히스토리를 하나 쌓아 두고 뒤로가기가 오면 닫는다.
-    useEffect(() => {
-        if (!isPlaygroundOpen) return undefined;
-        window.history.pushState({ studentPage: 'main', overlay: 'playground' }, '');
-        const closeOnBack = () => setIsPlaygroundOpen(false);
-        window.addEventListener('popstate', closeOnBack);
-        return () => window.removeEventListener('popstate', closeOnBack);
-    }, [isPlaygroundOpen]);
 
     // [신규] 아지트 온도 및 활성화 정보 실시간 동기화
     // 아지트 설정·어휘의 탑 설정. 우리 반 온도는 학생 홈에서 쓰지 않아 받지 않는다.
@@ -216,7 +207,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                 {/* 헤더 섹션 */}
                 <StudentHeader
                     hasActivity={hasActivity}
-                    onOpenFootprint={() => setIsFootprintOpen(true)}
                     openFeedback={openFeedback}
                     setIsGuideOpen={setIsGuideOpen}
                     onLogout={onLogout}
@@ -251,7 +241,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                 {/* 주요 활동 메뉴 */}
                 <DashboardMenu
                     onNavigate={onNavigate}
-                    setIsPlaygroundOpen={setIsPlaygroundOpen}
+                    onOpenMyAgit={() => setIsMyAgitOpen(true)}
                     playgroundCount={playgroundItems.length}
                     setIsAgitOpen={setIsAgitOpen} // [추가]
                     isMobile={isMobile}
@@ -269,6 +259,16 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                         🚩 오늘의 목표: 멋진 글 완성하고 포인트 더 받기!
                     </p>
                 </div>
+
+                <MyAgitPanel
+                    isOpen={isMyAgitOpen}
+                    onClose={() => setIsMyAgitOpen(false)}
+                    studentSession={studentSession}
+                    points={points}
+                    playgroundItems={playgroundItems}
+                    onOpenFootprint={() => { setIsMyAgitOpen(false); setIsFootprintOpen(true); }}
+                    onOpenPost={() => { setIsMyAgitOpen(false); onNavigate('friends_hideout'); }}
+                />
 
                 <Suspense fallback={null}>
                     {isFootprintOpen && (
@@ -330,31 +330,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
             </Card>
 
             {/* [신규] 우리반 아지트 독립 창 (전체 화면 오버레이) */}
-            {/* 아지트 놀이터 — 포인트로 즐기는 콘텐츠 모음 (모듈로 늘어남) */}
-            <AnimatePresence>
-                {isPlaygroundOpen && playgroundItems.length > 0 && (
-                    <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        style={{
-                            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-                            background: 'linear-gradient(180deg, #FFFDF5 0%, #FFF8E1 100%)',
-                            zIndex: 20000, overflowY: 'auto'
-                        }}
-                    >
-                        <Suspense fallback={null}>
-                            <PlaygroundPanel
-                                items={playgroundItems}
-                                points={points}
-                                isMobile={isMobile}
-                                onClose={() => setIsPlaygroundOpen(false)}
-                            />
-                        </Suspense>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+
 
             {/* 신규 포인트·놀이 모듈 공통 진입점 — manifest.studentEntry를 지연 로딩 */}
             <AnimatePresence>
