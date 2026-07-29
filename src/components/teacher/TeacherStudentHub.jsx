@@ -14,9 +14,13 @@ const cardStyle = (isMobile) => ({
     border: '1px solid #E2E8F0', boxShadow: '0 3px 12px rgba(15, 23, 42, 0.04)'
 });
 
-const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost, onNavigate }) => {
+const TeacherStudentHub = ({ activeClass, isMobile, setSelectedActivityPost, onNavigate, navigationTarget }) => {
     const classId = activeClass?.id;
-    const [section, setSection] = useState('overview');
+    const [section, setSection] = useState(() => (
+        navigationTarget?.tab === 'students' && ['overview', 'activity', 'students'].includes(navigationTarget.section)
+            ? navigationTarget.section
+            : 'overview'
+    ));
 
     const handleAnalysisNavigate = (target) => {
         if (target?.tab === 'students') {

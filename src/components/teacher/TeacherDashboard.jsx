@@ -361,11 +361,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             />
                         ) : visibleTab === 'students' ? (
                             <TeacherStudentHub
-                                key={activeClass.id}
+                                key={`${activeClass.id}-${workspaceTarget?.tab === 'students' ? workspaceTarget.requestId : 'stable'}`}
                                 activeClass={activeClass}
                                 isMobile={isMobile}
                                 setSelectedActivityPost={setSelectedActivityPost}
                                 onNavigate={handleWorkspaceNavigate}
+                                navigationTarget={workspaceTarget}
                             />
                         ) : visibleTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
@@ -382,6 +383,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
                                 reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}
                                 handleSaveTeacherSettings={handleSaveTeacherSettings}
+                                onNavigate={handleWorkspaceNavigate}
                             />
                         )
                     )}

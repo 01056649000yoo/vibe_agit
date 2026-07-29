@@ -16,7 +16,7 @@ const TeacherSettingsHub = ({
     handleTestAIConnection, runAIDiagnosis, savingKey, testingKey, aiStatus,
     promptTemplate, setPromptTemplate, originalPrompt,
     reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
-    handleSaveTeacherSettings
+    handleSaveTeacherSettings, onNavigate
 }) => {
     const [section, setSection] = useState('class');
     const selected = SETTINGS_ITEMS.find((item) => item.id === section) || SETTINGS_ITEMS[0];
@@ -74,6 +74,7 @@ const TeacherSettingsHub = ({
                         onClassDeleted={fetchAllClasses} isMobile={isMobile}
                         primaryClassId={profile?.primary_class_id} onSetPrimaryClass={handleSetPrimaryClass}
                         fetchDeletedClasses={fetchDeletedClasses} onRestoreClass={handleRestoreClass}
+                        onNavigate={onNavigate}
                     />
                 ) : section === 'writing-editor' ? (
                     <section style={{ padding: isMobile ? '28px 20px' : '40px', border: '1px solid #DCE6EE', borderRadius: '20px', background: 'white', textAlign: 'center' }}>

@@ -14,12 +14,23 @@ import { generateUnambiguousCode } from '../../lib/codeGenerator';
  * - classes 테이블은 ON DELETE CASCADE 설정이 되어 있어야 합니다.
  *   (학급 삭제 시 student, writing_missions 등 관련 데이터가 자동 삭제됨)
  */
-const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted, isMobile, primaryClassId, onSetPrimaryClass, fetchDeletedClasses, onRestoreClass }) => {
+const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setClasses, onClassDeleted, isMobile, primaryClassId, onSetPrimaryClass, fetchDeletedClasses, onRestoreClass, onNavigate }) => {
     const [className, setClassName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
     const [deletedClasses, setDeletedClasses] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
+    const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+
+    const handleCopyInviteCode = async () => {
+        if (!activeClass?.invite_code) return;
+        try {
+            await navigator.clipboard.writeText(activeClass.invite_code);
+            alert('학급 접속 코드를 복사했습니다.');
+        } catch {
+            alert(`학급 접속 코드: ${activeClass.invite_code}`);
+        }
+    };
 
     const handleOpenTrash = async () => {
         if (fetchDeletedClasses) {
@@ -202,96 +213,68 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     )}
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    {/* 학급 정보 섹션 */}
-                    <div style={{
-                        padding: isMobile ? '16px' : '14px 32px',
-                        background: 'linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%)',
-                        borderRadius: '24px',
-                        border: '1px solid #FFE082',
-                        display: 'flex',
-                        flexDirection: isMobile ? 'column' : 'row',
-                        alignItems: 'center',
-                        gap: '16px',
-                        boxShadow: '0 4px 15px rgba(255, 236, 179, 0.3)',
-                        width: '100%',
-                        boxSizing: 'border-box',
-                        overflow: 'hidden'
-                    }}>
-                        <div>
-                            <span style={{
-                                fontSize: '0.75rem',
-                                color: '#B26700',
-                                background: '#FFF176',
-                                padding: '2px 8px',
-                                borderRadius: '6px',
-                                fontWeight: '900',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                display: 'inline-block',
-                                marginBottom: '6px',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                            }}>
-                                CURRENT CLASS
-                            </span>
-                            <h3 style={{
-                                margin: 0,
-                                fontSize: isMobile ? '1.8rem' : '2.4rem',
-                                color: '#2C3E50',
-                                fontWeight: '950',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                lineHeight: 1,
-                                textShadow: '1px 1px 0px rgba(255,255,255,0.8)'
-                            }}>
-                                <span style={{ fontSize: '1.2em' }}>🏫</span> {activeClass?.name}
-                            </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', minWidth: 0 }}>
+                            {classes.map((cls) => {
+                                const selected = cls.id === activeClass.id;
+                                const primary = cls.id === primaryClassId;
+                                return (
+                                    <button key={cls.id} type="button" onClick={() => setActiveClass(cls)} style={{
+                                        padding: '9px 12px', borderRadius: '12px', cursor: 'pointer', fontWeight: '900', fontSize: '0.82rem',
+                                        border: selected ? '1px solid #93C5FD' : '1px solid #E2E8F0',
+                                        background: selected ? '#EFF6FF' : 'white', color: selected ? '#1D4ED8' : '#475569',
+                                        boxShadow: selected ? '0 3px 10px rgba(37,99,235,.10)' : 'none'
+                                    }}>
+                                        {primary ? '⭐ ' : ''}{cls.name}{selected ? ' · 현재' : ''}
+                                    </button>
+                                );
+                            })}
                         </div>
+                        <div style={{ display: 'flex', gap: '7px' }}>
+                            <button type="button" onClick={handleOpenTrash} style={smallActionStyle}>복구함</button>
+                            <button type="button" onClick={() => setIsModalOpen(true)} style={{ ...smallActionStyle, background: '#2563EB', color: 'white', borderColor: '#2563EB' }}>+ 학급 추가</button>
+                        </div>
+                    </div>
 
-                        {activeClass?.id === primaryClassId ? (
-                            <div style={{ background: '#FFD700', color: '#8B4513', padding: '6px 12px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(255, 215, 0, 0.2)' }}>
-                                ⭐ 주 학급
+                    <section style={{ padding: isMobile ? '16px' : '18px 20px', background: 'white', border: '1px solid #DCE6EE', borderRadius: '18px', boxShadow: '0 5px 18px rgba(15,23,42,.04)' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+                            <div style={{ flex: 1, minWidth: '190px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
+                                    <h3 style={{ margin: 0, color: '#1E293B', fontSize: '1.2rem' }}>🏫 {activeClass.name}</h3>
+                                    {activeClass.id === primaryClassId && <span style={badgeStyle}>⭐ 주 학급</span>}
+                                    <span style={{ ...badgeStyle, background: '#DCFCE7', color: '#15803D' }}>● 운영 중</span>
+                                </div>
+                                <div style={{ marginTop: '9px', display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap', color: '#64748B', fontSize: '0.8rem' }}>
+                                    <span>학생 접속 코드</span>
+                                    <code style={{ padding: '4px 8px', borderRadius: '8px', background: '#F1F5F9', color: '#334155', fontWeight: '900', letterSpacing: '0.08em' }}>{activeClass.invite_code || '확인 필요'}</code>
+                                </div>
                             </div>
-                        ) : (
-                            <button
-                                onClick={() => onSetPrimaryClass && onSetPrimaryClass(activeClass.id)}
-                                style={{
-                                    background: 'white', border: '1px solid #FFD700', color: '#DAA520',
-                                    padding: '6px 14px', borderRadius: '10px', fontSize: '0.75rem',
-                                    fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s',
-                                    display: 'flex', alignItems: 'center', gap: '4px'
-                                }}
-                            >
-                                ⭐ 주 학급 설정
-                            </button>
-                        )}
-                    </div>
 
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <Button
-                            variant="ghost"
-                            style={{ flex: 1.5, background: 'white', border: '1px solid #ECEFF1', color: '#2C3E50', height: '54px', fontWeight: 'bold' }}
-                            onClick={() => setIsModalOpen(true)}
-                        >
-                            ➕ 다른 학급 추가
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            style={{ flex: 1, background: 'white', border: '1px solid #ECEFF1', color: '#7F8C8D', height: '54px', fontWeight: 'bold' }}
-                            onClick={handleOpenTrash}
-                        >
-                            ♻️ 복구함
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            style={{ flex: 1, background: '#FDEDEC', border: '1px solid #FADBD8', color: '#E74C3C', height: '54px', fontWeight: 'bold' }}
-                            onClick={() => activeClass && handleDeleteClass(activeClass.id, activeClass.name)}
-                            disabled={!activeClass || isSaving}
-                        >
-                            {isSaving ? '삭제 중...' : '🗑️ 학급 삭제'}
-                        </Button>
-                    </div>
+                            <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', position: 'relative' }}>
+                                <button type="button" onClick={handleCopyInviteCode} style={smallActionStyle}>코드 복사</button>
+                                {onNavigate && <button type="button" onClick={() => onNavigate({ tab: 'students', section: 'students' })} style={smallActionStyle}>학생 관리</button>}
+                                {activeClass.id !== primaryClassId && <button type="button" onClick={() => onSetPrimaryClass?.(activeClass.id)} style={smallActionStyle}>주 학급 설정</button>}
+                                <button type="button" onClick={() => setIsActionMenuOpen((current) => !current)} aria-label="학급 추가 관리" style={{ ...smallActionStyle, width: '36px', padding: 0 }}>⋮</button>
+                                {isActionMenuOpen && (
+                                    <div style={{ position: 'absolute', zIndex: 5, top: '42px', right: 0, width: '170px', padding: '6px', borderRadius: '12px', border: '1px solid #E2E8F0', background: 'white', boxShadow: '0 12px 30px rgba(15,23,42,.16)' }}>
+                                        <button type="button" disabled={isSaving} onClick={() => { setIsActionMenuOpen(false); handleDeleteClass(activeClass.id, activeClass.name); }} style={{ width: '100%', padding: '10px', border: 'none', borderRadius: '8px', background: 'transparent', color: '#DC2626', textAlign: 'left', fontWeight: '800', cursor: 'pointer' }}>🗑️ 학급 삭제</button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section style={{ padding: isMobile ? '14px' : '15px 18px', border: '1px solid #E2E8F0', borderRadius: '16px', background: '#F8FAFC', display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                                <strong style={{ color: '#334155', fontSize: '0.88rem' }}>🔗 학급 간 글 공유</strong>
+                                <span style={{ ...badgeStyle, background: '#E2E8F0', color: '#64748B' }}>비공개</span>
+                            </div>
+                            <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.74rem' }}>연결을 승인한 학급끼리 선택한 글을 공유하는 기능이 이곳에 추가됩니다.</p>
+                        </div>
+                        <span style={{ padding: '6px 9px', borderRadius: '9px', background: 'white', border: '1px solid #E2E8F0', color: '#94A3B8', fontSize: '0.7rem', fontWeight: '900', whiteSpace: 'nowrap' }}>업데이트 예정</span>
+                    </section>
                 </div>
             )}
 
@@ -402,6 +385,16 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
             </AnimatePresence>
         </div>
     );
+};
+
+const smallActionStyle = {
+    minHeight: '36px', padding: '7px 10px', borderRadius: '10px', border: '1px solid #CBD5E1',
+    background: 'white', color: '#475569', fontSize: '0.75rem', fontWeight: '900', cursor: 'pointer'
+};
+
+const badgeStyle = {
+    display: 'inline-flex', alignItems: 'center', padding: '4px 7px', borderRadius: '999px',
+    background: '#FEF3C7', color: '#92400E', fontSize: '0.66rem', fontWeight: '900'
 };
 
 export default ClassManager;
