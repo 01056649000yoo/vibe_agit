@@ -21,6 +21,46 @@
 
 ---
 
+## 2026-07-29 — 교사 대시보드 리뉴얼 정적 점검 + 죽은 코드 정리 + 마지막 조인 교정 (Claude)
+- **배경**: 사용자 요청 — 브라우저 확인은 본인이 하고 있으니, 리뉴얼된 교사 대시보드의 기능이
+  잘 붙어 있는지 **정적으로** 점검. 큰 리팩터링에서 가장 잘 깨지는 것들 위주로 봤다.
+- **통과한 점검**:
+
+  | 항목 | 결과 |
+  |---|---|
+  | 교사 메뉴 탭 9개 ↔ 렌더 분기 | 전부 연결 (`settings` 는 최종 else 의 `TeacherSettingsHub`) |
+  | 코드가 부르는 **RPC 36종** ↔ `pg_proc` | 전부 존재 + 인자 이름 일치 |
+  | `anon` EXECUTE 권한 | 트리거·인증 헬퍼뿐. 교사·관리자 RPC **0건** |
+  | 모듈 진입점 15개 (`manifest` lazy import) | 전부 실제 파일로 해석됨 |
+  | `mission-types` 별도 레지스트리 | `poem`·`idea-market` 정상 (registry.js 와 다른 계통) |
+
+- **죽은 코드 4개 삭제** (모두 참조 0건 확인 후):
+  - `components/teacher/UsageGuide.jsx` (323줄) — `a668dc9 교사 설정 통합` 에서 `guide` 탭이 빠지며 열 수 없게 됐다.
+    **사용자 확인: 본인이 만들었다가 없앤 기능** → 삭제 확정.
+  - `lib/supabase.js` — `createClient` 를 **또** 호출하는 두 번째 클라이언트. 아무도 import 하지 않았지만
+    누가 가져다 쓰면 인증 세션이 갈라진다. 전부 `supabaseClient.js` 를 쓰므로 제거.
+  - `components/teacher/TeacherHome.jsx` (39줄), `modules/ModuleToggles.jsx` (7/28에도 보고한 중복 구현.
+    모듈 on/off 는 `GameManager` 안에 별도로 있다).
+- **마지막 조회 기준 위반 해소 — `reading_log_entries` 조인**:
+  7/28 에 "인덱스가 없어 조건만 넣으면 오히려 나빠질 수 있다"며 미뤄 뒀던 항목. **이번에 측정했고 예상과 반대였다.**
+  원인은 `base` CTE — `counts` 와 `page` 가 함께 참조해 materialize 되므로 책 조인이 페이지 50편이 아니라
+  **그 학급 독서록 전체**에 대해 돈다. 조인에 학급이 없으면 전 학급 항목을 Seq Scan 해서 해시로 만든다.
+
+  | (독서록 8만·항목 8만·한 학급 748편 사본, 3회) | reading_log_entries 접근 | 실행 시간 |
+  |---|---|---|
+  | 지금 | **Seq Scan 80,000행** | 6.9 / 7.9 / 15.6 ms |
+  | 학급 조인만 | 748행 | 3.3 / 4.2 / 5.3 ms |
+  | **조인 + class 인덱스** | **Bitmap Index Scan** | **1.8 / 2.0 / 2.3 ms** ← 채택 |
+
+  → `20260729_scope_reading_log_entries_join.sql` (인덱스 + 두 RPC 조인 2곳).
+  적용 전후 두 RPC 응답을 비교해 **완전히 동일**함을 확인(회귀 없음). 인덱스 `valid=true`.
+- **결과/검증**: 빌드 통과, 린트 문제 73→72. 남은 에러 2건은 이번 변경과 무관한 기존 파일
+  (`LandingPage.jsx`, `TeacherAnnouncementManager.jsx`).
+  **DB 함수 76개 전체를 훑어 학급 관련 조인 10건 중 학급 없는 조인 0건** 확인 — 조회 기준 위반이 처음으로 완전히 0이 됐다.
+- **남은 것**: 실제 동작·배치 확인은 계속 브라우저 몫(사용자가 직접 확인 중).
+
+---
+
 ## 2026-07-29 — GPT 작업분 최신화 + 조회 기준 위반 1건 교정 (Claude)
 - **한 일**: 로컬이 origin/main 보다 16커밋 뒤에 있어 fast-forward 로 최신화(`ce090c7` → `b1cd275`).
   로컬 고유 커밋 0개라 충돌·유실 없음. 2026-07-28 Claude 커밋 6개가 모두 origin/main 의 조상임을 확인.
