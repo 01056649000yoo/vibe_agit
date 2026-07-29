@@ -29,7 +29,7 @@ class ModuleErrorBoundary extends React.Component {
     }
 
     componentDidCatch(error) {
-        console.error(`[포인트·놀이 모듈] ${this.props.moduleName} 관리 화면 오류:`, error);
+        console.error(`[아지트 놀이터 모듈] ${this.props.moduleName} 관리 화면 오류:`, error);
     }
 
     render() {

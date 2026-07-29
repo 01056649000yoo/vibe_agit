@@ -51,7 +51,7 @@ const Row = ({ icon, title, desc, right, onClick }) => (
 
 const MyAgitPanel = ({
     isOpen, onClose, studentSession, points = 0,
-    playgroundItems = [], onOpenPost
+    onOpenPost
 }) => {
     const classId = studentSession?.class_id || studentSession?.classId;
     const studentId = studentSession?.id;
@@ -226,19 +226,6 @@ const MyAgitPanel = ({
                         )}
                     </section>
 
-                    {/* 발자국 · 놀이터 */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
-                        {playgroundItems.map((item) => (
-                            <Row
-                                key={item.id}
-                                icon={item.icon}
-                                title={item.name}
-                                desc={item.badge || item.description}
-                                right="열기 ›"
-                                onClick={item.onOpen}
-                            />
-                        ))}
-                    </div>
                 </div>
             </motion.div>
         </ModalPortal>

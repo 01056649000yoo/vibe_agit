@@ -2,7 +2,7 @@ import React from 'react';
 import RegisteredGameModuleCards from '../../modules/game/teacher/RegisteredGameModuleCards';
 
 /**
- * 포인트·놀이 교사 관리 셸.
+ * 아지트 놀이터 교사 관리 셸.
  *
  * manifest.teacherEntry를 등록한 게임은 같은 카드 그리드에 자동으로 추가된다.
  */

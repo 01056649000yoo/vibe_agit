@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 
-const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, playgroundCount = 0, isMobile, agitSettings, studentSession, enabledModules = [] }) => {
+const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, onOpenPlayground, playgroundCount = 0, isMobile, agitSettings, studentSession, enabledModules = [] }) => {
     const agitOnClassEnabled = enabledModules.some((module) => module.id === 'agit-on-class');
     // [신규] 새 미션 존재 여부 확인 (최근 24시간)
     const [hasNewMission, setHasNewMission] = useState(false);
@@ -167,10 +167,27 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, playgroundCoun
                 >
                     <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🏡</div>
                     <h3 style={{ margin: 0, color: '#5D4037' }}>나의 아지트</h3>
-                    <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>
-                        내 서재·칭호{playgroundCount > 0 ? ` · 놀거리 ${playgroundCount}개` : ''}
-                    </p>
+                    <p style={{ fontSize: '0.85rem', color: '#9E9E9E', marginTop: '8px' }}>내 서재와 작가 칭호</p>
                 </motion.div>
+
+                {/* 놀거리. PC 에는 하단 내비가 없어 홈 카드가 유일한 입구다.
+                    켜진 놀거리가 없으면 숨긴다. */}
+                {playgroundCount > 0 && (
+                    <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{
+                            background: 'linear-gradient(145deg,#FFF3E0,#FFFFFF)', padding: '24px', borderRadius: '24px', border: '2px solid #FFCC80',
+                            textAlign: 'center', cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative',
+                            boxShadow: '0 4px 8px rgba(251, 140, 0, 0.14)'
+                        }}
+                        onClick={onOpenPlayground}
+                    >
+                        <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🎡</div>
+                        <h3 style={{ margin: 0, color: '#E65100' }}>아지트 놀이터</h3>
+                        <p style={{ fontSize: '0.85rem', color: '#A1887F', marginTop: '8px' }}>포인트로 즐기는 놀거리 {playgroundCount}개</p>
+                    </motion.div>
+                )}
 
 
 

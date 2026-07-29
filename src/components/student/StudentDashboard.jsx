@@ -15,6 +15,7 @@ import TeacherNotifyBanner from './TeacherNotifyBanner';
 import DashboardMenu from './DashboardMenu';
 import StudentTodoCard from './StudentTodoCard';
 import MyAgitPanel from './MyAgitPanel';
+import AgitPlayground from './AgitPlayground';
 // 드래곤 모듈 — 모달을 열 때만 코드를 받도록 지연 로딩 (src/modules/game/dragon)
 const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHideoutModal'));
 const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/BackgroundShopModal'));
@@ -37,7 +38,7 @@ const HIDEOUT_BACKGROUNDS = {
 // [신규] 아지트 실시간 데이터 연동 훅
 import { useClassAgitClass } from '../../hooks/useClassAgitClass';
 
-const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules = [], myAgitSignal = 0 }) => {
+const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules = [], myAgitSignal = 0, playgroundSignal = 0 }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
@@ -47,12 +48,18 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [isFootprintOpen, setIsFootprintOpen] = useState(false);
     const [isMyAgitOpen, setIsMyAgitOpen] = useState(false);
+    const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false);
 
     // 하단 내비의 '나의 아지트'를 누르면 홈으로 온 뒤 이 신호가 올라온다.
     useEffect(() => {
         if (!myAgitSignal) return;
         setIsMyAgitOpen(true);
     }, [myAgitSignal]);
+
+    useEffect(() => {
+        if (!playgroundSignal) return;
+        setIsPlaygroundOpen(true);
+    }, [playgroundSignal]);
 
 
     // [신규] 아지트 온도 및 활성화 정보 실시간 동기화
@@ -243,6 +250,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                 <DashboardMenu
                     onNavigate={onNavigate}
                     onOpenMyAgit={() => setIsMyAgitOpen(true)}
+                    onOpenPlayground={() => setIsPlaygroundOpen(true)}
                     playgroundCount={playgroundItems.length}
                     setIsAgitOpen={setIsAgitOpen} // [추가]
                     isMobile={isMobile}
@@ -261,12 +269,17 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     </p>
                 </div>
 
+                <AgitPlayground
+                    isOpen={isPlaygroundOpen}
+                    onClose={() => setIsPlaygroundOpen(false)}
+                    items={playgroundItems}
+                />
+
                 <MyAgitPanel
                     isOpen={isMyAgitOpen}
                     onClose={() => setIsMyAgitOpen(false)}
                     studentSession={studentSession}
                     points={points}
-                    playgroundItems={playgroundItems}
                     onOpenPost={() => { setIsMyAgitOpen(false); onNavigate('friends_hideout'); }}
                 />
 
@@ -332,7 +345,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
             {/* [신규] 우리반 아지트 독립 창 (전체 화면 오버레이) */}
 
 
-            {/* 신규 포인트·놀이 모듈 공통 진입점 — manifest.studentEntry를 지연 로딩 */}
+            {/* 신규 아지트 놀이터 모듈 공통 진입점 — manifest.studentEntry를 지연 로딩 */}
             <AnimatePresence>
                 {activeGameModule && activeGameModule.playground?.entryMode !== 'legacy' && (
                     <motion.div

@@ -16,7 +16,7 @@
  * @property {{name?: string, description?: string, background?: string, borderColor?: string, order?: number, entryMode?: 'standard'|'legacy'}} [playground]
  *   학생 놀이터 카드와 진입 방식. standard 모듈은 studentEntry가 공통 호스트 props를 받는다.
  * @property {{title?: string, subtitle?: string, order?: number, activeColor?: string, headerBackground?: string, borderColor?: string, titleColor?: string, subtitleColor?: string, legacy?: boolean}} [management]
- *   교사 포인트·놀이 관리 카드 표시 정보. teacherEntry가 있으면 공통 관리 셸에서 지연 로딩한다.
+ *   교사 아지트 놀이터 관리 카드 표시 정보. teacherEntry가 있으면 공통 관리 셸에서 지연 로딩한다.
  * @property {{order?: number, launchMode?: 'embedded'|'external', href?: string}} [tool]
  *   교사 수업 도구 런처 정보. part가 tool이면 teacherEntry를 선택할 때만 지연 로딩한다.
  * @property {string}   [studentRoute] 학생 화면 내부 라우트 이름

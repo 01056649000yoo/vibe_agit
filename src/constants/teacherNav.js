@@ -42,10 +42,10 @@ export const TEACHER_NAV_GROUPS = [
     },
     {
         id: 'playground',
-        label: '포인트·놀이',
-        icon: '🎮',
+        label: '아지트 놀이터',
+        icon: '🎡',
         defaultTab: 'playground',
-        tabs: [{ id: 'playground', label: '포인트·놀이' }],
+        tabs: [{ id: 'playground', label: '아지트 놀이터' }],
         // 화면 안이 카드로 구성된다 (GameManager).
         // 켜고 끄는 버튼은 별도 화면이 아니라 각 카드 머리에 붙어 있다.
         innerShape: 'cards',
