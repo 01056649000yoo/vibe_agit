@@ -57,10 +57,9 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         classes, setClasses, loadingClasses,
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
         editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
-        promptTemplate, setPromptTemplate, originalPrompt,
-        reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
-        savingKey, testingKey, aiStatus,
-        handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection, runAIDiagnosis,
+        setPromptTemplate, reportPromptTemplate, setReportPromptTemplate,
+        testingKey, aiStatus,
+        handleUpdateTeacherProfile, handleTestAIConnection, runAIDiagnosis,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses
     } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass);
@@ -379,10 +378,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 fetchAllClasses={fetchAllClasses} fetchDeletedClasses={fetchDeletedClasses}
                                 handleRestoreClass={handleRestoreClass} handleSetPrimaryClass={handleSetPrimaryClass}
                                 handleTestAIConnection={handleTestAIConnection} runAIDiagnosis={runAIDiagnosis}
-                                savingKey={savingKey} testingKey={testingKey} aiStatus={aiStatus}
-                                promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
-                                reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}
-                                handleSaveTeacherSettings={handleSaveTeacherSettings}
+                                testingKey={testingKey} aiStatus={aiStatus}
+                                setPromptTemplate={setPromptTemplate} setReportPromptTemplate={setReportPromptTemplate}
                                 onNavigate={handleWorkspaceNavigate}
                             />
                         )

@@ -13,10 +13,8 @@ const SETTINGS_ITEMS = [
 const TeacherSettingsHub = ({
     isMobile, session, classes, activeClass, setActiveClass, setClasses,
     profile, fetchAllClasses, fetchDeletedClasses, handleRestoreClass, handleSetPrimaryClass,
-    handleTestAIConnection, runAIDiagnosis, savingKey, testingKey, aiStatus,
-    promptTemplate, setPromptTemplate, originalPrompt,
-    reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
-    handleSaveTeacherSettings, onNavigate
+    handleTestAIConnection, runAIDiagnosis, testingKey, aiStatus,
+    setPromptTemplate, setReportPromptTemplate, onNavigate
 }) => {
     const [section, setSection] = useState('class');
     const selected = SETTINGS_ITEMS.find((item) => item.id === section) || SETTINGS_ITEMS[0];
@@ -89,10 +87,8 @@ const TeacherSettingsHub = ({
                     <TeacherSettingsTab
                         isMobile={isMobile} promptKind={section} compact
                         handleTestAIConnection={handleTestAIConnection} runAIDiagnosis={runAIDiagnosis}
-                        savingKey={savingKey} testingKey={testingKey} aiStatus={aiStatus}
-                        promptTemplate={promptTemplate} setPromptTemplate={setPromptTemplate} originalPrompt={originalPrompt}
-                        reportPromptTemplate={reportPromptTemplate} setReportPromptTemplate={setReportPromptTemplate} originalReportPrompt={originalReportPrompt}
-                        handleSaveTeacherSettings={handleSaveTeacherSettings}
+                        testingKey={testingKey} aiStatus={aiStatus}
+                        setPromptTemplate={setPromptTemplate} setReportPromptTemplate={setReportPromptTemplate}
                     />
                 )}
             </main>
