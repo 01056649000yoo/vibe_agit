@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getWriterLevel } from '../constants/writerLevels';
 import { supabase } from '../lib/supabaseClient';
 
-import { dataCache } from '../lib/cache';
+import { classKey, dataCache } from '../lib/cache';
 
 export const useStudentDashboard = (studentSession, onNavigate) => {
     const RETURNED_COUNT_CACHE_MS = 30000;
@@ -39,7 +39,6 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     );
     const returnedCountCacheRef = useRef({ value: 0, fetchedAt: 0 });
 
-    const getLevelInfo = getWriterLevel;   // 정의는 constants/writerLevels.js 한 곳에
 
     const fetchStats = useCallback(async () => {
         if (!studentSession?.id) return;
@@ -49,26 +48,32 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
             // [최적화] 두 가지 통계를 DB 레벨 필터링을 통해 병렬로 가져옴
             const [lifetimeData, monthlyCount] = await Promise.all([
-                // 1. 전체 승인된 글 (최대 100개 제한)
-                dataCache.get(`stats_lifetime_${studentSession.id}`, async () => {
-                    const { data, error } = await supabase
+                // 1. 전체 승인된 글.
+                //    예전에는 `.limit(100)` 이 걸려 있었다. 정렬도 없어서 어떤 100편인지도 정해지지
+                //    않았고, 승인 글이 100편을 넘으면 **누적 글자 수가 더 늘지 않아 작가 레벨이 멈췄다.**
+                //    (지금은 최다 23편이라 아무도 걸리지 않았지만 학년 말에 걸릴 수 있다.)
+                //    한 학생의 글은 많아야 수백 건이고 두 열만 읽으므로 상한 없이 다 센다.
+                //    학급도 함께 걸어 학급 인덱스를 타게 한다 (WORKLOG '학급 글 조회 기준' ①).
+                dataCache.get(classKey(sessionClassId, 'student-lifetime-stats', { student: studentSession.id }), async () => {
+                    const query = supabase
                         .from('student_posts')
                         .select('mission_id, char_count')
                         .eq('student_id', studentSession.id)
-                        .eq('is_confirmed', true)
-                        .limit(100);
+                        .eq('is_confirmed', true);
+                    const { data, error } = await scopeToClass(query);
                     if (error) throw error;
                     return data || [];
                 }, 300000), // 5분 캐시
                 
                 // 2. 이번 달 승인된 글 개수 (DB 레벨 필터링)
-                dataCache.get(`stats_monthly_${studentSession.id}`, async () => {
-                    const { count, error } = await supabase
+                dataCache.get(classKey(sessionClassId, 'student-monthly-posts', { student: studentSession.id }), async () => {
+                    const query = supabase
                         .from('student_posts')
                         .select('id', { count: 'exact', head: true })
                         .eq('student_id', studentSession.id)
                         .eq('is_confirmed', true)
                         .gte('created_at', firstDayOfMonth);
+                    const { count, error } = await scopeToClass(query);
                     if (error) throw error;
                     return count || 0;
                 }, 60000) // 1분 캐시
@@ -92,12 +97,12 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     completedMissions, 
                     monthlyPosts: monthlyCount 
                 });
-                setLevelInfo(getLevelInfo(totalChars));
+                setLevelInfo(getWriterLevel(totalChars));
             }
         } catch (err) {
             console.error('글쓰기 통계 로드 실패:', err.message);
         }
-    }, [studentSession?.id]);
+    }, [studentSession?.id, sessionClassId, scopeToClass]);
 
     const fetchMyPoints = useCallback(async () => {
         if (!studentSession?.id) return;
