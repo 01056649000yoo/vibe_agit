@@ -53,10 +53,12 @@ const Row = ({ icon, title, desc, right, onClick }) => (
 );
 
 const TitleTrack = ({ label, level, value, unit, accent, surface, loading, errorMessage }) => {
-    const levelStart = level.from || 0;
-    const toNext = level.next ? Math.max(0, level.next - value) : 0;
+    const levelStart = level.progressFrom ?? level.from ?? 0;
+    const progressValue = level.progressValue ?? value;
+    const progressUnit = level.nextUnit || unit;
+    const toNext = level.next ? Math.max(0, level.next - progressValue) : 0;
     const percent = level.next
-        ? Math.max(0, Math.min(100, Math.round(((value - levelStart) / Math.max(1, level.next - levelStart)) * 100)))
+        ? Math.max(0, Math.min(100, Math.round(((progressValue - levelStart) / Math.max(1, level.next - levelStart)) * 100)))
         : 100;
 
     return (
@@ -77,8 +79,8 @@ const TitleTrack = ({ label, level, value, unit, accent, surface, loading, error
             {!loading && !errorMessage && (
                 <div style={{ marginTop: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', marginBottom: '5px', color: INK_SOFT, fontSize: '.7rem', fontWeight: 850 }}>
-                        <span>{num(value)}{unit}</span>
-                        <span>{level.next ? `다음 칭호까지 ${num(toNext)}${unit}` : '가장 높은 칭호예요!'}</span>
+                        <span>{num(progressValue)}{progressUnit}</span>
+                        <span>{level.next ? `다음 칭호까지 ${num(toNext)}${progressUnit}` : '가장 높은 칭호예요!'}</span>
                     </div>
                     <div style={{ height: '7px', overflow: 'hidden', borderRadius: '99px', background: 'rgba(62,46,35,.08)' }}>
                         <div style={{ width: `${percent}%`, height: '100%', borderRadius: '99px', background: accent }} />
@@ -310,7 +312,8 @@ const MyAgitPanel = ({
     }), [shelf]);
 
     const totalChars = writerStats?.totalChars || 0;
-    const writerTitle = writerLevel || getWriterLevel(totalChars);
+    const completedPosts = writerStats?.completedPosts ?? writerStats?.completedMissions ?? 0;
+    const writerTitle = writerLevel || getWriterLevel(totalChars, completedPosts);
     const readerTitle = getReaderLevel(readerActivity.score);
 
     if (!isOpen) return null;
@@ -353,8 +356,8 @@ const MyAgitPanel = ({
                             <TitleTrack
                                 label="✍️ 작가 칭호"
                                 level={writerTitle}
-                                value={totalChars}
-                                unit="자"
+                                value={writerTitle.progressValue}
+                                unit={writerTitle.nextUnit}
                                 accent="#F9A825"
                                 surface="#FFFDF5"
                             />

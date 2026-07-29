@@ -349,10 +349,12 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
     const t = detail.totals || EMPTY_DETAIL.totals;
     const sh = detail.sharing || EMPTY_DETAIL.sharing;
-    const level = getWriterLevel(t.total_chars);
-    const toNext = level.next ? Math.max(0, level.next - (t.total_chars || 0)) : 0;
+    const level = getWriterLevel(t.total_chars, t.completed_missions);
+    const toNext = level.next ? Math.max(0, level.next - level.progressValue) : 0;
     const levelPercent = level.next
-        ? Math.min(100, Math.round(((t.total_chars || 0) / level.next) * 100))
+        ? Math.max(0, Math.min(100, Math.round(
+            ((level.progressValue - level.progressFrom) / Math.max(1, level.next - level.progressFrom)) * 100
+        )))
         : 100;
 
     return (
@@ -414,7 +416,7 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                                             <span style={{ fontSize: '.75rem', fontWeight: 800, color: INK_SOFT }}>나의 성장 🌱</span>
                                             <span style={{ fontSize: '.72rem', fontWeight: 800, color: INK_SOFT }}>
-                                                {level.next ? `다음 레벨까지 ${num(toNext)}자` : '가장 높은 단계예요!'}
+                                                {level.next ? `다음 레벨까지 ${num(toNext)}${level.nextUnit}` : '가장 높은 단계예요!'}
                                             </span>
                                         </div>
                                         <div style={{ height: '8px', background: '#F1F3F5', borderRadius: '4px', overflow: 'hidden' }}>

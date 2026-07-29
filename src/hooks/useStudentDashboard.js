@@ -16,8 +16,8 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const [feedbackInitialTab, setFeedbackInitialTab] = useState(0);
     const [returnedCount, setReturnedCount] = useState(0);
     const [petData, setPetData] = useState(null); // [추가] 초기 펫 데이터 상태
-    const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, monthlyPosts: 0 });
-    const [levelInfo, setLevelInfo] = useState({ level: 1, name: '새싹 작가', emoji: '🌱', next: 1401 });
+    const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, completedPosts: 0, monthlyPosts: 0 });
+    const [levelInfo, setLevelInfo] = useState(() => getWriterLevel(0, 0));
     const [isLoading, setIsLoading] = useState(true);
     const [dragonConfig, setDragonConfig] = useState({ feedCost: 80, degenDays: 14 });
     // 퇴화 체크는 교사 설정(degenDays) 로드가 끝난 뒤에만 실행되어야 함 (기본값 14일로 오판 방지)
@@ -58,7 +58,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
 
     const fetchStats = useCallback(async () => {
-        if (!studentSession?.id) return;
+        if (!studentSession?.id || !sessionClassId) return;
         try {
             const now = new Date();
             const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -69,15 +69,18 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 //    예전에는 `.limit(100)` 이 걸려 있었다. 정렬도 없어서 어떤 100편인지도 정해지지
                 //    않았고, 승인 글이 100편을 넘으면 **누적 글자 수가 더 늘지 않아 작가 레벨이 멈췄다.**
                 //    (지금은 최다 23편이라 아무도 걸리지 않았지만 학년 말에 걸릴 수 있다.)
-                //    한 학생의 글은 많아야 수백 건이고 두 열만 읽으므로 상한 없이 다 센다.
-                //    학급도 함께 걸어 학급 인덱스를 타게 한다 (WORKLOG '학급 글 조회 기준' ①).
+                //    한 학생의 글은 많아야 수백 건이므로 최근 1,000편을 안전 상한으로 두고,
+                //    학급을 직접 걸어 학급 인덱스를 탄다 (WORKLOG '학급 글 조회 기준').
                 dataCache.get(classKey(sessionClassId, 'student-lifetime-stats', { student: studentSession.id }), async () => {
                     const query = supabase
                         .from('student_posts')
-                        .select('mission_id, char_count')
+                        .select('id, mission_id, char_count, created_at')
+                        .eq('class_id', sessionClassId)
                         .eq('student_id', studentSession.id)
-                        .eq('is_confirmed', true);
-                    const { data, error } = await scopeToClass(query);
+                        .eq('is_confirmed', true)
+                        .order('created_at', { ascending: false })
+                        .limit(1000);
+                    const { data, error } = await query;
                     if (error) throw error;
                     return data || [];
                 }, 300000), // 5분 캐시
@@ -87,10 +90,11 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     const query = supabase
                         .from('student_posts')
                         .select('id', { count: 'exact', head: true })
+                        .eq('class_id', sessionClassId)
                         .eq('student_id', studentSession.id)
                         .eq('is_confirmed', true)
                         .gte('created_at', firstDayOfMonth);
-                    const { count, error } = await scopeToClass(query);
+                    const { count, error } = await query;
                     if (error) throw error;
                     return count || 0;
                 }, 60000) // 1분 캐시
@@ -100,26 +104,30 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 // [최적화] 이미 DB에서 승인된 것만 가져왔으므로 미션별 중복만 제거
                 const missionMap = new Map();
                 lifetimeData.forEach(post => {
-                    if (!missionMap.has(post.mission_id)) {
-                        missionMap.set(post.mission_id, post);
+                    // 과제글은 미션별 한 편, 자율글(mission_id=null)은 각 글을 한 편으로 세다.
+                    const postKey = post.mission_id ? `mission:${post.mission_id}` : `post:${post.id}`;
+                    if (!missionMap.has(postKey)) {
+                        missionMap.set(postKey, post);
                     }
                 });
 
                 const finalPosts = Array.from(missionMap.values());
                 const totalChars = finalPosts.reduce((sum, post) => sum + (post.char_count || 0), 0);
-                const completedMissions = finalPosts.length;
+                const completedPosts = finalPosts.length;
+                const completedMissions = new Set(finalPosts.map((post) => post.mission_id).filter(Boolean)).size;
                 
                 setStats({ 
                     totalChars, 
-                    completedMissions, 
+                    completedMissions,
+                    completedPosts,
                     monthlyPosts: monthlyCount 
                 });
-                setLevelInfo(getWriterLevel(totalChars));
+                setLevelInfo(getWriterLevel(totalChars, completedPosts));
             }
         } catch (err) {
             console.error('글쓰기 통계 로드 실패:', err.message);
         }
-    }, [studentSession?.id, sessionClassId, scopeToClass]);
+    }, [studentSession?.id, sessionClassId]);
 
     const fetchMyPoints = useCallback(async () => {
         if (!studentSession?.id) return;

@@ -6,31 +6,54 @@ import { countContentChars } from '../lib/textMetrics.js';
  * 대시보드 훅과 발자국 화면이 같은 정의를 보도록 한 곳에 둔다.
  * (예전에는 훅 안에만 있어서, 다른 화면에서 레벨을 보여 주려면 계산을 베껴야 했다.)
  *
- * ⚠️ 지금 기준은 **누적 글자 수 하나**다. 길게 쓰기만 하면 오르고,
- * 꾸준히 쓴 날·고쳐 쓰기·친구와 나눈 기록은 레벨에 반영되지 않는다.
- * 개선 계획은 WORKLOG "작가 레벨 개편 계획" 항목 참고.
+ * 첫 단계는 승인 글 1편 완성, 그 다음부터는 누적 글자 수로 오른다.
+ * 등수·포인트 보상과는 연결하지 않고 자기 성장 표시로만 쓴다.
  */
 export const WRITER_LEVELS = [
-    { level: 1, name: '새싹 작가', emoji: '🌱', from: 0 },
-    { level: 2, name: '초보 작가', emoji: '🌿', from: 1401 },
-    { level: 3, name: '숙련 작가', emoji: '🌳', from: 4201 },
-    { level: 4, name: '대문호', emoji: '👑', from: 8401 },
-    { level: 5, name: '전설의 작가', emoji: '✨', from: 14001 }
+    { level: 1, name: '새싹 작가', emoji: '🌱', from: 0, criterion: 'chars' },
+    { level: 2, name: '첫걸음 작가', emoji: '✏️', from: 1, criterion: 'posts' },
+    { level: 3, name: '연필 작가', emoji: '📝', from: 300, criterion: 'chars' },
+    { level: 4, name: '이야기 작가', emoji: '📖', from: 700, criterion: 'chars' },
+    { level: 5, name: '초보 작가', emoji: '🪶', from: 1400, criterion: 'chars' },
+    { level: 6, name: '꾸준한 작가', emoji: '🔥', from: 2500, criterion: 'chars' },
+    { level: 7, name: '숙련 작가', emoji: '🌳', from: 4200, criterion: 'chars' },
+    { level: 8, name: '대문호', emoji: '👑', from: 8400, criterion: 'chars' },
+    { level: 9, name: '빛나는 작가', emoji: '💫', from: 12000, criterion: 'chars' },
+    { level: 10, name: '전설의 작가', emoji: '✨', from: 20000, criterion: 'chars' }
 ];
 
 /**
  * @param {number} totalChars 누적 글자 수
- * @returns {{level:number, name:string, emoji:string, from:number, next:number|null}}
+ * @param {number} completedPosts 승인 글 수
+ * @returns {{level:number, name:string, emoji:string, from:number, next:number|null, nextUnit:string, progressValue:number, progressFrom:number}}
  */
-export const getWriterLevel = (totalChars = 0) => {
-    const chars = Number(totalChars) || 0;
+export const getWriterLevel = (totalChars = 0, completedPosts = 0) => {
+    const chars = Math.max(0, Number(totalChars) || 0);
+    // 기존 호출처가 글 수를 아직 넘기지 않아도 승인 글에서 나온
+    // 누적 글자가 있다면 최소 1편을 쓴 것으로 하위 호환한다.
+    const posts = Math.max(0, Number(completedPosts) || 0, chars > 0 ? 1 : 0);
     const index = WRITER_LEVELS.reduce(
-        (found, item, i) => (chars >= item.from ? i : found),
+        (found, item, i) => {
+            const value = item.criterion === 'posts' ? posts : chars;
+            return value >= item.from ? i : found;
+        },
         0
     );
     const current = WRITER_LEVELS.at(index);
     const upcoming = WRITER_LEVELS.at(index + 1);
-    return { ...current, next: upcoming ? upcoming.from : null };
+    const progressUsesPosts = upcoming?.criterion === 'posts';
+    const progressValue = progressUsesPosts ? posts : chars;
+    const progressFrom = upcoming
+        ? (progressUsesPosts ? 0 : (current.criterion === 'chars' ? current.from : 0))
+        : current.from;
+
+    return {
+        ...current,
+        next: upcoming ? upcoming.from : null,
+        nextUnit: progressUsesPosts ? '편' : '자',
+        progressValue,
+        progressFrom
+    };
 };
 
 /**
