@@ -169,6 +169,39 @@ CHECK 2개·부분 인덱스·트리거 함수·트리거가 **하나도** 들�
   오늘 백업을 새 기준으로 재생성했다(20초, 산출물 7개, 연구소DB 2.2M→2.3M 로 계정 포함).
 - **신규 문서 `backup.md`** — 매월 점검법·산출물 표·복구 절차·남은 것·교훈. `AGENTS.md` 세션 시작 목록에 연결.
 
+### ⑩ 백업 파일 정리 + 쌤링크 드라이브 사본을 rclone 으로 (사용자 지시)
+사용자 지시: "불필요한 건 다 지우고 오늘부터 다시 시작하자", "전체 디스크 접근 권한은 어떻게 주니".
+
+- **지우기 전 안전 조건 확인**: 오늘 백업이 **세 곳 모두 7개 파일**(내장 41M·암호화 드라이브·외장SSD 40M),
+  리허설 `PASS`. 옛 폴더에만 있는 파일 없음(`comm` 대조). 그다음에 지웠다.
+
+  | 지운 것 | 양 |
+  |---|---|
+  | 드라이브 **평문** 백업 `gdrive:SH맥미니` (7/25~7/30, 6폴더) | **237MB** |
+  | 쌤링크 빈 백업 11개 (로컬 + 드라이브 `samlink-backup` 폴더째) | — |
+  | 내장 옛 백업 9개 (컷오버 시절 시각 붙은 것 포함) | 217MB |
+  | 외장SSD 옛 백업 5개 | 199MB |
+  | 컷오버 시절 임시 덤프 3개 | 17MB |
+
+- **남긴 것**: `~/backups/agit-cloud-20260724`(이관 전 클라우드 상태 — 해지하면 다시 못 만든다,
+  ROADMAP Phase 0 근거), 쌤링크 `postgres-20260718.sql.gz`(고장 전 마지막 정상본).
+- **정리 후 리허설 재실행 → `PASS`**. 드라이브에는 이제 `SH맥미니-enc` 하나만 남았다.
+- **전체 디스크 접근 권한 질문에 대한 답 — 권한을 주지 않고 우회했다**:
+  - 원인은 구글이 아니라 macOS 다. `~/Library/CloudStorage/…` 가 TCC 보호 폴더라
+    사람이 터미널에서 실행하면 되고 launchd 로 돌면 `Operation not permitted` 가 났다.
+  - `/bin/bash` 에 전체 디스크 접근을 주면 풀리지만 **그 인터프리터로 도는 모든 스크립트**가
+    디스크 전체를 읽게 된다 → 너무 넓다.
+  - **rclone 은 드라이브 API 로 직접 올려 그 폴더를 지나가지 않는다** → 권한 불필요.
+    `~/.db-backup/backup.sh` 의 `cp` → `rclone copy "$OUT" "agitcrypt:samlink/"`,
+    보관 정리도 `find -mtime` → `rclone delete --min-age 14d`. rclone 도 절대 경로로 부른다.
+    (백업 `backup.sh.pre-rclone-20260730`)
+  - **덤으로 쌤링크 백업도 암호화**됐다(전에는 평문으로 드라이브에 올라갔다).
+  - **검증**: 최소 환경(`env -i PATH=/usr/bin:/bin`) 실행 → 종료코드 0,
+    로그 `구글 드라이브 사본 저장 (암호화)`, `agitcrypt:samlink/postgres-20260730.sql.gz` 2.1MB 확인.
+- ⚠️ **열쇠 보관 주의**: `rclone config show agitcrypt` 는 값을 `*** ENCRYPTED ***` 로 가린다.
+  **출력이 아니라 `~/.config/rclone/rclone.conf` 파일 자체**를 보관해야 한다(실제 값 80글자 × 2 + 드라이브 토큰).
+- **남은 평문**: `gdrive:Supabase-Backups/literacy/` 15개·34MB. 같은 방식으로 옮길 수 있다(미결정).
+
 - **변경**: `ROADMAP.md`·`WORKLOG.md`·`AGENTS.md`·신규 `backup.md`. **앱 코드 변경 0** → 재배포 불필요.
   git 밖: `~/scripts/sh_mirror_backup.sh` 수정(백업 `*.pre-privileges-20260730`),
   신규 `~/scripts/restore_rehearsal.sh`, 신규 LaunchAgent `com.agit.restore-rehearsal`,

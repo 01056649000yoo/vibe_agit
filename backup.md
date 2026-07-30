@@ -40,7 +40,7 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 | 작업 | 시각 | 대상 | 사본 위치 | 보관 |
 |---|---|---|---|---|
 | `com.agit.backup` | 매일 **04:00** | `agit-db`(아지트) · `supabase-db`(연구소·쌤링크·수업도구·글쓰기도우미) · 자비스 · 스택 설정 · Caddyfile | ①내장 ②구글드라이브(**암호화**) ③외장SSD | 드라이브 30일 |
-| `com.samlink.db-backup` | 매일 **03:30** | `supabase-db` 전체 | 내장 + 드라이브 폴더 | 14일 |
+| `com.samlink.db-backup` | 매일 **03:30** | `supabase-db` 전체 | 내장 + 드라이브(**암호화** `agitcrypt:samlink/`) | 14일 |
 | `local.literacy.backup` | 매일 **03:00** | literacy DB | 드라이브 동기화 폴더 | — |
 | `com.agit.restore-rehearsal` | **매월 1일 04:40** | 위 백업을 복원해 검증 | 로그·상태 파일 | — |
 
@@ -73,9 +73,14 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 > **`~/.config/rclone/rclone.conf` 사본을 맥미니 밖(비밀번호 관리자 등)에 보관한다.**
 > 이게 없으면 맥미니가 죽었을 때 **드라이브 백업을 영영 열 수 없다** — 오프사이트 백업의 의미가 사라진다.
 >
+> **파일을 통째로 보관한다.** `rclone config show agitcrypt` 는 값을 `*** ENCRYPTED ***` 로 가려서
+> 출력만 저장하면 소용이 없다. 실제 값(80글자 두 개)은 설정 파일 안에만 있다.
+>
 > ```bash
-> rclone config show agitcrypt      # 이 출력을 비밀번호 관리자에 저장 (값 자체가 비밀이다)
+> open -e ~/.config/rclone/rclone.conf   # 내용을 비밀번호 관리자에 붙여넣거나 파일째 첨부
 > ```
+>
+> 이 파일에는 구글 드라이브 접속 토큰도 함께 있어 **파일 자체가 비밀**이다. 평문으로 아무 데나 두지 않는다.
 
 암호화가 필요한 이유: `아지트DB스택설정.tar.gz` 안에 `.env` 와 `secrets.agit.env` 가 그대로 들어가고,
 DB 덤프에는 계정 비밀번호 해시가 있다. 2026-07-30 이전에는 이것이 평문으로 드라이브에 30일 남았다.
@@ -132,10 +137,15 @@ pg_restore -U supabase_admin -d 대상DB --no-owner --data-only 리얼타임설�
 | 항목 | 누가 |
 |---|---|
 | 🔴 `rclone.conf` 사본을 맥미니 밖에 보관 (3절) | **사용자** |
-| 드라이브의 옛 **평문** 백업 정리 — `gdrive:SH맥미니` 의 20260726~20260730 | 사용자 확인 후 |
-| `~/Backups/supabase/postgres-20260719~29.sql.gz` 11개는 **빈 파일**이다. 복구 때 집으면 안 된다 | 사용자 확인 후 |
-| 쌤링크 백업의 드라이브 사본은 launchd 에 **전체 디스크 접근 권한**이 없어 막힌다(로컬 백업은 정상) | **사용자** |
+| `gdrive:Supabase-Backups/literacy/` 는 아직 **평문**이다(15개·34MB). 같은 방식으로 `agitcrypt:` 로 옮길 수 있다 | 미정 |
 | 외장SSD 를 뽑으면 3중 중 하나가 빠진다 | — |
+
+### 2026-07-30 에 정리·해결한 것
+- 드라이브 평문 백업(`gdrive:SH맥미니` 237MB)·`gdrive:samlink-backup` 삭제 → 드라이브에는 **암호화본만** 남았다.
+- 내장·외장SSD 의 옛 백업과 컷오버 시절 임시 덤프 삭제. **오늘(20260730)치 한 벌**로 다시 시작한다.
+  단 `~/backups/agit-cloud-20260724`(이관 전 클라우드 상태)는 대체 불가라 남겼다.
+- 빈 백업 파일 11개(`postgres-20260719~29`) 삭제 — 로컬·드라이브 양쪽.
+- 쌤링크 백업의 드라이브 사본을 `cp` → `rclone` 으로 바꿔 **전체 디스크 접근 권한 없이** 올라가게 했다(아래).
 
 ---
 
@@ -146,5 +156,9 @@ pg_restore -U supabase_admin -d 대상DB --no-owner --data-only 리얼타임설�
 2. **launchd 는 로그인 셸 PATH 를 물려받지 않는다.** 명령은 절대 경로로 부른다.
 3. **`du -h` 로 백업 크기를 판단하지 마라.** 빈 파일도 블록 크기 `4.0K` 로 보인다.
 4. **백업이 있다 ≠ 복원된다.** 복원해 보기 전까지는 아무것도 증명되지 않았다.
+6. **TCC(전체 디스크 접근)로 뚫기 전에 우회로를 본다.** 쌤링크 백업이 Drive 데스크톱 앱 폴더
+   (`~/Library/CloudStorage/…`)에 `cp` 하다 launchd 에서 막혔다. `/bin/bash` 에 전체 디스크 접근
+   권한을 주면 풀리지만 그 인터프리터로 도는 **모든** 스크립트가 디스크 전체를 읽게 된다.
+   rclone 은 API 로 직접 올려 보호 폴더를 지나가지 않는다 → 권한 불필요 + 암호화가 덤으로 따라왔다.
 5. **살아 있는 표와 백업을 행 수로 비교하지 마라.** 백업 시각과 검사 시각 사이에 데이터는 움직인다.
    리허설은 "운영과 똑같은가"가 아니라 "표가 빠지거나 비지 않았는가"로 판정한다.
