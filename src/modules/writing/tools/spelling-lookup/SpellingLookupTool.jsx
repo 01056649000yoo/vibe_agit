@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, ExternalLink, Search, X } from 'lucide-react';
 import ModalPortal from '../../../../components/common/ModalPortal';
+import { supabase } from '../../../../lib/supabaseClient';
 import {
     createOfficialDictionarySearchUrl,
     getPopularSpellingEntries,
@@ -10,12 +11,31 @@ import { SPELLING_LOOKUP_OPEN_EVENT } from './events';
 import './SpellingLookupTool.css';
 
 const MAX_QUERY_LENGTH = 180;
+const MAX_DICTIONARY_QUERY_LENGTH = 30;
+const dictionarySearchCache = new Map();
+
+const canSearchOfficialDictionary = (query) => (
+    query.length <= MAX_DICTIONARY_QUERY_LENGTH && !/[.!?。！？\n\r]/.test(query)
+);
+
+const getErrorPayload = async (error) => {
+    try {
+        return await error?.context?.json();
+    } catch {
+        return null;
+    }
+};
 
 const SpellingLookupTool = ({ disabled = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [searchedQuery, setSearchedQuery] = useState('');
+    const [dictionaryItems, setDictionaryItems] = useState([]);
+    const [dictionaryLoading, setDictionaryLoading] = useState(false);
+    const [dictionaryMessage, setDictionaryMessage] = useState('');
+    const [dictionarySearchedQuery, setDictionarySearchedQuery] = useState('');
     const inputRef = useRef(null);
+    const searchRequestRef = useRef(0);
     const popularEntries = useMemo(() => getPopularSpellingEntries(), []);
     const results = useMemo(
         () => searchedQuery ? searchElementarySpelling(searchedQuery) : [],
@@ -45,20 +65,74 @@ const SpellingLookupTool = ({ disabled = false }) => {
             setIsOpen(true);
             setQuery(nextQuery);
             setSearchedQuery(nextQuery);
+            setDictionaryItems([]);
+            setDictionaryMessage('');
+            setDictionarySearchedQuery('');
         };
         window.addEventListener(SPELLING_LOOKUP_OPEN_EVENT, handleOpenRequest);
         return () => window.removeEventListener(SPELLING_LOOKUP_OPEN_EVENT, handleOpenRequest);
     }, []);
 
-    const runSearch = (nextQuery = query) => {
+    const runSearch = async (nextQuery = query, { includeOfficial = true } = {}) => {
         const trimmed = nextQuery.trim();
+        const requestId = searchRequestRef.current + 1;
+        searchRequestRef.current = requestId;
         if (!trimmed) {
             setSearchedQuery('');
+            setDictionaryItems([]);
+            setDictionaryLoading(false);
+            setDictionaryMessage('');
+            setDictionarySearchedQuery('');
             inputRef.current?.focus();
             return;
         }
         setQuery(trimmed);
         setSearchedQuery(trimmed);
+        setDictionaryItems([]);
+        setDictionaryLoading(false);
+        setDictionaryMessage('');
+        setDictionarySearchedQuery('');
+
+        if (!includeOfficial) return;
+
+        setDictionarySearchedQuery(trimmed);
+        if (!canSearchOfficialDictionary(trimmed)) {
+            setDictionaryMessage('문장 전체는 수첩 규칙으로 살펴봤어요. 공식 사전에서는 궁금한 낱말이나 짧은 구만 다시 찾아보세요.');
+            return;
+        }
+        if (!supabase) {
+            setDictionaryMessage('공식 사전 연결을 준비하고 있어요. 아래 링크에서 직접 확인할 수 있어요.');
+            return;
+        }
+
+        const cacheKey = trimmed.toLocaleLowerCase('ko-KR');
+        if (dictionarySearchCache.has(cacheKey)) {
+            const cachedItems = dictionarySearchCache.get(cacheKey);
+            setDictionaryItems(cachedItems);
+            setDictionaryMessage(cachedItems.length === 0 ? '표준국어대사전에서 일치하는 낱말을 찾지 못했어요.' : '');
+            return;
+        }
+
+        setDictionaryLoading(true);
+        const { data, error } = await supabase.functions.invoke('korean-dictionary-search', {
+            body: { query: trimmed }
+        });
+        if (searchRequestRef.current !== requestId) return;
+
+        setDictionaryLoading(false);
+        if (error) {
+            const payload = await getErrorPayload(error);
+            if (searchRequestRef.current !== requestId) return;
+            setDictionaryMessage(payload?.code === 'STDICT_NOT_CONFIGURED'
+                ? '국립국어원 사전 연결을 준비하고 있어요. 아래 링크에서 직접 확인할 수 있어요.'
+                : (payload?.error || '국립국어원 사전에 잠시 연결할 수 없어요. 아래 링크에서 직접 확인해 보세요.'));
+            return;
+        }
+
+        const items = Array.isArray(data?.items) ? data.items : [];
+        dictionarySearchCache.set(cacheKey, items);
+        setDictionaryItems(items);
+        setDictionaryMessage(items.length === 0 ? '표준국어대사전에서 일치하는 낱말을 찾지 못했어요.' : '');
     };
 
     const openTool = () => {
@@ -111,7 +185,7 @@ const SpellingLookupTool = ({ disabled = false }) => {
                             </header>
 
                             <p className="spelling-lookup-promise">
-                                수첩 규칙을 기기 안에서 찾아요. 글을 외부로 보내거나 자동으로 고치지 않으니 궁금한 낱말이나 짧은 문장을 직접 찾아보세요.
+                                문장은 기기 안의 수첩 규칙으로 살펴보고, 직접 찾기를 누른 낱말·짧은 구만 국립국어원 사전에서 찾아요. 글을 자동으로 고치지 않아요.
                             </p>
 
                             <form
@@ -150,7 +224,7 @@ const SpellingLookupTool = ({ disabled = false }) => {
                                             <button
                                                 type="button"
                                                 key={entry.id}
-                                                onClick={() => runSearch(entry.question)}
+                                                onClick={() => runSearch(entry.question, { includeOfficial: false })}
                                             >
                                                 {entry.question}
                                             </button>
@@ -187,7 +261,7 @@ const SpellingLookupTool = ({ disabled = false }) => {
                                     </>
                                 )}
 
-                                {searchedQuery && results.length === 0 && (
+                                {searchedQuery && results.length === 0 && !dictionaryLoading && dictionaryItems.length === 0 && !dictionarySearchedQuery && (
                                     <div className="spelling-lookup-empty">
                                         <span aria-hidden="true">🔎</span>
                                         <strong>수첩에서 관련 규칙을 찾지 못했어요.</strong>
@@ -201,6 +275,56 @@ const SpellingLookupTool = ({ disabled = false }) => {
                                             <ExternalLink size={15} aria-hidden="true" />
                                         </a>
                                     </div>
+                                )}
+
+                                {dictionarySearchedQuery && (
+                                    <section className="spelling-dictionary-results" aria-labelledby="spelling-dictionary-title">
+                                        <div className="spelling-dictionary-heading">
+                                            <div>
+                                                <span>공식 사전 검색</span>
+                                                <h3 id="spelling-dictionary-title">국립국어원 표준국어대사전</h3>
+                                            </div>
+                                            <a
+                                                href={createOfficialDictionarySearchUrl(dictionarySearchedQuery)}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                사전에서 직접 보기
+                                                <ExternalLink size={15} aria-hidden="true" />
+                                            </a>
+                                        </div>
+
+                                        {dictionaryLoading && (
+                                            <div className="spelling-dictionary-status" role="status">
+                                                <span className="spelling-dictionary-spinner" aria-hidden="true" />
+                                                국립국어원 사전에서 찾는 중이에요.
+                                            </div>
+                                        )}
+
+                                        {!dictionaryLoading && dictionaryMessage && (
+                                            <div className="spelling-dictionary-message">{dictionaryMessage}</div>
+                                        )}
+
+                                        {!dictionaryLoading && dictionaryItems.length > 0 && (
+                                            <div className="spelling-dictionary-list">
+                                                {dictionaryItems.map((item, index) => (
+                                                    <article key={`${item.targetCode || item.word}-${index}`} className="spelling-dictionary-card">
+                                                        <div>
+                                                            <h4>{item.word}{item.supNo ? <sup>{item.supNo}</sup> : null}</h4>
+                                                            {item.pos && <span>{item.pos}</span>}
+                                                            {item.category && <span>{item.category}</span>}
+                                                        </div>
+                                                        <p>{item.definition}</p>
+                                                        {item.origin && <small>원어 {item.origin}</small>}
+                                                        <a href={item.sourceUrl} target="_blank" rel="noreferrer">
+                                                            자세한 뜻 보기
+                                                            <ExternalLink size={14} aria-hidden="true" />
+                                                        </a>
+                                                    </article>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </section>
                                 )}
                             </div>
 
