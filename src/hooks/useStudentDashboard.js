@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { collectWriterPosts, getWriterLevel } from '../constants/writerLevels';
 import { supabase } from '../lib/supabaseClient';
 
-import { classKey, dataCache } from '../lib/cache';
+import { dataCache } from '../lib/cache';
 
 const ACTIVE_MISSION_LIMIT = 500;
 
@@ -16,8 +15,6 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const [feedbackInitialTab, setFeedbackInitialTab] = useState(0);
     const [returnedCount, setReturnedCount] = useState(0);
     const [petData, setPetData] = useState(null); // [추가] 초기 펫 데이터 상태
-    const [stats, setStats] = useState({ totalChars: 0, completedMissions: 0, completedPosts: 0, monthlyPosts: 0 });
-    const [levelInfo, setLevelInfo] = useState(() => getWriterLevel(0, 0));
     const [isLoading, setIsLoading] = useState(true);
     const [dragonConfig, setDragonConfig] = useState({ feedCost: 80, degenDays: 14 });
     // 퇴화 체크는 교사 설정(degenDays) 로드가 끝난 뒤에만 실행되어야 함 (기본값 14일로 오판 방지)
@@ -56,80 +53,6 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         return (data || []).map((mission) => mission.id);
     }, [sessionClassId]);
 
-
-    /**
-     * @param {boolean} force 저장해 둔 값을 버리고 다시 확인한다.
-     *
-     * 교사가 글을 승인하면 실시간 알림이 와서 이 함수를 다시 부르는데, 5분·1분 동안
-     * 저장해 둔 값이 그대로 돌아와서 **작가 칭호가 최대 5분간 안 올랐다.**
-     * 알림으로 불릴 때는 값이 바뀐 것이 확실하니 저장해 둔 것을 버리고 새로 확인한다.
-     */
-    const fetchStats = useCallback(async (force = false) => {
-        if (!studentSession?.id || !sessionClassId) return;
-        try {
-            const now = new Date();
-            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-            const lifetimeKey = classKey(sessionClassId, 'student-lifetime-stats', { student: studentSession.id });
-            const monthlyKey = classKey(sessionClassId, 'student-monthly-posts', { student: studentSession.id });
-            if (force) {
-                dataCache.invalidate(lifetimeKey);
-                dataCache.invalidate(monthlyKey);
-            }
-
-            // [최적화] 두 가지 통계를 DB 레벨 필터링을 통해 병렬로 가져옴
-            const [lifetimeData, monthlyCount] = await Promise.all([
-                // 1. 전체 승인된 글.
-                //    예전에는 `.limit(100)` 이 걸려 있었다. 정렬도 없어서 어떤 100편인지도 정해지지
-                //    않았고, 승인 글이 100편을 넘으면 **누적 글자 수가 더 늘지 않아 작가 레벨이 멈췄다.**
-                //    (지금은 최다 23편이라 아무도 걸리지 않았지만 학년 말에 걸릴 수 있다.)
-                //    한 학생의 글은 많아야 수백 건이므로 최근 1,000편을 안전 상한으로 두고,
-                //    학급을 직접 걸어 학급 인덱스를 탄다 (WORKLOG '학급 글 조회 기준').
-                dataCache.get(lifetimeKey, async () => {
-                    const query = supabase
-                        .from('student_posts')
-                        .select('id, mission_id, char_count, created_at')
-                        .eq('class_id', sessionClassId)
-                        .eq('student_id', studentSession.id)
-                        .eq('is_confirmed', true)
-                        .order('created_at', { ascending: false })
-                        .limit(1000);
-                    const { data, error } = await query;
-                    if (error) throw error;
-                    return data || [];
-                }, 300000), // 5분 캐시
-                
-                // 2. 이번 달 승인된 글 개수 (DB 레벨 필터링)
-                dataCache.get(monthlyKey, async () => {
-                    const query = supabase
-                        .from('student_posts')
-                        .select('id', { count: 'exact', head: true })
-                        .eq('class_id', sessionClassId)
-                        .eq('student_id', studentSession.id)
-                        .eq('is_confirmed', true)
-                        .gte('created_at', firstDayOfMonth);
-                    const { count, error } = await query;
-                    if (error) throw error;
-                    return count || 0;
-                }, 60000) // 1분 캐시
-            ]);
-
-            if (lifetimeData) {
-                // 집계 규칙(미션별 한 편 + 자율글 각 한 편)은 writerLevels 에 한 곳으로 모아 두었다.
-                // 발자국 화면은 같은 규칙을 SQL(`level_posts` CTE)로 계산한다.
-                const { totalChars, completedPosts, completedMissions } = collectWriterPosts(lifetimeData);
-
-                setStats({
-                    totalChars,
-                    completedMissions,
-                    completedPosts,
-                    monthlyPosts: monthlyCount
-                });
-                setLevelInfo(getWriterLevel(totalChars, completedPosts));
-            }
-        } catch (err) {
-            console.error('글쓰기 통계 로드 실패:', err.message);
-        }
-    }, [studentSession?.id, sessionClassId]);
 
     const fetchMyPoints = useCallback(async () => {
         if (!studentSession?.id) return;
@@ -437,17 +360,16 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 });
 
                 fetchClassSettings().finally(() => setDragonConfigLoaded(true));
-                fetchStats();
             };
             loadData();
         }
-    }, [studentSession?.id, fetchMyPoints, fetchClassSettings, fetchStats, checkActivity, fetchReturnedCount, ensureLastCheckLoaded]);
+    }, [studentSession?.id, fetchMyPoints, fetchClassSettings, checkActivity, fetchReturnedCount, ensureLastCheckLoaded]);
 
     return {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
-        returnedCount, stats, levelInfo, isLoading, dragonConfig, dragonConfigLoaded, initialPetData: petData,
+        returnedCount, isLoading, dragonConfig, dragonConfigLoaded, initialPetData: petData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback,
-        fetchMyPoints, fetchStats, checkActivity, fetchReturnedCount // 새로운 훅에 넘기기 위한 내보내기
+        fetchMyPoints, checkActivity, fetchReturnedCount // 새로운 훅에 넘기기 위한 내보내기
     };
 };

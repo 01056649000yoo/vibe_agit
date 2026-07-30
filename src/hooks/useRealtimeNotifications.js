@@ -35,9 +35,8 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
 
             if (points) {
                 callbacksRef.current.refetchDataControls?.fetchMyPoints?.();
-                // 교사 승인 등으로 값이 바뀐 것이 확실한 시점이다.
-                // 저장해 둔 값을 버리고 다시 확인해야 작가 칭호가 바로 오른다.
-                callbacksRef.current.refetchDataControls?.fetchStats?.(true);
+                // 작가·독자 칭호는 공용 모듈의 단일 캐시를 무효화한다.
+                callbacksRef.current.refetchDataControls?.refreshMyTitleStatus?.();
             }
 
             if (activity) {

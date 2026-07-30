@@ -9,6 +9,7 @@ import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useRealtimeNotifications } from '../../hooks/useRealtimeNotifications'; // [신규] 분리된 리얼타임 훅
 import { getModule } from '../../modules/registry';
 import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
+import { invalidateMyTitleStatus } from '../../modules/writing/title-status/useMyTitleStatus';
 
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
@@ -67,15 +68,22 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
-        returnedCount, stats, levelInfo, dragonConfig, dragonConfigLoaded, initialPetData,
+        returnedCount, dragonConfig, dragonConfigLoaded, initialPetData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback,
-        fetchMyPoints, fetchStats, checkActivity
+        fetchMyPoints, checkActivity
     } = useStudentDashboard(studentSession, onNavigate);
+
+    const refreshMyTitleStatus = React.useCallback(() => {
+        invalidateMyTitleStatus({
+            classId: studentSession?.class_id || studentSession?.classId,
+            studentId: studentSession?.id
+        });
+    }, [studentSession?.classId, studentSession?.class_id, studentSession?.id]);
 
     // [신규] 실시간 알림 로직 전담 훅 (의존성 안정화)
     const refetchDataControls = React.useMemo(() => ({
-        fetchMyPoints, fetchStats, checkActivity
-    }), [fetchMyPoints, fetchStats, checkActivity]);
+        fetchMyPoints, refreshMyTitleStatus, checkActivity
+    }), [fetchMyPoints, refreshMyTitleStatus, checkActivity]);
 
     const { teacherNotify, setTeacherNotify } = useRealtimeNotifications(
         studentSession,
@@ -261,8 +269,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             onClose={() => setIsMyAgitOpen(false)}
                             studentSession={studentSession}
                             points={points}
-                            writerStats={stats}
-                            writerLevel={levelInfo}
                             enabledModules={enabledModules}
                             moduleRuntimeById={{
                                 dragon: { petData, dragonConfig, daysSinceLastFed }
@@ -280,6 +286,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                         <WritingFootprintModal
                             isOpen={isFootprintOpen}
                             onClose={() => setIsFootprintOpen(false)}
+                            studentSession={studentSession}
+                            points={points}
                         />
                     )}
                 </Suspense>
