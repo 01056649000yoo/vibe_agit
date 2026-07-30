@@ -284,6 +284,16 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             points={points}
                             writerStats={stats}
                             writerLevel={levelInfo}
+                            dragonEnabled={isOn('dragon')}
+                            petData={petData}
+                            dragonInfo={dragonInfo}
+                            dragonHabitat={HIDEOUT_BACKGROUNDS[petData.background] || HIDEOUT_BACKGROUNDS.default}
+                            dragonConfig={dragonConfig}
+                            daysSinceLastFed={daysSinceLastFed}
+                            onOpenDragon={() => {
+                                setIsMyAgitOpen(false);
+                                setIsDragonModalOpen(true);
+                            }}
                         />
                     </Suspense>
                 )}
