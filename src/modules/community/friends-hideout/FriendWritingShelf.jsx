@@ -1,13 +1,30 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import BookCover from '../../writing/reading-log/BookCover';
 import { supabase } from '../../../lib/supabaseClient';
 import { classKey, dataCache } from '../../../lib/cache';
 
 const FILTERS = [
-    { id: 'all', label: '전체' },
-    { id: 'reading_log', label: '📚 독서록' },
-    { id: 'assignment', label: '✍️ 선생님 과제' }
+    { id: 'all', label: '전체 책장' },
+    { id: 'assignment', label: '✍️ 과제 책장' },
+    { id: 'reading_log', label: '📚 독서록 책장' }
 ];
+
+const BOOK_COLORS = {
+    assignment: [
+        ['#477DB6', '#28527D', '#193B60'],
+        ['#6589B1', '#365F8C', '#23466B'],
+        ['#426A9B', '#25476F', '#173552']
+    ],
+    reading_log: [
+        ['#6B9A70', '#3F704A', '#295237'],
+        ['#5E958B', '#356A64', '#28514D'],
+        ['#77955C', '#4E6F37', '#384F29']
+    ],
+    meeting: [
+        ['#9C76A8', '#714E7E', '#54395F'],
+        ['#8B72B5', '#604B8D', '#403467'],
+        ['#AF7FAE', '#80517F', '#5D385C']
+    ]
+};
 
 const normalizeRelation = (value) => Array.isArray(value) ? (value[0] || null) : (value || null);
 
@@ -15,12 +32,76 @@ const isReadingLog = (post) => (
     post?.writing_context === 'self' && post?.self_writing_type === 'reading_log'
 );
 
+const isMeetingPost = (post) => {
+    const mission = normalizeRelation(post?.writing_missions);
+    return mission?.mission_type === 'meeting' || mission?.input_template === 'meeting';
+};
+
+const getBookKind = (post) => {
+    if (isReadingLog(post)) return 'reading_log';
+    if (isMeetingPost(post)) return 'meeting';
+    return 'assignment';
+};
+
+const getBookLabel = (post) => {
+    const mission = normalizeRelation(post?.writing_missions);
+    if (isReadingLog(post)) return '독서록';
+    if (isMeetingPost(post)) return '회의 안건';
+    return mission?.title || '선생님 과제';
+};
+
+const stableBookVariant = (post) => String(post?.id || post?.title || '')
+    .split('')
+    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+
 const SHELF_CACHE_MS = 120000;
+
+const ShelfBook = ({ post, opening, disabled, onOpen }) => {
+    const kind = getBookKind(post);
+    const variant = stableBookVariant(post);
+    const palette = kind === 'reading_log'
+        ? BOOK_COLORS.reading_log
+        : kind === 'meeting'
+            ? BOOK_COLORS.meeting
+            : BOOK_COLORS.assignment;
+    const [light, middle, dark] = palette[variant % palette.length];
+    const title = post.title || '제목 없는 글';
+    const titleLength = Array.from(title).length;
+    const width = titleLength > 16 ? 60 : titleLength > 8 ? 52 : 44;
+    const height = 146 + ((variant % 4) * 7);
+    const icon = kind === 'reading_log' ? '📚' : kind === 'meeting' ? '🏛️' : '✍️';
+    const reactionCount = Array.isArray(post.post_reactions) ? post.post_reactions.length : 0;
+
+    return (
+        <button
+            type="button"
+            onClick={onOpen}
+            disabled={disabled}
+            aria-label={`${getBookLabel(post)} ‘${title}’ 펼쳐보기, 반응 ${reactionCount}개`}
+            title={`${icon} ${getBookLabel(post)} · ${title}`}
+            className="friend-bookshelf-book"
+            style={{
+                flexBasis: `${width}px`, width: `${width}px`, height: `${height}px`,
+                borderColor: dark,
+                background: `linear-gradient(90deg,${dark} 0 8%,${light} 13%,${middle} 72%,${dark} 100%)`
+            }}
+        >
+            <span className="friend-bookshelf-book-icon" aria-hidden="true">{icon}</span>
+            <span className="friend-bookshelf-book-title" aria-hidden="true">
+                <span>{title}</span>
+            </span>
+            <span className="friend-bookshelf-book-reactions" aria-hidden="true">♡ {reactionCount}</span>
+            <span className="friend-bookshelf-book-ridge" aria-hidden="true" />
+            {opening && <span className="friend-bookshelf-book-opening">여는 중</span>}
+        </button>
+    );
+};
 
 const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
     const friendId = friend?.id;
     const [posts, setPosts] = useState([]);
     const [filter, setFilter] = useState('all');
+    const [viewMode, setViewMode] = useState('books');
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
     const [openingPostId, setOpeningPostId] = useState(null);
@@ -37,7 +118,7 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
             const data = await dataCache.get(cacheKey, async () => {
                 const { data: shelfRows, error } = await supabase
                     .from('student_posts')
-                    .select('id, title, student_id, mission_id, created_at, updated_at, published_at, writing_context, self_writing_type, visibility, structured_content')
+                    .select('id, title, student_id, mission_id, created_at, updated_at, published_at, writing_context, self_writing_type, visibility')
                     // 학급을 직접 건다. student_id 만으로 거르면 학급 인덱스를 못 쓰고,
                     // 전학 온 친구의 **예전 학급 글**까지 딸려 온다 (WORKLOG '학급 글 조회 기준' ①).
                     .eq('class_id', classId)
@@ -173,26 +254,33 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
         <section className="friend-writing-shelf" aria-label={`${friend?.name || '친구'}의 공개 글 책장`}>
             <div className="friend-writing-shelf-heading">
                 <div>
-                    <span>글 책장</span>
-                    <h3>📚 {friend?.name}의 공개 글</h3>
-                    <p>친구가 공개한 과제 글과 독서록만 보여요.</p>
+                    <span>공개 서재</span>
+                    <h3>📚 {friend?.name}의 책장</h3>
+                    <p>책등을 눌러 친구가 공개한 글을 펼쳐보세요.</p>
                 </div>
                 <button type="button" onClick={() => fetchShelf(true)} disabled={loading}>새로고침</button>
             </div>
 
-            <div className="friend-writing-shelf-filters" role="tablist" aria-label="공개 글 종류">
-                {FILTERS.map((item) => (
-                    <button
-                        key={item.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={filter === item.id}
-                        className={filter === item.id ? 'active' : ''}
-                        onClick={() => setFilter(item.id)}
-                    >
-                        {item.label} <small>{counts[item.id]}</small>
+            <div className="friend-writing-shelf-toolbar">
+                <div className="friend-writing-shelf-filters" role="tablist" aria-label="공개 글 책장 종류">
+                    {FILTERS.map((item) => (
+                        <button
+                            key={item.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={filter === item.id}
+                            className={filter === item.id ? 'active' : ''}
+                            onClick={() => setFilter(item.id)}
+                        >
+                            {item.label} <small>{counts[item.id]}</small>
+                        </button>
+                    ))}
+                </div>
+                {visiblePosts.length > 0 && (
+                    <button type="button" className="friend-writing-shelf-view" onClick={() => setViewMode((current) => current === 'books' ? 'titles' : 'books')}>
+                        {viewMode === 'books' ? '제목 전체 보기' : '책등으로 보기'}
                     </button>
-                ))}
+                )}
             </div>
 
             {loading ? (
@@ -202,81 +290,91 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
             ) : visiblePosts.length === 0 ? (
                 <div className="friend-writing-shelf-state">
                     <span>📭</span>
-                    {posts.length === 0 ? '아직 공개한 글이 없어요.' : '이 종류의 공개 글은 아직 없어요.'}
+                    {posts.length === 0 ? '아직 공개한 글이 없어요.' : '이 책장에는 아직 공개한 글이 없어요.'}
                 </div>
-            ) : (
-                <div className="friend-writing-shelf-grid">
+            ) : viewMode === 'titles' ? (
+                <div className="friend-writing-title-list" role="group" aria-label="공개 글 제목 전체 목록">
                     {visiblePosts.map((post) => {
-                        const readingLog = isReadingLog(post);
-                        const mission = normalizeRelation(post.writing_missions);
-                        const book = post.structured_content || {};
+                        const kind = getBookKind(post);
+                        const icon = kind === 'reading_log' ? '📚' : kind === 'meeting' ? '🏛️' : '✍️';
                         const reactionCount = Array.isArray(post.post_reactions) ? post.post_reactions.length : 0;
-                        const isMeeting = mission?.mission_type === 'meeting' || mission?.input_template === 'meeting';
-
                         return (
-                            <button
-                                key={post.id}
-                                type="button"
-                                className={`friend-writing-shelf-card ${readingLog ? 'reading-log' : 'assignment'}`}
-                                onClick={() => handleOpenPost(post)}
-                                disabled={Boolean(openingPostId)}
-                            >
-                                {readingLog ? (
-                                    <BookCover src={book.thumbnailUrl} title={book.bookTitle || post.title} size="sm" />
-                                ) : (
-                                    <span className={`friend-writing-paper-icon ${isMeeting ? 'meeting' : ''}`}>
-                                        {isMeeting ? '🏛️' : '✍️'}
-                                    </span>
-                                )}
-                                <span className="friend-writing-shelf-card-copy">
-                                    <small>{readingLog ? '독서록' : (isMeeting ? '회의 안건' : mission?.title || '선생님 과제')}</small>
+                            <button key={post.id} type="button" onClick={() => handleOpenPost(post)} disabled={Boolean(openingPostId)}>
+                                <span aria-hidden="true">{icon}</span>
+                                <span>
                                     <strong>{post.title || '제목 없는 글'}</strong>
-                                    <em>
-                                        {readingLog
-                                            ? ([book.bookAuthor, book.publisher].filter(Boolean).join(' · ') || '책 정보 보기')
-                                            : (mission?.title || '과제 글쓰기')}
-                                    </em>
-                                    <span>💬 글 보기 · 반응 {reactionCount}</span>
+                                    <small>{getBookLabel(post)} · 반응 {reactionCount}</small>
                                 </span>
-                                {openingPostId === post.id && <b>여는 중...</b>}
+                                <em>{openingPostId === post.id ? '여는 중...' : '펼치기 →'}</em>
                             </button>
                         );
                     })}
                 </div>
+            ) : (
+                <div className="friend-bookshelf-scene">
+                    <div className="friend-bookshelf-books" role="group" aria-label={`${FILTERS.find((item) => item.id === filter)?.label || '전체 책장'} 책등`}>
+                        {visiblePosts.map((post) => (
+                            <ShelfBook
+                                key={post.id}
+                                post={post}
+                                opening={openingPostId === post.id}
+                                disabled={Boolean(openingPostId)}
+                                onOpen={() => handleOpenPost(post)}
+                            />
+                        ))}
+                    </div>
+                    <div className="friend-bookshelf-board" aria-hidden="true">
+                        <span />
+                    </div>
+                    <p>← 책장을 좌우로 밀어 더 많은 글을 찾아보세요 →</p>
+                </div>
             )}
 
             <style>{`
-                .friend-writing-shelf { margin-top:32px; padding:24px; border-radius:26px; border:1px solid #DDE7F0; background:linear-gradient(145deg,#F8FBFF,#FFFFFF); text-align:left; }
-                .friend-writing-shelf-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
-                .friend-writing-shelf-heading span { color:#5C6BC0; font-size:.74rem; font-weight:950; letter-spacing:.08em; }
-                .friend-writing-shelf-heading h3 { margin:5px 0 4px; color:#263238; font-size:1.2rem; }
-                .friend-writing-shelf-heading p { margin:0; color:#78909C; font-size:.82rem; }
-                .friend-writing-shelf-heading > button { border:0; border-radius:10px; padding:7px 10px; background:#EEF2FF; color:#4F46E5; font-size:.75rem; font-weight:900; cursor:pointer; }
-                .friend-writing-shelf-filters { display:flex; gap:7px; margin-bottom:16px; overflow-x:auto; }
-                .friend-writing-shelf-filters button { border:1px solid #DDE3EA; border-radius:999px; padding:7px 11px; background:white; color:#607D8B; font-size:.76rem; font-weight:850; white-space:nowrap; cursor:pointer; }
-                .friend-writing-shelf-filters button.active { border-color:#5C6BC0; background:#5C6BC0; color:white; }
-                .friend-writing-shelf-filters small { margin-left:3px; opacity:.8; }
-                .friend-writing-shelf-state { display:flex; align-items:center; justify-content:center; gap:8px; min-height:120px; border:2px dashed #E2E8F0; border-radius:18px; color:#90A4AE; font-weight:800; text-align:center; }
+                .friend-writing-shelf { margin-top:14px; padding:20px; overflow:hidden; border-radius:24px; border:1px solid rgba(105,61,32,.18); background:linear-gradient(145deg,#FFF9EB,#F7E8CB); text-align:left; box-shadow:0 8px 22px rgba(82,51,29,.08); }
+                .friend-writing-shelf-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:15px; }
+                .friend-writing-shelf-heading span { color:#8A5B27; font-size:.7rem; font-weight:950; letter-spacing:.08em; }
+                .friend-writing-shelf-heading h3 { margin:4px 0; color:#3E2E23; font-size:1.08rem; }
+                .friend-writing-shelf-heading p { margin:0; color:#8D7B6C; font-size:.76rem; }
+                .friend-writing-shelf-heading > button { border:1px solid rgba(112,65,38,.18); border-radius:10px; padding:7px 9px; background:rgba(255,255,255,.7); color:#75513A; font-size:.7rem; font-weight:900; cursor:pointer; }
+                .friend-writing-shelf-toolbar { display:flex; align-items:flex-start; justify-content:space-between; gap:9px; margin-bottom:12px; }
+                .friend-writing-shelf-filters { display:flex; gap:6px; min-width:0; overflow-x:auto; scrollbar-width:none; }
+                .friend-writing-shelf-filters button { flex:0 0 auto; min-height:36px; border:1px solid rgba(112,65,38,.2); border-radius:11px 11px 5px 5px; padding:6px 10px; background:rgba(255,255,255,.65); color:#75513A; font-size:.69rem; font-weight:850; white-space:nowrap; cursor:pointer; }
+                .friend-writing-shelf-filters button.active { border-color:#704126; background:linear-gradient(145deg,#8B5A35,#5D351F); color:#FFF8E8; box-shadow:0 4px 9px rgba(76,43,24,.18); }
+                .friend-writing-shelf-filters small { margin-left:2px; opacity:.8; }
+                .friend-writing-shelf-view { flex:0 0 auto; border:0; border-radius:9px; padding:7px 9px; background:#F3E1C0; color:#704126; font-size:.65rem; font-weight:900; cursor:pointer; }
+                .friend-writing-shelf-state { display:flex; align-items:center; justify-content:center; gap:8px; min-height:120px; border:2px dashed rgba(112,65,38,.2); border-radius:18px; background:rgba(255,255,255,.36); color:#9A7A61; font-weight:800; text-align:center; }
                 .friend-writing-shelf-state > span { font-size:1.5rem; }
                 .friend-writing-shelf-state.error { color:#C62828; background:#FFF5F5; }
-                .friend-writing-shelf-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
-                .friend-writing-shelf-card { position:relative; display:flex; align-items:center; gap:13px; min-width:0; padding:13px; border-radius:17px; border:1px solid #E3E8EF; background:white; text-align:left; cursor:pointer; box-shadow:0 5px 14px rgba(44,62,80,.05); }
-                .friend-writing-shelf-card:hover { border-color:#7986CB; transform:translateY(-1px); }
-                .friend-writing-shelf-card:disabled { cursor:wait; opacity:.72; }
-                .friend-writing-shelf-card.reading-log { border-left:5px solid #7CB342; }
-                .friend-writing-shelf-card.assignment { border-left:5px solid #42A5F5; }
-                .friend-writing-paper-icon { display:flex; width:58px; height:72px; flex:0 0 58px; align-items:center; justify-content:center; border-radius:8px 13px 13px 8px; background:linear-gradient(145deg,#E3F2FD,#BBDEFB); font-size:1.7rem; box-shadow:0 6px 12px rgba(30,136,229,.12); }
-                .friend-writing-paper-icon.meeting { background:linear-gradient(145deg,#F3E8FF,#DDD6FE); }
-                .friend-writing-shelf-card-copy { display:flex; flex:1; min-width:0; flex-direction:column; }
-                .friend-writing-shelf-card-copy small { color:#5C6BC0; font-size:.66rem; font-weight:950; }
-                .friend-writing-shelf-card-copy strong { margin:4px 0; overflow:hidden; color:#263238; font-size:.88rem; text-overflow:ellipsis; white-space:nowrap; }
-                .friend-writing-shelf-card-copy em { overflow:hidden; color:#78909C; font-size:.7rem; font-style:normal; text-overflow:ellipsis; white-space:nowrap; }
-                .friend-writing-shelf-card-copy > span { margin-top:7px; color:#90A4AE; font-size:.65rem; font-weight:800; }
-                .friend-writing-shelf-card > b { position:absolute; inset:auto 8px 8px auto; padding:3px 6px; border-radius:7px; background:#263238; color:white; font-size:.62rem; }
+                .friend-bookshelf-scene { overflow:hidden; border-radius:15px; background:linear-gradient(180deg,#D9BB8B 0%,#B98755 62%,#82502D 100%); box-shadow:inset 0 5px 12px rgba(76,43,24,.28),0 7px 14px rgba(76,43,24,.14); }
+                .friend-bookshelf-books { display:flex; align-items:flex-end; gap:3px; min-height:190px; padding:17px 14px 0; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:thin; scrollbar-color:#704126 transparent; scroll-snap-type:x proximity; }
+                .friend-bookshelf-book { position:relative; flex-grow:0; flex-shrink:0; padding:8px 5px 7px; overflow:hidden; border-width:1px; border-style:solid; border-radius:5px 5px 2px 2px; color:#FFF9E9; cursor:pointer; font-family:inherit; scroll-snap-align:start; box-shadow:inset 2px 0 0 rgba(255,255,255,.18),inset -2px 0 0 rgba(0,0,0,.12),3px 3px 6px rgba(55,31,17,.28); transition:transform .15s ease,filter .15s ease; }
+                .friend-bookshelf-book:hover { transform:translateY(-5px) rotate(-1deg); filter:brightness(1.06); }
+                .friend-bookshelf-book:disabled { cursor:wait; opacity:.76; }
+                .friend-bookshelf-book-icon { position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:.78rem; line-height:1; }
+                .friend-bookshelf-book-title { position:absolute; top:25px; right:5px; bottom:28px; left:5px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+                .friend-bookshelf-book-title > span { display:block; height:100%; max-width:100%; overflow:hidden; writing-mode:vertical-rl; text-orientation:upright; color:#FFFDF5; white-space:normal; word-break:break-all; font-size:.69rem; font-weight:900; line-height:1.18; letter-spacing:.02em; text-align:center; text-shadow:0 1px 1px rgba(0,0,0,.35); }
+                .friend-bookshelf-book-reactions { position:absolute; right:4px; bottom:8px; left:4px; overflow:hidden; color:rgba(255,255,255,.86); font-size:.54rem; font-weight:850; text-align:center; white-space:nowrap; }
+                .friend-bookshelf-book-ridge { position:absolute; right:5px; bottom:3px; left:5px; height:2px; border-top:1px solid rgba(255,255,255,.55); border-bottom:1px solid rgba(0,0,0,.25); }
+                .friend-bookshelf-book-opening { position:absolute; inset:0; display:grid; place-items:center; background:rgba(35,25,20,.7); color:#FFFFFF; font-size:.64rem; font-weight:950; writing-mode:horizontal-tb; }
+                .friend-bookshelf-board { position:relative; height:21px; border-top:4px solid #6B3E22; border-bottom:3px solid #4B2B1A; background:linear-gradient(180deg,#A66A3E,#704126); box-shadow:0 5px 8px rgba(61,34,18,.38); }
+                .friend-bookshelf-board > span { position:absolute; inset:4px 0 auto; height:2px; background:rgba(255,220,170,.16); }
+                .friend-bookshelf-scene > p { margin:0; padding:8px 12px 10px; background:rgba(80,44,22,.88); color:#F8E4C8; font-size:.6rem; font-weight:800; text-align:center; }
+                .friend-writing-title-list { display:grid; gap:7px; max-height:310px; overflow-y:auto; }
+                .friend-writing-title-list > button { display:grid; grid-template-columns:28px minmax(0,1fr) auto; align-items:center; gap:8px; width:100%; padding:10px 11px; border:1px solid rgba(112,65,38,.15); border-radius:13px; background:rgba(255,255,255,.72); cursor:pointer; text-align:left; }
+                .friend-writing-title-list > button:disabled { cursor:wait; opacity:.7; }
+                .friend-writing-title-list > button > span:first-child { font-size:1.05rem; text-align:center; }
+                .friend-writing-title-list > button > span:nth-child(2) { min-width:0; }
+                .friend-writing-title-list strong { display:block; color:#3E2E23; font-size:.78rem; line-height:1.4; overflow-wrap:anywhere; }
+                .friend-writing-title-list small { display:block; margin-top:2px; color:#8D7B6C; font-size:.61rem; font-weight:800; }
+                .friend-writing-title-list em { color:#8A5B27; font-size:.61rem; font-style:normal; font-weight:900; white-space:nowrap; }
                 @media (max-width:620px) {
-                    .friend-writing-shelf { padding:18px; }
-                    .friend-writing-shelf-heading { flex-direction:column; }
-                    .friend-writing-shelf-grid { grid-template-columns:1fr; }
+                    .friend-writing-shelf { padding:17px 14px; }
+                    .friend-writing-shelf-heading { gap:8px; }
+                    .friend-writing-shelf-heading p { max-width:250px; }
+                    .friend-writing-shelf-toolbar { align-items:flex-end; flex-direction:column; }
+                    .friend-writing-shelf-filters { width:100%; }
+                    .friend-bookshelf-books { min-height:186px; padding-right:12px; padding-left:12px; }
                 }
             `}</style>
         </section>
