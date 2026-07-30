@@ -94,15 +94,18 @@ export const getWriterLevel = (totalChars = 0, completedPosts = 0) => {
  * 독자 칭호.
  * 친구 글을 여러 편 읽고 반응하거나 정성스러운 댓글을 남기는 행동을 인정한다.
  * 등수·포인트 보상과는 연결하지 않고 자기 성장 표시로만 사용한다.
+ * 2026-07-30 운영 학급의 1학기 중앙값 60점을 기준으로, 같은 활동량이 2학기까지
+ * 이어지면 학생 절반이 1년 안에 Lv5(120점)에 닿도록 중·상위 구간을 보정했다.
+ * Lv2는 첫 읽기 행동을 바로 인정하도록 1점을 유지한다.
  */
 export const READER_LEVELS = [
     { level: 1, name: '조용한 독자', emoji: '👀', from: 0 },
     { level: 2, name: '첫 독자', emoji: '📖', from: 1 },
-    { level: 3, name: '이야기 친구', emoji: '💬', from: 3 },
-    { level: 4, name: '단짝 독자', emoji: '🤝', from: 8 },
-    { level: 5, name: '든든한 독자', emoji: '🌟', from: 20 },
-    { level: 6, name: '열혈 독자', emoji: '🏅', from: 45 },
-    { level: 7, name: '아지트 지킴이', emoji: '💎', from: 90 }
+    { level: 3, name: '이야기 친구', emoji: '💬', from: 20 },
+    { level: 4, name: '단짝 독자', emoji: '🤝', from: 50 },
+    { level: 5, name: '든든한 독자', emoji: '🌟', from: 120 },
+    { level: 6, name: '열혈 독자', emoji: '🏅', from: 200 },
+    { level: 7, name: '아지트 지킴이', emoji: '💎', from: 300 }
 ];
 
 export const getReaderLevel = (score = 0) => {
