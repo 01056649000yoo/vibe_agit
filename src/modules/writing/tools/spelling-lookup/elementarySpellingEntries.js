@@ -239,6 +239,55 @@ export const POPULAR_SPELLING_ENTRY_IDS = [
     'myeochil'
 ];
 
+const SPELLING_DETECTION_RULES = [
+    { entryId: 'dwae-doe', pattern: /되요/g },
+    { entryId: 'an-anh', pattern: /안돼/g },
+    { entryId: 'wen-waen', pattern: /웬지|왠(?!지)/g },
+    { entryId: 'eotteoke-eotteokhae', pattern: /어떻해/g },
+    { entryId: 'myeochil', pattern: /몇일/g },
+    { entryId: 'geumse', pattern: /금새/g },
+    { entryId: 'oraenman', pattern: /오랫만|오랜\s+만/g },
+    { entryId: 'yeokhal', pattern: /역활/g },
+    { entryId: 'seollem', pattern: /설레임/g },
+    { entryId: 'bwaeyo', pattern: /뵈요/g },
+    { entryId: 'anieyo', pattern: /아니예요/g },
+    { entryId: 'hal-su-itda', pattern: /[가-힣]수\s*(?:있|없)/g },
+    { entryId: 'geot-gatda', pattern: /(?:것|거)같/g },
+    { entryId: 'kkaekkeusi', pattern: /깨끗히/g },
+    { entryId: 'gomgomi', pattern: /곰곰히/g }
+];
+
+const ENTRY_BY_ID = new Map(ELEMENTARY_SPELLING_ENTRIES.map((entry) => [entry.id, entry]));
+
+/**
+ * 브라우저/키보드의 맞춤법 엔진과 관계없이 수첩 규칙으로 확인 가능한 위치를 찾는다.
+ * 문맥에 따라 둘 다 맞을 수 있는 표현은 자동 밑줄 대상에서 제외한다.
+ */
+export const findSpellingIssues = (value) => {
+    const text = String(value || '');
+    if (!text) return [];
+
+    const issues = SPELLING_DETECTION_RULES.flatMap(({ entryId, pattern }) => {
+        const entry = ENTRY_BY_ID.get(entryId);
+        if (!entry) return [];
+
+        return [...text.matchAll(pattern)].map((match) => ({
+            id: `${entryId}-${match.index}-${match[0]}`,
+            entryId,
+            start: match.index,
+            end: match.index + match[0].length,
+            text: match[0],
+            entry
+        }));
+    }).sort((left, right) => left.start - right.start || right.end - left.end);
+
+    return issues.filter((issue, index) => (
+        !issues.some((other, otherIndex) => (
+            otherIndex < index && other.start <= issue.start && other.end >= issue.end
+        ))
+    ));
+};
+
 const normalize = (value) => value
     .normalize('NFC')
     .toLocaleLowerCase('ko-KR')
@@ -248,6 +297,8 @@ export const searchElementarySpelling = (query) => {
     const normalizedQuery = normalize(query.trim());
     if (!normalizedQuery) return [];
 
+    const detectedEntryIds = new Set(findSpellingIssues(query).map((issue) => issue.entryId));
+
     return ELEMENTARY_SPELLING_ENTRIES
         .map((entry) => {
             const candidates = [entry.question, entry.answer, ...entry.searchable];
@@ -255,11 +306,13 @@ export const searchElementarySpelling = (query) => {
             const exact = normalizedCandidates.some((candidate) => candidate === normalizedQuery);
             const startsWith = normalizedCandidates.some((candidate) => candidate.startsWith(normalizedQuery));
             const includes = normalizedCandidates.some((candidate) => (
-                candidate.includes(normalizedQuery) || normalizedQuery.includes(candidate)
+                (normalizedQuery.length >= 2 && candidate.includes(normalizedQuery)) ||
+                (candidate.length >= 2 && normalizedQuery.includes(candidate))
             ));
             const explanationMatch = normalize(entry.explanation).includes(normalizedQuery);
 
-            const score = exact ? 100 : startsWith ? 75 : includes ? 55 : explanationMatch ? 25 : 0;
+            const detectedInSentence = detectedEntryIds.has(entry.id);
+            const score = exact ? 100 : detectedInSentence ? 90 : startsWith ? 75 : includes ? 55 : explanationMatch ? 25 : 0;
             return { entry, score };
         })
         .filter(({ score }) => score > 0)

@@ -6,9 +6,10 @@ import {
     getPopularSpellingEntries,
     searchElementarySpelling
 } from './elementarySpellingEntries';
+import { SPELLING_LOOKUP_OPEN_EVENT } from './events';
 import './SpellingLookupTool.css';
 
-const MAX_QUERY_LENGTH = 60;
+const MAX_QUERY_LENGTH = 180;
 
 const SpellingLookupTool = ({ disabled = false }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -37,6 +38,17 @@ const SpellingLookupTool = ({ disabled = false }) => {
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [isOpen]);
+
+    useEffect(() => {
+        const handleOpenRequest = (event) => {
+            const nextQuery = String(event.detail?.query || '').trim().slice(0, MAX_QUERY_LENGTH);
+            setIsOpen(true);
+            setQuery(nextQuery);
+            setSearchedQuery(nextQuery);
+        };
+        window.addEventListener(SPELLING_LOOKUP_OPEN_EVENT, handleOpenRequest);
+        return () => window.removeEventListener(SPELLING_LOOKUP_OPEN_EVENT, handleOpenRequest);
+    }, []);
 
     const runSearch = (nextQuery = query) => {
         const trimmed = nextQuery.trim();
@@ -99,7 +111,7 @@ const SpellingLookupTool = ({ disabled = false }) => {
                             </header>
 
                             <p className="spelling-lookup-promise">
-                                이 도구는 내 글을 읽거나 자동으로 고치지 않아요. 궁금한 낱말이나 짧은 표현만 직접 찾아보세요.
+                                수첩 규칙을 기기 안에서 찾아요. 글을 외부로 보내거나 자동으로 고치지 않으니 궁금한 낱말이나 짧은 문장을 직접 찾아보세요.
                             </p>
 
                             <form
@@ -109,14 +121,14 @@ const SpellingLookupTool = ({ disabled = false }) => {
                                     runSearch();
                                 }}
                             >
-                                <label htmlFor="spelling-lookup-query">어떤 표현이 궁금한가요?</label>
+                                <label htmlFor="spelling-lookup-query">어떤 낱말이나 문장이 궁금한가요?</label>
                                 <div className="spelling-lookup-search-row">
                                     <input
                                         ref={inputRef}
                                         id="spelling-lookup-query"
                                         value={query}
                                         onChange={(event) => setQuery(event.target.value.slice(0, MAX_QUERY_LENGTH))}
-                                        placeholder="예: 되요 / 돼요"
+                                        placeholder="예: 오늘은 웬지 기분이 좋아요."
                                         lang="ko"
                                         spellCheck={false}
                                         autoCorrect="off"
@@ -178,8 +190,8 @@ const SpellingLookupTool = ({ disabled = false }) => {
                                 {searchedQuery && results.length === 0 && (
                                     <div className="spelling-lookup-empty">
                                         <span aria-hidden="true">🔎</span>
-                                        <strong>아직 수첩에 없는 표현이에요.</strong>
-                                        <p>비슷한 낱말로 다시 찾아보거나 국립국어원 사전에서 확인해 보세요.</p>
+                                        <strong>수첩에서 관련 규칙을 찾지 못했어요.</strong>
+                                        <p>낱말은 국립국어원 사전에서 직접 확인할 수 있어요. 문장은 수첩 규칙을 더 보강하면서 검색 범위를 넓혀 갈게요.</p>
                                         <a
                                             href={createOfficialDictionarySearchUrl(searchedQuery)}
                                             target="_blank"
@@ -193,7 +205,7 @@ const SpellingLookupTool = ({ disabled = false }) => {
                             </div>
 
                             <footer className="spelling-lookup-footer">
-                                설명을 읽은 뒤 글쓰기 창으로 돌아가서 직접 고쳐 보세요.
+                                설명을 읽은 뒤 글쓰기 창으로 돌아가 직접 판단하고 고쳐 보세요.
                             </footer>
                         </section>
                     </div>

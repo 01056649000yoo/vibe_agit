@@ -1,4 +1,6 @@
 import React, { forwardRef } from 'react';
+import SpellingUnderlineInput from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineInput';
+import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea';
 
 /**
  * 과제 글쓰기와 학생 자율 글쓰기가 함께 쓰는 기본 제목/본문 입력부.
@@ -17,15 +19,14 @@ const WritingEditorFields = forwardRef(function WritingEditorFields({
 }, ref) {
     return (
         <>
-            <input
+            <SpellingUnderlineInput
                 type="text"
                 value={title}
                 onChange={(event) => onTitleChange(event.target.value)}
                 placeholder={titlePlaceholder}
-                spellCheck={true}
-                autoCorrect="off"
                 autoCapitalize="sentences"
                 lang="ko"
+                containerStyle={{ marginBottom: '24px' }}
                 style={{
                     width: '100%',
                     padding: '16px 0',
@@ -33,7 +34,6 @@ const WritingEditorFields = forwardRef(function WritingEditorFields({
                     fontWeight: '900',
                     border: 'none',
                     borderBottom: '2px solid #F1F3F5',
-                    marginBottom: '24px',
                     outline: 'none',
                     color: disabled ? '#546E7A' : '#2C3E50',
                     background: 'transparent',
@@ -41,13 +41,11 @@ const WritingEditorFields = forwardRef(function WritingEditorFields({
                 }}
                 disabled={disabled}
             />
-            <textarea
+            <SpellingUnderlineTextarea
                 ref={ref}
                 value={content}
                 onChange={(event) => onContentChange(event.target.value)}
                 placeholder={contentPlaceholder}
-                spellCheck={true}
-                autoCorrect="off"
                 autoCapitalize="sentences"
                 lang="ko"
                 enterKeyHint="enter"

@@ -1,0 +1,114 @@
+.spelling-underline-field,
+.spelling-underline-layer-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.spelling-underline-layer-wrap > textarea {
+    position: relative;
+    z-index: 1;
+    display: block;
+    caret-color: currentColor;
+}
+
+.spelling-underline-layer-wrap > input {
+    position: relative;
+    z-index: 1;
+    display: block;
+    caret-color: currentColor;
+}
+
+.spelling-underline-layer {
+    position: absolute !important;
+    z-index: 0;
+    inset: 0;
+    height: 100%;
+    overflow: hidden !important;
+    pointer-events: none;
+    color: transparent !important;
+    user-select: none;
+}
+
+.spelling-underline-layer--single {
+    white-space: nowrap !important;
+}
+
+.spelling-underline-mark {
+    border-radius: 3px;
+    background: rgba(239, 68, 68, 0.1);
+    text-decoration-line: underline;
+    text-decoration-style: wavy;
+    text-decoration-color: #DC3545;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+}
+
+.spelling-underline-notice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px solid #F4CCCC;
+    border-radius: 12px;
+    background: #FFF8F8;
+    color: #8B3A3A;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.spelling-underline-notice > div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.spelling-underline-notice button {
+    min-height: 40px;
+    padding: 7px 11px;
+    border: 1px solid #E7B3B3;
+    border-radius: 10px;
+    background: #FFFFFF;
+    box-shadow: none;
+    color: #A12F3F;
+    font-size: 0.75rem;
+    font-weight: 850;
+}
+
+.spelling-underline-notice button:hover,
+.spelling-underline-notice button:focus-visible {
+    border-color: #D56A76;
+    background: #FFF0F1;
+    box-shadow: none;
+}
+
+.spelling-underline-notice button:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.3);
+    outline-offset: 2px;
+}
+
+.spelling-underline-notice small {
+    color: #8B6A6A;
+    font-weight: 750;
+}
+
+@media (max-width: 600px) {
+    .spelling-underline-notice {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .spelling-underline-notice > div {
+        width: 100%;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 3px;
+    }
+
+    .spelling-underline-notice button {
+        flex: 0 0 auto;
+    }
+}
