@@ -34,6 +34,7 @@
   학생 점수·댓글·반응 데이터는 바뀌지 않는다.
 - **변경**: 커밋 `e149b02` — `src/constants/writerLevels.js`. DB·인프라 변경 없음.
 - **결과/검증**: 새 12개 경계값 테스트, 변경 파일 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과.
+  GitHub Actions Deploy run `30535067354` 성공: 앱 이미지 빌드·`agit-app` 재시작·Verify 통과.
 - **남은 것 / 다음**: 운영 배포 후 최원진 교사 학급의 현재 칭호 분포를 화면에서 대조하고, 2학기 말 실제 중앙값으로
   단순 2배 투영 오차를 재평가한다.
 
