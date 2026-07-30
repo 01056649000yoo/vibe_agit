@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 
-const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, onOpenPlayground, playgroundCount = 0, isMobile, agitSettings, studentSession, enabledModules = [] }) => {
+const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, onOpenPlayground, playgroundCount = 0, agitSettings, studentSession, enabledModules = [] }) => {
     const agitOnClassEnabled = enabledModules.some((module) => module.id === 'agit-on-class');
     // [신규] 새 미션 존재 여부 확인 (최근 24시간)
     const [hasNewMission, setHasNewMission] = useState(false);
@@ -221,7 +221,6 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, onOpenPlaygrou
                         textAlign: 'center',
                         position: 'relative',
                         overflow: 'hidden',
-                        gridColumn: isMobile ? 'span 1' : 'span 2',
                         minHeight: '220px',
                         display: 'flex',
                         flexDirection: 'column',
@@ -268,7 +267,14 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, onOpenPlaygrou
                         {agitSettings?.isMenuEnabled === false ? '입장 불가 🔒' : '아지트 입장하기 🚀'}
                     </div>
                 </motion.div>}
-            </div >
+            </div>
+            <style>{`
+                /* 실제로 보이는 메뉴가 홀수 개면 마지막 카드가 빈 두 번째 칸까지 채운다.
+                   메뉴가 추가되어 짝수가 되면 선택자가 자동으로 해제되어 모두 한 칸이 된다. */
+                .student-writing-menu-grid > :last-child:nth-child(odd) {
+                    grid-column: 1 / -1;
+                }
+            `}</style>
         </>
     );
 };
