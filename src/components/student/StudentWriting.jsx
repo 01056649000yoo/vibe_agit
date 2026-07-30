@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useState, useRef, useEffect } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import ModalPortal from '../common/ModalPortal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMissionSubmit } from '../../hooks/useMissionSubmit';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
@@ -1078,23 +1079,27 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 </Button>
             </div>
 
-            <AnimatePresence>
-                {isPreviewOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        style={PREVIEW_MODAL_STYLES.overlay}
-                        onClick={() => setIsPreviewOpen(false)}
-                    >
+            <ModalPortal>
+                <AnimatePresence>
+                    {isPreviewOpen && (
                         <motion.div
-                            initial={{ y: 24, opacity: 0, scale: 0.98 }}
-                            animate={{ y: 0, opacity: 1, scale: 1 }}
-                            exit={{ y: 24, opacity: 0, scale: 0.98 }}
-                            transition={{ duration: 0.2 }}
-                            style={PREVIEW_MODAL_STYLES.dialog}
-                            onClick={(e) => e.stopPropagation()}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            style={PREVIEW_MODAL_STYLES.overlay}
+                            onClick={() => setIsPreviewOpen(false)}
                         >
+                            <motion.div
+                                role="dialog"
+                                aria-modal="true"
+                                aria-label={studentLabels.previewHeading || '제출 전 검토하기'}
+                                initial={{ y: 24, opacity: 0, scale: 0.98 }}
+                                animate={{ y: 0, opacity: 1, scale: 1 }}
+                                exit={{ y: 24, opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.2 }}
+                                style={PREVIEW_MODAL_STYLES.dialog}
+                                onClick={(e) => e.stopPropagation()}
+                            >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '24px' }}>
                                 <div>
                                     <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#263238', marginBottom: '8px' }}>
@@ -1105,7 +1110,9 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     </div>
                                 </div>
                                 <button
+                                    type="button"
                                     onClick={() => setIsPreviewOpen(false)}
+                                    aria-label="제출 전 검토 창 닫기"
                                     style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#90A4AE' }}
                                 >
                                     ✕
@@ -1238,10 +1245,11 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     {studentLabels.previewSubmitLabel || '이대로 제출하기 🚀'}
                                 </Button>
                             </div>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    )}
+                </AnimatePresence>
+            </ModalPortal>
         </Card>
     );
 };
