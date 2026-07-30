@@ -37,6 +37,7 @@ export const TEACHER_NAV_GROUPS = [
         secondaryShape: 'sidebar',
         tabs: [
             { id: 'evaluation', label: '학생 평가' },
+            { id: 'footprints', label: '학급 발자국' },
             { id: 'activity', label: '평어 도우미' }
         ]
     },

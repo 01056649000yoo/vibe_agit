@@ -13,6 +13,7 @@ const TeachingToolsHub = lazy(() => import('./TeachingToolsHub'));
 const TeacherEvaluationTab = lazy(() => import('./TeacherEvaluationTab'));
 const ActivityReport = lazy(() => import('./ActivityReport'));
 const TeacherStudentHub = lazy(() => import('./TeacherStudentHub'));
+const TeacherWritingFootprintDashboard = lazy(() => import('../../modules/writing/writing-footprint/TeacherWritingFootprintDashboard'));
 
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
@@ -369,6 +370,8 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             />
                         ) : visibleTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
+                        ) : visibleTab === 'footprints' ? (
+                            <TeacherWritingFootprintDashboard activeClass={activeClass} isMobile={isMobile} />
                         ) : visibleTab === 'activity' ? (
                             <ActivityReport activeClass={activeClass} isMobile={isMobile} promptTemplate={reportPromptTemplate} />
                         ) : (
