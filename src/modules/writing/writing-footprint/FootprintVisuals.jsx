@@ -56,22 +56,22 @@ export const Section = ({ title, hint, children }) => (
     </section>
 );
 
-export const StatTile = ({ icon, label, value, unit, accent = INK }) => (
+export const StatTile = ({ icon, label, value, unit, accent = INK, compact = false }) => (
     <div style={{
-        padding: '13px 14px', borderRadius: '16px', background: '#FFFFFF',
+        padding: compact ? '7px 9px' : '13px 14px', borderRadius: compact ? '11px' : '16px', background: '#FFFFFF',
         border: '1px solid rgba(62,46,35,.10)', minWidth: 0
     }}>
-        <div style={{ fontSize: '.72rem', fontWeight: 800, color: INK_SOFT, whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: compact ? '.62rem' : '.72rem', fontWeight: 800, color: INK_SOFT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {icon} {label}
         </div>
-        <div style={{ marginTop: '3px', fontSize: '1.2rem', fontWeight: 900, color: accent, lineHeight: 1.15 }}>
-            {value}<span style={{ fontSize: '.8rem', fontWeight: 800, color: INK_SOFT }}>{unit}</span>
+        <div style={{ marginTop: compact ? '1px' : '3px', fontSize: compact ? '.94rem' : '1.2rem', fontWeight: 900, color: accent, lineHeight: 1.15, whiteSpace: 'nowrap' }}>
+            {value}<span style={{ fontSize: compact ? '.62rem' : '.8rem', fontWeight: 800, color: INK_SOFT }}>{unit}</span>
         </div>
     </div>
 );
 
 /** 한 학년도(3월~다음 해 1월)의 글쓰기 밀도 달력. */
-export const WritingCalendar = ({ daily = [], schoolYear }) => {
+export const WritingCalendar = ({ daily = [], schoolYear, fluid = false, compact = false }) => {
     const { weeks, maxCount, monthMarks } = useMemo(() => {
         const byDay = new Map(daily.map((row) => [row.d, Number(row.posts || 0)]));
         const toKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -129,8 +129,15 @@ export const WritingCalendar = ({ daily = [], schoolYear }) => {
     };
 
     return (
-        <div style={{ overflowX: 'auto', paddingBottom: '4px' }}>
-            <svg width={width} height={padTop + 7 * step} role="img" aria-label="학년도 글쓰기 기록">
+        <div style={{ overflowX: fluid ? 'hidden' : 'auto', paddingBottom: compact ? 0 : '4px', minWidth: 0 }}>
+            <svg
+                width={fluid ? '100%' : width}
+                height={padTop + 7 * step}
+                viewBox={`0 0 ${width} ${padTop + 7 * step}`}
+                preserveAspectRatio="xMidYMid meet"
+                role="img"
+                aria-label="학년도 글쓰기 기록"
+            >
                 {monthMarks.map((mark) => (
                     <text key={`${mark.x}-${mark.text}`} x={padLeft + mark.x * step} y={11} fontSize="10" fontWeight="800" fill={INK_SOFT}>{mark.text}</text>
                 ))}
@@ -143,7 +150,7 @@ export const WritingCalendar = ({ daily = [], schoolYear }) => {
                     </rect>
                 )))}
             </svg>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '.72rem', color: INK_SOFT, fontWeight: 800 }}>
+            <div style={{ display: compact ? 'none' : 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: '.72rem', color: INK_SOFT, fontWeight: 800 }}>
                 <span>적게</span>
                 {HEAT.map((color) => <span key={color} style={{ width: '9px', height: '9px', borderRadius: '2.5px', background: color, display: 'inline-block' }} />)}
                 <span>많이</span>
@@ -152,15 +159,15 @@ export const WritingCalendar = ({ daily = [], schoolYear }) => {
     );
 };
 
-export const MonthlyBars = ({ rows, valueKey, unit }) => {
-    const height = 118;
+export const MonthlyBars = ({ rows, valueKey, unit, fluid = false, compact = false }) => {
+    const height = compact ? 72 : 118;
     const slot = (CHART_W - AXIS_L) / rows.length;
     const barWidth = Math.min(26, slot - 12);
     const maximum = Math.max(...rows.map((row) => Number(Reflect.get(row, valueKey) || 0)), 1);
     const hasAny = rows.some((row) => Number(Reflect.get(row, valueKey) || 0) > 0);
     return (
-        <div style={{ overflowX: 'auto' }}>
-            <svg width={CHART_W} height={height + 38} role="img" aria-label="달마다 쓴 글">
+        <div style={{ overflowX: fluid ? 'hidden' : 'auto', minWidth: 0 }}>
+            <svg width={fluid ? '100%' : CHART_W} height={height + 38} viewBox={`0 0 ${CHART_W} ${height + 38}`} preserveAspectRatio="none" role="img" aria-label="달마다 쓴 글">
                 <line x1={AXIS_L} y1={height} x2={CHART_W} y2={height} stroke={GRID} strokeWidth="1" />
                 {rows.map((row, index) => {
                     const value = Number(Reflect.get(row, valueKey) || 0);
@@ -183,8 +190,8 @@ export const MonthlyBars = ({ rows, valueKey, unit }) => {
     );
 };
 
-export const TrendLine = ({ rows, valueKey, unit }) => {
-    const height = 118;
+export const TrendLine = ({ rows, valueKey, unit, fluid = false, compact = false }) => {
+    const height = compact ? 72 : 118;
     const slot = (CHART_W - AXIS_L) / rows.length;
     const maximum = Math.max(...rows.map((row) => Number(Reflect.get(row, valueKey) || 0)), 1);
     const points = rows.map((row, index) => ({ ...row, index, value: Number(Reflect.get(row, valueKey) || 0) })).filter((row) => row.value > 0);
@@ -195,8 +202,8 @@ export const TrendLine = ({ rows, valueKey, unit }) => {
     const last = points.length ? points[points.length - 1] : null;
     const labelled = new Set([peak?.index, last?.index].filter((value) => value !== undefined));
     return (
-        <div style={{ overflowX: 'auto' }}>
-            <svg width={CHART_W} height={height + 38} role="img" aria-label="달마다 추이">
+        <div style={{ overflowX: fluid ? 'hidden' : 'auto', minWidth: 0 }}>
+            <svg width={fluid ? '100%' : CHART_W} height={height + 38} viewBox={`0 0 ${CHART_W} ${height + 38}`} preserveAspectRatio="none" role="img" aria-label="달마다 추이">
                 <line x1={AXIS_L} y1={height} x2={CHART_W} y2={height} stroke={GRID} strokeWidth="1" />
                 {points.length > 1 && <path d={path} fill="none" stroke={SERIES} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
                 {rows.map((row, index) => <text key={`x-${row.m}`} x={centerX(index)} y={height + 16} textAnchor="middle" fontSize="10" fontWeight="800" fill={INK_SOFT}>{row.monthNo}</text>)}
@@ -213,19 +220,19 @@ export const TrendLine = ({ rows, valueKey, unit }) => {
     );
 };
 
-export const PointTypeBars = ({ rows = [], emptyMessage, color = SERIES }) => {
+export const PointTypeBars = ({ rows = [], emptyMessage, color = SERIES, compact = false }) => {
     if (!rows.length) return <p style={{ color: INK_SOFT, fontSize: '.85rem' }}>{emptyMessage}</p>;
     const maximum = Math.max(...rows.map((row) => Number(row.total || 0)), 1);
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
-            {rows.map((row) => <div key={row.type} style={{ display: 'grid', gridTemplateColumns: '86px minmax(0,1fr) 62px', alignItems: 'center', gap: '10px' }}>
-                <span title={POINT_LABELS[row.type] || row.type} style={{ fontSize: '.8rem', fontWeight: 800, color: INK_SOFT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? '4px' : '9px' }}>
+            {rows.map((row) => <div key={row.type} style={{ display: 'grid', gridTemplateColumns: compact ? '68px minmax(0,1fr) 48px' : '86px minmax(0,1fr) 62px', alignItems: 'center', gap: compact ? '6px' : '10px' }}>
+                <span title={POINT_LABELS[row.type] || row.type} style={{ fontSize: compact ? '.64rem' : '.8rem', fontWeight: 800, color: INK_SOFT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {POINT_LABELS[row.type] || row.type}
                 </span>
-                <span style={{ height: '13px', background: 'rgba(62,46,35,.06)', borderRadius: '5px', overflow: 'hidden' }}>
+                <span style={{ height: compact ? '8px' : '13px', background: 'rgba(62,46,35,.06)', borderRadius: '5px', overflow: 'hidden' }}>
                     <span style={{ display: 'block', height: '100%', width: `${Math.max((Number(row.total || 0) / maximum) * 100, 3)}%`, background: color, borderRadius: '5px' }} />
                 </span>
-                <span style={{ fontSize: '.82rem', fontWeight: 900, color: INK, textAlign: 'right' }}>{num(row.total)}P</span>
+                <span style={{ fontSize: compact ? '.64rem' : '.82rem', fontWeight: 900, color: INK, textAlign: 'right' }}>{num(row.total)}P</span>
             </div>)}
         </div>
     );

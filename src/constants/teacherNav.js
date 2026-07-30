@@ -37,7 +37,6 @@ export const TEACHER_NAV_GROUPS = [
         secondaryShape: 'sidebar',
         tabs: [
             { id: 'evaluation', label: '학생 평가' },
-            { id: 'footprints', label: '학급 발자국' },
             { id: 'activity', label: '평어 도우미' }
         ]
     },
@@ -52,6 +51,13 @@ export const TEACHER_NAV_GROUPS = [
         innerShape: 'cards',
         innerItems: ['드래곤 키우기 관리', '어휘의 탑 관리'],
         innerNote: '각 카드 머리의 "학생 화면 ON/OFF" 버튼으로 켜고 끕니다.'
+    },
+    {
+        id: 'footprints',
+        label: '학급 발자국',
+        icon: '👣',
+        defaultTab: 'footprints',
+        tabs: [{ id: 'footprints', label: '학급 발자국' }]
     },
     {
         id: 'tools',
