@@ -120,7 +120,34 @@ CHECK 2개·부분 인덱스·트리거 함수·트리거가 **하나도** 들�
   (그 폴더의 기존 관례와 같은 방식, 이름만 되돌리면 복구).
 - AGENTS.md 의 "삭제보다 기본 OFF" 규칙대로 **표·함수·트리거는 그대로 유지**(5,620행 보존).
 
+### ⑧ 복구 리허설 — "백업이 있다"와 "복원된다"는 달랐다 (구멍 3개 발견·수정)
+사용자 질문("현재 백업은 잘 되고 있나?")에 답하려고 **임시 DB 에 실제로 복원**했다(끝나고 삭제).
+`~/backups/auto/20260730/` 의 그날 산출물을 그대로 썼다.
+
+| 발견 | 증상 | 고친 것 |
+|---|---|---|
+| **연구소DB 에 계정이 없었다** | `-n auth` 가 빠져 **auth.users 17명이 백업에 0건**. RLS·FK 가 auth 를 참조해 복원 오류 **47건** | `-n auth -n storage` 추가 → 오류 52건 → **1건**(무해) |
+| **권한이 안 담겼다** | `--no-privileges` 라 anon/authenticated 표 권한이 덤프에 0개. 복원해도 **데이터는 있는데 PostgREST 가 표를 못 본다** | 옵션 제거 → 아지트 263/263, 연구소 379/379 복원 확인 |
+| **롤·리얼타임 설정이 없었다** | `pg_dump` 는 롤을 안 담고, 손으로 올린 리얼타임 한도(`_realtime.tenants`)도 대상 밖 | `롤.sql`(15롤, 6.5KB)·`리얼타임설정.dump`(8.5KB) 추가 |
+
+- **복원 절차에 함정이 있다**: 대상 DB 에 `extensions` 스키마가 없으면 `extensions.uuid_generate_v4()` 를
+  기본값으로 쓰는 표가 **생성 실패 → 그 표 데이터가 조용히 빠진다**. 첫 시도에서
+  `post_comments` 8,410 + `post_reactions` 2,465 가 그렇게 없어졌다(백업에는 정상 포함되어 있었다).
+  연구소DB 는 `vector` 확장까지 필요하다. 절차는 `~/scripts/sh_mirror_backup.sh` 주석에 적었다.
+- **리허설 최종 결과**: 아지트 표 26개·연구소 표 61개 **행 수 전수 일치**, RLS 정책 58개,
+  `auth.users` 아지트 2,747 / 연구소 17, 버킷 3, 오류는 무해한 `schema "public" already exists` 1건.
+  아지트 쪽 함수 2개·트리거 1개 차이는 04:00 백업 **이후** 적용한 것들이라 정상
+  (`guard_archived_mission_student_write`+트리거, `get_my_reader_title`).
+- **🔴 남은 최대 구멍 — 백업이 평문이고 그대로 드라이브에 올라간다**:
+  `아지트DB스택설정.tar.gz` 안에 `.env` 와 `secrets.agit.env` 가 **그대로** 들어 있고(제외 규칙에 없다),
+  DB 덤프에는 auth 비밀번호 해시가 있다. 이게 매일 `gdrive:` 로 올라가 **30일 보관**된다.
+  → ROADMAP Phase 5 "암호화 백업 자동화"가 바로 이 문제다. **키 보관 장소를 사용자가 정해야** 진행 가능
+  (맥미니에만 두면 맥미니가 죽었을 때 오프사이트 백업이 무용지물이 된다).
+- **채울 필요 없다고 판단한 것**: `realtime`(메시지 파티션 63행·휘발성), `vault`(0행),
+  `supabase_functions.hooks`(0행), `net`(0행), `graphql`·`extensions`(확장이 다시 만든다).
+
 - **변경**: `ROADMAP.md`·`WORKLOG.md` 만. **앱 코드 변경 0** → 재배포 불필요.
+  git 밖: `~/scripts/sh_mirror_backup.sh` 수정(백업 `*.pre-privileges-20260730`).
   git 밖 운영 변경: 마이그레이션 1개 적용, `~/agit-supabase/compose-backups/` 신설(파일 6개 이동),
   `~/.db-backup/backup.sh` 수정, 스냅샷 LaunchAgent 언로드.
 - **결과/검증**: 앱 `:8300` 200, `agit-*` 15개·`supabase-db` 정상, 운영 함수·인덱스 미적용 0건.
