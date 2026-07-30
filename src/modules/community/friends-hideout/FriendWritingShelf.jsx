@@ -37,12 +37,7 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
             const data = await dataCache.get(cacheKey, async () => {
                 const { data: shelfRows, error } = await supabase
                     .from('student_posts')
-                    .select(`
-                        id, title, student_id, mission_id, created_at, updated_at, published_at,
-                        writing_context, self_writing_type, visibility, structured_content,
-                        writing_missions(id, title, mission_type, input_template),
-                        post_reactions(id, reaction_type)
-                    `)
+                    .select('id, title, student_id, mission_id, created_at, updated_at, published_at, writing_context, self_writing_type, visibility, structured_content')
                     // 학급을 직접 건다. student_id 만으로 거르면 학급 인덱스를 못 쓰고,
                     // 전학 온 친구의 **예전 학급 글**까지 딸려 온다 (WORKLOG '학급 글 조회 기준' ①).
                     .eq('class_id', classId)
@@ -54,7 +49,42 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
                     .limit(36);
 
                 if (error) throw error;
-                return shelfRows || [];
+                const rows = shelfRows || [];
+                const missionIds = [...new Set(rows.map((post) => post.mission_id).filter(Boolean))];
+                const postIds = rows.map((post) => post.id);
+                const [missionResult, reactionResult] = await Promise.all([
+                    missionIds.length
+                        ? supabase
+                            .from('writing_missions')
+                            .select('id, title, mission_type, input_template')
+                            .eq('class_id', classId)
+                            .in('id', missionIds)
+                            .limit(missionIds.length)
+                        : Promise.resolve({ data: [], error: null }),
+                    postIds.length
+                        ? supabase
+                            .from('post_reactions')
+                            .select('id, post_id, reaction_type')
+                            .eq('class_id', classId)
+                            .in('post_id', postIds)
+                            .limit(Math.min(1000, postIds.length * 50))
+                        : Promise.resolve({ data: [], error: null })
+                ]);
+                if (missionResult.error) throw missionResult.error;
+                if (reactionResult.error) throw reactionResult.error;
+
+                const missionMap = new Map((missionResult.data || []).map((mission) => [mission.id, mission]));
+                const reactionsByPost = new Map();
+                (reactionResult.data || []).forEach((reaction) => {
+                    const list = reactionsByPost.get(reaction.post_id) || [];
+                    list.push(reaction);
+                    reactionsByPost.set(reaction.post_id, list);
+                });
+                return rows.map((post) => ({
+                    ...post,
+                    writing_missions: post.mission_id ? (missionMap.get(post.mission_id) || null) : null,
+                    post_reactions: reactionsByPost.get(post.id) || []
+                }));
             }, SHELF_CACHE_MS);
 
             setPosts(data || []);
@@ -90,34 +120,50 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
         setOpeningPostId(postSummary.id);
         const { data, error } = await supabase
             .from('student_posts')
-            .select(`
-                id, title, content, student_id, mission_id, created_at, updated_at, published_at,
-                char_count, is_confirmed, is_submitted, writing_context, self_writing_type,
-                visibility, structured_content, show_original, original_title, original_content,
-                students:student_id(name, pet_data),
-                writing_missions(id, title, allow_comments, mission_type, input_template),
-                post_reactions(id, reaction_type, student_id)
-            `)
+            .select('id, title, content, student_id, mission_id, created_at, updated_at, published_at, char_count, is_confirmed, is_submitted, writing_context, self_writing_type, visibility, structured_content, show_original, original_title, original_content')
+            .eq('class_id', classId)
             .eq('id', postSummary.id)
             .eq('student_id', friend.id)
             .eq('is_submitted', true)
             .eq('visibility', 'class')
             .maybeSingle();
 
-        setOpeningPostId(null);
         if (error || !data) {
+            setOpeningPostId(null);
             setPosts((current) => current.filter((post) => post.id !== postSummary.id));
             alert('이 글은 비공개로 바뀌었거나 더 이상 볼 수 없어요. 🔒');
             return;
         }
 
-        const embeddedStudent = normalizeRelation(data.students);
-        const embeddedMission = normalizeRelation(data.writing_missions);
+        const [missionResult, reactionResult] = await Promise.all([
+            data.mission_id
+                ? supabase
+                    .from('writing_missions')
+                    .select('id, title, allow_comments, mission_type, input_template')
+                    .eq('class_id', classId)
+                    .eq('id', data.mission_id)
+                    .maybeSingle()
+                : Promise.resolve({ data: null, error: null }),
+            supabase
+                .from('post_reactions')
+                .select('id, reaction_type, student_id')
+                .eq('class_id', classId)
+                .eq('post_id', data.id)
+                .limit(50)
+        ]);
+        if (missionResult.error || reactionResult.error) {
+            setOpeningPostId(null);
+            alert('글 정보를 완성하지 못했어요. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+
+        setOpeningPostId(null);
         onOpenPost({
             ...data,
-            student_name: embeddedStudent?.name || friend.name,
-            students: embeddedStudent || { name: friend.name, pet_data: friend.pet_data || null },
-            writing_missions: embeddedMission,
+            student_name: friend.name,
+            students: { name: friend.name, pet_data: friend.pet_data || null },
+            writing_missions: missionResult.data || null,
+            post_reactions: reactionResult.data || [],
             original_title: data.show_original ? data.original_title : null,
             original_content: data.show_original ? data.original_content : null
         });

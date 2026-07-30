@@ -24,13 +24,12 @@ export const useFriendsHideout = (studentSession, params) => {
     // [Realtime] 구독 콜백이 최신 값을 읽되, deps로 인한 재구독은 피하기 위한 ref
     const selectedMissionIdRef = useRef(null);
     const normalizePostsRef = useRef(null);
-    // 화면에 다시 들어올 때 갱신하는 길. 실시간 구독을 뺀 뒤로는 이것이 새 글을 받는 주된 길이다.
-    const fetchPostsRef = useRef(null);
+    const hydratePostsRef = useRef(null);
     const lastHideoutRefreshAtRef = useRef(0);
 
     const PAGE_SIZE = 10;
 
-    const normalizePostsWithAuthors = useCallback(async (rawPosts = []) => {
+    const normalizePostsWithAuthors = useCallback(async (rawPosts = [], classIdOverride = null) => {
         if (!Array.isArray(rawPosts) || rawPosts.length === 0) {
             return [];
         }
@@ -49,9 +48,12 @@ export const useFriendsHideout = (studentSession, params) => {
             original_content: post?.show_original ? post.original_content : null
         }));
 
-        const classmateMap = new Map(
-            (classmates || []).map(classmate => [classmate.id, classmate])
-        );
+        const classmateMap = new Map((classmates || []).map(classmate => [classmate.id, classmate]));
+        classmateMap.set(studentSession.id, {
+            id: studentSession.id,
+            name: studentSession.name || '나',
+            pet_data: studentSession.pet_data || null
+        });
 
         const postsWithClassmateFallback = postsWithNormalizedShape.map(post => {
             if (post?.students?.name) {
@@ -89,10 +91,14 @@ export const useFriendsHideout = (studentSession, params) => {
         }
 
         try {
+            const classId = classIdOverride || studentSession.classId || studentSession.class_id;
+            if (!classId) throw new Error('학급 정보를 찾지 못했어요.');
             const { data: studentRows, error } = await supabase
                 .from('students')
                 .select('id, name, pet_data')
-                .in('id', allStudentIds);
+                .eq('class_id', classId)
+                .in('id', allStudentIds)
+                .limit(allStudentIds.length);
 
             if (error) throw error;
 
@@ -127,7 +133,52 @@ export const useFriendsHideout = (studentSession, params) => {
                 student_name: post?.student_name || post?.students?.name || ''
             }));
         }
-    }, [classmates]);
+    }, [classmates, studentSession.classId, studentSession.class_id, studentSession.id, studentSession.name, studentSession.pet_data]);
+
+    // 학급 테이블끼리의 임베드 조인을 피하고 각각 class_id로 직접 좁힌 뒤 메모리에서 합친다.
+    const hydratePostRelations = useCallback(async (rawPosts = [], classId) => {
+        if (!rawPosts.length || !classId) return [];
+        const missionIds = [...new Set(rawPosts.map((post) => post.mission_id).filter(Boolean))];
+        const postIds = rawPosts.map((post) => post.id).filter(Boolean);
+
+        const [missionResult, reactionResult] = await Promise.all([
+            missionIds.length
+                ? supabase
+                    .from('writing_missions')
+                    .select('id, title, allow_comments, mission_type, input_template')
+                    .eq('class_id', classId)
+                    .in('id', missionIds)
+                    .limit(missionIds.length)
+                : Promise.resolve({ data: [], error: null }),
+            postIds.length
+                ? supabase
+                    .from('post_reactions')
+                    .select('id, post_id, reaction_type, student_id')
+                    .eq('class_id', classId)
+                    .in('post_id', postIds)
+                    .limit(Math.min(500, postIds.length * 50))
+                : Promise.resolve({ data: [], error: null })
+        ]);
+
+        if (missionResult.error) throw missionResult.error;
+        if (reactionResult.error) throw reactionResult.error;
+
+        const missionMap = new Map((missionResult.data || []).map((mission) => [mission.id, mission]));
+        const reactionsByPost = new Map();
+        (reactionResult.data || []).forEach((reaction) => {
+            const list = reactionsByPost.get(reaction.post_id) || [];
+            list.push(reaction);
+            reactionsByPost.set(reaction.post_id, list);
+        });
+
+        const hydrated = rawPosts.map((post) => ({
+            ...post,
+            writing_missions: post.mission_id ? (missionMap.get(post.mission_id) || null) : null,
+            post_reactions: reactionsByPost.get(post.id) || []
+        }));
+        const normalizer = normalizePostsRef.current;
+        return normalizer ? normalizer(hydrated, classId) : hydrated;
+    }, []);
 
     const resolveClassId = useCallback(async () => {
         const sessionClassId = studentSession.classId || studentSession.class_id;
@@ -188,7 +239,8 @@ export const useFriendsHideout = (studentSession, params) => {
                     .eq('class_id', classId)
                     .is('deleted_at', null)
                     .neq('id', studentSession.id)
-                    .order('name');
+                    .order('name')
+                    .limit(100);
 
                 if (error) throw error;
                 return excludeCurrentStudent(data || []);
@@ -211,16 +263,15 @@ export const useFriendsHideout = (studentSession, params) => {
         const currentOffset = isAppend ? (pageRef.current + 1) * PAGE_SIZE : 0;
 
         try {
+            const classId = await resolveClassId();
+            if (!classId || !missionId) {
+                setPosts([]);
+                return;
+            }
             const { data, error } = await supabase
                 .from('student_posts')
-                .select(`
-                    id, title, content, student_id, mission_id, created_at, updated_at, char_count, is_confirmed,
-                    writing_context, self_writing_type, visibility, structured_content, show_original,
-                    original_title, original_content,
-                    students:student_id(name, pet_data),
-                    writing_missions(allow_comments, mission_type, input_template),
-                    post_reactions(id, reaction_type, student_id)
-                `)
+                .select('id, title, content, student_id, mission_id, created_at, updated_at, char_count, is_confirmed, writing_context, self_writing_type, visibility, structured_content, show_original, original_title, original_content')
+                .eq('class_id', classId)
                 .eq('mission_id', missionId)
                 .eq('is_submitted', true)
                 .eq('visibility', 'class')
@@ -228,10 +279,8 @@ export const useFriendsHideout = (studentSession, params) => {
                 .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
             if (error) throw error;
-            const normalizer = normalizePostsRef.current;
-            const normalizedPosts = normalizer
-                ? await normalizer(data || [])
-                : (data || []);
+            const hydrator = hydratePostsRef.current;
+            const normalizedPosts = hydrator ? await hydrator(data || [], classId) : (data || []);
 
             if (isAppend) {
                 setPosts(prev => [...prev, ...normalizedPosts]);
@@ -247,13 +296,56 @@ export const useFriendsHideout = (studentSession, params) => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, []);
+    }, [resolveClassId]);
+
+    const fetchRecentPosts = useCallback(async (isAppend = false) => {
+        if (!isAppend) {
+            setLoading(true);
+            pageRef.current = 0;
+        } else {
+            setLoadingMore(true);
+        }
+
+        const currentOffset = isAppend ? (pageRef.current + 1) * PAGE_SIZE : 0;
+        try {
+            const classId = await resolveClassId();
+            if (!classId) {
+                setPosts([]);
+                return;
+            }
+            const { data, error } = await supabase
+                .from('student_posts')
+                .select('id, title, content, student_id, mission_id, created_at, updated_at, char_count, is_confirmed, writing_context, self_writing_type, visibility, structured_content, show_original, original_title, original_content')
+                .eq('class_id', classId)
+                .eq('is_submitted', true)
+                .eq('visibility', 'class')
+                .order('created_at', { ascending: false })
+                .range(currentOffset, currentOffset + PAGE_SIZE - 1);
+
+            if (error) throw error;
+            const hydrator = hydratePostsRef.current;
+            const normalizedPosts = hydrator ? await hydrator(data || [], classId) : (data || []);
+
+            if (isAppend) {
+                setPosts((current) => [...current, ...normalizedPosts]);
+                pageRef.current += 1;
+            } else {
+                setPosts(normalizedPosts);
+            }
+            setHasMore(data?.length === PAGE_SIZE);
+        } catch (err) {
+            console.error('최신 친구 글 로드 실패:', err.message);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    }, [resolveClassId]);
 
     const loadMore = useCallback(() => {
-        if (!loadingMore && hasMore && selectedMission) {
-            fetchPosts(selectedMission.id, true);
-        }
-    }, [loadingMore, hasMore, selectedMission, fetchPosts]);
+        if (loadingMore || !hasMore) return;
+        if (selectedMission) fetchPosts(selectedMission.id, true);
+        else fetchRecentPosts(true);
+    }, [loadingMore, hasMore, selectedMission, fetchPosts, fetchRecentPosts]);
 
     const fetchMissions = useCallback(async (forceRefresh = false) => {
         setLoading(true);
@@ -277,7 +369,8 @@ export const useFriendsHideout = (studentSession, params) => {
                     .select('id, title, class_id, genre, mission_type, input_template, allow_comments, is_archived, created_at, base_reward, bonus_threshold, bonus_reward')
                     .eq('class_id', classId)
                     .eq('is_archived', false)
-                    .order('created_at', { ascending: false });
+                    .order('created_at', { ascending: false })
+                    .limit(100);
 
                 if (error) throw error;
                 return missionRows || [];
@@ -289,51 +382,36 @@ export const useFriendsHideout = (studentSession, params) => {
                     data.find(m => m.id === selectedMissionIdRef.current) ||
                     data.find(m => m.id === params?.missionId);
 
-                // 처음 들어왔을 때는 단순히 최신 미션이 아니라,
-                // 실제로 우리 반의 제출 글이 있는 최신 미션을 먼저 보여준다.
-                if (!nextMission) {
-                    const missionIds = data.map(mission => mission.id);
-                    const { data: sharedPostRows, error: sharedPostError } = await supabase
-                        .from('student_posts')
-                        .select('mission_id')
-                        .eq('class_id', classId)
-                        .eq('is_submitted', true)
-                        .eq('visibility', 'class')
-                        .in('mission_id', missionIds);
-
-                    if (sharedPostError) {
-                        console.warn('공유 글이 있는 미션 확인 실패:', sharedPostError.message);
-                    }
-
-                    const missionsWithSharedPosts = new Set(
-                        (sharedPostRows || []).map(post => post.mission_id)
-                    );
-                    nextMission =
-                        data.find(mission => missionsWithSharedPosts.has(mission.id)) ||
-                        data[0];
+                if (nextMission) {
+                    selectedMissionIdRef.current = nextMission.id;
+                    setSelectedMission(nextMission);
+                    fetchPosts(nextMission.id);
+                } else {
+                    selectedMissionIdRef.current = null;
+                    setSelectedMission(null);
+                    fetchRecentPosts();
                 }
-
-                selectedMissionIdRef.current = nextMission.id;
-                setSelectedMission(nextMission);
-                fetchPosts(nextMission.id);
             } else {
                 setSelectedMission(null);
-                setPosts([]);
+                fetchRecentPosts();
             }
         } catch (err) {
             console.error('미션 로드 실패:', err.message);
         } finally {
             setLoading(false);
         }
-    }, [resolveClassId, fetchPosts, params?.missionId]);
+    }, [resolveClassId, fetchPosts, fetchRecentPosts, params?.missionId]);
 
     const handleMeetingPick = useCallback(async (postId) => {
         if (!postId || !studentSession.id || !selectedMission?.id) return false;
 
         try {
+            const classId = await resolveClassId();
+            if (!classId) return false;
             const { data: existingReaction, error: existingError } = await supabase
                 .from('post_reactions')
                 .select('id, reaction_type')
+                .eq('class_id', classId)
                 .eq('post_id', postId)
                 .eq('student_id', studentSession.id)
                 .maybeSingle();
@@ -344,18 +422,21 @@ export const useFriendsHideout = (studentSession, params) => {
                 const { error } = await supabase
                     .from('post_reactions')
                     .delete()
+                    .eq('class_id', classId)
                     .eq('id', existingReaction.id);
                 if (error) throw error;
             } else if (existingReaction?.id) {
                 const { error } = await supabase
                     .from('post_reactions')
                     .update({ reaction_type: 'agree' })
+                    .eq('class_id', classId)
                     .eq('id', existingReaction.id);
                 if (error) throw error;
             } else {
                 const { error } = await supabase
                     .from('post_reactions')
                     .insert({
+                        class_id: classId,
                         post_id: postId,
                         student_id: studentSession.id,
                         reaction_type: 'agree'
@@ -369,26 +450,31 @@ export const useFriendsHideout = (studentSession, params) => {
             console.error('회의 안건 선택 실패:', err.message);
             return false;
         }
-    }, [fetchPosts, selectedMission?.id, studentSession.id]);
+    }, [fetchPosts, resolveClassId, selectedMission?.id, studentSession.id]);
 
     const handleInitialPost = useCallback(async (postId) => {
         try {
+            const classId = await resolveClassId();
+            if (!classId) return;
             const { data, error } = await supabase
                 .from('student_posts')
-                .select('*, students:student_id(name, pet_data), writing_missions(allow_comments, mission_type, input_template), post_reactions(id, reaction_type, student_id)')
+                .select('id, title, content, student_id, mission_id, created_at, updated_at, char_count, is_confirmed, is_submitted, writing_context, self_writing_type, visibility, structured_content, show_original, original_title, original_content')
+                .eq('class_id', classId)
                 .eq('id', postId)
+                .eq('is_submitted', true)
+                .eq('visibility', 'class')
                 .maybeSingle();
 
             if (error) throw error;
             if (data) {
-                const normalizer = normalizePostsRef.current;
-                const [normalizedPost] = normalizer ? await normalizer([data]) : [data];
+                const hydrator = hydratePostsRef.current;
+                const [normalizedPost] = hydrator ? await hydrator([data], classId) : [data];
                 setViewingPost(normalizedPost || data);
             }
         } catch (err) {
             console.error('초기 포스트 로드 실패:', err.message);
         }
-    }, []);
+    }, [resolveClassId]);
 
     useEffect(() => {
         setResolvedClassId(studentSession.classId || studentSession.class_id || null);
@@ -439,8 +525,8 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [normalizePostsWithAuthors]);
 
     useEffect(() => {
-        fetchPostsRef.current = fetchPosts;
-    }, [fetchPosts]);
+        hydratePostsRef.current = hydratePostRelations;
+    }, [hydratePostRelations]);
 
     useEffect(() => {
         fetchMissions(true);
@@ -470,8 +556,6 @@ export const useFriendsHideout = (studentSession, params) => {
             lastHideoutRefreshAtRef.current = Date.now();
             fetchMissions(true);
             fetchClassmates();
-            const missionId = selectedMissionIdRef.current;
-            if (missionId) fetchPostsRef.current?.(missionId);
         };
         const handleFocus = () => refreshIfStale();
         const handleVisibilityChange = () => {
@@ -484,14 +568,14 @@ export const useFriendsHideout = (studentSession, params) => {
             window.removeEventListener('focus', handleFocus);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-        // [주의] deps에는 구독 식별자(classId/studentId)만 둡니다.
-        // selectedMission.id / normalizePostsWithAuthors 변경 시 재구독하지 않도록 ref 사용.
-    }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, fetchMissions]);
+        // selectedMission.id / normalizePostsWithAuthors 변경 시 재등록하지 않도록 ref 사용.
+    }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, fetchMissions, fetchClassmates]);
 
     const handleMissionChange = (mission) => {
-        selectedMissionIdRef.current = mission.id;
-        setSelectedMission(mission);
-        fetchPosts(mission.id);
+        selectedMissionIdRef.current = mission?.id || null;
+        setSelectedMission(mission || null);
+        if (mission?.id) fetchPosts(mission.id);
+        else fetchRecentPosts();
     };
 
     return {

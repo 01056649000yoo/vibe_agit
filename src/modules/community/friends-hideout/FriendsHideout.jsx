@@ -36,17 +36,15 @@ const GRID_STYLE = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, mi
 const MAIN_TABS = [
     {
         id: 'posts',
-        step: '1',
-        icon: '📖',
-        title: '우리 반 글 나눔',
-        description: '선생님 과제로 쓴 글을 바로 함께 읽어요.'
+        icon: '📰',
+        title: '최신 글',
+        description: '우리 반이 최근 공개한 글'
     },
     {
         id: 'hideouts',
-        step: '2',
         icon: '🏠',
-        title: '친구 아지트 방문',
-        description: '친구를 골라 드래곤과 공개 책장을 구경해요.'
+        title: '친구 아지트',
+        description: '친구의 성장과 서재 방문'
     }
 ];
 
@@ -183,14 +181,14 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 
     const handleCloseModal = useCallback(() => {
         if (params?.initialPostId) onBack();
+        else if (viewingFriendHideout) setViewingPost(null);
         else {
             setViewingPost(null);
             if (selectedMission) handleMissionChange(selectedMission);
         }
-    }, [params, onBack, setViewingPost, selectedMission, handleMissionChange]);
+    }, [params, onBack, viewingFriendHideout, setViewingPost, selectedMission, handleMissionChange]);
 
     const handleOpenFriendPost = useCallback((post) => {
-        setViewingFriendHideout(null);
         setViewingPost(post);
     }, [setViewingPost]);
 
@@ -212,12 +210,16 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                     <div>
                         <h2 style={{ margin: 0, color: '#2C3E50', fontWeight: '950', fontSize: isMobile ? '1.5rem' : '1.8rem' }}>🌈 우리 반 글과 아지트</h2>
                         <p style={{ margin: '7px 0 0', color: '#78909C', fontSize: '0.9rem', fontWeight: '700' }}>
-                            먼저 친구들의 글을 함께 읽고, 더 알고 싶은 친구의 아지트도 방문해 보세요.
+                            최신 글을 읽거나 친구가 꾸민 아지트로 바로 놀러 가요.
                         </p>
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '12px', marginBottom: '30px' }} role="tablist" aria-label="우리 반 글과 친구 아지트">
+                <div style={{
+                    display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '7px',
+                    marginBottom: '25px', padding: '6px', borderRadius: '18px', background: '#E8EDF3',
+                    position: 'sticky', top: '8px', zIndex: 20, boxShadow: '0 6px 18px rgba(38,50,56,.08)'
+                }} role="tablist" aria-label="최신 글과 친구 아지트">
                     {MAIN_TABS.map((tab) => {
                         const selected = activeMainTab === tab.id;
                         return (
@@ -228,22 +230,17 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                 aria-selected={selected}
                                 onClick={() => setActiveMainTab(tab.id)}
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: '14px', padding: '16px',
-                                    borderRadius: '20px', textAlign: 'left', cursor: 'pointer',
-                                    border: selected ? '2px solid #5C6BC0' : '1px solid #DDE4EA',
-                                    background: selected ? 'linear-gradient(135deg,#EEF2FF,#FFFFFF)' : 'white',
-                                    boxShadow: selected ? '0 10px 24px rgba(92,107,192,.14)' : '0 4px 12px rgba(38,50,56,.04)'
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                    minHeight: '58px', padding: '9px 10px', borderRadius: '13px', cursor: 'pointer',
+                                    border: selected ? '1px solid #5C6BC0' : '1px solid transparent',
+                                    background: selected ? '#FFFFFF' : 'transparent',
+                                    boxShadow: selected ? '0 4px 12px rgba(92,107,192,.14)' : 'none'
                                 }}
                             >
-                                <span style={{
-                                    display: 'flex', width: '42px', height: '42px', flex: '0 0 42px',
-                                    alignItems: 'center', justifyContent: 'center', borderRadius: '14px',
-                                    background: selected ? '#5C6BC0' : '#ECEFF1', color: selected ? 'white' : '#607D8B',
-                                    fontSize: '1.05rem', fontWeight: '950'
-                                }}>{tab.step}</span>
-                                <span style={{ minWidth: 0 }}>
-                                    <strong style={{ display: 'block', color: '#263238', fontSize: '1rem' }}>{tab.icon} {tab.title}</strong>
-                                    <small style={{ display: 'block', marginTop: '4px', color: '#78909C', lineHeight: '1.35' }}>{tab.description}</small>
+                                <span aria-hidden="true" style={{ fontSize: '1.15rem' }}>{tab.icon}</span>
+                                <span style={{ minWidth: 0, textAlign: 'left' }}>
+                                    <strong style={{ display: 'block', color: selected ? '#3949AB' : '#546E7A', fontSize: '.9rem' }}>{tab.title}</strong>
+                                    {!isMobile && <small style={{ display: 'block', marginTop: '2px', color: '#78909C', fontSize: '.68rem' }}>{tab.description}</small>}
                                 </span>
                             </button>
                         );
@@ -253,22 +250,35 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                 {activeMainTab === 'posts' ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <div style={{ marginBottom: '18px' }}>
-                            <span style={{ color: '#5C6BC0', fontSize: '0.75rem', fontWeight: '950' }}>1순위 · 지금 바로 함께 읽기</span>
-                            <h3 style={{ margin: '5px 0 3px', color: '#263238', fontSize: '1.25rem' }}>📖 선생님 과제 글 모아보기</h3>
-                            <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>과제를 고르면 제출된 우리 반 글이 보여요. 내가 쓴 글도 함께 확인할 수 있어요.</p>
+                            <span style={{ color: '#5C6BC0', fontSize: '0.75rem', fontWeight: '950' }}>우리 반 새 글 탐색</span>
+                            <h3 style={{ margin: '5px 0 3px', color: '#263238', fontSize: '1.25rem' }}>📰 최신 글 찾아보기</h3>
+                            <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>과제·독서록을 최신순으로 읽고, 원하면 과제별로 좁혀 보세요.</p>
                         </div>
                     </div>
                 ) : (
                     <div style={{ marginBottom: '18px' }}>
-                        <span style={{ color: '#8E24AA', fontSize: '0.75rem', fontWeight: '950' }}>2순위 · 친구를 더 알아보기</span>
+                        <span style={{ color: '#8E24AA', fontSize: '0.75rem', fontWeight: '950' }}>친구의 공간 방문</span>
                         <h3 style={{ margin: '5px 0 3px', color: '#263238', fontSize: '1.25rem' }}>🏠 누구의 아지트로 갈까요?</h3>
-                        <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>학생마다 꾸민 아지트에서 드래곤과 공개한 글 책장을 함께 볼 수 있어요.</p>
+                        <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>나의 아지트처럼 친구의 성장·드래곤·공개 책장을 한 화면에서 구경해요.</p>
                     </div>
                 )}
 
                 {activeMainTab === 'posts' ? (
                     <>
                         <div style={TAB_CONTAINER_STYLE}>
+                            <button
+                                type="button"
+                                onClick={() => handleMissionChange(null)}
+                                style={{
+                                    padding: '10px 20px', borderRadius: '16px', border: 'none',
+                                    background: !selectedMission ? '#5C6BC0' : 'white',
+                                    color: !selectedMission ? 'white' : '#607D8B',
+                                    fontWeight: 'bold', whiteSpace: 'nowrap', cursor: 'pointer',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                                }}
+                            >
+                                📰 최신 글
+                            </button>
                             {missions.map(m => (
                                 <button
                                     key={m.id}
@@ -310,7 +320,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                             ) : posts.length === 0 ? (
                                 <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px', background: 'white', borderRadius: '24px' }}>
                                     <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🌵</div>
-                                    <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>아직 이 과제에 제출된 글이 없어요.</p>
+                                    <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>{selectedMission ? '아직 이 과제에 제출된 글이 없어요.' : '아직 공개된 최신 글이 없어요.'}</p>
                                 </div>
                             ) : (
                                 <>
@@ -387,7 +397,6 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                             classId={resolvedClassId}
                             onClose={() => setViewingFriendHideout(null)}
                             onOpenPost={handleOpenFriendPost}
-                            isMobile={isMobile}
                         />
                     </Suspense>
                 )}

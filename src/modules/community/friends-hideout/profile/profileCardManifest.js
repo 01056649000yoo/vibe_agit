@@ -12,20 +12,20 @@ const FriendPointActivityCard = lazy(() => import('./cards/FriendPointActivityCa
  */
 export const friendProfileCardManifest = [
     {
-        id: 'dragon',
-        title: '대표 드래곤',
-        order: 10,
-        status: 'active',
-        component: FriendDragonProfileCard,
-        loadingMessage: '친구 드래곤을 깨우는 중... 🐲'
-    },
-    {
         id: 'writing-footprint',
         title: '글쓰기 발자국',
-        order: 20,
+        order: 10,
         status: 'active',
         component: FriendWritingFootprintCard,
         loadingMessage: '글쓰기 발자국을 모으는 중... 👣'
+    },
+    {
+        id: 'dragon',
+        title: '대표 드래곤',
+        order: 20,
+        status: 'active',
+        component: FriendDragonProfileCard,
+        loadingMessage: '친구 드래곤을 깨우는 중... 🐲'
     },
     {
         id: 'writing-shelf',
