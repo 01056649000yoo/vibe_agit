@@ -63,36 +63,54 @@ const Row = ({ icon, title, desc, right, onClick }) => (
 
 const BadgeButton = ({ kind, level, loading, errorMessage, onClick }) => {
     const writer = kind === 'writer';
-    const accent = writer ? '#C77712' : '#2768B7';
+    const accent = writer ? '#F4B740' : '#72B7FF';
+    const deepAccent = writer ? '#9A5B00' : '#145EA8';
+    const totalLevels = writer ? WRITER_LEVELS.length : READER_LEVELS.length;
     return (
-        <button
+        <motion.button
             type="button"
             onClick={onClick}
             aria-label={`${writer ? '작가' : '독자'} 칭호 설명 보기`}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
             style={{
-                position: 'relative', minWidth: 0, padding: '2px 4px 6px', border: 'none', borderRadius: '18px',
-                background: 'transparent', cursor: 'pointer', color: INK, fontFamily: 'inherit'
+                position: 'relative', minWidth: 0, minHeight: '166px', padding: '11px 10px 12px', overflow: 'hidden',
+                border: `1px solid ${writer ? 'rgba(255,211,117,.48)' : 'rgba(139,199,255,.48)'}`, borderRadius: '19px',
+                background: writer
+                    ? 'linear-gradient(155deg,rgba(255,247,220,.98),rgba(255,220,143,.92))'
+                    : 'linear-gradient(155deg,rgba(237,248,255,.98),rgba(171,216,255,.92))',
+                boxShadow: `inset 0 1px 0 rgba(255,255,255,.9), 0 8px 18px ${writer ? 'rgba(81,48,8,.18)' : 'rgba(8,54,98,.2)'}`,
+                cursor: 'pointer', color: INK, fontFamily: 'inherit', textAlign: 'center'
             }}
         >
-            <span style={{ position: 'relative', display: 'inline-block' }}>
-                <img src={titleBadgeSrc(kind, level.level)} alt="" aria-hidden="true" width="76" height="76"
-                    style={{ display: 'block', width: '76px', height: '76px', objectFit: 'contain', filter: 'drop-shadow(0 5px 7px rgba(62,46,35,.14))' }} />
-                {!loading && !errorMessage && (
-                    <span style={{
-                        position: 'absolute', right: '-2px', bottom: '2px', minWidth: '29px', height: '29px', padding: '0 4px',
-                        display: 'grid', placeItems: 'center', boxSizing: 'border-box', borderRadius: '99px',
-                        background: '#FFFFFF', border: `2px solid ${accent}`, color: accent, fontSize: '.68rem', fontWeight: 950,
-                        boxShadow: '0 2px 6px rgba(62,46,35,.16)'
-                    }}>L{level.level}</span>
-                )}
+            <span aria-hidden="true" style={{
+                position: 'absolute', width: '108px', height: '108px', left: '50%', top: '40px', transform: 'translateX(-50%)',
+                borderRadius: '50%', background: `radial-gradient(circle,${accent}42 0%,${accent}14 48%,transparent 70%)`
+            }} />
+            <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                <span style={{ color: deepAccent, fontSize: '.68rem', fontWeight: 950, letterSpacing: '.02em' }}>
+                    {writer ? '✍️ 작가 칭호' : '📖 독자 칭호'}
+                </span>
+                <span aria-hidden="true" style={{
+                    width: '20px', height: '20px', display: 'grid', placeItems: 'center', borderRadius: '50%',
+                    background: 'rgba(255,255,255,.7)', border: `1px solid ${accent}90`, color: deepAccent,
+                    fontSize: '.68rem', fontWeight: 950
+                }}>i</span>
             </span>
-            <span style={{ display: 'block', marginTop: '1px', color: INK_SOFT, fontSize: '.68rem', fontWeight: 900 }}>
-                {writer ? '작가 칭호' : '독자 칭호'}
+            <span style={{ position: 'relative', display: 'inline-block', marginTop: '2px' }}>
+                <img src={titleBadgeSrc(kind, level.level)} alt="" aria-hidden="true" width="82" height="82"
+                    style={{ display: 'block', width: '82px', height: '82px', objectFit: 'contain', filter: 'drop-shadow(0 6px 7px rgba(35,27,22,.2))' }} />
             </span>
-            <span style={{ display: 'block', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: INK, fontSize: '.88rem', fontWeight: 950 }}>
+            <span style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '-2px' }}>
+                <span style={{
+                    padding: '3px 7px', borderRadius: '99px', background: deepAccent, color: '#FFFFFF',
+                    fontSize: '.62rem', fontWeight: 950, boxShadow: '0 2px 5px rgba(31,28,25,.15)'
+                }}>LV.{level.level} / {totalLevels}</span>
+            </span>
+            <span style={{ position: 'relative', display: 'block', marginTop: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#342820', fontSize: '.86rem', fontWeight: 950 }}>
                 {loading ? '살펴보는 중...' : errorMessage ? '확인 필요' : level.name}
             </span>
-        </button>
+        </motion.button>
     );
 };
 
@@ -446,23 +464,45 @@ const MyAgitPanel = ({
                             style={{ border: 'none', background: 'none', fontSize: '1.5rem', color: INK_SOFT, cursor: 'pointer' }}>✕</button>
                     </header>
 
-                    {/* 칭호 — 긴 상태표 대신 프로필에 다는 두 개의 훈장으로 보여 준다. */}
+                    {/* 성장 상태 — 포인트 계기판과 작가·독자 훈장 슬롯을 한눈에 보여 준다. */}
                     <section aria-label="나의 작가·독자 칭호" style={{
-                        padding: '15px 16px 13px', borderRadius: '22px', border: '1px solid #FFE082',
-                        background: 'linear-gradient(135deg,#FFF8E1,#FFFFFF)', marginBottom: '14px'
+                        position: 'relative', padding: '16px', overflow: 'hidden', borderRadius: '24px',
+                        border: '1px solid rgba(255,226,168,.38)',
+                        background: 'radial-gradient(circle at 8% 0%,rgba(255,210,109,.28),transparent 34%), radial-gradient(circle at 100% 100%,rgba(90,164,235,.22),transparent 38%), linear-gradient(145deg,#3B2924 0%,#503A32 48%,#263E56 100%)',
+                        boxShadow: '0 14px 30px rgba(62,46,35,.18)', marginBottom: '14px'
                     }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                            <div>
-                                <div style={{ fontSize: '1.02rem', fontWeight: 950, color: INK }}>{studentSession?.name}의 두 가지 칭호</div>
-                                <div style={{ marginTop: '3px', fontSize: '.7rem', fontWeight: 800, color: INK_SOFT }}>뱃지를 눌러 성장 단계를 봐요.</div>
+                        <span aria-hidden="true" style={{ position: 'absolute', right: '-28px', top: '-34px', width: '112px', height: '112px', border: '1px solid rgba(255,255,255,.1)', borderRadius: '50%' }} />
+                        <span aria-hidden="true" style={{ position: 'absolute', right: '-7px', top: '-13px', width: '70px', height: '70px', border: '1px solid rgba(255,255,255,.08)', borderRadius: '50%' }} />
+                        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#FFD987', fontSize: '.64rem', fontWeight: 950, letterSpacing: '.08em' }}>
+                                    <span aria-hidden="true" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#7FE0A0', boxShadow: '0 0 8px #7FE0A0' }} />
+                                    나의 성장 상태
+                                </div>
+                                <div style={{ marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.08rem', fontWeight: 950, color: '#FFFFFF' }}>
+                                    {studentSession?.name || '나'}의 아지트
+                                </div>
                             </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#FBC02D', lineHeight: 1.1 }}>
-                                    {num(points)}<span style={{ fontSize: '.85rem', color: INK_SOFT }}>P</span>
+                            <div role="group" aria-label={`보유 포인트 ${num(points)}점`} style={{
+                                flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 10px 7px 8px',
+                                border: '1px solid rgba(255,224,143,.42)', borderRadius: '15px',
+                                background: 'linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.08))',
+                                boxShadow: 'inset 0 1px 0 rgba(255,255,255,.2)'
+                            }}>
+                                <span aria-hidden="true" style={{
+                                    width: '31px', height: '31px', display: 'grid', placeItems: 'center', borderRadius: '50%',
+                                    background: 'linear-gradient(145deg,#FFE991,#F2AD27)', border: '2px solid #FFF1B6',
+                                    color: '#9B5B00', fontSize: '.9rem', fontWeight: 950, boxShadow: '0 3px 8px rgba(0,0,0,.22)'
+                                }}>★</span>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ color: 'rgba(255,255,255,.65)', fontSize: '.55rem', fontWeight: 850 }}>보유 포인트</div>
+                                    <div style={{ marginTop: '1px', color: '#FFE38A', fontSize: '1.05rem', fontWeight: 950, lineHeight: 1 }}>
+                                        {num(points)}<span style={{ marginLeft: '2px', fontSize: '.62rem', color: '#FFFFFF' }}>P</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '10px', marginTop: '10px' }}>
+                        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '10px', marginTop: '13px' }}>
                             <BadgeButton
                                 kind="writer"
                                 level={writerTitle}
@@ -475,6 +515,9 @@ const MyAgitPanel = ({
                                 errorMessage={readerError}
                                 onClick={() => setActiveTitleGuide('reader')}
                             />
+                        </div>
+                        <div style={{ position: 'relative', marginTop: '9px', textAlign: 'center', color: 'rgba(255,255,255,.7)', fontSize: '.64rem', fontWeight: 800 }}>
+                            칭호 카드를 눌러 전체 성장 단계를 확인해요
                         </div>
                     </section>
 
