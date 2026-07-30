@@ -24,9 +24,10 @@ const SELF_METRICS = [
     { key: 'reactions_received_count', icon: '💖', label: '받은 반응', unit: '개', color: '#C2185B', bg: '#FCE4EC' }
 ];
 
+// 친구에게 보여 줄 항목. `revisions_count`(고쳐 쓴 횟수)는 이벤트 표에만 있던 값이라
+// 실제 글·댓글 표에서 같은 정의로 셀 근거가 없어 뺐다 — 내 발자국 화면도 이미 안 보여 준다.
 const FRIEND_METRICS = SELF_METRICS.filter((metric) => [
     'posts_written_count',
-    'revisions_count',
     'active_days_count',
     'comments_given_count',
     'comments_received_count',

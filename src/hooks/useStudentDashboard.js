@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getWriterLevel } from '../constants/writerLevels';
+import { collectWriterPosts, getWriterLevel } from '../constants/writerLevels';
 import { supabase } from '../lib/supabaseClient';
 
 import { classKey, dataCache } from '../lib/cache';
@@ -57,11 +57,24 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     }, [sessionClassId]);
 
 
-    const fetchStats = useCallback(async () => {
+    /**
+     * @param {boolean} force 저장해 둔 값을 버리고 다시 확인한다.
+     *
+     * 교사가 글을 승인하면 실시간 알림이 와서 이 함수를 다시 부르는데, 5분·1분 동안
+     * 저장해 둔 값이 그대로 돌아와서 **작가 칭호가 최대 5분간 안 올랐다.**
+     * 알림으로 불릴 때는 값이 바뀐 것이 확실하니 저장해 둔 것을 버리고 새로 확인한다.
+     */
+    const fetchStats = useCallback(async (force = false) => {
         if (!studentSession?.id || !sessionClassId) return;
         try {
             const now = new Date();
             const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+            const lifetimeKey = classKey(sessionClassId, 'student-lifetime-stats', { student: studentSession.id });
+            const monthlyKey = classKey(sessionClassId, 'student-monthly-posts', { student: studentSession.id });
+            if (force) {
+                dataCache.invalidate(lifetimeKey);
+                dataCache.invalidate(monthlyKey);
+            }
 
             // [최적화] 두 가지 통계를 DB 레벨 필터링을 통해 병렬로 가져옴
             const [lifetimeData, monthlyCount] = await Promise.all([
@@ -71,7 +84,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 //    (지금은 최다 23편이라 아무도 걸리지 않았지만 학년 말에 걸릴 수 있다.)
                 //    한 학생의 글은 많아야 수백 건이므로 최근 1,000편을 안전 상한으로 두고,
                 //    학급을 직접 걸어 학급 인덱스를 탄다 (WORKLOG '학급 글 조회 기준').
-                dataCache.get(classKey(sessionClassId, 'student-lifetime-stats', { student: studentSession.id }), async () => {
+                dataCache.get(lifetimeKey, async () => {
                     const query = supabase
                         .from('student_posts')
                         .select('id, mission_id, char_count, created_at')
@@ -86,7 +99,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                 }, 300000), // 5분 캐시
                 
                 // 2. 이번 달 승인된 글 개수 (DB 레벨 필터링)
-                dataCache.get(classKey(sessionClassId, 'student-monthly-posts', { student: studentSession.id }), async () => {
+                dataCache.get(monthlyKey, async () => {
                     const query = supabase
                         .from('student_posts')
                         .select('id', { count: 'exact', head: true })
@@ -101,26 +114,15 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             ]);
 
             if (lifetimeData) {
-                // [최적화] 이미 DB에서 승인된 것만 가져왔으므로 미션별 중복만 제거
-                const missionMap = new Map();
-                lifetimeData.forEach(post => {
-                    // 과제글은 미션별 한 편, 자율글(mission_id=null)은 각 글을 한 편으로 세다.
-                    const postKey = post.mission_id ? `mission:${post.mission_id}` : `post:${post.id}`;
-                    if (!missionMap.has(postKey)) {
-                        missionMap.set(postKey, post);
-                    }
-                });
+                // 집계 규칙(미션별 한 편 + 자율글 각 한 편)은 writerLevels 에 한 곳으로 모아 두었다.
+                // 발자국 화면은 같은 규칙을 SQL(`level_posts` CTE)로 계산한다.
+                const { totalChars, completedPosts, completedMissions } = collectWriterPosts(lifetimeData);
 
-                const finalPosts = Array.from(missionMap.values());
-                const totalChars = finalPosts.reduce((sum, post) => sum + (post.char_count || 0), 0);
-                const completedPosts = finalPosts.length;
-                const completedMissions = new Set(finalPosts.map((post) => post.mission_id).filter(Boolean)).size;
-                
-                setStats({ 
-                    totalChars, 
+                setStats({
+                    totalChars,
                     completedMissions,
                     completedPosts,
-                    monthlyPosts: monthlyCount 
+                    monthlyPosts: monthlyCount
                 });
                 setLevelInfo(getWriterLevel(totalChars, completedPosts));
             }

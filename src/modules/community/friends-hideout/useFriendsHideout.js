@@ -5,6 +5,9 @@ import { dataCache } from '../../../lib/cache';
 
 const getClassmatesCacheKey = (classId, studentId) => `classmates_${classId}_${studentId}`;
 
+// 화면에 다시 들어올 때 너무 잦게 다시 부르지 않도록 두는 최소 간격.
+const HIDEOUT_REFRESH_COOLDOWN_MS = 5000;
+
 export const useFriendsHideout = (studentSession, params) => {
     const CLASSMATES_CACHE_MS = 300000;
     const [missions, setMissions] = useState([]);
@@ -21,6 +24,9 @@ export const useFriendsHideout = (studentSession, params) => {
     // [Realtime] 구독 콜백이 최신 값을 읽되, deps로 인한 재구독은 피하기 위한 ref
     const selectedMissionIdRef = useRef(null);
     const normalizePostsRef = useRef(null);
+    // 화면에 다시 들어올 때 갱신하는 길. 실시간 구독을 뺀 뒤로는 이것이 새 글을 받는 주된 길이다.
+    const fetchPostsRef = useRef(null);
+    const lastHideoutRefreshAtRef = useRef(0);
 
     const PAGE_SIZE = 10;
 
@@ -433,6 +439,10 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [normalizePostsWithAuthors]);
 
     useEffect(() => {
+        fetchPostsRef.current = fetchPosts;
+    }, [fetchPosts]);
+
+    useEffect(() => {
         fetchMissions(true);
         fetchClassmates();
         if (params?.initialPostId) {
@@ -444,90 +454,35 @@ export const useFriendsHideout = (studentSession, params) => {
         const classId = resolvedClassId || studentSession.classId || studentSession.class_id;
         if (!classId) return;
 
-        // [실시간 1] 친구들의 드래곤 데이터 및 프로필 업데이트 구독
-        const classmateSubscription = supabase
-            .channel(`classmates_${classId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'students',
-                    filter: `class_id=eq.${classId}`
-                },
-                (payload) => {
-                    if (payload.new.id !== studentSession.id) {
-                        dataCache.invalidate(getClassmatesCacheKey(classId, studentSession.id));
-                        setClassmates(prev => prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c));
-                    }
-                }
-            )
-            .subscribe();
-
-        // [실시간 2] 미션 복구/보관 반영
-        const missionsSubscription = supabase
-            .channel(`hideout_missions_${classId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'writing_missions',
-                    filter: `class_id=eq.${classId}`
-                },
-                () => {
-                    fetchMissions(true);
-                }
-            )
-            .subscribe();
-
-        // [실시간 3] 새 글 알림 구독 (class_id 필터로 범위 제한 + 콜백 내부에서 현재 미션 체크)
-        const postsSubscription = supabase
-            .channel(`posts_${classId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'student_posts',
-                    filter: `class_id=eq.${classId}`
-                },
-                async (payload) => {
-                    const currentMissionId = selectedMissionIdRef.current;
-                    if (
-                        payload.new.mission_id === currentMissionId &&
-                        payload.new.is_submitted &&
-                        payload.new.visibility === 'class'
-                    ) {
-                        const { data: newPost, error } = await supabase
-                            .from('student_posts')
-                            .select(`
-                                id, title, content, student_id, mission_id, created_at, updated_at, char_count, is_confirmed,
-                                writing_context, self_writing_type, visibility, structured_content, show_original,
-                                original_title, original_content,
-                                students:student_id(name, pet_data),
-                                writing_missions(allow_comments)
-                            `)
-                            .eq('id', payload.new.id)
-                            .single();
-
-                        if (!error && newPost) {
-                            const normalizer = normalizePostsRef.current;
-                            const [normalizedPost] = normalizer ? await normalizer([newPost]) : [newPost];
-                            setPosts(prev => {
-                                if (prev.some(p => p.id === newPost.id)) return prev;
-                                return [normalizedPost || newPost, ...prev];
-                            });
-                        }
-                    }
-                }
-            )
-            .subscribe();
+        // [실시간 구독 제거 — 2026-07-30]
+        //
+        // 예전에는 여기서 `students`·`writing_missions`·`student_posts` 를 **학급 단위**로 구독했다.
+        // 친구가 글을 하나 올리면 같은 학급 접속자 전원(최대 30명)에게 이벤트가 퍼져서,
+        // 이벤트 수가 접속자 수에 비례해 늘었다. 리얼타임 한도가 `max_events_per_second=100`,
+        // `max_concurrent_users=200` 이라 동시 500명 목표에서 여기가 먼저 막힌다.
+        //
+        // 앱의 핵심 흐름(학생 제출 → 교사 확인·피드백 → 승인)은 학생 본인으로 좁혀 구독하는
+        // `useRealtimeNotifications` 가 담당하고, 친구 아지트는 핵심이 아니라 구독을 뺐다.
+        // 대신 **화면에 다시 들어올 때 갱신**한다 — 예전에는 이 화면에 그 길이 아예 없어서
+        // 구독만 빼면 나갔다 들어와야 새 글이 보였다.
+        const refreshIfStale = () => {
+            if (Date.now() - lastHideoutRefreshAtRef.current < HIDEOUT_REFRESH_COOLDOWN_MS) return;
+            lastHideoutRefreshAtRef.current = Date.now();
+            fetchMissions(true);
+            fetchClassmates();
+            const missionId = selectedMissionIdRef.current;
+            if (missionId) fetchPostsRef.current?.(missionId);
+        };
+        const handleFocus = () => refreshIfStale();
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') refreshIfStale();
+        };
+        window.addEventListener('focus', handleFocus);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
-            supabase.removeChannel(classmateSubscription);
-            supabase.removeChannel(missionsSubscription);
-            supabase.removeChannel(postsSubscription);
+            window.removeEventListener('focus', handleFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
         // [주의] deps에는 구독 식별자(classId/studentId)만 둡니다.
         // selectedMission.id / normalizePostsWithAuthors 변경 시 재구독하지 않도록 ref 사용.

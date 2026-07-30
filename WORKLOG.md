@@ -21,6 +21,146 @@
 
 ---
 
+## 2026-07-30 — 리얼타임 구독을 핵심 흐름(제출→확인·피드백→승인)만 남기고 정리 (Claude)
+- **배경/결정**: 사용자 결정 — "앱의 핵심은 학생이 글을 제출하고 교사가 확인·피드백하고 최종 승인하는 것이다.
+  실시간 구독은 그 흐름만 남기고 나머지는 빼도 좋다." 리얼타임 한도가 `max_concurrent_users=200`,
+  `max_events_per_second=100` 인데 **학급 단위 구독이 이벤트를 접속자 수에 비례해 부풀리고 있었다**
+  (학생 한 명의 공감 하나 → 같은 학급 접속자 전원에게 전파).
+- **남긴 구독 (핵심 흐름)**:
+  - `useRealtimeNotifications` — `point_logs` INSERT / `student_posts` UPDATE, 둘 다 `student_id=eq.본인`.
+    **교사 승인·회수·피드백이 학생에게 닿는 바로 그 통로**이고 받는 사람이 1명이라 가장 싸다.
+  - `useMissionSubmit` — `writing_missions` UPDATE, `id=eq.그 미션`. 작성 중 미션이 수정·보관될 때 알림.
+  - `MissionList` — `writing_missions` `class_id=eq`. 과제가 떠야 제출을 시작할 수 있어 남겼다. 발생 빈도가 낮다.
+- **뺀 구독**:
+  - `useClassAgitClass` — `student_posts`·`post_comments`·`post_reactions`·`classes` 학급 단위 4개(채널 통째로).
+    화면 복귀 갱신(focus·visibilitychange)이 이미 있어 그것만 남기고, 죽은 코드가 된
+    `debouncedFetch`·`queuedRealtimeRefreshRef`·`cooldownTimerRef`·`REALTIME_REFRESH_DEBOUNCE_MS` 정리.
+    `handleVisibilityChange` 는 큐 플래그에만 반응하던 것을 "쿨다운 지났으면 갱신"으로 바꿨다(플래그를 세울 곳이 없어졌다).
+  - `useFriendsHideout` — `students`·`writing_missions`·`student_posts` 학급 단위 3개.
+    **이 화면에는 복귀 갱신이 아예 없어서** 구독만 빼면 나갔다 들어와야 새 글이 보인다 → focus·visibilitychange
+    갱신(쿨다운 5초)을 새로 넣었다.
+  - `useAnnouncements` — `announcements` **필터 없는** 구독. `class_id` 칸이 없어 필터를 걸 수도 없고,
+    공지 1건 변경이 **접속한 전원**에게 갔다. 화면 열 때 조회만 남긴다(공지는 18건, 즉시성 불필요).
+  - `useEnabledModules` — `classes` UPDATE 학급 단위. 주기 조회 + 복귀 갱신이 이미 "Realtime 상태와 무관하게
+    수렴"하도록 만들어져 있어 중복이었다.
+  - 남은 `LegacyGameManager`(`students`)는 교사 화면이라 학생 동시 접속과 무관, `AgitOnClassPage` 는 UI 숨김 상태.
+- **줄어든 양 (누적 데이터 기준)**: 학급 단위로 퍼지던 원천이 `student_posts` 2,777 + `post_comments` 8,410 +
+  `post_reactions` 2,465 = **13,652건**, 학급당 평균 16명이라 전파가 최대 **약 21만 건**이었다.
+  이제 `student_posts` 변경이 **본인 1명**에게만 간다 → 전파량이 자릿수로 줄어든다.
+- **변경**: `useClassAgitClass.js`, `useFriendsHideout.js`, `useAnnouncements.js`, `useEnabledModules.js`.
+- **결과/검증**: 저장소 전체 ESLint 72문제·2에러로 **변경 전과 동일**(2에러는 `navigateToUrl`·소식 배너의 기존 건),
+  변경 파일에 안 쓰는 변수 없음, `npm run build` 통과. 남은 구독 전수 확인 — 학생 화면에서 학급 단위로
+  퍼지는 구독은 `MissionList` 의 `writing_missions` 하나뿐이다.
+- **리얼타임 한도 상향 (같은 날 이어서 적용)**:
+  - 바꾼 값 (`_realtime.tenants`, external_id `realtime-dev`) — **바꾸기 전 값은 `200 / 100 / 100 / 100000`**:
+
+    | 항목 | 전 | 후 |
+    |---|---|---|
+    | `max_concurrent_users` | 200 | **600** |
+    | `max_events_per_second` | 100 | **1000** |
+    | `max_joins_per_second` | 100 | **500** |
+    | `max_bytes_per_second` | 100,000 | **1,000,000** |
+
+    `max_channels_per_client` 는 100 유지(학생당 3~4개만 쓴다).
+  - **함정 — DB만 고치면 재시작 때 되돌아간다.** `SEED_SELF_HOST=true` 면 부팅마다
+    `priv/repo/seeds.exs` 가 테넌트 행을 **삭제하고 다시 만든다**(`Repo.delete!` → `Repo.insert!`).
+    한도는 changeset 기본값에서 오고 **환경변수로 바꿀 수 없다**(시드가 읽는 env 는 이름·JWT·DB 접속뿐).
+    실제로 처음에 DB만 UPDATE 했다가 재시작 후 200으로 되돌아간 것을 확인했다.
+  - 그래서 `~/agit-supabase/docker-compose.yml` 332행의 `SEED_SELF_HOST` 를 `"false"` 로 바꾸고
+    (백업 `docker-compose.yml.pre-realtime-seed-20260730`) `agit-realtime` 만 재생성한 뒤 한도를 다시 넣었다.
+    **재시작 2회로 값 유지 확인.**
+  - ⚠️ **리얼타임 이미지를 올릴 때 주의**: 시드가 꺼져 있어 테넌트 마이그레이션(`run_migrations`)이 자동 실행되지 않는다.
+    버전을 올리면 `SEED_SELF_HOST` 를 잠시 `"true"` 로 되돌려 한 번 부팅하고(그때 한도가 초기화되니)
+    다시 `"false"` + 위 한도 UPDATE 를 하거나, 테넌트 마이그레이션을 수동 실행한다.
+- **결과/검증 (한도)**: 재시작 후에도 `600 / 1000 / 500 / 1000000` 유지, `agit-realtime` healthy,
+  로그에 `GetTenant`·`CheckConnection` 정상(0ms/19ms), 앱 `127.0.0.1:8300` HTTP 200.
+- **남은 것 / 다음**:
+  1. 웹소켓 500개 실부하 측정(방학 중 사람 없는 시간). 한도는 올렸지만 실제로 버티는지는 안 재봤다.
+  2. 화면 복귀 갱신으로 바뀐 두 화면(학급 아지트·친구 아지트)의 학생 실기기 체감 확인.
+  3. `max_concurrent_users=600` 은 접속자 기준이다. 학급이 더 늘면 다시 올려야 하고,
+     그때는 `agit-db` 의 `max_connections=100`(현재 사용 49)도 함께 본다.
+
+## 2026-07-30 — 발자국·칭호 부하 실측, 친구 발자국 실시간 통일, 리얼타임 한도 발견 (Claude)
+- **배경**: 사용자 제안 — "발자국을 밤 12시 5분 스냅샷으로 통일하고 칭호는 교사 승인 때만 실시간으로,
+  동시 학생 500명 기준으로 맥미니에 부담 없게". **실측해 보니 방향을 바꿔야 했다.**
+- **먼저 실측 (맥미니 M4 10코어 / 16GB, `agit-db`)**:
+
+  | 재본 것 | 결과 | 500명 동시 |
+  |---|---|---|
+  | 발자국 집계 1회 | 0.75ms | — |
+  | 발자국 집계 (동시 10연결 pgbench 10초) | **초당 13,333회** | 0.04초 |
+  | 나의 아지트 열기 = 조회 5건 묶음 | **초당 11,503회** | 0.04초 |
+
+  데이터가 작아서(글 2,777 · 댓글 8,410 · 반응 2,465 · 포인트 17,519 · 활성 학생 1,405) 미리 계산해 둘 이유가 없다.
+  부하 중 서버 load 1.9 → 4.0 (10코어). **밤 배치로 옮기는 방향은 폐기.**
+- **더 중요한 발견 — 스냅샷으로 통일하면 전교생 발자국이 0이 된다**: 밤 작업은 정상 동작(5,620줄, 최신 7/29)이지만
+  재료인 `writing_activity_events` 가 **7건**뿐이라 값이 0이 아닌 학생이 **1,405명 중 1명**이다.
+  내 발자국은 7/29에 실제 표 직접 집계로 바꿨는데 **친구 카드만 이 스냅샷을 계속 읽고 있었다**(전원 0).
+- **한 일**:
+  - ① 운영 DB에 미적용이던 마이그레이션 적용: `20260730_align_writer_level_totals.sql`,
+    `20260809_reader_title_indexes.sql`. **`get_my_reader_title()` 이 운영에 없어서** 학생이 나의 아지트를 열 때마다
+    실패 요청 1건을 버리고 폴백 조회 3건을 더 타고 있었다 → 왕복 5회에서 2회로 줄었다.
+    (테이블·함수 소유자가 `supabase_admin` 이라 `-U postgres` 로는 적용 실패한다. `-U supabase_admin` 사용.)
+  - ② `agit-rest` 의 `PGRST_DB_POOL` 을 기본값 10 → **25**. 내부 연결이 이미 40여 개라 25가 안전 상한이다(한도 100).
+  - ③ `get_friend_writing_footprint` 를 내 발자국과 **같은 실시간 집계**로 교체(`20260730_friend_footprint_live.sql`).
+    `revisions_count`(고쳐 쓴 횟수)는 이벤트 표에만 있던 값이라 실제 표에서 셀 근거가 없어 항목에서 제거.
+  - ④ 교사 승인 실시간 알림이 `fetchStats` 를 불러도 5분·1분 캐시가 옛 값을 돌려줘 **작가 칭호가 최대 5분간 안 올랐다.**
+    `fetchStats(force)` 를 만들고 알림 경로에서 `true` 로 부르게 했다.
+- **변경**: `20260730_friend_footprint_live.sql`(신규), `useStudentDashboard.js`, `useRealtimeNotifications.js`,
+  `WritingFootprintSummary.jsx`. git 밖 운영 변경: 위 마이그레이션 3개 적용 + PostgREST 스키마 새로고침,
+  `~/agit-supabase/docker-compose.yml` 에 `PGRST_DB_POOL` 추가(백업 `docker-compose.yml.pre-pgrst-pool-20260730`),
+  `docker compose -p agit ... up -d --no-deps rest` 로 `agit-rest` 만 재생성.
+- **결과/검증**: 변경 파일 ESLint 0에러, 빌드·`git diff --check` 통과. 앱 `127.0.0.1:8300` HTTP 200(1.8ms).
+  실제 학생으로 `get_my_reader_title()` → `{score: 204, post_count: 173}` (4.8ms).
+  친구 발자국 실측 대조 — 새 방식 `글 23편 / 활동일 14 / 남긴 댓글 116 / 받은 댓글 59 / 받은 반응 9`,
+  옛 스냅샷 방식은 **전부 0**. 116/59/9 는 7/29 기록의 실제 값과 일치.
+  DB 연결 49/100. `-p agit` 없이 compose 를 돌리면 `agit-db` 이름 충돌로 전체 스택을 건드리려 하므로 반드시 붙인다.
+- **⚠️ 리얼타임 한도 발견 (미해결)**: `_realtime.tenants` 가 **`max_concurrent_users=200`,
+  `max_events_per_second=100`, `max_joins_per_second=100`** 이다. **동시 500명은 지금 설정으로 불가능**하고
+  201번째 학생부터 실시간이 거부된다(화면은 뜨지만 알림·과제 목록 자동 갱신·학급 소식이 죽는다).
+  또 `agit-realtime-events-{classId}` 채널이 `student_posts`·`post_comments`·`post_reactions` 를 학급 단위로 들어서
+  학생 한 명의 공감 하나가 같은 학급 접속자 전원(최대 30명)에게 퍼진다 → 이벤트가 사람 수에 비례해 늘어난다.
+  공지 채널은 `announcements` 에 `class_id` 가 없어 필터 없는 것이 의도지만, 전체 공지 1건이 접속자 전원에게 퍼진다.
+- **남은 것 / 다음**:
+  1. 리얼타임 한도 상향(사용자 결정 대기): `max_concurrent_users` 600, `max_events_per_second` 1000 등.
+     올린 뒤 실제 웹소켓 부하 측정 필요 — 한도만 올리면 실패 지점이 옮겨갈 뿐이다.
+  2. 이벤트를 줄이는 쪽: 가장 많이 발생하는 `post_reactions` 를 실시간 구독에서 빼는 안 검토.
+  3. 밤 12시 5분 스냅샷 작업과 `student_writing_daily_snapshots` 는 이제 읽는 화면이 없다 → 중단 검토.
+     (WORKLOG 기록은 00:10 인데 사용자는 12:05 라고 하므로 실제 LaunchAgent 시각 확인 필요.)
+  4. Postgres 메모리 기본값: `shared_buffers` 128MB, `effective_cache_size` 128MB (16GB 머신). 급하지 않으나 상향 여지.
+
+## 2026-07-30 — 작가 칭호 집계 기준 통일 + 칭호 뱃지 최적화 (Claude)
+- **배경**: 직전 칭호 작업(`f7556dc`~`cb461da`)을 점검하다 두 가지를 찾았다.
+  1. **같은 학생이 화면마다 다른 작가 칭호를 볼 수 있었다.** 나의 아지트(`useStudentDashboard`)는
+     과제글을 미션별 한 편으로 줄인 뒤 `char_count`를 합산하는데, 발자국(`get_my_writing_footprint_detail`)은
+     승인 글 전부를 그냥 `sum(char_count)` 했다. `student_posts`에 `(student_id, mission_id)` 유니크 제약이
+     없어 재작성이 쌓이면 발자국 쪽 글자 수가 더 커지고, 레벨 경계를 넘으면 칭호가 갈렸다.
+     발자국은 레벨을 구할 때 승인 글 수 자리에 `completed_missions`(미션 수)도 넘기고 있었다 — 자율글만 쓴 학생은 0편이 된다.
+  2. **뱃지 17종이 512×512 PNG(장당 139~419KB)인데 화면에서는 40~76px로만 썼다.** 칭호 설명판을 한 번 열면
+     작가 10장 약 3.3MB를 내려받았다. `writer-badge.png`·`reader-badge.png`(643KB)는 단계별 이미지로
+     갈아탄 뒤 아무 데서도 참조되지 않았다.
+- **한 일**:
+  - 집계 규칙을 `writerLevels.js`의 `collectWriterPosts()` 한 곳으로 모으고(과제글은 미션별 가장 최근 한 편,
+    자율글은 각 글 한 편), 훅이 이걸 쓰게 했다. SQL 짝으로 `level_posts` CTE를 만들어 발자국의 `total_chars`를
+    같은 규칙으로 바꾸고 `completed_posts`를 totals에 추가했다. 발자국 화면은 이제 `completed_posts`를 넘긴다.
+    활동 통계(달력·연속 기록·이달의 활동·가장 길게)는 계속 `my_posts` 전체를 쓴다 — 재작성한 날도 글을 쓴 날이다.
+  - 뱃지를 256px WebP로 바꿨다(화면 최대 76px × DPR 3). 새 의존성 없이 이미 깔린 Playwright로 윈도우의
+    Edge를 띄워 Chromium WebP 인코더를 쓰는 `scripts/optimize-title-badges.mjs`(`npm run badges:optimize`)를 뒀다.
+    PNG 원본 19장과 참조 없는 뱃지 2종은 지웠다.
+- **변경**: `src/constants/writerLevels.js`, `src/hooks/useStudentDashboard.js`,
+  `src/modules/writing/writing-footprint/WritingFootprintModal.jsx`, `src/components/student/MyAgitPanel.jsx`,
+  `scripts/optimize-title-badges.mjs`, `package.json`,
+  신규 `supabase/migrations/20260730_align_writer_level_totals.sql`, 배지 에셋 PNG 19개 → WebP 17개.
+- **결과/검증**: 변경 파일 ESLint 0에러, `npm run build`, `git diff --check` 통과(저장소 전체 기준 기존 2에러는
+  이번 변경과 무관한 `navigateToUrl`·소식 배너 건). 배지 **5.72MB → 258KB(-95%)**, `dist`에 17개 반영 확인.
+  변환 후 17장 전부 256×256·네 모서리 알파 0(투명 유지)·불투명 비율 21~56% 확인하고, 실제 표시 크기 76px로
+  대조 시트를 렌더해 작가 1→10·독자 1→7 성장 차이와 선명도를 눈으로 확인했다.
+  `.png` 잔여 참조 없음. 운영 SQL 미적용 상태에서도 `completed_posts`가 없으면 `getWriterLevel`의
+  "글자가 있으면 최소 1편" 하위 호환이 받아 준다.
+- **남은 것 / 다음**: **운영 DB에 `20260730_align_writer_level_totals.sql` 적용**해야 발자국 글자 수가 실제로
+  통일된다(적용 전까지는 기존 값 유지). WebP 단독 제공이므로 학생 실기기(교실 태블릿·크롬북)에서 뱃지가
+  뜨는지 한 번 확인. `MyAgitPanel.jsx`의 미사용 `Row` 컴포넌트 정리는 남겨 뒀다.
+
 ## 2026-07-30 — 작가 10종·독자 7종 단계별 고유 뱃지 적용 (GPT/Codex)
 - **배경/결정**: 직전 구현에서 단계별 17종 계획을 축별 기본 훈장 2종과 LV 표식으로 잘못 축소했다. 사용자 재확인에 따라
   이 결정을 폐기하고, 레벨이 오를 때 뱃지 이미지 자체가 달라지는 원래 방향으로 복원했다.

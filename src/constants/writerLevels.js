@@ -23,8 +23,42 @@ export const WRITER_LEVELS = [
 ];
 
 /**
- * @param {number} totalChars 누적 글자 수
- * @param {number} completedPosts 승인 글 수
+ * 작가 레벨이 세는 글 묶음.
+ *
+ * **과제글은 미션별 한 편(가장 최근 것), 자율글은 각 글을 한 편**으로 센다.
+ * 재작성으로 같은 미션에 승인 글이 여러 편 쌓여도 누적 글자가 부풀지 않게 하려는 규칙이다.
+ *
+ * SQL 쪽 짝은 `get_my_writing_footprint_detail` 의 `level_posts` CTE다.
+ * 한쪽만 고치면 **같은 학생이 나의 아지트와 발자국에서 다른 칭호를 본다**
+ * (실제로 그랬다 — 발자국은 중복 제거 없이 전부 합산하고 있었다).
+ *
+ * @param {Array<{id:string, mission_id:string|null, char_count:number|null, created_at:string}>} posts 승인된 글
+ * @returns {{totalChars:number, completedPosts:number, completedMissions:number}}
+ */
+export const collectWriterPosts = (posts = []) => {
+    // 호출처의 정렬에 기대지 않는다. 미션별로 어떤 글이 남는지가 합계를 바꾼다.
+    const newestFirst = [...posts].sort(
+        (a, b) => new Date(b?.created_at || 0) - new Date(a?.created_at || 0)
+    );
+
+    const byKey = new Map();
+    newestFirst.forEach((post) => {
+        if (!post) return;
+        const key = post.mission_id ? `mission:${post.mission_id}` : `post:${post.id}`;
+        if (!byKey.has(key)) byKey.set(key, post);
+    });
+
+    const kept = Array.from(byKey.values());
+    return {
+        totalChars: kept.reduce((sum, post) => sum + (Number(post.char_count) || 0), 0),
+        completedPosts: kept.length,
+        completedMissions: new Set(kept.map((post) => post.mission_id).filter(Boolean)).size
+    };
+};
+
+/**
+ * @param {number} totalChars 누적 글자 수 (`collectWriterPosts` 규칙으로 센 값)
+ * @param {number} completedPosts 승인 글 수 — 미션 수가 아니다. 자율글도 한 편으로 센다.
  * @returns {{level:number, name:string, emoji:string, from:number, next:number|null, nextUnit:string, progressValue:number, progressFrom:number}}
  */
 export const getWriterLevel = (totalChars = 0, completedPosts = 0) => {

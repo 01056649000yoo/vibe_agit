@@ -31,7 +31,9 @@ const SHELF_TTL_MS = 30000;
 const READER_ACTIVITY_LIMIT = 1000;
 
 const num = (v) => Number(v || 0).toLocaleString('ko-KR');
-const titleBadgeSrc = (kind, level) => `/assets/title-badges/${kind}-level-${level}.png`;
+// 256px WebP. 원본은 512px PNG(장당 139~419KB)였는데 화면에서는 40~76px로만 써서,
+// 칭호 설명을 한 번 열면 작가 10장 약 3.3MB를 내려받았다. scripts/optimize-title-badges.mjs 로 만든다.
+const titleBadgeSrc = (kind, level) => `/assets/title-badges/${kind}-level-${level}.webp`;
 
 const typeLabel = (post) => {
     if (post.writing_context === 'self') {

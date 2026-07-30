@@ -34,7 +34,7 @@ const POINT_LABELS = {
 
 const EMPTY_DETAIL = {
     totals: {
-        total_chars: 0, completed_missions: 0, monthly_posts: 0, longest_post_chars: 0,
+        total_chars: 0, completed_posts: 0, completed_missions: 0, monthly_posts: 0, longest_post_chars: 0,
         active_days: 0, best_streak: 0, current_streak: 0,
         total_points: 0, points_earned: 0, points_spent: 0
     },
@@ -349,7 +349,10 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
     const t = detail.totals || EMPTY_DETAIL.totals;
     const sh = detail.sharing || EMPTY_DETAIL.sharing;
-    const level = getWriterLevel(t.total_chars, t.completed_missions);
+    // 승인 글 수를 넘긴다. 예전에는 completed_missions(미션 수)를 넘겨서 자율글만 쓴
+    // 학생이 0편으로 계산됐다. 운영 SQL 적용 전이면 completed_posts 가 없는데,
+    // 그때는 getWriterLevel 의 "글자가 있으면 최소 1편" 하위 호환이 받아 준다.
+    const level = getWriterLevel(t.total_chars, t.completed_posts);
     const toNext = level.next ? Math.max(0, level.next - level.progressValue) : 0;
     const levelPercent = level.next
         ? Math.max(0, Math.min(100, Math.round(

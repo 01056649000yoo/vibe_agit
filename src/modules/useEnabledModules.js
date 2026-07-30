@@ -62,23 +62,18 @@ export function useEnabledModules(classId, audience = 'student') {
 
     loadModules();
 
-    // 교사가 다른 화면/기기에서 토글하면 열린 학생 화면에도 즉시 반영한다.
-    const channel = supabase
-      .channel(`module_settings_${classId}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'classes', filter: `id=eq.${classId}` },
-        () => loadModules()
-      )
-      .subscribe();
+    // [실시간 구독 제거 — 2026-07-30]
+    // 교사가 모듈을 켜고 끄면 `classes` 를 학급 단위로 구독해 즉시 반영했다. 학급 전원에게 퍼지는
+    // 구독이라 리얼타임 한도(`max_events_per_second=100`)를 쓰는데, 아래 주기 조회와 화면 복귀
+    // 갱신이 이미 같은 일을 하도록 만들어져 있었다("Realtime 연결 상태와 무관하게 수렴"). 그래서 뺐다.
+    // 모듈 토글은 드물게 일어나고, 늦어도 아래 주기 안에 반영된다.
 
-    // 운영 Realtime publication/연결 상태와 무관하게 학생 화면이 최종 설정으로 수렴하도록
-    // 보이는 탭에서만 가벼운 단일 행 조회를 주기적으로 수행한다.
+    // 학생 화면이 최종 설정으로 수렴하도록 보이는 탭에서만 가벼운 단일 행 조회를 주기적으로 수행한다.
     const refreshTimer = window.setInterval(() => {
       if (document.visibilityState === 'visible') loadModules();
     }, MODULE_SETTINGS_REFRESH_MS);
 
-    // Realtime 연결이 끊겼던 경우 탭으로 돌아올 때 최종 상태를 즉시 다시 확인한다.
+    // 탭으로 돌아올 때 최종 상태를 즉시 다시 확인한다.
     const handleFocus = () => loadModules();
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') loadModules();
@@ -91,7 +86,6 @@ export function useEnabledModules(classId, audience = 'student') {
       window.clearInterval(refreshTimer);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      supabase.removeChannel(channel);
     };
   }, [classId]);
 

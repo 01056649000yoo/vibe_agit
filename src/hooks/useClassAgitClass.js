@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { dataCache } from '../lib/cache';
 
-const REALTIME_REFRESH_DEBOUNCE_MS = 1000;
+// 화면에 다시 들어올 때 너무 잦게 다시 부르지 않도록 두는 최소 간격.
 const REALTIME_REFRESH_COOLDOWN_MS = 5000;
 
 const DEFAULT_SETTINGS = {
@@ -42,8 +42,6 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
 
     const agitSettings = useMemo(() => agitSettingsState, [agitSettingsState]);
     const lastRealtimeRefreshAtRef = useRef(0);
-    const queuedRealtimeRefreshRef = useRef(false);
-    const cooldownTimerRef = useRef(null);
 
     // [신규] 어휘의 탑 게임 설정 상태
     const [vocabTowerSettings, setVocabTowerSettings] = useState({
@@ -380,72 +378,20 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
             return;
         }
 
-        // [최적화] 디바운싱: 여러 실시간 이벤트가 동시에 들어올 때 최후 1초 뒤에 한 번만 실행
-        let timeoutId;
-        const debouncedFetch = () => {
-            if (timeoutId) clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                if (typeof document !== 'undefined' && document.hidden) {
-                    queuedRealtimeRefreshRef.current = true;
-                    return;
-                }
-
-                const now = Date.now();
-                const elapsed = now - lastRealtimeRefreshAtRef.current;
-
-                if (elapsed < REALTIME_REFRESH_COOLDOWN_MS) {
-                    queuedRealtimeRefreshRef.current = true;
-
-                    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-                    cooldownTimerRef.current = setTimeout(() => {
-                        cooldownTimerRef.current = null;
-                        if (!queuedRealtimeRefreshRef.current || !fetchDataRef.current) return;
-                        if (typeof document !== 'undefined' && document.hidden) return;
-
-                        queuedRealtimeRefreshRef.current = false;
-                        lastRealtimeRefreshAtRef.current = Date.now();
-                        fetchDataRef.current(false, true);
-                    }, REALTIME_REFRESH_COOLDOWN_MS - elapsed);
-
-                    return;
-                }
-
-                queuedRealtimeRefreshRef.current = false;
-                lastRealtimeRefreshAtRef.current = now;
-                if (fetchDataRef.current) fetchDataRef.current(false, true);
-            }, REALTIME_REFRESH_DEBOUNCE_MS);
-        };
-
-        // [방어막] 기존 동일 이름의 채널이 있다면 명시적으로 제거하여 중복 구독 방지
-        const duplicate = supabase.getChannels().find(c => c.name === `agit-realtime-events-${classId}`);
-        if (duplicate) {
-            console.log(`♻️ [Agit] 중복 채널 감지 및 제거: agit-realtime-events-${classId}`);
-            supabase.removeChannel(duplicate);
-        }
-
-        const agitChannel = supabase
-            .channel(`agit-realtime-events-${classId}`)
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'student_posts', filter: `class_id=eq.${classId}` },
-                debouncedFetch
-            )
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'post_comments', filter: `class_id=eq.${classId}` },
-                debouncedFetch
-            )
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'post_reactions', filter: `class_id=eq.${classId}` },
-                debouncedFetch
-            )
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'classes', filter: `id=eq.${classId}` }, debouncedFetch)
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    console.log('✅ [Agit] 실시간 채널 연결 성공');
-                }
-            });
+        // [실시간 구독 제거 — 2026-07-30]
+        //
+        // 예전에는 `agit-realtime-events-{classId}` 채널이 `student_posts`·`post_comments`·
+        // `post_reactions`·`classes` 를 **학급 단위**로 들었다. 그래서 학생 한 명이 공감 하나를
+        // 누르면 같은 학급 접속자 전원(최대 30명)에게 이벤트가 퍼졌다 — 이벤트가 사람 수에 비례해 늘었다.
+        //
+        // 리얼타임 한도가 `max_events_per_second=100`, `max_concurrent_users=200` 이라
+        // 동시 500명 목표에서 여기가 가장 먼저 막힌다. 앱의 핵심 흐름은
+        // **학생 제출 → 교사 확인·피드백 → 최종 승인** 이고, 그 알림은 학생 본인으로 좁혀진
+        // `useRealtimeNotifications`(`point_logs`·`student_posts` 를 `student_id=eq.본인` 으로 구독)가
+        // 이미 담당한다. 학급 소식 자동 갱신은 핵심이 아니라서 구독을 뺐다.
+        //
+        // 대신 아래의 **화면 복귀 시 갱신**(focus·visibilitychange)과 자정 갱신이 남는다.
+        // 학생이 화면에 다시 들어오면 5초 쿨다운만 지났으면 새로 불러온다.
 
         // 1. 자정이 지나 날짜가 바뀌었는지 1분마다 체크하여 자동 갱신
         let lastCheckDate = new Date().getDate();
@@ -458,34 +404,28 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
             }
         }, 60000); // 1분 간격
 
-        // 2. 브라우저 탭 활성화 시 데이터 갱신 (오래 켜뒀다가 다시 볼 때 대비)
-        const handleFocus = () => {
-            console.log("👀 [윈도우 포커스] 최신 데이터 확인");
+        // 2. 화면에 다시 들어올 때 갱신.
+        //    실시간 구독을 뺀 뒤로는 **이것이 학급 소식을 새로 받는 주된 길**이다.
+        //    마지막 갱신에서 쿨다운(5초)만 지났으면 다시 불러온다.
+        const refreshIfStale = () => {
             if (!fetchDataRef.current) return;
+            if (Date.now() - lastRealtimeRefreshAtRef.current < REALTIME_REFRESH_COOLDOWN_MS) return;
 
-            const needsQueuedRefresh = queuedRealtimeRefreshRef.current;
-            const isStale = Date.now() - lastRealtimeRefreshAtRef.current >= REALTIME_REFRESH_COOLDOWN_MS;
-
-            if (needsQueuedRefresh || isStale) {
-                queuedRealtimeRefreshRef.current = false;
-                lastRealtimeRefreshAtRef.current = Date.now();
-                fetchDataRef.current(false, true);
-            }
-        };
-        const handleVisibilityChange = () => {
-            if (document.hidden || !queuedRealtimeRefreshRef.current || !fetchDataRef.current) return;
-
-            queuedRealtimeRefreshRef.current = false;
             lastRealtimeRefreshAtRef.current = Date.now();
             fetchDataRef.current(false, true);
+        };
+        const handleFocus = () => {
+            console.log("👀 [윈도우 포커스] 최신 데이터 확인");
+            refreshIfStale();
+        };
+        const handleVisibilityChange = () => {
+            if (document.hidden) return;
+            refreshIfStale();
         };
         window.addEventListener('focus', handleFocus);
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
-            supabase.removeChannel(agitChannel);
-            if (timeoutId) clearTimeout(timeoutId);
-            if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
             clearInterval(dateCheckInterval); // 인터벌 정리
             window.removeEventListener('focus', handleFocus); // 이벤트 리스너 정리
             document.removeEventListener('visibilitychange', handleVisibilityChange);
