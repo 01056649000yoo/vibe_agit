@@ -32,9 +32,10 @@
     드래곤 모듈만 계속 소유한다.
   - 대시보드가 이미 보유한 `petData`·단계·배경·교사 설정을 props로 전달해 추가 DB 조회가 없으며,
     학급에서 드래곤 모듈이 켜졌을 때만 카드를 표시한다.
-- **변경**: `src/components/student/MyAgitPanel.jsx`, `src/components/student/StudentDashboard.jsx`.
+- **변경**: 커밋 `64510b9` — `src/components/student/MyAgitPanel.jsx`, `src/components/student/StudentDashboard.jsx`.
   DB·드래곤 저장 계약 변경 없음.
 - **결과/검증**: 변경 파일 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과.
+  GitHub Actions Deploy run `30536705997` 성공: 앱 이미지 빌드·`agit-app` 재시작·Verify 통과.
 - **남은 것 / 다음**: 운영 학생 계정에서 단계별 이미지·장착 배경·돌봄 경고·경험치와 카드→드래곤 방 진입을 실기기 스모크한다.
 
 ## 2026-07-30 — 책등 제목 중앙 정렬 수정 (GPT/Codex)
