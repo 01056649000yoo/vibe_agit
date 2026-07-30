@@ -129,12 +129,15 @@ export const WritingCalendar = ({ daily = [], schoolYear, fluid = false, compact
     };
 
     return (
-        <div style={{ overflowX: fluid ? 'hidden' : 'auto', paddingBottom: compact ? 0 : '4px', minWidth: 0 }}>
+        <div style={{
+            overflowX: fluid ? 'hidden' : 'auto', paddingBottom: compact ? 0 : '4px', minWidth: 0,
+            flex: compact ? 1 : undefined, minHeight: compact ? 0 : undefined, display: compact ? 'flex' : 'block'
+        }}>
             <svg
                 width={fluid ? '100%' : width}
-                height={padTop + 7 * step}
+                height={compact ? '100%' : padTop + 7 * step}
                 viewBox={`0 0 ${width} ${padTop + 7 * step}`}
-                preserveAspectRatio="xMidYMid meet"
+                preserveAspectRatio={compact ? 'none' : 'xMidYMid meet'}
                 role="img"
                 aria-label="학년도 글쓰기 기록"
             >
@@ -166,8 +169,11 @@ export const MonthlyBars = ({ rows, valueKey, unit, fluid = false, compact = fal
     const maximum = Math.max(...rows.map((row) => Number(Reflect.get(row, valueKey) || 0)), 1);
     const hasAny = rows.some((row) => Number(Reflect.get(row, valueKey) || 0) > 0);
     return (
-        <div style={{ overflowX: fluid ? 'hidden' : 'auto', minWidth: 0 }}>
-            <svg width={fluid ? '100%' : CHART_W} height={height + 38} viewBox={`0 0 ${CHART_W} ${height + 38}`} preserveAspectRatio="none" role="img" aria-label="달마다 쓴 글">
+        <div style={{
+            overflowX: fluid ? 'hidden' : 'auto', minWidth: 0, position: 'relative',
+            flex: compact ? 1 : undefined, minHeight: compact ? 0 : undefined, display: compact ? 'flex' : 'block'
+        }}>
+            <svg width={fluid ? '100%' : CHART_W} height={compact ? '100%' : height + 38} viewBox={`0 0 ${CHART_W} ${height + 38}`} preserveAspectRatio="none" role="img" aria-label="달마다 쓴 글">
                 <line x1={AXIS_L} y1={height} x2={CHART_W} y2={height} stroke={GRID} strokeWidth="1" />
                 {rows.map((row, index) => {
                     const value = Number(Reflect.get(row, valueKey) || 0);
@@ -185,7 +191,10 @@ export const MonthlyBars = ({ rows, valueKey, unit, fluid = false, compact = fal
                 })}
                 <text x={AXIS_L} y={height + 32} fontSize="9.5" fontWeight="800" fill={INK_SOFT}>월</text>
             </svg>
-            {!hasAny && <p style={{ margin: '4px 0 0', color: INK_SOFT, fontSize: '.82rem' }}>아직 기록이 없어요.</p>}
+            {!hasAny && <p style={compact ? {
+                position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', margin: 0,
+                color: INK_SOFT, fontSize: '.7rem', background: 'rgba(255,255,255,.72)'
+            } : { margin: '4px 0 0', color: INK_SOFT, fontSize: '.82rem' }}>아직 기록이 없어요.</p>}
         </div>
     );
 };
@@ -202,8 +211,11 @@ export const TrendLine = ({ rows, valueKey, unit, fluid = false, compact = false
     const last = points.length ? points[points.length - 1] : null;
     const labelled = new Set([peak?.index, last?.index].filter((value) => value !== undefined));
     return (
-        <div style={{ overflowX: fluid ? 'hidden' : 'auto', minWidth: 0 }}>
-            <svg width={fluid ? '100%' : CHART_W} height={height + 38} viewBox={`0 0 ${CHART_W} ${height + 38}`} preserveAspectRatio="none" role="img" aria-label="달마다 추이">
+        <div style={{
+            overflowX: fluid ? 'hidden' : 'auto', minWidth: 0, position: 'relative',
+            flex: compact ? 1 : undefined, minHeight: compact ? 0 : undefined, display: compact ? 'flex' : 'block'
+        }}>
+            <svg width={fluid ? '100%' : CHART_W} height={compact ? '100%' : height + 38} viewBox={`0 0 ${CHART_W} ${height + 38}`} preserveAspectRatio="none" role="img" aria-label="달마다 추이">
                 <line x1={AXIS_L} y1={height} x2={CHART_W} y2={height} stroke={GRID} strokeWidth="1" />
                 {points.length > 1 && <path d={path} fill="none" stroke={SERIES} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
                 {rows.map((row, index) => <text key={`x-${row.m}`} x={centerX(index)} y={height + 16} textAnchor="middle" fontSize="10" fontWeight="800" fill={INK_SOFT}>{row.monthNo}</text>)}
@@ -215,16 +227,25 @@ export const TrendLine = ({ rows, valueKey, unit, fluid = false, compact = false
                 </g>)}
                 <text x={AXIS_L} y={height + 32} fontSize="9.5" fontWeight="800" fill={INK_SOFT}>월</text>
             </svg>
-            {!points.length && <p style={{ margin: '4px 0 0', color: INK_SOFT, fontSize: '.82rem' }}>아직 기록이 없어요.</p>}
+            {!points.length && <p style={compact ? {
+                position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', margin: 0,
+                color: INK_SOFT, fontSize: '.7rem', background: 'rgba(255,255,255,.72)'
+            } : { margin: '4px 0 0', color: INK_SOFT, fontSize: '.82rem' }}>아직 기록이 없어요.</p>}
         </div>
     );
 };
 
 export const PointTypeBars = ({ rows = [], emptyMessage, color = SERIES, compact = false }) => {
-    if (!rows.length) return <p style={{ color: INK_SOFT, fontSize: '.85rem' }}>{emptyMessage}</p>;
+    if (!rows.length) return <p style={{
+        color: INK_SOFT, fontSize: compact ? '.7rem' : '.85rem',
+        ...(compact ? { flex: 1, display: 'grid', placeItems: 'center', margin: 0 } : {})
+    }}>{emptyMessage}</p>;
     const maximum = Math.max(...rows.map((row) => Number(row.total || 0)), 1);
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? '4px' : '9px' }}>
+        <div style={{
+            display: 'flex', flexDirection: 'column', gap: compact ? '4px' : '9px',
+            flex: compact ? 1 : undefined, justifyContent: compact ? 'space-evenly' : undefined, minHeight: 0
+        }}>
             {rows.map((row) => <div key={row.type} style={{ display: 'grid', gridTemplateColumns: compact ? '68px minmax(0,1fr) 48px' : '86px minmax(0,1fr) 62px', alignItems: 'center', gap: compact ? '6px' : '10px' }}>
                 <span title={POINT_LABELS[row.type] || row.type} style={{ fontSize: compact ? '.64rem' : '.8rem', fontWeight: 800, color: INK_SOFT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {POINT_LABELS[row.type] || row.type}

@@ -21,9 +21,10 @@ const Panel = ({ title, hint, compact = false, children, style }) => <section st
     padding: compact ? '9px 11px' : '20px', minWidth: 0, minHeight: 0,
     boxShadow: compact ? '0 3px 12px rgba(15,23,42,.04)' : '0 8px 24px rgba(15,23,42,.04)',
     overflow: compact ? 'hidden' : undefined,
+    display: compact ? 'flex' : undefined, flexDirection: compact ? 'column' : undefined,
     ...style
 }}>
-    <h3 style={{ margin: 0, color: '#1E293B', fontSize: compact ? '.78rem' : '1rem', fontWeight: 900 }}>{title}</h3>
+    <h3 style={{ margin: compact ? '0 0 3px' : 0, color: '#1E293B', fontSize: compact ? '.78rem' : '1rem', fontWeight: 900, flexShrink: 0 }}>{title}</h3>
     {hint && !compact && <p style={{ margin: '4px 0 16px', color: '#64748B', fontSize: '.8rem', lineHeight: 1.5 }}>{hint}</p>}
     {!hint && !compact && <div style={{ height: '14px' }} />}
     {children}
@@ -73,16 +74,19 @@ const StudentTable = ({ students }) => <div style={{ overflowX: 'auto' }}>
 /** 전체화면에서는 학생 1명을 한 줄짜리 미니 카드로 줄이고 여러 열에 나눠 모든 학생을 함께 본다. */
 const CompactStudentGrid = ({ students }) => {
     const columns = Math.min(4, Math.max(2, Math.ceil(students.length / 12)));
+    const rows = Math.ceil(students.length / columns);
     if (!students.length) return <p style={{ padding: '20px', textAlign: 'center', color: '#64748B', fontSize: '.72rem' }}>등록된 학생이 없습니다.</p>;
     return <div style={{
         display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))`, gap: '4px',
-        alignContent: 'start', marginTop: '6px'
+        gridTemplateRows: `repeat(${rows}, minmax(0,1fr))`, gridAutoFlow: 'column',
+        flex: 1, minHeight: 0, marginTop: '3px'
     }}>
         {students.map((student) => {
             const interactions = Number(student.comments_given) + Number(student.reactions_given);
             const fullSummary = `완료 ${num(student.posts)}편 · ${num(student.total_chars)}자 · ${num(student.active_days)}일 · 평균 ${num(student.avg_chars)}자 · 교류 ${num(interactions)}회`;
             return <div key={student.student_id} title={`${student.name} · ${fullSummary} · 최근 글 ${formatDate(student.last_post_at)}`} style={{
-                border: '1px solid #E2E8F0', borderRadius: '8px', padding: '4px 6px', background: '#F8FAFC', minWidth: 0
+                border: '1px solid #E2E8F0', borderRadius: '8px', padding: '4px 6px', background: '#F8FAFC', minWidth: 0,
+                display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden'
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4px', alignItems: 'baseline' }}>
                     <strong style={{ color: '#1E293B', fontSize: '.68rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</strong>
