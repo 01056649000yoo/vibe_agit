@@ -30,10 +30,12 @@
   - 드래곤·꾸미기·향후 놀이 소비는 사용처에 포함하고, 승인 취소·교사 회수·조정은 별도 합계로 분리해 소비로 오해하지 않게 했다.
   - 발자국에 `🛍️ 포인트를 어디에 썼나` 막대와 `직접 쓴 포인트` 합계를 추가하고, 조정 금액이 있으면 제외 안내를 표시한다.
   - 기존 포인트 획득 막대 컴포넌트를 색·빈 상태 문구만 바꿔 재사용한다. 사용처 RPC가 일시 실패해도 기존 발자국은 계속 열린다.
-- **변경**: `WritingFootprintModal.jsx`, 신규 마이그레이션 `20260810_writing_footprint_spending_breakdown.sql`, 로드맵·작업로그.
+- **변경**: 커밋 `b1f0470` — `WritingFootprintModal.jsx`, 신규 마이그레이션
+  `20260810_writing_footprint_spending_breakdown.sql`, 로드맵·작업로그.
 - **결과/검증**: 대상 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과. 운영 통합 DB에 신규 RPC를 적용했고
   `anon` 실행 차단·`authenticated` 실행 허용·SECURITY DEFINER/search_path 고정을 확인했다. 실제 학생 권한 호출에서
-  드래곤 돌봄·아지트 꾸미기 합계와 전체 직접 사용 합계가 일치했다. 자동 배포 확인 예정.
+  드래곤 돌봄·아지트 꾸미기 합계와 전체 직접 사용 합계가 일치했다. GitHub Actions Deploy run `30551272899`에서
+  앱 이미지 빌드·`agit-app` 재시작·Verify가 모두 성공했다.
 - **남은 것 / 다음**: 학생 실기기에서 사용 기록 있음/없음, 조정 기록 있음/없음의 문구와 막대 배치를 확인한다.
 
 ## 2026-07-30 — 학생 홈의 홀수 메뉴 마지막 카드를 자동 확장 (GPT/Codex)
