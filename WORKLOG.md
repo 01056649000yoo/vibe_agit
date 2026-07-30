@@ -32,8 +32,10 @@
   - 전체화면은 상단 요약 6개 아래 왼쪽에 달력·월별 글·글 길이·포인트 흐름·획득처·사용처를 2×3으로, 오른쪽에 학생별
     완료 글·글자·활동일·평균·교류·최근 글을 다열 미니 카드로 배치했다. 그래프는 전체화면에서 패널 폭에 맞게 유동 축소된다.
   - 일반 화면과 학생 모달은 기존 크기·세로 흐름을 유지하고, 모바일 전체화면은 가독성을 위해 세로 스크롤을 허용한다.
-- **변경**: 교사 내비게이션, `TeacherWritingFootprintDashboard.jsx`, 공용 `FootprintVisuals.jsx`. DB 변경 없음.
-- **결과/검증**: 대상 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과.
+- **변경**: 커밋 `6f8538c` — 교사 내비게이션, `TeacherWritingFootprintDashboard.jsx`, 공용 `FootprintVisuals.jsx`.
+  DB 변경 없음.
+- **결과/검증**: 대상 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과. GitHub Actions Deploy run
+  `30554493213`에서 앱 이미지 빌드·`agit-app` 재시작·HTTP Verify가 모두 성공했다.
 - **남은 것 / 다음**: 운영 교사 PC에서 1366×768·1920×1080 전체화면의 6개 패널과 현재 학급 학생 전원 표시,
   Esc/버튼 복귀를 시각 확인한다. 연결 가능한 브라우저가 없어 자동 시각 검증은 하지 못했다.
 
