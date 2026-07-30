@@ -29,8 +29,9 @@
   - 포인트 획득처·사용처 행을 패널 높이에 맞춰 균등 분산하고, 기록 없음 안내도 패널 중앙에 배치했다.
   - 학생 수로 열·행 수를 계산한 뒤 행 높이를 균등 분배하고 열 우선으로 채워, 학생 카드 묶음이 오른쪽 패널 하단까지 이어지게 했다.
   - 위 규칙은 `compact` 전체화면에만 적용해 학생 발자국 모달과 교사 기본 화면의 기존 그래프 크기는 유지했다.
-- **변경**: `FootprintVisuals.jsx`, `TeacherWritingFootprintDashboard.jsx`. DB 변경 없음.
-- **결과/검증**: 대상 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과.
+- **변경**: 커밋 `d5c54a0` — `FootprintVisuals.jsx`, `TeacherWritingFootprintDashboard.jsx`. DB 변경 없음.
+- **결과/검증**: 대상 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과. GitHub Actions Deploy run
+  `30555097789`에서 앱 이미지 빌드·`agit-app` 재시작·HTTP Verify가 모두 성공했다.
 - **남은 것 / 다음**: 운영 교사 화면에서 실제 해상도별 그래프 비율과 학생 카드 글자 크기를 시각 확인한다.
 
 ## 2026-07-30 — 학급 발자국 독립 탭·전체화면 한판 보기 (GPT/Codex)
