@@ -12,6 +12,7 @@ export const useFriendsHideout = (studentSession, params) => {
     const CLASSMATES_CACHE_MS = 300000;
     const [missions, setMissions] = useState([]);
     const [selectedMission, setSelectedMission] = useState(null);
+    const [feedKind, setFeedKind] = useState('assignment');
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -23,9 +24,11 @@ export const useFriendsHideout = (studentSession, params) => {
 
     // [Realtime] 구독 콜백이 최신 값을 읽되, deps로 인한 재구독은 피하기 위한 ref
     const selectedMissionIdRef = useRef(null);
+    const feedKindRef = useRef('assignment');
     const normalizePostsRef = useRef(null);
     const hydratePostsRef = useRef(null);
     const lastHideoutRefreshAtRef = useRef(0);
+    const postsRequestIdRef = useRef(0);
 
     const PAGE_SIZE = 10;
 
@@ -264,6 +267,7 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [resolveClassId, studentSession.id]);
 
     const fetchPosts = useCallback(async (missionId, isAppend = false) => {
+        const requestId = ++postsRequestIdRef.current;
         if (!isAppend) {
             setLoading(true);
             pageRef.current = 0;
@@ -292,6 +296,7 @@ export const useFriendsHideout = (studentSession, params) => {
             if (error) throw error;
             const hydrator = hydratePostsRef.current;
             const normalizedPosts = hydrator ? await hydrator(data || [], classId) : (data || []);
+            if (requestId !== postsRequestIdRef.current) return;
 
             if (isAppend) {
                 setPosts(prev => [...prev, ...normalizedPosts]);
@@ -304,12 +309,16 @@ export const useFriendsHideout = (studentSession, params) => {
         } catch (err) {
             console.error('친구 글 로드 실패:', err.message);
         } finally {
-            setLoading(false);
-            setLoadingMore(false);
+            if (requestId === postsRequestIdRef.current) {
+                setLoading(false);
+                setLoadingMore(false);
+            }
         }
     }, [resolveClassId]);
 
-    const fetchRecentPosts = useCallback(async (isAppend = false) => {
+    const fetchRecentPosts = useCallback(async (kind = 'assignment', isAppend = false) => {
+        const requestId = ++postsRequestIdRef.current;
+        const normalizedKind = kind === 'reading_log' ? 'reading_log' : 'assignment';
         if (!isAppend) {
             setLoading(true);
             pageRef.current = 0;
@@ -324,18 +333,27 @@ export const useFriendsHideout = (studentSession, params) => {
                 setPosts([]);
                 return;
             }
-            const { data, error } = await supabase
+            let query = supabase
                 .from('student_posts')
                 .select('id, title, content, student_id, mission_id, created_at, updated_at, char_count, is_confirmed, writing_context, self_writing_type, visibility, structured_content, show_original, original_title, original_content')
                 .eq('class_id', classId)
                 .eq('is_submitted', true)
-                .eq('visibility', 'class')
+                .eq('visibility', 'class');
+
+            query = normalizedKind === 'reading_log'
+                ? query
+                    .eq('writing_context', 'self')
+                    .eq('self_writing_type', 'reading_log')
+                : query.not('mission_id', 'is', null);
+
+            const { data, error } = await query
                 .order('created_at', { ascending: false })
                 .range(currentOffset, currentOffset + PAGE_SIZE - 1);
 
             if (error) throw error;
             const hydrator = hydratePostsRef.current;
             const normalizedPosts = hydrator ? await hydrator(data || [], classId) : (data || []);
+            if (requestId !== postsRequestIdRef.current) return;
 
             if (isAppend) {
                 setPosts((current) => [...current, ...normalizedPosts]);
@@ -345,17 +363,19 @@ export const useFriendsHideout = (studentSession, params) => {
             }
             setHasMore(data?.length === PAGE_SIZE);
         } catch (err) {
-            console.error('최신 친구 글 로드 실패:', err.message);
+            console.error(`${normalizedKind === 'reading_log' ? '독서록' : '과제'} 최신 글 로드 실패:`, err.message);
         } finally {
-            setLoading(false);
-            setLoadingMore(false);
+            if (requestId === postsRequestIdRef.current) {
+                setLoading(false);
+                setLoadingMore(false);
+            }
         }
     }, [resolveClassId]);
 
     const loadMore = useCallback(() => {
         if (loadingMore || !hasMore) return;
         if (selectedMission) fetchPosts(selectedMission.id, true);
-        else fetchRecentPosts(true);
+        else fetchRecentPosts(feedKindRef.current, true);
     }, [loadingMore, hasMore, selectedMission, fetchPosts, fetchRecentPosts]);
 
     const fetchMissions = useCallback(async (forceRefresh = false) => {
@@ -394,17 +414,19 @@ export const useFriendsHideout = (studentSession, params) => {
                     data.find(m => m.id === params?.missionId);
 
                 if (nextMission) {
+                    feedKindRef.current = 'assignment';
+                    setFeedKind('assignment');
                     selectedMissionIdRef.current = nextMission.id;
                     setSelectedMission(nextMission);
-                    fetchPosts(nextMission.id);
+                    await fetchPosts(nextMission.id);
                 } else {
                     selectedMissionIdRef.current = null;
                     setSelectedMission(null);
-                    fetchRecentPosts();
+                    await fetchRecentPosts(feedKindRef.current);
                 }
             } else {
                 setSelectedMission(null);
-                fetchRecentPosts();
+                await fetchRecentPosts(feedKindRef.current);
             }
         } catch (err) {
             console.error('미션 로드 실패:', err.message);
@@ -583,15 +605,27 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, fetchMissions, fetchClassmates]);
 
     const handleMissionChange = (mission) => {
+        feedKindRef.current = 'assignment';
+        setFeedKind('assignment');
         selectedMissionIdRef.current = mission?.id || null;
         setSelectedMission(mission || null);
         if (mission?.id) fetchPosts(mission.id);
-        else fetchRecentPosts();
+        else fetchRecentPosts('assignment');
+    };
+
+    const handleFeedKindChange = (kind) => {
+        const normalizedKind = kind === 'reading_log' ? 'reading_log' : 'assignment';
+        feedKindRef.current = normalizedKind;
+        setFeedKind(normalizedKind);
+        selectedMissionIdRef.current = null;
+        setSelectedMission(null);
+        fetchRecentPosts(normalizedKind);
     };
 
     return {
         missions,
         selectedMission,
+        feedKind,
         posts,
         classmates,
         resolvedClassId,   // 친구 서재 등 학급 범위 조회에 쓴다
@@ -602,6 +636,7 @@ export const useFriendsHideout = (studentSession, params) => {
         viewingPost,
         setViewingPost,
         handleMissionChange,
+        handleFeedKindChange,
         handleMeetingPick
     };
 };

@@ -48,9 +48,25 @@ const MAIN_TABS = [
     }
 ];
 
+const FEED_TABS = [
+    {
+        id: 'assignment',
+        icon: '✍️',
+        title: '선생님 과제 최신글',
+        description: '우리 반이 제출한 과제 글'
+    },
+    {
+        id: 'reading_log',
+        icon: '📚',
+        title: '독서록 최신글',
+        description: '친구들이 공개한 독서록'
+    }
+];
+
 // 개별 포스트 카드 컴포넌트 분리 및 memo 적용
 const PostCard = memo(({ post, isLast, lastElementRef, onClick, isMeeting, studentId, onMeetingPick }) => {
     const isMine = post.student_id === studentId;
+    const isReadingLog = post.writing_context === 'self' && post.self_writing_type === 'reading_log';
     const authorName =
         (isMine ? '내 글' : '') ||
         post.student_name ||
@@ -96,7 +112,14 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick, isMeeting, stude
                 }}>
                     {isMine ? '✍️ 내 글' : authorName}
                 </span>
-                {isMeeting && (
+                {isReadingLog ? (
+                    <span style={{
+                        fontSize: '0.72rem', padding: '4px 9px', borderRadius: '999px',
+                        background: '#E8F5E9', color: '#558B2F', fontWeight: '900'
+                    }}>
+                        📚 독서록
+                    </span>
+                ) : isMeeting && (
                     <span style={{
                         fontSize: '0.72rem', padding: '4px 9px', borderRadius: '999px',
                         background: '#7E22CE', color: 'white', fontWeight: '900'
@@ -152,8 +175,8 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
     const observer = useRef();
 
     const {
-        missions, selectedMission, posts, classmates, loading, loadingMore, hasMore, loadMore,
-        viewingPost, setViewingPost, handleMissionChange, handleMeetingPick,
+        missions, selectedMission, feedKind, posts, classmates, loading, loadingMore, hasMore, loadMore,
+        viewingPost, setViewingPost, handleMissionChange, handleFeedKindChange, handleMeetingPick,
         resolvedClassId
     } = useFriendsHideout(studentSession, params);
     const isMeetingMission =
@@ -252,7 +275,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                         <div style={{ marginBottom: '18px' }}>
                             <span style={{ color: '#5C6BC0', fontSize: '0.75rem', fontWeight: '950' }}>우리 반 새 글 탐색</span>
                             <h3 style={{ margin: '5px 0 3px', color: '#263238', fontSize: '1.25rem' }}>📰 최신 글 찾아보기</h3>
-                            <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>과제·독서록을 최신순으로 읽고, 원하면 과제별로 좁혀 보세요.</p>
+                            <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>선생님 과제와 독서록을 나누어 각각 최신순으로 읽어요.</p>
                         </div>
                     </div>
                 ) : (
@@ -265,41 +288,81 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 
                 {activeMainTab === 'posts' ? (
                     <>
-                        <div style={TAB_CONTAINER_STYLE}>
-                            <button
-                                type="button"
-                                onClick={() => handleMissionChange(null)}
-                                style={{
-                                    padding: '10px 20px', borderRadius: '16px', border: 'none',
-                                    background: !selectedMission ? '#5C6BC0' : 'white',
-                                    color: !selectedMission ? 'white' : '#607D8B',
-                                    fontWeight: 'bold', whiteSpace: 'nowrap', cursor: 'pointer',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                                }}
-                            >
-                                📰 최신 글
-                            </button>
-                            {missions.map(m => (
+                        <div role="tablist" aria-label="최신 글 종류" style={{
+                            display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '8px',
+                            marginBottom: feedKind === 'assignment' ? '14px' : '22px', padding: '6px',
+                            borderRadius: '18px', background: '#E8EDF3'
+                        }}>
+                            {FEED_TABS.map((tab) => {
+                                const active = feedKind === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={active}
+                                        onClick={() => handleFeedKindChange(tab.id)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px',
+                                            minHeight: '62px', padding: '9px 10px', borderRadius: '13px', cursor: 'pointer',
+                                            border: active ? `1px solid ${tab.id === 'reading_log' ? '#7CB342' : '#5C6BC0'}` : '1px solid transparent',
+                                            background: active ? '#FFFFFF' : 'transparent',
+                                            boxShadow: active ? '0 4px 12px rgba(63,81,181,.12)' : 'none'
+                                        }}
+                                    >
+                                        <span aria-hidden="true" style={{ fontSize: '1.2rem' }}>{tab.icon}</span>
+                                        <span style={{ minWidth: 0, textAlign: 'left' }}>
+                                            <strong style={{ display: 'block', color: active ? (tab.id === 'reading_log' ? '#558B2F' : '#3949AB') : '#607D8B', fontSize: '.82rem' }}>{tab.title}</strong>
+                                            {!isMobile && <small style={{ display: 'block', marginTop: '2px', color: '#90A4AE', fontSize: '.64rem' }}>{tab.description}</small>}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {feedKind === 'assignment' && (
+                            <div style={TAB_CONTAINER_STYLE} aria-label="선생님 과제별 필터">
                                 <button
-                                    key={m.id}
-                                    onClick={() => handleMissionChange(m)}
+                                    type="button"
+                                    onClick={() => handleMissionChange(null)}
                                     style={{
                                         padding: '10px 20px', borderRadius: '16px', border: 'none',
-                                        background: selectedMission?.id === m.id
-                                            ? (m.mission_type === 'meeting' || m.input_template === 'meeting' ? '#7E22CE' : 'var(--primary-color)')
-                                            : (m.mission_type === 'meeting' || m.input_template === 'meeting' ? '#FAF5FF' : 'white'),
-                                        color: selectedMission?.id === m.id
-                                            ? 'white'
-                                            : (m.mission_type === 'meeting' || m.input_template === 'meeting' ? '#7E22CE' : '#607D8B'),
+                                        background: !selectedMission ? '#5C6BC0' : 'white',
+                                        color: !selectedMission ? 'white' : '#607D8B',
                                         fontWeight: 'bold', whiteSpace: 'nowrap', cursor: 'pointer',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)', transition: 'all 0.2s',
-                                        outline: m.mission_type === 'meeting' || m.input_template === 'meeting' ? '1px solid #D8B4FE' : 'none'
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
                                     }}
                                 >
-                                    {m.mission_type === 'meeting' || m.input_template === 'meeting' ? '🏛️ ' : ''}{m.title}
+                                    ✍️ 전체 과제
                                 </button>
-                            ))}
-                        </div>
+                                {missions.map(m => (
+                                    <button
+                                        key={m.id}
+                                        onClick={() => handleMissionChange(m)}
+                                        style={{
+                                            padding: '10px 20px', borderRadius: '16px', border: 'none',
+                                            background: selectedMission?.id === m.id
+                                                ? (m.mission_type === 'meeting' || m.input_template === 'meeting' ? '#7E22CE' : 'var(--primary-color)')
+                                                : (m.mission_type === 'meeting' || m.input_template === 'meeting' ? '#FAF5FF' : 'white'),
+                                            color: selectedMission?.id === m.id
+                                                ? 'white'
+                                                : (m.mission_type === 'meeting' || m.input_template === 'meeting' ? '#7E22CE' : '#607D8B'),
+                                            fontWeight: 'bold', whiteSpace: 'nowrap', cursor: 'pointer',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)', transition: 'all 0.2s',
+                                            outline: m.mission_type === 'meeting' || m.input_template === 'meeting' ? '1px solid #D8B4FE' : 'none'
+                                        }}
+                                    >
+                                        {m.mission_type === 'meeting' || m.input_template === 'meeting' ? '🏛️ ' : ''}{m.title}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {feedKind === 'reading_log' && (
+                            <div style={{ margin: '-8px 0 20px', padding: '12px 16px', border: '1px solid #DCEDC8', borderRadius: '16px', background: '#F7FBEF', color: '#558B2F', fontSize: '.8rem', fontWeight: 800 }}>
+                                📚 친구들이 공개한 독서록을 가장 최근 글부터 보여줘요.
+                            </div>
+                        )}
 
                         {isMeetingMission && (
                             <div style={{
@@ -316,11 +379,19 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 
                         <div style={GRID_STYLE}>
                             {loading ? (
-                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px' }}>우리 반이 나눈 글을 불러오는 중... ✨</div>
+                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px' }}>
+                                    {feedKind === 'reading_log' ? '우리 반 독서록을 불러오는 중... 📚' : '우리 반 과제 글을 불러오는 중... ✨'}
+                                </div>
                             ) : posts.length === 0 ? (
                                 <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px', background: 'white', borderRadius: '24px' }}>
                                     <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🌵</div>
-                                    <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>{selectedMission ? '아직 이 과제에 제출된 글이 없어요.' : '아직 공개된 최신 글이 없어요.'}</p>
+                                    <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>
+                                        {selectedMission
+                                            ? '아직 이 과제에 제출된 글이 없어요.'
+                                            : feedKind === 'reading_log'
+                                                ? '아직 친구에게 공개된 독서록이 없어요.'
+                                                : '아직 공개된 과제 글이 없어요.'}
+                                    </p>
                                 </div>
                             ) : (
                                 <>
