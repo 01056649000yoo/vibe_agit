@@ -21,6 +21,118 @@
 
 ---
 
+## 2026-07-30 — 다른 컴 작업 인수 + 미적용 마이그레이션 적용 + 백업 공백 11일 발견·수정 (Claude)
+
+사용자가 다른 컴퓨터에서 작업하다 맥미니로 옮겨 와 "커밋 확인·로컬 비교 → 남은 정리 진행"을 지시했다.
+
+### ① 인수 대조 — 로컬이 2커밋 뒤였다
+- `git pull --ff-only` 로 `cb461da` → **`84af116`**. 미커밋 변경 0건이라 되감김 없음.
+- 다른 컴 작업 내역: GPT/Codex 쪽 `632bf42`(다시쓰기 오집계)·`07563df`(내 서재 글 상세),
+  Claude 쪽 `c30bb35`(칭호 집계 통일·뱃지 최적화·리얼타임 정리)·`84af116`(사고 기록).
+- **배포 = 현재 커밋 확인**: Actions run 이 `84af116` 에서 성공(02:32Z), `agit-app` 시작 시각 동일,
+  컨테이너 안에 `.webp` 뱃지만 있고 PNG 없음.
+
+### ② 레포↔운영 DB 전수 대조 (앞으로 인수할 때마다 이 방법을 쓴다)
+마이그레이션 파일이 운영에 실제로 들어갔는지 **파일 이름이 아니라 DB 실물**로 확인한다.
+
+```
+# 함수: 레포 마이그레이션이 정의한 것 vs 운영 public 함수
+grep -rhoiE 'create (or replace )?function (public\.)?[a-z0-9_]+' supabase/migrations/ \
+  | tr 'A-Z' 'a-z' | sed -E 's/^.*function +(public\.)?//' | sort -u   # ← tr 를 sed 보다 먼저
+psql -U supabase_admin -tAc "select distinct proname from pg_proc p join pg_namespace n
+  on n.oid=p.pronamespace where n.nspname='public' order by 1;"
+comm -23 레포 DB
+# 인덱스도 같은 방식으로 pg_indexes 와 대조
+```
+
+⚠️ `grep -i` 로 뽑으면 `FUNCTION` 이 대문자로 섞여 나온다. **`tr` 로 먼저 소문자화**하지 않으면
+sed 가 아무것도 못 지우고 전부 "미적용"으로 보인다(처음에 그렇게 잘못 읽었다).
+
+결과: 함수 54개 중 미적용 2개, 인덱스 31개 중 미적용 1개.
+- `get_class_student_summary` → **정상**(`20260728_drop_class_student_summary.sql` 로 일부러 지운 것)
+- 나머지는 아래 ③ 한 파일에서 나왔다.
+
+### ③ `20260808_fix_pending_rewrite_states.sql` 운영 적용 (통째로 미적용이었다)
+자동 앱 배포는 SQL 을 실행하지 않고, 작성한 세션(GPT/Codex)에 DB 접근 권한이 없어 미뤄져 있었다.
+CHECK 2개·부분 인덱스·트리거 함수·트리거가 **하나도** 들어가 있지 않았다.
+
+- **먼저 `BEGIN; \i 파일; ROLLBACK;` 으로 시험** → 통과 확인 후 `--single-transaction` 으로 실제 적용.
+- 데이터 정리 UPDATE 는 **빈 작업**이었다(모순 행 0/0, 전체 2,777). 배포된 클라이언트가 이미 그 상태를 안 만든다.
+  → 남은 것은 재발 방지뿐이라 순수 추가.
+- **CHECK 가 기존 코드를 깨뜨리지 않는지 경로 전수 확인**(깨지면 교사·학생 저장이 실패한다):
+
+  | 경로 | 판정 |
+  |---|---|
+  | 승인 `handleApprovePost` · 일괄 다시쓰기 · 학생 제출 | 세 플래그를 함께 써서 안전 |
+  | AI 일괄 다시쓰기 | `is_submitted && !is_confirmed` 로 이미 걸러 안전 |
+  | 단건 `다시 쓰기 요청` 버튼 | `is_submitted && !is_confirmed` 일 때만 노출 → 안전 |
+  | 회수 취소 `handleUndoRecall` | 버튼이 `recalled_at && !is_confirmed` 로 걸림. 데이터도 회수 4건 중 승인 0건 |
+  | 아이디어마켓 `결정됨` | 현재 대상 3건 모두 제출·미반려라 통과. **반려 상태 글을 `결정됨` 으로 바꾸면 걸린다**(남은 위험, 아래) |
+
+- **트리거 동작 시험** (`SET LOCAL request.jwt.claims` 로 학생을 흉내 내고 전부 ROLLBACK):
+  ① 보관 미션 글에 학생 쓰기 → `Archived mission cannot be edited or submitted` **차단됨**
+  ② 같은 학생의 보관 안 된 글 → **통과**(과차단 없음)
+  ③ `student_id` 없는 교사/서비스 경로 → 보관 미션이어도 **통과**
+- 적용 후 `notify pgrst, 'reload schema'`, 앱 `:8300` 200.
+
+### ④ `~/agit-supabase` compose 백업 6개를 하위 폴더로
+사고의 원인이 "폴더에 compose 파일이 7개 쌓여 헷갈린 것"이었으므로 최상위를 활성 3개만 남겼다.
+- `compose-backups/` 로 이동(삭제 아님). 이동 전 LaunchAgents·폴더에서 **참조 없음** 확인.
+- 활성 파일은 컨테이너 라벨 `com.docker.compose.project.config_files` 로 확정:
+  `docker-compose.yml` + `docker-compose.pg17.yml` + `docker-compose.agit.yml`.
+- **이동 후 dry-run** → `agit-db`·`agit-rest`·`agit-realtime` 모두 `Running`(재생성 없음).
+
+### ⑤ 🚨 쌤링크 자동 백업이 **11일간 빈 파일**이었다 (수정 완료)
+"자동 백업이 아지트만 대상인지" 확인하다 발견했다.
+
+- **증상**: `~/Backups/supabase/postgres-20260719 ~ 20260729.sql.gz` 11개가 전부 **20바이트(내용 0바이트)**.
+  그런데 로그에는 11일 내내 `백업 완료 ... (4.0K)`.
+- **원인 두 겹**:
+  1. launchd 는 로그인 셸 PATH 를 안 물려받아 `docker: command not found`. 그런데
+     `if docker exec … pg_dump | gzip > 파일` 은 **파이프라인 종료코드 = `gzip` 의 것(0)** 이라 성공으로 판정됐다.
+  2. 실패를 알아챌 유일한 신호였을 크기 표시가 `du -h` 라 **블록 크기 4.0K** 를 보여 줬다.
+- **고친 것** (`~/.db-backup/backup.sh`, 백업 `backup.sh.pre-pathfix-20260730`):
+  절대 경로 `/usr/local/bin/docker`, `set -o pipefail`, **압축 해제 크기 10만 바이트 미만이면 폐기하고 ERROR**,
+  구글 드라이브 사본은 `cp` 성공을 확인한 뒤에만 성공으로 기록(전에는 실패해도 "저장"으로 남겼다).
+- **검증**: launchd 와 같은 최소 PATH(`env -i PATH=/usr/bin:/bin`)로 실행 → 20바이트 → **2.0MB(원본 4,686,230바이트)**,
+  `short_links`·`page_visits` 테이블 포함 확인.
+- **데이터가 위험했던 적은 없다**: 04:00 `com.agit.backup` 이 같은 `supabase-db` 를 매일 덤프하고 있었다.
+  7/29 `연구소DB.dump`(2.1MB) 안에 `short_links`·`short_link_visits`·`page_visits` 등 **TABLE DATA 61개** 확인.
+
+### ⑥ 자동 백업 지도 (WORKLOG 미해결 질문 답)
+**아지트만이 아니라 supabase 스택도 포함**이다. 겹쳐서 3중이다.
+
+| 작업 | 시각 | 대상 | 보관 | 상태 |
+|---|---|---|---|---|
+| `com.agit.backup` | 04:00 | `agit-db`(아지트) + `supabase-db`(연구소·쌤링크) + 자비스 + 스택 설정 + Caddyfile | 내장 → rclone `gdrive:` → 외장SSD, 30일 | ✅ 7/28~7/30 전부 ✓ |
+| `com.samlink.db-backup` | 03:30 | `supabase-db` 전체 | 내장 + 드라이브 폴더, 14일 | ⚠️→✅ 위 ⑤ 로 수정 |
+| `local.literacy.backup` | 03:00 | literacy DB | 드라이브 동기화 폴더 | ✅ 매일 2.4MB |
+
+- **구글드라이브 업로드는 미완이 아니다** — rclone 원격 `gdrive:` 로 7/28·29·30 모두 업로드 성공(이전 기록 수정).
+  다만 `com.samlink.db-backup` 의 `CloudStorage` 폴더 접근은 `Operation not permitted` 로 막힌다
+  (launchd 에 전체 디스크 접근 권한 없음). 이제 조용히 성공으로 적지 않고 WARN 을 남긴다.
+
+### ⑦ 밤 00:10 스냅샷 작업 중단
+- **읽는 곳이 없음을 먼저 확인**: 클라이언트에 `student_writing_daily_snapshots`·`writing_activity_events`·
+  구 RPC `get_my_writing_footprint` 참조 0건. 표를 읽는 DB 함수는 구 RPC 와 갱신 함수 자신뿐.
+- 작업 자체는 정상 동작했다(매일 1,405행, 누적 5,620행) → **아무도 안 보는데 연 51만 행**이 쌓이는 중이었다.
+- `launchctl bootout` + `site.agit.writing-footprint-snapshot.plist` → **`.plist.disabled`**
+  (그 폴더의 기존 관례와 같은 방식, 이름만 되돌리면 복구).
+- AGENTS.md 의 "삭제보다 기본 OFF" 규칙대로 **표·함수·트리거는 그대로 유지**(5,620행 보존).
+
+- **변경**: `ROADMAP.md`·`WORKLOG.md` 만. **앱 코드 변경 0** → 재배포 불필요.
+  git 밖 운영 변경: 마이그레이션 1개 적용, `~/agit-supabase/compose-backups/` 신설(파일 6개 이동),
+  `~/.db-backup/backup.sh` 수정, 스냅샷 LaunchAgent 언로드.
+- **결과/검증**: 앱 `:8300` 200, `agit-*` 15개·`supabase-db` 정상, 운영 함수·인덱스 미적용 0건.
+- **남은 것 / 다음**:
+  1. **아이디어마켓 잔여 위험**: 반려 상태(`is_returned=true`) 글을 `결정됨` 으로 바꾸면 새 CHECK 에 걸려
+     교사에게 날 오류가 뜬다. 현재 대상 3건은 모두 안전하고 그 모듈은 미션 `teacherEntry` 로만 들어간다.
+     손보려면 `IdeaMarketManager.jsx` 의 `updateData` 에 상태를 함께 명시해야 한다.
+  2. 7/19~7/29 빈 백업 파일 11개(`postgres-202607{19..29}.sql.gz`)를 남겨 뒀다 — 복구할 때 집으면 안 되니
+     사용자 확인 후 지운다. 같은 날짜의 실제 백업은 `~/backups/auto/2026072*/연구소DB.dump` 에 있다.
+  3. 쌤링크 백업의 드라이브 사본을 살리려면 launchd 에 전체 디스크 접근 권한이 필요하다(사용자 조작).
+  4. 웹소켓 500 실부하 측정은 그대로 남았다.
+
 ## 2026-07-30 — 🚨 사고: 다른 스택 DB 컨테이너 삭제 → 복구 + 재발 방지 (Claude)
 - **사고 경위 (git 밖 운영)**: 같은 날 `PGRST_DB_POOL` 을 올릴 때 `~/agit-supabase` 에서
   **`-p agit` 없이** `docker compose -f docker-compose.yml -f docker-compose.pg17.yml -f docker-compose.agit.yml up -d rest`
