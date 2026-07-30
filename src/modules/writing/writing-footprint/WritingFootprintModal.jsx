@@ -40,7 +40,8 @@ const EMPTY_DETAIL = {
     },
     sharing: { comments_received: 0, comments_given: 0, reactions_received: 0, reactions_given: 0 },
     school_year: null,
-    daily: [], monthly: [], points_monthly: [], points_by_type: []
+    daily: [], monthly: [], points_monthly: [], points_by_type: [],
+    spending: { total_used: 0, total_adjusted: 0, by_type: [] }
 };
 
 // 달력·막대·꺾은선이 모두 같은 폭을 쓰면 위아래로 눈이 자연스럽게 이어진다.
@@ -188,15 +189,15 @@ const MonthlyBars = ({ rows, valueKey, unit }) => {
     const h = 118;
     const slot = (CHART_W - AXIS_L) / rows.length;
     const barW = Math.min(26, slot - 12);
-    const max = Math.max(...rows.map((r) => r[valueKey] || 0), 1);
-    const hasAny = rows.some((r) => (r[valueKey] || 0) > 0);
+    const max = Math.max(...rows.map((r) => Reflect.get(r, valueKey) || 0), 1);
+    const hasAny = rows.some((r) => (Reflect.get(r, valueKey) || 0) > 0);
 
     return (
         <div style={{ overflowX: 'auto' }}>
             <svg width={CHART_W} height={h + 38} role="img" aria-label="달마다 쓴 글">
                 <line x1={AXIS_L} y1={h} x2={CHART_W} y2={h} stroke={GRID} strokeWidth="1" />
                 {rows.map((r, i) => {
-                    const v = r[valueKey] || 0;
+                    const v = Reflect.get(r, valueKey) || 0;
                     const barH = v > 0 ? Math.max((v / max) * (h - 24), 4) : 0;
                     const cx = AXIS_L + i * slot + slot / 2;
                     return (
@@ -226,9 +227,9 @@ const MonthlyBars = ({ rows, valueKey, unit }) => {
 const TrendLine = ({ rows, valueKey, unit }) => {
     const h = 118;
     const slot = (CHART_W - AXIS_L) / rows.length;
-    const max = Math.max(...rows.map((r) => r[valueKey] || 0), 1);
+    const max = Math.max(...rows.map((r) => Reflect.get(r, valueKey) || 0), 1);
     const points = rows
-        .map((r, i) => ({ ...r, i, v: r[valueKey] || 0 }))
+        .map((r, i) => ({ ...r, i, v: Reflect.get(r, valueKey) || 0 }))
         .filter((r) => r.v > 0);
 
     const cx = (i) => AXIS_L + i * slot + slot / 2;
@@ -269,8 +270,8 @@ const TrendLine = ({ rows, valueKey, unit }) => {
 };
 
 /** 가로 막대 — 항목 이름이 축에 있으므로 색은 한 가지로 충분하다. */
-const SourceBars = ({ rows }) => {
-    if (!rows.length) return <p style={{ color: INK_SOFT, fontSize: '.85rem' }}>아직 모은 포인트가 없어요.</p>;
+const PointTypeBars = ({ rows, emptyMessage, color = SERIES }) => {
+    if (!rows.length) return <p style={{ color: INK_SOFT, fontSize: '.85rem' }}>{emptyMessage}</p>;
     const max = Math.max(...rows.map((r) => r.total), 1);
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
@@ -280,7 +281,7 @@ const SourceBars = ({ rows }) => {
                         {POINT_LABELS[r.type] || r.type}
                     </span>
                     <span style={{ height: '13px', background: 'rgba(62,46,35,.06)', borderRadius: '5px', overflow: 'hidden' }}>
-                        <span style={{ display: 'block', height: '100%', width: `${Math.max((r.total / max) * 100, 3)}%`, background: SERIES, borderRadius: '5px' }} />
+                        <span style={{ display: 'block', height: '100%', width: `${Math.max((r.total / max) * 100, 3)}%`, background: color, borderRadius: '5px' }} />
                     </span>
                     <span style={{ fontSize: '.82rem', fontWeight: 900, color: INK, textAlign: 'right' }}>{num(r.total)}P</span>
                 </div>
@@ -297,12 +298,24 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
     const load = useCallback(async () => {
         setLoading(true);
         setErrorMessage('');
-        const detailResult = await supabase.rpc('get_my_writing_footprint_detail');
+        const [detailResult, spendingResult] = await Promise.all([
+            supabase.rpc('get_my_writing_footprint_detail'),
+            supabase.rpc('get_my_point_spending_breakdown')
+        ]);
         if (detailResult.error) {
             console.error('글쓰기 발자국 로드 실패:', detailResult.error.message);
             setErrorMessage('발자국을 불러오지 못했어요. 잠시 후 다시 열어 주세요.');
         } else {
-            setDetail({ ...EMPTY_DETAIL, ...(detailResult.data || {}) });
+            if (spendingResult.error) {
+                console.warn('포인트 사용처 로드 실패:', spendingResult.error.message);
+            }
+            setDetail({
+                ...EMPTY_DETAIL,
+                ...(detailResult.data || {}),
+                spending: spendingResult.error
+                    ? EMPTY_DETAIL.spending
+                    : { ...EMPTY_DETAIL.spending, ...(spendingResult.data || {}) }
+            });
         }
         setLoading(false);
     }, []);
@@ -349,6 +362,7 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
     const t = detail.totals || EMPTY_DETAIL.totals;
     const sh = detail.sharing || EMPTY_DETAIL.sharing;
+    const spending = detail.spending || EMPTY_DETAIL.spending;
     // 승인 글 수를 넘긴다. 예전에는 completed_missions(미션 수)를 넘겨서 자율글만 쓴
     // 학생이 0편으로 계산됐다. 운영 SQL 적용 전이면 completed_posts 가 없는데,
     // 그때는 getWriterLevel 의 "글자가 있으면 최소 1편" 하위 호환이 받아 준다.
@@ -451,16 +465,29 @@ const WritingFootprintModal = ({ isOpen, onClose }) => {
                                     <TrendLine rows={monthsAxis} valueKey="avg_chars" unit="자" />
                                 </Section>
 
-                                <Section title="💰 포인트가 쌓인 길" hint="쓴 포인트를 뺀 나머지가 지금 내 포인트예요.">
+                                <Section title="💰 포인트가 쌓인 길" hint="사용하거나 회수·조정된 포인트를 뺀 나머지가 지금 내 포인트예요.">
                                     <TrendLine rows={cumulative} valueKey="total" unit="P" />
                                     <div style={{ display: 'flex', gap: '9px', marginTop: '12px' }}>
                                         <StatTile icon="➕" label="모은 포인트" value={num(t.points_earned)} unit="P" />
-                                        <StatTile icon="➖" label="쓴 포인트" value={num(t.points_spent)} unit="P" />
+                                        <StatTile icon="➖" label="직접 쓴 포인트" value={num(spending.total_used)} unit="P" />
                                     </div>
+                                    {spending.total_adjusted > 0 && (
+                                        <p style={{ margin: '9px 2px 0', fontSize: '.74rem', color: INK_SOFT }}>
+                                            승인 취소·선생님 조정으로 빠진 {num(spending.total_adjusted)}P는 사용처에서 제외했어요.
+                                        </p>
+                                    )}
                                 </Section>
 
                                 <Section title="🎁 포인트를 어디서 모았나">
-                                    <SourceBars rows={detail.points_by_type || []} />
+                                    <PointTypeBars rows={detail.points_by_type || []} emptyMessage="아직 모은 포인트가 없어요." />
+                                </Section>
+
+                                <Section title="🛍️ 포인트를 어디에 썼나" hint="내가 직접 선택해 사용한 포인트만 보여 줘요.">
+                                    <PointTypeBars
+                                        rows={spending.by_type || []}
+                                        emptyMessage="아직 사용한 포인트가 없어요."
+                                        color="#F59E0B"
+                                    />
                                 </Section>
 
                                 <Section title="💬 친구와 나눈 기록" hint="친구 아지트에서 주고받은 댓글과 반응이에요.">
