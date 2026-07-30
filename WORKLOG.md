@@ -34,11 +34,12 @@
     중복 작가 통계 조회 대신 공용 캐시를 무효화하고, 상태창이 열려 있으면 즉시 같은 RPC로 갱신한다.
   - `MyAgitPanel`의 뱃지·독자 폴백·설명판과 `WritingFootprintModal`의 예전 작가 레벨 카드, 대시보드의 더 이상 쓰지 않는
     작가 통계 상태·2개 조회를 제거했다. 빌드에서 상태창과 데이터 훅이 별도 공용 청크로 추출된다.
-- **변경**: `title-status` 신규 모듈, `MyAgitPanel.jsx`, `WritingFootprintModal.jsx`, 학생 대시보드/리얼타임 훅,
-  신규 마이그레이션 `20260811_my_title_status.sql`, 칭호 상수 주석, 로드맵·작업로그.
+- **변경**: 커밋 `8549aaf` — `title-status` 신규 모듈, `MyAgitPanel.jsx`, `WritingFootprintModal.jsx`,
+  학생 대시보드/리얼타임 훅, 신규 마이그레이션 `20260811_my_title_status.sql`, 칭호 상수 주석, 로드맵·작업로그.
 - **결과/검증**: 관련 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과. 운영 통합 DB에 RPC 적용,
   `anon` 실행 차단·`authenticated` 허용·SECURITY DEFINER/search_path 고정 확인. 실제 학생 권한 호출에서 공용 RPC의
-  작가 글자·글 수가 발자국 확정 집계와, 독자 점수가 기존 확정 독자 RPC와 모두 일치했다. 자동 배포 확인 예정.
+  작가 글자·글 수가 발자국 확정 집계와, 독자 점수가 기존 확정 독자 RPC와 모두 일치했다. GitHub Actions Deploy run
+  `30552590280`에서 앱 이미지 빌드·`agit-app` 재시작·Verify가 모두 성공했다.
 - **남은 것 / 다음**: 학생 실기기에서 두 화면의 작가·독자 이름과 뱃지가 같은지, 뱃지 선택 시 동일 설명판이 열리는지,
   열린 상태에서 승인 후 칭호가 갱신되는지 확인한다.
 
