@@ -21,6 +21,53 @@
 
 ---
 
+## 2026-07-30 — 🚨 사고: 다른 스택 DB 컨테이너 삭제 → 복구 + 재발 방지 (Claude)
+- **사고 경위 (git 밖 운영)**: 같은 날 `PGRST_DB_POOL` 을 올릴 때 `~/agit-supabase` 에서
+  **`-p agit` 없이** `docker compose -f docker-compose.yml -f docker-compose.pg17.yml -f docker-compose.agit.yml up -d rest`
+  를 실행했다. 그 결과 **쌤링크·수업도구·글쓰기도우미가 쓰는 `supabase` 스택의 `supabase-db` 컨테이너가 삭제**됐다.
+  당시 로그에 `Container supabase-db Recreate` 가 찍혔는데 이름 충돌 오류만 보고 "아무것도 바뀌지 않았다"고 잘못 판단했다.
+- **근본 원인**: `~/agit-supabase/docker-compose.yml` **8행에 `name: supabase`** 가 박혀 있었다.
+  슈파베이스 공식 self-hosted compose 파일을 복사해 오면서 따라온 값이고, `docker-compose.agit.yml` 은
+  이를 덮지 않았다. 그래서 그 폴더의 파일들은 **`-p agit` 을 붙일 때만** 아지트 스택을 가리켰고,
+  빼면 조용히 **다른 스택**을 대상으로 잡았다. 폴더에 compose 파일이 7개(백업 포함) 쌓여 있어 더 헷갈렸다.
+- **영향**: `supabase-rest` 가 `Could not query the database for the schema cache. Retrying.` 반복,
+  쌤링크에서 "속도 제한을 확인하지 못했습니다"·데이터 개수 미표시. **아지트 스택은 영향 없음**(`agit-db` 7/28부터 무중단).
+- **데이터는 손실 없음**: Postgres 데이터는 컨테이너가 아니라 바인드 마운트
+  (`Jarvis_Brain_Local/self-hosted-supabase/volumes/db/data`, 287MB)에 있어 컨테이너 삭제와 무관했다.
+  복구 후 실제 개수 확인 — `short_links` 254, `short_link_visits` 5,645, `page_visits` 1,280,
+  `short_link_daily_stats` 76, `short_link_device_access` 254.
+  ⚠️ 사고 직전 `pg_stat_user_tables.n_live_tup` 으로 본 낮은 값(166·32·1)은 **통계 추정치**였다. 개수 확인에 쓰면 안 된다.
+- **복구 절차**:
+  1. `--dry-run` 으로 먼저 확인 → 첫 시도는 `4e3ef2b6f7fd_agit-db`(project=supabase, service=db)를 건드리려 했다.
+     이는 실패한 명령이 남긴 **`created` 상태·한 번도 실행 안 된 껍데기**(StartedAt=0001-01-01)였다.
+     `docker rm`(`-v` 없이 → 바인드 마운트 무관)으로 제거.
+  2. 다시 `--dry-run` → `supabase-db` 하나만 생성하는 것 확인 후
+     `cd .../self-hosted-supabase && docker compose -p supabase up -d --no-deps db` 실행.
+  3. `notify pgrst, 'reload schema'` → `supabase-rest` 가 71 relations 정상 로드.
+- **재발 방지 (적용 완료)**: 프로젝트마다 compose 파일에 `name:` 을 못박아 `-p` 를 빼먹어도 대상이 고정되게 했다.
+
+  | 폴더 | 전 | 후 |
+  |---|---|---|
+  | `~/agit-supabase/docker-compose.yml` | `name: supabase` ⚠️ | **`name: agit`** |
+  | `~/agit-supabase/docker-compose.agit.yml` | 없음 | **`name: agit`** |
+  | `.../self-hosted-supabase/docker-compose.yml` | `name: supabase` | 그대로(올바름) |
+  | `~/classroom-tools` · `~/writing-helper` · `~/Jarvis_Brain_Local` | 없음 | 폴더명과 같은 이름 명시 |
+
+  백업은 각 파일 옆에 `*.pre-projectname-20260730`. 쌤링크(`url`)는 Actions 러너가 배포마다 덮는
+  작업 폴더이고 compose 파일이 1개뿐이라 손대지 않았다(폴더명 `URL` → 프로젝트 `url` 로 결정).
+- **결과/검증**: 사고 났던 그 명령을 `-p` 없이 `--dry-run` 으로 재현 → 이제 `agit-db`·`agit-rest` **Running**
+  (변경 없음), 다른 스택 언급 없음. 이름을 넣은 3개 프로젝트도 각각 dry-run 으로 **기존 컨테이너 그대로 인식** 확인
+  (새로 만들려 하면 이름 불일치 신호이므로 반드시 확인). `supabase-db` healthy, 쌤링크 REST 총 개수 255 정상,
+  아지트 앱 `:8300` 200 · 쌤링크 앱 `:3000` 307 · 쌤링크 공개 도메인 200.
+  아지트 공개 도메인은 맥미니 내부에서 000 이지만 `--resolve` 로 로컬 Caddy 직결 시 **200** — 하이핀(내부에서
+  자기 공개주소로 못 돌아옴) 현상이며 장애가 아니다. Caddy·DNS 는 건드리지 않았다.
+- **교훈 / 앞으로**:
+  1. **서버 compose 명령은 `--dry-run` 을 먼저 돌린다.** 실제로 복구 중 두 번째 사고를 이걸로 막았다.
+  2. compose 파일의 `name:` 을 먼저 확인한다. 폴더 이름으로 프로젝트가 정해진다고 가정하면 안 된다.
+  3. 오류가 났을 때 "아무것도 안 바뀌었다"고 단정하지 않는다. 삭제까지 성공하고 생성만 실패할 수 있다.
+- **남은 것 / 다음**: `~/agit-supabase` 의 백업 compose 파일 7개를 하위 폴더로 정리(사람 혼동 방지).
+  DB 자동 백업(매일 4시)이 **아지트만 대상인지 `supabase` 스택도 포함인지** 확인 — 구글드라이브 업로드 인증도 미완 상태.
+
 ## 2026-07-30 — 리얼타임 구독을 핵심 흐름(제출→확인·피드백→승인)만 남기고 정리 (Claude)
 - **배경/결정**: 사용자 결정 — "앱의 핵심은 학생이 글을 제출하고 교사가 확인·피드백하고 최종 승인하는 것이다.
   실시간 구독은 그 흐름만 남기고 나머지는 빼도 좋다." 리얼타임 한도가 `max_concurrent_users=200`,
