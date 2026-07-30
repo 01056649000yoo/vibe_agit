@@ -16,7 +16,11 @@ export const dragonManifest = {
   audience: 'student',
   defaultEnabled: true, // 기존 동작 보존: 지금까지 모든 학급에 노출돼 있었음
   studentEntry: () => import('./DragonHideoutModal'),
+  myAgitEntry: () => import('./MyAgitCard'),
   teacherEntry: () => import('./TeacherManager'),
+  myAgit: {
+    order: 10
+  },
   playground: {
     name: '나의 드래곤 파트너',
     description: '포인트로 먹이를 주고 키우기',

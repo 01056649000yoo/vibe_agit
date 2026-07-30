@@ -32,12 +32,16 @@ export const sampleGameManifest = {
   audience: 'both',
   defaultEnabled: false,
   studentEntry: () => import('./StudentEntry'),
+  myAgitEntry: () => import('./MyAgitCard'), // 나의 아지트에 상태 카드가 필요할 때만
   teacherEntry: () => import('./TeacherManager'),
   playground: {
     order: 30,
     background: 'linear-gradient(135deg, #F3E8FF, #FAF5FF)',
     borderColor: '#D8B4FE',
     entryMode: 'standard'
+  },
+  myAgit: {
+    order: 10
   },
   management: {
     order: 30,
@@ -60,6 +64,18 @@ export const sampleGameManifest = {
 ```js
 { studentSession, isMobile, points, onPointsChange, onBack, module }
 ```
+
+`myAgitEntry`는 나의 아지트를 열 때만 지연 로딩되며 다음 props를 받는다.
+
+```js
+{ module, runtime, onOpen }
+```
+
+- 카드 UI·상태 문구·단계 이미지 해석은 모듈 폴더가 소유한다.
+- `runtime`은 대시보드에 이미 올라와 있는 모듈 상태를 재사용하는 레거시 어댑터다. 새 모듈은 카드가 열릴 때
+  자기 데이터를 직접 제한 조회해도 된다.
+- `onOpen`은 공통 셸이 해당 모듈의 기존 학생 진입 화면을 열어 주므로 카드에서 모달 상태를 직접 만들지 않는다.
+- 한 슬롯의 지연 로딩·렌더 오류는 오류 경계로 격리되어 칭호·서재나 다른 모듈 카드를 막지 않는다.
 
 ## 데이터 원칙
 

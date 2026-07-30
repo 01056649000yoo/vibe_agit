@@ -12,9 +12,11 @@
  * @property {'game'|'community'|'tool'|'writing'} part  파트 분류 (메뉴 그룹)
  * @property {'student'|'teacher'|'both'} audience  누구에게 보이는가
  * @property {() => Promise<any>} [studentEntry]  학생 진입 컴포넌트 (React.lazy용 동적 import)
+ * @property {() => Promise<any>} [myAgitEntry]  나의 아지트 확장 카드 (React.lazy용 동적 import)
  * @property {() => Promise<any>} [teacherEntry]  교사 설정/관리 컴포넌트
  * @property {{name?: string, description?: string, background?: string, borderColor?: string, order?: number, entryMode?: 'standard'|'legacy'}} [playground]
  *   학생 놀이터 카드와 진입 방식. standard 모듈은 studentEntry가 공통 호스트 props를 받는다.
+ * @property {{order?: number}} [myAgit] 나의 아지트에서 확장 카드를 표시할 순서
  * @property {{title?: string, subtitle?: string, order?: number, activeColor?: string, headerBackground?: string, borderColor?: string, titleColor?: string, subtitleColor?: string, legacy?: boolean}} [management]
  *   교사 아지트 놀이터 관리 카드 표시 정보. teacherEntry가 있으면 공통 관리 셸에서 지연 로딩한다.
  * @property {{order?: number, launchMode?: 'embedded'|'external', href?: string}} [tool]
@@ -46,6 +48,7 @@ export function validateManifest(m) {
   if (!PART_LABELS[m.part]) problems.push(`part가 유효하지 않음: ${m.part}`);
   if (!['student', 'teacher', 'both'].includes(m.audience)) problems.push(`audience 유효하지 않음: ${m.audience}`);
   if (!m.studentEntry && !m.teacherEntry) problems.push('studentEntry/teacherEntry 둘 다 없음');
+  if (m.myAgit && typeof m.myAgitEntry !== 'function') problems.push('myAgit 설정은 있지만 myAgitEntry가 없음');
   if (m.management?.legacy !== true && m.teacherEntry && m.audience === 'student') {
     problems.push('teacherEntry가 있지만 audience가 student임');
   }

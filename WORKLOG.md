@@ -21,6 +21,24 @@
 
 ---
 
+## 2026-07-30 — 반려 드래곤 카드를 나의 아지트 모듈 슬롯으로 전환 (GPT/Codex)
+- **원인/목표**: 반려 드래곤 카드 UI가 공통 `MyAgitPanel`, 단계·배경 정의와 카드 데이터 연결이 `StudentDashboard`에
+  흩어져 있어 드래곤 모듈을 업데이트할 때 공통 셸도 함께 수정해야 했다. 이는 게임 기능이 자기 표현을 소유한다는
+  모듈 확장 원칙과 맞지 않았다.
+- **한 일**:
+  - 드래곤 매니페스트에 `myAgitEntry`와 표시 순서 계약을 추가하고 카드 전체를 모듈의 `MyAgitCard.jsx`로 옮겼다.
+    단계 이미지·단계명·아지트 배경도 `dragon/presentation.js` 한곳으로 옮겨 기존 드래곤 방과 나의 아지트 카드가 공유한다.
+  - 공통 `MyAgitModuleSlotHost`를 만들었다. 활성 모듈 매니페스트의 슬롯을 순서대로 지연 로딩하고, 공통 진입 콜백과
+    대시보드에 이미 있는 레거시 상태만 전달하며, 슬롯별 오류 경계로 칭호·서재와 다른 슬롯을 보호한다.
+  - `MyAgitPanel`에서 드래곤 전용 props·조건·카드 코드를 제거했다. `StudentDashboard`도 카드 열기 조건 대신 기존
+    `openGameModule()` 공통 진입점을 전달한다. 이후 드래곤 카드·단계·이미지·배경 변경은 드래곤 폴더만 수정하면 된다.
+  - 게임 모듈 README와 매니페스트 타입에 `myAgitEntry / myAgit.order / { module, runtime, onOpen }` 계약을 문서화했다.
+- **변경**: 신규 `src/modules/MyAgitModuleSlotHost.jsx`, `src/modules/game/dragon/MyAgitCard.jsx`,
+  `src/modules/game/dragon/presentation.js`; 드래곤 매니페스트·모듈 타입/README·학생 공통 화면 연결 변경. DB 변경 없음.
+- **결과/검증**: 관련 7개 JS/JSX 파일 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과.
+  `MyAgitCard`가 별도 3.44kB 지연 청크로 생성되고 공통 `MyAgitPanel`·`StudentDashboard` 청크 크기도 감소했다.
+- **남은 것 / 다음**: 운영 학생 계정에서 슬롯 지연 표시·현재 단계/배경·카드→기존 드래곤 방 진입을 실기기 스모크한다.
+
 ## 2026-07-30 — 나의 아지트에 반려 드래곤 생활 공간 추가 (GPT/Codex)
 - **배경/결정**: 나의 아지트에서 작가·독자 성장과 서재는 보이지만, 학생이 포인트로 키우는 드래곤은 놀이터로 들어가야만
   상태를 알 수 있어 `내 공간에서 함께 사는 반려동물`이라는 연결감이 약했다. 성장 상태창과 내 서재 사이를 드래곤의
