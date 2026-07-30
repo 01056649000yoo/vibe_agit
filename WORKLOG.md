@@ -146,8 +146,33 @@ CHECK 2개·부분 인덱스·트리거 함수·트리거가 **하나도** 들�
 - **채울 필요 없다고 판단한 것**: `realtime`(메시지 파티션 63행·휘발성), `vault`(0행),
   `supabase_functions.hooks`(0행), `net`(0행), `graphql`·`extensions`(확장이 다시 만든다).
 
-- **변경**: `ROADMAP.md`·`WORKLOG.md` 만. **앱 코드 변경 0** → 재배포 불필요.
-  git 밖: `~/scripts/sh_mirror_backup.sh` 수정(백업 `*.pre-privileges-20260730`).
+### ⑨ 드라이브 백업 암호화 + 매월 자동 리허설 (사용자 결정 반영)
+사용자 선택: **rclone crypt(드라이브만 암호화)** + **매월 1일 자동 리허설**.
+
+- **암호화**: `agitcrypt:` → `gdrive:SH맥미니-enc`. 내용·파일명 모두 암호화(드라이브에서는
+  `688mb2qbfs59…` 같은 이름에 `RCLONE` 매직바이트 컨테이너로 보인다). 내장·외장SSD 사본은 평문 유지.
+  - **검증**: 200KB 난수 파일 왕복 해시 일치 → 오늘 백업 40MB 업로드 →
+    암호화 원격에서 `아지트DB.dump` 를 내려받아 **로컬 원본과 SHA256 일치**, `pg_restore -l` 로 TABLE DATA 85개 판독.
+  - ⚠️ **열쇠는 `~/.config/rclone/rclone.conf` 의 `[agitcrypt]` 에만 있다.** 이 파일 사본이 맥미니 밖에
+    없으면 맥미니가 죽었을 때 드라이브 백업을 못 연다 → **사용자 조치 대기**(backup.md 3절).
+  - 열쇠글은 `openssl rand` 로 만들어 `--obscure` 로 넣었고 **화면·문서 어디에도 출력하지 않았다**.
+- **매월 리허설**: `~/scripts/restore_rehearsal.sh` + `com.agit.restore-rehearsal`(매월 1일 04:40, 04:00 백업 뒤).
+  임시 DB 에 복원해 검증하고 끝나면 지운다. 결과는 `~/backups/auto/rehearsal-status.txt` 한 줄(`PASS`/`FAIL`),
+  실패 시 macOS 알림. plist 에 `PATH` 를 명시했다(쌤링크 백업이 이걸 빠뜨려 11일을 날렸다).
+  - **판정 기준을 한 번 고쳤다.** 처음엔 "운영과 행 수 전수 일치"로 짰는데 **오탐이 났다** —
+    `short_link_rate_limits` 가 백업(15:25)과 리허설(15:31) 사이 419→420 으로 늘었다.
+    백업의 임무는 "지금 운영과 똑같음"이 아니라 "온전히 복원됨"이므로
+    **①표 누락 ②운영엔 있는데 0행 ③5%(최소 20행) 넘게 빔** 세 가지로 바꿨다.
+  - **양방향 시험**: 정상 백업 → 통과(아지트 85표·연구소 91표, 권한 368·379 일치).
+    일부러 `-n auth` 를 뺀 덤프 → **auth 표 30개 누락으로 실패 검출**. 껍데기 파일·산출물 누락도 검출.
+- **백업 스크립트 전체를 launchd 와 같은 최소 환경(`env -i PATH=/usr/bin:/bin`)으로 1회 실행**해
+  오늘 백업을 새 기준으로 재생성했다(20초, 산출물 7개, 연구소DB 2.2M→2.3M 로 계정 포함).
+- **신규 문서 `backup.md`** — 매월 점검법·산출물 표·복구 절차·남은 것·교훈. `AGENTS.md` 세션 시작 목록에 연결.
+
+- **변경**: `ROADMAP.md`·`WORKLOG.md`·`AGENTS.md`·신규 `backup.md`. **앱 코드 변경 0** → 재배포 불필요.
+  git 밖: `~/scripts/sh_mirror_backup.sh` 수정(백업 `*.pre-privileges-20260730`),
+  신규 `~/scripts/restore_rehearsal.sh`, 신규 LaunchAgent `com.agit.restore-rehearsal`,
+  `~/.config/rclone/rclone.conf` 에 `[agitcrypt]` 추가(백업 `*.pre-crypt-20260730`).
   git 밖 운영 변경: 마이그레이션 1개 적용, `~/agit-supabase/compose-backups/` 신설(파일 6개 이동),
   `~/.db-backup/backup.sh` 수정, 스냅샷 LaunchAgent 언로드.
 - **결과/검증**: 앱 `:8300` 200, `agit-*` 15개·`supabase-db` 정상, 운영 함수·인덱스 미적용 0건.
