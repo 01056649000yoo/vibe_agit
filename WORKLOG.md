@@ -33,8 +33,9 @@
     책등 보기 전환을 제공한다. 책등·제목 목록 모두 기존 공개 글 상세와 친구 아지트 복귀 흐름을 그대로 사용한다.
   - 목록에서 더 이상 쓰지 않는 독서록 표지용 `structured_content` 조회를 제거했다. 학급 직접 필터·36편 상한·관계 별도 조회·
     `classKey` 캐시는 바꾸지 않았다.
-- **변경**: `src/modules/community/friends-hideout/FriendWritingShelf.jsx`, 로드맵·작업로그. DB 변경 없음.
-- **결과/검증**: 대상 ESLint, `npm run build`, `git diff --check`로 검증. 연결 가능한 브라우저가 없어 로그인 학생의
+- **변경**: 커밋 `4904af0` — `src/modules/community/friends-hideout/FriendWritingShelf.jsx`, 로드맵·작업로그. DB 변경 없음.
+- **결과/검증**: 대상 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과. GitHub Actions Deploy run
+  `30539414377`에서 앱 이미지 빌드·`agit-app` 재시작·Verify가 모두 성공했다. 연결 가능한 브라우저가 없어 로그인 학생의
   실제 책장 렌더링은 확인하지 못했다.
 - **남은 것 / 다음**: 학생 실기기에서 짧은/긴 제목 중앙 정렬, 과제·회의·독서록 색, 36권 좌우 스와이프,
   제목 전체 보기와 글 상세→친구 아지트 복귀를 확인한다.
