@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { AlertCircle, BookOpen, Check, Inbox, LoaderCircle, RefreshCw } from 'lucide-react'
 import Button from '../components/common/Button'
 import Card from '../components/common/Card'
+import WritingEditorFields from '../components/writing/WritingEditorFields'
+import WritingToolHost from '../modules/writing/tools/WritingToolHost'
 import '../App.css'
 import './UiPreview.css'
 
@@ -30,6 +32,8 @@ function UiPreview() {
   const [activeState, setActiveState] = useState('empty')
   const [showLoading, setShowLoading] = useState(false)
   const [activeNav, setActiveNav] = useState(TEACHER_NAV_GROUPS[0].id)
+  const [previewTitle, setPreviewTitle] = useState('우리 반 체육 대회')
+  const [previewContent, setPreviewContent] = useState('오늘은 웬지 운동장이 더 넓어 보였다. 이어달리기를 할수 있어서 정말 신났다.')
   const state = previewStates.find((item) => item.id === activeState)
   const StateIcon = state.icon
 
@@ -118,6 +122,27 @@ function UiPreview() {
             </Button>
           </article>
         </div>
+      </section>
+
+      <section className="ui-preview__section" aria-labelledby="writing-tool-preview-title">
+        <div className="ui-preview__section-heading">
+          <div>
+            <p className="ui-preview__eyebrow">03 · 학생 글쓰기</p>
+            <h2 id="writing-tool-preview-title">맞춤법 찾아보기</h2>
+          </div>
+          <p>글 전체를 검사하거나 고치지 않고, 학생이 궁금한 표현만 직접 검색하는 태블릿용 도구입니다.</p>
+        </div>
+        <Card className="ui-preview__writing-canvas" animate={false}>
+          <WritingToolHost />
+          <WritingEditorFields
+            title={previewTitle}
+            onTitleChange={setPreviewTitle}
+            content={previewContent}
+            onContentChange={setPreviewContent}
+            contentMinHeight={260}
+            isMobile
+          />
+        </Card>
       </section>
 
       <section className="ui-preview__section" aria-labelledby="teacher-nav-title">

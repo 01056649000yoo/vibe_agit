@@ -28,6 +28,10 @@ const PoemEditor = ({
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="시의 제목을 적어주세요"
                 disabled={disabled}
+                spellCheck
+                autoCorrect="off"
+                autoCapitalize="sentences"
+                lang="ko"
                 style={{ width: '100%', boxSizing: 'border-box', padding: '16px 0', fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '900', border: 'none', borderBottom: '2px solid #DCFCE7', outline: 'none', color: '#14532D', background: 'transparent' }}
             />
             <div style={{ textAlign: 'right', color: '#64748B', fontSize: '0.9rem', margin: '10px 4px 24px' }}>쓴이: <strong>{studentName || '학생'}</strong></div>
@@ -51,6 +55,8 @@ const PoemEditor = ({
                             placeholder={`${index + 1}연의 시구를 행으로 나누어 적어보세요`}
                             disabled={disabled}
                             spellCheck
+                            autoCorrect="off"
+                            autoCapitalize="sentences"
                             lang="ko"
                             style={{ width: '100%', minHeight: '120px', boxSizing: 'border-box', padding: '12px', border: 'none', borderRadius: '12px', resize: 'vertical', outline: 'none', background: 'white', fontSize: isMobile ? '1.05rem' : '1.15rem', lineHeight: 1.9, fontFamily: 'inherit' }}
                         />

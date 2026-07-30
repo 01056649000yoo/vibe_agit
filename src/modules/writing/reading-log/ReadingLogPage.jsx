@@ -4,6 +4,7 @@ import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
 import WritingEditorFields from '../../../components/writing/WritingEditorFields';
 import { supabase } from '../../../lib/supabaseClient';
+import WritingToolHost from '../tools/WritingToolHost';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
 
@@ -202,6 +203,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                 border: '2px solid #F1F3F5',
                 boxShadow: '0 18px 45px rgba(0,0,0,0.04)'
             }}>
+                <WritingToolHost disabled={saving} />
                 <WritingEditorFields
                     title={form.title}
                     onTitleChange={(value) => updateForm('title', value)}

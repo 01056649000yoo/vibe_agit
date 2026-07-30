@@ -23,7 +23,7 @@ const WritingEditorFields = forwardRef(function WritingEditorFields({
                 onChange={(event) => onTitleChange(event.target.value)}
                 placeholder={titlePlaceholder}
                 spellCheck={true}
-                autoCorrect="on"
+                autoCorrect="off"
                 autoCapitalize="sentences"
                 lang="ko"
                 style={{
@@ -47,7 +47,7 @@ const WritingEditorFields = forwardRef(function WritingEditorFields({
                 onChange={(event) => onContentChange(event.target.value)}
                 placeholder={contentPlaceholder}
                 spellCheck={true}
-                autoCorrect="on"
+                autoCorrect="off"
                 autoCapitalize="sentences"
                 lang="ko"
                 enterKeyHint="enter"

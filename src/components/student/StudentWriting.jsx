@@ -7,6 +7,7 @@ import { useMissionSubmit } from '../../hooks/useMissionSubmit';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
 import { countContentChars } from '../../lib/textMetrics';
 import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
+import WritingToolHost from '../../modules/writing/tools/WritingToolHost';
 import WritingEditorFields from '../writing/WritingEditorFields';
 
 const GENRE_EDITORS = new Map(
@@ -676,7 +677,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     onChange={(e) => handleAnswerChange(idx, e.target.value)}
                                     placeholder="여기에 생각을 적어보세요..."
                                     spellCheck={true}
-                                    autoCorrect="on"
+                                    autoCorrect="off"
                                     autoCapitalize="sentences"
                                     lang="ko"
                                     enterKeyHint="enter"
@@ -764,6 +765,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         </button>
                     )}
                 </div>
+
+                <WritingToolHost disabled={submitting || isLocked} />
 
                 <div style={{ position: 'relative' }}>
                     {showOriginal && (
