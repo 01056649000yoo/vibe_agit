@@ -7,19 +7,21 @@ import { countContentChars } from '../lib/textMetrics.js';
  * (예전에는 훅 안에만 있어서, 다른 화면에서 레벨을 보여 주려면 계산을 베껴야 했다.)
  *
  * 첫 단계는 승인 글 1편 완성, 그 다음부터는 누적 글자 수로 오른다.
+ * 2026-07-30 한 학기 안에 상위 칭호에 너무 빨리 도달한다는 운영 피드백에 따라
+ * 글자 수 문턱은 최초 확정값에서 30% 높였다. 첫 완성 경험은 늦추지 않도록 Lv2=승인 글 1편을 유지한다.
  * 등수·포인트 보상과는 연결하지 않고 자기 성장 표시로만 쓴다.
  */
 export const WRITER_LEVELS = [
     { level: 1, name: '새싹 작가', emoji: '🌱', from: 0, criterion: 'chars' },
     { level: 2, name: '첫걸음 작가', emoji: '✏️', from: 1, criterion: 'posts' },
-    { level: 3, name: '연필 작가', emoji: '📝', from: 300, criterion: 'chars' },
-    { level: 4, name: '이야기 작가', emoji: '📖', from: 700, criterion: 'chars' },
-    { level: 5, name: '초보 작가', emoji: '🪶', from: 1400, criterion: 'chars' },
-    { level: 6, name: '꾸준한 작가', emoji: '🔥', from: 2500, criterion: 'chars' },
-    { level: 7, name: '숙련 작가', emoji: '🌳', from: 4200, criterion: 'chars' },
-    { level: 8, name: '대문호', emoji: '👑', from: 8400, criterion: 'chars' },
-    { level: 9, name: '빛나는 작가', emoji: '💫', from: 12000, criterion: 'chars' },
-    { level: 10, name: '전설의 작가', emoji: '✨', from: 20000, criterion: 'chars' }
+    { level: 3, name: '연필 작가', emoji: '📝', from: 390, criterion: 'chars' },
+    { level: 4, name: '이야기 작가', emoji: '📖', from: 910, criterion: 'chars' },
+    { level: 5, name: '초보 작가', emoji: '🪶', from: 1820, criterion: 'chars' },
+    { level: 6, name: '꾸준한 작가', emoji: '🔥', from: 3250, criterion: 'chars' },
+    { level: 7, name: '숙련 작가', emoji: '🌳', from: 5460, criterion: 'chars' },
+    { level: 8, name: '대문호', emoji: '👑', from: 10920, criterion: 'chars' },
+    { level: 9, name: '빛나는 작가', emoji: '💫', from: 15600, criterion: 'chars' },
+    { level: 10, name: '전설의 작가', emoji: '✨', from: 26000, criterion: 'chars' }
 ];
 
 /**

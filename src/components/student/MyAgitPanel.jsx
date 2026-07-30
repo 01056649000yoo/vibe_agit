@@ -35,11 +35,95 @@ const num = (v) => Number(v || 0).toLocaleString('ko-KR');
 // 칭호 설명을 한 번 열면 작가 10장 약 3.3MB를 내려받았다. scripts/optimize-title-badges.mjs 로 만든다.
 const titleBadgeSrc = (kind, level) => `/assets/title-badges/${kind}-level-${level}.webp`;
 
-const typeLabel = (post) => {
-    if (post.writing_context === 'self') {
-        return post.self_writing_type === 'reading_log' ? '📚 독서록' : '✏️ 자유글';
+// 새 글쓰기 유형은 이 배열에 탭 정보와 match만 추가한다.
+// `free`는 아직 분류되지 않은 자율 글을 받는 마지막 폴백이므로 항상 맨 아래에 둔다.
+const SHELF_SECTIONS = [
+    {
+        id: 'assignment', tabLabel: '과제 책장', emptyMessage: '완성한 과제가 아직 없어요.', alwaysVisible: true,
+        match: (post) => post.writing_context !== 'self',
+        label: '과제', icon: '📝',
+        colors: [
+            ['#477DB6', '#28527D', '#193B60'],
+            ['#6589B1', '#365F8C', '#23466B'],
+            ['#426A9B', '#25476F', '#173552']
+        ]
+    },
+    {
+        id: 'reading', tabLabel: '독서록 책장', emptyMessage: '완성한 독서록이 아직 없어요.', alwaysVisible: true,
+        match: (post) => post.writing_context === 'self' && post.self_writing_type === 'reading_log',
+        label: '독서록', icon: '📚',
+        colors: [
+            ['#6B9A70', '#3F704A', '#295237'],
+            ['#5E958B', '#356A64', '#28514D'],
+            ['#77955C', '#4E6F37', '#384F29']
+        ]
+    },
+    {
+        id: 'free', tabLabel: '자유글 책장', emptyMessage: '완성한 자유글이 아직 없어요.', alwaysVisible: false,
+        match: (post) => post.writing_context === 'self' && post.self_writing_type !== 'reading_log',
+        label: '자유글', icon: '✏️',
+        colors: [
+            ['#D17A67', '#A24E48', '#793538'],
+            ['#C88658', '#9D5B32', '#743F23'],
+            ['#9C76A8', '#714E7E', '#54395F']
+        ]
     }
-    return '📝 과제';
+];
+
+const shelfSectionFor = (post) => SHELF_SECTIONS.find((section) => section.match(post)) || SHELF_SECTIONS[0];
+
+const stableBookVariant = (post) => String(post.id || post.title || '')
+    .split('')
+    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+
+const ShelfBook = ({ post, section, onOpen }) => {
+    const type = section || shelfSectionFor(post);
+    const variant = stableBookVariant(post);
+    const [light, middle, dark] = type.colors[variant % type.colors.length];
+    const height = 128 + ((variant % 4) * 7);
+    const title = post.title || '제목 없는 글';
+    const isPrivate = post.visibility !== 'class';
+
+    return (
+        <motion.button
+            type="button"
+            role="listitem"
+            onClick={onOpen}
+            aria-label={`${type.label} ‘${title}’ 펼쳐보기${isPrivate ? ', 나만 보는 글' : ''}`}
+            title={`${type.icon} ${type.label} · ${title}`}
+            whileHover={{ y: -5, rotate: -1 }}
+            whileTap={{ y: 1, scale: 0.97 }}
+            style={{
+                position: 'relative', flex: '0 0 44px', width: '44px', height: `${height}px`,
+                padding: '8px 5px 7px', overflow: 'hidden', border: `1px solid ${dark}`,
+                borderRadius: '5px 5px 2px 2px', color: '#FFF9E9', cursor: 'pointer',
+                background: `linear-gradient(90deg,${dark} 0 8%,${light} 13%,${middle} 72%,${dark} 100%)`,
+                boxShadow: 'inset 2px 0 0 rgba(255,255,255,.18), inset -2px 0 0 rgba(0,0,0,.12), 3px 3px 6px rgba(55,31,17,.28)',
+                fontFamily: 'inherit', scrollSnapAlign: 'start'
+            }}
+        >
+            <span aria-hidden="true" style={{ display: 'block', fontSize: '.8rem', lineHeight: 1 }}>{type.icon}</span>
+            <span style={{
+                display: 'block', height: `${height - 48}px`, margin: '5px auto 0', overflow: 'hidden',
+                writingMode: 'vertical-rl', textOrientation: 'upright', color: '#FFFDF5',
+                fontSize: '.7rem', fontWeight: 900, lineHeight: 1.18, letterSpacing: '.02em',
+                textShadow: '0 1px 1px rgba(0,0,0,.35)'
+            }}>
+                {title}
+            </span>
+            {isPrivate && (
+                <span aria-hidden="true" style={{
+                    position: 'absolute', left: '50%', bottom: '6px', transform: 'translateX(-50%)',
+                    display: 'grid', placeItems: 'center', width: '20px', height: '20px',
+                    borderRadius: '50%', background: 'rgba(35,25,20,.5)', fontSize: '.64rem'
+                }}>🔒</span>
+            )}
+            <span aria-hidden="true" style={{
+                position: 'absolute', left: '5px', right: '5px', bottom: '3px', height: '2px',
+                borderTop: '1px solid rgba(255,255,255,.55)', borderBottom: '1px solid rgba(0,0,0,.25)'
+            }} />
+        </motion.button>
+    );
 };
 
 const Row = ({ icon, title, desc, right, onClick }) => (
@@ -223,6 +307,7 @@ const MyAgitPanel = ({
     const [readerLoading, setReaderLoading] = useState(true);
     const [readerError, setReaderError] = useState('');
     const [activeTitleGuide, setActiveTitleGuide] = useState(null);
+    const [activeShelfId, setActiveShelfId] = useState('assignment');
     const [selectedSummary, setSelectedSummary] = useState(null);
     const [selectedPost, setSelectedPost] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -433,11 +518,12 @@ const MyAgitPanel = ({
         return () => window.removeEventListener('popstate', closeOnBack);
     }, [isOpen]);
 
-    const counts = useMemo(() => ({
-        posts: shelf.filter((p) => p.writing_context !== 'self').length,
-        readingLogs: shelf.filter((p) => p.self_writing_type === 'reading_log').length,
-        free: shelf.filter((p) => p.writing_context === 'self' && p.self_writing_type !== 'reading_log').length
-    }), [shelf]);
+    const shelfSections = useMemo(() => SHELF_SECTIONS.map((section) => ({
+        ...section,
+        posts: shelf.filter(section.match)
+    })).filter((section) => section.alwaysVisible || section.posts.length > 0), [shelf]);
+    const activeShelf = shelfSections.find((section) => section.id === activeShelfId) || shelfSections[0];
+    const activeShelfPosts = activeShelf?.posts || [];
 
     const totalChars = writerStats?.totalChars || 0;
     const completedPosts = writerStats?.completedPosts ?? writerStats?.completedMissions ?? 0;
@@ -523,52 +609,97 @@ const MyAgitPanel = ({
 
                     {/* 내 서재 */}
                     <section aria-label="내 서재" style={{
-                        padding: '16px 18px', borderRadius: '22px', border: `1px solid ${LINE}`,
-                        background: 'white', marginBottom: '14px'
+                        overflow: 'hidden', borderRadius: '22px', border: '1px solid rgba(105,61,32,.18)',
+                        background: 'linear-gradient(145deg,#FFF9EB,#F7E8CB)', marginBottom: '14px',
+                        boxShadow: '0 8px 22px rgba(82,51,29,.08)'
                     }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px' }}>
-                            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 900, color: INK }}>📖 내 서재</h3>
-                            <span style={{ fontSize: '.76rem', fontWeight: 800, color: INK_SOFT }}>
-                                과제 {counts.posts} · 독서록 {counts.readingLogs}{counts.free ? ` · 자유글 ${counts.free}` : ''}
+                        <div style={{ padding: '15px 17px 11px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 950, color: INK }}>📖 내 서재</h3>
+                                <span style={{ display: 'block', marginTop: '3px', fontSize: '.68rem', fontWeight: 800, color: INK_SOFT }}>
+                                    책등을 눌러 내가 쓴 글을 펼쳐보세요
+                                </span>
+                            </div>
+                            <span style={{ padding: '4px 8px', borderRadius: '99px', background: 'rgba(255,255,255,.68)', fontSize: '.69rem', fontWeight: 900, color: '#75513A', whiteSpace: 'nowrap' }}>
+                                모두 {shelf.length}권
                             </span>
                         </div>
 
-                        {loading ? (
-                            <p style={{ padding: '28px 0', textAlign: 'center', color: INK_SOFT, fontWeight: 800 }}>책을 꽂는 중... 📚</p>
-                        ) : shelf.length === 0 ? (
-                            <p style={{ padding: '28px 0', textAlign: 'center', color: INK_SOFT, fontWeight: 800 }}>
-                                아직 꽂힌 책이 없어요. 글을 쓰면 여기 쌓여요!
-                            </p>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', maxHeight: '260px', overflowY: 'auto' }}>
-                                {shelf.map((post) => (
+                        <div
+                            role="tablist"
+                            aria-label="내 서재 책장 종류"
+                            style={{
+                                display: 'flex', gap: '6px', padding: '0 12px 10px', overflowX: 'auto',
+                                scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch'
+                            }}
+                        >
+                            {shelfSections.map((section) => {
+                                const active = section.id === activeShelf.id;
+                                return (
                                     <button
-                                        key={post.id}
+                                        key={section.id}
                                         type="button"
-                                        onClick={() => openShelfPost(post)}
+                                        role="tab"
+                                        aria-selected={active}
+                                        aria-controls="my-agit-bookshelf"
+                                        onClick={() => setActiveShelfId(section.id)}
                                         style={{
-                                            display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-                                            padding: '10px 12px', border: `1px solid ${LINE}`, borderRadius: '13px',
-                                            background: '#FCFBF7', cursor: 'pointer', textAlign: 'left', boxSizing: 'border-box'
+                                            flex: '0 0 auto', minHeight: '38px', padding: '7px 11px',
+                                            border: active ? '1px solid #704126' : '1px solid rgba(112,65,38,.2)',
+                                            borderRadius: '11px 11px 5px 5px', cursor: 'pointer', fontFamily: 'inherit',
+                                            background: active
+                                                ? 'linear-gradient(180deg,#98613B,#754226)'
+                                                : 'rgba(255,255,255,.62)',
+                                            color: active ? '#FFF8EA' : '#73523D', fontSize: '.72rem', fontWeight: 900,
+                                            boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,.2), 0 3px 6px rgba(80,43,23,.18)' : 'none'
                                         }}
                                     >
-                                        <span style={{ fontSize: '.72rem', fontWeight: 900, color: INK_SOFT, whiteSpace: 'nowrap' }}>
-                                            {typeLabel(post)}
-                                        </span>
-                                        <span style={{
-                                            flex: 1, minWidth: 0, fontSize: '.88rem', fontWeight: 800, color: INK,
-                                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                                        }}>
-                                            {post.title || '제목 없는 글'}
-                                        </span>
-                                        {post.visibility !== 'class' && (
-                                            <span style={{ fontSize: '.7rem', fontWeight: 800, color: INK_SOFT }}>🔒</span>
-                                        )}
-                                        <span aria-hidden="true" style={{ color: '#B0BEC5', fontWeight: 900 }}>›</span>
+                                        {section.icon} {section.tabLabel} <span style={{ opacity: .78 }}>{section.posts.length}</span>
                                     </button>
+                                );
+                            })}
+                        </div>
+
+                        <div style={{
+                            margin: '0 10px', overflow: 'hidden', border: '8px solid #85502E', borderBottom: 0,
+                            borderRadius: '8px 8px 0 0', background: 'linear-gradient(180deg,#E8CFAC 0%,#D9B582 100%)',
+                            boxShadow: 'inset 0 8px 16px rgba(67,37,18,.2), inset 5px 0 6px rgba(67,37,18,.12), inset -5px 0 6px rgba(67,37,18,.12)'
+                        }}>
+                            <div
+                                id="my-agit-bookshelf"
+                                role={activeShelfPosts.length ? 'list' : 'tabpanel'}
+                                aria-label={`${activeShelf.tabLabel} 글 목록`}
+                                style={{
+                                    minHeight: '164px', display: 'flex', alignItems: 'flex-end', gap: '5px',
+                                    padding: '14px 12px 0', overflowX: 'auto', overscrollBehaviorX: 'contain',
+                                    scrollSnapType: 'x proximity', WebkitOverflowScrolling: 'touch', boxSizing: 'border-box'
+                                }}
+                            >
+                                {loading ? (
+                                    <p style={{ alignSelf: 'center', width: '100%', margin: 0, textAlign: 'center', color: '#76563D', fontWeight: 850 }}>책을 꽂는 중... 📚</p>
+                                ) : activeShelfPosts.length === 0 ? (
+                                    <div style={{ alignSelf: 'center', width: '100%', textAlign: 'center', color: '#76563D' }}>
+                                        <span aria-hidden="true" style={{ display: 'block', marginBottom: '6px', fontSize: '2rem' }}>🪵</span>
+                                        <span style={{ fontSize: '.8rem', fontWeight: 850 }}>{activeShelf.emptyMessage}</span>
+                                    </div>
+                                ) : activeShelfPosts.map((post) => (
+                                    <ShelfBook key={post.id} post={post} section={activeShelf} onOpen={() => openShelfPost(post)} />
                                 ))}
                             </div>
-                        )}
+                            <div aria-hidden="true" style={{
+                                height: '17px', borderTop: '2px solid #B97943', borderBottom: '4px solid #552C18',
+                                background: 'linear-gradient(180deg,#A96838 0%,#7E4525 58%,#60331C 100%)',
+                                boxShadow: '0 -3px 6px rgba(57,29,14,.2), 0 5px 8px rgba(57,29,14,.28)'
+                            }} />
+                        </div>
+
+                        <div style={{
+                            display: 'flex', justifyContent: 'space-between', gap: '8px', padding: '9px 16px 12px',
+                            color: '#80624D', fontSize: '.64rem', fontWeight: 850
+                        }}>
+                            <span>{activeShelf.icon} {activeShelf.label} {activeShelfPosts.length}권</span>
+                            {activeShelfPosts.length > 7 && <span style={{ whiteSpace: 'nowrap' }}>옆으로 넘기기 →</span>}
+                        </div>
                     </section>
 
                 </div>
