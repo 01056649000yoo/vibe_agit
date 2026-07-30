@@ -33,10 +33,11 @@
   - `MyAgitPanel`에서 드래곤 전용 props·조건·카드 코드를 제거했다. `StudentDashboard`도 카드 열기 조건 대신 기존
     `openGameModule()` 공통 진입점을 전달한다. 이후 드래곤 카드·단계·이미지·배경 변경은 드래곤 폴더만 수정하면 된다.
   - 게임 모듈 README와 매니페스트 타입에 `myAgitEntry / myAgit.order / { module, runtime, onOpen }` 계약을 문서화했다.
-- **변경**: 신규 `src/modules/MyAgitModuleSlotHost.jsx`, `src/modules/game/dragon/MyAgitCard.jsx`,
+- **변경**: 커밋 `eb3247d` — 신규 `src/modules/MyAgitModuleSlotHost.jsx`, `src/modules/game/dragon/MyAgitCard.jsx`,
   `src/modules/game/dragon/presentation.js`; 드래곤 매니페스트·모듈 타입/README·학생 공통 화면 연결 변경. DB 변경 없음.
 - **결과/검증**: 관련 7개 JS/JSX 파일 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과.
   `MyAgitCard`가 별도 3.44kB 지연 청크로 생성되고 공통 `MyAgitPanel`·`StudentDashboard` 청크 크기도 감소했다.
+  GitHub Actions Deploy run `30537104650` 성공: 앱 이미지 빌드·`agit-app` 재시작·Verify 통과.
 - **남은 것 / 다음**: 운영 학생 계정에서 슬롯 지연 표시·현재 단계/배경·카드→기존 드래곤 방 진입을 실기기 스모크한다.
 
 ## 2026-07-30 — 나의 아지트에 반려 드래곤 생활 공간 추가 (GPT/Codex)
