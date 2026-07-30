@@ -104,15 +104,23 @@ const ShelfBook = ({ post, section, onOpen }) => {
                 fontFamily: 'inherit', scrollSnapAlign: 'start'
             }}
         >
-            <span aria-hidden="true" style={{ display: 'block', fontSize: '.8rem', lineHeight: 1 }}>{type.icon}</span>
-            <span style={{
-                display: 'block', width: '100%', height: `${height - 43}px`, margin: '5px auto 0', overflow: 'hidden',
-                writingMode: 'vertical-rl', textOrientation: 'upright', color: '#FFFDF5',
-                whiteSpace: 'normal', wordBreak: 'break-all', fontSize: '.7rem', fontWeight: 900,
-                lineHeight: 1.18, letterSpacing: '.02em', textAlign: 'left',
-                textShadow: '0 1px 1px rgba(0,0,0,.35)'
+            <span aria-hidden="true" style={{
+                position: 'absolute', top: '8px', left: '50%', transform: 'translateX(-50%)',
+                fontSize: '.8rem', lineHeight: 1
+            }}>{type.icon}</span>
+            <span aria-hidden="true" style={{
+                position: 'absolute', top: '25px', right: '5px', bottom: isPrivate ? '30px' : '14px', left: '5px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
             }}>
-                {title}
+                <span style={{
+                    display: 'block', height: '100%', maxWidth: '100%', overflow: 'hidden',
+                    writingMode: 'vertical-rl', textOrientation: 'upright', color: '#FFFDF5',
+                    whiteSpace: 'normal', wordBreak: 'break-all', fontSize: '.7rem', fontWeight: 900,
+                    lineHeight: 1.18, letterSpacing: '.02em', textAlign: 'center',
+                    textShadow: '0 1px 1px rgba(0,0,0,.35)'
+                }}>
+                    {title}
+                </span>
             </span>
             {isPrivate && (
                 <span aria-hidden="true" style={{
