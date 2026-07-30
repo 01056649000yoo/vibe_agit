@@ -1,9 +1,28 @@
 import React, { memo, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../../../components/common/Button';
+import { getReaderLevel, getWriterLevel } from '../../../../constants/writerLevels';
 import FriendProfileCardBoundary from './FriendProfileCardBoundary';
 import { getActiveFriendProfileCards } from './profileCardManifest';
-import { getDragonStage, getHideoutBackground, normalizeFriendPet } from './dragonProfile';
+
+const titleBadgeSrc = (kind, level) => `/assets/title-badges/${kind}-level-${level}.webp`;
+
+const TitleIdentity = ({ kind, level }) => {
+    const writer = kind === 'writer';
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, padding: '9px 10px',
+            borderRadius: '15px', background: writer ? 'rgba(255,238,185,.94)' : 'rgba(213,237,255,.94)',
+            border: `1px solid ${writer ? 'rgba(244,183,64,.6)' : 'rgba(114,183,255,.65)'}`
+        }}>
+            <img src={titleBadgeSrc(kind, level.level)} alt="" aria-hidden="true" width="42" height="42" style={{ width: '42px', height: '42px', objectFit: 'contain', flexShrink: 0 }} />
+            <div style={{ minWidth: 0 }}>
+                <small style={{ display: 'block', color: writer ? '#9A5B00' : '#145EA8', fontSize: '.6rem', fontWeight: 950 }}>{writer ? '✍️ 작가 칭호' : '📖 독자 칭호'} · LV.{level.level}</small>
+                <strong style={{ display: 'block', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3E2E23', fontSize: '.76rem' }}>{level.name}</strong>
+            </div>
+        </div>
+    );
+};
 
 const LoadingCard = ({ message }) => (
     <div style={{ marginBottom: '14px', padding: '36px 20px', borderRadius: '22px', background: '#FFFFFF', color: '#78909C', textAlign: 'center', fontWeight: 800 }}>
@@ -11,13 +30,12 @@ const LoadingCard = ({ message }) => (
     </div>
 );
 
-/** 나의 아지트와 같은 전체 화면 흐름으로 친구의 공개 공간을 보여 준다. */
+/** 공개 칭호·드래곤·서재와 둘 사이의 기록만 보여 주는 친구 공간. */
 const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) => {
     if (!friend?.id || !viewerId) return null;
 
-    const pet = normalizeFriendPet(friend.pet_data);
-    const background = getHideoutBackground(pet.background);
-    const dragon = getDragonStage(pet.level);
+    const writer = getWriterLevel(friend.writer_total_chars, friend.writer_completed_posts);
+    const reader = getReaderLevel(friend.reader_score);
     const activeCards = getActiveFriendProfileCards();
 
     return (
@@ -40,25 +58,24 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) 
                         <h2 style={{ margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#3E2E23', fontSize: '1.3rem', fontWeight: 950 }}>
                             🏡 {friend.name}의 아지트
                         </h2>
-                        <p style={{ margin: '3px 0 0', color: '#8D7B6C', fontSize: '.72rem', fontWeight: 800 }}>친구가 공개한 성장과 글을 구경해요</p>
+                        <p style={{ margin: '3px 0 0', color: '#8D7B6C', fontSize: '.72rem', fontWeight: 800 }}>친구가 고른 모습과 우리 둘의 기록을 구경해요</p>
                     </div>
                     <button type="button" onClick={onClose} aria-label="친구 아지트 닫기" style={{ border: 'none', background: 'none', color: '#8D7B6C', cursor: 'pointer', fontSize: '1.5rem' }}>✕</button>
                 </header>
 
                 <section aria-label={`${friend.name}의 아지트 소개`} style={{
-                    position: 'relative', minHeight: '128px', marginBottom: '14px', padding: '16px', overflow: 'hidden',
-                    border: `2px solid ${background.border}`, borderRadius: '24px', background: background.color,
-                    boxShadow: `0 12px 28px ${background.glow}`
+                    position: 'relative', marginBottom: '14px', padding: '17px', overflow: 'hidden',
+                    border: '1px solid rgba(255,226,168,.38)', borderRadius: '24px',
+                    background: 'radial-gradient(circle at 8% 0%,rgba(255,210,109,.28),transparent 34%), radial-gradient(circle at 100% 100%,rgba(90,164,235,.22),transparent 38%), linear-gradient(145deg,#3B2924 0%,#503A32 48%,#263E56 100%)',
+                    boxShadow: '0 14px 30px rgba(62,46,35,.18)'
                 }}>
-                    <span aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg,rgba(255,255,255,.26),transparent 58%)' }} />
-                    <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '92px minmax(0,1fr)', alignItems: 'center', gap: '14px' }}>
-                        <div style={{ width: '88px', height: '88px', display: 'grid', placeItems: 'center', borderRadius: '24px', background: 'rgba(255,255,255,.58)', border: `1px solid ${background.border}` }}>
-                            <img src={dragon.image} alt="" aria-hidden="true" width="78" height="78" style={{ width: '78px', height: '78px', objectFit: 'contain', filter: `drop-shadow(0 6px 8px ${background.glow})` }} />
-                        </div>
-                        <div style={{ minWidth: 0, padding: '12px', borderRadius: '18px', background: 'rgba(255,255,255,.78)', color: '#3E2E23', backdropFilter: 'blur(5px)' }}>
-                            <span style={{ display: 'block', color: '#80624D', fontSize: '.65rem', fontWeight: 950 }}>친구 아지트 방문 중</span>
-                            <strong style={{ display: 'block', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.12rem' }}>{friend.name}</strong>
-                            <span style={{ display: 'block', marginTop: '4px', color: '#80624D', fontSize: '.72rem', fontWeight: 850 }}>{pet.name} · LV.{pet.level} {dragon.name}</span>
+                    <span aria-hidden="true" style={{ position: 'absolute', right: '-28px', top: '-34px', width: '112px', height: '112px', border: '1px solid rgba(255,255,255,.1)', borderRadius: '50%' }} />
+                    <div style={{ position: 'relative' }}>
+                        <small style={{ display: 'block', color: '#FFD987', fontSize: '.63rem', fontWeight: 950, letterSpacing: '.05em' }}>친구의 성장 칭호</small>
+                        <strong style={{ display: 'block', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#FFFFFF', fontSize: '1.1rem' }}>{friend.name}</strong>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '8px', marginTop: '12px' }}>
+                            <TitleIdentity kind="writer" level={writer} />
+                            <TitleIdentity kind="reader" level={reader} />
                         </div>
                     </div>
                 </section>

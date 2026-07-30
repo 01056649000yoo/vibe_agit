@@ -226,6 +226,17 @@ export const useFriendsHideout = (studentSession, params) => {
                 rows.filter((student) => student?.id !== currentStudentId);
             const cacheKey = getClassmatesCacheKey(classId, currentStudentId);
             const data = await dataCache.get(cacheKey, async () => {
+                const { data: directoryData, error: directoryError } = await supabase
+                    .rpc('get_student_hideout_directory');
+
+                if (!directoryError && Array.isArray(directoryData)) {
+                    return excludeCurrentStudent(directoryData);
+                }
+
+                if (directoryError && !['PGRST202', '42883'].includes(directoryError.code)) {
+                    console.warn('친구 칭호 목록 RPC 폴백:', directoryError.message);
+                }
+
                 const { data: rpcData, error: rpcError } = await supabase
                     .rpc('get_student_classmates_for_hideout');
 
