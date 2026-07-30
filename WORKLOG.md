@@ -32,11 +32,12 @@
     학생당·글당 평균, 교류, 학급 달력, 월별 활동/글 길이, 포인트 흐름·획득처·사용처, 학생별 현황을 한 화면에 표시한다.
   - `get_class_writing_footprint_dashboard()`를 추가했다. 활성 학생 100명, 학년도별 글·포인트·댓글·반응 각 100,000건 상한과
     직접 `class_id` 제한을 적용하고 원문·댓글 내용은 반환하지 않는다. 클라이언트는 `classKey`/`dataCache` 30초 캐시만 사용한다.
-- **변경**: `writing-footprint` 공용/학생/교사 컴포넌트, 교사 내비게이션·대시보드 연결,
+- **변경**: 커밋 `0c36326` — `writing-footprint` 공용/학생/교사 컴포넌트, 교사 내비게이션·대시보드 연결,
   `20260812_class_writing_footprint_dashboard.sql`; 운영 통합 DB에 신규 인덱스·RPC 적용 및 PostgREST 스키마 갱신.
 - **결과/검증**: 대상 ESLint 0에러·0경고, `npm run build`, `git diff --check` 통과. 운영 RPC는 SECURITY DEFINER와
   `search_path=public` 고정, `anon` 차단·`authenticated` 허용 확인. 실제 28명 학급에서 반환 학생 수와 학생별 합산 글·댓글·
-  반응이 학급 합계와 모두 일치했고 실행 시간은 약 9.0ms였다.
+  반응이 학급 합계와 모두 일치했고 실행 시간은 약 9.0ms였다. GitHub Actions Deploy run `30553776298`에서 앱 이미지 빌드·
+  `agit-app` 재시작·HTTP Verify가 모두 성공했다. 연결 가능한 브라우저가 없어 로그인 교사 화면의 자동 시각 검증은 못 했다.
 - **남은 것 / 다음**: 운영 교사 PC·모바일에서 3개 좌측/상단 메뉴 배치, 긴 학생 이름과 표 가로 스크롤, 학생 모달의 기존
   칭호→발자국 순서와 그래프가 동일한지 시각 스모크한다.
 
