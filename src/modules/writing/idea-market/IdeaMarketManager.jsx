@@ -243,10 +243,21 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
         }
 
         try {
+            const isDecided = newStatus === '결정됨';
             const updateData = {
                 status: newStatus,
-                is_confirmed: newStatus === '결정됨'
+                is_confirmed: isDecided
             };
+
+            // 글 상태 두 가지를 함께 맞춘다. `20260808_fix_pending_rewrite_states.sql` 의 CHECK 제약이
+            //   ① 반려 상태면 제출·승인일 수 없고  ② 승인이면 반드시 제출 상태여야 한다
+            // 고 요구하는데, 예전에는 `is_confirmed` 만 켜서 **반려된 안건을 결정하면 교사 화면에
+            // 날 DB 오류가 떴다**. 결정한다는 것은 곧 "제출된 글로 확정하고 다시 쓰기 요청을 거둔다"는
+            // 뜻이므로 두 값을 여기서 명시한다.
+            if (isDecided) {
+                updateData.is_submitted = true;
+                updateData.is_returned = false;
+            }
 
             const { error } = await supabase
                 .from('student_posts')

@@ -640,8 +640,14 @@ SSO가 되려면 둘을 한 스택·한 인증으로 통일해야 한다 (JWT �
       웹소켓 500 실측에서 접속 500·채널 1,000 전부 성공(2026-07-31)
 - [ ] Realtime 잔여: `writing_missions` 구독이 아직 `MissionList`·`useMissionSubmit`·`AgitOnClassPage` 세 곳에 나뉘어 있다.
       발생 빈도가 낮아 급하지 않음 (Stage 3b 모듈 이전 때 통합)
-- [ ] 어휘의 탑 일일제한·보상을 localStorage → 서버 검증으로 전환 (포인트 파밍 구멍 차단)
-- [ ] `reward_for_vocab_tower` RPC의 서버측 일일 지급 제한 확인/보강
+- [x] **2026-07-31 아이디어마켓 잔여 위험 제거**: 반려 상태 안건을 `결정됨` 으로 바꾸면 CHECK 제약에 걸려
+      교사 화면에 DB 오류가 떴다. `IdeaMarketManager.jsx` 가 `is_submitted: true`·`is_returned: false` 를
+      함께 보내도록 고쳤다. 운영 DB 에서 롤백 시험으로 전/후 대조 확인 (`2026-07-31`)
+- [ ] 🗓️ **다음 주 한꺼번에 처리 (사용자 결정, 2026-07-31)** — 어휘의 탑·드래곤 아지트 묶음.
+      지금은 UI 수정에 집중 중이라 건드리지 않는다:
+      - 어휘의 탑 일일제한·보상을 localStorage → 서버 검증으로 전환 (포인트 파밍 구멍 차단)
+      - `reward_for_vocab_tower` RPC의 서버측 일일 지급 제한 확인/보강
+      - 드래곤 성장 연출·상호작용 강화, 성장·퇴화 밸런스 재점검 (아래 Stage 4d 항목과 함께)
 - [ ] Supabase 이미지·Caddy 정기 업데이트 루틴
 
 ---
