@@ -47,9 +47,22 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
     };
 
     // [최적화] 공통 notify 디바운스 함수 (연속된 알림을 마지막 1개만 노출)
-    const debouncedNotify = (notifyObj) => {
+    //
+    // 한 가지 일에 알림이 **두 곳에서** 온다. 예를 들어 안건이 결정되면
+    //   ① 글 상태 변경(`student_posts`) → "회의 안건이 최종 결정되었습니다!"  (금액 없음)
+    //   ② 포인트 지급(`point_logs`)      → "... (+50P)"                      (금액 있음)
+    // 둘 다 300ms 안에 들어오는데 예전에는 **나중에 온 것이 무조건 이겨서**, 도착 순서에 따라
+    // 금액이 안 보이는 일이 생겼다. 그래서 금액이 담긴 알림에 높은 우선순위를 주고,
+    // 같은 창 안에서는 낮은 것이 높은 것을 덮지 못하게 한다.
+    const notifyPriorityRef = useRef(-1);
+    const debouncedNotify = (notifyObj, priority = 0) => {
+        if (notifyTimerRef.current && priority < notifyPriorityRef.current) return;
+
+        notifyPriorityRef.current = priority;
         if (notifyTimerRef.current) clearTimeout(notifyTimerRef.current);
         notifyTimerRef.current = setTimeout(() => {
+            notifyTimerRef.current = null;
+            notifyPriorityRef.current = -1;
             setTeacherNotify(notifyObj);
         }, 300);
     };
@@ -130,11 +143,20 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
                     if (newLog.amount !== 0) {
                         const cleanReason = (newLog.reason || '').replace(/\((Post|Mission)ID:[^)]+\)/g, '').trim();
                         if (newLog.amount < 0) {
-                            if (newLog.reason?.includes('승인 취소')) bannerMsg = `⚠️ 앗! 글 승인이 취소되어 ${newLog.amount}P가 회수되었습니다.`;
-                            else bannerMsg = `⚠️ ${cleanReason} (${newLog.amount}P)`;
-                            bannerIcon = "⚠️";
+                            // 회수 금액은 절댓값으로 보여 준다. `-50P가 회수` 처럼 읽히지 않게.
+                            const recovered = Math.abs(newLog.amount);
+                            if (newLog.reason?.includes('안건 결정 취소')) {
+                                bannerMsg = `🏛️ 회의 안건 결정이 취소되어 ${recovered}P가 회수되었습니다.`;
+                                bannerIcon = "🏛️";
+                            } else if (newLog.reason?.includes('승인 취소')) {
+                                bannerMsg = `⚠️ 앗! 글 승인이 취소되어 ${recovered}P가 회수되었습니다.`;
+                                bannerIcon = "⚠️";
+                            } else {
+                                bannerMsg = `⚠️ ${cleanReason} (-${recovered}P)`;
+                                bannerIcon = "⚠️";
+                            }
                         } else if ((newLog.reason?.includes('아이디어 마켓') || newLog.reason?.includes('회의 안건')) && newLog.reason?.includes('결정')) {
-                            bannerMsg = `🏛️✅ 회의 안건이 최종 결정되었습니다! (+${newLog.amount}P)`;
+                            bannerMsg = `🏛️✅ 회의 안건이 최종 결정되어 ${newLog.amount}P를 받았어요!`;
                             bannerIcon = "🏛️";
                         } else if (newLog.reason?.includes('승인')) {
                             bannerMsg = `🎉 글이 승인되어 +${newLog.amount}P를 얻었습니다!`;
@@ -149,9 +171,10 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
                     }
 
                     if (bannerMsg) {
+                        // 금액이 담긴 알림 — 같은 일로 온 상태 변경 알림보다 우선한다.
                         debouncedNotify({
                             type: 'point', message: bannerMsg, icon: bannerIcon, amount: newLog.amount, timestamp: Date.now()
-                        });
+                        }, 2);
                     }
                 }
             )
@@ -168,19 +191,27 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
                     const updatedPost = payload.new;
                     const oldPost = payload.old;
 
+                    // 아래 알림들은 **금액을 모른다**(포인트는 별도 기록으로 온다).
+                    // 그래서 우선순위 1 로 보내, 금액이 담긴 포인트 알림(우선순위 2)이 함께 오면
+                    // 그쪽이 화면에 남게 한다. 보상이 없는 경우(기준 미달 등)에는 이 문구가 그대로 뜬다.
                     if (updatedPost.is_returned && !oldPost.is_returned) {
-                        debouncedNotify({ type: 'rewrite', message: "♻️ 선생님의 다시 쓰기 요청이 있습니다.", icon: "♻️", timestamp: Date.now() });
+                        debouncedNotify({ type: 'rewrite', message: "♻️ 선생님의 다시 쓰기 요청이 있습니다.", icon: "♻️", timestamp: Date.now() }, 1);
                         debouncedFetch('activity');
                     } else if (updatedPost.is_confirmed && !oldPost.is_confirmed) {
                         // 회의 안건 결정 시 전용 문구 노출
                         const isIdea = updatedPost.status === '결정됨';
-                        const message = isIdea ? "🎉 회의 안건이 최종 결정되었습니다!" : "🎉 글이 승인되었습니다! 축하해요!";
+                        const message = isIdea ? "🏛️✅ 회의 안건이 최종 결정되었습니다!" : "🎉 글이 승인되었습니다! 축하해요!";
                         const icon = isIdea ? "🏛️" : "🎉";
-                        
-                        debouncedNotify({ type: isIdea ? 'idea_decided' : 'approve', message, icon, timestamp: Date.now() });
+
+                        debouncedNotify({ type: isIdea ? 'idea_decided' : 'approve', message, icon, timestamp: Date.now() }, 1);
                         debouncedFetch('points');
                     } else if (!updatedPost.is_confirmed && oldPost.is_confirmed) {
-                        debouncedNotify({ type: 'recovery', message: "⚠️ 글의 승인이 취소되거나 회수되었습니다.", icon: "⚠️", timestamp: Date.now() });
+                        const wasIdea = oldPost.status === '결정됨';
+                        const message = wasIdea
+                            ? "🏛️ 회의 안건 결정이 취소되었습니다."
+                            : "⚠️ 글의 승인이 취소되거나 회수되었습니다.";
+
+                        debouncedNotify({ type: 'recovery', message, icon: wasIdea ? "🏛️" : "⚠️", timestamp: Date.now() }, 1);
                         debouncedFetch('points');
                     }
                 }

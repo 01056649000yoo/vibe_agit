@@ -55,7 +55,13 @@ const TeacherNotifyBanner = ({ teacherNotify, setTeacherNotify, handleDirectRewr
                             {teacherNotify?.message || "♻️ 선생님의 다시 쓰기 요청이 있습니다."}
                         </div>
                         <div style={{ fontSize: '0.85rem', color: '#F57C00', fontWeight: 'bold' }}>
-                            {teacherNotify?.type === 'point' ? "포인트 내역은 상단 지갑(P)을 눌러 확인할 수 있어요! ✨" : "지금 바로 확인하고 완벽한 글을 완성해봐요! ✨"}
+                            {/* 상황에 맞는 안내를 준다. 예전에는 회의 안건 결정·회수에도
+                                "완벽한 글을 완성해봐요" 가 떠서 문구가 겉돌았다. */}
+                            {teacherNotify?.type === 'point' ? "포인트 내역은 상단 지갑(P)을 눌러 확인할 수 있어요! ✨"
+                                : teacherNotify?.type === 'idea_decided' ? "우리 반 회의에서 내 안건이 뽑혔어요! 🏛️"
+                                    : teacherNotify?.type === 'recovery' ? "궁금한 점은 선생님께 여쭤보세요."
+                                        : teacherNotify?.type === 'approve' ? "내 글이 우리 반에 공개되었어요! 🎉"
+                                            : "지금 바로 확인하고 완벽한 글을 완성해봐요! ✨"}
                         </div>
                     </div>
                 </motion.div>
