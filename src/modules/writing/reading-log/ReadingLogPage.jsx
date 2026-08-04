@@ -312,7 +312,6 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     const [teacherReviews, setTeacherReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('all');
-    const [expandedBookId, setExpandedBookId] = useState(null);
     const isEditing = params.mode === 'editor';
 
     const fetchLogs = useCallback(async () => {
@@ -521,8 +520,10 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
             ) : (
                 <div className="reading-shelf-grid">
                     {filteredShelves.map((shelf, index) => {
-                        const isExpanded = expandedBookId === shelf.id;
-                        const publicCount = shelf.logs.filter((log) => log.visibility === 'class').length;
+                        // 책 한 권에 독서록 한 편이 우리 교실의 실제 모습이다(운영 데이터에서도 두 편 이상은 0건).
+                        // 옛 데이터에 여러 편이 있더라도 가장 최근 것을 그 책의 독서록으로 본다.
+                        const mainLog = shelf.logs[0] || null;
+                        const teacherReview = mainLog ? teacherReviewByPost.get(mainLog.id) : null;
                         return (
                         <motion.article
                             key={shelf.id}
@@ -540,50 +541,41 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                                     <h2>{shelf.book.title || '책 제목 없음'}</h2>
                                     <p>{shelf.book.authors?.join(', ') || '지은이 정보 없음'}</p>
                                     {shelf.book.publisher && <small>{shelf.book.publisher}</small>}
-                                    <div className="reading-shelf-stats">
-                                        <span>독서록 {shelf.logs.length}개</span>
-                                        {publicCount > 0 && <span>친구 공개 {publicCount}개</span>}
-                                    </div>
+                                    {mainLog && (
+                                        <div className="reading-shelf-stats">
+                                            <span>{mainLog.visibility === 'class' ? '📚 친구 공개' : '🔒 나만 보기'}</span>
+                                            <span>{formatDate(mainLog.updated_at || mainLog.created_at)}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="reading-shelf-card-actions">
-                                <Button size="sm" onClick={() => onNavigate('reading_logs', { mode: 'editor', book: { ...shelf.book, readingStatus: shelf.readingStatus } })}>
-                                    독서록 더 쓰기
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => setExpandedBookId(isExpanded ? null : shelf.id)}>
-                                    {isExpanded ? '접기' : `독서록 보기 (${shelf.logs.length})`}
-                                </Button>
-                            </div>
+                            {mainLog && (
+                                <p className="reading-shelf-log-preview">
+                                    {mainLog.content || '아직 내용이 없어요.'}
+                                </p>
+                            )}
 
-                            {isExpanded && (
-                                <div className="reading-shelf-log-list">
-                                    {shelf.logs.length === 0 ? (
-                                        <p>이 책에 쓴 독서록이 아직 없어요.</p>
-                                    ) : shelf.logs.map((log) => {
-                                        const teacherReview = teacherReviewByPost.get(log.id);
-                                        return (
-                                        <div key={log.id} className="reading-shelf-log-row">
-                                            <div>
-                                                <span>{log.visibility === 'class' ? '📚' : '🔒'}</span>
-                                                <strong>{log.title || '제목 없는 독서록'}</strong>
-                                                <small>{formatDate(log.updated_at || log.created_at)}</small>
-                                            </div>
-                                            <p>{log.content || '아직 내용이 없어요.'}</p>
-                                            {teacherReview && (
-                                                <div className="reading-log-teacher-review">
-                                                    <strong>{teacherReview.review_status === 'commented' ? '💬 선생님 한마디' : '✅ 선생님이 확인했어요'}</strong>
-                                                    {teacherReview.teacher_comment && <p>{teacherReview.teacher_comment}</p>}
-                                                </div>
-                                            )}
-                                            <div>
-                                                <Button size="sm" onClick={() => onNavigate('reading_logs', { mode: 'editor', postId: log.id })}>열어보기</Button>
-                                                <Button variant="ghost" size="sm" onClick={() => handleDelete(log)}>삭제</Button>
-                                            </div>
-                                        </div>
-                                    );})}
+                            {teacherReview && (
+                                <div className="reading-log-teacher-review">
+                                    <strong>{teacherReview.review_status === 'commented' ? '💬 선생님 한마디' : '✅ 선생님이 확인했어요'}</strong>
+                                    {teacherReview.teacher_comment && <p>{teacherReview.teacher_comment}</p>}
                                 </div>
                             )}
+
+                            <div className="reading-shelf-card-actions">
+                                <Button
+                                    size="sm"
+                                    onClick={() => onNavigate('reading_logs', mainLog
+                                        ? { mode: 'editor', postId: mainLog.id }
+                                        : { mode: 'editor', book: { ...shelf.book, readingStatus: shelf.readingStatus } })}
+                                >
+                                    {mainLog ? '독서록 수정하기 ✍️' : '독서록 쓰기 ✍️'}
+                                </Button>
+                                {mainLog && (
+                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(mainLog)}>삭제</Button>
+                                )}
+                            </div>
                         </motion.article>
                     );})}
                 </div>
@@ -614,17 +606,10 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                 .reading-shelf-stats { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
                 .reading-shelf-stats span { padding:5px 8px; border-radius:8px; background:#F5F5F5; color:#78909C; font-size:.72rem; font-weight:800; }
                 .reading-shelf-card-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
-                .reading-shelf-log-list { margin-top:18px; padding-top:16px; border-top:1px solid #ECEFF1; display:flex; flex-direction:column; gap:10px; }
-                .reading-shelf-log-list > p { text-align:center; color:#90A4AE; }
-                .reading-shelf-log-row { padding:13px; border-radius:13px; background:#FAFAFA; }
-                .reading-shelf-log-row > div:first-child { display:flex; align-items:center; gap:7px; }
-                .reading-shelf-log-row strong { color:#37474F; font-size:.92rem; }
-                .reading-shelf-log-row small { margin-left:auto; color:#B0BEC5; font-size:.72rem; }
-                .reading-shelf-log-row > p { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin:8px 0; color:#78909C; font-size:.82rem; line-height:1.5; white-space:pre-wrap; }
+                .reading-shelf-log-preview { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; margin:16px 0 0; padding-top:14px; border-top:1px solid #ECEFF1; color:#78909C; font-size:.85rem; line-height:1.6; white-space:pre-wrap; }
                 .reading-log-teacher-review { margin:10px 0; padding:10px 12px; border-radius:11px; background:#EEF2FF; color:#4338CA; }
                 .reading-log-teacher-review strong { font-size:.78rem; }
                 .reading-log-teacher-review p { margin:5px 0 0; color:#475569; font-size:.82rem; line-height:1.5; white-space:pre-wrap; }
-                .reading-shelf-log-row > div:last-child { display:flex; justify-content:flex-end; gap:6px; }
                 @media (max-width: 720px) {
                     .reading-log-page { width:min(100% - 24px, 1080px); margin-top:14px; }
                     .reading-log-list-header { align-items:stretch; flex-direction:column; }
