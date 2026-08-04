@@ -12,6 +12,7 @@ const GameManager = lazy(() => import('./GameManager'));
 const TeachingToolsHub = lazy(() => import('./TeachingToolsHub'));
 const TeacherEvaluationTab = lazy(() => import('./TeacherEvaluationTab'));
 const ActivityReport = lazy(() => import('./ActivityReport'));
+const TeacherOperationsHub = lazy(() => import('./TeacherOperationsHub'));
 const TeacherStudentHub = lazy(() => import('./TeacherStudentHub'));
 const TeacherWritingFootprintDashboard = lazy(() => import('../../modules/writing/writing-footprint/TeacherWritingFootprintDashboard'));
 
@@ -359,14 +360,20 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 navigationTarget={workspaceTarget}
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
                             />
-                        ) : visibleTab === 'students' ? (
-                            <TeacherStudentHub
-                                key={`${activeClass.id}-${workspaceTarget?.tab === 'students' ? workspaceTarget.requestId : 'stable'}`}
+                        ) : visibleTab === 'operations' || visibleTab === 'recent-activity' ? (
+                            <TeacherOperationsHub
+                                key={`${activeClass.id}-${visibleTab}`}
                                 activeClass={activeClass}
                                 isMobile={isMobile}
+                                section={visibleTab}
                                 setSelectedActivityPost={setSelectedActivityPost}
                                 onNavigate={handleWorkspaceNavigate}
-                                navigationTarget={workspaceTarget}
+                            />
+                        ) : visibleTab === 'students' ? (
+                            <TeacherStudentHub
+                                key={activeClass.id}
+                                activeClass={activeClass}
+                                isMobile={isMobile}
                             />
                         ) : visibleTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />
