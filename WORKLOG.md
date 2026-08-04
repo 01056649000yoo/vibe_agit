@@ -41,6 +41,7 @@
   `src/modules/dashboard/` 신규, `ClassAnalysis.jsx`, `classOperationsCards.js`, 독서록·글쓰기 발자국 manifest와
   발자국 카드/모달 렌더러. DB·운영 인프라 변경 없음.
 - **결과/검증**: 대상 ESLint 0에러, 전체 ESLint 0에러(기존 경고 69), 프로덕션 빌드와 `git diff --check` 통과.
+  원격 `main` 푸시 후 GitHub Actions Deploy run `30921492084`의 이미지 빌드·컨테이너 재시작·HTTP 검증이 성공했다.
   연결 가능한 브라우저 세션이 없어 교사 로그인 후 실제 카드 클릭 스모크는 하지 못했다.
 - **남은 것 / 다음**:
   - 실제 교사 화면에서 학급 운영 카드 10개 순서·이동과 학급 발자국 기본/전체화면 6개 확대 모달을 확인한다.
