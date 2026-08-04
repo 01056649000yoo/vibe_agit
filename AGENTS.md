@@ -53,6 +53,17 @@
 - 글쓰기를 독립 교과처럼 평가하지 않는다. 실제 평가 결과·교사 의견과 교사가 고른 국어 성취기준으로
   기존 국어 평어의 앞뒤에 붙일 짧은 문장만 생성한다.
 
+## DB 마이그레이션 (2026-08-04 도구화)
+- **적용 여부는 추측하지 말고 물어본다**: `npm run migrate:status` — 아직 적용 안 된 파일만 보여준다(DB를 건드리지 않음).
+- **적용**: `npm run migrate` — 안 된 것만 파일명 순서대로 적용하고 `public.applied_migrations` 에 기록한다.
+- 붙는 DB는 맥미니의 **`agit-db`** 컨테이너다. **`supabase-db` 는 다른 앱의 DB** — 헷갈리지 말 것.
+- **운영 적용 전에는 롤백되는 트랜잭션에서 먼저 검증한다**:
+  파일의 `BEGIN;`/`COMMIT;` 을 빼고 `BEGIN; … ROLLBACK;` 으로 감싸 돌려 본다.
+- 이미 적용된 파일은 **고치지 않는다.** 고쳐야 하면 새 파일을 만든다
+  (도구가 내용 변경을 `checksum` 으로 감지해 경고하지만 자동으로 다시 적용하지는 않는다).
+- 마이그레이션은 두 번 돌려도 안전하게 쓴다 — `CREATE TABLE IF NOT EXISTS`, `CREATE OR REPLACE FUNCTION`,
+  `ON CONFLICT DO NOTHING`.
+
 ## 빌드/실행 요령
 - 프론트 빌드: `npm run build` (Vite). 프로덕션 이미지: 레포 `Dockerfile`(build-arg로 `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` 주입).
 - 로컬에서 실도메인 테스트: `/etc/hosts`에 apex·api를 `127.0.0.1`로 매핑(NAT 루프백 우회). 테스트 후 제거.

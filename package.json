@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "badges:optimize": "node scripts/optimize-title-badges.mjs",
-    "spelling:check": "node scripts/check-spelling-rules.mjs"
+    "spelling:check": "node scripts/check-spelling-rules.mjs",
+    "migrate": "node scripts/migrate.mjs",
+    "migrate:status": "node scripts/migrate.mjs --status"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
