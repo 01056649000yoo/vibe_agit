@@ -14,7 +14,7 @@ import {
     removeLocalDraft,
     writeLocalDraft
 } from '../../modules/writing/drafts/localWritingDraft';
-import WritingEditorFields from '../writing/WritingEditorFields';
+import WritingEditorFields, { WRITING_CONTENT_MAX_WIDTH } from '../writing/WritingEditorFields';
 
 const GENRE_EDITORS = new Map(
     getGenreMissionTypes()
@@ -743,9 +743,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
                 <WritingToolHost disabled={submitting || isLocked} />
 
+                {/* 겹쳐 뜨는 `처음 글` 도 입력창과 같은 폭·같은 자리에 놓아야 글이 밀려 보이지 않는다. */}
                 <div style={{ position: 'relative' }}>
                     {showOriginal && (
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.98)', zIndex: 10, display: 'flex', flexDirection: 'column', padding: '0' }}>
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.98)', zIndex: 10, display: 'flex', flexDirection: 'column', padding: '0', maxWidth: `${WRITING_CONTENT_MAX_WIDTH}px`, margin: '0 auto' }}>
                             <div style={{
                                 width: '100%',
                                 padding: '16px 0',
