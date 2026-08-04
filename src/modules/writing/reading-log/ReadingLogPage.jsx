@@ -5,6 +5,7 @@ import Button from '../../../components/common/Button';
 import WritingEditorFields from '../../../components/writing/WritingEditorFields';
 import { supabase } from '../../../lib/supabaseClient';
 import WritingToolHost from '../tools/WritingToolHost';
+import { buildDraftKey, useLocalWritingDraft } from '../drafts/localWritingDraft';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
 
@@ -25,6 +26,11 @@ const formatDate = (value) => {
         month: 'long',
         day: 'numeric'
     }).format(new Date(value));
+};
+
+const formatTime = (value) => {
+    if (!value) return '';
+    return new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(value);
 };
 
 const bookFromStructuredContent = (content = {}) => ({
@@ -107,6 +113,32 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
         return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
     }, [isDirty, saving]);
 
+    /*
+     * 쓰다 만 독서록을 이 단말에 남긴다.
+     *
+     * 예전에는 임시저장이 없어서, 20분 쓰던 학생이 배터리가 나가거나 실수로 뒤로 가면
+     * 글이 통째로 사라졌다. 과제 글쓰기에는 있던 안전장치가 독서록에만 없었다.
+     * 서버 저장(`upsert_my_reading_log`)은 책 카탈로그·책장까지 함께 건드리므로
+     * 자동으로 부르지 않는다. 여기서는 이 기기에만 남기고 서버 저장은 학생이 `저장` 을 누를 때만 한다.
+     */
+    // 책장에서 특정 책으로 들어온 경우에는 책까지 열쇠에 넣는다.
+    // 그러지 않으면 A 책 쓰다 만 내용이 B 책 독서록에 되살아난다.
+    const draftScopeId = postId
+        || initialBook?.isbn13 || initialBook?.isbn10 || initialBook?.title
+        || 'new';
+    const draftKey = buildDraftKey('reading_log_draft', studentSession?.id, draftScopeId);
+    const draftHasContent = useCallback((candidate) => Boolean(
+        candidate?.title?.trim() || candidate?.content?.trim() || candidate?.selectedBook?.title
+    ), []);
+    const restoreDraft = useCallback((stored) => {
+        setForm((current) => ({ ...current, ...stored }));
+    }, []);
+    const { savedAt: draftSavedAt, error: draftError, clear: clearDraft } = useLocalWritingDraft(
+        draftKey,
+        form,
+        { enabled: !loading && !saving, hasContent: draftHasContent, onRestore: restoreDraft }
+    );
+
     const updateForm = (key, value) => {
         setForm((current) => ({ ...current, [key]: value }));
     };
@@ -156,6 +188,9 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
         }
 
         setInitialForm(form);
+        // 서버에 들어갔으니 이 기기의 임시본은 지운다. 남겨 두면 다음에 들어올 때
+        // 저장된 글 위에 옛 임시본이 되살아난다.
+        clearDraft();
         alert(form.visibility === 'class'
             ? '독서록을 친구 공개로 저장했어요! 📚'
             : '친구에게 비공개로 저장했어요. 선생님은 확인할 수 있어요. 🔒');
@@ -214,6 +249,17 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                     disabled={saving}
                     isMobile={isMobile}
                 />
+
+                {(draftError || draftSavedAt) && (
+                    <p style={{
+                        margin: '14px 0 0',
+                        color: draftError ? '#A2454F' : '#5B8076',
+                        fontSize: '0.8rem',
+                        fontWeight: 750
+                    }}>
+                        {draftError || `✅ ${formatTime(draftSavedAt)}에 이 기기에 임시 저장했어요. 저장 버튼을 눌러야 선생님과 친구에게 보여요.`}
+                    </p>
+                )}
             </section>
 
             <label className={`reading-log-visibility ${form.visibility === 'class' ? 'is-public' : ''}`}>

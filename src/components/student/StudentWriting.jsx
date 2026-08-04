@@ -8,6 +8,12 @@ import { usePostInteractions } from '../../hooks/usePostInteractions';
 import { countContentChars } from '../../lib/textMetrics';
 import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
 import WritingToolHost from '../../modules/writing/tools/WritingToolHost';
+import {
+    buildDraftKey,
+    readLocalDraft,
+    removeLocalDraft,
+    writeLocalDraft
+} from '../../modules/writing/drafts/localWritingDraft';
 import WritingEditorFields from '../writing/WritingEditorFields';
 
 const GENRE_EDITORS = new Map(
@@ -73,42 +79,11 @@ const hasStructuredDraftContent = (structuredContent) => (
     structuredContent.stanzas.some((stanza) => stanza?.trim())
 );
 
+// 읽기·쓰기·지우기는 독서록과 같은 파일을 쓴다(`modules/writing/drafts/localWritingDraft`).
+// 이 화면은 로컬 임시본 위에 DB 백업까지 얹기 때문에 아래 자동 저장 흐름은 여기서 따로 맡는다.
 const getDraftStorageKey = (studentId, missionId) => (
-    studentId && missionId ? `student_writing_draft_${studentId}_${missionId}` : null
+    buildDraftKey('student_writing_draft', studentId, missionId)
 );
-
-const readLocalDraft = (key) => {
-    if (!key) return null;
-    try {
-        const raw = window.localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : null;
-    } catch (err) {
-        console.warn('로컬 임시 저장본을 읽지 못했습니다:', err);
-        return null;
-    }
-};
-
-const writeLocalDraft = (key, draft) => {
-    if (!key) return null;
-    try {
-        const savedAt = new Date().toISOString();
-        window.localStorage.setItem(key, JSON.stringify({ ...draft, savedAt }));
-        return savedAt;
-    } catch (err) {
-        // 사파리 프라이빗 모드/쿼터 초과/보안 정책으로 localStorage 쓰기 실패 가능.
-        console.warn('로컬 임시 저장에 실패했습니다:', err);
-        return null;
-    }
-};
-
-const removeLocalDraft = (key) => {
-    if (!key) return;
-    try {
-        window.localStorage.removeItem(key);
-    } catch (err) {
-        console.warn('로컬 임시 저장본을 지우지 못했습니다:', err);
-    }
-};
 
 /**
  * 역할: 학생 - 글쓰기 에디터 (단계별 답변 및 본문 삽입 기능 포함) ✨
