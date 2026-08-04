@@ -24,7 +24,7 @@ const Panel = ({ title, hint, compact = false, children, style }) => <section st
     display: compact ? 'flex' : undefined, flexDirection: compact ? 'column' : undefined,
     ...style
 }}>
-    <h3 style={{ margin: compact ? '0 0 3px' : 0, color: '#1E293B', fontSize: compact ? '.78rem' : '1rem', fontWeight: 900, flexShrink: 0 }}>{title}</h3>
+    <h3 style={{ margin: compact ? '0 0 3px' : 0, color: '#1E293B', fontSize: compact ? 'var(--footprint-fs-md, .78rem)' : '1rem', fontWeight: 900, flexShrink: 0, whiteSpace: compact ? 'nowrap' : undefined, overflow: compact ? 'hidden' : undefined, textOverflow: compact ? 'ellipsis' : undefined }}>{title}</h3>
     {hint && !compact && <p style={{ margin: '4px 0 16px', color: '#64748B', fontSize: '.8rem', lineHeight: 1.5 }}>{hint}</p>}
     {!hint && !compact && <div style={{ height: '14px' }} />}
     {children}
@@ -75,7 +75,7 @@ const StudentTable = ({ students }) => <div style={{ overflowX: 'auto' }}>
 const CompactStudentGrid = ({ students }) => {
     const columns = Math.min(4, Math.max(2, Math.ceil(students.length / 12)));
     const rows = Math.ceil(students.length / columns);
-    if (!students.length) return <p style={{ padding: '20px', textAlign: 'center', color: '#64748B', fontSize: '.72rem' }}>등록된 학생이 없습니다.</p>;
+    if (!students.length) return <p style={{ padding: '20px', textAlign: 'center', color: '#64748B', fontSize: 'var(--footprint-fs-sm, .72rem)' }}>등록된 학생이 없습니다.</p>;
     return <div style={{
         display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))`, gap: '4px',
         gridTemplateRows: `repeat(${rows}, minmax(0,1fr))`, gridAutoFlow: 'column',
@@ -89,10 +89,10 @@ const CompactStudentGrid = ({ students }) => {
                 display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden'
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4px', alignItems: 'baseline' }}>
-                    <strong style={{ color: '#1E293B', fontSize: '.68rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</strong>
-                    <span style={{ color: '#94A3B8', fontSize: '.55rem', whiteSpace: 'nowrap' }}>{formatDate(student.last_post_at)}</span>
+                    <strong style={{ color: '#1E293B', fontSize: 'var(--footprint-fs-sm, .68rem)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</strong>
+                    <span style={{ color: '#94A3B8', fontSize: 'var(--footprint-fs-xs, .55rem)', whiteSpace: 'nowrap' }}>{formatDate(student.last_post_at)}</span>
                 </div>
-                <div style={{ marginTop: '2px', color: '#64748B', fontSize: '.55rem', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ marginTop: '2px', color: '#64748B', fontSize: 'var(--footprint-fs-xs, .55rem)', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     글 {num(student.posts)} · {num(student.total_chars)}자 · {num(student.active_days)}일 · 평균 {num(student.avg_chars)} · 교류 {num(interactions)}
                 </div>
             </div>;
@@ -117,7 +117,7 @@ const ChartPanels = ({ detail, totals, months, cumulativePoints, compact = false
     </Panel>
     <Panel compact={compact} title="💰 학급 포인트 흐름" hint="학급에서 모은 포인트에서 사용·조정된 포인트를 뺀 누적 흐름입니다.">
         <TrendLine compact={compact} fluid={compact} rows={cumulativePoints} valueKey="total" unit="P" />
-        {compact ? <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '-8px', fontSize: '.58rem', fontWeight: 900, color: '#64748B' }}>
+        {compact ? <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '-8px', fontSize: 'var(--footprint-fs-xs, .58rem)', fontWeight: 900, color: '#64748B' }}>
             <span>+ {num(totals.points_earned)}P</span><span>- {num(totals.points_used)}P</span>
         </div> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '9px', marginTop: '8px' }}>
             <StatTile icon="➕" label="모은 포인트" value={num(totals.points_earned)} unit="P" />
@@ -218,7 +218,12 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
         display: 'flex', flexDirection: 'column', gap: isExpanded ? '7px' : '18px', minWidth: 0,
         ...(isExpanded ? {
             position: 'fixed', inset: 0, zIndex: 20000, width: '100vw', height: '100dvh',
-            padding: isMobile ? '8px' : '10px', boxSizing: 'border-box', background: '#F1F5F9', overflow: isMobile ? 'auto' : 'hidden'
+            padding: isMobile ? '8px' : '10px', boxSizing: 'border-box', background: '#F1F5F9', overflow: isMobile ? 'auto' : 'hidden',
+            // vmin은 화면의 짧은 변을 따르므로 와이드·4:3·낮은 노트북에서도 글자가 한쪽으로 과도하게 커지지 않는다.
+            '--footprint-fs-xs': 'clamp(.5rem, .82vmin, .68rem)',
+            '--footprint-fs-sm': 'clamp(.56rem, .96vmin, .76rem)',
+            '--footprint-fs-md': 'clamp(.68rem, 1.16vmin, .9rem)',
+            '--footprint-fs-lg': 'clamp(.82rem, 1.42vmin, 1.08rem)'
         } : {})
     }}>
         <div style={{
@@ -229,13 +234,13 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
             boxShadow: '0 14px 34px rgba(37,99,235,.20)'
         }}>
             <div style={{ minWidth: 0 }}>
-                <p style={{ margin: '0 0 3px', fontSize: isExpanded ? '.6rem' : '.78rem', fontWeight: 800, opacity: .82 }}>{schoolYearLabel}</p>
-                <h2 style={{ margin: 0, fontSize: isExpanded ? '1rem' : (isMobile ? '1.35rem' : '1.6rem'), fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>👣 {activeClass?.name} 글쓰기 발자국</h2>
+                <p style={{ margin: '0 0 3px', fontSize: isExpanded ? 'var(--footprint-fs-sm, .6rem)' : '.78rem', fontWeight: 800, opacity: .82 }}>{schoolYearLabel}</p>
+                <h2 style={{ margin: 0, fontSize: isExpanded ? 'var(--footprint-fs-lg, 1rem)' : (isMobile ? '1.35rem' : '1.6rem'), fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>👣 {activeClass?.name} 글쓰기 발자국</h2>
                 {!isExpanded && <p style={{ margin: '8px 0 0', fontSize: '.86rem', opacity: .9 }}>칭호를 제외한 글쓰기 성장과 포인트·교류 기록을 학급 단위로 모았습니다.</p>}
             </div>
             <div style={{ display: 'flex', gap: '7px', flexShrink: 0 }}>
-                <button type="button" onClick={() => load(true)} style={{ border: '1px solid rgba(255,255,255,.45)', borderRadius: '10px', padding: isExpanded ? '6px 9px' : '9px 13px', color: 'white', background: 'rgba(255,255,255,.14)', fontSize: isExpanded ? '.7rem' : undefined, fontWeight: 800, cursor: 'pointer' }}>↻ 새로고침</button>
-                <button type="button" onClick={toggleExpanded} aria-pressed={isExpanded} style={{ border: '1px solid rgba(255,255,255,.65)', borderRadius: '10px', padding: isExpanded ? '6px 9px' : '9px 13px', color: '#1D4ED8', background: 'white', fontSize: isExpanded ? '.7rem' : undefined, fontWeight: 900, cursor: 'pointer' }}>
+                <button type="button" onClick={() => load(true)} style={{ border: '1px solid rgba(255,255,255,.45)', borderRadius: '10px', padding: isExpanded ? '6px 9px' : '9px 13px', color: 'white', background: 'rgba(255,255,255,.14)', fontSize: isExpanded ? 'var(--footprint-fs-sm, .7rem)' : undefined, fontWeight: 800, cursor: 'pointer' }}>↻ 새로고침</button>
+                <button type="button" onClick={toggleExpanded} aria-pressed={isExpanded} style={{ border: '1px solid rgba(255,255,255,.65)', borderRadius: '10px', padding: isExpanded ? '6px 9px' : '9px 13px', color: '#1D4ED8', background: 'white', fontSize: isExpanded ? 'var(--footprint-fs-sm, .7rem)' : undefined, fontWeight: 900, cursor: 'pointer' }}>
                     {isExpanded ? '🗗 기본화면' : '⛶ 전체화면'}
                 </button>
             </div>
