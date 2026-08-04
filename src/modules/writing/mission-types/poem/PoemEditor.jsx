@@ -49,7 +49,7 @@ const PoemEditor = ({
                             value={stanza}
                             onChange={(event) => {
                                 const next = [...stanzas];
-                                next[index] = event.target.value;
+                                next.splice(index, 1, event.target.value);
                                 updateStanzas(next);
                             }}
                             placeholder={`${index + 1}연의 시구를 행으로 나누어 적어보세요`}

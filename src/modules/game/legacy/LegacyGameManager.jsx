@@ -145,21 +145,20 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                 return;
             }
 
-            // [버그 수정/최적화] 데이터 정규화 및 이름 매핑 보강 (DB 조인 제거)
-            const normalizedData = (data || []).map(item => {
-                // [성능 최적화] 이미 로드된 students 목록에서 이름 찾기
-                const studentProfile = students.find(s => s.id === item.student_id);
-                return {
-                    ...item,
-                    students: { name: studentProfile?.name || '아지트 친구' }
-                };
-            });
-
-            setTowerRankings(normalizedData);
+            setTowerRankings(data || []);
         } catch (err) {
             console.error('어휘의 탑 랭킹 로드 실패:', err);
         }
-    }, [activeClass?.id]);
+    }, [activeClass?.id, vocabTowerConfig?.rankingResetDate]);
+
+    // 랭킹 조회와 이름 매핑을 분리해 학생 명단 갱신이 DB 재조회·구독 재연결을 만들지 않게 한다.
+    const towerRankingsWithNames = React.useMemo(() => towerRankings.map((item) => {
+        const studentProfile = students.find((student) => student.id === item.student_id);
+        return {
+            ...item,
+            students: { name: studentProfile?.name || '아지트 친구' }
+        };
+    }), [students, towerRankings]);
 
     const fetchTowerHistory = useCallback(async () => {
         if (!activeClass?.id) return;
@@ -1130,8 +1129,8 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {towerRankings.length > 0 ? (
-                                                        towerRankings.map((rank, index) => (
+                                                    {towerRankingsWithNames.length > 0 ? (
+                                                        towerRankingsWithNames.map((rank, index) => (
                                                             <tr key={rank.id} style={{ borderBottom: '1px solid #F1F3F5', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFF'} onMouseLeave={(e) => e.currentTarget.style.background = 'white'}>
                                                                 <td style={{ padding: '15px' }}>
                                                                     <span style={{

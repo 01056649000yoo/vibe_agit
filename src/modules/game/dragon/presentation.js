@@ -24,5 +24,5 @@ export const HIDEOUT_BACKGROUNDS = {
 };
 
 export const getHideoutBackground = (backgroundId) => (
-    HIDEOUT_BACKGROUNDS[backgroundId] || HIDEOUT_BACKGROUNDS.default
+    Reflect.get(HIDEOUT_BACKGROUNDS, backgroundId) || HIDEOUT_BACKGROUNDS.default
 );

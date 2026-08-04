@@ -75,7 +75,9 @@ const useVocabularyTower = (selectedGrade) => {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            const current = Reflect.get(shuffled, i);
+            shuffled.splice(i, 1, Reflect.get(shuffled, j));
+            shuffled.splice(j, 1, current);
         }
         return shuffled;
     }, []);
@@ -148,7 +150,7 @@ const useVocabularyTower = (selectedGrade) => {
         }
 
         const randomIndex = Math.floor(Math.random() * correctWordPool.length);
-        const correctWord = correctWordPool[randomIndex];
+        const correctWord = Reflect.get(correctWordPool, randomIndex);
 
         // 오답 단어 3개 선택 (정답과 다른 단어들 중에서)
         const wrongWordPool = vocabulary.filter(w => w.word !== correctWord.word);

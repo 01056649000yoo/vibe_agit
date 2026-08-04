@@ -61,7 +61,7 @@ const WritingToolHost = ({ disabled = false }) => {
         setOpenRequests((previous) => {
             if (!(toolId in previous)) return previous;
             const next = { ...previous };
-            delete next[toolId];
+            Reflect.deleteProperty(next, toolId);
             return next;
         });
     }, []);
@@ -99,7 +99,7 @@ const WritingToolHost = ({ disabled = false }) => {
             }}
         >
             {WRITING_TOOLS.map(({ id, label, triggerLabel, triggerHelp, Component }) => {
-                const request = openRequests[id];
+                const request = Reflect.get(openRequests, id);
                 return (
                     <WritingToolErrorBoundary key={id} toolLabel={label}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
@@ -122,7 +122,7 @@ const WritingToolHost = ({ disabled = false }) => {
                                     key={request.at}
                                     initialQuery={request.query}
                                     correction={request.correction}
-                                    onClose={closeHandlers[id]}
+                                    onClose={Reflect.get(closeHandlers, id)}
                                 />
                             </Suspense>
                         )}

@@ -239,7 +239,7 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
 
             // 점수 계산 정책 (교사 설정 반영 - 미션 달성형)
             const goals = currentSettings.activityGoals || { post: 1, comment: 5, reaction: 5 };
-            const studentMap = {};
+            const studentMap = new Map();
 
             const process = (items, type) => {
                 items?.forEach(item => {
@@ -247,15 +247,20 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
                     const studentName = item.students?.name;
                     if (!sid || !studentName) return;
 
-                    if (!studentMap[sid]) {
-                        studentMap[sid] = {
+                    if (!studentMap.has(sid)) {
+                        studentMap.set(sid, {
                             student_id: sid, // ID 보존
                             name: studentName,
                             counts: { post: 0, comment: 0, reaction: 0 },
                             isAchieved: false
-                        };
+                        });
                     }
-                    studentMap[sid].counts[type] += 1;
+                    const studentStats = studentMap.get(sid);
+                    Reflect.set(
+                        studentStats.counts,
+                        type,
+                        Number(Reflect.get(studentStats.counts, type) || 0) + 1
+                    );
                 });
             };
 
@@ -264,7 +269,7 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
             process(dailyComments, 'comment');
 
             const achievedStudents = [];
-            Object.values(studentMap).forEach(s => {
+            studentMap.forEach(s => {
                 if (
                     s.counts.post >= goals.post &&
                     s.counts.comment >= goals.comment &&
@@ -285,26 +290,26 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
             const pastHonorRolls = allHonorRolls?.filter(h => h.created_at >= seasonStartAt && h.created_at < startDate) || [];
             
             // [추가] 전체 명예의 전당 통계용 (과거 기록 + 오늘 달성자 합산하여 AgitManager 등에 노출)
-            const statsMapForHonorRoll = {};
+            const statsMapForHonorRoll = new Map();
             
             // 1. 과거 기록 먼저 합산
             pastHonorRolls.forEach(row => {
                 const sid = row.student_id;
                 const name = row.students?.name || '알 수 없는 학생';
-                if (!statsMapForHonorRoll[sid]) statsMapForHonorRoll[sid] = { name, count: 0 };
-                statsMapForHonorRoll[sid].count += 1;
+                if (!statsMapForHonorRoll.has(sid)) statsMapForHonorRoll.set(sid, { name, count: 0 });
+                statsMapForHonorRoll.get(sid).count += 1;
             });
             
             // 2. 오늘 달성자 합산 (DB에 아직 안 들어갔을 수도 있으므로 메모리 값 우선)
             achievedStudents.forEach(s => {
                 const sid = s.student_id;
-                if (!statsMapForHonorRoll[sid]) {
-                    statsMapForHonorRoll[sid] = { name: s.name, count: 0 };
+                if (!statsMapForHonorRoll.has(sid)) {
+                    statsMapForHonorRoll.set(sid, { name: s.name, count: 0 });
                 }
-                statsMapForHonorRoll[sid].count += 1;
+                statsMapForHonorRoll.get(sid).count += 1;
             });
 
-            const sortedStats = Object.values(statsMapForHonorRoll).sort((a, b) => b.count - a.count);
+            const sortedStats = Array.from(statsMapForHonorRoll.values()).sort((a, b) => b.count - a.count);
             setHistoryStats(sortedStats);
 
             const currentTemp = Math.min(currentSettings.targetScore, pastHonorRolls.length + achievedStudents.length);
@@ -315,8 +320,8 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
             setCounts({ posts: postCount || 0, feedbacks: totalFeedbacks });
             setTemperature(currentTemp);
 
-            if (currentStudentId && studentMap[currentStudentId]) {
-                const s = studentMap[currentStudentId];
+            if (currentStudentId && studentMap.has(currentStudentId)) {
+                const s = studentMap.get(currentStudentId);
                 setMyMissionStatus({
                     ...s.counts,
                     achieved: s.isAchieved
@@ -430,13 +435,13 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
             window.removeEventListener('focus', handleFocus); // 이벤트 리스너 정리
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [classId, lightweight]); // fetchData 의존성 제거
+    }, [fetchData, classId, lightweight]);
 
     return {
         loading,
         temperature,
         stageLevel,
-        stageInfo: stageInfo[stageLevel],
+        stageInfo: Reflect.get(stageInfo, stageLevel),
         unlockedContent,
         counts,
         boardMessages,

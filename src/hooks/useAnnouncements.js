@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 export const useAnnouncements = (role = 'TEACHER') => {
@@ -6,7 +6,7 @@ export const useAnnouncements = (role = 'TEACHER') => {
     const [loading, setLoading] = useState(true);
     const [latestAnnouncement, setLatestAnnouncement] = useState(null);
 
-    const fetchAnnouncements = async () => {
+    const fetchAnnouncements = useCallback(async () => {
         try {
             setLoading(true);
             const { data, error } = await supabase
@@ -27,7 +27,7 @@ export const useAnnouncements = (role = 'TEACHER') => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [role]);
 
     // [실시간 구독 제거 — 2026-07-30]
     //
@@ -37,7 +37,7 @@ export const useAnnouncements = (role = 'TEACHER') => {
     // 공지는 자주 바뀌지 않고 즉시성이 필요하지도 않다. 갱신이 필요하면 `refresh()` 를 부른다.
     useEffect(() => {
         fetchAnnouncements();
-    }, [role]);
+    }, [fetchAnnouncements]);
 
     return { announcements, latestAnnouncement, loading, refresh: fetchAnnouncements };
 };

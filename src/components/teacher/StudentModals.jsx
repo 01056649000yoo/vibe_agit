@@ -19,7 +19,7 @@ const StudentModals = ({
     const sortedRanking = React.useMemo(() => {
         if (!isRankingModalOpen) return [];
         const scoreKey = rankingTab === 'week' ? 'score_week' : rankingTab === 'month' ? 'score_month' : 'score_all';
-        return [...displayStudents].sort((a, b) => (b[scoreKey] || 0) - (a[scoreKey] || 0));
+        return [...displayStudents].sort((a, b) => (Reflect.get(b, scoreKey) || 0) - (Reflect.get(a, scoreKey) || 0));
     }, [displayStudents, rankingTab, isRankingModalOpen]);
 
     const allCodesLayout = React.useMemo(() => {
@@ -331,7 +331,7 @@ const StudentModals = ({
                                 {sortedRanking.map((s, idx) => {
                                     const isTop3 = idx < 3;
                                     const scoreKey = rankingTab === 'week' ? 'score_week' : rankingTab === 'month' ? 'score_month' : 'score_all';
-                                    const score = s[scoreKey] || 0;
+                                    const score = Reflect.get(s, scoreKey) || 0;
 
                                     const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : null;
                                     const bgColor = idx === 0 ? '#FFF9C4' : idx === 1 ? '#F5F5F5' : idx === 2 ? '#FFF3E0' : '#FDFDFD';

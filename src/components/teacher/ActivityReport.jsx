@@ -283,7 +283,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                     Object.keys(parsedResults).forEach(name => {
                         const student = classStudents.find(s => s.name === name);
                         if (student) {
-                            savedResults[student.id] = parsedResults[name];
+                            Reflect.set(savedResults, student.id, Reflect.get(parsedResults, name));
                         }
                     });
 
@@ -359,7 +359,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         if (!persistenceKey) return;
         const saved = localStorage.getItem(persistenceKey);
         const data = saved ? JSON.parse(saved) : {};
-        data[studentId] = synthesis;
+        Reflect.set(data, studentId, synthesis);
         localStorage.setItem(persistenceKey, JSON.stringify(data));
     };
 
@@ -499,7 +499,7 @@ ${activitiesInfo}`;
             // [보안] gemini_api_key 조회 제거 — Edge Function이 서버에서 키를 관리
 
             for (let i = 0; i < studentPosts.length; i++) {
-                const data = studentPosts[i];
+                const data = Reflect.get(studentPosts, i);
 
                 if (!isRegen && data.ai_synthesis) {
                     setBatchProgress(prev => ({ ...prev, current: i + 1 }));
@@ -513,7 +513,7 @@ ${activitiesInfo}`;
                             idx === i ? { ...s, ai_synthesis: review } : s
                         ));
                         // 로컬 변수 업데이트
-                        updatedPosts[i] = { ...updatedPosts[i], ai_synthesis: review };
+                        updatedPosts.splice(i, 1, { ...Reflect.get(updatedPosts, i), ai_synthesis: review });
 
                         saveToPersistence(data.student.id, review);
                     }
@@ -542,13 +542,13 @@ ${activitiesInfo}`;
 
     // 저장된 텍스트에서 학생별 분석 결과 파싱
     const parseHistoryContent = (content) => {
-        const results = {};
+        const results = Object.create(null);
         const sections = content.split('\n\n---\n\n');
         sections.forEach(section => {
             const match = section.match(/^\[(.*?)\]\n([\s\S]*)$/);
             if (match) {
                 const [_, name, synthesis] = match;
-                results[name] = synthesis;
+                Reflect.set(results, name, synthesis);
             }
         });
         return results;

@@ -56,11 +56,11 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     const lastFetchTimeRef = React.useRef(0); // [신규] Throttling을 위한 타임스탬프
 
     // [신규] 일일 시도 횟수 관리
-    const getTodayKey = () => {
+    const getTodayKey = React.useCallback(() => {
         const today = getKstDateKey(); // YYYY-MM-DD (KST)
         const resetSuffix = resetDate ? `_${resetDate}` : '';
         return `vocab_tower_attempts_${studentSession?.id}_${today}${resetSuffix}`;
-    };
+    }, [resetDate, studentSession?.id]);
 
     // [rerender-lazy-state-init] + [js-cache-storage]
     // 초기 렌더링 시에만 localStorage에서 값을 호출하고 상태로 관리합니다.
@@ -76,6 +76,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     const remainingAttempts = Math.max(0, dailyLimit - attempts);
     // 초기 진입 시 남은 횟수 계산 (attempts 상태의 현재값 활용)
     const initialRemaining = dailyLimit - attempts;
+    const initialRemainingRef = React.useRef(initialRemaining);
 
     // 시도 횟수 차감 (게임 시작 시 한 번만 차감)
     const consumeAttempt = () => {
@@ -91,12 +92,12 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
 
     useEffect(() => {
         // 게임 진입 시 차감 전 남은 횟수가 0 이하면 즉시 종료 (안내창 띄울 필요 없이)
-        if (initialRemaining <= 0) {
+        if (initialRemainingRef.current <= 0) {
             setIsFullyExhausted(true);
             setIsIntroOpen(false);
             return;
         }
-    }, []); // 입구 컷만 담당하므로 마운트 시에만 한 번 체크
+    }, []); // 입구 컷만 담당하므로 마운트 시의 값을 한 번만 체크
 
     // [신규] 실제로 게임을 시작하는 함수 (버튼 클릭 시 호출)
     const handleGameStart = () => {
@@ -126,7 +127,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [hasStarted, timeLeft, showResult, isTimeUp, isFullyExhausted]);
+    }, [hasStarted, timeLeft, showResult, isTimeUp, isFullyExhausted, remainingAttempts]);
 
     // [신규] 학급 학생 명단 로드 (이름 매핑용 캐시 - DB 조인 부하 감소)
     const fetchClassmates = React.useCallback(async () => {
@@ -151,7 +152,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     }, [fetchClassmates]);
 
     // 보상 포인트 지급 로직
-    const handleRewardPoints = async () => {
+    const handleRewardPoints = React.useCallback(async () => {
         const todayKey = getTodayKey();
         const rewardKey = `${todayKey}_rewarded`;
 
@@ -186,53 +187,38 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
             console.error('❌ 보상 포인트 지급 실패:', err);
             alert('⚠️ 보상 포인트 지급 중 오류가 발생했습니다. 선생님께 문의해 주세요.\n(에러: ' + (err.message || '데이터베이스 연결 오류') + ')');
         }
-    };
+    }, [awardedPoints, getTodayKey, rewardPoints, studentSession?.id]);
 
     // 최신 currentFloor를 ref로 추적 (stale closure 방지)
     const currentFloorRef = React.useRef(1);
-
-    useEffect(() => {
-        if (isFullyExhausted && !isTowerCleared) { // 클리어 시에는 중복 실행 안 함
-            // [수정] ref로 추적한 최신 층수 사용
-            const finalFloor = currentFloorRef.current;
-            const classId = studentSession?.class_id || studentSession?.classId;
-            if (studentSession?.id && classId) {
-                supabase.rpc('update_tower_max_floor', {
-                    p_student_id: studentSession.id,
-                    p_class_id: classId,
-                    p_floor: finalFloor
-                }).then(({ error }) => {
-                    if (error) {
-                        console.error('❌ isFullyExhausted 시 쳕수 기록 실패:', error);
-                    } else {
-                        fetchRankings(true); // 강제 갱신 호출로 통합
-                    }
-                });
-            }
-            handleRewardPoints();
-        }
-    }, [isFullyExhausted, isTowerCleared, studentSession?.id, studentSession?.class_id, studentSession?.classId]);
+    const exhaustedHandledRef = React.useRef(false);
+    const towerClearHandledRef = React.useRef(false);
 
     // [신규] 10층 클리어 보상 지급 로직 (500 포인트)
     useEffect(() => {
-        if (isTowerCleared) {
-            const clearKey = `${getTodayKey()}_floor10_cleared`;
-            const isCleared = localStorage.getItem(clearKey);
-
-            if (!isCleared) {
-                console.log('👑 10층 정복 보상 지급 시작: 500P');
-                supabase.rpc('reward_for_vocab_tower', { p_amount: 500 })
-                    .then(({ error }) => {
-                        if (!error) {
-                            localStorage.setItem(clearKey, 'true');
-                            console.log('✅ 10층 정복 보상 지급 완료');
-                        } else {
-                            console.error('❌ 10층 정복 보상 지급 실패:', error);
-                        }
-                    });
-            }
+        if (!isTowerCleared) {
+            towerClearHandledRef.current = false;
+            return;
         }
-    }, [isTowerCleared, studentSession?.id]);
+        if (towerClearHandledRef.current) return;
+
+        towerClearHandledRef.current = true;
+        const clearKey = `${getTodayKey()}_floor10_cleared`;
+        const isCleared = localStorage.getItem(clearKey);
+
+        if (!isCleared) {
+            console.log('👑 10층 정복 보상 지급 시작: 500P');
+            supabase.rpc('reward_for_vocab_tower', { p_amount: 500 })
+                .then(({ error }) => {
+                    if (!error) {
+                        localStorage.setItem(clearKey, 'true');
+                        console.log('✅ 10층 정복 보상 지급 완료');
+                    } else {
+                        console.error('❌ 10층 정복 보상 지급 실패:', error);
+                    }
+                });
+        }
+    }, [getTodayKey, isTowerCleared]);
 
     // [최적화] 랭킹 조회 함수 - 조인 제거 및 Throttling 적용
     const fetchRankings = React.useCallback(async (isForced = false) => {
@@ -266,6 +252,33 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
         }
     }, [studentSession?.class_id, studentSession?.classId, rankingResetDate]);
 
+    useEffect(() => {
+        if (!isFullyExhausted) {
+            exhaustedHandledRef.current = false;
+            return;
+        }
+        if (isTowerCleared || exhaustedHandledRef.current) return;
+
+        // 의존 값이 갱신되어 Effect가 다시 평가돼도 한 번만 기록·보상한다.
+        exhaustedHandledRef.current = true;
+        const finalFloor = currentFloorRef.current;
+        const classId = studentSession?.class_id || studentSession?.classId;
+        if (studentSession?.id && classId) {
+            supabase.rpc('update_tower_max_floor', {
+                p_student_id: studentSession.id,
+                p_class_id: classId,
+                p_floor: finalFloor
+            }).then(({ error }) => {
+                if (error) {
+                    console.error('❌ isFullyExhausted 시 층수 기록 실패:', error);
+                } else {
+                    fetchRankings(true);
+                }
+            });
+        }
+        void handleRewardPoints();
+    }, [fetchRankings, handleRewardPoints, isFullyExhausted, isTowerCleared, studentSession?.classId, studentSession?.class_id, studentSession?.id]);
+
     // [신규/최적화] 실시간 이름 매핑 (메모리 연산)
     // DB 호출 없이 명단이 로드되거나 랭킹이 바뀌면 즉시 이름을 입힙니다.
     const displayRankings = React.useMemo(() => {
@@ -291,9 +304,7 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
     }, [rankings, classmates, studentSession?.id, studentSession?.name]);
 
     useEffect(() => {
-        if (studentSession?.class_id || studentSession?.classId) {
-            fetchRankings();
-        }
+        fetchRankings();
     }, [fetchRankings]);
 
     // [신규] 최고 층수 업데이트 (순환참조 제거 - fetchRankings 개별 호출)
@@ -982,14 +993,14 @@ const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit =
                                     if (displayRankings.length === 0) return <p style={{ textAlign: 'center', color: '#999', fontSize: '0.8rem' }}>참여 기록 없음</p>;
                                     const grouped = displayRankings.reduce((acc, curr) => {
                                         const f = curr.max_floor;
-                                        if (!acc[f]) acc[f] = [];
-                                        acc[f].push(curr);
+                                        if (!acc.has(f)) acc.set(f, []);
+                                        acc.get(f).push(curr);
                                         return acc;
-                                    }, {});
-                                    const sortedFloors = Object.keys(grouped).sort((a, b) => b - a);
+                                    }, new Map());
+                                    const sortedFloors = Array.from(grouped.keys()).sort((a, b) => b - a);
                                     let currentRank = 1;
                                     return sortedFloors.slice(0, 5).map((floor) => { // 상위 5그룹만 표시
-                                        const students = grouped[floor];
+                                        const students = grouped.get(floor);
                                         const rank = currentRank;
                                         currentRank += students.length;
                                         const isMyGroup = students.some(s => s.student_id === studentSession?.id);

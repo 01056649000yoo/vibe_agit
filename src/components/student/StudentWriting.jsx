@@ -166,7 +166,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
     const handleAnswerChange = (idx, val) => {
         const newAnswers = [...studentAnswers];
-        newAnswers[idx] = val;
+        newAnswers.splice(idx, 1, val);
         setStudentAnswers(newAnswers);
     };
 
@@ -655,7 +655,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     <span>{q}</span>
                                 </div>
                                 <SpellingUnderlineTextarea
-                                    value={studentAnswers[idx] || ''}
+                                    value={Reflect.get(studentAnswers, idx) || ''}
                                     onChange={(e) => handleAnswerChange(idx, e.target.value)}
                                     placeholder="여기에 생각을 적어보세요..."
                                     spellCheck={true}
@@ -683,8 +683,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                 />
                                 <div style={{ textAlign: 'right', marginTop: '16px' }}>
                                     <button
-                                        onClick={() => insertToBody(studentAnswers[idx])}
-                                        disabled={isLocked || !studentAnswers[idx]?.trim()}
+                                        onClick={() => insertToBody(Reflect.get(studentAnswers, idx))}
+                                        disabled={isLocked || !Reflect.get(studentAnswers, idx)?.trim()}
                                         style={{
                                             background: '#E1F5FE',
                                             color: '#0288D1',
@@ -695,7 +695,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                             fontWeight: 'bold',
                                             cursor: 'pointer',
                                             transition: 'all 0.2s',
-                                            opacity: (isLocked || !studentAnswers[idx]?.trim()) ? 0.5 : 1
+                                            opacity: (isLocked || !Reflect.get(studentAnswers, idx)?.trim()) ? 0.5 : 1
                                         }}
                                     >
                                         이 답변만 본문에 넣기 📥

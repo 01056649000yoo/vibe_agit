@@ -8,6 +8,8 @@ import './App.css'
 import Layout from './components/layout/Layout'
 import Loading from './components/common/Loading'
 import ErrorBoundary from './components/common/ErrorBoundary'
+import PrivacyPolicy from './components/layout/PrivacyPolicy'
+import TermsOfService from './components/layout/TermsOfService'
 import { useAuthStore } from './store/useAuthStore';
 import { useAppStore } from './store/useAppStore';
 import { getModule } from './modules/registry';
@@ -26,8 +28,6 @@ const MissionList = lazy(() => import('./components/student/MissionList'))
 const FriendsHideout = lazy(getModule('friends-hideout').studentEntry)
 const ReadingLogPage = lazy(getModule('reading-log').studentEntry)
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
-const PrivacyPolicy = lazy(() => import('./components/layout/PrivacyPolicy'))
-const TermsOfService = lazy(() => import('./components/layout/TermsOfService'))
 
 /**
  * 역할: 전역 상태 관리 및 라우팅 (메인 진입점)

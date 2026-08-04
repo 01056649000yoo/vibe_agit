@@ -633,7 +633,7 @@ export const useMissionManager = (activeClass) => {
 ${postArray.map((p, idx) => {
                 let qaSection = "";
                 if (selectedMission?.guide_questions?.length > 0 && p.student_answers?.length > 0) {
-                    qaSection = "\n[핵심질문에 대한 답변]\n" + selectedMission.guide_questions.map((q, i) => `질문${i + 1}: ${q}\n답변${i + 1}: ${p.student_answers[i] || '(답변 없음)'}`).join('\n');
+                    qaSection = "\n[핵심질문에 대한 답변]\n" + selectedMission.guide_questions.map((q, i) => `질문${i + 1}: ${q}\n답변${i + 1}: ${Reflect.get(p.student_answers, i) || '(답변 없음)'}`).join('\n');
                 }
                 return `[학생 ${idx + 1}]\nID: ${p.id}\n성함: ${p.student_name || '학생'}\n제목: ${p.title}\n내용: ${p.content}${qaSection}`;
             }).join('\n\n')}`;
@@ -641,7 +641,7 @@ ${postArray.map((p, idx) => {
             let qaSection = "";
             const p = postArray[0];
             if (selectedMission?.guide_questions?.length > 0 && p.student_answers?.length > 0) {
-                qaSection = "\n[핵심질문에 대한 답변]\n" + selectedMission.guide_questions.map((q, i) => `질문${i + 1}: ${q}\n답변${i + 1}: ${p.student_answers[i] || '(답변 없음)'}`).join('\n');
+                qaSection = "\n[핵심질문에 대한 답변]\n" + selectedMission.guide_questions.map((q, i) => `질문${i + 1}: ${q}\n답변${i + 1}: ${Reflect.get(p.student_answers, i) || '(답변 없음)'}`).join('\n');
             }
             prompt = `${basePrompt}\n\n---\n[학생 정보]\n이름: ${p.student_name || '학생'}\n글 제목: "${p.title}"\n글 내용:\n"${p.content}"${qaSection}`;
         }

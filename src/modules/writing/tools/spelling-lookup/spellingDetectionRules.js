@@ -143,6 +143,8 @@ const RULES = [
  * 규칙 하나에 괄호 하나씩을 붙여 통째로 이어 붙인다.
  * 규칙 수가 늘어도 글을 **한 번만** 훑으므로, 규칙 개수는 속도에 거의 영향을 주지 않는다.
  */
+// RULES는 사용자 입력이 아닌 이 파일 안의 고정 리터럴만 포함한다.
+// eslint-disable-next-line security/detect-non-literal-regexp -- 고정 규칙을 한 번의 탐색용 정규식으로 결합한다.
 const COMBINED_PATTERN = new RegExp(RULES.map((rule) => `(${rule.source})`).join('|'), 'g');
 
 export const SPELLING_DETECTION_RULE_COUNT = RULES.length;

@@ -144,7 +144,7 @@ const RubricSettings = ({
                                     key={levelCount}
                                     type="button"
                                     onClick={() => updateRubric({
-                                        levels: LEVEL_PRESETS[levelCount].map((level) => ({ ...level }))
+                                        levels: Reflect.get(LEVEL_PRESETS, levelCount).map((level) => ({ ...level }))
                                     })}
                                     style={{
                                         padding: '6px 14px', borderRadius: '12px',

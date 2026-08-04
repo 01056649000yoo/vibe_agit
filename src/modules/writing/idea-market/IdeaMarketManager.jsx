@@ -404,9 +404,9 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
     // 전체 상태 요약 (선택된 안건)
     const statusSummary = ideas.reduce((acc, idea) => {
         const st = idea.status || '제안중';
-        acc[st] = (acc[st] || 0) + 1;
+        Reflect.set(acc, st, (Reflect.get(acc, st) || 0) + 1);
         return acc;
-    }, {});
+    }, Object.create(null));
 
     return (
         <div style={{
@@ -588,7 +588,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                             value={q}
                                             onChange={(e) => {
                                                 const newQ = [...formData.guide_questions];
-                                                newQ[idx] = e.target.value;
+                                                newQ.splice(idx, 1, e.target.value);
                                                 setFormData(prev => ({ ...prev, guide_questions: newQ }));
                                             }}
                                             style={{
@@ -938,7 +938,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                             </h3>
                                             <div style={{ display: 'flex', gap: '8px' }}>
                                                 {Object.entries(statusSummary).map(([status, count]) => {
-                                                    const sc = STATUS_COLORS[status] || STATUS_COLORS['제안중'];
+                                                    const sc = Reflect.get(STATUS_COLORS, status) || STATUS_COLORS['제안중'];
                                                     return (
                                                         <span key={status} style={{
                                                             padding: '4px 10px', borderRadius: '8px',
@@ -1148,7 +1148,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                                 Q{idx + 1}. {q}
                                             </div>
                                             <div style={{ fontSize: isMobile ? '0.95rem' : '1.1rem', color: '#4C1D95', lineHeight: '1.75', fontWeight: '600' }}>
-                                                {detailModal.student_answers[idx] || '(답변 없음)'}
+                                                {Reflect.get(detailModal.student_answers, idx) || '(답변 없음)'}
                                             </div>
                                         </div>
                                     ))}
@@ -1190,7 +1190,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                 }}>📋 상태 변경</div>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     {['제안중', '검토중', '결정됨'].map(st => {
-                                        const bsc = STATUS_COLORS[st];
+                                        const bsc = Reflect.get(STATUS_COLORS, st);
                                         const isActive = (detailModal.status || '제안중') === st;
                                         return (
                                             <motion.button

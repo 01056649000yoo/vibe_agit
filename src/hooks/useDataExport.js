@@ -73,7 +73,7 @@ export const useDataExport = () => {
     /**
      * 구글 액세스 토큰 획득 (최신 방식)
      */
-    const getAccessToken = () => {
+    const getAccessToken = useCallback(() => {
         return new Promise((resolve, reject) => {
             if (!tokenClient) return reject('인증 클라이언트가 준비되지 않았습니다.');
 
@@ -87,7 +87,7 @@ export const useDataExport = () => {
             // 이미 토큰이 있을 경우 체크 (선택사항)
             tokenClient.requestAccessToken({ prompt: 'select_account' });
         });
-    };
+    }, [tokenClient]);
 
     /**
      * 데이터 조회 로직 (기존과 동일)
@@ -350,7 +350,7 @@ export const useDataExport = () => {
             console.error('Google Doc Export Failed:', error);
             alert('구글 문서 생성에 실패했습니다: ' + (error.result?.error?.message || error.message));
         }
-    }, [isGapiLoaded]);
+    }, [getAccessToken, isGapiLoaded, tokenClient]);
 
     const exportToExcel = useCallback(async (data, fileName) => {
         if (!data || data.length === 0) {

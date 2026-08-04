@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
@@ -13,13 +13,8 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
     const [loading, setLoading] = useState(true);
     const [selectedMission, setSelectedMission] = useState(null);
 
-    useEffect(() => {
-        if (activeClass?.id) {
-            fetchMissions();
-        }
-    }, [activeClass?.id]);
-
-    const fetchMissions = async () => {
+    const fetchMissions = useCallback(async () => {
+        if (!activeClass?.id) return;
         setLoading(true);
         try {
             const { data, error } = await supabase
@@ -36,7 +31,11 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeClass?.id]);
+
+    useEffect(() => {
+        fetchMissions();
+    }, [fetchMissions]);
 
     if (loading) return <div style={{ textAlign: 'center', padding: '100px', color: '#94A3B8' }}>평가 데이터를 구성 중입니다... ✨</div>;
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import Card from '../common/Card';
@@ -120,13 +120,8 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
         }
     };
 
-    useEffect(() => {
-        if (activeClass?.id) {
-            fetchArchivedMissions();
-        }
-    }, [activeClass?.id]);
-
-    const fetchArchivedMissions = async () => {
+    const fetchArchivedMissions = useCallback(async () => {
+        if (!activeClass?.id) return;
         setLoading(true);
         try {
             // 미션 정보와 함께, 전체 학생 수와 제출된 글 수를 계산하기 위해 데이터 조회
@@ -177,7 +172,11 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeClass?.id]);
+
+    useEffect(() => {
+        fetchArchivedMissions();
+    }, [fetchArchivedMissions]);
 
     const toggleTagFilter = (tag) => {
         setSelectedTags(prev =>

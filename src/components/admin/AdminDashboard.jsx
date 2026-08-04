@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -270,7 +270,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         }
     };
 
-    const fetchTeachers = async ({ showLoading = true } = {}) => {
+    const fetchTeachers = useCallback(async ({ showLoading = true } = {}) => {
         if (showLoading) {
             setLoading(true);
         }
@@ -295,7 +295,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                 setLoading(false);
             }
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchTeachers();
@@ -331,7 +331,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             window.removeEventListener('focus', handleFocus);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, []);
+    }, [fetchTeachers]);
 
     // 탭이나 검색어가 바뀔 때 페이지 리셋
     useEffect(() => {

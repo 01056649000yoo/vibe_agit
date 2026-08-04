@@ -691,7 +691,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                                                             fontSize: '0.9rem', fontWeight: '900', color: idx < 3 ? '#10B981' : '#64748B',
                                                                             border: `1px solid ${idx < 3 ? '#BBF7D0' : '#E2E8F0'}`
                                                                         }}>
-                                                                            {idx < 3 ? ['🥇', '🥈', '🥉'][idx] : idx + 1}
+                                                                            {idx < 3 ? Reflect.get(['🥇', '🥈', '🥉'], idx) : idx + 1}
                                                                         </div>
                                                                         <span style={{ fontWeight: '800', color: '#1E293B', fontSize: '1rem' }}>{student.name}</span>
                                                                     </div>

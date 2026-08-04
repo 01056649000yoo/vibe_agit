@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
 import { Copy, Clock, Calendar, FileText, CheckCircle2, Save, UserCheck } from 'lucide-react';
@@ -15,7 +15,7 @@ const RecordAssistant = ({ student, activeClass, isMobile, onClose }) => {
     const [isSaving, setIsSaving] = useState(false);
 
     // 1. 해당 학생의 누적 기록 불러오기 (AI 쫑알이 + 교사 수정본)
-    const loadHistory = async (autoSelectLatest = false) => {
+    const loadHistory = useCallback(async () => {
         if (!student?.id) {
             console.log('RecordAssistant: 학생 ID가 없습니다.');
             return;
@@ -36,23 +36,24 @@ const RecordAssistant = ({ student, activeClass, isMobile, onClose }) => {
 
             setRecordHistory(data || []);
 
-            // 데이터가 있고, 자동 선택 옵션이 켜져 있거나 현재 선택된 게 없을 때 최신 것 선택
+            // 이 화면에서 불러오기는 항상 최신 기록을 선택한다.
             if (data && data.length > 0) {
-                if (autoSelectLatest || !selectedRecord) {
-                    setSelectedRecord(data[0]);
-                    setEditedContent(data[0].content);
-                }
+                setSelectedRecord(data[0]);
+                setEditedContent(data[0].content);
+            } else {
+                setSelectedRecord(null);
+                setEditedContent('');
             }
         } catch (err) {
             console.error('기록 로드 실패:', err);
         } finally {
             setLoading(false);
         }
-    };
+    }, [student?.id]);
 
     useEffect(() => {
-        loadHistory(true);
-    }, [student.id]);
+        loadHistory();
+    }, [loadHistory]);
 
     // 레코드 선택 시 편집용 텍스트 동기화
     useEffect(() => {
@@ -97,7 +98,7 @@ const RecordAssistant = ({ student, activeClass, isMobile, onClose }) => {
             if (error) throw error;
 
             alert('선생님의 수정본이 새로운 이력으로 저장되었습니다! ✨');
-            await loadHistory(true); // 최신(방금 저장한 것)으로 자동 선택
+            await loadHistory(); // 최신(방금 저장한 것)으로 자동 선택
         } catch (err) {
             console.error('저장 실패:', err);
             alert('저장 중 오류가 발생했습니다: ' + err.message);

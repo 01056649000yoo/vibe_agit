@@ -549,7 +549,7 @@ const MissionForm = ({
                                                                 value={q}
                                                                 onChange={e => {
                                                                     const newQs = [...formData.guide_questions];
-                                                                    newQs[idx] = e.target.value;
+                                                                    newQs.splice(idx, 1, e.target.value);
                                                                     setFormData({ ...formData, guide_questions: newQs });
                                                                 }}
                                                                 style={{

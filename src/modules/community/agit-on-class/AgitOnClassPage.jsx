@@ -482,7 +482,7 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
                                                 90: "🌠 거의 다 왔어요! 전설처럼 빛나는 아지트의 탄생 직전!",
                                                 100: "☀️ 축하합니다! 우리 모두의 마음으로 가장 환한 아지트를 만들었어요! ❤️"
                                             };
-                                            return messages[tempRange] || messages[0];
+                                            return Reflect.get(messages, tempRange) || Reflect.get(messages, 0);
                                         })()}
                                     </span>
                                 </motion.div>
