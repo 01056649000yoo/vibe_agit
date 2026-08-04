@@ -42,6 +42,7 @@
 - **변경**: `SpellingUnderlineTextarea.jsx`, `WritingEditorFields.jsx`, `ReadingLogPage.jsx`, `dev/UiPreview.jsx`.
 - **결과/검증**: 대상 ESLint 0에러, `npm run spelling:check` 통과, 빌드·`git diff --check` 통과.
   개발 서버 `?ui-preview=1` 이 200으로 뜨는 것까지 확인했다.
+  커밋 `5483b45` 를 push했고 GitHub Actions Deploy run `30907166525` 성공.
   **화면은 눈으로 못 봤다** — 이 작업 환경에 브라우저 도구가 없다. 줄 수·높이는 계산으로만 확인했다.
 - **남은 것 / 다음**: 실기기에서 ① 빈 화면 8줄이 적당한지 ② 길게 쓸 때 매끄럽게 늘어나는지
   ③ 모바일 키보드가 올라온 상태에서 커서가 가려지지 않는지 ④ 아래 칩이 글 바로 밑에 붙어 보이는지.
