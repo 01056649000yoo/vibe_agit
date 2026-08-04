@@ -1,0 +1,160 @@
+/*
+ * 끄적끄적 아지트 공통 디자인 토큰 v1
+ *
+ * 새 화면은 원시 색상·radius·shadow를 직접 늘리지 않고 아래 의미 토큰을 먼저 쓴다.
+ * 기능 고유 색은 허용하되, 본문·보조 글자·표면·테두리·포커스는 공통 토큰을 유지한다.
+ */
+:root {
+  /* Brand */
+  --ui-primary: #2563eb;
+  --ui-primary-hover: #1d4ed8;
+  --ui-primary-soft: #eff6ff;
+  --ui-primary-border: #bfdbfe;
+  --ui-secondary: #f6c344;
+  --ui-secondary-hover: #eab731;
+  --ui-secondary-ink: #422006;
+  --ui-accent: #c2410c;
+  --ui-accent-hover: #9a3412;
+
+  /* Neutral surfaces and text */
+  --ui-page: #f8fafc;
+  --ui-page-warm: #fffdf7;
+  --ui-surface: #ffffff;
+  --ui-surface-muted: #f1f5f9;
+  --ui-surface-raised: #ffffff;
+  --ui-ink: #0f172a;
+  --ui-ink-strong: #1e293b;
+  --ui-ink-muted: #64748b;
+  --ui-ink-subtle: #94a3b8;
+  --ui-border: #e2e8f0;
+  --ui-border-strong: #cbd5e1;
+
+  /* Status */
+  --ui-success: #15803d;
+  --ui-success-soft: #f0fdf4;
+  --ui-warning: #b45309;
+  --ui-warning-soft: #fff7ed;
+  --ui-danger: #b91c1c;
+  --ui-danger-hover: #991b1b;
+  --ui-danger-soft: #fef2f2;
+
+  /* Typography */
+  --ui-font-sans: 'Noto Sans KR', 'Pretendard', 'Inter', system-ui, sans-serif;
+  --ui-font-xs: 0.75rem;
+  --ui-font-sm: 0.875rem;
+  --ui-font-md: 1rem;
+  --ui-font-lg: 1.25rem;
+  --ui-font-xl: clamp(1.35rem, 2.5vw, 1.75rem);
+  --ui-line-compact: 1.25;
+  --ui-line-body: 1.55;
+
+  /* Spacing */
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 20px;
+  --ui-space-6: 24px;
+  --ui-space-8: 32px;
+  --ui-space-10: 40px;
+
+  /* Shape and elevation */
+  --ui-radius-xs: 8px;
+  --ui-radius-sm: 10px;
+  --ui-radius-md: 14px;
+  --ui-radius-lg: 18px;
+  --ui-radius-xl: 24px;
+  --ui-radius-pill: 999px;
+  --ui-shadow-xs: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --ui-shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.07);
+  --ui-shadow-md: 0 12px 34px rgba(15, 23, 42, 0.10);
+  --ui-shadow-modal: 0 28px 80px rgba(15, 23, 42, 0.34);
+
+  /* Controls and motion */
+  --ui-control-xs: 30px;
+  --ui-control-sm: 36px;
+  --ui-control-md: 44px;
+  --ui-control-lg: 52px;
+  --ui-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.28);
+  --ui-motion-fast: 160ms ease;
+  --ui-motion-normal: 240ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 기존 화면 호환 별칭 — 새 코드는 위 ui-* 토큰을 사용한다. */
+  --primary-color: var(--ui-primary);
+  --primary-hover: var(--ui-primary-hover);
+  --secondary-color: var(--ui-secondary);
+  --secondary-hover: var(--ui-secondary-hover);
+  --accent-color: var(--ui-accent);
+  --bg-primary: var(--ui-page);
+  --bg-secondary: var(--ui-primary-soft);
+  --card-bg: var(--ui-surface);
+  --text-primary: var(--ui-ink);
+  --text-secondary: var(--ui-ink-muted);
+  --border-radius-lg: var(--ui-radius-xl);
+  --border-radius-md: var(--ui-radius-md);
+  --border-radius-sm: var(--ui-radius-xs);
+  --shadow-subtle: var(--ui-shadow-sm);
+  --shadow-normal: var(--ui-shadow-md);
+  --transition-normal: var(--ui-motion-normal);
+}
+
+.ui-button {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.ui-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+
+.ui-button:active:not(:disabled) { transform: translateY(0); }
+.ui-button:focus-visible { outline: none; box-shadow: var(--ui-focus-ring) !important; }
+.ui-button:disabled { opacity: 0.56; box-shadow: none !important; }
+
+.ui-card {
+  isolation: isolate;
+}
+
+.ui-card--interactive {
+  cursor: pointer;
+  transition: transform var(--ui-motion-normal), box-shadow var(--ui-motion-normal), border-color var(--ui-motion-normal);
+}
+
+.ui-card--interactive:hover {
+  transform: translateY(-2px);
+  border-color: var(--ui-primary-border) !important;
+  box-shadow: var(--ui-shadow-md) !important;
+}
+
+.ui-card--interactive:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring), var(--ui-shadow-md) !important;
+}
+
+.ui-icon-button {
+  display: grid;
+  width: var(--ui-control-md);
+  height: var(--ui-control-md);
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--ui-border);
+  border-radius: 50%;
+  background: var(--ui-surface);
+  color: var(--ui-ink-muted);
+}
+
+.ui-icon-button:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
+.ui-icon-button:hover { box-shadow: none; filter: brightness(1.03); }
+
+@media (pointer: coarse) {
+  .ui-button { min-height: var(--ui-control-md) !important; }
+  .ui-icon-button { width: var(--ui-control-md); height: var(--ui-control-md); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-button,
+  .ui-card--interactive { transition: none !important; animation: none !important; }
+  .ui-button:hover:not(:disabled),
+  .ui-card--interactive:hover { transform: none; }
+}

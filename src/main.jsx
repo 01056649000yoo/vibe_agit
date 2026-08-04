@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client'
+import './styles/design-system.css'
 import './index.css'
 
 const isUiPreview = import.meta.env.DEV

@@ -1,5 +1,4 @@
-import React from 'react';
-import Card from './Card';
+import React, { useEffect, useId } from 'react';
 import Button from './Button';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,20 +11,39 @@ import { motion, AnimatePresence } from 'framer-motion';
  * @param {string} maxWidth 최대 너비 (기본값: 500px)
  */
 const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => {
+    const titleId = useId();
+
+    useEffect(() => {
+        if (!isOpen) return undefined;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        const closeOnEscape = (event) => {
+            if (event.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', closeOnEscape);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            window.removeEventListener('keydown', closeOnEscape);
+        };
+    }, [isOpen, onClose]);
+
     return (
         <AnimatePresence>
             {isOpen && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    zIndex: 9999, backdropFilter: 'blur(3px)',
-                    padding: '20px'
+                <div role="presentation" style={{
+                    position: 'fixed', inset: 0,
+                    backgroundColor: 'rgba(15, 23, 42, 0.58)',
+                    display: 'grid', placeItems: 'center',
+                    zIndex: 9999, backdropFilter: 'blur(6px)',
+                    padding: 'var(--ui-space-5)'
                 }} onClick={onClose}>
                     <motion.div
-                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby={titleId}
+                        initial={{ scale: 0.97, opacity: 0, y: 12 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        exit={{ scale: 0.97, opacity: 0, y: 12 }}
                         onClick={(e) => e.stopPropagation()}
                         style={{
                             width: '100%',
@@ -33,9 +51,10 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => {
                             maxHeight: '85vh',
                             display: 'flex',
                             flexDirection: 'column',
-                            backgroundColor: 'white',
-                            borderRadius: '24px',
-                            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+                            backgroundColor: 'var(--ui-surface)',
+                            border: '1px solid var(--ui-border)',
+                            borderRadius: 'var(--ui-radius-xl)',
+                            boxShadow: 'var(--ui-shadow-modal)',
                             overflow: 'hidden'
                         }}
                     >
@@ -44,32 +63,26 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            padding: '24px 24px 20px 24px',
-                            borderBottom: '1px solid #F1F3F5',
-                            backgroundColor: 'white',
+                            padding: 'var(--ui-space-5) var(--ui-space-6)',
+                            borderBottom: '1px solid var(--ui-border)',
+                            backgroundColor: 'var(--ui-surface)',
                             zIndex: 10
                         }}>
-                            <h3 style={{ margin: 0, color: '#2C3E50', fontWeight: '900', fontSize: '1.25rem' }}>{title}</h3>
+                            <h3 id={titleId} style={{ margin: 0, color: 'var(--ui-ink-strong)', fontWeight: '900', fontSize: 'var(--ui-font-lg)' }}>{title}</h3>
                             <button
+                                type="button"
                                 onClick={onClose}
+                                className="ui-icon-button"
+                                aria-label={`${title} 닫기`}
                                 style={{
-                                    background: '#F8F9FA',
-                                    border: 'none',
-                                    fontSize: '1.2rem',
-                                    cursor: 'pointer',
-                                    color: '#ADB5BD',
-                                    width: '36px',
-                                    height: '36px',
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    transition: 'all 0.2s'
+                                    flexShrink: 0,
+                                    background: 'var(--ui-surface-muted)',
+                                    color: 'var(--ui-ink-muted)'
                                 }}
-                                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#E9ECEF'}
-                                onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F8F9FA'}
                             >
-                                ✕
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 5L19 19M19 5L5 19" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                                </svg>
                             </button>
                         </div>
 
@@ -77,32 +90,30 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => {
                         <div style={{
                             flex: 1,
                             overflowY: 'auto',
-                            padding: '24px',
-                            backgroundColor: 'white',
+                            padding: 'var(--ui-space-6)',
+                            backgroundColor: 'var(--ui-surface)',
                             /* 스크롤바 커스텀 */
                             scrollbarWidth: 'thin',
-                            scrollbarColor: '#D1D5DB transparent'
+                            scrollbarColor: 'var(--ui-border-strong) transparent'
                         }}>
                             {children}
                         </div>
 
                         {/* 푸터 섹션 (고정) */}
                         <div style={{
-                            padding: '20px 24px 24px 24px',
+                            padding: 'var(--ui-space-5) var(--ui-space-6) var(--ui-space-6)',
                             display: 'flex',
                             justifyContent: 'center',
-                            borderTop: '1px solid #F1F3F5',
-                            backgroundColor: '#F9FAFB'
+                            borderTop: '1px solid var(--ui-border)',
+                            backgroundColor: 'var(--ui-page)'
                         }}>
                             <Button
                                 onClick={onClose}
                                 style={{
                                     width: '100%',
                                     maxWidth: '120px',
-                                    background: 'var(--primary-color)',
-                                    color: 'white',
                                     fontWeight: 'bold',
-                                    height: '48px'
+                                    minHeight: 'var(--ui-control-md)'
                                 }}
                             >
                                 확인

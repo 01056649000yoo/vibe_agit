@@ -28,6 +28,15 @@ const previewStates = [
   },
 ]
 
+const designSwatches = [
+  { id: 'primary', label: '주요 행동', token: '--ui-primary' },
+  { id: 'secondary', label: '보조 강조', token: '--ui-secondary' },
+  { id: 'success', label: '완료·성공', token: '--ui-success' },
+  { id: 'warning', label: '주의·변화', token: '--ui-warning' },
+  { id: 'danger', label: '오류·삭제', token: '--ui-danger' },
+  { id: 'ink', label: '본문 글자', token: '--ui-ink' },
+]
+
 function UiPreview() {
   const [activeState, setActiveState] = useState('empty')
   const [showLoading, setShowLoading] = useState(false)
@@ -58,10 +67,34 @@ function UiPreview() {
         </div>
       </header>
 
+      <section className="ui-preview__section" aria-labelledby="token-preview-title">
+        <div className="ui-preview__section-heading">
+          <div>
+            <p className="ui-preview__eyebrow">01 · 공통 기준</p>
+            <h2 id="token-preview-title">색·모서리·표면</h2>
+          </div>
+          <p>새 화면은 원시 색상값을 늘리지 않고 의미 토큰을 사용합니다. 기능 고유 색은 내용 강조에만 둡니다.</p>
+        </div>
+        <div className="ui-preview__token-grid">
+          {designSwatches.map((swatch) => (
+            <article className="ui-preview__token" key={swatch.id}>
+              <span className="ui-preview__swatch" style={{ background: `var(${swatch.token})` }} />
+              <strong>{swatch.label}</strong>
+              <code>var({swatch.token})</code>
+            </article>
+          ))}
+        </div>
+        <div className="ui-preview__surface-row">
+          <article className="ui-preview__surface-sample is-flat"><strong>기본 표면</strong><span>테두리 중심</span></article>
+          <article className="ui-preview__surface-sample is-raised"><strong>강조 표면</strong><span>작은 그림자</span></article>
+          <article className="ui-preview__surface-sample is-modal"><strong>대화상자</strong><span>큰 그림자·24px</span></article>
+        </div>
+      </section>
+
       <section className="ui-preview__section" aria-labelledby="button-preview-title">
         <div className="ui-preview__section-heading">
           <div>
-            <p className="ui-preview__eyebrow">01 · 공통 동작</p>
+            <p className="ui-preview__eyebrow">02 · 공통 동작</p>
             <h2 id="button-preview-title">버튼</h2>
           </div>
           <p>Tab 키로 이동했을 때 포커스가 선명하고, 비활성 상태가 색상 외에도 구분되어야 합니다.</p>
@@ -71,6 +104,9 @@ function UiPreview() {
             <Button type="button">저장하기</Button>
             <Button type="button" variant="secondary">미리 보기</Button>
             <Button type="button" variant="ghost">취소</Button>
+            <Button type="button" variant="outline">목록 보기</Button>
+            <Button type="button" variant="danger">삭제</Button>
+            <Button type="button" size="xs">아주 작게</Button>
             <Button type="button" loading loadingText="저장하고 있어요...">저장</Button>
             <Button type="button" disabled>제출 완료</Button>
           </div>
@@ -80,7 +116,7 @@ function UiPreview() {
       <section className="ui-preview__section" aria-labelledby="state-preview-title">
         <div className="ui-preview__section-heading">
           <div>
-            <p className="ui-preview__eyebrow">02 · 화면 상태</p>
+            <p className="ui-preview__eyebrow">03 · 화면 상태</p>
             <h2 id="state-preview-title">비어 있음과 오류</h2>
           </div>
           <div className="ui-preview__segmented" aria-label="화면 상태 선택">
@@ -127,7 +163,7 @@ function UiPreview() {
       <section className="ui-preview__section" aria-labelledby="writing-tool-preview-title">
         <div className="ui-preview__section-heading">
           <div>
-            <p className="ui-preview__eyebrow">03 · 학생 글쓰기</p>
+            <p className="ui-preview__eyebrow">04 · 학생 글쓰기</p>
             <h2 id="writing-tool-preview-title">맞춤법 찾아보기</h2>
           </div>
           <p>글 전체를 검사하거나 고치지 않고, 학생이 궁금한 표현만 직접 검색하는 태블릿용 도구입니다.</p>
@@ -147,7 +183,7 @@ function UiPreview() {
       <section className="ui-preview__section" aria-labelledby="teacher-nav-title">
         <div className="ui-preview__section-heading">
           <div>
-            <p className="ui-preview__eyebrow">04 · 교사 화면</p>
+            <p className="ui-preview__eyebrow">05 · 교사 화면</p>
             <h2 id="teacher-nav-title">상단 업무 영역</h2>
           </div>
         </div>
