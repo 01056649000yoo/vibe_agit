@@ -16,6 +16,7 @@ import WritingToolHost from '../tools/WritingToolHost';
 import { buildDraftKey, readLocalDraft, useLocalWritingDraft } from '../drafts/localWritingDraft';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
+import './ReadingLogShelf.css';
 
 const EMPTY_FORM = {
     title: '',
@@ -56,7 +57,49 @@ const bookFromStructuredContent = (content = {}) => ({
     isbn13: content.isbn13 || ''
 });
 
-const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCancel }) => {
+const SHELF_WRITING_STATES = {
+    complete: {
+        label: '작성 완료',
+        actionLabel: '작성 완료 · 수정',
+        buttonStyle: { backgroundColor: '#2F7D52', color: '#FFFFFF' }
+    },
+    draft: {
+        label: '작성 중',
+        actionLabel: '작성 중 · 계속 쓰기',
+        buttonStyle: { backgroundColor: '#B45309', color: '#FFFFFF' }
+    },
+    saved: {
+        label: '책만 저장',
+        actionLabel: '책만 저장 · 쓰기',
+        buttonStyle: {
+            backgroundColor: '#F1F5F9',
+            borderColor: '#CBD5E1',
+            color: '#475569',
+            boxShadow: 'none'
+        }
+    }
+};
+
+const getBookKeys = (book = {}) => (
+    [book.isbn13, book.isbn10, book.title]
+        .map((value) => String(value || '').trim())
+        .filter(Boolean)
+);
+
+const bookFromDraft = (book = {}) => ({
+    source: book.source || 'manual',
+    title: book.title || '',
+    authors: Array.isArray(book.authors) ? book.authors : [],
+    translators: Array.isArray(book.translators) ? book.translators : [],
+    publisher: book.publisher || '',
+    publishedDate: book.publishedDate || book.published_date || '',
+    thumbnailUrl: book.thumbnailUrl || book.thumbnail_url || '',
+    sourceUrl: book.sourceUrl || book.source_url || '',
+    isbn10: book.isbn10 || '',
+    isbn13: book.isbn13 || ''
+});
+
+const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, onDone, onCancel }) => {
     const createInitialForm = () => ({
         ...EMPTY_FORM,
         selectedBook: initialBook || null,
@@ -134,7 +177,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
     // 책장에서 특정 책으로 들어온 경우에는 책까지 열쇠에 넣는다.
     // 그러지 않으면 A 책 쓰다 만 내용이 B 책 독서록에 되살아난다.
     const draftScopeId = postId
-        || initialBook?.isbn13 || initialBook?.isbn10 || initialBook?.title
+        || draftBookKey || initialBook?.isbn13 || initialBook?.isbn10 || initialBook?.title
         || 'new';
     const draftKey = buildDraftKey('reading_log_draft', studentSession?.id, draftScopeId);
     const draftHasContent = useCallback((candidate) => Boolean(
@@ -427,16 +470,17 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     const [libraryItems, setLibraryItems] = useState([]);
     const [logLinks, setLogLinks] = useState([]);
     const [teacherReviews, setTeacherReviews] = useState([]);
+    const [draftStatuses, setDraftStatuses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('all');
     const isEditing = params.mode === 'editor';
 
     const fetchLogs = useCallback(async () => {
         setLoading(true);
-        const [logsResult, libraryResult, linksResult, reviewsResult] = await Promise.all([
+        const [logsResult, libraryResult, linksResult, reviewsResult, draftsResult] = await Promise.all([
             supabase
                 .from('student_posts')
-                .select('id, title, content, structured_content, visibility, published_at, created_at, updated_at')
+                .select('id, title, structured_content, visibility, published_at, created_at, updated_at')
                 .eq('student_id', studentSession.id)
                 .eq('writing_context', 'self')
                 .eq('self_writing_type', 'reading_log')
@@ -453,7 +497,8 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
             supabase
                 .from('reading_log_teacher_reviews')
                 .select('post_id, review_status, teacher_comment, reviewed_at')
-                .eq('student_id', studentSession.id)
+                .eq('student_id', studentSession.id),
+            supabase.rpc('get_my_reading_log_draft_statuses')
         ]);
 
         if (logsResult.error || libraryResult.error || linksResult.error) {
@@ -462,6 +507,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
             setLibraryItems([]);
             setLogLinks([]);
             setTeacherReviews([]);
+            setDraftStatuses([]);
         } else {
             setLogs(logsResult.data || []);
             setLibraryItems(libraryResult.data || []);
@@ -471,6 +517,12 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                 setTeacherReviews([]);
             } else {
                 setTeacherReviews(reviewsResult.data || []);
+            }
+            if (draftsResult.error) {
+                console.error('독서록 작성 상태 로드 실패:', draftsResult.error.message);
+                setDraftStatuses([]);
+            } else {
+                setDraftStatuses(draftsResult.data || []);
             }
         }
         setLoading(false);
@@ -526,7 +578,8 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                     isbn10: rawBook.isbn10 || '',
                     isbn13: rawBook.isbn13 || ''
                 },
-                logs: []
+                logs: [],
+                draft: null
             });
         });
 
@@ -545,10 +598,41 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                     readingStatus: log.structured_content?.readingStatus === 'reading' ? 'reading' : 'completed',
                     updatedAt: log.updated_at,
                     book: fallbackBook,
-                    logs: []
+                    logs: [],
+                    draft: null
                 });
             }
             shelves.get(fallbackId).logs.push(log);
+        });
+
+        draftStatuses.forEach((draft) => {
+            // 이미 저장된 독서록의 수정 초안은 카드 상태를 "작성 완료"로 유지한다.
+            if (draft.post_id) return;
+
+            const draftBook = bookFromDraft(draft.book || {});
+            const draftKeys = new Set([String(draft.book_key || '').trim(), ...getBookKeys(draftBook)].filter(Boolean));
+            const matchingShelf = [...shelves.values()].find((shelf) => (
+                getBookKeys(shelf.book).some((key) => draftKeys.has(key))
+            ));
+
+            if (matchingShelf) {
+                matchingShelf.draft = draft;
+                if (new Date(draft.updated_at) > new Date(matchingShelf.updatedAt || 0)) {
+                    matchingShelf.updatedAt = draft.updated_at;
+                }
+                return;
+            }
+
+            // 책을 고르기 전 저장한 빈 범위 초안은 책장 카드로 만들 수 없으므로 편집기에서만 복원한다.
+            if (!draftBook.title) return;
+            shelves.set(`draft-${draft.book_key || draft.updated_at}`, {
+                id: `draft-${draft.book_key || draft.updated_at}`,
+                readingStatus: draft.reading_status === 'reading' ? 'reading' : 'completed',
+                updatedAt: draft.updated_at,
+                book: draftBook,
+                logs: [],
+                draft
+            });
         });
 
         return [...shelves.values()]
@@ -557,13 +641,24 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                 logs: [...shelf.logs].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
             }))
             .sort((a, b) => new Date(b.updatedAt || b.logs[0]?.updated_at || 0) - new Date(a.updatedAt || a.logs[0]?.updated_at || 0));
-    }, [libraryItems, logLinks, logs]);
+    }, [draftStatuses, libraryItems, logLinks, logs]);
+
+    const displayShelves = useMemo(() => shelfBooks.map((shelf) => {
+        const mainLog = shelf.logs[0] || null;
+        const writingStateId = mainLog ? 'complete' : (shelf.draft ? 'draft' : 'saved');
+        return {
+            ...shelf,
+            mainLog,
+            writingStateId,
+            writingState: Reflect.get(SHELF_WRITING_STATES, writingStateId)
+        };
+    }), [shelfBooks]);
 
     const filteredShelves = useMemo(() => (
         statusFilter === 'all'
-            ? shelfBooks
-            : shelfBooks.filter((shelf) => shelf.readingStatus === statusFilter)
-    ), [shelfBooks, statusFilter]);
+            ? displayShelves
+            : displayShelves.filter((shelf) => shelf.readingStatus === statusFilter)
+    ), [displayShelves, statusFilter]);
 
     const counts = useMemo(() => ({
         books: shelfBooks.length,
@@ -571,8 +666,11 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
         public: logs.filter((log) => log.visibility === 'class').length,
         reading: shelfBooks.filter((shelf) => shelf.readingStatus === 'reading').length,
         completed: shelfBooks.filter((shelf) => shelf.readingStatus === 'completed').length,
-        reviewed: teacherReviews.length
-    }), [logs, shelfBooks, teacherReviews.length]);
+        reviewed: teacherReviews.length,
+        writingComplete: displayShelves.filter((shelf) => shelf.writingStateId === 'complete').length,
+        writingDraft: displayShelves.filter((shelf) => shelf.writingStateId === 'draft').length,
+        bookOnly: displayShelves.filter((shelf) => shelf.writingStateId === 'saved').length
+    }), [displayShelves, logs, shelfBooks, teacherReviews.length]);
 
     const teacherReviewByPost = useMemo(() => (
         new Map(teacherReviews.map((review) => [review.post_id, review]))
@@ -584,6 +682,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                 studentSession={studentSession}
                 postId={params.postId}
                 initialBook={params.book}
+                draftBookKey={params.draftBookKey}
                 onDone={openList}
                 onCancel={openList}
             />
@@ -606,6 +705,12 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                 <span><strong>{counts.logs}</strong>개의 독서록</span>
                 <span><strong>{counts.public}</strong>개를 친구 공개로 설정</span>
                 {counts.reviewed > 0 && <span><strong>{counts.reviewed}</strong>개를 선생님이 확인</span>}
+            </div>
+
+            <div className="reading-writing-legend" aria-label="독서록 작성 상태 안내">
+                <span className="complete">작성 완료 {counts.writingComplete}</span>
+                <span className="draft">작성 중 {counts.writingDraft}</span>
+                <span className="saved">책만 저장 {counts.bookOnly}</span>
             </div>
 
             <div className="reading-shelf-tabs" role="tablist" aria-label="책장 독서 상태 필터">
@@ -639,7 +744,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                     {filteredShelves.map((shelf, index) => {
                         // 책 한 권에 독서록 한 편이 우리 교실의 실제 모습이다(운영 데이터에서도 두 편 이상은 0건).
                         // 옛 데이터에 여러 편이 있더라도 가장 최근 것을 그 책의 독서록으로 본다.
-                        const mainLog = shelf.logs[0] || null;
+                        const { mainLog, writingState, writingStateId } = shelf;
                         const teacherReview = mainLog ? teacherReviewByPost.get(mainLog.id) : null;
                         return (
                         <motion.article
@@ -650,7 +755,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                             className="reading-shelf-card"
                         >
                             <div className="reading-shelf-card-main">
-                                <BookCover src={shelf.book.thumbnailUrl} title={shelf.book.title} />
+                                <BookCover src={shelf.book.thumbnailUrl} title={shelf.book.title} size="sm" />
                                 <div className="reading-shelf-book-info">
                                     <span className={`reading-status ${shelf.readingStatus}`}>
                                         {shelf.readingStatus === 'reading' ? '📖 읽는 중' : '✅ 다 읽음'}
@@ -667,12 +772,6 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                                 </div>
                             </div>
 
-                            {mainLog && (
-                                <p className="reading-shelf-log-preview">
-                                    {mainLog.content || '아직 내용이 없어요.'}
-                                </p>
-                            )}
-
                             {teacherReview && (
                                 <div className="reading-log-teacher-review">
                                     <strong>{teacherReview.review_status === 'commented' ? '💬 선생님 한마디' : '✅ 선생님이 확인했어요'}</strong>
@@ -683,11 +782,17 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                             <div className="reading-shelf-card-actions">
                                 <Button
                                     size="sm"
+                                    className={`reading-shelf-action is-${writingStateId}`}
+                                    style={writingState.buttonStyle}
                                     onClick={() => onNavigate('reading_logs', mainLog
                                         ? { mode: 'editor', postId: mainLog.id }
-                                        : { mode: 'editor', book: { ...shelf.book, readingStatus: shelf.readingStatus } })}
+                                        : {
+                                            mode: 'editor',
+                                            book: { ...shelf.book, readingStatus: shelf.readingStatus },
+                                            draftBookKey: shelf.draft?.book_key
+                                        })}
                                 >
-                                    {mainLog ? '독서록 수정하기 ✍️' : '독서록 쓰기 ✍️'}
+                                    {writingState.actionLabel}
                                 </Button>
                                 {mainLog && (
                                     <Button variant="ghost" size="sm" onClick={() => handleDelete(mainLog)}>삭제</Button>
@@ -698,45 +803,6 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                 </div>
             )}
 
-            <style>{`
-                .reading-log-page { width:min(1080px, calc(100% - 32px)); margin:24px auto 70px; }
-                .reading-log-list-header { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:24px; }
-                .reading-log-list-header h1 { margin:22px 0 8px; color:#263238; font-size:2rem; }
-                .reading-log-list-header p { margin:0; color:#78909C; }
-                .reading-log-summary { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:22px; }
-                .reading-log-summary span { padding:9px 14px; border-radius:999px; background:#F1F8E9; color:#558B2F; font-size:.9rem; }
-                .reading-log-summary strong { font-size:1.1rem; margin-right:3px; }
-                .reading-shelf-tabs { display:flex; gap:8px; margin-bottom:22px; overflow-x:auto; }
-                .reading-shelf-tabs button { padding:10px 15px; border:1px solid #DCEDC8; border-radius:12px; background:white; color:#607D8B; cursor:pointer; font-weight:800; white-space:nowrap; }
-                .reading-shelf-tabs button.active { background:#558B2F; border-color:#558B2F; color:white; }
-                .reading-shelf-tabs small { margin-left:4px; opacity:.8; }
-                .reading-shelf-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:20px; align-items:start; }
-                .reading-shelf-card { padding:22px; border:1px solid #E0E0E0; border-radius:24px; background:white; box-shadow:0 10px 28px rgba(51,105,30,.08); }
-                .reading-shelf-card-main { display:flex; align-items:flex-start; gap:20px; }
-                .reading-shelf-book-info { min-width:0; display:flex; flex-direction:column; align-items:flex-start; }
-                .reading-status { padding:5px 9px; border-radius:9px; font-size:.72rem; font-weight:900; }
-                .reading-status.reading { background:#E3F2FD; color:#1565C0; }
-                .reading-status.completed { background:#E8F5E9; color:#2E7D32; }
-                .reading-shelf-book-info h2 { margin:10px 0 5px; color:#263238; font-size:1.2rem; line-height:1.35; }
-                .reading-shelf-book-info p { margin:0 0 4px; color:#607D8B; font-size:.88rem; }
-                .reading-shelf-book-info > small { color:#9E9E9E; }
-                .reading-shelf-stats { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
-                .reading-shelf-stats span { padding:5px 8px; border-radius:8px; background:#F5F5F5; color:#78909C; font-size:.72rem; font-weight:800; }
-                .reading-shelf-card-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
-                .reading-shelf-log-preview { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; margin:16px 0 0; padding-top:14px; border-top:1px solid #ECEFF1; color:#78909C; font-size:.85rem; line-height:1.6; white-space:pre-wrap; }
-                .reading-log-teacher-review { margin:10px 0; padding:10px 12px; border-radius:11px; background:#EEF2FF; color:#4338CA; }
-                .reading-log-teacher-review strong { font-size:.78rem; }
-                .reading-log-teacher-review p { margin:5px 0 0; color:#475569; font-size:.82rem; line-height:1.5; white-space:pre-wrap; }
-                @media (max-width: 720px) {
-                    .reading-log-page { width:min(100% - 24px, 1080px); margin-top:14px; }
-                    .reading-log-list-header { align-items:stretch; flex-direction:column; }
-                    .reading-log-list-header > button { width:100%; }
-                    .reading-shelf-grid { grid-template-columns:1fr; }
-                    .reading-shelf-card-main { gap:16px; }
-                    .reading-shelf-card-actions { flex-direction:column; }
-                    .reading-shelf-card-actions > button { width:100%; }
-                }
-            `}</style>
         </div>
     );
 };
