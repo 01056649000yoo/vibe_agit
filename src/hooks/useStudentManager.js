@@ -34,7 +34,7 @@ export const useStudentManager = (classId) => {
         reason: '참여도가 높아요! 🌟'
     });
 
-    const { fetchExportData, exportToExcel, exportToGoogleDoc, authorizeGoogleExport, isGapiLoaded } = useDataExport();
+    const { fetchExportData, exportToExcel, exportToGoogleDoc, authorizeGoogleExport, isGapiLoaded } = useDataExport(classId);
 
     const fetchStudents = useCallback(async () => {
         if (!classId) return;

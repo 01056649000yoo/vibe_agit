@@ -22,7 +22,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
     const [selectedMissionIds, setSelectedMissionIds] = useState([]); // 다중 선택된 미션 ID들
 
     // 엑셀 추출 훅
-    const { fetchExportData, exportToExcel, exportToGoogleDoc, authorizeGoogleExport, isGapiLoaded } = useDataExport();
+    const { fetchExportData, exportToExcel, exportToGoogleDoc, authorizeGoogleExport, isGapiLoaded } = useDataExport(activeClass?.id);
 
     // 내보내기 모달 상태
     const [exportModalOpen, setExportModalOpen] = useState(false);

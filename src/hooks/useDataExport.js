@@ -4,6 +4,20 @@ import { supabase } from '../lib/supabaseClient';
 
 const GOOGLE_DOCS_API_ROOT = 'https://docs.googleapis.com/v1';
 
+const formatApprovalDate = (approvedAt, isConfirmed) => {
+    if (!isConfirmed) return '미승인';
+    if (!approvedAt) return '승인일 기록 없음';
+
+    const parts = new Intl.DateTimeFormat('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).formatToParts(new Date(approvedAt));
+    const dateParts = new Map(parts.map(({ type, value }) => [type, value]));
+    return `${dateParts.get('year')}-${dateParts.get('month')}-${dateParts.get('day')}`;
+};
+
 const requestGoogleDocs = async (path, accessToken, options = {}) => {
     const response = await fetch(`${GOOGLE_DOCS_API_ROOT}${path}`, {
         method: options.method || 'GET',
@@ -25,7 +39,7 @@ const requestGoogleDocs = async (path, accessToken, options = {}) => {
 /**
  * 엑셀 데이터 추출 및 구글 문서 내보내기를 위한 커스텀 훅
  */
-export const useDataExport = () => {
+export const useDataExport = (classId) => {
 
     // Google Identity Services 토큰 클라이언트가 준비되면 내보내기를 활성화한다.
     const [tokenClient, setTokenClient] = useState(null);
@@ -113,33 +127,24 @@ export const useDataExport = () => {
      */
     const fetchExportData = useCallback(async (type, id) => {
         try {
-            let query = supabase
-                .from('student_posts')
-                .select(`
-                    title,
-                    content,
-                    students (name, student_code, created_at),
-                    writing_missions!inner (title, id)
-                `)
-                .eq('is_submitted', true);
+            if (!classId) throw new Error('내보낼 학급을 확인할 수 없습니다.');
 
-            if (type === 'student') {
-                query = query.eq('student_id', id);
-            } else if (type === 'mission') {
-                query = query.eq('mission_id', id);
-            }
-
-            const { data, error } = await query;
+            const { data, error } = await supabase.rpc('get_writing_export_data', {
+                p_class_id: classId,
+                p_type: type,
+                p_target_id: id
+            });
             if (error) throw error;
 
             let formattedData = data.map(post => ({
-                작성자: post.students?.name || '알 수 없음',
-                번호: post.students?.student_code || 0,
-                미션제목: post.writing_missions?.title || '제목 없음',
-                학생글제목: post.title || '제목 없음',
+                작성자: post.student_name || '알 수 없음',
+                번호: post.student_code || 0,
+                미션제목: post.mission_title || '제목 없음',
+                학생글제목: post.post_title || '제목 없음',
                 내용: post.content || '',
-                _missionId: post.writing_missions?.id,
-                _studentCreatedAt: post.students?.created_at
+                승인일: formatApprovalDate(post.approved_at, post.is_confirmed),
+                _missionId: post.mission_id,
+                _studentCreatedAt: post.student_created_at
             }));
 
             if (type === 'student') {
@@ -153,11 +158,12 @@ export const useDataExport = () => {
                 });
             }
 
-            return formattedData.map(({ 번호, 작성자, 미션제목, 학생글제목, 내용 }) => ({
+            return formattedData.map(({ 번호, 작성자, 미션제목, 학생글제목, 승인일, 내용 }) => ({
                 번호,
                 작성자,
                 미션제목,
                 학생글제목,
+                승인일,
                 내용
             }));
 
@@ -166,7 +172,7 @@ export const useDataExport = () => {
             alert('데이터를 불러오는 중 오류가 발생했습니다.');
             return [];
         }
-    }, []);
+    }, [classId]);
 
     /**
      * 구글 문서로 내보내기 (순차 삽입)
@@ -301,7 +307,7 @@ export const useDataExport = () => {
                 // (b) 학생 이름 (작성자: 이름)
                 // 학생별 모드인 경우 이미 헤더가 학생 이름이므로 중복 표시 제외
                 if (groupBy !== 'student') {
-                    const nameLine = `작성자: ${item.작성자}\n\n`;
+                    const nameLine = `작성자: ${item.작성자}\n`;
                     requests.push({
                         insertText: { location: { index: currentIndex }, text: nameLine }
                     });
@@ -317,7 +323,7 @@ export const useDataExport = () => {
                     });
                     requests.push({
                         updateTextStyle: {
-                            range: { startIndex: currentIndex, endIndex: currentIndex + nameLine.length - 2 },
+                            range: { startIndex: currentIndex, endIndex: currentIndex + nameLine.length - 1 },
                             textStyle: { bold: true },
                             fields: 'bold'
                         }
@@ -329,6 +335,22 @@ export const useDataExport = () => {
                     requests.push({ insertText: { location: { index: currentIndex }, text: spacer } });
                     currentIndex += spacer.length;
                 }
+
+                const approvalLine = `승인일: ${item.승인일}\n\n`;
+                requests.push({
+                    insertText: { location: { index: currentIndex }, text: approvalLine }
+                });
+                requests.push({
+                    updateParagraphStyle: {
+                        range: { startIndex: currentIndex, endIndex: currentIndex + approvalLine.length },
+                        paragraphStyle: {
+                            namedStyleType: 'NORMAL_TEXT',
+                            alignment: 'START'
+                        },
+                        fields: 'namedStyleType,alignment'
+                    }
+                });
+                currentIndex += approvalLine.length;
 
                 // (c) 글 내용 (본문)
                 const contentText = `${item.내용}\n`;
