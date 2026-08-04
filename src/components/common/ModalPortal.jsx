@@ -9,11 +9,12 @@ import { createPortal } from 'react-dom';
  * 게다가 `overflow: hidden` 이라 카드 밖으로 나간 부분이 잘린다.
  * 그래서 모달이 화면 가운데가 아니라 문서 어딘가에 뜨고, 학생이 스크롤해야 보였다.
  *
- * 포털로 body 에 붙이면 조상의 transform 과 무관해져 항상 보는 화면 가운데에 뜬다.
+ * 기본은 body 에 붙여 조상의 transform 영향을 피한다. 다만 Fullscreen API를 사용 중이면
+ * fullscreen 요소 밖의 body 자식은 보이지 않을 수 있으므로, 호출부가 해당 요소를 container로 넘길 수 있다.
  */
-const ModalPortal = ({ children }) => {
+const ModalPortal = ({ children, container = null }) => {
     if (typeof document === 'undefined') return null;
-    return createPortal(children, document.body);
+    return createPortal(children, container || document.body);
 };
 
 export default ModalPortal;

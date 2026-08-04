@@ -5,6 +5,7 @@ import {
     buildCumulativePoints, fillSchoolYearMonths, MonthlyBars, num,
     PointTypeBars, StatTile, TrendLine, WritingCalendar
 } from './FootprintVisuals';
+import StudentFootprintDetailModal from './StudentFootprintDetailModal';
 
 const EMPTY_CLASS_FOOTPRINT = {
     school_year: null,
@@ -127,7 +128,7 @@ const StudentTable = ({ students }) => {
 };
 
 /** 전체화면에서는 학생 1명을 한 줄짜리 미니 카드로 줄이고 여러 열에 나눠 모든 학생을 함께 본다. */
-const CompactStudentGrid = ({ students }) => {
+const CompactStudentGrid = ({ students, onSelectStudent }) => {
     // 전체 폭을 사용하므로 한 줄에 더 많은 카드를 두고, 카드 한 장은 3줄 높이를 확보한다.
     const columns = Math.min(8, Math.max(3, Math.ceil(students.length / 4)));
     const rows = Math.ceil(students.length / columns);
@@ -153,10 +154,11 @@ const CompactStudentGrid = ({ students }) => {
                 `30일 ${num(student.recent_30_posts)}편·${changeLabel}`,
                 `포인트 +${num(student.points_earned)}·사용 ${num(student.points_used)}`
             ].join(' · ');
-            return <div key={student.student_id} title={`${student.name} · ${fullSummary} · 최근 글 ${formatDate(student.last_post_at)}`} style={{
+            return <button type="button" key={student.student_id} onClick={() => onSelectStudent(student)} aria-haspopup="dialog" aria-label={`${student.name} 발자국 크게 보기`} title={`${student.name} · ${fullSummary} · 최근 글 ${formatDate(student.last_post_at)}`} style={{
                 border: '1px solid #DCE6F2', borderRadius: '10px', padding: '5px 8px', background: '#F8FAFC',
                 minWidth: 0, minHeight: '68px', boxSizing: 'border-box',
-                display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden'
+                display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden',
+                color: 'inherit', font: 'inherit', textAlign: 'left', cursor: 'pointer'
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '5px', alignItems: 'baseline', minWidth: 0, lineHeight: 1.05 }}>
                     <strong style={{ flex: 1, minWidth: 0, color: '#172554', fontSize: 'var(--footprint-student-name, .84rem)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</strong>
@@ -174,7 +176,7 @@ const CompactStudentGrid = ({ students }) => {
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>교류 {num(interactionsGiven)}↗ {num(interactionsReceived)}↙</span>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: change == null ? '#94A3B8' : (Number(change) >= 0 ? '#047857' : '#B45309') }}>30일 {num(student.recent_30_posts)} · {changeLabel}</span>
                 </div>
-            </div>;
+            </button>;
         })}
     </div>;
 };
@@ -216,6 +218,8 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
     const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
     const [isExpanded, setIsExpanded] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+    const [modalContainer, setModalContainer] = useState(null);
     const rootRef = useRef(null);
 
     const classId = activeClass?.id;
@@ -246,7 +250,11 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
 
     useEffect(() => {
         const handleFullscreenChange = () => {
-            if (!document.fullscreenElement) setIsExpanded(false);
+            setModalContainer(document.fullscreenElement || null);
+            if (!document.fullscreenElement) {
+                setIsExpanded(false);
+                setSelectedStudent(null);
+            }
         };
         const handleKeyDown = (event) => {
             if (event.key === 'Escape' && !document.fullscreenElement) setIsExpanded(false);
@@ -268,6 +276,7 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
 
     const toggleExpanded = useCallback(async () => {
         if (isExpanded) {
+            setSelectedStudent(null);
             if (document.fullscreenElement === rootRef.current) await document.exitFullscreen().catch(() => {});
             setIsExpanded(false);
             return;
@@ -275,6 +284,7 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
         setIsExpanded(true);
         if (rootRef.current?.requestFullscreen) await rootRef.current.requestFullscreen().catch(() => {});
     }, [isExpanded]);
+    const closeStudentDetail = useCallback(() => setSelectedStudent(null), []);
 
     const months = useMemo(() => fillSchoolYearMonths(detail.monthly, detail.school_year), [detail.monthly, detail.school_year]);
     const cumulativePoints = useMemo(() => buildCumulativePoints(detail.points_monthly, detail.school_year), [detail.points_monthly, detail.school_year]);
@@ -335,8 +345,8 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
             gap: '7px', flex: 1, minHeight: 0, overflow: 'hidden'
         }}>
             <ChartPanels compact detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} />
-            <Panel compact title={`👥 학생별 현황 · ${students.length}명`} style={{ height: '100%', boxSizing: 'border-box' }}>
-                <CompactStudentGrid students={students} />
+            <Panel compact title={`👥 학생별 현황 · ${students.length}명 · 카드를 눌러 크게 보기`} style={{ height: '100%', boxSizing: 'border-box' }}>
+                <CompactStudentGrid students={students} onSelectStudent={setSelectedStudent} />
             </Panel>
         </div> : <>
             <ChartPanels detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} isMobile={isMobile} />
@@ -344,6 +354,7 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
                 <StudentTable students={students} />
             </Panel>
         </>}
+        <StudentFootprintDetailModal student={selectedStudent} onClose={closeStudentDetail} container={modalContainer} />
     </div>;
 };
 
