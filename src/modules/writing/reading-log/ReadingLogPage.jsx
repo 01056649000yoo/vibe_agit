@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
+import Modal from '../../../components/common/Modal';
 import WritingEditorFields from '../../../components/writing/WritingEditorFields';
 import {
     WritingNotice,
@@ -471,6 +472,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     const [logLinks, setLogLinks] = useState([]);
     const [teacherReviews, setTeacherReviews] = useState([]);
     const [draftStatuses, setDraftStatuses] = useState([]);
+    const [selectedTeacherComment, setSelectedTeacherComment] = useState(null);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('all');
     const isEditing = params.mode === 'editor';
@@ -537,6 +539,10 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     const openList = useCallback(() => {
         onNavigate('reading_logs');
     }, [onNavigate]);
+
+    const closeTeacherComment = useCallback(() => {
+        setSelectedTeacherComment(null);
+    }, []);
 
     const handleDelete = async (log) => {
         if (!window.confirm(`「${log.title || '제목 없는 독서록'}」을 삭제할까요? 삭제하면 되돌릴 수 없어요.`)) return;
@@ -746,6 +752,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                         // 옛 데이터에 여러 편이 있더라도 가장 최근 것을 그 책의 독서록으로 본다.
                         const { mainLog, writingState, writingStateId } = shelf;
                         const teacherReview = mainLog ? teacherReviewByPost.get(mainLog.id) : null;
+                        const hasTeacherComment = Boolean(teacherReview?.teacher_comment?.trim());
                         return (
                         <motion.article
                             key={shelf.id}
@@ -767,17 +774,25 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                                         <div className="reading-shelf-stats">
                                             <span>{mainLog.visibility === 'class' ? '📚 친구 공개' : '🔒 나만 보기'}</span>
                                             <span>{formatDate(mainLog.updated_at || mainLog.created_at)}</span>
+                                            {hasTeacherComment ? (
+                                                <button
+                                                    type="button"
+                                                    className="reading-teacher-comment-trigger"
+                                                    onClick={() => setSelectedTeacherComment({
+                                                        ...teacherReview,
+                                                        bookTitle: shelf.book.title || '책 제목 없음'
+                                                    })}
+                                                    aria-label={`「${shelf.book.title || '책 제목 없음'}」 선생님 한마디 보기`}
+                                                >
+                                                    💬 한마디 있음
+                                                </button>
+                                            ) : teacherReview ? (
+                                                <span className="reading-teacher-reviewed">✅ 선생님 확인</span>
+                                            ) : null}
                                         </div>
                                     )}
                                 </div>
                             </div>
-
-                            {teacherReview && (
-                                <div className="reading-log-teacher-review">
-                                    <strong>{teacherReview.review_status === 'commented' ? '💬 선생님 한마디' : '✅ 선생님이 확인했어요'}</strong>
-                                    {teacherReview.teacher_comment && <p>{teacherReview.teacher_comment}</p>}
-                                </div>
-                            )}
 
                             <div className="reading-shelf-card-actions">
                                 <Button
@@ -802,6 +817,21 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                     );})}
                 </div>
             )}
+
+            <Modal
+                isOpen={Boolean(selectedTeacherComment)}
+                onClose={closeTeacherComment}
+                title="💬 선생님 한마디"
+                maxWidth="560px"
+            >
+                <div className="reading-teacher-comment-modal">
+                    <span>{selectedTeacherComment?.bookTitle}</span>
+                    <p>{selectedTeacherComment?.teacher_comment}</p>
+                    {selectedTeacherComment?.reviewed_at && (
+                        <small>{formatDate(selectedTeacherComment.reviewed_at)}에 남긴 한마디</small>
+                    )}
+                </div>
+            </Modal>
 
         </div>
     );
