@@ -66,6 +66,12 @@ const WritingToolHost = ({ disabled = false }) => {
         });
     }, []);
 
+    // 닫기 함수가 렌더마다 새로 만들어지면 도구 쪽 useEffect 가 매번 다시 돌아
+    // 배경 스크롤 잠금이 풀리지 않는다. 도구별로 한 번만 만들어 둔다.
+    const closeHandlers = useMemo(() => Object.fromEntries(
+        WRITING_TOOLS.map((tool) => [tool.id, () => closeTool(tool.id)])
+    ), [closeTool]);
+
     // 밑줄 칩처럼 도구 바깥에서 "이 낱말로 열어 줘" 하고 보내는 신호를 받는다.
     // 본체를 아직 안 받았어도 여기서 먼저 잡아 두므로 신호를 놓치지 않는다.
     const openEvents = useMemo(
@@ -116,7 +122,7 @@ const WritingToolHost = ({ disabled = false }) => {
                                     key={request.at}
                                     initialQuery={request.query}
                                     correction={request.correction}
-                                    onClose={() => closeTool(id)}
+                                    onClose={closeHandlers[id]}
                                 />
                             </Suspense>
                         )}

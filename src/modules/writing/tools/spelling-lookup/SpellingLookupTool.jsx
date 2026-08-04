@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, BookOpen, ExternalLink, X } from 'lucide-react';
+import { ArrowRight, BookOpen, ExternalLink, Search, X } from 'lucide-react';
 import ModalPortal from '../../../../components/common/ModalPortal';
 import { supabase } from '../../../../lib/supabaseClient';
 import {
