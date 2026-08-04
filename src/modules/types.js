@@ -14,6 +14,8 @@
  * @property {() => Promise<any>} [studentEntry]  학생 진입 컴포넌트 (React.lazy용 동적 import)
  * @property {() => Promise<any>} [myAgitEntry]  나의 아지트 확장 카드 (React.lazy용 동적 import)
  * @property {() => Promise<any>} [teacherEntry]  교사 설정/관리 컴포넌트
+ * @property {Record<string, Array<Object>>} [dashboardCards]
+ *   교사 대시보드 확장 카드. 키는 대시보드 id이며 공통 카드 호스트가 기본·전체화면·모달 노출을 담당한다.
  * @property {{name?: string, description?: string, background?: string, borderColor?: string, order?: number, entryMode?: 'standard'|'legacy'}} [playground]
  *   학생 놀이터 카드와 진입 방식. standard 모듈은 studentEntry가 공통 호스트 props를 받는다.
  * @property {{order?: number}} [myAgit] 나의 아지트에서 확장 카드를 표시할 순서
@@ -49,6 +51,13 @@ export function validateManifest(m) {
   if (!['student', 'teacher', 'both'].includes(m.audience)) problems.push(`audience 유효하지 않음: ${m.audience}`);
   if (!m.studentEntry && !m.teacherEntry) problems.push('studentEntry/teacherEntry 둘 다 없음');
   if (m.myAgit && typeof m.myAgitEntry !== 'function') problems.push('myAgit 설정은 있지만 myAgitEntry가 없음');
+  if (m.dashboardCards && (typeof m.dashboardCards !== 'object' || Array.isArray(m.dashboardCards))) {
+    problems.push('dashboardCards가 객체가 아님');
+  } else if (m.dashboardCards) {
+    Object.entries(m.dashboardCards).forEach(([dashboardId, cards]) => {
+      if (!Array.isArray(cards)) problems.push(`dashboardCards.${dashboardId}가 배열이 아님`);
+    });
+  }
   if (m.management?.legacy !== true && m.teacherEntry && m.audience === 'student') {
     problems.push('teacherEntry가 있지만 audience가 student임');
   }

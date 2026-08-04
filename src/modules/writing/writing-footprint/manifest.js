@@ -1,3 +1,5 @@
+import { CLASS_FOOTPRINT_CARDS } from './dashboardCards';
+
 /**
  * 학생의 글쓰기 활동을 가볍게 돌아보는 고정 모듈.
  * 원천 이벤트는 DB에만 두고 화면은 일별 스냅샷 한 건만 읽는다.
@@ -11,7 +13,10 @@ export const writingFootprintManifest = {
     audience: 'student',
     core: true,
     // 페이지가 아니라 모달로 연다 — 학생이 헤더 버튼으로 수시로 열어 본다.
-    studentEntry: () => import('./WritingFootprintModal')
+    studentEntry: () => import('./WritingFootprintModal'),
+    dashboardCards: {
+        'class-footprint': CLASS_FOOTPRINT_CARDS
+    }
 };
 
 export default writingFootprintManifest;

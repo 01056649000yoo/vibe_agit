@@ -1,12 +1,25 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import { classKey, dataCache } from '../../../lib/cache';
+import DashboardCardHost from '../../dashboard/DashboardCardHost';
+import { DASHBOARD_IDS, getDashboardCards, getDashboardValue } from '../../dashboard/cardRegistry';
 import {
-    buildCumulativePoints, fillSchoolYearMonths, MonthlyBars, num,
-    PointTypeBars, StatTile, TrendLine, WritingCalendar
+    buildCumulativePoints, fillSchoolYearMonths, num, StatTile
 } from './FootprintVisuals';
+import FootprintCardContent from './FootprintCardContent';
 import FootprintChartDetailModal from './FootprintChartDetailModal';
 import StudentFootprintDetailModal from './StudentFootprintDetailModal';
+
+const FOOTPRINT_DASHBOARD_CARDS = getDashboardCards(
+    DASHBOARD_IDS.CLASS_FOOTPRINT,
+    [],
+    {
+        renderers: {
+            summary: ['stat'],
+            visualization: ['calendar', 'monthly-bars', 'trend-line', 'point-flow', 'point-types']
+        }
+    }
+);
 
 const EMPTY_CLASS_FOOTPRINT = {
     school_year: null,
@@ -51,18 +64,50 @@ const formatDate = (value) => value
     ? new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric' }).format(new Date(value))
     : '아직 없음';
 
-const SummaryTiles = ({ totals, participation, compact = false, isMobile = false }) => <div style={{
-    display: 'grid',
-    gridTemplateColumns: isMobile && !compact ? 'repeat(2, minmax(0,1fr))' : 'repeat(6, minmax(0,1fr))',
-    gap: compact ? '6px' : '10px'
-}}>
-    <StatTile compact={compact} icon="👥" label="참여 학생" value={`${num(totals.active_students)}/${num(totals.total_students)}`} unit={`명 · ${participation}%`} accent="#1D4ED8" />
-    <StatTile compact={compact} icon="📝" label="완료 글" value={num(totals.total_posts)} unit="편" />
-    <StatTile compact={compact} icon="✍️" label="쓴 글자" value={num(totals.total_chars)} unit="자" />
-    <StatTile compact={compact} icon="📊" label="학생당 평균" value={num(totals.avg_posts_per_student)} unit="편" />
-    <StatTile compact={compact} icon="📏" label="한 편 평균" value={num(totals.avg_chars_per_post)} unit="자" />
-    <StatTile compact={compact} icon="💬" label="친구 교류" value={num(Number(totals.comments) + Number(totals.reactions))} unit="회" />
-</div>;
+const resolveSummaryMetric = (card, context) => {
+    const metric = card.metric || {};
+    if (metric.type === 'ratio') {
+        const numerator = Number(getDashboardValue(context, metric.numeratorPath, 0));
+        const denominator = Number(getDashboardValue(context, metric.denominatorPath, 0));
+        const percent = denominator > 0 ? Math.round((numerator / denominator) * 100) : 0;
+        return { value: `${num(numerator)}/${num(denominator)}`, unit: `${metric.unit || ''} · ${percent}%` };
+    }
+    if (metric.type === 'sum') {
+        const value = (metric.paths || []).reduce(
+            (total, path) => total + Number(getDashboardValue(context, path, 0)),
+            0
+        );
+        return { value: num(value), unit: metric.unit || '' };
+    }
+    return { value: num(getDashboardValue(context, metric.path, 0)), unit: metric.unit || '' };
+};
+
+const SummaryTiles = ({ cards, context, compact = false, isMobile = false }) => {
+    const surface = compact ? 'fullscreen' : 'default';
+    const cardCount = cards.filter((card) => (
+        card.section === 'summary'
+        && (!card.surfaces || card.surfaces.includes(surface))
+        && (typeof card.isVisible !== 'function' || card.isVisible(context))
+    )).length;
+    const columns = isMobile && !compact ? 2 : Math.min(Math.max(cardCount, 1), compact ? 8 : 6);
+
+    return <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))`,
+        gap: compact ? '6px' : '10px'
+    }}>
+        <DashboardCardHost
+            cards={cards}
+            context={context}
+            section="summary"
+            surface={surface}
+            renderCard={(card) => {
+                const metric = resolveSummaryMetric(card, context);
+                return <StatTile compact={compact} icon={card.icon} label={card.label} value={metric.value} unit={metric.unit} accent={card.accent} />;
+            }}
+        />
+    </div>;
+};
 
 const MetricCell = ({ primary, secondary, muted = false }) => <td style={{ padding: '11px 10px', textAlign: 'right', verticalAlign: 'middle' }}>
     <strong style={{ display: 'block', color: muted ? '#94A3B8' : '#334155', fontSize: '.83rem' }}>{primary}</strong>
@@ -197,37 +242,39 @@ const CompactStudentGrid = ({ students, onSelectStudent }) => {
     </div>;
 };
 
-const ChartPanels = ({ detail, totals, months, cumulativePoints, compact = false, isMobile = false, onOpenPanel }) => <div style={{
-    display: 'grid',
-    gridTemplateColumns: isMobile && !compact ? 'minmax(0,1fr)' : `repeat(${compact ? 3 : 2}, minmax(0,1fr))`,
-    gridTemplateRows: compact ? 'repeat(2, minmax(0,1fr))' : undefined,
-    gap: compact ? '7px' : '18px', minWidth: 0, minHeight: 0
-}}>
-    <Panel compact={compact} onOpen={() => onOpenPanel('calendar')} title="🔥 학급 글쓰기 달력" hint="학급 전체가 쓴 날을 합쳐, 활동이 많았던 날을 진하게 표시합니다.">
-        <WritingCalendar compact={compact} fluid={compact} daily={detail.daily || []} schoolYear={detail.school_year} />
-    </Panel>
-    <Panel compact={compact} onOpen={() => onOpenPanel('monthly_posts')} title="📈 달마다 완료한 글" hint="승인된 글을 기준으로 월별 학급 활동량을 봅니다.">
-        <MonthlyBars compact={compact} fluid={compact} rows={months} valueKey="posts" unit="편" />
-    </Panel>
-    <Panel compact={compact} onOpen={() => onOpenPanel('average_chars')} title="✍️ 글 길이 변화" hint="월별로 글 한 편의 평균 글자 수가 어떻게 달라졌는지 봅니다.">
-        <TrendLine compact={compact} fluid={compact} rows={months} valueKey="avg_chars" unit="자" />
-    </Panel>
-    <Panel compact={compact} onOpen={() => onOpenPanel('point_flow')} title="💰 학급 포인트 흐름" hint="학급에서 모은 포인트에서 사용·조정된 포인트를 뺀 누적 흐름입니다.">
-        <TrendLine compact={compact} fluid={compact} rows={cumulativePoints} valueKey="total" unit="P" />
-        {compact ? <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '-8px', fontSize: 'var(--footprint-fs-xs, .58rem)', fontWeight: 900, color: '#64748B' }}>
-            <span>+ {num(totals.points_earned)}P</span><span>- {num(totals.points_used)}P</span>
-        </div> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '9px', marginTop: '8px' }}>
-            <StatTile icon="➕" label="모은 포인트" value={num(totals.points_earned)} unit="P" />
-            <StatTile icon="➖" label="직접 사용" value={num(totals.points_used)} unit="P" />
-        </div>}
-    </Panel>
-    <Panel compact={compact} onOpen={() => onOpenPanel('point_sources')} title="🎁 포인트 획득처" hint="이번 학년도에 학급이 포인트를 모은 활동입니다.">
-        <PointTypeBars compact={compact} rows={detail.points_by_type || []} emptyMessage="아직 모은 포인트가 없습니다." />
-    </Panel>
-    <Panel compact={compact} onOpen={() => onOpenPanel('point_spending')} title="🛍️ 포인트 사용처" hint="학생이 직접 선택해 사용한 포인트만 표시합니다.">
-        <PointTypeBars compact={compact} rows={detail.spending_by_type || []} emptyMessage="아직 사용한 포인트가 없습니다." color="#F59E0B" />
-    </Panel>
-</div>;
+const ChartPanels = ({ cards, context, compact = false, isMobile = false, onOpenPanel }) => {
+    const surface = compact ? 'fullscreen' : 'default';
+    const cardCount = cards.filter((card) => (
+        card.section === 'visualization'
+        && (!card.surfaces || card.surfaces.includes(surface))
+        && (typeof card.isVisible !== 'function' || card.isVisible(context))
+    )).length;
+    const compactColumns = Math.min(4, Math.max(1, Math.ceil(cardCount / 2)));
+    const columns = isMobile && !compact ? 1 : (compact ? compactColumns : 2);
+    const rows = compact ? Math.ceil(cardCount / compactColumns) : undefined;
+
+    return <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))`,
+        gridTemplateRows: compact ? `repeat(${rows}, minmax(0,1fr))` : undefined,
+        gap: compact ? '7px' : '18px', minWidth: 0, minHeight: 0
+    }}>
+        <DashboardCardHost
+            cards={cards}
+            context={context}
+            section="visualization"
+            surface={surface}
+            renderCard={(card) => <Panel
+                compact={compact}
+                onOpen={card.surfaces?.includes('modal') ? () => onOpenPanel(card.id) : undefined}
+                title={card.title}
+                hint={card.hint}
+            >
+                <FootprintCardContent card={card} context={context} compact={compact} />
+            </Panel>}
+        />
+    </div>;
+};
 
 const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
     const [detail, setDetail] = useState(EMPTY_CLASS_FOOTPRINT);
@@ -310,9 +357,14 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
     const cumulativePoints = useMemo(() => buildCumulativePoints(detail.points_monthly, detail.school_year), [detail.points_monthly, detail.school_year]);
     const totals = detail.totals || EMPTY_CLASS_FOOTPRINT.totals;
     const students = detail.students || [];
-    const participation = totals.total_students
-        ? Math.round((Number(totals.active_students) / Number(totals.total_students)) * 100)
-        : 0;
+    const dashboardContext = useMemo(
+        () => ({ detail, totals, months, cumulativePoints }),
+        [cumulativePoints, detail, months, totals]
+    );
+    const selectedChartCard = useMemo(
+        () => FOOTPRINT_DASHBOARD_CARDS.find((card) => card.id === selectedChart && card.surfaces?.includes('modal')) || null,
+        [selectedChart]
+    );
     const schoolYearLabel = detail.school_year?.start
         ? `${String(detail.school_year.start).slice(0, 4)}학년도 (3월~1월)`
         : '이번 학년도 (3월~1월)';
@@ -358,23 +410,23 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
             </div>
         </div>
 
-        <SummaryTiles totals={totals} participation={participation} compact={isExpanded} isMobile={isMobile} />
+        <SummaryTiles cards={FOOTPRINT_DASHBOARD_CARDS} context={dashboardContext} compact={isExpanded} isMobile={isMobile} />
 
         {isExpanded && !isMobile ? <div style={{
             display: 'grid', gridTemplateRows: 'minmax(0,3fr) minmax(320px,2fr)',
             gap: '7px', flex: 1, minHeight: 0, overflow: 'hidden'
         }}>
-            <ChartPanels compact detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} onOpenPanel={setSelectedChart} />
+            <ChartPanels cards={FOOTPRINT_DASHBOARD_CARDS} context={dashboardContext} compact onOpenPanel={setSelectedChart} />
             <Panel compact title={`👥 학생별 현황 · ${students.length}명 · 카드를 눌러 크게 보기`} style={{ height: '100%', boxSizing: 'border-box' }}>
                 <CompactStudentGrid students={students} onSelectStudent={setSelectedStudent} />
             </Panel>
         </div> : <>
-            <ChartPanels detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} isMobile={isMobile} onOpenPanel={setSelectedChart} />
+            <ChartPanels cards={FOOTPRINT_DASHBOARD_CARDS} context={dashboardContext} isMobile={isMobile} onOpenPanel={setSelectedChart} />
             <Panel title="👥 학생별 현황" hint="등수가 아니라 개별 학생의 참여와 최근 기록을 빠르게 확인하는 표입니다.">
                 <StudentTable students={students} />
             </Panel>
         </>}
-        <FootprintChartDetailModal view={selectedChart} onClose={closeChartDetail} container={modalContainer} detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} />
+        <FootprintChartDetailModal card={selectedChartCard} onClose={closeChartDetail} container={modalContainer} context={dashboardContext} />
         <StudentFootprintDetailModal student={selectedStudent} onClose={closeStudentDetail} container={modalContainer} />
     </div>;
 };

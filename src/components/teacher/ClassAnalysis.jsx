@@ -1,6 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
+import DashboardCardHost from '../../modules/dashboard/DashboardCardHost';
+import {
+    DASHBOARD_IDS, getDashboardCards, getDashboardValue, getFirstDashboardValue
+} from '../../modules/dashboard/cardRegistry';
+import { CLASS_OPERATIONS_CORE_CARDS } from './classOperationsCards';
+
+const CLASS_OPERATIONS_CARDS = getDashboardCards(
+    DASHBOARD_IDS.CLASS_OPERATIONS,
+    CLASS_OPERATIONS_CORE_CARDS,
+    { renderers: { summary: ['metric'], actions: ['action'] } }
+);
 
 const CACHE_TTL_MS = 30000;
 
@@ -51,6 +62,39 @@ const missionTypeLabel = (type) => {
     if (type === 'meeting') return '회의 안건';
     if (type === 'poem') return '시 쓰기';
     return '자유 글쓰기';
+};
+
+const resolveMetricCard = (card, data) => {
+    const metric = card.metric || {};
+    if (metric.type === 'ratio') {
+        const numerator = Number(getDashboardValue(data, metric.numeratorPath, 0));
+        const denominator = Number(getDashboardValue(data, metric.denominatorPath, 0));
+        const percent = denominator > 0 ? Math.round((numerator / denominator) * 100) : 0;
+        return {
+            value: `${numerator.toLocaleString()}/${denominator.toLocaleString()}${metric.unit || ''}`,
+            note: `${metric.noteLabel || '비율'} ${percent}%`
+        };
+    }
+    return {
+        value: `${Number(getDashboardValue(data, metric.path, 0)).toLocaleString()}${metric.unit || ''}`,
+        note: card.note
+    };
+};
+
+const resolveActionDetail = (card, item) => {
+    if (card.detailRenderer === 'last-activity') {
+        return item.last_activity_at ? `마지막 ${formatDate(item.last_activity_at)}` : '활동 기록 없음';
+    }
+    return getFirstDashboardValue(item, card.detailPaths, card.detailFallback || '내용 없음');
+};
+
+const buildNavigationTarget = (card, action) => {
+    if (typeof card.navigate === 'function') return card.navigate(action);
+    if (!card.navigate) return null;
+    const { includeFirstItem, ...target } = card.navigate;
+    return includeFirstItem
+        ? { ...target, item: action?.items?.[0] || null }
+        : target;
 };
 
 const MetricCard = ({ icon, label, value, note, background, color }) => (
@@ -189,10 +233,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
         loadDashboard();
     }, [loadDashboard]);
 
-    const summary = data.summary;
-    const totalStudents = Number(summary.students || 0);
-    const activeStudents = Number(summary.active_students || 0);
-    const activeRate = totalStudents > 0 ? Math.round((activeStudents / totalStudents) * 100) : 0;
+    const totalStudents = Number(data.summary.students || 0);
     const periodLabel = PERIOD_OPTIONS.find((option) => option.id === period)?.label || '조회 기간';
 
     if (loading) {
@@ -261,12 +302,22 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                     <small style={{ color: '#94A3B8', fontSize: '0.66rem' }}>{periodLabel} 기준</small>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, minmax(0, 1fr))', gap: '9px' }}>
-                    <MetricCard icon="👥" label="활동 학생" value={`${activeStudents}/${totalStudents}명`} note={`참여율 ${activeRate}%`} background="#EFF6FF" color="#1D4ED8" />
-                    <MetricCard icon="📝" label="작성 완료 글" value={`${Number(summary.submitted_posts || 0).toLocaleString()}편`} />
-                    <MetricCard icon="♻️" label="고쳐쓰기" value={`${Number(summary.revisions || 0).toLocaleString()}회`} background="#F0FDF4" color="#15803D" />
-                    <MetricCard icon="💬" label="댓글 활동" value={`${Number(summary.comments || 0).toLocaleString()}회`} />
-                    <MetricCard icon="💡" label="받은 피드백" value={`${Number(summary.feedbacks || 0).toLocaleString()}회`} background="#FFF7ED" color="#C2410C" />
-                    <MetricCard icon="🔤" label="평균 글자 수" value={`${Number(summary.avg_chars || 0).toLocaleString()}자`} />
+                    <DashboardCardHost
+                        cards={CLASS_OPERATIONS_CARDS}
+                        context={data}
+                        section="summary"
+                        renderCard={(card) => {
+                            const metric = resolveMetricCard(card, data);
+                            return <MetricCard
+                                icon={card.icon}
+                                label={card.label}
+                                value={metric.value}
+                                note={metric.note}
+                                background={card.background}
+                                color={card.color}
+                            />;
+                        }}
+                    />
                 </div>
                 <p style={{ margin: '7px 2px 0', color: '#94A3B8', fontSize: '0.64rem', lineHeight: 1.4 }}>
                     고쳐쓰기·댓글·피드백은 글쓰기 발자국 기록을 시작한 이후 활동부터 집계합니다.
@@ -279,49 +330,24 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                     <small style={{ color: '#94A3B8', fontSize: '0.66rem' }}>현재 상태 기준</small>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '9px' }}>
-                    <ActionCard
-                        icon="📥" title="과제 제출 확인" description="제출했지만 아직 확인하지 않은 글"
-                        action={data.actions.assignment_pending}
-                        tone={{ background: '#EFF6FF', border: '#BFDBFE', badge: '#DBEAFE', text: '#1D4ED8' }}
-                        renderDetail={(item) => item.mission_title || item.title || '선생님 과제'}
-                        actionLabel="제출 글 확인"
-                        onActivate={() => onNavigate?.({
-                            tab: 'dashboard',
-                            kind: 'assignment-review',
-                            item: data.actions.assignment_pending?.items?.[0] || null
-                        })}
-                    />
-                    <ActionCard
-                        icon="📚" title="독서록 확인" description="학생이 등록한 미확인 독서록"
-                        action={data.actions.reading_pending}
-                        tone={{ background: '#F0FDF4', border: '#BBF7D0', badge: '#DCFCE7', text: '#15803D' }}
-                        renderDetail={(item) => item.title || '제목 없는 독서록'}
-                        actionLabel="독서록 확인"
-                        onActivate={() => onNavigate?.({
-                            tab: 'reading-logs',
-                            kind: 'reading-review',
-                            item: data.actions.reading_pending?.items?.[0] || null
-                        })}
-                    />
-                    <ActionCard
-                        icon="🧭" title="평가 입력" description="루브릭은 설정됐지만 평가가 없는 글"
-                        action={data.actions.evaluation_pending}
-                        tone={{ background: '#FFF7ED', border: '#FED7AA', badge: '#FFEDD5', text: '#C2410C' }}
-                        renderDetail={(item) => item.mission_title || item.title || '평가 과제'}
-                        actionLabel="평가 입력"
-                        onActivate={() => onNavigate?.({
-                            tab: 'dashboard',
-                            kind: 'evaluation-entry',
-                            item: data.actions.evaluation_pending?.items?.[0] || null
-                        })}
-                    />
-                    <ActionCard
-                        icon="🌙" title="최근 활동 없음" description="7일 넘게 글쓰기 활동이 없는 학생"
-                        action={data.actions.inactive_students}
-                        tone={{ background: '#FAF5FF', border: '#E9D5FF', badge: '#F3E8FF', text: '#7E22CE' }}
-                        renderDetail={(item) => item.last_activity_at ? `마지막 ${formatDate(item.last_activity_at)}` : '활동 기록 없음'}
-                        actionLabel="학생 명단 보기"
-                        onActivate={() => onNavigate?.({ tab: 'students', kind: 'student-roster' })}
+                    <DashboardCardHost
+                        cards={CLASS_OPERATIONS_CARDS}
+                        context={data}
+                        section="actions"
+                        renderCard={(card) => {
+                            const action = getDashboardValue(data, card.dataPath, { count: 0, items: [] });
+                            const navigationTarget = buildNavigationTarget(card, action);
+                            return <ActionCard
+                                icon={card.icon}
+                                title={card.title}
+                                description={card.description}
+                                action={action}
+                                tone={card.tone}
+                                renderDetail={(item) => resolveActionDetail(card, item)}
+                                actionLabel={card.actionLabel}
+                                onActivate={navigationTarget ? () => onNavigate?.(navigationTarget) : undefined}
+                            />;
+                        }}
                     />
                 </div>
             </section>
