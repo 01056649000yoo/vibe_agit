@@ -32,11 +32,13 @@
     비교 기간 자료가 없으면 증감 0으로 오해하지 않도록 `비교 자료 없음`으로 표시한다.
   - 학급 발자국 RPC가 승인 과제뿐 아니라 제출 완료 독서록도 포함하고, 모든 학생별 확장 지표를 한 번에 반환하도록 했다.
     학급 데이터는 각 원본 테이블의 `class_id`로 직접 제한하고 학년도 범위·상한·학급 포함 조인 규칙을 유지했다.
-- **변경**: `TeacherWritingFootprintDashboard.jsx`, 마이그레이션
-  `20260816_class_footprint_student_details.sql`. git 밖 운영 변경: 통합 DB `agit-db`에 해당 마이그레이션 적용.
+- **변경**: 기능 커밋 `abcba56`(`학급 발자국 학생별 현황 확장`).
+  `TeacherWritingFootprintDashboard.jsx`, 마이그레이션 `20260816_class_footprint_student_details.sql`.
+  git 밖 운영 변경: 통합 DB `agit-db`에 해당 마이그레이션 적용.
 - **결과/검증**: 운영 스키마 대상 롤백 트랜잭션 검증 후 적용, 마이그레이션 56/56. 실제 학생 28명 학급의
   교사 권한 RPC 호출에서 전체 확장 필드 반환을 확인했고 `authenticated` 실행 허용·`anon` 차단을 확인했다.
-  대상 및 전체 ESLint 0에러(기존 경고 69), 프로덕션 빌드와 `git diff --check` 통과.
+  대상 및 전체 ESLint 0에러(기존 경고 69), 프로덕션 빌드와 `git diff --check` 통과. 원격 `main` 푸시 후
+  GitHub Actions Deploy run `30917198629`의 이미지 빌드·컨테이너 재시작·HTTP 검증이 성공했다.
 - **남은 것 / 다음**: 교사 PC·태블릿에서 표 가로 스크롤, 학생 상세 펼침, 긴 학생 이름과 큰 포인트 수의 가독성을 확인한다.
 
 ## 2026-08-04 — 학급 발자국 전체화면 화면비·폰트 자동 보정 (GPT/Codex)
