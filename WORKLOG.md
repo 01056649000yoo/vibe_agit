@@ -47,6 +47,8 @@
   `희안`(→사람 이름) · `찌게`(→'고구마를 찌게'). `찌게` 는 음식 이름 앞가지가 붙은 경우만 남겼다.
 - **변경**: `spellingDetectionRules.js`(신규), `elementarySpellingEntries.js`, `SpellingUnderlineTextarea.jsx`,
   `SpellingUnderlineInput.jsx`, `scripts/check-spelling-rules.mjs`(신규), `package.json`. DB·저장 계약 변경 없음.
+  커밋 `f729f0b` 을 원격 `main` 에 push 했고, GitHub Actions Deploy run `30904748086` 에서
+  앱 이미지 빌드·컨테이너 재시작·HTTP 검증이 모두 성공했다.
 - **결과/검증**:
 
   | | 전 | 후 |
