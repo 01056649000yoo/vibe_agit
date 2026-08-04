@@ -143,12 +143,13 @@
   - 맞춤법 수첩에 공식 사전 상태·뜻·품사·전문 분야·원어·상세 링크를 표시하고, 빠른 수첩 항목/밑줄 클릭은 외부 호출 없이 로컬 설명만 연다.
     학생이 검색 버튼을 눌렀을 때만 공식 검색하며 공용 AI 호출은 없다.
 - **변경**: `supabase/functions/korean-dictionary-search/`, `SpellingLookupTool.jsx/.css`, 글쓰기 도구 계약·로드맵.
+  기능 커밋 `fb86f42`(`feat: add official Korean dictionary lookup`)을 원격 `main`에 push했다.
   git 밖 운영 함수 볼륨에 신규 함수를 배치하고 `agit-edge-functions`만 재생성했다. 인증키 값은 git·문서·로그에 기록하지 않았다.
 - **결과/검증**: 대상 React ESLint 0에러, 프로덕션 빌드, 함수 TypeScript esbuild 구문 검사, `git diff --check`,
   맞춤법 모듈/신규 함수의 AI 호출 및 하드코딩 키 부재 확인. 운영 Kong의 신규 함수 경로가 미인증 요청을 401로 차단한다.
   첫 설정값이 온용어 전용 키여서 표준국어대사전에는 유효하지 않음을 확인했고, 잘못된 키에 오는 HTTP 200 빈 본문도
   인증키 확인 오류로 명시 처리했다. 이후 표준국어대사전 전용 키로 교체해 값 노출 없이 `나무` 5건의 정상 JSON 응답을 확인하고
-  `agit-edge-functions`를 재생성했다.
+  `agit-edge-functions`를 재생성했다. GitHub Actions Deploy run `30560511498`에서 앱 이미지 빌드·컨테이너 재시작·HTTP 검증이 성공했다.
 - **남은 것 / 다음**: 실제 학생 로그인으로 낱말 검색·빈 결과·문장 로컬 전용 안내·연속 호출 제한과 삼성탭/iPad의
   수첩 내부 공식 사전 카드 표시를 스모크한다.
 
