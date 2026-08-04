@@ -5,6 +5,7 @@ import {
     buildCumulativePoints, fillSchoolYearMonths, MonthlyBars, num,
     PointTypeBars, StatTile, TrendLine, WritingCalendar
 } from './FootprintVisuals';
+import FootprintChartDetailModal from './FootprintChartDetailModal';
 import StudentFootprintDetailModal from './StudentFootprintDetailModal';
 
 const EMPTY_CLASS_FOOTPRINT = {
@@ -17,15 +18,30 @@ const EMPTY_CLASS_FOOTPRINT = {
     daily: [], monthly: [], points_monthly: [], points_by_type: [], spending_by_type: [], students: []
 };
 
-const Panel = ({ title, hint, compact = false, children, style }) => <section style={{
+const Panel = ({ title, hint, compact = false, children, style, onOpen }) => <section
+    role={onOpen ? 'button' : undefined}
+    tabIndex={onOpen ? 0 : undefined}
+    aria-label={onOpen ? `${title} 크게 보기` : undefined}
+    onClick={onOpen}
+    onKeyDown={onOpen ? (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onOpen();
+        }
+    } : undefined}
+    style={{
     background: 'white', border: '1px solid #E2E8F0', borderRadius: compact ? '13px' : '20px',
     padding: compact ? '9px 11px' : '20px', minWidth: 0, minHeight: 0,
     boxShadow: compact ? '0 3px 12px rgba(15,23,42,.04)' : '0 8px 24px rgba(15,23,42,.04)',
     overflow: compact ? 'hidden' : undefined,
     display: compact ? 'flex' : undefined, flexDirection: compact ? 'column' : undefined,
+    cursor: onOpen ? 'pointer' : undefined,
     ...style
 }}>
-    <h3 style={{ margin: compact ? '0 0 3px' : 0, color: '#1E293B', fontSize: compact ? 'var(--footprint-fs-md, .78rem)' : '1rem', fontWeight: 900, flexShrink: 0, whiteSpace: compact ? 'nowrap' : undefined, overflow: compact ? 'hidden' : undefined, textOverflow: compact ? 'ellipsis' : undefined }}>{title}</h3>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexShrink: 0, minWidth: 0 }}>
+        <h3 style={{ margin: compact ? '0 0 3px' : 0, color: '#1E293B', fontSize: compact ? 'var(--footprint-fs-md, .78rem)' : '1rem', fontWeight: 900, flexShrink: 1, minWidth: 0, whiteSpace: compact ? 'nowrap' : undefined, overflow: compact ? 'hidden' : undefined, textOverflow: compact ? 'ellipsis' : undefined }}>{title}</h3>
+        {onOpen && <span aria-hidden="true" style={{ flexShrink: 0, color: '#2563EB', fontSize: compact ? 'var(--footprint-fs-xs, .58rem)' : '.68rem', fontWeight: 900 }}>⛶ 크게 보기</span>}
+    </div>
     {hint && !compact && <p style={{ margin: '4px 0 16px', color: '#64748B', fontSize: '.8rem', lineHeight: 1.5 }}>{hint}</p>}
     {!hint && !compact && <div style={{ height: '14px' }} />}
     {children}
@@ -181,22 +197,22 @@ const CompactStudentGrid = ({ students, onSelectStudent }) => {
     </div>;
 };
 
-const ChartPanels = ({ detail, totals, months, cumulativePoints, compact = false, isMobile = false }) => <div style={{
+const ChartPanels = ({ detail, totals, months, cumulativePoints, compact = false, isMobile = false, onOpenPanel }) => <div style={{
     display: 'grid',
     gridTemplateColumns: isMobile && !compact ? 'minmax(0,1fr)' : `repeat(${compact ? 3 : 2}, minmax(0,1fr))`,
     gridTemplateRows: compact ? 'repeat(2, minmax(0,1fr))' : undefined,
     gap: compact ? '7px' : '18px', minWidth: 0, minHeight: 0
 }}>
-    <Panel compact={compact} title="🔥 학급 글쓰기 달력" hint="학급 전체가 쓴 날을 합쳐, 활동이 많았던 날을 진하게 표시합니다.">
+    <Panel compact={compact} onOpen={() => onOpenPanel('calendar')} title="🔥 학급 글쓰기 달력" hint="학급 전체가 쓴 날을 합쳐, 활동이 많았던 날을 진하게 표시합니다.">
         <WritingCalendar compact={compact} fluid={compact} daily={detail.daily || []} schoolYear={detail.school_year} />
     </Panel>
-    <Panel compact={compact} title="📈 달마다 완료한 글" hint="승인된 글을 기준으로 월별 학급 활동량을 봅니다.">
+    <Panel compact={compact} onOpen={() => onOpenPanel('monthly_posts')} title="📈 달마다 완료한 글" hint="승인된 글을 기준으로 월별 학급 활동량을 봅니다.">
         <MonthlyBars compact={compact} fluid={compact} rows={months} valueKey="posts" unit="편" />
     </Panel>
-    <Panel compact={compact} title="✍️ 글 길이 변화" hint="월별로 글 한 편의 평균 글자 수가 어떻게 달라졌는지 봅니다.">
+    <Panel compact={compact} onOpen={() => onOpenPanel('average_chars')} title="✍️ 글 길이 변화" hint="월별로 글 한 편의 평균 글자 수가 어떻게 달라졌는지 봅니다.">
         <TrendLine compact={compact} fluid={compact} rows={months} valueKey="avg_chars" unit="자" />
     </Panel>
-    <Panel compact={compact} title="💰 학급 포인트 흐름" hint="학급에서 모은 포인트에서 사용·조정된 포인트를 뺀 누적 흐름입니다.">
+    <Panel compact={compact} onOpen={() => onOpenPanel('point_flow')} title="💰 학급 포인트 흐름" hint="학급에서 모은 포인트에서 사용·조정된 포인트를 뺀 누적 흐름입니다.">
         <TrendLine compact={compact} fluid={compact} rows={cumulativePoints} valueKey="total" unit="P" />
         {compact ? <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '-8px', fontSize: 'var(--footprint-fs-xs, .58rem)', fontWeight: 900, color: '#64748B' }}>
             <span>+ {num(totals.points_earned)}P</span><span>- {num(totals.points_used)}P</span>
@@ -205,10 +221,10 @@ const ChartPanels = ({ detail, totals, months, cumulativePoints, compact = false
             <StatTile icon="➖" label="직접 사용" value={num(totals.points_used)} unit="P" />
         </div>}
     </Panel>
-    <Panel compact={compact} title="🎁 포인트 획득처" hint="이번 학년도에 학급이 포인트를 모은 활동입니다.">
+    <Panel compact={compact} onOpen={() => onOpenPanel('point_sources')} title="🎁 포인트 획득처" hint="이번 학년도에 학급이 포인트를 모은 활동입니다.">
         <PointTypeBars compact={compact} rows={detail.points_by_type || []} emptyMessage="아직 모은 포인트가 없습니다." />
     </Panel>
-    <Panel compact={compact} title="🛍️ 포인트 사용처" hint="학생이 직접 선택해 사용한 포인트만 표시합니다.">
+    <Panel compact={compact} onOpen={() => onOpenPanel('point_spending')} title="🛍️ 포인트 사용처" hint="학생이 직접 선택해 사용한 포인트만 표시합니다.">
         <PointTypeBars compact={compact} rows={detail.spending_by_type || []} emptyMessage="아직 사용한 포인트가 없습니다." color="#F59E0B" />
     </Panel>
 </div>;
@@ -219,6 +235,7 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
     const [errorMessage, setErrorMessage] = useState('');
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
+    const [selectedChart, setSelectedChart] = useState(null);
     const [modalContainer, setModalContainer] = useState(null);
     const rootRef = useRef(null);
 
@@ -254,6 +271,7 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
             if (!document.fullscreenElement) {
                 setIsExpanded(false);
                 setSelectedStudent(null);
+                setSelectedChart(null);
             }
         };
         const handleKeyDown = (event) => {
@@ -277,6 +295,7 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
     const toggleExpanded = useCallback(async () => {
         if (isExpanded) {
             setSelectedStudent(null);
+            setSelectedChart(null);
             if (document.fullscreenElement === rootRef.current) await document.exitFullscreen().catch(() => {});
             setIsExpanded(false);
             return;
@@ -285,6 +304,7 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
         if (rootRef.current?.requestFullscreen) await rootRef.current.requestFullscreen().catch(() => {});
     }, [isExpanded]);
     const closeStudentDetail = useCallback(() => setSelectedStudent(null), []);
+    const closeChartDetail = useCallback(() => setSelectedChart(null), []);
 
     const months = useMemo(() => fillSchoolYearMonths(detail.monthly, detail.school_year), [detail.monthly, detail.school_year]);
     const cumulativePoints = useMemo(() => buildCumulativePoints(detail.points_monthly, detail.school_year), [detail.points_monthly, detail.school_year]);
@@ -344,16 +364,17 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
             display: 'grid', gridTemplateRows: 'minmax(0,3fr) minmax(320px,2fr)',
             gap: '7px', flex: 1, minHeight: 0, overflow: 'hidden'
         }}>
-            <ChartPanels compact detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} />
+            <ChartPanels compact detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} onOpenPanel={setSelectedChart} />
             <Panel compact title={`👥 학생별 현황 · ${students.length}명 · 카드를 눌러 크게 보기`} style={{ height: '100%', boxSizing: 'border-box' }}>
                 <CompactStudentGrid students={students} onSelectStudent={setSelectedStudent} />
             </Panel>
         </div> : <>
-            <ChartPanels detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} isMobile={isMobile} />
+            <ChartPanels detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} isMobile={isMobile} onOpenPanel={setSelectedChart} />
             <Panel title="👥 학생별 현황" hint="등수가 아니라 개별 학생의 참여와 최근 기록을 빠르게 확인하는 표입니다.">
                 <StudentTable students={students} />
             </Panel>
         </>}
+        <FootprintChartDetailModal view={selectedChart} onClose={closeChartDetail} container={modalContainer} detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} />
         <StudentFootprintDetailModal student={selectedStudent} onClose={closeStudentDetail} container={modalContainer} />
     </div>;
 };
