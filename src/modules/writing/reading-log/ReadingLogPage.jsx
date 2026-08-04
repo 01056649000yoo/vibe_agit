@@ -213,7 +213,6 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                     contentPlaceholder={'책에서 기억에 남는 장면, 새롭게 알게 된 점, 내 생각을 자유롭게 적어보세요...'}
                     disabled={saving}
                     isMobile={isMobile}
-                    contentMinHeight={420}
                 />
             </section>
 

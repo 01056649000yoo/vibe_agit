@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { findSpellingIssues } from './spellingDetectionRules';
 import { openSpellingLookup } from './events';
 import './SpellingUnderlineTextarea.css';
@@ -47,6 +47,7 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
     value = '',
     onScroll,
     style = {},
+    autoGrow = false,
     ...props
 }, forwardedRef) {
     const textareaRef = useRef(null);
@@ -114,6 +115,29 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
     // 글을 이어 쓰면 입력창이 스스로 아래로 스크롤하는데 그 때는 scroll 이벤트가 오지 않는다.
     useEffect(syncScroll, [normalizedValue]);
 
+    /*
+     * 글이 길어지는 만큼 입력창도 세로로 늘어난다.
+     *
+     * 안쪽에 스크롤이 생기지 않으므로 아래쪽 `확인해 볼 표현` 칩이 늘 글 바로 밑에 붙어 있고,
+     * 학생이 쓰면서 함께 볼 수 있다. 입력창이 스스로 스크롤할 일이 없어져 밑줄이 밀리는 문제도 함께 사라진다.
+     * 높이를 한 번 `auto` 로 되돌려야 글을 지웠을 때 다시 줄어든다. 최소 높이는 CSS 가 지킨다.
+     */
+    useLayoutEffect(() => {
+        if (!autoGrow) return undefined;
+        const textarea = textareaRef.current;
+        if (!textarea) return undefined;
+
+        const fit = () => {
+            textarea.style.height = 'auto';
+            textarea.style.height = `${textarea.scrollHeight}px`;
+        };
+        fit();
+
+        // 화면 폭이 바뀌면 줄바꿈이 달라져 필요한 높이도 달라진다.
+        window.addEventListener('resize', fit);
+        return () => window.removeEventListener('resize', fit);
+    }, [autoGrow, normalizedValue, style.fontSize, style.lineHeight]);
+
     const handleScroll = (event) => {
         syncScroll();
         onScroll?.(event);
@@ -137,7 +161,13 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
                     onScroll={handleScroll}
                     spellCheck={false}
                     autoCorrect="off"
-                    style={{ ...sharedStyle, background: 'transparent', backgroundColor: 'transparent' }}
+                    style={{
+                        ...sharedStyle,
+                        background: 'transparent',
+                        backgroundColor: 'transparent',
+                        // 스스로 늘어나므로 안쪽 스크롤막대가 잠깐씩 나타나지 않게 한다.
+                        ...(autoGrow ? { overflowY: 'hidden' } : {})
+                    }}
                 />
             </div>
 

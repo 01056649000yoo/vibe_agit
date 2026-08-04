@@ -139,7 +139,6 @@ function UiPreview() {
             onTitleChange={setPreviewTitle}
             content={previewContent}
             onContentChange={setPreviewContent}
-            contentMinHeight={260}
             isMobile
           />
         </Card>
