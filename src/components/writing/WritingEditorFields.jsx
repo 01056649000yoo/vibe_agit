@@ -1,6 +1,7 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
 import SpellingUnderlineInput from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineInput';
 import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea';
+import './WritingEditorFields.css';
 
 const CONTENT_LINE_HEIGHT = 1.8;
 
@@ -35,56 +36,66 @@ const WritingEditorFields = forwardRef(function WritingEditorFields({
     isMobile = false,
     contentMinLines = 8
 }, ref) {
+    const fieldId = useId();
+    const titleId = `${fieldId}-title`;
+    const contentId = `${fieldId}-content`;
+
     return (
-        <>
-            <SpellingUnderlineInput
-                type="text"
-                value={title}
-                onChange={(event) => onTitleChange(event.target.value)}
-                placeholder={titlePlaceholder}
-                autoCapitalize="sentences"
-                lang="ko"
-                containerStyle={{ marginBottom: '24px' }}
-                style={{
-                    width: '100%',
-                    padding: '16px 0',
-                    fontSize: isMobile ? '1.5rem' : '2rem',
-                    fontWeight: '900',
-                    border: 'none',
-                    borderBottom: '2px solid #F1F3F5',
-                    outline: 'none',
-                    color: disabled ? '#546E7A' : '#2C3E50',
-                    background: 'transparent',
-                    lineHeight: '1.4'
-                }}
-                disabled={disabled}
-            />
-            <SpellingUnderlineTextarea
-                ref={ref}
-                value={content}
-                onChange={(event) => onContentChange(event.target.value)}
-                placeholder={contentPlaceholder}
-                autoCapitalize="sentences"
-                lang="ko"
-                enterKeyHint="enter"
-                wrap="soft"
-                autoGrow
-                style={{
-                    width: '100%',
-                    // 세로 여백(10px×2)을 뺀 나머지가 딱 `contentMinLines` 줄이 되게 한다.
-                    minHeight: `calc(${contentMinLines * CONTENT_LINE_HEIGHT}em + 20px)`,
-                    padding: '10px 0',
-                    border: 'none',
-                    fontSize: isMobile ? '1.1rem' : '1.25rem',
-                    lineHeight: `${CONTENT_LINE_HEIGHT}`,
-                    outline: 'none',
-                    color: disabled ? '#546E7A' : '#444',
-                    resize: 'none',
-                    background: 'transparent'
-                }}
-                disabled={disabled}
-            />
-        </>
+        <div className={`writing-editor-fields ${disabled ? 'is-disabled' : ''}`.trim()}>
+            <div className="writing-editor-fields__field writing-editor-fields__field--title">
+                <label htmlFor={titleId}>글 제목</label>
+                <SpellingUnderlineInput
+                    id={titleId}
+                    type="text"
+                    value={title}
+                    onChange={(event) => onTitleChange(event.target.value)}
+                    placeholder={titlePlaceholder}
+                    autoCapitalize="sentences"
+                    lang="ko"
+                    style={{
+                        width: '100%',
+                        padding: '0',
+                        fontSize: isMobile ? '1.45rem' : '1.85rem',
+                        fontWeight: '900',
+                        border: 'none',
+                        outline: 'none',
+                        color: disabled ? 'var(--ui-ink-muted)' : 'var(--ui-ink)',
+                        background: 'transparent',
+                        lineHeight: '1.4'
+                    }}
+                    disabled={disabled}
+                />
+            </div>
+            <div className="writing-editor-fields__field writing-editor-fields__field--body">
+                <label htmlFor={contentId}>글 내용</label>
+                <SpellingUnderlineTextarea
+                    id={contentId}
+                    ref={ref}
+                    value={content}
+                    onChange={(event) => onContentChange(event.target.value)}
+                    placeholder={contentPlaceholder}
+                    autoCapitalize="sentences"
+                    lang="ko"
+                    enterKeyHint="enter"
+                    wrap="soft"
+                    autoGrow
+                    style={{
+                        width: '100%',
+                        // 세로 여백을 뺀 나머지가 딱 `contentMinLines` 줄이 되게 한다.
+                        minHeight: `calc(${contentMinLines * CONTENT_LINE_HEIGHT}em + 8px)`,
+                        padding: '4px 0',
+                        border: 'none',
+                        fontSize: isMobile ? '1.08rem' : '1.2rem',
+                        lineHeight: `${CONTENT_LINE_HEIGHT}`,
+                        outline: 'none',
+                        color: disabled ? 'var(--ui-ink-muted)' : 'var(--ui-ink-strong)',
+                        resize: 'none',
+                        background: 'transparent'
+                    }}
+                    disabled={disabled}
+                />
+            </div>
+        </div>
     );
 });
 

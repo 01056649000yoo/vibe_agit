@@ -16,11 +16,14 @@ import {
     writeLocalDraft
 } from '../../modules/writing/drafts/localWritingDraft';
 import WritingEditorFields from '../writing/WritingEditorFields';
-import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea';
 import {
-    getStudentWritingCardPadding,
-    STUDENT_WRITING_CARD_MAX_WIDTH
-} from '../../modules/writing/layout';
+    WritingNotice,
+    WritingSectionHeader,
+    WritingWorkspace,
+    WritingWorkspaceHeader,
+    WritingWorkspacePath
+} from '../writing/WritingWorkspace';
+import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea';
 
 const GENRE_EDITORS = new Map(
     getGenreMissionTypes()
@@ -511,64 +514,40 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const hasQuestions = mission?.guide_questions?.length > 0;
 
     return (
-        <Card style={{
-            // 질문 유무와 관계없이 질문 있는 과제의 폭을 기준으로 쓴다.
-            maxWidth: STUDENT_WRITING_CARD_MAX_WIDTH,
-            padding: getStudentWritingCardPadding(isMobile),
-            border: 'none',
-            background: '#FFFFFF',
-            boxShadow: '0 15px 40px rgba(0,0,0,0.08)',
-            margin: '20px auto 40px auto',
-            transition: 'all 0.3s ease'
-        }}>
-            {/* 상단 헤더 */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
-                <Button variant="ghost" size="sm" onClick={onBack} disabled={submitting}>
-                    ⬅️ 나가기
-                </Button>
-                <div style={{ textAlign: 'right' }}>
-                    <div style={{
-                        display: 'inline-block',
-                        padding: '4px 12px',
-                        background: '#E3F2FD',
-                        color: '#1976D2',
-                        borderRadius: '12px',
-                        fontSize: '0.8rem',
-                        fontWeight: '900',
-                        marginBottom: '8px'
-                    }}>
-                        {mission.genre}
-                    </div>
-                    <h2 style={{ margin: 0, color: '#263238', fontSize: '1.8rem', fontWeight: '900' }}>{mission.title}</h2>
-                </div>
-            </div>
+        <WritingWorkspace tone="assignment">
+            <WritingWorkspaceHeader
+                onBack={onBack}
+                disabled={submitting}
+                eyebrow={`✍️ ${mission.genre || '글쓰기 과제'}`}
+                title={mission.title}
+                description="생각을 정리한 뒤 글을 쓰고, 마지막에 한 번 검토해 제출해요."
+            />
+            <WritingWorkspacePath
+                steps={hasQuestions
+                    ? ['생각 열기', '글쓰기', '검토·제출']
+                    : ['안내 읽기', '글쓰기', '검토·제출']}
+            />
 
             {/* 선생님 피드백/상태 표시 영역 (기존 로직 유지) */}
             <AnimatePresence>
                 {isConfirmed ? (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ background: '#E8F5E9', padding: '16px 20px', borderRadius: '16px', marginBottom: '24px', border: '1px solid #C8E6C9', display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                        <span style={{ fontSize: '1.5rem' }}>✅</span>
-                        <div>
-                            <div style={{ fontWeight: '900', color: '#2E7D32', fontSize: '1rem' }}>포인트 지급 완료!</div>
-                            <div style={{ fontSize: '0.85rem', color: '#388E3C' }}>선생님이 글을 승인하고 포인트를 선물하셨어요. 축하해요! 🌟</div>
-                        </div>
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ overflow: 'hidden' }}>
+                        <WritingNotice tone="success" icon="✅" title="포인트 지급 완료!">
+                            선생님이 글을 승인하고 포인트를 선물하셨어요. 축하해요! 🌟
+                        </WritingNotice>
                     </motion.div>
                 ) : isSubmitted ? (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ background: '#E3F2FD', padding: '16px 20px', borderRadius: '16px', marginBottom: '24px', border: '1px solid #BBDEFB', display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                        <span style={{ fontSize: '1.5rem' }}>⏳</span>
-                        <div>
-                            <div style={{ fontWeight: '900', color: '#1565C0', fontSize: '1rem' }}>선생님이 확인 중이에요</div>
-                            <div style={{ fontSize: '0.85rem', color: '#1976D2' }}>글을 멋지게 제출했어요! 조금만 기다려주세요. ✨</div>
-                        </div>
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ overflow: 'hidden' }}>
+                        <WritingNotice tone="info" icon="⏳" title="선생님이 확인 중이에요">
+                            글을 멋지게 제출했어요! 조금만 기다려주세요. ✨
+                        </WritingNotice>
                     </motion.div>
                 ) : isReturned && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ background: '#FFF3E0', padding: '16px 20px', borderRadius: '16px', marginBottom: '24px', border: '1px solid #FFE0B2', display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                        <span style={{ fontSize: '1.5rem' }}>♻️</span>
-                        <div>
-                            <div style={{ fontWeight: '900', color: '#E65100', fontSize: '1rem' }}>선생님이 다시 쓰기를 요청하셨습니다.</div>
-                            <div style={{ fontSize: '0.85rem', color: '#EF6C00', marginBottom: aiFeedback ? '8px' : '0' }}>내용을 보완해서 다시 한번 멋진 글을 완성해볼까요?</div>
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ overflow: 'hidden' }}>
+                        <WritingNotice tone="warning" icon="♻️" title="선생님이 다시 쓰기를 요청하셨어요">
+                            <div style={{ marginBottom: aiFeedback ? '8px' : '0' }}>내용을 보완해서 다시 한번 멋진 글을 완성해볼까요?</div>
                             {aiFeedback && <div style={{ background: 'rgba(255,255,255,0.7)', padding: '20px', borderRadius: '16px', fontSize: '1rem', color: '#444', whiteSpace: 'pre-wrap', lineHeight: '1.8', border: '1px solid rgba(230, 81, 0, 0.2)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.03)' }}>{aiFeedback}</div>}
-                        </div>
+                        </WritingNotice>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -595,158 +574,84 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             {/* 가이드 박스 */}
             <AnimatePresence>
                 {isTeacherEdited && isReturned && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ background: '#E8F5E9', padding: '16px 20px', borderRadius: '16px', marginBottom: '24px', border: '1px solid #C8E6C9', display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                        <span style={{ fontSize: '1.5rem' }}>알림</span>
-                        <div>
-                            <div style={{ fontWeight: '900', color: '#2E7D32', fontSize: '1rem' }}>선생님이 직접 다듬은 글이 도착했어요</div>
-                            <div style={{ fontSize: '0.85rem', color: '#388E3C' }}>
-                                아래 글은 선생님이 손봐서 보내준 버전이에요. 이 상태에서 이어서 수정하거나 다시 제출하면 돼요.
-                                {teacherEditedAt ? ` (${new Date(teacherEditedAt).toLocaleString()})` : ''}
-                            </div>
-                        </div>
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ overflow: 'hidden' }}>
+                        <WritingNotice tone="success" icon="📝" title="선생님이 직접 다듬은 글이 도착했어요">
+                            아래 글은 선생님이 손봐서 보내준 버전이에요. 이 상태에서 이어서 수정하거나 다시 제출하면 돼요.
+                            {teacherEditedAt ? ` (${new Date(teacherEditedAt).toLocaleString()})` : ''}
+                        </WritingNotice>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <div style={{ background: '#F8F9FA', padding: '24px', borderRadius: '20px', marginBottom: '32px', border: '1px solid #E9ECEF', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ background: '#FFFFFF', padding: '2px 12px', borderRadius: '10px', fontSize: '0.85rem', fontWeight: '900', color: '#607D8B', border: '1px solid #E9ECEF' }}>선생님의 가이드 💡</div>
-                </div>
-                <p style={{ margin: 10, fontSize: '1.05rem', color: '#455A64', lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>{mission.guide}</p>
+            <div className="writing-guide">
+                <span className="writing-guide__label">💡 선생님의 글쓰기 안내</span>
+                <p>{mission.guide}</p>
             </div>
 
             {/* 1단계: 생각 일깨우기 (질문 리스트) */}
             {hasQuestions && (
-                <div style={{
-                    background: '#F0F7FF',
-                    padding: isMobile ? '24px 20px' : '40px',
-                    borderRadius: '28px',
-                    border: '1px solid #D6EAF8',
-                    marginBottom: '40px',
-                    boxShadow: '0 4px 15px rgba(52, 152, 219, 0.05)'
-                }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-                        <div>
-                            <h3 style={{ margin: 0, fontSize: '1.4rem', color: '#1565C0', fontWeight: '900', letterSpacing: '-0.5px' }}>🎯 생각 일깨우기</h3>
-                            <p style={{ margin: '8px 0 0 0', color: '#546E7A', fontSize: '0.95rem' }}>글을 쓰기 전, 아래 질문들에 답하며 생각을 정리해볼까요?</p>
-                        </div>
-                        <Button size="sm" onClick={insertAllToBody} style={{ background: '#3498DB', fontWeight: 'bold', padding: '10px 20px', borderRadius: '14px' }}>답변 전체를 본문에 넣기 📥</Button>
-                    </div>
+                <section className="writing-question-stage">
+                    <WritingSectionHeader
+                        icon="🎯"
+                        title="생각 일깨우기"
+                        description="질문에 답하며 글에 넣을 생각을 먼저 모아봐요."
+                        action={<Button type="button" size="sm" onClick={insertAllToBody}>답변 전체 넣기</Button>}
+                    />
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                    <div className="writing-question-list">
                         {mission.guide_questions.map((q, idx) => (
-                            <div key={idx} style={{
-                                background: 'white',
-                                padding: isMobile ? '20px' : '32px',
-                                borderRadius: '24px',
-                                border: '1px solid #E3F2FD',
-                                boxShadow: '0 10px 25px rgba(0,0,0,0.03)'
-                            }}>
-                                <div style={{
-                                    fontSize: isMobile ? '1.2rem' : '1.35rem',
-                                    color: '#2C3E50',
-                                    fontWeight: '900',
-                                    marginBottom: '18px',
-                                    lineHeight: '1.5',
-                                    display: 'flex',
-                                    gap: '12px'
-                                }}>
-                                    <span style={{ color: '#3498DB', minWidth: '24px' }}>{idx + 1}.</span>
+                            <div key={idx} className="writing-question">
+                                <div className="writing-question__prompt">
+                                    <span className="writing-question__number">{idx + 1}</span>
                                     <span>{q}</span>
                                 </div>
-                                <SpellingUnderlineTextarea
-                                    value={Reflect.get(studentAnswers, idx) || ''}
-                                    onChange={(e) => handleAnswerChange(idx, e.target.value)}
-                                    placeholder="여기에 생각을 적어보세요..."
-                                    spellCheck={true}
-                                    autoCorrect="off"
-                                    autoCapitalize="sentences"
-                                    lang="ko"
-                                    enterKeyHint="enter"
-                                    wrap="soft"
-                                    style={{
-                                        width: '100%',
-                                        minHeight: '120px',
-                                        padding: '20px',
-                                        borderRadius: '16px',
-                                        border: '1px solid #DEE2E6',
-                                        fontSize: '1.1rem',
-                                        lineHeight: '1.8',
-                                        resize: 'none',
-                                        background: '#FBFBFB',
-                                        outline: 'none',
-                                        transition: 'all 0.2s'
-                                    }}
-                                    onFocus={(e) => e.target.style.borderColor = '#3498DB'}
-                                    onBlur={(e) => e.target.style.borderColor = '#DEE2E6'}
-                                    disabled={isLocked}
-                                />
-                                <div style={{ textAlign: 'right', marginTop: '16px' }}>
-                                    <button
+                                <div className="writing-question__answer">
+                                    <SpellingUnderlineTextarea
+                                        value={Reflect.get(studentAnswers, idx) || ''}
+                                        onChange={(e) => handleAnswerChange(idx, e.target.value)}
+                                        placeholder="여기에 생각을 적어보세요..."
+                                        autoCapitalize="sentences"
+                                        lang="ko"
+                                        enterKeyHint="enter"
+                                        wrap="soft"
+                                        style={{ width: '100%', resize: 'none', outline: 'none' }}
+                                        disabled={isLocked}
+                                    />
+                                </div>
+                                <div className="writing-question__action">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
                                         onClick={() => insertToBody(Reflect.get(studentAnswers, idx))}
                                         disabled={isLocked || !Reflect.get(studentAnswers, idx)?.trim()}
-                                        style={{
-                                            background: '#E1F5FE',
-                                            color: '#0288D1',
-                                            border: 'none',
-                                            padding: '8px 20px',
-                                            borderRadius: '12px',
-                                            fontSize: '0.9rem',
-                                            fontWeight: 'bold',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                            opacity: (isLocked || !Reflect.get(studentAnswers, idx)?.trim()) ? 0.5 : 1
-                                        }}
                                     >
-                                        이 답변만 본문에 넣기 📥
-                                    </button>
+                                        이 답변만 본문에 넣기
+                                    </Button>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </div>
+                </section>
             )}
 
             {/* 2단계: 메인 글쓰기 에디터 */}
-            <div style={{
-                background: '#FFFFFF',
-                padding: isMobile ? '32px 20px' : '48px 60px',
-                borderRadius: '32px',
-                border: '2px solid #F1F3F5',
-                position: 'relative',
-                marginBottom: '40px',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.05)'
-            }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-                    <div style={{ borderBottom: '2px solid #3498DB', width: '120px', paddingBottom: '8px' }}>
-                        <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1.1rem' }}>
-                            {studentLabels.editorHeading || '✍️ 본격 글쓰기'}
-                        </span>
-                    </div>
-                    {originalContent && (
-                        <button
+            <section className="writing-editor-surface">
+                <WritingSectionHeader
+                    icon="✍️"
+                    title={studentLabels.editorHeading || '본격 글쓰기'}
+                    description="제목과 내용을 차근차근 적어보세요. 입력한 글은 자동으로 안전하게 남겨요."
+                    action={originalContent && (
+                        <Button
+                            type="button"
+                            variant={showOriginal ? 'secondary' : 'outline'}
+                            size="sm"
                             onClick={() => setShowOriginal(!showOriginal)}
-                            style={{
-                                background: showOriginal ? '#FFFDE7' : '#FFFFFF',
-                                color: showOriginal ? '#F57F17' : '#3498DB',
-                                border: showOriginal ? '2px solid #FBC02D' : '1px solid #D6EAF8',
-                                padding: '10px 18px',
-                                borderRadius: '16px',
-                                fontSize: '0.95rem',
-                                fontWeight: '900',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                boxShadow: showOriginal ? '0 4px 15px rgba(251, 192, 45, 0.2)' : '0 2px 8px rgba(52, 152, 219, 0.1)',
-                                transition: 'all 0.2s',
-                                zIndex: 20
-                            }}
                         >
                             {showOriginal ? '✨ 마지막 글(수정본) 보기' : '📜 나의 처음 글과 비교하기'}
-                        </button>
+                        </Button>
                     )}
-                </div>
+                />
 
                 <WritingToolHost disabled={submitting || isLocked} />
 
@@ -809,7 +714,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         />
                     )}
                 </div>
-            </div>
+            </section>
 
             {/* [신규] 내 글에 달린 소식 (반응 및 댓글) */}
             <AnimatePresence>
@@ -989,69 +894,53 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             </AnimatePresence>
 
             {/* 통계 및 보너스 현황 */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', background: '#FFFDE7', borderRadius: '20px', marginBottom: '32px', border: '1px solid #FFF59D' }}>
-                <div style={{ display: 'flex', gap: '20px' }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.8rem', color: '#8D6E63', marginBottom: '4px' }}>글자수</div>
-                        <div style={{ fontSize: '1.2rem', fontWeight: '900', color: charCount >= mission.min_chars ? '#2E7D32' : '#F44336' }}>{charCount} / {mission.min_chars}</div>
-                    </div>
-                    <div style={{ width: '1px', background: '#FFE082' }} />
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.8rem', color: '#8D6E63', marginBottom: '4px' }}>{genreMissionType?.unitLabel || '문단수'}</div>
-                        <div style={{ fontSize: '1.2rem', fontWeight: '900', color: paragraphCount >= mission.min_paragraphs ? '#2E7D32' : '#F44336' }}>{paragraphCount} / {mission.min_paragraphs}</div>
-                    </div>
-                    <div style={{ width: '1px', background: '#FFE082' }} />
-                    <div style={{ textAlign: 'center', minWidth: isMobile ? '90px' : '120px' }}>
-                        <div style={{ fontSize: '0.8rem', color: '#8D6E63', marginBottom: '4px' }}>자동 저장</div>
-                        <div style={{ fontSize: '0.95rem', fontWeight: '900', color: autoSaveError ? '#D84315' : '#546E7A' }}>
-                            {autoSaveError || (autoSaveAt ? autoSaveAt.toLocaleTimeString() : '-')}
-                        </div>
-                        {!autoSaveError && (
-                            <div style={{ marginTop: '4px', fontSize: '0.72rem', color: '#8D6E63' }}>
-                                태블릿에 먼저 저장됨
-                            </div>
-                        )}
-                    </div>
+            <div className="writing-metrics">
+                <div className="writing-metric">
+                    <span>글자 수</span>
+                    <strong className={charCount >= mission.min_chars ? 'is-complete' : 'is-pending'}>{charCount} / {mission.min_chars}</strong>
                 </div>
-                <div style={{ textAlign: 'right' }}>
+                <div className="writing-metric">
+                    <span>{genreMissionType?.unitLabel || '문단 수'}</span>
+                    <strong className={paragraphCount >= mission.min_paragraphs ? 'is-complete' : 'is-pending'}>{paragraphCount} / {mission.min_paragraphs}</strong>
+                </div>
+                <div className="writing-metric">
+                    <span>자동 저장</span>
+                    <strong className={autoSaveError ? 'is-pending' : ''}>
+                        {autoSaveError || (autoSaveAt ? autoSaveAt.toLocaleTimeString() : '-')}
+                    </strong>
+                        {!autoSaveError && (
+                        <small>이 기기에 먼저 저장돼요</small>
+                        )}
+                </div>
+                <div className="writing-bonus">
                     {mission.bonus_threshold > 0 && mission.bonus_reward > 0 && (
                         charCount >= (mission.min_chars + mission.bonus_threshold) ? (
-                            <div style={{ color: '#E65100', fontWeight: '900', fontSize: '1rem' }}>🔥 보너스 달성 완료! (+{mission.bonus_reward}P)</div>
+                            <strong>🔥 보너스 달성 완료! (+{mission.bonus_reward}P)</strong>
                         ) : (
-                            <div style={{ color: '#795548', fontSize: '0.9rem' }}>
-                                <strong style={{ color: '#E65100' }}>{(mission.min_chars || 0) + (mission.bonus_threshold || 0)}자</strong>를 넘기면{' '}
-                                <strong style={{ color: '#E65100' }}>+{mission.bonus_reward}P</strong>를 더 얻을 수 있어요!
-                                <span style={{ marginLeft: '6px', color: '#BCAAA4', fontSize: '0.8rem' }}>
-                                    ({(mission.min_chars + mission.bonus_threshold) - charCount}자 남음)
-                                </span>
-                            </div>
+                            <span>
+                                <strong>{(mission.min_chars || 0) + (mission.bonus_threshold || 0)}자</strong>를 넘기면{' '}
+                                <strong>+{mission.bonus_reward}P</strong> · {(mission.min_chars + mission.bonus_threshold) - charCount}자 남음
+                            </span>
                         )
                     )}
                 </div>
             </div>
 
             {/* 저장 및 제출 버튼 */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-                <Button size="lg" onClick={handleManualSave} disabled={submitting || isLocked} style={{ flex: 1, height: '64px', fontSize: '1.2rem', fontWeight: '800', background: isLocked ? '#F1F3F5' : '#ECEFF1', color: isLocked ? '#BDC3C7' : '#455A64', border: 'none' }}>
+            <div className="writing-action-bar">
+                <Button type="button" size="lg" variant="ghost" onClick={handleManualSave} disabled={submitting || isLocked}>
                     {isLocked ? '수정 불가 🔒' : '임시 저장 💾'}
                 </Button>
                 <Button
+                    type="button"
                     size="lg"
+                    variant="outline"
                     onClick={() => setIsPreviewOpen(true)}
                     disabled={submitting || isLocked || (!title.trim() && !content.trim())}
-                    style={{
-                        flex: 1.2,
-                        height: '64px',
-                        fontSize: '1.2rem',
-                        fontWeight: '800',
-                        background: (submitting || isLocked || (!title.trim() && !content.trim())) ? '#E0E0E0' : '#E8F1FF',
-                        color: (submitting || isLocked || (!title.trim() && !content.trim())) ? '#9E9E9E' : '#1565C0',
-                        border: '1px solid #BBDEFB'
-                    }}
                 >
                     제출 전 검토하기 👀
                 </Button>
-                <Button size="lg" onClick={handleFinalSubmit} disabled={submitting || isLocked} style={{ flex: 2, height: '64px', fontSize: '1.3rem', fontWeight: '900', background: isLocked ? '#B0BEC5' : 'var(--primary-color)', color: 'white', border: 'none' }}>
+                <Button type="button" size="lg" onClick={handleFinalSubmit} disabled={submitting || isLocked}>
                     {submitting
                         ? '제출 중...'
                         : isConfirmed
@@ -1235,7 +1124,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     )}
                 </AnimatePresence>
             </ModalPortal>
-        </Card>
+        </WritingWorkspace>
     );
 };
 

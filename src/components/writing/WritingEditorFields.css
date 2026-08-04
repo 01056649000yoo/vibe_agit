@@ -1,0 +1,31 @@
+.writing-editor-fields { display: grid; gap: 14px; }
+
+.writing-editor-fields__field {
+    padding: 15px 18px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-page-warm);
+    transition: border-color var(--ui-motion-fast), box-shadow var(--ui-motion-fast), background-color var(--ui-motion-fast);
+}
+
+.writing-editor-fields__field:focus-within {
+    border-color: var(--writing-workspace-accent, var(--ui-primary));
+    background: var(--ui-surface);
+    box-shadow: var(--ui-focus-ring);
+}
+
+.writing-editor-fields__field > label {
+    display: block;
+    margin-bottom: 9px;
+    color: var(--writing-workspace-accent-strong, var(--ui-primary-hover));
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+}
+
+.writing-editor-fields__field--body { padding-top: 17px; }
+.writing-editor-fields.is-disabled .writing-editor-fields__field { background: var(--ui-surface-muted); }
+
+@media (max-width: 640px) {
+    .writing-editor-fields__field { padding: 14px; border-radius: var(--ui-radius-md); }
+}

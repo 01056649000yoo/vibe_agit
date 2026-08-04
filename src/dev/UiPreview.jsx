@@ -3,6 +3,12 @@ import { AlertCircle, BookOpen, Check, Inbox, LoaderCircle, RefreshCw } from 'lu
 import Button from '../components/common/Button'
 import Card from '../components/common/Card'
 import WritingEditorFields from '../components/writing/WritingEditorFields'
+import {
+  WritingSectionHeader,
+  WritingWorkspace,
+  WritingWorkspaceHeader,
+  WritingWorkspacePath,
+} from '../components/writing/WritingWorkspace'
 import WritingToolHost from '../modules/writing/tools/WritingToolHost'
 import '../App.css'
 import './UiPreview.css'
@@ -43,6 +49,7 @@ function UiPreview() {
   const [activeNav, setActiveNav] = useState(TEACHER_NAV_GROUPS[0].id)
   const [previewTitle, setPreviewTitle] = useState('우리 반 체육 대회')
   const [previewContent, setPreviewContent] = useState('오늘은 웬지 운동장이 더 넓어 보였다. 이어달리기를 할수 있어서 정말 신났다.')
+  const [writingTone, setWritingTone] = useState('assignment')
   const state = previewStates.find((item) => item.id === activeState)
   const StateIcon = state.icon
 
@@ -164,20 +171,44 @@ function UiPreview() {
         <div className="ui-preview__section-heading">
           <div>
             <p className="ui-preview__eyebrow">04 · 학생 글쓰기</p>
-            <h2 id="writing-tool-preview-title">맞춤법 찾아보기</h2>
+            <h2 id="writing-tool-preview-title">태블릿 글쓰기 작업대</h2>
           </div>
-          <p>글 전체를 검사하거나 고치지 않고, 학생이 궁금한 표현만 직접 검색하는 태블릿용 도구입니다.</p>
+          <div className="ui-preview__segmented" aria-label="글쓰기 화면 종류">
+            <button type="button" className={writingTone === 'assignment' ? 'is-active' : ''} onClick={() => setWritingTone('assignment')}>과제 글쓰기</button>
+            <button type="button" className={writingTone === 'reading' ? 'is-active' : ''} onClick={() => setWritingTone('reading')}>독서록</button>
+          </div>
         </div>
-        <Card className="ui-preview__writing-canvas" animate={false}>
-          <WritingToolHost />
-          <WritingEditorFields
-            title={previewTitle}
-            onTitleChange={setPreviewTitle}
-            content={previewContent}
-            onContentChange={setPreviewContent}
-            isMobile
+        <WritingWorkspace tone={writingTone}>
+          <WritingWorkspaceHeader
+            onBack={() => {}}
+            eyebrow={writingTone === 'reading' ? '📚 나의 독서록' : '✍️ 생활문'}
+            title={writingTone === 'reading' ? '새 독서록 쓰기' : '우리 반 체육 대회 이야기'}
+            description={writingTone === 'reading'
+              ? '책을 고르고 기억에 남은 장면과 내 생각을 나만의 말로 기록해요.'
+              : '생각을 정리한 뒤 글을 쓰고, 마지막에 한 번 검토해 제출해요.'}
           />
-        </Card>
+          <WritingWorkspacePath steps={writingTone === 'reading' ? ['책 선택', '생각 쓰기', '공개·저장'] : ['생각 열기', '글쓰기', '검토·제출']} />
+          <section className="writing-editor-surface">
+            <WritingSectionHeader
+              icon={writingTone === 'reading' ? '💭' : '✍️'}
+              title={writingTone === 'reading' ? '책에서 만난 생각' : '본격 글쓰기'}
+              description="맞춤법은 자동으로 고치지 않고 궁금한 표현을 직접 찾아봐요."
+            />
+            <WritingToolHost />
+            <WritingEditorFields
+              title={previewTitle}
+              onTitleChange={setPreviewTitle}
+              content={previewContent}
+              onContentChange={setPreviewContent}
+              isMobile
+            />
+          </section>
+          <div className={`writing-action-bar ${writingTone === 'reading' ? 'writing-action-bar--reading' : ''}`}>
+            <Button type="button" variant="ghost" size="lg">취소</Button>
+            <Button type="button" variant="outline" size="lg">임시 저장 💾</Button>
+            <Button type="button" size="lg">{writingTone === 'reading' ? '독서록 저장하기 📚' : '멋지게 제출하기! 🚀'}</Button>
+          </div>
+        </WritingWorkspace>
       </section>
 
       <section className="ui-preview__section" aria-labelledby="teacher-nav-title">

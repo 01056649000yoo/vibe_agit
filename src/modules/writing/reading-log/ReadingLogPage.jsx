@@ -3,11 +3,17 @@ import { motion } from 'framer-motion';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
 import WritingEditorFields from '../../../components/writing/WritingEditorFields';
+import {
+    WritingNotice,
+    WritingSectionHeader,
+    WritingWorkspace,
+    WritingWorkspaceHeader,
+    WritingWorkspacePath
+} from '../../../components/writing/WritingWorkspace';
 import useMediaQuery from '../../../hooks/useMediaQuery';
 import { supabase } from '../../../lib/supabaseClient';
 import WritingToolHost from '../tools/WritingToolHost';
 import { buildDraftKey, readLocalDraft, useLocalWritingDraft } from '../drafts/localWritingDraft';
-import { getStudentWritingCardPadding, STUDENT_WRITING_CARD_MAX_WIDTH } from '../layout';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
 
@@ -317,24 +323,17 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
     }
 
     return (
-        <Card style={{
-            // 질문 있는 과제 글쓰기와 같은 바깥 폭·안쪽 여백을 써서
-            // 세 글쓰기 화면의 실제 제목·본문 폭을 모두 1016px로 맞춘다.
-            maxWidth: STUDENT_WRITING_CARD_MAX_WIDTH,
-            margin: '20px auto 50px',
-            padding: getStudentWritingCardPadding(isMobile),
-            border: 'none',
-            boxShadow: '0 15px 40px rgba(0,0,0,0.08)'
-        }}>
-            <div className="reading-log-editor-header">
-                <Button variant="ghost" size="sm" onClick={handleCancel} disabled={saving}>⬅️ 나가기</Button>
-                <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: '#2E7D32', fontWeight: 900, fontSize: '0.82rem' }}>📚 나의 독서록</div>
-                    <h2 style={{ margin: '6px 0 0', color: '#263238' }}>{postId ? '독서록 다듬기' : '새 독서록 쓰기'}</h2>
-                </div>
-            </div>
+        <WritingWorkspace tone="reading">
+            <WritingWorkspaceHeader
+                onBack={handleCancel}
+                disabled={saving}
+                eyebrow="📚 나의 독서록"
+                title={postId ? '독서록 다듬기' : '새 독서록 쓰기'}
+                description="책을 고르고 기억에 남은 장면과 내 생각을 나만의 말로 기록해요."
+            />
+            <WritingWorkspacePath steps={['책 선택', '생각 쓰기', '공개·저장']} />
 
-            <div style={{ marginBottom: '28px' }}>
+            <div className="reading-log-book-stage">
                 <BookSearchPanel
                     selectedBook={form.selectedBook}
                     onSelectBook={handleBookSelect}
@@ -349,12 +348,12 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                 <button type="button" className={form.readingStatus === 'completed' ? 'active' : ''} onClick={() => updateForm('readingStatus', 'completed')} disabled={saving}>✅ 다 읽음</button>
             </div>
 
-            <section style={{
-                padding: isMobile ? '32px 20px' : '48px 60px',
-                borderRadius: '32px',
-                border: '2px solid #F1F3F5',
-                boxShadow: '0 18px 45px rgba(0,0,0,0.04)'
-            }}>
+            <section className="writing-editor-surface">
+                <WritingSectionHeader
+                    icon="💭"
+                    title="책에서 만난 생각"
+                    description="정답을 찾기보다 기억에 남은 까닭과 내 생각을 자유롭게 적어봐요."
+                />
                 <WritingToolHost disabled={saving} />
                 <WritingEditorFields
                     title={form.title}
@@ -368,16 +367,11 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                 />
 
                 {(draftError || draftSavedAt || serverDraftAt) && (
-                    <p style={{
-                        margin: '14px 0 0',
-                        color: draftError ? '#A2454F' : '#5B8076',
-                        fontSize: '0.8rem',
-                        fontWeight: 750
-                    }}>
+                    <WritingNotice tone={draftError ? 'danger' : 'success'} icon={draftError ? '⚠️' : '💾'} compact>
                         {draftError || (serverDraftAt
-                            ? `💾 ${formatTime(serverDraftAt)}에 임시 저장했어요. 다른 기기에서도 이어 쓸 수 있어요. 아직 선생님과 친구에게는 보이지 않아요.`
-                            : `✅ ${formatTime(draftSavedAt)}에 이 기기에 남겨 뒀어요. 다른 기기에서도 이어 쓰려면 임시 저장을 눌러 주세요.`)}
-                    </p>
+                            ? `${formatTime(serverDraftAt)}에 임시 저장했어요. 다른 기기에서도 이어 쓸 수 있어요. 아직 선생님과 친구에게는 보이지 않아요.`
+                            : `${formatTime(draftSavedAt)}에 이 기기에 남겨 뒀어요. 다른 기기에서도 이어 쓰려면 임시 저장을 눌러 주세요.`)}
+                    </WritingNotice>
                 )}
             </section>
 
@@ -395,35 +389,36 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                 </span>
             </label>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '28px', flexWrap: 'wrap' }}>
-                <Button variant="ghost" onClick={handleCancel} disabled={saving || savingDraft}>취소</Button>
-                <Button variant="ghost" onClick={handleSaveDraft} disabled={saving || savingDraft}>
+            <div className="writing-action-bar writing-action-bar--reading">
+                <Button type="button" variant="ghost" size="lg" onClick={handleCancel} disabled={saving || savingDraft}>취소</Button>
+                <Button type="button" variant="outline" size="lg" onClick={handleSaveDraft} disabled={saving || savingDraft}>
                     {savingDraft ? '임시 저장 중...' : '임시 저장 💾'}
                 </Button>
-                <Button onClick={handleSave} disabled={saving || savingDraft}>
+                <Button type="button" size="lg" onClick={handleSave} disabled={saving || savingDraft}>
                     {saving ? '저장하는 중...' : '독서록 저장하기 📚'}
                 </Button>
             </div>
             </>}
 
             <style>{`
-                .reading-log-editor-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:30px; }
-                .reading-status-picker { display:flex; align-items:center; gap:8px; margin-bottom:18px; padding:12px 14px; border-radius:14px; background:#F8F9FA; }
-                .reading-status-picker > span { margin-right:auto; color:#607D8B; font-size:.9rem; font-weight:800; }
-                .reading-status-picker button { padding:8px 12px; border:1px solid #CFD8DC; border-radius:10px; background:white; color:#607D8B; cursor:pointer; font-weight:800; }
-                .reading-status-picker button.active { border-color:#7CB342; background:#F1F8E9; color:#33691E; }
-                .reading-log-visibility { display:flex; align-items:center; gap:14px; margin-top:24px; padding:18px 20px; border:2px solid #E0E0E0; border-radius:18px; cursor:pointer; background:#FAFAFA; }
-                .reading-log-visibility.is-public { border-color:#81C784; background:#F1F8E9; }
+                .reading-log-book-stage { margin-bottom:24px; }
+                .reading-status-picker { display:flex; align-items:center; gap:8px; margin-bottom:18px; padding:12px 14px; border:1px solid var(--ui-border); border-radius:var(--ui-radius-md); background:var(--ui-surface-muted); }
+                .reading-status-picker > span { margin-right:auto; color:var(--ui-ink-muted); font-size:.9rem; font-weight:800; }
+                .reading-status-picker button { min-height:44px; padding:8px 12px; border:1px solid var(--ui-border-strong); border-radius:var(--ui-radius-sm); background:var(--ui-surface); color:var(--ui-ink-muted); cursor:pointer; font-weight:800; box-shadow:none; }
+                .reading-status-picker button:hover { background:var(--writing-workspace-soft); box-shadow:none; }
+                .reading-status-picker button.active { border-color:var(--writing-workspace-accent); background:var(--writing-workspace-soft); color:var(--writing-workspace-accent-strong); }
+                .reading-log-visibility { display:flex; align-items:center; gap:14px; margin-top:24px; padding:18px 20px; border:1px solid var(--ui-border); border-radius:var(--ui-radius-lg); cursor:pointer; background:var(--ui-surface-muted); }
+                .reading-log-visibility.is-public { border-color:var(--writing-workspace-accent); background:var(--writing-workspace-soft); }
                 .reading-log-visibility input { width:20px; height:20px; accent-color:#43A047; }
-                .reading-log-visibility span:last-child { display:flex; flex-direction:column; gap:4px; color:#37474F; }
-                .reading-log-visibility small { color:#78909C; font-weight:500; }
+                .reading-log-visibility span:last-child { display:flex; flex-direction:column; gap:4px; color:var(--ui-ink-strong); }
+                .reading-log-visibility small { color:var(--ui-ink-muted); font-weight:500; line-height:1.55; }
                 @media (max-width: 640px) {
                     .reading-log-editor-header h2 { font-size:1.25rem; }
                     .reading-status-picker { flex-wrap:wrap; }
                     .reading-status-picker > span { width:100%; }
                 }
             `}</style>
-        </Card>
+        </WritingWorkspace>
     );
 };
 

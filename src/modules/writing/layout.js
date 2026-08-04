@@ -7,7 +7,4 @@
  */
 export const STUDENT_WRITING_CARD_MAX_WIDTH = '1200px';
 
-/** 과제·독서록이 모바일에서도 같은 실제 입력 폭을 갖게 하는 공용 카드 여백. */
-export const getStudentWritingCardPadding = (isMobile) => (
-    isMobile ? '32px 20px' : '32px'
-);
+// 바깥 여백과 태블릿 반응형은 `components/writing/WritingWorkspace.css`가 맡는다.

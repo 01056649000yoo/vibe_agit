@@ -90,13 +90,7 @@ const WritingToolHost = ({ disabled = false }) => {
     return (
         <aside
             aria-label="글쓰기 도움 도구"
-            style={{
-                margin: '0 0 22px',
-                padding: '12px 14px',
-                border: '1px solid #DDEBE6',
-                borderRadius: '16px',
-                background: '#FBFEFD'
-            }}
+            className="writing-tool-host"
         >
             {WRITING_TOOLS.map(({ id, label, triggerLabel, triggerHelp, Component }) => {
                 const request = Reflect.get(openRequests, id);
