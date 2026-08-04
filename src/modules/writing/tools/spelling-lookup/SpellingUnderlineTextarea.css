@@ -4,28 +4,52 @@
     width: 100%;
 }
 
-.spelling-underline-layer-wrap > textarea {
-    position: relative;
-    z-index: 1;
-    display: block;
-    caret-color: currentColor;
+/*
+ * 밑줄층과 입력창은 글자 배치가 1픽셀도 어긋나면 안 된다.
+ * 모바일 브라우저는 둘을 다르게 취급하는 기본값이 있어(글자 자동 확대, 입력창 기본 배경,
+ * 줄바꿈 규칙 상속) 정렬에 영향을 주는 속성은 양쪽에 같은 값으로 못 박는다.
+ */
+.spelling-underline-layer-wrap > textarea,
+.spelling-underline-layer-wrap > input,
+.spelling-underline-layer {
+    /* 안드로이드 크롬은 div 글자만 키우고 입력창은 그대로 둔다 — 양쪽 모두 확대 차단 */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* App.css 의 word-break: keep-all 이 층마다 다르게 상속되지 않도록 고정 */
+    word-break: normal;
+    overflow-wrap: break-word;
+    letter-spacing: normal;
+    word-spacing: normal;
+    tab-size: 4;
+    font-kerning: none;
+    font-variant-ligatures: none;
+    text-transform: none;
+    text-indent: 0;
 }
 
+.spelling-underline-layer-wrap > textarea,
 .spelling-underline-layer-wrap > input {
     position: relative;
     z-index: 1;
     display: block;
     caret-color: currentColor;
+    /* iOS 사파리는 입력창에 기본 배경을 칠해 아래층 밑줄을 통째로 가린다 */
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .spelling-underline-layer {
     position: absolute !important;
     z-index: 0;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     height: 100%;
     overflow: hidden !important;
     pointer-events: none;
     color: transparent !important;
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -33,14 +57,18 @@
     white-space: nowrap !important;
 }
 
+/*
+ * 물결 밑줄을 text-decoration 이 아니라 배경 그림으로 그린다.
+ * wavy 밑줄은 브라우저 엔진마다 그리는 방식이 달라 모바일에서 사라지는 경우가 있는데,
+ * 배경 그림은 어디서나 같은 방식으로 칠해진다. 그림이 못 뜨더라도 옅은 붉은 바탕은 남는다.
+ */
 .spelling-underline-mark {
     border-radius: 3px;
-    background: rgba(239, 68, 68, 0.1);
-    text-decoration-line: underline;
-    text-decoration-style: wavy;
-    text-decoration-color: #DC3545;
-    text-decoration-thickness: 1.5px;
-    text-underline-offset: 3px;
+    background-color: rgba(239, 68, 68, 0.14);
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3' viewBox='0 0 6 3'%3E%3Cpath d='M0 2.2 Q1.5 0.2 3 2.2 T6 2.2' fill='none' stroke='%23DC3545' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-position: 0 100%;
+    background-size: 6px 3px;
 }
 
 .spelling-underline-notice {

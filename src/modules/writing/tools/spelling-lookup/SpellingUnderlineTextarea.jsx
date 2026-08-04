@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { findSpellingIssues } from './elementarySpellingEntries';
 import { openSpellingLookup } from './events';
 import './SpellingUnderlineTextarea.css';
@@ -40,7 +40,11 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
 }, forwardedRef) {
     const textareaRef = useRef(null);
     const highlighterRef = useRef(null);
-    const issues = useMemo(() => findSpellingIssues(value), [value]);
+    const scrollFrameRef = useRef(0);
+    // 모바일 키보드는 같은 글자를 조합형(NFD)으로 넘기기도 한다. 수첩 규칙은 완성형 기준이라
+    // 밑줄을 찾을 때와 그릴 때 모두 같은 완성형(NFC) 문장을 쓴다.
+    const normalizedValue = useMemo(() => String(value || '').normalize('NFC'), [value]);
+    const issues = useMemo(() => findSpellingIssues(normalizedValue), [normalizedValue]);
     const uniqueIssues = useMemo(() => {
         const seen = new Set();
         return issues.filter((issue) => {
@@ -61,11 +65,29 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
         overflowWrap: 'break-word'
     };
 
+    // 모바일은 손을 뗀 뒤에도 미끄러지는 관성 스크롤이라 이벤트가 띄엄띄엄 온다.
+    // 화면을 그리는 시점에 맞춰 따라가야 밑줄이 출렁이지 않는다.
+    const syncScroll = () => {
+        if (scrollFrameRef.current) return;
+        scrollFrameRef.current = requestAnimationFrame(() => {
+            scrollFrameRef.current = 0;
+            const textarea = textareaRef.current;
+            const highlighter = highlighterRef.current;
+            if (!textarea || !highlighter) return;
+            highlighter.scrollTop = textarea.scrollTop;
+            highlighter.scrollLeft = textarea.scrollLeft;
+        });
+    };
+
+    useEffect(() => () => {
+        if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
+    }, []);
+
+    // 글을 이어 쓰면 입력창이 스스로 아래로 스크롤하는데 그 때는 scroll 이벤트가 오지 않는다.
+    useEffect(syncScroll, [normalizedValue]);
+
     const handleScroll = (event) => {
-        if (highlighterRef.current) {
-            highlighterRef.current.scrollTop = event.currentTarget.scrollTop;
-            highlighterRef.current.scrollLeft = event.currentTarget.scrollLeft;
-        }
+        syncScroll();
         onScroll?.(event);
     };
 
@@ -78,7 +100,7 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
                     style={sharedStyle}
                     aria-hidden="true"
                 >
-                    {buildHighlightedContent(value, issues)}
+                    {buildHighlightedContent(normalizedValue, issues)}
                 </div>
                 <textarea
                     {...props}
