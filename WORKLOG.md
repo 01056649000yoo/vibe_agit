@@ -39,6 +39,7 @@
     배경 스크롤 잠금(`overflow: hidden`)이 풀리지 않을 수 있어 도구별로 한 번만 만들도록 고쳤다.
 - **변경**: `SpellingLookupTool.jsx`, `WritingToolHost.jsx`, `eslint.config.js`.
 - **결과/검증**: 대상 ESLint 0에러, `npm run spelling:check` 오탐 0·미탐 0, 빌드 통과.
+  커밋 `8dc35c5` 를 push했고 GitHub Actions Deploy run `30906303345` 성공.
 - **교훈**: 빌드 통과는 화면이 뜬다는 뜻이 아니다. 컴포넌트를 옮기거나 쪼갤 때는 **옮긴 쪽뿐 아니라
   남은 쪽에서 무엇을 계속 쓰는지** 확인해야 한다. 이제 그 확인을 린트가 대신한다.
 
