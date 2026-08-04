@@ -4,17 +4,14 @@ import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-look
 
 const CONTENT_LINE_HEIGHT = 1.8;
 
-/**
- * 글 쓰는 영역의 최대 가로 길이.
+/*
+ * 글 쓰는 영역에 별도의 최대 폭을 두지 않는다 (2026-08-04 되돌림).
  *
- * 예전에는 감싸는 카드의 폭이 곧 입력창의 폭이었다. 그래서 화면마다 달랐고
- * (과제 666px / 독서록 720px), 특히 **미션에 질문이 있으면 카드가 1200px 로 넓어져
- * 한 줄이 51글자**가 됐다. 읽기 편한 줄은 보통 30~40글자다.
- *
- * 카드가 아니라 글 쓰는 영역 자체가 폭을 갖게 해서 어느 화면에서든 같게 만든다.
- * 화면이 이보다 좁으면(모바일) 이 값은 아무 일도 하지 않는다.
+ * 한때 720px 상한을 뒀다. 읽기 편한 줄 길이(30~40자)만 보고 정한 것인데, 화면에서 보니
+ * **위쪽 `생각 일깨우기` 질문답변 블록보다 글 쓰는 칸이 좁아져** 어색했다.
+ * 글 쓰는 칸은 그 화면의 다른 블록과 같은 폭이어야 한다.
+ * 대신 독서록 카드를 과제 글쓰기 카드와 같은 치수로 맞춰 두 화면의 폭을 통일한다.
  */
-export const WRITING_CONTENT_MAX_WIDTH = 720;
 
 /**
  * 과제 글쓰기와 학생 자율 글쓰기가 함께 쓰는 기본 제목/본문 입력부.
@@ -39,7 +36,7 @@ const WritingEditorFields = forwardRef(function WritingEditorFields({
     contentMinLines = 8
 }, ref) {
     return (
-        <div style={{ maxWidth: `${WRITING_CONTENT_MAX_WIDTH}px`, margin: '0 auto' }}>
+        <>
             <SpellingUnderlineInput
                 type="text"
                 value={title}
@@ -87,7 +84,7 @@ const WritingEditorFields = forwardRef(function WritingEditorFields({
                 }}
                 disabled={disabled}
             />
-        </div>
+        </>
     );
 });
 

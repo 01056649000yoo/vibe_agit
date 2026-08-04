@@ -295,9 +295,11 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
 
     return (
         <Card style={{
-            maxWidth: '900px',
+            // 과제 글쓰기 카드(`StudentWriting`)와 같은 치수로 맞춘다.
+            // 학생이 두 화면에서 같은 폭으로 글을 쓰게 하기 위함이다 (2026-08-04).
+            maxWidth: '850px',
             margin: '20px auto 50px',
-            padding: isMobile ? '22px 18px' : '36px',
+            padding: isMobile ? '32px 20px' : '32px',
             border: 'none',
             boxShadow: '0 15px 40px rgba(0,0,0,0.08)'
         }}>
@@ -325,8 +327,8 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
             </div>
 
             <section style={{
-                padding: isMobile ? '28px 20px' : '44px 54px',
-                borderRadius: '28px',
+                padding: isMobile ? '32px 20px' : '48px 60px',
+                borderRadius: '32px',
                 border: '2px solid #F1F3F5',
                 boxShadow: '0 18px 45px rgba(0,0,0,0.04)'
             }}>

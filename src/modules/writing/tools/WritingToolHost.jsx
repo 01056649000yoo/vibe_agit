@@ -41,11 +41,7 @@ class WritingToolErrorBoundary extends React.Component {
     }
 }
 
-/**
- * 도구 줄도 글 쓰는 영역과 같은 폭에 놓는다. 폭이 다르면 버튼만 혼자 튀어나와 보인다.
- * (`WritingEditorFields` 의 `WRITING_CONTENT_MAX_WIDTH` 와 같은 값을 쓴다.)
- */
-const WritingToolHost = ({ disabled = false, maxWidth = 720 }) => {
+const WritingToolHost = ({ disabled = false }) => {
     // 열어 달라는 요청이 온 도구만 담는다. { [도구id]: { query, correction, at } }
     const [openRequests, setOpenRequests] = useState({});
 
@@ -95,8 +91,7 @@ const WritingToolHost = ({ disabled = false, maxWidth = 720 }) => {
         <aside
             aria-label="글쓰기 도움 도구"
             style={{
-                maxWidth: `${maxWidth}px`,
-                margin: '0 auto 22px',
+                margin: '0 0 22px',
                 padding: '12px 14px',
                 border: '1px solid #DDEBE6',
                 borderRadius: '16px',
