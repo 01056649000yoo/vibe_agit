@@ -1,6 +1,15 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Search } from 'lucide-react';
 import { getWritingToolManifests } from './registry';
+import './writingToolTrigger.css';
 
+/**
+ * 글쓰기 도우미 도구들의 공통 자리.
+ *
+ * 도구 본체는 **학생이 열어야** 내려받는다. 버튼만 먼저 그려 두고, 누르거나
+ * (밑줄 칩처럼) 다른 곳에서 열어 달라는 신호가 오면 그때 본체를 받는다.
+ * 그래서 글쓰기 창을 열기만 한 학생은 도구 본체를 받지 않는다.
+ */
 const WRITING_TOOLS = getWritingToolManifests().map((manifest) => ({
     ...manifest,
     Component: lazy(manifest.studentEntry)
@@ -32,27 +41,90 @@ class WritingToolErrorBoundary extends React.Component {
     }
 }
 
-const WritingToolHost = ({ disabled = false }) => (
-    <aside
-        aria-label="글쓰기 도움 도구"
-        style={{
-            margin: '0 0 22px',
-            padding: '12px 14px',
-            border: '1px solid #DDEBE6',
-            borderRadius: '16px',
-            background: '#FBFEFD'
-        }}
-    >
-        {WRITING_TOOLS.map(({ id, label, Component }) => (
-            <WritingToolErrorBoundary key={id} toolLabel={label}>
-                <Suspense
-                    fallback={<span style={{ color: '#71817C', fontSize: '0.82rem' }}>글쓰기 도구를 준비하는 중...</span>}
-                >
-                    <Component disabled={disabled} />
-                </Suspense>
-            </WritingToolErrorBoundary>
-        ))}
-    </aside>
-);
+const WritingToolHost = ({ disabled = false }) => {
+    // 열어 달라는 요청이 온 도구만 담는다. { [도구id]: { query, correction, at } }
+    const [openRequests, setOpenRequests] = useState({});
+
+    const requestOpen = useCallback((toolId, detail = {}) => {
+        setOpenRequests((previous) => ({
+            ...previous,
+            [toolId]: {
+                query: String(detail.query || ''),
+                correction: detail.correction || null,
+                // 같은 낱말을 다시 눌러도 수첩이 새로 열리도록 매번 값을 바꾼다.
+                at: Date.now()
+            }
+        }));
+    }, []);
+
+    const closeTool = useCallback((toolId) => {
+        setOpenRequests((previous) => {
+            if (!(toolId in previous)) return previous;
+            const next = { ...previous };
+            delete next[toolId];
+            return next;
+        });
+    }, []);
+
+    // 밑줄 칩처럼 도구 바깥에서 "이 낱말로 열어 줘" 하고 보내는 신호를 받는다.
+    // 본체를 아직 안 받았어도 여기서 먼저 잡아 두므로 신호를 놓치지 않는다.
+    const openEvents = useMemo(
+        () => WRITING_TOOLS.filter((tool) => tool.openEventName),
+        []
+    );
+    useEffect(() => {
+        const listeners = openEvents.map((tool) => {
+            const handler = (event) => requestOpen(tool.id, event.detail || {});
+            window.addEventListener(tool.openEventName, handler);
+            return () => window.removeEventListener(tool.openEventName, handler);
+        });
+        return () => listeners.forEach((remove) => remove());
+    }, [openEvents, requestOpen]);
+
+    return (
+        <aside
+            aria-label="글쓰기 도움 도구"
+            style={{
+                margin: '0 0 22px',
+                padding: '12px 14px',
+                border: '1px solid #DDEBE6',
+                borderRadius: '16px',
+                background: '#FBFEFD'
+            }}
+        >
+            {WRITING_TOOLS.map(({ id, label, triggerLabel, triggerHelp, Component }) => {
+                const request = openRequests[id];
+                return (
+                    <WritingToolErrorBoundary key={id} toolLabel={label}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <button
+                                type="button"
+                                className="spelling-lookup-trigger"
+                                onClick={() => requestOpen(id)}
+                                disabled={disabled}
+                                aria-haspopup="dialog"
+                            >
+                                <Search size={19} aria-hidden="true" />
+                                <span>{triggerLabel || label}</span>
+                            </button>
+                            {triggerHelp && <span className="spelling-lookup-trigger-help">{triggerHelp}</span>}
+                        </div>
+
+                        {request && (
+                            <Suspense fallback={null}>
+                                <Component
+                                    key={request.at}
+                                    initialQuery={request.query}
+                                    correction={request.correction}
+                                    onClose={() => closeTool(id)}
+                                />
+                            </Suspense>
+                        )}
+                    </WritingToolErrorBoundary>
+                );
+            })}
+        </aside>
+    );
+};
 
 export default WritingToolHost;

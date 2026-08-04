@@ -5,30 +5,9 @@
     flex-wrap: wrap;
 }
 
-.spelling-lookup-trigger {
-    display: inline-flex;
-    min-height: 46px;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border: 1px solid #A7D7C8;
-    border-radius: 14px;
-    background: #F0FBF7;
-    box-shadow: none;
-    color: #176B57;
-    font-size: 0.94rem;
-    font-weight: 900;
-}
+/* 도구를 여는 버튼(`.spelling-lookup-trigger`)의 모양은 `../writingToolTrigger.css` 에 있다.
+   버튼 하나 그리자고 이 무거운 파일을 받게 할 수는 없기 때문이다. */
 
-.spelling-lookup-trigger:hover:not(:disabled),
-.spelling-lookup-trigger:focus-visible {
-    border-color: #55B89A;
-    background: #E3F7EF;
-    box-shadow: 0 5px 16px rgba(23, 107, 87, 0.12);
-}
-
-.spelling-lookup-trigger:focus-visible,
 .spelling-lookup-close:focus-visible,
 .spelling-lookup-search button:focus-visible,
 .spelling-lookup-popular button:focus-visible,
@@ -588,4 +567,59 @@
         animation: none;
     }
 
+}
+
+/* ── 밑줄 칩으로 열렸을 때 맨 위에 보여 주는 "이렇게 고쳐 써요" 카드 ────────── */
+.spelling-correction-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 14px 22px 0;
+    padding: 14px 16px;
+    border: 1px solid #F0C9C9;
+    border-radius: 14px;
+    background: #FFF7F7;
+}
+
+.spelling-correction-label {
+    color: #A2454F;
+    font-size: 0.76rem;
+    font-weight: 850;
+    letter-spacing: 0.02em;
+}
+
+.spelling-correction-pair {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 0;
+    color: #7A2E37;
+}
+
+.spelling-correction-wrong {
+    padding: 3px 9px;
+    border-radius: 8px;
+    background: rgba(220, 53, 69, 0.12);
+    color: #A32B39;
+    font-size: 1.05rem;
+    font-weight: 800;
+    text-decoration: line-through;
+    text-decoration-color: rgba(163, 43, 57, 0.6);
+}
+
+.spelling-correction-right {
+    padding: 3px 9px;
+    border-radius: 8px;
+    background: #E4F6EE;
+    color: #146A54;
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+
+.spelling-correction-help {
+    color: #7C6467;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.5;
 }

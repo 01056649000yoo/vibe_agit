@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, ExternalLink, Search, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowRight, BookOpen, ExternalLink, X } from 'lucide-react';
 import ModalPortal from '../../../../components/common/ModalPortal';
 import { supabase } from '../../../../lib/supabaseClient';
 import {
@@ -7,7 +7,6 @@ import {
     getPopularSpellingEntries,
     searchElementarySpelling
 } from './elementarySpellingEntries';
-import { SPELLING_LOOKUP_OPEN_EVENT } from './events';
 import './SpellingLookupTool.css';
 
 const MAX_QUERY_LENGTH = 180;
@@ -26,10 +25,16 @@ const getErrorPayload = async (error) => {
     }
 };
 
-const SpellingLookupTool = ({ disabled = false }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [query, setQuery] = useState('');
-    const [searchedQuery, setSearchedQuery] = useState('');
+/**
+ * 맞춤법 수첩 본체.
+ *
+ * 여는 버튼과 "열어 달라"는 신호 처리는 공통 호스트(`WritingToolHost`)가 맡는다.
+ * 이 컴포넌트는 **열려 있을 때만 화면에 올라온다** — 그래야 글쓰기 창을 열기만 한 학생이
+ * 이 무거운 파일(설명·예문·사전)을 받지 않는다.
+ */
+const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) => {
+    const [query, setQuery] = useState(initialQuery.slice(0, MAX_QUERY_LENGTH));
+    const [searchedQuery, setSearchedQuery] = useState(initialQuery.slice(0, MAX_QUERY_LENGTH));
     const [dictionaryItems, setDictionaryItems] = useState([]);
     const [dictionaryLoading, setDictionaryLoading] = useState(false);
     const [dictionaryMessage, setDictionaryMessage] = useState('');
@@ -42,14 +47,14 @@ const SpellingLookupTool = ({ disabled = false }) => {
         [searchedQuery]
     );
 
-    useEffect(() => {
-        if (!isOpen) return undefined;
+    const closeTool = useCallback(() => onClose?.(), [onClose]);
 
+    useEffect(() => {
         const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
 
         const handleKeyDown = (event) => {
-            if (event.key === 'Escape') setIsOpen(false);
+            if (event.key === 'Escape') closeTool();
         };
         document.addEventListener('keydown', handleKeyDown);
 
@@ -57,21 +62,7 @@ const SpellingLookupTool = ({ disabled = false }) => {
             document.body.style.overflow = previousOverflow;
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isOpen]);
-
-    useEffect(() => {
-        const handleOpenRequest = (event) => {
-            const nextQuery = String(event.detail?.query || '').trim().slice(0, MAX_QUERY_LENGTH);
-            setIsOpen(true);
-            setQuery(nextQuery);
-            setSearchedQuery(nextQuery);
-            setDictionaryItems([]);
-            setDictionaryMessage('');
-            setDictionarySearchedQuery('');
-        };
-        window.addEventListener(SPELLING_LOOKUP_OPEN_EVENT, handleOpenRequest);
-        return () => window.removeEventListener(SPELLING_LOOKUP_OPEN_EVENT, handleOpenRequest);
-    }, []);
+    }, [closeTool]);
 
     const runSearch = async (nextQuery = query, { includeOfficial = true } = {}) => {
         const trimmed = nextQuery.trim();
@@ -135,207 +126,210 @@ const SpellingLookupTool = ({ disabled = false }) => {
         setDictionaryMessage(items.length === 0 ? '표준국어대사전에서 일치하는 낱말을 찾지 못했어요.' : '');
     };
 
-    const openTool = () => {
-        if (disabled) return;
-        setIsOpen(true);
-    };
+    // 밑줄 칩으로 열렸을 때는 학생이 쓴 **틀린 말**이 아니라 사전에 실제로 있는 **표제어**로 찾는다.
+    // `됬` 을 그대로 찾으면 사전은 늘 빈손으로 돌아온다 — 찾을 말은 `되다` 다.
+    useEffect(() => {
+        const openingQuery = correction?.lookup || initialQuery;
+        if (openingQuery.trim()) runSearch(openingQuery);
+        // 처음 열릴 때 한 번만. 이후 검색은 학생이 직접 한다.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
 
     return (
-        <div className="spelling-lookup-tool">
-            <button
-                type="button"
-                className="spelling-lookup-trigger"
-                onClick={openTool}
-                disabled={disabled}
-                aria-haspopup="dialog"
-            >
-                <Search size={19} aria-hidden="true" />
-                <span>맞춤법 찾아보기</span>
-            </button>
-            <span className="spelling-lookup-trigger-help">궁금한 표현을 직접 찾아보고 내 글은 내가 고쳐요.</span>
-
-            {isOpen && (
-                <ModalPortal>
-                    <div className="spelling-lookup-overlay" onMouseDown={() => setIsOpen(false)}>
-                        <section
-                            className="spelling-lookup-panel"
-                            role="dialog"
-                            aria-modal="true"
-                            aria-labelledby="spelling-lookup-title"
-                            onMouseDown={(event) => event.stopPropagation()}
+        <ModalPortal>
+            <div className="spelling-lookup-overlay" onMouseDown={closeTool}>
+                <section
+                    className="spelling-lookup-panel"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="spelling-lookup-title"
+                    onMouseDown={(event) => event.stopPropagation()}
+                >
+                    <header className="spelling-lookup-header">
+                        <div className="spelling-lookup-heading">
+                            <span className="spelling-lookup-heading-icon" aria-hidden="true">
+                                <BookOpen size={22} />
+                            </span>
+                            <div>
+                                <span>나의 맞춤법 수첩</span>
+                                <h2 id="spelling-lookup-title">맞춤법 찾아보기</h2>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            className="spelling-lookup-close"
+                            onClick={closeTool}
+                            aria-label="맞춤법 찾아보기 닫기"
                         >
-                            <header className="spelling-lookup-header">
-                                <div className="spelling-lookup-heading">
-                                    <span className="spelling-lookup-heading-icon" aria-hidden="true">
-                                        <BookOpen size={22} />
-                                    </span>
-                                    <div>
-                                        <span>나의 맞춤법 수첩</span>
-                                        <h2 id="spelling-lookup-title">맞춤법 찾아보기</h2>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    className="spelling-lookup-close"
-                                    onClick={() => setIsOpen(false)}
-                                    aria-label="맞춤법 찾아보기 닫기"
-                                >
-                                    <X size={23} aria-hidden="true" />
-                                </button>
-                            </header>
+                            <X size={23} aria-hidden="true" />
+                        </button>
+                    </header>
 
-                            <p className="spelling-lookup-promise">
-                                문장은 기기 안의 수첩 규칙으로 살펴보고, 직접 찾기를 누른 낱말·짧은 구만 국립국어원 사전에서 찾아요. 글을 자동으로 고치지 않아요.
+                    {correction?.right && (
+                        <div className="spelling-correction-card">
+                            <span className="spelling-correction-label">이렇게 고쳐 써요</span>
+                            <p className="spelling-correction-pair">
+                                <span className="spelling-correction-wrong">{correction.wrong}</span>
+                                <ArrowRight size={18} aria-hidden="true" />
+                                <span className="spelling-correction-right">{correction.right}</span>
                             </p>
+                            <span className="spelling-correction-help">
+                                틀린 말은 사전에 실려 있지 않아서, 바른 표기 &lsquo;{correction.lookup}&rsquo;(으)로 찾아봤어요.
+                            </span>
+                        </div>
+                    )}
 
-                            <form
-                                className="spelling-lookup-search"
-                                onSubmit={(event) => {
-                                    event.preventDefault();
-                                    runSearch();
-                                }}
-                            >
-                                <label htmlFor="spelling-lookup-query">어떤 낱말이나 문장이 궁금한가요?</label>
-                                <div className="spelling-lookup-search-row">
-                                    <input
-                                        ref={inputRef}
-                                        id="spelling-lookup-query"
-                                        value={query}
-                                        onChange={(event) => setQuery(event.target.value.slice(0, MAX_QUERY_LENGTH))}
-                                        placeholder="예: 오늘은 웬지 기분이 좋아요."
-                                        lang="ko"
-                                        spellCheck={false}
-                                        autoCorrect="off"
-                                        autoCapitalize="none"
-                                        enterKeyHint="search"
-                                    />
-                                    <button type="submit" disabled={!query.trim()}>
-                                        <Search size={19} aria-hidden="true" />
-                                        찾기
+                    <p className="spelling-lookup-promise">
+                        문장은 기기 안의 수첩 규칙으로 살펴보고, 직접 찾기를 누른 낱말·짧은 구만 국립국어원 사전에서 찾아요. 글을 자동으로 고치지 않아요.
+                    </p>
+
+                    <form
+                        className="spelling-lookup-search"
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            runSearch();
+                        }}
+                    >
+                        <label htmlFor="spelling-lookup-query">어떤 낱말이나 문장이 궁금한가요?</label>
+                        <div className="spelling-lookup-search-row">
+                            <input
+                                ref={inputRef}
+                                id="spelling-lookup-query"
+                                value={query}
+                                onChange={(event) => setQuery(event.target.value.slice(0, MAX_QUERY_LENGTH))}
+                                placeholder="예: 오늘은 웬지 기분이 좋아요."
+                                lang="ko"
+                                spellCheck={false}
+                                autoCorrect="off"
+                                autoCapitalize="none"
+                                enterKeyHint="search"
+                            />
+                            <button type="submit" disabled={!query.trim()}>
+                                <Search size={19} aria-hidden="true" />
+                                찾기
+                            </button>
+                        </div>
+                    </form>
+
+                    {!searchedQuery && (
+                        <div className="spelling-lookup-popular">
+                            <strong>많이 헷갈리는 표현</strong>
+                            <div>
+                                {popularEntries.map((entry) => (
+                                    <button
+                                        type="button"
+                                        key={entry.id}
+                                        onClick={() => runSearch(entry.question, { includeOfficial: false })}
+                                    >
+                                        {entry.question}
                                     </button>
-                                </div>
-                            </form>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-                            {!searchedQuery && (
-                                <div className="spelling-lookup-popular">
-                                    <strong>많이 헷갈리는 표현</strong>
+                    <div className="spelling-lookup-results" aria-live="polite">
+                        {searchedQuery && results.length > 0 && (
+                            <>
+                                <p className="spelling-lookup-result-count">
+                                    <strong>‘{searchedQuery}’</strong>와 관련된 설명 {results.length}개를 찾았어요.
+                                </p>
+                                {results.map((entry) => (
+                                    <article className="spelling-lookup-result-card" key={entry.id}>
+                                        <div className="spelling-lookup-answer-row">
+                                            <span>{entry.question}</span>
+                                            <strong>{entry.answer}</strong>
+                                        </div>
+                                        <p>{entry.explanation}</p>
+                                        <div className="spelling-lookup-examples">
+                                            <strong>이렇게 써요</strong>
+                                            {entry.examples.map((example) => (
+                                                <span key={example}>{example}</span>
+                                            ))}
+                                        </div>
+                                        <a href={entry.source.url} target="_blank" rel="noreferrer">
+                                            {entry.source.label}에서 더 보기
+                                            <ExternalLink size={15} aria-hidden="true" />
+                                        </a>
+                                    </article>
+                                ))}
+                            </>
+                        )}
+
+                        {searchedQuery && results.length === 0 && !dictionaryLoading && dictionaryItems.length === 0 && !dictionarySearchedQuery && (
+                            <div className="spelling-lookup-empty">
+                                <span aria-hidden="true">🔎</span>
+                                <strong>수첩에서 관련 규칙을 찾지 못했어요.</strong>
+                                <p>낱말은 국립국어원 사전에서 직접 확인할 수 있어요. 문장은 수첩 규칙을 더 보강하면서 검색 범위를 넓혀 갈게요.</p>
+                                <a
+                                    href={createOfficialDictionarySearchUrl(searchedQuery)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    국립국어원 사전에서 ‘{searchedQuery}’ 찾기
+                                    <ExternalLink size={15} aria-hidden="true" />
+                                </a>
+                            </div>
+                        )}
+
+                        {dictionarySearchedQuery && (
+                            <section className="spelling-dictionary-results" aria-labelledby="spelling-dictionary-title">
+                                <div className="spelling-dictionary-heading">
                                     <div>
-                                        {popularEntries.map((entry) => (
-                                            <button
-                                                type="button"
-                                                key={entry.id}
-                                                onClick={() => runSearch(entry.question, { includeOfficial: false })}
-                                            >
-                                                {entry.question}
-                                            </button>
-                                        ))}
+                                        <span>공식 사전 검색</span>
+                                        <h3 id="spelling-dictionary-title">국립국어원 표준국어대사전</h3>
                                     </div>
+                                    <a
+                                        href={createOfficialDictionarySearchUrl(dictionarySearchedQuery)}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        사전에서 직접 보기
+                                        <ExternalLink size={15} aria-hidden="true" />
+                                    </a>
                                 </div>
-                            )}
 
-                            <div className="spelling-lookup-results" aria-live="polite">
-                                {searchedQuery && results.length > 0 && (
-                                    <>
-                                        <p className="spelling-lookup-result-count">
-                                            <strong>‘{searchedQuery}’</strong>와 관련된 설명 {results.length}개를 찾았어요.
-                                        </p>
-                                        {results.map((entry) => (
-                                            <article className="spelling-lookup-result-card" key={entry.id}>
-                                                <div className="spelling-lookup-answer-row">
-                                                    <span>{entry.question}</span>
-                                                    <strong>{entry.answer}</strong>
+                                {dictionaryLoading && (
+                                    <div className="spelling-dictionary-status" role="status">
+                                        <span className="spelling-dictionary-spinner" aria-hidden="true" />
+                                        국립국어원 사전에서 찾는 중이에요.
+                                    </div>
+                                )}
+
+                                {!dictionaryLoading && dictionaryMessage && (
+                                    <div className="spelling-dictionary-message">{dictionaryMessage}</div>
+                                )}
+
+                                {!dictionaryLoading && dictionaryItems.length > 0 && (
+                                    <div className="spelling-dictionary-list">
+                                        {dictionaryItems.map((item, index) => (
+                                            <article key={`${item.targetCode || item.word}-${index}`} className="spelling-dictionary-card">
+                                                <div>
+                                                    <h4>{item.word}{item.supNo ? <sup>{item.supNo}</sup> : null}</h4>
+                                                    {item.pos && <span>{item.pos}</span>}
+                                                    {item.category && <span>{item.category}</span>}
                                                 </div>
-                                                <p>{entry.explanation}</p>
-                                                <div className="spelling-lookup-examples">
-                                                    <strong>이렇게 써요</strong>
-                                                    {entry.examples.map((example) => (
-                                                        <span key={example}>{example}</span>
-                                                    ))}
-                                                </div>
-                                                <a href={entry.source.url} target="_blank" rel="noreferrer">
-                                                    {entry.source.label}에서 더 보기
-                                                    <ExternalLink size={15} aria-hidden="true" />
+                                                <p>{item.definition}</p>
+                                                {item.origin && <small>원어 {item.origin}</small>}
+                                                <a href={item.sourceUrl} target="_blank" rel="noreferrer">
+                                                    자세한 뜻 보기
+                                                    <ExternalLink size={14} aria-hidden="true" />
                                                 </a>
                                             </article>
                                         ))}
-                                    </>
-                                )}
-
-                                {searchedQuery && results.length === 0 && !dictionaryLoading && dictionaryItems.length === 0 && !dictionarySearchedQuery && (
-                                    <div className="spelling-lookup-empty">
-                                        <span aria-hidden="true">🔎</span>
-                                        <strong>수첩에서 관련 규칙을 찾지 못했어요.</strong>
-                                        <p>낱말은 국립국어원 사전에서 직접 확인할 수 있어요. 문장은 수첩 규칙을 더 보강하면서 검색 범위를 넓혀 갈게요.</p>
-                                        <a
-                                            href={createOfficialDictionarySearchUrl(searchedQuery)}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                        >
-                                            국립국어원 사전에서 ‘{searchedQuery}’ 찾기
-                                            <ExternalLink size={15} aria-hidden="true" />
-                                        </a>
                                     </div>
                                 )}
-
-                                {dictionarySearchedQuery && (
-                                    <section className="spelling-dictionary-results" aria-labelledby="spelling-dictionary-title">
-                                        <div className="spelling-dictionary-heading">
-                                            <div>
-                                                <span>공식 사전 검색</span>
-                                                <h3 id="spelling-dictionary-title">국립국어원 표준국어대사전</h3>
-                                            </div>
-                                            <a
-                                                href={createOfficialDictionarySearchUrl(dictionarySearchedQuery)}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                사전에서 직접 보기
-                                                <ExternalLink size={15} aria-hidden="true" />
-                                            </a>
-                                        </div>
-
-                                        {dictionaryLoading && (
-                                            <div className="spelling-dictionary-status" role="status">
-                                                <span className="spelling-dictionary-spinner" aria-hidden="true" />
-                                                국립국어원 사전에서 찾는 중이에요.
-                                            </div>
-                                        )}
-
-                                        {!dictionaryLoading && dictionaryMessage && (
-                                            <div className="spelling-dictionary-message">{dictionaryMessage}</div>
-                                        )}
-
-                                        {!dictionaryLoading && dictionaryItems.length > 0 && (
-                                            <div className="spelling-dictionary-list">
-                                                {dictionaryItems.map((item, index) => (
-                                                    <article key={`${item.targetCode || item.word}-${index}`} className="spelling-dictionary-card">
-                                                        <div>
-                                                            <h4>{item.word}{item.supNo ? <sup>{item.supNo}</sup> : null}</h4>
-                                                            {item.pos && <span>{item.pos}</span>}
-                                                            {item.category && <span>{item.category}</span>}
-                                                        </div>
-                                                        <p>{item.definition}</p>
-                                                        {item.origin && <small>원어 {item.origin}</small>}
-                                                        <a href={item.sourceUrl} target="_blank" rel="noreferrer">
-                                                            자세한 뜻 보기
-                                                            <ExternalLink size={14} aria-hidden="true" />
-                                                        </a>
-                                                    </article>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </section>
-                                )}
-                            </div>
-
-                            <footer className="spelling-lookup-footer">
-                                설명을 읽은 뒤 글쓰기 창으로 돌아가 직접 판단하고 고쳐 보세요.
-                            </footer>
-                        </section>
+                            </section>
+                        )}
                     </div>
-                </ModalPortal>
-            )}
-        </div>
+
+                    <footer className="spelling-lookup-footer">
+                        설명을 읽은 뒤 글쓰기 창으로 돌아가 직접 판단하고 고쳐 보세요.
+                    </footer>
+                </section>
+            </div>
+        </ModalPortal>
     );
 };
 

@@ -1,0 +1,59 @@
+/*
+ * 글쓰기 도구를 여는 버튼.
+ *
+ * 도구 본체(맞춤법 수첩 등)는 학생이 이 버튼을 눌러야 내려받는다. 그래서 버튼 모양만은
+ * 본체와 따로 여기에 둔다 — 본체 CSS 안에 있으면 버튼을 그리려고 본체를 받아야 한다.
+ * 클래스 이름은 본체가 쓰던 것을 그대로 유지해 모양이 달라지지 않게 한다.
+ */
+
+.spelling-lookup-trigger {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid #A7D7C8;
+    border-radius: 14px;
+    background: #F0FBF7;
+    box-shadow: none;
+    color: #176B57;
+    font-size: 0.94rem;
+    font-weight: 900;
+}
+
+.spelling-lookup-trigger:hover:not(:disabled),
+.spelling-lookup-trigger:focus-visible {
+    border-color: #55B89A;
+    background: #E3F7EF;
+    box-shadow: 0 5px 16px rgba(23, 107, 87, 0.12);
+}
+
+.spelling-lookup-trigger:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.34);
+    outline-offset: 2px;
+}
+
+.spelling-lookup-trigger:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.spelling-lookup-trigger-help {
+    color: #6B7E78;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+@media (max-width: 560px) {
+    .spelling-lookup-trigger-help {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spelling-lookup-trigger {
+        transition: none;
+        animation: none;
+    }
+}

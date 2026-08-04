@@ -149,7 +149,7 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
                             <button
                                 type="button"
                                 key={issue.entryId}
-                                onClick={() => openSpellingLookup(issue.text)}
+                                onClick={() => openSpellingLookup(issue.text, issue)}
                             >
                                 {issue.text} <span aria-hidden="true">→</span> {issue.right}
                             </button>
