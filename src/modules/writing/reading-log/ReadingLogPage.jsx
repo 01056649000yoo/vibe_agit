@@ -111,6 +111,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
     const [loading, setLoading] = useState(Boolean(postId));
     const [saving, setSaving] = useState(false);
     const [completedPostAt, setCompletedPostAt] = useState(null);
+    const [teacherReview, setTeacherReview] = useState(null);
     const isMobile = useMediaQuery('(max-width: 768px)');
     const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
 
@@ -120,20 +121,36 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
         let active = true;
         const loadPost = async () => {
             setLoading(true);
-            const { data, error } = await supabase
-                .from('student_posts')
-                .select('id, title, content, structured_content, visibility, updated_at')
-                .eq('id', postId)
-                .eq('student_id', studentSession.id)
-                .eq('writing_context', 'self')
-                .eq('self_writing_type', 'reading_log')
-                .maybeSingle();
+            const [postResult, reviewResult] = await Promise.all([
+                supabase
+                    .from('student_posts')
+                    .select('id, title, content, structured_content, visibility, updated_at')
+                    .eq('id', postId)
+                    .eq('student_id', studentSession.id)
+                    .eq('writing_context', 'self')
+                    .eq('self_writing_type', 'reading_log')
+                    .maybeSingle(),
+                supabase
+                    .from('reading_log_teacher_reviews')
+                    .select('teacher_comment, reviewed_at')
+                    .eq('post_id', postId)
+                    .eq('student_id', studentSession.id)
+                    .maybeSingle()
+            ]);
 
             if (!active) return;
+            const { data, error } = postResult;
             if (error || !data) {
                 alert('독서록을 불러오지 못했습니다.');
                 onCancel();
                 return;
+            }
+
+            if (reviewResult.error) {
+                console.error('독서록 선생님 한마디 불러오기 실패:', reviewResult.error.message);
+                setTeacherReview(null);
+            } else {
+                setTeacherReview(reviewResult.data || null);
             }
 
             const loadedBook = bookFromStructuredContent(data.structured_content || {});
@@ -433,6 +450,21 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
                 </span>
             </label>
 
+            {teacherReview?.teacher_comment?.trim() && (
+                <aside className="reading-editor-teacher-comment" aria-label="선생님 한마디">
+                    <span className="reading-editor-teacher-comment__icon" aria-hidden="true">💬</span>
+                    <div>
+                        <strong>선생님 한마디</strong>
+                        <p>{teacherReview.teacher_comment}</p>
+                        <small>
+                            {teacherReview.reviewed_at
+                                ? `${formatDate(teacherReview.reviewed_at)}에 남긴 한마디 · 글을 다듬을 때 참고해 보세요.`
+                                : '글을 다듬을 때 참고해 보세요.'}
+                        </small>
+                    </div>
+                </aside>
+            )}
+
             <div className="writing-action-bar writing-action-bar--reading">
                 <Button type="button" variant="ghost" size="lg" onClick={handleCancel} disabled={saving || savingDraft}>취소</Button>
                 <Button type="button" variant="outline" size="lg" onClick={handleSaveDraft} disabled={saving || savingDraft}>
@@ -456,10 +488,16 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
                 .reading-log-visibility input { width:20px; height:20px; accent-color:#43A047; }
                 .reading-log-visibility span:last-child { display:flex; flex-direction:column; gap:4px; color:var(--ui-ink-strong); }
                 .reading-log-visibility small { color:var(--ui-ink-muted); font-weight:500; line-height:1.55; }
+                .reading-editor-teacher-comment { display:grid; grid-template-columns:auto minmax(0,1fr); gap:14px; margin-top:18px; padding:18px 20px; border:1px solid var(--ui-primary-border); border-radius:var(--ui-radius-lg); background:var(--ui-page-warm); box-shadow:var(--ui-shadow-xs); }
+                .reading-editor-teacher-comment__icon { display:grid; width:42px; height:42px; place-items:center; border-radius:50%; background:var(--ui-primary-soft); font-size:1.25rem; }
+                .reading-editor-teacher-comment strong { display:block; color:var(--ui-primary); font-size:.92rem; font-weight:900; }
+                .reading-editor-teacher-comment p { margin:8px 0 10px; color:var(--ui-ink-strong); font-size:1rem; line-height:1.75; overflow-wrap:anywhere; white-space:pre-wrap; }
+                .reading-editor-teacher-comment small { color:var(--ui-ink-subtle); font-size:.76rem; line-height:1.5; }
                 @media (max-width: 640px) {
                     .reading-log-editor-header h2 { font-size:1.25rem; }
                     .reading-status-picker { flex-wrap:wrap; }
                     .reading-status-picker > span { width:100%; }
+                    .reading-editor-teacher-comment { grid-template-columns:1fr; padding:16px; }
                 }
             `}</style>
         </WritingWorkspace>
