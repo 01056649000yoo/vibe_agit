@@ -29,10 +29,12 @@
   - 바깥 영역·닫기 버튼·Esc로 닫고, 모달 높이가 화면을 넘으면 모달 본문만 스크롤한다.
   - Fullscreen API 상태에서는 body 포털이 화면 뒤로 숨지 않도록 공용 `ModalPortal`에 선택적 `container`를 추가해
     현재 fullscreen 루트 안에 모달을 그린다. 기존 호출부는 container를 생략하므로 기존 중앙 모달 동작이 그대로다.
-- **변경**: `StudentFootprintDetailModal.jsx` 신규, `TeacherWritingFootprintDashboard.jsx`, `ModalPortal.jsx`.
+- **변경**: 기능 커밋 `15fb296`(`학생 발자국 카드 상세 모달 추가`).
+  `StudentFootprintDetailModal.jsx` 신규, `TeacherWritingFootprintDashboard.jsx`, `ModalPortal.jsx`.
   DB·운영 인프라 변경 없음.
-- **결과/검증**: 대상 ESLint 0에러, 프로덕션 빌드와 `git diff --check` 통과.
-  연결 가능한 브라우저가 없어 실제 fullscreen 포털 화면 검증은 하지 못했다.
+- **결과/검증**: 대상 및 전체 ESLint 0에러(기존 경고 69), 맞춤법 57규칙 오탐·미탐 0,
+  프로덕션 빌드와 `git diff --check` 통과. GitHub Actions Deploy run `30919149947`의 이미지 빌드·
+  컨테이너 재시작·HTTP 검증이 성공했다. 연결 가능한 브라우저가 없어 실제 fullscreen 포털 화면 검증은 하지 못했다.
 - **남은 것 / 다음**: 실제 교사 전체화면에서 카드 클릭→모달 중앙 표시→바깥/닫기/Esc 종료와 4:3 화면 스크롤을 확인한다.
 
 ## 2026-08-04 — 전체화면 학생 카드 내용 잘림 방지 (GPT/Codex)
