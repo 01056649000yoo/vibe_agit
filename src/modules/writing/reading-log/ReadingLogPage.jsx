@@ -822,7 +822,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                                                     })}
                                                     aria-label={`「${shelf.book.title || '책 제목 없음'}」 선생님 한마디 보기`}
                                                 >
-                                                    💬 한마디 있음
+                                                    💬 선생님 한마디 있음
                                                 </button>
                                             ) : teacherReview ? (
                                                 <span className="reading-teacher-reviewed">✅ 선생님 확인</span>
