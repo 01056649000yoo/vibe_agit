@@ -5,6 +5,7 @@ import ModalPortal from '../common/ModalPortal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMissionSubmit } from '../../hooks/useMissionSubmit';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
+import useMediaQuery from '../../hooks/useMediaQuery';
 import { countContentChars } from '../../lib/textMetrics';
 import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
 import WritingToolHost from '../../modules/writing/tools/WritingToolHost';
@@ -15,7 +16,11 @@ import {
     writeLocalDraft
 } from '../../modules/writing/drafts/localWritingDraft';
 import WritingEditorFields from '../writing/WritingEditorFields';
-import { STUDENT_WRITING_CARD_MAX_WIDTH } from '../../modules/writing/layout';
+import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea';
+import {
+    getStudentWritingCardPadding,
+    STUDENT_WRITING_CARD_MAX_WIDTH
+} from '../../modules/writing/layout';
 
 const GENRE_EDITORS = new Map(
     getGenreMissionTypes()
@@ -140,7 +145,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const [savingOriginalSharing, setSavingOriginalSharing] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const editorRef = useRef(null);
-    const isMobile = window.innerWidth <= 768;
+    const isMobile = useMediaQuery('(max-width: 768px)');
     const [autoSaveAt, setAutoSaveAt] = useState(null);
     const [autoSaveError, setAutoSaveError] = useState('');
     const genreMissionType = getGenreMissionType(mission?.input_template);
@@ -509,7 +514,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         <Card style={{
             // 질문 유무와 관계없이 질문 있는 과제의 폭을 기준으로 쓴다.
             maxWidth: STUDENT_WRITING_CARD_MAX_WIDTH,
-            padding: '32px',
+            padding: getStudentWritingCardPadding(isMobile),
             border: 'none',
             background: '#FFFFFF',
             boxShadow: '0 15px 40px rgba(0,0,0,0.08)',
@@ -649,7 +654,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     <span style={{ color: '#3498DB', minWidth: '24px' }}>{idx + 1}.</span>
                                     <span>{q}</span>
                                 </div>
-                                <textarea
+                                <SpellingUnderlineTextarea
                                     value={studentAnswers[idx] || ''}
                                     onChange={(e) => handleAnswerChange(idx, e.target.value)}
                                     placeholder="여기에 생각을 적어보세요..."

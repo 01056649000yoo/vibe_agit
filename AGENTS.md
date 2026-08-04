@@ -57,6 +57,7 @@
 - **적용 여부는 추측하지 말고 물어본다**: `npm run migrate:status` — 아직 적용 안 된 파일만 보여준다(DB를 건드리지 않음).
 - **적용**: `npm run migrate` — 안 된 것만 파일명 순서대로 적용하고 `public.applied_migrations` 에 기록한다.
 - 붙는 DB는 맥미니의 **`agit-db`** 컨테이너다. **`supabase-db` 는 다른 앱의 DB** — 헷갈리지 말 것.
+- 스키마 소유 역할은 **`supabase_admin`** 이다. 마이그레이션 도구도 이를 기본값으로 사용한다(`AGIT_DB_USER`로 변경 가능).
 - **운영 적용 전에는 롤백되는 트랜잭션에서 먼저 검증한다**:
   파일의 `BEGIN;`/`COMMIT;` 을 빼고 `BEGIN; … ROLLBACK;` 으로 감싸 돌려 본다.
 - 이미 적용된 파일은 **고치지 않는다.** 고쳐야 하면 새 파일을 만든다

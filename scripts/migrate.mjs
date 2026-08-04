@@ -11,6 +11,7 @@
  *
  * 어디에 붙는가:
  *   맥미니의 `agit-db` 도커 컨테이너. `supabase-db` 는 **다른 앱**의 DB다 — 헷갈리지 말 것.
+ *   스키마 소유자는 `supabase_admin` 이다. `postgres` 는 일부 신규 표만 소유해 기존 표 변경에 실패한다.
  *   (이 스크립트는 맥미니에서 돌린다. 다른 기기에서는 컨테이너가 없어 실패한다.)
  */
 
@@ -20,13 +21,14 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const CONTAINER = process.env.AGIT_DB_CONTAINER || 'agit-db';
+const DATABASE_USER = process.env.AGIT_DB_USER || 'supabase_admin';
 const MIGRATIONS_DIR = 'supabase/migrations';
 const TRACKING_TABLE = 'public.applied_migrations';
 const statusOnly = process.argv.includes('--status');
 
 const psql = (sql, { input } = {}) => execFileSync(
     'docker',
-    ['exec', '-i', CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1',
+    ['exec', '-i', CONTAINER, 'psql', '-U', DATABASE_USER, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1',
         ...(input ? [] : ['-t', '-A', '-F', '', '-c', sql])],
     { input, encoding: 'utf8' }
 );
@@ -44,10 +46,10 @@ try {
 } catch (err) {
     if (String(err.stderr || err.message).includes('does not exist')) {
         console.error(`기록 표가 아직 없습니다. 먼저 20260814_migration_tracking.sql 을 한 번 적용해 주세요.\n`
-            + `  docker exec -i ${CONTAINER} psql -U postgres -d postgres -v ON_ERROR_STOP=1 < ${MIGRATIONS_DIR}/20260814_migration_tracking.sql`);
+            + `  docker exec -i ${CONTAINER} psql -U ${DATABASE_USER} -d postgres -v ON_ERROR_STOP=1 < ${MIGRATIONS_DIR}/20260814_migration_tracking.sql`);
         process.exit(1);
     }
-    console.error(`DB 에 붙지 못했습니다. 컨테이너 이름을 확인해 주세요(현재: ${CONTAINER}).`);
+    console.error(`DB 에 붙지 못했습니다. 컨테이너·역할을 확인해 주세요(현재: ${CONTAINER} / ${DATABASE_USER}).`);
     console.error(String(err.stderr || err.message).trim());
     process.exit(1);
 }

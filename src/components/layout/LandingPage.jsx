@@ -76,7 +76,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
   const [modalType, setModalType] = useState(null);
 
   const navigateToUrl = (href) => {
-    window.location.href = href;
+    window.location.assign(href);
   };
 
   const openExternalUrl = (href) => {

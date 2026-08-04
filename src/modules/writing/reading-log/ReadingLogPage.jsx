@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
 import WritingEditorFields from '../../../components/writing/WritingEditorFields';
+import useMediaQuery from '../../../hooks/useMediaQuery';
 import { supabase } from '../../../lib/supabaseClient';
 import WritingToolHost from '../tools/WritingToolHost';
 import { buildDraftKey, readLocalDraft, useLocalWritingDraft } from '../drafts/localWritingDraft';
-import { STUDENT_WRITING_CARD_MAX_WIDTH } from '../layout';
+import { getStudentWritingCardPadding, STUDENT_WRITING_CARD_MAX_WIDTH } from '../layout';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
 
@@ -59,7 +60,8 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
     const [initialForm, setInitialForm] = useState(createInitialForm);
     const [loading, setLoading] = useState(Boolean(postId));
     const [saving, setSaving] = useState(false);
-    const isMobile = window.innerWidth <= 768;
+    const [completedPostAt, setCompletedPostAt] = useState(null);
+    const isMobile = useMediaQuery('(max-width: 768px)');
     const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
 
     useEffect(() => {
@@ -70,7 +72,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
             setLoading(true);
             const { data, error } = await supabase
                 .from('student_posts')
-                .select('id, title, content, structured_content, visibility')
+                .select('id, title, content, structured_content, visibility, updated_at')
                 .eq('id', postId)
                 .eq('student_id', studentSession.id)
                 .eq('writing_context', 'self')
@@ -95,6 +97,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
             };
             setForm(loadedForm);
             setInitialForm(loadedForm);
+            setCompletedPostAt(data.updated_at ? new Date(data.updated_at) : null);
             setLoading(false);
         };
 
@@ -131,9 +134,11 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
     const draftHasContent = useCallback((candidate) => Boolean(
         candidate?.title?.trim() || candidate?.content?.trim() || candidate?.selectedBook?.title
     ), []);
-    const restoreDraft = useCallback((stored) => {
+    const restoreDraft = useCallback((stored, storedAt) => {
+        // 완성본 저장 뒤 초안 정리만 실패했을 때 옛 로컬 초안이 되살아나지 않게 한다.
+        if (completedPostAt && storedAt && storedAt <= completedPostAt) return;
         setForm((current) => ({ ...current, ...stored }));
-    }, []);
+    }, [completedPostAt]);
     const {
         savedAt: draftSavedAt,
         error: draftError,
@@ -164,18 +169,25 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
 
         let active = true;
         const load = async () => {
-            const query = supabase
-                .from('reading_log_drafts')
-                .select('title, content, book, visibility, reading_status, updated_at');
-            const { data } = postId
-                ? await query.eq('post_id', postId).maybeSingle()
-                : await query.is('post_id', null).eq('book_key', bookKey).maybeSingle();
+            const { data, error } = await supabase.rpc('get_my_reading_log_draft', {
+                p_post_id: postId || null,
+                p_book_key: bookKey
+            });
 
-            if (!active || !data) return;
-            setServerDraftAt(new Date(data.updated_at));
+            if (!active) return;
+            if (error) {
+                console.error('독서록 서버 임시본 불러오기 실패:', error.message);
+                return;
+            }
+            if (!data) return;
+
+            const serverAt = new Date(data.updated_at);
+            setServerDraftAt(serverAt);
 
             const localAt = readLocalDraft(draftKey)?.savedAt;
-            if (localAt && new Date(localAt) >= new Date(data.updated_at)) return;
+            if (localAt && new Date(localAt) >= serverAt) return;
+            // 완성본보다 오래된 서버 초안은 삭제 실패 잔여본일 수 있으므로 절대 덮지 않는다.
+            if (completedPostAt && completedPostAt >= serverAt) return;
 
             setForm((current) => ({
                 ...current,
@@ -192,8 +204,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
             active = false;
         };
         // 처음 열릴 때 한 번만 가져온다. 이후에는 이 기기의 내용이 기준이다.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loading, postId, studentSession?.id]);
+    }, [bookKey, completedPostAt, draftKey, loading, postId, studentSession?.id]);
 
     const handleSaveDraft = async () => {
         if (!draftHasContent(form)) {
@@ -224,12 +235,18 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
     };
 
     const clearDraft = useCallback(async () => {
+        // 로컬 초안은 완성본 저장 직후 반드시 지운다. 남기면 다음 진입 때 완성본 위로 복원될 수 있다.
         clearLocalDraft();
-        setServerDraftAt(null);
-        await supabase.rpc('delete_my_reading_log_draft', {
+        const { error } = await supabase.rpc('delete_my_reading_log_draft', {
             p_post_id: postId || null,
             p_book_key: bookKey
         });
+        if (error) {
+            console.error('독서록 서버 임시본 삭제 실패:', error.message);
+            return false;
+        }
+        setServerDraftAt(null);
+        return true;
     }, [bookKey, clearLocalDraft, postId]);
 
     const updateForm = (key, value) => {
@@ -276,17 +293,22 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
         setSaving(false);
         if (result.error) {
             console.error('독서록 저장 실패:', result.error.message);
-            alert('독서록을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            alert(result.error.code === '23505'
+                ? '이 책에는 이미 독서록이 한 편 있어요. 책장에서 기존 독서록의 수정하기를 눌러 주세요.'
+                : '독서록을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
             return;
         }
 
         setInitialForm(form);
         // 완성본이 들어갔으니 임시본은 지운다(이 기기 + 서버 모두).
         // 남겨 두면 다음에 들어올 때 저장된 글 위에 옛 임시본이 되살아난다.
-        await clearDraft();
-        alert(form.visibility === 'class'
+        const draftCleared = await clearDraft();
+        const savedMessage = form.visibility === 'class'
             ? '독서록을 친구 공개로 저장했어요! 📚'
-            : '친구에게 비공개로 저장했어요. 선생님은 확인할 수 있어요. 🔒');
+            : '친구에게 비공개로 저장했어요. 선생님은 확인할 수 있어요. 🔒';
+        alert(draftCleared
+            ? savedMessage
+            : `${savedMessage}\n서버 임시본 정리가 늦어지고 있지만 저장한 글이 우선이라 옛 내용으로 덮이지 않아요.`);
         onDone();
     };
 
@@ -300,7 +322,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
             // 세 글쓰기 화면의 실제 제목·본문 폭을 모두 1016px로 맞춘다.
             maxWidth: STUDENT_WRITING_CARD_MAX_WIDTH,
             margin: '20px auto 50px',
-            padding: isMobile ? '32px 20px' : '32px',
+            padding: getStudentWritingCardPadding(isMobile),
             border: 'none',
             boxShadow: '0 15px 40px rgba(0,0,0,0.08)'
         }}>
