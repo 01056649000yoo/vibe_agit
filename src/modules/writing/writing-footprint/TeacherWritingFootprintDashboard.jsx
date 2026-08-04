@@ -47,29 +47,84 @@ const SummaryTiles = ({ totals, participation, compact = false, isMobile = false
     <StatTile compact={compact} icon="💬" label="친구 교류" value={num(Number(totals.comments) + Number(totals.reactions))} unit="회" />
 </div>;
 
-const StudentTable = ({ students }) => <div style={{ overflowX: 'auto' }}>
-    <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', fontSize: '.82rem' }}>
-        <thead><tr style={{ color: '#64748B', borderBottom: '1px solid #E2E8F0', textAlign: 'right' }}>
-            <th style={{ padding: '10px 12px', textAlign: 'left' }}>학생</th>
-            <th style={{ padding: '10px 12px' }}>완료 글</th>
-            <th style={{ padding: '10px 12px' }}>쓴 글자</th>
-            <th style={{ padding: '10px 12px' }}>글 쓴 날</th>
-            <th style={{ padding: '10px 12px' }}>한 편 평균</th>
-            <th style={{ padding: '10px 12px' }}>친구 교류</th>
-            <th style={{ padding: '10px 12px' }}>최근 글</th>
-        </tr></thead>
-        <tbody>{students.map((student) => <tr key={student.student_id} style={{ borderBottom: '1px solid #F1F5F9', color: '#334155', textAlign: 'right' }}>
-            <td style={{ padding: '11px 12px', textAlign: 'left', fontWeight: 900 }}>{student.name}</td>
-            <td style={{ padding: '11px 12px', fontWeight: 800 }}>{num(student.posts)}편</td>
-            <td style={{ padding: '11px 12px' }}>{num(student.total_chars)}자</td>
-            <td style={{ padding: '11px 12px' }}>{num(student.active_days)}일</td>
-            <td style={{ padding: '11px 12px' }}>{num(student.avg_chars)}자</td>
-            <td style={{ padding: '11px 12px' }}>{num(Number(student.comments_given) + Number(student.reactions_given))}회</td>
-            <td style={{ padding: '11px 12px', color: student.last_post_at ? '#475569' : '#94A3B8' }}>{formatDate(student.last_post_at)}</td>
-        </tr>)}</tbody>
-    </table>
-    {!students.length && <p style={{ padding: '28px', textAlign: 'center', color: '#64748B' }}>등록된 학생이 없습니다.</p>}
+const MetricCell = ({ primary, secondary, muted = false }) => <td style={{ padding: '11px 10px', textAlign: 'right', verticalAlign: 'middle' }}>
+    <strong style={{ display: 'block', color: muted ? '#94A3B8' : '#334155', fontSize: '.83rem' }}>{primary}</strong>
+    <span style={{ display: 'block', marginTop: '3px', color: '#94A3B8', fontSize: '.7rem', whiteSpace: 'nowrap' }}>{secondary}</span>
+</td>;
+
+const DetailValue = ({ label, value }) => <div style={{ minWidth: '120px' }}>
+    <span style={{ display: 'block', color: '#64748B', fontSize: '.7rem', fontWeight: 700 }}>{label}</span>
+    <strong style={{ display: 'block', marginTop: '3px', color: '#1E293B', fontSize: '.82rem' }}>{value}</strong>
 </div>;
+
+const StudentTable = ({ students }) => {
+    const [expandedStudentId, setExpandedStudentId] = useState(null);
+
+    return <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', minWidth: '1060px', borderCollapse: 'collapse', fontSize: '.82rem' }}>
+            <thead><tr style={{ color: '#64748B', borderBottom: '1px solid #E2E8F0', textAlign: 'right' }}>
+                <th style={{ padding: '10px 12px', textAlign: 'left' }}>학생</th>
+                <th style={{ padding: '10px' }}>글 활동</th>
+                <th style={{ padding: '10px' }}>꾸준함</th>
+                <th style={{ padding: '10px' }}>다듬기</th>
+                <th style={{ padding: '10px' }}>친구 교류</th>
+                <th style={{ padding: '10px' }}>포인트</th>
+                <th style={{ padding: '10px' }}>최근 변화</th>
+            </tr></thead>
+            <tbody>{students.map((student) => {
+                const isOpen = expandedStudentId === student.student_id;
+                const interactionsGiven = Number(student.comments_given || 0) + Number(student.reactions_given || 0);
+                const interactionsReceived = Number(student.comments_received || 0) + Number(student.reactions_received || 0);
+                const change = student.avg_chars_change;
+                const changeLabel = change == null
+                    ? '비교 자료 없음'
+                    : `이전 30일보다 ${Number(change) > 0 ? '+' : ''}${num(change)}자`;
+                const changeColor = change == null || Number(change) === 0
+                    ? '#94A3B8'
+                    : (Number(change) > 0 ? '#047857' : '#B45309');
+                const detailId = `footprint-student-${student.student_id}`;
+
+                return <React.Fragment key={student.student_id}>
+                    <tr style={{ borderBottom: isOpen ? 0 : '1px solid #F1F5F9', background: isOpen ? '#F8FAFC' : 'white' }}>
+                        <td style={{ padding: '11px 12px', textAlign: 'left', verticalAlign: 'middle' }}>
+                            <button
+                                type="button"
+                                aria-expanded={isOpen}
+                                aria-controls={detailId}
+                                onClick={() => setExpandedStudentId(isOpen ? null : student.student_id)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', border: 0, padding: 0, background: 'transparent', color: '#1E293B', fontWeight: 900, cursor: 'pointer' }}
+                            >
+                                <span aria-hidden="true" style={{ color: '#2563EB', fontSize: '.68rem' }}>{isOpen ? '▼' : '▶'}</span>
+                                {student.name}
+                            </button>
+                        </td>
+                        <MetricCell primary={`${num(student.posts)}편`} secondary={`과제 ${num(student.assignment_posts)} · 독서록 ${num(student.reading_logs)}`} />
+                        <MetricCell primary={`${num(student.active_days)}일 활동`} secondary={`현재 ${num(student.current_streak)}일 · 최고 ${num(student.best_streak)}일`} />
+                        <MetricCell primary={`고쳐쓰기 ${num(student.revisions)}회`} secondary={`피드백 ${num(student.feedbacks_received)}회 · 기록 이후`} />
+                        <MetricCell primary={`남김 ${num(interactionsGiven)}회`} secondary={`받음 ${num(interactionsReceived)}회`} />
+                        <MetricCell primary={`+${num(student.points_earned)}P`} secondary={`사용 ${num(student.points_used)}P`} />
+                        <td style={{ padding: '11px 10px', textAlign: 'right', verticalAlign: 'middle' }}>
+                            <strong style={{ display: 'block', color: student.last_post_at ? '#334155' : '#94A3B8', fontSize: '.83rem' }}>{formatDate(student.last_post_at)}</strong>
+                            <span style={{ display: 'block', marginTop: '3px', color: changeColor, fontSize: '.7rem', fontWeight: 700, whiteSpace: 'nowrap' }}>30일 {num(student.recent_30_posts)}편 · {changeLabel}</span>
+                        </td>
+                    </tr>
+                    {isOpen && <tr id={detailId} style={{ borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
+                        <td colSpan={7} style={{ padding: '2px 12px 14px 35px' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px 26px', padding: '12px 14px', border: '1px solid #DBEAFE', borderRadius: '12px', background: '#EFF6FF' }}>
+                                <DetailValue label="학년도 전체 글자" value={`${num(student.total_chars)}자`} />
+                                <DetailValue label="한 편 평균" value={`${num(student.avg_chars)}자`} />
+                                <DetailValue label="최근 30일 평균" value={student.recent_30_posts ? `${num(student.recent_30_avg_chars)}자` : '아직 없음'} />
+                                <DetailValue label="댓글" value={`남김 ${num(student.comments_given)} · 받음 ${num(student.comments_received)}`} />
+                                <DetailValue label="반응" value={`남김 ${num(student.reactions_given)} · 받음 ${num(student.reactions_received)}`} />
+                            </div>
+                        </td>
+                    </tr>}
+                </React.Fragment>;
+            })}</tbody>
+        </table>
+        {!students.length && <p style={{ padding: '28px', textAlign: 'center', color: '#64748B' }}>등록된 학생이 없습니다.</p>}
+    </div>;
+};
 
 /** 전체화면에서는 학생 1명을 한 줄짜리 미니 카드로 줄이고 여러 열에 나눠 모든 학생을 함께 본다. */
 const CompactStudentGrid = ({ students }) => {
