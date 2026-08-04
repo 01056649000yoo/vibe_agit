@@ -79,6 +79,11 @@ export const useLocalWritingDraft = (key, draft, {
     });
     const [error, setError] = useState('');
     const restoredKeyRef = useRef(null);
+    // `saveNow` 가 늘 최신 내용을 남기도록, 지금 화면의 내용을 따로 담아 둔다.
+    const draftRef = useRef(draft);
+    useEffect(() => {
+        draftRef.current = draft;
+    }, [draft]);
 
     // 되살리기는 열쇠 하나당 한 번만. 되살린 내용이 다시 저장을 부르는 고리를 막는다.
     // `hasContent`·`onRestore` 는 부르는 쪽에서 `useCallback` 으로 묶어 넘긴다.
@@ -138,5 +143,18 @@ export const useLocalWritingDraft = (key, draft, {
         setError('');
     }, [key]);
 
-    return { savedAt, error, clear };
+    // 학생이 `임시 저장` 을 눌렀을 때처럼 기다리지 않고 지금 남긴다.
+    const saveNow = useCallback(() => {
+        if (!key) return null;
+        const written = writeLocalDraft(key, draftRef.current);
+        if (written) {
+            setSavedAt(new Date(written));
+            setError('');
+        } else {
+            setError('이 기기에 임시 저장할 공간이 부족해요.');
+        }
+        return written;
+    }, [key]);
+
+    return { savedAt, error, clear, saveNow };
 };

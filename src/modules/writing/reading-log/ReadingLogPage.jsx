@@ -5,7 +5,7 @@ import Button from '../../../components/common/Button';
 import WritingEditorFields from '../../../components/writing/WritingEditorFields';
 import { supabase } from '../../../lib/supabaseClient';
 import WritingToolHost from '../tools/WritingToolHost';
-import { buildDraftKey, useLocalWritingDraft } from '../drafts/localWritingDraft';
+import { buildDraftKey, readLocalDraft, useLocalWritingDraft } from '../drafts/localWritingDraft';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
 
@@ -133,11 +133,103 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
     const restoreDraft = useCallback((stored) => {
         setForm((current) => ({ ...current, ...stored }));
     }, []);
-    const { savedAt: draftSavedAt, error: draftError, clear: clearDraft } = useLocalWritingDraft(
+    const {
+        savedAt: draftSavedAt,
+        error: draftError,
+        clear: clearLocalDraft,
+        saveNow: saveLocalDraftNow
+    } = useLocalWritingDraft(
         draftKey,
         form,
         { enabled: !loading && !saving, hasContent: draftHasContent, onRestore: restoreDraft }
     );
+
+    /*
+     * 서버 임시본 — 학교 태블릿에서 쓰다가 집에서 이어 쓸 수 있게 한다.
+     *
+     * 완성된 글(`student_posts`)이 아니라 `reading_log_drafts` 에 따로 담는다.
+     * 칭호·발자국 함수 여럿이 `is_submitted` 가 아니라 `is_confirmed` 만 보기 때문에,
+     * 임시본을 글 테이블에 넣으면 쓰다 만 글이 집계에 섞일 위험이 있다.
+     * 자리를 나누면 친구 공개·교사 화면·집계가 구조적으로 임시본을 볼 수 없다.
+     */
+    const [serverDraftAt, setServerDraftAt] = useState(null);
+    const [savingDraft, setSavingDraft] = useState(false);
+    const bookKey = postId ? '' : String(draftScopeId || '');
+
+    // 다른 기기에서 남긴 임시본을 가져온다. 이 기기에 남은 것보다 **새 것일 때만** 덮는다.
+    // 그러지 않으면 방금 이 기기에서 쓴 내용이 옛 임시본에 지워진다.
+    useEffect(() => {
+        if (loading || !studentSession?.id) return undefined;
+
+        let active = true;
+        const load = async () => {
+            const query = supabase
+                .from('reading_log_drafts')
+                .select('title, content, book, visibility, reading_status, updated_at');
+            const { data } = postId
+                ? await query.eq('post_id', postId).maybeSingle()
+                : await query.is('post_id', null).eq('book_key', bookKey).maybeSingle();
+
+            if (!active || !data) return;
+            setServerDraftAt(new Date(data.updated_at));
+
+            const localAt = readLocalDraft(draftKey)?.savedAt;
+            if (localAt && new Date(localAt) >= new Date(data.updated_at)) return;
+
+            setForm((current) => ({
+                ...current,
+                title: data.title || current.title,
+                content: data.content || current.content,
+                selectedBook: data.book || current.selectedBook,
+                visibility: data.visibility || current.visibility,
+                readingStatus: data.reading_status || current.readingStatus
+            }));
+        };
+
+        load();
+        return () => {
+            active = false;
+        };
+        // 처음 열릴 때 한 번만 가져온다. 이후에는 이 기기의 내용이 기준이다.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading, postId, studentSession?.id]);
+
+    const handleSaveDraft = async () => {
+        if (!draftHasContent(form)) {
+            alert('아직 적은 내용이 없어요. 한 줄이라도 적은 뒤에 임시 저장해 주세요. ✍️');
+            return;
+        }
+
+        setSavingDraft(true);
+        saveLocalDraftNow();
+        const { data, error } = await supabase.rpc('upsert_my_reading_log_draft', {
+            p_post_id: postId || null,
+            p_book_key: bookKey,
+            p_title: form.title,
+            p_content: form.content,
+            p_book: form.selectedBook,
+            p_visibility: form.visibility,
+            p_reading_status: form.readingStatus
+        });
+        setSavingDraft(false);
+
+        if (error) {
+            console.error('독서록 임시 저장 실패:', error.message);
+            alert('이 기기에는 남겼지만 서버 임시 저장에 실패했어요. 잠시 후 다시 눌러 주세요.');
+            return;
+        }
+        setServerDraftAt(data?.updated_at ? new Date(data.updated_at) : new Date());
+        alert('임시 저장했어요. 다른 기기에서도 이어 쓸 수 있어요. 💾\n아직 선생님과 친구에게는 보이지 않아요.');
+    };
+
+    const clearDraft = useCallback(async () => {
+        clearLocalDraft();
+        setServerDraftAt(null);
+        await supabase.rpc('delete_my_reading_log_draft', {
+            p_post_id: postId || null,
+            p_book_key: bookKey
+        });
+    }, [bookKey, clearLocalDraft, postId]);
 
     const updateForm = (key, value) => {
         setForm((current) => ({ ...current, [key]: value }));
@@ -188,9 +280,9 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
         }
 
         setInitialForm(form);
-        // 서버에 들어갔으니 이 기기의 임시본은 지운다. 남겨 두면 다음에 들어올 때
-        // 저장된 글 위에 옛 임시본이 되살아난다.
-        clearDraft();
+        // 완성본이 들어갔으니 임시본은 지운다(이 기기 + 서버 모두).
+        // 남겨 두면 다음에 들어올 때 저장된 글 위에 옛 임시본이 되살아난다.
+        await clearDraft();
         alert(form.visibility === 'class'
             ? '독서록을 친구 공개로 저장했어요! 📚'
             : '친구에게 비공개로 저장했어요. 선생님은 확인할 수 있어요. 🔒');
@@ -250,14 +342,16 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                     isMobile={isMobile}
                 />
 
-                {(draftError || draftSavedAt) && (
+                {(draftError || draftSavedAt || serverDraftAt) && (
                     <p style={{
                         margin: '14px 0 0',
                         color: draftError ? '#A2454F' : '#5B8076',
                         fontSize: '0.8rem',
                         fontWeight: 750
                     }}>
-                        {draftError || `✅ ${formatTime(draftSavedAt)}에 이 기기에 임시 저장했어요. 저장 버튼을 눌러야 선생님과 친구에게 보여요.`}
+                        {draftError || (serverDraftAt
+                            ? `💾 ${formatTime(serverDraftAt)}에 임시 저장했어요. 다른 기기에서도 이어 쓸 수 있어요. 아직 선생님과 친구에게는 보이지 않아요.`
+                            : `✅ ${formatTime(draftSavedAt)}에 이 기기에 남겨 뒀어요. 다른 기기에서도 이어 쓰려면 임시 저장을 눌러 주세요.`)}
                     </p>
                 )}
             </section>
@@ -276,10 +370,13 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
                 </span>
             </label>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '28px' }}>
-                <Button variant="ghost" onClick={handleCancel} disabled={saving}>취소</Button>
-                <Button onClick={handleSave} disabled={saving}>
-                    {saving ? '저장하는 중...' : '독서록 저장하기 💾'}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '28px', flexWrap: 'wrap' }}>
+                <Button variant="ghost" onClick={handleCancel} disabled={saving || savingDraft}>취소</Button>
+                <Button variant="ghost" onClick={handleSaveDraft} disabled={saving || savingDraft}>
+                    {savingDraft ? '임시 저장 중...' : '임시 저장 💾'}
+                </Button>
+                <Button onClick={handleSave} disabled={saving || savingDraft}>
+                    {saving ? '저장하는 중...' : '독서록 저장하기 📚'}
                 </Button>
             </div>
             </>}
