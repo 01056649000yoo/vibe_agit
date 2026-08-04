@@ -15,6 +15,7 @@ import {
     writeLocalDraft
 } from '../../modules/writing/drafts/localWritingDraft';
 import WritingEditorFields from '../writing/WritingEditorFields';
+import { STUDENT_WRITING_CARD_MAX_WIDTH } from '../../modules/writing/layout';
 
 const GENRE_EDITORS = new Map(
     getGenreMissionTypes()
@@ -506,7 +507,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
     return (
         <Card style={{
-            maxWidth: hasQuestions ? '1200px' : '850px',
+            // 질문 유무와 관계없이 질문 있는 과제의 폭을 기준으로 쓴다.
+            maxWidth: STUDENT_WRITING_CARD_MAX_WIDTH,
             padding: '32px',
             border: 'none',
             background: '#FFFFFF',

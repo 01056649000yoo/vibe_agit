@@ -21,6 +21,19 @@
 
 ---
 
+## 2026-08-04 — 세 학생 글쓰기 입력창을 넓은 폭으로 통일 (GPT/Codex)
+- **배경/결정**: 질문 없는 과제와 독서록은 실제 입력 폭이 약 666px, 질문 있는 과제는 약 1016px였다.
+  사용자가 세 화면 모두 질문 있는 과제의 넓은 입력창에 맞추기로 결정했다.
+- **한 일**:
+  - `modules/writing/layout.js`에 공용 `STUDENT_WRITING_CARD_MAX_WIDTH(1200px)`를 만들었다.
+  - `StudentWriting`은 질문 유무와 관계없이 공용 폭을 사용하고, `ReadingLogEditor`도 같은 폭을 사용한다.
+  - 세 화면의 바깥 32px·편집 섹션 60px 여백이 같아 PC 제목·본문 폭은 모두 1016px가 된다.
+    모바일에서는 기존 `width: 100%` 규칙으로 화면에 맞춰 줄어든다.
+- **변경**: `src/modules/writing/layout.js`, `StudentWriting.jsx`, `ReadingLogPage.jsx`, 로드맵·작업로그. DB 변경 없음.
+- **결과/검증**: 대상 ESLint 0에러(기존 보안 경고 5개), `npm run spelling:check` 오탐 0·미탐 0,
+  프로덕션 빌드와 `git diff --check` 통과. 연결 가능한 브라우저가 없어 자동 시각 검증은 못 했다.
+- **남은 것 / 다음**: PC/태블릿에서 질문 없는 과제·질문 있는 과제·독서록의 제목·본문 폭이 같은지 실기기 확인.
+
 ## 2026-08-04 — 하루 정리 · GPT 인수인계 (Claude)
 > 사용량 한도로 이 세션을 여기서 마칩니다. 아래 항목들의 상세는 각자의 WORKLOG 항목을 보세요.
 

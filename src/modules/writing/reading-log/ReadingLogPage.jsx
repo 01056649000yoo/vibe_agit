@@ -6,6 +6,7 @@ import WritingEditorFields from '../../../components/writing/WritingEditorFields
 import { supabase } from '../../../lib/supabaseClient';
 import WritingToolHost from '../tools/WritingToolHost';
 import { buildDraftKey, readLocalDraft, useLocalWritingDraft } from '../drafts/localWritingDraft';
+import { STUDENT_WRITING_CARD_MAX_WIDTH } from '../layout';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
 
@@ -295,9 +296,9 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, onDone, onCance
 
     return (
         <Card style={{
-            // 과제 글쓰기 카드(`StudentWriting`)와 같은 치수로 맞춘다.
-            // 학생이 두 화면에서 같은 폭으로 글을 쓰게 하기 위함이다 (2026-08-04).
-            maxWidth: '850px',
+            // 질문 있는 과제 글쓰기와 같은 바깥 폭·안쪽 여백을 써서
+            // 세 글쓰기 화면의 실제 제목·본문 폭을 모두 1016px로 맞춘다.
+            maxWidth: STUDENT_WRITING_CARD_MAX_WIDTH,
             margin: '20px auto 50px',
             padding: isMobile ? '32px 20px' : '32px',
             border: 'none',
