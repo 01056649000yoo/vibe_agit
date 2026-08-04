@@ -59,8 +59,13 @@ const StudentFootprintDetailModal = ({ student, onClose, container }) => {
                     </div>
                     <button type="button" onClick={onClose} aria-label="학생 발자국 상세 닫기" style={{
                         flexShrink: 0, width: '40px', height: '40px', border: '1px solid rgba(255,255,255,.55)', borderRadius: '50%',
-                        color: 'white', background: 'rgba(255,255,255,.16)', fontSize: '1.25rem', fontWeight: 900, cursor: 'pointer'
-                    }}>✕</button>
+                        display: 'grid', placeItems: 'center', padding: 0, lineHeight: 1,
+                        color: 'white', background: 'rgba(255,255,255,.16)', cursor: 'pointer'
+                    }}>
+                        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path d="M5 5L19 19M19 5L5 19" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                        </svg>
+                    </button>
                 </header>
 
                 <div style={{ padding: '20px 22px 24px' }}>
