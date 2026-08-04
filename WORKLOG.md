@@ -21,6 +21,27 @@
 
 ---
 
+## 2026-08-05 — Google Docs 내보내기 `서비스 준비 중` 복구 (GPT/Codex)
+- **원인**: 내보내기 화면은 `VITE_GOOGLE_CLIENT_ID`와 `VITE_GOOGLE_API_KEY`를 요구했지만, 맥미니 운영 Docker 빌드는
+  Supabase URL·anon만 주입했다. `gapi` 쪽은 준비돼 버튼이 열릴 수 있어도 GIS 토큰 클라이언트는 끝내 만들어지지 않아
+  클릭하면 계속 `Google API 서비스를 준비 중` 안내가 나왔다. 또한 기존 콜백은 발급받은 액세스 토큰을 Docs 요청에
+  명시적으로 연결하지 않았고, 데이터 조회가 끝난 뒤 권한 팝업을 열어 브라우저 팝업 정책에도 취약했다.
+- **한 일**:
+  - 운영 workflow가 git 밖 `~/agit-supabase/secrets.agit.env`의 기존 Google Web OAuth 클라이언트 ID를 값 노출 없이 읽어
+    `VITE_GOOGLE_CLIENT_ID` build-arg로 전달한다. Dockerfile은 이 공개 식별자가 없으면 빌드를 중단한다.
+  - `gapi-script`와 사용하지 못한 API 키 의존성을 제거했다. GIS 토큰 모델로 `drive.file` 액세스 토큰을 받은 뒤
+    Google Docs REST의 문서 생성·조회·batchUpdate를 Bearer 인증으로 직접 호출한다.
+  - 권한 요청을 Supabase 데이터 조회보다 앞으로 옮겨 사용자 클릭 직후 팝업을 열고, 팝업 차단·사용자 닫기·OAuth 오류를
+    각각 Promise 실패로 돌려 구체적인 안내를 표시한다. 학생별/보관 미션 내보내기 두 경로가 같은 흐름을 사용한다.
+  - 공개 프론트 설정과 서버 전용 OAuth 시크릿의 경계를 `AGENTS.md`·`README.md`에 갱신했다.
+- **변경**: 기능 커밋 `6fe9710`(`구글 문서 내보내기 초기화 복구`). DB 변경 없음. 배포 workflow·Docker build-arg 변경.
+- **결과/검증**: 전체 ESLint 0경고·0오류, 맞춤법 57규칙 오탐 0·미탐 0, 공개 클라이언트 ID를 넣은 프로덕션 빌드와
+  `git diff --check` 통과. `gapi-script`의 vendor `eval` 경고와 48KB 청크가 함께 사라져 빌드 경고도 0건이다.
+  연결 가능한 브라우저 세션이 없어 실제 Google 계정 권한 팝업·문서 생성은 자동 스모크하지 못했다.
+- **남은 것 / 다음**: 운영 배포 후 교사 화면에서 `구글 문서` 선택 → 계정/권한 창 → 새 문서 열림을 1회 확인한다.
+  Google Cloud에 운영 도메인이 승인된 JavaScript 원본으로 등록되고 Docs API가 활성화돼 있어야 하며,
+  문제가 남으면 이제 `origin_mismatch`·API 비활성화 같은 실제 Google 응답이 화면에 표시된다.
+
 ## 2026-08-05 — 기존 린트 경고 67건과 비동기 상태 안정화 (GPT/Codex)
 - **배경/점검**: 디자인 2차 전에 기존 경고부터 정리하기로 했다. 전체 ESLint 경고는 훅 의존성 13건,
   동적 객체 접근 53건, 고정 맞춤법 규칙 결합 정규식 1건이었다. 학생 글쓰기의 5건은 답변 배열 인덱스 접근으로
