@@ -29,9 +29,11 @@
   - `StudentWriting`은 질문 유무와 관계없이 공용 폭을 사용하고, `ReadingLogEditor`도 같은 폭을 사용한다.
   - 세 화면의 바깥 32px·편집 섹션 60px 여백이 같아 PC 제목·본문 폭은 모두 1016px가 된다.
     모바일에서는 기존 `width: 100%` 규칙으로 화면에 맞춰 줄어든다.
-- **변경**: `src/modules/writing/layout.js`, `StudentWriting.jsx`, `ReadingLogPage.jsx`, 로드맵·작업로그. DB 변경 없음.
+- **변경**: 기능 커밋 `41f324a`(`글쓰기 입력창을 넓은 폭으로 통일`)을 원격 `main`에 push.
+  `src/modules/writing/layout.js`, `StudentWriting.jsx`, `ReadingLogPage.jsx`, 로드맵·작업로그. DB 변경 없음.
 - **결과/검증**: 대상 ESLint 0에러(기존 보안 경고 5개), `npm run spelling:check` 오탐 0·미탐 0,
-  프로덕션 빌드와 `git diff --check` 통과. 연결 가능한 브라우저가 없어 자동 시각 검증은 못 했다.
+  프로덕션 빌드와 `git diff --check` 통과. GitHub Actions Deploy run `30912463728`에서 이미지 빌드·컨테이너 재시작·
+  HTTP 검증이 성공했다. 연결 가능한 브라우저가 없어 자동 시각 검증은 못 했다.
 - **남은 것 / 다음**: PC/태블릿에서 질문 없는 과제·질문 있는 과제·독서록의 제목·본문 폭이 같은지 실기기 확인.
 
 ## 2026-08-04 — 하루 정리 · GPT 인수인계 (Claude)
