@@ -134,8 +134,9 @@ const CompactStudentGrid = ({ students }) => {
     if (!students.length) return <p style={{ padding: '20px', textAlign: 'center', color: '#64748B', fontSize: 'var(--footprint-fs-sm, .72rem)' }}>등록된 학생이 없습니다.</p>;
     return <div style={{
         display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))`, gap: '6px',
-        gridTemplateRows: `repeat(${rows}, minmax(0,1fr))`,
-        flex: 1, minHeight: 0, marginTop: '4px'
+        gridTemplateRows: `repeat(${rows}, minmax(68px,1fr))`,
+        flex: 1, minHeight: 0, marginTop: '4px', paddingRight: '2px',
+        overflowX: 'hidden', overflowY: 'auto', overscrollBehavior: 'contain'
     }}>
         {students.map((student) => {
             const interactionsGiven = Number(student.comments_given || 0) + Number(student.reactions_given || 0);
@@ -153,22 +154,23 @@ const CompactStudentGrid = ({ students }) => {
                 `포인트 +${num(student.points_earned)}·사용 ${num(student.points_used)}`
             ].join(' · ');
             return <div key={student.student_id} title={`${student.name} · ${fullSummary} · 최근 글 ${formatDate(student.last_post_at)}`} style={{
-                border: '1px solid #DCE6F2', borderRadius: '10px', padding: '6px 8px', background: '#F8FAFC', minWidth: 0,
+                border: '1px solid #DCE6F2', borderRadius: '10px', padding: '5px 8px', background: '#F8FAFC',
+                minWidth: 0, minHeight: '68px', boxSizing: 'border-box',
                 display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '5px', alignItems: 'baseline', minWidth: 0 }}>
-                    <strong style={{ color: '#172554', fontSize: 'var(--footprint-student-name, .84rem)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</strong>
-                    <span title={`최근 글 ${formatDate(student.last_post_at)}`} style={{ color: '#1D4ED8', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 900, whiteSpace: 'nowrap' }}>+{num(student.points_earned)} · -{num(student.points_used)}P</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '5px', alignItems: 'baseline', minWidth: 0, lineHeight: 1.05 }}>
+                    <strong style={{ flex: 1, minWidth: 0, color: '#172554', fontSize: 'var(--footprint-student-name, .84rem)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</strong>
+                    <span title={`최근 글 ${formatDate(student.last_post_at)}`} style={{ flexShrink: 1, minWidth: 0, maxWidth: '52%', color: '#1D4ED8', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>+{num(student.points_earned)} · -{num(student.points_used)}P</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '4px', color: '#334155', fontSize: 'var(--footprint-student-text, .68rem)', fontWeight: 800, lineHeight: 1.2 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '3px', color: '#334155', fontSize: 'var(--footprint-student-text, .68rem)', fontWeight: 800, lineHeight: 1.12 }}>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>과 {num(student.assignment_posts)} · 독 {num(student.reading_logs)}</span>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>활동 {num(student.active_days)}일</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '3px', color: '#64748B', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 700, lineHeight: 1.2 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '2px', color: '#64748B', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 700, lineHeight: 1.12 }}>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>연속 {num(student.current_streak)}/{num(student.best_streak)}일</span>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>다듬 {num(student.revisions)} · 도움 {num(student.feedbacks_received)}</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '3px', color: '#64748B', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 700, lineHeight: 1.2 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '2px', color: '#64748B', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 700, lineHeight: 1.12 }}>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>교류 {num(interactionsGiven)}↗ {num(interactionsReceived)}↙</span>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: change == null ? '#94A3B8' : (Number(change) >= 0 ? '#047857' : '#B45309') }}>30일 {num(student.recent_30_posts)} · {changeLabel}</span>
                 </div>
@@ -329,7 +331,7 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
         <SummaryTiles totals={totals} participation={participation} compact={isExpanded} isMobile={isMobile} />
 
         {isExpanded && !isMobile ? <div style={{
-            display: 'grid', gridTemplateRows: 'minmax(0,3fr) minmax(245px,2fr)',
+            display: 'grid', gridTemplateRows: 'minmax(0,3fr) minmax(320px,2fr)',
             gap: '7px', flex: 1, minHeight: 0, overflow: 'hidden'
         }}>
             <ChartPanels compact detail={detail} totals={totals} months={months} cumulativePoints={cumulativePoints} />
