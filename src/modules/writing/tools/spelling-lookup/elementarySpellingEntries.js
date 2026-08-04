@@ -1,3 +1,11 @@
+/**
+ * 맞춤법 수첩의 사전 본문(설명·예문·출처).
+ *
+ * 이 파일은 학생이 **수첩을 열 때만** 내려간다. 글쓰기 창에 늘 따라다니는
+ * 밑줄 감지 규칙은 `spellingDetectionRules.js` 에 따로 있다 — 그쪽이 훨씬 가볍다.
+ */
+import { findDetectedEntryIds } from './spellingDetectionRules';
+
 const DICTIONARY_SEARCH_URL = 'https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=';
 const KOREAN_NORMS_URL = 'https://korean.go.kr/kornorms/main/main.do';
 
@@ -239,55 +247,6 @@ export const POPULAR_SPELLING_ENTRY_IDS = [
     'myeochil'
 ];
 
-const SPELLING_DETECTION_RULES = [
-    { entryId: 'dwae-doe', pattern: /되요/g },
-    { entryId: 'an-anh', pattern: /안돼/g },
-    { entryId: 'wen-waen', pattern: /웬지|왠(?!지)/g },
-    { entryId: 'eotteoke-eotteokhae', pattern: /어떻해/g },
-    { entryId: 'myeochil', pattern: /몇일/g },
-    { entryId: 'geumse', pattern: /금새/g },
-    { entryId: 'oraenman', pattern: /오랫만|오랜\s+만/g },
-    { entryId: 'yeokhal', pattern: /역활/g },
-    { entryId: 'seollem', pattern: /설레임/g },
-    { entryId: 'bwaeyo', pattern: /뵈요/g },
-    { entryId: 'anieyo', pattern: /아니예요/g },
-    { entryId: 'hal-su-itda', pattern: /[가-힣]수\s*(?:있|없)/g },
-    { entryId: 'geot-gatda', pattern: /(?:것|거)같/g },
-    { entryId: 'kkaekkeusi', pattern: /깨끗히/g },
-    { entryId: 'gomgomi', pattern: /곰곰히/g }
-];
-
-const ENTRY_BY_ID = new Map(ELEMENTARY_SPELLING_ENTRIES.map((entry) => [entry.id, entry]));
-
-/**
- * 브라우저/키보드의 맞춤법 엔진과 관계없이 수첩 규칙으로 확인 가능한 위치를 찾는다.
- * 문맥에 따라 둘 다 맞을 수 있는 표현은 자동 밑줄 대상에서 제외한다.
- */
-export const findSpellingIssues = (value) => {
-    const text = String(value || '');
-    if (!text) return [];
-
-    const issues = SPELLING_DETECTION_RULES.flatMap(({ entryId, pattern }) => {
-        const entry = ENTRY_BY_ID.get(entryId);
-        if (!entry) return [];
-
-        return [...text.matchAll(pattern)].map((match) => ({
-            id: `${entryId}-${match.index}-${match[0]}`,
-            entryId,
-            start: match.index,
-            end: match.index + match[0].length,
-            text: match[0],
-            entry
-        }));
-    }).sort((left, right) => left.start - right.start || right.end - left.end);
-
-    return issues.filter((issue, index) => (
-        !issues.some((other, otherIndex) => (
-            otherIndex < index && other.start <= issue.start && other.end >= issue.end
-        ))
-    ));
-};
-
 const normalize = (value) => value
     .normalize('NFC')
     .toLocaleLowerCase('ko-KR')
@@ -297,7 +256,7 @@ export const searchElementarySpelling = (query) => {
     const normalizedQuery = normalize(query.trim());
     if (!normalizedQuery) return [];
 
-    const detectedEntryIds = new Set(findSpellingIssues(query).map((issue) => issue.entryId));
+    const detectedEntryIds = findDetectedEntryIds(query);
 
     return ELEMENTARY_SPELLING_ENTRIES
         .map((entry) => {

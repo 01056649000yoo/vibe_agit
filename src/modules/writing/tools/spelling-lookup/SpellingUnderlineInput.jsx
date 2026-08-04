@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
-import { findSpellingIssues } from './elementarySpellingEntries';
+import { findSpellingIssues } from './spellingDetectionRules';
 import './SpellingUnderlineTextarea.css';
 
 const buildHighlightedTitle = (text, issues) => {

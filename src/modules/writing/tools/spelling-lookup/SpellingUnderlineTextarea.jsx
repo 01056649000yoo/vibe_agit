@@ -1,7 +1,18 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
-import { findSpellingIssues } from './elementarySpellingEntries';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { findSpellingIssues } from './spellingDetectionRules';
 import { openSpellingLookup } from './events';
 import './SpellingUnderlineTextarea.css';
+
+/** 손을 멈추고 이만큼 지나면 다시 훑는다. 한글 한 글자를 조합하는 시간보다 넉넉하다. */
+const SCAN_DELAY_MS = 250;
+
+/** 두 문장이 앞에서부터 몇 글자까지 똑같은지. */
+const commonPrefixLength = (left, right) => {
+    const limit = Math.min(left.length, right.length);
+    let index = 0;
+    while (index < limit && left.charAt(index) === right.charAt(index)) index += 1;
+    return index;
+};
 
 const buildHighlightedContent = (text, issues) => {
     if (!text) return '\u200b';
@@ -15,7 +26,7 @@ const buildHighlightedContent = (text, issues) => {
             <span
                 className="spelling-underline-mark"
                 key={issue.id}
-                title={`${issue.entry.question}: ${issue.entry.answer}`}
+                title={`${issue.wrong} → ${issue.right}`}
             >
                 {text.slice(issue.start, issue.end)}
             </span>
@@ -44,7 +55,24 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
     // 모바일 키보드는 같은 글자를 조합형(NFD)으로 넘기기도 한다. 수첩 규칙은 완성형 기준이라
     // 밑줄을 찾을 때와 그릴 때 모두 같은 완성형(NFC) 문장을 쓴다.
     const normalizedValue = useMemo(() => String(value || '').normalize('NFC'), [value]);
-    const issues = useMemo(() => findSpellingIssues(normalizedValue), [normalizedValue]);
+
+    // 글자를 칠 때마다 글 전체를 훑으면 학교 태블릿에서 타이핑이 밀린다.
+    // 손을 잠깐 멈춘 뒤에만 다시 찾는다. 글을 쓰는 중에는 직전 밑줄이 그대로 남아 있다.
+    const [scannedValue, setScannedValue] = useState(normalizedValue);
+    useEffect(() => {
+        if (scannedValue === normalizedValue) return undefined;
+        const timer = setTimeout(() => setScannedValue(normalizedValue), SCAN_DELAY_MS);
+        return () => clearTimeout(timer);
+    }, [normalizedValue, scannedValue]);
+
+    // 아직 훑지 않은 글자에 예전 위치의 밑줄이 남으면 엉뚱한 곳에 그어진다.
+    // 훑은 문장과 화면의 문장이 어긋난 동안에는 겹치는 앞부분까지만 밑줄을 남긴다.
+    const issues = useMemo(() => {
+        const found = findSpellingIssues(scannedValue);
+        if (scannedValue === normalizedValue) return found;
+        const safeLength = commonPrefixLength(scannedValue, normalizedValue);
+        return found.filter((issue) => issue.end <= safeLength);
+    }, [scannedValue, normalizedValue]);
     const uniqueIssues = useMemo(() => {
         const seen = new Set();
         return issues.filter((issue) => {
@@ -123,7 +151,7 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
                                 key={issue.entryId}
                                 onClick={() => openSpellingLookup(issue.text)}
                             >
-                                {issue.text} 찾아보기
+                                {issue.text} <span aria-hidden="true">→</span> {issue.right}
                             </button>
                         ))}
                         {uniqueIssues.length > 4 && <small>외 {uniqueIssues.length - 4}개</small>}
