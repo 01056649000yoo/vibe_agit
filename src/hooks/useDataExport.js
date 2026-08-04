@@ -1,38 +1,38 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 // import * as XLSX from 'xlsx'; // 동적 임포트로 변경하여 초기 로딩 속도 최적화
-import { gapi } from 'gapi-script';
+
+const GOOGLE_DOCS_API_ROOT = 'https://docs.googleapis.com/v1';
+
+const requestGoogleDocs = async (path, accessToken, options = {}) => {
+    const response = await fetch(`${GOOGLE_DOCS_API_ROOT}${path}`, {
+        method: options.method || 'GET',
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: 'application/json',
+            ...(options.body ? { 'Content-Type': 'application/json' } : {})
+        },
+        body: options.body ? JSON.stringify(options.body) : undefined
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(payload?.error?.message || `Google Docs API 요청 실패 (${response.status})`);
+    }
+    return payload;
+};
 
 /**
  * 엑셀 데이터 추출 및 구글 문서 내보내기를 위한 커스텀 훅
  */
 export const useDataExport = () => {
 
-    // Google API 상태
-    const [isGapiLoaded, setIsGapiLoaded] = useState(false);
+    // Google Identity Services 토큰 클라이언트가 준비되면 내보내기를 활성화한다.
     const [tokenClient, setTokenClient] = useState(null);
+    const pendingTokenRejectRef = useRef(null);
 
     useEffect(() => {
-        // 1. GAPI 클라이언트 초기화 (API 호출용)
-        function startGapi() {
-            gapi.client.init({
-                // ⚠️ [보안 안내] VITE_ 접두사 환경변수는 클라이언트 JS 번들에 포함됩니다.
-                // → Google Cloud Console → API 키 → 키 제한사항 에서:
-                //   1. "HTTP 리퍼러" 제한 설정 (허용 도메인만 지정)
-                //   2. "API 제한사항" → Google Docs API만 허용
-                apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
-                // clientId는 여기서 빼고 GIS에서 사용함
-            }).then(() => {
-                return gapi.client.load('docs', 'v1');
-            }).then(() => {
-                console.log('Google Docs API Client Loaded');
-                setIsGapiLoaded(true);
-            }).catch(err => {
-                console.error('GAPI Init Error:', err);
-            });
-        }
-
-        // 2. GIS (Google Identity Services) 초기화 (인증용)
+        // Google Identity Services 초기화 (인증용)
         function startGis() {
             try {
                 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -44,10 +44,19 @@ export const useDataExport = () => {
                 const client = window.google.accounts.oauth2.initTokenClient({
                     client_id: clientId,
                     scope: "https://www.googleapis.com/auth/drive.file",
-                    callback: (response) => {
-                        // Default callback - will be overridden in getAccessToken
-                        console.log('GIS Token Response:', response);
-                    },
+                    // 실제 콜백은 사용자가 내보내기를 누를 때 getAccessToken에서 지정한다.
+                    callback: () => {},
+                    error_callback: (error) => {
+                        const rejectPending = pendingTokenRejectRef.current;
+                        if (!rejectPending) return;
+                        pendingTokenRejectRef.current = null;
+                        const message = error?.type === 'popup_closed'
+                            ? 'Google 권한 창이 닫혔습니다.'
+                            : error?.type === 'popup_failed_to_open'
+                                ? 'Google 권한 창을 열지 못했습니다. 팝업 차단을 확인해 주세요.'
+                                : 'Google 권한 창에서 오류가 발생했습니다.';
+                        rejectPending(new Error(message));
+                    }
                 });
                 setTokenClient(client);
                 console.log('Google Auth Client Ready');
@@ -55,9 +64,6 @@ export const useDataExport = () => {
                 console.error('GIS Init Error:', err);
             }
         }
-
-        // 두 라이브러리 모두 로드
-        gapi.load('client', startGapi);
 
         // window.google 이 로드될 때까지 약간 대기 혹은 체크
         const checkGis = setInterval(() => {
@@ -67,7 +73,11 @@ export const useDataExport = () => {
             }
         }, 100);
 
-        return () => clearInterval(checkGis);
+        return () => {
+            clearInterval(checkGis);
+            pendingTokenRejectRef.current?.(new Error('Google 내보내기 화면이 닫혔습니다.'));
+            pendingTokenRejectRef.current = null;
+        };
     }, []);
 
     /**
@@ -75,17 +85,26 @@ export const useDataExport = () => {
      */
     const getAccessToken = useCallback(() => {
         return new Promise((resolve, reject) => {
-            if (!tokenClient) return reject('인증 클라이언트가 준비되지 않았습니다.');
+            if (!tokenClient) return reject(new Error('인증 클라이언트가 준비되지 않았습니다.'));
 
+            pendingTokenRejectRef.current?.(new Error('새 Google 권한 요청을 시작했습니다.'));
+            pendingTokenRejectRef.current = reject;
             tokenClient.callback = (response) => {
-                if (response.error !== undefined) {
-                    reject(response);
+                pendingTokenRejectRef.current = null;
+                if (response.error !== undefined || !response.access_token) {
+                    reject(new Error(response.error_description || response.error || 'Google 인증에 실패했습니다.'));
+                    return;
                 }
-                resolve(response);
+                resolve(response.access_token);
             };
 
             // 이미 토큰이 있을 경우 체크 (선택사항)
-            tokenClient.requestAccessToken({ prompt: 'select_account' });
+            try {
+                tokenClient.requestAccessToken({ prompt: 'select_account' });
+            } catch (error) {
+                pendingTokenRejectRef.current = null;
+                reject(error);
+            }
         });
     }, [tokenClient]);
 
@@ -156,14 +175,21 @@ export const useDataExport = () => {
      * @param {boolean} usePageBreak - 페이지 나누기 사용 여부
      * @param {string} targetDocId - (선택) 기존 문서 ID (여기에 이어붙이려면 전달)
      */
-    const exportToGoogleDoc = useCallback(async (data, title, usePageBreak = true, targetDocId = null, groupBy = 'mission') => {
-        if (!isGapiLoaded || !tokenClient) {
+    const exportToGoogleDoc = useCallback(async (
+        data,
+        title,
+        usePageBreak = true,
+        targetDocId = null,
+        groupBy = 'mission',
+        authorizedAccessToken = null
+    ) => {
+        if (!tokenClient) {
             alert('Google API 서비스를 준비 중입니다. 잠시 후 다시 시도해 주세요.');
             return;
         }
 
         try {
-            await getAccessToken();
+            const accessToken = authorizedAccessToken || await getAccessToken();
 
             const now = new Date();
             const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -174,13 +200,18 @@ export const useDataExport = () => {
 
             // 1. 문서 결정 (새로 생성하거나 기존 문서 정보 가져오기)
             if (!documentId) {
-                const createResponse = await gapi.client.docs.documents.create({ title: fullTitle });
-                documentId = createResponse.result.documentId;
+                const createResponse = await requestGoogleDocs('/documents', accessToken, {
+                    method: 'POST',
+                    body: { title: fullTitle }
+                });
+                documentId = createResponse.documentId;
                 console.log(`New Doc Created: ${documentId}`);
             } else {
                 // 기존 문서의 마지막 인덱스 확인
-                const doc = await gapi.client.docs.documents.get({ documentId });
-                currentIndex = doc.result.body.content[doc.result.body.content.length - 1].endIndex;
+                const doc = await requestGoogleDocs(`/documents/${encodeURIComponent(documentId)}`, accessToken);
+                const contentRows = doc.body?.content || [];
+                const lastContent = Reflect.get(contentRows, contentRows.length - 1);
+                currentIndex = lastContent?.endIndex || 1;
                 console.log(`Appending to Existing Doc: ${documentId} starting at ${currentIndex}`);
             }
 
@@ -336,9 +367,9 @@ export const useDataExport = () => {
 
             // 4. 배치 업데이트 실행
             if (requests.length > 0) {
-                await gapi.client.docs.documents.batchUpdate({
-                    documentId: documentId,
-                    requests: requests
+                await requestGoogleDocs(`/documents/${encodeURIComponent(documentId)}:batchUpdate`, accessToken, {
+                    method: 'POST',
+                    body: { requests }
                 });
                 console.log(`Inserted ${requests.length} operations successfully.`);
             }
@@ -348,9 +379,9 @@ export const useDataExport = () => {
 
         } catch (error) {
             console.error('Google Doc Export Failed:', error);
-            alert('구글 문서 생성에 실패했습니다: ' + (error.result?.error?.message || error.message));
+            alert('구글 문서 생성에 실패했습니다: ' + (error.message || 'Google 인증 또는 문서 API 오류'));
         }
-    }, [getAccessToken, isGapiLoaded, tokenClient]);
+    }, [getAccessToken, tokenClient]);
 
     const exportToExcel = useCallback(async (data, fileName) => {
         if (!data || data.length === 0) {
@@ -372,5 +403,12 @@ export const useDataExport = () => {
         }
     }, []);
 
-    return { fetchExportData, exportToExcel, exportToGoogleDoc, isGapiLoaded };
+    return {
+        fetchExportData,
+        exportToExcel,
+        exportToGoogleDoc,
+        authorizeGoogleExport: getAccessToken,
+        // 기존 호출부 이름은 유지하되, 이제 GIS 토큰 클라이언트 준비 여부를 뜻한다.
+        isGapiLoaded: Boolean(tokenClient)
+    };
 };

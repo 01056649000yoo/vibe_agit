@@ -18,7 +18,8 @@
 
 ## 절대 규칙
 - **비밀 값을 문서·코드·로그에 쓰지 않는다** (DB 비번, API 키, OAuth 시크릿). 위치만 참조.
-  - 아지트 앱 시크릿: `~/agit-supabase/secrets.agit.env` (git 밖, gitignore 대상). 프론트 빌드 인자는 공개 anon 키만.
+  - 아지트 앱 시크릿: `~/agit-supabase/secrets.agit.env` (git 밖, gitignore 대상). 프론트 빌드에는 공개 anon 키와
+    공개 Google OAuth 클라이언트 ID만 주입하며, OAuth 시크릿은 절대 넣지 않는다.
 - **코어 셸(글쓰기 파이프라인)은 함부로 수정하지 않는다** — 확장은 모듈/슬롯으로만 (ROADMAP 대원칙 4).
 - **연구소 코드를 아지트로 이식하지 않는다** — 데이터(RPC) 연동만 (대원칙 5).
 - 기능은 삭제보다 **모듈화 + 기본 OFF** 우선 (되돌릴 수 있게, 대원칙 3).
@@ -66,5 +67,6 @@
   `ON CONFLICT DO NOTHING`.
 
 ## 빌드/실행 요령
-- 프론트 빌드: `npm run build` (Vite). 프로덕션 이미지: 레포 `Dockerfile`(build-arg로 `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` 주입).
+- 프론트 빌드: `npm run build` (Vite). 프로덕션 이미지: 레포 `Dockerfile`(build-arg로
+  `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`/`VITE_GOOGLE_CLIENT_ID` 주입).
 - 로컬에서 실도메인 테스트: `/etc/hosts`에 apex·api를 `127.0.0.1`로 매핑(NAT 루프백 우회). 테스트 후 제거.

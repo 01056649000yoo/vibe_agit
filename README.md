@@ -129,5 +129,6 @@ npm run dev
 npm run build
 ```
 
-프로덕션 이미지는 저장소의 `Dockerfile`을 사용하며 `VITE_SUPABASE_URL`과 공개 anon key를 build-arg로 주입한다.
+프로덕션 이미지는 저장소의 `Dockerfile`을 사용하며 `VITE_SUPABASE_URL`, 공개 anon key와 공개 Google OAuth
+클라이언트 ID를 build-arg로 주입한다. Google OAuth 시크릿은 프론트 빌드에 넣지 않는다.
 운영 배포·롤백의 최신 절차와 실제 이미지 이름은 README를 추측해서 실행하지 말고 WORKLOG의 최신 배포 항목을 따른다.

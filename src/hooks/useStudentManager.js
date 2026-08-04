@@ -34,7 +34,7 @@ export const useStudentManager = (classId) => {
         reason: '참여도가 높아요! 🌟'
     });
 
-    const { fetchExportData, exportToExcel, exportToGoogleDoc, isGapiLoaded } = useDataExport();
+    const { fetchExportData, exportToExcel, exportToGoogleDoc, authorizeGoogleExport, isGapiLoaded } = useDataExport();
 
     const fetchStudents = useCallback(async () => {
         if (!classId) return;
@@ -304,6 +304,17 @@ export const useStudentManager = (classId) => {
 
     const handleExportConfirm = async (format, options) => {
         if (!exportTarget) return;
+        let googleAccessToken = null;
+        if (format === 'googleDoc') {
+            try {
+                // 데이터 조회보다 먼저 사용자 클릭 흐름 안에서 Google 권한 창을 연다.
+                googleAccessToken = await authorizeGoogleExport();
+            } catch (error) {
+                console.error('Google authorization failed:', error);
+                alert('구글 문서 권한을 확인하지 못했습니다: ' + (error.message || '로그인 창을 다시 열어 주세요.'));
+                return;
+            }
+        }
         const data = await fetchExportData(exportTarget.type, exportTarget.id);
         if (!data || data.length === 0) {
             alert('작성된 글이 없습니다.');
@@ -311,7 +322,9 @@ export const useStudentManager = (classId) => {
         }
         const fileName = `${exportTarget.title}_글모음`;
         if (format === 'excel') exportToExcel(data, fileName);
-        else if (format === 'googleDoc') await exportToGoogleDoc(data, fileName, options.usePageBreak);
+        else if (format === 'googleDoc') {
+            await exportToGoogleDoc(data, fileName, options.usePageBreak, null, 'mission', googleAccessToken);
+        }
     };
 
     const toggleSelection = (id) => {

@@ -22,7 +22,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
     const [selectedMissionIds, setSelectedMissionIds] = useState([]); // 다중 선택된 미션 ID들
 
     // 엑셀 추출 훅
-    const { fetchExportData, exportToExcel, exportToGoogleDoc, isGapiLoaded } = useDataExport();
+    const { fetchExportData, exportToExcel, exportToGoogleDoc, authorizeGoogleExport, isGapiLoaded } = useDataExport();
 
     // 내보내기 모달 상태
     const [exportModalOpen, setExportModalOpen] = useState(false);
@@ -53,6 +53,18 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
 
     const handleExportConfirm = async (format, options) => {
         if (!exportTarget) return;
+
+        let googleAccessToken = null;
+        if (format === 'googleDoc') {
+            try {
+                // 사용자 클릭 직후 권한 창을 열어 브라우저 팝업 차단을 피한다.
+                googleAccessToken = await authorizeGoogleExport();
+            } catch (error) {
+                console.error('Google authorization failed:', error);
+                alert('구글 문서 권한을 확인하지 못했습니다: ' + (error.message || '로그인 창을 다시 열어 주세요.'));
+                return;
+            }
+        }
 
         let data = [];
         let fileName = "";
@@ -116,7 +128,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
             }
 
             // 구글 문서의 경우 이미 useDataExport에서 item.미션제목을 출력하므로 순서대로 정렬된 data를 넘기면 됨
-            await exportToGoogleDoc(data, fileName, options.usePageBreak, null, groupBy);
+            await exportToGoogleDoc(data, fileName, options.usePageBreak, null, groupBy, googleAccessToken);
         }
     };
 
