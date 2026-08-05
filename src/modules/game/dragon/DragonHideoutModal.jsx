@@ -20,15 +20,22 @@ const STORY_KIND_LABELS = {
  */
 const getBondReaction = (bond) => {
     const kind = STORY_KIND_LABELS[bond?.storyKind] || '글';
+    // `submitted` 는 오늘 승인받은 과제이거나 오늘 작성 완료한 독서록이다.
     if (bond?.storyState === 'submitted') {
+        if (bond.storyKind === 'reading_log') {
+            return bond.storyTitle
+                ? `오늘 완성한 독서록 「${bond.storyTitle}」 잘 들었어. 다음 이야기도 들려줘!`
+                : '오늘 독서록을 완성했구나. 이야기 잘 들었어!';
+        }
         return bond.storyTitle
-            ? `오늘 완성한 ${kind} 「${bond.storyTitle}」 잘 들었어. 다음 이야기도 들려줘!`
-            : `오늘 ${kind}을 완성했구나. 이야기 잘 들었어!`;
+            ? `선생님께 승인받은 「${bond.storyTitle}」 잘 들었어. 정말 멋진 글이야!`
+            : `오늘 ${kind}이 승인됐구나. 이야기 잘 들었어!`;
     }
+    // 오늘 냈지만 아직 승인 전이다. 글을 쓴 것은 사실이니 없다고 하지 않는다.
     if (bond?.storyState === 'writing') {
         return bond.storyTitle
-            ? `「${bond.storyTitle}」 쓰고 있구나! 다 쓰면 꼭 들려줘.`
-            : `오늘 ${kind}을 쓰고 있구나! 다 쓰면 꼭 들려줘.`;
+            ? `「${bond.storyTitle}」 오늘 선생님께 보냈구나! 승인되면 자세히 들려줘.`
+            : '오늘 쓴 글을 선생님께 보냈구나! 승인되면 자세히 들려줘.';
     }
     return '오늘은 아직 들려줄 이야기가 없네. 한 편 쓰고 다시 와 줄래?';
 };

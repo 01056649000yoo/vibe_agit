@@ -661,19 +661,25 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
         setSelectedTeacherComment(null);
     }, []);
 
+    // 학생에게 `책 + 내가 쓴 글` 은 한 덩어리라, 지우면 책도 함께 책장에서 사라진다.
+    // 글과 책을 한 트랜잭션에서 지우도록 서버 RPC에 맡긴다.
     const handleDelete = async (log) => {
-        if (!window.confirm(`「${log.title || '제목 없는 독서록'}」을 삭제할까요? 삭제하면 되돌릴 수 없어요.`)) return;
-        const { error } = await supabase
-            .from('student_posts')
-            .delete()
-            .eq('id', log.id)
-            .eq('student_id', studentSession.id)
-            .eq('writing_context', 'self');
-        if (error) {
+        if (!window.confirm(`「${log.title || '제목 없는 독서록'}」을 삭제할까요?\n책장에 등록한 책도 함께 사라지고, 되돌릴 수 없어요.`)) return;
+        const { data: result, error } = await supabase.rpc('delete_my_reading_log', {
+            p_post_id: log.id
+        });
+        if (error || !result?.success) {
+            console.error('독서록 삭제 실패:', error?.message || result?.error);
             alert('독서록을 삭제하지 못했습니다.');
             return;
         }
+
+        const removedLibraryItemId = logLinks.find((link) => link.post_id === log.id)?.library_item_id;
         setLogs((current) => current.filter((item) => item.id !== log.id));
+        setLogLinks((current) => current.filter((link) => link.post_id !== log.id));
+        if (result.deleted_book && removedLibraryItemId) {
+            setLibraryItems((current) => current.filter((item) => item.id !== removedLibraryItemId));
+        }
     };
 
     const shelfBooks = useMemo(() => {
