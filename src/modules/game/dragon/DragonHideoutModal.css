@@ -1,0 +1,43 @@
+.dragon-room-modal { position: fixed; z-index: 2000; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(19,27,38,.67); backdrop-filter: blur(8px); }
+.dragon-room-modal__panel { width: min(760px,100%); max-height: min(91vh,840px); overflow-y: auto; border: 1px solid rgba(255,255,255,.7); border-radius: 30px; background: #fffdfa; box-shadow: 0 24px 70px rgba(18,24,34,.32); }
+.dragon-room-modal__header { position: sticky; z-index: 12; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 19px 22px; border-bottom: 1px solid #e8e0d6; background: rgba(255,253,250,.95); backdrop-filter: blur(10px); }
+.dragon-room-modal__header small { color: #a57331; font-size: .65rem; font-weight: 900; }
+.dragon-room-modal__header h2 { margin: 2px 0 0; color: #41352d; font-size: 1.35rem; font-weight: 950; }
+.dragon-room-modal__content { display: grid; grid-template-columns: minmax(280px,.95fr) minmax(270px,1.05fr); gap: 20px; padding: 22px; }
+.dragon-room-modal__scene { align-self: start; min-width: 0; }
+.dragon-room-modal__status { min-width: 0; padding: 4px 2px; }
+.dragon-room-modal__status > small { color: #a06f2c; font-size: .65rem; font-weight: 950; }
+.dragon-room-modal__status h3 { margin: 3px 0 10px; overflow: hidden; color: #3f332b; font-size: 1.28rem; text-overflow: ellipsis; white-space: nowrap; }
+.dragon-room-modal__badges { display: flex; flex-wrap: wrap; gap: 7px; }
+.dragon-room-modal__badges span { padding: 5px 8px; border-radius: 99px; background: #f0ebe5; color: #67564a; font-size: .65rem; font-weight: 900; }
+.dragon-room-modal__badges span:last-child { background: #eaf5fb; color: #346780; }
+.dragon-room-modal__progress { height: 9px; margin-top: 14px; overflow: hidden; border-radius: 99px; background: #ede7df; }
+.dragon-room-modal__progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#eba936,#e46d49,#706fd0); }
+.dragon-room-modal__progress-copy { display: flex; justify-content: space-between; gap: 9px; margin-top: 6px; color: #806f62; font-size: .61rem; font-weight: 800; }
+.dragon-room-modal__progress-copy strong { color: #a1732f; }
+.dragon-room-modal__reader { display: flex; align-items: center; gap: 9px; margin-top: 16px; padding: 11px; border: 1px solid #cddfea; border-radius: 14px; background: linear-gradient(135deg,#eef8fc,#f8fbff); }
+.dragon-room-modal__reader > span { display: grid; place-items: center; width: 34px; aspect-ratio: 1; border-radius: 12px; background: #d7ebf5; color: #367690; font-size: 1.05rem; }
+.dragon-room-modal__reader strong, .dragon-room-modal__reader small { display: block; }
+.dragon-room-modal__reader strong { color: #325d70; font-size: .76rem; }
+.dragon-room-modal__reader small { margin-top: 2px; color: #66818d; font-size: .61rem; font-weight: 750; line-height: 1.4; }
+.dragon-room-modal__guide { margin: 12px 0 0; padding: 11px 12px; border-radius: 13px; background: #fff7df; color: #725f3f; font-size: .67rem; font-weight: 750; line-height: 1.55; }
+.dragon-room-modal__reselect { width: 100%; min-height: 40px; margin-top: 9px; border: 1px solid #d9c9b7; border-radius: 12px; background: #fff; color: #6d5542; cursor: pointer; font: inherit; font-size: .68rem; font-weight: 900; }
+.dragon-room-modal__actions { grid-column: 1/-1; display: grid; grid-template-columns: 1.35fr 1fr; gap: 10px; }
+.dragon-room-modal__actions button { min-height: 50px; border: 0; border-radius: 15px; color: #fff; cursor: pointer; font: inherit; font-size: .82rem; font-weight: 950; box-shadow: 0 6px 0 rgba(33,28,25,.16); }
+.dragon-room-modal__actions button:disabled { cursor: default; opacity: .7; }
+.dragon-room-modal__bond { background: linear-gradient(135deg,#df7557,#c9503e); }
+.dragon-room-modal__workshop { background: linear-gradient(135deg,#386f86,#284f66); }
+.dragon-room-modal__bond-message { grid-column: 1/-1; padding: 11px 14px; border: 1px solid #c9e3d1; border-radius: 13px; background: #f2faf4; color: #3c6b48; text-align: center; font-size: .76rem; font-weight: 850; }
+
+@media (max-width: 650px) {
+    .dragon-room-modal { place-items: end center; padding: 0; }
+    .dragon-room-modal__panel { max-height: 94dvh; border-radius: 28px 28px 0 0; }
+    .dragon-room-modal__content { grid-template-columns: 1fr; padding: 16px; }
+    .dragon-room-modal__scene { width: min(390px,100%); margin: 0 auto; }
+    .dragon-room-modal__actions { grid-column: auto; }
+}
+
+@media (max-width: 420px) {
+    .dragon-room-modal__actions { grid-template-columns: 1fr; }
+}
+

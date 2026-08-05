@@ -11,6 +11,13 @@ import {
     getReaderSceneTheme
 } from '../src/modules/game/dragon/presentation.js';
 import { getReaderLevel, getWriterLevel } from '../src/constants/writerLevels.js';
+import {
+    DEFAULT_EQUIPPED_DECOR,
+    DRAGON_DECOR_ITEMS,
+    DRAGON_DECOR_SLOTS,
+    getDragonDecorItemsForSlot,
+    normalizeDragonDecor
+} from '../src/modules/game/dragon/decorCatalog.js';
 
 test('작가 칭호 10단계를 드래곤 10단계로 그대로 연결한다', () => {
     for (let level = 1; level <= 10; level += 1) {
@@ -105,4 +112,44 @@ test('잘못된 단계와 진행도는 안전한 범위로 제한한다', () => 
     assert.equal(getDragonStage(0).level, 1);
     assert.equal(getDragonStage(999).level, 10);
     assert.equal(getDragonGrowthFromWriterLevel({ level: 3, progressFrom: 390, progressValue: 10, next: 910 }).progress, 0);
+});
+
+test('아지트 공방은 관리 가능한 5개 고정 슬롯만 사용한다', () => {
+    assert.deepEqual(DRAGON_DECOR_SLOTS.map((slot) => slot.id), [
+        'wallpaper', 'pedestal', 'leftProp', 'rightProp', 'nameplate'
+    ]);
+    DRAGON_DECOR_SLOTS.forEach((slot) => {
+        const items = getDragonDecorItemsForSlot(slot.id);
+        assert.equal(items.length >= 4, true);
+        assert.equal(items.some((item) => item.isDefault), true);
+        assert.equal(Reflect.get(DEFAULT_EQUIPPED_DECOR, slot.id) != null, true);
+    });
+});
+
+test('기존에 산 배경은 새 벽지 소유·장착 상태로 그대로 이어진다', () => {
+    const normalized = normalizeDragonDecor({
+        background: 'storm',
+        ownedItems: ['volcano', 'storm']
+    });
+    assert.equal(normalized.equipped.wallpaper, 'storm');
+    assert.equal(normalized.owned.has('volcano'), true);
+    assert.equal(normalized.owned.has('storm'), true);
+    assert.equal(normalized.equipped.pedestal, 'pedestal-stone');
+});
+
+test('장착한 5개 슬롯은 하나의 pet_data 계약으로 복원된다', () => {
+    const petData = {
+        background: 'default',
+        ownedDecorItems: ['pedestal-cloud', 'left-bookshelf', 'right-telescope', 'nameplate-brass'],
+        equippedDecor: {
+            wallpaper: 'sky',
+            pedestal: 'pedestal-cloud',
+            leftProp: 'left-bookshelf',
+            rightProp: 'right-telescope',
+            nameplate: 'nameplate-brass'
+        }
+    };
+    const normalized = normalizeDragonDecor(petData);
+    assert.deepEqual(normalized.equipped, petData.equippedDecor);
+    assert.equal(DRAGON_DECOR_ITEMS.every((item) => item.slot && item.id), true);
 });

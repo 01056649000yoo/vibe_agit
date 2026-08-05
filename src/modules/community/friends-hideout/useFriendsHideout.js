@@ -9,7 +9,8 @@ const getClassmatesCacheKey = (classId, studentId) => `classmates_${classId}_${s
 const HIDEOUT_REFRESH_COOLDOWN_MS = 5000;
 
 export const useFriendsHideout = (studentSession, params) => {
-    const CLASSMATES_CACHE_MS = 300000;
+    // 공방에서 바꾼 장착 상태가 친구 화면에 오래 남지 않게 짧게 유지한다.
+    const CLASSMATES_CACHE_MS = 30000;
     const [missions, setMissions] = useState([]);
     const [selectedMission, setSelectedMission] = useState(null);
     const [feedKind, setFeedKind] = useState('assignment');

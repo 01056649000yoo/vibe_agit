@@ -4,7 +4,7 @@ import Card from '../common/Card';
 import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
 import { useDragonPet } from '../../modules/game/dragon/useDragonPet';
-import { getDragonGrowthFromWriterLevel, getDragonStage, getPendingDragonGrowth, HIDEOUT_BACKGROUNDS } from '../../modules/game/dragon/presentation';
+import { getDragonGrowthFromWriterLevel, getDragonStage, getPendingDragonGrowth } from '../../modules/game/dragon/presentation';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useRealtimeNotifications } from '../../hooks/useRealtimeNotifications'; // [신규] 분리된 리얼타임 훅
 import { getModule } from '../../modules/registry';
@@ -106,7 +106,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     // 드래곤 관련 상태 및 액션
     const {
         petData, isFlashing, isBusy,
-        handleBond, buyItem, equipItem, selectSpecies, acknowledgeGrowth
+        handleBond, buyDecorItem, equipDecorItem, selectSpecies, acknowledgeGrowth
     } = useDragonPet(
         studentSession?.id,
         points,
@@ -322,7 +322,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             isMobile={isMobile}
                             petData={displayPetData}
                             dragonInfo={dragonInfo}
-                            HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
+                            ownerName={studentSession?.name}
                             daysSinceLastFed={daysSinceLastBond}
                             handleBond={handleBond}
                             setIsShopOpen={setIsShopOpen}
@@ -348,7 +348,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     </Suspense>
                 )}
 
-                {/* 배경 상점 모달 (모듈: game/dragon) — 열릴 때만 로드 */}
+                {/* 아지트 공방 모달 (모듈: game/dragon) — 열릴 때만 로드 */}
                 {isShopOpen && isOn('dragon') && (
                     <Suspense fallback={null}>
                         <BackgroundShopModal
@@ -356,10 +356,12 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             onClose={() => setIsShopOpen(false)}
                             points={points}
                             petData={displayPetData}
-                            buyItem={buyItem}
-                            equipItem={equipItem}
+                            dragonInfo={dragonInfo}
+                            readerLevel={readerLevel}
+                            ownerName={studentSession?.name}
+                            buyDecorItem={buyDecorItem}
+                            equipDecorItem={equipDecorItem}
                             isBusy={isBusy}
-                            HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
                         />
                     </Suspense>
                 )}

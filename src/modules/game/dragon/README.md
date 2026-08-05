@@ -4,7 +4,7 @@
 
 - 작가 칭호: `presentation.js`의 4종 × 10단계 몸체 이미지
 - 독자 칭호: `DragonAvatar`의 빛·별·궤도·문장·오로라 레이어
-- 포인트 꾸미기: `HIDEOUT_BACKGROUNDS`의 배경과 앞으로 추가할 가구·소품
+- 포인트 꾸미기: `decorCatalog.js`의 벽지·받침대·좌우 소품·문패 5개 고정 슬롯
 
 꾸미기 상품이 늘어도 이 역할을 섞지 않는다. 포인트 상품은 물질적인 배경·가구·소품을 사용하고, 독자 효과 전용인
 빛의 궤도·룬·수호 문장·단계 인장은 상품 장식으로 재사용하지 않는다.
@@ -33,6 +33,23 @@ newBackground: {
 
 `getReaderSceneTheme()`가 보호 무대·외곽선·입자 대비를 CSS 변수로 바꾸고 모든 `DragonAvatar`에 적용한다.
 등록값이 없거나 잘못돼도 `light` 안전 기본값을 사용한다.
+
+## 아지트 공방 5개 슬롯 계약
+
+꾸미기는 자유 배치가 아니라 아래 슬롯에 하나씩만 장착한다.
+
+- `wallpaper`: 기존 `pet_data.background/ownedItems`를 그대로 읽는 벽지
+- `pedestal`: 수호룡 아래 받침대
+- `leftProp` / `rightProp`: 수호룡 바깥쪽의 소품
+- `nameplate`: 학생 이름과 드래곤 이름을 보여 주는 문패
+
+새 저장값은 `pet_data.equippedDecor`와 `ownedDecorItems`에 둔다. 기존 배경을 구입한 학생은 별도 변환 없이
+`normalizeDragonDecor()`에서 새 벽지 소유권으로 인정한다. 벽지를 새로 장착할 때는 `background`도 함께 갱신해
+교사 레거시 화면과 예전 카드가 계속 같은 배경을 표시한다.
+
+구매·장착은 클라이언트가 가격이나 전체 `pet_data`를 보내서 덮어쓰지 않는다. `buy_my_dragon_decor`와
+`equip_my_dragon_decor`가 서버 카탈로그의 가격·슬롯·소유·작가 단계·본인 여부를 검증한다. 나의 수호룡 방과 친구
+아지트는 같은 `DragonHideoutScene`을 사용하므로 장식 렌더러를 두 군데에 복사하지 않는다.
 
 ## 고정 레이어 순서
 

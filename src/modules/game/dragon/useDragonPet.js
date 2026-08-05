@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import { DRAGON_SPECIES } from './presentation';
+import { DEFAULT_EQUIPPED_DECOR } from './decorCatalog';
 
 const DEFAULT_PET_DATA = {
     name: '나의 드래곤',
@@ -8,6 +9,8 @@ const DEFAULT_PET_DATA = {
     exp: 0,
     lastFed: null,
     ownedItems: [],
+    ownedDecorItems: [],
+    equippedDecor: DEFAULT_EQUIPPED_DECOR,
     background: 'default',
     species: null
 };
@@ -15,7 +18,13 @@ const DEFAULT_PET_DATA = {
 const normalizePetData = (petData) => ({
     ...DEFAULT_PET_DATA,
     ...(petData || {}),
-    ownedItems: Array.isArray(petData?.ownedItems) ? petData.ownedItems : []
+    ownedItems: Array.isArray(petData?.ownedItems) ? petData.ownedItems : [],
+    ownedDecorItems: Array.isArray(petData?.ownedDecorItems) ? petData.ownedDecorItems : [],
+    equippedDecor: {
+        ...DEFAULT_EQUIPPED_DECOR,
+        ...(petData?.equippedDecor || {}),
+        wallpaper: petData?.equippedDecor?.wallpaper || petData?.background || 'default'
+    }
 });
 
 export const useDragonPet = (studentId, points, setPoints, initialPetData = null) => {
@@ -104,7 +113,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         }
     };
 
-    const buyItem = async (item) => {
+    const buyDecorItem = async (item) => {
         if (points === undefined || points === null || isBusy) return;
 
         if (points < item.price) {
@@ -112,21 +121,12 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             return;
         }
 
-        if (petData.ownedItems.includes(item.id)) return;
-
-        const newOwned = [...petData.ownedItems, item.id];
-        const newPetData = { ...petData, ownedItems: newOwned };
-
         setIsBusy(true);
 
         try {
-            // [보안 수정] RPC를 통한 안전한 포인트 차감 + 펫 데이터 동시 업데이트
-            const { data: spendResult, error } = await supabase
-                .rpc('spend_student_points', {
-                    p_amount: item.price,
-                    p_reason: `아지트 배경 구매: ${item.name}`,
-                    p_pet_data: newPetData
-                });
+            const { data: spendResult, error } = await supabase.rpc('buy_my_dragon_decor', {
+                p_item_id: item.id
+            });
 
             if (error) throw error;
             if (!spendResult?.success) {
@@ -134,38 +134,37 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             }
 
             setPoints(spendResult.new_points);
-            setPetData(newPetData);
-            alert(`[${item.name}] 구매 성공! 리스트에서 '적용하기'를 눌러보세요. ✨`);
+            setPetData(normalizePetData(spendResult.pet_data));
+            return true;
         } catch (err) {
-            console.error('배경 구매 실패:', err.message);
+            console.error('아지트 소품 구매 실패:', err.message);
             alert('구매에 실패했습니다. 다시 시도해 주세요.');
+            return false;
         } finally {
             setIsBusy(false);
         }
     };
 
-    const equipItem = async (bgId) => {
-        const newPetData = { ...petData, background: bgId };
-
+    const equipDecorItem = async (slotId, itemId) => {
+        if (isBusy) return false;
+        setIsBusy(true);
         try {
-            // [보안 수정] 직접 update 대신 포인트를 차감하지 않는(0포인트) RPC 호출로 안전하게 반영
-            // students 테이블의 보호 트리거를 우회하기 위해 RPC를 사용합니다.
-            const { data: spendResult, error } = await supabase
-                .rpc('spend_student_points', {
-                    p_amount: 0,
-                    p_reason: `아지트 배경 변경: ${bgId}`,
-                    p_pet_data: newPetData
-                });
+            const { data: result, error } = await supabase.rpc('equip_my_dragon_decor', {
+                p_slot: slotId,
+                p_item_id: itemId
+            });
 
             if (error) throw error;
-            if (!spendResult?.success) {
-                throw new Error(spendResult?.error || '배경 변경 실패');
-            }
+            if (!result?.success) throw new Error(result?.error || '장식 변경 실패');
 
-            setPetData(newPetData);
+            setPetData(normalizePetData(result.pet_data));
+            return true;
         } catch (err) {
-            console.error('배경 변경 실패:', err.message);
-            alert('배경 변경에 실패했습니다. 다시 시도해 주세요!');
+            console.error('아지트 장식 변경 실패:', err.message);
+            alert('장식을 바꾸지 못했어요. 다시 시도해 주세요.');
+            return false;
+        } finally {
+            setIsBusy(false);
         }
     };
 
@@ -217,8 +216,8 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         isFlashing,
         isBusy,
         handleBond,
-        buyItem,
-        equipItem,
+        buyDecorItem,
+        equipDecorItem,
         selectSpecies,
         acknowledgeGrowth
     };
