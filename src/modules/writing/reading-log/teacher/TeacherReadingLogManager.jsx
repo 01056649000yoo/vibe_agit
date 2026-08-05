@@ -34,6 +34,8 @@ const reviewLabel = (status) => {
 const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onNavigationHandled }) => {
     const classId = activeClass?.id;
     const handledNavigationRef = useRef(null);
+    const [section, setSection] = useState('reviews'); // 'reviews' | 'motivation'
+    const [policySettingsDirty, setPolicySettingsDirty] = useState(false);
 
     // 탭을 열면 "확인할 것"부터 보여준다. 전체 목록은 한 번 더 눌러서 본다.
     const [reviewFilter, setReviewFilter] = useState('unreviewed');
@@ -323,6 +325,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         const timerId = window.setTimeout(() => {
             if (handledNavigationRef.current === requestId) return;
             handledNavigationRef.current = requestId;
+            setSection('reviews');
             const targetItem = navigationTarget.item;
             if (!targetItem?.post_id) {
                 onNavigationHandled?.(requestId);
@@ -334,6 +337,15 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
 
         return () => window.clearTimeout(timerId);
     }, [navigationTarget, onNavigationHandled, openDetail]);
+
+    const changeSection = (nextSection) => {
+        if (nextSection === section) return;
+        if (section === 'motivation' && policySettingsDirty) {
+            const shouldLeave = window.confirm('아직 저장하지 않은 동기부여 설정이 있어요. 저장하지 않고 학생 독서록 확인으로 이동할까요?');
+            if (!shouldLeave) return;
+        }
+        setSection(nextSection);
+    };
 
     const saveReview = async (teacherComment) => {
         if (!selected) return;
@@ -406,16 +418,45 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                     <h2>📚 학생 독서록</h2>
                     <p>승인 절차 없이 학생이 완료하고 포인트를 받으며, 선생님은 확인 표시와 짧은 한마디만 남겨요.</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>새로고침</Button>
+                {section === 'reviews' && (
+                    <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>새로고침</Button>
+                )}
             </header>
 
-            <WritingPolicySettings
-                classId={classId}
-                writingType="reading_log"
-                defaults={READING_LOG_POLICY_DEFAULTS}
-                title="독서록 완료 조건과 포인트"
-                description="초안은 분량과 관계없이 저장됩니다. 학생이 작성 완료할 때 조건을 확인하고, 한 책당 최초 한 번만 포인트를 줍니다."
-            />
+            <nav className="teacher-reading-sections" role="tablist" aria-label="학생 독서록 관리 메뉴">
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={section === 'reviews'}
+                    className={section === 'reviews' ? 'active' : ''}
+                    onClick={() => changeSection('reviews')}
+                >
+                    <span>📚 학생 독서록 확인</span>
+                    {shownCounts.unreviewed > 0 && <strong>{shownCounts.unreviewed}</strong>}
+                </button>
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={section === 'motivation'}
+                    className={section === 'motivation' ? 'active' : ''}
+                    onClick={() => changeSection('motivation')}
+                >
+                    <span>⚙️ 글쓰기 동기부여 설정</span>
+                </button>
+            </nav>
+
+            {section === 'motivation' ? (
+                <div className="teacher-reading-policy-panel" role="tabpanel" aria-label="글쓰기 동기부여 설정">
+                    <WritingPolicySettings
+                        classId={classId}
+                        writingType="reading_log"
+                        defaults={READING_LOG_POLICY_DEFAULTS}
+                        title="독서록 완료 조건과 포인트"
+                        description="초안은 분량과 관계없이 저장됩니다. 학생이 작성 완료할 때 조건을 확인하고, 한 책당 최초 한 번만 포인트를 줍니다."
+                        onDirtyChange={setPolicySettingsDirty}
+                    />
+                </div>
+            ) : (<>
 
             <div className="teacher-reading-stats">
                 <button type="button" className={reviewFilter === 'unreviewed' ? 'active warning' : ''} onClick={() => setReviewFilter('unreviewed')}>
@@ -589,6 +630,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                     </article>
                 </div>
             )}
+            </>)}
 
             <style>{`
                 .teacher-reading-manager { width:100%; padding:28px; box-sizing:border-box; border:1px solid #E2E8F0; border-radius:26px; background:white; box-shadow:0 8px 26px rgba(15,23,42,.04); }
@@ -596,6 +638,12 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 .teacher-reading-kicker { color:#2563EB; font-size:.78rem; font-weight:900; }
                 .teacher-reading-header h2 { margin:7px 0; color:#1E293B; font-size:1.7rem; }
                 .teacher-reading-header p { margin:0; color:#64748B; }
+                .teacher-reading-sections { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; margin:24px 0 20px; padding:5px; border:1px solid #E2E8F0; border-radius:17px; background:#F1F5F9; }
+                .teacher-reading-sections button { display:flex; min-height:50px; align-items:center; justify-content:center; gap:9px; padding:10px 16px; border:0; border-radius:13px; background:transparent; color:#64748B; font-size:.9rem; font-weight:900; cursor:pointer; }
+                .teacher-reading-sections button.active { background:white; color:#1D4ED8; box-shadow:0 2px 8px rgba(15,23,42,.1); }
+                .teacher-reading-sections button strong { display:grid; min-width:22px; height:22px; place-items:center; padding:0 5px; border-radius:999px; background:#FEF3C7; color:#B45309; box-sizing:border-box; font-size:.7rem; }
+                .teacher-reading-policy-panel { min-height:360px; }
+                .teacher-reading-policy-panel .writing-policy-settings { margin:0; }
                 .teacher-reading-stats { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; margin:26px 0 18px; }
                 .teacher-reading-stats > * { display:flex; flex-direction:column; align-items:flex-start; gap:4px; padding:16px 18px; border:1px solid #E2E8F0; border-radius:16px; background:#F8FAFC; color:#64748B; text-align:left; }
                 .teacher-reading-stats button { cursor:pointer; }
@@ -666,6 +714,8 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 @media (max-width: 760px) {
                     .teacher-reading-manager { padding:18px 14px; border-radius:20px; }
                     .teacher-reading-header { flex-direction:column; }
+                    .teacher-reading-sections { margin:18px 0 16px; }
+                    .teacher-reading-sections button { min-height:48px; padding:9px 8px; font-size:.8rem; }
                     .teacher-reading-stats { grid-template-columns:repeat(2, minmax(0, 1fr)); }
                     .teacher-reading-filters, .teacher-reading-filters.is-wide { grid-template-columns:1fr; }
                     .teacher-reading-viewtabs { display:grid; grid-template-columns:1fr 1fr; }

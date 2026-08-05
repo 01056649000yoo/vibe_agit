@@ -5,8 +5,9 @@ import WritingPolicyFields from './WritingPolicyFields';
 import { normalizeWritingPolicy } from './writingPolicy';
 import './writingPolicy.css';
 
-const WritingPolicySettings = ({ classId, writingType, defaults, title, description }) => {
+const WritingPolicySettings = ({ classId, writingType, defaults, title, description, onDirtyChange }) => {
     const [policy, setPolicy] = useState(() => normalizeWritingPolicy(defaults));
+    const [savedPolicy, setSavedPolicy] = useState(() => normalizeWritingPolicy(defaults));
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
@@ -28,13 +29,21 @@ const WritingPolicySettings = ({ classId, writingType, defaults, title, descript
                 console.error('글쓰기 정책 불러오기 실패:', error.message);
                 setMessage('설정을 불러오지 못했습니다. 새로고침 후 다시 확인해 주세요.');
             } else {
-                setPolicy(normalizeWritingPolicy(data || defaults, defaults));
+                const loadedPolicy = normalizeWritingPolicy(data || defaults, defaults);
+                setPolicy(loadedPolicy);
+                setSavedPolicy(loadedPolicy);
             }
             setLoading(false);
         };
         load();
         return () => { active = false; };
     }, [classId, defaults, writingType]);
+
+    useEffect(() => {
+        const isDirty = JSON.stringify(policy) !== JSON.stringify(savedPolicy);
+        onDirtyChange?.(isDirty);
+        return () => onDirtyChange?.(false);
+    }, [onDirtyChange, policy, savedPolicy]);
 
     const save = async () => {
         setSaving(true);
@@ -51,7 +60,9 @@ const WritingPolicySettings = ({ classId, writingType, defaults, title, descript
             setMessage('저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
             return;
         }
-        setPolicy(normalizeWritingPolicy(data, defaults));
+        const saved = normalizeWritingPolicy(data, defaults);
+        setPolicy(saved);
+        setSavedPolicy(saved);
         setMessage('이 학급의 새 독서록부터 적용됩니다.');
     };
 
