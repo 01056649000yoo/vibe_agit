@@ -160,7 +160,7 @@ const StudentTable = ({ students }) => {
                                 {student.name}
                             </button>
                         </td>
-                        <MetricCell primary={`${num(student.posts)}편`} secondary={`과제 ${num(student.assignment_posts)} · 독서록 ${num(student.reading_logs)}`} />
+                        <MetricCell primary={`${num(student.posts)}편`} secondary={`과제 ${num(student.assignment_posts)} · 독서록 ${num(student.reading_logs)} · 일기 ${num(student.diaries)}`} />
                         <MetricCell primary={`${num(student.active_days)}일 활동`} secondary={`현재 ${num(student.current_streak)}일 · 최고 ${num(student.best_streak)}일`} />
                         <MetricCell primary={`고쳐쓰기 ${num(student.revisions)}회`} secondary={`피드백 ${num(student.feedbacks_received)}회 · 기록 이후`} />
                         <MetricCell primary={`남김 ${num(interactionsGiven)}회`} secondary={`받음 ${num(interactionsReceived)}회`} />
@@ -208,7 +208,7 @@ const CompactStudentGrid = ({ students, onSelectStudent }) => {
                 ? '비교 없음'
                 : `${Number(change) > 0 ? '+' : ''}${num(change)}자`;
             const fullSummary = [
-                `글 ${num(student.posts)}편(과제 ${num(student.assignment_posts)}·독서록 ${num(student.reading_logs)})`,
+                `글 ${num(student.posts)}편(과제 ${num(student.assignment_posts)}·독서록 ${num(student.reading_logs)}·일기 ${num(student.diaries)})`,
                 `활동 ${num(student.active_days)}일(연속 ${num(student.current_streak)}·최고 ${num(student.best_streak)})`,
                 `고쳐쓰기 ${num(student.revisions)}·피드백 ${num(student.feedbacks_received)}`,
                 `교류 남김 ${num(interactionsGiven)}·받음 ${num(interactionsReceived)}`,
@@ -226,7 +226,7 @@ const CompactStudentGrid = ({ students, onSelectStudent }) => {
                     <span title={`최근 글 ${formatDate(student.last_post_at)}`} style={{ flexShrink: 1, minWidth: 0, maxWidth: '52%', color: '#1D4ED8', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>+{num(student.points_earned)} · -{num(student.points_used)}P</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '3px', color: '#334155', fontSize: 'var(--footprint-student-text, .68rem)', fontWeight: 800, lineHeight: 1.12 }}>
-                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>과 {num(student.assignment_posts)} · 독 {num(student.reading_logs)}</span>
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>과 {num(student.assignment_posts)} · 독 {num(student.reading_logs)} · 일 {num(student.diaries)}</span>
                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>활동 {num(student.active_days)}일</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '3px', marginTop: '2px', color: '#64748B', fontSize: 'var(--footprint-student-meta, .64rem)', fontWeight: 700, lineHeight: 1.12 }}>

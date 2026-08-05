@@ -47,6 +47,7 @@ const StudentFootprintDetailModal = ({ student, onClose, container }) => {
                 <Breakdown>
                     <span>선생님 과제 <strong>{num(student.assignment_posts)}편</strong></span>
                     <span>독서록 <strong>{num(student.reading_logs)}편</strong></span>
+                    <span>일기 <strong>{num(student.diaries)}편</strong></span>
                 </Breakdown>
             </DetailCard>
 

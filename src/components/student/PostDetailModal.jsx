@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
+import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 import { supabase } from '../../lib/supabaseClient';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
 import Button from '../common/Button';
@@ -164,7 +165,9 @@ const PostDetailModal = ({
     const [showOriginal, setShowOriginal] = useState(false);
     const [originalAllowed, setOriginalAllowed] = useState(Boolean(post?.show_original));
     const [hoveredType, setHoveredType] = useState(null);
-    const readingLog = post?.writing_context === 'self' && post?.self_writing_type === 'reading_log';
+    const selfType = getSelfWritingType(post);
+    // 책 정보 블록은 독서록에만 있으므로 그 조건은 유형을 좁혀 그대로 둔다.
+    const readingLog = selfType?.id === 'reading_log';
     const bookInfo = post?.structured_content || {};
     const canShowOriginal = originalAllowed && Boolean(post?.original_content);
     const displayingOriginal = canShowOriginal && showOriginal;
@@ -374,7 +377,7 @@ const PostDetailModal = ({
                         )}
                         <div style={{ textAlign: 'left' }}>
                             <div style={{ fontSize: '0.85rem', color: '#3498DB', fontWeight: '900', marginBottom: '2px' }}>
-                                {postAuthorName}의 {readingLog ? '독서록' : '소중한 이야기'} {readingLog ? '📚' : '✍️'}
+                                {postAuthorName}의 {selfType ? selfType.label : '소중한 이야기'} {selfType ? selfType.icon : '✍️'}
                             </div>
                             <h3 style={{
                                 margin: 0, fontWeight: '900', color: '#2D3436',
@@ -385,15 +388,15 @@ const PostDetailModal = ({
                                 {displayingOriginal ? (post.original_title || post.title) : post.title}
                                 <span style={{
                                     fontSize: '0.7rem',
-                                    color: displayingOriginal ? '#E67E22' : (readingLog ? '#558B2F' : '#3498DB'),
-                                    background: displayingOriginal ? '#FFF3E0' : (readingLog ? '#F1F8E9' : '#E3F2FD'),
+                                    color: displayingOriginal ? '#E67E22' : (selfType ? '#558B2F' : '#3498DB'),
+                                    background: displayingOriginal ? '#FFF3E0' : (selfType ? '#F1F8E9' : '#E3F2FD'),
                                     padding: '2px 8px',
                                     borderRadius: '6px',
                                     fontWeight: '900',
-                                    border: displayingOriginal ? '1px solid #FFE082' : (readingLog ? '1px solid #C5E1A5' : '1px solid #BBDEFB'),
+                                    border: displayingOriginal ? '1px solid #FFE082' : (selfType ? '1px solid #C5E1A5' : '1px solid #BBDEFB'),
                                     whiteSpace: 'nowrap'
                                 }}>
-                                    {readingLog ? '독서록' : (displayingOriginal ? '처음글' : '마지막글')}
+                                    {selfType ? selfType.label : (displayingOriginal ? '처음글' : '마지막글')}
                                 </span>
                             </h3>
                             {mission?.tags && mission.tags.length > 0 && (

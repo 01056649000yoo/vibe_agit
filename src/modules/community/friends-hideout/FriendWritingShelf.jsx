@@ -1,14 +1,16 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { getSelfWritingType } from '../../writing/selfWritingTypes';
 import { supabase } from '../../../lib/supabaseClient';
 import { classKey, dataCache } from '../../../lib/cache';
 
 const FILTERS = [
     { id: 'all', label: '전체 책장' },
     { id: 'assignment', label: '✍️ 과제 책장' },
-    { id: 'reading_log', label: '📚 독서록 책장' }
+    { id: 'reading_log', label: '📚 독서록 책장' },
+    { id: 'diary', label: '📔 일기 책장' }
 ];
 
-const BOOK_COLORS = {
+const BOOK_COLORS = new Map(Object.entries({
     assignment: [
         ['#477DB6', '#28527D', '#193B60'],
         ['#6589B1', '#365F8C', '#23466B'],
@@ -19,18 +21,27 @@ const BOOK_COLORS = {
         ['#5E958B', '#356A64', '#28514D'],
         ['#77955C', '#4E6F37', '#384F29']
     ],
+    diary: [
+        ['#7C86D6', '#4F5AA8', '#343C7A'],
+        ['#8E86C9', '#5C509C', '#3E356F'],
+        ['#6E8FCB', '#42639C', '#2D466F']
+    ],
     meeting: [
         ['#9C76A8', '#714E7E', '#54395F'],
         ['#8B72B5', '#604B8D', '#403467'],
         ['#AF7FAE', '#80517F', '#5D385C']
     ]
-};
+}));
+
+const KIND_ICONS = new Map(Object.entries({ assignment: '✍️', reading_log: '📚', diary: '📔', meeting: '🏛️' }));
 
 const normalizeRelation = (value) => Array.isArray(value) ? (value[0] || null) : (value || null);
 
-const isReadingLog = (post) => (
-    post?.writing_context === 'self' && post?.self_writing_type === 'reading_log'
-);
+const isReadingLog = (post) => getSelfWritingType(post)?.id === 'reading_log';
+const isDiaryPost = (post) => getSelfWritingType(post)?.id === 'diary';
+// 자율 글은 과제가 아니다. 예전에는 `독서록이 아니면 과제` 로 갈라서
+// 공개한 일기가 과제 칸에 섞여 들어갔다.
+const isAssignmentPost = (post) => !getSelfWritingType(post);
 
 const isMeetingPost = (post) => {
     const mission = normalizeRelation(post?.writing_missions);
@@ -39,13 +50,15 @@ const isMeetingPost = (post) => {
 
 const getBookKind = (post) => {
     if (isReadingLog(post)) return 'reading_log';
+    if (isDiaryPost(post)) return 'diary';
     if (isMeetingPost(post)) return 'meeting';
     return 'assignment';
 };
 
 const getBookLabel = (post) => {
     const mission = normalizeRelation(post?.writing_missions);
-    if (isReadingLog(post)) return '독서록';
+    const selfType = getSelfWritingType(post);
+    if (selfType) return selfType.label;
     if (isMeetingPost(post)) return '회의 안건';
     return mission?.title || '선생님 과제';
 };
@@ -59,17 +72,13 @@ const SHELF_CACHE_MS = 120000;
 const ShelfBook = ({ post, opening, disabled, onOpen }) => {
     const kind = getBookKind(post);
     const variant = stableBookVariant(post);
-    const palette = kind === 'reading_log'
-        ? BOOK_COLORS.reading_log
-        : kind === 'meeting'
-            ? BOOK_COLORS.meeting
-            : BOOK_COLORS.assignment;
+    const palette = BOOK_COLORS.get(kind) || BOOK_COLORS.get('assignment');
     const [light, middle, dark] = palette[variant % palette.length];
     const title = post.title || '제목 없는 글';
     const titleLength = Array.from(title).length;
     const width = titleLength > 16 ? 60 : titleLength > 8 ? 52 : 44;
     const height = 146 + ((variant % 4) * 7);
-    const icon = kind === 'reading_log' ? '📚' : kind === 'meeting' ? '🏛️' : '✍️';
+    const icon = KIND_ICONS.get(kind) || KIND_ICONS.get('assignment');
     const reactionCount = Array.isArray(post.post_reactions) ? post.post_reactions.length : 0;
 
     return (
@@ -186,12 +195,14 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
     const counts = useMemo(() => ({
         all: posts.length,
         reading_log: posts.filter(isReadingLog).length,
-        assignment: posts.filter((post) => !isReadingLog(post)).length
+        diary: posts.filter(isDiaryPost).length,
+        assignment: posts.filter(isAssignmentPost).length
     }), [posts]);
 
     const visiblePosts = useMemo(() => {
         if (filter === 'reading_log') return posts.filter(isReadingLog);
-        if (filter === 'assignment') return posts.filter((post) => !isReadingLog(post));
+        if (filter === 'diary') return posts.filter(isDiaryPost);
+        if (filter === 'assignment') return posts.filter(isAssignmentPost);
         return posts;
     }, [filter, posts]);
 
@@ -296,7 +307,7 @@ const FriendWritingShelf = ({ friend, viewerId, classId, onOpenPost }) => {
                 <div className="friend-writing-title-list" role="group" aria-label="공개 글 제목 전체 목록">
                     {visiblePosts.map((post) => {
                         const kind = getBookKind(post);
-                        const icon = kind === 'reading_log' ? '📚' : kind === 'meeting' ? '🏛️' : '✍️';
+                        const icon = KIND_ICONS.get(kind) || KIND_ICONS.get('assignment');
                         const reactionCount = Array.isArray(post.post_reactions) ? post.post_reactions.length : 0;
                         return (
                             <button key={post.id} type="button" onClick={() => handleOpenPost(post)} disabled={Boolean(openingPostId)}>

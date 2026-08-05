@@ -6,6 +6,7 @@ import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 import MyAgitModuleSlotHost from '../../modules/MyAgitModuleSlotHost';
 import MyTitleStatusPanel from '../../modules/writing/title-status/MyTitleStatusPanel';
+import { FREE_WRITING_TYPE, SELF_WRITING_TYPES, getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 
 const MyShelfPostDetail = lazy(() => import('./MyShelfPostDetail'));
 
@@ -38,9 +39,10 @@ const SHELF_SECTIONS = [
         ]
     },
     {
-        id: 'reading', tabLabel: '독서록 책장', emptyMessage: '완성한 독서록이 아직 없어요.', alwaysVisible: true,
-        match: (post) => post.writing_context === 'self' && post.self_writing_type === 'reading_log',
-        label: '독서록', icon: '📚',
+        id: 'reading', tabLabel: SELF_WRITING_TYPES.reading_log.shelfTabLabel,
+        emptyMessage: SELF_WRITING_TYPES.reading_log.emptyMessage, alwaysVisible: true,
+        match: (post) => getSelfWritingType(post)?.id === 'reading_log',
+        label: SELF_WRITING_TYPES.reading_log.label, icon: SELF_WRITING_TYPES.reading_log.icon,
         colors: [
             ['#6B9A70', '#3F704A', '#295237'],
             ['#5E958B', '#356A64', '#28514D'],
@@ -48,9 +50,21 @@ const SHELF_SECTIONS = [
         ]
     },
     {
-        id: 'free', tabLabel: '자유글 책장', emptyMessage: '완성한 자유글이 아직 없어요.', alwaysVisible: false,
-        match: (post) => post.writing_context === 'self' && post.self_writing_type !== 'reading_log',
-        label: '자유글', icon: '✏️',
+        id: 'diary', tabLabel: SELF_WRITING_TYPES.diary.shelfTabLabel,
+        emptyMessage: SELF_WRITING_TYPES.diary.emptyMessage, alwaysVisible: true,
+        match: (post) => getSelfWritingType(post)?.id === 'diary',
+        label: SELF_WRITING_TYPES.diary.label, icon: SELF_WRITING_TYPES.diary.icon,
+        colors: [
+            ['#7C86D6', '#4F5AA8', '#343C7A'],
+            ['#8E86C9', '#5C509C', '#3E356F'],
+            ['#6E8FCB', '#42639C', '#2D466F']
+        ]
+    },
+    {
+        id: 'free', tabLabel: FREE_WRITING_TYPE.shelfTabLabel,
+        emptyMessage: FREE_WRITING_TYPE.emptyMessage, alwaysVisible: false,
+        match: (post) => getSelfWritingType(post)?.id === 'free',
+        label: FREE_WRITING_TYPE.label, icon: FREE_WRITING_TYPE.icon,
         colors: [
             ['#D17A67', '#A24E48', '#793538'],
             ['#C88658', '#9D5B32', '#743F23'],

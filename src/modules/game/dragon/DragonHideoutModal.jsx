@@ -7,11 +7,12 @@ import DragonSpeciesPicker from './DragonSpeciesPicker';
 import { canReselectDragonSpecies, getReaderDragonEffect } from './presentation';
 import './DragonHideoutModal.css';
 
-const STORY_KIND_LABELS = {
+const STORY_KIND_LABELS = new Map(Object.entries({
     mission: '과제 글',
     reading_log: '독서록',
+    diary: '일기',
     free: '자유글'
-};
+}));
 
 /**
  * 교감 반응은 그날 학생이 실제로 쓴 글에서 나온다.
@@ -19,13 +20,14 @@ const STORY_KIND_LABELS = {
  * 들려줄 글이 없으면 반응 대신 글쓰기로 안내해 교감이 글쓰기의 유인이 되게 한다.
  */
 const getBondReaction = (bond) => {
-    const kind = STORY_KIND_LABELS[bond?.storyKind] || '글';
+    const kind = STORY_KIND_LABELS.get(bond?.storyKind) || '글';
     // `submitted` 는 오늘 승인받은 과제이거나 오늘 작성 완료한 독서록이다.
     if (bond?.storyState === 'submitted') {
-        if (bond.storyKind === 'reading_log') {
+        // 자율 글(독서록·일기)은 학생이 스스로 완료한 글이라 승인 문구를 쓰지 않는다.
+        if (bond.storyKind === 'reading_log' || bond.storyKind === 'diary') {
             return bond.storyTitle
-                ? `오늘 완성한 독서록 「${bond.storyTitle}」 잘 들었어. 다음 이야기도 들려줘!`
-                : '오늘 독서록을 완성했구나. 이야기 잘 들었어!';
+                ? `오늘 완성한 ${kind} 「${bond.storyTitle}」 잘 들었어. 다음 이야기도 들려줘!`
+                : `오늘 ${kind}을 완성했구나. 이야기 잘 들었어!`;
         }
         return bond.storyTitle
             ? `선생님께 승인받은 「${bond.storyTitle}」 잘 들었어. 정말 멋진 글이야!`

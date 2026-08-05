@@ -1,12 +1,13 @@
 import React from 'react';
 import ModalCloseButton from '../common/ModalCloseButton';
+import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 
 const ActivityDetailModal = ({ post, onClose }) => {
     if (!post) return null;
 
     const recentActivity = post.recent_activity;
     const isCommentActivity = recentActivity?.kind === 'comment';
-    const isReadingLog = post.writing_context === 'self' && post.self_writing_type === 'reading_log';
+    const selfType = getSelfWritingType(post);
     const missionTitle = post.writing_missions?.title
         || (Array.isArray(post.writing_missions) ? post.writing_missions[0]?.title : null);
 
@@ -45,7 +46,7 @@ const ActivityDetailModal = ({ post, onClose }) => {
                     {post.content || '내용이 없습니다.'}
                 </div>
                 <footer style={{ padding: '20px', borderTop: '1px solid #EEE', textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem' }}>
-                    {isReadingLog ? '학생 독서록' : `미션: ${missionTitle || '정보 없음'}`} | 글자 수: {post.char_count || 0}자
+                    {selfType ? `학생 ${selfType.label}` : `미션: ${missionTitle || '정보 없음'}`} | 글자 수: {post.char_count || 0}자
                 </footer>
             </div>
         </div>

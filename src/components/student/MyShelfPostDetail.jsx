@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 
 const formatDate = (value) => {
     if (!value) return '';
@@ -11,16 +12,15 @@ const formatDate = (value) => {
 const MyShelfPostDetail = ({ summary, post, loading, errorMessage, onClose, onRetry }) => {
     const [showOriginal, setShowOriginal] = useState(false);
 
-    const readingLog = post?.writing_context === 'self' && post?.self_writing_type === 'reading_log';
+    const selfType = getSelfWritingType(post);
+    const readingLog = selfType?.id === 'reading_log';
     const book = post?.structured_content || {};
     const canCompare = Boolean(post?.original_content) && (
         post.original_title !== post.title || post.original_content !== post.content
     );
     const title = showOriginal ? (post?.original_title || post?.title) : post?.title;
     const content = showOriginal ? post?.original_content : post?.content;
-    const typeName = readingLog
-        ? '독서록'
-        : post?.writing_context === 'self' ? '자유글' : '선생님 과제';
+    const typeName = selfType ? selfType.label : '선생님 과제';
 
     return (
         <motion.div
@@ -65,8 +65,8 @@ const MyShelfPostDetail = ({ summary, post, loading, errorMessage, onClose, onRe
                 ) : (
                     <article style={{ padding: '26px', borderRadius: '28px', background: 'white', border: '1px solid #E3E8EF', boxShadow: '0 12px 34px rgba(55,71,79,.08)' }}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', marginBottom: '14px' }}>
-                            <span style={{ padding: '5px 9px', borderRadius: '9px', background: readingLog ? '#F1F8E9' : '#E3F2FD', color: readingLog ? '#558B2F' : '#1565C0', fontSize: '.72rem', fontWeight: 950 }}>
-                                {readingLog ? '📚' : '✍️'} {typeName}
+                            <span style={{ padding: '5px 9px', borderRadius: '9px', background: selfType ? '#F1F8E9' : '#E3F2FD', color: selfType ? '#558B2F' : '#1565C0', fontSize: '.72rem', fontWeight: 950 }}>
+                                {selfType ? selfType.icon : '✍️'} {typeName}
                             </span>
                             <span style={{ padding: '5px 9px', borderRadius: '9px', background: post.visibility === 'class' ? '#F3E5F5' : '#F5F5F5', color: post.visibility === 'class' ? '#7B1FA2' : '#78909C', fontSize: '.72rem', fontWeight: 900 }}>
                                 {post.visibility === 'class' ? '👥 친구 공개' : '🔒 친구에게 비공개'}

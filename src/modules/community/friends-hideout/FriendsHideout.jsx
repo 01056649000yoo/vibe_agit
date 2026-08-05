@@ -66,7 +66,7 @@ const FEED_TABS = [
 // 개별 포스트 카드 컴포넌트 분리 및 memo 적용
 const PostCard = memo(({ post, isLast, lastElementRef, onClick, isMeeting, studentId, onMeetingPick }) => {
     const isMine = post.student_id === studentId;
-    const isReadingLog = post.writing_context === 'self' && post.self_writing_type === 'reading_log';
+    const selfType = getSelfWritingType(post);
     const authorName =
         (isMine ? '내 글' : '') ||
         post.student_name ||
@@ -112,12 +112,12 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick, isMeeting, stude
                 }}>
                     {isMine ? '✍️ 내 글' : authorName}
                 </span>
-                {isReadingLog ? (
+                {selfType ? (
                     <span style={{
                         fontSize: '0.72rem', padding: '4px 9px', borderRadius: '999px',
                         background: '#E8F5E9', color: '#558B2F', fontWeight: '900'
                     }}>
-                        📚 독서록
+                        {selfType.icon} {selfType.label}
                     </span>
                 ) : isMeeting && (
                     <span style={{
