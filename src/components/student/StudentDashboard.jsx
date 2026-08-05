@@ -331,6 +331,10 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             isBusy={isBusy}
                             readerLevel={readerLevel}
                             selectSpecies={selectSpecies}
+                            onGoWrite={(target) => {
+                                setIsDragonModalOpen(false);
+                                onNavigate(target);
+                            }}
                         />
                     </Suspense>
                 )}

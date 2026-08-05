@@ -77,37 +77,33 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         ));
     }, [initialPetData]);
 
-    // 교감은 성장 조건이나 포인트 소비가 아닌, 내 수호룡과 만나는 가벼운 기록이다.
+    // 교감은 성장 조건이나 포인트 소비가 아니라, 오늘 쓴 글을 수호룡에게 들려주는 자리다.
+    // 오늘 날짜·교감 횟수·오늘의 글은 모두 서버가 계산한다 — 예전처럼 클라이언트가 만든
+    // pet_data 를 그대로 저장하지 않는다. 성공하면 그날의 이야기 상태를 돌려준다.
     const handleBond = async () => {
-        if (!studentId || isBusy) return false;
+        if (!studentId || isBusy) return null;
         setIsBusy(true);
-        const today = new Date().toISOString().split('T')[0];
-        const newPetData = {
-            ...petData,
-            lastFed: today,
-            bondCount: Number(petData.bondCount || 0) + 1
-        };
 
         try {
-            const { data: spendResult, error: updateError } = await supabase
-                .rpc('spend_student_points', {
-                    p_amount: 0,
-                    p_reason: '작가 수호룡과 교감하기 🐉',
-                    p_pet_data: newPetData
-                });
+            const { data: result, error } = await supabase.rpc('bond_with_my_dragon');
 
-            if (updateError) throw updateError;
-            if (!spendResult?.success) throw new Error(spendResult?.error || '교감 기록 실패');
+            if (error) throw error;
+            if (!result?.success) throw new Error(result?.error || '교감 기록 실패');
 
-            setPetData(newPetData);
+            setPetData(normalizePetData(result.pet_data));
             setIsFlashing(true);
             if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
             flashTimerRef.current = window.setTimeout(() => setIsFlashing(false), 1400);
-            return true;
+            return {
+                storyState: result.story_state || 'none',
+                storyTitle: result.story_title || null,
+                storyKind: result.story_kind || null,
+                alreadyBondedToday: Boolean(result.already_bonded_today)
+            };
         } catch (err) {
             console.error('드래곤 교감 기록 실패:', err.message);
             alert('교감 기록을 저장하지 못했어요. 다시 시도해 주세요.');
-            return false;
+            return null;
         } finally {
             setIsBusy(false);
         }

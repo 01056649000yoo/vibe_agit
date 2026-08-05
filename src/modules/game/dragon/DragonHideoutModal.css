@@ -28,6 +28,9 @@
 .dragon-room-modal__bond { background: linear-gradient(135deg,#df7557,#c9503e); }
 .dragon-room-modal__workshop { background: linear-gradient(135deg,#386f86,#284f66); }
 .dragon-room-modal__bond-message { grid-column: 1/-1; padding: 11px 14px; border: 1px solid #c9e3d1; border-radius: 13px; background: #f2faf4; color: #3c6b48; text-align: center; font-size: .76rem; font-weight: 850; }
+.dragon-room-modal__bond-message p { margin: 0; }
+.dragon-room-modal__bond-actions { display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.dragon-room-modal__bond-actions button { min-height: 44px; padding: 8px 16px; border: 1px solid #b5d9c0; border-radius: 11px; background: #fff; color: #2f6b47; cursor: pointer; font: inherit; font-size: .76rem; font-weight: 900; }
 
 @media (max-width: 650px) {
     .dragon-room-modal { place-items: end center; padding: 0; }

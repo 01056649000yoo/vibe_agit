@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
@@ -7,13 +7,30 @@ import DragonSpeciesPicker from './DragonSpeciesPicker';
 import { canReselectDragonSpecies, getReaderDragonEffect } from './presentation';
 import './DragonHideoutModal.css';
 
-const getBondMessage = (bondCount) => {
-    const messages = [
-        '오늘의 인사를 기억할게요.',
-        '네 글 이야기를 들으며 기분이 좋아졌어요.',
-        '함께 아지트를 지켜볼게요.'
-    ];
-    return messages[Math.max(0, Number(bondCount || 1) - 1) % messages.length];
+const STORY_KIND_LABELS = {
+    mission: '과제 글',
+    reading_log: '독서록',
+    free: '자유글'
+};
+
+/**
+ * 교감 반응은 그날 학생이 실제로 쓴 글에서 나온다.
+ * 예전에는 문구 3개가 돌아가서 네 번째 교감부터 같은 말이 반복됐고, 눌러도 달라지는 것이 없었다.
+ * 들려줄 글이 없으면 반응 대신 글쓰기로 안내해 교감이 글쓰기의 유인이 되게 한다.
+ */
+const getBondReaction = (bond) => {
+    const kind = STORY_KIND_LABELS[bond?.storyKind] || '글';
+    if (bond?.storyState === 'submitted') {
+        return bond.storyTitle
+            ? `오늘 완성한 ${kind} 「${bond.storyTitle}」 잘 들었어. 다음 이야기도 들려줘!`
+            : `오늘 ${kind}을 완성했구나. 이야기 잘 들었어!`;
+    }
+    if (bond?.storyState === 'writing') {
+        return bond.storyTitle
+            ? `「${bond.storyTitle}」 쓰고 있구나! 다 쓰면 꼭 들려줘.`
+            : `오늘 ${kind}을 쓰고 있구나! 다 쓰면 꼭 들려줘.`;
+    }
+    return '오늘은 아직 들려줄 이야기가 없네. 한 편 쓰고 다시 와 줄래?';
 };
 
 const DragonHideoutModal = ({
@@ -29,11 +46,12 @@ const DragonHideoutModal = ({
     isFlashing,
     isBusy,
     readerLevel,
-    selectSpecies
+    selectSpecies,
+    onGoWrite
 }) => {
     const [bondFeedback, setBondFeedback] = useState('idle');
+    const [bondReaction, setBondReaction] = useState(null);
     const [speciesPickerOpen, setSpeciesPickerOpen] = useState(() => !petData?.species);
-    const feedbackTimerRef = useRef(null);
     const readerEffect = getReaderDragonEffect(readerLevel);
     const canReselect = canReselectDragonSpecies(petData, petData.level);
     const exp = Math.min(100, Math.max(0, Number(petData?.exp || 0)));
@@ -41,21 +59,17 @@ const DragonHideoutModal = ({
         ? `오늘 교감했어요 · 총 ${Number(petData?.bondCount || 0)}회`
         : daysSinceLastFed == null ? '첫 교감을 기다려요' : `마지막 교감 ${daysSinceLastFed}일 전`;
 
-    useEffect(() => () => {
-        if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
-    }, []);
-
+    // 반응에 글쓰기 안내가 붙을 수 있어 자동으로 사라지지 않는다. 학생이 읽고 움직일 시간을 준다.
     const handleBondClick = async () => {
         if (isBusy) return;
         setBondFeedback('saving');
-        const success = await handleBond();
-        if (!success) {
+        const bond = await handleBond();
+        if (!bond) {
             setBondFeedback('idle');
             return;
         }
+        setBondReaction(bond);
         setBondFeedback('success');
-        if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
-        feedbackTimerRef.current = window.setTimeout(() => setBondFeedback('idle'), 2600);
     };
 
     const handleSpeciesSelect = async (speciesId) => {
@@ -138,7 +152,7 @@ const DragonHideoutModal = ({
 
                                     <div className="dragon-room-modal__actions">
                                         <button type="button" className="dragon-room-modal__bond" onClick={handleBondClick} disabled={isBusy || bondFeedback === 'success'}>
-                                            {bondFeedback === 'success' ? '교감했어요!' : bondFeedback === 'saving' ? '마음을 나누는 중...' : '수호룡과 교감하기'}
+                                            {bondFeedback === 'success' ? '오늘 이야기를 들려줬어요!' : bondFeedback === 'saving' ? '이야기를 들려주는 중...' : '오늘 이야기 들려주기'}
                                         </button>
                                         <button type="button" className="dragon-room-modal__workshop" onClick={() => setIsShopOpen(true)}>
                                             아지트 공방
@@ -146,9 +160,15 @@ const DragonHideoutModal = ({
                                     </div>
 
                                     <AnimatePresence>
-                                        {bondFeedback === 'success' && (
+                                        {bondFeedback === 'success' && bondReaction && (
                                             <motion.div role="status" aria-live="polite" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="dragon-room-modal__bond-message">
-                                                {petData.name || '작가 수호룡'}: “{getBondMessage(petData.bondCount)}”
+                                                <p>{petData.name || '작가 수호룡'}: “{getBondReaction(bondReaction)}”</p>
+                                                {bondReaction.storyState === 'none' && onGoWrite && (
+                                                    <div className="dragon-room-modal__bond-actions">
+                                                        <button type="button" onClick={() => onGoWrite('mission_list')}>과제 글쓰기</button>
+                                                        <button type="button" onClick={() => onGoWrite('reading_logs')}>독서록 쓰기</button>
+                                                    </div>
+                                                )}
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
