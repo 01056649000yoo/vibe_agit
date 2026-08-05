@@ -1,0 +1,38 @@
+/**
+ * 독서록 초안 판정과 책 선택 규칙.
+ *
+ * 화면에서 빼낸 이유: 새 독서록은 `postId` 도 책 열쇠도 없어 모두 `new` 라는 초안 자리를
+ * 함께 쓴다. 그래서 "무엇을 초안으로 볼 것인가" 를 조금만 헐겁게 잡아도 지난번에 검색한 책이
+ * 다음 학생 화면에 그대로 되살아난다. 실제로 그 일이 있었고, 브라우저 없이도 확인할 수 있도록
+ * 규칙만 따로 두고 테스트한다.
+ */
+
+/** 책을 고르면 대신 채워 주는 제목. */
+export const autoTitleFor = (book) => `『${book.title}』을 읽고`;
+
+/**
+ * 이 화면 내용을 초안으로 남길 만한가.
+ *
+ * 책을 고를 때 자동으로 붙는 제목은 학생이 쓴 글이 아니므로 세지 않는다.
+ * 이것을 세면 책만 검색해 보고 나가도 초안이 생겨 다음 진입 때 그 책이 올라온다.
+ */
+export const readingDraftHasContent = (candidate) => Boolean(
+    candidate?.content?.trim() || (candidate?.title?.trim() && !candidate?.titleAutoFilled)
+);
+
+/**
+ * 책을 고르거나(`book`) 비울 때(`null`) 폼이 어떻게 바뀌는지.
+ *
+ * 학생이 직접 손댄 제목은 지키고, 자동으로 붙었던 제목은 새 책 이름으로 갈아 끼운다.
+ * 그러지 않으면 다른 책으로 바꿔도 옛 책 이름이 제목에 남는다.
+ */
+export const applyBookSelection = (form, book) => {
+    const keepTitle = Boolean(form.title?.trim()) && !form.titleAutoFilled;
+
+    return {
+        ...form,
+        selectedBook: book,
+        title: book && !keepTitle ? autoTitleFor(book) : (keepTitle ? form.title : ''),
+        titleAutoFilled: Boolean(book) && !keepTitle
+    };
+};

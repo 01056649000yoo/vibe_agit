@@ -25,11 +25,15 @@ import {
 } from '../policy/writingPolicy';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
+import { applyBookSelection, readingDraftHasContent } from './draftRules';
 import useReadingLogDailyStatus from './useReadingLogDailyStatus';
 import './ReadingLogShelf.css';
 
 const EMPTY_FORM = {
     title: '',
+    // 책을 고를 때 대신 채워 준 제목인지. 학생이 제목을 만지면 꺼진다.
+    // 자동 제목만 있는 화면은 아직 쓴 글이 없는 것으로 본다.
+    titleAutoFilled: false,
     selectedBook: null,
     content: '',
     // 기본은 친구 공개 — 독서록을 서로 보며 읽을거리를 찾게 한다.
@@ -192,6 +196,8 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
             const loadedBook = bookFromStructuredContent(data.structured_content || {});
             const loadedForm = {
                 title: data.title || '',
+                // 이미 저장된 글의 제목은 학생이 확정한 것이라 자동 제목으로 보지 않는다.
+                titleAutoFilled: false,
                 selectedBook: loadedBook.title ? loadedBook : null,
                 content: data.content || '',
                 // 이미 저장된 글은 학생이 고른 값을 그대로 유지한다
@@ -234,13 +240,8 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
         || draftBookKey || initialBook?.isbn13 || initialBook?.isbn10 || initialBook?.title
         || 'new';
     const draftKey = buildDraftKey('reading_log_draft', studentSession?.id, draftScopeId);
-    // 책만 고른 상태는 초안으로 남기지 않는다.
-    // 새 독서록은 모두 `new` 라는 한 자리를 함께 쓰는데, 책 선택만으로 초안이 생기면
-    // 검색만 해 보고 나간 책이 다음 `새 독서록 쓰기` 에 그대로 되살아난다.
-    // 실제로 쓴 글이 있을 때만 남겨야 이어 쓰기가 학생에게 의도한 대로 동작한다.
-    const draftHasContent = useCallback((candidate) => Boolean(
-        candidate?.title?.trim() || candidate?.content?.trim()
-    ), []);
+    // 규칙과 근거는 `draftRules.js` 에 있고 `tests/readingLogDraftRules.test.mjs` 가 지킨다.
+    const draftHasContent = useCallback((candidate) => readingDraftHasContent(candidate), []);
     const restoreDraft = useCallback((stored, storedAt) => {
         // 완성본 저장 뒤 초안 정리만 실패했을 때 옛 로컬 초안이 되살아나지 않게 한다.
         if (completedPostAt && storedAt && storedAt <= completedPostAt) return;
@@ -299,6 +300,8 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
             setForm((current) => ({
                 ...current,
                 title: data.title || current.title,
+                // 서버 임시본은 학생이 `임시 저장` 을 눌러야 생기므로 그 제목은 확정된 것으로 본다.
+                titleAutoFilled: data.title ? false : current.titleAutoFilled,
                 content: data.content || current.content,
                 selectedBook: data.book || current.selectedBook,
                 visibility: data.visibility || current.visibility,
@@ -365,15 +368,16 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
     };
 
     const updateForm = (key, value) => {
-        setForm((current) => ({ ...current, [key]: value }));
+        setForm((current) => ({
+            ...current,
+            [key]: value,
+            // 학생이 제목을 직접 만지면 더 이상 자동 제목이 아니다.
+            ...(key === 'title' ? { titleAutoFilled: false } : null)
+        }));
     };
 
     const handleBookSelect = (book) => {
-        setForm((current) => ({
-            ...current,
-            selectedBook: book,
-            title: book && !current.title.trim() ? `『${book.title}』을 읽고` : current.title
-        }));
+        setForm((current) => applyBookSelection(current, book));
     };
 
     const handleCancel = () => {

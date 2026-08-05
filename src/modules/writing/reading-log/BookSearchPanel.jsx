@@ -81,6 +81,17 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
         }
     };
 
+    // 책을 다시 고를 때는 검색창을 빈 상태로 되돌린다.
+    // 옛 검색어와 결과가 남아 있으면 학생에게는 "검색이 그 책에 붙잡혀 있는" 것처럼 보인다.
+    const handleClearBook = () => {
+        setQuery('');
+        setResults([]);
+        setSearchMessage('');
+        setManualMode(false);
+        setManualBook(EMPTY_MANUAL_BOOK);
+        onSelectBook(null);
+    };
+
     const handleManualSelect = () => {
         if (!manualBook.title.trim()) {
             alert('책 제목을 적어주세요. 📖');
@@ -112,12 +123,12 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
                     <p>{selectedBook.authors?.join(', ') || '지은이 정보 없음'}</p>
                     {selectedBook.publisher && <small>{selectedBook.publisher}</small>}
                     <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={() => onSelectBook(null)}
+                        onClick={handleClearBook}
                         disabled={disabled}
                     >
-                        다른 책 선택
+                        🔍 다른 책 검색하기
                     </Button>
                 </div>
                 <style>{`
