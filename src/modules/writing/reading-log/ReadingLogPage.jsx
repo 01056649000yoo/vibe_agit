@@ -25,7 +25,7 @@ import {
 } from '../policy/writingPolicy';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
-import { applyBookSelection, readingDraftHasContent } from './draftRules';
+import { applyBookSelection, autoTitleFor, hasCustomTitle, readingDraftHasContent } from './draftRules';
 import useReadingLogDailyStatus from './useReadingLogDailyStatus';
 import './ReadingLogShelf.css';
 
@@ -376,8 +376,12 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
         }));
     };
 
+    // 책을 바꾸면 제목은 새 책 이름으로 바뀐다. 직접 지은 제목일 때만 지킬지 물어본다.
+    // `window.confirm` 은 상태 갱신 함수 밖에서 부른다 — 갱신 함수는 두 번 불릴 수 있다.
     const handleBookSelect = (book) => {
-        setForm((current) => applyBookSelection(current, book));
+        const keepCustomTitle = Boolean(book) && hasCustomTitle(form)
+            && !window.confirm(`제목을 「${autoTitleFor(book)}」로 바꿀까요?\n[취소]를 누르면 지금 제목을 그대로 둡니다.`);
+        setForm((current) => applyBookSelection(current, book, { keepCustomTitle }));
     };
 
     const handleCancel = () => {

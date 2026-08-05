@@ -36,21 +36,26 @@ export const readingDraftHasContent = (candidate) => Boolean(
         && !isAutoTitle(candidate.title, candidate.selectedBook))
 );
 
+/** 학생이 직접 지은 제목인가. 표시가 없어도 제목 모양으로 함께 판별한다. */
+export const hasCustomTitle = (form) => Boolean(form?.title?.trim())
+    && !form?.titleAutoFilled
+    && !isAutoTitle(form.title, form.selectedBook);
+
 /**
  * 책을 고르거나(`book`) 비울 때(`null`) 폼이 어떻게 바뀌는지.
  *
- * 학생이 직접 손댄 제목은 지키고, 자동으로 붙었던 제목은 새 책 이름으로 갈아 끼운다.
- * 그러지 않으면 다른 책으로 바꿔도 옛 책 이름이 제목에 남는다.
+ * **책을 바꾸면 제목은 기본적으로 새 책 이름으로 갈아 끼운다.** 예전에는 `자동 제목인지` 를
+ * 먼저 따졌는데, 그 판정이 한 군데라도 어긋나면 옛 책 이름이 그대로 남아 학생이 혼란스러웠다.
+ * 판정을 조건으로 두지 않고, 학생이 직접 지은 제목일 때만 부르는 쪽에서 `keepCustomTitle` 로
+ * 지키게 한다(화면에서는 물어보고 정한다). 책을 비울 때는 새 이름이 없으므로 늘 지킨다.
  */
-export const applyBookSelection = (form, book) => {
-    // 표시가 없어도 지금 고른 책의 자동 제목 그대로면 대신 채워 준 제목으로 본다.
-    const autoNow = Boolean(form.titleAutoFilled) || isAutoTitle(form.title, form.selectedBook);
-    const keepTitle = Boolean(form.title?.trim()) && !autoNow;
+export const applyBookSelection = (form, book, { keepCustomTitle = false } = {}) => {
+    const keep = hasCustomTitle(form) && (keepCustomTitle || !book);
 
     return {
         ...form,
         selectedBook: book,
-        title: book && !keepTitle ? autoTitleFor(book) : (keepTitle ? form.title : ''),
-        titleAutoFilled: Boolean(book) && !keepTitle
+        title: keep ? form.title : (book ? autoTitleFor(book) : ''),
+        titleAutoFilled: Boolean(book) && !keep
     };
 };

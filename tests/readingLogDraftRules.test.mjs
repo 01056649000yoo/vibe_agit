@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
     applyBookSelection,
     autoTitleFor,
+    hasCustomTitle,
     readingDraftHasContent
 } from '../src/modules/writing/reading-log/draftRules.js';
 
@@ -49,13 +50,34 @@ test('다른 책으로 바꾸면 자동 제목도 새 책 이름으로 바뀐다
     assert.equal(second.selectedBook, BOOK_B);
 });
 
-test('학생이 직접 지은 제목은 책을 바꿔도 지킨다', () => {
-    const picked = applyBookSelection(EMPTY, BOOK_A);
-    const renamed = { ...picked, title: '내가 지은 제목', titleAutoFilled: false };
+test('직접 지은 제목도 기본은 새 책 이름으로 바뀐다', () => {
+    // 판정이 한 군데라도 어긋나면 옛 책 이름이 남는다. 기본을 `갈아 끼움` 으로 두어 그 위험을 없앤다.
+    const renamed = { ...EMPTY, title: '내가 지은 제목', selectedBook: BOOK_A };
     const swapped = applyBookSelection(renamed, BOOK_B);
+    assert.equal(swapped.title, autoTitleFor(BOOK_B));
+    assert.equal(swapped.titleAutoFilled, true);
+});
+
+test('지키기로 하면 직접 지은 제목이 그대로 남는다', () => {
+    const renamed = { ...EMPTY, title: '내가 지은 제목', selectedBook: BOOK_A };
+    const swapped = applyBookSelection(renamed, BOOK_B, { keepCustomTitle: true });
     assert.equal(swapped.title, '내가 지은 제목');
     assert.equal(swapped.titleAutoFilled, false);
     assert.equal(swapped.selectedBook, BOOK_B);
+});
+
+test('자동 제목은 지키기로 해도 새 책 이름으로 바뀐다', () => {
+    const picked = applyBookSelection(EMPTY, BOOK_A);
+    const swapped = applyBookSelection(picked, BOOK_B, { keepCustomTitle: true });
+    assert.equal(swapped.title, autoTitleFor(BOOK_B));
+});
+
+test('직접 지은 제목인지 판정 — 자동 제목·빈 제목은 아니다', () => {
+    assert.equal(hasCustomTitle(EMPTY), false);
+    assert.equal(hasCustomTitle(applyBookSelection(EMPTY, BOOK_A)), false);
+    // 표시가 없는 옛 초안도 모양으로 걸러진다
+    assert.equal(hasCustomTitle({ title: autoTitleFor(BOOK_A), selectedBook: BOOK_A }), false);
+    assert.equal(hasCustomTitle({ ...EMPTY, title: '내가 지은 제목', selectedBook: BOOK_A }), true);
 });
 
 test('책을 비우면 자동 제목도 함께 사라진다', () => {
