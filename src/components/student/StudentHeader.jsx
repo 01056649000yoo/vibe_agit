@@ -1,102 +1,37 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
+import './StudentHeader.css';
 
-const StudentHeader = ({ hasActivity, openFeedback, setIsGuideOpen, onLogout, onOpenFootprint }) => {
-    return (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', gap: '8px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => openFeedback(0)}
-                    style={{
-                        background: 'white',
-                        color: '#5D4037',
-                        border: '2px solid #FFECB3',
-                        padding: '6px 12px',
-                        borderRadius: '20px',
-                        fontSize: '0.8rem',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        position: 'relative',
-                        whiteSpace: 'nowrap'
-                    }}
-                >
-                    🔔 내 글 소식
-                    {hasActivity && (
-                        <span style={{
-                            width: '8px',
-                            height: '8px',
-                            background: '#FF5252',
-                            borderRadius: '50%',
-                            position: 'absolute',
-                            top: '0px',
-                            right: '0px',
-                            border: '2px solid white'
-                        }}></span>
-                    )}
-                </motion.button>
+const HeaderAction = ({ icon, label, onClick, hasNotice = false }) => (
+    <motion.button
+        type="button"
+        className="student-home-toolbar__action"
+        whileHover={{ y: -1 }}
+        whileTap={{ scale: .97 }}
+        onClick={onClick}
+    >
+        <span aria-hidden="true">{icon}</span>
+        <strong>{label}</strong>
+        {hasNotice && <i aria-label="새 소식 있음" />}
+    </motion.button>
+);
 
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={onOpenFootprint}
-                    style={{
-                        background: 'white', color: '#5D4037', border: '2px solid #FFECB3',
-                        padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold',
-                        cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                        display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap'
-                    }}
-                >
-                    👣 글쓰기 발자국
-                </motion.button>
-            </div>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <motion.button
-                    whileHover={{ scale: 1.1, rotate: 10 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setIsGuideOpen(true)}
-                    style={{
-                        width: '42px',
-                        height: '42px',
-                        borderRadius: '50%',
-                        background: '#FFF9C4',
-                        border: '3px solid #FBC02D',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        fontSize: '1.2rem',
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 0 #F9A825',
-                        transition: 'all 0.2s'
-                    }}
-                    title="사용법 가이드"
-                >
-                    ❓
-                </motion.button>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onLogout}
-                    style={{
-                        color: '#8D6E63',
-                        fontWeight: 'bold',
-                        background: '#EFEBE9',
-                        borderRadius: '15px',
-                        padding: '6px 12px',
-                        whiteSpace: 'nowrap'
-                    }}
-                >
-                    로그아웃 🚪
-                </Button>
-            </div>
+const StudentHeader = ({ hasActivity, openFeedback, setIsGuideOpen, onLogout, onOpenFootprint }) => (
+    <header className="student-home-toolbar">
+        <div className="student-home-toolbar__brand">
+            <span aria-hidden="true">✏️</span>
+            <strong>끄적끄적 아지트</strong>
         </div>
-    );
-};
+        <nav aria-label="학생 홈 도움 메뉴" className="student-home-toolbar__actions">
+            <HeaderAction icon="🔔" label="내 글 소식" onClick={() => openFeedback(0)} hasNotice={hasActivity} />
+            <HeaderAction icon="👣" label="글쓰기 발자국" onClick={onOpenFootprint} />
+            <HeaderAction icon="?" label="사용법" onClick={() => setIsGuideOpen(true)} />
+            <Button variant="ghost" size="sm" onClick={onLogout} className="student-home-toolbar__logout">
+                로그아웃
+            </Button>
+        </nav>
+    </header>
+);
 
 export default StudentHeader;

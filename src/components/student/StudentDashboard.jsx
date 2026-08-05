@@ -15,8 +15,10 @@ import { invalidateMyTitleStatus } from '../../modules/writing/title-status/useM
 import StudentHeader from './StudentHeader';
 import TeacherNotifyBanner from './TeacherNotifyBanner';
 import DashboardMenu from './DashboardMenu';
+import StudentHomeGrowthPanel from './StudentHomeGrowthPanel';
 import StudentTodoCard from './StudentTodoCard';
 import AgitPlayground from './AgitPlayground';
+import './StudentDashboard.css';
 // 드래곤 모듈 — 모달을 열 때만 코드를 받도록 지연 로딩 (src/modules/game/dragon)
 const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHideoutModal'));
 const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/BackgroundShopModal'));
@@ -182,37 +184,29 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                 onClose={() => setIsGuideOpen(false)}
             />
 
-            {/* [모바일 최적화] 모바일에서는 전체 폭, PC에서는 카드 형태 유지 */}
-            <Card style={isMobile ? {
-                width: '100%',
-                maxWidth: '800px', // 태블릿 가로모드 대응 (너무 넓어짐 방지)
-                margin: '0 auto', // 중앙 정렬
-                minHeight: '100vh',
-                border: 'none',
-                borderRadius: 0,
-                background: '#FFFDF7',
-                paddingBottom: '80px', // 하단 탭바 가림 방지
-            } : {
-                maxWidth: '600px',
-                background: '#FFFDF7',
-                border: '2px solid #FFE082',
-                overflow: 'visible'
-            }}>
-                {/* 헤더 섹션 */}
-                <StudentHeader
-                    hasActivity={hasActivity}
-                    onOpenFootprint={() => setIsFootprintOpen(true)}
-                    openFeedback={openFeedback}
-                    setIsGuideOpen={setIsGuideOpen}
-                    onLogout={onLogout}
-                />
+            <Card
+                className="student-home-shell"
+                style={{ maxWidth: '960px', padding: 0, background: 'var(--ui-page-warm)', border: '1px solid #FDE68A', overflow: 'visible' }}
+            >
+                <div className="student-home-content">
+                    {/* 헤더 섹션 */}
+                    <StudentHeader
+                        hasActivity={hasActivity}
+                        onOpenFootprint={() => setIsFootprintOpen(true)}
+                        openFeedback={openFeedback}
+                        setIsGuideOpen={setIsGuideOpen}
+                        onLogout={onLogout}
+                    />
 
-                {/* 인사말 — 할 일을 첫 화면에 올리려고 한 줄로 줄였다 */}
-                <div style={{ textAlign: 'center', marginBottom: '1.1rem' }}>
-                    <h1 style={{ fontSize: '1.5rem', color: '#5D4037', margin: 0 }}>
-                        🌟 안녕, <span style={{ color: '#FBC02D' }}>{studentSession.name}</span>!
-                    </h1>
-                </div>
+                    <StudentHomeGrowthPanel
+                        studentSession={studentSession}
+                        points={points}
+                        dragonEnabled={isOn('dragon')}
+                        petData={petData}
+                        dragonInfo={dragonInfo}
+                        onOpenMyAgit={() => setIsMyAgitOpen(true)}
+                        onOpenFootprint={() => setIsFootprintOpen(true)}
+                    />
 
                 {/* 선생님의 실시간 알림(포인트·승인·회수). 상시 상태인 '다시 쓸 글'은
                     아래 할 일 카드가 맡는다 — 같은 것을 두 군데서 세지 않도록. */}
@@ -239,22 +233,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     onOpenMyAgit={() => setIsMyAgitOpen(true)}
                     onOpenPlayground={() => setIsPlaygroundOpen(true)}
                     playgroundCount={playgroundItems.length}
-                    setIsAgitOpen={setIsAgitOpen} // [추가]
-                    isMobile={isMobile}
+                    setIsAgitOpen={setIsAgitOpen}
                     agitSettings={agitSettings}
                     studentSession={studentSession}
                     enabledModules={enabledModules}
                 />
-
-                {/* 오늘의 목표 하단 문구 */}
-                <div style={{
-                    marginTop: '24px', padding: '20px', background: '#FDFCF0',
-                    borderRadius: '20px', textAlign: 'center', border: '1px dashed #FFE082'
-                }}>
-                    <p style={{ margin: 0, color: '#9E9E9E', fontSize: '0.9rem' }}>
-                        🚩 오늘의 목표: 멋진 글 완성하고 포인트 더 받기!
-                    </p>
-                </div>
 
                 <AgitPlayground
                     isOpen={isPlaygroundOpen}
@@ -340,6 +323,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                         />
                     </Suspense>
                 )}
+                </div>
             </Card>
 
             {/* [신규] 우리반 아지트 독립 창 (전체 화면 오버레이) */}

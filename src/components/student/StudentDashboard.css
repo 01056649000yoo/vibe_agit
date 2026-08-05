@@ -1,0 +1,23 @@
+.student-home-shell { box-sizing: border-box; }
+.student-home-content { padding: clamp(20px, 4vw, 40px); }
+
+@media (max-width: 1024px) {
+    .student-home-shell {
+        width: min(920px, calc(100% - 20px)) !important;
+        min-height: calc(100dvh - 20px);
+        margin: 10px auto 88px !important;
+        border: 1px solid var(--ui-border) !important;
+        border-radius: 26px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .student-home-shell {
+        width: 100% !important;
+        min-height: 100dvh;
+        margin: 0 0 80px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+    }
+    .student-home-content { padding: 16px 14px 28px; }
+}

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 import { isPendingRewrite } from '../../lib/writingStatus';
+import './StudentTodoCard.css';
 
 /**
  * 홈 맨 위 "오늘 할 일".
@@ -19,22 +20,12 @@ const TodoRow = ({ icon, label, count, actionLabel, onClick, tone }) => (
     <button
         type="button"
         onClick={onClick}
-        style={{
-            display: 'flex', alignItems: 'center', gap: '12px', width: '100%',
-            padding: '14px 16px', border: `2px solid ${tone.border}`, borderRadius: '18px',
-            background: tone.bg, cursor: 'pointer', textAlign: 'left', boxSizing: 'border-box'
-        }}
+        className="student-todo-row"
+        style={{ '--todo-border': tone.border, '--todo-bg': tone.bg, '--todo-text': tone.text, '--todo-chip': tone.chip }}
     >
-        <span aria-hidden="true" style={{ fontSize: '1.6rem' }}>{icon}</span>
-        <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: 'block', fontSize: '1rem', fontWeight: '900', color: tone.text }}>
-                {label} <strong style={{ fontSize: '1.15rem' }}>{count}개</strong>
-            </span>
-        </span>
-        <span style={{
-            padding: '7px 13px', borderRadius: '12px', background: tone.chip,
-            color: 'white', fontSize: '0.82rem', fontWeight: '900', whiteSpace: 'nowrap'
-        }}>{actionLabel}</span>
+        <span className="student-todo-row__icon" aria-hidden="true">{icon}</span>
+        <span className="student-todo-row__label">{label} <strong>{count}개</strong></span>
+        <span className="student-todo-row__action">{actionLabel}</span>
     </button>
 );
 
@@ -100,7 +91,7 @@ const StudentTodoCard = ({ studentSession, returnedCount = 0, hasActivity, onNav
 
     // 아직 세는 중이면 자리만 잡아 둔다. 숫자가 늦게 튀어나와 화면이 밀리지 않게.
     if (pendingMissions === null) {
-        return <div style={{ minHeight: '96px', marginBottom: '24px' }} aria-hidden="true" />;
+        return <div className="student-todo-loading" aria-hidden="true" />;
     }
 
     const rows = [];
@@ -137,30 +128,20 @@ const StudentTodoCard = ({ studentSession, returnedCount = 0, hasActivity, onNav
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             aria-label="오늘 할 일"
-            style={{ marginBottom: '24px' }}
+            className="student-todo-card"
         >
-            <h2 style={{
-                margin: '0 0 10px 2px', fontSize: '1.05rem', color: '#5D4037',
-                fontWeight: '900', display: 'flex', alignItems: 'center', gap: '7px'
-            }}>
-                📌 오늘 할 일
-            </h2>
+            <header className="student-todo-card__header">
+                <div><span>먼저 확인해요</span><h2>📌 오늘 할 일</h2></div>
+                {rows.length > 0 && <strong>{rows.reduce((sum, row) => sum + Number(row.props.count || 0), 0)}개 남음</strong>}
+            </header>
 
             {rows.length === 0 ? (
-                <div style={{
-                    padding: '22px 18px', borderRadius: '20px', border: '2px solid #A5D6A7',
-                    background: '#F1F8E9', textAlign: 'center'
-                }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '4px' }}>🎉</div>
-                    <div style={{ fontSize: '1.05rem', fontWeight: '900', color: '#2E7D32' }}>
-                        할 일을 모두 끝냈어요!
-                    </div>
-                    <div style={{ marginTop: '4px', fontSize: '0.86rem', color: '#558B2F', fontWeight: '700' }}>
-                        읽고 싶은 책 이야기를 독서록에 남겨 볼까요?
-                    </div>
+                <div className="student-todo-done">
+                    <span aria-hidden="true">🎉</span>
+                    <div><strong>할 일을 모두 끝냈어요!</strong><small>읽고 싶은 책 이야기를 독서록에 남겨 볼까요?</small></div>
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>{rows}</div>
+                <div className="student-todo-card__rows">{rows}</div>
             )}
         </motion.section>
     );

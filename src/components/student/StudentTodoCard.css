@@ -1,0 +1,113 @@
+.student-todo-card { margin-bottom: var(--ui-space-6); }
+.student-todo-loading { min-height: 96px; margin-bottom: var(--ui-space-6); }
+.student-todo-card__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--ui-space-3);
+    margin: 0 2px 11px;
+}
+.student-todo-card__header span {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--ui-accent);
+    font-size: var(--ui-font-xs);
+    font-weight: 900;
+}
+.student-todo-card__header h2 {
+    margin: 0;
+    color: var(--ui-ink-strong);
+    font-size: 1.1rem;
+    font-weight: 950;
+}
+.student-todo-card__header > strong {
+    padding: 5px 10px;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-warning-soft);
+    color: var(--ui-warning);
+    font-size: .7rem;
+    font-weight: 950;
+}
+.student-todo-card__rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.student-todo-card__rows > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+.student-todo-row {
+    display: grid;
+    min-width: 0;
+    min-height: 78px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--todo-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--todo-bg);
+    color: var(--todo-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: transform var(--ui-motion-fast), box-shadow var(--ui-motion-fast);
+}
+.student-todo-row:hover { transform: translateY(-1px); box-shadow: var(--ui-shadow-sm); }
+.student-todo-row:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
+.student-todo-row__icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .72);
+    font-size: 1.35rem;
+}
+.student-todo-row__label {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--todo-text);
+    font-size: .86rem;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.student-todo-row__label strong { font-size: 1rem; }
+.student-todo-row__action {
+    padding: 7px 10px;
+    border-radius: 11px;
+    background: var(--todo-chip);
+    color: white;
+    font-size: .7rem;
+    font-weight: 950;
+    white-space: nowrap;
+}
+.student-todo-done {
+    display: flex;
+    min-height: 82px;
+    align-items: center;
+    justify-content: center;
+    gap: 13px;
+    padding: 14px 18px;
+    border: 1px solid #bbf7d0;
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-success-soft);
+    text-align: left;
+}
+.student-todo-done > span { font-size: 1.7rem; }
+.student-todo-done div { display: flex; flex-direction: column; gap: 3px; }
+.student-todo-done strong { color: var(--ui-success); font-size: .95rem; font-weight: 950; }
+.student-todo-done small { color: #3f8f5f; font-size: .76rem; font-weight: 750; }
+
+@media (max-width: 680px) {
+    .student-todo-card__rows { grid-template-columns: 1fr; }
+    .student-todo-card__rows > :last-child:nth-child(odd) { grid-column: auto; }
+}
+
+@media (max-width: 390px) {
+    .student-todo-row { grid-template-columns: 38px minmax(0, 1fr) auto; gap: 8px; padding: 10px; }
+    .student-todo-row__icon { width: 38px; height: 38px; }
+    .student-todo-row__action { padding: 6px 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .student-todo-row { transition: none; }
+    .student-todo-row:hover { transform: none; }
+}
