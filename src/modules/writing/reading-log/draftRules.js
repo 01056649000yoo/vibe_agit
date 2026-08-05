@@ -11,13 +11,29 @@
 export const autoTitleFor = (book) => `『${book.title}』을 읽고`;
 
 /**
+ * 지금 제목이 "학생이 쓴 것이 아니라 대신 채워 준 것"인가.
+ *
+ * `titleAutoFilled` 표시만 믿지 않고 제목 모양으로도 판별한다.
+ * 이 표시가 생기기 전에 태블릿에 남은 초안에는 표시가 없어서, 표시만 보면
+ * 자동 제목이 `학생이 지은 제목` 으로 취급돼 책을 바꿔도 옛 책 이름이 그대로 남았다.
+ */
+export const isAutoTitle = (title, book) => {
+    const clean = String(title || '').trim();
+    if (!clean) return true;
+    return Boolean(book?.title) && clean === autoTitleFor(book);
+};
+
+/**
  * 이 화면 내용을 초안으로 남길 만한가.
  *
  * 책을 고를 때 자동으로 붙는 제목은 학생이 쓴 글이 아니므로 세지 않는다.
  * 이것을 세면 책만 검색해 보고 나가도 초안이 생겨 다음 진입 때 그 책이 올라온다.
  */
 export const readingDraftHasContent = (candidate) => Boolean(
-    candidate?.content?.trim() || (candidate?.title?.trim() && !candidate?.titleAutoFilled)
+    candidate?.content?.trim()
+    || (candidate?.title?.trim()
+        && !candidate?.titleAutoFilled
+        && !isAutoTitle(candidate.title, candidate.selectedBook))
 );
 
 /**
@@ -27,7 +43,9 @@ export const readingDraftHasContent = (candidate) => Boolean(
  * 그러지 않으면 다른 책으로 바꿔도 옛 책 이름이 제목에 남는다.
  */
 export const applyBookSelection = (form, book) => {
-    const keepTitle = Boolean(form.title?.trim()) && !form.titleAutoFilled;
+    // 표시가 없어도 지금 고른 책의 자동 제목 그대로면 대신 채워 준 제목으로 본다.
+    const autoNow = Boolean(form.titleAutoFilled) || isAutoTitle(form.title, form.selectedBook);
+    const keepTitle = Boolean(form.title?.trim()) && !autoNow;
 
     return {
         ...form,

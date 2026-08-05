@@ -72,6 +72,42 @@ test('책을 비워도 학생이 지은 제목은 남긴다', () => {
     assert.equal(cleared.title, '내가 지은 제목');
 });
 
+// `titleAutoFilled` 표시가 생기기 전에 태블릿에 남은 초안에는 그 값이 없다.
+// 표시만 믿으면 자동 제목이 `학생이 지은 제목` 이 되어 책을 바꿔도 옛 책 이름이 남았다.
+test('표시 없는 옛 초안의 자동 제목도 새 책 이름으로 바뀐다', () => {
+    const legacyDraft = {
+        ...EMPTY,
+        title: autoTitleFor(BOOK_A),
+        selectedBook: BOOK_A,
+        content: '읽고 나서 생각을 적었다.'
+    };
+    delete legacyDraft.titleAutoFilled;
+
+    const swapped = applyBookSelection(legacyDraft, BOOK_B);
+    assert.equal(swapped.title, autoTitleFor(BOOK_B));
+    assert.equal(swapped.content, '읽고 나서 생각을 적었다.');
+});
+
+test('표시 없는 옛 초안이 자동 제목뿐이면 초안으로 세지 않는다', () => {
+    const legacyDraft = { ...EMPTY, title: autoTitleFor(BOOK_A), selectedBook: BOOK_A };
+    delete legacyDraft.titleAutoFilled;
+    assert.equal(readingDraftHasContent(legacyDraft), false);
+});
+
+test('자동 제목을 그대로 두고 본문만 썼어도 책을 바꾸면 제목이 따라간다', () => {
+    const picked = applyBookSelection(EMPTY, BOOK_A);
+    const written = { ...picked, content: '재미있었다.' };
+    const swapped = applyBookSelection(written, BOOK_B);
+    assert.equal(swapped.title, autoTitleFor(BOOK_B));
+});
+
+test('다른 책 검색하기로 비운 뒤 새 책을 골라도 제목이 새 책 이름이다', () => {
+    const picked = applyBookSelection(EMPTY, BOOK_A);
+    const cleared = applyBookSelection(picked, null);
+    const swapped = applyBookSelection(cleared, BOOK_B);
+    assert.equal(swapped.title, autoTitleFor(BOOK_B));
+});
+
 test('쓰던 글이 있으면 책을 바꿔도 본문은 그대로다', () => {
     const picked = applyBookSelection(EMPTY, BOOK_A);
     const written = { ...picked, content: '기억에 남는 장면이 있다.' };
