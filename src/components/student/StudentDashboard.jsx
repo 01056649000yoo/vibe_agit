@@ -4,7 +4,7 @@ import Card from '../common/Card';
 import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
 import { useDragonPet } from '../../modules/game/dragon/useDragonPet';
-import { getDragonGrowthFromWriterLevel, getDragonStage, HIDEOUT_BACKGROUNDS } from '../../modules/game/dragon/presentation';
+import { getDragonGrowthFromWriterLevel, getDragonStage, getPendingDragonGrowth, HIDEOUT_BACKGROUNDS } from '../../modules/game/dragon/presentation';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useRealtimeNotifications } from '../../hooks/useRealtimeNotifications'; // [신규] 분리된 리얼타임 훅
 import { getModule } from '../../modules/registry';
@@ -21,6 +21,7 @@ import AgitPlayground from './AgitPlayground';
 import './StudentDashboard.css';
 // 드래곤 모듈 — 모달을 열 때만 코드를 받도록 지연 로딩 (src/modules/game/dragon)
 const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHideoutModal'));
+const DragonGrowthCelebrationModal = lazy(() => import('../../modules/game/dragon/DragonGrowthCelebrationModal'));
 const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/BackgroundShopModal'));
 // [bundle-dynamic-imports] 조건부 렌더링되는 대형 컴포넌트를 lazy loading으로 전환
 const AgitOnClassPage = lazy(getModule('agit-on-class').studentEntry);
@@ -42,6 +43,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const [isFootprintOpen, setIsFootprintOpen] = useState(false);
     const [isMyAgitOpen, setIsMyAgitOpen] = useState(false);
     const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false);
+    const [growthCelebration, setGrowthCelebration] = useState(null);
 
     // 하단 내비의 '나의 아지트'를 누르면 홈으로 온 뒤 이 신호가 올라온다.
     useEffect(() => {
@@ -104,7 +106,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     // 드래곤 관련 상태 및 액션
     const {
         petData, isFlashing, isBusy,
-        handleBond, buyItem, equipItem, selectSpecies
+        handleBond, buyItem, equipItem, selectSpecies, acknowledgeGrowth
     } = useDragonPet(
         studentSession?.id,
         points,
@@ -135,6 +137,24 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     }), [dragonGrowth.level, dragonGrowth.progress, petData]);
     const dragonInfo = getDragonStage(displayPetData.level, displayPetData.species);
     const daysSinceLastBond = getDaysSinceLastBond();
+    const dragonEnabled = enabledModules.some((module) => module.id === 'dragon');
+
+    const hasBlockingOverlay = isDragonModalOpen || isShopOpen || isMyAgitOpen || isFootprintOpen
+        || isGuideOpen || showFeedback || isPlaygroundOpen || isAgitOpen || isVocabTowerOpen
+        || Boolean(activeGameModuleId);
+
+    useEffect(() => {
+        if (titleStatusLoading || !dragonEnabled || hasBlockingOverlay || growthCelebration) return;
+        const pendingGrowth = getPendingDragonGrowth(writerLevel, petData);
+        if (!pendingGrowth) return;
+        const timerId = window.setTimeout(() => setGrowthCelebration(pendingGrowth), 280);
+        return () => window.clearTimeout(timerId);
+    }, [dragonEnabled, growthCelebration, hasBlockingOverlay, petData, titleStatusLoading, writerLevel]);
+
+    const handleGrowthCelebrationConfirm = async () => {
+        const success = await acknowledgeGrowth();
+        if (success) setGrowthCelebration(null);
+    };
 
     // 현재 모습은 화면의 img가 받고, 다음 한 단계만 브라우저가 한가할 때 미리 받는다.
     useEffect(() => {
@@ -310,6 +330,20 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             isBusy={isBusy}
                             readerLevel={readerLevel}
                             selectSpecies={selectSpecies}
+                        />
+                    </Suspense>
+                )}
+
+                {growthCelebration && isOn('dragon') && (
+                    <Suspense fallback={null}>
+                        <DragonGrowthCelebrationModal
+                            growth={growthCelebration}
+                            species={displayPetData.species}
+                            dragonName={displayPetData.name}
+                            writerTitle={writerLevel.name}
+                            readerLevel={readerLevel}
+                            saving={isBusy}
+                            onConfirm={handleGrowthCelebrationConfirm}
                         />
                     </Suspense>
                 )}

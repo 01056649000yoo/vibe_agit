@@ -4,6 +4,7 @@ import {
     DRAGON_SPECIES,
     canReselectDragonSpecies,
     getDragonGrowthFromWriterLevel,
+    getPendingDragonGrowth,
     getDragonStage,
     getReaderDragonEffect
 } from '../src/modules/game/dragon/presentation.js';
@@ -23,6 +24,26 @@ test('테스트 칭호 오버라이드는 실제 글 통계를 바꾸지 않고 
     assert.equal(overridden.isTestOverride, true);
     assert.equal(getDragonGrowthFromWriterLevel(overridden).level, 8);
     assert.equal(getWriterLevel(0, 0, 999).level, 1);
+});
+
+test('실제 성장과 테스트 성장은 서로 다른 확인 기록을 사용한다', () => {
+    const pet = {
+        species: 'star',
+        lastCelebratedWriterLevel: 4,
+        lastCelebratedTestWriterLevel: 7
+    };
+    assert.deepEqual(getPendingDragonGrowth({ level: 6 }, pet), {
+        fromLevel: 4,
+        toLevel: 6,
+        isTestOverride: false
+    });
+    assert.deepEqual(getPendingDragonGrowth({ level: 9, isTestOverride: true }, pet), {
+        fromLevel: 7,
+        toLevel: 9,
+        isTestOverride: true
+    });
+    assert.equal(getPendingDragonGrowth({ level: 4 }, pet), null);
+    assert.equal(getPendingDragonGrowth({ level: 10 }, { species: null }), null);
 });
 
 test('4종 드래곤이 작가 10단계마다 서로 다른 개별 이미지를 쓴다', () => {

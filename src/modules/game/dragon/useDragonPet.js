@@ -193,6 +193,24 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         }
     };
 
+    const acknowledgeGrowth = async () => {
+        if (!studentId || isBusy) return false;
+        setIsBusy(true);
+        try {
+            const { data: result, error } = await supabase.rpc('acknowledge_my_dragon_growth');
+            if (error) throw error;
+            if (!result?.success) throw new Error(result?.error || '성장 확인 저장 실패');
+            setPetData(normalizePetData(result.pet_data));
+            return true;
+        } catch (error) {
+            console.error('수호룡 성장 확인 저장 실패:', error.message);
+            alert('새 모습을 기록하지 못했어요. 잠시 후 다시 눌러 주세요.');
+            return false;
+        } finally {
+            setIsBusy(false);
+        }
+    };
+
     return {
         petData,
         setPetData,
@@ -201,6 +219,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         handleBond,
         buyItem,
         equipItem,
-        selectSpecies
+        selectSpecies,
+        acknowledgeGrowth
     };
 };

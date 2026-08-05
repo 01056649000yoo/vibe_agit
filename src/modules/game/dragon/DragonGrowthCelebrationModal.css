@@ -1,0 +1,209 @@
+.dragon-growth-celebration {
+    position: fixed;
+    z-index: 32000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 22px;
+}
+
+.dragon-growth-celebration__backdrop {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 35%, rgba(85, 117, 177, .34), rgba(19, 22, 35, .78));
+    backdrop-filter: blur(8px);
+}
+
+.dragon-growth-celebration__panel {
+    position: relative;
+    width: min(680px, 100%);
+    max-height: min(760px, calc(100dvh - 32px));
+    overflow: auto;
+    padding: 32px 38px 30px;
+    border: 1px solid rgba(255, 232, 170, .78);
+    border-radius: 30px;
+    background:
+        radial-gradient(circle at 50% 42%, rgba(255, 236, 159, .32), transparent 34%),
+        linear-gradient(155deg, #FFFCF3 0%, #F5F0E8 54%, #E8EEF8 100%);
+    box-shadow: 0 30px 80px rgba(12, 16, 27, .34), inset 0 1px 0 #FFFFFF;
+    text-align: center;
+}
+
+.dragon-growth-celebration__close {
+    position: absolute;
+    z-index: 8;
+    top: 16px;
+    right: 16px;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(74, 63, 51, .14);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .74);
+    color: #66584D;
+}
+
+.dragon-growth-celebration__header { position: relative; z-index: 3; }
+.dragon-growth-celebration__eyebrow {
+    display: inline-flex;
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: #3B4C70;
+    color: #FFF7D2;
+    font-size: .69rem;
+    font-weight: 950;
+    letter-spacing: .05em;
+}
+.dragon-growth-celebration__header h2 {
+    margin: 13px 42px 0;
+    color: #3B3028;
+    font-size: clamp(1.35rem, 4vw, 1.9rem);
+    font-weight: 950;
+    line-height: 1.25;
+    letter-spacing: -.025em;
+}
+.dragon-growth-celebration__header p {
+    margin: 8px 0 0;
+    color: #7D6E61;
+    font-size: .84rem;
+    font-weight: 750;
+}
+
+.dragon-growth-celebration__scene {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(120px, .8fr) 58px minmax(190px, 1.25fr);
+    align-items: center;
+    min-height: 288px;
+    margin-top: 4px;
+}
+.dragon-growth-celebration__before,
+.dragon-growth-celebration__after { position: relative; display: grid; place-items: center; }
+.dragon-growth-celebration__before .dragon-avatar { width: 148px; height: 148px; filter: grayscale(.2); }
+.dragon-growth-celebration__before > span {
+    margin-top: -8px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(82, 72, 63, .11);
+    color: #786A5E;
+    font-size: .68rem;
+    font-weight: 900;
+}
+.dragon-growth-celebration__after .dragon-avatar { width: 248px; height: 248px; }
+.dragon-growth-celebration__after > strong {
+    position: absolute;
+    right: 3px;
+    bottom: 18px;
+    z-index: 6;
+    padding: 7px 11px;
+    border: 2px solid #FFF7D2;
+    border-radius: 999px;
+    background: #44577D;
+    color: #FFF5BE;
+    font-size: .73rem;
+    font-weight: 950;
+    box-shadow: 0 6px 14px rgba(35, 48, 76, .25);
+}
+.dragon-growth-celebration__halo {
+    position: absolute;
+    width: 212px;
+    height: 212px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(from 0deg, rgba(255, 211, 88, .5) 0 3deg, transparent 3deg 18deg);
+    opacity: .6;
+    filter: blur(.3px);
+    animation: dragon-growth-halo 18s linear infinite;
+}
+.dragon-growth-celebration__beam {
+    position: relative;
+    height: 3px;
+    border-radius: 99px;
+    background: linear-gradient(90deg, rgba(175, 142, 70, .08), #E5B83E, rgba(255, 224, 128, .18));
+    transform-origin: left center;
+    box-shadow: 0 0 14px rgba(227, 179, 59, .62);
+}
+.dragon-growth-celebration__beam span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    color: #E0AC29;
+    font-size: 1.6rem;
+    transform: translate(-50%, -50%);
+}
+
+.dragon-growth-celebration__identity {
+    position: relative;
+    z-index: 4;
+    display: grid;
+    justify-items: center;
+    margin: -10px auto 18px;
+}
+.dragon-growth-celebration__identity span { color: #8C6A30; font-size: .69rem; font-weight: 950; }
+.dragon-growth-celebration__identity strong { margin-top: 2px; color: #3D322A; font-size: 1.08rem; font-weight: 950; }
+.dragon-growth-celebration__identity em { margin-top: 4px; color: #675B52; font-size: .73rem; font-style: normal; font-weight: 850; }
+
+.dragon-growth-celebration__confirm {
+    position: relative;
+    z-index: 5;
+    width: min(310px, 100%);
+    min-height: 52px;
+    border: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #3B4D72, #596F9B);
+    color: #FFF9DE;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: .9rem;
+    font-weight: 950;
+    box-shadow: 0 11px 22px rgba(50, 68, 107, .24);
+}
+.dragon-growth-celebration__confirm:disabled { cursor: wait; opacity: .72; }
+.dragon-growth-celebration__confirm:focus-visible,
+.dragon-growth-celebration__close:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
+
+.dragon-growth-celebration__particles { position: absolute; z-index: 1; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.dragon-growth-celebration__particles span { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #F4C84F; box-shadow: 0 0 9px #FFE8A0; animation: dragon-growth-particle 3.2s ease-in-out infinite; }
+.dragon-growth-celebration__particles span:nth-child(1) { left: 8%; top: 22%; animation-delay: -.2s; }
+.dragon-growth-celebration__particles span:nth-child(2) { left: 17%; top: 53%; animation-delay: -.9s; }
+.dragon-growth-celebration__particles span:nth-child(3) { left: 27%; top: 13%; animation-delay: -1.6s; }
+.dragon-growth-celebration__particles span:nth-child(4) { left: 39%; top: 65%; animation-delay: -2.1s; }
+.dragon-growth-celebration__particles span:nth-child(5) { left: 48%; top: 19%; animation-delay: -.5s; }
+.dragon-growth-celebration__particles span:nth-child(6) { left: 57%; top: 75%; animation-delay: -1.2s; }
+.dragon-growth-celebration__particles span:nth-child(7) { left: 69%; top: 11%; animation-delay: -2.4s; }
+.dragon-growth-celebration__particles span:nth-child(8) { left: 78%; top: 59%; animation-delay: -.7s; }
+.dragon-growth-celebration__particles span:nth-child(9) { left: 90%; top: 27%; animation-delay: -1.8s; }
+.dragon-growth-celebration__particles span:nth-child(10) { left: 11%; top: 80%; animation-delay: -2.7s; }
+.dragon-growth-celebration__particles span:nth-child(11) { left: 34%; top: 88%; animation-delay: -1.1s; }
+.dragon-growth-celebration__particles span:nth-child(12) { left: 62%; top: 91%; animation-delay: -2s; }
+.dragon-growth-celebration__particles span:nth-child(13) { left: 84%; top: 84%; animation-delay: -.4s; }
+.dragon-growth-celebration__particles span:nth-child(14) { left: 94%; top: 68%; animation-delay: -1.4s; }
+
+@keyframes dragon-growth-halo { to { transform: rotate(360deg); } }
+@keyframes dragon-growth-particle {
+    0%, 100% { opacity: .18; transform: translateY(8px) scale(.55); }
+    50% { opacity: .95; transform: translateY(-8px) scale(1.25); }
+}
+
+@media (max-width: 620px) {
+    .dragon-growth-celebration { padding: 12px; }
+    .dragon-growth-celebration__panel { padding: 28px 18px 24px; border-radius: 24px; }
+    .dragon-growth-celebration__header h2 { margin-inline: 34px; }
+    .dragon-growth-celebration__scene { grid-template-columns: 92px 36px minmax(150px, 1fr); min-height: 238px; }
+    .dragon-growth-celebration__before .dragon-avatar { width: 102px; height: 102px; }
+    .dragon-growth-celebration__after .dragon-avatar { width: 190px; height: 190px; }
+    .dragon-growth-celebration__halo { width: 168px; height: 168px; }
+    .dragon-growth-celebration__after > strong { right: 0; bottom: 8px; }
+}
+
+@media (max-width: 390px) {
+    .dragon-growth-celebration__scene { grid-template-columns: 74px 25px minmax(136px, 1fr); }
+    .dragon-growth-celebration__before .dragon-avatar { width: 86px; height: 86px; }
+    .dragon-growth-celebration__after .dragon-avatar { width: 164px; height: 164px; }
+    .dragon-growth-celebration__halo { width: 142px; height: 142px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dragon-growth-celebration *,
+    .dragon-growth-celebration *::before,
+    .dragon-growth-celebration *::after { animation: none !important; }
+}

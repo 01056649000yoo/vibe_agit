@@ -117,6 +117,27 @@ export const getDragonGrowthFromWriterLevel = (writerLevel) => {
     return { level, progress: Math.min(100, Math.max(0, progress)) };
 };
 
+/** 실제 칭호와 관리용 테스트 칭호의 성장 확인 기록을 서로 섞지 않는다. */
+export const getPendingDragonGrowth = (writerLevel, petData) => {
+    if (!petData?.species) return null;
+
+    const toLevel = Math.min(10, Math.max(1, Math.floor(Number(writerLevel?.level) || 1)));
+    if (toLevel <= 1) return null;
+
+    const acknowledgmentKey = writerLevel?.isTestOverride
+        ? 'lastCelebratedTestWriterLevel'
+        : 'lastCelebratedWriterLevel';
+    const acknowledgedValue = petData ? Reflect.get(petData, acknowledgmentKey) : null;
+    const acknowledgedLevel = Math.min(10, Math.max(1, Math.floor(Number(acknowledgedValue) || 1)));
+    if (toLevel <= acknowledgedLevel) return null;
+
+    return {
+        fromLevel: Math.min(toLevel - 1, acknowledgedLevel),
+        toLevel,
+        isTestOverride: Boolean(writerLevel?.isTestOverride)
+    };
+};
+
 export const HIDEOUT_BACKGROUNDS = {
     default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63', glow: 'rgba(255, 241, 118, 0.3)' },
     volcano: { id: 'volcano', name: '🌋 화산 동굴', color: 'linear-gradient(135deg, #4A0000 0%, #8B0000 100%)', border: '#FF5722', textColor: 'white', subColor: '#FFCCBC', price: 300, glow: 'rgba(255, 87, 34, 0.4)' },
