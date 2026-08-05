@@ -10,14 +10,7 @@ const DecorProp = ({ itemId, side }) => {
 
     return (
         <span className={`dragon-hideout-scene__prop dragon-hideout-scene__prop--${side}`} data-visual={item.preview} aria-hidden="true">
-            {item.preview === 'dragon-library' && <span className="dragon-hideout-scene__library"><i /><i /><i /><i /><b>ᚱ</b></span>}
-            {item.preview === 'breath-sprout' && <span className="dragon-hideout-scene__sprout"><i /><i /><i /><b /></span>}
-            {item.preview === 'guardian-flame' && <span className="dragon-hideout-scene__guardian-flame"><i /><b /></span>}
-            {item.preview === 'rune-stone' && <span className="dragon-hideout-scene__runestone"><i>ᚱ</i></span>}
-            {item.preview === 'story-altar' && <span className="dragon-hideout-scene__altar"><i /><b /></span>}
-            {item.preview === 'star-orb' && <span className="dragon-hideout-scene__star-orb"><i>✦</i><b /></span>}
-            {item.preview === 'dragon-hoard' && <span className="dragon-hideout-scene__hoard"><i /><b /></span>}
-            {item.preview === 'hatchling-nest' && <span className="dragon-hideout-scene__nest"><i /><b /></span>}
+            {item.image && <img src={item.image} alt="" loading="lazy" decoding="async" draggable="false" />}
         </span>
     );
 };

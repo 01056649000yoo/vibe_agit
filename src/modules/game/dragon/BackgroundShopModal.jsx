@@ -11,11 +11,6 @@ import {
 } from './decorCatalog';
 import './BackgroundShopModal.css';
 
-const ITEM_PREVIEW_SYMBOLS = new Map([
-    ['none', '비움'], ['dragon-library', 'ᚱ'], ['breath-sprout', '♧'], ['guardian-flame', '♢'],
-    ['rune-stone', 'ᚱ'], ['story-altar', '✦'], ['star-orb', '◉'], ['dragon-hoard', '◆'], ['hatchling-nest', '◒']
-]);
-
 const BackgroundShopModal = ({
     isOpen,
     onClose,
@@ -140,7 +135,9 @@ const BackgroundShopModal = ({
                                                 aria-label={`${item.name} 미리보기`}
                                             >
                                                 {item.slot === 'nameplate' && <span>나의 아지트</span>}
-                                                {item.slot === 'leftProp' || item.slot === 'rightProp' ? <span>{ITEM_PREVIEW_SYMBOLS.get(item.preview) || '◆'}</span> : null}
+                                                {item.slot === 'leftProp' || item.slot === 'rightProp' ? (
+                                                    item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" draggable="false" /> : <span>비움</span>
+                                                ) : null}
                                                 {item.slot === 'pedestal' && <span />}
                                             </button>
                                             <div className="agit-workshop__item-copy">

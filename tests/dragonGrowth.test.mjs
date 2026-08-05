@@ -139,19 +139,27 @@ test('기존에 산 배경은 새 프레임 소유·장착 상태로 그대로 �
     assert.equal(normalized.equipped.pedestal, 'pedestal-stone');
 });
 
-test('프레임은 모서리 테마 이름을 쓰고 소품은 수호룡 세계관의 시각 키를 쓴다', () => {
+test('프레임은 모서리 테마 이름을 쓰고 좌우 소품은 최적화된 수호룡 에셋을 쓴다', () => {
     assert.equal(getDragonDecorItemsForSlot('wallpaper').every((item) => item.name.includes('프레임')), true);
     assert.deepEqual(
         getDragonDecorItemsForSlot('pedestal').map((item) => item.preview),
         ['stone', 'oak', 'cloud', 'crystal', 'rune', 'moonstone', 'ember', 'root']
     );
-    const propVisuals = [
+    const props = [
         ...getDragonDecorItemsForSlot('leftProp'),
         ...getDragonDecorItemsForSlot('rightProp')
-    ].map((item) => item.preview);
-    ['bookshelf', 'plant', 'lantern', 'desk', 'telescope', 'chest'].forEach((legacyVisual) => {
-        assert.equal(propVisuals.includes(legacyVisual), false);
-    });
+    ].filter((item) => !item.isDefault);
+    assert.equal(props.length, 8);
+    assert.deepEqual(props.map((item) => item.image), [
+        '/assets/dragons/decor/left-chronicle-lectern.webp',
+        '/assets/dragons/decor/left-dragonheart-crystals.webp',
+        '/assets/dragons/decor/left-guardian-brazier.webp',
+        '/assets/dragons/decor/left-ancestor-runestone.webp',
+        '/assets/dragons/decor/right-bond-shrine.webp',
+        '/assets/dragons/decor/right-celestial-orrery.webp',
+        '/assets/dragons/decor/right-treasure-vault.webp',
+        '/assets/dragons/decor/right-hatchling-nest.webp'
+    ]);
 });
 
 test('장착한 5개 슬롯은 하나의 pet_data 계약으로 복원된다', () => {
