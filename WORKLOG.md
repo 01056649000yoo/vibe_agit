@@ -40,8 +40,23 @@
   ESLint 0경고·0오류, 프로덕션 빌드 통과. 운영 DB **73/73·대기 0**.
 - **남은 것 / 다음**: 이 작업 환경에 브라우저가 없어 화면 확인은 못 했다. 배포 후 태블릿에서 ① 오늘 글을 낸 학생의
   제목 반응 ② 안 쓴 학생의 글쓰기 버튼 두 개 ③ 연타 시 문구 유지와 버튼 비활성을 확인한다.
-  `spend_student_points` 의 `p_pet_data` 무검증 경로는 이제 앱에서 호출하지 않지만 **함수 자체는 남아 있어**
-  공방 소품 무료 획득이 여전히 가능하다. 별도 작업으로 막는 것을 권한다.
+  `spend_student_points` 는 같은 날 이어서 삭제했다(아래 항목).
+
+## 2026-08-05 — 무검증 `spend_student_points` 삭제 (Claude)
+- **한 일**: 클라이언트가 보낸 `pet_data` 를 검증 없이 `students.pet_data` 에 저장하던 `spend_student_points`
+  함수를 제거했다. 학생 인증만 있으면 호출할 수 있어, 브라우저에서 직접 부르면 **아지트 공방 소품을 구매 없이
+  소유 목록에 넣거나** 교감 기록을 임의로 조작할 수 있었다. 마지막 호출처였던 수호룡 교감을 전용 RPC로 옮긴
+  직후라 지울 수 있게 됐다.
+- **변경**: 운영 마이그레이션 `20260903_drop_unvalidated_spend_student_points.sql` 적용 완료
+  (`DROP FUNCTION IF EXISTS public.spend_student_points(integer, text, jsonb)`). 삭제 전에 앱 코드(`src/`),
+  엣지 함수(`supabase/functions/`), 다른 DB 함수 본문(`pg_proc.prosrc`), RLS 정책(`pg_policy`)을 전수 조회해
+  남은 참조가 **0건**임을 확인했다. 시그니처도 이 하나뿐이었다.
+- **결과/검증**: 롤백 드라이런에서 대상만 사라지고 `increment_student_points`·`teacher_manage_points`·
+  `buy_my_dragon_decor`·`bond_with_my_dragon` 4개는 그대로임을 확인한 뒤 적용했다. 적용 후 운영 DB에
+  `spend_student_points` **0개**, `bond_with_my_dragon` 1개다. 다른 포인트·공방 RPC에는 같은 `pet_data`
+  인자가 없어 동일한 구멍이 남아 있지 않다.
+- **남은 것 / 다음**: 배포 전 열어 둔 학생 탭이 있다면 옛 번들이 교감 시 이 함수를 부르다 실패할 수 있다.
+  새로고침하면 해소되며 저장 실패 안내만 뜨고 데이터는 상하지 않는다.
 
 ## 2026-08-05 — 학생 홈 수호룡 카드에서 방으로 바로 들어가기 (Claude)
 - **한 일**: 학생 홈 상단 우측의 `나의 작가 수호룡` 카드를 누르면 나의 아지트가 먼저 열리고, 거기서 드래곤 카드를
