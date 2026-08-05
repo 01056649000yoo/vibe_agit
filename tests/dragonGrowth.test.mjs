@@ -2,11 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
     DRAGON_SPECIES,
+    HIDEOUT_BACKGROUNDS,
     canReselectDragonSpecies,
     getDragonGrowthFromWriterLevel,
     getPendingDragonGrowth,
     getDragonStage,
-    getReaderDragonEffect
+    getReaderDragonEffect,
+    getReaderSceneTheme
 } from '../src/modules/game/dragon/presentation.js';
 import { getReaderLevel, getWriterLevel } from '../src/constants/writerLevels.js';
 
@@ -70,6 +72,15 @@ test('독자 칭호 7단계를 독립적인 드래곤 효과로 제한한다', (
     assert.equal(getReaderDragonEffect(0).level, 1);
     assert.equal(getReaderDragonEffect({ level: 5 }).name, '별무리 서가');
     assert.equal(getReaderDragonEffect(999).level, 7);
+});
+
+test('모든 아지트 배경이 독자 효과 대비 계약을 선언한다', () => {
+    const allowedTones = new Set(['light', 'dark', 'vivid']);
+    Object.values(HIDEOUT_BACKGROUNDS).forEach((background) => {
+        assert.equal(allowedTones.has(background.readerTone), true);
+    });
+    assert.notDeepEqual(getReaderSceneTheme('storm'), getReaderSceneTheme('default'));
+    assert.deepEqual(getReaderSceneTheme('missing-background'), getReaderSceneTheme('default'));
 });
 
 test('작가 3단계부터 종류를 한 번만 다시 고를 수 있다', () => {

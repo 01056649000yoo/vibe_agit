@@ -87,7 +87,7 @@ const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipI
                                         <span>{isEquipped ? '✨ 사용 중' : '✅ 보유 중'}</span>
                                     ) : (
                                         isLegendary ? (
-                                            !hasFullyMastered ? <span>🔒 5레벨 만렙(100%) 달성 시 무료!</span> : <span>🎁 드래곤 마스터 완료 기념 선물!</span>
+                                            !hasFullyMastered ? <span>🔒 작가 10단계 달성 시 무료!</span> : <span>🎁 드래곤 마스터 완료 기념 선물!</span>
                                         ) : (
                                             <span>💰 {item.price?.toLocaleString()}P</span>
                                         )

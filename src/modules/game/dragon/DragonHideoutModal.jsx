@@ -623,6 +623,7 @@ const DragonHideoutModal = ({
                                             <DragonAvatar
                                                 dragon={dragonInfo}
                                                 readerLevel={readerEffect.level}
+                                                backgroundId={petData.background}
                                                 alt={`${dragonInfo.species.name} ${dragonInfo.name}`}
                                                 eager
                                                 imageStyle={{ filter: `drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 9 ? 'drop-shadow(0 0 25px rgba(255,193,7,0.8))' : ''}` }}

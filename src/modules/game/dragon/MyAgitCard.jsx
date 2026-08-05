@@ -52,6 +52,7 @@ const MyAgitCard = ({ runtime, onOpen }) => {
                 <DragonAvatar
                     dragon={dragonInfo}
                     readerLevel={readerEffect.level}
+                    backgroundId={petData.background}
                     alt=""
                     style={{ width: '116px', height: '116px' }}
                     imageStyle={{ filter: `drop-shadow(0 8px 9px ${habitat.glow})` }}

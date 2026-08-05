@@ -40,6 +40,7 @@ const FriendDragonProfileCard = ({ friend }) => {
                     <DragonAvatar
                         dragon={dragon}
                         readerLevel={readerLevel}
+                        backgroundId={pet.background}
                         alt={`${pet.name} ${dragon.species.name} 드래곤`}
                         style={{ width: '116px', height: '116px' }}
                         imageStyle={{ filter: `drop-shadow(0 8px 9px ${background.glow})` }}
