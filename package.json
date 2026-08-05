@@ -11,6 +11,7 @@
     "badges:optimize": "node scripts/optimize-title-badges.mjs",
     "spelling:check": "node scripts/check-spelling-rules.mjs",
     "test:writing-policy": "node --test tests/writingPolicy.test.mjs",
+    "test:writing-export": "node --test tests/writingExportProfiles.test.mjs",
     "migrate": "node scripts/migrate.mjs",
     "migrate:status": "node scripts/migrate.mjs --status"
   },

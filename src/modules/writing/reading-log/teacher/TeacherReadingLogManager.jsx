@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../../../../components/common/Button';
+import ExportSelectModal from '../../../../components/common/ExportSelectModal';
+import { useDataExport } from '../../../../hooks/useDataExport';
 import { supabase } from '../../../../lib/supabaseClient';
 import { classKey, classScope, dataCache } from '../../../../lib/cache';
 import WritingPolicySettings from '../../policy/WritingPolicySettings';
@@ -37,9 +39,9 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     const [section, setSection] = useState('reviews'); // 'reviews' | 'motivation'
     const [policySettingsDirty, setPolicySettingsDirty] = useState(false);
 
-    // 탭을 열면 "확인할 것"부터 보여준다. 전체 목록은 한 번 더 눌러서 본다.
-    const [reviewFilter, setReviewFilter] = useState('unreviewed');
-    const [viewMode, setViewMode] = useState('recent'); // 'recent' | 'student'
+    // 평소 업무는 검토 대기함에서 시작한다. 학생별 책장과 전체 기록은 필요할 때 연다.
+    const [reviewFilter, setReviewFilter] = useState('all');
+    const [viewMode, setViewMode] = useState('queue'); // 'queue' | 'student' | 'archive'
 
     const [items, setItems] = useState([]);
     const [counts, setCounts] = useState(EMPTY_COUNTS);
@@ -64,6 +66,18 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     const [comment, setComment] = useState('');
     const [detailLoading, setDetailLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [exportTarget, setExportTarget] = useState(null);
+    const [exporting, setExporting] = useState(false);
+    const {
+        fetchWritingContentExportData,
+        exportWritingContentToExcel,
+        exportWritingContentToGoogleDoc,
+        authorizeGoogleExport,
+        isGapiLoaded
+    } = useDataExport(classId);
+
+    const effectiveReviewFilter = viewMode === 'queue' ? 'unreviewed'
+        : viewMode === 'archive' ? reviewFilter : 'all';
 
     useEffect(() => {
         const timerId = window.setTimeout(() => setDebouncedQuery(query.trim()), 250);
@@ -99,21 +113,21 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
             setExpandedId(null);
         }, 0);
         return () => window.clearTimeout(timerId);
-    }, [classId, reviewFilter, debouncedQuery]);
+    }, [classId, debouncedQuery]);
 
     const fetchPage = useCallback(async (offset) => {
         return supabase.rpc('get_teacher_reading_log_overview', {
             p_class_id: classId,
-            p_review_filter: reviewFilter,
+            p_review_filter: effectiveReviewFilter,
             p_student_id: studentFilter === 'all' ? null : studentFilter,
             p_query: debouncedQuery || null,
             p_limit: PAGE_SIZE,
             p_offset: offset
         });
-    }, [classId, reviewFilter, studentFilter, debouncedQuery]);
+    }, [classId, effectiveReviewFilter, studentFilter, debouncedQuery]);
 
     const recentKey = classKey(classId, 'reading-log-list', {
-        filter: reviewFilter, student: studentFilter, q: debouncedQuery
+        filter: effectiveReviewFilter, student: studentFilter, q: debouncedQuery
     });
     const summaryKey = classKey(classId, 'reading-log-by-student', { q: debouncedQuery });
 
@@ -175,7 +189,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     // 보기별로 나눈 이유: 하나로 두면 필터를 누를 때마다 fetchRecent 의 정체가 바뀌어,
     // 학생별 보기에서도(그쪽은 필터를 화면에서 처리하는데) 요약을 다시 받아왔다.
     useEffect(() => {
-        if (viewMode !== 'recent') return undefined;
+        if (viewMode === 'student') return undefined;
         const timerId = window.setTimeout(fetchRecent, 0);
         return () => window.clearTimeout(timerId);
     }, [viewMode, fetchRecent]);
@@ -201,13 +215,13 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         ? (summaryCounts || EMPTY_COUNTS)
         : counts;
 
-    const filteredTotal = reviewFilter === 'unreviewed'
+    const filteredTotal = effectiveReviewFilter === 'unreviewed'
         ? shownCounts.unreviewed
-        : reviewFilter === 'reviewed'
+        : effectiveReviewFilter === 'reviewed'
             ? shownCounts.reviewed
             : shownCounts.total;
 
-    const hasMore = viewMode === 'recent'
+    const hasMore = viewMode !== 'student'
         && !loading
         && items.length > 0
         && items.length < filteredTotal;
@@ -232,24 +246,17 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         setLoadingMore(false);
     };
 
-    const countForFilter = useCallback((row) => (
-        reviewFilter === 'unreviewed' ? row.unreviewed_count
-            : reviewFilter === 'reviewed' ? row.reviewed_count
-                : row.total_count
-    ), [reviewFilter]);
-
-    // 조건에 걸리는 글이 없는 학생은 접어 둔다. 전체 보기일 때는 "아직 안 쓴 학생"이라
-    // 도움이 되는 정보라 이름은 남기고, 목록만 눌러서 펼치게 한다.
+    // 학생별 책장은 전체 누적 편수를 기준으로 한 학생당 카드 하나만 만든다.
     const { activeRows, quietRows } = useMemo(() => {
         if (!summary) return { activeRows: [], quietRows: [] };
         const active = [];
         const quiet = [];
         summary.forEach((row) => {
-            if (countForFilter(row) > 0) active.push(row);
+            if (row.total_count > 0) active.push(row);
             else quiet.push(row);
         });
         return { activeRows: active, quietRows: quiet };
-    }, [summary, countForFilter]);
+    }, [summary]);
 
     const toggleStudent = async (studentId) => {
         if (expandedId === studentId) {
@@ -262,7 +269,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         setStudentLogsLoading(studentId);
         const { data, error } = await supabase.rpc('get_teacher_reading_log_overview', {
             p_class_id: classId,
-            p_review_filter: reviewFilter,
+            p_review_filter: 'all',
             p_student_id: studentId,
             p_query: debouncedQuery || null,
             p_limit: STUDENT_LOG_LIMIT,
@@ -280,6 +287,52 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
             studentId,
             Array.isArray(data?.items) ? data.items : []
         ));
+    };
+
+    const openStudentExport = (row) => {
+        if (!row?.student_id || row.total_count < 1) return;
+        setExportTarget({
+            studentId: row.student_id,
+            studentName: row.student_name,
+            totalCount: row.total_count
+        });
+    };
+
+    const handleStudentExport = async (format, options) => {
+        if (!exportTarget || exporting) return;
+        setExporting(true);
+        let googleAccessToken = null;
+
+        try {
+            if (format === 'googleDoc') {
+                // 팝업 차단을 피하려면 데이터 조회보다 권한 창을 먼저 열어야 한다.
+                googleAccessToken = await authorizeGoogleExport();
+            }
+
+            const data = await fetchWritingContentExportData('reading_log', exportTarget.studentId);
+            if (data.length === 0) {
+                alert('내보낼 독서록이 없습니다.');
+                return;
+            }
+
+            const fileName = `${exportTarget.studentName}_독서록_모음`;
+            if (format === 'excel') {
+                await exportWritingContentToExcel(data, fileName, 'reading_log');
+            } else {
+                await exportWritingContentToGoogleDoc(
+                    data,
+                    fileName,
+                    'reading_log',
+                    options.usePageBreak,
+                    googleAccessToken
+                );
+            }
+        } catch (error) {
+            console.error('학생 독서록 내보내기 실패:', error.message);
+            alert('독서록 내보내기에 실패했습니다: ' + (error.message || '잠시 후 다시 시도해 주세요.'));
+        } finally {
+            setExporting(false);
+        }
     };
 
     const openDetail = useCallback(async (item) => {
@@ -378,10 +431,10 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     };
 
     const filteredTitle = useMemo(() => {
-        if (reviewFilter === 'unreviewed') return '아직 확인하지 않은 독서록';
-        if (reviewFilter === 'reviewed') return '확인한 독서록';
+        if (viewMode === 'queue') return '검토 대기 독서록';
+        if (reviewFilter === 'reviewed') return '확인한 독서록 기록';
         return '전체 독서록';
-    }, [reviewFilter]);
+    }, [reviewFilter, viewMode]);
 
     const renderRow = (item) => (
         <button key={item.post_id} type="button" className="teacher-reading-row" onClick={() => openDetail(item)}>
@@ -395,13 +448,34 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         </button>
     );
 
+    const renderQueueCard = (item) => (
+        <button key={item.post_id} type="button" className="teacher-reading-queue-card" onClick={() => openDetail(item)}>
+            <div className="teacher-reading-queue-card__top">
+                <strong>👤 {item.student_name || '이름 없음'}</strong>
+                <span>{formatDate(item.updated_at)}</span>
+            </div>
+            <h4>{item.title || '제목 없는 독서록'}</h4>
+            <p>『{item.book_title || '책 정보 없음'}』</p>
+            <span className="teacher-reading-queue-card__action">내용 확인하고 표시 남기기 ›</span>
+        </button>
+    );
+
+    const renderShelfCard = (item) => (
+        <button key={item.post_id} type="button" className="teacher-reading-shelf-card" onClick={() => openDetail(item)}>
+            <span className={`teacher-reading-status ${item.review_status}`}>{reviewLabel(item.review_status)}</span>
+            <h4>{item.title || '제목 없는 독서록'}</h4>
+            <p>『{item.book_title || '책 정보 없음'}』</p>
+            <small>{formatDate(item.updated_at)}</small>
+        </button>
+    );
+
     const renderEmpty = () => {
-        if (reviewFilter === 'unreviewed' && !debouncedQuery && studentFilter === 'all' && shownCounts.total > 0) {
+        if (viewMode === 'queue' && !debouncedQuery && studentFilter === 'all' && shownCounts.total > 0) {
             return (
                 <div className="teacher-reading-empty done">
                     <strong>모두 확인했어요! 👏</strong>
                     <p>새로 올라온 독서록이 없습니다.</p>
-                    <Button variant="ghost" size="sm" onClick={() => setReviewFilter('all')}>
+                    <Button variant="ghost" size="sm" onClick={() => { setReviewFilter('all'); setViewMode('archive'); }}>
                         전체 {shownCounts.total}편 보기
                     </Button>
                 </div>
@@ -459,29 +533,36 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
             ) : (<>
 
             <div className="teacher-reading-stats">
-                <button type="button" className={reviewFilter === 'unreviewed' ? 'active warning' : ''} onClick={() => setReviewFilter('unreviewed')}>
+                <button type="button" className={viewMode === 'queue' ? 'active warning' : ''} onClick={() => setViewMode('queue')}>
                     <strong>{shownCounts.unreviewed}</strong><span>🕓 미확인</span>
                 </button>
-                <button type="button" className={reviewFilter === 'reviewed' ? 'active success' : ''} onClick={() => setReviewFilter('reviewed')}>
+                <button type="button" className={viewMode === 'archive' && reviewFilter === 'reviewed' ? 'active success' : ''} onClick={() => { setReviewFilter('reviewed'); setViewMode('archive'); }}>
                     <strong>{shownCounts.reviewed}</strong><span>✅ 확인 완료</span>
                 </button>
-                <button type="button" className={reviewFilter === 'all' ? 'active' : ''} onClick={() => setReviewFilter('all')}>
+                <button type="button" className={viewMode === 'archive' && reviewFilter === 'all' ? 'active' : ''} onClick={() => { setReviewFilter('all'); setViewMode('archive'); }}>
                     <strong>{shownCounts.total}</strong><span>전체 독서록</span>
                 </button>
-                <div><strong>{shownCounts.students}</strong><span>작성 학생</span></div>
+                <button type="button" className={viewMode === 'student' ? 'active' : ''} onClick={() => { setStudentFilter('all'); setViewMode('student'); }}>
+                    <strong>{shownCounts.students}</strong><span>작성 학생</span>
+                </button>
             </div>
 
             <div className="teacher-reading-viewtabs" role="tablist" aria-label="목록 보는 방법">
                 <button
-                    type="button" role="tab" aria-selected={viewMode === 'recent'}
-                    className={viewMode === 'recent' ? 'active' : ''}
-                    onClick={() => setViewMode('recent')}
-                >🕘 최신순</button>
+                    type="button" role="tab" aria-selected={viewMode === 'queue'}
+                    className={viewMode === 'queue' ? 'active' : ''}
+                    onClick={() => setViewMode('queue')}
+                >🕓 검토 대기</button>
                 <button
                     type="button" role="tab" aria-selected={viewMode === 'student'}
                     className={viewMode === 'student' ? 'active' : ''}
                     onClick={() => { setStudentFilter('all'); setViewMode('student'); }}
-                >👥 학생별</button>
+                >👥 학생별 책장</button>
+                <button
+                    type="button" role="tab" aria-selected={viewMode === 'archive'}
+                    className={viewMode === 'archive' ? 'active' : ''}
+                    onClick={() => { setReviewFilter('all'); setViewMode('archive'); }}
+                >🗂️ 전체 기록</button>
             </div>
 
             <div className={`teacher-reading-filters ${viewMode === 'student' ? 'is-wide' : ''}`}>
@@ -492,7 +573,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                     placeholder="학생 이름·독서록 제목·책 제목 검색"
                     aria-label="독서록 검색"
                 />
-                {viewMode === 'recent' && (
+                {viewMode !== 'student' && (
                     <select value={studentFilter} onChange={(event) => setStudentFilter(event.target.value)} aria-label="학생 선택">
                         <option value="all">전체 학생</option>
                         {students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}
@@ -504,8 +585,10 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 <h3>{viewMode === 'student' ? '학생별 현황' : filteredTitle}</h3>
                 <small>
                     {viewMode === 'student'
-                        ? '이름을 누르면 그 학생이 쓴 글이 펼쳐져요.'
-                        : '글을 선택하면 전체 내용을 크게 볼 수 있어요.'}
+                        ? '학생 한 명당 카드 하나로 보고, 책장을 열거나 글 모음을 내보낼 수 있어요.'
+                        : viewMode === 'queue'
+                            ? '아직 확인하지 않은 글만 모았습니다. 확인하면 이 대기함에서 빠져요.'
+                            : '검색과 학생 필터로 지난 독서록을 찾아볼 수 있어요.'}
                 </small>
             </div>
 
@@ -517,61 +600,76 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 activeRows.length === 0 && quietRows.length === 0 ? (
                     <div className="teacher-reading-empty">이 학급에 학생이 아직 없어요.</div>
                 ) : (
-                    <div className="teacher-reading-list">
+                    <>
                         {activeRows.length === 0 && renderEmpty()}
 
-                        {activeRows.map((row) => (
-                            <div key={row.student_id} className="teacher-reading-group">
+                        <div className="teacher-reading-student-grid">
+                            {activeRows.map((row) => (
+                            <article key={row.student_id} className={`teacher-reading-student-card ${expandedId === row.student_id ? 'is-open' : ''}`}>
                                 <button
                                     type="button"
-                                    className="teacher-reading-grouprow"
+                                    className="teacher-reading-student-card__main"
                                     onClick={() => toggleStudent(row.student_id)}
                                     aria-expanded={expandedId === row.student_id}
                                 >
-                                    <span className="teacher-reading-caret">{expandedId === row.student_id ? '▾' : '▸'}</span>
-                                    <strong>{row.student_name}</strong>
-                                    <span className="teacher-reading-groupmeta">
-                                        {countForFilter(row)}편
-                                        {row.unreviewed_count > 0 && (
-                                            <em className="teacher-reading-unread">미확인 {row.unreviewed_count}</em>
-                                        )}
+                                    <span className="teacher-reading-student-card__avatar">👤</span>
+                                    <span>
+                                        <strong>{row.student_name}</strong>
+                                        <small>{row.last_written_at ? `최근 ${formatDate(row.last_written_at)}` : '작성 기록 없음'}</small>
                                     </span>
-                                    <small>{row.last_written_at ? `최근 ${formatDate(row.last_written_at)}` : ''}</small>
+                                    <em>{expandedId === row.student_id ? '책장 닫기 ▴' : '책장 열기 ▾'}</em>
                                 </button>
 
-                                {expandedId === row.student_id && (
-                                    studentLogsLoading === row.student_id ? (
-                                        <div className="teacher-reading-grouploading">불러오는 중... 📖</div>
-                                    ) : (
-                                        <div className="teacher-reading-sublist">
-                                            {(studentLogs.get(row.student_id) || []).map(renderRow)}
-                                        </div>
-                                    )
+                                <div className="teacher-reading-student-card__stats">
+                                    <span><strong>{row.total_count}</strong>전체</span>
+                                    <span className={row.unreviewed_count > 0 ? 'has-unread' : ''}><strong>{row.unreviewed_count}</strong>미확인</span>
+                                    <span><strong>{row.reviewed_count}</strong>확인</span>
+                                </div>
+                                <button type="button" className="teacher-reading-export-button" onClick={() => openStudentExport(row)}>
+                                    📤 독서록 모음 내보내기
+                                </button>
+                            </article>
+                            ))}
+                        </div>
+
+                        {expandedId && (
+                            <section className="teacher-reading-student-shelf">
+                                <header>
+                                    <div>
+                                        <span>학생별 책장</span>
+                                        <h3>{activeRows.find((row) => row.student_id === expandedId)?.student_name || '학생'}의 독서록</h3>
+                                    </div>
+                                    <button type="button" onClick={() => setExpandedId(null)} aria-label="학생 책장 닫기">×</button>
+                                </header>
+                                {studentLogsLoading === expandedId ? (
+                                    <div className="teacher-reading-grouploading">책장을 불러오는 중... 📖</div>
+                                ) : (
+                                    <div className="teacher-reading-student-log-grid">
+                                        {(studentLogs.get(expandedId) || []).map(renderShelfCard)}
+                                    </div>
                                 )}
-                            </div>
-                        ))}
+                            </section>
+                        )}
 
                         {quietRows.length > 0 && (
                             <div className="teacher-reading-quiet">
                                 <button type="button" onClick={() => setShowQuietStudents((v) => !v)} aria-expanded={showQuietStudents}>
                                     <span>{showQuietStudents ? '▾' : '▸'}</span>
-                                    {reviewFilter === 'all'
-                                        ? `아직 독서록을 쓰지 않은 학생 ${quietRows.length}명`
-                                        : `해당하는 글이 없는 학생 ${quietRows.length}명`}
+                                    아직 독서록을 쓰지 않은 학생 {quietRows.length}명
                                 </button>
                                 {showQuietStudents && (
                                     <p>{quietRows.map((row) => row.student_name).join(' · ')}</p>
                                 )}
                             </div>
                         )}
-                    </div>
+                    </>
                 )
             ) : items.length === 0 ? (
                 renderEmpty()
             ) : (
                 <>
-                    <div className="teacher-reading-list">
-                        {items.map(renderRow)}
+                    <div className={viewMode === 'queue' ? 'teacher-reading-queue-grid' : 'teacher-reading-list'}>
+                        {items.map(viewMode === 'queue' ? renderQueueCard : renderRow)}
                     </div>
                     {hasMore && (
                         <div className="teacher-reading-more">
@@ -630,6 +728,14 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                     </article>
                 </div>
             )}
+
+            <ExportSelectModal
+                isOpen={Boolean(exportTarget)}
+                onClose={() => !exporting && setExportTarget(null)}
+                onConfirm={handleStudentExport}
+                title={exportTarget ? `${exportTarget.studentName} 학생 독서록 ${exportTarget.totalCount}편` : '독서록 내보내기'}
+                isGapiLoaded={isGapiLoaded}
+            />
             </>)}
 
             <style>{`
@@ -652,7 +758,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 .teacher-reading-stats button.active.success { border-color:#86EFAC; background:#F0FDF4; color:#15803D; }
                 .teacher-reading-stats strong { font-size:1.55rem; color:inherit; }
                 .teacher-reading-stats span { font-size:.78rem; font-weight:800; }
-                .teacher-reading-viewtabs { display:inline-flex; gap:4px; margin-bottom:12px; padding:4px; border-radius:14px; background:#F1F5F9; }
+                .teacher-reading-viewtabs { display:inline-grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:4px; margin-bottom:12px; padding:4px; border-radius:14px; background:#F1F5F9; }
                 .teacher-reading-viewtabs button { padding:9px 16px; border:0; border-radius:11px; background:transparent; color:#64748B; font-weight:900; font-size:.85rem; cursor:pointer; }
                 .teacher-reading-viewtabs button.active { background:white; color:#1D4ED8; box-shadow:0 1px 4px rgba(15,23,42,.12); }
                 .teacher-reading-filters { display:grid; grid-template-columns:minmax(0, 1fr) 220px; gap:10px; padding:14px; border-radius:16px; background:#F8FAFC; }
@@ -661,6 +767,39 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 .teacher-reading-list-heading { display:flex; align-items:flex-end; justify-content:space-between; margin:24px 2px 10px; }
                 .teacher-reading-list-heading h3 { margin:0; color:#334155; }
                 .teacher-reading-list-heading small { color:#94A3B8; }
+                .teacher-reading-queue-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
+                .teacher-reading-queue-card { display:flex; min-width:0; min-height:168px; flex-direction:column; align-items:stretch; padding:18px; border:1px solid #FDE68A; border-radius:18px; background:linear-gradient(145deg,#FFFBEB,#FFFFFF); text-align:left; cursor:pointer; }
+                .teacher-reading-queue-card:hover { border-color:#F59E0B; transform:translateY(-1px); box-shadow:0 8px 20px rgba(180,83,9,.09); }
+                .teacher-reading-queue-card__top { display:flex; align-items:center; justify-content:space-between; gap:10px; color:#92400E; font-size:.78rem; }
+                .teacher-reading-queue-card__top span { color:#94A3B8; }
+                .teacher-reading-queue-card h4 { margin:18px 0 6px; overflow:hidden; color:#1E293B; font-size:1rem; text-overflow:ellipsis; white-space:nowrap; }
+                .teacher-reading-queue-card p { margin:0; overflow:hidden; color:#64748B; font-size:.84rem; text-overflow:ellipsis; white-space:nowrap; }
+                .teacher-reading-queue-card__action { margin-top:auto; padding-top:16px; color:#B45309; font-size:.78rem; font-weight:900; }
+                .teacher-reading-student-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
+                .teacher-reading-student-card { overflow:hidden; border:1px solid #E2E8F0; border-radius:18px; background:white; }
+                .teacher-reading-student-card.is-open { border-color:#93C5FD; box-shadow:0 7px 22px rgba(37,99,235,.1); }
+                .teacher-reading-student-card__main { display:grid; grid-template-columns:auto minmax(0, 1fr); gap:10px; width:100%; padding:17px; border:0; background:transparent; text-align:left; cursor:pointer; }
+                .teacher-reading-student-card__avatar { grid-row:1 / span 2; display:grid; width:38px; height:38px; place-items:center; border-radius:13px; background:#EFF6FF; }
+                .teacher-reading-student-card__main > span:nth-child(2) { display:flex; min-width:0; flex-direction:column; gap:4px; }
+                .teacher-reading-student-card__main strong { overflow:hidden; color:#1E293B; text-overflow:ellipsis; white-space:nowrap; }
+                .teacher-reading-student-card__main small { color:#94A3B8; font-size:.72rem; }
+                .teacher-reading-student-card__main em { grid-column:2; color:#2563EB; font-size:.72rem; font-style:normal; font-weight:900; }
+                .teacher-reading-student-card__stats { display:grid; grid-template-columns:repeat(3, 1fr); border-top:1px solid #F1F5F9; border-bottom:1px solid #F1F5F9; background:#F8FAFC; }
+                .teacher-reading-student-card__stats span { display:flex; align-items:center; justify-content:center; gap:4px; padding:10px 4px; color:#64748B; font-size:.7rem; font-weight:800; }
+                .teacher-reading-student-card__stats strong { color:#334155; font-size:.9rem; }
+                .teacher-reading-student-card__stats .has-unread, .teacher-reading-student-card__stats .has-unread strong { color:#B45309; }
+                .teacher-reading-export-button { width:100%; padding:11px 14px; border:0; background:white; color:#475569; font-size:.75rem; font-weight:900; cursor:pointer; }
+                .teacher-reading-export-button:hover { background:#EFF6FF; color:#1D4ED8; }
+                .teacher-reading-student-shelf { margin-top:18px; padding:18px; border:1px solid #BFDBFE; border-radius:20px; background:#F8FBFF; }
+                .teacher-reading-student-shelf > header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+                .teacher-reading-student-shelf > header span { color:#2563EB; font-size:.72rem; font-weight:900; }
+                .teacher-reading-student-shelf > header h3 { margin:4px 0 0; color:#1E293B; }
+                .teacher-reading-student-shelf > header button { display:grid; width:34px; height:34px; place-items:center; border:0; border-radius:50%; background:white; color:#64748B; font-size:1.35rem; cursor:pointer; }
+                .teacher-reading-student-log-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; }
+                .teacher-reading-shelf-card { display:flex; min-width:0; min-height:142px; flex-direction:column; align-items:flex-start; padding:14px; border:1px solid #DBEAFE; border-radius:15px; background:white; text-align:left; cursor:pointer; }
+                .teacher-reading-shelf-card h4 { width:100%; margin:12px 0 5px; overflow:hidden; color:#1E293B; text-overflow:ellipsis; white-space:nowrap; }
+                .teacher-reading-shelf-card p { width:100%; margin:0; overflow:hidden; color:#64748B; font-size:.78rem; text-overflow:ellipsis; white-space:nowrap; }
+                .teacher-reading-shelf-card small { margin-top:auto; padding-top:12px; color:#94A3B8; }
                 .teacher-reading-list { display:flex; flex-direction:column; border-top:1px solid #E2E8F0; }
                 .teacher-reading-row { display:grid; grid-template-columns:150px minmax(0, 1fr) 130px 84px; align-items:center; gap:14px; width:100%; padding:17px 12px; border:0; border-bottom:1px solid #E2E8F0; background:white; text-align:left; cursor:pointer; }
                 .teacher-reading-row:hover { background:#F8FAFC; }
@@ -711,6 +850,10 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 .teacher-reading-review-box textarea { width:100%; margin-top:14px; padding:14px; border:1px solid #BFDBFE; border-radius:13px; box-sizing:border-box; resize:vertical; color:#334155; font:inherit; line-height:1.6; }
                 .teacher-reading-review-box > small { display:block; margin-top:6px; color:#64748B; text-align:right; }
                 .teacher-reading-review-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
+                @media (max-width: 1100px) {
+                    .teacher-reading-student-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+                    .teacher-reading-student-log-grid { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+                }
                 @media (max-width: 760px) {
                     .teacher-reading-manager { padding:18px 14px; border-radius:20px; }
                     .teacher-reading-header { flex-direction:column; }
@@ -718,7 +861,8 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                     .teacher-reading-sections button { min-height:48px; padding:9px 8px; font-size:.8rem; }
                     .teacher-reading-stats { grid-template-columns:repeat(2, minmax(0, 1fr)); }
                     .teacher-reading-filters, .teacher-reading-filters.is-wide { grid-template-columns:1fr; }
-                    .teacher-reading-viewtabs { display:grid; grid-template-columns:1fr 1fr; }
+                    .teacher-reading-viewtabs { display:grid; width:100%; grid-template-columns:1fr; }
+                    .teacher-reading-queue-grid, .teacher-reading-student-grid, .teacher-reading-student-log-grid { grid-template-columns:1fr; }
                     .teacher-reading-list-heading { align-items:flex-start; flex-direction:column; gap:5px; }
                     .teacher-reading-row { grid-template-columns:minmax(0, 1fr) auto; gap:8px; padding:16px 8px; }
                     .teacher-reading-student { grid-column:1; }

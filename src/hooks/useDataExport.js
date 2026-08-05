@@ -1,5 +1,10 @@
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import {
+    getWritingExportProfile,
+    toWritingExportDocumentEntries,
+    toWritingExportExcelRows
+} from '../modules/writing/export/writingExportProfiles';
 // import * as XLSX from 'xlsx'; // 동적 임포트로 변경하여 초기 로딩 속도 최적화
 
 const GOOGLE_DOCS_API_ROOT = 'https://docs.googleapis.com/v1';
@@ -405,6 +410,124 @@ export const useDataExport = (classId) => {
         }
     }, [getAccessToken, tokenClient]);
 
+    /**
+     * student_posts 기반 글 콘텐츠를 학생별 공용 행 계약으로 조회한다.
+     * 새 자율 글 유형은 writing_types 등록 + export profile 추가만으로 같은 흐름을 쓴다.
+     */
+    const fetchWritingContentExportData = useCallback(async (contentType, studentId, limit = 500) => {
+        if (!classId) throw new Error('내보낼 학급을 확인할 수 없습니다.');
+        if (!studentId) throw new Error('내보낼 학생을 확인할 수 없습니다.');
+
+        const { data, error } = await supabase.rpc('get_teacher_writing_content_export', {
+            p_class_id: classId,
+            p_student_id: studentId,
+            p_content_type: contentType,
+            p_limit: limit
+        });
+        if (error) throw error;
+        return Array.isArray(data) ? data : [];
+    }, [classId]);
+
+    const exportWritingContentToGoogleDoc = useCallback(async (
+        data,
+        title,
+        contentType,
+        usePageBreak = true,
+        authorizedAccessToken = null
+    ) => {
+        if (!data?.length) {
+            alert('출력할 데이터가 없습니다.');
+            return;
+        }
+        if (!tokenClient) {
+            alert('Google API 서비스를 준비 중입니다. 잠시 후 다시 시도해 주세요.');
+            return;
+        }
+
+        try {
+            const accessToken = authorizedAccessToken || await getAccessToken();
+            const entries = toWritingExportDocumentEntries(data, contentType);
+            const dateStr = new Intl.DateTimeFormat('sv-SE', {
+                timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit'
+            }).format(new Date());
+            const fullTitle = `${title} (${dateStr})`;
+            const created = await requestGoogleDocs('/documents', accessToken, {
+                method: 'POST',
+                body: { title: fullTitle }
+            });
+            const documentId = created.documentId;
+            let currentIndex = 1;
+            const requests = [];
+
+            const appendStyledParagraph = (text, namedStyleType, alignment = 'START') => {
+                requests.push({ insertText: { location: { index: currentIndex }, text } });
+                requests.push({
+                    updateParagraphStyle: {
+                        range: { startIndex: currentIndex, endIndex: currentIndex + text.length },
+                        paragraphStyle: { namedStyleType, alignment },
+                        fields: 'namedStyleType,alignment'
+                    }
+                });
+                currentIndex += text.length;
+            };
+
+            appendStyledParagraph(`${fullTitle}\n\n`, 'TITLE', 'CENTER');
+            if (entries[0]?.group) appendStyledParagraph(`${entries[0].group}\n\n`, 'HEADING_1', 'CENTER');
+
+            entries.forEach((entry, index) => {
+                if (index > 0 && usePageBreak) {
+                    requests.push({ insertPageBreak: { location: { index: currentIndex } } });
+                    currentIndex += 1;
+                } else if (index > 0) {
+                    requests.push({ insertText: { location: { index: currentIndex }, text: '\n\n' } });
+                    currentIndex += 2;
+                }
+
+                appendStyledParagraph(`${entry.heading}\n`, 'HEADING_2');
+                const metadataText = `${entry.metadata.join('\n')}\n\n`;
+                appendStyledParagraph(metadataText, 'NORMAL_TEXT');
+                const contentText = `${entry.content}\n`;
+                requests.push({ insertText: { location: { index: currentIndex }, text: contentText } });
+                requests.push({
+                    updateParagraphStyle: {
+                        range: { startIndex: currentIndex, endIndex: currentIndex + contentText.length },
+                        paragraphStyle: { namedStyleType: 'NORMAL_TEXT', lineSpacing: 115 },
+                        fields: 'namedStyleType,lineSpacing'
+                    }
+                });
+                currentIndex += contentText.length;
+            });
+
+            await requestGoogleDocs(`/documents/${encodeURIComponent(documentId)}:batchUpdate`, accessToken, {
+                method: 'POST', body: { requests }
+            });
+            alert(`'${fullTitle}' 문서가 성공적으로 생성되었습니다! ✨\n구글 드라이브에서 확인해 보세요.`);
+            window.open(`https://docs.google.com/document/d/${documentId}/edit`, '_blank');
+        } catch (error) {
+            console.error('Writing content Google export failed:', error);
+            alert('구글 문서 생성에 실패했습니다: ' + (error.message || 'Google 인증 또는 문서 API 오류'));
+        }
+    }, [getAccessToken, tokenClient]);
+
+    const exportWritingContentToExcel = useCallback(async (data, fileName, contentType) => {
+        if (!data?.length) {
+            alert('출력할 데이터가 없습니다.');
+            return;
+        }
+
+        try {
+            const XLSX = await import('xlsx');
+            const profile = getWritingExportProfile(contentType);
+            const worksheet = XLSX.utils.json_to_sheet(toWritingExportExcelRows(data, contentType));
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, profile.sheetName.slice(0, 31));
+            XLSX.writeFile(workbook, `${fileName}.xlsx`);
+        } catch (error) {
+            console.error('Writing content Excel export failed:', error);
+            alert('엑셀 파일 생성 중 오류가 발생했습니다.');
+        }
+    }, []);
+
     const exportToExcel = useCallback(async (data, fileName) => {
         if (!data || data.length === 0) {
             alert('출력할 데이터가 없습니다.');
@@ -427,8 +550,11 @@ export const useDataExport = (classId) => {
 
     return {
         fetchExportData,
+        fetchWritingContentExportData,
         exportToExcel,
         exportToGoogleDoc,
+        exportWritingContentToExcel,
+        exportWritingContentToGoogleDoc,
         authorizeGoogleExport: getAccessToken,
         // 기존 호출부 이름은 유지하되, 이제 GIS 토큰 클라이언트 준비 여부를 뜻한다.
         isGapiLoaded: Boolean(tokenClient)
