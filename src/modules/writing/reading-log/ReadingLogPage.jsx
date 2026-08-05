@@ -661,25 +661,49 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
         setSelectedTeacherComment(null);
     }, []);
 
-    // 학생에게 `책 + 내가 쓴 글` 은 한 덩어리라, 지우면 책도 함께 책장에서 사라진다.
-    // 글과 책을 한 트랜잭션에서 지우도록 서버 RPC에 맡긴다.
-    const handleDelete = async (log) => {
-        if (!window.confirm(`「${log.title || '제목 없는 독서록'}」을 삭제할까요?\n책장에 등록한 책도 함께 사라지고, 되돌릴 수 없어요.`)) return;
-        const { data: result, error } = await supabase.rpc('delete_my_reading_log', {
-            p_post_id: log.id
-        });
-        if (error || !result?.success) {
-            console.error('독서록 삭제 실패:', error?.message || result?.error);
-            alert('독서록을 삭제하지 못했습니다.');
+    // 학생에게 `책 + 내가 쓴 글` 은 한 덩어리라, 지우면 책도 글도 함께 책장에서 사라진다.
+    // 책장 카드는 세 가지에서 나온다 — 등록된 책, 책 없이 남은 옛 글, 책 없이 저장된 초안.
+    // 어느 쪽이든 카드 하나가 통째로 없어지도록 각각에 맞는 서버 RPC로 지운다.
+    const handleDeleteShelf = async (shelf) => {
+        const bookTitle = shelf.book?.title || '제목 없는 책';
+        const notice = shelf.mainLog
+            ? `「${bookTitle}」 독서록과 등록한 책이 모두 사라져요.`
+            : shelf.draft
+                ? `「${bookTitle}」 쓰던 글과 등록한 책이 사라져요.`
+                : `책장에서 「${bookTitle}」을 빼요.`;
+        if (!window.confirm(`${notice}\n삭제하면 되돌릴 수 없어요.`)) return;
+
+        const isLibraryBook = !String(shelf.id).startsWith('legacy-') && !String(shelf.id).startsWith('draft-');
+        const draftBookKey = shelf.draft?.book_key || '';
+
+        try {
+            if (isLibraryBook) {
+                const { data, error } = await supabase.rpc('delete_my_library_book', { p_library_item_id: shelf.id });
+                if (error || !data?.success) throw new Error(error?.message || data?.error || '책 삭제 실패');
+            } else if (shelf.mainLog) {
+                const { data, error } = await supabase.rpc('delete_my_reading_log', { p_post_id: shelf.mainLog.id });
+                if (error || !data?.success) throw new Error(error?.message || data?.error || '독서록 삭제 실패');
+            }
+
+            // 글에 매이지 않은 초안은 책 키로만 찾을 수 있어 따로 지운다.
+            if (draftBookKey) {
+                const { error } = await supabase.rpc('delete_my_reading_log_draft', {
+                    p_post_id: null,
+                    p_book_key: draftBookKey
+                });
+                if (error) throw new Error(error.message);
+            }
+        } catch (error) {
+            console.error('책장 카드 삭제 실패:', error.message);
+            alert('삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.');
             return;
         }
 
-        const removedLibraryItemId = logLinks.find((link) => link.post_id === log.id)?.library_item_id;
-        setLogs((current) => current.filter((item) => item.id !== log.id));
-        setLogLinks((current) => current.filter((link) => link.post_id !== log.id));
-        if (result.deleted_book && removedLibraryItemId) {
-            setLibraryItems((current) => current.filter((item) => item.id !== removedLibraryItemId));
-        }
+        const removedPostIds = new Set(shelf.logs.map((log) => log.id));
+        setLogs((current) => current.filter((item) => !removedPostIds.has(item.id)));
+        setLogLinks((current) => current.filter((link) => !removedPostIds.has(link.post_id)));
+        if (isLibraryBook) setLibraryItems((current) => current.filter((item) => item.id !== shelf.id));
+        if (draftBookKey) setDraftStatuses((current) => current.filter((draft) => draft.book_key !== draftBookKey));
     };
 
     const shelfBooks = useMemo(() => {
@@ -973,9 +997,14 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                                 >
                                     {writingState.actionLabel}
                                 </Button>
-                                {mainLog && (
-                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(mainLog)}>삭제</Button>
-                                )}
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteShelf(shelf)}
+                                    aria-label={`「${shelf.book?.title || '제목 없는 책'}」 책장에서 삭제`}
+                                >
+                                    삭제
+                                </Button>
                             </div>
                         </motion.article>
                     );})}
