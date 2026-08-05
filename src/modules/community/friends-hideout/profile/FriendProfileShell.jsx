@@ -1,6 +1,7 @@
 import React, { memo, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../../../components/common/Button';
+import ModalCloseButton from '../../../../components/common/ModalCloseButton';
 import { getReaderLevel, getWriterLevel } from '../../../../constants/writerLevels';
 import FriendProfileCardBoundary from './FriendProfileCardBoundary';
 import { getActiveFriendProfileCards } from './profileCardManifest';
@@ -60,7 +61,7 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) 
                         </h2>
                         <p style={{ margin: '3px 0 0', color: '#8D7B6C', fontSize: '.72rem', fontWeight: 800 }}>친구가 고른 모습과 우리 둘의 기록을 구경해요</p>
                     </div>
-                    <button type="button" onClick={onClose} aria-label="친구 아지트 닫기" style={{ border: 'none', background: 'none', color: '#8D7B6C', cursor: 'pointer', fontSize: '1.5rem' }}>✕</button>
+                    <ModalCloseButton onClick={onClose} label="친구 아지트 닫기" style={{ border: 0, background: 'transparent', color: '#8D7B6C' }} />
                 </header>
 
                 <section aria-label={`${friend.name}의 아지트 소개`} style={{

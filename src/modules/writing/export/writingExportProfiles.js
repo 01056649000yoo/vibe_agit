@@ -73,7 +73,7 @@ export const WRITING_EXPORT_PROFILES = Object.freeze({
 });
 
 export const getWritingExportProfile = (contentType) => (
-    WRITING_EXPORT_PROFILES[contentType] || {
+    Reflect.get(WRITING_EXPORT_PROFILES, contentType) || {
         ...assignmentProfile,
         id: contentType,
         label: contentType,
@@ -95,4 +95,3 @@ export const toWritingExportDocumentEntries = (items, contentType) => {
         content: item.content || ''
     }));
 };
-

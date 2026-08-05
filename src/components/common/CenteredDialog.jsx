@@ -1,5 +1,6 @@
 import React, { useEffect, useId } from 'react';
 import ModalPortal from './ModalPortal';
+import ModalCloseButton from './ModalCloseButton';
 
 /**
  * 기본/Fullscreen API 양쪽에서 쓰는 공통 중앙 대화상자 셸.
@@ -60,13 +61,9 @@ const CenteredDialog = ({
                         }}>{title}</h2>
                         {description && <p style={{ margin: '5px 0 0', fontSize: 'var(--ui-font-xs)', fontWeight: 750, lineHeight: 1.45, opacity: .9 }}>{description}</p>}
                     </div>
-                    <button type="button" onClick={onClose} className="ui-icon-button" aria-label={closeLabel || `${title} 닫기`} style={{
+                    <ModalCloseButton onClick={onClose} label={closeLabel || `${title} 닫기`} style={{
                         flexShrink: 0, borderColor: 'rgba(255,255,255,.55)', color: 'white', background: 'rgba(255,255,255,.16)'
-                    }}>
-                        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none">
-                            <path d="M5 5L19 19M19 5L5 19" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-                        </svg>
-                    </button>
+                    }} />
                 </header>
                 <div style={{ padding: bodyPadding }}>{children}</div>
             </section>
@@ -75,4 +72,3 @@ const CenteredDialog = ({
 };
 
 export default CenteredDialog;
-

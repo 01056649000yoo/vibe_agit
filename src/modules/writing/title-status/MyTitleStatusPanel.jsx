@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import ModalPortal from '../../../components/common/ModalPortal';
+import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import { READER_LEVELS, WRITER_LEVELS } from '../../../constants/writerLevels';
 import useMyTitleStatus from './useMyTitleStatus';
 
@@ -100,8 +101,8 @@ const TitleGuide = ({ kind, currentLevel, currentValue, currentUnit, onClose }) 
                                 LV. {currentLevel.level} · {num(currentValue)}{currentUnit}
                             </div>
                         </div>
-                        <button type="button" onClick={onClose} aria-label="칭호 설명 닫기"
-                            style={{ alignSelf: 'flex-start', border: 'none', background: 'none', color: INK_SOFT, cursor: 'pointer', fontSize: '1.35rem' }}>✕</button>
+                        <ModalCloseButton onClick={onClose} label="칭호 설명 닫기"
+                            style={{ alignSelf: 'flex-start', border: 0, background: 'transparent', color: INK_SOFT }} />
                     </header>
                     <div style={{ padding: '14px 18px 20px' }}>
                         <p style={{ margin: '0 0 13px', color: INK_SOFT, fontSize: '.78rem', fontWeight: 750, lineHeight: 1.55 }}>

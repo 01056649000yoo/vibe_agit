@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
+import ModalCloseButton from '../common/ModalCloseButton';
 import PromptRuleButton from './PromptRuleButton';
 
 const SubmissionStatusModal = ({
@@ -133,7 +134,7 @@ const SubmissionStatusModal = ({
                                 <span style={{ fontSize: '0.8rem', color: '#1976D2', background: '#E3F2FD', padding: '2px 8px', borderRadius: '6px', fontWeight: 'bold' }}>{selectedMission.genre}</span>
                                 <h4 style={{ margin: '8px 0 0 0', fontSize: '1.2rem', color: '#2C3E50', fontWeight: '900' }}>{selectedMission.title} ({posts.length}명)</h4>
                             </div>
-                            <button onClick={() => setSelectedMission(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ADB5BD' }}>✕</button>
+                            <ModalCloseButton onClick={() => setSelectedMission(null)} label="제출 현황 닫기" style={{ background: 'transparent', border: 0, color: '#ADB5BD' }} />
                         </div>
 
                         <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '24px', background: '#FAFAFA' }}>

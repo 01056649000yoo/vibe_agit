@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalPortal from '../common/ModalPortal';
+import ModalCloseButton from '../common/ModalCloseButton';
 
 /**
  * 역할: 학생 - 내 글 소식(알림) 모달 🔔
@@ -83,7 +84,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                             >
                                 <span style={{ fontSize: '1rem' }}>🗑️</span> 비우기
                             </Button>
-                            <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#BDC3C7' }}>✕</button>
+                            <ModalCloseButton onClick={onClose} label="내 글 소식 닫기" style={{ background: 'transparent', border: 0, color: '#BDC3C7' }} />
                         </div>
                     </div>
 

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../../lib/supabaseClient';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
+import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import RubricSettings, { createDefaultEvaluationRubric } from '../evaluation/RubricSettings';
 
 // 상태 뱃지 색상
@@ -1098,16 +1099,15 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                         {detailModal.title || '제목 없는 제안'}
                                     </h3>
                                 </div>
-                                <button
+                                <ModalCloseButton
                                     onClick={() => setDetailModal(null)}
                                     style={{
                                         background: '#F1F5F9', border: 'none',
-                                        borderRadius: '12px', padding: isMobile ? '8px 12px' : '10px 15px',
-                                        cursor: 'pointer', fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: 'bold',
+                                        width: isMobile ? '38px' : '42px', height: isMobile ? '38px' : '42px',
                                         color: '#64748B', marginLeft: '16px', flexShrink: 0
                                     }}
-                                    aria-label="제안 상세창 닫기"
-                                >✕</button>
+                                    label="제안 상세창 닫기"
+                                />
                             </div>
 
                             {/* 내용 */}

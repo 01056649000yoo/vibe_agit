@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import ModalPortal from '../common/ModalPortal';
+import ModalCloseButton from '../common/ModalCloseButton';
 
 /**
  * 아지트 놀이터 — 포인트로 즐기는 놀거리 모음.
@@ -43,8 +44,8 @@ const AgitPlayground = ({ isOpen, onClose, items = [] }) => {
                 <div style={{ width: 'min(560px, 100%)', margin: '0 auto', padding: '18px 18px 90px' }}>
                     <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                         <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 900, color: INK }}>🎡 아지트 놀이터</h2>
-                        <button type="button" onClick={onClose} aria-label="닫기"
-                            style={{ border: 'none', background: 'none', fontSize: '1.5rem', color: INK_SOFT, cursor: 'pointer' }}>✕</button>
+                        <ModalCloseButton onClick={onClose} label="아지트 놀이터 닫기"
+                            style={{ border: 0, background: 'transparent', color: INK_SOFT }} />
                     </header>
                     <p style={{ margin: '0 0 16px', fontSize: '.84rem', color: INK_SOFT, fontWeight: 700 }}>
                         모은 포인트로 즐기는 놀거리예요.

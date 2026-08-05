@@ -32,7 +32,7 @@ const NumberField = ({ label, value, onChange, min = 0, max = 20000, step = 1, s
 const WritingPolicyFields = ({ value, onChange, showDailyLimit = false, showBonus = true }) => {
     const policy = normalizeWritingPolicy(value);
     const update = (key, nextValue) => onChange({ ...value, [key]: nextValue });
-    const fieldValue = (key) => value?.[key] ?? policy[key];
+    const fieldValue = (key) => Reflect.get(value || {}, key) ?? Reflect.get(policy, key);
 
     return (
         <div className="writing-policy-fields">

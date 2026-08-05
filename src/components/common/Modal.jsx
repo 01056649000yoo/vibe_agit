@@ -1,5 +1,6 @@
 import React, { useEffect, useId } from 'react';
 import Button from './Button';
+import ModalCloseButton from './ModalCloseButton';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /**
@@ -69,21 +70,15 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => {
                             zIndex: 10
                         }}>
                             <h3 id={titleId} style={{ margin: 0, color: 'var(--ui-ink-strong)', fontWeight: '900', fontSize: 'var(--ui-font-lg)' }}>{title}</h3>
-                            <button
-                                type="button"
+                            <ModalCloseButton
                                 onClick={onClose}
-                                className="ui-icon-button"
-                                aria-label={`${title} 닫기`}
+                                label={`${title} 닫기`}
                                 style={{
                                     flexShrink: 0,
                                     background: 'var(--ui-surface-muted)',
                                     color: 'var(--ui-ink-muted)'
                                 }}
-                            >
-                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                    <path d="M5 5L19 19M19 5L5 19" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-                                </svg>
-                            </button>
+                            />
                         </div>
 
                         {/* 콘텐츠 섹션 (스크롤 가능) */}

@@ -9,6 +9,7 @@ import { saveEnabledModules } from '../../useEnabledModules';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../../components/common/Button';
 import Card from '../../../components/common/Card';
+import ModalCloseButton from '../../../components/common/ModalCloseButton';
 
 // [재사용] 드래곤 단계 로직
 const getDragonStage = (level) => {
@@ -1243,7 +1244,7 @@ const TeacherHideoutPreview = ({ student, onClose }) => {
     return (
         <div style={{ position: 'relative' }}>
             <div style={{ background: bg.color, padding: '50px 20px', textAlign: 'center', borderBottom: `6px solid ${bg.border}`, position: 'relative' }}>
-                <button onClick={onClose} style={{ position: 'absolute', top: '24px', right: '24px', background: 'white', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.2)', fontSize: '1.2rem' }}>✕</button>
+                <ModalCloseButton onClick={onClose} label="학생 아지트 미리보기 닫기" style={{ position: 'absolute', top: '24px', right: '24px', background: 'white', border: 0, width: '36px', height: '36px', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }} />
                 <div style={{ marginBottom: '32px' }}>
                     <span style={{ background: 'rgba(255,255,255,0.9)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '900', color: '#7F8C8D', border: '1px solid #EEE' }}>{student.name} 학생의 아지트 내부</span>
                     <h2 style={{ margin: '16px 0 0 0', color: '#2C3E50', fontSize: '2rem', fontWeight: '1000' }}>{pet.name}</h2>

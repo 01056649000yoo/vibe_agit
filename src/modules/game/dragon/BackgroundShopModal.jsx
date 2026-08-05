@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import ModalPortal from '../../../components/common/ModalPortal';
 import Button from '../../../components/common/Button';
+import ModalCloseButton from '../../../components/common/ModalCloseButton';
 
 const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipItem, isBusy, HIDEOUT_BACKGROUNDS }) => {
     if (!isOpen) return null;
@@ -35,7 +36,7 @@ const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipI
                         <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#2C3E50', fontWeight: '900' }}>🏡 아지트 배경 상점</h3>
                         <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#7F8C8D' }}>남은 포인트: <b>{points.toLocaleString()}P</b></p>
                     </div>
-                    <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+                    <ModalCloseButton onClick={onClose} label="아지트 배경 상점 닫기" style={{ border: 0, background: 'transparent' }} />
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>

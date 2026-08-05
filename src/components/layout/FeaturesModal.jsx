@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import Button from '../common/Button';
+import ModalCloseButton from '../common/ModalCloseButton';
 
 /**
  * 서비스 특징 소개 모달 ✨
@@ -93,19 +94,18 @@ const FeaturesModal = ({ isOpen, onClose, mode = 'features' }) => {
             }} onClick={e => e.stopPropagation()}>
 
                 {/* 닫기 버튼 */}
-                <button
+                <ModalCloseButton
                     onClick={onClose}
+                    label="서비스 특징 닫기"
                     style={{
                         position: 'absolute',
                         top: '20px',
                         right: '25px',
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '1.5rem',
-                        cursor: 'pointer',
+                        background: 'transparent',
+                        border: 0,
                         color: '#94A3B8'
                     }}
-                >✕</button>
+                />
 
                 {isGuideMode ? (
                     <>

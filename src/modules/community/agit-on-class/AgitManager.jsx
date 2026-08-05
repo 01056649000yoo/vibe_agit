@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
+import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClassAgitClass } from '../../../hooks/useClassAgitClass';
 
@@ -507,7 +508,7 @@ const AgitManager = ({ activeClass, isMobile }) => {
                                         <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#1E1B4B' }}>🛠️ 아지트 세부 관리</h3>
                                         <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#64748B' }}>학급의 온도를 올리는 규칙을 설정합니다.</p>
                                     </div>
-                                    <button onClick={() => setIsSettingsModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.6rem', cursor: 'pointer', color: '#94A3B8' }}>×</button>
+                                    <ModalCloseButton onClick={() => setIsSettingsModalOpen(false)} label="아지트 세부 관리 닫기" style={{ background: 'transparent', border: 0, color: '#94A3B8' }} />
                                 </div>
                                 <div style={{ display: 'flex', gap: '20px' }}>
                                     {['settings', 'history'].map(tab => (

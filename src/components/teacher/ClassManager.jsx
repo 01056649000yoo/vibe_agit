@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import ModalCloseButton from '../common/ModalCloseButton';
 import StudentManager from './StudentManager';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateUnambiguousCode } from '../../lib/codeGenerator';
@@ -314,7 +315,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                             <Card style={{ padding: '32px', borderRadius: '32px', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                                     <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#2C3E50', fontWeight: '900' }}>🗑️ 삭제된 학급 복구</h2>
-                                    <button onClick={() => setIsTrashModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#ADB5BD' }}>✕</button>
+                                    <ModalCloseButton onClick={() => setIsTrashModalOpen(false)} label="삭제된 학급 복구 닫기" style={{ background: 'transparent', border: 0, color: '#ADB5BD' }} />
                                 </div>
 
                                 <div style={{ background: '#FFFCEB', padding: '16px', borderRadius: '16px', border: '1px solid #FFE082', marginBottom: '24px' }}>
