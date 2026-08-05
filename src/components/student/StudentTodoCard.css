@@ -1,113 +1,102 @@
 .student-todo-card { margin-bottom: var(--ui-space-6); }
-.student-todo-loading { min-height: 96px; margin-bottom: var(--ui-space-6); }
+.student-todo-loading { min-height: 88px; margin-bottom: var(--ui-space-6); }
 .student-todo-card__header {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
     gap: var(--ui-space-3);
     margin: 0 2px 11px;
 }
-.student-todo-card__header span {
-    display: block;
-    margin-bottom: 3px;
-    color: var(--ui-accent);
-    font-size: var(--ui-font-xs);
-    font-weight: 900;
-}
 .student-todo-card__header h2 {
     margin: 0;
     color: var(--ui-ink-strong);
-    font-size: 1.1rem;
+    font-size: 1.08rem;
     font-weight: 950;
 }
 .student-todo-card__header > strong {
-    padding: 5px 10px;
+    padding: 4px 9px;
     border-radius: var(--ui-radius-pill);
-    background: var(--ui-warning-soft);
-    color: var(--ui-warning);
-    font-size: .7rem;
-    font-weight: 950;
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink-muted);
+    font-size: .68rem;
+    font-weight: 900;
 }
 .student-todo-card__rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .student-todo-card__rows > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 .student-todo-row {
     display: grid;
     min-width: 0;
-    min-height: 78px;
+    min-height: 76px;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 11px;
     width: 100%;
-    padding: 12px 14px;
-    border: 1px solid var(--todo-border);
+    padding: 11px 13px;
+    border: 1px solid var(--ui-border);
+    border-left: 4px solid var(--todo-chip);
     border-radius: var(--ui-radius-lg);
-    background: var(--todo-bg);
-    color: var(--todo-text);
+    background: var(--ui-surface);
+    color: var(--ui-ink-strong);
     font: inherit;
     text-align: left;
     cursor: pointer;
     box-sizing: border-box;
-    transition: transform var(--ui-motion-fast), box-shadow var(--ui-motion-fast);
 }
-.student-todo-row:hover { transform: translateY(-1px); box-shadow: var(--ui-shadow-sm); }
 .student-todo-row:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
 .student-todo-row__icon {
     display: grid;
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     place-items: center;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, .72);
-    font-size: 1.35rem;
+    border-radius: 13px;
+    background: var(--todo-bg);
+    font-size: 1.25rem;
 }
 .student-todo-row__label {
     min-width: 0;
     overflow: hidden;
-    color: var(--todo-text);
-    font-size: .86rem;
+    color: var(--ui-ink-strong);
+    font-size: .84rem;
     font-weight: 900;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.student-todo-row__label strong { font-size: 1rem; }
+.student-todo-row__label strong { color: var(--todo-text); font-size: .96rem; }
 .student-todo-row__action {
-    padding: 7px 10px;
-    border-radius: 11px;
+    padding: 6px 9px;
+    border-radius: 10px;
     background: var(--todo-chip);
     color: white;
-    font-size: .7rem;
-    font-weight: 950;
+    font-size: .68rem;
+    font-weight: 900;
     white-space: nowrap;
 }
 .student-todo-done {
     display: flex;
-    min-height: 82px;
+    min-height: 66px;
     align-items: center;
-    justify-content: center;
-    gap: 13px;
-    padding: 14px 18px;
-    border: 1px solid #bbf7d0;
+    gap: 12px;
+    padding: 11px 16px;
+    border: 1px solid var(--ui-border);
+    border-left: 4px solid var(--ui-success);
     border-radius: var(--ui-radius-lg);
-    background: var(--ui-success-soft);
+    background: var(--ui-surface);
     text-align: left;
 }
-.student-todo-done > span { font-size: 1.7rem; }
-.student-todo-done div { display: flex; flex-direction: column; gap: 3px; }
-.student-todo-done strong { color: var(--ui-success); font-size: .95rem; font-weight: 950; }
-.student-todo-done small { color: #3f8f5f; font-size: .76rem; font-weight: 750; }
+.student-todo-done > span { font-size: 1.4rem; }
+.student-todo-done div { display: flex; flex-direction: column; gap: 2px; }
+.student-todo-done strong { color: var(--ui-ink-strong); font-size: .9rem; font-weight: 950; }
+.student-todo-done small { color: var(--ui-ink-muted); font-size: .72rem; font-weight: 700; }
 
+@media (hover: hover) {
+    .student-todo-row:hover { border-top-color: var(--ui-border-strong); border-right-color: var(--ui-border-strong); border-bottom-color: var(--ui-border-strong); box-shadow: var(--ui-shadow-xs); }
+}
 @media (max-width: 680px) {
     .student-todo-card__rows { grid-template-columns: 1fr; }
     .student-todo-card__rows > :last-child:nth-child(odd) { grid-column: auto; }
 }
-
 @media (max-width: 390px) {
-    .student-todo-row { grid-template-columns: 38px minmax(0, 1fr) auto; gap: 8px; padding: 10px; }
-    .student-todo-row__icon { width: 38px; height: 38px; }
-    .student-todo-row__action { padding: 6px 8px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .student-todo-row { transition: none; }
-    .student-todo-row:hover { transform: none; }
+    .student-todo-row { grid-template-columns: 36px minmax(0, 1fr) auto; gap: 8px; padding: 9px; }
+    .student-todo-row__icon { width: 36px; height: 36px; }
+    .student-todo-row__action { padding: 6px 7px; }
 }

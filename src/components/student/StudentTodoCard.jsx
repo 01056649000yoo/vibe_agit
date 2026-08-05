@@ -131,7 +131,7 @@ const StudentTodoCard = ({ studentSession, returnedCount = 0, hasActivity, onNav
             className="student-todo-card"
         >
             <header className="student-todo-card__header">
-                <div><span>먼저 확인해요</span><h2>📌 오늘 할 일</h2></div>
+                <h2>오늘 할 일</h2>
                 {rows.length > 0 && <strong>{rows.reduce((sum, row) => sum + Number(row.props.count || 0), 0)}개 남음</strong>}
             </header>
 

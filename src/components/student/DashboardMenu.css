@@ -6,66 +6,55 @@
     gap: var(--ui-space-4);
     margin: 0 2px 12px;
 }
-.student-home-menu__header span {
-    display: block;
-    margin-bottom: 3px;
-    color: var(--ui-primary);
-    font-size: var(--ui-font-xs);
-    font-weight: 900;
-}
 .student-home-menu__header h2 {
     margin: 0;
     color: var(--ui-ink-strong);
-    font-size: 1.1rem;
+    font-size: 1.08rem;
     font-weight: 950;
 }
 .student-home-menu__header p {
     margin: 0;
     color: var(--ui-ink-subtle);
     font-size: var(--ui-font-xs);
-    font-weight: 700;
+    font-weight: 650;
 }
-
 .student-home-menu-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 10px;
 }
-
 .student-home-menu-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 
 .student-home-menu-card {
     position: relative;
     display: grid;
     min-width: 0;
-    min-height: 118px;
-    grid-template-columns: 54px minmax(0, 1fr) auto;
+    min-height: 106px;
+    grid-template-columns: 50px minmax(0, 1fr) auto;
     align-items: center;
     gap: 13px;
-    padding: 17px;
+    padding: 15px 16px;
     overflow: hidden;
-    border: 1px solid var(--menu-border);
-    border-radius: 21px;
-    background: var(--menu-bg);
-    color: var(--menu-ink);
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
+    color: var(--ui-ink-strong);
     font: inherit;
     text-align: left;
     cursor: pointer;
     box-shadow: var(--ui-shadow-xs);
     -webkit-tap-highlight-color: transparent;
 }
-
-.student-home-menu-card:focus-visible { outline: none; box-shadow: var(--ui-focus-ring), var(--ui-shadow-sm); }
-.student-home-menu-card:disabled { cursor: default; filter: grayscale(.25); opacity: .72; }
+.student-home-menu-card:focus-visible { outline: none; box-shadow: var(--ui-focus-ring), var(--ui-shadow-xs); }
+.student-home-menu-card:disabled { cursor: default; opacity: .58; }
 .student-home-menu-card__icon {
     display: grid;
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
     place-items: center;
-    border-radius: 17px;
-    background: rgba(255, 255, 255, .82);
-    font-size: 1.7rem;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .72);
+    border-radius: 15px;
+    background: var(--menu-soft);
+    font-size: 1.5rem;
 }
 .student-home-menu-card__copy {
     display: flex;
@@ -75,17 +64,17 @@
 }
 .student-home-menu-card__copy strong {
     overflow: hidden;
-    color: var(--menu-ink);
-    font-size: .98rem;
+    color: var(--ui-ink-strong);
+    font-size: .94rem;
     font-weight: 950;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 .student-home-menu-card__copy small {
     overflow: hidden;
-    color: var(--menu-sub);
-    font-size: .74rem;
-    font-weight: 750;
+    color: var(--ui-ink-muted);
+    font-size: .72rem;
+    font-weight: 700;
     line-height: 1.4;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -93,43 +82,44 @@
 .student-home-menu-card__copy em {
     align-self: flex-start;
     margin-top: 2px;
-    padding: 4px 8px;
+    padding: 3px 7px;
     border-radius: var(--ui-radius-pill);
-    background: rgba(255, 255, 255, .78);
-    color: var(--menu-ink);
-    font-size: .65rem;
+    background: var(--menu-soft);
+    color: var(--menu-accent);
+    font-size: .63rem;
     font-style: normal;
     font-weight: 900;
 }
-.student-home-menu-card__arrow { color: var(--menu-ink); font-size: 1.55rem; font-weight: 500; opacity: .62; }
+.student-home-menu-card__arrow { color: var(--ui-ink-subtle); font-size: 1.4rem; font-weight: 500; }
 .student-home-menu-card__new {
     position: absolute;
-    top: 9px;
-    right: 10px;
+    top: 8px;
+    right: 9px;
     padding: 3px 7px;
     border-radius: var(--ui-radius-pill);
     background: var(--ui-danger);
     color: white;
-    font-size: .6rem;
+    font-size: .58rem;
     font-weight: 950;
-    box-shadow: 0 3px 8px rgba(185, 28, 28, .2);
 }
 
-.student-home-menu-card.tone-amber { --menu-bg: linear-gradient(145deg, #fffaf0, #fff7db); --menu-border: #fde68a; --menu-ink: #92400e; --menu-sub: #a16207; }
-.student-home-menu-card.tone-green { --menu-bg: linear-gradient(145deg, #f7fee7, #ecfccb); --menu-border: #bef264; --menu-ink: #3f6212; --menu-sub: #4d7c0f; }
-.student-home-menu-card.tone-blue { --menu-bg: linear-gradient(145deg, #eff6ff, #dbeafe); --menu-border: #bfdbfe; --menu-ink: #1e40af; --menu-sub: #2563eb; }
-.student-home-menu-card.tone-brown { --menu-bg: linear-gradient(145deg, #fffaf5, #f7e9db); --menu-border: #e7c7a7; --menu-ink: #5d4037; --menu-sub: #795548; }
-.student-home-menu-card.tone-orange { --menu-bg: linear-gradient(145deg, #fff7ed, #ffedd5); --menu-border: #fed7aa; --menu-ink: #9a3412; --menu-sub: #c2410c; }
-.student-home-menu-card.tone-rose { --menu-bg: linear-gradient(145deg, #fff1f2, #ffe4e6); --menu-border: #fecdd3; --menu-ink: #9f1239; --menu-sub: #be123c; }
+.student-home-menu-card.tone-amber { --menu-soft: #fffbeb; --menu-accent: #a16207; }
+.student-home-menu-card.tone-green { --menu-soft: #f0fdf4; --menu-accent: #15803d; }
+.student-home-menu-card.tone-blue { --menu-soft: #eff6ff; --menu-accent: #2563eb; }
+.student-home-menu-card.tone-brown { --menu-soft: #faf5f1; --menu-accent: #795548; }
+.student-home-menu-card.tone-orange { --menu-soft: #fff7ed; --menu-accent: #c2410c; }
+.student-home-menu-card.tone-rose { --menu-soft: #fff1f2; --menu-accent: #be123c; }
 
+@media (hover: hover) {
+    .student-home-menu-card:hover { border-color: var(--ui-border-strong); box-shadow: var(--ui-shadow-sm); }
+}
 @media (max-width: 680px) {
-    .student-home-menu__header { align-items: flex-start; flex-direction: column; gap: 4px; }
+    .student-home-menu__header { align-items: flex-start; flex-direction: column; gap: 3px; }
     .student-home-menu-grid { grid-template-columns: 1fr; }
     .student-home-menu-grid > :last-child:nth-child(odd) { grid-column: auto; }
-    .student-home-menu-card { min-height: 104px; padding: 14px; }
+    .student-home-menu-card { min-height: 96px; padding: 13px 14px; }
 }
-
 @media (max-width: 390px) {
-    .student-home-menu-card { grid-template-columns: 46px minmax(0, 1fr) auto; gap: 10px; }
-    .student-home-menu-card__icon { width: 46px; height: 46px; border-radius: 15px; font-size: 1.5rem; }
+    .student-home-menu-card { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; }
+    .student-home-menu-card__icon { width: 44px; height: 44px; border-radius: 14px; font-size: 1.4rem; }
 }

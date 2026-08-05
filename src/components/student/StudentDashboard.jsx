@@ -186,7 +186,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
 
             <Card
                 className="student-home-shell"
-                style={{ maxWidth: '960px', padding: 0, background: 'var(--ui-page-warm)', border: '1px solid #FDE68A', overflow: 'visible' }}
+                style={{ maxWidth: '960px', padding: 0, background: 'var(--ui-page)', border: '1px solid var(--ui-border)', boxShadow: 'none', overflow: 'visible' }}
             >
                 <div className="student-home-content">
                     {/* 헤더 섹션 */}

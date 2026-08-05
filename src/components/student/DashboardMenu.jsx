@@ -122,10 +122,7 @@ const DashboardMenu = ({
     return (
         <section className="student-home-menu" aria-labelledby="student-home-menu-title">
             <header className="student-home-menu__header">
-                <div>
-                    <span>바로 가기</span>
-                    <h2 id="student-home-menu-title">어디로 갈까요?</h2>
-                </div>
+                <h2 id="student-home-menu-title">주요 메뉴</h2>
                 <p>글을 쓰고, 친구의 글을 읽고, 포인트로 놀아 보세요.</p>
             </header>
 
