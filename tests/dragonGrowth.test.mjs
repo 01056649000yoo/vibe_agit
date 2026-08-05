@@ -126,6 +126,7 @@ test('아지트 공방은 관리 가능한 5개 고정 슬롯만 사용한다', 
     });
     assert.equal(DRAGON_DECOR_SLOTS[0].name, '프레임');
     assert.equal(getDragonDecorItemsForSlot('pedestal').length, 8);
+    assert.equal(getDragonDecorItemsForSlot('nameplate').length, 8);
 });
 
 test('기존에 산 배경은 새 프레임 소유·장착 상태로 그대로 이어진다', () => {
@@ -177,4 +178,20 @@ test('장착한 5개 슬롯은 하나의 pet_data 계약으로 복원된다', ()
     const normalized = normalizeDragonDecor(petData);
     assert.deepEqual(normalized.equipped, petData.equippedDecor);
     assert.equal(DRAGON_DECOR_ITEMS.every((item) => item.slot && item.id), true);
+});
+
+test('문패 8종은 단계적으로 화려해지는 개별 WebP와 전설 잠금 조건을 쓴다', () => {
+    const nameplates = getDragonDecorItemsForSlot('nameplate');
+    assert.deepEqual(nameplates.map((item) => item.image), [
+        '/assets/dragons/nameplates/nameplate-simple.webp',
+        '/assets/dragons/nameplates/nameplate-oak.webp',
+        '/assets/dragons/nameplates/nameplate-brass.webp',
+        '/assets/dragons/nameplates/nameplate-crystal.webp',
+        '/assets/dragons/nameplates/nameplate-rune.webp',
+        '/assets/dragons/nameplates/nameplate-celestial.webp',
+        '/assets/dragons/nameplates/nameplate-ember.webp',
+        '/assets/dragons/nameplates/nameplate-legend.webp'
+    ]);
+    assert.deepEqual(nameplates.map((item) => item.price), [0, 120, 220, 360, 420, 480, 540, 800]);
+    assert.equal(nameplates.at(-1).requiredWriterLevel, 10);
 });

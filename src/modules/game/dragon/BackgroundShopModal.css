@@ -58,6 +58,7 @@
 
 .agit-workshop__items { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
 .agit-workshop__item { display: grid; grid-template-columns: 58px minmax(0,1fr); gap: 10px; align-items: center; padding: 10px; border: 1px solid #e6ded5; border-radius: 16px; background: #fff; box-shadow: 0 3px 9px rgba(51,42,35,.045); }
+.agit-workshop__item[data-slot='nameplate'] { grid-template-columns: 94px minmax(0,1fr); }
 .agit-workshop__item.is-equipped { border-color: #5d9aac; background: #f3fbfc; box-shadow: 0 0 0 2px rgba(93,154,172,.12); }
 .agit-workshop__item.is-previewing { border-color: #c59a52; box-shadow: 0 0 0 2px rgba(197,154,82,.12); }
 .agit-workshop__item-preview { grid-row: span 2; display: grid; place-items: center; width: 58px; aspect-ratio: 1; overflow: hidden; padding: 0; border: 1px solid rgba(68,52,40,.14); border-radius: 13px; background: #f2eee9; color: #695749; cursor: pointer; font: inherit; }
@@ -67,15 +68,23 @@
 .agit-workshop__item-preview[data-slot='wallpaper']::before { top: 3px; left: 3px; border-top: 5px solid; border-left: 5px solid; border-radius: 7px 0 0; }
 .agit-workshop__item-preview[data-slot='wallpaper']::after { right: 3px; bottom: 3px; border-right: 5px solid; border-bottom: 5px solid; border-radius: 0 0 7px; }
 .agit-workshop__item-preview[data-slot='pedestal'] span { width: 72%; height: 26%; border-radius: 50%; background: linear-gradient(180deg,#ddd8cb,#77736b); box-shadow: 0 5px 5px rgba(42,31,24,.24); }
-.agit-workshop__item-preview[data-visual='oak'] span { background: linear-gradient(180deg,#c88b54,#704126); }
-.agit-workshop__item-preview[data-visual='cloud'] span { background: #fff; box-shadow: -7px -4px 0 #f4fbff, 7px -5px 0 #fff, 0 5px 7px rgba(73,125,158,.25); }
-.agit-workshop__item-preview[data-visual='crystal'] span { border-radius: 4px; background: linear-gradient(135deg,#e5f7ff,#8c75e5); clip-path: polygon(50% 0,100% 72%,72% 100%,17% 89%,0 48%); box-shadow: none; }
-.agit-workshop__item-preview[data-visual='rune'] span { border: 2px solid #b79347; background: radial-gradient(ellipse,#565961,#1f2228 67%); box-shadow: 0 0 8px rgba(230,185,86,.45); }
-.agit-workshop__item-preview[data-visual='moonstone'] span { background: radial-gradient(circle at 30% 30%,#7987a7 0 5%,transparent 6%),linear-gradient(180deg,#f4f6ff,#7785a6); box-shadow: 0 0 9px #a8c6ff; }
-.agit-workshop__item-preview[data-visual='ember'] span { background: linear-gradient(115deg,#27221f 0 30%,#ed6a2b 31% 38%,#292222 39% 66%,#ff9a38 67% 72%,#171515 73%); box-shadow: 0 0 9px rgba(255,98,31,.55); }
-.agit-workshop__item-preview[data-visual='root'] span { background: repeating-linear-gradient(112deg,#593a25 0 16%,#96633a 17% 31%); box-shadow: -4px 4px 0 -2px #654127,5px 4px 0 -2px #754b2b; }
-.agit-workshop__item-preview[data-slot='nameplate'] span { max-width: 88%; overflow: hidden; padding: 5px 7px; border-radius: 6px; background: rgba(255,255,255,.84); font-size: .48rem; font-weight: 950; white-space: nowrap; }
-.agit-workshop__item-preview[data-visual='brass'] span { background: linear-gradient(135deg,#f4dc80,#b6882e); color: #493711; }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='oak'] span { background: linear-gradient(180deg,#c88b54,#704126); }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='cloud'] span { background: #fff; box-shadow: -7px -4px 0 #f4fbff, 7px -5px 0 #fff, 0 5px 7px rgba(73,125,158,.25); }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='crystal'] span { border-radius: 4px; background: linear-gradient(135deg,#e5f7ff,#8c75e5); clip-path: polygon(50% 0,100% 72%,72% 100%,17% 89%,0 48%); box-shadow: none; }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='rune'] span { border: 2px solid #b79347; background: radial-gradient(ellipse,#565961,#1f2228 67%); box-shadow: 0 0 8px rgba(230,185,86,.45); }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='moonstone'] span { background: radial-gradient(circle at 30% 30%,#7987a7 0 5%,transparent 6%),linear-gradient(180deg,#f4f6ff,#7785a6); box-shadow: 0 0 9px #a8c6ff; }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='ember'] span { background: linear-gradient(115deg,#27221f 0 30%,#ed6a2b 31% 38%,#292222 39% 66%,#ff9a38 67% 72%,#171515 73%); box-shadow: 0 0 9px rgba(255,98,31,.55); }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='root'] span { background: repeating-linear-gradient(112deg,#593a25 0 16%,#96633a 17% 31%); box-shadow: -4px 4px 0 -2px #654127,5px 4px 0 -2px #754b2b; }
+.agit-workshop__item-preview[data-slot='nameplate'] { position: relative; width: 94px; aspect-ratio: 2.35; overflow: visible; border: 0; background: radial-gradient(ellipse,#fff 0 12%,#f1e8dc 58%,transparent 72%); }
+.agit-workshop__item-preview[data-slot='nameplate'] img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(45,31,21,.28)); }
+.agit-workshop__item-preview[data-slot='nameplate'] span { position: relative; z-index: 1; display: block; max-width: 48%; overflow: hidden; color: #4b3020; font-size: .37rem; font-weight: 950; text-align: center; text-overflow: ellipsis; text-shadow: 0 1px rgba(255,255,255,.45); white-space: nowrap; }
+.agit-workshop__item-preview[data-visual='oak'] span,
+.agit-workshop__item-preview[data-visual='brass'] span,
+.agit-workshop__item-preview[data-visual='crystal'] span,
+.agit-workshop__item-preview[data-visual='rune'] span,
+.agit-workshop__item-preview[data-visual='celestial'] span,
+.agit-workshop__item-preview[data-visual='ember'] span { color: #fff0c2; text-shadow: 0 1px 2px #241c18; }
+.agit-workshop__item-preview[data-visual='legend'] span { max-width: 38%; color: #5b3b13; }
 .agit-workshop__item-preview[data-slot='leftProp'], .agit-workshop__item-preview[data-slot='rightProp'] { background: radial-gradient(circle at 50% 38%,#fff 0 8%,#eee4d8 58%,#d8cabb); }
 .agit-workshop__item-preview[data-slot='leftProp'] img,
 .agit-workshop__item-preview[data-slot='rightProp'] img { display: block; width: 92%; height: 92%; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(46,32,23,.24)); }

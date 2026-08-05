@@ -48,10 +48,14 @@ const DECOR_ITEMS = [
     { id: 'right-chest', slot: 'rightProp', name: '수호룡 보물고', price: 420, preview: 'dragon-vault', image: '/assets/dragons/decor/right-treasure-vault.webp', sortOrder: 3 },
     { id: 'right-nest', slot: 'rightProp', name: '해츨링 꿈둥지', price: 300, preview: 'hatchling-dream-nest', image: '/assets/dragons/decor/right-hatchling-nest.webp', sortOrder: 4 },
 
-    { id: 'nameplate-simple', slot: 'nameplate', name: '기본 문패', price: 0, isDefault: true, preview: 'simple', sortOrder: 0 },
-    { id: 'nameplate-oak', slot: 'nameplate', name: '참나무 문패', price: 120, preview: 'oak', sortOrder: 1 },
-    { id: 'nameplate-brass', slot: 'nameplate', name: '황동 문패', price: 220, preview: 'brass', sortOrder: 2 },
-    { id: 'nameplate-crystal', slot: 'nameplate', name: '수정 문패', price: 360, preview: 'crystal', sortOrder: 3 }
+    { id: 'nameplate-simple', slot: 'nameplate', name: '어린 수호자의 문패', price: 0, isDefault: true, preview: 'simple', image: '/assets/dragons/nameplates/nameplate-simple.webp', sortOrder: 0 },
+    { id: 'nameplate-oak', slot: 'nameplate', name: '숲의 뿌리 문패', price: 120, preview: 'oak', image: '/assets/dragons/nameplates/nameplate-oak.webp', sortOrder: 1 },
+    { id: 'nameplate-brass', slot: 'nameplate', name: '황동 용날개 문패', price: 220, preview: 'brass', image: '/assets/dragons/nameplates/nameplate-brass.webp', sortOrder: 2 },
+    { id: 'nameplate-crystal', slot: 'nameplate', name: '월광 수정 문패', price: 360, preview: 'crystal', image: '/assets/dragons/nameplates/nameplate-crystal.webp', sortOrder: 3 },
+    { id: 'nameplate-rune', slot: 'nameplate', name: '고대 룬 문패', price: 420, preview: 'rune', image: '/assets/dragons/nameplates/nameplate-rune.webp', sortOrder: 4 },
+    { id: 'nameplate-celestial', slot: 'nameplate', name: '별자리 천구 문패', price: 480, preview: 'celestial', image: '/assets/dragons/nameplates/nameplate-celestial.webp', sortOrder: 5 },
+    { id: 'nameplate-ember', slot: 'nameplate', name: '용암 심장 문패', price: 540, preview: 'ember', image: '/assets/dragons/nameplates/nameplate-ember.webp', sortOrder: 6 },
+    { id: 'nameplate-legend', slot: 'nameplate', name: '전설의 황금 문패', price: 800, preview: 'legend', image: '/assets/dragons/nameplates/nameplate-legend.webp', requiredWriterLevel: 10, sortOrder: 7 }
 ];
 
 export const DRAGON_DECOR_ITEMS = [...FRAME_ITEMS, ...DECOR_ITEMS];

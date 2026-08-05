@@ -118,7 +118,7 @@ const BackgroundShopModal = ({
                                     const isEquipped = Reflect.get(decor.equipped, item.slot) === item.id;
                                     const isLocked = Number(item.requiredWriterLevel || 1) > Number(petData?.level || 1);
                                     return (
-                                        <article key={item.id} className={`agit-workshop__item${isEquipped ? ' is-equipped' : ''}${previewItemId === item.id ? ' is-previewing' : ''}`}>
+                                        <article key={item.id} data-slot={item.slot} className={`agit-workshop__item${isEquipped ? ' is-equipped' : ''}${previewItemId === item.id ? ' is-previewing' : ''}`}>
                                             <button
                                                 type="button"
                                                 className="agit-workshop__item-preview"
@@ -134,7 +134,12 @@ const BackgroundShopModal = ({
                                                 }}
                                                 aria-label={`${item.name} 미리보기`}
                                             >
-                                                {item.slot === 'nameplate' && <span>나의 아지트</span>}
+                                                {item.slot === 'nameplate' && (
+                                                    <>
+                                                        {item.image && <img src={item.image} alt="" loading="lazy" decoding="async" draggable="false" />}
+                                                        <span>나의 아지트</span>
+                                                    </>
+                                                )}
                                                 {item.slot === 'leftProp' || item.slot === 'rightProp' ? (
                                                     item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" draggable="false" /> : <span>비움</span>
                                                 ) : null}

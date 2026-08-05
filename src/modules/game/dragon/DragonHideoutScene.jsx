@@ -62,8 +62,21 @@ const DragonHideoutScene = ({
                 className="dragon-hideout-scene__dragon"
             />
             <span className="dragon-hideout-scene__nameplate">
-                <strong>{roomLabel}</strong>
-                <small>{petData?.name || '작가 수호룡'}</small>
+                {nameplate?.image && (
+                    <img
+                        className="dragon-hideout-scene__nameplate-art"
+                        src={nameplate.image}
+                        alt=""
+                        loading={eager ? 'eager' : 'lazy'}
+                        decoding="async"
+                        draggable="false"
+                    />
+                )}
+                <span className="dragon-hideout-scene__nameplate-effect" aria-hidden="true" />
+                <span className="dragon-hideout-scene__nameplate-copy">
+                    <strong>{roomLabel}</strong>
+                    <small>{petData?.name || '작가 수호룡'}</small>
+                </span>
             </span>
         </div>
     );
