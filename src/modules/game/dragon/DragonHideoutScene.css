@@ -1,17 +1,16 @@
 .dragon-hideout-scene {
-    --hideout-wallpaper: linear-gradient(135deg, #fff9c4, #fffde7);
-    --hideout-border: #fff176;
-    --hideout-glow: rgba(255, 241, 118, .3);
-    --hideout-text: #5d4037;
+    --hideout-frame: #a97848;
+    --hideout-frame-glow: rgba(169, 120, 72, .28);
+    --hideout-frame-ink: #79553a;
     position: relative;
     display: block;
     width: 100%;
     aspect-ratio: 1;
     overflow: hidden;
-    border: 2px solid var(--hideout-border);
+    border: 1px solid #d7c9ba;
     border-radius: 28px;
-    background: var(--hideout-wallpaper);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .68), 0 14px 30px var(--hideout-glow);
+    background: linear-gradient(145deg, #f8f1e8 0%, #efe3d5 58%, #e3d1bd 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 14px 30px rgba(65, 45, 31, .16);
     container-type: inline-size;
     isolation: isolate;
 }
@@ -19,19 +18,19 @@
 .dragon-hideout-scene__wall,
 .dragon-hideout-scene__floor,
 .dragon-hideout-scene__window,
+.dragon-hideout-scene__frame,
 .dragon-hideout-scene__pedestal,
 .dragon-hideout-scene__prop,
-.dragon-hideout-scene__nameplate {
-    position: absolute;
-}
+.dragon-hideout-scene__nameplate { position: absolute; }
 
+/* 중앙은 모든 프레임에서 동일한 중립 공간을 써 드래곤과 독자 효과의 대비를 지킨다. */
 .dragon-hideout-scene__wall {
     z-index: 0;
     inset: 0 0 28%;
     background:
-        radial-gradient(circle at 20% 14%, rgba(255, 255, 255, .55) 0 1.5%, transparent 2%),
-        radial-gradient(circle at 78% 26%, rgba(255, 255, 255, .42) 0 1%, transparent 1.7%),
-        linear-gradient(90deg, rgba(255, 255, 255, .08), transparent 45%, rgba(20, 26, 38, .08));
+        radial-gradient(circle at 22% 18%, rgba(255,255,255,.62) 0 1.3%, transparent 1.9%),
+        radial-gradient(circle at 73% 28%, rgba(255,255,255,.46) 0 .9%, transparent 1.5%),
+        linear-gradient(90deg, rgba(255,255,255,.18), transparent 46%, rgba(75,48,30,.06));
 }
 
 .dragon-hideout-scene__floor {
@@ -40,180 +39,162 @@
     bottom: -8%;
     left: -8%;
     height: 40%;
-    border-top: 1px solid rgba(255, 255, 255, .55);
+    border-top: 1px solid rgba(255,255,255,.58);
     background:
-        repeating-linear-gradient(96deg, rgba(255, 255, 255, .13) 0 2px, transparent 2px 16%),
-        linear-gradient(180deg, rgba(56, 41, 32, .08), rgba(44, 31, 24, .34));
+        repeating-linear-gradient(96deg, rgba(255,255,255,.13) 0 2px, transparent 2px 16%),
+        linear-gradient(180deg, rgba(91,62,42,.09), rgba(62,42,30,.34));
     transform: perspective(230px) rotateX(54deg);
     transform-origin: bottom;
 }
 
 .dragon-hideout-scene__window {
     z-index: 1;
-    top: 8%;
-    right: 8%;
-    width: 19%;
+    top: 9%;
+    right: 9%;
+    width: 18%;
     aspect-ratio: .8;
     overflow: hidden;
-    border: max(2px, .8cqi) solid rgba(75, 56, 43, .55);
+    border: max(2px,.8cqi) solid rgba(83,61,44,.5);
     border-radius: 50% 50% 7px 7px;
-    background: linear-gradient(180deg, rgba(188, 229, 255, .88), rgba(255, 242, 183, .74));
-    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .42), 0 4px 12px rgba(34, 25, 20, .12);
-    opacity: .84;
+    background: linear-gradient(180deg, rgba(193,228,247,.9), rgba(255,239,187,.8));
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.42), 0 4px 12px rgba(34,25,20,.12);
+    opacity: .8;
 }
-
 .dragon-hideout-scene__window::before,
-.dragon-hideout-scene__window::after {
-    position: absolute;
-    background: rgba(75, 56, 43, .5);
-    content: '';
-}
+.dragon-hideout-scene__window::after { position: absolute; background: rgba(83,61,44,.45); content: ''; }
 .dragon-hideout-scene__window::before { top: 0; bottom: 0; left: 48%; width: 2px; }
 .dragon-hideout-scene__window::after { top: 48%; right: 0; left: 0; height: 2px; }
-.dragon-hideout-scene__window i {
-    position: absolute;
-    top: 15%;
-    left: 20%;
-    width: 7%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 14px 8px 0 rgba(255, 255, 255, .86), 7px 24px 0 rgba(255, 255, 255, .72);
-}
+.dragon-hideout-scene__window i { position: absolute; top: 15%; left: 20%; width: 7%; aspect-ratio: 1; border-radius: 50%; background: #fff; box-shadow: 14px 8px 0 rgba(255,255,255,.86), 7px 24px 0 rgba(255,255,255,.72); }
 .dragon-hideout-scene__window i:last-child { top: 58%; left: 63%; opacity: .72; }
 
-.dragon-hideout-scene__pedestal {
-    z-index: 3;
-    right: 20%;
-    bottom: 17%;
-    left: 20%;
-    height: 18%;
-    border-radius: 50%;
-    background: linear-gradient(180deg, #d6d3ca 0 22%, #8b887f 24% 70%, #66645f 72%);
-    box-shadow: 0 11px 16px rgba(32, 24, 20, .26), inset 0 3px 0 rgba(255, 255, 255, .52);
+/* 프레임은 중앙을 채우지 않고 얇은 선과 네 모서리에만 나타난다. */
+.dragon-hideout-scene__frame {
+    z-index: 9;
+    inset: 2.6%;
+    border: max(2px,.8cqi) solid var(--hideout-frame);
+    border-radius: 23px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.52), 0 0 13px var(--hideout-frame-glow);
+    pointer-events: none;
 }
-.dragon-hideout-scene__pedestal i {
+.dragon-hideout-scene__frame i {
     position: absolute;
-    inset: 6% 7% auto;
-    height: 30%;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, .24);
+    width: 19%;
+    aspect-ratio: 1;
+    border-color: var(--hideout-frame);
+    filter: drop-shadow(0 0 5px var(--hideout-frame-glow));
 }
-.dragon-hideout-scene[data-pedestal='oak'] .dragon-hideout-scene__pedestal {
-    background: repeating-linear-gradient(90deg, #87532f 0 12%, #a96f40 12% 24%);
-    box-shadow: 0 11px 16px rgba(49, 27, 15, .3), inset 0 4px 0 #d39a61;
-}
-.dragon-hideout-scene[data-pedestal='cloud'] .dragon-hideout-scene__pedestal {
-    bottom: 18%;
-    background: linear-gradient(180deg, #fff, #cce5f5);
-    box-shadow: -12px -6px 0 -2px #eef8ff, 15px -8px 0 -1px #fff, 0 12px 20px rgba(80, 145, 190, .28);
-}
-.dragon-hideout-scene[data-pedestal='crystal'] .dragon-hideout-scene__pedestal {
-    border-radius: 18% 18% 50% 50%;
-    background: linear-gradient(135deg, rgba(255,255,255,.9), #a7b7ff 30%, #7459d9 62%, #c0edff);
-    clip-path: polygon(10% 15%, 25% 0, 44% 12%, 64% 0, 89% 17%, 100% 70%, 83% 100%, 15% 96%, 0 67%);
-    box-shadow: 0 0 20px rgba(159, 132, 255, .74);
-}
+.dragon-hideout-scene__frame i:nth-child(1) { top: -2px; left: -2px; border-top: max(5px,1.7cqi) solid; border-left: max(5px,1.7cqi) solid; border-radius: 18px 0 0; }
+.dragon-hideout-scene__frame i:nth-child(2) { top: -2px; right: -2px; border-top: max(5px,1.7cqi) solid; border-right: max(5px,1.7cqi) solid; border-radius: 0 18px 0 0; }
+.dragon-hideout-scene__frame i:nth-child(3) { right: -2px; bottom: -2px; border-right: max(5px,1.7cqi) solid; border-bottom: max(5px,1.7cqi) solid; border-radius: 0 0 18px; }
+.dragon-hideout-scene__frame i:nth-child(4) { bottom: -2px; left: -2px; border-bottom: max(5px,1.7cqi) solid; border-left: max(5px,1.7cqi) solid; border-radius: 0 0 0 18px; }
 
-.dragon-hideout-scene__dragon {
-    position: absolute !important;
-    z-index: 5;
-    top: 13%;
-    left: 17%;
-    width: 66% !important;
-    height: 66% !important;
-}
+.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame { border-color: #6e241b; background: linear-gradient(135deg, rgba(255,94,44,.14), transparent 14% 86%, rgba(255,94,44,.14)); }
+.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame i { border: 0; background: linear-gradient(135deg,#ffb02e,#de3f25 52%,#5d1514); clip-path: polygon(0 0,100% 0,68% 25%,92% 44%,57% 51%,72% 100%,40% 70%,0 100%); }
+.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
+.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
+.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
 
-.dragon-hideout-scene__prop {
-    z-index: 6;
-    bottom: 19%;
-    width: 23%;
-    height: 29%;
-    filter: drop-shadow(0 6px 5px rgba(35, 25, 19, .28));
-}
+.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame { border-color: #87c7e5; box-shadow: inset 0 0 0 1px rgba(255,255,255,.8), 0 0 16px rgba(99,190,232,.34); }
+.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame i { border: 0; width: 21%; border-radius: 50%; background: #f9fdff; box-shadow: 5cqi 1cqi 0 -1cqi #d8f1fb, 10cqi 5cqi 0 -2cqi #fff, 0 0 8px rgba(80,169,212,.3); }
+.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
+.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
+.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+
+.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame { border-color: #9d7ddd; }
+.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i { border: 0; background: linear-gradient(135deg,#ecfbff,#a995ff 52%,#6844b4); clip-path: polygon(0 0,100% 0,75% 32%,92% 63%,52% 55%,35% 100%,20% 57%,0 74%); }
+.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
+.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
+.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+
+.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame { border-color: #5968ad; box-shadow: inset 0 0 0 1px #d8e3ff, 0 0 17px rgba(72,101,214,.4); }
+.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame i { border: 0; width: 14%; background: linear-gradient(135deg,#f6fbff,#70a9ff 42%,#4a4b9f); clip-path: polygon(38% 0,100% 0,62% 38%,87% 38%,21% 100%,42% 52%,0 52%); }
+.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
+.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
+.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+
+.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame { border-color: #5867c6; background: radial-gradient(circle at 3% 3%,#fff 0 .6%,transparent .9%), radial-gradient(circle at 97% 4%,#ffeaa0 0 .7%,transparent 1%), radial-gradient(circle at 96% 96%,#fff 0 .5%,transparent .9%), radial-gradient(circle at 4% 96%,#d8e3ff 0 .7%,transparent 1%); }
+.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame i { border: 0; background: radial-gradient(circle at 38% 35%,#fff 0 3%,transparent 4%), radial-gradient(circle at 66% 62%,#ffe69c 0 4%,transparent 5%), linear-gradient(135deg,#19235b,#5964bd 58%,#261744); clip-path: polygon(0 0,100% 0,74% 27%,100% 62%,58% 57%,38% 100%,25% 57%,0 72%); }
+.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
+.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
+.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+
+.dragon-hideout-scene[data-frame='legend'] .dragon-hideout-scene__frame { border: max(3px,1cqi) double #d4a31d; box-shadow: inset 0 0 0 2px rgba(255,245,182,.66), 0 0 18px rgba(222,174,35,.52); }
+.dragon-hideout-scene[data-frame='legend'] .dragon-hideout-scene__frame i { border-color: #d4a31d; width: 22%; }
+.dragon-hideout-scene[data-frame='legend'] .dragon-hideout-scene__frame i::after { position: absolute; top: 18%; left: 18%; width: 34%; aspect-ratio: 1; background: linear-gradient(135deg,#fff3a6,#c78b12); clip-path: polygon(50% 0,62% 36%,100% 50%,62% 64%,50% 100%,38% 64%,0 50%,38% 36%); content: ''; }
+
+/* 받침대: 같은 타원 크기 안에서도 재질과 실루엣을 확실히 달리한다. */
+.dragon-hideout-scene__pedestal { z-index: 3; right: 20%; bottom: 17%; left: 20%; height: 18%; border-radius: 50%; background: linear-gradient(180deg,#d6d3ca 0 22%,#8b887f 24% 70%,#66645f 72%); box-shadow: 0 11px 16px rgba(32,24,20,.26), inset 0 3px 0 rgba(255,255,255,.52); }
+.dragon-hideout-scene__pedestal i { position: absolute; inset: 6% 7% auto; display: grid; place-items: center; height: 30%; border-radius: 50%; background: rgba(255,255,255,.24); color: #ffe595; font-size: 6cqi; font-style: normal; font-weight: 900; }
+.dragon-hideout-scene[data-pedestal='oak'] .dragon-hideout-scene__pedestal { background: repeating-linear-gradient(90deg,#87532f 0 12%,#a96f40 12% 24%); box-shadow: 0 11px 16px rgba(49,27,15,.3), inset 0 4px 0 #d39a61; }
+.dragon-hideout-scene[data-pedestal='cloud'] .dragon-hideout-scene__pedestal { bottom: 18%; background: linear-gradient(180deg,#fff,#cce5f5); box-shadow: -12px -6px 0 -2px #eef8ff,15px -8px 0 -1px #fff,0 12px 20px rgba(80,145,190,.28); }
+.dragon-hideout-scene[data-pedestal='crystal'] .dragon-hideout-scene__pedestal { border-radius: 18% 18% 50% 50%; background: linear-gradient(135deg,rgba(255,255,255,.9),#a7b7ff 30%,#7459d9 62%,#c0edff); clip-path: polygon(10% 15%,25% 0,44% 12%,64% 0,89% 17%,100% 70%,83% 100%,15% 96%,0 67%); box-shadow: 0 0 20px rgba(159,132,255,.74); }
+.dragon-hideout-scene[data-pedestal='rune'] .dragon-hideout-scene__pedestal { height: 20%; border: max(2px,.7cqi) solid #b79347; background: radial-gradient(ellipse,#4e5158 0 40%,#262931 43% 66%,#0f1117 68%); box-shadow: 0 0 18px rgba(230,185,86,.42),0 11px 17px rgba(20,18,16,.4); }
+.dragon-hideout-scene[data-pedestal='rune'] .dragon-hideout-scene__pedestal i::after { content: 'ᚱ'; color: #f3ce75; text-shadow: 0 0 7px #f0b844; }
+.dragon-hideout-scene[data-pedestal='moonstone'] .dragon-hideout-scene__pedestal { background: radial-gradient(circle at 30% 30%,rgba(94,105,145,.25) 0 5%,transparent 6%),radial-gradient(circle at 67% 45%,rgba(94,105,145,.22) 0 4%,transparent 5%),linear-gradient(180deg,#f4f6ff,#a9b9d8 56%,#65708f); box-shadow: 0 0 20px rgba(168,198,255,.7),0 12px 18px rgba(47,56,84,.3); }
+.dragon-hideout-scene[data-pedestal='ember'] .dragon-hideout-scene__pedestal { border-radius: 36% 36% 50% 50%; background: linear-gradient(115deg,#28231f 0 23%,#ed6a2b 24% 27%,#3a2b24 28% 54%,#ff9a38 55% 58%,#181717 59%); box-shadow: 0 0 20px rgba(255,98,31,.52),0 13px 18px rgba(38,18,11,.4); }
+.dragon-hideout-scene[data-pedestal='root'] .dragon-hideout-scene__pedestal { height: 20%; border-radius: 38% 46% 50% 43%; background: repeating-linear-gradient(112deg,#593a25 0 10%,#8b5a32 11% 22%,#49301f 23% 31%); box-shadow: -8px 8px 0 -5px #654127,9px 7px 0 -5px #754b2b,0 13px 18px rgba(48,28,16,.34); transform: rotate(-2deg); }
+
+.dragon-hideout-scene__dragon { position: absolute !important; z-index: 5; top: 13%; left: 17%; width: 66% !important; height: 66% !important; }
+.dragon-hideout-scene__prop { z-index: 6; bottom: 19%; width: 23%; height: 29%; filter: drop-shadow(0 6px 5px rgba(35,25,19,.28)); }
 .dragon-hideout-scene__prop--left { left: 4%; }
 .dragon-hideout-scene__prop--right { right: 4%; }
 
-.dragon-hideout-scene__prop[data-visual='bookshelf'] {
-    border: max(2px, .8cqi) solid #6d4228;
-    border-radius: 5px 5px 3px 3px;
-    background: linear-gradient(90deg, #7b4b2c, #a46b3f 50%, #704126);
-    box-shadow: inset 0 -32cqi 0 rgba(56, 30, 16, .22);
-}
-.dragon-hideout-scene__prop[data-visual='bookshelf']::before {
-    position: absolute;
-    top: 45%;
-    right: 6%;
-    left: 6%;
-    height: 4%;
-    background: #59341f;
-    content: '';
-}
-.dragon-hideout-scene__books { position: absolute; inset: 11% 12%; display: flex; align-items: flex-end; gap: 5%; }
-.dragon-hideout-scene__books i { width: 18%; height: 34%; border-radius: 2px 2px 0 0; background: #dc6b55; box-shadow: 0 23cqi 0 #6a88b8; }
-.dragon-hideout-scene__books i:nth-child(2) { height: 28%; background: #e8b84f; transform: rotate(4deg); }
-.dragon-hideout-scene__books i:nth-child(3) { height: 39%; background: #5e9870; }
-.dragon-hideout-scene__books i:nth-child(4) { height: 31%; background: #8c6db1; transform: rotate(-5deg); }
+/* 소품은 생활 가구가 아니라 수호룡의 서식 공간에서 나온 물건처럼 보이게 한다. */
+.dragon-hideout-scene__prop[data-visual='dragon-library'] { border: max(2px,.8cqi) solid #503522; border-radius: 48% 48% 8% 8%; background: linear-gradient(90deg,#5e3b28,#8e5c39 50%,#523221); box-shadow: inset 0 -32cqi 0 rgba(41,24,15,.25); }
+.dragon-hideout-scene__prop[data-visual='dragon-library']::before,
+.dragon-hideout-scene__prop[data-visual='dragon-library']::after { position: absolute; top: -10%; width: 29%; height: 24%; border-top: max(4px,1.2cqi) solid #69442a; border-radius: 80% 0 0; content: ''; }
+.dragon-hideout-scene__prop[data-visual='dragon-library']::before { left: 6%; transform: rotate(-28deg); }
+.dragon-hideout-scene__prop[data-visual='dragon-library']::after { right: 6%; transform: scaleX(-1) rotate(-28deg); }
+.dragon-hideout-scene__library { position: absolute; inset: 16% 12% 8%; display: flex; align-items: flex-end; gap: 5%; }
+.dragon-hideout-scene__library i { width: 17%; height: 38%; border-radius: 2px; background: #8cb4cb; box-shadow: 0 24cqi 0 #684a8d; }
+.dragon-hideout-scene__library i:nth-child(2) { height: 31%; background: #d99a4d; }
+.dragon-hideout-scene__library i:nth-child(3) { height: 42%; background: #6f9a75; }
+.dragon-hideout-scene__library i:nth-child(4) { height: 34%; background: #b45e58; }
+.dragon-hideout-scene__library b { position: absolute; top: -4%; left: 38%; color: #e5c77a; font-size: 6cqi; text-shadow: 0 0 5px #f6d985; }
 
-.dragon-hideout-scene__prop[data-visual='plant']::before {
-    position: absolute; right: 19%; bottom: 0; left: 19%; height: 39%; border-radius: 8% 8% 42% 42%;
-    background: linear-gradient(90deg, #9a5736, #d68750 48%, #8b482d); content: '';
-}
-.dragon-hideout-scene__plant { position: absolute; inset: 0 4% 27%; }
-.dragon-hideout-scene__plant i { position: absolute; bottom: 2%; left: 38%; width: 30%; height: 68%; border-radius: 100% 0 100% 0; background: linear-gradient(135deg, #76b861, #2f7541); transform: rotate(-32deg); transform-origin: bottom; }
-.dragon-hideout-scene__plant i:nth-child(2) { left: 45%; height: 82%; transform: rotate(10deg); }
-.dragon-hideout-scene__plant i:nth-child(3) { left: 45%; height: 66%; transform: rotate(45deg); }
+.dragon-hideout-scene__prop[data-visual='breath-sprout']::before { position: absolute; right: 18%; bottom: 0; left: 18%; height: 36%; border-radius: 45% 45% 30% 30%; background: linear-gradient(135deg,#405d64,#78989a 48%,#314b52); clip-path: polygon(12% 20%,32% 0,49% 18%,70% 0,92% 22%,100% 100%,0 100%); content: ''; }
+.dragon-hideout-scene__sprout { position: absolute; inset: 0 2% 25%; }
+.dragon-hideout-scene__sprout i { position: absolute; bottom: 2%; left: 38%; width: 30%; height: 68%; border-radius: 100% 0 100% 0; background: linear-gradient(135deg,#8ce4b0,#2d8f70); box-shadow: 0 0 8px rgba(82,221,174,.56); transform: rotate(-32deg); transform-origin: bottom; }
+.dragon-hideout-scene__sprout i:nth-child(2) { left: 45%; height: 82%; transform: rotate(10deg); }
+.dragon-hideout-scene__sprout i:nth-child(3) { left: 45%; height: 66%; transform: rotate(45deg); }
+.dragon-hideout-scene__sprout b { position: absolute; top: 8%; left: 38%; width: 23%; aspect-ratio: 1; border-radius: 50%; background: #c8fff0; box-shadow: 0 0 12px #63e4bd; }
 
-.dragon-hideout-scene__prop[data-visual='lantern']::before { position: absolute; top: 7%; right: 22%; bottom: 12%; left: 22%; border: max(2px,.8cqi) solid #5f4b3a; border-radius: 45% 45% 20% 20%; background: radial-gradient(circle, #fff8b3, #f1ad45 55%, #6a4933 58%); box-shadow: 0 0 18px #ffd66b; content: ''; }
-.dragon-hideout-scene__lantern::before { position: absolute; top: 0; left: 36%; width: 28%; height: 16%; border: max(2px,.8cqi) solid #5f4b3a; border-bottom: 0; border-radius: 50% 50% 0 0; content: ''; }
-.dragon-hideout-scene__lantern i { position: absolute; right: 28%; bottom: 7%; left: 28%; height: 8%; border-radius: 50%; background: #4f3a2d; }
+.dragon-hideout-scene__prop[data-visual='guardian-flame']::before { position: absolute; right: 16%; bottom: 0; left: 16%; height: 34%; border: max(2px,.7cqi) solid #3d3530; border-radius: 8% 8% 48% 48%; background: linear-gradient(90deg,#44404a,#807178 50%,#332f37); content: ''; }
+.dragon-hideout-scene__guardian-flame { position: absolute; inset: 3% 19% 29%; filter: drop-shadow(0 0 8px #ff9b45); }
+.dragon-hideout-scene__guardian-flame i { position: absolute; inset: 0; background: linear-gradient(135deg,#fff6a4 18%,#ff9b35 48%,#ca3a38 78%); clip-path: polygon(50% 0,68% 28%,88% 17%,82% 58%,100% 54%,73% 100%,24% 100%,0 56%,21% 62%,14% 24%,39% 39%); }
+.dragon-hideout-scene__guardian-flame b { position: absolute; top: 36%; left: 38%; width: 28%; height: 48%; background: #fffbd0; clip-path: polygon(50% 0,100% 100%,0 100%); }
 
-.dragon-hideout-scene__prop[data-visual='desk']::before { position: absolute; right: 0; bottom: 24%; left: 0; height: 28%; border-radius: 4px; background: linear-gradient(180deg, #b47745, #704125); box-shadow: inset 0 3px #dca06b; content: ''; }
-.dragon-hideout-scene__prop[data-visual='desk']::after { position: absolute; right: 9%; bottom: 0; left: 9%; height: 30%; border-right: max(3px,1.2cqi) solid #60402c; border-left: max(3px,1.2cqi) solid #60402c; content: ''; }
-.dragon-hideout-scene__desk i { position: absolute; right: 10%; bottom: 53%; width: 47%; height: 15%; border-radius: 2px; background: #f0dd9d; box-shadow: 0 -5cqi 0 #7793bb; transform: rotate(-5deg); }
-.dragon-hideout-scene__desk b { position: absolute; bottom: 55%; left: 12%; width: 20%; height: 21%; border: 2px solid #f5e5cf; border-radius: 50% 50% 4px 4px; background: #7c6049; }
+.dragon-hideout-scene__runestone { position: absolute; inset: 4% 16% 0; display: grid; place-items: center; border: max(2px,.8cqi) solid #4a4c51; border-radius: 42% 42% 14% 14%; background: linear-gradient(135deg,#777b81,#3d4148 65%,#25282e); color: #89e4d2; box-shadow: inset 0 0 0 2px rgba(255,255,255,.12),0 0 12px rgba(93,224,197,.3); transform: rotate(-4deg); }
+.dragon-hideout-scene__runestone i { font-size: 10cqi; font-style: normal; text-shadow: 0 0 7px #52d1bb; }
 
-.dragon-hideout-scene__prop[data-visual='telescope']::before { position: absolute; top: 18%; left: 11%; width: 76%; height: 22%; border: max(2px,.8cqi) solid #54493f; border-radius: 50% 18% 18% 50%; background: linear-gradient(180deg, #c9b26d, #806c3c); transform: rotate(-22deg); content: ''; }
-.dragon-hideout-scene__telescope i { position: absolute; top: 38%; left: 43%; width: 7%; height: 58%; background: #4f4842; transform: rotate(15deg); transform-origin: top; }
-.dragon-hideout-scene__telescope i::after { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #4f4842; content: ''; transform: rotate(-31deg); transform-origin: top; }
-.dragon-hideout-scene__telescope b { position: absolute; right: 2%; bottom: 1%; left: 8%; height: 5%; border-radius: 50%; background: rgba(47, 36, 30, .36); }
+.dragon-hideout-scene__prop[data-visual='story-altar']::before { position: absolute; right: 2%; bottom: 0; left: 2%; height: 48%; border-radius: 12% 12% 24% 24%; background: linear-gradient(180deg,#7b7778,#49474d 55%,#2b2b30); clip-path: polygon(8% 0,92% 0,100% 24%,80% 36%,87% 100%,13% 100%,20% 36%,0 24%); content: ''; }
+.dragon-hideout-scene__altar i { position: absolute; top: 17%; left: 16%; width: 68%; height: 23%; border: 1px solid #cda968; border-radius: 50%; background: radial-gradient(circle,#fff2b1,#b8893c 42%,#3a3330 45%); box-shadow: 0 0 13px rgba(255,213,111,.55); }
+.dragon-hideout-scene__altar b { position: absolute; top: 5%; left: 41%; width: 18%; aspect-ratio: 1; background: #fff3b0; clip-path: polygon(50% 0,62% 37%,100% 50%,62% 63%,50% 100%,38% 63%,0 50%,38% 37%); filter: drop-shadow(0 0 6px #efc867); }
 
-.dragon-hideout-scene__prop[data-visual='chest']::before { position: absolute; right: 2%; bottom: 2%; left: 2%; height: 58%; border: max(2px,.8cqi) solid #553921; border-radius: 32% 32% 8% 8%; background: linear-gradient(180deg, #a96a36 0 34%, #724522 35%); box-shadow: inset 0 5px rgba(255,255,255,.15); content: ''; }
-.dragon-hideout-scene__chest i { position: absolute; z-index: 1; bottom: 20%; left: 42%; width: 17%; aspect-ratio: .8; border-radius: 3px; background: #edc858; box-shadow: 0 0 0 2px #705622; }
+.dragon-hideout-scene__star-orb { position: absolute; inset: 1% 5% 0; }
+.dragon-hideout-scene__star-orb::before { position: absolute; top: 2%; left: 19%; width: 63%; aspect-ratio: 1; border: max(2px,.7cqi) solid #c0a55f; border-radius: 50%; background: radial-gradient(circle at 38% 31%,#fff 0 4%,transparent 5%),radial-gradient(circle,#5968ba,#242a68 58%,#17143c); box-shadow: inset 0 0 12px #8fa8ff,0 0 15px rgba(92,114,222,.6); content: ''; }
+.dragon-hideout-scene__star-orb i { position: absolute; z-index: 1; top: 19%; left: 43%; color: #fff1a5; font-size: 7cqi; font-style: normal; text-shadow: 0 0 8px #fff; }
+.dragon-hideout-scene__star-orb b { position: absolute; right: 16%; bottom: 0; left: 16%; height: 38%; border-right: max(3px,1cqi) solid #59472e; border-left: max(3px,1cqi) solid #59472e; clip-path: polygon(18% 0,82% 0,100% 100%,72% 100%,50% 32%,28% 100%,0 100%); }
 
-.dragon-hideout-scene__nameplate {
-    z-index: 8;
-    right: 21%;
-    bottom: 3.5%;
-    left: 21%;
-    min-height: 12%;
-    padding: 2.4% 4%;
-    border: 1px solid rgba(65, 50, 38, .28);
-    border-radius: 10px;
-    background: rgba(255, 253, 245, .9);
-    color: #4d3b2c;
-    text-align: center;
-    box-shadow: 0 5px 11px rgba(38, 28, 22, .22), inset 0 1px rgba(255,255,255,.8);
-    backdrop-filter: blur(4px);
-}
+.dragon-hideout-scene__prop[data-visual='dragon-hoard']::before { position: absolute; right: 1%; bottom: 0; left: 1%; height: 59%; border: max(2px,.8cqi) solid #4c3423; border-radius: 38% 38% 10% 10%; background: repeating-linear-gradient(135deg,#8e5a32 0 12%,#b7783d 13% 24%); box-shadow: inset 0 5px rgba(255,255,255,.12); content: ''; }
+.dragon-hideout-scene__hoard i { position: absolute; z-index: 1; bottom: 18%; left: 41%; width: 18%; aspect-ratio: .8; border-radius: 3px; background: #e8c052; box-shadow: 0 0 0 2px #694d1e; }
+.dragon-hideout-scene__hoard b { position: absolute; z-index: 1; right: 8%; bottom: 1%; width: 27%; height: 19%; background: linear-gradient(135deg,#b9f3ff,#5d87df); clip-path: polygon(50% 0,100% 52%,76% 100%,20% 93%,0 42%); filter: drop-shadow(-17cqi 2cqi 0 #d86555); }
+
+.dragon-hideout-scene__nest { position: absolute; inset: 10% 0 0; }
+.dragon-hideout-scene__nest::before { position: absolute; right: 2%; bottom: 0; left: 2%; height: 38%; border-radius: 50%; background: repeating-linear-gradient(10deg,#5c3b26 0 6%,#a16c3e 7% 12%,#69442a 13% 18%); box-shadow: inset 0 6px #3f291c,0 7px 9px rgba(45,27,17,.3); content: ''; }
+.dragon-hideout-scene__nest i { position: absolute; bottom: 18%; left: 32%; width: 37%; height: 51%; border: max(2px,.7cqi) solid #7a6bb1; border-radius: 52% 48% 46% 54%; background: radial-gradient(circle at 35% 28%,#fff 0 4%,transparent 5%),linear-gradient(135deg,#d8d1ff,#8b78c7); transform: rotate(-7deg); }
+.dragon-hideout-scene__nest b { position: absolute; z-index: 1; bottom: 27%; left: 45%; width: 10%; height: 20%; background: #fff4b0; clip-path: polygon(50% 0,100% 45%,63% 100%,0 66%); }
+
+.dragon-hideout-scene__nameplate { z-index: 8; right: 21%; bottom: 3.5%; left: 21%; min-height: 12%; padding: 2.4% 4%; border: 1px solid rgba(65,50,38,.28); border-radius: 10px; background: rgba(255,253,245,.92); color: #4d3b2c; text-align: center; box-shadow: 0 5px 11px rgba(38,28,22,.22),inset 0 1px rgba(255,255,255,.8); backdrop-filter: blur(4px); }
 .dragon-hideout-scene__nameplate strong,
 .dragon-hideout-scene__nameplate small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dragon-hideout-scene__nameplate strong { font-size: clamp(.58rem, 4.1cqi, .86rem); font-weight: 950; }
-.dragon-hideout-scene__nameplate small { margin-top: 1px; font-size: clamp(.45rem, 2.8cqi, .62rem); font-weight: 800; opacity: .72; }
-.dragon-hideout-scene[data-nameplate='oak'] .dragon-hideout-scene__nameplate { border-color: #6a4024; background: linear-gradient(90deg, #8b562f, #c38751 50%, #83502d); color: #fff7df; box-shadow: 0 5px 11px rgba(51,29,16,.34), inset 0 2px #d9a36d; }
-.dragon-hideout-scene[data-nameplate='brass'] .dragon-hideout-scene__nameplate { border: 2px solid #6a5524; background: linear-gradient(135deg, #f6df88, #b98a2e 48%, #f9e7a2); color: #4b3712; box-shadow: 0 5px 12px rgba(72,52,16,.32), inset 0 1px #fff2b8; }
-.dragon-hideout-scene[data-nameplate='crystal'] .dragon-hideout-scene__nameplate { border-color: rgba(228,238,255,.9); background: linear-gradient(135deg, rgba(223,246,255,.92), rgba(171,158,255,.9), rgba(231,244,255,.92)); color: #312a68; box-shadow: 0 0 18px rgba(156,135,255,.72), inset 0 1px #fff; }
+.dragon-hideout-scene__nameplate strong { font-size: clamp(.58rem,4.1cqi,.86rem); font-weight: 950; }
+.dragon-hideout-scene__nameplate small { margin-top: 1px; font-size: clamp(.45rem,2.8cqi,.62rem); font-weight: 800; opacity: .72; }
+.dragon-hideout-scene[data-nameplate='oak'] .dragon-hideout-scene__nameplate { border-color: #6a4024; background: linear-gradient(90deg,#8b562f,#c38751 50%,#83502d); color: #fff7df; box-shadow: 0 5px 11px rgba(51,29,16,.34),inset 0 2px #d9a36d; }
+.dragon-hideout-scene[data-nameplate='brass'] .dragon-hideout-scene__nameplate { border: 2px solid #6a5524; background: linear-gradient(135deg,#f6df88,#b98a2e 48%,#f9e7a2); color: #4b3712; box-shadow: 0 5px 12px rgba(72,52,16,.32),inset 0 1px #fff2b8; }
+.dragon-hideout-scene[data-nameplate='crystal'] .dragon-hideout-scene__nameplate { border-color: rgba(228,238,255,.9); background: linear-gradient(135deg,rgba(223,246,255,.92),rgba(171,158,255,.9),rgba(231,244,255,.92)); color: #312a68; box-shadow: 0 0 18px rgba(156,135,255,.72),inset 0 1px #fff; }
 
-.dragon-hideout-scene[data-wallpaper='volcano'] .dragon-hideout-scene__window,
-.dragon-hideout-scene[data-wallpaper='storm'] .dragon-hideout-scene__window,
-.dragon-hideout-scene[data-wallpaper='galaxy'] .dragon-hideout-scene__window,
-.dragon-hideout-scene[data-wallpaper='legend'] .dragon-hideout-scene__window { background: linear-gradient(180deg, #28325f, #7e6eaf); border-color: rgba(255,255,255,.48); }
-.dragon-hideout-scene[data-wallpaper='volcano'] .dragon-hideout-scene__floor { background: radial-gradient(circle at 30% 10%, rgba(255,93,47,.38), transparent 18%), linear-gradient(180deg, rgba(20,8,5,.2), rgba(10,3,2,.72)); }
-.dragon-hideout-scene[data-wallpaper='crystal'] .dragon-hideout-scene__wall { background: linear-gradient(125deg, transparent 10%, rgba(255,255,255,.2) 11% 13%, transparent 14% 48%, rgba(227,190,255,.22) 49% 52%, transparent 53%); }
-.dragon-hideout-scene[data-wallpaper='galaxy'] .dragon-hideout-scene__wall,
-.dragon-hideout-scene[data-wallpaper='storm'] .dragon-hideout-scene__wall { background: radial-gradient(circle at 17% 20%, #fff 0 .5%, transparent .8%), radial-gradient(circle at 72% 34%, #fff 0 .7%, transparent 1%), radial-gradient(circle at 48% 9%, rgba(255,255,255,.8) 0 .4%, transparent .8%); }
-
-.dragon-hideout-scene--compact { border-radius: 18px; container-type: inline-size; }
+.dragon-hideout-scene--compact { border-radius: 18px; }
 .dragon-hideout-scene--compact .dragon-hideout-scene__nameplate { right: 13%; left: 13%; }
 
 @media (prefers-reduced-motion: reduce) {

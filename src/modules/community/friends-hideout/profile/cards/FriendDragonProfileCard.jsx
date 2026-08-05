@@ -37,7 +37,7 @@ const FriendDragonProfileCard = ({ friend }) => {
                     <span style={{ display: 'block', width: `${exp}%`, height: '100%', borderRadius: 'inherit', background: 'linear-gradient(90deg,#F2B92C,#E78632)' }} />
                 </span>
                 <p style={{ margin: '9px 0 0', color: '#7C654E', fontSize: '.65rem', fontWeight: 800, lineHeight: 1.45 }}>
-                    친구가 장착한 벽지·받침대·좌우 소품·문패가 그대로 전시돼요.
+                    친구가 장착한 프레임·받침대·좌우 소품·문패가 그대로 전시돼요.
                 </p>
             </div>
         </section>

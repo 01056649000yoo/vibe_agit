@@ -159,7 +159,7 @@ const READER_SCENE_THEMES = new Map([
     }]
 ]);
 
-/** 새 배경은 readerTone만 선언하면 독자 효과 대비가 자동으로 맞춰진다. */
+/** 저장 ID는 예전 배경과 호환하지만, 화면에서는 모서리 프레임 테마로 사용한다. */
 export const getReaderSceneTheme = (backgroundId) => {
     const background = Reflect.get(HIDEOUT_BACKGROUNDS, backgroundId) || HIDEOUT_BACKGROUNDS.default;
     const theme = READER_SCENE_THEMES.get(background.readerTone) || READER_SCENE_THEMES.get('light');
@@ -172,13 +172,13 @@ export const getReaderSceneTheme = (backgroundId) => {
 };
 
 export const HIDEOUT_BACKGROUNDS = {
-    default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', textColor: '#5D4037', subColor: '#8D6E63', glow: 'rgba(255, 241, 118, 0.3)', readerTone: 'light' },
-    volcano: { id: 'volcano', name: '🌋 화산 동굴', color: 'linear-gradient(135deg, #4A0000 0%, #8B0000 100%)', border: '#FF5722', textColor: 'white', subColor: '#FFCCBC', price: 300, glow: 'rgba(255, 87, 34, 0.4)', readerTone: 'dark' },
-    sky: { id: 'sky', name: '☁️ 천상 전당', color: 'linear-gradient(180deg, #0288D1 0%, #E1F5FE 70%, #FFFFFF 100%)', border: '#81D4FA', textColor: '#01579B', subColor: '#0288D1', price: 500, glow: 'rgba(129, 212, 250, 0.4)', readerTone: 'vivid' },
-    crystal: { id: 'crystal', name: '💎 수정 궁전', color: 'linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%)', border: '#BA68C8', textColor: 'white', subColor: '#E1BEE7', price: 1000, glow: 'rgba(186, 104, 200, 0.4)', readerTone: 'dark' },
-    storm: { id: 'storm', name: '🌩️ 번개 폭풍', color: 'linear-gradient(180deg, #050A30 0%, #000C66 50%, #000000 100%)', border: '#7986CB', textColor: 'white', subColor: '#C5CAE9', price: 700, glow: 'rgba(121, 134, 203, 0.6)', readerTone: 'dark' },
-    galaxy: { id: 'galaxy', name: '🌌 달빛 은하수', color: 'linear-gradient(135deg, #0D47A1 0%, #000000 100%)', border: '#90CAF9', textColor: 'white', subColor: '#E3F2FD', price: 500, glow: 'rgba(144, 202, 249, 0.4)', readerTone: 'dark' },
-    legend: { id: 'legend', name: '✨ 천상의 황금성소', color: 'linear-gradient(135deg, #1A1A1A 0%, #4D342C 50%, #1A1A1A 100%)', border: '#FFD700', textColor: '#FFD700', subColor: '#B8860B', price: 0, requiresMaxLevel: true, glow: 'rgba(255, 215, 0, 0.9)', readerTone: 'dark' }
+    default: { id: 'default', name: '기본 나무 프레임', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#A97848', textColor: '#5D4037', subColor: '#8D6E63', glow: 'rgba(169, 120, 72, 0.28)', readerTone: 'light' },
+    volcano: { id: 'volcano', name: '🌋 용암 프레임', color: 'linear-gradient(135deg, #4A0000 0%, #8B0000 100%)', border: '#FF5722', textColor: 'white', subColor: '#FFCCBC', price: 300, glow: 'rgba(255, 87, 34, 0.4)', readerTone: 'dark' },
+    sky: { id: 'sky', name: '☁️ 구름 프레임', color: 'linear-gradient(180deg, #0288D1 0%, #E1F5FE 70%, #FFFFFF 100%)', border: '#81D4FA', textColor: '#01579B', subColor: '#0288D1', price: 500, glow: 'rgba(129, 212, 250, 0.4)', readerTone: 'vivid' },
+    crystal: { id: 'crystal', name: '💎 수정 프레임', color: 'linear-gradient(135deg, #4A148C 0%, #7B1FA2 100%)', border: '#BA68C8', textColor: 'white', subColor: '#E1BEE7', price: 1000, glow: 'rgba(186, 104, 200, 0.4)', readerTone: 'dark' },
+    storm: { id: 'storm', name: '🌩️ 번개 프레임', color: 'linear-gradient(180deg, #050A30 0%, #000C66 50%, #000000 100%)', border: '#7986CB', textColor: 'white', subColor: '#C5CAE9', price: 700, glow: 'rgba(121, 134, 203, 0.6)', readerTone: 'dark' },
+    galaxy: { id: 'galaxy', name: '🌌 별자리 프레임', color: 'linear-gradient(135deg, #0D47A1 0%, #000000 100%)', border: '#6679D9', textColor: 'white', subColor: '#E3F2FD', price: 500, glow: 'rgba(102, 121, 217, 0.4)', readerTone: 'dark' },
+    legend: { id: 'legend', name: '✨ 전설의 황금 프레임', color: 'linear-gradient(135deg, #1A1A1A 0%, #4D342C 50%, #1A1A1A 100%)', border: '#D5A51E', textColor: '#FFD700', subColor: '#B8860B', price: 0, requiresMaxLevel: true, glow: 'rgba(213, 165, 30, 0.55)', readerTone: 'dark' }
 };
 
 export const getHideoutBackground = (backgroundId) => (

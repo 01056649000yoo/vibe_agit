@@ -81,7 +81,7 @@ test('독자 칭호 7단계를 독립적인 드래곤 효과로 제한한다', (
     assert.equal(getReaderDragonEffect(999).level, 7);
 });
 
-test('모든 아지트 배경이 독자 효과 대비 계약을 선언한다', () => {
+test('모든 아지트 프레임이 예전 화면용 독자 효과 대비 계약도 유지한다', () => {
     const allowedTones = new Set(['light', 'dark', 'vivid']);
     Object.values(HIDEOUT_BACKGROUNDS).forEach((background) => {
         assert.equal(allowedTones.has(background.readerTone), true);
@@ -124,9 +124,11 @@ test('아지트 공방은 관리 가능한 5개 고정 슬롯만 사용한다', 
         assert.equal(items.some((item) => item.isDefault), true);
         assert.equal(Reflect.get(DEFAULT_EQUIPPED_DECOR, slot.id) != null, true);
     });
+    assert.equal(DRAGON_DECOR_SLOTS[0].name, '프레임');
+    assert.equal(getDragonDecorItemsForSlot('pedestal').length, 8);
 });
 
-test('기존에 산 배경은 새 벽지 소유·장착 상태로 그대로 이어진다', () => {
+test('기존에 산 배경은 새 프레임 소유·장착 상태로 그대로 이어진다', () => {
     const normalized = normalizeDragonDecor({
         background: 'storm',
         ownedItems: ['volcano', 'storm']
@@ -135,6 +137,21 @@ test('기존에 산 배경은 새 벽지 소유·장착 상태로 그대로 이�
     assert.equal(normalized.owned.has('volcano'), true);
     assert.equal(normalized.owned.has('storm'), true);
     assert.equal(normalized.equipped.pedestal, 'pedestal-stone');
+});
+
+test('프레임은 모서리 테마 이름을 쓰고 소품은 수호룡 세계관의 시각 키를 쓴다', () => {
+    assert.equal(getDragonDecorItemsForSlot('wallpaper').every((item) => item.name.includes('프레임')), true);
+    assert.deepEqual(
+        getDragonDecorItemsForSlot('pedestal').map((item) => item.preview),
+        ['stone', 'oak', 'cloud', 'crystal', 'rune', 'moonstone', 'ember', 'root']
+    );
+    const propVisuals = [
+        ...getDragonDecorItemsForSlot('leftProp'),
+        ...getDragonDecorItemsForSlot('rightProp')
+    ].map((item) => item.preview);
+    ['bookshelf', 'plant', 'lantern', 'desk', 'telescope', 'chest'].forEach((legacyVisual) => {
+        assert.equal(propVisuals.includes(legacyVisual), false);
+    });
 });
 
 test('장착한 5개 슬롯은 하나의 pet_data 계약으로 복원된다', () => {

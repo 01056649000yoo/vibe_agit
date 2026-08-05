@@ -12,8 +12,8 @@ import {
 import './BackgroundShopModal.css';
 
 const ITEM_PREVIEW_SYMBOLS = new Map([
-    ['none', '비움'], ['bookshelf', '▥'], ['plant', '♧'], ['lantern', '◇'],
-    ['desk', '▰'], ['telescope', '⌕'], ['chest', '▣']
+    ['none', '비움'], ['dragon-library', 'ᚱ'], ['breath-sprout', '♧'], ['guardian-flame', '♢'],
+    ['rune-stone', 'ᚱ'], ['story-altar', '✦'], ['star-orb', '◉'], ['dragon-hoard', '◆'], ['hatchling-nest', '◒']
 ]);
 
 const BackgroundShopModal = ({
@@ -129,7 +129,10 @@ const BackgroundShopModal = ({
                                                 className="agit-workshop__item-preview"
                                                 data-slot={item.slot}
                                                 data-visual={item.preview || item.id}
-                                                style={item.slot === 'wallpaper' ? { background: item.color } : undefined}
+                                                style={item.slot === 'wallpaper' ? {
+                                                    '--workshop-frame-color': item.border,
+                                                    '--workshop-frame-glow': item.glow
+                                                } : undefined}
                                                 onClick={() => {
                                                     setPreviewItemId(item.id);
                                                     setNotice(`${item.name} 미리보기예요. 구입하거나 장착하기 전에는 저장되지 않아요.`);

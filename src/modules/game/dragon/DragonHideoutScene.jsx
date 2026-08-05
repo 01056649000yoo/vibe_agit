@@ -10,12 +10,14 @@ const DecorProp = ({ itemId, side }) => {
 
     return (
         <span className={`dragon-hideout-scene__prop dragon-hideout-scene__prop--${side}`} data-visual={item.preview} aria-hidden="true">
-            {item.preview === 'bookshelf' && <span className="dragon-hideout-scene__books"><i /><i /><i /><i /></span>}
-            {item.preview === 'plant' && <span className="dragon-hideout-scene__plant"><i /><i /><i /></span>}
-            {item.preview === 'lantern' && <span className="dragon-hideout-scene__lantern"><i /></span>}
-            {item.preview === 'desk' && <span className="dragon-hideout-scene__desk"><i /><b /></span>}
-            {item.preview === 'telescope' && <span className="dragon-hideout-scene__telescope"><i /><b /></span>}
-            {item.preview === 'chest' && <span className="dragon-hideout-scene__chest"><i /></span>}
+            {item.preview === 'dragon-library' && <span className="dragon-hideout-scene__library"><i /><i /><i /><i /><b>ᚱ</b></span>}
+            {item.preview === 'breath-sprout' && <span className="dragon-hideout-scene__sprout"><i /><i /><i /><b /></span>}
+            {item.preview === 'guardian-flame' && <span className="dragon-hideout-scene__guardian-flame"><i /><b /></span>}
+            {item.preview === 'rune-stone' && <span className="dragon-hideout-scene__runestone"><i>ᚱ</i></span>}
+            {item.preview === 'story-altar' && <span className="dragon-hideout-scene__altar"><i /><b /></span>}
+            {item.preview === 'star-orb' && <span className="dragon-hideout-scene__star-orb"><i>✦</i><b /></span>}
+            {item.preview === 'dragon-hoard' && <span className="dragon-hideout-scene__hoard"><i /><b /></span>}
+            {item.preview === 'hatchling-nest' && <span className="dragon-hideout-scene__nest"><i /><b /></span>}
         </span>
     );
 };
@@ -31,7 +33,7 @@ const DragonHideoutScene = ({
     eager = false
 }) => {
     const { equipped } = normalizeDragonDecor(petData);
-    const wallpaper = getHideoutBackground(equipped.wallpaper);
+    const frameTheme = getHideoutBackground(equipped.wallpaper);
     const pedestal = getDragonDecorItem(equipped.pedestal);
     const nameplate = getDragonDecorItem(equipped.nameplate);
     const roomLabel = `${ownerName || '나'}의 아지트`;
@@ -40,14 +42,13 @@ const DragonHideoutScene = ({
         <div
             role="img"
             className={`dragon-hideout-scene${compact ? ' dragon-hideout-scene--compact' : ''} ${className}`.trim()}
-            data-wallpaper={equipped.wallpaper}
+            data-frame={equipped.wallpaper}
             data-pedestal={pedestal?.preview || 'stone'}
             data-nameplate={nameplate?.preview || 'simple'}
             style={{
-                '--hideout-wallpaper': wallpaper.color,
-                '--hideout-border': wallpaper.border,
-                '--hideout-glow': wallpaper.glow,
-                '--hideout-text': wallpaper.textColor,
+                '--hideout-frame': frameTheme.border,
+                '--hideout-frame-glow': frameTheme.glow,
+                '--hideout-frame-ink': frameTheme.subColor,
                 ...style
             }}
             aria-label={`${roomLabel}, ${petData?.name || '작가 수호룡'}`}
@@ -55,13 +56,14 @@ const DragonHideoutScene = ({
             <span className="dragon-hideout-scene__wall" aria-hidden="true" />
             <span className="dragon-hideout-scene__window" aria-hidden="true"><i /><i /></span>
             <span className="dragon-hideout-scene__floor" aria-hidden="true" />
+            <span className="dragon-hideout-scene__frame" aria-hidden="true"><i /><i /><i /><i /></span>
             <span className="dragon-hideout-scene__pedestal" aria-hidden="true"><i /></span>
             <DecorProp itemId={equipped.leftProp} side="left" />
             <DecorProp itemId={equipped.rightProp} side="right" />
             <DragonAvatar
                 dragon={dragon}
                 readerLevel={readerLevel}
-                backgroundId={equipped.wallpaper}
+                backgroundId="default"
                 alt=""
                 eager={eager}
                 className="dragon-hideout-scene__dragon"

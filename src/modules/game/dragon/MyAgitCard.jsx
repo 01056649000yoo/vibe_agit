@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import DragonAvatar from './DragonAvatar';
+import DragonHideoutScene from './DragonHideoutScene';
 import { getDragonStage, getHideoutBackground, getReaderDragonEffect } from './presentation';
 
 const INK = '#3E2E23';
@@ -20,7 +20,8 @@ const MyAgitCard = ({ runtime, onOpen }) => {
     const mastered = level >= 10 && exp >= 100;
     const dragonInfo = getDragonStage(level, petData.species);
     const readerEffect = getReaderDragonEffect(runtime?.readerLevel);
-    const habitat = getHideoutBackground(petData.background);
+    const frameId = petData?.equippedDecor?.wallpaper || petData.background;
+    const habitat = getHideoutBackground(frameId);
 
     return (
         <motion.button
@@ -32,30 +33,30 @@ const MyAgitCard = ({ runtime, onOpen }) => {
             style={{
                 position: 'relative', display: 'grid', gridTemplateColumns: '126px minmax(0,1fr)',
                 width: '100%', minHeight: '164px', marginBottom: '14px', padding: 0, overflow: 'hidden',
-                border: `2px solid ${habitat.border}`, borderRadius: '23px', background: habitat.color,
+                border: `2px solid ${habitat.border}`, borderRadius: '23px', background: 'linear-gradient(145deg,#FFFFFF,#F8F2EA)',
                 boxShadow: `0 10px 24px ${habitat.glow}`, cursor: 'pointer', textAlign: 'left',
-                fontFamily: 'inherit', color: habitat.textColor
+                fontFamily: 'inherit', color: INK
             }}
         >
             <span aria-hidden="true" style={{
                 position: 'absolute', inset: 0,
-                background: 'linear-gradient(90deg,rgba(255,255,255,.08),transparent 45%), radial-gradient(circle at 17% 82%,rgba(255,255,255,.46),transparent 32%)'
+                background: 'linear-gradient(90deg,rgba(244,235,224,.46),transparent 45%), radial-gradient(circle at 17% 82%,rgba(255,255,255,.7),transparent 32%)'
             }} />
             <span style={{
                 position: 'relative', alignSelf: 'stretch', display: 'grid', placeItems: 'center',
                 minWidth: 0, padding: '26px 4px 10px'
             }}>
                 <span aria-hidden="true" style={{
-                    position: 'absolute', left: '12px', top: '11px', padding: '4px 7px', borderRadius: '99px',
+                    position: 'absolute', zIndex: 2, left: '12px', top: '11px', padding: '4px 7px', borderRadius: '99px',
                     background: 'rgba(41,31,24,.58)', color: '#FFF7E5', fontSize: '.61rem', fontWeight: 950
                 }}>🐉 나의 작가 수호룡</span>
-                <DragonAvatar
+                <DragonHideoutScene
+                    petData={petData}
                     dragon={dragonInfo}
                     readerLevel={readerEffect.level}
-                    backgroundId={petData.background}
-                    alt=""
+                    ownerName="나"
+                    compact
                     style={{ width: '116px', height: '116px' }}
-                    imageStyle={{ filter: `drop-shadow(0 8px 9px ${habitat.glow})` }}
                 />
             </span>
             <span style={{
