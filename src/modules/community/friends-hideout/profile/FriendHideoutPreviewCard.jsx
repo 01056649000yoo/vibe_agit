@@ -22,7 +22,11 @@ const MiniTitle = ({ kind, level }) => {
 };
 
 const FriendHideoutPreviewCard = ({ friend, onSelect }) => {
-    const writer = getWriterLevel(friend?.writer_total_chars, friend?.writer_completed_posts);
+    const writer = getWriterLevel(
+        friend?.writer_total_chars,
+        friend?.writer_completed_posts,
+        friend?.pet_data?._testWriterLevel
+    );
     const reader = getReaderLevel(friend?.reader_score);
     const initial = Array.from(friend?.name || '친').at(0);
 

@@ -6,7 +6,11 @@ import { getDragonGrowthFromWriterLevel, getDragonStage, getHideoutBackground, n
 
 const FriendDragonProfileCard = ({ friend }) => {
     const storedPet = normalizeFriendPet(friend?.pet_data);
-    const writerLevel = getWriterLevel(friend?.writer_total_chars, friend?.writer_completed_posts);
+    const writerLevel = getWriterLevel(
+        friend?.writer_total_chars,
+        friend?.writer_completed_posts,
+        friend?.pet_data?._testWriterLevel
+    );
     const growth = getDragonGrowthFromWriterLevel(writerLevel);
     const pet = { ...storedPet, level: growth.level, exp: growth.progress };
     const background = getHideoutBackground(pet.background);

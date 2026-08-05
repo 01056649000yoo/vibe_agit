@@ -7,6 +7,7 @@ import {
     getDragonStage,
     getReaderDragonEffect
 } from '../src/modules/game/dragon/presentation.js';
+import { getWriterLevel } from '../src/constants/writerLevels.js';
 
 test('작가 칭호 10단계를 드래곤 10단계로 그대로 연결한다', () => {
     for (let level = 1; level <= 10; level += 1) {
@@ -14,6 +15,14 @@ test('작가 칭호 10단계를 드래곤 10단계로 그대로 연결한다', (
         assert.equal(growth.level, level);
         assert.equal(getDragonStage(growth.level).level, level);
     }
+});
+
+test('테스트 칭호 오버라이드는 실제 글 통계를 바꾸지 않고 지정 단계만 표시한다', () => {
+    const overridden = getWriterLevel(0, 0, 8);
+    assert.equal(overridden.level, 8);
+    assert.equal(overridden.isTestOverride, true);
+    assert.equal(getDragonGrowthFromWriterLevel(overridden).level, 8);
+    assert.equal(getWriterLevel(0, 0, 999).level, 1);
 });
 
 test('4종 드래곤이 작가 10단계마다 서로 다른 개별 이미지를 쓴다', () => {

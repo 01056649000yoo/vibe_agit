@@ -9,6 +9,7 @@ const TITLE_STATUS_REFRESH_EVENT = 'agit:my-title-status-refresh';
 const EMPTY_STATUS = {
     writerTotalChars: 0,
     writerCompletedPosts: 0,
+    writerLevelOverride: null,
     readerScore: 0,
     readerPostCount: 0
 };
@@ -49,6 +50,9 @@ const useMyTitleStatus = ({ studentSession, active = true }) => {
                 return {
                     writerTotalChars: Number(data?.writer_total_chars || 0),
                     writerCompletedPosts: Number(data?.writer_completed_posts || 0),
+                    writerLevelOverride: data?.writer_level_override == null
+                        ? null
+                        : Number(data.writer_level_override),
                     readerScore: Number(data?.reader_score || 0),
                     readerPostCount: Number(data?.reader_post_count || 0)
                 };
@@ -80,8 +84,8 @@ const useMyTitleStatus = ({ studentSession, active = true }) => {
     }, [active, classId, load, studentId]);
 
     const writerLevel = useMemo(
-        () => getWriterLevel(status.writerTotalChars, status.writerCompletedPosts),
-        [status.writerCompletedPosts, status.writerTotalChars]
+        () => getWriterLevel(status.writerTotalChars, status.writerCompletedPosts, status.writerLevelOverride),
+        [status.writerCompletedPosts, status.writerLevelOverride, status.writerTotalChars]
     );
     const readerLevel = useMemo(() => getReaderLevel(status.readerScore), [status.readerScore]);
 

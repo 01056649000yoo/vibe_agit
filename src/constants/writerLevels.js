@@ -63,7 +63,22 @@ export const collectWriterPosts = (posts = []) => {
  * @param {number} completedPosts 승인 글 수 — 미션 수가 아니다. 자율글도 한 편으로 센다.
  * @returns {{level:number, name:string, emoji:string, from:number, next:number|null, nextUnit:string, progressValue:number, progressFrom:number}}
  */
-export const getWriterLevel = (totalChars = 0, completedPosts = 0) => {
+export const getWriterLevel = (totalChars = 0, completedPosts = 0, overrideLevel = null) => {
+    const requestedOverride = Number(overrideLevel);
+    if (Number.isInteger(requestedOverride) && requestedOverride >= 1 && requestedOverride <= WRITER_LEVELS.length) {
+        const overrideIndex = requestedOverride - 1;
+        const current = WRITER_LEVELS.at(overrideIndex);
+        const upcoming = WRITER_LEVELS.at(overrideIndex + 1);
+        return {
+            ...current,
+            next: upcoming ? upcoming.from : null,
+            nextUnit: upcoming?.criterion === 'posts' ? '편' : '자',
+            progressValue: current.from,
+            progressFrom: current.from,
+            isTestOverride: true
+        };
+    }
+
     const chars = Math.max(0, Number(totalChars) || 0);
     // 기존 호출처가 글 수를 아직 넘기지 않아도 승인 글에서 나온
     // 누적 글자가 있다면 최소 1편을 쓴 것으로 하위 호환한다.

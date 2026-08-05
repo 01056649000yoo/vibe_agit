@@ -35,7 +35,11 @@ const LoadingCard = ({ message }) => (
 const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) => {
     if (!friend?.id || !viewerId) return null;
 
-    const writer = getWriterLevel(friend.writer_total_chars, friend.writer_completed_posts);
+    const writer = getWriterLevel(
+        friend.writer_total_chars,
+        friend.writer_completed_posts,
+        friend.pet_data?._testWriterLevel
+    );
     const reader = getReaderLevel(friend.reader_score);
     const activeCards = getActiveFriendProfileCards();
 
