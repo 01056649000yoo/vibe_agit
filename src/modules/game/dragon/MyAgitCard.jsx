@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { getDragonStage, getHideoutBackground } from './presentation';
+import DragonAvatar from './DragonAvatar';
+import { getDragonStage, getHideoutBackground, getReaderDragonEffect } from './presentation';
 
 const INK = '#3E2E23';
 
@@ -17,7 +18,8 @@ const MyAgitCard = ({ runtime, onOpen }) => {
     const days = Math.max(0, Number(runtime?.daysSinceLastFed || 0));
     const bondText = days === 0 ? '오늘 교감했어요' : `마지막 교감 ${days}일 전`;
     const mastered = level >= 10 && exp >= 100;
-    const dragonInfo = getDragonStage(level);
+    const dragonInfo = getDragonStage(level, petData.species);
+    const readerEffect = getReaderDragonEffect(runtime?.readerLevel);
     const habitat = getHideoutBackground(petData.background);
 
     return (
@@ -47,17 +49,12 @@ const MyAgitCard = ({ runtime, onOpen }) => {
                     position: 'absolute', left: '12px', top: '11px', padding: '4px 7px', borderRadius: '99px',
                     background: 'rgba(41,31,24,.58)', color: '#FFF7E5', fontSize: '.61rem', fontWeight: 950
                 }}>🐉 나의 작가 수호룡</span>
-                <img
-                    src={dragonInfo.image}
+                <DragonAvatar
+                    dragon={dragonInfo}
+                    readerLevel={readerEffect.level}
                     alt=""
-                    aria-hidden="true"
-                    width="116"
-                    height="116"
-                    style={{
-                        display: 'block', width: '116px', height: '116px', objectFit: 'contain',
-                        transform: `scale(${dragonInfo.imageScale})`,
-                        filter: `${dragonInfo.imageFilter} drop-shadow(0 8px 9px ${habitat.glow})`
-                    }}
+                    style={{ width: '116px', height: '116px' }}
+                    imageStyle={{ filter: `drop-shadow(0 8px 9px ${habitat.glow})` }}
                 />
             </span>
             <span style={{
@@ -66,7 +63,7 @@ const MyAgitCard = ({ runtime, onOpen }) => {
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,.8), 0 4px 12px rgba(47,32,22,.12)',
                 color: INK, backdropFilter: 'blur(5px)'
             }}>
-                <span style={{ display: 'block', color: '#9B6A23', fontSize: '.64rem', fontWeight: 950 }}>{dragonInfo.name}</span>
+                <span style={{ display: 'block', color: '#9B6A23', fontSize: '.64rem', fontWeight: 950 }}>{dragonInfo.species.name} · {dragonInfo.name}</span>
                 <span style={{
                     display: 'block', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     color: INK, fontSize: '1.02rem', fontWeight: 950
@@ -89,7 +86,7 @@ const MyAgitCard = ({ runtime, onOpen }) => {
                     }} />
                 </span>
                 <span style={{ display: 'block', marginTop: '7px', color: '#7C654E', fontSize: '.64rem', fontWeight: 900 }}>
-                    {mastered ? '전설의 작가와 함께해요 ✨' : `다음 모습까지 ${100 - exp}%`} · 방에 들어가기 ›
+                    {mastered ? '전설의 작가와 함께해요 ✨' : `다음 모습까지 ${100 - exp}%`} · {readerEffect.name} · 방에 들어가기 ›
                 </span>
             </span>
         </motion.button>

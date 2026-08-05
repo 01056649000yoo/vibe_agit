@@ -1,4 +1,5 @@
 import React from 'react';
+import DragonAvatar from '../../modules/game/dragon/DragonAvatar';
 import './StudentHomeGrowthPanel.css';
 
 const titleBadgeSrc = (kind, level) => `/assets/title-badges/${kind}-level-${level}.webp`;
@@ -58,15 +59,15 @@ const StudentHomeGrowthPanel = ({
             {dragonEnabled && (
                 <button type="button" className="student-home-dragon-summary" onClick={onOpenMyAgit}>
                     <span className="student-home-dragon-summary__label">나의 작가 수호룡</span>
-                    <img
-                        src={dragonInfo.image}
-                        alt={`${dragonInfo.name} 모습`}
-                        width="132"
-                        height="132"
-                        style={{ filter: dragonInfo.imageFilter, transform: `scale(${dragonInfo.imageScale})` }}
+                    <DragonAvatar
+                        dragon={dragonInfo}
+                        readerLevel={readerLevel}
+                        alt={`${dragonInfo.species.name} ${dragonInfo.name} 모습`}
+                        className="student-home-dragon-summary__avatar"
+                        eager
                     />
                     <strong>{petData?.name || '나의 드래곤'}</strong>
-                    <span>작가 성장 {petData?.level || 1}/10 · {dragonInfo.name}</span>
+                    <span className="student-home-dragon-summary__meta">작가 성장 {petData?.level || 1}/10 · {dragonInfo.species.name}</span>
                     <em>아지트에서 만나기 ›</em>
                 </button>
             )}

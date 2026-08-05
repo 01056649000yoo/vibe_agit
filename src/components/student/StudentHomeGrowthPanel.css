@@ -130,7 +130,7 @@
     font-size: .65rem;
     font-weight: 900;
 }
-.student-home-dragon-summary img {
+.student-home-dragon-summary__avatar {
     display: block;
     width: 84px;
     height: 84px;
@@ -139,7 +139,7 @@
     filter: drop-shadow(0 6px 6px rgba(30, 64, 175, .12));
 }
 .student-home-dragon-summary strong { font-size: .86rem; font-weight: 950; }
-.student-home-dragon-summary > span:not(.student-home-dragon-summary__label) {
+.student-home-dragon-summary__meta {
     margin-top: 2px;
     overflow: hidden;
     max-width: 100%;
@@ -171,9 +171,9 @@
         text-align: left;
     }
     .student-home-dragon-summary__label { grid-column: 2 / -1; align-self: end; }
-    .student-home-dragon-summary img { grid-column: 1; grid-row: 1 / -1; width: 72px; height: 72px; margin: 0; }
+    .student-home-dragon-summary__avatar { grid-column: 1; grid-row: 1 / -1; width: 72px; height: 72px; margin: 0; }
     .student-home-dragon-summary strong { grid-column: 2; grid-row: 2; }
-    .student-home-dragon-summary > span:not(.student-home-dragon-summary__label) { grid-column: 2; grid-row: 3; align-self: start; }
+    .student-home-dragon-summary__meta { grid-column: 2; grid-row: 3; align-self: start; }
     .student-home-dragon-summary em { grid-column: 3; grid-row: 1 / -1; margin: 0; white-space: nowrap; }
 }
 
@@ -196,6 +196,6 @@
     .student-home-title-summary em { grid-column: 1; }
     .student-home-title-summary img { width: 34px; height: 34px; }
     .student-home-dragon-summary { grid-template-columns: 68px minmax(0, 1fr); }
-    .student-home-dragon-summary img { width: 64px; height: 64px; }
+    .student-home-dragon-summary__avatar { width: 64px; height: 64px; }
     .student-home-dragon-summary em { display: none; }
 }

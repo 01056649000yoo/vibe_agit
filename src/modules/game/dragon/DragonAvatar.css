@@ -1,0 +1,111 @@
+.dragon-avatar {
+    --dragon-reader-color: rgba(101, 187, 255, .64);
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    isolation: isolate;
+}
+
+.dragon-avatar img {
+    position: relative;
+    z-index: 3;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    user-select: none;
+}
+
+.dragon-reader-effect__glow,
+.dragon-reader-effect__orbit,
+.dragon-reader-effect__aurora {
+    position: absolute;
+    pointer-events: none;
+}
+
+.dragon-reader-effect__glow {
+    z-index: 0;
+    width: 76%;
+    height: 76%;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--dragon-reader-color) 0%, transparent 68%);
+    opacity: .45;
+    filter: blur(9px);
+    animation: dragon-reader-breathe 3.8s ease-in-out infinite;
+}
+
+.dragon-reader-effect__orbit {
+    z-index: 1;
+    width: 78%;
+    height: 44%;
+    border: 2px solid var(--dragon-reader-color);
+    border-radius: 50%;
+    opacity: .65;
+    transform: rotate(-12deg);
+    box-shadow: 0 0 12px var(--dragon-reader-color);
+    animation: dragon-reader-orbit 8s linear infinite;
+}
+
+.dragon-reader-effect__aurora {
+    z-index: 2;
+    inset: 11% 7% 16%;
+    border-radius: 48% 52% 42% 58%;
+    background: conic-gradient(from 90deg, transparent, rgba(116, 226, 207, .36), rgba(149, 109, 255, .38), transparent 72%);
+    filter: blur(8px);
+    opacity: .7;
+    animation: dragon-reader-aurora 7s ease-in-out infinite;
+}
+
+.dragon-reader-effect__particle {
+    position: absolute;
+    z-index: 4;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 0 5px #FFFFFF, 0 0 11px var(--dragon-reader-color);
+    animation: dragon-reader-spark 2.8s ease-in-out infinite;
+    animation-delay: calc(var(--dragon-particle-index) * -.32s);
+}
+
+.dragon-reader-effect--quiet .dragon-reader-effect__particle { display: none; }
+.dragon-reader-effect--booklight { --dragon-reader-color: rgba(90, 174, 255, .5); }
+.dragon-reader-effect--spark { --dragon-reader-color: rgba(91, 194, 255, .68); }
+.dragon-reader-effect--orbit { --dragon-reader-color: rgba(91, 151, 255, .7); }
+.dragon-reader-effect--starlibrary { --dragon-reader-color: rgba(255, 196, 72, .78); }
+.dragon-reader-effect--aurora { --dragon-reader-color: rgba(144, 105, 255, .78); }
+.dragon-reader-effect--guardian { --dragon-reader-color: rgba(255, 218, 94, .9); }
+
+.dragon-reader-effect--guardian .dragon-reader-effect__orbit {
+    border-width: 3px;
+    box-shadow: 0 0 13px #FFE97F, 0 0 24px rgba(132, 104, 255, .55);
+}
+
+.dragon-reader-effect--guardian .dragon-reader-effect__aurora {
+    background: conic-gradient(from 40deg, rgba(255, 222, 89, .2), rgba(90, 218, 255, .42), rgba(168, 104, 255, .45), rgba(255, 222, 89, .2));
+}
+
+@keyframes dragon-reader-breathe {
+    0%, 100% { opacity: .3; transform: scale(.92); }
+    50% { opacity: .62; transform: scale(1.05); }
+}
+
+@keyframes dragon-reader-orbit {
+    to { transform: rotate(348deg); }
+}
+
+@keyframes dragon-reader-aurora {
+    0%, 100% { transform: rotate(-5deg) scale(.94); opacity: .42; }
+    50% { transform: rotate(7deg) scale(1.06); opacity: .76; }
+}
+
+@keyframes dragon-reader-spark {
+    0%, 100% { opacity: .22; transform: scale(.55); }
+    50% { opacity: .95; transform: scale(1.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dragon-avatar * { animation: none !important; }
+}

@@ -1,15 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
+import { DRAGON_SPECIES } from './presentation';
+
+const DEFAULT_PET_DATA = {
+    name: '나의 드래곤',
+    level: 1,
+    exp: 0,
+    lastFed: null,
+    ownedItems: [],
+    background: 'default',
+    species: null
+};
+
+const normalizePetData = (petData) => ({
+    ...DEFAULT_PET_DATA,
+    ...(petData || {}),
+    ownedItems: Array.isArray(petData?.ownedItems) ? petData.ownedItems : []
+});
 
 export const useDragonPet = (studentId, points, setPoints, initialPetData = null) => {
-    const [petData, setPetData] = useState({
-        name: '나의 드래곤',
-        level: 1,
-        exp: 0,
-        lastFed: new Date().toISOString().split('T')[0],
-        ownedItems: [],
-        background: 'default'
-    });
+    const [petData, setPetData] = useState(() => normalizePetData());
     const [isFlashing, setIsFlashing] = useState(false);
     const [isBusy, setIsBusy] = useState(false); 
     const hasHydratedInitialDataRef = useRef(false);
@@ -47,13 +57,13 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
 
         if (!hasHydratedInitialDataRef.current) {
             hasHydratedInitialDataRef.current = true;
-            setPetData(() => initialPetData);
+            setPetData(() => normalizePetData(initialPetData));
             return;
         }
 
         setPetData((currentPetData) => (
             shouldAcceptIncomingPetData(currentPetData, initialPetData)
-                ? initialPetData
+                ? normalizePetData(initialPetData)
                 : currentPetData
         ));
     }, [initialPetData]);
@@ -159,6 +169,30 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         }
     };
 
+    const selectSpecies = async (speciesId, { isReselection = false } = {}) => {
+        if (!studentId || isBusy) return false;
+        if (!DRAGON_SPECIES.some((species) => species.id === speciesId)) return false;
+        if (isReselection && petData.speciesReselectedAt) return false;
+
+        setIsBusy(true);
+        try {
+            const { data: result, error } = await supabase.rpc('set_my_dragon_species', {
+                p_species: speciesId,
+                p_reselect: isReselection
+            });
+            if (error) throw error;
+            if (!result?.success) throw new Error(result?.error || '수호룡 선택 저장 실패');
+            setPetData(normalizePetData(result.pet_data));
+            return true;
+        } catch (error) {
+            console.error('수호룡 종류 저장 실패:', error.message);
+            alert('수호룡 선택을 저장하지 못했어요. 다시 시도해 주세요.');
+            return false;
+        } finally {
+            setIsBusy(false);
+        }
+    };
+
     return {
         petData,
         setPetData,
@@ -166,6 +200,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         isBusy,
         handleBond,
         buyItem,
-        equipItem
+        equipItem,
+        selectSpecies
     };
 };

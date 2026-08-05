@@ -1,0 +1,69 @@
+.dragon-species-picker {
+    padding: 18px;
+    border: 1px solid #E9DFD3;
+    border-radius: 24px;
+    background: linear-gradient(145deg, #FFFCF7, #FFF7E9);
+}
+
+.dragon-species-picker__heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.dragon-species-picker__heading > span { font-size: 1.8rem; }
+.dragon-species-picker__heading h3 { margin: 0; color: #49372B; font-size: 1.08rem; font-weight: 950; }
+.dragon-species-picker__heading p { margin: 5px 0 0; color: #846F60; font-size: .78rem; font-weight: 750; line-height: 1.55; }
+
+.dragon-species-picker__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.dragon-species-option {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    padding: 12px 10px;
+    border: 2px solid #D8CBBE;
+    border-radius: 19px;
+    background: linear-gradient(160deg, #FFFFFF, var(--dragon-species-soft));
+    color: #49372B;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    box-shadow: 0 6px 14px rgba(67, 48, 34, .08);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.dragon-species-option:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 9px 18px rgba(67, 48, 34, .13); }
+.dragon-species-option:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
+.dragon-species-option:disabled { cursor: default; opacity: .62; }
+.dragon-species-option.is-current { border-color: var(--dragon-species-accent); }
+.dragon-species-option strong { color: var(--dragon-species-accent); font-size: .9rem; font-weight: 950; }
+.dragon-species-option > span { min-height: 2.3em; margin-top: 4px; color: #76675D; font-size: .65rem; font-weight: 760; line-height: 1.35; }
+.dragon-species-option em { margin-top: 8px; padding: 5px 9px; border-radius: 999px; background: var(--dragon-species-accent); color: #FFFFFF; font-size: .62rem; font-style: normal; font-weight: 900; }
+
+.dragon-species-picker__cancel {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 12px;
+    border: 1px solid #D8CBBE;
+    border-radius: 14px;
+    background: #FFFFFF;
+    color: #75665B;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 850;
+}
+
+@media (max-width: 560px) {
+    .dragon-species-picker { padding: 14px; }
+    .dragon-species-picker__grid { grid-template-columns: 1fr; }
+    .dragon-species-option { grid-template-columns: 88px minmax(0, 1fr); grid-template-rows: auto auto auto; text-align: left; }
+    .dragon-species-option .dragon-avatar { grid-row: 1 / 4; width: 88px !important; height: 88px !important; }
+    .dragon-species-option > span { min-height: 0; }
+    .dragon-species-option em { justify-self: start; }
+}

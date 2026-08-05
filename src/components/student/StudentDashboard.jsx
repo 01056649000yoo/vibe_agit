@@ -104,28 +104,13 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     // 드래곤 관련 상태 및 액션
     const {
         petData, isFlashing, isBusy,
-        handleBond, buyItem, equipItem
+        handleBond, buyItem, equipItem, selectSpecies
     } = useDragonPet(
         studentSession?.id,
         points,
         setPoints,
         initialPetData
     );
-
-    // [신규] 이미지 선행 로딩 (Optimization 4)
-    useEffect(() => {
-        const imagesToPreload = [
-            '/assets/dragons/dragon_stage_1.webp',
-            '/assets/dragons/dragon_stage_2.webp',
-            '/assets/dragons/dragon_stage_3.webp',
-            '/assets/dragons/dragon_stage_4.webp',
-            '/assets/dragons/dragon_stage_5.webp'
-        ];
-        imagesToPreload.forEach(src => {
-            const img = new Image();
-            img.src = src;
-        });
-    }, []);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 1024);
@@ -134,6 +119,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     }, []);
 
     const getDaysSinceLastBond = () => {
+        if (!petData.lastFed) return null;
         const lastFedDate = new Date(petData.lastFed);
         if (Number.isNaN(lastFedDate.getTime())) return null;
         const today = new Date();
@@ -147,8 +133,24 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
         level: dragonGrowth.level,
         exp: dragonGrowth.progress
     }), [dragonGrowth.level, dragonGrowth.progress, petData]);
-    const dragonInfo = getDragonStage(displayPetData.level);
+    const dragonInfo = getDragonStage(displayPetData.level, displayPetData.species);
     const daysSinceLastBond = getDaysSinceLastBond();
+
+    // 현재 모습은 화면의 img가 받고, 다음 한 단계만 브라우저가 한가할 때 미리 받는다.
+    useEffect(() => {
+        if (displayPetData.level >= 10) return undefined;
+        const nextImage = getDragonStage(displayPetData.level + 1, displayPetData.species).image;
+        const preload = () => {
+            const image = new Image();
+            image.src = nextImage;
+        };
+        if ('requestIdleCallback' in window) {
+            const idleId = window.requestIdleCallback(preload, { timeout: 1800 });
+            return () => window.cancelIdleCallback(idleId);
+        }
+        const timerId = window.setTimeout(preload, 600);
+        return () => window.clearTimeout(timerId);
+    }, [displayPetData.level, displayPetData.species]);
 
     // 앱 셸이 읽은 동일한 모듈 목록으로 모든 학생 진입점을 게이팅한다.
     const isOn = (id) => enabledModules.some((m) => m.id === id);
@@ -259,7 +261,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             points={points}
                             enabledModules={enabledModules}
                             moduleRuntimeById={{
-                                dragon: { petData: displayPetData, daysSinceLastFed: daysSinceLastBond }
+                                dragon: { petData: displayPetData, daysSinceLastFed: daysSinceLastBond, readerLevel }
                             }}
                             onOpenModule={(module) => {
                                 setIsMyAgitOpen(false);
@@ -306,6 +308,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             setIsShopOpen={setIsShopOpen}
                             isFlashing={isFlashing}
                             isBusy={isBusy}
+                            readerLevel={readerLevel}
+                            selectSpecies={selectSpecies}
                         />
                     </Suspense>
                 )}

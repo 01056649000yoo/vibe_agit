@@ -13,5 +13,6 @@ export const normalizeFriendPet = (petData) => ({
     level: 1,
     background: 'default',
     exp: 0,
+    species: 'star',
     ...(petData || {})
 });

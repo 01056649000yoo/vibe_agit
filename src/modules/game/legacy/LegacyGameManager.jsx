@@ -10,16 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../../components/common/Button';
 import Card from '../../../components/common/Card';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
-
-// [재사용] 드래곤 단계 로직
-const getDragonStage = (level) => {
-    const basePath = '/assets/dragons';
-    if (level >= 5) return { name: '전설의 수호신룡', image: `${basePath}/dragon_stage_5.webp` };
-    if (level === 4) return { name: '불을 내뿜는 성장한 용', image: `${basePath}/dragon_stage_4.webp` };
-    if (level === 3) return { name: '푸른 빛의 어린 용', image: `${basePath}/dragon_stage_3.webp` };
-    if (level === 2) return { name: '갓 태어난 용', image: `${basePath}/dragon_stage_2.webp` };
-    return { name: '신비로운 알', image: `${basePath}/dragon_stage_1.webp` };
-};
+import { getDragonStage } from '../dragon/presentation';
 
 const HIDEOUT_BACKGROUNDS = {
     default: { id: 'default', name: '기본 초원', color: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)', border: '#FFF176', glow: 'rgba(255, 241, 118, 0.3)' },
@@ -966,7 +957,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                                         }}>
                                             {students.map(s => {
                                                 const pet = s.pet_data || { name: '나의 드래곤', level: 1, exp: 0, background: 'default', ownedItems: [] };
-                                                const stage = getDragonStage(pet.level);
+                                                const stage = getDragonStage(pet.level, pet.species);
                                                 const bg = HIDEOUT_BACKGROUNDS[pet.background] || HIDEOUT_BACKGROUNDS.default;
                                                 const isMaster = pet.level >= 5 && pet.exp >= 100;
 
@@ -1234,7 +1225,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
 const TeacherHideoutPreview = ({ student, onClose }) => {
     const pet = student.pet_data || { name: '친구 드래곤', level: 1, background: 'default', exp: 0 };
     const bg = HIDEOUT_BACKGROUNDS[pet.background] || HIDEOUT_BACKGROUNDS.default;
-    const dragon = getDragonStage(pet.level);
+    const dragon = getDragonStage(pet.level, pet.species);
 
     return (
         <div style={{ position: 'relative' }}>

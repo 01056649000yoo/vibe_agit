@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
+import DragonAvatar from './DragonAvatar';
+import DragonSpeciesPicker from './DragonSpeciesPicker';
+import { canReselectDragonSpecies, getReaderDragonEffect } from './presentation';
 
 const BOND_PARTICLES = [
     { symbol: '💛', x: -92, y: -92, delay: 0 },
@@ -24,10 +27,14 @@ const getBondMessage = (bondCount) => {
 const DragonHideoutModal = ({
     isOpen, onClose, isMobile, petData, dragonInfo,
     HIDEOUT_BACKGROUNDS, daysSinceLastFed,
-    handleBond, setIsShopOpen, isFlashing, isBusy
+    handleBond, setIsShopOpen, isFlashing, isBusy,
+    readerLevel, selectSpecies
 }) => {
     const [bondFeedback, setBondFeedback] = useState('idle');
+    const [speciesPickerOpen, setSpeciesPickerOpen] = useState(() => !petData?.species);
     const feedbackTimerRef = useRef(null);
+    const readerEffect = getReaderDragonEffect(readerLevel);
+    const canReselect = canReselectDragonSpecies(petData, petData.level);
 
     useEffect(() => () => {
         if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
@@ -45,6 +52,13 @@ const DragonHideoutModal = ({
         setBondFeedback('success');
         if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
         feedbackTimerRef.current = window.setTimeout(() => setBondFeedback('idle'), 2600);
+    };
+
+    const handleSpeciesSelect = async (speciesId) => {
+        const isReselection = Boolean(petData?.species);
+        if (isReselection && !window.confirm('수호룡을 다시 고를 기회는 한 번뿐이에요. 이 모습으로 바꿀까요?')) return;
+        const success = await selectSpecies(speciesId, { isReselection });
+        if (success) setSpeciesPickerOpen(false);
     };
 
     return (
@@ -102,7 +116,17 @@ const DragonHideoutModal = ({
                             <p style={{ margin: '4px 0 0 0', color: '#8D6E63', fontSize: '0.9rem' }}>내가 쓴 글과 함께 자라는 아지트 친구</p>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        {speciesPickerOpen && (
+                            <DragonSpeciesPicker
+                                currentSpecies={petData?.species}
+                                isReselection={Boolean(petData?.species)}
+                                isBusy={isBusy}
+                                onSelect={handleSpeciesSelect}
+                                onCancel={petData?.species ? () => setSpeciesPickerOpen(false) : null}
+                            />
+                        )}
+
+                        <div style={{ display: speciesPickerOpen ? 'none' : 'flex', flexDirection: 'column', gap: '24px' }}>
                             <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: '24px', background: '#F9F9F9', padding: '24px', borderRadius: '24px', border: '1px solid #EEE' }}>
                                 <div style={{
                                     position: 'relative',
@@ -593,10 +617,16 @@ const DragonHideoutModal = ({
                                         transition={isFlashing
                                             ? { duration: 1.2, ease: 'easeInOut' }
                                             : { scale: { duration: 3, repeat: Infinity, ease: 'easeInOut' }, y: { repeat: Infinity, duration: 3, ease: "easeInOut" } }}
-                                        style={{ width: (dragonInfo.formLevel === 3 || dragonInfo.formLevel === 4) ? '264px' : '220px', height: (dragonInfo.formLevel === 3 || dragonInfo.formLevel === 4) ? '264px' : '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 5, cursor: 'pointer', background: 'transparent' }}
+                                        style={{ width: petData.level >= 6 ? '264px' : '220px', height: petData.level >= 6 ? '264px' : '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 5, cursor: 'pointer', background: 'transparent' }}
                                     >
                                         {!dragonInfo.isPlaceholder && (
-                                            <img src={dragonInfo.image} alt={dragonInfo.name} style={{ width: '100%', height: '100%', objectFit: 'contain', background: 'transparent', transform: `scale(${dragonInfo.imageScale})`, filter: `${dragonInfo.imageFilter} drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 9 ? 'drop-shadow(0 0 25px rgba(255,193,7,0.8))' : ''}` }} />
+                                            <DragonAvatar
+                                                dragon={dragonInfo}
+                                                readerLevel={readerEffect.level}
+                                                alt={`${dragonInfo.species.name} ${dragonInfo.name}`}
+                                                eager
+                                                imageStyle={{ filter: `drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 9 ? 'drop-shadow(0 0 25px rgba(255,193,7,0.8))' : ''}` }}
+                                            />
                                         )}
                                     </motion.div>
                                 </div>
@@ -604,8 +634,9 @@ const DragonHideoutModal = ({
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
                                         <div>
-                                            <span style={{ fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.name}</span>
+                                            <span style={{ fontSize: '0.85rem', color: '#FBC02D', fontWeight: 'bold', display: 'block' }}>{dragonInfo.species.name} · {dragonInfo.name}</span>
                                             <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
+                                            <span style={{ display: 'block', marginTop: '3px', color: '#7E71C6', fontSize: '.72rem', fontWeight: 850 }}>독자 효과 LV.{readerEffect.level} · {readerEffect.name}</span>
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
                                             {petData.level >= 10 && petData.exp >= 100 && (
@@ -630,6 +661,15 @@ const DragonHideoutModal = ({
                                         <span style={{ fontWeight: 'bold' }}>💡 작가 수호룡 성장 안내</span><br />
                                         승인된 글이 쌓이면 작가 칭호와 함께 성장해요. 자주 접속하지 않아도 퇴화하지 않으며, 포인트는 아지트 꾸미기에만 사용해요.
                                     </div>
+                                    {canReselect && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSpeciesPickerOpen(true)}
+                                            style={{ width: '100%', minHeight: '42px', marginTop: '12px', border: '1px solid #D6C8B7', borderRadius: '13px', background: '#FFFFFF', color: '#6D4C41', cursor: 'pointer', fontFamily: 'inherit', fontSize: '.78rem', fontWeight: 900 }}
+                                        >
+                                            작가 3단계 기회로 수호룡 다시 고르기
+                                        </button>
+                                    )}
                                 </div>
 
                                 <motion.div
