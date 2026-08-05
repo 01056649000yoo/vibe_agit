@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
 import { sanitizeFeedback } from '../utils/aiFeedbackGuard';
 import { dataCache } from '../lib/cache';
+import { calculateWritingReward, writingPolicyFromMission } from '../modules/writing/policy/writingPolicy';
 
 export const useMissionManager = (activeClass) => {
     const [missions, setMissions] = useState([]);
@@ -133,20 +134,10 @@ export const useMissionManager = (activeClass) => {
 
     const calculateApprovalPoints = useCallback((mission, post) => {
         if (!mission || !post) return 0;
-
-        const baseReward = post.awarded_base_reward ?? mission.base_reward ?? 0;
-        const bonusReward = post.awarded_bonus_reward ?? mission.bonus_reward ?? 0;
-        const bonusThreshold = post.awarded_bonus_threshold ?? mission.bonus_threshold ?? 0;
-        const minChars = mission.min_chars ?? 0;
-
-        let totalPoints = baseReward;
-        const totalThreshold = minChars + bonusThreshold;
-
-        if (bonusThreshold && post.char_count >= totalThreshold) {
-            totalPoints += bonusReward;
-        }
-
-        return totalPoints;
+        return calculateWritingReward(
+            writingPolicyFromMission(mission, post),
+            { charCount: post.char_count, paragraphCount: post.paragraph_count }
+        ).total;
     }, []);
 
     const clearZeroPointLogsForPost = useCallback(async (post) => {

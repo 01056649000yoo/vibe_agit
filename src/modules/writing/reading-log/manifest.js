@@ -20,6 +20,19 @@ export const readingLogManifest = {
     audience: 'student',
     core: true,
     studentRoute: 'reading_logs',
+    writingPolicy: {
+        type: 'reading_log',
+        completionFlow: 'student_complete',
+        defaults: {
+            min_chars: 100,
+            min_paragraphs: 1,
+            base_reward: 50,
+            bonus_enabled: false,
+            bonus_threshold: 0,
+            bonus_reward: 0,
+            daily_reward_limit: 3
+        }
+    },
     studentEntry: () => import('./ReadingLogPage'),
     teacherEntry: () => import('./teacher/TeacherReadingLogManager'),
     dashboardCards: {

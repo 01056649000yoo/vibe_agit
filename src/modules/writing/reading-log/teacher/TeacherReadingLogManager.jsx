@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Button from '../../../../components/common/Button';
 import { supabase } from '../../../../lib/supabaseClient';
 import { classKey, classScope, dataCache } from '../../../../lib/cache';
+import WritingPolicySettings from '../../policy/WritingPolicySettings';
+import { READING_LOG_POLICY_DEFAULTS } from '../../policy/writingPolicy';
 
 const EMPTY_COUNTS = { total: 0, unreviewed: 0, reviewed: 0, students: 0 };
 
@@ -402,10 +404,18 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 <div>
                     <span className="teacher-reading-kicker">자율 글쓰기 관리</span>
                     <h2>📚 학생 독서록</h2>
-                    <p>점수나 승인 없이 읽어보고, 확인 표시와 짧은 한마디만 남길 수 있어요.</p>
+                    <p>승인 절차 없이 학생이 완료하고 포인트를 받으며, 선생님은 확인 표시와 짧은 한마디만 남겨요.</p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>새로고침</Button>
             </header>
+
+            <WritingPolicySettings
+                classId={classId}
+                writingType="reading_log"
+                defaults={READING_LOG_POLICY_DEFAULTS}
+                title="독서록 완료 조건과 포인트"
+                description="초안은 분량과 관계없이 저장됩니다. 학생이 작성 완료할 때 조건을 확인하고, 한 책당 최초 한 번만 포인트를 줍니다."
+            />
 
             <div className="teacher-reading-stats">
                 <button type="button" className={reviewFilter === 'unreviewed' ? 'active warning' : ''} onClick={() => setReviewFilter('unreviewed')}>

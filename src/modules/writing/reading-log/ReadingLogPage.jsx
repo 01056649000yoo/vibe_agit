@@ -15,6 +15,14 @@ import useMediaQuery from '../../../hooks/useMediaQuery';
 import { supabase } from '../../../lib/supabaseClient';
 import WritingToolHost from '../tools/WritingToolHost';
 import { buildDraftKey, readLocalDraft, useLocalWritingDraft } from '../drafts/localWritingDraft';
+import WritingPolicyProgress from '../policy/WritingPolicyProgress';
+import {
+    evaluateWritingPolicy,
+    getWritingPolicyError,
+    measureWritingContent,
+    normalizeWritingPolicy,
+    READING_LOG_POLICY_DEFAULTS
+} from '../policy/writingPolicy';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
 import './ReadingLogShelf.css';
@@ -101,6 +109,7 @@ const bookFromDraft = (book = {}) => ({
 });
 
 const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, onDone, onCancel }) => {
+    const studentClassId = studentSession?.classId || studentSession?.class_id || null;
     const createInitialForm = () => ({
         ...EMPTY_FORM,
         selectedBook: initialBook || null,
@@ -112,8 +121,34 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
     const [saving, setSaving] = useState(false);
     const [completedPostAt, setCompletedPostAt] = useState(null);
     const [teacherReview, setTeacherReview] = useState(null);
+    const [writingPolicy, setWritingPolicy] = useState(READING_LOG_POLICY_DEFAULTS);
+    const [policyLoading, setPolicyLoading] = useState(Boolean(studentClassId));
     const isMobile = useMediaQuery('(max-width: 768px)');
     const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
+    const writingMetrics = useMemo(() => measureWritingContent(form.content), [form.content]);
+
+    useEffect(() => {
+        if (!studentClassId) return undefined;
+
+        let active = true;
+        const loadPolicy = async () => {
+            setPolicyLoading(true);
+            const { data, error } = await supabase
+                .from('class_writing_policies')
+                .select('is_enabled, min_chars, min_paragraphs, base_reward, bonus_enabled, bonus_threshold, bonus_reward, daily_reward_limit')
+                .eq('class_id', studentClassId)
+                .eq('writing_type', 'reading_log')
+                .maybeSingle();
+            if (!active) return;
+            if (error) {
+                console.error('독서록 완료 조건 불러오기 실패:', error.message);
+            }
+            setWritingPolicy(normalizeWritingPolicy(data || READING_LOG_POLICY_DEFAULTS, READING_LOG_POLICY_DEFAULTS));
+            setPolicyLoading(false);
+        };
+        loadPolicy();
+        return () => { active = false; };
+    }, [studentClassId]);
 
     useEffect(() => {
         if (!postId) return;
@@ -347,6 +382,12 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
             return;
         }
 
+        const policyError = getWritingPolicyError(evaluateWritingPolicy(writingPolicy, writingMetrics));
+        if (policyError) {
+            alert(policyError);
+            return;
+        }
+
         setSaving(true);
         const result = await supabase.rpc('upsert_my_reading_log', {
             p_post_id: postId || null,
@@ -360,9 +401,13 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
         setSaving(false);
         if (result.error) {
             console.error('독서록 저장 실패:', result.error.message);
-            alert(result.error.code === '23505'
-                ? '이 책에는 이미 독서록이 한 편 있어요. 책장에서 기존 독서록의 수정하기를 눌러 주세요.'
-                : '독서록을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            if (result.error.code === '23505') {
+                alert('이 책에는 이미 독서록이 한 편 있어요. 책장에서 기존 독서록의 수정하기를 눌러 주세요.');
+            } else if (result.error.code === 'P0001' && result.error.message?.startsWith('독서록을 작성 완료하려면')) {
+                alert(result.error.message);
+            } else {
+                alert('독서록을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            }
             return;
         }
 
@@ -370,9 +415,15 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
         // 완성본이 들어갔으니 임시본은 지운다(이 기기 + 서버 모두).
         // 남겨 두면 다음에 들어올 때 저장된 글 위에 옛 임시본이 되살아난다.
         const draftCleared = await clearDraft();
+        const awardedPoints = Number(result.data?.points_awarded) || 0;
+        const rewardMessage = awardedPoints > 0
+            ? `\n완료 보상으로 ${awardedPoints}P를 받았어요! 🪙`
+            : result.data?.reward_status === 'daily_limit'
+                ? '\n오늘 받을 수 있는 독서록 완료 보상을 모두 받았어요.'
+                : '';
         const savedMessage = form.visibility === 'class'
-            ? '독서록을 친구 공개로 저장했어요! 📚'
-            : '친구에게 비공개로 저장했어요. 선생님은 확인할 수 있어요. 🔒';
+            ? `독서록을 친구 공개로 저장했어요! 📚${rewardMessage}`
+            : `친구에게 비공개로 저장했어요. 선생님은 확인할 수 있어요. 🔒${rewardMessage}`;
         alert(draftCleared
             ? savedMessage
             : `${savedMessage}\n서버 임시본 정리가 늦어지고 있지만 저장한 글이 우선이라 옛 내용으로 덮이지 않아요.`);
@@ -392,7 +443,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
                 title={postId ? '독서록 다듬기' : '새 독서록 쓰기'}
                 description="책을 고르고 기억에 남은 장면과 내 생각을 나만의 말로 기록해요."
             />
-            <WritingWorkspacePath steps={['책 선택', '생각 쓰기', '공개·저장']} />
+            <WritingWorkspacePath steps={['책 선택', '생각 쓰기', '완료·공개']} />
 
             <div className="reading-log-book-stage">
                 <BookSearchPanel
@@ -436,6 +487,11 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
                 )}
             </section>
 
+            <WritingPolicyProgress policy={writingPolicy} metrics={writingMetrics} />
+            {policyLoading && (
+                <WritingNotice tone="info" icon="⏳" compact>이 학급의 완료 조건을 확인하고 있어요.</WritingNotice>
+            )}
+
             <label className={`reading-log-visibility ${form.visibility === 'class' ? 'is-public' : ''}`}>
                 <input
                     type="checkbox"
@@ -470,8 +526,8 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
                 <Button type="button" variant="outline" size="lg" onClick={handleSaveDraft} disabled={saving || savingDraft}>
                     {savingDraft ? '임시 저장 중...' : '임시 저장 💾'}
                 </Button>
-                <Button type="button" size="lg" onClick={handleSave} disabled={saving || savingDraft}>
-                    {saving ? '저장하는 중...' : '독서록 저장하기 📚'}
+                <Button type="button" size="lg" onClick={handleSave} disabled={saving || savingDraft || policyLoading}>
+                    {saving ? '완료하는 중...' : '독서록 작성 완료 📚'}
                 </Button>
             </div>
             </>}

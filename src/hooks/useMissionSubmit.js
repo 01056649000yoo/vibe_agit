@@ -4,6 +4,11 @@ import { dataCache } from '../lib/cache';
 import confetti from 'canvas-confetti';
 import { countContentChars } from '../lib/textMetrics';
 import { getGenreMissionType, validateGenreMissionSubmission } from '../modules/writing/mission-types/registry';
+import {
+    evaluateWritingPolicy,
+    getWritingPolicyError,
+    writingPolicyFromMission
+} from '../modules/writing/policy/writingPolicy';
 
 export const useMissionSubmit = (studentSession, missionId, params, onBack, onNavigate) => {
     const studentId = studentSession?.id || null;
@@ -272,14 +277,18 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         const charCount = countContentChars(content);
         const paragraphCount = getParagraphCount();
 
-        if (charCount < (mission.min_chars || 0)) {
-            alert(`최소 ${mission.min_chars}자 이상 써야 해요! 조금 더 힘내볼까요? 💪`);
-            return false;
-        }
-
         const missionType = getGenreMissionType(mission?.input_template);
-        if (!missionType?.skipGenericParagraphValidation && paragraphCount < (mission.min_paragraphs || 0)) {
-            alert(`최소 ${mission.min_paragraphs}문단 이상이 필요해요! 내용을 나눠서 적어보세요. 📏`);
+        const policyEvaluation = evaluateWritingPolicy(
+            writingPolicyFromMission(mission),
+            { charCount, paragraphCount },
+            {
+                skipParagraphValidation: missionType?.skipGenericParagraphValidation,
+                unitLabel: missionType?.unitLabel || '문단'
+            }
+        );
+        const policyError = getWritingPolicyError(policyEvaluation);
+        if (policyError) {
+            alert(policyError);
             return false;
         }
 

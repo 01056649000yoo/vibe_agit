@@ -108,3 +108,8 @@ export function groupByPart(modules) {
 export function getModule(id) {
   return manifests.find((m) => m.id === id) ?? null;
 }
+
+/** 분량·보상 정책을 제공하는 글쓰기 유형. 새 유형은 매니페스트 등록만으로 이 목록에 들어온다. */
+export function getWritingPolicyModules() {
+  return manifests.filter((manifest) => manifest.writingPolicy?.type);
+}

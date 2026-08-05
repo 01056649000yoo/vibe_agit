@@ -24,6 +24,8 @@ import {
     WritingWorkspacePath
 } from '../writing/WritingWorkspace';
 import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea';
+import WritingPolicyProgress from '../../modules/writing/policy/WritingPolicyProgress';
+import { writingPolicyFromMission } from '../../modules/writing/policy/writingPolicy';
 
 const GENRE_EDITORS = new Map(
     getGenreMissionTypes()
@@ -893,16 +895,14 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 )}
             </AnimatePresence>
 
-            {/* 통계 및 보너스 현황 */}
+            {/* 공용 분량·보상 정책 현황 + 자동 저장 상태 */}
+            <WritingPolicyProgress
+                policy={writingPolicyFromMission(mission)}
+                metrics={{ charCount, paragraphCount }}
+                unitLabel={genreMissionType?.unitLabel || '문단'}
+                skipParagraphValidation={genreMissionType?.skipGenericParagraphValidation}
+            />
             <div className="writing-metrics">
-                <div className="writing-metric">
-                    <span>글자 수</span>
-                    <strong className={charCount >= mission.min_chars ? 'is-complete' : 'is-pending'}>{charCount} / {mission.min_chars}</strong>
-                </div>
-                <div className="writing-metric">
-                    <span>{genreMissionType?.unitLabel || '문단 수'}</span>
-                    <strong className={paragraphCount >= mission.min_paragraphs ? 'is-complete' : 'is-pending'}>{paragraphCount} / {mission.min_paragraphs}</strong>
-                </div>
                 <div className="writing-metric">
                     <span>자동 저장</span>
                     <strong className={autoSaveError ? 'is-pending' : ''}>
@@ -911,18 +911,6 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                         {!autoSaveError && (
                         <small>이 기기에 먼저 저장돼요</small>
                         )}
-                </div>
-                <div className="writing-bonus">
-                    {mission.bonus_threshold > 0 && mission.bonus_reward > 0 && (
-                        charCount >= (mission.min_chars + mission.bonus_threshold) ? (
-                            <strong>🔥 보너스 달성 완료! (+{mission.bonus_reward}P)</strong>
-                        ) : (
-                            <span>
-                                <strong>{(mission.min_chars || 0) + (mission.bonus_threshold || 0)}자</strong>를 넘기면{' '}
-                                <strong>+{mission.bonus_reward}P</strong> · {(mission.min_chars + mission.bonus_threshold) - charCount}자 남음
-                            </span>
-                        )
-                    )}
                 </div>
             </div>
 
