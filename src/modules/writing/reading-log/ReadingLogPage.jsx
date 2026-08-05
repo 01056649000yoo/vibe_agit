@@ -25,6 +25,7 @@ import {
 } from '../policy/writingPolicy';
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
+import useReadingLogDailyStatus from './useReadingLogDailyStatus';
 import './ReadingLogShelf.css';
 
 const EMPTY_FORM = {
@@ -108,7 +109,7 @@ const bookFromDraft = (book = {}) => ({
     isbn13: book.isbn13 || ''
 });
 
-const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, onDone, onCancel }) => {
+const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, dailyStatus, onDone, onCancel }) => {
     const studentClassId = studentSession?.classId || studentSession?.class_id || null;
     const createInitialForm = () => ({
         ...EMPTY_FORM,
@@ -403,7 +404,10 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
             console.error('독서록 저장 실패:', result.error.message);
             if (result.error.code === '23505') {
                 alert('이 책에는 이미 독서록이 한 편 있어요. 책장에서 기존 독서록의 수정하기를 눌러 주세요.');
-            } else if (result.error.code === 'P0001' && result.error.message?.startsWith('독서록을 작성 완료하려면')) {
+            } else if (result.error.code === 'P0001' && (
+                result.error.message?.startsWith('독서록을 작성 완료하려면')
+                || result.error.message?.startsWith('오늘 완료할 수 있는 독서록은')
+            )) {
                 alert(result.error.message);
             } else {
                 alert('독서록을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
@@ -487,7 +491,11 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
                 )}
             </section>
 
-            <WritingPolicyProgress policy={writingPolicy} metrics={writingMetrics} />
+            <WritingPolicyProgress
+                policy={writingPolicy}
+                metrics={writingMetrics}
+                dailyRemaining={postId ? null : dailyStatus?.remainingToday ?? null}
+            />
             {policyLoading && (
                 <WritingNotice tone="info" icon="⏳" compact>이 학급의 완료 조건을 확인하고 있어요.</WritingNotice>
             )}
@@ -570,6 +578,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState('all');
     const isEditing = params.mode === 'editor';
+    const dailyStatus = useReadingLogDailyStatus(studentSession?.id);
 
     const fetchLogs = useCallback(async () => {
         setLoading(true);
@@ -633,6 +642,20 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     const openList = useCallback(() => {
         onNavigate('reading_logs');
     }, [onNavigate]);
+
+    const openEditor = useCallback((editorParams = {}) => {
+        const isExistingPost = Boolean(editorParams.postId);
+        if (!isExistingPost && !dailyStatus.loading && !dailyStatus.error && !dailyStatus.canComplete) {
+            alert(`오늘 완료할 수 있는 독서록 ${dailyStatus.dailyLimit}편을 모두 작성했어요. 새 독서록은 내일 다시 쓸 수 있어요. 📚`);
+            return;
+        }
+        onNavigate('reading_logs', { mode: 'editor', ...editorParams });
+    }, [dailyStatus.canComplete, dailyStatus.dailyLimit, dailyStatus.error, dailyStatus.loading, onNavigate]);
+
+    const handleEditorDone = () => {
+        dailyStatus.refresh();
+        openList();
+    };
 
     const closeTeacherComment = useCallback(() => {
         setSelectedTeacherComment(null);
@@ -777,13 +800,30 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     ), [teacherReviews]);
 
     if (isEditing) {
+        if (!params.postId && dailyStatus.loading) {
+            return <Card><p style={{ textAlign: 'center', padding: '42px' }}>오늘 작성 가능한 독서록 편수를 확인하는 중... 📚</p></Card>;
+        }
+        if (!params.postId && !dailyStatus.error && !dailyStatus.canComplete) {
+            return (
+                <Card style={{ maxWidth: '720px', margin: '40px auto', padding: '48px 24px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '3.5rem' }}>🌙</div>
+                    <h2 style={{ color: '#33691E' }}>오늘 독서록을 모두 작성했어요</h2>
+                    <p style={{ color: '#64748B', lineHeight: 1.7 }}>
+                        오늘은 {dailyStatus.completedToday}/{dailyStatus.dailyLimit}편을 완료했어요.<br />
+                        이미 완료한 기존 독서록은 계속 다듬을 수 있고, 새 독서록은 내일 다시 쓸 수 있어요.
+                    </p>
+                    <Button onClick={openList}>내 책장으로 돌아가기</Button>
+                </Card>
+            );
+        }
         return (
             <ReadingLogEditor
                 studentSession={studentSession}
                 postId={params.postId}
                 initialBook={params.book}
                 draftBookKey={params.draftBookKey}
-                onDone={openList}
+                dailyStatus={dailyStatus}
+                onDone={handleEditorDone}
                 onCancel={openList}
             />
         );
@@ -797,7 +837,29 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                     <h1>📚 나의 책장</h1>
                     <p>읽고 있는 책과 다 읽은 책, 내가 쓴 독서록을 한곳에서 관리해요.</p>
                 </div>
-                <Button onClick={() => onNavigate('reading_logs', { mode: 'editor' })}>새 책·독서록 추가 ✍️</Button>
+                <Button onClick={() => openEditor()} disabled={!dailyStatus.loading && !dailyStatus.error && !dailyStatus.canComplete}>
+                    {!dailyStatus.loading && !dailyStatus.error && !dailyStatus.canComplete ? '오늘 작성 완료 ✅' : '새 책·독서록 추가 ✍️'}
+                </Button>
+            </div>
+
+            <div className={`reading-log-daily-status ${dailyStatus.canComplete ? '' : 'is-complete'}`}>
+                <span aria-hidden="true">{dailyStatus.canComplete ? '✍️' : '✅'}</span>
+                <div>
+                    <strong>
+                        {dailyStatus.loading
+                            ? '오늘 작성 현황을 확인하고 있어요.'
+                            : `오늘 독서록 ${dailyStatus.completedToday}/${dailyStatus.dailyLimit}편 완료`}
+                    </strong>
+                    {!dailyStatus.loading && (
+                        <small>
+                            {dailyStatus.error
+                                ? dailyStatus.error
+                                : dailyStatus.canComplete
+                                    ? `새 독서록을 ${dailyStatus.remainingToday}편 더 작성할 수 있어요.`
+                                    : '오늘 작성 가능한 편수를 모두 채웠어요. 새 독서록은 내일 다시 쓸 수 있어요.'}
+                        </small>
+                    )}
+                </div>
             </div>
 
             <div className="reading-log-summary">
@@ -832,7 +894,9 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                     <div style={{ fontSize: '4rem' }}>📗</div>
                     <h2 style={{ color: '#33691E' }}>내 책장의 첫 책을 골라보세요</h2>
                     <p style={{ color: '#78909C', marginBottom: '24px' }}>책을 검색하거나 직접 입력한 뒤 독서록을 남길 수 있어요.</p>
-                    <Button onClick={() => onNavigate('reading_logs', { mode: 'editor' })}>첫 책 추가하기</Button>
+                    <Button onClick={() => openEditor()} disabled={!dailyStatus.loading && !dailyStatus.error && !dailyStatus.canComplete}>
+                        {dailyStatus.canComplete ? '첫 책 추가하기' : '오늘 작성 완료 ✅'}
+                    </Button>
                 </Card>
             ) : filteredShelves.length === 0 ? (
                 <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
@@ -893,13 +957,13 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                                     size="sm"
                                     className={`reading-shelf-action is-${writingStateId}`}
                                     style={writingState.buttonStyle}
-                                    onClick={() => onNavigate('reading_logs', mainLog
-                                        ? { mode: 'editor', postId: mainLog.id }
+                                    onClick={() => openEditor(mainLog
+                                        ? { postId: mainLog.id }
                                         : {
-                                            mode: 'editor',
                                             book: { ...shelf.book, readingStatus: shelf.readingStatus },
                                             draftBookKey: shelf.draft?.book_key
                                         })}
+                                    disabled={!mainLog && !dailyStatus.loading && !dailyStatus.error && !dailyStatus.canComplete}
                                 >
                                     {writingState.actionLabel}
                                 </Button>

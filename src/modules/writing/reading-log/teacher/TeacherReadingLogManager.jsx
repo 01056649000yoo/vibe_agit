@@ -452,7 +452,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                         writingType="reading_log"
                         defaults={READING_LOG_POLICY_DEFAULTS}
                         title="독서록 완료 조건과 포인트"
-                        description="초안은 분량과 관계없이 저장됩니다. 학생이 작성 완료할 때 조건을 확인하고, 한 책당 최초 한 번만 포인트를 줍니다."
+                        description="학생이 작성 완료할 때 분량과 하루 완료 편수를 확인합니다. 포인트는 한 책당 최초 한 번만 지급합니다."
                         onDirtyChange={setPolicySettingsDirty}
                     />
                 </div>

@@ -29,7 +29,7 @@ const WritingPolicyProgress = ({
             <div className="writing-policy-progress__reward">
                 <span>완료 보상</span>
                 <strong>{reward.total}P</strong>
-                {dailyRemaining !== null && <small>오늘 {dailyRemaining}편까지 보상 가능</small>}
+                {dailyRemaining !== null && <small>오늘 새 독서록 {dailyRemaining}편 작성 가능</small>}
             </div>
             {evaluation.policy.bonus_enabled && evaluation.policy.bonus_threshold > 0 && evaluation.policy.bonus_reward > 0 && (
                 <p className={reward.bonusAchieved ? 'is-complete' : ''}>

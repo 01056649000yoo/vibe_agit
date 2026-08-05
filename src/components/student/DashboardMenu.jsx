@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
+import useReadingLogDailyStatus from '../../modules/writing/reading-log/useReadingLogDailyStatus';
 
 const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, onOpenPlayground, playgroundCount = 0, agitSettings, studentSession, enabledModules = [] }) => {
     const agitOnClassEnabled = enabledModules.some((module) => module.id === 'agit-on-class');
@@ -11,6 +12,7 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, onOpenPlaygrou
     const [, setHasNewAgitHonor] = useState(false);
 
     const [hasNewAgitUpdate, setHasNewAgitUpdate] = useState(false);
+    const readingDailyStatus = useReadingLogDailyStatus(studentSession?.id);
 
     useEffect(() => {
         const classId = studentSession?.class_id || studentSession?.classId;
@@ -136,7 +138,23 @@ const DashboardMenu = ({ onNavigate, setIsAgitOpen, onOpenMyAgit, onOpenPlaygrou
                 >
                     <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📚</div>
                     <h3 style={{ margin: 0, color: '#33691E' }}>독서록</h3>
-                    <p style={{ fontSize: '0.85rem', color: '#8D9F7A', marginTop: '8px' }}>언제든 책과 생각 기록하기</p>
+                    <p style={{ fontSize: '0.85rem', color: '#8D9F7A', margin: '8px 0 0' }}>
+                        {readingDailyStatus.loading
+                            ? '오늘 작성 현황 확인 중...'
+                            : readingDailyStatus.canComplete
+                                ? `오늘 ${readingDailyStatus.completedToday}/${readingDailyStatus.dailyLimit}편 완료 · ${readingDailyStatus.remainingToday}편 남음`
+                                : `오늘 ${readingDailyStatus.completedToday}/${readingDailyStatus.dailyLimit}편 완료 · 내일 다시 쓰기`}
+                    </p>
+                    {!readingDailyStatus.loading && (
+                        <span style={{
+                            display: 'inline-block', marginTop: '10px', padding: '4px 9px', borderRadius: '999px',
+                            background: readingDailyStatus.canComplete ? '#ECFCCB' : '#F1F5F9',
+                            color: readingDailyStatus.canComplete ? '#3F6212' : '#64748B',
+                            fontSize: '0.72rem', fontWeight: '900'
+                        }}>
+                            {readingDailyStatus.canComplete ? `새 독서록 ${readingDailyStatus.remainingToday}편 가능` : '오늘 작성 완료'}
+                        </span>
+                    )}
                 </motion.div>
 
                 <motion.div

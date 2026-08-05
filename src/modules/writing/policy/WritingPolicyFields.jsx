@@ -12,7 +12,17 @@ const NumberField = ({ label, value, onChange, min = 0, max = 20000, step = 1, s
                 max={max}
                 step={step}
                 value={value}
-                onChange={(event) => onChange(Math.max(min, Math.min(max, Number.parseInt(event.target.value, 10) || 0)))}
+                onChange={(event) => {
+                    const rawValue = event.target.value;
+                    if (rawValue === '') {
+                        onChange('');
+                        return;
+                    }
+                    onChange(Math.max(min, Math.min(max, Number.parseInt(rawValue, 10) || 0)));
+                }}
+                onBlur={() => {
+                    if (value === '') onChange(min);
+                }}
             />
             {suffix && <strong>{suffix}</strong>}
         </span>
@@ -22,23 +32,24 @@ const NumberField = ({ label, value, onChange, min = 0, max = 20000, step = 1, s
 const WritingPolicyFields = ({ value, onChange, showDailyLimit = false, showBonus = true }) => {
     const policy = normalizeWritingPolicy(value);
     const update = (key, nextValue) => onChange({ ...value, [key]: nextValue });
+    const fieldValue = (key) => value?.[key] ?? policy[key];
 
     return (
         <div className="writing-policy-fields">
             <div className="writing-policy-fields__group">
                 <h4>📏 완료 분량</h4>
                 <div className="writing-policy-fields__grid">
-                    <NumberField label="최소 글자 수" value={policy.min_chars} step={50} onChange={(next) => update('min_chars', next)} suffix="자" />
-                    <NumberField label="최소 문단 수" value={policy.min_paragraphs} max={100} onChange={(next) => update('min_paragraphs', next)} suffix="문단" />
+                    <NumberField label="최소 글자 수" value={fieldValue('min_chars')} step={50} onChange={(next) => update('min_chars', next)} suffix="자" />
+                    <NumberField label="최소 문단 수" value={fieldValue('min_paragraphs')} max={100} onChange={(next) => update('min_paragraphs', next)} suffix="문단" />
                 </div>
             </div>
 
             <div className="writing-policy-fields__group">
                 <h4>🪙 완료 보상</h4>
                 <div className="writing-policy-fields__grid">
-                    <NumberField label="기본 포인트" value={policy.base_reward} max={10000} step={10} onChange={(next) => update('base_reward', next)} suffix="P" />
+                    <NumberField label="기본 포인트" value={fieldValue('base_reward')} max={10000} step={10} onChange={(next) => update('base_reward', next)} suffix="P" />
                     {showDailyLimit && (
-                        <NumberField label="하루 보상 가능" value={policy.daily_reward_limit} min={1} max={20} onChange={(next) => update('daily_reward_limit', next)} suffix="편" />
+                        <NumberField label="하루 작성 완료" value={fieldValue('daily_reward_limit')} min={1} max={20} onChange={(next) => update('daily_reward_limit', next)} suffix="편" />
                     )}
                 </div>
             </div>
@@ -51,8 +62,8 @@ const WritingPolicyFields = ({ value, onChange, showDailyLimit = false, showBonu
                     </label>
                     {policy.bonus_enabled && (
                         <div className="writing-policy-fields__grid">
-                            <NumberField label="추가 글자 수" value={policy.bonus_threshold} max={20000} step={50} onChange={(next) => update('bonus_threshold', next)} suffix="자" />
-                            <NumberField label="추가 포인트" value={policy.bonus_reward} max={10000} step={10} onChange={(next) => update('bonus_reward', next)} suffix="P" />
+                            <NumberField label="추가 글자 수" value={fieldValue('bonus_threshold')} max={20000} step={50} onChange={(next) => update('bonus_threshold', next)} suffix="자" />
+                            <NumberField label="추가 포인트" value={fieldValue('bonus_reward')} max={10000} step={10} onChange={(next) => update('bonus_reward', next)} suffix="P" />
                         </div>
                     )}
                 </div>

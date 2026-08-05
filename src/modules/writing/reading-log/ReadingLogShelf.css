@@ -22,6 +22,47 @@
     color: var(--ui-ink-muted);
 }
 
+.reading-log-daily-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding: 13px 16px;
+    border: 1px solid #BBF7D0;
+    border-radius: var(--ui-radius-lg);
+    background: linear-gradient(135deg, #F0FDF4, #F7FEE7);
+    color: #166534;
+}
+
+.reading-log-daily-status > span {
+    font-size: 1.55rem;
+}
+
+.reading-log-daily-status div {
+    display: grid;
+    gap: 3px;
+}
+
+.reading-log-daily-status strong,
+.reading-log-daily-status small {
+    display: block;
+}
+
+.reading-log-daily-status small {
+    color: #4D7C0F;
+    font-weight: 700;
+}
+
+.reading-log-daily-status.is-complete {
+    border-color: #CBD5E1;
+    background: #F8FAFC;
+    color: #475569;
+}
+
+.reading-log-daily-status.is-complete small {
+    color: #64748B;
+}
+
 .reading-log-summary,
 .reading-writing-legend {
     display: flex;
