@@ -14,6 +14,7 @@ import { friendsHideoutManifest } from './community/friends-hideout/manifest';
 import { agitOnClassManifest } from './community/agit-on-class/manifest';
 import { ideaMarketManifest } from './writing/idea-market/manifest';
 import { readingLogManifest } from './writing/reading-log/manifest';
+import { diaryManifest } from './writing/diary/manifest';
 import { writingFootprintManifest } from './writing/writing-footprint/manifest';
 import { samlinkManifest } from './tool/samlink/manifest';
 
@@ -25,6 +26,7 @@ const manifests = [
   agitOnClassManifest, // src/modules/community/agit-on-class/
   ideaMarketManifest, // src/modules/writing/idea-market/
   readingLogManifest, // src/modules/writing/reading-log/
+  diaryManifest, // src/modules/writing/diary/
   writingFootprintManifest, // src/modules/writing/writing-footprint/
   samlinkManifest, // src/modules/tool/samlink/
 ];

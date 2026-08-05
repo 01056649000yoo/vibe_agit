@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 import useReadingLogDailyStatus from '../../modules/writing/reading-log/useReadingLogDailyStatus';
+import useDiaryDailyStatus from '../../modules/writing/diary/useDiaryDailyStatus';
 import './DashboardMenu.css';
 
 const MenuCard = ({ icon, title, description, badge, isNew, tone, onClick, disabled = false }) => (
@@ -38,6 +39,7 @@ const DashboardMenu = ({
     const [hasNewMission, setHasNewMission] = useState(false);
     const [hasNewAgitUpdate, setHasNewAgitUpdate] = useState(false);
     const readingDailyStatus = useReadingLogDailyStatus(studentSession?.id);
+    const diaryDailyStatus = useDiaryDailyStatus(studentSession?.id);
 
     useEffect(() => {
         const classId = studentSession?.class_id || studentSession?.classId;
@@ -111,6 +113,15 @@ const DashboardMenu = ({
             ? `새 독서록 ${readingDailyStatus.remainingToday}편 가능`
             : '오늘 작성 완료';
 
+    const diaryDescription = diaryDailyStatus.loading
+        ? '오늘 작성 현황을 확인하고 있어요'
+        : diaryDailyStatus.hasTodayDiary
+            ? '오늘 일기를 썼어요 · 다시 열어 다듬기'
+            : '오늘 있었던 일 남기기';
+    const diaryBadge = diaryDailyStatus.loading
+        ? null
+        : diaryDailyStatus.hasTodayDiary ? '오늘 작성 완료' : '오늘 아직 안 썼어요';
+
     const openAgitOnClass = () => {
         if (agitSettings?.isMenuEnabled === false) return;
         const classId = studentSession?.class_id || studentSession?.classId;
@@ -142,6 +153,14 @@ const DashboardMenu = ({
                     badge={readingBadge}
                     tone="green"
                     onClick={() => onNavigate('reading_logs')}
+                />
+                <MenuCard
+                    icon="📔"
+                    title="일기"
+                    description={diaryDescription}
+                    badge={diaryBadge}
+                    tone="blue"
+                    onClick={() => onNavigate('diaries')}
                 />
                 <MenuCard
                     icon="👀"

@@ -1,0 +1,37 @@
+/**
+ * 학생 자율 글쓰기의 두 번째 모듈: 일기.
+ *
+ * 독서록을 복사하지 않았다. 독서록 부피의 절반 이상이 책 카탈로그·내 서재·책 기준 초안이라
+ * 일기에는 버릴 코드다. 공용 층(글쓰기 작업대·정책·보상 원장·모듈 레지스트리)에 유형만 하나 더 얹는다.
+ *
+ * 축이 다르다 — 독서록은 `책 한 권에 하나`, 일기는 **`하루에 하나`** 다.
+ * 공개 기본값도 반대다. 일기는 개인적인 글이라 기본 비공개이고 학생이 원할 때만 친구에게 연다.
+ */
+export const diaryManifest = {
+    id: 'diary',
+    name: '나의 일기',
+    description: '오늘 있었던 일과 내 마음을 하루에 한 편 기록하기',
+    icon: '📔',
+    part: 'writing',
+    audience: 'student',
+    core: true,
+    studentRoute: 'diaries',
+    writingPolicy: {
+        type: 'diary',
+        completionFlow: 'student_complete',
+        defaults: {
+            min_chars: 150,
+            min_paragraphs: 1,
+            base_reward: 80,
+            bonus_enabled: false,
+            bonus_threshold: 0,
+            bonus_reward: 0,
+            daily_reward_limit: 1
+        }
+    },
+    // 교사 확인·한마디와 학급 운영 카드는 다음 단계에서 붙인다.
+    // 데이터를 주는 RPC 없이 카드만 등록하면 교사 화면에 빈 카드가 뜬다.
+    studentEntry: () => import('./DiaryPage')
+};
+
+export default diaryManifest;
