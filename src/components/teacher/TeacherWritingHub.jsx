@@ -3,6 +3,7 @@ import { getModule } from '../../modules/registry';
 import TeacherMissionTab from './TeacherMissionTab';
 
 const TeacherReadingLogManager = lazy(getModule('reading-log').teacherEntry);
+const TeacherDiaryManager = lazy(getModule('diary').teacherEntry);
 
 const TeacherWritingHub = ({
     activeClass, isMobile, section = 'missions', cardLayout,
@@ -18,6 +19,10 @@ const TeacherWritingHub = ({
                     navigationTarget={navigationTarget}
                     onNavigationHandled={onNavigationHandled}
                 />
+            ) : section === 'diaries' ? (
+                <Suspense fallback={<div style={{ padding: '60px', textAlign: 'center', color: '#94A3B8' }}>학생 일기를 정리하는 중... 📔</div>}>
+                    <TeacherDiaryManager activeClass={activeClass} isMobile={isMobile} />
+                </Suspense>
             ) : (
                 <Suspense fallback={<div style={{ padding: '60px', textAlign: 'center', color: '#94A3B8' }}>학생 독서록을 정리하는 중... 📚</div>}>
                     <TeacherReadingLogManager

@@ -14,6 +14,7 @@ export const TEACHER_NAV_GROUPS = [
         tabs: [
             { id: 'dashboard', label: '선생님 과제' },
             { id: 'reading-logs', label: '학생 독서록' },
+            { id: 'diaries', label: '학생 일기' },
             { id: 'archive', label: '보관함' }
         ]
     },

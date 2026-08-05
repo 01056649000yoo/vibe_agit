@@ -29,9 +29,8 @@ export const diaryManifest = {
             daily_reward_limit: 1
         }
     },
-    // 교사 확인·한마디와 학급 운영 카드는 다음 단계에서 붙인다.
-    // 데이터를 주는 RPC 없이 카드만 등록하면 교사 화면에 빈 카드가 뜬다.
-    studentEntry: () => import('./DiaryPage')
+    studentEntry: () => import('./DiaryPage'),
+    teacherEntry: () => import('./teacher/TeacherDiaryManager')
 };
 
 export default diaryManifest;

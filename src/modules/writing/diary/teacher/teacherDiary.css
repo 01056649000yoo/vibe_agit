@@ -1,0 +1,112 @@
+/* 교사 일기 확인 화면. 공용 --ui-* 토큰을 쓰고 남색만 일기 고유 강조로 둔다. */
+
+.teacher-diary { display: flex; flex-direction: column; gap: var(--ui-space-4, 12px); }
+
+.teacher-diary__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--ui-space-3, 8px);
+}
+.teacher-diary__header h2 { margin: 0; color: var(--ui-ink-strong); font-size: 1.25rem; }
+.teacher-diary__header p { margin: 3px 0 0; color: var(--ui-ink-muted); font-size: .82rem; }
+.teacher-diary__pending {
+    padding: 6px 12px;
+    border: 1px solid #C7D2FE;
+    border-radius: 999px;
+    background: #EEF2FF;
+    color: #4338CA;
+    font-size: .78rem;
+    font-weight: 900;
+}
+
+.teacher-diary__filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.teacher-diary__filters button {
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-sm, 10px);
+    background: var(--ui-surface);
+    color: var(--ui-ink-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 800;
+}
+.teacher-diary__filters button.is-active {
+    border-color: #A5B4FC;
+    background: #EEF2FF;
+    color: #3730A3;
+}
+
+.teacher-diary__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ui-space-3, 8px); }
+.teacher-diary__grid.is-mobile { grid-template-columns: 1fr; }
+
+.teacher-diary__card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    padding: 14px;
+    border: 1px solid var(--ui-border);
+    border-left: 4px solid #6366F1;
+    border-radius: var(--ui-radius-md, 14px);
+    background: var(--ui-surface);
+    cursor: pointer;
+    gap: 6px;
+    font: inherit;
+    text-align: left;
+}
+.teacher-diary__card.is-reviewed { border-left-color: var(--ui-border); }
+.teacher-diary__card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.teacher-diary__card-top strong { color: var(--ui-ink-strong); font-size: .95rem; }
+.teacher-diary__card-top em { color: var(--ui-ink-subtle); font-size: .74rem; font-style: normal; white-space: nowrap; }
+.teacher-diary__card-title {
+    overflow: hidden;
+    color: var(--ui-ink);
+    font-size: .88rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.teacher-diary__card-meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--ui-ink-muted); font-size: .72rem; font-weight: 700; }
+.teacher-diary__card-meta .is-pending { color: #4338CA; font-weight: 900; }
+.teacher-diary__card-meta .is-done { color: #15803D; font-weight: 900; }
+
+.teacher-diary__detail { display: flex; flex-direction: column; gap: var(--ui-space-4, 12px); }
+.teacher-diary__detail h3 { margin: 0; color: var(--ui-ink-strong); font-size: 1.05rem; }
+.teacher-diary__content {
+    max-height: 320px;
+    margin: 0;
+    padding: 16px;
+    overflow-y: auto;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md, 14px);
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink);
+    font-size: .92rem;
+    line-height: 1.75;
+    white-space: pre-wrap;
+}
+.teacher-diary__comment { display: flex; flex-direction: column; gap: 6px; }
+.teacher-diary__comment > span { color: var(--ui-ink-strong); font-size: .85rem; font-weight: 800; }
+.teacher-diary__comment small { margin-left: 6px; color: var(--ui-ink-subtle); font-size: .74rem; font-weight: 600; }
+.teacher-diary__comment textarea {
+    padding: 12px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-sm, 10px);
+    background: var(--ui-surface);
+    color: var(--ui-ink);
+    font: inherit;
+    resize: vertical;
+}
+.teacher-diary__actions { display: flex; justify-content: flex-end; gap: var(--ui-space-3, 8px); }
+
+@media (max-width: 1024px) {
+    .teacher-diary__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+    .teacher-diary__grid { grid-template-columns: 1fr; }
+    .teacher-diary__actions { flex-direction: column-reverse; }
+    .teacher-diary__actions > * { width: 100%; }
+}

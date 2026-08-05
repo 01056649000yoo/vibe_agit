@@ -350,12 +350,12 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                             />
                         </div>
                     ) : (
-                        visibleTab === 'dashboard' || visibleTab === 'reading-logs' ? (
+                        visibleTab === 'dashboard' || visibleTab === 'reading-logs' || visibleTab === 'diaries' ? (
                             <TeacherWritingHub
                                 key={activeClass.id}
                                 activeClass={activeClass}
                                 isMobile={isMobile}
-                                section={visibleTab === 'reading-logs' ? 'reading-logs' : 'missions'}
+                                section={visibleTab === 'dashboard' ? 'missions' : visibleTab}
                                 cardLayout={writingCardLayout}
                                 navigationTarget={workspaceTarget}
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
