@@ -40,7 +40,7 @@ const FriendProfileShell = ({ friend, viewerId, classId, onClose, onOpenPost }) 
         friend.writer_completed_posts,
         friend.pet_data?._testWriterLevel
     );
-    const reader = getReaderLevel(friend.reader_score);
+    const reader = getReaderLevel(friend.reader_score, friend.pet_data?._testReaderLevel);
     const activeCards = getActiveFriendProfileCards();
 
     return (

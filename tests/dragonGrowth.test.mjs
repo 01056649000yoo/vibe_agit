@@ -8,7 +8,7 @@ import {
     getDragonStage,
     getReaderDragonEffect
 } from '../src/modules/game/dragon/presentation.js';
-import { getWriterLevel } from '../src/constants/writerLevels.js';
+import { getReaderLevel, getWriterLevel } from '../src/constants/writerLevels.js';
 
 test('작가 칭호 10단계를 드래곤 10단계로 그대로 연결한다', () => {
     for (let level = 1; level <= 10; level += 1) {
@@ -24,6 +24,12 @@ test('테스트 칭호 오버라이드는 실제 글 통계를 바꾸지 않고 
     assert.equal(overridden.isTestOverride, true);
     assert.equal(getDragonGrowthFromWriterLevel(overridden).level, 8);
     assert.equal(getWriterLevel(0, 0, 999).level, 1);
+
+    const reader = getReaderLevel(0, 6);
+    assert.equal(reader.level, 6);
+    assert.equal(reader.name, '열혈 독자');
+    assert.equal(reader.isTestOverride, true);
+    assert.equal(getReaderLevel(0, 999).level, 1);
 });
 
 test('실제 성장과 테스트 성장은 서로 다른 확인 기록을 사용한다', () => {

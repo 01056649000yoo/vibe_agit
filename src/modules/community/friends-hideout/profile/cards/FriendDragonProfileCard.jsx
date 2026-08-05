@@ -14,7 +14,7 @@ const FriendDragonProfileCard = ({ friend }) => {
     const growth = getDragonGrowthFromWriterLevel(writerLevel);
     const pet = { ...storedPet, level: growth.level, exp: growth.progress };
     const background = getHideoutBackground(pet.background);
-    const readerLevel = getReaderLevel(friend?.reader_score);
+    const readerLevel = getReaderLevel(friend?.reader_score, friend?.pet_data?._testReaderLevel);
     const dragon = getDragonStage(pet.level, pet.species);
     const exp = Math.min(100, Math.max(0, Number(pet.exp || 0)));
 

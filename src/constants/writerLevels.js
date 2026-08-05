@@ -125,7 +125,19 @@ export const READER_LEVELS = [
     { level: 7, name: '아지트 지킴이', emoji: '💎', from: 300 }
 ];
 
-export const getReaderLevel = (score = 0) => {
+export const getReaderLevel = (score = 0, overrideLevel = null) => {
+    const requestedOverride = Number(overrideLevel);
+    if (Number.isInteger(requestedOverride) && requestedOverride >= 1 && requestedOverride <= READER_LEVELS.length) {
+        const overrideIndex = requestedOverride - 1;
+        const current = READER_LEVELS.at(overrideIndex);
+        const upcoming = READER_LEVELS.at(overrideIndex + 1);
+        return {
+            ...current,
+            next: upcoming ? upcoming.from : null,
+            isTestOverride: true
+        };
+    }
+
     const safeScore = Math.max(0, Number(score) || 0);
     const index = READER_LEVELS.reduce(
         (found, item, i) => (safeScore >= item.from ? i : found),

@@ -27,7 +27,7 @@ const FriendHideoutPreviewCard = ({ friend, onSelect }) => {
         friend?.writer_completed_posts,
         friend?.pet_data?._testWriterLevel
     );
-    const reader = getReaderLevel(friend?.reader_score);
+    const reader = getReaderLevel(friend?.reader_score, friend?.pet_data?._testReaderLevel);
     const initial = Array.from(friend?.name || '친').at(0);
 
     return (

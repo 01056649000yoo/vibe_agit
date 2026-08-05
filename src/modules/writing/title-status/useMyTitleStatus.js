@@ -11,7 +11,8 @@ const EMPTY_STATUS = {
     writerCompletedPosts: 0,
     writerLevelOverride: null,
     readerScore: 0,
-    readerPostCount: 0
+    readerPostCount: 0,
+    readerLevelOverride: null
 };
 
 export const invalidateMyTitleStatus = ({ classId, studentId }) => {
@@ -54,7 +55,10 @@ const useMyTitleStatus = ({ studentSession, active = true }) => {
                         ? null
                         : Number(data.writer_level_override),
                     readerScore: Number(data?.reader_score || 0),
-                    readerPostCount: Number(data?.reader_post_count || 0)
+                    readerPostCount: Number(data?.reader_post_count || 0),
+                    readerLevelOverride: data?.reader_level_override == null
+                        ? null
+                        : Number(data.reader_level_override)
                 };
             }, TITLE_STATUS_TTL_MS);
             setStatus(next || EMPTY_STATUS);
@@ -87,7 +91,10 @@ const useMyTitleStatus = ({ studentSession, active = true }) => {
         () => getWriterLevel(status.writerTotalChars, status.writerCompletedPosts, status.writerLevelOverride),
         [status.writerCompletedPosts, status.writerLevelOverride, status.writerTotalChars]
     );
-    const readerLevel = useMemo(() => getReaderLevel(status.readerScore), [status.readerScore]);
+    const readerLevel = useMemo(
+        () => getReaderLevel(status.readerScore, status.readerLevelOverride),
+        [status.readerLevelOverride, status.readerScore]
+    );
 
     return { status, writerLevel, readerLevel, loading, errorMessage, reload: () => load(true) };
 };
