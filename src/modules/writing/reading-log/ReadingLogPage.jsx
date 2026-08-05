@@ -234,8 +234,12 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
         || draftBookKey || initialBook?.isbn13 || initialBook?.isbn10 || initialBook?.title
         || 'new';
     const draftKey = buildDraftKey('reading_log_draft', studentSession?.id, draftScopeId);
+    // 책만 고른 상태는 초안으로 남기지 않는다.
+    // 새 독서록은 모두 `new` 라는 한 자리를 함께 쓰는데, 책 선택만으로 초안이 생기면
+    // 검색만 해 보고 나간 책이 다음 `새 독서록 쓰기` 에 그대로 되살아난다.
+    // 실제로 쓴 글이 있을 때만 남겨야 이어 쓰기가 학생에게 의도한 대로 동작한다.
     const draftHasContent = useCallback((candidate) => Boolean(
-        candidate?.title?.trim() || candidate?.content?.trim() || candidate?.selectedBook?.title
+        candidate?.title?.trim() || candidate?.content?.trim()
     ), []);
     const restoreDraft = useCallback((stored, storedAt) => {
         // 완성본 저장 뒤 초안 정리만 실패했을 때 옛 로컬 초안이 되살아나지 않게 한다.
@@ -351,6 +355,14 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
         setServerDraftAt(null);
         return true;
     }, [bookKey, clearLocalDraft, postId]);
+
+    // 이어 쓰기가 되살아났는데 다른 책으로 새로 쓰고 싶을 때 빠져나갈 길을 준다.
+    const startFresh = async () => {
+        if (!window.confirm('쓰던 내용을 지우고 처음부터 새로 쓸까요?\n지우면 되돌릴 수 없어요.')) return;
+        await clearDraft();
+        setForm(EMPTY_FORM);
+        setInitialForm(EMPTY_FORM);
+    };
 
     const updateForm = (key, value) => {
         setForm((current) => ({ ...current, [key]: value }));
@@ -487,6 +499,11 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
                         {draftError || (serverDraftAt
                             ? `${formatTime(serverDraftAt)}에 임시 저장했어요. 다른 기기에서도 이어 쓸 수 있어요. 아직 선생님과 친구에게는 보이지 않아요.`
                             : `${formatTime(draftSavedAt)}에 이 기기에 남겨 뒀어요. 다른 기기에서도 이어 쓰려면 임시 저장을 눌러 주세요.`)}
+                        {!postId && !draftError && (
+                            <button type="button" className="reading-draft-reset" onClick={startFresh}>
+                                다른 책으로 처음부터 쓰기
+                            </button>
+                        )}
                     </WritingNotice>
                 )}
             </section>
