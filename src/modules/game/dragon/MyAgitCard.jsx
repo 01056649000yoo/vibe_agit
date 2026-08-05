@@ -15,10 +15,8 @@ const MyAgitCard = ({ runtime, onOpen }) => {
     const level = Number(petData.level || 1);
     const exp = Math.min(100, Math.max(0, Number(petData.exp || 0)));
     const days = Math.max(0, Number(runtime?.daysSinceLastFed || 0));
-    const careLimit = Math.max(1, Number(runtime?.dragonConfig?.degenDays || 14));
-    const needsCare = days >= Math.max(1, careLimit - 2);
-    const careText = days === 0 ? '오늘 돌봤어요' : `마지막 먹이 ${days}일 전`;
-    const mastered = level >= 5 && exp >= 100;
+    const bondText = days === 0 ? '오늘 교감했어요' : `마지막 교감 ${days}일 전`;
+    const mastered = level >= 10 && exp >= 100;
     const dragonInfo = getDragonStage(level);
     const habitat = getHideoutBackground(petData.background);
 
@@ -26,7 +24,7 @@ const MyAgitCard = ({ runtime, onOpen }) => {
         <motion.button
             type="button"
             onClick={onOpen}
-            aria-label={`${petData.name || '나의 드래곤'}, 레벨 ${level}, ${dragonInfo.name}. 드래곤 방 들어가기`}
+            aria-label={`${petData.name || '나의 드래곤'}, 작가 성장 ${level}단계, ${dragonInfo.name}. 수호룡 방 들어가기`}
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.985 }}
             style={{
@@ -48,7 +46,7 @@ const MyAgitCard = ({ runtime, onOpen }) => {
                 <span aria-hidden="true" style={{
                     position: 'absolute', left: '12px', top: '11px', padding: '4px 7px', borderRadius: '99px',
                     background: 'rgba(41,31,24,.58)', color: '#FFF7E5', fontSize: '.61rem', fontWeight: 950
-                }}>🐉 나의 반려 드래곤</span>
+                }}>🐉 나의 작가 수호룡</span>
                 <img
                     src={dragonInfo.image}
                     alt=""
@@ -57,7 +55,8 @@ const MyAgitCard = ({ runtime, onOpen }) => {
                     height="116"
                     style={{
                         display: 'block', width: '116px', height: '116px', objectFit: 'contain',
-                        filter: `drop-shadow(0 8px 9px ${habitat.glow})`
+                        transform: `scale(${dragonInfo.imageScale})`,
+                        filter: `${dragonInfo.imageFilter} drop-shadow(0 8px 9px ${habitat.glow})`
                     }}
                 />
             </span>
@@ -73,9 +72,9 @@ const MyAgitCard = ({ runtime, onOpen }) => {
                     color: INK, fontSize: '1.02rem', fontWeight: 950
                 }}>{petData.name || '나의 드래곤'}</span>
                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '7px', marginTop: '8px' }}>
-                    <span style={{ color: '#8A5B27', fontSize: '.7rem', fontWeight: 950 }}>LV.{level}</span>
-                    <span style={{ color: needsCare ? '#C74735' : '#527453', fontSize: '.64rem', fontWeight: 900 }}>
-                        {needsCare ? '🍖 돌봐주세요' : `● ${careText}`}
+                    <span style={{ color: '#8A5B27', fontSize: '.7rem', fontWeight: 950 }}>{level}/10단계</span>
+                    <span style={{ color: '#527453', fontSize: '.64rem', fontWeight: 900 }}>
+                        ● {bondText}
                     </span>
                 </span>
                 <span aria-label={mastered ? '성장 완료' : `성장 경험치 ${exp}%`} style={{
@@ -90,7 +89,7 @@ const MyAgitCard = ({ runtime, onOpen }) => {
                     }} />
                 </span>
                 <span style={{ display: 'block', marginTop: '7px', color: '#7C654E', fontSize: '.64rem', fontWeight: 900 }}>
-                    {mastered ? '최고 단계까지 자랐어요 ✨' : `성장 ${exp}%`} · 방에 들어가기 ›
+                    {mastered ? '전설의 작가와 함께해요 ✨' : `다음 모습까지 ${100 - exp}%`} · 방에 들어가기 ›
                 </span>
             </span>
         </motion.button>

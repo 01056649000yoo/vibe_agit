@@ -44,7 +44,7 @@ const BackgroundShopModal = ({ isOpen, onClose, points, petData, buyItem, equipI
                         const isOwned = item.id === 'default' || (petData.ownedItems && petData.ownedItems.includes(item.id));
                         const isEquipped = petData.background === item.id;
                         const isLegendary = item.requiresMaxLevel;
-                        const hasFullyMastered = petData.level >= 5 && petData.exp >= 100;
+                        const hasFullyMastered = petData.level >= 10 && petData.exp >= 100;
 
                         return (
                             <div key={item.id} style={{

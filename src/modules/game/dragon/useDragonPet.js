@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
-import confetti from 'canvas-confetti';
 
-export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenDays = 14, initialPetData = null) => {
+export const useDragonPet = (studentId, points, setPoints, initialPetData = null) => {
     const [petData, setPetData] = useState({
         name: '나의 드래곤',
         level: 1,
@@ -11,9 +10,9 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
         ownedItems: [],
         background: 'default'
     });
-    const [isEvolving, setIsEvolving] = useState(false);
     const [isFlashing, setIsFlashing] = useState(false);
     const [isBusy, setIsBusy] = useState(false); 
+    const hasHydratedInitialDataRef = useRef(false);
 
     const shouldAcceptIncomingPetData = (currentPetData, nextPetData) => {
         if (!nextPetData) return false;
@@ -41,6 +40,12 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
     useEffect(() => {
         if (!initialPetData) return;
 
+        if (!hasHydratedInitialDataRef.current) {
+            hasHydratedInitialDataRef.current = true;
+            setPetData(() => initialPetData);
+            return;
+        }
+
         setPetData((currentPetData) => (
             shouldAcceptIncomingPetData(currentPetData, initialPetData)
                 ? initialPetData
@@ -48,168 +53,37 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
         ));
     }, [initialPetData]);
 
-    // [정밀 동기화] props로 전달된 설정값이 비동기로 업데이트될 때 훅 내부에서도 즉시 반영되도록 ref 사용
-    const feedCostRef = useRef(feedCost);
-    const degenDaysRef = useRef(degenDays);
-
-    useEffect(() => {
-        feedCostRef.current = feedCost;
-        degenDaysRef.current = degenDays;
-        console.log(`🔄 드래곤 설정 업데이트됨 (Hook): 먹이비용=${feedCost}, 퇴화기간=${degenDays}`);
-    }, [feedCost, degenDays]);
-
-    // 진화 사운드 (구조 제공)
-    const playEvolutionSound = () => {
-        console.log('🎵 진화 사운드 재생: 두구두구두구~ 짠!');
-    };
-
-    // 드래곤 퇴화 로직 (14일 미접속/미관리 시)
-    const checkPetDegeneration = async (currentPetData, overrideDegenDays = null) => {
-        if (!currentPetData?.lastFed) return;
-
-        const parseLocalrDate = (dateStr) => {
-            const [y, m, d] = dateStr.split('-').map(Number);
-            return new Date(y, m - 1, d);
+    // 교감은 성장 조건이나 포인트 소비가 아닌, 내 수호룡과 만나는 가벼운 기록이다.
+    const handleBond = async () => {
+        if (!studentId || isBusy) return false;
+        setIsBusy(true);
+        const today = new Date().toISOString().split('T')[0];
+        const newPetData = {
+            ...petData,
+            lastFed: today,
+            bondCount: Number(petData.bondCount || 0) + 1
         };
 
-        const lastFedDate = parseLocalrDate(currentPetData.lastFed);
-        const now = new Date();
-        const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        const diffTime = todayDate - lastFedDate;
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        console.log(`🐉 드래곤 상태 점검: 마지막 식사 ${diffDays}일 전 (${currentPetData.lastFed})`);
-
-        // [기준 강화] 설정값(degenDays) 이상 경과 시 퇴화 (오버라이드 우선 -> ref값 -> 기본값)
-        const threshold = overrideDegenDays !== null ? overrideDegenDays : degenDaysRef.current;
-
-        if (diffDays >= threshold) {
-            let newLevel = currentPetData.level;
-
-            if (newLevel > 1) {
-                newLevel -= 1;
-            }
-
-            const newPetData = {
-                ...currentPetData,
-                level: newLevel,
-                exp: 0,
-                lastFed: now.toISOString().split('T')[0]
-            };
-
-            try {
-                const { data: spendResult, error } = await supabase
-                    .rpc('spend_student_points', {
-                        p_amount: 0,
-                        p_reason: '드래곤 돌봄 부족으로 인한 퇴화 📉',
-                        p_pet_data: newPetData
-                    });
-
-                if (error) throw error;
-                if (!spendResult?.success) throw new Error(spendResult?.error);
-
-                console.warn('📉 드래곤 퇴화 페널티 적용됨:', newPetData);
-
-                setPetData(newPetData);
-                alert(`드래곤을 ${threshold}일 동안 돌보지 않아 기운이 다 빠졌어요! 레벨이 내려가거나 초기화되었으니 다시 사랑으로 키워주세요! 😢`);
-
-            } catch (err) {
-                console.error('❌ 드래곤 퇴화 정보 저장 실패:', err.message);
-            }
-        }
-    };
-
-    // 먹이 주기 기능
-    const handleFeed = async () => {
-        if (points === undefined || points === null || isBusy) return;
-
-        const FEED_COST = feedCostRef.current;
-        if (points < FEED_COST) {
-            alert(`먹이를 주려면 ${FEED_COST}포인트가 필요해요! 글을 써서 포인트를 더 모아보세요. 💪`);
-            return;
-        }
-
-        const newPoints = points - FEED_COST;
-        if (newPoints < 0) {
-            alert('작업을 완료할 수 없습니다. 포인트가 유효하지 않습니다.');
-            return;
-        }
-
-        setIsBusy(true);
-
-        let newExp = petData.exp + 20;
-        let newLevel = petData.level;
-
-        if (newExp >= 100) {
-            if (newLevel < 5) {
-                newLevel += 1;
-                newExp = newExp % 100;
-            } else {
-                newExp = 100;
-            }
-        }
-
-        const today = new Date().toISOString().split('T')[0];
-        const isLevelUp = newLevel > petData.level;
-
         try {
-            if (isLevelUp) {
-                setIsEvolving(true);
-                playEvolutionSound();
-            }
-
-            const newPetData = {
-                ...petData,
-                level: newLevel,
-                exp: newExp,
-                lastFed: today
-            };
-
-            // [보안 수정] RPC를 통한 안전한 포인트 차감 + 펫 데이터 동시 업데이트
             const { data: spendResult, error: updateError } = await supabase
                 .rpc('spend_student_points', {
-                    p_amount: FEED_COST,
-                    p_reason: '드래곤 먹이주기 🍖',
+                    p_amount: 0,
+                    p_reason: '작가 수호룡과 교감하기 🐉',
                     p_pet_data: newPetData
                 });
 
             if (updateError) throw updateError;
-            if (!spendResult?.success) {
-                throw new Error(spendResult?.error || '포인트 차감 실패');
-            }
+            if (!spendResult?.success) throw new Error(spendResult?.error || '교감 기록 실패');
 
-            const confirmedNewPoints = spendResult.new_points;
-
-            if (isLevelUp) {
-                setTimeout(() => {
-                    setIsFlashing(true);
-
-                    setPetData(newPetData);
-                    setPoints(confirmedNewPoints);
-
-                    confetti({
-                        particleCount: 150,
-                        spread: 70,
-                        origin: { y: 0.6 },
-                        colors: ['#FFD700', '#FFA500', '#FF4500']
-                    });
-
-                    setTimeout(() => {
-                        setIsFlashing(false);
-                        setIsEvolving(false);
-                        setIsBusy(false);
-                    }, 500);
-                }, 1500);
-            } else {
-                setPoints(confirmedNewPoints);
-                setPetData(newPetData);
-                setIsBusy(false);
-            }
+            setPetData(newPetData);
+            setIsFlashing(true);
+            window.setTimeout(() => setIsFlashing(false), 450);
+            return true;
         } catch (err) {
-            console.error('포인트 업데이트 실패:', err.message);
-            alert('포인트 사용에 실패했습니다. 다시 시도해 주세요!');
-            setIsEvolving(false);
+            console.error('드래곤 교감 기록 실패:', err.message);
+            alert('교감 기록을 저장하지 못했어요. 다시 시도해 주세요.');
+            return false;
+        } finally {
             setIsBusy(false);
         }
     };
@@ -282,11 +156,9 @@ export const useDragonPet = (studentId, points, setPoints, feedCost = 80, degenD
     return {
         petData,
         setPetData,
-        isEvolving,
         isFlashing,
         isBusy,
-        handleFeed,
-        checkPetDegeneration,
+        handleBond,
         buyItem,
         equipItem
     };

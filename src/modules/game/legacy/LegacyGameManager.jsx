@@ -50,7 +50,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
     const [moduleLoadError, setModuleLoadError] = useState(false);
     const [students, setStudents] = useState([]);
     const [, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
+    const [, setSaving] = useState(false);
     const [showMonitoring, setShowMonitoring] = useState(false);
     const [previewStudent, setPreviewStudent] = useState(null);
     const [towerRankings, setTowerRankings] = useState([]); // [신규] 어휘의 탑 랭킹 데이터
@@ -307,11 +307,6 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
             console.error('패널티 적용 실패:', err);
             alert('처리에 실패했습니다.');
         }
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setConfig(prev => ({ ...prev, [name]: value }));
     };
 
     const handleToggleModule = async (moduleId, moduleName) => {
@@ -578,8 +573,8 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                     <div style={{ padding: '24px', background: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)', borderBottom: '1px solid #FFE0B2', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         <div style={{ width: '60px', height: '60px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', boxShadow: '0 4px 12px rgba(255, 145, 0, 0.2)' }}>🐉</div>
                         <div style={{ flex: 1 }}>
-                            <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#5D4037', fontWeight: '900' }}>드래곤 키우기 관리</h3>
-                            <span style={{ fontSize: '0.85rem', color: '#8D6E63', fontWeight: 'bold' }}>성장 밸런스 및 시즌 운영</span>
+                            <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#5D4037', fontWeight: '900' }}>작가 수호룡 관리</h3>
+                            <span style={{ fontSize: '0.85rem', color: '#8D6E63', fontWeight: 'bold' }}>작가 칭호 연동 성장 · 아지트 꾸미기</span>
                         </div>
                         {renderModulePowerButton('dragon', '드래곤 키우기', '#E65100')}
                     </div>
@@ -588,27 +583,25 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                     <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {/* 1.1 운영 정책 설정 */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <h4 style={{ margin: 0, fontSize: '1rem', color: '#5D4037', borderLeft: '4px solid #FBC02D', paddingLeft: '10px' }}>⚙️ 시스템 밸런스 설정</h4>
+                            <h4 style={{ margin: 0, fontSize: '1rem', color: '#5D4037', borderLeft: '4px solid #FBC02D', paddingLeft: '10px' }}>⚙️ 공용 성장 정책</h4>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 <div style={{ background: '#F8F9FA', padding: '14px', borderRadius: '12px', border: '1px solid #EEE' }}>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#7F8C8D', marginBottom: '8px', fontWeight: 'bold' }}>🥩 먹이 주기 비용</label>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#7F8C8D', marginBottom: '8px', fontWeight: 'bold' }}>✍️ 성장 기준</label>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <input type="number" name="dragon_feed_points" value={config.dragon_feed_points} onChange={handleChange} style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '1.2rem', fontWeight: '900', color: '#2C3E50', outline: 'none' }} />
-                                        <span style={{ fontWeight: 'bold', color: '#ADB5BD' }}>P/회</span>
+                                        <strong style={{ fontSize: '1.05rem', color: '#2C3E50' }}>작가 칭호 10단계</strong>
                                     </div>
-                                    <div style={{ fontSize: '0.7rem', color: '#ADB5BD', marginTop: '4px' }}>먹이 1회당 소모 포인트</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#ADB5BD', marginTop: '4px' }}>승인된 글 누적 기준</div>
                                 </div>
                                 <div style={{ background: '#F8F9FA', padding: '14px', borderRadius: '12px', border: '1px solid #EEE' }}>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#7F8C8D', marginBottom: '8px', fontWeight: 'bold' }}>📉 자동 퇴화 기준</label>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#7F8C8D', marginBottom: '8px', fontWeight: 'bold' }}>🐉 교감과 포인트</label>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <input type="number" name="dragon_degen_days" value={config.dragon_degen_days} onChange={handleChange} style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '1.2rem', fontWeight: '900', color: '#2C3E50', outline: 'none' }} />
-                                        <span style={{ fontWeight: 'bold', color: '#ADB5BD' }}>일</span>
+                                        <strong style={{ fontSize: '1.05rem', color: '#2C3E50' }}>무료 · 퇴화 없음</strong>
                                     </div>
-                                    <div style={{ fontSize: '0.7rem', color: '#ADB5BD', marginTop: '4px' }}>미접속 시 레벨 하락 기준</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#ADB5BD', marginTop: '4px' }}>포인트는 아지트 꾸미기에만 사용</div>
                                 </div>
                             </div>
-                            <Button onClick={handleSave} disabled={saving} size="sm" style={{ alignSelf: 'flex-end', background: '#5D4037', color: 'white', borderRadius: '8px', padding: '8px 20px', fontWeight: 'bold' }}>
-                                {saving ? '저장 중...' : '설정값 적용'}
+                            <Button onClick={handleSave} disabled size="sm" title={`이전 운영값: 먹이 ${config.dragon_feed_points}P, 퇴화 ${config.dragon_degen_days}일 (현재 미사용)`} style={{ alignSelf: 'flex-end', background: '#ECEFF1', color: '#78909C', borderRadius: '8px', padding: '8px 20px', fontWeight: 'bold' }}>
+                                이전 먹이·퇴화 설정 사용 안 함
                             </Button>
                         </div>
 
@@ -618,11 +611,11 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div style={{ background: '#FFF9C4', padding: '14px', borderRadius: '14px', border: '1px solid #FFE082' }}>
                                 <div style={{ fontSize: '0.85rem', color: '#F57F17', fontWeight: '900', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span>💡</span> 시즌 관리 팁
+                                    <span>💡</span> 작가 수호룡 운영 안내
                                 </div>
                                 <p style={{ margin: 0, fontSize: '0.75rem', color: '#8D6E63', lineHeight: '1.5' }}>
-                                    매 학기/달이 끝날 때 시즌을 종료하고 초기화하세요.<br />
-                                    모든 기록은 기록 탭에 안전하게 보관됩니다.
+                                    성장 단계는 작가 칭호와 늘 같게 표시됩니다.<br />
+                                    학기가 바뀌어도 성장과 구매한 배경은 초기화되지 않습니다.
                                 </p>
                             </div>
 
@@ -640,13 +633,14 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                                     marginTop: '5px'
                                 }}
                             >
-                                📊 실시간 성장 모니터링 관리
+                                📦 기존 드래곤 저장 기록
                             </Button>
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                                 <Button
                                     onClick={() => handleResetAgitSeason()}
-                                    title="현재 시즌을 종료하고 데이터를 보관한 뒤 기초 레벨로 초기화합니다."
+                                    disabled
+                                    title="작가 칭호 연동 성장은 초기화하지 않습니다."
                                     style={{
                                         height: '44px', fontSize: '0.85rem',
                                         fontWeight: 'bold', borderRadius: '10px',
@@ -654,7 +648,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                                         border: '1px solid #F44336'
                                     }}
                                 >
-                                    ⚠️ 시즌 종료/리셋
+                                    🔒 성장 초기화 안 함
                                 </Button>
                                 <Button
                                     onClick={() => {
@@ -943,7 +937,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                                 <div style={{ width: '100%' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                                         <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#5D4037', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            🐉 실시간 드래곤 성장 모니터링
+                                            🐉 기존 드래곤 저장 기록
                                         </h3>
                                         <div style={{ display: 'flex', gap: '10px' }}>
                                             <Button
@@ -954,10 +948,11 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                                             </Button>
                                             <Button
                                                 onClick={handleResetAgitSeason}
-                                                title="현재 모든 학생의 드래곤 성장을 [지난 시즌 기록]으로 보관한 뒤 기초 레벨(1)로 초기화합니다."
+                                                disabled
+                                                title="작가 칭호 연동 성장은 초기화하지 않습니다."
                                                 style={{ background: '#F44336', color: 'white', borderRadius: '12px', padding: '10px 20px', fontWeight: 'bold' }}
                                             >
-                                                ⚠️ 시즌 종료 및 초기화
+                                                🔒 성장 초기화 안 함
                                             </Button>
                                         </div>
                                     </div>
@@ -1007,7 +1002,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                                     <div style={{ fontSize: '1.15rem', fontWeight: '900', color: '#2C3E50', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
-                                                                    <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#ADB5BD' }}>Lv.{pet.level}</span>
+                                                                    <span style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#ADB5BD' }}>이전 Lv.{pet.level}</span>
                                                                 </div>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '1px' }}>
                                                                     <span style={{ fontSize: '0.75rem', color: '#7F8C8D', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stage.name}</span>
@@ -1022,7 +1017,7 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                                                                 <motion.div initial={{ width: 0 }} animate={{ width: `${pet.exp}%` }} style={{ height: '100%', background: isMaster ? 'linear-gradient(90deg, #FFD700, #BA68C8)' : '#FBC02D' }} />
                                                             </div>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '10px', fontWeight: 'bold', color: '#ADB5BD' }}>
-                                                                <span>EXP {pet.exp}%</span>
+                                                                <span>이전 EXP {pet.exp}%</span>
                                                                 <span>{bg.name}</span>
                                                             </div>
                                                         </div>
@@ -1035,8 +1030,8 @@ const LegacyGameManager = ({ activeClass, isMobile, renderAdditionalModules, mod
                                                             marginTop: '4px'
                                                         }}>
                                                             <Button size="xs" onClick={() => setPreviewStudent(s)} style={{ background: '#F0F4F8', color: '#546E7A', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '0.75rem' }}>구경</Button>
-                                                            <Button size="xs" onClick={() => handleUpdatePet(s.id, s.name, { ...pet, level: Math.max(1, pet.level - 1), exp: 0 }, "레벨 패널티")} style={{ background: '#FFEBEE', color: '#D32F2F', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '0.75rem' }}>🚨 패널티</Button>
-                                                            <Button size="xs" onClick={() => handleUpdatePet(s.id, s.name, { name: '나의 드래곤', level: 1, exp: 0, lastFed: new Date().toISOString().split('T')[0], ownedItems: [], background: 'default' }, "데이터 초기화")} style={{ background: '#F5F5F5', color: '#9E9E9E', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '0.75rem' }}>🔄 초기화</Button>
+                                                            <Button size="xs" disabled onClick={() => handleUpdatePet(s.id, s.name, { ...pet, level: Math.max(1, pet.level - 1), exp: 0 }, "레벨 패널티")} title="작가 성장은 패널티로 낮추지 않습니다." style={{ background: '#F5F5F5', color: '#9E9E9E', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '0.75rem' }}>🔒 패널티 없음</Button>
+                                                            <Button size="xs" disabled onClick={() => handleUpdatePet(s.id, s.name, { name: '나의 드래곤', level: 1, exp: 0, lastFed: new Date().toISOString().split('T')[0], ownedItems: [], background: 'default' }, "데이터 초기화")} title="구매한 꾸미기 기록을 보존합니다." style={{ background: '#F5F5F5', color: '#9E9E9E', border: 'none', borderRadius: '8px', padding: '6px 0', fontSize: '0.75rem' }}>🔒 기록 보존</Button>
                                                         </div>
                                                     </motion.div>
                                                 );
@@ -1248,14 +1243,14 @@ const TeacherHideoutPreview = ({ student, onClose }) => {
                 <div style={{ marginBottom: '32px' }}>
                     <span style={{ background: 'rgba(255,255,255,0.9)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '900', color: '#7F8C8D', border: '1px solid #EEE' }}>{student.name} 학생의 아지트 내부</span>
                     <h2 style={{ margin: '16px 0 0 0', color: '#2C3E50', fontSize: '2rem', fontWeight: '1000' }}>{pet.name}</h2>
-                    <div style={{ color: '#5D4037', fontWeight: 'bold', marginTop: '4px', marginBottom: '12px' }}>Lv.{pet.level} {dragon.name}</div>
+                    <div style={{ color: '#5D4037', fontWeight: 'bold', marginTop: '4px', marginBottom: '12px' }}>기존 저장값 Lv.{pet.level} · {dragon.name}</div>
                     {/* [추가] 경험치 바 */}
                     <div style={{ maxWidth: '280px', margin: '0 auto' }}>
                         <div style={{ height: '8px', background: 'rgba(255,255,255,0.3)', borderRadius: '4px', overflow: 'hidden' }}>
                             <motion.div initial={{ width: 0 }} animate={{ width: `${pet.exp}%` }} style={{ height: '100%', background: pet.level >= 5 && pet.exp >= 100 ? 'linear-gradient(90deg, #FFD700, #BA68C8)' : 'white' }} />
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '0.75rem', fontWeight: '900', color: 'rgba(255,255,255,0.8)' }}>
-                            <span>EXP {pet.exp}%</span>
+                            <span>이전 EXP {pet.exp}%</span>
                             <span>{pet.level >= 5 && pet.exp >= 100 ? 'MAX' : `${100 - pet.exp}% 남음`}</span>
                         </div>
                     </div>

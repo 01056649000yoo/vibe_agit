@@ -1,16 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
 
 const DragonHideoutModal = ({
     isOpen, onClose, isMobile, petData, dragonInfo,
-    HIDEOUT_BACKGROUNDS, daysSinceLastFed, dragonConfig,
-    handleFeed, setIsShopOpen, isEvolving, isFlashing, isBusy,
-    currentPoints = 0
-}) => {
-    const [showConfirm, setShowConfirm] = useState(false);
-
-    return (
+    HIDEOUT_BACKGROUNDS, daysSinceLastFed,
+    handleBond, setIsShopOpen, isFlashing, isBusy
+}) => (
 
         <ModalPortal>
         <AnimatePresence>
@@ -45,46 +42,24 @@ const DragonHideoutModal = ({
                             transition: 'all 0.5s ease'
                         }}
                     >
-                        <button
+                        <ModalCloseButton
                             onClick={onClose}
+                            label="작가 수호룡의 방 닫기"
                             style={{
                                 position: 'absolute', top: '24px', right: '24px',
                                 background: '#FFFFFF',
                                 border: '1px solid #EEEEEE',
                                 width: '40px', height: '40px', borderRadius: '50%',
-                                fontSize: '1.2rem', cursor: 'pointer', zIndex: 10,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', zIndex: 10,
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                                 color: '#7F8C8D',
                                 fontWeight: 'bold'
                             }}
-                        >
-                            ✕
-                        </button>
+                        />
 
                         <div style={{ textAlign: 'center', marginBottom: '24px', position: 'relative' }}>
-                            <div style={{
-                                position: isMobile ? 'static' : 'absolute',
-                                top: '0',
-                                left: '0',
-                                marginBottom: isMobile ? '12px' : '0',
-                                background: '#FFF9C4',
-                                padding: '6px 14px',
-                                borderRadius: '12px',
-                                border: '1px solid #FBC02D',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                            }}>
-                                <span style={{ fontSize: '1rem' }}>💰</span>
-                                <span style={{ fontWeight: '900', color: '#F57F17', fontSize: '0.95rem' }}>
-                                    {currentPoints.toLocaleString()}P
-                                </span>
-                            </div>
-
-                            <h2 style={{ margin: 0, color: '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 드래곤 아지트</h2>
-                            <p style={{ margin: '4px 0 0 0', color: '#8D6E63', fontSize: '0.9rem' }}>나의 소중한 드래곤 파트너와 함께하는 공간</p>
+                            <h2 style={{ margin: 0, color: '#5D4037', fontWeight: '900', fontSize: '1.5rem' }}>🐉 작가 수호룡의 방</h2>
+                            <p style={{ margin: '4px 0 0 0', color: '#8D6E63', fontSize: '0.9rem' }}>내가 쓴 글과 함께 자라는 아지트 친구</p>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -99,7 +74,7 @@ const DragonHideoutModal = ({
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     overflow: 'hidden',
-                                    border: petData.level >= 5 ? '4px solid #FFD700' : `2px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || '#DDD'}`,
+                                    border: petData.level >= 10 ? '4px solid #FFD700' : `2px solid ${HIDEOUT_BACKGROUNDS[petData.background]?.border || '#DDD'}`,
                                 }}>
                                     <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.2) 100%)', pointerEvents: 'none', zIndex: 10 }} />
 
@@ -473,7 +448,7 @@ const DragonHideoutModal = ({
                                                         </motion.div>
                                                     ))}
 
-                                                    {petData.level >= 5 && petData.exp >= 100 && (
+                                                    {petData.level >= 10 && petData.exp >= 100 && (
                                                         <>
                                                             <motion.div
                                                                 key={`${petData.background}-ring-1`}
@@ -551,12 +526,12 @@ const DragonHideoutModal = ({
 
                                     <motion.div
                                         key={petData.level}
-                                        animate={isEvolving ? { x: [-3, 3, -3, 3, 0], filter: ["brightness(1)", "brightness(1.8)", "brightness(1)"] } : { scale: [0.8, 1.15, 1], y: [0, -12, 0] }}
-                                        transition={isEvolving ? { x: { repeat: Infinity, duration: 0.05 }, filter: { repeat: Infinity, duration: 0.5 } } : { scale: { type: "spring", stiffness: 300, damping: 12 }, y: { repeat: Infinity, duration: 3, ease: "easeInOut" } }}
-                                        style={{ width: (petData.level === 3 || petData.level === 4) ? '264px' : '220px', height: (petData.level === 3 || petData.level === 4) ? '264px' : '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 5, cursor: 'pointer', background: 'transparent' }}
+                                        animate={{ scale: [0.92, 1.04, 0.98], y: [0, -12, 0] }}
+                                        transition={{ scale: { type: "spring", stiffness: 300, damping: 12 }, y: { repeat: Infinity, duration: 3, ease: "easeInOut" } }}
+                                        style={{ width: (dragonInfo.formLevel === 3 || dragonInfo.formLevel === 4) ? '264px' : '220px', height: (dragonInfo.formLevel === 3 || dragonInfo.formLevel === 4) ? '264px' : '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 5, cursor: 'pointer', background: 'transparent' }}
                                     >
                                         {!dragonInfo.isPlaceholder && (
-                                            <img src={dragonInfo.image} alt={dragonInfo.name} style={{ width: '100%', height: '100%', objectFit: 'contain', background: 'transparent', filter: `drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 5 ? 'drop-shadow(0 0 25px rgba(255,193,7,0.8))' : ''}` }} />
+                                            <img src={dragonInfo.image} alt={dragonInfo.name} style={{ width: '100%', height: '100%', objectFit: 'contain', background: 'transparent', transform: `scale(${dragonInfo.imageScale})`, filter: `${dragonInfo.imageFilter} drop-shadow(0 10px 20px ${HIDEOUT_BACKGROUNDS[petData.background]?.glow || 'rgba(0,0,0,0.3)'}) ${petData.level >= 9 ? 'drop-shadow(0 0 25px rgba(255,193,7,0.8))' : ''}` }} />
                                         )}
                                     </motion.div>
                                 </div>
@@ -568,7 +543,7 @@ const DragonHideoutModal = ({
                                             <span style={{ fontSize: '1.4rem', fontWeight: '900', color: '#5D4037' }}>{petData.name}</span>
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
-                                            {petData.level >= 5 && petData.exp >= 100 && (
+                                            {petData.level >= 10 && petData.exp >= 100 && (
                                                 <span style={{ display: 'block', fontSize: '0.7rem', background: 'linear-gradient(45deg, #FFD700, #FF5722)', color: 'white', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold', marginBottom: '4px', boxShadow: '0 2px 5px rgba(255,87,34,0.3)' }}>MASTER 🏆</span>
                                             )}
                                             <span style={{ fontSize: '1rem', color: '#8D6E63', fontWeight: 'bold' }}>Lv.{petData.level}</span>
@@ -578,8 +553,8 @@ const DragonHideoutModal = ({
                                         <motion.div initial={{ width: 0 }} animate={{ width: `${petData.exp}%` }} style={{ height: '100%', background: petData.exp >= 100 ? 'linear-gradient(90deg, #FFD700, #FF8A65, #BA68C8, #4FC3F7)' : 'linear-gradient(90deg, #FFB300, #FBC02D)', borderRadius: '7px' }} />
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-                                        <span style={{ fontSize: '0.8rem', color: '#8D6E63' }}>식사 후 {daysSinceLastFed}일 경과</span>
-                                        <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold' }}>{petData.level < 5 || petData.exp < 100 ? `${100 - petData.exp}% 남음` : '전설의 마스터! 🌈'}</span>
+                                        <span style={{ fontSize: '0.8rem', color: '#8D6E63' }}>{daysSinceLastFed === 0 ? '오늘 교감했어요' : daysSinceLastFed == null ? '첫 교감을 기다려요' : `마지막 교감 ${daysSinceLastFed}일 전`}</span>
+                                        <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold' }}>{petData.level < 10 ? `다음 모습까지 ${100 - petData.exp}%` : '전설의 작가 수호룡! 🌈'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -587,24 +562,20 @@ const DragonHideoutModal = ({
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 <div style={{ background: '#FFFDE7', padding: '16px', borderRadius: '18px', border: '1px solid #FFF9C4' }}>
                                     <div style={{ fontSize: '0.9rem', color: '#795548', lineHeight: '1.5' }}>
-                                        <span style={{ fontWeight: 'bold' }}>💡 드래곤 돌보기 팁</span><br />
-                                        글을 써서 모은 포인트로 맛있는 먹이를 줄 수 있어요. {dragonConfig.degenDays}일 동안 돌보지 않으면 드래곤이 지쳐서 레벨이 내려갈 수 있으니 주의하세요!
+                                        <span style={{ fontWeight: 'bold' }}>💡 작가 수호룡 성장 안내</span><br />
+                                        승인된 글이 쌓이면 작가 칭호와 함께 성장해요. 자주 접속하지 않아도 퇴화하지 않으며, 포인트는 아지트 꾸미기에만 사용해요.
                                     </div>
                                 </div>
 
-                                <AnimatePresence mode="wait">
-                                    {!showConfirm ? (
-                                        <motion.div 
-                                            key="action-buttons"
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            style={{ display: 'flex', gap: '12px' }}
-                                        >
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    style={{ display: 'flex', gap: '12px' }}
+                                >
                                             <motion.button 
                                                 whileHover={!isBusy ? { scale: 1.05 } : {}} 
                                                 whileTap={!isBusy ? { scale: 0.95 } : {}} 
-                                                onClick={() => setShowConfirm(true)} 
+                                                onClick={handleBond}
                                                 disabled={isBusy}
                                                 style={{ 
                                                     flex: 2, 
@@ -624,7 +595,7 @@ const DragonHideoutModal = ({
                                                     opacity: isBusy ? 0.8 : 1
                                                 }}
                                             >
-                                                {isBusy ? '🍖 잠시만요...' : `🍖 먹이 주기 (${dragonConfig.feedCost}P)`}
+                                                {isBusy ? '🐉 인사하는 중...' : '🐉 교감하기'}
                                             </motion.button>
                                             <motion.button 
                                                 whileHover={{ scale: 1.05 }} 
@@ -647,76 +618,9 @@ const DragonHideoutModal = ({
                                                     gap: '10px' 
                                                 }}
                                             >
-                                                🛍️ 상점
+                                                🎨 꾸미기
                                             </motion.button>
-                                        </motion.div>
-                                    ) : (
-                                        <motion.div 
-                                            key="confirm-buttons"
-                                            initial={{ opacity: 0, scale: 0.95 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.95 }}
-                                            style={{ 
-                                                background: '#FFF3E0', 
-                                                padding: '20px', 
-                                                borderRadius: '24px', 
-                                                border: '2px solid #FFB74D',
-                                                boxShadow: '0 8px 16px rgba(255,152,0,0.1)'
-                                            }}
-                                        >
-                                            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                                                <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#E65100', marginBottom: '8px' }}>🍖 먹이를 주시겠습니까?</div>
-                                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
-                                                    <div style={{ textAlign: 'center' }}>
-                                                        <div style={{ fontSize: '0.75rem', color: '#FB8C00' }}>현재</div>
-                                                        <div style={{ fontWeight: 'bold' }}>{currentPoints.toLocaleString()}P</div>
-                                                    </div>
-                                                    <div style={{ fontSize: '1.2rem', color: '#FFB74D' }}>➜</div>
-                                                    <div style={{ textAlign: 'center' }}>
-                                                        <div style={{ fontSize: '0.75rem', color: '#FB8C00' }}>남은 포인트</div>
-                                                        <div style={{ fontWeight: 'bold', color: '#E65100' }}>{(currentPoints - dragonConfig.feedCost).toLocaleString()}P</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div style={{ display: 'flex', gap: '10px' }}>
-                                                <button 
-                                                    onClick={() => setShowConfirm(false)}
-                                                    style={{ 
-                                                        flex: 1, 
-                                                        background: 'white', 
-                                                        color: '#7F8C8D', 
-                                                        border: '1px solid #DDD', 
-                                                        padding: '12px', 
-                                                        borderRadius: '14px', 
-                                                        fontWeight: 'bold', 
-                                                        cursor: 'pointer' 
-                                                    }}
-                                                >
-                                                    취소
-                                                </button>
-                                                <button 
-                                                    onClick={() => {
-                                                        handleFeed();
-                                                        setShowConfirm(false);
-                                                    }}
-                                                    style={{ 
-                                                        flex: 1.5, 
-                                                        background: '#FF9800', 
-                                                        color: 'white', 
-                                                        border: 'none', 
-                                                        padding: '12px', 
-                                                        borderRadius: '14px', 
-                                                        fontWeight: 'bold', 
-                                                        cursor: 'pointer',
-                                                        boxShadow: '0 4px 0 #E65100'
-                                                    }}
-                                                >
-                                                    확인
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                </motion.div>
                             </div>
                         </div>
                     </motion.div>
@@ -726,6 +630,5 @@ const DragonHideoutModal = ({
 
         </ModalPortal>
     );
-};
 
 export default DragonHideoutModal;

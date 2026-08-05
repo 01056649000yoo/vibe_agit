@@ -2,15 +2,15 @@
  * 드래곤 기르기 모듈 (Stage 3b 첫 이전 대상)
  *
  * 3대 기둥 중 ③포인트 동기부여에 해당 — 유지 기능.
- * 학생: 드래곤 아지트(성장·먹이·상점) / 교사: 설정은 아직 GameManager에 있음(추후 이전).
+ * 학생: 작가 칭호 연동 성장·교감·꾸미기 / 교사: 운영 호환 설정은 legacy 관리자에 있음.
  *
  * 주의: 학생 아바타로 쓰이는 `pet_data` 자체는 친구목록·글 작성자 표시 등
  * 여러 곳에서 쓰이므로 코어 데이터로 남긴다. 이 모듈은 "드래곤 기르기 기능"만 담당.
  */
 export const dragonManifest = {
   id: 'dragon',
-  name: '드래곤 파트너',
-  description: '포인트로 드래곤을 키우고 꾸미기',
+  name: '작가 수호룡',
+  description: '글쓰기와 함께 성장하고 포인트로 아지트 꾸미기',
   icon: '🐉',
   part: 'game',
   audience: 'student',
@@ -22,16 +22,16 @@ export const dragonManifest = {
     order: 10
   },
   playground: {
-    name: '나의 드래곤 파트너',
-    description: '포인트로 먹이를 주고 키우기',
+    name: '나의 작가 수호룡',
+    description: '나의 글과 함께 자라는 아지트 친구',
     background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
     borderColor: '#FFE082',
     order: 10,
     entryMode: 'legacy'
   },
   management: {
-    title: '드래곤 키우기 관리',
-    subtitle: '성장 밸런스 및 시즌 운영',
+    title: '작가 수호룡 관리',
+    subtitle: '작가 칭호 연동 성장 및 아지트 꾸미기',
     order: 10,
     activeColor: '#E65100',
     ownsCard: true,

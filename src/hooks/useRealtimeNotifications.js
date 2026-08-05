@@ -117,7 +117,7 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
                     console.log(`📡 [Realtime] 포인트 알림 수신! (Amount: ${newLog.amount})`);
 
                     if (newLog.amount !== 0) {
-                        // [버그 수정] 드래곤 먹이주기 및 상점 구매는 해당 훅(useDragonPet)에서 
+                        // 드래곤 꾸미기 구매는 해당 훅(useDragonPet)에서
                         // 이미 서버 응답을 통해 포인트를 동기화하므로 리얼타임 합산에서 제외합니다.
                         const isDragonAction = newLog.reason?.includes('드래곤') || newLog.reason?.includes('아지트 배경');
                         

@@ -4,12 +4,12 @@ import Card from '../common/Card';
 import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
 import { useDragonPet } from '../../modules/game/dragon/useDragonPet';
-import { getDragonStage, HIDEOUT_BACKGROUNDS } from '../../modules/game/dragon/presentation';
+import { getDragonGrowthFromWriterLevel, getDragonStage, HIDEOUT_BACKGROUNDS } from '../../modules/game/dragon/presentation';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useRealtimeNotifications } from '../../hooks/useRealtimeNotifications'; // [신규] 분리된 리얼타임 훅
 import { getModule } from '../../modules/registry';
 import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
-import { invalidateMyTitleStatus } from '../../modules/writing/title-status/useMyTitleStatus';
+import useMyTitleStatus, { invalidateMyTitleStatus } from '../../modules/writing/title-status/useMyTitleStatus';
 
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
@@ -45,13 +45,15 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
 
     // 하단 내비의 '나의 아지트'를 누르면 홈으로 온 뒤 이 신호가 올라온다.
     useEffect(() => {
-        if (!myAgitSignal) return;
-        setIsMyAgitOpen(true);
+        if (!myAgitSignal) return undefined;
+        const timerId = window.setTimeout(() => setIsMyAgitOpen(true), 0);
+        return () => window.clearTimeout(timerId);
     }, [myAgitSignal]);
 
     useEffect(() => {
-        if (!playgroundSignal) return;
-        setIsPlaygroundOpen(true);
+        if (!playgroundSignal) return undefined;
+        const timerId = window.setTimeout(() => setIsPlaygroundOpen(true), 0);
+        return () => window.clearTimeout(timerId);
     }, [playgroundSignal]);
 
 
@@ -70,10 +72,16 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
-        returnedCount, dragonConfig, dragonConfigLoaded, initialPetData,
+        returnedCount, initialPetData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback,
         fetchMyPoints, checkActivity
     } = useStudentDashboard(studentSession, onNavigate);
+
+    const {
+        writerLevel,
+        readerLevel,
+        loading: titleStatusLoading
+    } = useMyTitleStatus({ studentSession, active: true });
 
     const refreshMyTitleStatus = React.useCallback(() => {
         invalidateMyTitleStatus({
@@ -95,27 +103,14 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
 
     // 드래곤 관련 상태 및 액션
     const {
-        petData, isEvolving, isFlashing, isBusy,
-        handleFeed, checkPetDegeneration, buyItem, equipItem
+        petData, isFlashing, isBusy,
+        handleBond, buyItem, equipItem
     } = useDragonPet(
         studentSession?.id,
         points,
         setPoints,
-        dragonConfig.feedCost,
-        dragonConfig.degenDays,
-        initialPetData // [수정] 충돌을 피하기 위해 이름을 변경하여 전달
+        initialPetData
     );
-
-    // 드래곤 퇴화 체크: 펫 데이터와 교사 설정이 모두 로드된 뒤 세션당 1회만 실행.
-    // (155d66d 리팩토링에서 호출부가 유실되어 퇴화가 전혀 동작하지 않던 버그 복원)
-    const degenCheckedRef = React.useRef(false);
-    useEffect(() => {
-        if (degenCheckedRef.current) return;
-        if (!initialPetData || !dragonConfigLoaded) return;
-        degenCheckedRef.current = true;
-        checkPetDegeneration(initialPetData, dragonConfig.degenDays);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialPetData, dragonConfigLoaded]);
 
     // [신규] 이미지 선행 로딩 (Optimization 4)
     useEffect(() => {
@@ -138,15 +133,22 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const getDaysSinceLastFed = () => {
+    const getDaysSinceLastBond = () => {
         const lastFedDate = new Date(petData.lastFed);
+        if (Number.isNaN(lastFedDate.getTime())) return null;
         const today = new Date();
         const diffTime = Math.abs(today - lastFedDate);
         return Math.floor(diffTime / (1000 * 60 * 60 * 24));
     };
 
-    const dragonInfo = getDragonStage(petData.level);
-    const daysSinceLastFed = getDaysSinceLastFed();
+    const dragonGrowth = getDragonGrowthFromWriterLevel(writerLevel);
+    const displayPetData = React.useMemo(() => ({
+        ...petData,
+        level: dragonGrowth.level,
+        exp: dragonGrowth.progress
+    }), [dragonGrowth.level, dragonGrowth.progress, petData]);
+    const dragonInfo = getDragonStage(displayPetData.level);
+    const daysSinceLastBond = getDaysSinceLastBond();
 
     // 앱 셸이 읽은 동일한 모듈 목록으로 모든 학생 진입점을 게이팅한다.
     const isOn = (id) => enabledModules.some((m) => m.id === id);
@@ -173,7 +175,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
         description: module.playground?.description || module.description,
         background: module.playground?.background,
         borderColor: module.playground?.borderColor,
-        badge: module.id === 'dragon' ? `${dragonInfo.name} · LV.${petData.level}` : null,
+        badge: module.id === 'dragon' ? `${dragonInfo.name} · LV.${displayPetData.level}` : null,
         onOpen: () => openGameModule(module)
     }));
 
@@ -201,8 +203,11 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     <StudentHomeGrowthPanel
                         studentSession={studentSession}
                         points={points}
+                        writerLevel={writerLevel}
+                        readerLevel={readerLevel}
+                        titleLoading={titleStatusLoading}
                         dragonEnabled={isOn('dragon')}
-                        petData={petData}
+                        petData={displayPetData}
                         dragonInfo={dragonInfo}
                         onOpenMyAgit={() => setIsMyAgitOpen(true)}
                         onOpenFootprint={() => setIsFootprintOpen(true)}
@@ -254,7 +259,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             points={points}
                             enabledModules={enabledModules}
                             moduleRuntimeById={{
-                                dragon: { petData, dragonConfig, daysSinceLastFed }
+                                dragon: { petData: displayPetData, daysSinceLastFed: daysSinceLastBond }
                             }}
                             onOpenModule={(module) => {
                                 setIsMyAgitOpen(false);
@@ -293,17 +298,14 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             isOpen={isDragonModalOpen}
                             onClose={() => setIsDragonModalOpen(false)}
                             isMobile={isMobile}
-                            petData={petData}
+                            petData={displayPetData}
                             dragonInfo={dragonInfo}
                             HIDEOUT_BACKGROUNDS={HIDEOUT_BACKGROUNDS}
-                            daysSinceLastFed={daysSinceLastFed}
-                            dragonConfig={dragonConfig}
-                            handleFeed={handleFeed}
+                            daysSinceLastFed={daysSinceLastBond}
+                            handleBond={handleBond}
                             setIsShopOpen={setIsShopOpen}
-                            isEvolving={isEvolving}
                             isFlashing={isFlashing}
                             isBusy={isBusy}
-                            currentPoints={points}
                         />
                     </Suspense>
                 )}
@@ -315,7 +317,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                             isOpen={isShopOpen}
                             onClose={() => setIsShopOpen(false)}
                             points={points}
-                            petData={petData}
+                            petData={displayPetData}
                             buyItem={buyItem}
                             equipItem={equipItem}
                             isBusy={isBusy}

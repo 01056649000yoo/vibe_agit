@@ -1,16 +1,20 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { getDragonStage, getHideoutBackground, normalizeFriendPet } from '../dragonProfile';
+import { getWriterLevel } from '../../../../../constants/writerLevels';
+import { getDragonGrowthFromWriterLevel, getDragonStage, getHideoutBackground, normalizeFriendPet } from '../dragonProfile';
 
 const FriendDragonProfileCard = ({ friend }) => {
-    const pet = normalizeFriendPet(friend?.pet_data);
+    const storedPet = normalizeFriendPet(friend?.pet_data);
+    const writerLevel = getWriterLevel(friend?.writer_total_chars, friend?.writer_completed_posts);
+    const growth = getDragonGrowthFromWriterLevel(writerLevel);
+    const pet = { ...storedPet, level: growth.level, exp: growth.progress };
     const background = getHideoutBackground(pet.background);
     const dragon = getDragonStage(pet.level);
     const exp = Math.min(100, Math.max(0, Number(pet.exp || 0)));
 
     return (
         <section
-            aria-label={`${friend.name}의 반려 드래곤`}
+            aria-label={`${friend.name}의 작가 수호룡`}
             style={{
                 position: 'relative', display: 'grid', gridTemplateColumns: '126px minmax(0,1fr)',
                 minHeight: '164px', marginTop: '14px', overflow: 'hidden', border: `2px solid ${background.border}`,
@@ -25,7 +29,7 @@ const FriendDragonProfileCard = ({ friend }) => {
                 <span aria-hidden="true" style={{
                     position: 'absolute', left: '12px', top: '11px', padding: '4px 7px', borderRadius: '99px',
                     background: 'rgba(41,31,24,.58)', color: '#FFF7E5', fontSize: '.61rem', fontWeight: 950
-                }}>🐉 반려 드래곤</span>
+                }}>🐉 작가 수호룡</span>
                 <motion.img
                     animate={{ y: [0, -5, 0] }}
                     transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
@@ -33,7 +37,7 @@ const FriendDragonProfileCard = ({ friend }) => {
                     alt={`${pet.name} 드래곤`}
                     width="116"
                     height="116"
-                    style={{ width: '116px', height: '116px', objectFit: 'contain', filter: `drop-shadow(0 8px 9px ${background.glow})` }}
+                    style={{ width: '116px', height: '116px', objectFit: 'contain', transform: `scale(${dragon.imageScale})`, filter: `${dragon.imageFilter} drop-shadow(0 8px 9px ${background.glow})` }}
                 />
             </span>
             <span style={{
@@ -44,13 +48,13 @@ const FriendDragonProfileCard = ({ friend }) => {
                 <span style={{ display: 'block', color: '#9B6A23', fontSize: '.64rem', fontWeight: 950 }}>{dragon.name}</span>
                 <strong style={{ display: 'block', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.02rem' }}>{pet.name}</strong>
                 <span style={{ display: 'flex', justifyContent: 'space-between', marginTop: '9px', color: '#8A5B27', fontSize: '.7rem', fontWeight: 950 }}>
-                    <span>LV.{pet.level}</span><span>성장 {exp}%</span>
+                    <span>{pet.level}/10단계</span><span>다음 모습 {exp}%</span>
                 </span>
                 <span style={{ display: 'block', height: '8px', marginTop: '6px', overflow: 'hidden', borderRadius: '99px', background: 'rgba(101,76,52,.13)' }}>
                     <motion.span initial={{ width: 0 }} animate={{ width: `${exp}%` }} style={{ display: 'block', height: '100%', borderRadius: 'inherit', background: 'linear-gradient(90deg,#F2B92C,#E78632)' }} />
                 </span>
                 <span style={{ display: 'block', marginTop: '8px', color: '#7C654E', fontSize: '.64rem', fontWeight: 850 }}>
-                    {friend.name} 친구가 정성껏 키우고 있어요 💛
+                    {friend.name} 친구의 글과 함께 자라고 있어요 💛
                 </span>
             </span>
         </section>

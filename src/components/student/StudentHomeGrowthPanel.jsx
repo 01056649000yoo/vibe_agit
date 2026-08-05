@@ -1,5 +1,4 @@
 import React from 'react';
-import useMyTitleStatus from '../../modules/writing/title-status/useMyTitleStatus';
 import './StudentHomeGrowthPanel.css';
 
 const titleBadgeSrc = (kind, level) => `/assets/title-badges/${kind}-level-${level}.webp`;
@@ -25,18 +24,19 @@ const TitleSummary = ({ kind, level, loading, onClick }) => {
     );
 };
 
-/** 학생 홈의 성장 정보는 공용 칭호 훅과 드래곤 표현값만 조합한다. */
+/** 학생 홈의 성장 정보는 상위에서 한 번 읽은 공용 칭호·드래곤 표현값만 조합한다. */
 const StudentHomeGrowthPanel = ({
     studentSession,
     points,
+    writerLevel,
+    readerLevel,
+    titleLoading,
     dragonEnabled,
     petData,
     dragonInfo,
     onOpenMyAgit,
     onOpenFootprint
 }) => {
-    const { writerLevel, readerLevel, loading } = useMyTitleStatus({ studentSession, active: true });
-
     return (
         <section className={`student-home-growth ${dragonEnabled ? 'has-dragon' : ''}`} aria-label="나의 성장 상태">
             <div className="student-home-growth__main">
@@ -50,17 +50,23 @@ const StudentHomeGrowthPanel = ({
                         <span><small>보유 포인트</small><strong>{formatPoints(points)}P</strong></span>
                         <em>발자국 보기</em>
                     </button>
-                    <TitleSummary kind="writer" level={writerLevel} loading={loading} onClick={onOpenMyAgit} />
-                    <TitleSummary kind="reader" level={readerLevel} loading={loading} onClick={onOpenMyAgit} />
+                    <TitleSummary kind="writer" level={writerLevel} loading={titleLoading} onClick={onOpenMyAgit} />
+                    <TitleSummary kind="reader" level={readerLevel} loading={titleLoading} onClick={onOpenMyAgit} />
                 </div>
             </div>
 
             {dragonEnabled && (
                 <button type="button" className="student-home-dragon-summary" onClick={onOpenMyAgit}>
-                    <span className="student-home-dragon-summary__label">나의 아지트 친구</span>
-                    <img src={dragonInfo.image} alt={`${dragonInfo.name} 모습`} width="132" height="132" />
+                    <span className="student-home-dragon-summary__label">나의 작가 수호룡</span>
+                    <img
+                        src={dragonInfo.image}
+                        alt={`${dragonInfo.name} 모습`}
+                        width="132"
+                        height="132"
+                        style={{ filter: dragonInfo.imageFilter, transform: `scale(${dragonInfo.imageScale})` }}
+                    />
                     <strong>{petData?.name || '나의 드래곤'}</strong>
-                    <span>LV.{petData?.level || 1} · {dragonInfo.name}</span>
+                    <span>작가 성장 {petData?.level || 1}/10 · {dragonInfo.name}</span>
                     <em>아지트에서 만나기 ›</em>
                 </button>
             )}

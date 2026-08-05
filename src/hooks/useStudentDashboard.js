@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-import { dataCache } from '../lib/cache';
-
 const ACTIVE_MISSION_LIMIT = 500;
 
 export const useStudentDashboard = (studentSession, onNavigate) => {
@@ -16,9 +14,6 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const [returnedCount, setReturnedCount] = useState(0);
     const [petData, setPetData] = useState(null); // [추가] 초기 펫 데이터 상태
     const [isLoading, setIsLoading] = useState(true);
-    const [dragonConfig, setDragonConfig] = useState({ feedCost: 80, degenDays: 14 });
-    // 퇴화 체크는 교사 설정(degenDays) 로드가 끝난 뒤에만 실행되어야 함 (기본값 14일로 오판 방지)
-    const [dragonConfigLoaded, setDragonConfigLoaded] = useState(false);
 
     const lastCheckRef = useRef('1970-01-01T00:00:00.000Z');
     // 기준선(last_feedback_check)을 **실제로 읽었는지** 표시한다.
@@ -99,47 +94,6 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             lastCheckLoadedRef.current = true;
         }
     }, [studentSession?.id]);
-
-    const fetchClassSettings = useCallback(async () => {
-        let classId = studentSession.classId || studentSession.class_id;
-
-        if (!classId && studentSession?.id) {
-            const { data: studentData } = await supabase
-                .from('students')
-                .select('class_id')
-                .eq('id', studentSession.id)
-                .single();
-            if (studentData?.class_id) {
-                classId = studentData.class_id;
-            }
-        }
-
-        if (!classId) return null;
-
-        try {
-            const data = await dataCache.get(`class_settings_${classId}`, async () => {
-                const { data, error } = await supabase
-                    .from('classes')
-                    .select('dragon_feed_points, dragon_degen_days')
-                    .eq('id', classId)
-                    .single();
-                if (error) throw error;
-                return data;
-            });
-
-            if (data) {
-                const config = {
-                    feedCost: data.dragon_feed_points || 80,
-                    degenDays: data.dragon_degen_days || 14
-                };
-                setDragonConfig(config);
-                return config;
-            }
-        } catch (err) {
-            console.error('드래곤 설정 로드 오류:', err);
-        }
-        return null;
-    }, [studentSession.classId, studentSession.class_id, studentSession.id]);
 
     const checkActivity = useCallback(async () => {
         try {
@@ -359,16 +313,15 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
                     fetchReturnedCount(true);
                 });
 
-                fetchClassSettings().finally(() => setDragonConfigLoaded(true));
             };
             loadData();
         }
-    }, [studentSession?.id, fetchMyPoints, fetchClassSettings, checkActivity, fetchReturnedCount, ensureLastCheckLoaded]);
+    }, [studentSession?.id, fetchMyPoints, checkActivity, fetchReturnedCount, ensureLastCheckLoaded]);
 
     return {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
-        returnedCount, isLoading, dragonConfig, dragonConfigLoaded, initialPetData: petData,
+        returnedCount, isLoading, initialPetData: petData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback,
         fetchMyPoints, checkActivity, fetchReturnedCount // 새로운 훅에 넘기기 위한 내보내기
     };

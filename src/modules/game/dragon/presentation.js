@@ -1,16 +1,46 @@
 const DRAGON_ASSET_PATH = '/assets/dragons';
 
+const DRAGON_STAGES = [
+    { name: '잠든 이야기의 알', formLevel: 1, variant: 'base', aura: 'none', imageScale: 0.9, imageFilter: 'saturate(0.9)' },
+    { name: '깨어나는 이야기의 알', formLevel: 1, variant: 'awakened', aura: 'soft', imageScale: 0.98, imageFilter: 'saturate(1.12) brightness(1.05)' },
+    { name: '글을 만난 아기 용', formLevel: 2, variant: 'base', aura: 'soft', imageScale: 0.94, imageFilter: 'saturate(0.95)' },
+    { name: '호기심 많은 아기 용', formLevel: 2, variant: 'awakened', aura: 'blue', imageScale: 1.02, imageFilter: 'saturate(1.18) brightness(1.04)' },
+    { name: '서재를 지키는 어린 용', formLevel: 3, variant: 'base', aura: 'blue', imageScale: 0.96, imageFilter: 'saturate(1.02)' },
+    { name: '날개를 펼친 이야기 용', formLevel: 3, variant: 'awakened', aura: 'violet', imageScale: 1.05, imageFilter: 'saturate(1.22) brightness(1.04)' },
+    { name: '빛나는 문양의 수호룡', formLevel: 4, variant: 'base', aura: 'violet', imageScale: 0.98, imageFilter: 'saturate(1.05)' },
+    { name: '작가의 수호룡', formLevel: 4, variant: 'awakened', aura: 'gold', imageScale: 1.06, imageFilter: 'saturate(1.24) brightness(1.05)' },
+    { name: '지혜로운 수호룡', formLevel: 5, variant: 'base', aura: 'gold', imageScale: 1, imageFilter: 'saturate(1.08)' },
+    { name: '전설의 작가 수호룡', formLevel: 5, variant: 'awakened', aura: 'legend', imageScale: 1.08, imageFilter: 'saturate(1.3) brightness(1.08)' }
+];
+
 /**
  * 드래곤의 화면 표현은 모듈 한곳에서 관리한다.
  * 단계 이미지·이름이나 아지트 배경을 바꾸면 전체 드래곤 방과 나의 아지트 슬롯이 함께 따라간다.
  */
 export const getDragonStage = (level) => {
-    const safeLevel = Number(level || 1);
-    if (safeLevel >= 5) return { name: '전설의 수호신룡', image: `${DRAGON_ASSET_PATH}/dragon_stage_5.webp`, isPlaceholder: false };
-    if (safeLevel === 4) return { name: '불을 내뿜는 성장한 용', image: `${DRAGON_ASSET_PATH}/dragon_stage_4.webp`, isPlaceholder: false };
-    if (safeLevel === 3) return { name: '푸른 빛의 어린 용', image: `${DRAGON_ASSET_PATH}/dragon_stage_3.webp`, isPlaceholder: false };
-    if (safeLevel === 2) return { name: '갓 태어난 용', image: `${DRAGON_ASSET_PATH}/dragon_stage_2.webp`, isPlaceholder: false };
-    return { name: '신비로운 알', image: `${DRAGON_ASSET_PATH}/dragon_stage_1.webp`, isPlaceholder: false };
+    const safeLevel = Math.min(10, Math.max(1, Math.floor(Number(level) || 1)));
+    const stage = DRAGON_STAGES[safeLevel - 1];
+    return {
+        ...stage,
+        level: safeLevel,
+        image: `${DRAGON_ASSET_PATH}/dragon_stage_${stage.formLevel}.webp`,
+        isMilestone: safeLevel % 2 === 1,
+        isPlaceholder: false
+    };
+};
+
+/** 작가 칭호의 현재 단계·진행도를 드래곤 표시값으로 바꾼다. 저장된 예전 먹이 레벨은 쓰지 않는다. */
+export const getDragonGrowthFromWriterLevel = (writerLevel) => {
+    const level = Math.min(10, Math.max(1, Math.floor(Number(writerLevel?.level) || 1)));
+    if (level >= 10 || !writerLevel?.next) return { level, progress: 100 };
+
+    const from = Number(writerLevel.progressFrom || 0);
+    const current = Number(writerLevel.progressValue || 0);
+    const target = Number(writerLevel.next || 0);
+    const range = Math.max(1, target - from);
+    const progress = Math.round(((current - from) / range) * 100);
+
+    return { level, progress: Math.min(100, Math.max(0, progress)) };
 };
 
 export const HIDEOUT_BACKGROUNDS = {
