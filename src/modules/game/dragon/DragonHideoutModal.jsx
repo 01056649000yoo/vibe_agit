@@ -1,13 +1,53 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
+
+const BOND_PARTICLES = [
+    { symbol: '💛', x: -92, y: -92, delay: 0 },
+    { symbol: '✨', x: -48, y: -116, delay: 0.08 },
+    { symbol: '✦', x: 12, y: -122, delay: 0.16 },
+    { symbol: '💫', x: 76, y: -88, delay: 0.24 },
+    { symbol: '✨', x: 98, y: -28, delay: 0.12 },
+    { symbol: '💛', x: -104, y: -24, delay: 0.2 }
+];
+
+const getBondMessage = (bondCount) => {
+    const messages = [
+        '오늘의 인사를 기억할게요.',
+        '네 글 이야기를 들으며 기분이 좋아졌어요.',
+        '함께 아지트를 지켜볼게요.'
+    ];
+    return messages[Math.max(0, Number(bondCount || 1) - 1) % messages.length];
+};
 
 const DragonHideoutModal = ({
     isOpen, onClose, isMobile, petData, dragonInfo,
     HIDEOUT_BACKGROUNDS, daysSinceLastFed,
     handleBond, setIsShopOpen, isFlashing, isBusy
-}) => (
+}) => {
+    const [bondFeedback, setBondFeedback] = useState('idle');
+    const feedbackTimerRef = useRef(null);
+
+    useEffect(() => () => {
+        if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
+    }, []);
+
+    const handleBondClick = async () => {
+        if (isBusy) return;
+        setBondFeedback('saving');
+        const success = await handleBond();
+        if (!success) {
+            setBondFeedback('idle');
+            return;
+        }
+
+        setBondFeedback('success');
+        if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
+        feedbackTimerRef.current = window.setTimeout(() => setBondFeedback('idle'), 2600);
+    };
+
+    return (
 
         <ModalPortal>
         <AnimatePresence>
@@ -520,14 +560,39 @@ const DragonHideoutModal = ({
 
                                     <AnimatePresence>
                                         {isFlashing && (
-                                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0] }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ position: 'absolute', inset: 0, background: 'white', zIndex: 50, pointerEvents: 'none' }} />
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.5 }}
+                                                animate={{ opacity: [0, 0.75, 0], scale: [0.5, 1.25, 1.55] }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 1.25, ease: 'easeOut' }}
+                                                style={{ position: 'absolute', left: '50%', top: '50%', width: '220px', height: '220px', margin: '-110px 0 0 -110px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,244,166,.95) 0%, rgba(255,193,7,.4) 42%, transparent 72%)', zIndex: 4, pointerEvents: 'none' }}
+                                            />
                                         )}
+                                    </AnimatePresence>
+
+                                    <AnimatePresence>
+                                        {isFlashing && BOND_PARTICLES.map((particle, index) => (
+                                            <motion.span
+                                                key={`bond-particle-${index}`}
+                                                initial={{ x: 0, y: 10, opacity: 0, scale: 0.35 }}
+                                                animate={{ x: particle.x, y: particle.y, opacity: [0, 1, 1, 0], scale: [0.35, 1.25, 1] }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 1.25, delay: particle.delay, ease: 'easeOut' }}
+                                                style={{ position: 'absolute', left: '50%', top: '54%', zIndex: 30, fontSize: index % 2 === 0 ? '1.55rem' : '1.25rem', pointerEvents: 'none', filter: 'drop-shadow(0 2px 5px rgba(99,62,18,.28))' }}
+                                            >
+                                                {particle.symbol}
+                                            </motion.span>
+                                        ))}
                                     </AnimatePresence>
 
                                     <motion.div
                                         key={petData.level}
-                                        animate={{ scale: [0.92, 1.04, 0.98], y: [0, -12, 0] }}
-                                        transition={{ scale: { type: "spring", stiffness: 300, damping: 12 }, y: { repeat: Infinity, duration: 3, ease: "easeInOut" } }}
+                                        animate={isFlashing
+                                            ? { scale: [1, 1.18, 0.96, 1.08, 1], y: [0, -34, 3, -10, 0], rotate: [0, -6, 7, -3, 0] }
+                                            : { scale: [0.96, 1.03, 0.98], y: [0, -10, 0], rotate: 0 }}
+                                        transition={isFlashing
+                                            ? { duration: 1.2, ease: 'easeInOut' }
+                                            : { scale: { duration: 3, repeat: Infinity, ease: 'easeInOut' }, y: { repeat: Infinity, duration: 3, ease: "easeInOut" } }}
                                         style={{ width: (dragonInfo.formLevel === 3 || dragonInfo.formLevel === 4) ? '264px' : '220px', height: (dragonInfo.formLevel === 3 || dragonInfo.formLevel === 4) ? '264px' : '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 5, cursor: 'pointer', background: 'transparent' }}
                                     >
                                         {!dragonInfo.isPlaceholder && (
@@ -553,7 +618,7 @@ const DragonHideoutModal = ({
                                         <motion.div initial={{ width: 0 }} animate={{ width: `${petData.exp}%` }} style={{ height: '100%', background: petData.exp >= 100 ? 'linear-gradient(90deg, #FFD700, #FF8A65, #BA68C8, #4FC3F7)' : 'linear-gradient(90deg, #FFB300, #FBC02D)', borderRadius: '7px' }} />
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-                                        <span style={{ fontSize: '0.8rem', color: '#8D6E63' }}>{daysSinceLastFed === 0 ? '오늘 교감했어요' : daysSinceLastFed == null ? '첫 교감을 기다려요' : `마지막 교감 ${daysSinceLastFed}일 전`}</span>
+                                        <span style={{ fontSize: '0.8rem', color: '#8D6E63' }}>{daysSinceLastFed === 0 ? `오늘 교감했어요 · 총 ${Number(petData.bondCount || 0)}회` : daysSinceLastFed == null ? '첫 교감을 기다려요' : `마지막 교감 ${daysSinceLastFed}일 전`}</span>
                                         <span style={{ fontSize: '0.8rem', color: '#FBC02D', fontWeight: 'bold' }}>{petData.level < 10 ? `다음 모습까지 ${100 - petData.exp}%` : '전설의 작가 수호룡! 🌈'}</span>
                                     </div>
                                 </div>
@@ -573,21 +638,21 @@ const DragonHideoutModal = ({
                                     style={{ display: 'flex', gap: '12px' }}
                                 >
                                             <motion.button 
-                                                whileHover={!isBusy ? { scale: 1.05 } : {}} 
-                                                whileTap={!isBusy ? { scale: 0.95 } : {}} 
-                                                onClick={handleBond}
-                                                disabled={isBusy}
+                                                whileHover={!isBusy && bondFeedback !== 'success' ? { scale: 1.05 } : {}}
+                                                whileTap={!isBusy && bondFeedback !== 'success' ? { scale: 0.95 } : {}}
+                                                onClick={handleBondClick}
+                                                disabled={isBusy || bondFeedback === 'success'}
                                                 style={{ 
                                                     flex: 2, 
-                                                    background: isBusy ? '#BDC3C7' : '#FF8A65', 
+                                                    background: bondFeedback === 'success' ? '#43A047' : isBusy ? '#BDC3C7' : '#FF8A65',
                                                     color: 'white', 
                                                     border: 'none', 
                                                     padding: '16px', 
                                                     borderRadius: '20px', 
                                                     fontSize: '1rem', 
                                                     fontWeight: 'bold', 
-                                                    cursor: isBusy ? 'default' : 'pointer', 
-                                                    boxShadow: isBusy ? '0 6px 0 #95A5A6' : '0 6px 0 #E64A19', 
+                                                    cursor: isBusy || bondFeedback === 'success' ? 'default' : 'pointer',
+                                                    boxShadow: bondFeedback === 'success' ? '0 6px 0 #2E7D32' : isBusy ? '0 6px 0 #95A5A6' : '0 6px 0 #E64A19',
                                                     display: 'flex', 
                                                     justifyContent: 'center', 
                                                     alignItems: 'center', 
@@ -595,7 +660,7 @@ const DragonHideoutModal = ({
                                                     opacity: isBusy ? 0.8 : 1
                                                 }}
                                             >
-                                                {isBusy ? '🐉 인사하는 중...' : '🐉 교감하기'}
+                                                {bondFeedback === 'success' ? '💛 교감했어요!' : isBusy ? '🐉 마음을 나누는 중...' : '🐉 교감하기'}
                                             </motion.button>
                                             <motion.button 
                                                 whileHover={{ scale: 1.05 }} 
@@ -621,6 +686,20 @@ const DragonHideoutModal = ({
                                                 🎨 꾸미기
                                             </motion.button>
                                 </motion.div>
+                                <AnimatePresence>
+                                    {bondFeedback === 'success' && (
+                                        <motion.div
+                                            role="status"
+                                            aria-live="polite"
+                                            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -5 }}
+                                            style={{ padding: '11px 14px', borderRadius: '15px', border: '1px solid #C8E6C9', background: '#F1F8E9', color: '#33691E', textAlign: 'center', fontSize: '0.88rem', fontWeight: '850' }}
+                                        >
+                                            {petData.name || '작가 수호룡'}: “{getBondMessage(petData.bondCount)}”
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </div>
                     </motion.div>
@@ -630,5 +709,6 @@ const DragonHideoutModal = ({
 
         </ModalPortal>
     );
+};
 
 export default DragonHideoutModal;

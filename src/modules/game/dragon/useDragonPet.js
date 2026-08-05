@@ -13,6 +13,11 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
     const [isFlashing, setIsFlashing] = useState(false);
     const [isBusy, setIsBusy] = useState(false); 
     const hasHydratedInitialDataRef = useRef(false);
+    const flashTimerRef = useRef(null);
+
+    useEffect(() => () => {
+        if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
+    }, []);
 
     const shouldAcceptIncomingPetData = (currentPetData, nextPetData) => {
         if (!nextPetData) return false;
@@ -77,7 +82,8 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
 
             setPetData(newPetData);
             setIsFlashing(true);
-            window.setTimeout(() => setIsFlashing(false), 450);
+            if (flashTimerRef.current) window.clearTimeout(flashTimerRef.current);
+            flashTimerRef.current = window.setTimeout(() => setIsFlashing(false), 1400);
             return true;
         } catch (err) {
             console.error('드래곤 교감 기록 실패:', err.message);
