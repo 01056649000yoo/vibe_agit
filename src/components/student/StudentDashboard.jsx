@@ -232,6 +232,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                         petData={displayPetData}
                         dragonInfo={dragonInfo}
                         onOpenMyAgit={() => setIsMyAgitOpen(true)}
+                        onOpenDragon={() => setIsDragonModalOpen(true)}
                         onOpenFootprint={() => setIsFootprintOpen(true)}
                     />
 

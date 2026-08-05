@@ -36,6 +36,7 @@ const StudentHomeGrowthPanel = ({
     petData,
     dragonInfo,
     onOpenMyAgit,
+    onOpenDragon,
     onOpenFootprint
 }) => {
     return (
@@ -56,8 +57,9 @@ const StudentHomeGrowthPanel = ({
                 </div>
             </div>
 
+            {/* 수호룡은 나의 아지트를 거치지 않고 바로 방으로 들어간다 — 중간 단계는 불필요한 클릭이다. */}
             {dragonEnabled && (
-                <button type="button" className="student-home-dragon-summary" onClick={onOpenMyAgit}>
+                <button type="button" className="student-home-dragon-summary" onClick={onOpenDragon}>
                     <span className="student-home-dragon-summary__label">나의 작가 수호룡</span>
                     <DragonAvatar
                         dragon={dragonInfo}
@@ -68,7 +70,7 @@ const StudentHomeGrowthPanel = ({
                     />
                     <strong>{petData?.name || '나의 드래곤'}</strong>
                     <span className="student-home-dragon-summary__meta">작가 성장 {petData?.level || 1}/10 · {dragonInfo.species.name}</span>
-                    <em>아지트에서 만나기 ›</em>
+                    <em>수호룡 방 들어가기 ›</em>
                 </button>
             )}
         </section>
