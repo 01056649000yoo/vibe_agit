@@ -17,8 +17,17 @@ test('공백은 글자 수에 포함하고 보이지 않는 서식 문자는 제
     });
 });
 
-test('독서록 기본 정책은 100자·1문단·50P·하루 3편이다', () => {
-    assert.deepEqual(normalizeWritingPolicy(READING_LOG_POLICY_DEFAULTS), READING_LOG_POLICY_DEFAULTS);
+test('독서록 기본 정책은 200자·1문단·100P·하루 1편이다', () => {
+    assert.deepEqual(normalizeWritingPolicy(READING_LOG_POLICY_DEFAULTS), {
+        is_enabled: true,
+        min_chars: 200,
+        min_paragraphs: 1,
+        base_reward: 100,
+        bonus_enabled: false,
+        bonus_threshold: 0,
+        bonus_reward: 0,
+        daily_reward_limit: 1
+    });
 });
 
 test('글자와 문단 중 하나라도 부족하면 완료할 수 없다', () => {

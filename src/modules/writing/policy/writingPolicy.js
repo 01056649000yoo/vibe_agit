@@ -13,10 +13,10 @@ export const DEFAULT_WRITING_POLICY = Object.freeze({
 
 export const READING_LOG_POLICY_DEFAULTS = Object.freeze({
     ...DEFAULT_WRITING_POLICY,
-    min_chars: 100,
+    min_chars: 200,
     min_paragraphs: 1,
-    base_reward: 50,
-    daily_reward_limit: 3
+    base_reward: 100,
+    daily_reward_limit: 1
 });
 
 const toSafeInteger = (value, fallback = 0) => {

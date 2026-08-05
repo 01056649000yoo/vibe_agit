@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 
 const EMPTY_STATUS = Object.freeze({
-    dailyLimit: 3,
+    dailyLimit: 1,
     completedToday: 0,
-    remainingToday: 3,
+    remainingToday: 1,
     canComplete: true
 });
 

@@ -24,13 +24,13 @@ export const readingLogManifest = {
         type: 'reading_log',
         completionFlow: 'student_complete',
         defaults: {
-            min_chars: 100,
+            min_chars: 200,
             min_paragraphs: 1,
-            base_reward: 50,
+            base_reward: 100,
             bonus_enabled: false,
             bonus_threshold: 0,
             bonus_reward: 0,
-            daily_reward_limit: 3
+            daily_reward_limit: 1
         }
     },
     studentEntry: () => import('./ReadingLogPage'),
