@@ -725,9 +725,24 @@ SSO가 되려면 둘을 한 스택·한 인증으로 통일해야 한다 (JWT �
 7. [~] 죽은 코드 청소: 미사용 컴포넌트·훅·유틸·의존성, 도달 불가 분기 제거
    - [x] 아지트온클래스(`available:false`라 마운트 자체가 안 됨)의 `postgres_changes` 구독 코드 제거
      (2026-08-07) — 나머지 화면 전체는 아직 그대로(재활성화 대비 보관 방침 유지).
-8. [ ] 린트 잔여 정리: `exhaustive-deps` 경고 등 (Stage 0에서 미룬 것)
+   - [ ] 안 쓰는 이미지 정리: `public/classroom_bg.png`(900KB, 코드에서 참조 없음),
+     `public/agit_hideout_bg.png`(800KB, 아지트온클래스 전용이라 실사용자에게 다운로드는 안 되지만
+     저장소엔 남아있음) — 실사용 부하와는 무관, 정리 성격.
+8. [x] 린트 잔여 정리: `exhaustive-deps` 경고 등 (Stage 0에서 미룬 것) — 2026-08-07 재확인 결과
+   `npx eslint . --no-cache` 0경고·0오류로 **이미 해결됨**. 계획에 미완료로 남아있던 걸 정정.
 9. [ ] 정리 전후 빌드·핵심 흐름(글쓰기·제출·피드백·포인트) 동작 검증
-10. [ ] **Realtime 구독 최소화 방향으로 (2026-08-07 결정)**: 단일 노드인 `agit-realtime`에 부하를
+10. [ ] **가벼움 2차 점검 (2026-08-07)**: 폴링·코드 스플리팅·이미지 포맷은 이미 잘 되어 있음을
+    재확인(아래 "굳이 손 안 대도 되는 것" 참고). 새로 찾은 두 가지:
+    - [ ] **랜딩페이지 히어로 이미지 최적화** — [LandingPage.jsx:106](src/components/layout/LandingPage.jsx#L106)의
+      `landing-hero-reference.png`가 `public/` 전체에서 가장 큰 파일(1.7MB, PNG). 다른 이미지는 전부
+      40~60KB WebP인데 이것만 예외(파일명이 "reference"인 걸 보면 최종본 교체를 놓친 것으로 보임).
+      가입하러 오는 교사가 제일 먼저 보는 화면이라 영향이 가장 크다. WebP 전환 시 80~90%+ 절감 예상.
+    - [ ] **죽은 Vercel 분석 SDK 제거** — `@vercel/analytics`·`@vercel/speed-insights`가
+      [App.jsx:385-386](src/App.jsx#L385-L386)에 여전히 마운트돼 있다. Stage 1에서 이미 맥미니 자체
+      호스팅으로 이관 완료했으므로, 지금은 모든 페이지·모든 학생·교사마다 존재하지 않는 Vercel 수집
+      서버로 실패할 요청을 계속 보내고 있을 가능성이 높다. 번들 용량(App 청크, 초기 로드 경로)과
+      네트워크 요청 둘 다 낭비 — `package.json` 의존성까지 완전히 제거해도 된다.
+11. [ ] **Realtime 구독 최소화 방향으로 (2026-08-07 결정)**: 단일 노드인 `agit-realtime`에 부하를
     몰아주지 않도록, 새 기능에 Realtime을 기본으로 쓰지 않고 꼭 필요한 곳만 남긴다. 지금 코드에
     남은 4곳을 감사한 결과:
     - [ ] **`mission_list_changes_${classId}`([MissionList.jsx:104-116](src/components/student/MissionList.jsx#L104-L116)) 제거 후보** —
