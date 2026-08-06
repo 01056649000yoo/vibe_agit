@@ -60,103 +60,42 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         lastFetchAtRef.current = now;
         setLoading(true);
         try {
-            const [rxRes, cmRes] = await Promise.all([
-                supabase
-                    .from('post_reactions')
-                    .select('id, reaction_type, student_id, students!inner(name)')
-                    .eq('post_id', postId)
-                    .is('students.deleted_at', null),
-                supabase
-                    .from('post_comments')
-                    .select('id, content, student_id, teacher_id, status, created_at, students:student_id(name)')
-                    .eq('post_id', postId)
-                    .order('created_at', { ascending: true })
-            ]);
+            // 공용 RPC 한 번으로 반응·댓글을 함께 받는다.
+            // 예전에는 PostgREST 임베드(`students:student_id(name)`)를 썼는데 그 조인이
+            // 학생 표 전체를 Seq Scan 했다. 이제 인덱스 조인이라 학생이 늘어도 무거워지지 않는다.
+            const { data: interactions, error: rpcError } = await supabase
+                .rpc('get_post_interactions', { p_post_id: postId });
+            if (rpcError) throw rpcError;
 
-            if (rxRes.error) throw rxRes.error;
-            if (cmRes.error) throw cmRes.error;
-
-            const normalizeEmbeddedStudent = (studentValue) => {
-                if (Array.isArray(studentValue)) {
-                    return studentValue[0] || null;
-                }
-                return studentValue || null;
-            };
-
-            const rawComments = (cmRes.data || []).map(comment => ({
+            const rawComments = (interactions?.comments || []).map((comment) => ({
                 ...comment,
-                students: normalizeEmbeddedStudent(comment.students)
+                students: comment.student_name ? { name: comment.student_name, deleted_at: null } : null
             }));
-            const classmateMap = new Map((latestContextRef.current.classmates || []).map(classmate => [classmate.id, classmate]));
-            const missingStudentIds = [...new Set(
-                rawComments
-                    .filter((comment) => comment.student_id && !comment.students?.name)
-                    .map((comment) => comment.student_id)
-            )];
 
-            let studentNameMap = new Map();
-            if (missingStudentIds.length > 0) {
-                const { data: studentRows, error: studentError } = await supabase
-                    .from('students')
-                    .select('id, name, deleted_at')
-                    .in('id', missingStudentIds);
-
-                if (studentError) {
-                    console.warn('[usePostInteractions] ?? ??? ?? ?? ??:', studentError.message);
-                } else {
-                    studentNameMap = new Map((studentRows || []).map((student) => [student.id, student]));
-                }
-            }
-
-            const normalizedComments = rawComments.map((comment) => {
-                if (comment.students?.name || !comment.student_id) {
-                    return comment;
-                }
-
-                if (comment.student_id === latestContextRef.current.studentId) {
-                    return {
+            // 이름은 서버가 채워 준다. 예전엔 임베드가 비면 학급 명단·학생 표로 다시 찾아 메웠지만
+            // 이제 RPC 가 학급 안에서 인덱스 조인으로 붙여 주므로 보강 단계가 필요 없다.
+            const normalizedComments = rawComments.map((comment) => (
+                comment.students?.name || !comment.student_id
+                    ? comment
+                    : {
                         ...comment,
-                        student_name: studentName || '내 댓글',
+                        student_name: comment.student_id === latestContextRef.current.studentId
+                            ? (studentName || '내 댓글')
+                            : '알 수 없는 친구',
                         students: {
-                            name: studentName || '내 댓글',
+                            name: comment.student_id === latestContextRef.current.studentId
+                                ? (studentName || '내 댓글')
+                                : '알 수 없는 친구',
                             deleted_at: null
                         }
-                    };
-                }
-
-                const classmateInfo = classmateMap.get(comment.student_id);
-                if (classmateInfo?.name) {
-                    return {
-                        ...comment,
-                        student_name: classmateInfo.name,
-                        students: {
-                            name: classmateInfo.name,
-                            deleted_at: null
-                        }
-                    };
-                }
-
-                const studentInfo = studentNameMap.get(comment.student_id);
-                if (!studentInfo) {
-                    return comment;
-                }
-
-                return {
-                    ...comment,
-                    student_name: studentInfo.name,
-                    students: {
-                        name: studentInfo.name,
-                        deleted_at: studentInfo.deleted_at ?? null
                     }
-                };
-            });
+            ));
 
             console.log('[usePostInteractions] 데이터 로드 완료 (postId: ' + postId + ')');
             
-            // [버그 수정] 반응(Reactions) 데이터 정규화 추가
-            const normalizedReactions = (rxRes.data || []).map(r => ({
-                ...r,
-                students: normalizeEmbeddedStudent(r.students)
+            const normalizedReactions = (interactions?.reactions || []).map((reaction) => ({
+                ...reaction,
+                students: reaction.student_name ? { name: reaction.student_name } : null
             }));
 
             setReactions(normalizedReactions);
