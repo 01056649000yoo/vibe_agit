@@ -1,0 +1,32 @@
+.dragon-farewell { grid-column: 1 / -1; display: grid; gap: 12px; margin-top: 3px; }
+.dragon-farewell__current, .dragon-farewell__archive { padding: 17px; border: 1px solid #dcc8ae; border-radius: 18px; background: linear-gradient(145deg,#fffaf0,#f5e9d8); }
+.dragon-farewell__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dragon-farewell__heading small { display: block; color: #a05b31; font-size: .61rem; font-weight: 950; letter-spacing: .12em; }
+.dragon-farewell__heading h3 { margin: 3px 0 0; color: #40332b; font-size: 1rem; }
+.dragon-farewell__heading > span { padding: 5px 8px; border-radius: 99px; background: #eee5db; color: #7b6a5d; font-size: .62rem; font-weight: 900; }
+.dragon-farewell__heading > span.is-complete { background: #dff1df; color: #386b3e; }
+.dragon-farewell__current > p { margin: 10px 0 13px; color: #75665b; font-size: .7rem; font-weight: 750; line-height: 1.6; }
+.dragon-farewell__current label { display: block; margin-bottom: 6px; color: #654936; font-size: .7rem; font-weight: 900; }
+.dragon-farewell__current textarea { box-sizing: border-box; width: 100%; min-height: 180px; resize: vertical; padding: 13px; border: 1px solid #d8c8bb; border-radius: 13px; outline: none; background: rgba(255,255,255,.88); color: #3d332c; font: inherit; font-size: max(16px,.82rem); font-weight: 650; line-height: 1.75; }
+.dragon-farewell__current textarea:focus { border-color: #b47443; box-shadow: 0 0 0 3px rgba(180,116,67,.13); }
+.dragon-farewell__counter { margin-top: 5px; color: #8f8176; font-size: .6rem; font-weight: 750; text-align: right; }
+.dragon-farewell__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; margin-top: 11px; }
+.dragon-farewell__actions button, .dragon-farewell__archive-list button { min-height: 38px; padding: 8px 11px; border: 1px solid #d4c2b2; border-radius: 10px; background: white; color: #685344; cursor: pointer; font: inherit; font-size: .67rem; font-weight: 900; }
+.dragon-farewell__actions button.is-primary { border-color: #a75e31; background: #a75e31; color: white; }
+.dragon-farewell__actions button.is-download { border-color: #4e6487; background: #3e5274; color: white; }
+.dragon-farewell button:disabled { cursor: wait; opacity: .58; }
+.dragon-farewell__archive-list { display: grid; gap: 7px; margin-top: 12px; }
+.dragon-farewell__archive-list article { display: grid; grid-template-columns: 62px minmax(0,1fr) auto; align-items: center; gap: 10px; min-width: 0; padding: 9px; border: 1px solid rgba(128,92,63,.13); border-radius: 13px; background: rgba(255,255,255,.68); }
+.dragon-farewell__archive-list img { width: 62px; height: 62px; object-fit: contain; }
+.dragon-farewell__archive-list strong, .dragon-farewell__archive-list small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dragon-farewell__archive-list strong { color: #49382d; font-size: .74rem; }
+.dragon-farewell__archive-list small { margin-top: 3px; color: #86776c; font-size: .6rem; font-weight: 750; }
+.dragon-farewell__message { margin: 0; padding: 10px 12px; border-radius: 11px; background: #edf3f8; color: #465d73; font-size: .67rem; font-weight: 850; }
+
+@media (max-width: 620px) {
+    .dragon-farewell__current, .dragon-farewell__archive { padding: 14px; }
+    .dragon-farewell__actions { display: grid; grid-template-columns: 1fr; }
+    .dragon-farewell__archive-list article { grid-template-columns: 52px minmax(0,1fr); }
+    .dragon-farewell__archive-list img { width: 52px; height: 52px; }
+    .dragon-farewell__archive-list button { grid-column: 1 / -1; }
+}

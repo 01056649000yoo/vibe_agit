@@ -57,6 +57,8 @@ const normalizeStudent = (raw) => {
         seasonChars: Number(raw?.season_chars || 0),
         writerChars: Number(raw?.writer_total_chars || 0),
         writerPosts: Number(raw?.writer_completed_posts || 0),
+        careerChars: Number(raw?.career_chars || 0),
+        careerPosts: Number(raw?.career_posts || 0),
         readerScore: Number(raw?.reader_score || 0)
     };
 };
@@ -124,6 +126,7 @@ const StudentCard = ({ student, onOpen }) => (
             <span className="dragon-student-card__title">
                 <strong>{student.name}</strong>
                 {!student.hasSpecies && <em>수호룡 선택 전</em>}
+                {student.farewell_status === 'completed' && <em className="is-farewell">작별 편지 완성</em>}
             </span>
             <span className="dragon-student-card__subtitle">
                 {student.writer.emoji} {student.writer.name} · {student.readerEffect.name}
@@ -133,7 +136,7 @@ const StudentCard = ({ student, onOpen }) => (
             </span>
             <span className="dragon-student-card__stats">
                 <span><b>{student.seasonPosts}</b>편<small>이번 시즌</small></span>
-                <span><b>{formatNumber(student.writerChars)}</b>자<small>누적 글자</small></span>
+                <span><b>{formatNumber(student.writerChars)}</b>자<small>이번 학기</small></span>
                 <span><b>R{student.reader.level}</b><small>독자 효과</small></span>
             </span>
             <span className="dragon-student-card__more">성장 자세히 보기 ›</span>
@@ -168,9 +171,10 @@ const StudentDetailModal = ({ student, onClose }) => {
                     </div>
 
                     <div className="dragon-teacher-detail-grid">
-                        <div><small>누적 완성 글</small><strong>{formatNumber(student.writerPosts)}편</strong></div>
-                        <div><small>누적 글자 수</small><strong>{formatNumber(student.writerChars)}자</strong></div>
+                        <div><small>이번 학기 완성 글</small><strong>{formatNumber(student.writerPosts)}편</strong></div>
+                        <div><small>이번 학기 글자 수</small><strong>{formatNumber(student.writerChars)}자</strong></div>
                         <div><small>이번 시즌</small><strong>{formatNumber(student.seasonPosts)}편 · {formatNumber(student.seasonChars)}자</strong></div>
+                        <div><small>전체 보관 기록</small><strong>{formatNumber(student.careerPosts)}편 · {formatNumber(student.careerChars)}자</strong></div>
                         <div><small>최근 완성</small><strong>{formatDateTime(student.latest_completed_at)}</strong></div>
                         <div><small>독자 활동 점수</small><strong>{formatNumber(student.readerScore)}점</strong></div>
                         <div><small>교감 기록</small><strong>{formatNumber(student.petData.bondCount)}회 · {student.petData.lastFed ? formatDate(student.petData.lastFed) : '아직 없음'}</strong></div>
@@ -246,6 +250,7 @@ const DragonTeacherManager = ({ activeClass }) => {
     const [levelFilter, setLevelFilter] = useState('all');
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [seasonName, setSeasonName] = useState('');
+    const [farewellDeadline, setFarewellDeadline] = useState('');
     const [closingSeason, setClosingSeason] = useState(false);
 
     const loadDashboard = useCallback(async () => {
@@ -304,28 +309,53 @@ const DragonTeacherManager = ({ activeClass }) => {
         });
     }, [students, search, levelFilter]);
 
-    const handleCloseSeason = async () => {
+    const runSeasonAction = async ({ rpc, params, confirmMessage, successMessage, nextTab = 'overview' }) => {
         if (closingSeason || !classId) return;
-        const currentName = seasonName.trim() || season.name || `${season.number || 1}번째 시즌`;
-        const confirmed = window.confirm(
-            `“${currentName}”을 마치고 다음 시즌을 시작할까요?\n\n현재 학급 성장 현황만 기록으로 보관합니다. 학생의 작가·독자 단계, 수호룡 종류, 포인트와 꾸미기 아이템은 초기화되지 않습니다.`
-        );
-        if (!confirmed) return;
+        if (!window.confirm(confirmMessage)) return;
 
         setClosingSeason(true);
-        const { data, error: closeError } = await supabase.rpc('close_teacher_dragon_growth_season', {
-            p_class_id: classId,
-            p_season_name: currentName
-        });
+        const { data, error: actionError } = await supabase.rpc(rpc, { p_class_id: classId, ...params });
         setClosingSeason(false);
-        if (closeError) {
-            console.error('수호룡 시즌 전환 실패:', closeError);
-            window.alert('시즌을 전환하지 못했습니다. 잠시 후 다시 시도해주세요.');
+        if (actionError) {
+            console.error('수호룡 시즌 처리 실패:', actionError);
+            window.alert(actionError.message || '시즌을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.');
             return;
         }
-        window.alert(`${data?.closed_season_name || currentName} 기록을 보관하고 ${data?.next_season_number || Number(season.number || 1) + 1}번째 시즌을 시작했습니다.`);
+        window.alert(successMessage(data));
         await loadDashboard();
-        setActiveTab('history');
+        setActiveTab(nextTab);
+    };
+
+    const handleOpenFarewell = () => {
+        const currentName = seasonName.trim() || season.name || `${season.number || 1}번째 시즌`;
+        runSeasonAction({
+            rpc: 'open_teacher_dragon_season_closing',
+            params: { p_season_name: currentName, p_farewell_deadline: farewellDeadline || null },
+            confirmMessage: `“${currentName}”의 작별 기간을 열까요?\n\n이 순간의 작가·독자 단계와 수호룡 모습이 동결됩니다. 학생들은 작별 편지를 쓰고 기념 이미지를 받을 수 있습니다.`,
+            successMessage: () => `${currentName}의 성장을 마무리하고 작별 편지 쓰기를 열었습니다.`
+        });
+    };
+
+    const handleFinalizeSeason = () => {
+        const pending = Math.max(0, Number(season.farewell_total || students.length) - Number(season.farewell_completed || 0));
+        runSeasonAction({
+            rpc: 'finalize_teacher_dragon_season',
+            params: {},
+            confirmMessage: `현재 시즌을 최종 종료할까요?\n\n작별 편지 미완성 학생 ${pending}명도 그대로 보관됩니다. 종료 뒤에는 편지를 수정할 수 없습니다.`,
+            successMessage: (data) => `${data?.season_name || season.name}을 보관했습니다. 새 학기는 준비가 되었을 때 별도로 시작하세요.`,
+            nextTab: 'history'
+        });
+    };
+
+    const handleStartSeason = () => {
+        const nextNumber = Number(season.number || history[0]?.season_number || 0) + 1;
+        const nextName = seasonName.trim() && seasonName.trim() !== season.name ? seasonName.trim() : `${nextNumber}번째 시즌`;
+        runSeasonAction({
+            rpc: 'start_teacher_dragon_season',
+            params: { p_season_name: nextName },
+            confirmMessage: `“${nextName}”을 시작할까요?\n\n학생의 포인트·구입한 소품·지난 글은 보존됩니다. 새 수호룡은 알부터 시작하며 학생이 종류를 다시 고릅니다.`,
+            successMessage: (data) => `${data?.season_name || nextName}을 시작했습니다. 학생들은 새 수호룡을 선택할 수 있습니다.`
+        });
     };
 
     if (!activeClass) return <div className="dragon-teacher-empty"><strong>학급을 먼저 선택해주세요.</strong></div>;
@@ -343,15 +373,15 @@ const DragonTeacherManager = ({ activeClass }) => {
                 <div className="dragon-season-hero__copy">
                     <span className="dragon-teacher-eyebrow">GUARDIAN SEASON {season.number || 1}</span>
                     <h2>{season.name || '현재 시즌'}</h2>
-                    <p>시즌은 학급 성장 기록을 나누는 운영 구간입니다. 수호룡 성장과 꾸미기 자산은 학기와 시즌이 바뀌어도 계속 이어집니다.</p>
+                    <p>한 학기 동안 한 수호룡을 키우고, 학기말에는 작별 편지와 최종 모습을 기록합니다. 새 학기는 알부터 다시 시작하지만 글·포인트·꾸미기 자산은 그대로 남습니다.</p>
                     <div className="dragon-season-hero__meta">
                         <span>시작 {formatDate(season.started_at)}</span>
                         <span>{getSeasonDays(season.started_at)}일째</span>
-                        <span>성장 초기화 없음</span>
+                        <span>{season.status === 'closing' ? '작별 편지 기간' : season.status === 'closed' ? '시즌 보관 완료' : '학기 성장 중'}</span>
                     </div>
                 </div>
                 <div className="dragon-season-hero__action">
-                    <label htmlFor="dragon-season-name">보관할 시즌 이름</label>
+                    <label htmlFor="dragon-season-name">{season.status === 'closed' ? '새 시즌 이름' : '현재 시즌 이름'}</label>
                     <input
                         id="dragon-season-name"
                         value={seasonName}
@@ -359,10 +389,30 @@ const DragonTeacherManager = ({ activeClass }) => {
                         onChange={(event) => setSeasonName(event.target.value)}
                         placeholder={`${season.number || 1}번째 시즌`}
                     />
-                    <Button type="button" loading={closingSeason} loadingText="기록 보관 중..." onClick={handleCloseSeason}>
-                        현재 시즌 보관 · 다음 시즌 시작
-                    </Button>
-                    <small>학생 레벨·포인트·소품은 그대로 보존됩니다.</small>
+                    {season.status === 'active' && (
+                        <>
+                            <label htmlFor="dragon-farewell-deadline">작별 편지 마감일 (선택)</label>
+                            <input id="dragon-farewell-deadline" type="date" value={farewellDeadline} onChange={(event) => setFarewellDeadline(event.target.value)} />
+                            <Button type="button" loading={closingSeason} loadingText="성장 기록 중..." onClick={handleOpenFarewell}>성장 마감 · 작별 편지 열기</Button>
+                            <small>누르는 순간 최종 수호룡 모습과 칭호가 동결됩니다.</small>
+                        </>
+                    )}
+                    {season.status === 'closing' && (
+                        <>
+                            <div className="dragon-season-hero__farewell-progress">
+                                <strong>{season.farewell_completed || 0} / {season.farewell_total || students.length}명</strong>
+                                <span>작별 편지 완성</span>
+                            </div>
+                            <Button type="button" loading={closingSeason} loadingText="시즌 보관 중..." onClick={handleFinalizeSeason}>작별 기간 마감 · 시즌 종료</Button>
+                            <small>시즌 종료 뒤에도 학생의 완성 편지와 기념 이미지는 보관됩니다.</small>
+                        </>
+                    )}
+                    {season.status === 'closed' && (
+                        <>
+                            <Button type="button" loading={closingSeason} loadingText="새 시즌 준비 중..." onClick={handleStartSeason}>새 학기 · 알부터 시작</Button>
+                            <small>포인트·구입 소품·지난 글은 유지하고 수호룡 성장만 다시 시작합니다.</small>
+                        </>
+                    )}
                 </div>
             </section>
 

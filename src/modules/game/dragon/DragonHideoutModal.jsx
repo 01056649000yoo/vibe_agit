@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import ModalPortal from '../../../components/common/ModalPortal';
 import DragonHideoutScene from './DragonHideoutScene';
+import DragonFarewellPanel from './DragonFarewellPanel';
 import DragonSpeciesPicker from './DragonSpeciesPicker';
 import { canReselectDragonSpecies, getReaderDragonEffect } from './presentation';
 import './DragonHideoutModal.css';
@@ -181,6 +182,8 @@ const DragonHideoutModal = ({
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
+
+                                    <DragonFarewellPanel ownerName={ownerName} />
                                 </div>
                             )}
                         </motion.div>

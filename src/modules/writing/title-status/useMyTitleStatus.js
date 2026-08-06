@@ -12,7 +12,8 @@ const EMPTY_STATUS = {
     writerLevelOverride: null,
     readerScore: 0,
     readerPostCount: 0,
-    readerLevelOverride: null
+    readerLevelOverride: null,
+    season: null
 };
 
 export const invalidateMyTitleStatus = ({ classId, studentId }) => {
@@ -58,7 +59,8 @@ const useMyTitleStatus = ({ studentSession, active = true }) => {
                     readerPostCount: Number(data?.reader_post_count || 0),
                     readerLevelOverride: data?.reader_level_override == null
                         ? null
-                        : Number(data.reader_level_override)
+                        : Number(data.reader_level_override),
+                    season: data?.season || null
                 };
             }, TITLE_STATUS_TTL_MS);
             setStatus(next || EMPTY_STATUS);

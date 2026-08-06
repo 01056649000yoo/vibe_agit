@@ -61,6 +61,9 @@
 .dragon-season-hero__action label { color: #705844; font-size: .72rem; font-weight: 900; }
 .dragon-season-hero__action input { min-height: 42px; padding: 8px 11px; border: 1px solid #d6c1ad; border-radius: 11px; background: white; color: #40352d; font: inherit; font-size: .83rem; font-weight: 800; }
 .dragon-season-hero__action small { color: #7b6b5f; font-size: .66rem; font-weight: 750; text-align: center; }
+.dragon-season-hero__farewell-progress { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 11px; border-radius: 12px; background: #f5eadb; color: #765236; }
+.dragon-season-hero__farewell-progress strong { font-size: 1.05rem; }
+.dragon-season-hero__farewell-progress span { font-size: .68rem; font-weight: 850; }
 
 .dragon-teacher-tabs { display: flex; gap: 6px; margin: 20px 0; padding: 5px; overflow-x: auto; border: 1px solid #e7e1dc; border-radius: 15px; background: #f7f5f3; }
 .dragon-teacher-tabs button { min-height: 40px; padding: 8px 15px; border: 0; border-radius: 11px; background: transparent; color: #776b62; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 900; white-space: nowrap; }
@@ -114,6 +117,7 @@
 .dragon-student-card__title { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .dragon-student-card__title strong { overflow: hidden; font-size: .92rem; text-overflow: ellipsis; white-space: nowrap; }
 .dragon-student-card__title em { padding: 3px 5px; border-radius: 5px; background: #f0ece8; color: #9a7c66; font-size: .55rem; font-style: normal; font-weight: 900; white-space: nowrap; }
+.dragon-student-card__title em.is-farewell { background: #e3f1e4; color: #47704b; }
 .dragon-student-card__subtitle { margin-top: 3px; overflow: hidden; color: #7d6b5d; font-size: .65rem; font-weight: 850; text-overflow: ellipsis; white-space: nowrap; }
 .dragon-student-card__progress { display: block; height: 7px; margin-top: 10px; overflow: hidden; border-radius: 99px; background: #ece6e1; }
 .dragon-student-card__progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #e8b34b, #df7042); }

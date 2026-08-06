@@ -199,7 +199,7 @@ const MyTitleStatusPanel = ({ active = true, studentSession, points = 0 }) => {
                     <BadgeButton kind="reader" level={readerLevel} loading={loading} errorMessage={errorMessage} onClick={() => setActiveGuide('reader')} />
                 </div>
                 <div style={{ position: 'relative', marginTop: '9px', textAlign: 'center', color: 'rgba(255,255,255,.7)', fontSize: '.64rem', fontWeight: 800 }}>
-                    칭호 카드를 눌러 전체 성장 단계를 확인해요
+                    {status.season?.name || '현재 학기'} · {status.season?.status === 'closing' ? '성장 기록 완료' : status.season?.status === 'closed' ? '보관된 성장' : '이번 학기 성장'} · 칭호 카드를 눌러 단계를 확인해요
                 </div>
             </section>
 
