@@ -367,14 +367,14 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
     return (
         <div className="diary-page">
             <header className="diary-page-header">
-                <Button variant="ghost" size="sm" onClick={onBack}>← 홈으로</Button>
                 <div>
+                    <Button variant="ghost" size="sm" onClick={onBack}>⬅️ 홈으로</Button>
                     <h1>📔 나의 일기</h1>
                     <p>하루에 한 편, 오늘의 나를 남겨요.</p>
                 </div>
             </header>
 
-            <Card className="diary-today-card">
+            <div className="diary-today-card">
                 <div className="diary-today-card__info">
                     <span className="diary-today-card__eyebrow">오늘</span>
                     <strong>{formatDiaryDate(today)}</strong>
@@ -393,7 +393,7 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                 >
                     {todayDiary ? '오늘 일기 다듬기' : '오늘의 일기 쓰기 ✍️'}
                 </Button>
-            </Card>
+            </div>
 
             {loading ? (
                 <Card><p style={{ textAlign: 'center', padding: '42px' }}>일기장을 넘기는 중... 📔</p></Card>
