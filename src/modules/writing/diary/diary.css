@@ -1,10 +1,12 @@
 /* 일기 화면. 표면·글자·모서리는 공용 --ui-* 토큰을 쓰고, 남색 계열만 일기 고유 강조로 둔다. */
 
+/* 바깥 폭·여백·카드 열은 독서록(`ReadingLogShelf.css`)과 같은 값을 쓴다.
+   두 화면이 학생에게는 나란한 자율 글쓰기라 폭이 다르면 화면을 옮길 때마다 어긋나 보인다. */
 .diary-page {
     display: flex;
-    max-width: 1200px;
+    width: min(1400px, calc(100% - 32px));
     flex-direction: column;
-    margin: 0 auto;
+    margin: 24px auto 70px;
     gap: var(--ui-space-5, 16px);
 }
 
@@ -32,18 +34,22 @@
 
 .diary-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--ui-space-4, 12px);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 14px;
 }
 
+/* 카드 상자도 독서록 책장 카드와 같은 값이다(최소 높이 238px, 여백 16px, 같은 모서리·그림자). */
 .diary-card {
     display: flex;
     min-width: 0;
+    min-height: 238px;
     flex-direction: column;
-    padding: var(--ui-space-5, 16px);
+    padding: 16px;
     border: 1px solid var(--ui-border);
-    border-radius: var(--ui-radius-md, 14px);
+    border-radius: var(--ui-radius-xl);
     background: var(--ui-surface);
+    box-shadow: var(--ui-shadow-sm);
     gap: 6px;
 }
 .diary-card__date { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -58,7 +64,8 @@
     white-space: nowrap;
 }
 .diary-card__meta { margin: 0; color: var(--ui-ink-subtle); font-size: .74rem; }
-.diary-card__actions { display: flex; margin-top: 6px; gap: 6px; }
+/* 행동 버튼은 카드 아래에 붙여 카드 높이가 달라도 나란히 보이게 한다. */
+.diary-card__actions { display: flex; margin-top: auto; padding-top: 8px; gap: 6px; }
 
 .diary-date-badge {
     display: flex;
@@ -93,13 +100,23 @@
     gap: var(--ui-space-3, 8px);
 }
 
-@media (max-width: 1024px) {
-    .diary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* 아래 세 경계는 독서록 책장과 같은 지점(980 / 760 / 520)이다. */
+@media (max-width: 980px) {
+    .diary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-@media (max-width: 640px) {
-    .diary-grid { grid-template-columns: 1fr; }
+@media (max-width: 760px) {
+    .diary-page {
+        width: min(100% - 24px, 1400px);
+        margin-top: 14px;
+    }
+    .diary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .diary-page-header { align-items: stretch; flex-direction: column; }
     .diary-today-card { align-items: stretch; flex-direction: column; }
+}
+
+@media (max-width: 520px) {
+    .diary-grid { grid-template-columns: 1fr; }
     .diary-editor-actions { flex-direction: column-reverse; }
     .diary-editor-actions > * { width: 100%; }
 }
