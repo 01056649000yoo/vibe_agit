@@ -61,24 +61,6 @@ const AgitOnClassPage = ({ studentSession, onBack, onNavigate }) => {
         };
 
         checkNewContent();
-
-        // [실시간 연동] 새로운 미션/안건 등록 시 뱃지 갱신
-        if (classId) {
-            const channel = supabase
-                .channel(`agit_hub_changes_${classId}`)
-                .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'writing_missions',
-                    filter: `class_id=eq.${classId}`
-                }, () => {
-                    console.log('📢 [AgitHub] 새로운 미션 감지 -> 뱃지 갱신');
-                    checkNewContent();
-                })
-                .subscribe();
-
-            return () => supabase.removeChannel(channel);
-        }
     }, [classId]);
 
     const [subTab, setSubTab] = useState('hub');

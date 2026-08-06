@@ -21,6 +21,27 @@
 
 ---
 
+## 2026-08-07 — agit-realtime 자원 우선순위 부여 + 죽은 실시간 구독 제거 (Claude)
+- **한 일**: "동시접속 몇 명까지 되나" 질문에 답하며 찾아낸 두 가지를 바로 적용했다. 사용자 확인:
+  아지트가 이 맥미니의 우선 서비스이고 나머지 앱(자비스·연구소·샘링크·서바이벌)은 앞으로 아지트로
+  흡수/연동될 예정이므로, 부하가 몰려도 `agit-realtime`이 밀리지 않게 우선순위를 걸어야 한다.
+  ① 코드에서 안 쓰이는데 구독 중이던 실시간 채널 1곳 제거 — 아지트온클래스(`available:false`라
+  모듈 자체가 마운트될 수 없음)의 `postgres_changes` 구독. ② `agit-realtime`에 자원 예약/우선순위 부여.
+- **변경(git 밖, `~/agit-supabase/docker-compose.yml`)**: `realtime` 서비스에
+  `mem_limit: 1g`, `memswap_limit: 1g`, `mem_reservation: 512m`, `cpu_shares: 2048`(기본 1024의
+  2배) 추가. `docker update --memory=1g --memory-swap=1g --memory-reservation=512m --cpu-shares=2048
+  agit-realtime`으로 **컨테이너 재기동 없이** 라이브 적용(적용 전후 `Up 2 days (healthy)` 그대로).
+  기존 파일은 `docker-compose.yml.bak-20260807`로 백업.
+- **변경(이 레포)**: [AgitOnClassPage.jsx](src/modules/community/agit-on-class/AgitOnClassPage.jsx)에서
+  `postgres_changes` 구독 블록(채널 `agit_hub_changes_${classId}`) 제거. 뱃지 확인용 일반 조회
+  (`checkNewContent`)는 그대로 남겨 재활성화 시에도 동작한다. 코드에 남은 실시간 구독은 4곳
+  (`useRealtimeNotifications`·`MissionList`·`useMissionSubmit`·`LegacyGameManager`)뿐이다.
+- **결과/검증**: ESLint 0경고, `npm run build` 통과. 인프라 변경은 `docker ps`로 healthy 유지,
+  `docker inspect`로 새 제한값 반영 확인. 실사용 부하 재현은 방학 중이라 못 했다.
+- **남은 것 / 다음**: `postgres_changes`→Broadcast 전환은 지금 당장 급하지 않아 `ROADMAP.md` Stage 3c
+  10번 항목("규모 커지면")으로 남겨뒀다. 학기 시작해 실사용이 늘면 `agit-realtime` 메모리·CPU 사용률을
+  한 번 재보고 이 예약값(512m/1g)이 충분한지 재확인할 것.
+
 ## 2026-08-07 — Stage 3 계획을 하나로 합침 (원래 계획 + 진행 현황 + 오늘 분석) (Claude)
 - **한 일**: 바로 아래 항목(Stage 2 통합 전 코드 분석)을 급하게 `3c-1`로 따로 추가해뒀더니, 원래
   모듈화 계획(3a·3b)·기존 정리 항목(3c)·오늘 분석(3c-1)이 세 갈래로 흩어지고 "대형 파일 분할"
