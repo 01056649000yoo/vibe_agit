@@ -144,7 +144,7 @@ const StudentCard = ({ student, onOpen }) => (
     </button>
 );
 
-const StudentDetailModal = ({ student, onClose }) => {
+const StudentDetailModal = ({ student, onClose, seasonLabel }) => {
     if (!student) return null;
     const species = getDragonSpecies(student.petData.species);
     const ownedDecorCount = student.decor.owned.size;
@@ -159,7 +159,7 @@ const StudentDetailModal = ({ student, onClose }) => {
                     <div className="dragon-teacher-modal__hero">
                         <div className="dragon-teacher-modal__avatar"><StudentAvatar student={student} /></div>
                         <div>
-                            <span className="dragon-teacher-eyebrow">STUDENT GUARDIAN</span>
+                            <span className="dragon-teacher-eyebrow">{seasonLabel || 'STUDENT GUARDIAN'}</span>
                             <h2 id="dragon-student-detail-title">{student.name}의 작가 수호룡</h2>
                             <p>{student.petData.name || '나의 드래곤'} · {student.hasSpecies ? species.name : '수호룡 선택 전'}</p>
                             <div className="dragon-teacher-modal__badges">
@@ -208,37 +208,61 @@ const StudentDetailModal = ({ student, onClose }) => {
     );
 };
 
-const HistoryPanel = ({ history }) => (
-    <div className="dragon-season-history">
-        {history.length === 0 ? (
-            <div className="dragon-teacher-empty">
-                <span>📚</span>
-                <strong>아직 보관한 시즌이 없습니다.</strong>
-                <p>현재 시즌을 마치면 학급의 성장 현황이 여기에 스냅샷으로 남습니다.</p>
-            </div>
-        ) : history.map((season) => {
-            const totals = season.snapshot?.totals || {};
-            const snapshotStudents = Array.isArray(season.snapshot?.students) ? season.snapshot.students : [];
-            const levelCounts = WRITER_LEVELS.map((level) => snapshotStudents.filter((student) => Number(student.writer_level) === level.level).length);
-            return (
-                <article className="dragon-season-history__card" key={season.id}>
-                    <div className="dragon-season-history__header">
-                        <div><span>SEASON {season.season_number}</span><h3>{season.name}</h3></div>
-                        <time>{formatDate(season.started_at)} ~ {formatDate(season.ended_at)}</time>
-                    </div>
-                    <div className="dragon-season-history__totals">
-                        <span><small>참여 학생</small><strong>{formatNumber(totals.student_count ?? snapshotStudents.length)}명</strong></span>
-                        <span><small>시즌 완성 글</small><strong>{formatNumber(totals.season_posts)}편</strong></span>
-                        <span><small>시즌 글자</small><strong>{formatNumber(totals.season_chars)}자</strong></span>
-                    </div>
-                    <div className="dragon-season-history__levels" aria-label="시즌 종료 시 성장 분포">
-                        {levelCounts.map((count, index) => <span key={index} title={`Lv.${index + 1} ${count}명`} className={count > 0 ? 'has-student' : ''}><i>{index + 1}</i><b>{count}</b></span>)}
-                    </div>
-                </article>
-            );
-        })}
-    </div>
-);
+const HistoryPanel = ({ history, onOpenStudent }) => {
+    const [expandedId, setExpandedId] = useState(null);
+
+    return (
+        <div className="dragon-season-history">
+            {history.length === 0 ? (
+                <div className="dragon-teacher-empty">
+                    <span>📚</span>
+                    <strong>아직 보관한 시즌이 없습니다.</strong>
+                    <p>현재 시즌을 마치면 학급의 성장 현황이 여기에 스냅샷으로 남습니다.</p>
+                </div>
+            ) : history.map((season) => {
+                const totals = season.snapshot?.totals || {};
+                const snapshotStudents = Array.isArray(season.snapshot?.students) ? season.snapshot.students : [];
+                const levelCounts = WRITER_LEVELS.map((level) => snapshotStudents.filter((student) => Number(student.writer_level) === level.level).length);
+                const isExpanded = expandedId === season.id;
+                const seasonLabel = `SEASON ${season.season_number} · ${formatDate(season.ended_at)} 종료 기준`;
+                return (
+                    <article className="dragon-season-history__card" key={season.id}>
+                        <div className="dragon-season-history__header">
+                            <div><span>SEASON {season.season_number}</span><h3>{season.name}</h3></div>
+                            <time>{formatDate(season.started_at)} ~ {formatDate(season.ended_at)}</time>
+                        </div>
+                        <div className="dragon-season-history__totals">
+                            <span><small>참여 학생</small><strong>{formatNumber(totals.student_count ?? snapshotStudents.length)}명</strong></span>
+                            <span><small>시즌 완성 글</small><strong>{formatNumber(totals.season_posts)}편</strong></span>
+                            <span><small>시즌 글자</small><strong>{formatNumber(totals.season_chars)}자</strong></span>
+                        </div>
+                        <div className="dragon-season-history__levels" aria-label="시즌 종료 시 성장 분포">
+                            {levelCounts.map((count, index) => <span key={index} title={`Lv.${index + 1} ${count}명`} className={count > 0 ? 'has-student' : ''}><i>{index + 1}</i><b>{count}</b></span>)}
+                        </div>
+                        {snapshotStudents.length > 0 && (
+                            <div className="dragon-season-history__students">
+                                <Button type="button" variant="ghost" size="sm" onClick={() => setExpandedId(isExpanded ? null : season.id)}>
+                                    {isExpanded ? '학생별 수호룡 접기 ▴' : `학생별 수호룡 보기 · ${snapshotStudents.length}명 ▾`}
+                                </Button>
+                                {isExpanded && (
+                                    <div className="dragon-student-grid">
+                                        {snapshotStudents.map(normalizeStudent).map((student) => (
+                                            <StudentCard
+                                                key={student.student_id}
+                                                student={student}
+                                                onOpen={(picked) => onOpenStudent(picked, seasonLabel)}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </article>
+                );
+            })}
+        </div>
+    );
+};
 
 const DragonTeacherManager = ({ activeClass }) => {
     const classId = activeClass?.id;
@@ -249,6 +273,7 @@ const DragonTeacherManager = ({ activeClass }) => {
     const [search, setSearch] = useState('');
     const [levelFilter, setLevelFilter] = useState('all');
     const [selectedStudent, setSelectedStudent] = useState(null);
+    const [selectedStudentSeasonLabel, setSelectedStudentSeasonLabel] = useState(null);
     const [seasonName, setSeasonName] = useState('');
     const [farewellDeadline, setFarewellDeadline] = useState('');
     const [closingSeason, setClosingSeason] = useState(false);
@@ -491,15 +516,30 @@ const DragonTeacherManager = ({ activeClass }) => {
                     </div>
                     {filteredStudents.length > 0 ? (
                         <div className="dragon-student-grid">
-                            {filteredStudents.map((student) => <StudentCard key={student.student_id} student={student} onOpen={setSelectedStudent} />)}
+                            {filteredStudents.map((student) => (
+                                <StudentCard
+                                    key={student.student_id}
+                                    student={student}
+                                    onOpen={(picked) => { setSelectedStudent(picked); setSelectedStudentSeasonLabel(null); }}
+                                />
+                            ))}
                         </div>
                     ) : <div className="dragon-teacher-empty"><strong>조건에 맞는 학생이 없습니다.</strong></div>}
                 </section>
             )}
 
-            {activeTab === 'history' && <HistoryPanel history={history} />}
+            {activeTab === 'history' && (
+                <HistoryPanel
+                    history={history}
+                    onOpenStudent={(picked, seasonLabel) => { setSelectedStudent(picked); setSelectedStudentSeasonLabel(seasonLabel); }}
+                />
+            )}
 
-            <StudentDetailModal student={selectedStudent} onClose={() => setSelectedStudent(null)} />
+            <StudentDetailModal
+                student={selectedStudent}
+                seasonLabel={selectedStudentSeasonLabel}
+                onClose={() => { setSelectedStudent(null); setSelectedStudentSeasonLabel(null); }}
+            />
         </div>
     );
 };
