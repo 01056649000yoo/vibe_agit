@@ -48,6 +48,37 @@ const drawRoundedRect = (context, x, y, width, height, radius) => {
     context.fill();
 };
 
+const FAREWELL_FONT_MIN = 20;
+const FAREWELL_FONT_MAX = 42;
+const FAREWELL_LINE_HEIGHT_RATIO = 1.55;
+
+/**
+ * 편지 글씨 크기를 학생이 쓴 분량에 맞춰 정한다.
+ *
+ * 예전에는 21px 고정이라 최소 분량(50자)만 써도 커다란 편지 상자에 글씨가 작게 떠 있었다.
+ * 큰 글씨부터 내려가며 목표 높이(상자의 약 2/3) 안에 들어오는 첫 크기를 고른다 — 짧은 편지는
+ * 최대 크기 근처로 커지고, 긴 편지는 필요한 만큼만 작아진다. 최소 크기에서도 넘치면 자르고 말줄임표를 붙인다.
+ */
+const fitFarewellLetterText = (context, text, { maxWidth, targetHeight, maxHeight }) => {
+    let best = null;
+    for (let fontSize = FAREWELL_FONT_MAX; fontSize >= FAREWELL_FONT_MIN; fontSize -= 1) {
+        context.font = `650 ${fontSize}px system-ui, sans-serif`;
+        const lines = wrapCanvasText(context, text, maxWidth);
+        const lineHeight = Math.round(fontSize * FAREWELL_LINE_HEIGHT_RATIO);
+        best = { fontSize, lineHeight, lines, totalHeight: lines.length * lineHeight };
+        if (best.totalHeight <= targetHeight) break;
+    }
+    if (best.totalHeight > maxHeight) {
+        const maxLines = Math.max(1, Math.floor(maxHeight / best.lineHeight) - 1);
+        best = {
+            ...best,
+            lines: [...best.lines.slice(0, maxLines), '…'],
+            totalHeight: (maxLines + 1) * best.lineHeight
+        };
+    }
+    return best;
+};
+
 const downloadFarewellCard = async ({ record, ownerName }) => {
     const snapshot = record?.snapshot || {};
     const petData = snapshot.pet_data || {};
@@ -87,42 +118,67 @@ const downloadFarewellCard = async ({ record, ownerName }) => {
     context.fillText(season.name || '수호룡과 함께한 학기', 525, 165);
     context.fillStyle = 'rgba(255,255,255,.72)';
     context.font = '700 20px system-ui, sans-serif';
-    context.fillText(`${ownerName || '나'}와 ${petData.name || '작가 수호룡'}의 성장 기록`, 525, 205);
+    // "와/과"는 이름의 받침 유무에 따라 갈리는데(예: "유지담과", "김단우와"), 이걸 문자열로만
+    // 판정하지 않는다. 가운뎃점으로 이어 문법 오류 없이 같은 뜻을 전달한다.
+    context.fillText(`${ownerName || '나'} · ${petData.name || '작가 수호룡'}의 성장 기록`, 525, 205);
 
+    // 수호룡을 더 크게 보여 달라는 요청으로 이전보다 카드·슬롯을 키웠다(510×360 → 650×470).
     context.fillStyle = 'rgba(255,255,255,.1)';
-    drawRoundedRect(context, 110, 240, 830, 455, 36);
+    drawRoundedRect(context, 70, 225, 910, 595, 36);
 
     const dragonImage = await loadImage(dragon.image);
-    const maxDragonWidth = 510;
-    const maxDragonHeight = 360;
+    const dragonSlotY = 250;
+    const dragonSlotHeight = 480;
+    const maxDragonWidth = 650;
+    const maxDragonHeight = 470;
     const ratio = Math.min(maxDragonWidth / dragonImage.naturalWidth, maxDragonHeight / dragonImage.naturalHeight);
     const dragonWidth = dragonImage.naturalWidth * ratio;
     const dragonHeight = dragonImage.naturalHeight * ratio;
-    context.drawImage(dragonImage, (1050 - dragonWidth) / 2, 265 + (340 - dragonHeight) / 2, dragonWidth, dragonHeight);
+    context.drawImage(
+        dragonImage,
+        (1050 - dragonWidth) / 2,
+        dragonSlotY + (dragonSlotHeight - dragonHeight) / 2,
+        dragonWidth,
+        dragonHeight
+    );
 
     context.fillStyle = 'rgba(10,16,30,.72)';
-    drawRoundedRect(context, 160, 610, 730, 58, 29);
+    drawRoundedRect(context, 125, 740, 800, 58, 29);
     context.fillStyle = '#FFFFFF';
     context.font = '850 21px system-ui, sans-serif';
-    context.fillText(`${writer.emoji} 작가 ${writerLevel}/10 ${writer.name}   ·   ${reader.emoji} 독자 ${readerLevel}/7 ${reader.name}`, 525, 647);
+    context.fillText(`${writer.emoji} 작가 ${writerLevel}/10 ${writer.name}   ·   ${reader.emoji} 독자 ${readerLevel}/7 ${reader.name}`, 525, 777);
 
+    const letterBox = { x: 90, y: 850, width: 870, height: 980 };
     context.textAlign = 'left';
     context.fillStyle = '#FFF9EB';
-    drawRoundedRect(context, 90, 730, 870, 1115, 32);
+    drawRoundedRect(context, letterBox.x, letterBox.y, letterBox.width, letterBox.height, 32);
     context.fillStyle = '#6B432A';
     context.font = '900 28px system-ui, sans-serif';
-    context.fillText(`${petData.name || '나의 수호룡'}에게`, 135, 790);
-    context.fillStyle = '#392C27';
-    context.font = '650 21px system-ui, sans-serif';
-    const lines = wrapCanvasText(context, record?.farewell_content || '', 780);
-    const lineHeight = 34;
-    lines.slice(0, 27).forEach((line, index) => context.fillText(line, 135, 840 + index * lineHeight));
-    if (lines.length > 27) context.fillText('…', 135, 840 + 27 * lineHeight);
+    context.fillText(`${petData.name || '나의 수호룡'}에게`, 135, letterBox.y + 60);
 
+    // 편지 글씨는 분량에 맞춰 자동으로 커지거나 작아진다(짧은 편지가 작게 떠 있던 문제 해결).
+    context.fillStyle = '#392C27';
+    const contentLeft = 135;
+    const contentMaxWidth = 780;
+    const contentTop = letterBox.y + 110;
+    const signatureReserve = 90;
+    const maxTextAreaHeight = letterBox.height - 110 - signatureReserve;
+    const { fontSize, lineHeight, lines, totalHeight } = fitFarewellLetterText(context, record?.farewell_content || '', {
+        maxWidth: contentMaxWidth,
+        targetHeight: maxTextAreaHeight * (2 / 3),
+        maxHeight: maxTextAreaHeight
+    });
+    context.font = `650 ${fontSize}px system-ui, sans-serif`;
+    lines.forEach((line, index) => context.fillText(line, contentLeft, contentTop + index * lineHeight));
+
+    // 서명은 편지 길이에 맞춰 마지막 줄 바로 아래에 둔다 — 글씨가 커져도 겹치지 않는다.
+    const signatureY = Math.min(contentTop + totalHeight + 44, letterBox.y + letterBox.height - 40);
     context.textAlign = 'right';
     context.fillStyle = '#815A3D';
     context.font = '800 20px system-ui, sans-serif';
-    context.fillText(`${ownerName || '나'}가`, 905, 1800);
+    // 받침 유무에 따라 "이"/"가" 를 가리지 않고도 자연스러운 편지 서명 표현을 쓴다.
+    context.fillText(`${ownerName || '나'} 올림`, letterBox.x + letterBox.width - 55, signatureY);
+
     context.textAlign = 'center';
     context.fillStyle = 'rgba(255,255,255,.65)';
     context.font = '700 17px system-ui, sans-serif';
