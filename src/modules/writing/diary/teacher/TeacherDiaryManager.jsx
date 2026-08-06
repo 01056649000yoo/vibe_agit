@@ -3,6 +3,7 @@ import Button from '../../../../components/common/Button';
 import Card from '../../../../components/common/Card';
 import Modal from '../../../../components/common/Modal';
 import { supabase } from '../../../../lib/supabaseClient';
+import { useDataExport } from '../../../../hooks/useDataExport';
 import WritingPolicySettings from '../../policy/WritingPolicySettings';
 import './teacherDiary.css';
 
@@ -46,6 +47,13 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
     // 매일 쓰는 `확인`을 기본으로 두고, 큰 설정 폼은 열 때만 마운트한다(독서록과 같은 구조).
     const [section, setSection] = useState('reviews');
     const [policyDirty, setPolicyDirty] = useState(false);
+    // 독서록과 같은 세 보기 — 매일 쓰는 `검토 대기`, 학생 한 명씩 모아 보는 `학생별`, 검색·필터의 `전체 기록`.
+    const [view, setView] = useState('queue');
+    const [students, setStudents] = useState([]);
+    const [studentQuery, setStudentQuery] = useState('');
+    const [openStudentId, setOpenStudentId] = useState(null);
+    const [studentDiaries, setStudentDiaries] = useState({});
+    const [exportingId, setExportingId] = useState(null);
     const [filter, setFilter] = useState('unreviewed');
     const [overview, setOverview] = useState({ total: 0, pending_count: 0, items: [] });
     const [loading, setLoading] = useState(true);
@@ -55,13 +63,21 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
     const [comment, setComment] = useState('');
     const [saving, setSaving] = useState(false);
 
+    const {
+        fetchWritingContentExportData,
+        exportWritingContentToExcel,
+        exportWritingContentToGoogleDoc,
+        authorizeGoogleExport
+    } = useDataExport(classId);
+
     const load = useCallback(async () => {
         if (!classId) return;
         setLoading(true);
         setErrorMessage('');
         const { data, error } = await supabase.rpc('get_teacher_diary_overview', {
             p_class_id: classId,
-            p_review_filter: filter,
+            p_review_filter: view === 'queue' ? 'unreviewed' : filter,
+            p_student_id: null,
             p_limit: PAGE_SIZE,
             p_offset: 0
         });
@@ -77,7 +93,7 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
             });
         }
         setLoading(false);
-    }, [classId, filter]);
+    }, [classId, filter, view]);
 
     useEffect(() => {
         if (!classId) return undefined;
@@ -116,6 +132,74 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
         }
         setSelected(null);
         load();
+    };
+
+    // 학생별 보기는 명단 요약만 먼저 받고, 한 학생을 펼칠 때 그 학생 일기를 지연 조회한다.
+    const loadStudents = useCallback(async () => {
+        if (!classId) return;
+        const { data, error } = await supabase.rpc('get_teacher_diary_student_summary', {
+            p_class_id: classId,
+            p_query: studentQuery.trim() || null
+        });
+        if (error) {
+            console.error('학생별 일기 요약 불러오기 실패:', error.message);
+            setStudents([]);
+            return;
+        }
+        setStudents(Array.isArray(data?.students) ? data.students : []);
+    }, [classId, studentQuery]);
+
+    useEffect(() => {
+        if (section !== 'reviews' || view !== 'students') return undefined;
+        const timerId = window.setTimeout(loadStudents, 250);
+        return () => window.clearTimeout(timerId);
+    }, [loadStudents, section, view]);
+
+    const toggleStudent = async (studentId) => {
+        if (openStudentId === studentId) {
+            setOpenStudentId(null);
+            return;
+        }
+        setOpenStudentId(studentId);
+        if (Reflect.get(studentDiaries, studentId)) return;
+        const { data, error } = await supabase.rpc('get_teacher_diary_overview', {
+            p_class_id: classId,
+            p_review_filter: 'all',
+            p_student_id: studentId,
+            p_limit: PAGE_SIZE,
+            p_offset: 0
+        });
+        if (error) {
+            console.error('학생 일기 목록 불러오기 실패:', error.message);
+            return;
+        }
+        setStudentDiaries((current) => ({ ...current, [studentId]: data?.items || [] }));
+    };
+
+    const exportStudent = async (student, format) => {
+        setExportingId(student.student_id);
+        try {
+            let googleAccessToken = null;
+            // 팝업 차단을 피하려면 데이터 조회보다 권한 창을 먼저 연다(독서록과 같은 순서).
+            if (format === 'googleDoc') googleAccessToken = await authorizeGoogleExport();
+
+            const data = await fetchWritingContentExportData('diary', student.student_id);
+            if (data.length === 0) {
+                alert('내보낼 일기가 없습니다.');
+                return;
+            }
+            const fileName = `${student.name}_일기_모음`;
+            if (format === 'excel') {
+                await exportWritingContentToExcel(data, fileName, 'diary');
+            } else {
+                await exportWritingContentToGoogleDoc(data, fileName, 'diary', true, googleAccessToken);
+            }
+        } catch (error) {
+            console.error('학생 일기 내보내기 실패:', error.message);
+            alert('일기 내보내기에 실패했습니다: ' + (error.message || '잠시 후 다시 시도해 주세요.'));
+        } finally {
+            setExportingId(null);
+        }
     };
 
     const changeSection = (nextSection) => {
@@ -176,6 +260,103 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                     />
                 </div>
             ) : (<>
+            <div className="teacher-diary__views" role="tablist" aria-label="일기 보기 방식">
+                {[
+                    { id: 'queue', label: '🕓 검토 대기' },
+                    { id: 'students', label: '🧑‍🎓 학생별' },
+                    { id: 'archive', label: '📚 전체 기록' }
+                ].map((item) => (
+                    <button
+                        key={item.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={view === item.id}
+                        className={view === item.id ? 'is-active' : ''}
+                        onClick={() => { setView(item.id); setOpenStudentId(null); }}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+
+            {view === 'students' ? (
+                <div className="teacher-diary__students">
+                    <input
+                        type="search"
+                        className="teacher-diary__student-search"
+                        value={studentQuery}
+                        onChange={(event) => setStudentQuery(event.target.value)}
+                        placeholder="학생 이름으로 찾기"
+                        aria-label="학생 이름으로 찾기"
+                    />
+                    {students.length === 0 ? (
+                        <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
+                            <p style={{ color: 'var(--ui-ink-muted)' }}>찾는 학생이 없어요.</p>
+                        </Card>
+                    ) : students.map((student) => (
+                        <div key={student.student_id} className="teacher-diary__student">
+                            <button
+                                type="button"
+                                className="teacher-diary__student-head"
+                                onClick={() => toggleStudent(student.student_id)}
+                                aria-expanded={openStudentId === student.student_id}
+                            >
+                                <strong>{student.name}</strong>
+                                <span>일기 {student.total}편</span>
+                                {student.unreviewed > 0 && <em>확인 대기 {student.unreviewed}</em>}
+                                <small>{student.last_diary_date ? `최근 ${formatDiaryDate(student.last_diary_date)}` : '아직 없음'}</small>
+                                <span aria-hidden="true">{openStudentId === student.student_id ? '▲' : '▼'}</span>
+                            </button>
+
+                            {openStudentId === student.student_id && (
+                                <div className="teacher-diary__student-body">
+                                    <div className="teacher-diary__student-actions">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={exportingId === student.student_id || student.total === 0}
+                                            onClick={() => exportStudent(student, 'excel')}
+                                        >
+                                            {exportingId === student.student_id ? '내보내는 중...' : '📊 엑셀로'}
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={exportingId === student.student_id || student.total === 0}
+                                            onClick={() => exportStudent(student, 'googleDoc')}
+                                        >
+                                            📄 구글 문서로
+                                        </Button>
+                                    </div>
+                                    <div className="teacher-diary__grid">
+                                        {(Reflect.get(studentDiaries, student.student_id) || []).map((item) => (
+                                            <button
+                                                key={item.post_id}
+                                                type="button"
+                                                className={`teacher-diary__card ${item.review_status ? 'is-reviewed' : ''}`}
+                                                onClick={() => openDiary(item)}
+                                            >
+                                                <span className="teacher-diary__card-top">
+                                                    <strong>{formatDiaryDate(item.diary_date)}</strong>
+                                                </span>
+                                                <span className="teacher-diary__card-title">{item.title || '제목 없는 일기'}</span>
+                                                <span className="teacher-diary__card-meta">
+                                                    <span>{item.char_count || 0}자</span>
+                                                    <span className={item.review_status ? 'is-done' : 'is-pending'}>
+                                                        {item.review_status === 'commented' ? '💬 한마디 남김'
+                                                            : item.review_status === 'checked' ? '✅ 확인함' : '확인 대기'}
+                                                    </span>
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            ) : (<>
+            {view === 'archive' && (
             <div className="teacher-diary__filters" role="tablist" aria-label="일기 확인 상태">
                 {FILTERS.map((item) => (
                     <button
@@ -190,6 +371,7 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                     </button>
                 ))}
             </div>
+            )}
 
             {errorMessage && (
                 <Card style={{ borderColor: '#FCA5A5', color: '#B91C1C' }}>{errorMessage}</Card>
@@ -230,6 +412,7 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                 </div>
             )}
 
+            </>)}
             </>)}
 
             <Modal

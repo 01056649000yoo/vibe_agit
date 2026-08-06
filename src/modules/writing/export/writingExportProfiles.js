@@ -67,9 +67,37 @@ const readingLogProfile = {
     }
 };
 
+const diaryProfile = {
+    id: 'diary',
+    label: '일기',
+    sheetName: '일기',
+    toExcelRow: (item) => ({
+        번호: item.student_code || '',
+        작성자: item.student_name || '이름 없음',
+        // 일기의 축은 날짜다. 공용 행의 `source_title` 자리에 일기 날짜가 들어온다.
+        일기날짜: item.source_title || formatDate(item.created_at),
+        일기제목: item.post_title || '제목 없음',
+        작성일: formatDate(item.created_at),
+        마지막수정일: formatDate(item.updated_at),
+        공개범위: visibilityLabel(item.visibility),
+        선생님확인: reviewLabel(item.review_status),
+        선생님한마디: item.teacher_comment || '',
+        내용: item.content || ''
+    }),
+    documentHeading: (item) => `${item.student_name || '이름 없음'} 학생의 일기`,
+    itemHeading: (item) => `${item.source_title || formatDate(item.created_at)} ${item.post_title || '제목 없는 일기'}`,
+    metadataLines: (item) => [
+        `일기 날짜: ${item.source_title || formatDate(item.created_at)}`,
+        `공개 범위: ${visibilityLabel(item.visibility)}`,
+        `선생님 확인: ${reviewLabel(item.review_status)}`,
+        item.teacher_comment ? `선생님 한마디: ${item.teacher_comment}` : null
+    ].filter(Boolean)
+};
+
 export const WRITING_EXPORT_PROFILES = Object.freeze({
     assignment: assignmentProfile,
-    reading_log: readingLogProfile
+    reading_log: readingLogProfile,
+    diary: diaryProfile
 });
 
 export const getWritingExportProfile = (contentType) => (
