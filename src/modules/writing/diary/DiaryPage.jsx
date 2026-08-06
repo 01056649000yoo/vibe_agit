@@ -22,6 +22,7 @@ import {
     measureWritingContent,
     normalizeWritingPolicy
 } from '../policy/writingPolicy';
+import MyPostEngagementPanel from '../engagement/MyPostEngagementPanel';
 import useDiaryDailyStatus from './useDiaryDailyStatus';
 import './diary.css';
 
@@ -358,6 +359,9 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
                     {form.visibility === 'class' ? '🔒 다시 나만 보기로' : '📔 친구에게도 보여주기'}
                 </button>
             </div>
+
+            {/* 이미 낸 일기에는 확인 상태·선생님 의견·친구 댓글을 함께 보여 준다(세 글쓰기 공용 부품). */}
+            {postId && <MyPostEngagementPanel postId={postId} />}
 
             <div className="diary-editor-actions">
                 <Button variant="outline" onClick={handleCancel} disabled={saving || savingDraft}>취소</Button>

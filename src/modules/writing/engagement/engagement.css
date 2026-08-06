@@ -1,0 +1,89 @@
+/* 내 글의 확인·선생님 의견·친구 댓글. 세 글쓰기 유형이 같은 모습을 쓴다. */
+
+.post-engagement {
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--ui-space-5, 16px);
+    gap: var(--ui-space-4, 12px);
+}
+.post-engagement.is-loading,
+.post-engagement.is-error {
+    padding: 14px 16px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md, 14px);
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink-muted);
+    font-size: .84rem;
+    font-weight: 700;
+}
+.post-engagement.is-error { border-color: #FCA5A5; color: #B91C1C; }
+
+.post-engagement__status {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md, 14px);
+    background: var(--ui-surface);
+    gap: 12px;
+}
+.post-engagement__status > span:first-child { font-size: 1.4rem; }
+.post-engagement__status > span:last-child { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.post-engagement__status strong { color: var(--ui-ink-strong); font-size: .9rem; font-weight: 900; }
+.post-engagement__status small { color: var(--ui-ink-muted); font-size: .76rem; }
+.post-engagement__status.is-approved { border-color: #BBF7D0; background: #F0FDF4; }
+.post-engagement__status.is-submitted { border-color: #BFDBFE; background: #EFF6FF; }
+.post-engagement__status.is-returned { border-color: #FED7AA; background: #FFF7ED; }
+
+.post-engagement__teacher {
+    padding: 14px 16px;
+    border: 1px solid #C7D2FE;
+    border-radius: var(--ui-radius-md, 14px);
+    background: #EEF2FF;
+}
+.post-engagement__teacher strong { display: block; margin-bottom: 6px; color: #3730A3; font-size: .85rem; font-weight: 900; }
+.post-engagement__teacher p { margin: 0; color: var(--ui-ink); font-size: .92rem; line-height: 1.75; white-space: pre-wrap; }
+
+.post-engagement__comments {
+    padding: 14px 16px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md, 14px);
+    background: var(--ui-surface);
+}
+.post-engagement__comments > strong {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    color: var(--ui-ink-strong);
+    gap: 8px;
+    font-size: .85rem;
+    font-weight: 900;
+}
+.post-engagement__comments > strong span {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink-muted);
+    font-size: .74rem;
+}
+.post-engagement__comments > strong em { margin-left: auto; color: var(--ui-ink-muted); font-size: .76rem; font-style: normal; }
+.post-engagement__empty { margin: 0; color: var(--ui-ink-subtle); font-size: .82rem; }
+.post-engagement__comments ul { display: flex; flex-direction: column; margin: 0; padding: 0; gap: 8px; list-style: none; }
+.post-engagement__comments li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: baseline;
+    padding: 9px 12px;
+    border-radius: var(--ui-radius-sm, 10px);
+    background: var(--ui-surface-muted);
+    gap: 10px;
+}
+.post-engagement__comments li.is-teacher { background: #EEF2FF; }
+.post-engagement__author { color: var(--ui-ink-strong); font-size: .8rem; font-weight: 900; white-space: nowrap; }
+.post-engagement__body { min-width: 0; color: var(--ui-ink); font-size: .86rem; line-height: 1.6; overflow-wrap: anywhere; }
+.post-engagement__when { color: var(--ui-ink-subtle); font-size: .72rem; white-space: nowrap; }
+
+@media (max-width: 560px) {
+    .post-engagement__comments li { grid-template-columns: 1fr; gap: 4px; }
+    .post-engagement__when { justify-self: end; }
+}

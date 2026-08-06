@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
+import MyPostEngagementPanel from '../../modules/writing/engagement/MyPostEngagementPanel';
 
 const formatDate = (value) => {
     if (!value) return '';
@@ -113,21 +114,8 @@ const MyShelfPostDetail = ({ summary, post, loading, errorMessage, onClose, onRe
                             {content || '아직 내용이 없어요.'}
                         </div>
 
-                        {post.ai_feedback && (
-                            <section style={{ marginTop: '28px', padding: '18px', borderRadius: '18px', background: '#FFF8E1', border: '1px solid #FFE082' }}>
-                                <strong style={{ display: 'block', marginBottom: '8px', color: '#E65100' }}>💡 선생님·AI 피드백</strong>
-                                <p style={{ margin: 0, color: '#5D4037', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{post.ai_feedback}</p>
-                            </section>
-                        )}
-
-                        {post.teacherReview && (
-                            <section style={{ marginTop: '16px', padding: '18px', borderRadius: '18px', background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
-                                <strong style={{ display: 'block', marginBottom: post.teacherReview.teacher_comment ? '8px' : 0, color: '#1D4ED8' }}>
-                                    {post.teacherReview.review_status === 'commented' ? '💬 선생님 한마디' : '✅ 선생님이 확인했어요'}
-                                </strong>
-                                {post.teacherReview.teacher_comment && <p style={{ margin: 0, color: '#334155', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{post.teacherReview.teacher_comment}</p>}
-                            </section>
-                        )}
+                        {/* 확인 상태·선생님 의견·친구 댓글은 세 글쓰기가 같은 공용 부품을 쓴다. */}
+                        <MyPostEngagementPanel postId={post.id} />
                     </article>
                 )}
             </div>

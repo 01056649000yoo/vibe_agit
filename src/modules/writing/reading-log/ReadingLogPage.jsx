@@ -26,6 +26,7 @@ import {
 import BookSearchPanel from './BookSearchPanel';
 import BookCover from './BookCover';
 import { applyBookSelection, autoTitleFor, hasCustomTitle, readingDraftHasContent } from './draftRules';
+import MyPostEngagementPanel from '../engagement/MyPostEngagementPanel';
 import useReadingLogDailyStatus from './useReadingLogDailyStatus';
 import './ReadingLogShelf.css';
 
@@ -125,7 +126,6 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
     const [loading, setLoading] = useState(Boolean(postId));
     const [saving, setSaving] = useState(false);
     const [completedPostAt, setCompletedPostAt] = useState(null);
-    const [teacherReview, setTeacherReview] = useState(null);
     const [writingPolicy, setWritingPolicy] = useState(READING_LOG_POLICY_DEFAULTS);
     const [policyLoading, setPolicyLoading] = useState(Boolean(studentClassId));
     const isMobile = useMediaQuery('(max-width: 768px)');
@@ -161,36 +161,21 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
         let active = true;
         const loadPost = async () => {
             setLoading(true);
-            const [postResult, reviewResult] = await Promise.all([
-                supabase
-                    .from('student_posts')
-                    .select('id, title, content, structured_content, visibility, updated_at')
-                    .eq('id', postId)
-                    .eq('student_id', studentSession.id)
-                    .eq('writing_context', 'self')
-                    .eq('self_writing_type', 'reading_log')
-                    .maybeSingle(),
-                supabase
-                    .from('reading_log_teacher_reviews')
-                    .select('teacher_comment, reviewed_at')
-                    .eq('post_id', postId)
-                    .eq('student_id', studentSession.id)
-                    .maybeSingle()
-            ]);
+            // 선생님 한마디는 공용 `MyPostEngagementPanel` 이 유형 무관 RPC 로 직접 받는다.
+            const { data, error } = await supabase
+                .from('student_posts')
+                .select('id, title, content, structured_content, visibility, updated_at')
+                .eq('id', postId)
+                .eq('student_id', studentSession.id)
+                .eq('writing_context', 'self')
+                .eq('self_writing_type', 'reading_log')
+                .maybeSingle();
 
             if (!active) return;
-            const { data, error } = postResult;
             if (error || !data) {
                 alert('독서록을 불러오지 못했습니다.');
                 onCancel();
                 return;
-            }
-
-            if (reviewResult.error) {
-                console.error('독서록 선생님 한마디 불러오기 실패:', reviewResult.error.message);
-                setTeacherReview(null);
-            } else {
-                setTeacherReview(reviewResult.data || null);
             }
 
             const loadedBook = bookFromStructuredContent(data.structured_content || {});
@@ -539,20 +524,8 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
                 </span>
             </label>
 
-            {teacherReview?.teacher_comment?.trim() && (
-                <aside className="reading-editor-teacher-comment" aria-label="선생님 한마디">
-                    <span className="reading-editor-teacher-comment__icon" aria-hidden="true">💬</span>
-                    <div>
-                        <strong>선생님 한마디</strong>
-                        <p>{teacherReview.teacher_comment}</p>
-                        <small>
-                            {teacherReview.reviewed_at
-                                ? `${formatDate(teacherReview.reviewed_at)}에 남긴 한마디 · 글을 다듬을 때 참고해 보세요.`
-                                : '글을 다듬을 때 참고해 보세요.'}
-                        </small>
-                    </div>
-                </aside>
-            )}
+            {/* 확인 상태·선생님 의견·친구 댓글은 세 글쓰기가 같은 공용 부품을 쓴다. */}
+            {postId && <MyPostEngagementPanel postId={postId} />}
 
             <div className="writing-action-bar writing-action-bar--reading">
                 <Button type="button" variant="ghost" size="lg" onClick={handleCancel} disabled={saving || savingDraft}>취소</Button>
