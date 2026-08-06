@@ -9,17 +9,36 @@ import './teacherComments.css';
  *
  * 만든 이유: AI 검사가 부적절로 판정하면 예전에는 댓글을 **지웠다.** 그래서 학생은 애써 쓴 글을 잃고,
  * 교사는 무엇이 막혔는지 모르고, 오탐률도 잴 수 없었다. 이제 `blocked` 로 남으므로
- * 선생님이 보고 `이건 괜찮아요` 를 눌러 풀어 줄 수 있다.
+ * 선생님이 보고 풀어 주거나 지울 수 있다.
  *
- * `확인 대기(pending)` 는 AI 판정이 끝나지 않은 댓글이다. 아무에게도 안 보이는데 학생은 썼다고
- * 생각하므로, 여기서 보이는 것 자체가 중요하다.
+ * 탭을 **성격대로** 둘로 나눴다. 둘을 같은 모양으로 두면 8,000건짜리 기록에 처리할 4건이 묻힌다.
+ *   * `처리할 것` — 막힘 + 대기. 교사가 봐야 할 것이라 **기간을 걸지 않고 전부** 보여 준다. 비우는 게 목표다.
+ *   * `기록`     — 이미 보이는 댓글. 스크롤이 아니라 **검색으로 찾는다.** 기본은 최근 7일만.
  */
 
-const FILTERS = [
-    { id: 'blocked', label: '🛡️ AI가 막음', hint: '억울하게 막힌 것이 있으면 풀어 주세요' },
-    { id: 'pending', label: '🕓 확인 대기', hint: 'AI 판정이 끝나지 않아 아무에게도 안 보이는 댓글' },
-    { id: 'approved', label: '✅ 보이는 댓글', hint: '친구들에게 보이고 있는 댓글' },
-    { id: 'all', label: '전체', hint: '' }
+const VIEWS = [
+    {
+        id: 'todo',
+        label: '🛠️ 처리할 것',
+        countKey: 'todo',
+        hint: 'AI가 막았거나 판정이 끝나지 않아 친구에게 보이지 않는 댓글이에요. 확인해서 풀어 주거나 지워 주세요.',
+        empty: '처리할 댓글이 없어요. 모두 확인하셨습니다. ✅',
+        usePeriod: false
+    },
+    {
+        id: 'approved',
+        label: '📚 기록',
+        countKey: 'approved',
+        hint: '친구들에게 보이고 있는 댓글이에요. 기간을 좁히거나 이름·내용으로 찾아보세요.',
+        empty: '이 기간에 남긴 댓글이 없어요.',
+        usePeriod: true
+    }
+];
+
+const PERIODS = [
+    { id: 7, label: '최근 7일' },
+    { id: 30, label: '최근 30일' },
+    { id: 0, label: '전체' }
 ];
 
 const PAGE_SIZE = 50;
@@ -30,37 +49,46 @@ const formatWhen = (value) => (value
 
 const TeacherCommentManager = ({ activeClass }) => {
     const classId = activeClass?.id || null;
-    const [filter, setFilter] = useState('blocked');
+    const [view, setView] = useState('todo');
+    const [days, setDays] = useState(7);
     const [query, setQuery] = useState('');
-    const [data, setData] = useState({ total: 0, counts: {}, items: [] });
+    const [counts, setCounts] = useState({});
+    const [items, setItems] = useState([]);
+    const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [busyId, setBusyId] = useState(null);
+
+    const activeView = VIEWS.find((item) => item.id === view) || VIEWS[0];
+
+    const fetchPage = useCallback(async (offset) => supabase.rpc('get_teacher_class_comments', {
+        p_class_id: classId,
+        p_status: view,
+        p_query: query.trim() || null,
+        p_limit: PAGE_SIZE,
+        p_offset: offset,
+        // `처리할 것` 은 오래된 것도 반드시 보여야 하므로 기간을 걸지 않는다.
+        p_days: view === 'todo' ? null : (days || null)
+    }), [classId, days, query, view]);
 
     const load = useCallback(async () => {
         if (!classId) return;
         setLoading(true);
         setErrorMessage('');
-        const { data: result, error } = await supabase.rpc('get_teacher_class_comments', {
-            p_class_id: classId,
-            p_status: filter,
-            p_query: query.trim() || null,
-            p_limit: PAGE_SIZE,
-            p_offset: 0
-        });
+        const { data, error } = await fetchPage(0);
         if (error) {
             console.error('학생 댓글 목록 불러오기 실패:', error.message);
             setErrorMessage('댓글 목록을 불러오지 못했습니다.');
-            setData({ total: 0, counts: {}, items: [] });
+            setItems([]);
+            setTotal(0);
         } else {
-            setData({
-                total: Number(result?.total || 0),
-                counts: result?.counts || {},
-                items: Array.isArray(result?.items) ? result.items : []
-            });
+            setCounts(data?.counts || {});
+            setItems(Array.isArray(data?.items) ? data.items : []);
+            setTotal(Number(data?.total || 0));
         }
         setLoading(false);
-    }, [classId, filter, query]);
+    }, [classId, fetchPage]);
 
     useEffect(() => {
         if (!classId) return undefined;
@@ -68,31 +96,54 @@ const TeacherCommentManager = ({ activeClass }) => {
         return () => window.clearTimeout(timerId);
     }, [classId, load]);
 
+    const loadMore = async () => {
+        setLoadingMore(true);
+        const { data, error } = await fetchPage(items.length);
+        setLoadingMore(false);
+        if (error) {
+            console.error('댓글 더 보기 실패:', error.message);
+            return;
+        }
+        setItems((current) => [...current, ...(data?.items || [])]);
+    };
+
     const changeStatus = async (comment, nextStatus) => {
         setBusyId(comment.id);
-        const { data: result, error } = await supabase.rpc('set_teacher_comment_status', {
+        const { data, error } = await supabase.rpc('set_teacher_comment_status', {
             p_comment_id: comment.id,
             p_status: nextStatus,
             p_reason: null
         });
         setBusyId(null);
-        if (error || !result?.success) {
-            console.error('댓글 상태 변경 실패:', error?.message || result?.error);
+        if (error || !data?.success) {
+            console.error('댓글 상태 변경 실패:', error?.message || data?.error);
             alert('댓글 상태를 바꾸지 못했습니다.');
             return;
         }
         load();
     };
 
-    const activeFilter = FILTERS.find((item) => item.id === filter);
-    const count = (key) => Number(Reflect.get(data.counts || {}, key) ?? 0);
+    const removeComment = async (comment) => {
+        if (!window.confirm(`${comment.student_name} 학생의 댓글을 지울까요?\n「${comment.content.slice(0, 30)}${comment.content.length > 30 ? '…' : ''}」\n지우면 되돌릴 수 없어요.`)) return;
+        setBusyId(comment.id);
+        const { data, error } = await supabase.rpc('delete_teacher_class_comment', { p_comment_id: comment.id });
+        setBusyId(null);
+        if (error || !data?.success) {
+            console.error('댓글 삭제 실패:', error?.message || data?.error);
+            alert('댓글을 지우지 못했습니다.');
+            return;
+        }
+        load();
+    };
+
+    const count = (key) => Number(Reflect.get(counts || {}, key) ?? 0);
 
     return (
         <div className="teacher-comments">
             <header className="teacher-comments__header">
                 <div>
                     <h2>🗨️ 학생 댓글 관리</h2>
-                    <p>친구 글에 남긴 댓글을 한자리에서 보고, AI가 막은 것을 풀어 줄 수 있어요.</p>
+                    <p>친구 글에 남긴 댓글을 한자리에서 보고, AI가 막은 것을 풀어 주거나 지울 수 있어요.</p>
                 </div>
                 <input
                     type="search"
@@ -103,91 +154,118 @@ const TeacherCommentManager = ({ activeClass }) => {
                 />
             </header>
 
-            <div className="teacher-comments__filters" role="tablist" aria-label="댓글 상태">
-                {FILTERS.map((item) => (
+            <div className="teacher-comments__filters" role="tablist" aria-label="댓글 보기">
+                {VIEWS.map((item) => (
                     <button
                         key={item.id}
                         type="button"
                         role="tab"
-                        aria-selected={filter === item.id}
-                        className={filter === item.id ? 'is-active' : ''}
-                        onClick={() => setFilter(item.id)}
+                        aria-selected={view === item.id}
+                        className={view === item.id ? 'is-active' : ''}
+                        onClick={() => setView(item.id)}
                     >
                         {item.label}
-                        {item.id !== 'all' && count(item.id) > 0 && <strong>{count(item.id)}</strong>}
+                        {count(item.countKey) > 0 && <strong>{count(item.countKey)}</strong>}
                     </button>
                 ))}
             </div>
 
-            {activeFilter?.hint && <p className="teacher-comments__hint">{activeFilter.hint}</p>}
+            <p className="teacher-comments__hint">{activeView.hint}</p>
+
+            {activeView.usePeriod && (
+                <div className="teacher-comments__periods" role="group" aria-label="기간">
+                    {PERIODS.map((period) => (
+                        <button
+                            key={period.id}
+                            type="button"
+                            className={days === period.id ? 'is-active' : ''}
+                            onClick={() => setDays(period.id)}
+                        >
+                            {period.label}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {errorMessage && <Card style={{ borderColor: '#FCA5A5', color: '#B91C1C' }}>{errorMessage}</Card>}
 
             {loading ? (
                 <Card><p style={{ textAlign: 'center', padding: '42px' }}>학생 댓글을 모으는 중... 🗨️</p></Card>
-            ) : data.items.length === 0 ? (
+            ) : items.length === 0 ? (
                 <Card style={{ textAlign: 'center', padding: '56px 24px' }}>
-                    <div style={{ fontSize: '3rem' }}>🗨️</div>
-                    <p style={{ color: 'var(--ui-ink-muted)' }}>
-                        {filter === 'blocked' ? 'AI가 막은 댓글이 없어요.'
-                            : filter === 'pending' ? '확인을 기다리는 댓글이 없어요.'
-                                : '아직 댓글이 없어요.'}
-                    </p>
+                    <div style={{ fontSize: '3rem' }}>{view === 'todo' ? '✅' : '🗨️'}</div>
+                    <p style={{ color: 'var(--ui-ink-muted)' }}>{activeView.empty}</p>
                 </Card>
             ) : (
-                <ul className="teacher-comments__list">
-                    {data.items.map((comment) => (
-                        <li key={comment.id} className={`teacher-comments__item is-${comment.status}`}>
-                            <div className="teacher-comments__meta">
-                                <strong>{comment.student_name}</strong>
-                                <span>
-                                    {comment.post_owner_name
-                                        ? `${comment.post_owner_name}의 「${comment.post_title || '제목 없는 글'}」에`
-                                        : `「${comment.post_title || '제목 없는 글'}」에`}
-                                </span>
-                                <small>{formatWhen(comment.created_at)}</small>
-                            </div>
+                <>
+                    <ul className="teacher-comments__list">
+                        {items.map((comment) => (
+                            <li key={comment.id} className={`teacher-comments__item is-${comment.status}`}>
+                                <div className="teacher-comments__meta">
+                                    <strong>{comment.student_name}</strong>
+                                    <span>
+                                        {comment.post_owner_name
+                                            ? `${comment.post_owner_name}의 「${comment.post_title || '제목 없는 글'}」에`
+                                            : `「${comment.post_title || '제목 없는 글'}」에`}
+                                    </span>
+                                    <small>{formatWhen(comment.created_at)}</small>
+                                </div>
 
-                            <p className="teacher-comments__content">{comment.content}</p>
+                                <p className="teacher-comments__content">{comment.content}</p>
 
-                            {comment.moderation_reason && (
-                                <p className="teacher-comments__reason">
-                                    <span>AI 판단</span> {comment.moderation_reason}
-                                </p>
-                            )}
-
-                            <div className="teacher-comments__actions">
-                                <span className={`teacher-comments__status is-${comment.status}`}>
-                                    {comment.status === 'blocked' ? '🛡️ 막힘 (친구에게 안 보임)'
-                                        : comment.status === 'pending' ? '🕓 확인 대기 (친구에게 안 보임)'
-                                            : '✅ 보이는 중'}
-                                </span>
-                                {comment.status !== 'approved' ? (
-                                    <Button
-                                        size="sm"
-                                        disabled={busyId === comment.id}
-                                        onClick={() => changeStatus(comment, 'approved')}
-                                    >
-                                        {busyId === comment.id ? '바꾸는 중...' : '이건 괜찮아요 · 보여주기'}
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        disabled={busyId === comment.id}
-                                        onClick={() => changeStatus(comment, 'blocked')}
-                                    >
-                                        가리기
-                                    </Button>
+                                {comment.moderation_reason && (
+                                    <p className="teacher-comments__reason">
+                                        <span>AI 판단</span> {comment.moderation_reason}
+                                    </p>
                                 )}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            )}
 
-            {data.total > data.items.length && (
-                <p className="teacher-comments__more">{data.total}건 중 {data.items.length}건을 보고 있어요.</p>
+                                <div className="teacher-comments__actions">
+                                    <span className={`teacher-comments__status is-${comment.status}`}>
+                                        {comment.status === 'blocked' ? '🛡️ 막힘 (친구에게 안 보임)'
+                                            : comment.status === 'pending' ? '🕓 확인 대기 (친구에게 안 보임)'
+                                                : '✅ 보이는 중'}
+                                    </span>
+                                    <span className="teacher-comments__buttons">
+                                        {comment.status !== 'approved' ? (
+                                            <Button
+                                                size="sm"
+                                                disabled={busyId === comment.id}
+                                                onClick={() => changeStatus(comment, 'approved')}
+                                            >
+                                                {busyId === comment.id ? '처리 중...' : '이건 괜찮아요'}
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={busyId === comment.id}
+                                                onClick={() => changeStatus(comment, 'blocked')}
+                                            >
+                                                가리기
+                                            </Button>
+                                        )}
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
+                                            disabled={busyId === comment.id}
+                                            onClick={() => removeComment(comment)}
+                                        >
+                                            삭제
+                                        </Button>
+                                    </span>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+
+                    {items.length < total && (
+                        <div className="teacher-comments__more">
+                            <Button variant="outline" onClick={loadMore} disabled={loadingMore}>
+                                {loadingMore ? '불러오는 중...' : `더 보기 (${items.length} / ${total})`}
+                            </Button>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

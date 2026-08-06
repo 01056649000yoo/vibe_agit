@@ -96,7 +96,24 @@
 .teacher-comments__status.is-blocked { color: #B91C1C; }
 .teacher-comments__status.is-pending { color: #B45309; }
 .teacher-comments__status.is-approved { color: #15803D; }
-.teacher-comments__more { margin: 0; color: var(--ui-ink-subtle); font-size: .8rem; text-align: center; }
+/* 기간 좁히기 — `기록` 탭에서만 쓴다. 기본 7일이라 창이 길어지지 않는다. */
+.teacher-comments__periods { display: flex; flex-wrap: wrap; gap: 6px; }
+.teacher-comments__periods button {
+    min-height: 38px;
+    padding: 6px 14px;
+    border: 1px solid var(--ui-border);
+    border-radius: 999px;
+    background: var(--ui-surface);
+    color: var(--ui-ink-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 800;
+}
+.teacher-comments__periods button.is-active { border-color: #A5B4FC; background: #EEF2FF; color: #3730A3; }
+
+.teacher-comments__buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.teacher-comments__more { display: flex; justify-content: center; padding-top: 4px; }
 
 @media (max-width: 640px) {
     .teacher-comments__header input { width: 100%; min-width: 0; }
