@@ -66,6 +66,23 @@ const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, i
                             {commentAuthorName}
                         </span>
                     )}
+                    {/*
+                      * 내 댓글이 아직 친구에게 안 보이는 상태면 **본인에게만** 사실대로 알린다.
+                      * 예전에는 표시가 없어서, 막히거나 판정이 안 끝난 댓글도 완전히 올라간 것처럼 보였다.
+                      * 학생은 `올라갔다`고 믿는데 친구는 못 보는 상태가 몇 달씩 이어졌다.
+                      * 혼내는 말투를 피하고 사실만 적는다.
+                      */}
+                    {isMe && !comment.isOptimistic && comment.status && comment.status !== 'approved' && (
+                        <span style={{
+                            fontSize: '0.72rem', fontWeight: '800', padding: '2px 8px', borderRadius: '999px',
+                            background: comment.status === 'blocked' ? '#FEF3C7' : '#F1F5F9',
+                            color: comment.status === 'blocked' ? '#B45309' : '#64748B'
+                        }}>
+                            {comment.status === 'blocked'
+                                ? '🛡️ 선생님 확인을 기다려요 · 친구에게는 아직 안 보여요'
+                                : '🕓 확인 중이에요'}
+                        </span>
+                    )}
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                     {(isMe && !isTeacher) && !isConfirming && (

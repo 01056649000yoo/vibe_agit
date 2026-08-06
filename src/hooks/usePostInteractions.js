@@ -107,6 +107,24 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                     }))
                     .filter(shouldShowComment)
             );
+
+            // 탭을 닫거나 통신이 끊겨 판정이 끝나지 않은 **내** 댓글을 다시 물어본다.
+            // 이게 없으면 그 댓글은 영영 `pending` 으로 남아 친구에게 보이지 않는다
+            // (운영에서 112건이 3~4개월 묶여 있었다). 한 번에 3건까지만 처리해 몰아치지 않게 한다.
+            normalizedComments
+                .filter((comment) => comment.status === 'pending'
+                    && comment.student_id === latestContextRef.current.studentId)
+                .slice(0, 3)
+                .forEach((comment) => {
+                    checkContentSafety(comment.content).then((safety) => {
+                        if (safety.unchecked) return;
+                        return supabase.rpc('record_comment_ai_review', {
+                            p_comment_id: comment.id,
+                            p_is_appropriate: safety.is_appropriate,
+                            p_reason: safety.reason || null
+                        });
+                    }).catch(() => {});
+                });
         } catch (err) {
             console.error('[usePostInteractions] ??? ?? ??:', err.message);
         } finally {

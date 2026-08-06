@@ -3,9 +3,25 @@ import { callAI } from '../lib/openai';
 /**
  * AI를 사용하여 텍스트의 적절성을 분석합니다. ✨
  */
-export const checkContentSafety = async (content) => {
+const wait = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+
+/**
+ * 한 번 실패하면 그 댓글은 영영 `pending` 에 갇힌다(운영에서 112건이 그렇게 3~4개월 묶여 있었다).
+ * 429·순간 오류는 잠깐 쉬고 다시 물어보면 대개 풀린다. 2회까지 다시 시도한다.
+ */
+export const checkContentSafety = async (content, { retries = 2 } = {}) => {
     if (!content || content.trim().length < 2) return { is_appropriate: true, reason: '' };
 
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+        const result = await runSafetyCheck(content);
+        if (result.ok) return result.value;
+        if (attempt < retries) await wait(600 * (attempt + 1));
+    }
+    // 끝내 실패하면 막지 않는다. 1단계 로컬 필터가 있고, 통과시키는 편이 학생에게 덜 억울하다.
+    return { is_appropriate: true, reason: '', unchecked: true };
+};
+
+const runSafetyCheck = async (content) => {
     try {
         // [수정] 이제 서버(Edge Function)에서 SAFETY_CHECK 타입을 감지하여 프롬프트를 강제합니다.
         // 클라이언트에서는 분석할 내용만 content에 담아 보냅니다.
@@ -14,12 +30,11 @@ export const checkContentSafety = async (content) => {
         // JSON 부분만 추출 (서버 응답이 텍스트 형태일 경우 대비)
         const jsonMatch = responseText.match(/\{.*\}/s);
         if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]);
+            return { ok: true, value: JSON.parse(jsonMatch[0]) };
         }
-        return { is_appropriate: true, reason: '' };
+        return { ok: true, value: { is_appropriate: true, reason: '' } };
     } catch (err) {
         console.error('AI Safety Check Error:', err);
-        // 오류 발생 시에는 시스템 중단 방지를 위해 통과시키되, 1단계 로컬 필터가 있으므로 안전합니다.
-        return { is_appropriate: true, reason: '' };
+        return { ok: false };
     }
 };
