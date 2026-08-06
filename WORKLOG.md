@@ -41,6 +41,8 @@
 - **남은 것 / 다음**: `postgres_changes`→Broadcast 전환은 지금 당장 급하지 않아 `ROADMAP.md` Stage 3c
   10번 항목("규모 커지면")으로 남겨뒀다. 학기 시작해 실사용이 늘면 `agit-realtime` 메모리·CPU 사용률을
   한 번 재보고 이 예약값(512m/1g)이 충분한지 재확인할 것.
+- **배포(git 밖)**: GitHub Actions 큐가 계속 막혀 있어(같은 "Partial System Outage") 맥미니에서 직접
+  빌드·재기동으로 배포하고 HTTP 200 확인.
 
 ## 2026-08-07 — Stage 3 계획을 하나로 합침 (원래 계획 + 진행 현황 + 오늘 분석) (Claude)
 - **한 일**: 바로 아래 항목(Stage 2 통합 전 코드 분석)을 급하게 `3c-1`로 따로 추가해뒀더니, 원래
