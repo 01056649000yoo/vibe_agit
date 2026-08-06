@@ -41,6 +41,13 @@
   현재 스냅샷엔 작별 편지 **본문**(`farewell_content`)은 포함돼 있지 않다 — 편지 글까지 지난 시즌
   탭에서 다시 읽고 싶다면 `get_teacher_dragon_growth_dashboard()`의 history 조회에 `dragon_season_students`
   본문을 합치는 마이그레이션이 추가로 필요하다(요청 시 진행).
+- **배포(git 밖)**: 커밋(`6f8ba98`) 푸시 직후 GitHub 자체가 다시 장애(이번엔 "Partial System Outage",
+  이전 "Minor"보다 심각)였고 같은 `deploy-main` 큐에 이전 커밋(`395c3f9`)의 잡이 20분 넘게 `queued`로
+  막혀 있었다. 오늘 이미 승인받은 절차대로 `.github/workflows/deploy.yml`과 같은 `docker build`→
+  `docker rm -f agit-app && docker run`→`curl` 검증을 맥미니에서 직접 실행해 배포했다. 배포된 번들에서
+  `학생별 수호룡 보기` 문자열 확인 완료(`agit-app` 컨테이너 `/srv/assets/TeacherManager-*.js`).
+  GitHub Actions 큐에는 여전히 오래된 `queued`/`pending` 잡이 남아 있으나 실배포와는 무관하다 —
+  다음 세션에서 GitHub 상태가 정상화되면 `gh run list`로 남은 큐가 자동 정리되는지만 확인하면 된다.
 
 ## 2026-08-07 — "시즌 종료 후 드래곤이 1레벨로 안 돌아감" 점검 → 버그 아님 (Claude)
 - **한 일**: 사용자가 `테스트` 학급에서 시즌 종료 후 드래곤이 1레벨로 안 돌아간다고 신고해 점검했다.
