@@ -155,3 +155,44 @@
     .diary-editor-actions { flex-direction: column-reverse; }
     .diary-editor-actions > * { width: 100%; }
 }
+
+/* 선생님 한마디는 카드에서 표시만 하고, 누르면 그 글만 모달로 읽는다.
+   일기 본문까지 다시 열 필요가 없다. */
+.diary-card__teacher-comment {
+    align-self: flex-start;
+    max-width: 100%;
+    padding: 5px 10px;
+    overflow: hidden;
+    border: 1px solid #C7D2FE;
+    border-radius: var(--ui-radius-xs, 8px);
+    background: #EEF2FF;
+    color: #4338CA;
+    cursor: pointer;
+    font: inherit;
+    font-size: .72rem;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.diary-card__teacher-comment:hover { background: #E0E7FF; }
+.diary-card__teacher-checked {
+    align-self: flex-start;
+    color: #15803D;
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+.diary-comment-modal { display: flex; flex-direction: column; gap: 10px; }
+.diary-comment-modal__about { margin: 0; color: var(--ui-ink-muted); font-size: .8rem; font-weight: 800; }
+.diary-comment-modal__body {
+    margin: 0;
+    padding: 16px;
+    border: 1px solid #C7D2FE;
+    border-radius: var(--ui-radius-md, 14px);
+    background: #EEF2FF;
+    color: var(--ui-ink);
+    font-size: .95rem;
+    line-height: 1.75;
+    white-space: pre-wrap;
+}
+.diary-comment-modal__when { margin: 0; color: var(--ui-ink-subtle); font-size: .76rem; }

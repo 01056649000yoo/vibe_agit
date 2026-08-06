@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
+import Modal from '../../../components/common/Modal';
 import WritingEditorFields from '../../../components/writing/WritingEditorFields';
 import {
     WritingNotice,
@@ -375,6 +376,8 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
     const classId = studentSession?.classId || studentSession?.class_id || null;
     const studentId = studentSession?.id || null;
     const [diaries, setDiaries] = useState([]);
+    const [reviews, setReviews] = useState({});
+    const [selectedComment, setSelectedComment] = useState(null);
     const [loading, setLoading] = useState(true);
     const dailyStatus = useDiaryDailyStatus(studentId);
     const mode = params.mode === 'editor' ? 'editor' : 'list';
@@ -383,20 +386,35 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
     const load = useCallback(async () => {
         if (!classId || !studentId) return;
         setLoading(true);
-        const { data, error } = await supabase
-            .from('student_posts')
-            .select('id, title, char_count, visibility, created_at, updated_at, structured_content')
-            .eq('class_id', classId)
-            .eq('student_id', studentId)
-            .eq('writing_context', 'self')
-            .eq('self_writing_type', 'diary')
-            .order('created_at', { ascending: false })
-            .limit(100);
-        if (error) {
-            console.error('내 일기 목록 불러오기 실패:', error.message);
+        // 선생님 한마디는 본인 것만 읽히는 정책이 있어 목록과 함께 받아 카드에 표시한다.
+        const [postsResult, reviewsResult] = await Promise.all([
+            supabase
+                .from('student_posts')
+                .select('id, title, char_count, visibility, created_at, updated_at, structured_content')
+                .eq('class_id', classId)
+                .eq('student_id', studentId)
+                .eq('writing_context', 'self')
+                .eq('self_writing_type', 'diary')
+                .order('created_at', { ascending: false })
+                .limit(100),
+            supabase
+                .from('reading_log_teacher_reviews')
+                .select('post_id, review_status, teacher_comment, reviewed_at')
+                .eq('class_id', classId)
+                .eq('student_id', studentId)
+        ]);
+
+        if (postsResult.error) {
+            console.error('내 일기 목록 불러오기 실패:', postsResult.error.message);
             setDiaries([]);
         } else {
-            setDiaries(data || []);
+            setDiaries(postsResult.data || []);
+        }
+        if (reviewsResult.error) {
+            console.error('선생님 한마디 불러오기 실패:', reviewsResult.error.message);
+            setReviews({});
+        } else {
+            setReviews(Object.fromEntries((reviewsResult.data || []).map((row) => [row.post_id, row])));
         }
         setLoading(false);
     }, [classId, studentId]);
@@ -506,6 +524,26 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                             </div>
                             <h3>{entry.title || '제목 없는 일기'}</h3>
                             <p className="diary-card__meta">{entry.char_count || 0}자</p>
+                            {(() => {
+                                const review = Reflect.get(reviews, entry.id);
+                                if (!review) return null;
+                                // 한마디가 있으면 눌러서 그 글만 본다. 확인만 한 경우는 표시만 남긴다.
+                                return review.teacher_comment?.trim() ? (
+                                    <button
+                                        type="button"
+                                        className="diary-card__teacher-comment"
+                                        onClick={() => setSelectedComment({
+                                            ...review,
+                                            diaryDate: entry.structured_content?.diaryDate,
+                                            title: entry.title
+                                        })}
+                                    >
+                                        💬 선생님 한마디 있음
+                                    </button>
+                                ) : (
+                                    <span className="diary-card__teacher-checked">✅ 선생님 확인</span>
+                                );
+                            })()}
                             <div className="diary-card__actions">
                                 <Button
                                     size="sm"
@@ -522,6 +560,27 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                     ))}
                 </div>
             )}
+
+            <Modal
+                isOpen={Boolean(selectedComment)}
+                onClose={() => setSelectedComment(null)}
+                title="💬 선생님 한마디"
+                maxWidth="560px"
+            >
+                {selectedComment && (
+                    <div className="diary-comment-modal">
+                        <p className="diary-comment-modal__about">
+                            {formatDiaryDate(selectedComment.diaryDate)} · {selectedComment.title || '제목 없는 일기'}
+                        </p>
+                        <p className="diary-comment-modal__body">{selectedComment.teacher_comment}</p>
+                        {selectedComment.reviewed_at && (
+                            <p className="diary-comment-modal__when">
+                                {formatDiaryDate(String(selectedComment.reviewed_at).slice(0, 10))}에 남겨 주셨어요.
+                            </p>
+                        )}
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };
