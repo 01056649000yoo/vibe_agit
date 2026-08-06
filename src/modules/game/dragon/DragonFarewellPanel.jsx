@@ -177,7 +177,7 @@ const downloadFarewellCard = async ({ record, ownerName }) => {
     context.fillStyle = '#815A3D';
     context.font = '800 20px system-ui, sans-serif';
     // 받침 유무에 따라 "이"/"가" 를 가리지 않고도 자연스러운 편지 서명 표현을 쓴다.
-    context.fillText(`${ownerName || '나'} 올림`, letterBox.x + letterBox.width - 55, signatureY);
+    context.fillText(`${ownerName || '나'} 씀`, letterBox.x + letterBox.width - 55, signatureY);
 
     context.textAlign = 'center';
     context.fillStyle = 'rgba(255,255,255,.65)';
