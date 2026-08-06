@@ -727,11 +727,22 @@ SSO가 되려면 둘을 한 스택·한 인증으로 통일해야 한다 (JWT �
      (2026-08-07) — 나머지 화면 전체는 아직 그대로(재활성화 대비 보관 방침 유지).
 8. [ ] 린트 잔여 정리: `exhaustive-deps` 경고 등 (Stage 0에서 미룬 것)
 9. [ ] 정리 전후 빌드·핵심 흐름(글쓰기·제출·피드백·포인트) 동작 검증
-10. [ ] **(규모 커지면) Realtime을 `postgres_changes`에서 Broadcast로**: 지금 알림·과제 목록·과제
-    제출·어휘탑 모니터링 4곳이 전부 WAL 로그를 디코딩하는 `postgres_changes` 방식이라 단일 노드인
-    `agit-realtime`에 부하가 몰린다(2026-08-07 동시접속 분석). 여러 학급이 동시에 몰리는 규모가
-    되면 알림처럼 가벼운 것부터 서버가 직접 이벤트를 쏘는 Broadcast 방식으로 옮긴다. 지금 당장은
-    급하지 않음 — `agit-realtime`에 자원 우선순위(아래)만 먼저 걸어 둠.
+10. [ ] **Realtime 구독 최소화 방향으로 (2026-08-07 결정)**: 단일 노드인 `agit-realtime`에 부하를
+    몰아주지 않도록, 새 기능에 Realtime을 기본으로 쓰지 않고 꼭 필요한 곳만 남긴다. 지금 코드에
+    남은 4곳을 감사한 결과:
+    - [ ] **`mission_list_changes_${classId}`([MissionList.jsx:104-116](src/components/student/MissionList.jsx#L104-L116)) 제거 후보** —
+      과제 생성·수정은 하루 몇 번 안 되는 저빈도 이벤트라 실시간일 필요가 제일 낮다. 없어도
+      "화면 나갔다 재입장하면 보임" 정도라 학생 경험 타격이 작다. 실행 시 폴링(포커스 시 재조회 등)
+      대체 여부는 그때 판단.
+    - [ ] **`monitoring_${activeClass.id}`([LegacyGameManager.jsx:198-206](src/modules/game/legacy/LegacyGameManager.jsx#L198-L206)) 범위 축소** —
+      어휘탑 실시간 모니터링 화면 자체는 유지하되(교사가 라이브로 순위 보는 합리적 용도), 지금
+      `students` 테이블 전체 변경을 구독해 어휘탑과 무관한 변경(드래곤 성장·포인트 등)에도 반응한다.
+      1번(모듈 계약 마무리, 어휘의 탑 표준 계약 전환) 할 때 같이 정리 — 지금 따로 손대면 이중작업.
+    - [ ] `mission_updates_${missionId}`([useMissionSubmit.js:159-184](src/hooks/useMissionSubmit.js#L159-L184))·
+      알림(`useRealtimeNotifications.js`)은 **유지** — 전자는 학생이 쓰는 도중 미션이 바뀌는 사고를
+      막고, 후자는 항상 켜져 있는 핵심 알림이라 대체 시 사용자 경험 손실이 크다.
+    - [ ] 규모가 더 커지면 `postgres_changes`(WAL 디코딩, 무거움)를 Broadcast(서버가 직접 이벤트
+      발행, 가벼움)로 옮기는 것도 검토 — 지금은 급하지 않음(자원 우선순위만 먼저 걸어 둠, 아래).
 
 **완료 기준**: 메뉴·코드·DB에서 3대 기둥 외 기능이 사라지거나 기본 OFF, 9개 모듈 계약이 일관, 빌드 크기 감소 확인.
 
