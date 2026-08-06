@@ -36,8 +36,11 @@ const VIEWS = [
 ];
 
 const PERIODS = [
+    { id: 3, label: '최근 3일' },
     { id: 7, label: '최근 7일' },
+    { id: 14, label: '최근 2주' },
     { id: 30, label: '최근 30일' },
+    // 옛 댓글은 기간을 풀고 검색으로 찾는다.
     { id: 0, label: '전체' }
 ];
 
