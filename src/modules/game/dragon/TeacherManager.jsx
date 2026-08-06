@@ -347,14 +347,16 @@ const DragonTeacherManager = ({ activeClass }) => {
         });
     };
 
-    // `시즌 종료`를 잘못 눌렀을 때 되돌린다. 새 학기를 아직 시작하지 않았을 때만 가능하다 —
+    // `시즌 종료`를 잘못 눌렀을 때 되돌린다. `작별 편지 기간`이 아니라 **작별 기간을 열기 전,
+    // 평소처럼 성장하던 상태**로 완전히 되돌아간다(사용자 결정). 학생이 쓴 편지는 지우지 않으므로
+    // 나중에 다시 작별 기간을 열면 그대로 이어서 보인다. 새 학기를 아직 시작하지 않았을 때만 가능하다 —
     // 그 뒤로는 pet_data 가 이미 초기화됐을 수 있어 서버가 거절한다.
     const handleCancelFinalize = () => {
         runSeasonAction({
             rpc: 'cancel_teacher_dragon_season_finalize',
             params: {},
-            confirmMessage: `방금 종료한 “${season.name}”을 다시 작별 편지 기간으로 되돌릴까요?\n\n학생이 쓴 작별 편지는 그대로 남아 있어요. 새 학기를 이미 시작했다면 되돌릴 수 없어요.`,
-            successMessage: (data) => `${data?.season_name || season.name}을 작별 편지 기간으로 되돌렸습니다.`,
+            confirmMessage: `“${season.name}” 종료를 취소하고 시즌 종료를 누르기 전, 학기 성장 중 상태로 되돌릴까요?\n\n학생이 쓴 작별 편지는 지워지지 않고 그대로 남아요. 새 학기를 이미 시작했다면 되돌릴 수 없어요.`,
+            successMessage: (data) => `${data?.season_name || season.name}을 시즌 종료 이전, 학기 성장 중 상태로 되돌렸습니다.`,
             nextTab: 'overview'
         });
     };
@@ -428,9 +430,9 @@ const DragonTeacherManager = ({ activeClass }) => {
                                 loading={closingSeason} loadingText="되돌리는 중..."
                                 onClick={handleCancelFinalize}
                             >
-                                실수로 종료했어요 · 되돌리기
+                                실수로 종료했어요 · 시즌 종료 취소
                             </Button>
-                            <small>새 학기를 시작하기 전까지만 되돌릴 수 있어요.</small>
+                            <small>학기 성장 중 상태로 완전히 되돌아갑니다. 새 학기를 시작하기 전까지만 가능해요.</small>
                         </>
                     )}
                 </div>
