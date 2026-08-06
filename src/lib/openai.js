@@ -3,12 +3,6 @@ import { supabase } from './supabaseClient';
 /**
  * OpenAI 모델 호출 유틸리티 ✨
  */
-const MODEL_HIERARCHY = [
-    'gpt-4o',
-    'gpt-4o-mini',
-    'gpt-3.5-turbo'
-];
-
 /**
  * OpenAI API를 호출하여 메시지를 생성합니다.
  */
@@ -42,7 +36,7 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
 
         // 2. Edge Function 호출
         const { data: responseData, error: invokeError } = await supabase.functions.invoke('vibe-ai', {
-            body: { model: 'gpt-4o-mini', ...body }
+            body
         });
 
         // 3. 성공 시 즉시 반환
@@ -108,7 +102,7 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
                                 'Authorization': `Bearer ${anonKey}`,
                                 'X-Customer-Auth': token ? `Bearer ${token}` : '',
                             },
-                            body: JSON.stringify({ model: 'gpt-4o-mini', ...body })
+                            body: JSON.stringify(body)
                         });
 
                         if (directResp.ok) {
@@ -139,11 +133,11 @@ export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
                 }
             }
 
-            // 폴백 (안전 검사가 아닌 경우만 gpt-3.5 시도)
+            // 서버가 모델을 고정하므로 다른 모델을 지정한 폴백은 두지 않는다.
             if (!body.type || body.type !== 'SAFETY_CHECK') {
-                console.warn('1차 실패, 2차 모델 폴백 시도...');
+                console.warn('1차 실패, 같은 서버 설정으로 1회 재시도...');
                 const { data: fallbackData, error: fallbackError } = await supabase.functions.invoke('vibe-ai', {
-                    body: { model: 'gpt-3.5-turbo', ...body }
+                    body
                 });
                 if (!fallbackError && fallbackData?.text) return fallbackData.text;
             }

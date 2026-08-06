@@ -116,14 +116,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                     && comment.student_id === latestContextRef.current.studentId)
                 .slice(0, 3)
                 .forEach((comment) => {
-                    checkContentSafety(comment.content).then((safety) => {
-                        if (safety.unchecked) return;
-                        return supabase.rpc('record_comment_ai_review', {
-                            p_comment_id: comment.id,
-                            p_is_appropriate: safety.is_appropriate,
-                            p_reason: safety.reason || null
-                        });
-                    }).catch(() => {});
+                    checkContentSafety(comment.content, { commentId: comment.id }).catch(() => {});
                 });
         } catch (err) {
             console.error('[usePostInteractions] ??? ?? ??:', err.message);
@@ -249,15 +242,10 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                 if (error) throw error;
                 const newCommentId = insertedComment.id;
 
-                checkContentSafety(content).then(async (safety) => {
+                checkContentSafety(content, { commentId: newCommentId }).then(async (safety) => {
                     // 예전에는 부적절 판정이면 댓글을 지웠다. 그러면 학생은 애써 쓴 글을 잃고,
                     // 교사는 무엇이 막혔는지 모르고, 오탐률도 잴 수 없다.
-                    // 이제 지우지 않고 `blocked` 로 남겨 선생님이 보고 풀어 줄 수 있게 한다.
-                    await supabase.rpc('record_comment_ai_review', {
-                        p_comment_id: newCommentId,
-                        p_is_appropriate: safety.is_appropriate,
-                        p_reason: safety.reason || null
-                    });
+                    // 이제 Edge Function이 지우지 않고 `blocked` 로 기록해 선생님이 보고 풀 수 있게 한다.
 
                     if (!safety.is_appropriate) {
                         alert(`잠깐! 🛡️\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n선생님이 확인한 뒤 친구들에게 보여요.`);
@@ -304,15 +292,21 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
             try {
                 const { error } = await supabase
                     .from('post_comments')
-                    .update({ content: newContent.trim() })
+                    .update({
+                        content: newContent.trim(),
+                        status: 'pending',
+                        moderation_reason: null,
+                        moderated_at: null,
+                        moderated_by: null
+                    })
                     .eq('id', commentId);
                 if (error) throw error;
 
-                checkContentSafety(newContent).then(async (safety) => {
+                checkContentSafety(newContent, { commentId }).then(async (safety) => {
                     if (!safety.is_appropriate) {
                         fetchInteractions(); 
-                        console.log(`💬 [AI 보안관] 부적절한 수정 감지 -> 원복 완료: ${newContent}`);
-                        alert(`잠깐! 🛡️\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n(수정 내용이 차단 및 복구되었습니다)`);
+                        console.log(`💬 [AI 보안관] 부적절한 수정 감지 -> 친구 공개 보류: ${newContent}`);
+                        alert(`잠깐! 🛡️\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n선생님이 확인한 뒤 친구들에게 보여요.`);
                     }
                     fetchInteractions();
                 }).catch(err => {

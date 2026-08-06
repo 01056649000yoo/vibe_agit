@@ -10,8 +10,6 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') ?? '')
     .map(o => o.trim().replace(/\/$/, '')) // ✅ Remove trailing slash
     .filter(Boolean);
 
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-
 function isAllowedOrigin(requestOrigin: string | null) {
     if (!requestOrigin) return true;
 
@@ -39,11 +37,6 @@ function getCorsHeaders(requestOrigin: string | null) {
         'Access-Control-Max-Age': '86400',
         'Vary': 'Origin',
     };
-}
-
-function isTrustedClientRequest(req: Request, requestOrigin: string | null) {
-    const apiKeyHeader = req.headers.get('apikey') ?? '';
-    return isAllowedOrigin(requestOrigin) && !!SUPABASE_ANON_KEY && apiKeyHeader === SUPABASE_ANON_KEY;
 }
 
 console.log("Hello from vibe-ai Functions!")
@@ -78,8 +71,8 @@ Deno.serve(async (req) => {
         // [보안] 민감 헤더 마스킹 로그
         const safeHeaders: Record<string, string> = {};
         req.headers.forEach((v, k) => {
-            if (k.toLowerCase() === 'authorization' || k.toLowerCase() === 'x-customer-auth') {
-                safeHeaders[k] = `Bearer ***${v.slice(-8)}`;
+            if (['authorization', 'x-customer-auth', 'apikey'].includes(k.toLowerCase())) {
+                safeHeaders[k] = '***';
             } else {
                 safeHeaders[k] = v;
             }
@@ -100,29 +93,13 @@ Deno.serve(async (req) => {
         )
 
         // 4. 요청 바디 파싱
-        const { prompt, content, studentId, type } = await req.json()
+        const { prompt, content, studentId, type, commentId } = await req.json()
 
         // 5. 인증 검사 (교사 세션 또는 학생 ID)
-        const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : '';
-        let jwtUserId: string | null = null;
-
-        // [신규] JWT 수동 디코딩 (Gateway 이슈 등으로 getUser가 실패할 때를 대비한 안전장치)
-        if (token && token.length > 20 && token.includes('.')) {
-            try {
-                const payloadBase64 = token.split('.')[1];
-                const decodedPayload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
-                jwtUserId = decodedPayload.sub || null;
-                console.log(`🔑 인증 토큰 확인됨 (JWT): ${jwtUserId}`);
-            } catch (e) {
-                console.warn("JWT 디코딩 실패:", e.message);
-            }
-        }
-
         let isAuthorized = false;
         let isStudentRequest = false;
         let authReason = "";
-        let authedUserId: string | null = jwtUserId;
-        let targetTeacherId: string | null = jwtUserId; // 교사 본인인 경우 기본값
+        let targetTeacherId: string | null = null;
 
         // --- 인증 통합 검사 ---
         if (authHeader) {
@@ -131,7 +108,6 @@ Deno.serve(async (req) => {
                 const user = userData?.user;
 
                 if (user && !userError) {
-                    authedUserId = user.id;
                     targetTeacherId = user.id; // 기본적으로 교사 본인
                     console.log(`👤 인증된 사용자 확인: ${user.id} (Anonymous: ${user.is_anonymous})`);
 
@@ -174,29 +150,61 @@ Deno.serve(async (req) => {
             authReason = "Authorization 헤더 없음";
         }
 
-        const trustedClientRequest = isTrustedClientRequest(req, origin);
-
         if (!isAuthorized) {
-            // [특수 허용] SAFETY_CHECK 또는 JWT fallback
-            if (type === 'SAFETY_CHECK' && trustedClientRequest) {
-                isAuthorized = true;
-                console.warn(`⚠️ 인증 우회 허용(SAFETY_CHECK): ${authReason}`);
-            } else if (jwtUserId && !studentId && trustedClientRequest) {
-                isAuthorized = true;
-                authedUserId = jwtUserId;
-                targetTeacherId = jwtUserId;
-                console.warn(`⚠️ JWT 수동 인증 fallback 허용: ${jwtUserId}`);
-            } else {
-                console.error(`🚫 차단: ${authReason}`);
-                return new Response(
-                    JSON.stringify({ error: 'Unauthorized', details: authReason }),
-                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-                );
-            }
+            console.error(`🚫 차단: ${authReason}`);
+            return new Response(
+                JSON.stringify({ error: 'Unauthorized', details: authReason }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+            );
         }
 
         // 6. 용도별 모델 매핑 및 보안 제약
         let finalPrompt = prompt || content;
+        let moderationCommentId: string | null = null;
+
+        // 새 화면의 댓글 안전 판정은 클라이언트가 보낸 문장을 그대로 믿지 않는다. 인증된 학생 본인의
+        // pending 댓글을 서버에서 다시 읽어 그 내용만 판정한다. 이미 끝난 판정은 재호출하지 않는다.
+        // commentId가 없는 호출은 배포 직후 캐시된 구버전 화면을 위한 과도기 호환 경로다. 인증된 학생의
+        // 300자 이하 요청만 판정하고, 구버전 화면이 기존 RPC로 결과를 기록한다.
+        if (type === 'SAFETY_CHECK') {
+            if (!isStudentRequest || !studentId) {
+                throw new Error('댓글 안전 판정에는 인증된 학생이 필요합니다.');
+            }
+
+            if (commentId != null) {
+                if (typeof commentId !== 'string' || !commentId) {
+                    throw new Error('댓글 ID 형식이 올바르지 않습니다.');
+                }
+
+                const { data: pendingComment, error: commentError } = await supabaseAdmin
+                    .from('post_comments')
+                    .select('id, content, status, moderation_reason')
+                    .eq('id', commentId)
+                    .eq('student_id', studentId)
+                    .maybeSingle();
+
+                if (commentError) throw commentError;
+                if (!pendingComment) throw new Error('판정할 댓글을 찾지 못했습니다.');
+
+                if (pendingComment.status !== 'pending') {
+                    const existingResult = {
+                        is_appropriate: pendingComment.status === 'approved',
+                        reason: pendingComment.moderation_reason || ''
+                    };
+                    return new Response(
+                        JSON.stringify({
+                            text: JSON.stringify(existingResult),
+                            reviewRecorded: false,
+                            currentStatus: pendingComment.status
+                        }),
+                        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+                    );
+                }
+
+                moderationCommentId = pendingComment.id;
+                finalPrompt = pendingComment.content;
+            }
+        }
 
         const MAX_PROMPT_LENGTH = isStudentRequest ? 300 : 10000;
         if (finalPrompt && finalPrompt.length > MAX_PROMPT_LENGTH) {
@@ -207,7 +215,7 @@ Deno.serve(async (req) => {
         const finalModel = 'gpt-4o-mini';
 
         if (isStudentRequest || type === 'SAFETY_CHECK') {
-            const textToCheck = content || prompt || '';
+            const textToCheck = finalPrompt || '';
             finalPrompt = `
 너는 초등학교 선생님이야. 다음 학생이 쓴 글이 학급 커뮤니티에 올리기에 교육적으로 적절한지 판단해줘.
 
@@ -265,8 +273,7 @@ Deno.serve(async (req) => {
         const cleanApiKey = apiKey.replace(/[^\x20-\x7E]/g, '').trim();
         if (!cleanApiKey) throw new Error('API 키 형식이 올바르지 않습니다. 키에 특수문자나 줄바꿈이 포함되었는지 확인해 주세요.');
 
-        // API 키 앞 7자리만 로그 (sk-xxx 형태 확인용)
-        console.log(`🤖 Mode: [${currentMode}] | Teacher: [${targetTeacherId || 'N/A'}] | Type: [${type || 'N/A'}] | Key: ${cleanApiKey.slice(0, 7)}***`);
+        console.log(`🤖 Mode: [${currentMode}] | Teacher: [${targetTeacherId || 'N/A'}] | Type: [${type || 'N/A'}]`);
 
         // Deno 네이티브 fetch로 OpenAI API 직접 호출 (SDK 호환성 문제 우회)
         const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -278,7 +285,9 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
                 model: finalModel,
                 messages: [{ role: 'user', content: finalPrompt }],
-                max_tokens: 1000,
+                // 댓글 판정은 짧은 JSON만 필요하다. 교사용 피드백은 기존 길이를 유지한다.
+                max_tokens: type === 'SAFETY_CHECK' ? 100 : 1000,
+                ...(type === 'SAFETY_CHECK' ? { temperature: 0 } : {}),
             }),
         });
 
@@ -291,6 +300,42 @@ Deno.serve(async (req) => {
 
         const openaiData = await openaiResponse.json();
         const resultText = openaiData.choices?.[0]?.message?.content ?? '';
+
+        // 화면이 닫혀도 댓글이 pending에 갇히지 않도록 Edge Function이 판정 저장까지 끝낸다.
+        if (type === 'SAFETY_CHECK' && moderationCommentId && studentId) {
+            const jsonMatch = resultText.match(/\{.*\}/s);
+            if (!jsonMatch) throw new Error('AI 댓글 판정 형식이 올바르지 않습니다.');
+
+            const safetyResult = JSON.parse(jsonMatch[0]);
+            if (typeof safetyResult.is_appropriate !== 'boolean') {
+                throw new Error('AI 댓글 판정 값이 올바르지 않습니다.');
+            }
+
+            const nextStatus = safetyResult.is_appropriate ? 'approved' : 'blocked';
+            const moderationReason = safetyResult.is_appropriate
+                ? null
+                : String(safetyResult.reason || '').trim() || null;
+            const { data: recordedComment, error: recordError } = await supabaseAdmin
+                .from('post_comments')
+                .update({
+                    status: nextStatus,
+                    moderation_reason: moderationReason,
+                    moderated_at: new Date().toISOString(),
+                    moderated_by: 'ai'
+                })
+                .eq('id', moderationCommentId)
+                .eq('student_id', studentId)
+                .eq('status', 'pending')
+                .select('id')
+                .maybeSingle();
+
+            if (recordError) throw recordError;
+
+            return new Response(
+                JSON.stringify({ text: resultText, reviewRecorded: !!recordedComment, currentStatus: nextStatus }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            );
+        }
 
         return new Response(
             JSON.stringify({ text: resultText }),

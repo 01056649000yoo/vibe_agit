@@ -9,11 +9,11 @@ const wait = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
  * 한 번 실패하면 그 댓글은 영영 `pending` 에 갇힌다(운영에서 112건이 그렇게 3~4개월 묶여 있었다).
  * 429·순간 오류는 잠깐 쉬고 다시 물어보면 대개 풀린다. 2회까지 다시 시도한다.
  */
-export const checkContentSafety = async (content, { retries = 2 } = {}) => {
+export const checkContentSafety = async (content, { retries = 2, commentId = null } = {}) => {
     if (!content || content.trim().length < 2) return { is_appropriate: true, reason: '' };
 
     for (let attempt = 0; attempt <= retries; attempt += 1) {
-        const result = await runSafetyCheck(content);
+        const result = await runSafetyCheck(content, commentId);
         if (result.ok) return result.value;
         if (attempt < retries) await wait(600 * (attempt + 1));
     }
@@ -21,11 +21,11 @@ export const checkContentSafety = async (content, { retries = 2 } = {}) => {
     return { is_appropriate: true, reason: '', unchecked: true };
 };
 
-const runSafetyCheck = async (content) => {
+const runSafetyCheck = async (content, commentId) => {
     try {
-        // [수정] 이제 서버(Edge Function)에서 SAFETY_CHECK 타입을 감지하여 프롬프트를 강제합니다.
-        // 클라이언트에서는 분석할 내용만 content에 담아 보냅니다.
-        const responseText = await callAI({ content, type: 'SAFETY_CHECK' });
+        // 서버가 commentId로 본인 댓글을 다시 읽고 판정과 DB 기록까지 마친다.
+        // 클라이언트 content는 화면 응답용이며 판정 원문으로 신뢰하지 않는다.
+        const responseText = await callAI({ content, commentId, type: 'SAFETY_CHECK' });
 
         // JSON 부분만 추출 (서버 응답이 텍스트 형태일 경우 대비)
         const jsonMatch = responseText.match(/\{.*\}/s);
