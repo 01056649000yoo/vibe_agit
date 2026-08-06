@@ -251,26 +251,37 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
                 <WritingNotice tone="info" icon="⏳" compact>이 학급의 완료 조건을 확인하고 있어요.</WritingNotice>
             )}
 
-            <label className={`diary-visibility ${form.visibility === 'class' ? 'is-public' : ''}`}>
-                <input
-                    type="checkbox"
-                    checked={form.visibility === 'class'}
-                    onChange={(event) => setForm((current) => ({
+            {/*
+              * 일기는 개인적인 글이라 **아무것도 고르지 않으면 나만 보기**다.
+              * 그래서 `둘 중 하나 고르기` 가 아니라 `이미 잠겨 있고, 열려면 한 번 누르기` 로 보여 준다.
+              * 현재 상태를 먼저 못박고, 그 아래에 여는 행동 하나만 둔다.
+              */}
+            <div className={`diary-visibility ${form.visibility === 'class' ? 'is-public' : ''}`}>
+                <span className="diary-visibility__state">
+                    <span aria-hidden="true">{form.visibility === 'class' ? '📔' : '🔒'}</span>
+                    <span>
+                        <strong>
+                            {form.visibility === 'class' ? '지금은 친구도 볼 수 있어요' : '지금은 나만 봐요'}
+                        </strong>
+                        <small>
+                            {form.visibility === 'class'
+                                ? '친구들이 내 아지트 책장에서 읽고 반응과 댓글을 남길 수 있어요.'
+                                : '그냥 두면 친구에게 보이지 않아요. 선생님은 확인할 수 있어요.'}
+                        </small>
+                    </span>
+                </span>
+                <button
+                    type="button"
+                    className="diary-visibility__toggle"
+                    onClick={() => setForm((current) => ({
                         ...current,
-                        visibility: event.target.checked ? 'class' : 'private'
+                        visibility: current.visibility === 'class' ? 'private' : 'class'
                     }))}
                     disabled={saving}
-                />
-                <span style={{ fontSize: '1.6rem' }}>{form.visibility === 'class' ? '📔' : '🔒'}</span>
-                <span>
-                    <strong>{form.visibility === 'class' ? '친구 공개로 저장' : '나만 보기 (기본)'}</strong>
-                    <small>
-                        {form.visibility === 'class'
-                            ? '친구들이 내 아지트의 글 책장에서 보고 반응과 댓글을 남길 수 있어요.'
-                            : '친구에게는 보이지 않아요. 선생님은 확인할 수 있어요. 원할 때 공개로 바꿀 수 있어요.'}
-                    </small>
-                </span>
-            </label>
+                >
+                    {form.visibility === 'class' ? '🔒 다시 나만 보기로' : '📔 친구에게도 보여주기'}
+                </button>
+            </div>
 
             <div className="diary-editor-actions">
                 <Button variant="outline" onClick={handleCancel} disabled={saving}>취소</Button>
