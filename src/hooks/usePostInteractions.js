@@ -232,16 +232,19 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
                 const newCommentId = insertedComment.id;
 
                 checkContentSafety(content).then(async (safety) => {
+                    // 예전에는 부적절 판정이면 댓글을 지웠다. 그러면 학생은 애써 쓴 글을 잃고,
+                    // 교사는 무엇이 막혔는지 모르고, 오탐률도 잴 수 없다.
+                    // 이제 지우지 않고 `blocked` 로 남겨 선생님이 보고 풀어 줄 수 있게 한다.
+                    await supabase.rpc('record_comment_ai_review', {
+                        p_comment_id: newCommentId,
+                        p_is_appropriate: safety.is_appropriate,
+                        p_reason: safety.reason || null
+                    });
+
                     if (!safety.is_appropriate) {
-                        await supabase.from('post_comments').delete().eq('id', newCommentId);
-                        console.log(`💬 [AI 보안관] 부적절한 표현 감지 -> 자동 삭제 완료: ${content}`);
-                        alert(`잠깐! 🛡️\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n(방금 작성한 댓글은 삭제 처리 되었어요)`);
+                        alert(`잠깐! 🛡️\n${safety.reason || '조금 더 고운 표현을 사용해 볼까요?'}\n선생님이 확인한 뒤 친구들에게 보여요.`);
+                        fetchInteractions();
                     } else {
-                        // [추가] 안전한 경우 승인 상태로 변경
-                        await supabase
-                            .from('post_comments')
-                            .update({ status: 'approved' })
-                            .eq('id', newCommentId);
 
                         supabase.rpc('reward_for_comment', { p_post_id: postId }).then(({ data, error: rpcErr }) => {
                             if (!rpcErr && data?.success) {

@@ -1,0 +1,105 @@
+/* 학생 댓글 관리. AI가 막은 것을 교사가 보고 풀어 주는 자리다. */
+
+.teacher-comments { display: flex; flex-direction: column; gap: var(--ui-space-4, 12px); }
+
+.teacher-comments__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--ui-space-4, 12px);
+}
+.teacher-comments__header h2 { margin: 0; color: var(--ui-ink-strong); font-size: 1.25rem; }
+.teacher-comments__header p { margin: 3px 0 0; color: var(--ui-ink-muted); font-size: .82rem; }
+.teacher-comments__header input {
+    min-height: 44px;
+    min-width: 240px;
+    padding: 10px 14px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-sm, 10px);
+    background: var(--ui-surface);
+    color: var(--ui-ink);
+    font: inherit;
+}
+
+.teacher-comments__filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.teacher-comments__filters button {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    padding: 8px 16px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-sm, 10px);
+    background: var(--ui-surface);
+    color: var(--ui-ink-muted);
+    cursor: pointer;
+    gap: 8px;
+    font: inherit;
+    font-size: .84rem;
+    font-weight: 800;
+}
+.teacher-comments__filters button.is-active { border-color: #A5B4FC; background: #EEF2FF; color: #3730A3; }
+.teacher-comments__filters button strong {
+    min-width: 20px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #4338CA;
+    color: #FFFFFF;
+    font-size: .72rem;
+    text-align: center;
+}
+.teacher-comments__hint { margin: 0; color: var(--ui-ink-subtle); font-size: .8rem; }
+
+.teacher-comments__list { display: flex; flex-direction: column; margin: 0; padding: 0; gap: 8px; list-style: none; }
+.teacher-comments__item {
+    display: flex;
+    flex-direction: column;
+    padding: 14px 16px;
+    border: 1px solid var(--ui-border);
+    border-left: 4px solid var(--ui-border);
+    border-radius: var(--ui-radius-md, 14px);
+    background: var(--ui-surface);
+    gap: 8px;
+}
+.teacher-comments__item.is-blocked { border-left-color: #F87171; }
+.teacher-comments__item.is-pending { border-left-color: #FBBF24; }
+.teacher-comments__item.is-approved { border-left-color: #86EFAC; }
+
+.teacher-comments__meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.teacher-comments__meta strong { color: var(--ui-ink-strong); font-size: .92rem; }
+.teacher-comments__meta span { min-width: 0; color: var(--ui-ink-muted); font-size: .8rem; }
+.teacher-comments__meta small { margin-left: auto; color: var(--ui-ink-subtle); font-size: .74rem; white-space: nowrap; }
+
+.teacher-comments__content {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: var(--ui-radius-sm, 10px);
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink);
+    font-size: .92rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.teacher-comments__reason { margin: 0; color: #B45309; font-size: .8rem; line-height: 1.6; }
+.teacher-comments__reason span {
+    margin-right: 6px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #FEF3C7;
+    font-size: .72rem;
+    font-weight: 900;
+}
+
+.teacher-comments__actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.teacher-comments__status { font-size: .78rem; font-weight: 800; }
+.teacher-comments__status.is-blocked { color: #B91C1C; }
+.teacher-comments__status.is-pending { color: #B45309; }
+.teacher-comments__status.is-approved { color: #15803D; }
+.teacher-comments__more { margin: 0; color: var(--ui-ink-subtle); font-size: .8rem; text-align: center; }
+
+@media (max-width: 640px) {
+    .teacher-comments__header input { width: 100%; min-width: 0; }
+    .teacher-comments__meta small { margin-left: 0; }
+    .teacher-comments__actions { align-items: stretch; flex-direction: column; }
+}

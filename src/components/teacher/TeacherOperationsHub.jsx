@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 
 const RecentActivity = lazy(() => import('./RecentActivity'));
 const ClassAnalysis = lazy(() => import('./ClassAnalysis'));
+const TeacherCommentManager = lazy(() => import('./TeacherCommentManager'));
 
 const PanelLoading = ({ children }) => (
     <div role="status" style={{ minHeight: '180px', display: 'grid', placeItems: 'center', color: '#64748B', fontWeight: '700' }}>{children}</div>
@@ -20,6 +21,16 @@ const cardStyle = (isMobile) => ({
 const TeacherOperationsHub = ({ activeClass, isMobile, section, setSelectedActivityPost, onNavigate }) => {
     const classId = activeClass?.id;
     if (!classId) return null;
+
+    if (section === 'comments') {
+        return (
+            <section role="tabpanel" aria-label="학생 댓글 관리" style={cardStyle(isMobile)}>
+                <Suspense fallback={<PanelLoading>학생 댓글을 모으는 중... 🗨️</PanelLoading>}>
+                    <TeacherCommentManager activeClass={activeClass} />
+                </Suspense>
+            </section>
+        );
+    }
 
     return section === 'recent-activity' ? (
         <section role="tabpanel" aria-label="최근 활동" style={cardStyle(isMobile)}>

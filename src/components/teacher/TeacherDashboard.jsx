@@ -360,7 +360,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 navigationTarget={workspaceTarget}
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
                             />
-                        ) : visibleTab === 'operations' || visibleTab === 'recent-activity' ? (
+                        ) : visibleTab === 'operations' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (
                             <TeacherOperationsHub
                                 key={`${activeClass.id}-${visibleTab}`}
                                 activeClass={activeClass}
