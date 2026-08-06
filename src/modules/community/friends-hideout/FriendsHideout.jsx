@@ -3,6 +3,7 @@ import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFriendsHideout } from './useFriendsHideout';
+import { getSelfWritingType } from '../../writing/selfWritingTypes';
 import PostDetailModal from '../../../components/student/PostDetailModal';
 import FriendHideoutPreviewCard from './profile/FriendHideoutPreviewCard';
 

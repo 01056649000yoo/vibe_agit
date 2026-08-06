@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 
-const PendingApproval = ({ onLogout }) => {
+// `onReEdit` 는 App.jsx 가 넘겨 주는데 받지 않고 있었다. 아래 `정보 수정` 버튼이
+// 선언되지 않은 이름을 참조해 누르는 순간 터졌다(2026-08-06 `no-undef` 규칙으로 발견).
+const PendingApproval = ({ onLogout, onReEdit }) => {
     const [copiedEmail, setCopiedEmail] = useState(false);
     const [copiedForm, setCopiedForm] = useState(false);
 
