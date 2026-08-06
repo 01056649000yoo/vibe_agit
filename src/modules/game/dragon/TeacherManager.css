@@ -138,11 +138,13 @@
 .dragon-season-history__totals small, .dragon-season-history__totals strong { display: block; }
 .dragon-season-history__totals small { color: #8b7e74; font-size: .59rem; font-weight: 800; }
 .dragon-season-history__totals strong { margin-top: 2px; font-size: .85rem; }
-.dragon-season-history__levels { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; margin-top: 12px; }
-.dragon-season-history__levels span { display: grid; place-items: center; min-height: 42px; border-radius: 8px; background: #eeeae6; color: #a0958d; }
+.dragon-season-history__levels-caption { margin: 13px 0 0; color: #8b7e74; font-size: .64rem; font-weight: 700; line-height: 1.55; }
+.dragon-season-history__levels-caption b { color: #6d5c50; font-weight: 900; }
+.dragon-season-history__levels { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; margin-top: 8px; }
+.dragon-season-history__levels span { display: grid; place-items: center; min-height: 46px; border-radius: 8px; background: #eeeae6; color: #a0958d; }
 .dragon-season-history__levels span.has-student { background: #f4dfbd; color: #8a4d28; }
-.dragon-season-history__levels i { font-size: .51rem; font-style: normal; font-weight: 900; }
-.dragon-season-history__levels b { font-size: .75rem; }
+.dragon-season-history__levels i { font-size: .56rem; font-style: normal; font-weight: 900; }
+.dragon-season-history__levels b { margin-top: 2px; font-size: .68rem; }
 .dragon-season-history__students { margin-top: 14px; }
 .dragon-season-history__students .dragon-student-grid { margin-top: 10px; }
 
@@ -209,6 +211,7 @@
     .dragon-student-card__stats > span:last-child { display: none; }
     .dragon-season-history__header { flex-direction: column; }
     .dragon-season-history__totals { grid-template-columns: 1fr; }
+    .dragon-season-history__levels { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .dragon-teacher-students__filters { grid-template-columns: 1fr; }
     .dragon-teacher-detail-grid { grid-template-columns: 1fr; }
 }

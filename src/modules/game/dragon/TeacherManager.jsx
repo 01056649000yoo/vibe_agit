@@ -208,6 +208,9 @@ const StudentDetailModal = ({ student, onClose, seasonLabel }) => {
     );
 };
 
+const firstLevel = WRITER_LEVELS[0];
+const lastLevel = WRITER_LEVELS[WRITER_LEVELS.length - 1];
+
 const HistoryPanel = ({ history, onOpenStudent }) => {
     const [expandedId, setExpandedId] = useState(null);
 
@@ -236,8 +239,25 @@ const HistoryPanel = ({ history, onOpenStudent }) => {
                             <span><small>시즌 완성 글</small><strong>{formatNumber(totals.season_posts)}편</strong></span>
                             <span><small>시즌 글자</small><strong>{formatNumber(totals.season_chars)}자</strong></span>
                         </div>
-                        <div className="dragon-season-history__levels" aria-label="시즌 종료 시 성장 분포">
-                            {levelCounts.map((count, index) => <span key={index} title={`Lv.${index + 1} ${count}명`} className={count > 0 ? 'has-student' : ''}><i>{index + 1}</i><b>{count}</b></span>)}
+                        <p className="dragon-season-history__levels-caption">
+                            시즌이 끝난 시점, 학생들이 도달해 있던 <b>작가 성장 단계</b>예요. 왼쪽 1단계
+                            ({firstLevel.emoji} {firstLevel.name})부터 오른쪽 10단계
+                            ({lastLevel.emoji} {lastLevel.name})까지, 숫자는 그 단계였던 학생 수입니다.
+                        </p>
+                        <div className="dragon-season-history__levels" aria-label="시즌 종료 시 성장 단계별 학생 수">
+                            {levelCounts.map((count, index) => {
+                                const level = Reflect.get(WRITER_LEVELS, index);
+                                return (
+                                    <span
+                                        key={index}
+                                        title={`${index + 1}단계 ${level.emoji} ${level.name} · ${count}명`}
+                                        className={count > 0 ? 'has-student' : ''}
+                                    >
+                                        <i>Lv.{index + 1}</i>
+                                        <b>{count}명</b>
+                                    </span>
+                                );
+                            })}
                         </div>
                         {snapshotStudents.length > 0 && (
                             <div className="dragon-season-history__students">
