@@ -1,0 +1,213 @@
+.dragon-teacher-manager {
+    --dragon-ink: #2f2925;
+    --dragon-muted: #786d65;
+    --dragon-line: #e8ded4;
+    color: var(--dragon-ink);
+}
+
+.dragon-teacher-eyebrow {
+    display: block;
+    color: #a45b2a;
+    font-size: .66rem;
+    font-weight: 950;
+    letter-spacing: .13em;
+}
+
+.dragon-season-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(250px, .75fr);
+    gap: 22px;
+    overflow: hidden;
+    padding: 26px;
+    border: 1px solid #e3caa9;
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at 11% 12%, rgba(255, 216, 142, .64), transparent 26%),
+        linear-gradient(135deg, #fff9ed 0%, #f6ead9 60%, #e8d2b7 100%);
+    box-shadow: 0 14px 34px rgba(86, 57, 32, .09);
+}
+
+.dragon-season-hero::after {
+    position: absolute;
+    right: 30%;
+    bottom: -80px;
+    width: 210px;
+    height: 210px;
+    border: 24px double rgba(137, 87, 43, .09);
+    border-radius: 50%;
+    content: '';
+}
+
+.dragon-season-hero__copy,
+.dragon-season-hero__action { position: relative; z-index: 1; }
+.dragon-season-hero h2 { margin: 5px 0 6px; font-size: clamp(1.55rem, 3vw, 2.15rem); }
+.dragon-season-hero__copy > p { max-width: 690px; margin: 0; color: #6d5b4b; font-size: .85rem; font-weight: 750; line-height: 1.7; }
+.dragon-season-hero__meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 17px; }
+.dragon-season-hero__meta span { padding: 6px 9px; border: 1px solid rgba(151, 102, 59, .18); border-radius: 99px; background: rgba(255,255,255,.62); color: #79563a; font-size: .69rem; font-weight: 900; }
+
+.dragon-season-hero__action {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    padding: 17px;
+    border: 1px solid rgba(132, 87, 48, .17);
+    border-radius: 18px;
+    background: rgba(255,255,255,.73);
+    box-shadow: inset 0 1px 0 white;
+}
+.dragon-season-hero__action label { color: #705844; font-size: .72rem; font-weight: 900; }
+.dragon-season-hero__action input { min-height: 42px; padding: 8px 11px; border: 1px solid #d6c1ad; border-radius: 11px; background: white; color: #40352d; font: inherit; font-size: .83rem; font-weight: 800; }
+.dragon-season-hero__action small { color: #7b6b5f; font-size: .66rem; font-weight: 750; text-align: center; }
+
+.dragon-teacher-tabs { display: flex; gap: 6px; margin: 20px 0; padding: 5px; overflow-x: auto; border: 1px solid #e7e1dc; border-radius: 15px; background: #f7f5f3; }
+.dragon-teacher-tabs button { min-height: 40px; padding: 8px 15px; border: 0; border-radius: 11px; background: transparent; color: #776b62; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 900; white-space: nowrap; }
+.dragon-teacher-tabs button.is-active { background: white; color: #a44f21; box-shadow: 0 4px 12px rgba(47, 36, 27, .09); }
+
+.dragon-teacher-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.dragon-teacher-summary { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 15px; border: 1px solid; border-radius: 17px; }
+.dragon-teacher-summary__icon { display: grid; flex: 0 0 auto; place-items: center; width: 40px; height: 40px; border-radius: 13px; background: rgba(255,255,255,.7); font-size: 1.1rem; font-weight: 950; }
+.dragon-teacher-summary__label, .dragon-teacher-summary small { display: block; }
+.dragon-teacher-summary__label { color: #766a61; font-size: .66rem; font-weight: 900; }
+.dragon-teacher-summary strong { display: block; margin: 2px 0; font-size: 1.15rem; font-weight: 950; white-space: nowrap; }
+.dragon-teacher-summary small { color: #867a71; font-size: .62rem; font-weight: 750; }
+.dragon-teacher-summary--amber { border-color: #f0d59d; background: #fff8e9; }
+.dragon-teacher-summary--green { border-color: #cbe1cd; background: #f1f8f1; }
+.dragon-teacher-summary--blue { border-color: #cbddeb; background: #f2f8fc; }
+.dragon-teacher-summary--violet { border-color: #dcd2ee; background: #f8f4fc; }
+
+.dragon-teacher-overview__grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .75fr); gap: 12px; margin-top: 12px; }
+.dragon-teacher-panel { padding: 20px; border: 1px solid var(--dragon-line); border-radius: 19px; background: #fff; }
+.dragon-teacher-panel__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.dragon-teacher-panel__heading h3 { margin: 3px 0 0; font-size: .98rem; }
+.dragon-teacher-panel__hint { color: #8a7d73; font-size: .65rem; font-weight: 800; }
+
+.dragon-level-chart { display: grid; gap: 7px; }
+.dragon-level-chart__row { display: grid; grid-template-columns: 38px minmax(50px, 1fr) 34px 95px; align-items: center; gap: 8px; min-width: 0; }
+.dragon-level-chart__level { color: #8c684c; font-size: .66rem; font-weight: 950; }
+.dragon-level-chart__track { height: 9px; overflow: hidden; border-radius: 99px; background: #eee8e3; }
+.dragon-level-chart__track span { display: block; min-width: 2px; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #e7a74f, #cc673a); }
+.dragon-level-chart__row strong { color: #564a41; font-size: .7rem; text-align: right; }
+.dragon-level-chart__row small { overflow: hidden; color: #8c8178; font-size: .62rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+
+.dragon-teacher-watchlist__items { display: grid; gap: 8px; }
+.dragon-teacher-watchlist__items button { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 3px 10px; padding: 12px; border: 1px solid #e9dfd5; border-radius: 13px; background: #fbf9f6; color: inherit; cursor: pointer; font: inherit; text-align: left; }
+.dragon-teacher-watchlist__items button > span { font-size: .72rem; font-weight: 900; }
+.dragon-teacher-watchlist__items button > strong { grid-row: span 2; align-self: center; color: #bb582d; font-size: 1.05rem; }
+.dragon-teacher-watchlist__items button > small { color: #8b7f76; font-size: .6rem; font-weight: 750; }
+.dragon-teacher-watchlist > p { margin: 13px 0 0; padding: 11px; border-radius: 12px; background: #f1f5ec; color: #66735d; font-size: .65rem; font-weight: 800; line-height: 1.55; }
+
+.dragon-teacher-students__toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.dragon-teacher-students__toolbar h3 { margin: 3px 0 0; font-size: 1.05rem; }
+.dragon-teacher-students__filters { display: flex; gap: 7px; }
+.dragon-teacher-students__filters input, .dragon-teacher-students__filters select { min-height: 42px; padding: 8px 11px; border: 1px solid #ded6cf; border-radius: 11px; background: white; color: #504740; font: inherit; font-size: .76rem; font-weight: 800; }
+.dragon-student-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+.dragon-student-card { display: grid; grid-template-columns: 118px minmax(0, 1fr); min-width: 0; min-height: 174px; overflow: hidden; padding: 0; border: 1px solid #e5ddd6; border-radius: 18px; background: linear-gradient(145deg, #fff, #faf7f3); color: inherit; cursor: pointer; font: inherit; text-align: left; transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+.dragon-student-card:hover { border-color: #d6b78f; box-shadow: 0 10px 24px rgba(62, 43, 28, .09); transform: translateY(-2px); }
+.dragon-student-card__visual { position: relative; display: grid; place-items: center; min-width: 0; padding: 19px 7px 9px; background: radial-gradient(circle at 50% 50%, #fff6da 0%, #efe5d6 70%, #e1d2bf 100%); }
+.dragon-teacher-avatar { display: inline-grid; width: 230px; height: 230px; container-type: inline-size; }
+.dragon-teacher-avatar--compact { width: 106px; height: 106px; }
+.dragon-student-card__level { position: absolute; top: 9px; left: 9px; padding: 4px 7px; border-radius: 99px; background: rgba(52, 42, 34, .72); color: white; font-size: .62rem; font-weight: 950; }
+.dragon-student-card__body { display: flex; min-width: 0; padding: 14px 14px 11px; flex-direction: column; }
+.dragon-student-card__title { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.dragon-student-card__title strong { overflow: hidden; font-size: .92rem; text-overflow: ellipsis; white-space: nowrap; }
+.dragon-student-card__title em { padding: 3px 5px; border-radius: 5px; background: #f0ece8; color: #9a7c66; font-size: .55rem; font-style: normal; font-weight: 900; white-space: nowrap; }
+.dragon-student-card__subtitle { margin-top: 3px; overflow: hidden; color: #7d6b5d; font-size: .65rem; font-weight: 850; text-overflow: ellipsis; white-space: nowrap; }
+.dragon-student-card__progress { display: block; height: 7px; margin-top: 10px; overflow: hidden; border-radius: 99px; background: #ece6e1; }
+.dragon-student-card__progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #e8b34b, #df7042); }
+.dragon-student-card__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-top: 10px; }
+.dragon-student-card__stats > span { min-width: 0; color: #5e5147; font-size: .62rem; font-weight: 850; }
+.dragon-student-card__stats b { margin-right: 1px; color: #3f352e; font-size: .75rem; }
+.dragon-student-card__stats small { display: block; margin-top: 2px; overflow: hidden; color: #9a8c81; font-size: .52rem; text-overflow: ellipsis; white-space: nowrap; }
+.dragon-student-card__more { margin-top: auto; padding-top: 6px; color: #ad592e; font-size: .6rem; font-weight: 900; text-align: right; }
+
+.dragon-season-history { display: grid; gap: 12px; }
+.dragon-season-history__card { padding: 19px; border: 1px solid #e5ddd4; border-radius: 18px; background: linear-gradient(145deg, #fff, #faf8f5); }
+.dragon-season-history__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dragon-season-history__header span { color: #ad6233; font-size: .61rem; font-weight: 950; letter-spacing: .12em; }
+.dragon-season-history__header h3 { margin: 3px 0 0; font-size: 1rem; }
+.dragon-season-history__header time { color: #877a70; font-size: .67rem; font-weight: 800; }
+.dragon-season-history__totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 13px; }
+.dragon-season-history__totals span { padding: 10px; border-radius: 11px; background: #f4f0eb; }
+.dragon-season-history__totals small, .dragon-season-history__totals strong { display: block; }
+.dragon-season-history__totals small { color: #8b7e74; font-size: .59rem; font-weight: 800; }
+.dragon-season-history__totals strong { margin-top: 2px; font-size: .85rem; }
+.dragon-season-history__levels { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; margin-top: 12px; }
+.dragon-season-history__levels span { display: grid; place-items: center; min-height: 42px; border-radius: 8px; background: #eeeae6; color: #a0958d; }
+.dragon-season-history__levels span.has-student { background: #f4dfbd; color: #8a4d28; }
+.dragon-season-history__levels i { font-size: .51rem; font-style: normal; font-weight: 900; }
+.dragon-season-history__levels b { font-size: .75rem; }
+
+.dragon-teacher-modal { position: fixed; z-index: 10000; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(24, 20, 17, .66); backdrop-filter: blur(5px); }
+.dragon-teacher-modal__dialog { position: relative; width: min(850px, 100%); max-height: calc(100dvh - 36px); overflow-y: auto; padding: 25px; border: 1px solid #d9c5b0; border-radius: 23px; background: #fffdfa; box-shadow: 0 28px 80px rgba(21, 17, 14, .32); }
+.dragon-teacher-modal__close { position: absolute; z-index: 4; top: 15px; right: 15px; }
+.dragon-teacher-modal__hero { display: grid; grid-template-columns: 250px minmax(0, 1fr); align-items: center; gap: 24px; padding-right: 34px; }
+.dragon-teacher-modal__avatar { display: grid; place-items: center; min-height: 250px; border-radius: 23px; background: radial-gradient(circle, #fff6d7, #eaddc9 67%, #cbb598); }
+.dragon-teacher-modal__hero h2 { margin: 5px 0 4px; font-size: 1.45rem; }
+.dragon-teacher-modal__hero p { margin: 0; color: #7e6e61; font-size: .78rem; font-weight: 800; }
+.dragon-teacher-modal__badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 13px; }
+.dragon-teacher-modal__badges span { padding: 6px 8px; border: 1px solid #ead9c6; border-radius: 99px; background: #fff7e8; color: #6d4b33; font-size: .65rem; font-weight: 900; }
+.dragon-teacher-modal__badges span.is-test { border-color: #d4c7e9; background: #f3edfb; color: #67518b; }
+.dragon-teacher-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 18px; }
+.dragon-teacher-detail-grid > div { padding: 12px; border: 1px solid #ebe3dc; border-radius: 12px; background: #faf8f5; }
+.dragon-teacher-detail-grid small, .dragon-teacher-detail-grid strong { display: block; }
+.dragon-teacher-detail-grid small { color: #8e8177; font-size: .61rem; font-weight: 800; }
+.dragon-teacher-detail-grid strong { margin-top: 3px; font-size: .78rem; }
+.dragon-teacher-growth-detail { margin-top: 10px; padding: 14px; border-radius: 14px; background: #f8efe1; }
+.dragon-teacher-growth-detail > div:first-child { display: flex; justify-content: space-between; gap: 10px; font-size: .74rem; }
+.dragon-teacher-growth-detail > div:first-child span { color: #806b59; font-size: .65rem; font-weight: 800; }
+.dragon-teacher-growth-detail__bar { height: 9px; margin-top: 9px; overflow: hidden; border-radius: 99px; background: rgba(111, 77, 45, .14); }
+.dragon-teacher-growth-detail__bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #e9b54a, #d9653e); }
+.dragon-teacher-growth-detail > small { display: block; margin-top: 5px; color: #806f61; font-size: .6rem; font-weight: 800; text-align: right; }
+.dragon-teacher-decor { margin-top: 15px; }
+.dragon-teacher-decor__slots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.dragon-teacher-decor__slots > span { min-width: 0; padding: 10px 7px; border: 1px solid #e8dfd7; border-radius: 11px; background: #fbf9f7; text-align: center; }
+.dragon-teacher-decor__slots i, .dragon-teacher-decor__slots small, .dragon-teacher-decor__slots strong { display: block; }
+.dragon-teacher-decor__slots i { color: #af6534; font-style: normal; }
+.dragon-teacher-decor__slots small { margin-top: 3px; color: #95877c; font-size: .53rem; font-weight: 800; }
+.dragon-teacher-decor__slots strong { margin-top: 3px; overflow: hidden; font-size: .61rem; text-overflow: ellipsis; white-space: nowrap; }
+
+.dragon-teacher-loading, .dragon-teacher-empty { display: flex; min-height: 180px; align-items: center; justify-content: center; flex-direction: column; gap: 10px; padding: 30px; border: 1px dashed #dacfc5; border-radius: 18px; background: #faf8f5; color: #80736a; text-align: center; font-size: .8rem; font-weight: 850; }
+.dragon-teacher-loading > span, .dragon-teacher-empty > span { font-size: 2rem; }
+.dragon-teacher-empty p { margin: 0; color: #9a8d83; font-size: .68rem; }
+.dragon-teacher-empty--error { color: #9f3229; }
+
+@media (max-width: 1050px) {
+    .dragon-teacher-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dragon-teacher-overview__grid { grid-template-columns: 1fr; }
+    .dragon-student-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+    .dragon-season-hero { grid-template-columns: 1fr; padding: 19px; }
+    .dragon-teacher-summary-grid { grid-template-columns: 1fr 1fr; }
+    .dragon-teacher-students__toolbar { align-items: stretch; flex-direction: column; }
+    .dragon-teacher-students__filters { display: grid; grid-template-columns: 1fr 1fr; }
+    .dragon-teacher-modal__dialog { padding: 19px; }
+    .dragon-teacher-modal__hero { grid-template-columns: 1fr; gap: 15px; padding-right: 0; text-align: center; }
+    .dragon-teacher-modal__avatar { width: 230px; min-height: 230px; margin: 0 auto; }
+    .dragon-teacher-modal__badges { justify-content: center; }
+    .dragon-teacher-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dragon-teacher-decor__slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 520px) {
+    .dragon-teacher-summary-grid { grid-template-columns: 1fr; }
+    .dragon-level-chart__row { grid-template-columns: 36px minmax(40px, 1fr) 32px; }
+    .dragon-level-chart__row small { display: none; }
+    .dragon-student-card { grid-template-columns: 98px minmax(0, 1fr); }
+    .dragon-teacher-avatar--compact { width: 90px; height: 90px; }
+    .dragon-student-card__stats { grid-template-columns: 1fr 1fr; }
+    .dragon-student-card__stats > span:last-child { display: none; }
+    .dragon-season-history__header { flex-direction: column; }
+    .dragon-season-history__totals { grid-template-columns: 1fr; }
+    .dragon-teacher-students__filters { grid-template-columns: 1fr; }
+    .dragon-teacher-detail-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dragon-student-card { transition: none; }
+    .dragon-student-card:hover { transform: none; }
+}
