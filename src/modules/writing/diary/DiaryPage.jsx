@@ -13,7 +13,7 @@ import {
 import useMediaQuery from '../../../hooks/useMediaQuery';
 import { supabase } from '../../../lib/supabaseClient';
 import WritingToolHost from '../tools/WritingToolHost';
-import { buildDraftKey, useLocalWritingDraft } from '../drafts/localWritingDraft';
+import { buildDraftKey, readLocalDraft, useLocalWritingDraft } from '../drafts/localWritingDraft';
 import WritingPolicyProgress from '../policy/WritingPolicyProgress';
 import {
     evaluateWritingPolicy,
@@ -49,6 +49,10 @@ const formatDiaryDate = (value) => {
     const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
     return `${year}년 ${month}월 ${day}일 ${weekday}요일`;
 };
+
+const formatTime = (value) => (value
+    ? new Date(value).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+    : '');
 
 const formatShortDate = (value) => {
     if (!value) return '';
@@ -130,6 +134,9 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
         return () => { active = false; };
     }, [onCancel, postId, studentClassId, studentSession.id]);
 
+    const [serverDraftAt, setServerDraftAt] = useState(null);
+    const [savingDraft, setSavingDraft] = useState(false);
+
     // 초안은 날짜별로 나눈다. 그러지 않으면 어제 쓰다 만 내용이 오늘 일기에 되살아난다.
     const draftKey = buildDraftKey('diary_draft', studentSession?.id, postId || diaryDate);
     const draftHasContent = useCallback((candidate) => diaryDraftHasContent(candidate), []);
@@ -145,6 +152,64 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
         form,
         { enabled: !loading && !saving, hasContent: draftHasContent, onRestore: restoreDraft }
     );
+
+    /*
+     * 다른 기기에서 남긴 임시본을 가져온다. 이 기기에 남은 것보다 **새 것일 때만** 덮는다.
+     * 그러지 않으면 방금 이 기기에서 쓴 내용이 옛 임시본에 지워진다(독서록과 같은 규칙).
+     */
+    useEffect(() => {
+        if (loading || !studentSession?.id) return undefined;
+        let active = true;
+        const load = async () => {
+            const { data, error } = await supabase.rpc('get_my_self_writing_draft', {
+                p_writing_type: 'diary',
+                p_source_key: diaryDate
+            });
+            if (!active || error || !data) {
+                if (error) console.error('일기 서버 임시본 불러오기 실패:', error.message);
+                return;
+            }
+            const serverAt = new Date(data.updated_at);
+            setServerDraftAt(serverAt);
+
+            const localAt = readLocalDraft(draftKey)?.savedAt;
+            if (localAt && new Date(localAt) >= serverAt) return;
+
+            setForm((current) => ({
+                ...current,
+                title: data.title || current.title,
+                content: data.content || current.content,
+                visibility: data.visibility === 'class' ? 'class' : current.visibility
+            }));
+        };
+        load();
+        return () => { active = false; };
+        // 처음 열릴 때 한 번만 가져온다. 이후에는 이 기기의 내용이 기준이다.
+    }, [diaryDate, draftKey, loading, studentSession?.id]);
+
+    const handleSaveDraft = async () => {
+        if (!diaryDraftHasContent(form)) {
+            alert('아직 적은 내용이 없어요. 한 줄이라도 적은 뒤에 임시 저장해 주세요. ✍️');
+            return;
+        }
+        setSavingDraft(true);
+        const { data, error } = await supabase.rpc('upsert_my_self_writing_draft', {
+            p_writing_type: 'diary',
+            p_source_key: diaryDate,
+            p_post_id: postId || null,
+            p_title: form.title,
+            p_content: form.content,
+            p_visibility: form.visibility
+        });
+        setSavingDraft(false);
+        if (error || !data?.success) {
+            console.error('일기 임시 저장 실패:', error?.message);
+            alert('이 기기에는 남겼지만 서버 임시 저장에 실패했어요. 잠시 후 다시 눌러 주세요.');
+            return;
+        }
+        setServerDraftAt(data.updated_at ? new Date(data.updated_at) : new Date());
+        alert('임시 저장했어요. 다른 기기에서도 이어 쓸 수 있어요. 💾\n아직 선생님과 친구에게는 보이지 않아요.');
+    };
 
     const handleCancel = () => {
         if (isDirty && !window.confirm('아직 저장하지 않은 내용이 있어요. 일기 목록으로 나갈까요?')) return;
@@ -183,6 +248,14 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
         }
 
         clearLocalDraft();
+        // 남기면 다음에 들어올 때 저장된 글 위로 옛 임시본이 되살아난다.
+        const { error: draftError } = await supabase.rpc('delete_my_self_writing_draft', {
+            p_writing_type: 'diary',
+            p_source_key: diaryDate
+        });
+        if (draftError) console.error('일기 서버 임시본 정리 실패:', draftError.message);
+        setServerDraftAt(null);
+
         const awardedPoints = Number(data.points_awarded) || 0;
         const rewardMessage = awardedPoints > 0
             ? `\n완료 보상으로 ${awardedPoints}P를 받았어요! 🪙`
@@ -235,9 +308,11 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
                     isMobile={isMobile}
                 />
 
-                {(draftError || draftSavedAt) && (
+                {(draftError || draftSavedAt || serverDraftAt) && (
                     <WritingNotice tone={draftError ? 'danger' : 'success'} icon={draftError ? '⚠️' : '💾'} compact>
-                        {draftError || '쓰던 내용을 이 기기에 남겨 두고 있어요. 실수로 나가도 되살아나요.'}
+                        {draftError || (serverDraftAt
+                            ? `${formatTime(serverDraftAt)}에 임시 저장했어요. 다른 기기에서도 이어 쓸 수 있어요. 아직 선생님과 친구에게는 보이지 않아요.`
+                            : '쓰던 내용을 이 기기에 남겨 두고 있어요. 다른 기기에서도 이어 쓰려면 임시 저장을 눌러 주세요.')}
                     </WritingNotice>
                 )}
             </section>
@@ -284,8 +359,11 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
             </div>
 
             <div className="diary-editor-actions">
-                <Button variant="outline" onClick={handleCancel} disabled={saving}>취소</Button>
-                <Button onClick={handleSave} disabled={saving}>
+                <Button variant="outline" onClick={handleCancel} disabled={saving || savingDraft}>취소</Button>
+                <Button variant="outline" onClick={handleSaveDraft} disabled={saving || savingDraft}>
+                    {savingDraft ? '임시 저장 중...' : '임시 저장 💾'}
+                </Button>
+                <Button onClick={handleSave} disabled={saving || savingDraft}>
                     {saving ? '저장하는 중...' : postId ? '수정 완료' : '작성 완료'}
                 </Button>
             </div>

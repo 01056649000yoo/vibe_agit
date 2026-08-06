@@ -3,7 +3,20 @@ import Button from '../../../../components/common/Button';
 import Card from '../../../../components/common/Card';
 import Modal from '../../../../components/common/Modal';
 import { supabase } from '../../../../lib/supabaseClient';
+import WritingPolicySettings from '../../policy/WritingPolicySettings';
 import './teacherDiary.css';
+
+/** 학생 화면(`DiaryPage`)의 기본값과 같아야 한다. 서버 기본값은 `writing_types.diary` 다. */
+const DIARY_POLICY_DEFAULTS = Object.freeze({
+    is_enabled: true,
+    min_chars: 150,
+    min_paragraphs: 1,
+    base_reward: 80,
+    bonus_enabled: false,
+    bonus_threshold: 0,
+    bonus_reward: 0,
+    daily_reward_limit: 1
+});
 
 /**
  * 교사가 매일 쓰는 것만 담은 가벼운 일기 확인 화면.
@@ -30,6 +43,9 @@ const formatDiaryDate = (value) => {
 
 const TeacherDiaryManager = ({ activeClass, isMobile }) => {
     const classId = activeClass?.id || null;
+    // 매일 쓰는 `확인`을 기본으로 두고, 큰 설정 폼은 열 때만 마운트한다(독서록과 같은 구조).
+    const [section, setSection] = useState('reviews');
+    const [policyDirty, setPolicyDirty] = useState(false);
     const [filter, setFilter] = useState('unreviewed');
     const [overview, setOverview] = useState({ total: 0, pending_count: 0, items: [] });
     const [loading, setLoading] = useState(true);
@@ -102,6 +118,15 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
         load();
     };
 
+    const changeSection = (nextSection) => {
+        if (nextSection === section) return;
+        if (section === 'motivation' && policyDirty
+            && !window.confirm('아직 저장하지 않은 동기부여 설정이 있어요. 저장하지 않고 학생 일기 확인으로 이동할까요?')) {
+            return;
+        }
+        setSection(nextSection);
+    };
+
     const emptyMessage = useMemo(() => {
         if (filter === 'unreviewed') return '확인을 기다리는 일기가 없어요. 모두 살펴보셨습니다. ✅';
         if (filter === 'reviewed') return '아직 확인한 일기가 없어요.';
@@ -115,13 +140,42 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                     <h2>📔 학생 일기</h2>
                     <p>학생이 하루에 한 편 남긴 일기를 읽고 한마디를 남겨요.</p>
                 </div>
-                {overview.pending_count > 0 && (
-                    <span className="teacher-diary__pending" aria-label={`확인 대기 ${overview.pending_count}편`}>
-                        확인 대기 {overview.pending_count}편
-                    </span>
-                )}
             </header>
 
+            <nav className="teacher-diary__sections" role="tablist" aria-label="학생 일기 업무">
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={section === 'reviews'}
+                    className={section === 'reviews' ? 'active' : ''}
+                    onClick={() => changeSection('reviews')}
+                >
+                    <span>📔 학생 일기 확인</span>
+                    {overview.pending_count > 0 && <strong>{overview.pending_count}</strong>}
+                </button>
+                <button
+                    type="button"
+                    role="tab"
+                    aria-selected={section === 'motivation'}
+                    className={section === 'motivation' ? 'active' : ''}
+                    onClick={() => changeSection('motivation')}
+                >
+                    <span>⚙️ 글쓰기 동기부여 설정</span>
+                </button>
+            </nav>
+
+            {section === 'motivation' ? (
+                <div className="teacher-diary__policy" role="tabpanel" aria-label="글쓰기 동기부여 설정">
+                    <WritingPolicySettings
+                        classId={classId}
+                        writingType="diary"
+                        defaults={DIARY_POLICY_DEFAULTS}
+                        title="일기 완료 조건과 포인트"
+                        description="학생이 작성 완료할 때 분량과 하루 완료 편수를 확인합니다. 일기는 하루에 한 편이며 포인트는 그 날짜에 최초 한 번만 지급합니다."
+                        onDirtyChange={setPolicyDirty}
+                    />
+                </div>
+            ) : (<>
             <div className="teacher-diary__filters" role="tablist" aria-label="일기 확인 상태">
                 {FILTERS.map((item) => (
                     <button
@@ -175,6 +229,8 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                     ))}
                 </div>
             )}
+
+            </>)}
 
             <Modal
                 isOpen={Boolean(selected)}
