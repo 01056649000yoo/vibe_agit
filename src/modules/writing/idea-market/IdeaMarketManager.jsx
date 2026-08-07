@@ -6,6 +6,8 @@ import Button from '../../../components/common/Button';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import RubricSettings, { createDefaultEvaluationRubric } from '../evaluation/RubricSettings';
 
+const MissionStudentPreview = React.lazy(() => import('../../../components/teacher/MissionStudentPreview'));
+
 // 상태 뱃지 색상
 const STATUS_COLORS = {
     '제안중': { bg: '#E3F2FD', color: '#1565C0', border: '#BBDEFB', icon: '💡' },
@@ -40,11 +42,13 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
     const [loading, setLoading] = useState(mode === 'legacy');
     const [ideasLoading, setIdeasLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [editingMeetingId, setEditingMeetingId] = useState(mode === 'edit' ? mission?.id : null); // 수정 중인 안건 ID
     const [detailModal, setDetailModal] = useState(null); // 상세보기 모달용
 
     // 새 회의 안건 폼
     const [formData, setFormData] = useState(() => createMeetingForm(mode === 'edit' ? mission : null));
+    const closePreview = useCallback(() => setIsPreviewOpen(false), []);
 
     // 회의 목록 가져오기
     const fetchMeetings = useCallback(async () => {
@@ -822,6 +826,15 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                 recommendedCodes={['4국03-03', '6국03-02']}
                             />
 
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsPreviewOpen(true)}
+                                style={{ width: '100%', minHeight: '52px', fontWeight: '900' }}
+                            >
+                                👀 학생에게 어떻게 보일까요?
+                            </Button>
+
                             {/* 등록 버튼 */}
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
@@ -1051,6 +1064,30 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {isPreviewOpen && (
+                <React.Suspense fallback={null}>
+                    <MissionStudentPreview
+                        isOpen
+                        onClose={closePreview}
+                        mission={{
+                            title: formData.title,
+                            guide: formData.guide,
+                            genre: '회의',
+                            mission_type: 'meeting',
+                            input_template: 'meeting',
+                            template_config: {},
+                            guide_questions: formData.guide_questions,
+                            min_chars: formData.min_chars,
+                            min_paragraphs: formData.min_paragraphs,
+                            base_reward: formData.submit_reward,
+                            bonus_threshold: formData.bonus_threshold,
+                            bonus_reward: formData.decided_reward,
+                            allow_comments: true,
+                        }}
+                    />
+                </React.Suspense>
+            )}
 
             {/* ========== 상세보기 모달 ========== */}
             <AnimatePresence>

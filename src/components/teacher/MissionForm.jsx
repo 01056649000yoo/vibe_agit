@@ -6,6 +6,8 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabaseClient';
 import RubricSettings from '../../modules/writing/evaluation/RubricSettings';
 
+const MissionStudentPreview = React.lazy(() => import('./MissionStudentPreview'));
+
 const MissionForm = ({
     isFormOpen, isEditing, editingMissionId, formData, setFormData,
     genreCategories, handleSubmit, handleCancelEdit, isMobile,
@@ -16,6 +18,8 @@ const MissionForm = ({
     const [isQuestionModalOpen, setIsQuestionModalOpen] = React.useState(false);
     const [tagInput, setTagInput] = React.useState('');
     const [isLoadingEditMission, setIsLoadingEditMission] = React.useState(false);
+    const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
+    const closePreview = React.useCallback(() => setIsPreviewOpen(false), []);
     const useAIQuestions = (formData.guide_questions?.length > 0) || formData.use_ai_questions;
 
     const toggleAIQuestions = () => {
@@ -886,7 +890,15 @@ const MissionForm = ({
                                     isMobile={isMobile}
                                     onSaveDefaultRubric={handleSaveDefaultRubric}
                                 />
-                                <div style={{ display: 'flex', gap: '12px' }}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setIsPreviewOpen(true)}
+                                        style={{ flex: isMobile ? '1 1 100%' : 1, height: '54px', borderRadius: '14px', fontWeight: 'bold' }}
+                                    >
+                                        👀 학생에게 어떻게 보일까요?
+                                    </Button>
                                     {isEditing && (
                                         <Button
                                             type="button"
@@ -950,6 +962,16 @@ const MissionForm = ({
                     document.body
                 )}
             </AnimatePresence >
+
+            {isPreviewOpen && (
+                <React.Suspense fallback={null}>
+                    <MissionStudentPreview
+                        isOpen
+                        onClose={closePreview}
+                        mission={formData}
+                    />
+                </React.Suspense>
+            )}
         </>
     );
 };

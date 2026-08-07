@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { supabase } from '../../../../lib/supabaseClient';
 import Card from '../../../../components/common/Card';
 import Button from '../../../../components/common/Button';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../evaluation/RubricSettings';
+
+const MissionStudentPreview = React.lazy(() => import('../../../../components/teacher/MissionStudentPreview'));
 
 const getInitialForm = (mission) => ({
     title: mission?.title || '',
@@ -58,6 +60,8 @@ const NumberSetting = ({ label, value, min, step = 1, onChange, description }) =
 const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSaved }) => {
     const [form, setForm] = useState(() => getInitialForm(mission));
     const [saving, setSaving] = useState(false);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const closePreview = useCallback(() => setIsPreviewOpen(false), []);
 
     const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
@@ -149,11 +153,43 @@ const PoemMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSave
                         {form.allow_comments ? '💬 친구 댓글 허용함' : '🔒 친구 댓글 사용 안 함'}
                     </button>
 
-                    <Button type="submit" disabled={saving} style={{ minHeight: '52px', background: '#16A34A', color: 'white', fontWeight: '900' }}>
-                        {saving ? '저장 중...' : mission?.id ? '시 쓰기 미션 수정하기' : '시 쓰기 미션 공개하기'}
-                    </Button>
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '10px' }}>
+                        <Button type="button" variant="outline" onClick={() => setIsPreviewOpen(true)} style={{ minHeight: '52px', flex: 1 }}>
+                            👀 학생에게 어떻게 보일까요?
+                        </Button>
+                        <Button type="submit" disabled={saving} style={{ minHeight: '52px', flex: 1, background: '#16A34A', color: 'white', fontWeight: '900' }}>
+                            {saving ? '저장 중...' : mission?.id ? '시 쓰기 미션 수정하기' : '시 쓰기 미션 공개하기'}
+                        </Button>
+                    </div>
                 </form>
             </Card>
+
+            {isPreviewOpen && (
+                <React.Suspense fallback={null}>
+                    <MissionStudentPreview
+                        isOpen
+                        onClose={closePreview}
+                        mission={{
+                            title: form.title,
+                            guide: form.guide,
+                            genre: '시',
+                            mission_type: 'poem',
+                            input_template: 'poem',
+                            template_config: {
+                                min_stanzas: form.min_stanzas,
+                                min_lines_per_stanza: form.min_lines_per_stanza,
+                            },
+                            min_chars: 0,
+                            min_paragraphs: form.min_stanzas,
+                            base_reward: form.base_reward,
+                            bonus_threshold: 0,
+                            bonus_reward: 0,
+                            allow_comments: form.allow_comments,
+                            guide_questions: [],
+                        }}
+                    />
+                </React.Suspense>
+            )}
         </div>
     );
 };
