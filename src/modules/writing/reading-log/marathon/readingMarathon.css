@@ -104,11 +104,6 @@
 .reading-marathon-track dd { margin: 4px 0 0; color: #14532d; font-size: .9rem; font-weight: 950; }
 .reading-marathon-pending { margin: 10px 0 0; color: #92400e; font-size: .7rem; font-weight: 800; }
 
-.reading-marathon-switch { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid #cbd5e1; border-radius: 999px; background: #f8fafc; color: #64748b; font-size: .76rem; font-weight: 900; box-shadow: none; }
-.reading-marathon-switch span { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; }
-.reading-marathon-switch.is-on { border-color: #86efac; background: #f0fdf4; color: #15803d; }
-.reading-marathon-switch.is-on span { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.13); }
-
 .reading-marathon-settings__form { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(190px,.7fr); gap: 14px; margin-top: 18px; padding: 18px; border: 1px solid #fed7aa; border-radius: 18px; background: rgba(255,255,255,.8); }
 .reading-marathon-settings__form > label { display: grid; align-content: start; gap: 7px; }
 .reading-marathon-settings__form > label > span,
@@ -146,8 +141,7 @@
 @media (max-width: 760px) {
     .reading-marathon-card__header,
     .reading-marathon-settings > header { align-items: stretch; flex-direction: column; }
-    .reading-marathon-card__header > strong,
-    .reading-marathon-switch { align-self: flex-start; }
+    .reading-marathon-card__header > strong { align-self: flex-start; }
     .reading-marathon-card__tracks,
     .reading-marathon-settings__tracks,
     .reading-marathon-settings__form { grid-template-columns: 1fr; }

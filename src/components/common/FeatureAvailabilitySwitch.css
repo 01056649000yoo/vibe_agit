@@ -1,0 +1,109 @@
+.feature-availability-switch {
+    display: flex;
+    min-width: 270px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid #CBD5E1;
+    border-radius: 15px;
+    box-sizing: border-box;
+    background: #F8FAFC;
+    color: #334155;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    transition: border-color .18s ease, background-color .18s ease, opacity .18s ease;
+}
+
+.feature-availability-switch.is-full-width {
+    width: 100%;
+    min-width: 0;
+}
+
+.feature-availability-switch.is-enabled {
+    border-color: #86EFAC;
+    background: #F0FDF4;
+}
+
+.feature-availability-switch:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, .28);
+    outline-offset: 2px;
+}
+
+.feature-availability-switch:disabled {
+    cursor: not-allowed;
+    opacity: .58;
+}
+
+.feature-availability-switch[aria-busy='true'] {
+    cursor: wait;
+}
+
+.feature-availability-switch__copy {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.feature-availability-switch__copy strong {
+    color: #334155;
+    font-size: .84rem;
+    font-weight: 900;
+}
+
+.feature-availability-switch__copy small {
+    color: #64748B;
+    font-size: .72rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.feature-availability-switch__control {
+    position: relative;
+    width: 46px;
+    height: 26px;
+    border-radius: 999px;
+    background: #94A3B8;
+    flex: 0 0 auto;
+    transition: background-color .18s ease;
+}
+
+.feature-availability-switch__control::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .25);
+    content: '';
+    transition: transform .18s ease;
+}
+
+.feature-availability-switch.is-enabled .feature-availability-switch__control {
+    background: #16A34A;
+}
+
+.feature-availability-switch.is-enabled .feature-availability-switch__control::after {
+    transform: translateX(20px);
+}
+
+@media (max-width: 640px) {
+    .feature-availability-switch {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .feature-availability-switch,
+    .feature-availability-switch__control,
+    .feature-availability-switch__control::after {
+        transition: none;
+    }
+}

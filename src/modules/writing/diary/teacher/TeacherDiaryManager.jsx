@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../../components/common/Button';
 import Card from '../../../../components/common/Card';
+import FeatureAvailabilitySwitch from '../../../../components/common/FeatureAvailabilitySwitch';
 import Modal from '../../../../components/common/Modal';
 import { supabase } from '../../../../lib/supabaseClient';
 import { useDataExport } from '../../../../hooks/useDataExport';
@@ -279,21 +280,17 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                     <h2>📔 학생 일기</h2>
                     <p>학생이 하루에 한 편 남긴 일기를 읽고 한마디를 남겨요.</p>
                 </div>
-                <label className={`teacher-diary__availability ${diaryEnabled ? 'is-enabled' : 'is-disabled'}`}>
-                    <span className="teacher-diary__availability-copy">
-                        <strong>{diaryEnabled ? '학생 일기 사용 중' : '학생 일기 사용 안 함'}</strong>
-                        <small>{diaryEnabled ? '학생 화면에 일기 탭이 보입니다.' : '기존 일기는 보관하고 작성·수정만 막습니다.'}</small>
-                    </span>
-                    <input
-                        type="checkbox"
-                        role="switch"
-                        aria-label="학생 일기 사용"
-                        checked={diaryEnabled}
-                        disabled={availabilityLoading || availabilitySaving || !classId}
-                        onChange={(event) => changeDiaryAvailability(event.target.checked)}
-                    />
-                    <span className="teacher-diary__availability-control" aria-hidden="true" />
-                </label>
+                <FeatureAvailabilitySwitch
+                    checked={diaryEnabled}
+                    disabled={availabilityLoading || !classId}
+                    loading={availabilitySaving}
+                    onChange={changeDiaryAvailability}
+                    enabledLabel="학생 일기 사용 중"
+                    disabledLabel="학생 일기 사용 안 함"
+                    enabledDescription="학생 화면에 일기 탭이 보입니다."
+                    disabledDescription="기존 일기는 보관하고 작성·수정만 막습니다."
+                    ariaLabel="학생 일기 사용"
+                />
             </header>
 
             <nav className="teacher-diary__sections" role="tablist" aria-label="학생 일기 업무">

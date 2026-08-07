@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/common/Button';
+import FeatureAvailabilitySwitch from '../../../components/common/FeatureAvailabilitySwitch';
 import { supabase } from '../../../lib/supabaseClient';
 import {
     CONFIGURED_MARK,
@@ -43,31 +44,6 @@ class ModuleErrorBoundary extends React.Component {
         return this.props.children;
     }
 }
-
-const StatusSwitch = ({ isOn, disabled, onClick, compact = false }) => (
-    <button
-        type="button"
-        role="switch"
-        aria-checked={isOn}
-        disabled={disabled}
-        onClick={(event) => {
-            event.stopPropagation();
-            onClick();
-        }}
-        style={{
-            border: 'none', borderRadius: '999px', padding: compact ? '5px 8px' : '7px 10px',
-            background: isOn ? '#DCFCE7' : '#F1F5F9', color: isOn ? '#15803D' : '#64748B',
-            display: 'inline-flex', alignItems: 'center', gap: '7px', cursor: disabled ? 'wait' : 'pointer',
-            fontWeight: '900', fontSize: compact ? '0.72rem' : '0.8rem', opacity: disabled ? 0.65 : 1
-        }}
-    >
-        <span style={{
-            width: compact ? '9px' : '11px', height: compact ? '9px' : '11px', borderRadius: '50%',
-            background: isOn ? '#22C55E' : '#94A3B8', boxShadow: isOn ? '0 0 0 3px rgba(34,197,94,.14)' : 'none'
-        }} />
-        {isOn ? 'ON' : 'OFF'}
-    </button>
-);
 
 const StudentDashboardPreview = ({ enabledModules, selectedId, disabledPreviewModule = null }) => {
     const previewModules = enabledModules.length > 0 ? enabledModules : (disabledPreviewModule ? [disabledPreviewModule] : []);
@@ -145,21 +121,37 @@ const Overview = ({ modules, enabledIds, savingModuleId, onToggle, onSelect }) =
 
             <div>
                 <h3 style={{ margin: '0 0 12px', color: '#1E293B', fontSize: '1rem' }}>전체 콘텐츠 빠른 설정</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '10px' }}>
                     {modules.map(({ module }) => {
                         const isOn = enabledIds.includes(module.id);
                         return (
-                            <button key={module.id} type="button" onClick={() => onSelect(module.id)} style={{
+                            <div key={module.id} style={{
                                 padding: '14px', border: '1px solid #E2E8F0', borderRadius: '16px', background: 'white',
-                                display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', cursor: 'pointer'
+                                display: 'flex', flexDirection: 'column', gap: '12px'
                             }}>
-                                <span style={{ fontSize: '1.8rem' }}>{module.icon || '🎮'}</span>
-                                <span style={{ flex: 1, minWidth: 0 }}>
-                                    <span style={{ display: 'block', color: '#334155', fontWeight: '950' }}>{module.name}</span>
-                                    <span style={{ display: 'block', marginTop: '2px', color: '#94A3B8', fontSize: '0.7rem' }}>세부 설정 열기</span>
-                                </span>
-                                <StatusSwitch isOn={isOn} disabled={!!savingModuleId} compact onClick={() => onToggle(module.id)} />
-                            </button>
+                                <button type="button" onClick={() => onSelect(module.id)} style={{
+                                    display: 'flex', alignItems: 'center', gap: '12px', padding: 0, border: 0,
+                                    background: 'transparent', textAlign: 'left', cursor: 'pointer'
+                                }}>
+                                    <span style={{ fontSize: '1.8rem' }}>{module.icon || '🎮'}</span>
+                                    <span style={{ flex: 1, minWidth: 0 }}>
+                                        <span style={{ display: 'block', color: '#334155', fontWeight: '950' }}>{module.name}</span>
+                                        <span style={{ display: 'block', marginTop: '2px', color: '#94A3B8', fontSize: '0.7rem' }}>세부 설정 열기</span>
+                                    </span>
+                                </button>
+                                <FeatureAvailabilitySwitch
+                                    checked={isOn}
+                                    loading={savingModuleId === module.id}
+                                    disabled={Boolean(savingModuleId)}
+                                    fullWidth
+                                    onChange={() => onToggle(module.id)}
+                                    enabledLabel={`${module.name} 사용 중`}
+                                    disabledLabel={`${module.name} 사용 안 함`}
+                                    enabledDescription="학생 놀이터에 이 콘텐츠가 보입니다."
+                                    disabledDescription="기존 기록은 보관하고 학생 화면에서 숨깁니다."
+                                    ariaLabel={`학생 ${module.name} 사용`}
+                                />
+                            </div>
                         );
                     })}
                 </div>
@@ -257,10 +249,16 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile }) => {
                                 <h2 style={{ margin: 0, color: '#1E293B', fontSize: '1.35rem' }}>{selected.module.name}</h2>
                                 <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.82rem' }}>{selected.module.description}</p>
                             </div>
-                            <StatusSwitch
-                                isOn={enabledIds.includes(selected.module.id)}
-                                disabled={!!savingModuleId}
-                                onClick={() => handleToggle(selected.module.id)}
+                            <FeatureAvailabilitySwitch
+                                checked={enabledIds.includes(selected.module.id)}
+                                loading={savingModuleId === selected.module.id}
+                                disabled={Boolean(savingModuleId)}
+                                onChange={() => handleToggle(selected.module.id)}
+                                enabledLabel={`${selected.module.name} 사용 중`}
+                                disabledLabel={`${selected.module.name} 사용 안 함`}
+                                enabledDescription="학생 놀이터에 이 콘텐츠가 보입니다."
+                                disabledDescription="기존 기록은 보관하고 학생 화면에서 숨깁니다."
+                                ariaLabel={`학생 ${selected.module.name} 사용`}
                             />
                         </div>
                         <StudentDashboardPreview

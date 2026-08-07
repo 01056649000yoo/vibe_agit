@@ -22,18 +22,6 @@
 .teacher-diary__kicker { color: #2563EB; font-size: .78rem; font-weight: 900; }
 .teacher-diary__header h2 { margin: 7px 0; color: #1E293B; font-size: 1.7rem; }
 .teacher-diary__header p { margin: 0; color: #64748B; }
-.teacher-diary__availability { display: flex; min-width: 270px; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; border: 1px solid #CBD5E1; border-radius: 15px; background: #F8FAFC; cursor: pointer; }
-.teacher-diary__availability.is-enabled { border-color: #86EFAC; background: #F0FDF4; }
-.teacher-diary__availability-copy { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
-.teacher-diary__availability-copy strong { color: #334155; font-size: .84rem; }
-.teacher-diary__availability-copy small { color: #64748B; font-size: .72rem; line-height: 1.4; }
-.teacher-diary__availability input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
-.teacher-diary__availability-control { position: relative; width: 46px; height: 26px; border-radius: 999px; background: #94A3B8; flex: 0 0 auto; transition: background-color .18s ease; }
-.teacher-diary__availability-control::after { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 3px rgba(15, 23, 42, .25); content: ''; transition: transform .18s ease; }
-.teacher-diary__availability input:checked + .teacher-diary__availability-control { background: #16A34A; }
-.teacher-diary__availability input:checked + .teacher-diary__availability-control::after { transform: translateX(20px); }
-.teacher-diary__availability input:focus-visible + .teacher-diary__availability-control { outline: 3px solid rgba(37, 99, 235, .28); outline-offset: 2px; }
-.teacher-diary__availability input:disabled + .teacher-diary__availability-control { cursor: wait; opacity: .55; }
 /* 상단 업무 탭. `확인`이 매일 쓰는 것이라 기본이고, 큰 설정 폼은 열 때만 마운트한다. */
 .teacher-diary__sections {
     display: grid;
@@ -227,7 +215,6 @@
 @media (max-width: 640px) {
     .teacher-diary { padding: 18px 14px; border-radius: 20px; }
     .teacher-diary__header { flex-direction: column; }
-    .teacher-diary__availability { width: 100%; min-width: 0; box-sizing: border-box; }
     .teacher-diary__sections { margin: 18px 0 16px; }
     .teacher-diary__sections button { min-height: 48px; padding: 9px 8px; font-size: .8rem; }
     .teacher-diary__views { display: grid; width: 100%; align-self: stretch; grid-template-columns: 1fr; box-sizing: border-box; }

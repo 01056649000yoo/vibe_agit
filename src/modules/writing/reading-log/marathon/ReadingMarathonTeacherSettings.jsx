@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../../components/common/Button';
+import FeatureAvailabilitySwitch from '../../../../components/common/FeatureAvailabilitySwitch';
 import { supabase } from '../../../../lib/supabaseClient';
 import ReadingMarathonCourse from './ReadingMarathonCourse';
 import {
@@ -129,16 +130,16 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                     <h3 id="reading-marathon-settings-title">🏃 독서마라톤</h3>
                     <p>개인 거리 순위로 도전하고, 모두의 거리를 합쳐 학급 목표도 함께 완주합니다.</p>
                 </div>
-                <button
-                    type="button"
-                    role="switch"
-                    aria-checked={form.enabled}
-                    className={`reading-marathon-switch ${form.enabled ? 'is-on' : ''}`}
-                    onClick={() => setForm((current) => ({ ...current, enabled: !current.enabled }))}
+                <FeatureAvailabilitySwitch
+                    checked={form.enabled}
+                    onChange={(enabled) => setForm((current) => ({ ...current, enabled }))}
                     disabled={completed}
-                >
-                    <span /> {form.enabled ? '학생에게 보임' : '사용 안 함'}
-                </button>
+                    enabledLabel="학생 독서마라톤 사용 중"
+                    disabledLabel="학생 독서마라톤 사용 안 함"
+                    enabledDescription="설정 저장 후 학생 화면에 마라톤이 보입니다."
+                    disabledDescription="설정 저장 후 학생 화면에서 마라톤을 숨깁니다."
+                    ariaLabel="학생 독서마라톤 사용"
+                />
             </header>
 
             {snapshot?.campaign && (
