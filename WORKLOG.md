@@ -26,9 +26,10 @@
   보여 주는 뜻이 명확하도록 교사 화면을 재구성했다. 화면 순서를 `현재 운영 현황 → 학생에게 보이는 실제 구성 →
   우리 반 독서 기여 순위 → 페이지 확인이 필요한 책 → 운영 설정`으로 바꾸고, 공동 달성 거리·달성률·남은 거리·
   참여 학생·종료일을 첫 화면에 요약했다. 학생 화면의 `개인 레이스` 표현도 `우리 반 독서 기여 순위`로 통일했다.
-- **변경**: `ReadingMarathonTeacherSettings.jsx`, `ReadingMarathonDashboardCard.jsx`, `readingMarathon.css`, 문서 2개.
-  DB·RPC·집계 규칙은 변경하지 않았다.
+- **변경**: 커밋 `afce71e` — `ReadingMarathonTeacherSettings.jsx`, `ReadingMarathonDashboardCard.jsx`,
+  `readingMarathon.css`, 문서 2개. DB·RPC·집계 규칙은 변경하지 않았다.
 - **결과/검증**: `npm run build` 성공, 수정 JSX 대상 ESLint 성공, `npm run test:reading-log` 24개 전부 통과.
+  GitHub Actions 운영 배포 `31188557326`도 22초 만에 Verify까지 성공했다.
 - **남은 것 / 다음**: 운영 배포 후 교사 독서록의 `독서록 이벤트` 탭에서 큰 화면·태블릿 배치와 실제 학생 이름이
   들어간 상위 3명/전체 순위 가독성을 확인한다.
 
