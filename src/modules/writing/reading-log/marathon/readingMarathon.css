@@ -7,7 +7,7 @@
     box-shadow: 0 12px 30px rgba(154, 52, 18, .08);
 }
 
-.reading-marathon-card { margin: 20px 0; padding: clamp(18px, 3vw, 28px); }
+.reading-marathon-card { margin: 20px 0; padding: 0; overflow: hidden; }
 .reading-marathon-settings { padding: clamp(18px, 3vw, 28px); }
 
 .reading-marathon-card__header,
@@ -18,6 +18,24 @@
     gap: 18px;
     margin-bottom: 16px;
 }
+
+.reading-marathon-card__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: clamp(15px, 2.5vw, 21px) clamp(17px, 3vw, 26px) 13px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.reading-marathon-card__header:hover { background: rgba(255,255,255,.45); }
+.reading-marathon-card__header:focus-visible { outline: 3px solid #fb923c; outline-offset: -4px; }
 
 .reading-marathon-card__header span,
 .reading-marathon-settings > header > div > span {
@@ -33,13 +51,38 @@
     font-size: clamp(1.18rem, 2.2vw, 1.55rem);
 }
 
-.reading-marathon-card__header > strong {
+.reading-marathon-card__summary > strong {
     padding: 8px 12px;
     border-radius: 999px;
     background: #ffedd5;
     color: #c2410c;
     white-space: nowrap;
 }
+
+.reading-marathon-card__summary { display: flex; align-items: center; justify-content: flex-end; gap: 9px; }
+.reading-marathon-card__summary > span { color: #78716c; font-size: .76rem; font-weight: 850; white-space: nowrap; }
+.reading-marathon-card__summary > em { color: #9a3412; font-size: .76rem; font-style: normal; font-weight: 950; white-space: nowrap; }
+
+.reading-marathon-card__compact-progress {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 6px;
+    margin-top: 12px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #ffedd5;
+}
+
+.reading-marathon-card__compact-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg,#fb923c,#facc15);
+    transition: width .7s ease;
+}
+
+.reading-marathon-card__details { padding: 0 clamp(17px, 3vw, 26px) clamp(17px, 3vw, 26px); animation:marathonDetailsOpen .22s ease-out; }
+@keyframes marathonDetailsOpen { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:none; } }
 
 .reading-marathon-settings > header p { margin: 7px 0 0; color: #78716c; font-size: .88rem; }
 
@@ -238,7 +281,9 @@
 @media (max-width: 760px) {
     .reading-marathon-card__header,
     .reading-marathon-settings > header { align-items: stretch; flex-direction: column; }
-    .reading-marathon-card__header > strong { align-self: flex-start; }
+    .reading-marathon-card__header { grid-template-columns: 1fr; }
+    .reading-marathon-card__summary { justify-content: space-between; margin-top: 10px; }
+    .reading-marathon-card__summary > span { display: none; }
     .reading-marathon-card__tracks,
     .reading-marathon-settings__tracks,
     .reading-marathon-settings__form { grid-template-columns: 1fr; }
