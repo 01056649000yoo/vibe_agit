@@ -142,7 +142,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 <div>
                     <span>독서 동기부여</span>
                     <h3 id="reading-marathon-settings-title">🏃 독서마라톤</h3>
-                    <p>우리 반이 함께 목표 거리를 완주하고, 학생별 기여 거리와 순위도 확인합니다.</p>
+                    <p>교사가 확인 완료한 독서록의 페이지를 거리로 바꿔, 우리 반 공동 목표와 학생별 기여 순위를 보여줍니다.</p>
                 </div>
                 <FeatureAvailabilitySwitch
                     checked={form.enabled}
@@ -226,7 +226,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                     <div className="reading-marathon-settings__tracks">
                         <section>
                             <h4>🏅 우리 반 독서 기여 순위</h4>
-                            <p>공동 목표에 보탠 개인별 독서 거리입니다. 학생 화면에는 상위 3명과 본인 순위가 표시됩니다.</p>
+                            <p>교사가 확인 완료한 독서록만 반영합니다. 학생 화면에는 상위 3명과 본인 순위가 표시됩니다.</p>
                             {leaderboard.length > 0 ? (
                                 <ol className="reading-marathon-teacher-ranking">
                                     {leaderboard.map((row) => (
@@ -237,7 +237,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                         </section>
                         <section>
                             <h4>📖 페이지 정보 확인이 필요한 책</h4>
-                            <p>자동으로 페이지 수를 찾지 못한 책만 교사가 직접 입력할 수 있습니다.</p>
+                            <p>확인 완료했어도 페이지 수가 없으면 거리를 계산할 수 없습니다. 자동으로 찾지 못한 책만 직접 입력해주세요.</p>
                             {snapshot.pendingBooks.length > 0 ? (
                                 <div className="reading-marathon-pending-list">
                                     {snapshot.pendingBooks.map((book) => (
@@ -291,7 +291,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                     <span>종료일(선택)</span>
                     <input type="date" value={form.endsOn} onChange={(event) => setForm((current) => ({ ...current, endsOn: event.target.value }))} />
                 </label>
-                <p className="reading-marathon-settings__rule">한 페이지는 10m로 계산합니다. 한 학생의 같은 책은 한 번만 인정됩니다.</p>
+                <p className="reading-marathon-settings__rule">교사가 확인 완료한 독서록만 반영합니다. 한 페이지는 10m이며, 한 학생의 같은 책은 한 번만 인정됩니다.</p>
                 {completed ? (
                     <Button type="button" onClick={() => saveCampaign({ startNew: true })} disabled={saving}>새 마라톤 시작하기 🏁</Button>
                 ) : (
