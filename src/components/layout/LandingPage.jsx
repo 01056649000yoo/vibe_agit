@@ -1,273 +1,137 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import FeaturesModal from './FeaturesModal';
 import './LandingPage.css';
 
-const WRITING_LAB_URL = 'https://helper.xn--vz0ba242ncqcba79xhwx.site/';
-const QR_TOOL_URL = 'https://샘링크.Kr';
-
-const quickActions = [
+const capabilities = [
   {
     icon: '✍️',
-    title: '글쓰기 시작',
-    description: '바로 글쓰기',
-    tone: 'peach',
-    action: 'student-entry',
+    title: '생각을 글로 써요',
+    description: '선생님 과제부터 독서록과 일기까지, 여러 가지 글을 한곳에서 써요.',
+    tone: 'writing',
   },
   {
-    icon: '🔎',
-    title: '글감 찾기',
-    description: '아이디어 얻기',
-    tone: 'mint',
-    href: WRITING_LAB_URL,
+    icon: '🌱',
+    title: '함께 고치며 자라요',
+    description: '선생님의 의견과 친구의 따뜻한 댓글을 보고 내 글을 더 좋게 다듬어요.',
+    tone: 'growth',
   },
   {
-    icon: '🎮',
-    title: '문해력 서바이벌',
-    description: '초4~6 퀴즈로 키우기',
-    tone: 'sky',
-    onClick: 'survival',
-  },
-  {
-    icon: '🔳',
-    title: 'QR 도구',
-    description: 'QR 바로 만들기',
-    tone: 'lavender',
-    href: QR_TOOL_URL,
-  },
-];
-
-const groupedActivities = [
-  {
-    title: '아지트 글쓰기 연구소',
-    badge: 'Beta',
-    banner: true,
-    bannerDescription: '글쓰기 전 활동을 한곳에서 이어서 준비해요.',
-    items: [
-      { icon: '🔎', name: '글감 찾기', detail: '주제와 재료 아이디어 모으기', href: WRITING_LAB_URL },
-      { icon: '💬', name: '질문 만들기', detail: '생각을 넓히는 질문 생성하기', href: WRITING_LAB_URL },
-      { icon: '🌟', name: '한줄모아', detail: '친구들의 한줄글 아이디어 모아보기', href: WRITING_LAB_URL },
-      { icon: '📚', name: '과목별 글쓰기 준비하기', detail: '수업 주제에 맞춰 글쓰기 재료 준비하기', href: WRITING_LAB_URL },
-    ],
-  },
-  {
-    title: '문해력 활동',
-    items: [
-      { icon: '🎮', name: '문해력 서바이벌', detail: '초4~6 퀴즈로 문해력 키우기', onClick: 'survival' },
-      { icon: '📝', name: '급수의 달인', detail: '받아쓰기 활동 앱 · 아직 열리지 않았어요', badge: '제작중' },
-    ],
-  },
-];
-
-const guideLinks = [
-  {
-    label: '교사용 가이드',
-    href: 'https://moduai.notion.site/_-2fb79937a97380148743fa935dfa768c',
-    icon: '📘',
-  },
-  {
-    label: '학생용 가이드',
-    href: 'https://moduai.notion.site/_-2fb79937a97380c99dacd9fe11182473',
-    icon: '📗',
+    icon: '🐲',
+    title: '재미있게 이어가요',
+    description: '글쓰기 포인트로 수호룡을 키우고, 독서마라톤과 어휘 활동에 도전해요.',
+    tone: 'play',
   },
 ];
 
 const LandingPage = ({ onStudentLoginClick }) => {
-  const [modalType, setModalType] = useState(null);
+  const [teacherLoginPending, setTeacherLoginPending] = useState(false);
+  const [teacherLoginError, setTeacherLoginError] = useState('');
 
-  const navigateToUrl = (href) => {
-    window.location.assign(href);
-  };
+  const handleTeacherLogin = async () => {
+    if (teacherLoginPending) return;
 
-  const openExternalUrl = (href) => {
-    window.open(href, '_blank', 'noopener,noreferrer');
-  };
+    setTeacherLoginPending(true);
+    setTeacherLoginError('');
 
-  const handleTeacherLogin = () => {
-    supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
     });
+
+    if (error) {
+      setTeacherLoginError('선생님 로그인을 시작하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      setTeacherLoginPending(false);
+    }
   };
 
   return (
-    <>
-      <section className="landing-shell">
-        <div className="landing-halo landing-halo-left" />
-        <div className="landing-halo landing-halo-right" />
+    <section className="landing-shell">
+      <div className="landing-halo landing-halo-left" aria-hidden="true" />
+      <div className="landing-halo landing-halo-right" aria-hidden="true" />
 
-        <div className="landing-showcase">
-          <main className="landing-device">
-            <div className="landing-device-notch" />
+      <main className="landing-card">
+        <header className="landing-brand-row">
+          <span className="landing-brand-mark" aria-hidden="true">✏️</span>
+          <div>
+            <strong>끄적끄적 아지트</strong>
+            <span>글쓰기로 생각이 자라는 우리 반 공간</span>
+          </div>
+        </header>
 
-            <section className="landing-device-hero">
-              <img
-                className="landing-device-hero-image"
-                src="/assets/landing-hero-reference.png"
-                alt="끄적끄적 아지트 상단 대표 이미지"
-              />
-            </section>
+        <section className="landing-hero" aria-label="끄적끄적 아지트 소개">
+          <img
+            className="landing-hero-image"
+            src="/assets/landing-hero-reference.png"
+            alt="수호룡과 함께 글을 쓰는 끄적끄적 아지트"
+            width="1723"
+            height="913"
+            fetchPriority="high"
+          />
+        </section>
 
-            <section className="landing-entry-grid">
-              <button className="entry-card entry-card-student" onClick={onStudentLoginClick}>
-                <span className="entry-card-icon">✍️</span>
-                <strong>학생 글쓰기 입장</strong>
-                <span>내 글을 쓰고 생각을 키워요!</span>
-              </button>
+        <section className="landing-entry" aria-labelledby="landing-entry-title">
+          <div className="landing-section-heading">
+            <span>아지트 입구</span>
+            <h1 id="landing-entry-title">누구로 들어갈까요?</h1>
+            <p>학생은 선생님께 받은 코드로, 선생님은 Google 계정으로 들어가요.</p>
+          </div>
 
-              <button className="entry-card entry-card-teacher" onClick={handleTeacherLogin}>
-                <span className="entry-card-icon">🧑‍🏫</span>
-                <strong>선생님으로 시작하기</strong>
-                <span>수업에 바로 활용해요!</span>
-              </button>
-            </section>
-
+          <div className="landing-entry-grid">
             <button
-              className="landing-intro-banner"
-              onClick={() => setModalType('features')}
+              className="entry-card entry-card-student"
+              onClick={onStudentLoginClick}
               type="button"
             >
-              <span className="landing-intro-icon">🏡</span>
-              <span className="landing-intro-text">
-                <strong>아지트 소개</strong>
-                <span>끄적끄적 아지트는 어떤 공간인지 한눈에 살펴보기</span>
+              <span className="entry-card-icon" aria-hidden="true">🎒</span>
+              <span className="entry-card-copy">
+                <strong>학생으로 들어가기</strong>
+                <small>8자리 학생 코드 입력</small>
               </span>
-              <span className="landing-intro-arrow">자세히 보기 〉</span>
+              <span className="entry-card-arrow" aria-hidden="true">→</span>
             </button>
 
-            <section className="landing-section">
-              <div className="landing-section-head">
-                <h3>빠른 시작</h3>
-              </div>
-              <div className="quick-action-grid">
-                {quickActions.map((action) => (
-                  <button
-                    key={action.title}
-                    className={`quick-action-card quick-action-${action.tone}`}
-                    onClick={() => {
-                      if (action.action === 'student-entry') {
-                        onStudentLoginClick();
-                        return;
-                      }
-                      if (action.href) {
-                        if (action.href === WRITING_LAB_URL || action.href === QR_TOOL_URL) {
-                          openExternalUrl(action.href);
-                          return;
-                        }
-                        navigateToUrl(action.href);
-                        return;
-                      }
-                      if (action.onClick) {
-                        setModalType(action.onClick);
-                      }
-                    }}
-                    type="button"
-                  >
-                    <span className="quick-action-icon">{action.icon}</span>
-                    <strong>{action.title}</strong>
-                    <span>{action.description}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
+            <button
+              className="entry-card entry-card-teacher"
+              onClick={handleTeacherLogin}
+              type="button"
+              disabled={teacherLoginPending}
+              aria-busy={teacherLoginPending}
+            >
+              <span className="entry-card-icon" aria-hidden="true">🧑‍🏫</span>
+              <span className="entry-card-copy">
+                <strong>{teacherLoginPending ? '로그인 화면 여는 중…' : '선생님으로 들어가기'}</strong>
+                <small>Google 계정으로 로그인</small>
+              </span>
+              <span className="entry-card-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
 
-            {groupedActivities.map((section) => (
-              <section className="landing-section" key={section.title}>
-                <div className="landing-section-head">
-                  <div className="landing-section-title-group">
-                    <div className="landing-section-title-row">
-                      <h3>{section.title}</h3>
-                      {section.badge && <span className="landing-beta-badge">{section.badge}</span>}
-                    </div>
-                    {section.bannerDescription && <p>{section.bannerDescription}</p>}
-                  </div>
-                </div>
-                {section.banner ? (
-                  <button
-                    className="activity-banner-card"
-                    onClick={() => openExternalUrl(WRITING_LAB_URL)}
-                    type="button"
-                  >
-                    <div className="activity-banner-head">
-                      <span className="activity-banner-icon">🧪</span>
-                      <div className="activity-banner-copy">
-                        <div className="activity-banner-title-row">
-                          <strong>{section.title}</strong>
-                          {section.badge && <span className="landing-beta-badge">{section.badge}</span>}
-                        </div>
-                        <span>{section.bannerDescription}</span>
-                      </div>
-                    </div>
-                    <div className="activity-banner-list">
-                      {section.items.map((item) => (
-                        <div className="activity-banner-pill" key={item.name}>
-                          <span>{item.icon}</span>
-                          <strong>{item.name}</strong>
-                        </div>
-                      ))}
-                    </div>
-                  </button>
-                ) : (
-                  <div className="activity-grid">
-                    {section.items.map((item) => (
-                      <button
-                        className={`activity-card ${item.badge ? 'activity-card-disabled' : ''}`}
-                        key={item.name}
-                        onClick={() => {
-                          if (item.href) {
-                            if (item.href === WRITING_LAB_URL) {
-                              openExternalUrl(item.href);
-                              return;
-                            }
-                            navigateToUrl(item.href);
-                            return;
-                          }
-                          if (item.onClick) {
-                            setModalType(item.onClick);
-                          }
-                        }}
-                        type="button"
-                        disabled={!item.onClick && !item.href}
-                      >
-                        {item.badge && <span className="activity-badge">{item.badge}</span>}
-                        <span className="activity-icon">{item.icon}</span>
-                        <strong>{item.name}</strong>
-                        <p>{item.detail}</p>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </section>
+          <p className="landing-login-error" role="alert" aria-live="polite">
+            {teacherLoginError}
+          </p>
+        </section>
+
+        <section className="landing-capabilities" aria-labelledby="landing-capabilities-title">
+          <div className="landing-section-heading landing-section-heading-centered">
+            <span>아지트에서 할 수 있는 일</span>
+            <h2 id="landing-capabilities-title">쓰고, 나누고, 즐기며 성장해요</h2>
+          </div>
+
+          <div className="capability-grid">
+            {capabilities.map((capability) => (
+              <article
+                className={`capability-card capability-card-${capability.tone}`}
+                key={capability.title}
+              >
+                <span className="capability-icon" aria-hidden="true">{capability.icon}</span>
+                <strong>{capability.title}</strong>
+                <p>{capability.description}</p>
+              </article>
             ))}
-
-            <section className="landing-section landing-guides">
-              <div className="landing-section-head">
-                <h3>안내 & 정보</h3>
-              </div>
-              <div className="guide-link-grid">
-                {guideLinks.map((link) => (
-                  <a
-                    key={link.label}
-                    className="guide-link-card"
-                    href={link.href}
-                    rel="noopener noreferrer"
-                  >
-                    <span>{link.icon}</span>
-                    <strong>{link.label}</strong>
-                  </a>
-                ))}
-              </div>
-            </section>
-          </main>
-        </div>
-      </section>
-
-      <FeaturesModal
-        isOpen={Boolean(modalType)}
-        mode={modalType || 'features'}
-        onClose={() => setModalType(null)}
-      />
-    </>
+          </div>
+        </section>
+      </main>
+    </section>
   );
 };
 
