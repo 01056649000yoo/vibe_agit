@@ -104,6 +104,103 @@
 .reading-marathon-track dd { margin: 4px 0 0; color: #14532d; font-size: .9rem; font-weight: 950; }
 .reading-marathon-pending { margin: 10px 0 0; color: #92400e; font-size: .7rem; font-weight: 800; }
 
+.reading-marathon-overview,
+.reading-marathon-student-preview,
+.reading-marathon-config {
+    margin-top: 18px;
+    padding: clamp(16px, 2.5vw, 22px);
+    border: 1px solid #fed7aa;
+    border-radius: 20px;
+    background: rgba(255,255,255,.82);
+}
+
+.reading-marathon-section-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 15px;
+}
+
+.reading-marathon-section-heading > div > span {
+    color: #c2410c;
+    font-size: .7rem;
+    font-weight: 950;
+}
+
+.reading-marathon-section-heading h4 {
+    margin: 4px 0 0;
+    color: #431407;
+    font-size: 1.02rem;
+}
+
+.reading-marathon-section-heading p {
+    margin: 6px 0 0;
+    color: #78716c;
+    font-size: .76rem;
+    line-height: 1.5;
+}
+
+.reading-marathon-section-heading > strong,
+.reading-marathon-status {
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: #f0fdf4;
+    color: #15803d;
+    font-size: .72rem;
+    white-space: nowrap;
+}
+
+.reading-marathon-status--draft,
+.reading-marathon-status--paused { background: #f5f5f4; color: #78716c; }
+.reading-marathon-status--completed { background: #fef9c3; color: #a16207; }
+
+.reading-marathon-overview__stats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
+}
+
+.reading-marathon-overview__stats div {
+    min-width: 0;
+    padding: 12px 8px;
+    border-radius: 13px;
+    background: #fff7ed;
+    text-align: center;
+}
+
+.reading-marathon-overview__stats dt { color: #9a3412; font-size: .67rem; font-weight: 850; }
+.reading-marathon-overview__stats dd { margin: 5px 0 0; color: #7c2d12; font-size: .88rem; font-weight: 950; overflow-wrap: anywhere; }
+
+.reading-marathon-student-preview {
+    border-color: #bae6fd;
+    background: linear-gradient(145deg, #f8fcff, #fffdf5);
+}
+
+.reading-marathon-my-race--guide { grid-template-columns: 1fr; }
+.reading-marathon-my-race--guide small { grid-column: auto; }
+
+.reading-marathon-config { background: #fffaf2; }
+.reading-marathon-config .reading-marathon-settings__form { margin-top: 0; }
+
+.reading-marathon-settings__empty {
+    display: grid;
+    justify-items: center;
+    gap: 7px;
+    margin-top: 18px;
+    padding: 28px 18px;
+    border: 1px dashed #fdba74;
+    border-radius: 18px;
+    background: rgba(255,255,255,.72);
+    text-align: center;
+}
+
+.reading-marathon-settings__empty > span { font-size: 2rem; }
+.reading-marathon-settings__empty > strong { color: #7c2d12; }
+.reading-marathon-settings__empty > p { margin: 0; color: #78716c; font-size: .78rem; }
+
 .reading-marathon-settings__form { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(190px,.7fr); gap: 14px; margin-top: 18px; padding: 18px; border: 1px solid #fed7aa; border-radius: 18px; background: rgba(255,255,255,.8); }
 .reading-marathon-settings__form > label { display: grid; align-content: start; gap: 7px; }
 .reading-marathon-settings__form > label > span,
@@ -145,6 +242,10 @@
     .reading-marathon-card__tracks,
     .reading-marathon-settings__tracks,
     .reading-marathon-settings__form { grid-template-columns: 1fr; }
+    .reading-marathon-section-heading { align-items: stretch; flex-direction: column; }
+    .reading-marathon-section-heading > strong { align-self: flex-start; }
+    .reading-marathon-overview__stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .reading-marathon-overview__stats div:last-child { grid-column: 1 / -1; }
     .reading-marathon-settings__form fieldset,
     .reading-marathon-settings__rule,
     .reading-marathon-settings__form > button { grid-column: auto; }

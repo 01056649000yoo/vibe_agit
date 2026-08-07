@@ -11,6 +11,16 @@ import {
 import './readingMarathon.css';
 
 const TARGET_PRESETS = [10000, 42195, 100000];
+const MEDALS = ['🥇', '🥈', '🥉'];
+
+const formatDate = (dateValue) => {
+    if (!dateValue) return '정하지 않음';
+    return new Intl.DateTimeFormat('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    }).format(new Date(`${dateValue}T00:00:00`));
+};
 
 const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const [snapshot, setSnapshot] = useState(null);
@@ -121,6 +131,10 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     if (loading) return <div className="reading-marathon-settings__loading">독서마라톤 코스를 준비하는 중... 🏃</div>;
 
     const completed = snapshot?.campaign?.status === 'completed';
+    const campaign = snapshot?.campaign;
+    const summary = snapshot?.summary;
+    const podium = leaderboard.slice(0, 3);
+    const remainingDistanceM = Math.max(0, (summary?.targetDistanceM || 0) - (summary?.totalDistanceM || 0));
 
     return (
         <section className="reading-marathon-settings" aria-labelledby="reading-marathon-settings-title">
@@ -128,7 +142,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 <div>
                     <span>독서 동기부여</span>
                     <h3 id="reading-marathon-settings-title">🏃 독서마라톤</h3>
-                    <p>개인 거리 순위로 도전하고, 모두의 거리를 합쳐 학급 목표도 함께 완주합니다.</p>
+                    <p>우리 반이 함께 목표 거리를 완주하고, 학생별 기여 거리와 순위도 확인합니다.</p>
                 </div>
                 <FeatureAvailabilitySwitch
                     checked={form.enabled}
@@ -142,15 +156,118 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 />
             </header>
 
-            {snapshot?.campaign && (
-                <ReadingMarathonCourse
-                    title={snapshot.campaign.title}
-                    summary={snapshot.summary}
-                    completed={completed}
-                />
+            {campaign ? (
+                <>
+                    <section className="reading-marathon-overview" aria-labelledby="reading-marathon-overview-title">
+                        <div className="reading-marathon-section-heading">
+                            <div>
+                                <span>현재 운영 현황</span>
+                                <h4 id="reading-marathon-overview-title">{campaign.title}</h4>
+                            </div>
+                            <strong className={`reading-marathon-status reading-marathon-status--${campaign.status}`}>
+                                {completed ? '공동 목표 완주' : campaign.is_enabled ? '학생에게 표시 중' : '학생에게 숨김'}
+                            </strong>
+                        </div>
+                        <dl className="reading-marathon-overview__stats">
+                            <div><dt>공동 달성 거리</dt><dd>{formatMarathonDistance(summary.totalDistanceM)}</dd></div>
+                            <div><dt>목표 달성률</dt><dd>{Math.round(summary.progressPercent)}%</dd></div>
+                            <div><dt>남은 거리</dt><dd>{formatMarathonDistance(remainingDistanceM)}</dd></div>
+                            <div><dt>참여 학생</dt><dd>{summary.contributors}명</dd></div>
+                            <div><dt>종료일</dt><dd>{formatDate(campaign.ends_on)}</dd></div>
+                        </dl>
+                    </section>
+
+                    <section className="reading-marathon-student-preview" aria-labelledby="reading-marathon-preview-title">
+                        <div className="reading-marathon-section-heading">
+                            <div>
+                                <span>학생 화면 확인</span>
+                                <h4 id="reading-marathon-preview-title">학생에게 이렇게 보여요</h4>
+                                <p>학생 대시보드에 표시되는 실제 공동 코스와 순위 구성입니다.</p>
+                            </div>
+                            <strong>{campaign.is_enabled ? '현재 표시 중' : '기능을 켜면 표시'}</strong>
+                        </div>
+
+                        <ReadingMarathonCourse title={campaign.title} summary={summary} completed={completed} />
+
+                        <div className="reading-marathon-card__tracks">
+                            <article className="reading-marathon-track reading-marathon-track--individual">
+                                <header><span>🏅</span><div><strong>우리 반 독서 기여 순위</strong><small>공동 목표에 보탠 독서 거리</small></div></header>
+                                {podium.length > 0 ? (
+                                    <ol className="reading-marathon-podium">
+                                        {podium.map((row, index) => (
+                                            <li key={row.student_id}>
+                                                <span>{MEDALS.at(index)}</span>
+                                                <strong>{row.name}</strong>
+                                                <em>{formatMarathonDistance(row.distance_m)}</em>
+                                            </li>
+                                        ))}
+                                    </ol>
+                                ) : <p className="reading-marathon-track__empty">첫 번째 독서 기록을 기다리고 있어요.</p>}
+                                <div className="reading-marathon-my-race reading-marathon-my-race--guide">
+                                    <span>학생마다 자신의 현재 순위가 보여요</span>
+                                    <small>내가 읽은 거리 · 책 수 · 페이지 수를 함께 확인합니다.</small>
+                                </div>
+                            </article>
+
+                            <article className="reading-marathon-track reading-marathon-track--class">
+                                <header><span>🤝</span><div><strong>공동 목표 현황</strong><small>모두의 거리를 합쳐 완주</small></div></header>
+                                <dl>
+                                    <div><dt>참여 학생</dt><dd>{summary.contributors}명</dd></div>
+                                    <div><dt>함께 읽은 책</dt><dd>{summary.bookCount}권</dd></div>
+                                    <div><dt>함께 읽은 쪽</dt><dd>{summary.totalPages.toLocaleString('ko-KR')}쪽</dd></div>
+                                </dl>
+                                {summary.pendingBookCount > 0 && (
+                                    <p className="reading-marathon-pending">📖 페이지 정보 확인 중인 책 {summary.pendingBookCount}권</p>
+                                )}
+                            </article>
+                        </div>
+                    </section>
+
+                    <div className="reading-marathon-settings__tracks">
+                        <section>
+                            <h4>🏅 우리 반 독서 기여 순위</h4>
+                            <p>공동 목표에 보탠 개인별 독서 거리입니다. 학생 화면에는 상위 3명과 본인 순위가 표시됩니다.</p>
+                            {leaderboard.length > 0 ? (
+                                <ol className="reading-marathon-teacher-ranking">
+                                    {leaderboard.map((row) => (
+                                        <li key={row.student_id}><span>{row.rank}위</span><strong>{row.name}</strong><em>{row.book_count}권 · {formatMarathonDistance(row.distance_m)}</em></li>
+                                    ))}
+                                </ol>
+                            ) : <p>아직 페이지가 반영된 학생이 없습니다.</p>}
+                        </section>
+                        <section>
+                            <h4>📖 페이지 정보 확인이 필요한 책</h4>
+                            <p>자동으로 페이지 수를 찾지 못한 책만 교사가 직접 입력할 수 있습니다.</p>
+                            {snapshot.pendingBooks.length > 0 ? (
+                                <div className="reading-marathon-pending-list">
+                                    {snapshot.pendingBooks.map((book) => (
+                                        <div key={book.post_id}>
+                                            <span><strong>{book.book_title}</strong><small>{book.student_name} · {book.isbn13 || book.isbn10 || 'ISBN 없음'}</small></span>
+                                            <label><input type="number" min="1" max="10000" aria-label={`${book.book_title} 페이지 수`} placeholder="쪽수" value={pageValues[book.post_id] || ''} onChange={(event) => setPageValues((current) => ({ ...current, [book.post_id]: event.target.value }))} /><em>쪽</em></label>
+                                            <Button type="button" size="sm" variant="outline" onClick={() => savePageCount(book)} disabled={pageSavingId === book.post_id}>{pageSavingId === book.post_id ? '저장 중' : '반영'}</Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : <p className="reading-marathon-settings__done">페이지 정보가 필요한 새 책이 없습니다. ✅</p>}
+                        </section>
+                    </div>
+                </>
+            ) : (
+                <div className="reading-marathon-settings__empty">
+                    <span>🏁</span>
+                    <strong>아직 만든 독서마라톤이 없습니다.</strong>
+                    <p>아래에서 이름과 공동 목표 거리를 정하면 학생 화면에 표시할 수 있습니다.</p>
+                </div>
             )}
 
-            <form onSubmit={(event) => { event.preventDefault(); saveCampaign(); }} className="reading-marathon-settings__form">
+            <section className="reading-marathon-config" aria-labelledby="reading-marathon-config-title">
+                <div className="reading-marathon-section-heading">
+                    <div>
+                        <span>운영 설정</span>
+                        <h4 id="reading-marathon-config-title">마라톤 설정 바꾸기</h4>
+                    </div>
+                </div>
+                <form onSubmit={(event) => { event.preventDefault(); saveCampaign(); }} className="reading-marathon-settings__form">
                 <label>
                     <span>마라톤 이름</span>
                     <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} maxLength={60} />
@@ -180,37 +297,8 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 ) : (
                     <Button type="submit" disabled={saving}>{saving ? '저장 중...' : snapshot?.campaign ? '설정 저장하기' : '독서마라톤 만들기'}</Button>
                 )}
-            </form>
-
-            {snapshot?.campaign && (
-                <div className="reading-marathon-settings__tracks">
-                    <section>
-                        <h4>🏅 개인 레이스 전체 기록</h4>
-                        {leaderboard.length > 0 ? (
-                            <ol className="reading-marathon-teacher-ranking">
-                                {leaderboard.map((row) => (
-                                    <li key={row.student_id}><span>{row.rank}위</span><strong>{row.name}</strong><em>{row.book_count}권 · {formatMarathonDistance(row.distance_m)}</em></li>
-                                ))}
-                            </ol>
-                        ) : <p>아직 페이지가 반영된 학생이 없습니다.</p>}
-                    </section>
-                    <section>
-                        <h4>📖 페이지 정보 대기</h4>
-                        <p>API 연결 전에는 필요한 책만 교사가 보정할 수 있습니다. API가 연결되면 이 목록은 자동 처리됩니다.</p>
-                        {snapshot.pendingBooks.length > 0 ? (
-                            <div className="reading-marathon-pending-list">
-                                {snapshot.pendingBooks.map((book) => (
-                                    <div key={book.post_id}>
-                                        <span><strong>{book.book_title}</strong><small>{book.student_name} · {book.isbn13 || book.isbn10 || 'ISBN 없음'}</small></span>
-                                        <label><input type="number" min="1" max="10000" placeholder="쪽수" value={pageValues[book.post_id] || ''} onChange={(event) => setPageValues((current) => ({ ...current, [book.post_id]: event.target.value }))} /><em>쪽</em></label>
-                                        <Button type="button" size="sm" variant="outline" onClick={() => savePageCount(book)} disabled={pageSavingId === book.post_id}>{pageSavingId === book.post_id ? '저장 중' : '반영'}</Button>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : <p className="reading-marathon-settings__done">페이지 정보가 필요한 새 책이 없습니다. ✅</p>}
-                    </section>
-                </div>
-            )}
+                </form>
+            </section>
         </section>
     );
 };

@@ -48,7 +48,7 @@ const ReadingMarathonDashboardCard = ({ studentSession }) => {
 
             <div className="reading-marathon-card__tracks">
                 <article className="reading-marathon-track reading-marathon-track--individual">
-                    <header><span>🏅</span><div><strong>개인 레이스</strong><small>읽은 페이지 거리 순위</small></div></header>
+                    <header><span>🏅</span><div><strong>우리 반 독서 기여 순위</strong><small>공동 목표에 보탠 독서 거리</small></div></header>
                     {podium.length > 0 ? (
                         <ol className="reading-marathon-podium">
                             {podium.map((row, index) => (
@@ -68,7 +68,7 @@ const ReadingMarathonDashboardCard = ({ studentSession }) => {
                 </article>
 
                 <article className="reading-marathon-track reading-marathon-track--class">
-                    <header><span>🤝</span><div><strong>우리 반 레이스</strong><small>모두의 거리를 합쳐 완주</small></div></header>
+                    <header><span>🤝</span><div><strong>공동 목표 현황</strong><small>모두의 거리를 합쳐 완주</small></div></header>
                     <dl>
                         <div><dt>참여 주자</dt><dd>{snapshot.summary.contributors}명</dd></div>
                         <div><dt>함께 읽은 책</dt><dd>{snapshot.summary.bookCount}권</dd></div>
