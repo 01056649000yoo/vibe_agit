@@ -65,13 +65,14 @@ const LandingPage = ({ onStudentLoginClick }) => {
         </header>
 
         <section className="landing-hero" aria-label="끄적끄적 아지트 소개">
-          <div className="landing-hero-character" aria-hidden="true">🐲</div>
-          <div className="landing-hero-copy">
-            <span>우리 반 글쓰기 공간</span>
-            <strong>생각을 쓰고, 나누며 자라요</strong>
-            <p>글쓰기를 중심으로 독서와 재미있는 활동을 이어가요.</p>
-          </div>
-          <div className="landing-hero-pencil" aria-hidden="true">✏️</div>
+          <img
+            className="landing-hero-image"
+            src="/assets/landing-hero-reference.png"
+            alt="끄적끄적 아지트, 글쓰기를 중심으로 문해력 활동을 이어가는 공간"
+            width="1723"
+            height="913"
+            fetchPriority="high"
+          />
         </section>
 
         <section className="landing-entry" aria-labelledby="landing-entry-title">

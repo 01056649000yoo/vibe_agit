@@ -1,6 +1,6 @@
 .landing-shell {
   position: relative;
-  width: min(860px, 100%);
+  width: min(760px, 100%);
   margin: 0 auto;
   padding: 12px 16px 56px;
   overflow: hidden;
@@ -32,7 +32,7 @@
 }
 
 .landing-card {
-  width: min(100%, 760px);
+  width: min(100%, 680px);
   margin: 0 auto;
   padding: 22px;
   border: 1px solid rgba(240, 220, 194, 0.9);
@@ -77,66 +77,21 @@
 }
 
 .landing-hero {
-  position: relative;
   overflow: hidden;
   border: 1px solid rgba(255, 222, 184, 0.85);
   border-radius: 24px;
-  min-height: 168px;
-  padding: 24px 84px 24px 28px;
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  background:
-    radial-gradient(circle at 90% 20%, rgba(148, 222, 207, 0.42) 0, rgba(148, 222, 207, 0) 32%),
-    linear-gradient(135deg, #fff4e5 0%, #fffaf3 54%, #f2fbf8 100%);
+  aspect-ratio: 1723 / 720;
+  background: #fff5e9;
 }
 
-.landing-hero-character {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 92px;
-  height: 92px;
-  flex: 0 0 92px;
-  border: 1px solid rgba(226, 191, 134, 0.48);
-  border-radius: 30px;
-  background: rgba(255, 255, 255, 0.74);
-  box-shadow: 0 14px 30px rgba(139, 104, 65, 0.1);
-  font-size: 3.4rem;
-}
-
-.landing-hero-copy {
-  display: grid;
-  gap: 4px;
-}
-
-.landing-hero-copy > span {
-  color: #188273;
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.landing-hero-copy strong {
-  color: #352d26;
-  font-size: clamp(1.3rem, 2.5vw, 1.85rem);
-  font-weight: 900;
-  letter-spacing: -0.035em;
-}
-
-.landing-hero-copy p {
-  margin: 2px 0 0;
-  color: #74685d;
-  font-size: 0.88rem;
-  line-height: 1.55;
-}
-
-.landing-hero-pencil {
-  position: absolute;
-  right: 28px;
-  top: 24px;
-  transform: rotate(-12deg);
-  font-size: 2rem;
-  opacity: 0.7;
+.landing-hero-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  transform: scale(1.04);
+  transform-origin: center center;
 }
 
 .landing-entry,
@@ -376,29 +331,6 @@
 
   .landing-hero {
     border-radius: 18px;
-    min-height: 132px;
-    padding: 18px 16px;
-    gap: 14px;
-  }
-
-  .landing-hero-character {
-    width: 64px;
-    height: 64px;
-    flex-basis: 64px;
-    border-radius: 21px;
-    font-size: 2.3rem;
-  }
-
-  .landing-hero-copy strong {
-    font-size: 1.18rem;
-  }
-
-  .landing-hero-copy p {
-    font-size: 0.78rem;
-  }
-
-  .landing-hero-pencil {
-    display: none;
   }
 
   .landing-entry,
