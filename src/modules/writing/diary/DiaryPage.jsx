@@ -459,6 +459,39 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
         dailyStatus.reload();
     };
 
+    if (dailyStatus.loading) {
+        return <Card><p style={{ textAlign: 'center', padding: '40px' }}>일기 사용 여부를 확인하는 중... 📔</p></Card>;
+    }
+
+    if (dailyStatus.error) {
+        return (
+            <Card style={{ maxWidth: '680px', margin: '48px auto', padding: '48px 24px', textAlign: 'center' }}>
+                <div style={{ fontSize: '3.5rem' }}>📡</div>
+                <h1 style={{ color: '#334155', fontSize: '1.5rem' }}>일기 사용 여부를 확인하지 못했어요</h1>
+                <p style={{ color: '#64748B' }}>잠시 뒤 다시 확인해 주세요. 확인 전에는 개인정보 보호를 위해 일기장을 열지 않습니다.</p>
+                <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <Button variant="outline" onClick={onBack}>홈으로</Button>
+                    <Button onClick={dailyStatus.reload}>다시 확인</Button>
+                </div>
+            </Card>
+        );
+    }
+
+    if (!dailyStatus.isEnabled) {
+        return (
+            <div className="diary-page">
+                <Card style={{ maxWidth: '680px', margin: '48px auto', padding: '48px 24px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '3.5rem' }}>🔒</div>
+                    <h1 style={{ color: '#334155', fontSize: '1.5rem' }}>지금은 일기 쓰기를 사용하지 않아요</h1>
+                    <p style={{ color: '#64748B', lineHeight: 1.7 }}>
+                        선생님이 학급의 일기 기능을 꺼 두었습니다.<br />이미 작성한 일기는 삭제되지 않고 안전하게 보관됩니다.
+                    </p>
+                    <Button onClick={onBack}>홈으로 돌아가기</Button>
+                </Card>
+            </div>
+        );
+    }
+
     if (mode === 'editor') {
         return (
             <DiaryEditor

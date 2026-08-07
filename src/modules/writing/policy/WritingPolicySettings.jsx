@@ -5,7 +5,10 @@ import WritingPolicyFields from './WritingPolicyFields';
 import { normalizeWritingPolicy } from './writingPolicy';
 import './writingPolicy.css';
 
-const WritingPolicySettings = ({ classId, writingType, defaults, title, description, kicker = '글쓰기 동기부여 설정', onDirtyChange }) => {
+const WritingPolicySettings = ({
+    classId, writingType, defaults, title, description,
+    kicker = '글쓰기 동기부여 설정', availabilityEnabled, onDirtyChange
+}) => {
     const [policy, setPolicy] = useState(() => normalizeWritingPolicy(defaults));
     const [savedPolicy, setSavedPolicy] = useState(() => normalizeWritingPolicy(defaults));
     const [loading, setLoading] = useState(true);
@@ -49,9 +52,14 @@ const WritingPolicySettings = ({ classId, writingType, defaults, title, descript
         setSaving(true);
         setMessage('');
         const normalized = normalizeWritingPolicy(policy, defaults);
+        // 사용 ON/OFF는 화면 머리의 전용 스위치가 맡는다. 설정 폼을 오래 열어 둔 뒤 저장해도
+        // 과거 is_enabled 값이 스위치를 되돌리지 않도록 저장 직전 최신 값을 사용한다.
+        const policyToSave = typeof availabilityEnabled === 'boolean'
+            ? { ...normalized, is_enabled: availabilityEnabled }
+            : normalized;
         const { data, error } = await supabase
             .from('class_writing_policies')
-            .upsert({ class_id: classId, writing_type: writingType, ...normalized }, { onConflict: 'class_id,writing_type' })
+            .upsert({ class_id: classId, writing_type: writingType, ...policyToSave }, { onConflict: 'class_id,writing_type' })
             .select('is_enabled, min_chars, min_paragraphs, base_reward, bonus_enabled, bonus_threshold, bonus_reward, daily_reward_limit')
             .single();
         setSaving(false);

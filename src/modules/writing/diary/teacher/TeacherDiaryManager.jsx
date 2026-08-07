@@ -44,6 +44,10 @@ const formatDiaryDate = (value) => {
 
 const TeacherDiaryManager = ({ activeClass, isMobile }) => {
     const classId = activeClass?.id || null;
+    const [diaryEnabled, setDiaryEnabled] = useState(true);
+    const [availabilityLoading, setAvailabilityLoading] = useState(true);
+    const [availabilitySaving, setAvailabilitySaving] = useState(false);
+    const [availabilityExists, setAvailabilityExists] = useState(true);
     // 매일 쓰는 `확인`을 기본으로 두고, 큰 설정 폼은 열 때만 마운트한다(독서록과 같은 구조).
     const [section, setSection] = useState('reviews');
     const [policyDirty, setPolicyDirty] = useState(false);
@@ -69,6 +73,56 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
         exportWritingContentToGoogleDoc,
         authorizeGoogleExport
     } = useDataExport(classId);
+
+    useEffect(() => {
+        if (!classId) return undefined;
+        let active = true;
+        const loadAvailability = async () => {
+            setAvailabilityLoading(true);
+            const { data, error } = await supabase
+                .from('class_writing_policies')
+                .select('is_enabled')
+                .eq('class_id', classId)
+                .eq('writing_type', 'diary')
+                .maybeSingle();
+            if (!active) return;
+            if (error) {
+                console.error('일기 사용 여부 불러오기 실패:', error.message);
+            } else {
+                setAvailabilityExists(Boolean(data));
+                setDiaryEnabled(data?.is_enabled ?? true);
+            }
+            setAvailabilityLoading(false);
+        };
+        loadAvailability();
+        return () => { active = false; };
+    }, [classId]);
+
+    const changeDiaryAvailability = async (nextEnabled) => {
+        if (!nextEnabled && !window.confirm(
+            '학생 화면에서 일기 탭을 숨길까요?\n이미 작성한 일기는 삭제되지 않으며, 다시 켜면 그대로 사용할 수 있습니다.'
+        )) return;
+
+        setAvailabilitySaving(true);
+        const query = availabilityExists
+            ? supabase
+                .from('class_writing_policies')
+                .update({ is_enabled: nextEnabled })
+                .eq('class_id', classId)
+                .eq('writing_type', 'diary')
+            : supabase
+                .from('class_writing_policies')
+                .insert({ class_id: classId, writing_type: 'diary', ...DIARY_POLICY_DEFAULTS, is_enabled: nextEnabled });
+        const { error } = await query;
+        setAvailabilitySaving(false);
+        if (error) {
+            console.error('일기 사용 여부 저장 실패:', error.message);
+            alert('일기 사용 여부를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            return;
+        }
+        setAvailabilityExists(true);
+        setDiaryEnabled(nextEnabled);
+    };
 
     const load = useCallback(async () => {
         if (!classId) return;
@@ -225,6 +279,21 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                     <h2>📔 학생 일기</h2>
                     <p>학생이 하루에 한 편 남긴 일기를 읽고 한마디를 남겨요.</p>
                 </div>
+                <label className={`teacher-diary__availability ${diaryEnabled ? 'is-enabled' : 'is-disabled'}`}>
+                    <span className="teacher-diary__availability-copy">
+                        <strong>{diaryEnabled ? '학생 일기 사용 중' : '학생 일기 사용 안 함'}</strong>
+                        <small>{diaryEnabled ? '학생 화면에 일기 탭이 보입니다.' : '기존 일기는 보관하고 작성·수정만 막습니다.'}</small>
+                    </span>
+                    <input
+                        type="checkbox"
+                        role="switch"
+                        aria-label="학생 일기 사용"
+                        checked={diaryEnabled}
+                        disabled={availabilityLoading || availabilitySaving || !classId}
+                        onChange={(event) => changeDiaryAvailability(event.target.checked)}
+                    />
+                    <span className="teacher-diary__availability-control" aria-hidden="true" />
+                </label>
             </header>
 
             <nav className="teacher-diary__sections" role="tablist" aria-label="학생 일기 업무">
@@ -255,6 +324,7 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                         classId={classId}
                         writingType="diary"
                         defaults={DIARY_POLICY_DEFAULTS}
+                        availabilityEnabled={diaryEnabled}
                         title="일기 완료 조건과 포인트"
                         description="학생이 작성 완료할 때 분량과 하루 완료 편수를 확인합니다. 일기는 하루에 한 편이며 포인트는 그 날짜에 최초 한 번만 지급합니다."
                         onDirtyChange={setPolicyDirty}

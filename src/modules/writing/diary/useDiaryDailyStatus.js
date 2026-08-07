@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 
 const DEFAULT_STATUS = {
+    isEnabled: false,
     today: null,
     dailyLimit: 1,
     completedToday: 0,
@@ -28,6 +29,7 @@ const useDiaryDailyStatus = (studentId) => {
             return;
         }
         setStatus({
+            isEnabled: data?.is_enabled === true,
             today: data?.today || null,
             dailyLimit: Number(data?.daily_limit ?? 1),
             completedToday: Number(data?.completed_today ?? 0),

@@ -154,14 +154,16 @@ const DashboardMenu = ({
                     tone="green"
                     onClick={() => onNavigate('reading_logs')}
                 />
-                <MenuCard
-                    icon="📔"
-                    title="일기"
-                    description={diaryDescription}
-                    badge={diaryBadge}
-                    tone="blue"
-                    onClick={() => onNavigate('diaries')}
-                />
+                {diaryDailyStatus.isEnabled && (
+                    <MenuCard
+                        icon="📔"
+                        title="일기"
+                        description={diaryDescription}
+                        badge={diaryBadge}
+                        tone="blue"
+                        onClick={() => onNavigate('diaries')}
+                    />
+                )}
                 <MenuCard
                     icon="👀"
                     title="친구 아지트"
