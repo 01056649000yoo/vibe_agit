@@ -28,6 +28,7 @@
 - **변경**: `ReadingMarathonDashboardCard.jsx`, `readingMarathon.css`, 문서 2개. DB·집계 규칙 변경 없음.
 - **결과/검증**: 수정 JSX ESLint, 프로덕션 빌드, 독서록·마라톤 테스트 24개를 통과했다. 펼침 버튼은
   `aria-expanded`·`aria-controls`와 키보드 포커스를 지원하고 모바일에서는 내 거리 보조 문구를 줄여 한 줄 폭을 지킨다.
+  커밋 `d0bb107`, GitHub Actions 운영 배포 `31190503998`이 21초 만에 Verify까지 성공했다.
 - **남은 것 / 다음**: 운영 배포 후 학생 PC·태블릿에서 접힌 카드 높이와 펼침 애니메이션을 실화면 확인한다.
 
 ## 2026-08-07 — 독서록 확인 완료 피드백·일괄 확인 (GPT/Codex)
