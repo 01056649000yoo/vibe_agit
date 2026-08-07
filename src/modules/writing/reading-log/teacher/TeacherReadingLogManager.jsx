@@ -69,6 +69,10 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     const [comment, setComment] = useState('');
     const [detailLoading, setDetailLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [reviewNotice, setReviewNotice] = useState('');
+    const [selectedReviewIds, setSelectedReviewIds] = useState(() => new Set());
+    const [bulkSaving, setBulkSaving] = useState(false);
+    const [bulkNotice, setBulkNotice] = useState('');
     const [exportTarget, setExportTarget] = useState(null);
     const [exporting, setExporting] = useState(false);
     const {
@@ -86,6 +90,11 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         const timerId = window.setTimeout(() => setDebouncedQuery(query.trim()), 250);
         return () => window.clearTimeout(timerId);
     }, [query]);
+
+    useEffect(() => {
+        setSelectedReviewIds(new Set());
+        setBulkNotice('');
+    }, [classId, effectiveReviewFilter, studentFilter, debouncedQuery, viewMode]);
 
     useEffect(() => {
         let active = true;
@@ -342,6 +351,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         setSelected(item);
         setDetail(null);
         setComment('');
+        setReviewNotice('');
         setDetailLoading(true);
 
         const [postResult, reviewResult] = await Promise.all([
@@ -430,6 +440,56 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         setDetail((current) => current ? { ...current, review: savedReview } : current);
         setSelected((current) => current ? { ...current, review_status: savedReview.review_status } : current);
         setComment(savedReview.teacher_comment);
+        setReviewNotice(teacherComment.trim()
+            ? '확인 완료! 선생님 한마디도 학생에게 저장됐습니다.'
+            : '확인 완료! 이 독서록은 확인한 기록으로 이동합니다.');
+        await refresh();
+    };
+
+    const toggleReviewSelection = (postId) => {
+        setSelectedReviewIds((current) => {
+            const next = new Set(current);
+            if (next.has(postId)) next.delete(postId);
+            else next.add(postId);
+            return next;
+        });
+        setBulkNotice('');
+    };
+
+    const selectableIds = useMemo(
+        () => items.filter((item) => item.review_status === 'unreviewed').map((item) => item.post_id),
+        [items]
+    );
+    const allLoadedSelected = selectableIds.length > 0
+        && selectableIds.every((postId) => selectedReviewIds.has(postId));
+
+    const toggleAllLoadedReviews = () => {
+        setSelectedReviewIds(allLoadedSelected ? new Set() : new Set(selectableIds));
+        setBulkNotice('');
+    };
+
+    const saveBulkReviews = async () => {
+        const postIds = selectableIds.filter((postId) => selectedReviewIds.has(postId));
+        if (postIds.length === 0 || bulkSaving) return;
+        const shouldSave = window.confirm(`선택한 독서록 ${postIds.length}편을 모두 확인 완료로 표시할까요?`);
+        if (!shouldSave) return;
+
+        setBulkSaving(true);
+        setBulkNotice('');
+        const { data, error } = await supabase.rpc('save_teacher_reading_log_reviews_bulk', {
+            p_post_ids: postIds
+        });
+        setBulkSaving(false);
+
+        if (error) {
+            console.error('독서록 일괄 확인 실패:', error.message);
+            alert('선택한 독서록을 일괄 확인하지 못했습니다. 다시 시도해 주세요.');
+            return;
+        }
+
+        const confirmedCount = Number(data?.confirmed_count) || postIds.length;
+        setSelectedReviewIds(new Set());
+        setBulkNotice(`✅ 독서록 ${confirmedCount}편을 확인 완료로 표시했습니다.`);
         await refresh();
     };
 
@@ -439,17 +499,31 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         return '전체 독서록';
     }, [reviewFilter, viewMode]);
 
-    const renderQueueCard = (item) => (
-        <button key={item.post_id} type="button" className="teacher-reading-queue-card" onClick={() => openDetail(item)}>
-            <div className="teacher-reading-queue-card__top">
-                <strong>👤 {item.student_name || '이름 없음'}</strong>
-                <span>{formatDate(item.updated_at)}</span>
-            </div>
-            <h4>{item.title || '제목 없는 독서록'}</h4>
-            <p>『{item.book_title || '책 정보 없음'}』</p>
-            <span className="teacher-reading-queue-card__action">내용 확인하고 표시 남기기 ›</span>
-        </button>
-    );
+    const renderQueueCard = (item) => {
+        const isSelected = selectedReviewIds.has(item.post_id);
+        return (
+            <article key={item.post_id} className={`teacher-reading-queue-card ${isSelected ? 'is-selected' : ''}`}>
+                <label className="teacher-reading-queue-card__select">
+                    <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleReviewSelection(item.post_id)}
+                        disabled={bulkSaving}
+                    />
+                    <span>{isSelected ? '선택됨' : '일괄 확인 선택'}</span>
+                </label>
+                <button type="button" className="teacher-reading-queue-card__open" onClick={() => openDetail(item)}>
+                    <div className="teacher-reading-queue-card__top">
+                        <strong>👤 {item.student_name || '이름 없음'}</strong>
+                        <span>{formatDate(item.updated_at)}</span>
+                    </div>
+                    <h4>{item.title || '제목 없는 독서록'}</h4>
+                    <p>『{item.book_title || '책 정보 없음'}』</p>
+                    <span className="teacher-reading-queue-card__action">내용 확인하고 표시 남기기 ›</span>
+                </button>
+            </article>
+        );
+    };
 
     const renderArchiveCard = (item) => (
         <button key={item.post_id} type="button" className="teacher-reading-archive-card" onClick={() => openDetail(item)}>
@@ -614,6 +688,28 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 </small>
             </div>
 
+            {viewMode === 'queue' && !loading && items.length > 0 && (
+                <div className="teacher-reading-bulk-bar">
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={allLoadedSelected}
+                            onChange={toggleAllLoadedReviews}
+                            disabled={bulkSaving}
+                        />
+                        <span>현재 목록 전체 선택</span>
+                    </label>
+                    <div>
+                        <span>{selectedReviewIds.size > 0 ? `${selectedReviewIds.size}편 선택` : '확인할 글을 선택하세요'}</span>
+                        <Button onClick={saveBulkReviews} disabled={selectedReviewIds.size === 0 || bulkSaving}>
+                            {bulkSaving ? '일괄 확인 중...' : `선택한 독서록 확인 완료 ✓`}
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {bulkNotice && <div className="teacher-reading-success-notice" role="status">{bulkNotice}</div>}
+
             {loading ? (
                 <div className="teacher-reading-empty">독서록 목록을 불러오는 중... 📖</div>
             ) : loadError ? (
@@ -732,11 +828,14 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                                     <span>마지막 수정 {formatDate(detail.updated_at)}</span>
                                 </div>
                                 <div className="teacher-reading-content">{detail.content || '작성된 내용이 없습니다.'}</div>
-                                <section className="teacher-reading-review-box">
+                                <section className={`teacher-reading-review-box ${detail.review ? 'is-reviewed' : ''}`}>
                                     <div>
                                         <h3>선생님 확인</h3>
-                                        <span>{reviewLabel(detail.review?.review_status)}</span>
+                                        <span className={`teacher-reading-review-state ${detail.review?.review_status || 'unreviewed'}`}>
+                                            {reviewLabel(detail.review?.review_status)}
+                                        </span>
                                     </div>
+                                    {reviewNotice && <div className="teacher-reading-review-success" role="status">✅ {reviewNotice}</div>}
                                     <textarea
                                         value={comment}
                                         onChange={(event) => setComment(event.target.value.slice(0, 500))}
@@ -746,8 +845,13 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                                     />
                                     <small>{comment.length}/500 · 학생의 나의 책장에 표시됩니다.</small>
                                     <div className="teacher-reading-review-actions">
-                                        <Button variant="ghost" onClick={() => saveReview('')} disabled={saving}>
-                                            {saving ? '저장 중...' : '확인했어요만 표시'}
+                                        <Button
+                                            variant="ghost"
+                                            style={detail.review && !comment.trim() ? { backgroundColor: '#16A34A', color: 'white' } : undefined}
+                                            onClick={() => saveReview('')}
+                                            disabled={saving || (Boolean(detail.review) && !comment.trim())}
+                                        >
+                                            {saving ? '저장 중...' : detail.review && !comment.trim() ? '✅ 확인 완료됨' : '확인 완료로 표시 ✓'}
                                         </Button>
                                         <Button onClick={() => saveReview(comment.trim())} disabled={saving || !comment.trim()}>
                                             한마디 저장하기 💬
@@ -801,8 +905,18 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 .teacher-reading-list-heading h3 { margin:0; color:#334155; }
                 .teacher-reading-list-heading small { color:#94A3B8; }
                 .teacher-reading-queue-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
-                .teacher-reading-queue-card { display:flex; min-width:0; min-height:168px; flex-direction:column; align-items:stretch; padding:18px; border:1px solid #FDE68A; border-radius:18px; background:linear-gradient(145deg,#FFFBEB,#FFFFFF); text-align:left; cursor:pointer; }
+                .teacher-reading-bulk-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:14px; padding:13px 15px; border:1px solid #BFDBFE; border-radius:15px; background:#EFF6FF; }
+                .teacher-reading-bulk-bar label { display:flex; align-items:center; gap:8px; color:#1E3A8A; font-size:.82rem; font-weight:900; cursor:pointer; }
+                .teacher-reading-bulk-bar input, .teacher-reading-queue-card__select input { width:18px; height:18px; accent-color:#2563EB; cursor:pointer; }
+                .teacher-reading-bulk-bar > div { display:flex; align-items:center; gap:12px; }
+                .teacher-reading-bulk-bar > div > span { color:#475569; font-size:.78rem; font-weight:900; }
+                .teacher-reading-success-notice { margin-bottom:14px; padding:13px 16px; border:1px solid #86EFAC; border-radius:14px; background:#F0FDF4; color:#15803D; font-weight:900; animation:readingReviewDone .28s ease-out; }
+                .teacher-reading-queue-card { display:flex; min-width:0; min-height:192px; flex-direction:column; align-items:stretch; overflow:hidden; padding:0; border:1px solid #FDE68A; border-radius:18px; background:linear-gradient(145deg,#FFFBEB,#FFFFFF); text-align:left; transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
                 .teacher-reading-queue-card:hover { border-color:#F59E0B; transform:translateY(-1px); box-shadow:0 8px 20px rgba(180,83,9,.09); }
+                .teacher-reading-queue-card.is-selected { border-color:#60A5FA; box-shadow:0 0 0 3px rgba(96,165,250,.18); }
+                .teacher-reading-queue-card__select { display:flex; align-items:center; gap:8px; padding:10px 15px; border-bottom:1px solid #FEF3C7; background:rgba(255,255,255,.74); color:#64748B; font-size:.72rem; font-weight:900; cursor:pointer; }
+                .teacher-reading-queue-card.is-selected .teacher-reading-queue-card__select { background:#EFF6FF; color:#1D4ED8; }
+                .teacher-reading-queue-card__open { display:flex; min-width:0; flex:1; flex-direction:column; align-items:stretch; padding:16px 18px 18px; border:0; background:transparent; text-align:left; cursor:pointer; }
                 .teacher-reading-queue-card__top { display:flex; align-items:center; justify-content:space-between; gap:10px; color:#92400E; font-size:.78rem; }
                 .teacher-reading-queue-card__top span { color:#94A3B8; }
                 .teacher-reading-queue-card h4 { margin:18px 0 6px; overflow:hidden; color:#1E293B; font-size:1rem; text-overflow:ellipsis; white-space:nowrap; }
@@ -877,9 +991,14 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 .teacher-reading-detail-meta { display:flex; justify-content:space-between; gap:12px; padding:18px 30px 0; color:#64748B; font-size:.82rem; font-weight:800; }
                 .teacher-reading-content { min-height:260px; margin:18px 30px 24px; padding:34px; border:1px solid #E2E8F0; border-radius:20px; background:#FFFEFA; color:#334155; font-size:1.08rem; line-height:1.9; white-space:pre-wrap; overflow-wrap:anywhere; }
                 .teacher-reading-review-box { margin:0 30px 30px; padding:22px; border-radius:20px; background:#EFF6FF; }
+                .teacher-reading-review-box.is-reviewed { border:2px solid #86EFAC; background:linear-gradient(145deg,#F0FDF4,#FFFFFF); }
                 .teacher-reading-review-box > div:first-child { display:flex; align-items:center; justify-content:space-between; gap:12px; }
                 .teacher-reading-review-box h3 { margin:0; color:#1E3A8A; }
-                .teacher-reading-review-box > div:first-child span { color:#475569; font-size:.8rem; font-weight:900; }
+                .teacher-reading-review-state { padding:7px 10px; border-radius:999px; background:#FEF3C7; color:#92400E; font-size:.8rem; font-weight:950; }
+                .teacher-reading-review-state.checked { background:#DCFCE7; color:#15803D; }
+                .teacher-reading-review-state.commented { background:#EDE9FE; color:#6D28D9; }
+                .teacher-reading-review-success { margin-top:14px; padding:14px 16px; border:1px solid #86EFAC; border-radius:13px; background:#DCFCE7; color:#15803D; font-weight:950; animation:readingReviewDone .28s ease-out; }
+                @keyframes readingReviewDone { from { opacity:0; transform:translateY(5px) scale(.985); } to { opacity:1; transform:none; } }
                 .teacher-reading-review-box textarea { width:100%; margin-top:14px; padding:14px; border:1px solid #BFDBFE; border-radius:13px; box-sizing:border-box; resize:vertical; color:#334155; font:inherit; line-height:1.6; }
                 .teacher-reading-review-box > small { display:block; margin-top:6px; color:#64748B; text-align:right; }
                 .teacher-reading-review-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
@@ -895,6 +1014,9 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                     .teacher-reading-sections button { min-height:48px; padding:9px 8px; font-size:.8rem; }
                     .teacher-reading-stats { grid-template-columns:repeat(2, minmax(0, 1fr)); }
                     .teacher-reading-filters, .teacher-reading-filters.is-wide { grid-template-columns:1fr; }
+                    .teacher-reading-bulk-bar { align-items:stretch; flex-direction:column; }
+                    .teacher-reading-bulk-bar > div { align-items:stretch; flex-direction:column; }
+                    .teacher-reading-bulk-bar > div button { width:100%; }
                     .teacher-reading-viewtabs { display:grid; width:100%; grid-template-columns:1fr; }
                     .teacher-reading-queue-grid, .teacher-reading-student-grid, .teacher-reading-student-log-grid, .teacher-reading-archive-grid { grid-template-columns:1fr; }
                     .teacher-reading-list-heading { align-items:flex-start; flex-direction:column; gap:5px; }
