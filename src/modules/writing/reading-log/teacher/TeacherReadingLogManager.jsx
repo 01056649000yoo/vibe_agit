@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../../../../components/common/Button';
 import ExportSelectModal from '../../../../components/common/ExportSelectModal';
 import ModalCloseButton from '../../../../components/common/ModalCloseButton';
@@ -7,6 +7,8 @@ import { supabase } from '../../../../lib/supabaseClient';
 import { classKey, classScope, dataCache } from '../../../../lib/cache';
 import WritingPolicySettings from '../../policy/WritingPolicySettings';
 import { READING_LOG_POLICY_DEFAULTS } from '../../policy/writingPolicy';
+
+const ReadingMarathonTeacherSettings = lazy(() => import('../marathon/ReadingMarathonTeacherSettings'));
 
 const EMPTY_COUNTS = { total: 0, unreviewed: 0, reviewed: 0, students: 0 };
 
@@ -525,6 +527,9 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
 
             {section === 'motivation' ? (
                 <div className="teacher-reading-policy-panel" role="tabpanel" aria-label="글쓰기 동기부여 설정">
+                    <Suspense fallback={<div className="reading-marathon-settings__loading">독서마라톤 설정을 준비하는 중... 🏃</div>}>
+                        <ReadingMarathonTeacherSettings classId={classId} className={activeClass?.name} />
+                    </Suspense>
                     <WritingPolicySettings
                         classId={classId}
                         writingType="reading_log"

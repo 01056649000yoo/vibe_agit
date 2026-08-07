@@ -27,6 +27,7 @@ const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/Backgro
 const AgitOnClassPage = lazy(getModule('agit-on-class').studentEntry);
 const WritingFootprintModal = lazy(() => import('../../modules/writing/writing-footprint/WritingFootprintModal'));
 const MyAgitPanel = lazy(() => import('./MyAgitPanel'));
+const ReadingMarathonDashboardCard = lazy(() => import('../../modules/writing/reading-log/marathon/ReadingMarathonDashboardCard'));
 
 // [신규] 아지트 실시간 데이터 연동 훅
 import { useClassAgitClass } from '../../hooks/useClassAgitClass';
@@ -229,6 +230,10 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                         onOpenDragon={() => setIsDragonModalOpen(true)}
                         onOpenFootprint={() => setIsFootprintOpen(true)}
                     />
+
+                    <Suspense fallback={null}>
+                        <ReadingMarathonDashboardCard studentSession={studentSession} />
+                    </Suspense>
 
                 {/* 선생님의 실시간 알림(포인트·승인·회수). 상시 상태인 '다시 쓸 글'은
                     아래 할 일 카드가 맡는다 — 같은 것을 두 군데서 세지 않도록. */}

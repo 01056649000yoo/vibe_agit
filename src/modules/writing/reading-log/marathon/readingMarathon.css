@@ -1,0 +1,167 @@
+.reading-marathon-card,
+.reading-marathon-settings {
+    box-sizing: border-box;
+    border: 1px solid #fed7aa;
+    border-radius: 24px;
+    background: linear-gradient(145deg, #fffdf5, #fff7ed);
+    box-shadow: 0 12px 30px rgba(154, 52, 18, .08);
+}
+
+.reading-marathon-card { margin: 20px 0; padding: clamp(18px, 3vw, 28px); }
+.reading-marathon-settings { padding: clamp(18px, 3vw, 28px); }
+
+.reading-marathon-card__header,
+.reading-marathon-settings > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 16px;
+}
+
+.reading-marathon-card__header span,
+.reading-marathon-settings > header > div > span {
+    color: #c2410c;
+    font-size: .76rem;
+    font-weight: 950;
+}
+
+.reading-marathon-card__header h2,
+.reading-marathon-settings > header h3 {
+    margin: 5px 0 0;
+    color: #431407;
+    font-size: clamp(1.18rem, 2.2vw, 1.55rem);
+}
+
+.reading-marathon-card__header > strong {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #ffedd5;
+    color: #c2410c;
+    white-space: nowrap;
+}
+
+.reading-marathon-settings > header p { margin: 7px 0 0; color: #78716c; font-size: .88rem; }
+
+.reading-marathon-course {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #bae6fd;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 58%, #dcfce7 58%);
+}
+
+.reading-marathon-course__sky {
+    position: absolute;
+    inset: 12px 18px auto;
+    display: flex;
+    justify-content: space-between;
+    opacity: .8;
+    font-size: 1.3rem;
+}
+
+.reading-marathon-course svg { position: relative; display: block; width: 100%; height: auto; min-height: 150px; }
+.reading-marathon-course__landmarks { font-size: 34px; }
+.reading-marathon-course__track { fill: none; stroke: #fff; stroke-width: 20; stroke-linecap: round; filter: drop-shadow(0 2px 1px rgba(71,85,105,.16)); }
+.reading-marathon-course__progress { fill: none; stroke-width: 12; stroke-linecap: round; transition: stroke-dasharray .7s ease; }
+.reading-marathon-course__runner { transition: transform .7s ease; }
+.reading-marathon-course__runner circle { fill: #fff; stroke: #fb923c; stroke-width: 4; filter: drop-shadow(0 3px 4px rgba(124,45,18,.25)); }
+.reading-marathon-course__runner text { font-size: 25px; text-anchor: middle; }
+.reading-marathon-course.is-complete .reading-marathon-course__runner circle { stroke: #facc15; animation: marathonPulse 1.2s ease-in-out infinite; }
+
+@keyframes marathonPulse { 50% { r: 25px; } }
+
+.reading-marathon-course__caption { display: flex; justify-content: space-between; gap: 10px; padding: 0 16px 10px; color: #475569; font-size: .76rem; font-weight: 800; }
+.reading-marathon-course__caption strong { color: #c2410c; font-size: .88rem; }
+.reading-marathon-course__bar { height: 8px; background: rgba(255,255,255,.7); }
+.reading-marathon-course__bar span { display: block; height: 100%; border-radius: 0 999px 999px 0; background: linear-gradient(90deg,#fb923c,#facc15); transition: width .7s ease; }
+
+.reading-marathon-card__tracks,
+.reading-marathon-settings__tracks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+
+.reading-marathon-track,
+.reading-marathon-settings__tracks > section { min-width: 0; padding: 16px; border: 1px solid #fed7aa; border-radius: 17px; background: rgba(255,255,255,.82); }
+.reading-marathon-track > header { display: flex; align-items: center; gap: 10px; }
+.reading-marathon-track > header > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; background: #ffedd5; font-size: 1.25rem; }
+.reading-marathon-track > header div { display: grid; gap: 2px; }
+.reading-marathon-track > header strong { color: #7c2d12; }
+.reading-marathon-track > header small { color: #9a3412; font-size: .7rem; }
+.reading-marathon-track__empty { margin: 15px 0 0; color: #a8a29e; font-size: .8rem; text-align: center; }
+
+.reading-marathon-podium { display: grid; gap: 6px; margin: 13px 0; padding: 0; list-style: none; }
+.reading-marathon-podium li { display: grid; grid-template-columns: 28px minmax(0,1fr) auto; align-items: center; gap: 7px; padding: 7px 9px; border-radius: 11px; background: #fff7ed; }
+.reading-marathon-podium strong { min-width: 0; overflow: hidden; color: #431407; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
+.reading-marathon-podium em { color: #c2410c; font-size: .74rem; font-style: normal; font-weight: 900; }
+
+.reading-marathon-my-race { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 3px 10px; padding: 11px; border: 1px solid #fdba74; border-radius: 13px; background: #fff; }
+.reading-marathon-my-race span { color: #c2410c; font-size: .76rem; font-weight: 950; }
+.reading-marathon-my-race strong { color: #7c2d12; }
+.reading-marathon-my-race small { grid-column: 1 / -1; color: #a8a29e; font-size: .68rem; }
+
+.reading-marathon-track dl { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin: 16px 0 0; }
+.reading-marathon-track dl div { padding: 10px 5px; border-radius: 12px; background: #f0fdf4; text-align: center; }
+.reading-marathon-track dt { color: #15803d; font-size: .65rem; font-weight: 800; }
+.reading-marathon-track dd { margin: 4px 0 0; color: #14532d; font-size: .9rem; font-weight: 950; }
+.reading-marathon-pending { margin: 10px 0 0; color: #92400e; font-size: .7rem; font-weight: 800; }
+
+.reading-marathon-switch { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid #cbd5e1; border-radius: 999px; background: #f8fafc; color: #64748b; font-size: .76rem; font-weight: 900; box-shadow: none; }
+.reading-marathon-switch span { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; }
+.reading-marathon-switch.is-on { border-color: #86efac; background: #f0fdf4; color: #15803d; }
+.reading-marathon-switch.is-on span { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.13); }
+
+.reading-marathon-settings__form { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(190px,.7fr); gap: 14px; margin-top: 18px; padding: 18px; border: 1px solid #fed7aa; border-radius: 18px; background: rgba(255,255,255,.8); }
+.reading-marathon-settings__form > label { display: grid; align-content: start; gap: 7px; }
+.reading-marathon-settings__form > label > span,
+.reading-marathon-settings__form legend { color: #7c2d12; font-size: .78rem; font-weight: 900; }
+.reading-marathon-settings__form input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #fdba74; border-radius: 11px; box-sizing: border-box; background: #fff; color: #431407; font: inherit; }
+.reading-marathon-settings__form fieldset { grid-column: 1 / -1; margin: 0; padding: 13px; border: 1px solid #fed7aa; border-radius: 14px; }
+.reading-marathon-presets { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.reading-marathon-presets button { padding: 8px 10px; border: 1px solid #fed7aa; background: #fff; color: #9a3412; font-size: .74rem; font-weight: 900; box-shadow: none; }
+.reading-marathon-presets button.active { border-color: #f97316; background: #ffedd5; color: #c2410c; }
+.reading-marathon-custom-target { display: flex; align-items: center; gap: 8px; margin-top: 9px; color: #9a3412; font-size: .74rem; font-weight: 800; }
+.reading-marathon-custom-target input { width: 130px; }
+.reading-marathon-custom-target em { font-style: normal; }
+.reading-marathon-settings__rule { grid-column: 1 / -1; margin: 0; color: #78716c; font-size: .75rem; }
+.reading-marathon-settings__form > button { grid-column: 1 / -1; min-height: 48px; }
+
+.reading-marathon-settings__tracks > section h4 { margin: 0 0 10px; color: #7c2d12; }
+.reading-marathon-settings__tracks > section > p { margin: 0 0 12px; color: #78716c; font-size: .78rem; line-height: 1.55; }
+.reading-marathon-teacher-ranking { max-height: 330px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.reading-marathon-teacher-ranking li { display: grid; grid-template-columns: 42px minmax(0,1fr) auto; align-items: center; gap: 8px; padding: 9px 5px; border-bottom: 1px solid #ffedd5; }
+.reading-marathon-teacher-ranking li span { color: #c2410c; font-size: .74rem; font-weight: 950; }
+.reading-marathon-teacher-ranking li strong { min-width: 0; overflow: hidden; color: #431407; text-overflow: ellipsis; white-space: nowrap; }
+.reading-marathon-teacher-ranking li em { color: #78716c; font-size: .72rem; font-style: normal; }
+
+.reading-marathon-pending-list { display: grid; gap: 8px; max-height: 330px; overflow-y: auto; }
+.reading-marathon-pending-list > div { display: grid; grid-template-columns: minmax(0,1fr) 105px auto; align-items: center; gap: 8px; padding: 9px; border: 1px solid #ffedd5; border-radius: 12px; background: #fff; }
+.reading-marathon-pending-list > div > span { display: grid; min-width: 0; gap: 3px; }
+.reading-marathon-pending-list strong { overflow: hidden; color: #431407; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
+.reading-marathon-pending-list small { color: #a8a29e; font-size: .66rem; }
+.reading-marathon-pending-list label { display: flex; align-items: center; gap: 4px; }
+.reading-marathon-pending-list input { width: 75px; min-height: 36px; padding: 7px; border: 1px solid #fdba74; border-radius: 8px; box-sizing: border-box; }
+.reading-marathon-pending-list em { color: #9a3412; font-size: .7rem; font-style: normal; }
+.reading-marathon-settings__done { padding: 14px; border-radius: 12px; background: #f0fdf4; color: #15803d !important; text-align: center; }
+.reading-marathon-settings__loading { min-height: 280px; display: grid; place-items: center; color: #9a3412; font-weight: 900; }
+
+@media (max-width: 760px) {
+    .reading-marathon-card__header,
+    .reading-marathon-settings > header { align-items: stretch; flex-direction: column; }
+    .reading-marathon-card__header > strong,
+    .reading-marathon-switch { align-self: flex-start; }
+    .reading-marathon-card__tracks,
+    .reading-marathon-settings__tracks,
+    .reading-marathon-settings__form { grid-template-columns: 1fr; }
+    .reading-marathon-settings__form fieldset,
+    .reading-marathon-settings__rule,
+    .reading-marathon-settings__form > button { grid-column: auto; }
+    .reading-marathon-course__caption { flex-direction: column; gap: 2px; }
+    .reading-marathon-pending-list > div { grid-template-columns: minmax(0,1fr) auto; }
+    .reading-marathon-pending-list > div > span { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reading-marathon-course__runner,
+    .reading-marathon-course__progress,
+    .reading-marathon-course__bar span { transition: none; }
+    .reading-marathon-course.is-complete .reading-marathon-course__runner circle { animation: none; }
+}

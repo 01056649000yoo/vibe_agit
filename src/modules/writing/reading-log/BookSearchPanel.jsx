@@ -122,6 +122,11 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
                     <h3>{selectedBook.title}</h3>
                     <p>{selectedBook.authors?.join(', ') || '지은이 정보 없음'}</p>
                     {selectedBook.publisher && <small>{selectedBook.publisher}</small>}
+                    <span className={`selected-reading-book-pages ${selectedBook.pageCount ? 'is-ready' : ''}`}>
+                        {selectedBook.pageCount
+                            ? `📄 총 ${Number(selectedBook.pageCount).toLocaleString('ko-KR')}쪽`
+                            : '📄 페이지 정보는 서지 API 연결 후 자동 반영돼요'}
+                    </span>
                     <Button
                         variant="outline"
                         size="sm"
@@ -138,6 +143,8 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
                     .selected-reading-book-info h3 { margin:7px 0 5px; color:var(--ui-ink,#263238); font-size:1.35rem; }
                     .selected-reading-book-info p { margin:0 0 4px; color:var(--ui-ink-muted,#607D8B); }
                     .selected-reading-book-info small { margin-bottom:10px; color:var(--ui-ink-subtle,#90A4AE); }
+                    .selected-reading-book-pages { margin:3px 0 12px; padding:6px 9px; border-radius:9px; background:#F8FAFC; color:#64748B; font-size:.72rem; font-weight:800; }
+                    .selected-reading-book-pages.is-ready { background:#F0FDF4; color:#15803D; }
                     @media (max-width:560px) { .selected-reading-book { align-items:flex-start; gap:16px; padding:18px; } }
                 `}</style>
             </div>
@@ -192,7 +199,7 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
                                     <span>
                                         <strong>{book.title}</strong>
                                         <em>{book.authors?.join(', ') || '지은이 정보 없음'}</em>
-                                        <small>{[book.publisher, book.publishedDate?.slice(0, 4)].filter(Boolean).join(' · ')}</small>
+                                        <small>{[book.publisher, book.publishedDate?.slice(0, 4), book.pageCount ? `${Number(book.pageCount).toLocaleString('ko-KR')}쪽` : null].filter(Boolean).join(' · ')}</small>
                                     </span>
                                 </button>
                             ))}
