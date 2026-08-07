@@ -43,16 +43,6 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
     const agitSettings = useMemo(() => agitSettingsState, [agitSettingsState]);
     const lastRealtimeRefreshAtRef = useRef(0);
 
-    // [신규] 어휘의 탑 게임 설정 상태
-    const [vocabTowerSettings, setVocabTowerSettings] = useState({
-        grade: 3,
-        dailyLimit: 3,
-        timeLimit: 40,
-        rewardPoints: 80,
-        resetDate: null,
-        rankingResetDate: null
-    });
-
     // 단계별 메시지 및 설명 (초등학생 눈높이)
     const stageInfo = {
         1: {
@@ -131,7 +121,7 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
                 dataCache.get(cacheKey, async () => {
                     const { data, error } = await supabase
                         .from('classes')
-                        .select('agit_settings, vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_reset_date, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_ranking_reset_date')
+                        .select('agit_settings')
                         .eq('id', classId)
                         .single();
                     return { classData: data, classError: error };
@@ -190,16 +180,6 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
                     return currentSettings;
                 }
                 return prev;
-            });
-
-            // [신규] 어휘의 탑 설정 동기화
-            setVocabTowerSettings({
-                grade: classData?.vocab_tower_grade || 3,
-                dailyLimit: classData?.vocab_tower_daily_limit ?? 3,
-                timeLimit: classData?.vocab_tower_time_limit ?? 40,
-                rewardPoints: classData?.vocab_tower_reward_points ?? 80,
-                resetDate: classData?.vocab_tower_reset_date || null,
-                rankingResetDate: classData?.vocab_tower_ranking_reset_date || null
             });
 
             if (lightweight) {
@@ -450,8 +430,6 @@ export const useClassAgitClass = (classId, currentStudentId, options = {}) => {
         agitSettings,
         refresh: (force = true) => fetchData(false, force === true),
         achievedStudents: achievedStudentsList,
-        honorRollStats: historyStats, // [추가]
-        // [신규] 어휘의 탑 설정 노출
-        vocabTowerSettings
+        honorRollStats: historyStats // [추가]
     };
 };

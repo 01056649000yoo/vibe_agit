@@ -21,6 +21,26 @@
 
 ---
 
+## 2026-08-07 — Stage 2 선행조건 2건 완료: 어휘의 탑 표준 계약 + QA 칭호 경로 분리 (GPT/Codex)
+- **한 일**: Stage 3c 우선순위 1·2를 완료했다. 어휘의 탑 교사 화면을 1,266줄짜리
+  `legacy/LegacyGameManager.jsx` 어댑터에서 독립 `TeacherManager`로 옮기고, 학생 진입도 전용
+  `StudentEntry`가 설정을 직접 읽는 표준 계약으로 바꿨다. `StudentDashboard`와 `useClassAgitClass`의
+  어휘의 탑 전용 상태·조회·오버레이를 제거했으며, 드래곤을 제외한 나머지 8개 모듈에 README를 추가했다.
+  QA용 `student_title_test_overrides`는 일반 학생 `get_my_title_status()`에서 완전히 제거하고, 권한 검증된
+  교사 수호룡 대시보드에서만 확인하도록 분리했다. 추가 감사에서 친구 아지트 목록도 시험 필드를 섞는 것을
+  발견해 해당 학생용 경로에서도 함께 제거했다.
+- **변경**: 어휘의 탑 `manifest.js`를 `audience: both`·`entryMode: standard`로 전환하고
+  `StudentEntry.jsx`, 독립 `TeacherManager.jsx`·CSS를 추가했다. 사용처가 사라진 레거시 관리자를 삭제했다.
+  새 마이그레이션 `20260924_title_test_overrides_teacher_only.sql`과
+  `20260925_title_test_overrides_remove_student_directory.sql`을 운영 `agit-db`에 적용했다.
+  어휘의 탑 교사 화면의 `students` 전체 Realtime 구독도 제거하고 진입·포커스 복귀·수동 새로고침 기반의
+  `class_id` 직접 제한·상한 조회로 바꿨다.
+- **결과/검증**: ESLint 0경고·0오류, `npm run test:dragon` 14건, 프로덕션 빌드,
+  `git diff --check` 통과. SQL 전체 ROLLBACK 드라이런과 실제 QA 학생 가상 인증 검증에서 일반 RPC의
+  writer/reader override가 NULL이고 QA 원본 행은 보존됨을 확인했다. 운영 DB **96/96·대기 0**.
+- **남은 것 / 다음**: 교사 실계정에서 어휘의 탑 설정 저장·현재 랭킹·지난 시즌 탭과 학생 놀이터 진입을
+  한 번 확인한다. Stage 2 선행조건은 끝났으며 다음 우선순위는 교사용 `글 하나 확인` 공용 부품(3c 3번)이다.
+
 ## 2026-08-07 — agit-realtime 자원 우선순위 부여 + 죽은 실시간 구독 제거 (Claude)
 - **한 일**: "동시접속 몇 명까지 되나" 질문에 답하며 찾아낸 두 가지를 바로 적용했다. 사용자 확인:
   아지트가 이 맥미니의 우선 서비스이고 나머지 앱(자비스·연구소·샘링크·서바이벌)은 앞으로 아지트로

@@ -26,7 +26,6 @@ const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/Backgro
 // [bundle-dynamic-imports] 조건부 렌더링되는 대형 컴포넌트를 lazy loading으로 전환
 const AgitOnClassPage = lazy(getModule('agit-on-class').studentEntry);
 const WritingFootprintModal = lazy(() => import('../../modules/writing/writing-footprint/WritingFootprintModal'));
-const VocabularyTowerGame = lazy(() => import('../../modules/game/vocab-tower/VocabularyTowerGame'));
 const MyAgitPanel = lazy(() => import('./MyAgitPanel'));
 
 // [신규] 아지트 실시간 데이터 연동 훅
@@ -37,7 +36,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
     const [isAgitOpen, setIsAgitOpen] = useState(false); // [신규] 아지트 오픈 상태
-    const [isVocabTowerOpen, setIsVocabTowerOpen] = useState(false); // [신규] 어휘의 탑 오픈 상태
     const [activeGameModuleId, setActiveGameModuleId] = useState(null);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [isFootprintOpen, setIsFootprintOpen] = useState(false);
@@ -60,11 +58,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
 
 
     // [신규] 아지트 온도 및 활성화 정보 실시간 동기화
-    // 아지트 설정·어휘의 탑 설정. 우리 반 온도는 학생 홈에서 쓰지 않아 받지 않는다.
-    const {
-        agitSettings,
-        vocabTowerSettings
-    } = useClassAgitClass(
+    // 아지트 설정만 받는다. 게임별 설정은 각 표준 StudentEntry가 열릴 때 직접 조회한다.
+    const { agitSettings } = useClassAgitClass(
         studentSession?.classId || studentSession?.class_id,
         studentSession?.id,
         { lightweight: true }
@@ -140,7 +135,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     const dragonEnabled = enabledModules.some((module) => module.id === 'dragon');
 
     const hasBlockingOverlay = isDragonModalOpen || isShopOpen || isMyAgitOpen || isFootprintOpen
-        || isGuideOpen || showFeedback || isPlaygroundOpen || isAgitOpen || isVocabTowerOpen
+        || isGuideOpen || showFeedback || isPlaygroundOpen || isAgitOpen
         || Boolean(activeGameModuleId);
 
     useEffect(() => {
@@ -187,7 +182,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
             return;
         }
         if (module.id === 'dragon') setIsDragonModalOpen(true);
-        if (module.id === 'vocab-tower') setIsVocabTowerOpen(true);
     };
 
     const playgroundItems = gameModules.map((module) => ({
@@ -436,39 +430,6 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                 )}
             </AnimatePresence>
 
-            {/* [신규] 어휘의 탑 게임 (전체 화면 오버레이) */}
-            <AnimatePresence>
-                {isVocabTowerOpen && isOn('vocab-tower') && (
-                    <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        style={{
-                            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-                            background: 'white', zIndex: 20000, overflow: 'hidden'
-                        }}
-                    >
-                        <Suspense fallback={
-                            <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'white' }}>
-                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🗼</div>
-                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#1565C0' }}>어휘의 탑 입장 중...</div>
-                            </div>
-                        }>
-                            <VocabularyTowerGame
-                                studentSession={studentSession}
-                                onBack={() => setIsVocabTowerOpen(false)}
-                                forcedGrade={vocabTowerSettings?.grade}
-                                dailyLimit={vocabTowerSettings?.dailyLimit ?? 3}
-                                timeLimit={vocabTowerSettings?.timeLimit ?? 60}
-                                rewardPoints={vocabTowerSettings?.rewardPoints ?? 80}
-                                resetDate={vocabTowerSettings?.resetDate}
-                                rankingResetDate={vocabTowerSettings?.rankingResetDate}
-                            />
-                        </Suspense>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </>
     );
 };
