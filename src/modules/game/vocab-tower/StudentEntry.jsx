@@ -6,7 +6,7 @@ const DEFAULT_SETTINGS = {
     grade: 3,
     dailyLimit: 3,
     timeLimit: 40,
-    rewardPoints: 80,
+    rewardPoints: 50,
     resetDate: null,
     rankingResetDate: null
 };
@@ -83,8 +83,6 @@ const VocabularyTowerStudentEntry = ({ studentSession, onBack }) => {
             dailyLimit={settings.dailyLimit}
             timeLimit={settings.timeLimit}
             rewardPoints={settings.rewardPoints}
-            resetDate={settings.resetDate}
-            rankingResetDate={settings.rankingResetDate}
         />
     );
 };

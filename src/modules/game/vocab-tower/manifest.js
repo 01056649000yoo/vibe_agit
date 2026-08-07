@@ -11,7 +11,7 @@
 export const vocabTowerManifest = {
   id: 'vocab-tower',
   name: '어휘의 탑',
-  description: '어휘 퀴즈로 탑을 오르고 포인트 획득',
+  description: '틀린 낱말을 다시 배우며 오르는 어휘 탐험',
   icon: '🏰',
   part: 'game',
   audience: 'both',
@@ -22,7 +22,7 @@ export const vocabTowerManifest = {
   teacherEntry: () => import('./TeacherManager'),
   playground: {
     name: '어휘의 탑',
-    description: '어휘 퀴즈로 탑을 오르고 포인트 받기',
+    description: '방을 통과하고 능력을 골라 낱말 익히기',
     background: 'linear-gradient(135deg, #E3F2FD 0%, #F1F8FF 100%)',
     borderColor: '#BBDEFB',
     order: 20,
@@ -30,7 +30,7 @@ export const vocabTowerManifest = {
   },
   management: {
     title: '어휘의 탑 관리',
-    subtitle: '어휘력 향상 퀴즈 게임',
+    subtitle: '오답 복습이 이어지는 선택형 어휘 탐험',
     order: 20,
     activeColor: '#2E7D32',
     ownsCard: true,

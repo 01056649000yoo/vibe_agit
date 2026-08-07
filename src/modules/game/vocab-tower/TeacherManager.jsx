@@ -7,7 +7,7 @@ const DEFAULT_CONFIG = {
     grade: 3,
     dailyLimit: 3,
     timeLimit: 40,
-    rewardPoints: 80,
+    rewardPoints: 50,
     rankingResetDate: null,
     createdAt: null
 };
@@ -218,8 +218,8 @@ const VocabularyTowerTeacherManager = ({ activeClass, isMobile }) => {
         <div className="vocab-teacher">
             <div className="vocab-teacher__summary">
                 <div><span>현재 설정</span><strong>{config.grade}학년 · {config.dailyLimit}회</strong></div>
-                <div><span>제한 시간</span><strong>{config.timeLimit}초</strong></div>
-                <div><span>완료 보너스</span><strong>{config.rewardPoints}P</strong></div>
+                <div><span>층별 제한 시간</span><strong>{config.timeLimit}초</strong></div>
+                <div><span>1회 최대 보상</span><strong>{config.rewardPoints}P</strong></div>
                 <div><span>도전 학생</span><strong>{rankings.length}명</strong></div>
             </div>
 
@@ -246,18 +246,18 @@ const VocabularyTowerTeacherManager = ({ activeClass, isMobile }) => {
                         </label>
                         <label>
                             <span>🎯 일일 기회</span>
-                            <input type="number" min="1" max="10" value={config.dailyLimit} onChange={(event) => setConfig((current) => ({ ...current, dailyLimit: Number(event.target.value) }))} />
+                            <input type="number" min="1" max="5" value={config.dailyLimit} onChange={(event) => setConfig((current) => ({ ...current, dailyLimit: Number(event.target.value) }))} />
                         </label>
                         <label>
-                            <span>⏱️ 제한 시간</span>
+                            <span>⏱️ 층별 제한 시간</span>
                             <input type="number" min="30" max="120" step="10" value={config.timeLimit} onChange={(event) => setConfig((current) => ({ ...current, timeLimit: Number(event.target.value) }))} />
                         </label>
                         <label>
-                            <span>🎁 완료 보너스</span>
-                            <input type="number" min="0" step="10" value={config.rewardPoints} onChange={(event) => setConfig((current) => ({ ...current, rewardPoints: Number(event.target.value) }))} />
+                            <span>🎁 1회 최대 보상</span>
+                            <input type="number" min="0" max="50" step="5" value={config.rewardPoints} onChange={(event) => setConfig((current) => ({ ...current, rewardPoints: Number(event.target.value) }))} />
                         </label>
                     </div>
-                    <p className="vocab-teacher__notice">설정을 저장하면 학생들의 오늘 도전 횟수 기준도 함께 갱신됩니다.</p>
+                    <p className="vocab-teacher__notice">모든 게임 포인트는 하루 80P·주 250P 공용 상한 안에서 지급됩니다. 설정을 저장하면 오늘 도전 횟수 기준도 함께 갱신됩니다.</p>
                     <Button onClick={handleSave} disabled={saving} style={{ width: '100%' }}>
                         {saving ? '저장 중...' : '설정 저장'}
                     </Button>

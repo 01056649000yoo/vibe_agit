@@ -13,6 +13,7 @@
     "test:writing-policy": "node --test tests/writingPolicy.test.mjs",
     "test:writing-export": "node --test tests/writingExportProfiles.test.mjs",
     "test:dragon": "node --test tests/dragonGrowth.test.mjs",
+    "test:vocab-tower": "node --test tests/vocabTower.test.mjs",
     "test:reading-log": "node --test tests/readingLogDraftRules.test.mjs",
     "test:vibe-ai": "node --test tests/vibeAiEdgeFunction.test.mjs",
     "migrate": "node scripts/migrate.mjs",

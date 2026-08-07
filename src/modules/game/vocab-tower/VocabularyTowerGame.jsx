@@ -1,1408 +1,434 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '../../../lib/supabaseClient';
 import useVocabularyTower from './useVocabularyTower';
+import { ROOM_INFO } from './vocabTowerEngine';
+import './vocabularyTowerGame.css';
 
-/**
- * 어휘의 탑 게임 컴포넌트
- * 학년별 어휘 퀴즈를 통해 경험치를 쌓고 탑을 올라가는 게임
- * @param {Object} studentSession - 학생 세션 정보
- * @param {Function} onBack - 뒤로가기 핸들러
- * @param {number} forcedGrade - 교사가 설정한 학년 (고정 출제)
- * @param {number} dailyLimit - 일일 시도 횟수 제한
- * @param {number} timeLimit - [신규] 게임 제한 시간 (초)
- * @param {number} rewardPoints - [신규] 기회 소진 시 보상 포인트
- * @param {number} rewardPoints - [신규] 기회 소진 시 보상 포인트
- * @param {string} resetDate - [신규] 교사 설정 변경에 따른 리셋 기준일
- */
+const BOONS = Object.freeze([
+    { id: 'time', icon: '⏳', name: '시간의 모래', description: '다음 층 제한 시간이 20초 늘어나요.' },
+    { id: 'eliminate', icon: '🪄', name: '선택 지우개', description: '다음 층은 보기 하나가 사라져요.' },
+    { id: 'hint', icon: '🔤', name: '첫 글자 등불', description: '다음 층 정답의 첫 글자를 보여줘요.' },
+    { id: 'focus', icon: '✨', name: '집중의 깃털', description: '다음 층 정답 학습 경험치가 5 늘어요.' },
+    { id: 'shield', icon: '🛡️', name: '오답 방패', description: '다음 층에서 틀려도 학습 경험치를 더 받아요.' }
+]);
 
-const FLOOR_MESSAGES = {
-    2: "첫 발을 내디뎠어요! 어휘의 탑 정복 시작! 🌱",
-    3: "놀라운 기세예요! 벌써 3층이라니 대단합니다! 🚀",
-    4: "어휘력이 폭발하고 있어요! 이 기세로 쭉쭉 가보자고! 🔥",
-    5: "드디어 탑의 절반! 당신은 어휘의 강자입니다! 🏅",
-    6: "고지가 멀지 않았어요! 집중력을 잃지 마세요! 🎯",
-    7: "진정한 실력자가 나타났다! 어휘 마스터에 한 발짝 더! ✨",
-    8: "대문호의 기운이 느껴져요! 엄청난 실력입니다! 👑",
-    9: "이제 단 한 층뿐! 마지막까지 에너지를 쏟아부으세요! ⚡",
-    10: "전설의 탄생! 탑의 정상이 코앞이에요! 🏆",
-    default: "점점 더 정상이 가까워지고 있어요! 💪"
+const initialRun = {
+    runId: null,
+    answerCount: 0,
+    correctCount: 0,
+    wrongCount: 0,
+    reviewCorrectCount: 0,
+    currentFloor: 1,
+    currentCombo: 0,
+    maxCombo: 0
 };
 
-const getKstDateKey = () => {
-    return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Seoul',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).format(new Date());
-};
+const fromServerRun = (data, current = initialRun) => ({
+    runId: data?.run_id || current.runId,
+    answerCount: Number(data?.answer_count ?? current.answerCount),
+    correctCount: Number(data?.correct_count ?? current.correctCount),
+    wrongCount: Number(data?.wrong_count ?? current.wrongCount),
+    reviewCorrectCount: Number(data?.review_correct_count ?? current.reviewCorrectCount),
+    currentFloor: Number(data?.current_floor ?? current.currentFloor),
+    currentCombo: Number(data?.current_combo ?? current.currentCombo),
+    maxCombo: Number(data?.max_combo ?? current.maxCombo)
+});
 
-const VocabularyTowerGame = ({ studentSession, onBack, forcedGrade, dailyLimit = 3, timeLimit = 60, rewardPoints = 80, resetDate, rankingResetDate }) => {
-    // 교사가 설정한 학년이 있으면 고정, 없으면 학생 학년 또는 4학년
-    const [selectedGrade, setSelectedGrade] = useState(forcedGrade || studentSession?.grade || 4);
-    const [showResult, setShowResult] = useState(false);
-    const [selectedAnswers, setSelectedAnswers] = useState([]); // [수정] 여러 번 선택 가능하도록 변경
-    const [showLevelUp, setShowLevelUp] = useState(false);
-    const [previousFloor, setPreviousFloor] = useState(1); // [신규] 이전 층 기록
-    const [timeLeft, setTimeLeft] = useState(timeLimit);
-    const [isTimeUp, setIsTimeUp] = useState(false);
-    const [isFullyExhausted, setIsFullyExhausted] = useState(false);
-    const [awardedPoints, setAwardedPoints] = useState(0);
-    const [rankings, setRankings] = useState([]); // [신규] 랭킹 정보
-    const [isTowerCleared, setIsTowerCleared] = useState(false); // [신규] 10층 클리어 상태
-    const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false); // [신규] 퇴장 확인 팝업 상태
-    const [classmates, setClassmates] = useState([]); // [신규] 성능 최적화를 위한 학생 명단 캐싱
-    const lastFetchTimeRef = React.useRef(0); // [신규] Throttling을 위한 타임스탬프
+const pickBoonChoices = () => [...BOONS]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3);
 
-    // [신규] 일일 시도 횟수 관리
-    const getTodayKey = React.useCallback(() => {
-        const today = getKstDateKey(); // YYYY-MM-DD (KST)
-        const resetSuffix = resetDate ? `_${resetDate}` : '';
-        return `vocab_tower_attempts_${studentSession?.id}_${today}${resetSuffix}`;
-    }, [resetDate, studentSession?.id]);
-
-    // [rerender-lazy-state-init] + [js-cache-storage]
-    // 초기 렌더링 시에만 localStorage에서 값을 호출하고 상태로 관리합니다.
-    const [attempts, setAttempts] = useState(() => {
-        const key = getTodayKey();
-        const stored = localStorage.getItem(key);
-        return stored ? parseInt(stored, 10) : 0;
-    });
-    const [hasStarted, setHasStarted] = useState(false);
-    const [isIntroOpen, setIsIntroOpen] = useState(true); // [신규] 게임 시작 안내 화면 상태
-
-    // 현재 표시용 남은 횟수
-    const remainingAttempts = Math.max(0, dailyLimit - attempts);
-    // 초기 진입 시 남은 횟수 계산 (attempts 상태의 현재값 활용)
-    const initialRemaining = dailyLimit - attempts;
-    const initialRemainingRef = React.useRef(initialRemaining);
-
-    // 시도 횟수 차감 (게임 시작 시 한 번만 차감)
-    const consumeAttempt = () => {
-        if (remainingAttempts > 0) {
-            const key = getTodayKey();
-            const newAttempts = attempts + 1;
-            localStorage.setItem(key, newAttempts.toString());
-            setAttempts(newAttempts);
-            return true;
-        }
-        return false;
-    };
-
-    useEffect(() => {
-        // 게임 진입 시 차감 전 남은 횟수가 0 이하면 즉시 종료 (안내창 띄울 필요 없이)
-        if (initialRemainingRef.current <= 0) {
-            setIsFullyExhausted(true);
-            setIsIntroOpen(false);
-            return;
-        }
-    }, []); // 입구 컷만 담당하므로 마운트 시의 값을 한 번만 체크
-
-    // [신규] 실제로 게임을 시작하는 함수 (버튼 클릭 시 호출)
-    const handleGameStart = () => {
-        if (consumeAttempt()) {
-            setHasStarted(true);
-            setIsIntroOpen(false);
-        }
-    };
-
-    // 타이머 로직
-    useEffect(() => {
-        if (!hasStarted || showResult || isTimeUp || isFullyExhausted) return;
-
-        if (timeLeft <= 0) {
-            if (remainingAttempts <= 0) {
-                // 남은 기회가 없으면 즉시 보상 결과 화면으로
-                setIsFullyExhausted(true);
-            } else {
-                // 기회가 남았을 때만 시간 초과 팝업 표시
-                setIsTimeUp(true);
-            }
-            return;
-        }
-
-        const timer = setInterval(() => {
-            setTimeLeft(prev => prev - 1);
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [hasStarted, timeLeft, showResult, isTimeUp, isFullyExhausted, remainingAttempts]);
-
-    // [신규] 학급 학생 명단 로드 (이름 매핑용 캐시 - DB 조인 부하 감소)
-    const fetchClassmates = React.useCallback(async () => {
-        const classId = studentSession?.class_id || studentSession?.classId;
-        if (!classId) return;
-
-        try {
-            // [보안/최적화] 학생들이 다른 학생 정보를 조회할 수 있도록 허용된 보안 우회 RPC 사용
-            const { data, error } = await supabase
-                .rpc('get_student_classmates_for_hideout');
-
-            if (error) throw error;
-            setClassmates(data || []);
-            console.log('👥 학생 명단 로드 완료 (RPC 캐싱):', data?.length);
-        } catch (err) {
-            console.error('❌ 학생 명단 로드 실패:', err);
-        }
-    }, [studentSession?.class_id, studentSession?.classId]);
-
-    useEffect(() => {
-        fetchClassmates();
-    }, [fetchClassmates]);
-
-    // 보상 포인트 지급 로직
-    const handleRewardPoints = React.useCallback(async () => {
-        const todayKey = getTodayKey();
-        const rewardKey = `${todayKey}_rewarded`;
-
-        // [js-cache-storage] localStorage 호출 결과를 상수에 할당
-        const isRewarded = localStorage.getItem(rewardKey);
-
-        // 이미 지급했거나 보상 포인트가 0 이하인 경우 방지
-        if (awardedPoints > 0 || rewardPoints <= 0 || isRewarded) {
-            // 이미 지급된 상태라면 상태값만 동기화 (UI 표시용)
-            if (isRewarded && awardedPoints === 0) {
-                setAwardedPoints(rewardPoints);
-            }
-            return;
-        }
-
-        try {
-            console.log('💰 보상 포인트 지급 시작:', { student_id: studentSession.id, points: rewardPoints });
-
-            const { error } = await supabase.rpc('reward_for_vocab_tower', {
-                p_amount: rewardPoints
-            });
-
-            if (error) throw error;
-
-            // 로컬 스토리지에 기록하여 중복 지급 방지
-            localStorage.setItem(rewardKey, 'true');
-            setAwardedPoints(rewardPoints);
-
-            // [수정] 중복 알림 방지를 위해 브라우저 alert 제거 (중앙 배너 UI만 노출)
-            console.log('✅ 보상 포인트 지급 완료');
-        } catch (err) {
-            console.error('❌ 보상 포인트 지급 실패:', err);
-            alert('⚠️ 보상 포인트 지급 중 오류가 발생했습니다. 선생님께 문의해 주세요.\n(에러: ' + (err.message || '데이터베이스 연결 오류') + ')');
-        }
-    }, [awardedPoints, getTodayKey, rewardPoints, studentSession?.id]);
-
-    // 최신 currentFloor를 ref로 추적 (stale closure 방지)
-    const currentFloorRef = React.useRef(1);
-    const exhaustedHandledRef = React.useRef(false);
-    const towerClearHandledRef = React.useRef(false);
-
-    // [신규] 10층 클리어 보상 지급 로직 (500 포인트)
-    useEffect(() => {
-        if (!isTowerCleared) {
-            towerClearHandledRef.current = false;
-            return;
-        }
-        if (towerClearHandledRef.current) return;
-
-        towerClearHandledRef.current = true;
-        const clearKey = `${getTodayKey()}_floor10_cleared`;
-        const isCleared = localStorage.getItem(clearKey);
-
-        if (!isCleared) {
-            console.log('👑 10층 정복 보상 지급 시작: 500P');
-            supabase.rpc('reward_for_vocab_tower', { p_amount: 500 })
-                .then(({ error }) => {
-                    if (!error) {
-                        localStorage.setItem(clearKey, 'true');
-                        console.log('✅ 10층 정복 보상 지급 완료');
-                    } else {
-                        console.error('❌ 10층 정복 보상 지급 실패:', error);
-                    }
-                });
-        }
-    }, [getTodayKey, isTowerCleared]);
-
-    // [최적화] 랭킹 조회 함수 - 조인 제거 및 Throttling 적용
-    const fetchRankings = React.useCallback(async (isForced = false) => {
-        const classId = studentSession?.class_id || studentSession?.classId;
-        if (!classId) return;
-
-        // [스로틀링] 강제 호출이 아니면 10초 이내 중복 호출 방지 (DB 부하 방지)
-        const now = Date.now();
-        if (!isForced && now - lastFetchTimeRef.current < 10000) {
-            return;
-        }
-        lastFetchTimeRef.current = now;
-
-        try {
-            console.log('🏆 랭킹 조회 수행 (DB 조인 없음)');
-            let query = supabase
-                .from('vocab_tower_rankings')
-                .select('max_floor, student_id') // 조인 제거하여 쿼리 경량화
-                .eq('class_id', classId);
-
-            if (rankingResetDate) {
-                query = query.gte('updated_at', rankingResetDate);
-            }
-
-            const { data, error } = await query.order('max_floor', { ascending: false });
-            if (error) throw error;
-
-            setRankings(data || []);
-        } catch (err) {
-            console.error('❌ 랭킹 로드 실패:', err);
-        }
-    }, [studentSession?.class_id, studentSession?.classId, rankingResetDate]);
-
-    useEffect(() => {
-        if (!isFullyExhausted) {
-            exhaustedHandledRef.current = false;
-            return;
-        }
-        if (isTowerCleared || exhaustedHandledRef.current) return;
-
-        // 의존 값이 갱신되어 Effect가 다시 평가돼도 한 번만 기록·보상한다.
-        exhaustedHandledRef.current = true;
-        const finalFloor = currentFloorRef.current;
-        const classId = studentSession?.class_id || studentSession?.classId;
-        if (studentSession?.id && classId) {
-            supabase.rpc('update_tower_max_floor', {
-                p_student_id: studentSession.id,
-                p_class_id: classId,
-                p_floor: finalFloor
-            }).then(({ error }) => {
-                if (error) {
-                    console.error('❌ isFullyExhausted 시 층수 기록 실패:', error);
-                } else {
-                    fetchRankings(true);
-                }
-            });
-        }
-        void handleRewardPoints();
-    }, [fetchRankings, handleRewardPoints, isFullyExhausted, isTowerCleared, studentSession?.classId, studentSession?.class_id, studentSession?.id]);
-
-    // [신규/최적화] 실시간 이름 매핑 (메모리 연산)
-    // DB 호출 없이 명단이 로드되거나 랭킹이 바뀌면 즉시 이름을 입힙니다.
-    const displayRankings = React.useMemo(() => {
-        if (rankings.length === 0) return [];
-        
-        return rankings.map(item => {
-            const classmate = classmates.find(c => c.id === item.student_id);
-            let displayName = '조회 중...';
-            
-            if (classmate) {
-                displayName = classmate.name;
-            } else if (item.student_id === studentSession?.id) {
-                displayName = studentSession?.name || '나';
-            } else if (classmates.length > 0) {
-                displayName = '아지트 친구';
-            }
-
-            return {
-                ...item,
-                students: { name: displayName }
-            };
-        });
-    }, [rankings, classmates, studentSession?.id, studentSession?.name]);
-
-    useEffect(() => {
-        fetchRankings();
-    }, [fetchRankings]);
-
-    // [신규] 최고 층수 업데이트 (순환참조 제거 - fetchRankings 개별 호출)
-    const updateMaxFloor = React.useCallback(async (floor) => {
-        const classId = studentSession?.class_id || studentSession?.classId;
-        if (!studentSession?.id || !classId) return;
-
-        try {
-            const { error } = await supabase.rpc('update_tower_max_floor', {
-                p_student_id: studentSession.id,
-                p_class_id: classId,
-                p_floor: floor
-            });
-            if (error) throw error;
-            fetchRankings(); // 랭킹 갱신
-        } catch (err) {
-            console.error('❌ 최고 층수 업데이트 실패:', err);
-        }
-    }, [studentSession?.id, studentSession?.class_id, studentSession?.classId, fetchRankings]);
-
-    // forcedGrade가 변경되면 동기화
-    useEffect(() => {
-        if (forcedGrade) {
-            setSelectedGrade(forcedGrade);
-        }
-    }, [forcedGrade]);
+const VocabularyTowerGame = ({
+    studentSession,
+    onBack,
+    forcedGrade,
+    dailyLimit = 3,
+    timeLimit = 40
+}) => {
+    const [selectedGrade, setSelectedGrade] = useState(Number(forcedGrade || studentSession?.grade || 3));
+    const [phase, setPhase] = useState('loading');
+    const [status, setStatus] = useState(null);
+    const [run, setRun] = useState(initialRun);
+    const [floorTimeLimit, setFloorTimeLimit] = useState(Number(timeLimit || 40));
+    const [timeLeft, setTimeLeft] = useState(Number(timeLimit || 40));
+    const [activeBoon, setActiveBoon] = useState(null);
+    const [boonChoices, setBoonChoices] = useState([]);
+    const [lastResult, setLastResult] = useState(null);
+    const [pendingServerResult, setPendingServerResult] = useState(null);
+    const [learningExp, setLearningExp] = useState(0);
+    const [summary, setSummary] = useState(null);
+    const [notice, setNotice] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const [returnPhase, setReturnPhase] = useState('playing');
+    const finishingRef = useRef(false);
 
     const {
         currentQuiz,
-        stats,
-        actions,
-        isLoading,
-        error,
-        lastResult
+        reviewWords,
+        isLoading: wordsLoading,
+        error: wordsError,
+        createQuiz,
+        recordAnswer,
+        resetJourney
     } = useVocabularyTower(selectedGrade);
 
-    // 레벨업/감점 애니메이션 처리
+    const loadStatus = useCallback(async () => {
+        setNotice('');
+        const { data, error } = await supabase.rpc('get_my_vocab_tower_status');
+        if (error) {
+            console.error('어휘의 탑 상태 조회 실패:', error);
+            setNotice('오늘의 도전 정보를 불러오지 못했어요.');
+            setPhase('error');
+            return;
+        }
+        setStatus(data);
+        setFloorTimeLimit(Number(data?.floor_time_limit || timeLimit || 40));
+        setTimeLeft(Number(data?.floor_time_limit || timeLimit || 40));
+        setPhase('intro');
+    }, [timeLimit]);
+
     useEffect(() => {
-        if (lastResult?.leveledUp) {
-            const newFloor = lastResult.newFloor ?? stats.currentFloor;
-            currentFloorRef.current = newFloor;
-            setPreviousFloor(newFloor - 1);
-            setShowLevelUp(true);
-            updateMaxFloor(newFloor);
+        if (wordsLoading || wordsError) return undefined;
+        const timerId = window.setTimeout(() => void loadStatus(), 0);
+        return () => window.clearTimeout(timerId);
+    }, [loadStatus, wordsError, wordsLoading]);
 
-            const bonus = 20 + (Math.max(0, newFloor - 2) * 3);
-            setTimeLeft(prev => prev + bonus);
+    useEffect(() => {
+        if (phase !== 'playing' || submitting) return undefined;
+        if (timeLeft <= 0) return undefined;
+        const timerId = window.setInterval(() => setTimeLeft((current) => Math.max(0, current - 1)), 1000);
+        return () => window.clearInterval(timerId);
+    }, [phase, submitting, timeLeft]);
 
-            setTimeout(() => {
-                setShowLevelUp(false);
-                if (newFloor === 10) setIsTowerCleared(true);
-            }, 3000);
+    const finishRun = useCallback(async (reason, runIdOverride = null) => {
+        const targetRunId = runIdOverride || run.runId;
+        if (!targetRunId || finishingRef.current) return;
+        finishingRef.current = true;
+        setSubmitting(true);
+        const { data, error } = await supabase.rpc('finish_my_vocab_tower_run', {
+            p_run_id: targetRunId,
+            p_reason: reason
+        });
+        setSubmitting(false);
+        finishingRef.current = false;
+        if (error) {
+            console.error('어휘의 탑 종료 실패:', error);
+            setNotice('탐험 결과를 저장하지 못했어요. 다시 눌러주세요.');
+            return;
         }
-    }, [lastResult, updateMaxFloor, stats.currentFloor]);
+        setSummary(data);
+        setPhase('summary');
+    }, [run.runId]);
 
-    // [신규] 광클(어뷰징) 방지를 위한 트랜지션 락
-    const isTransitioningRef = React.useRef(false);
+    useEffect(() => {
+        if (phase !== 'playing' || timeLeft !== 0) return undefined;
+        const timerId = window.setTimeout(() => void finishRun('time_up'), 0);
+        return () => window.clearTimeout(timerId);
+    }, [finishRun, phase, timeLeft]);
 
-    // 정답 선택 핸들러 (어뷰징 방지 3회 기회 로직)
-    const handleAnswerSelect = (answer) => {
-        if (showResult || selectedAnswers.includes(answer) || isTransitioningRef.current) return;
-
-        const result = actions.handleAnswer(answer);
-        const isCorrect = answer === currentQuiz.correctAnswer;
-        
-        // 선택 내역 기록
-        setSelectedAnswers(prev => [...prev, answer]);
-
-        if (isCorrect || result?.isMaxAttemptsReached) {
-            // 정답이거나 3회 모두 틀린 경우에만 결과창 노출
-            setShowResult(true);
-            
-            // [수정] 자동 전환 타이머 제거: 이제 학생이 명시적으로 '다음 문제' 버튼을 눌러야 함
-            // (주변 클릭 시 넘어가는 것처럼 느껴지는 혼란 방지)
+    const prepareQuiz = useCallback((floor, roomIndex, boon = activeBoon) => {
+        const quiz = createQuiz({
+            floor,
+            roomIndex,
+            reduceOptions: boon?.id === 'eliminate'
+        });
+        if (!quiz) {
+            setNotice('다음 문제를 준비하지 못했어요. 다시 시도해주세요.');
+            return false;
         }
-    };
+        setLastResult(null);
+        setPendingServerResult(null);
+        setPhase('playing');
+        return true;
+    }, [activeBoon, createQuiz]);
 
-    // 다음 문제로 이동
-    const handleNextQuestion = () => {
-        if (isTransitioningRef.current) return; // 이미 넘어가는 중이면 무시 (광클 방지)
-        isTransitioningRef.current = true;
-
-        setShowResult(false);
-        setSelectedAnswers([]); // 선택 내역 초기화
-        actions.nextQuiz();
-
-        // 새 퀴즈 렌더링 후 락 해제 (버튼 애니메이션 페이드아웃 고려 0.3초)
-        setTimeout(() => {
-            isTransitioningRef.current = false;
-        }, 300);
-    };
-
-    // 게임 재시작 (시간 초과 후 계속하기 시 사용)
-    const handleContinue = () => {
-        if (remainingAttempts <= 0) {
-            setIsFullyExhausted(true);
-            setIsTimeUp(false);
+    const handleStart = async () => {
+        if (submitting) return;
+        setSubmitting(true);
+        setNotice('');
+        const { data, error } = await supabase.rpc('start_my_vocab_tower_run');
+        setSubmitting(false);
+        if (error || !data?.success) {
+            console.error('어휘의 탑 시작 실패:', error || data?.error);
+            setNotice(data?.error || '탐험을 시작하지 못했어요.');
             return;
         }
 
-        // 새로운 시도 차감
-        consumeAttempt();
-        setTimeLeft(timeLimit);
-        setIsTimeUp(false);
-        setShowResult(false);
-        setSelectedAnswers([]);
-        actions.startGame();
+        const nextRun = fromServerRun(data);
+        const nextGrade = Number(data.grade || selectedGrade);
+        const nextTimeLimit = Number(data.floor_time_limit || floorTimeLimit);
+        setSelectedGrade(nextGrade);
+        setFloorTimeLimit(nextTimeLimit);
+        setTimeLeft(nextTimeLimit);
+        setRun(nextRun);
+        setLearningExp(nextRun.correctCount * 20 + nextRun.wrongCount * 4);
+        setActiveBoon(null);
+        resetJourney(data.review_words || []);
+
+        if (nextRun.answerCount >= 30) {
+            setRun(nextRun);
+            window.setTimeout(() => void finishRun('completed', nextRun.runId), 0);
+            return;
+        }
+        window.setTimeout(() => prepareQuiz(nextRun.currentFloor, nextRun.answerCount % 3, null), 0);
     };
 
-    // [신규] 게임 중 퇴장 핸들러 (커스텀 팝업 사용으로 안정성 강화)
-    const handleExit = React.useCallback(() => {
-        // 이미 모든 기회를 썼거나 시간 초과 상태면 그냥 나감
-        if (isFullyExhausted || isTimeUp) {
-            if (onBack) onBack();
+    const handleAnswer = async (answer) => {
+        if (!currentQuiz || submitting || phase !== 'playing') return;
+        setSubmitting(true);
+        setNotice('');
+        const usedHint = activeBoon?.id === 'hint';
+        const { data, error } = await supabase.rpc('submit_my_vocab_tower_answer', {
+            p_run_id: run.runId,
+            p_question_key: currentQuiz.questionKey,
+            p_room_type: currentQuiz.roomType,
+            p_word: currentQuiz.correctAnswer,
+            p_selected_answer: answer,
+            p_used_hint: usedHint
+        });
+        setSubmitting(false);
+        if (error || !data?.success) {
+            console.error('어휘의 탑 정답 저장 실패:', error || data);
+            setNotice(error?.message || '정답을 저장하지 못했어요. 다시 선택해주세요.');
             return;
         }
 
-        // 게임 중일 때는 커스텀 확인 팝업을 엽니다.
-        setIsExitConfirmOpen(true);
-    }, [isFullyExhausted, isTimeUp, onBack]);
-
-    // 팝업에서 최종 퇴장 승인 시 호출
-    const confirmExit = () => {
-        setIsExitConfirmOpen(false);
-        if (onBack) onBack();
+        const isCorrect = Boolean(data.is_correct);
+        const { learnedFromReview } = recordAnswer({ quiz: currentQuiz, isCorrect });
+        const earnedExp = isCorrect
+            ? 20 + (activeBoon?.id === 'focus' ? 5 : 0) + (currentQuiz.roomType === 'boss' ? 5 : 0)
+            : activeBoon?.id === 'shield' ? 8 : 4;
+        setLearningExp((current) => current + earnedExp);
+        setRun((current) => fromServerRun(data, current));
+        setPendingServerResult(data);
+        setLastResult({
+            selectedAnswer: answer,
+            isCorrect,
+            earnedExp,
+            learnedFromReview: learnedFromReview || Boolean(data.is_review_correct)
+        });
+        setPhase('answer');
     };
 
-    // 층수에 따른 배경색 결정
-    const getFloorBackground = (floor) => {
-        if (floor >= 10) return 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)';
-        if (floor >= 7) return 'linear-gradient(135deg, #9C27B0 0%, #673AB7 100%)';
-        if (floor >= 5) return 'linear-gradient(135deg, #2196F3 0%, #03A9F4 100%)';
-        if (floor >= 3) return 'linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%)';
-        return 'linear-gradient(135deg, #90CAF9 0%, #E3F2FD 100%)';
+    const handleNext = () => {
+        if (!pendingServerResult) return;
+        if (pendingServerResult.completed) {
+            void finishRun('completed');
+            return;
+        }
+        if (pendingServerResult.floor_cleared) {
+            setBoonChoices(pickBoonChoices());
+            setPhase('reward');
+            return;
+        }
+        prepareQuiz(Number(pendingServerResult.current_floor), Number(pendingServerResult.answer_count) % 3);
     };
 
-    // 층수에 따른 텍스트 색상
-    const getFloorTextColor = (floor) => {
-        return floor >= 5 ? 'white' : '#1565C0';
+    const chooseBoon = (boon) => {
+        setActiveBoon(boon);
+        const nextTime = floorTimeLimit + (boon.id === 'time' ? 20 : 0);
+        setTimeLeft(nextTime);
+        prepareQuiz(run.currentFloor, run.answerCount % 3, boon);
     };
 
-    // [신규] 미니 타워 맵 컴포넌트
-    const TowerMap = () => {
-        const floors = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+    const floorProgress = useMemo(() => {
+        const completedRooms = run.answerCount % 3;
+        return [0, 1, 2].map((index) => ({
+            ...Reflect.get(ROOM_INFO, (run.currentFloor === 5 || run.currentFloor === 10) && index === 2
+                ? 'boss'
+                : Reflect.get(['meaning', 'sentence', 'distinction'], index)),
+            completed: index < completedRooms,
+            current: index === completedRooms
+        }));
+    }, [run.answerCount, run.currentFloor]);
+
+    if (wordsLoading || phase === 'loading') {
+        return <div className="vocab-journey vocab-journey--center"><div className="vocab-journey__loader">🏰</div><p>탑의 방을 준비하고 있어요...</p></div>;
+    }
+
+    if (wordsError || phase === 'error') {
         return (
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                pointerEvents: 'none',
-                scale: '1.2'
-            }}>
-                {/* 타워 꼭대기 지붕 (10층 위) */}
-                <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    style={{
-                        width: '0',
-                        height: '0',
-                        borderLeft: '40px solid transparent', // 지붕 크기 확대
-                        borderRight: '40px solid transparent',
-                        borderBottom: '50px solid #D32F2F',
-                        marginBottom: '-5px',
-                        position: 'relative',
-                        filter: 'drop-shadow(0 -5px 10px rgba(211,47,47,0.4))',
-                        zIndex: 2
-                    }}
-                >
-                    <span style={{ position: 'absolute', top: '18px', left: '-12px', fontSize: '1.6rem' }}>👑</span>
-                </motion.div>
-
-                {/* 타워 몸체 */}
-                <div style={{
-                    background: '#5D4037',
-                    padding: '8px 6px',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-                    border: '3px solid #3E2723'
-                }}>
-                    {floors.map(f => {
-                        const isCurrent = f === stats.currentFloor;
-                        const isPassed = f < stats.currentFloor;
-
-                        return (
-                            <motion.div
-                                key={f}
-                                initial={false}
-                                animate={{
-                                    scale: isCurrent ? 1.2 : 1,
-                                    x: isCurrent ? -10 : 0,
-                                    backgroundColor: isCurrent ? '#FFF' : (isPassed ? '#4CAF50' : '#8D6E63'),
-                                    boxShadow: isCurrent ? '0 0 20px #FFD700' : 'none'
-                                }}
-                                style={{
-                                    width: '45px',
-                                    height: '32px',
-                                    borderRadius: '4px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '0.9rem',
-                                    fontWeight: '900',
-                                    color: isCurrent ? '#1565C0' : (isPassed ? '#FFF' : '#D7CCC8'),
-                                    border: `2px solid ${isCurrent ? '#FFD700' : '#4E342E'}`,
-                                    position: 'relative'
-                                }}
-                            >
-                                {f === 10 ? 'TOP' : f}
-
-                                {isCurrent && (
-                                    <motion.div
-                                        layoutId="tower-marker-new"
-                                        style={{
-                                            position: 'absolute',
-                                            left: '-65px',
-                                            background: 'linear-gradient(135deg, #FF9800, #F57C00)',
-                                            color: 'white',
-                                            padding: '4px 8px',
-                                            borderRadius: '8px',
-                                            fontSize: '0.75rem',
-                                            fontWeight: 'bold',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            boxShadow: '0 4px 10px rgba(255,152,0,0.4)',
-                                            whiteSpace: 'nowrap'
-                                        }}
-                                    >
-                                        <span>내 위치</span>
-                                        <motion.span
-                                            animate={{ x: [0, 4, 0] }}
-                                            transition={{ repeat: Infinity, duration: 1 }}
-                                        >
-                                            ▶
-                                        </motion.span>
-                                    </motion.div>
-                                )}
-
-                                {/* 장식: 창문 */}
-                                <div style={{
-                                    position: 'absolute',
-                                    right: '4px',
-                                    top: '4px',
-                                    width: '5px',
-                                    height: '7px',
-                                    background: isCurrent ? '#FFEB3B' : 'rgba(0,0,0,0.2)',
-                                    borderRadius: '1px'
-                                }} />
-                            </motion.div>
-                        );
-                    })}
+            <div className="vocab-journey vocab-journey--center">
+                <div className="vocab-journey__dialog">
+                    <span className="vocab-journey__dialog-icon">😢</span>
+                    <h2>탑 문이 열리지 않아요</h2>
+                    <p>{wordsError || notice}</p>
+                    <div className="vocab-journey__dialog-actions">
+                        <button type="button" onClick={loadStatus}>다시 시도</button>
+                        <button type="button" className="is-quiet" onClick={onBack}>놀이터로 돌아가기</button>
+                    </div>
                 </div>
-
-                {/* 타워 받침대 */}
-                <div style={{
-                    width: '70px',
-                    height: '20px',
-                    background: '#3E2723',
-                    borderRadius: '4px 4px 12px 12px',
-                    marginTop: '-2px',
-                    boxShadow: '0 5px 15px rgba(0,0,0,0.2)'
-                }} />
-            </div>
-        );
-    };
-
-    if (isLoading) {
-        return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'linear-gradient(135deg, #E3F2FD 0%, #F0F4F8 100%)'
-            }}>
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                    style={{ fontSize: '4rem', marginBottom: '20px' }}
-                >
-                    🏰
-                </motion.div>
-                <p style={{ color: '#1565C0', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                    어휘의 탑 준비 중...
-                </p>
             </div>
         );
     }
 
-    if (error) {
+    if (phase === 'intro') {
+        const hasActiveRun = Boolean(status?.active_run);
+        const remaining = Number(status?.remaining_attempts ?? dailyLimit);
+        const canStart = hasActiveRun || remaining > 0;
         return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'linear-gradient(135deg, #FFEBEE 0%, #FCE4EC 100%)',
-                padding: '20px'
-            }}>
-                <div style={{ fontSize: '4rem', marginBottom: '20px' }}>😢</div>
-                <p style={{ color: '#C62828', fontSize: '1.1rem', textAlign: 'center', marginBottom: '20px' }}>
-                    {error}
-                </p>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={onBack}
-                    style={{
-                        padding: '12px 32px',
-                        borderRadius: '20px',
-                        border: 'none',
-                        background: '#1565C0',
-                        color: 'white',
-                        fontSize: '1rem',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
-                    }}
-                >
-                    돌아가기
-                </motion.button>
+            <div className="vocab-journey vocab-journey--intro">
+                <main className="vocab-intro-card">
+                    <button type="button" className="vocab-journey__back" onClick={onBack}>← 놀이터</button>
+                    <div className="vocab-intro-card__tower" aria-hidden="true">🏰</div>
+                    <p className="vocab-intro-card__eyebrow">틀린 낱말을 다시 만나며 성장하는 탐험</p>
+                    <h1>새로운 어휘의 탑</h1>
+                    <p className="vocab-intro-card__lead">방 세 개를 통과하고, 층마다 특별한 능력을 골라 정상까지 올라가요.</p>
+
+                    <div className="vocab-intro-card__rooms">
+                        {Object.values(ROOM_INFO).slice(0, 3).map((room) => (
+                            <article key={room.id}><span>{room.icon}</span><strong>{room.name}</strong><small>{room.guide}</small></article>
+                        ))}
+                    </div>
+
+                    <div className="vocab-intro-card__limits">
+                        <div><span>오늘 남은 도전</span><strong>{hasActiveRun ? '이어할 탐험 있음' : `${remaining}회`}</strong></div>
+                        <div><span>층별 시간</span><strong>{status?.floor_time_limit || timeLimit}초</strong></div>
+                        <div><span>게임 포인트</span><strong>{status?.daily_points || 0}/80P</strong></div>
+                    </div>
+
+                    <p className="vocab-intro-card__rule">틀려도 경험치는 줄지 않아요. 설명을 읽고 보스전에서 다시 맞히면 ‘새로 익힌 낱말’이 됩니다.</p>
+                    {notice && <p className="vocab-journey__notice" role="alert">{notice}</p>}
+                    <button type="button" className="vocab-journey__primary" onClick={handleStart} disabled={!canStart || submitting}>
+                        {submitting ? '탑 문을 여는 중...' : hasActiveRun ? '탐험 이어하기' : canStart ? '탐험 시작하기' : '오늘의 도전을 모두 사용했어요'}
+                    </button>
+                </main>
             </div>
         );
     }
 
+    if (phase === 'summary' && summary) {
+        return (
+            <div className="vocab-journey vocab-journey--summary">
+                <main className="vocab-summary-card">
+                    <span className="vocab-summary-card__icon">{Number(summary.answer_count) >= 30 ? '👑' : '📚'}</span>
+                    <p className="vocab-intro-card__eyebrow">오늘의 어휘 탐험 기록</p>
+                    <h1>{Number(summary.answer_count) >= 30 ? '정상까지 도착했어요!' : '배운 만큼 성장했어요!'}</h1>
+                    <div className="vocab-summary-card__stats">
+                        <div><span>도달 층</span><strong>{summary.max_floor}층</strong></div>
+                        <div><span>정답</span><strong>{summary.correct_count}개</strong></div>
+                        <div><span>새로 익힘</span><strong>{summary.review_correct_count}개</strong></div>
+                        <div><span>최고 연속</span><strong>{summary.max_combo}개</strong></div>
+                    </div>
+                    <div className="vocab-summary-card__reward">
+                        <span>탐험 보상</span><strong>+{summary.reward_points || 0}P</strong>
+                        <small>오늘 게임 포인트 {summary.daily_points ?? status?.daily_points ?? 0}/80P · 이번 주 {summary.weekly_points ?? status?.weekly_points ?? 0}/250P</small>
+                    </div>
+                    <p>포인트를 모두 받아도 낱말 학습과 최고 기록 도전은 계속할 수 있어요.</p>
+                    <button type="button" className="vocab-journey__primary" onClick={onBack}>놀이터로 돌아가기</button>
+                </main>
+            </div>
+        );
+    }
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: getFloorBackground(stats.currentFloor),
-            position: 'relative',
-            overflowX: 'hidden',
-            overflowY: 'auto',
-            transition: 'background 1s ease',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center' // 전체 중앙 정렬
-        }}>
-            {/* 전체 컨텐츠 래퍼 (태블릿/데스크탑 대응 최대 너비 설정) */}
-            <div style={{
-                width: '100%',
-                maxWidth: '1280px',
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: '100vh',
-                position: 'relative'
-            }}>
-                {/* 배경 타워 벽돌 패턴 (미세하게) */}
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    opacity: 0.05,
-                    backgroundImage: 'radial-gradient(#000 1px, transparent 1px)',
-                    backgroundSize: '30px 30px',
-                    pointerEvents: 'none'
-                }} />
+        <div className={`vocab-journey vocab-journey--floor-${run.currentFloor}`}>
+            <header className="vocab-journey__header">
+                <button type="button" onClick={() => { setReturnPhase(phase); setPhase('confirm'); }}>← 나가기</button>
+                <div><span>{run.currentFloor}층</span><strong>{currentQuiz?.room?.name || '층 보상 선택'}</strong></div>
+                <div className={`vocab-journey__timer${timeLeft <= 10 ? ' is-low' : ''}`}>⏱ {timeLeft}초</div>
+            </header>
 
-                {/* [신규] 게임 시작 안내 화면 (Intro) */}
-                <AnimatePresence>
-                    {isIntroOpen && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            style={{
-                                position: 'fixed', inset: 0,
-                                background: 'rgba(0,0,0,0.8)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                zIndex: 20000, padding: '20px'
-                            }}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, y: 20 }}
-                                animate={{ scale: 1, y: 0 }}
-                                style={{
-                                    background: 'white', borderRadius: '32px', padding: '40px 30px',
-                                    maxWidth: '450px', width: '100%', textAlign: 'center',
-                                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-                                    position: 'relative', overflow: 'hidden'
-                                }}
-                            >
-                                <div style={{
-                                    position: 'absolute', top: 0, left: 0, right: 0, height: '8px',
-                                    background: 'linear-gradient(90deg, #1565C0, #42A5F5)'
-                                }} />
+            <div className="vocab-journey__floor-map" aria-label={`현재 ${run.currentFloor}층`}>
+                {Array.from({ length: 10 }, (_, index) => index + 1).map((floor) => (
+                    <span key={floor} className={floor < run.currentFloor ? 'is-passed' : floor === run.currentFloor ? 'is-current' : ''}>{floor}</span>
+                ))}
+            </div>
 
-                                <span style={{ fontSize: '4.5rem', display: 'block', marginBottom: '10px' }}>🏰</span>
-                                <h2 style={{ fontSize: '1.8rem', color: '#1565C0', margin: '10px 0', fontWeight: '900' }}>어휘의 탑 챌린지</h2>
+            <div className="vocab-journey__status-row">
+                <div><span>학습 경험치</span><strong>{learningExp} EXP</strong></div>
+                <div><span>연속 정답</span><strong>{run.currentCombo}개</strong></div>
+                <div><span>복습할 낱말</span><strong>{reviewWords.length}개</strong></div>
+                {activeBoon && <div className="is-boon"><span>층 능력</span><strong>{activeBoon.icon} {activeBoon.name}</strong></div>}
+            </div>
 
-                                <div style={{
-                                    background: '#F0F7FF', borderRadius: '20px', padding: '20px',
-                                    margin: '25px 0', textAlign: 'left', border: '1px solid #E3F2FD'
-                                }}>
-                                    <p style={{ margin: '0 0 12px 0', fontSize: '0.95rem', color: '#455A64', lineHeight: '1.6' }}>
-                                        🎯 <strong>게임 방법:</strong><br />
-                                        제한 시간 내에 어휘 퀴즈를 맞히고 탑을 높이 올라가세요! 정답을 맞히면 경험치를 얻고 다음 층으로 올라갑니다.
-                                    </p>
-                                    <p style={{ margin: 0, fontSize: '0.95rem', color: '#455A64', lineHeight: '1.6' }}>
-                                        💡 <strong>도전 기회:</strong><br />
-                                        매일 총 <strong>{dailyLimit}번</strong>의 도전 기회가 주어집니다.<br />
-                                        (현재 남은 기회: <strong>{remainingAttempts}회</strong>)
-                                    </p>
-                                </div>
+            <div className="vocab-journey__rooms" aria-label="현재 층의 방 진행">
+                {floorProgress.map((room) => (
+                    <div key={room.id} className={room.completed ? 'is-completed' : room.current ? 'is-current' : ''}>
+                        <span>{room.completed ? '✓' : room.icon}</span><strong>{room.name}</strong>
+                    </div>
+                ))}
+            </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
-                                    <Button
-                                        onClick={onBack}
-                                        variant="ghost"
-                                        style={{
-                                            height: '60px', border: '2px solid #E0E0E0',
-                                            color: '#757575', borderRadius: '20px'
-                                        }}
+            <main className="vocab-journey__main">
+                {(phase === 'playing' || phase === 'answer') && currentQuiz && (
+                    <motion.section key={currentQuiz.questionKey} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="vocab-question-card">
+                        <div className="vocab-question-card__heading">
+                            <span>{currentQuiz.room.icon}</span>
+                            <div><strong>{currentQuiz.room.name}</strong><small>{currentQuiz.room.guide}</small></div>
+                            <em>난이도 {currentQuiz.word.level}</em>
+                        </div>
+                        <p className="vocab-question-card__prompt">{currentQuiz.prompt}</p>
+                        {activeBoon?.id === 'hint' && <p className="vocab-question-card__hint">💡 첫 글자: <strong>{currentQuiz.correctAnswer.slice(0, 1)}</strong></p>}
+                        <div className="vocab-question-card__options">
+                            {currentQuiz.options.map((option) => {
+                                const isSelected = lastResult?.selectedAnswer === option;
+                                const isAnswer = currentQuiz.correctAnswer === option;
+                                const stateClass = phase === 'answer'
+                                    ? isAnswer ? 'is-correct' : isSelected ? 'is-wrong' : 'is-muted'
+                                    : '';
+                                return (
+                                    <motion.button
+                                        key={option}
+                                        type="button"
+                                        whileTap={phase === 'playing' ? { scale: .98 } : undefined}
+                                        className={stateClass}
+                                        disabled={phase !== 'playing' || submitting}
+                                        onClick={() => handleAnswer(option)}
                                     >
-                                        나중에 하기
-                                    </Button>
-                                    <Button
-                                        onClick={handleGameStart}
-                                        style={{
-                                            height: '60px', background: 'linear-gradient(135deg, #1565C0, #1976D2)',
-                                            color: 'white', fontSize: '1.1rem', fontWeight: '900',
-                                            borderRadius: '20px', boxShadow: '0 8px 16px rgba(21, 101, 192, 0.3)'
-                                        }}
-                                    >
-                                        챌린지 시작! 🚀
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* 미니 타워 맵 제거 (중복) */}
-                {/* [신규] 층간 이동 고도화 애니메이션 */}
-                <AnimatePresence>
-                    {showLevelUp && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            style={{
-                                position: 'fixed',
-                                top: 0, left: 0, right: 0, bottom: 0,
-                                background: 'rgba(0,0,0,0.85)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                zIndex: 10000,
-                                overflow: 'hidden'
-                            }}
-                        >
-                            {/* 올라가는 연출: 배경 배경 구름 */}
-                            {[1, 2, 3].map(i => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ y: -100 }}
-                                    animate={{ y: 800 }}
-                                    transition={{ duration: 1.5, repeat: Infinity, ease: 'linear', delay: i * 0.5 }}
-                                    style={{
-                                        position: 'absolute',
-                                        left: `${i * 30}%`,
-                                        fontSize: '3rem',
-                                        opacity: 0.2
-                                    }}
-                                >
-                                    ☁️
+                                        {option}{stateClass === 'is-correct' ? ' ✓' : stateClass === 'is-wrong' ? ' ×' : ''}
+                                    </motion.button>
+                                );
+                            })}
+                        </div>
+                        {notice && <p className="vocab-journey__notice" role="alert">{notice}</p>}
+                        <AnimatePresence>
+                            {phase === 'answer' && lastResult && (
+                                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`vocab-answer-note${lastResult.isCorrect ? ' is-correct' : ' is-wrong'}`}>
+                                    <strong>{lastResult.isCorrect ? lastResult.learnedFromReview ? '🎉 헷갈렸던 낱말을 익혔어요!' : '정답이에요!' : `정답은 ‘${currentQuiz.correctAnswer}’이에요.`}</strong>
+                                    <span>학습 경험치 +{lastResult.earnedExp}</span>
+                                    {!lastResult.isCorrect && <p>{currentQuiz.word.definition}<br /><small>예: {currentQuiz.word.example}</small></p>}
+                                    <button type="button" onClick={handleNext} disabled={submitting}>{pendingServerResult?.completed ? '정상 기록 확인하기' : pendingServerResult?.floor_cleared ? '층 보상 고르기' : '다음 방으로'}</button>
                                 </motion.div>
-                            ))}
-
-                            <div style={{ position: 'relative', height: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                {/* 이전 층 (아래로 내려감) */}
-                                <motion.div
-                                    initial={{ y: 0, opacity: 1 }}
-                                    animate={{ y: 150, opacity: 0 }}
-                                    transition={{ duration: 0.8 }}
-                                    style={{
-                                        fontSize: '2rem',
-                                        color: '#AAA',
-                                        fontWeight: 'bold',
-                                        position: 'absolute',
-                                        top: '40%'
-                                    }}
-                                >
-                                    {previousFloor}층
-                                </motion.div>
-
-                                {/* 로켓/캐릭터 (위로 상승) */}
-                                <motion.div
-                                    initial={{ y: 100, scale: 0.5, opacity: 0 }}
-                                    animate={{ y: [-20, 10, -20], scale: 1, opacity: 1 }}
-                                    transition={{
-                                        y: { duration: 0.6, repeat: Infinity, ease: 'easeInOut' },
-                                        opacity: { duration: 0.5 },
-                                        scale: { duration: 0.5 }
-                                    }}
-                                    style={{ fontSize: '6rem', zIndex: 2 }}
-                                >
-                                    🚀
-                                </motion.div>
-
-                                {/* 현재 층 (위에서 나타남) */}
-                                <motion.div
-                                    initial={{ y: -150, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.5, duration: 0.8, type: 'spring' }}
-                                    style={{
-                                        fontSize: '4rem',
-                                        color: '#FFD700',
-                                        fontWeight: '900',
-                                        textShadow: '0 0 20px rgba(255,215,0,0.5)',
-                                        zIndex: 3,
-                                        marginTop: '120px'
-                                    }}
-                                >
-                                    {stats.currentFloor}층 도달!
-                                </motion.div>
-                            </div>
-
-                            <motion.div
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: 1 }}
-                                style={{ textAlign: 'center', marginTop: '40px', padding: '0 20px' }}
-                            >
-                                <h2 style={{ color: 'white', fontSize: '1.8rem', margin: 0 }}>
-                                    {stats.currentFloor === 10 ? '✨ 최종 층 도달! ✨' : '층간 정복 완료!'}
-                                </h2>
-                                <p style={{ color: '#DDD', fontSize: '1.2rem', marginTop: '12px', lineHeight: 1.5 }}>
-                                    {FLOOR_MESSAGES[stats.currentFloor] || FLOOR_MESSAGES.default}
-                                </p>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                <div style={{
-                    padding: '0 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: 'rgba(255,255,255,0.98)',
-                    backdropFilter: 'blur(10px)',
-                    borderBottom: '2px solid #E3F2FD',
-                    zIndex: 1500, // 헤더 내부 요소들보다 위에 있도록 상향
-                    height: '70px',
-                    position: 'sticky',
-                    top: 0
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleExit}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                background: '#F5F5F5',
-                                border: '1px solid #E0E0E0',
-                                padding: '6px 14px',
-                                borderRadius: '12px',
-                                color: '#666',
-                                fontSize: '0.9rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <span style={{ fontSize: '1.2rem' }}>←</span>
-                            <span className="hide-on-mobile">나가기</span>
-                        </motion.button>
-
-                        {/* [개선] 학년 표시를 헤더로 이동 (상단 공간 절약) */}
-                        <div style={{
-                            padding: '6px 16px',
-                            background: '#E3F2FD',
-                            borderRadius: '12px',
-                            border: '1px solid #BBDEFB',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px'
-                        }}>
-                            <span style={{ fontSize: '1rem', fontWeight: 'bold', color: '#1565C0' }}>📚 {selectedGrade}학년</span>
-                        </div>
-                    </div>
-
-                    <h2 style={{ margin: 0, color: '#1565C0', fontSize: '1.2rem', fontWeight: '800', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>🏰 어휘의 탑</h2>
-
-                    {/* [신규] 남은 시도 횟수 표시 */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '6px 12px',
-                        background: remainingAttempts > 1 ? '#E8F5E9' : remainingAttempts === 1 ? '#FFF3E0' : '#FFEBEE',
-                        borderRadius: '20px',
-                        border: `2px solid ${remainingAttempts > 1 ? '#4CAF50' : remainingAttempts === 1 ? '#FF9800' : '#EF5350'}`
-                    }}>
-                        <span style={{ fontSize: '1rem' }}>🎯</span>
-                        <span style={{
-                            fontSize: '0.85rem',
-                            fontWeight: 'bold',
-                            color: remainingAttempts > 1 ? '#2E7D32' : remainingAttempts === 1 ? '#E65100' : '#C62828'
-                        }}>
-                            {remainingAttempts > 0 ? `사용: ${attempts}/${dailyLimit}` : '완료!'}
-                        </span>
-                    </div>
-                </div>
-
-                {/* 기존 학년 선택 영역 제거 (헤더로 통합됨) */}
-
-                {/* 상태바 (경험치 & 타이머) - 더 컴팩트하게 */}
-                <div style={{
-                    padding: '10px 20px',
-                    background: 'rgba(255,255,255,0.8)',
-                    backdropFilter: 'blur(5px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '20px',
-                    borderBottom: '1px solid rgba(0,0,0,0.05)'
-                }}>
-                    {/* 현재 층수 */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '90px' }}>
-                        <div style={{
-                            width: '32px', height: '32px', borderRadius: '50%',
-                            background: getFloorBackground(stats.currentFloor),
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '0.9rem', fontWeight: 'bold', color: getFloorTextColor(stats.currentFloor),
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                        }}>{stats.currentFloor}</div>
-                        <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{stats.currentFloor}층</span>
-                    </div>
-
-                    {/* 경험치 바 */}
-                    <div style={{ flex: 1 }}>
-                        <div style={{ width: '100%', height: '8px', background: '#E0E0E0', borderRadius: '4px', overflow: 'hidden' }}>
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${stats.expProgress}%` }}
-                                style={{ height: '100%', background: 'linear-gradient(90deg, #2196F3, #1565C0)' }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* [신규] 타이머 - 컴팩트형 */}
-                    <div style={{
-                        minWidth: '100px', padding: '4px 12px',
-                        background: timeLeft <= 10 ? '#FFEBEE' : '#F5F5F5',
-                        borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px',
-                        border: `1px solid ${timeLeft <= 10 ? '#FFCDD2' : '#E0E0E0'}`
-                    }}>
-                        <span>⏱️</span>
-                        <span style={{ fontWeight: 'bold', color: timeLeft <= 10 ? '#C62828' : '#333' }}>{timeLeft}초</span>
-                    </div>
-                </div>
-
-                {/* 3열 레이아웃: 랭킹 / 퀴즈 / 타워맵 */}
-                {currentQuiz && (
-                    <div style={{
-                        flex: 1,
-                        width: '100%',
-                        padding: '10px 20px',
-                        display: 'grid',
-                        gridTemplateColumns: 'minmax(250px, 300px) 1fr minmax(150px, 200px)',
-                        gap: '20px',
-                        alignItems: 'start',
-                        overflowY: 'auto'
-                    }}>
-                        {/* [1열] 랭킹 리스트 (좌측) */}
-                        <div style={{
-                            background: 'rgba(255, 255, 255, 0.95)',
-                            borderRadius: '24px',
-                            padding: '20px 16px',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-                            border: '1px solid #E3F2FD',
-                            maxHeight: 'calc(100vh - 120px)',
-                            overflowY: 'auto'
-                        }}>
-                            <h3 style={{ margin: '0 0 15px 0', fontSize: '1rem', color: '#1565C0', fontWeight: '900', textAlign: 'center' }}>🏆 탑 랭킹</h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {/* 랭킹 렌더링 (동일 로직 최적화) */}
-                                {(() => {
-                                    if (displayRankings.length === 0) return <p style={{ textAlign: 'center', color: '#999', fontSize: '0.8rem' }}>참여 기록 없음</p>;
-                                    const grouped = displayRankings.reduce((acc, curr) => {
-                                        const f = curr.max_floor;
-                                        if (!acc.has(f)) acc.set(f, []);
-                                        acc.get(f).push(curr);
-                                        return acc;
-                                    }, new Map());
-                                    const sortedFloors = Array.from(grouped.keys()).sort((a, b) => b - a);
-                                    let currentRank = 1;
-                                    return sortedFloors.slice(0, 5).map((floor) => { // 상위 5그룹만 표시
-                                        const students = grouped.get(floor);
-                                        const rank = currentRank;
-                                        currentRank += students.length;
-                                        const isMyGroup = students.some(s => s.student_id === studentSession?.id);
-                                        return (
-                                            <div key={floor} style={{
-                                                background: isMyGroup ? '#E3F2FD' : '#F8F9FA',
-                                                borderRadius: '12px', padding: '10px',
-                                                border: isMyGroup ? '1px solid #2196F3' : '1px solid #EEE'
-                                            }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '4px' }}>
-                                                    <span style={{ color: rank <= 3 ? '#E65100' : '#666' }}>{rank}위</span>
-                                                    <span style={{ color: '#1565C0' }}>{floor}F</span>
-                                                </div>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                                    {students.map(s => (
-                                                        <span key={s.student_id} style={{ fontSize: '0.75rem', padding: '2px 6px', background: s.student_id === studentSession?.id ? '#2196F3' : 'white', color: s.student_id === studentSession?.id ? 'white' : '#555', borderRadius: '4px', border: '1px solid #DDD' }}>
-                                                            {s.students?.name}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        );
-                                    });
-                                })()}
-                            </div>
-                        </div>
-
-                        {/* [2열] 메인 퀴즈 (중앙) */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            {/* 문제 카드 - 더 컴팩트하게 */}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                key={currentQuiz.correctAnswer}
-                                style={{
-                                    background: 'white', borderRadius: '24px', padding: '25px',
-                                    boxShadow: '0 8px 32px rgba(0,0,0,0.08)', border: '1px solid #EEE'
-                                }}
-                            >
-                                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                                    <span style={{ background: '#E3F2FD', color: '#1565C0', padding: '4px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>{currentQuiz.category}</span>
-                                    <span style={{ background: '#F5F5F5', color: '#666', padding: '4px 12px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>Lv.{currentQuiz.level}</span>
-                                </div>
-                                <h3 style={{ fontSize: '1.4rem', color: '#333', marginBottom: '12px', lineHeight: 1.4, fontWeight: '700' }}>📖 "{currentQuiz.question}"</h3>
-                                <p style={{ fontSize: '1rem', color: '#666', background: '#F9F9F9', padding: '12px 15px', borderRadius: '12px', borderLeft: '4px solid #2196F3', margin: 0 }}>
-                                    💡 힌트: {currentQuiz.example?.replace(currentQuiz.correctAnswer, '___') || '예문이 없습니다.'}
-                                </p>
-                            </motion.div>
-
-                            {/* 보기 버튼들 - 그리드 최적화 */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                {currentQuiz.options.map((option) => {
-                                    const isSelected = selectedAnswers.includes(option);
-                                    const isCorrect = option === currentQuiz.correctAnswer;
-                                    
-                                    let btnStyle = { background: 'white', border: '2px solid #EEE', color: '#333' };
-                                    
-                                    if (isSelected) {
-                                        if (isCorrect) {
-                                            btnStyle = { background: '#4CAF50', border: '2px solid #4CAF50', color: 'white' };
-                                        } else {
-                                            btnStyle = { background: '#FFEBEE', border: '2px solid #EF5350', color: '#C62828', opacity: 0.7 };
-                                        }
-                                    }
-
-                                    return (
-                                        <motion.button
-                                            key={option}
-                                            whileHover={(!showResult && !isSelected) ? { scale: 1.02, y: -2 } : {}}
-                                            whileTap={(!showResult && !isSelected) ? { scale: 0.98 } : {}}
-                                            onClick={() => handleAnswerSelect(option)}
-                                            disabled={showResult || isSelected}
-                                            style={{
-                                                padding: '16px', borderRadius: '16px', ...btnStyle,
-                                                fontSize: '1.1rem', fontWeight: 'bold', 
-                                                cursor: (showResult || isSelected) ? 'default' : 'pointer',
-                                                boxShadow: isSelected ? 'none' : '0 4px 12px rgba(0,0,0,0.05)', 
-                                                transition: 'all 0.2s',
-                                                position: 'relative',
-                                                overflow: 'hidden'
-                                            }}
-                                        >
-                                            {option}
-                                            {isSelected && !isCorrect && (
-                                                <motion.span 
-                                                    initial={{ scale: 0 }} animate={{ scale: 1 }}
-                                                    style={{ position: 'absolute', right: '10px', top: '10px', fontSize: '1rem' }}
-                                                >❌</motion.span>
-                                            )}
-                                            {isSelected && isCorrect && (
-                                                <motion.span 
-                                                    initial={{ scale: 0 }} animate={{ scale: 1 }}
-                                                    style={{ position: 'absolute', right: '10px', top: '10px', fontSize: '1rem' }}
-                                                >✅</motion.span>
-                                            )}
-                                        </motion.button>
-                                    );
-                                })}
-                            </div>
-
-                            {/* 정답 확인 결과 및 다음 버튼 */}
-                            <AnimatePresence>
-                                {showResult && lastResult && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                        style={{
-                                            padding: '12px 20px', borderRadius: '16px', textAlign: 'center',
-                                            background: lastResult.isCorrect ? '#E8F5E9' : '#FFEBEE',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px'
-                                        }}
-                                    >
-                                        <span style={{ fontWeight: 'bold', color: lastResult.isCorrect ? (lastResult.earnedExp < 0 ? '#E65100' : '#2E7D32') : '#C62828' }}>
-                                            {lastResult.isCorrect 
-                                                ? lastResult.earnedExp >= 0 
-                                                    ? `🎉 정답! +${lastResult.earnedExp} EXP` 
-                                                    : `⚠️ 늦게 맞혔어요! ${lastResult.earnedExp} EXP`
-                                                : lastResult.isMaxAttemptsReached 
-                                                    ? `📉 최종 오답 패널티! ${lastResult.earnedExp} EXP (정답: ${lastResult.correctAnswer})`
-                                                    : `💪 아쉬워요! 남은 기회: ${3 - lastResult.wrongAttempts}번`}
-                                        </span>
-                                        <motion.button
-                                            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                                            onClick={handleNextQuestion}
-                                            style={{
-                                                padding: '8px 24px', borderRadius: '12px', border: 'none',
-                                                background: '#1565C0', color: 'white', fontSize: '0.9rem', fontWeight: 'bold', cursor: 'pointer'
-                                            }}
-                                        >다음 문제 →</motion.button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        {/* [3열] 실시간 타워 맵 (우측) */}
-                        <div style={{
-                            display: 'flex', flexDirection: 'column', alignItems: 'center',
-                            justifyContent: 'flex-start', paddingTop: '20px', pointerEvents: 'none'
-                        }}>
-                            <div style={{ transform: 'scale(0.85)' }}>
-                                <TowerMap />
-                            </div>
-                            <div style={{
-                                marginTop: '20px', padding: '10px 15px', background: 'rgba(255,255,255,0.7)',
-                                borderRadius: '12px', textAlign: 'center', backdropFilter: 'blur(5px)'
-                            }}>
-                                <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '2px' }}>나의 정복도</div>
-                                <div style={{ fontSize: '1.2rem', fontWeight: '900', color: '#1565C0' }}>{stats.currentFloor}층 탐험 중</div>
-                            </div>
-                        </div>
-                    </div>
+                            )}
+                        </AnimatePresence>
+                    </motion.section>
                 )}
 
-                {/* 하단 재설정 버튼 - 컴팩트 레이아웃에선 제거 또는 최소화 */}
-                {/* [신규] 시간 초과 오버레이 */}
-                <AnimatePresence>
-                    {isTimeUp && !isFullyExhausted && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            style={{
-                                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                zIndex: 6000, padding: '20px'
-                            }}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, y: 20 }}
-                                animate={{ scale: 1, y: 0 }}
-                                style={{
-                                    background: 'white', borderRadius: '32px', padding: '40px 30px',
-                                    maxWidth: '400px', width: '100%', textAlign: 'center'
-                                }}
-                            >
-                                <span style={{ fontSize: '4rem', display: 'block', marginBottom: '20px' }}>⏱️</span>
-                                <h2 style={{ fontSize: '1.8rem', color: '#E53935', margin: '0 0 10px 0', fontWeight: '900' }}>제한시간 종료!</h2>
-                                <p style={{ color: '#666', marginBottom: '30px', lineHeight: '1.6' }}>
-                                    아쉽게도 시간이 모두 지났어요!<br />
-                                    기회를 1회 소진했습니다.<br />
-                                    <strong>남은 기회: {remainingAttempts}회</strong>
-                                </p>
+                {phase === 'reward' && (
+                    <section className="vocab-boon-card">
+                        <span className="vocab-boon-card__icon">🎁</span>
+                        <p className="vocab-intro-card__eyebrow">{Math.max(1, run.currentFloor - 1)}층 통과</p>
+                        <h2>다음 층에서 쓸 능력을 하나 골라요</h2>
+                        <div className="vocab-boon-card__choices">
+                            {boonChoices.map((boon) => (
+                                <button type="button" key={boon.id} onClick={() => chooseBoon(boon)}>
+                                    <span>{boon.icon}</span><strong>{boon.name}</strong><small>{boon.description}</small>
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                )}
+            </main>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <Button
-                                        onClick={handleContinue}
-                                        style={{
-                                            background: '#2196F3', color: 'white', height: '56px',
-                                            fontSize: '1.1rem', fontWeight: 'bold', borderRadius: '16px'
-                                        }}
-                                    >
-                                        계속 도전하기 🚀
-                                    </Button>
-                                    <Button
-                                        onClick={onBack}
-                                        variant="ghost"
-                                        style={{
-                                            color: '#757575', height: '56px',
-                                            fontSize: '1rem', fontWeight: 'bold'
-                                        }}
-                                    >
-                                        그만하고 나갈래요 🏠
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* [신규] 모든 기회 소진 오버레이 (보상 획득) */}
-                <AnimatePresence>
-                    {isFullyExhausted && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            style={{
-                                position: 'fixed', inset: 0, background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                zIndex: 7000, padding: '20px'
-                            }}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.8, y: 50 }}
-                                animate={{ scale: 1, y: 0 }}
-                                style={{
-                                    background: 'white', borderRadius: '32px', padding: '40px 30px',
-                                    maxWidth: '450px', width: '100%', textAlign: 'center',
-                                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
-                                }}
-                            >
-                                <span style={{ fontSize: '4rem', display: 'block', marginBottom: '20px' }}>🏆</span>
-                                <h2 style={{ fontSize: '2rem', color: '#FF9800', margin: '0 0 10px 0', fontWeight: '1000' }}>오늘의 미션 완료!</h2>
-                                <p style={{ color: '#666', fontSize: '1.1rem', marginBottom: '30px', lineHeight: '1.6' }}>
-                                    {dailyLimit}번의 기회를 모두 사용했어요!<br />
-                                    정상을 향한 학생의 열정, 정말 멋져요!<br />
-                                    <strong>{stats.currentFloor}층</strong>까지 등반했습니다!
-                                </p>
-
-                                <div style={{
-                                    background: '#FFF8E1', borderRadius: '20px', padding: '20px',
-                                    marginBottom: '40px', border: '2px dashed #FF9800'
-                                }}>
-                                    <span style={{ color: '#F57C00', fontWeight: 'bold' }}>축하 보너스</span>
-                                    <div style={{ fontSize: '2.5rem', fontWeight: '1000', color: '#E65100', marginTop: '10px' }}>
-                                        +{rewardPoints}P
-                                    </div>
-                                    <p style={{ fontSize: '0.85rem', color: '#FB8C00', marginTop: '10px', margin: 0 }}>
-                                        (포인트가 보관함에 지급되었습니다)
-                                    </p>
-                                </div>
-
-                                <Button
-                                    onClick={onBack}
-                                    style={{
-                                        width: '100%', height: '60px',
-                                        background: '#1565C0', color: 'white',
-                                        fontSize: '1.2rem', fontWeight: '900', borderRadius: '20px'
-                                    }}
-                                >
-                                    대시보드로 돌아가기 🏠
-                                </Button>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* [신규] 10층 타워 클리어 오버레이 */}
-                <AnimatePresence>
-                    {isTowerCleared && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            style={{
-                                position: 'fixed', inset: 0, background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                zIndex: 8000, padding: '20px'
-                            }}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.8, y: 50 }}
-                                animate={{ scale: 1, y: 0 }}
-                                style={{
-                                    background: 'white', borderRadius: '32px', padding: '40px 30px',
-                                    maxWidth: '450px', width: '100%', textAlign: 'center',
-                                    boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
-                                }}
-                            >
-                                <span style={{ fontSize: '4.5rem', display: 'block', marginBottom: '15px' }}>👑</span>
-                                <h2 style={{ fontSize: '2.2rem', color: '#FF9800', margin: '0 0 10px 0', fontWeight: '1000' }}>어휘마스터 등극!</h2>
-                                <p style={{ color: '#666', fontSize: '1.1rem', marginBottom: '30px', lineHeight: '1.6' }}>
-                                    대단해요! 어휘의 탑 정상을 정복했습니다!<br />
-                                    전설적인 실력을 증명한 학생에게<br />
-                                    <strong>특별 보너스</strong>를 드립니다!
-                                </p>
-
-                                <div style={{
-                                    background: '#FFF8E1', borderRadius: '20px', padding: '20px',
-                                    marginBottom: '40px', border: '2px dashed #FF9800'
-                                }}>
-                                    <span style={{ color: '#F57C00', fontWeight: 'bold' }}>탑 클리어 기념 보너스</span>
-                                    <div style={{ fontSize: '3rem', fontWeight: '1000', color: '#E65100', marginTop: '10px' }}>
-                                        +500P
-                                    </div>
-                                    <p style={{ fontSize: '0.85rem', color: '#FB8C00', marginTop: '10px', margin: 0 }}>
-                                        (보관함에 즉시 지급되었습니다)
-                                    </p>
-                                </div>
-
-                                <Button
-                                    onClick={onBack}
-                                    style={{
-                                        width: '100%', height: '60px',
-                                        background: '#E65100', color: 'white',
-                                        fontSize: '1.2rem', fontWeight: '900', borderRadius: '20px'
-                                    }}
-                                >
-                                    위풍당당하게 돌아가기 🏠
-                                </Button>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-                {/* [신규] 커스텀 퇴장 확인 팝업 (window.confirm 대체) */}
-                <AnimatePresence>
-                    {isExitConfirmOpen && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            style={{
-                                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                zIndex: 30000, padding: '20px' // 최상위 z-index
-                            }}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, y: 20 }}
-                                animate={{ scale: 1, y: 0 }}
-                                style={{
-                                    background: 'white', borderRadius: '32px', padding: '35px 25px',
-                                    maxWidth: '400px', width: '100%', textAlign: 'center',
-                                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
-                                }}
-                            >
-                                <span style={{ fontSize: '3.5rem', display: 'block', marginBottom: '15px' }}>⚠️</span>
-                                <h2 style={{ fontSize: '1.5rem', color: '#C62828', margin: '0 0 12px 0', fontWeight: '900' }}>잠깐! 나갈까요?</h2>
-                                <p style={{ color: '#546E7A', marginBottom: '30px', lineHeight: '1.6', fontSize: '0.95rem' }}>
-                                    {remainingAttempts === 0 
-                                        ? '마지막 도전 기회예요! 지금 중단하면 오늘 미션 보상 포인트를 받을 수 없어요. 끝까지 해보는 건 어떨까요?'
-                                        : '아직 게임이 진행 중이에요! 지금 나가면 시도 횟수 1회가 차감됩니다. 그래도 나갈까요?'
-                                    }
-                                </p>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <Button
-                                        onClick={() => setIsExitConfirmOpen(false)}
-                                        variant="ghost"
-                                        style={{ height: '56px', background: '#F5F5F5', color: '#666', borderRadius: '16px' }}
-                                    >
-                                        계속하기
-                                    </Button>
-                                    <Button
-                                        onClick={confirmExit}
-                                        style={{
-                                            height: '56px', background: '#E53935', color: 'white',
-                                            fontWeight: 'bold', borderRadius: '16px', boxShadow: '0 4px 12px rgba(229,57,53,0.3)'
-                                        }}
-                                    >
-                                        나가기
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div> {/* 컨텐츠 래퍼 닫기 */}
+            <AnimatePresence>
+                {phase === 'confirm' && (
+                    <motion.div className="vocab-journey__overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <div className="vocab-journey__dialog">
+                            <span className="vocab-journey__dialog-icon">🚪</span>
+                            <h2>탐험을 마칠까요?</h2>
+                            <p>지금까지 푼 문제와 배운 낱말은 서버에 저장되어 있어요. 지금까지 얻은 보상도 계산해드려요.</p>
+                            <div className="vocab-journey__dialog-actions">
+                                <button type="button" onClick={() => setPhase(returnPhase)}>계속 탐험하기</button>
+                                <button type="button" className="is-quiet" onClick={() => finishRun('exited')} disabled={submitting}>탐험 마치기</button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
-
-// 재사용 가능한 버튼 컴포넌트
-const Button = ({ children, onClick, style, variant = 'primary', disabled = false }) => (
-    <motion.button
-        whileHover={!disabled ? { scale: 1.02, y: -2 } : {}}
-        whileTap={!disabled ? { scale: 0.98 } : {}}
-        onClick={onClick}
-        disabled={disabled}
-        style={{
-            padding: '0 20px',
-            borderRadius: '12px',
-            border: 'none',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s',
-            boxShadow: variant === 'ghost' ? 'none' : '0 4px 12px rgba(0,0,0,0.1)',
-            opacity: disabled ? 0.6 : 1,
-            background: variant === 'ghost' ? 'transparent' : '#eee',
-            ...style
-        }}
-    >
-        {children}
-    </motion.button>
-);
 
 export default VocabularyTowerGame;
