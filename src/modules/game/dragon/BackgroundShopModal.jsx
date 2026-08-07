@@ -5,6 +5,7 @@ import Button from '../../../components/common/Button';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import DragonHideoutScene from './DragonHideoutScene';
 import {
+    DRAGON_DECOR_RARITIES,
     DRAGON_DECOR_SLOTS,
     getDragonDecorItemsForSlot,
     normalizeDragonDecor
@@ -117,8 +118,9 @@ const BackgroundShopModal = ({
                                     const isOwned = decor.owned.has(item.id);
                                     const isEquipped = Reflect.get(decor.equipped, item.slot) === item.id;
                                     const isLocked = Number(item.requiredWriterLevel || 1) > Number(petData?.level || 1);
+                                    const rarity = Reflect.get(DRAGON_DECOR_RARITIES, item.rarity);
                                     return (
-                                        <article key={item.id} data-slot={item.slot} className={`agit-workshop__item${isEquipped ? ' is-equipped' : ''}${previewItemId === item.id ? ' is-previewing' : ''}`}>
+                                        <article key={item.id} data-slot={item.slot} data-rarity={item.rarity || 'default'} className={`agit-workshop__item${isEquipped ? ' is-equipped' : ''}${previewItemId === item.id ? ' is-previewing' : ''}`}>
                                             <button
                                                 type="button"
                                                 className="agit-workshop__item-preview"
@@ -146,6 +148,7 @@ const BackgroundShopModal = ({
                                                 {item.slot === 'pedestal' && <span />}
                                             </button>
                                             <div className="agit-workshop__item-copy">
+                                                {rarity && <span className="agit-workshop__rarity">{rarity.name}</span>}
                                                 <strong>{item.name}</strong>
                                                 <small>
                                                     {isEquipped ? '현재 장착 중' : isOwned ? '보유 중' : isLocked ? `작가 ${item.requiredWriterLevel}단계 필요` : `${Number(item.price || 0).toLocaleString()}P`}

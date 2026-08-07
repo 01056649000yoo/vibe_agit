@@ -75,6 +75,7 @@
 .agit-workshop__item-preview[data-slot='pedestal'][data-visual='moonstone'] span { background: radial-gradient(circle at 30% 30%,#7987a7 0 5%,transparent 6%),linear-gradient(180deg,#f4f6ff,#7785a6); box-shadow: 0 0 9px #a8c6ff; }
 .agit-workshop__item-preview[data-slot='pedestal'][data-visual='ember'] span { background: linear-gradient(115deg,#27221f 0 30%,#ed6a2b 31% 38%,#292222 39% 66%,#ff9a38 67% 72%,#171515 73%); box-shadow: 0 0 9px rgba(255,98,31,.55); }
 .agit-workshop__item-preview[data-slot='pedestal'][data-visual='root'] span { background: repeating-linear-gradient(112deg,#593a25 0 16%,#96633a 17% 31%); box-shadow: -4px 4px 0 -2px #654127,5px 4px 0 -2px #754b2b; }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='celestial'] span { border: 2px solid #d5b552; background: radial-gradient(ellipse,#36437d 0 36%,#141b42 40% 67%,#9b7a2f 70%); box-shadow: 0 0 9px rgba(122,153,255,.65); }
 .agit-workshop__item-preview[data-slot='nameplate'] { position: relative; width: 94px; aspect-ratio: 2.35; overflow: visible; border: 0; background: radial-gradient(ellipse,#fff 0 12%,#f1e8dc 58%,transparent 72%); }
 .agit-workshop__item-preview[data-slot='nameplate'] img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(45,31,21,.28)); }
 .agit-workshop__item-preview[data-slot='nameplate'] span { position: relative; z-index: 1; display: block; max-width: 48%; overflow: hidden; color: #4b3020; font-size: .37rem; font-weight: 950; text-align: center; text-overflow: ellipsis; text-shadow: 0 1px rgba(255,255,255,.45); white-space: nowrap; }
@@ -83,7 +84,8 @@
 .agit-workshop__item-preview[data-visual='crystal'] span,
 .agit-workshop__item-preview[data-visual='rune'] span,
 .agit-workshop__item-preview[data-visual='celestial'] span,
-.agit-workshop__item-preview[data-visual='ember'] span { color: #fff0c2; text-shadow: 0 1px 2px #241c18; }
+.agit-workshop__item-preview[data-visual='ember'] span,
+.agit-workshop__item-preview[data-visual='storm'] span { color: #fff0c2; text-shadow: 0 1px 2px #241c18; }
 .agit-workshop__item-preview[data-visual='legend'] span { max-width: 38%; color: #5b3b13; }
 .agit-workshop__item-preview[data-slot='leftProp'], .agit-workshop__item-preview[data-slot='rightProp'] { background: radial-gradient(circle at 50% 38%,#fff 0 8%,#eee4d8 58%,#d8cabb); }
 .agit-workshop__item-preview[data-slot='leftProp'] img,
@@ -91,6 +93,12 @@
 .agit-workshop__item-preview[data-slot='leftProp'] span,
 .agit-workshop__item-preview[data-slot='rightProp'] span { color: #918176; font-size: .55rem; font-weight: 900; }
 .agit-workshop__item-copy { min-width: 0; }
+.agit-workshop__rarity { display: inline-flex; margin-bottom: 3px; padding: 2px 6px; border-radius: 999px; background: #ece8e2; color: #6f6258; font-size: .5rem; font-weight: 950; line-height: 1.2; }
+.agit-workshop__item[data-rarity='starter'] .agit-workshop__rarity { background: #e8f4ea; color: #397047; }
+.agit-workshop__item[data-rarity='common'] .agit-workshop__rarity { background: #e8f0f8; color: #35638b; }
+.agit-workshop__item[data-rarity='rare'] .agit-workshop__rarity { background: #eee8fb; color: #6546a5; }
+.agit-workshop__item[data-rarity='hero'] .agit-workshop__rarity { background: #fff0d9; color: #9a5718; }
+.agit-workshop__item[data-rarity='legendary'] .agit-workshop__rarity { background: linear-gradient(135deg,#fff4b8,#f3c75d); color: #774b08; }
 .agit-workshop__item-copy strong { display: block; overflow: hidden; color: #473a31; font-size: .76rem; text-overflow: ellipsis; white-space: nowrap; }
 .agit-workshop__item-copy small { display: block; margin-top: 2px; color: #89786b; font-size: .6rem; font-weight: 800; }
 .agit-workshop__item > button { grid-column: 2; min-height: 34px; padding: 5px 8px; border-radius: 10px; font-size: .65rem; }

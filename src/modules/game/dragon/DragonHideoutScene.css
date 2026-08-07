@@ -100,11 +100,29 @@
 .dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
 .dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
 
+.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame { border-color: #63864b; background: linear-gradient(135deg,rgba(104,151,70,.12),transparent 16% 84%,rgba(104,151,70,.12)); }
+.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame i { border: 0; background: linear-gradient(135deg,#b8d37b,#5f8f4a 52%,#355f36); clip-path: polygon(0 0,100% 0,72% 20%,95% 50%,59% 44%,50% 100%,28% 56%,0 77%); }
+.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
+.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
+.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+
+.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame { border-color: #aebcf0; box-shadow: inset 0 0 0 1px rgba(246,247,255,.8),0 0 17px rgba(132,151,232,.4); }
+.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame i { border: 0; width: 18%; border-radius: 50%; background: radial-gradient(circle at 62% 38%,transparent 0 38%,#e9efff 40% 62%,transparent 64%); filter: drop-shadow(0 0 7px rgba(198,211,255,.72)); }
+.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
+.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
+.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+
 .dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame { border-color: #9d7ddd; }
 .dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i { border: 0; background: linear-gradient(135deg,#ecfbff,#a995ff 52%,#6844b4); clip-path: polygon(0 0,100% 0,75% 32%,92% 63%,52% 55%,35% 100%,20% 57%,0 74%); }
 .dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
 .dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
 .dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+
+.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame { border: max(2px,.8cqi) double #4fd3d0; box-shadow: inset 0 0 0 1px rgba(180,255,249,.5),0 0 18px rgba(66,220,215,.42); }
+.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame i { border: max(2px,.65cqi) solid #4fd3d0; width: 17%; transform: rotate(45deg) scale(.72); }
+.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame i:nth-child(2) { transform: rotate(-45deg) scale(.72); }
+.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame i:nth-child(3) { transform: rotate(45deg) scale(.72); }
+.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame i:nth-child(4) { transform: rotate(-45deg) scale(.72); }
 
 .dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame { border-color: #5968ad; box-shadow: inset 0 0 0 1px #d8e3ff, 0 0 17px rgba(72,101,214,.4); }
 .dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame i { border: 0; width: 14%; background: linear-gradient(135deg,#f6fbff,#70a9ff 42%,#4a4b9f); clip-path: polygon(38% 0,100% 0,62% 38%,87% 38%,21% 100%,42% 52%,0 52%); }
@@ -133,6 +151,8 @@
 .dragon-hideout-scene[data-pedestal='moonstone'] .dragon-hideout-scene__pedestal { background: radial-gradient(circle at 30% 30%,rgba(94,105,145,.25) 0 5%,transparent 6%),radial-gradient(circle at 67% 45%,rgba(94,105,145,.22) 0 4%,transparent 5%),linear-gradient(180deg,#f4f6ff,#a9b9d8 56%,#65708f); box-shadow: 0 0 20px rgba(168,198,255,.7),0 12px 18px rgba(47,56,84,.3); }
 .dragon-hideout-scene[data-pedestal='ember'] .dragon-hideout-scene__pedestal { border-radius: 36% 36% 50% 50%; background: linear-gradient(115deg,#28231f 0 23%,#ed6a2b 24% 27%,#3a2b24 28% 54%,#ff9a38 55% 58%,#181717 59%); box-shadow: 0 0 20px rgba(255,98,31,.52),0 13px 18px rgba(38,18,11,.4); }
 .dragon-hideout-scene[data-pedestal='root'] .dragon-hideout-scene__pedestal { height: 20%; border-radius: 38% 46% 50% 43%; background: repeating-linear-gradient(112deg,#593a25 0 10%,#8b5a32 11% 22%,#49301f 23% 31%); box-shadow: -8px 8px 0 -5px #654127,9px 7px 0 -5px #754b2b,0 13px 18px rgba(48,28,16,.34); transform: rotate(-2deg); }
+.dragon-hideout-scene[data-pedestal='celestial'] .dragon-hideout-scene__pedestal { height: 20%; border: max(2px,.7cqi) solid #d2b04f; background: radial-gradient(ellipse,#455aa0 0 34%,#1c285b 37% 67%,#866421 70%); box-shadow: 0 0 22px rgba(111,142,255,.64),0 12px 18px rgba(25,31,68,.36); }
+.dragon-hideout-scene[data-pedestal='celestial'] .dragon-hideout-scene__pedestal i::after { content: '✦'; color: #ffe995; text-shadow: 0 0 8px #9ac6ff; }
 
 .dragon-hideout-scene__dragon { position: absolute !important; z-index: 5; top: 13%; left: 17%; width: 66% !important; height: 66% !important; }
 .dragon-hideout-scene__prop { z-index: 6; bottom: 16%; width: 28%; height: 38%; filter: drop-shadow(0 7px 6px rgba(35,25,19,.34)); pointer-events: none; }
@@ -179,6 +199,10 @@
 .dragon-hideout-scene[data-nameplate='ember'] .dragon-hideout-scene__nameplate { color: #ffe0a7; filter: drop-shadow(0 0 10px rgba(255,88,26,.62)) drop-shadow(0 8px 6px rgba(48,24,15,.42)); }
 .dragon-hideout-scene[data-nameplate='ember'] .dragon-hideout-scene__nameplate strong { text-shadow: 0 1px 3px #471810; }
 .dragon-hideout-scene[data-nameplate='ember'] .dragon-hideout-scene__nameplate-art { animation: nameplate-ember-pulse 2.2s ease-in-out infinite; }
+
+.dragon-hideout-scene[data-nameplate='storm'] .dragon-hideout-scene__nameplate { color: #eef5ff; filter: drop-shadow(0 0 11px rgba(92,163,255,.68)) drop-shadow(0 8px 6px rgba(22,31,64,.42)); }
+.dragon-hideout-scene[data-nameplate='storm'] .dragon-hideout-scene__nameplate strong { text-shadow: 0 1px 3px #182a61; }
+.dragon-hideout-scene[data-nameplate='storm'] .dragon-hideout-scene__nameplate-effect::after { top: 18%; bottom: 18%; left: -25%; width: 18%; background: linear-gradient(90deg,transparent,rgba(178,222,255,.72),transparent); transform: skewX(-18deg); animation: nameplate-sweep 3.8s ease-in-out infinite; }
 
 .dragon-hideout-scene[data-nameplate='legend'] .dragon-hideout-scene__nameplate { color: #5b3b13; filter: drop-shadow(0 0 13px rgba(255,208,70,.72)) drop-shadow(0 9px 7px rgba(88,55,16,.36)); }
 .dragon-hideout-scene[data-nameplate='legend'] .dragon-hideout-scene__nameplate-copy { width: 40%; }

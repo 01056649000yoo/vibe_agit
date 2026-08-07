@@ -125,8 +125,27 @@ test('아지트 공방은 관리 가능한 5개 고정 슬롯만 사용한다', 
         assert.equal(Reflect.get(DEFAULT_EQUIPPED_DECOR, slot.id) != null, true);
     });
     assert.equal(DRAGON_DECOR_SLOTS[0].name, '프레임');
-    assert.equal(getDragonDecorItemsForSlot('pedestal').length, 8);
-    assert.equal(getDragonDecorItemsForSlot('nameplate').length, 8);
+    assert.equal(getDragonDecorItemsForSlot('wallpaper').length, 10);
+    assert.equal(getDragonDecorItemsForSlot('pedestal').length, 9);
+    assert.equal(getDragonDecorItemsForSlot('leftProp').length, 9);
+    assert.equal(getDragonDecorItemsForSlot('rightProp').length, 9);
+    assert.equal(getDragonDecorItemsForSlot('nameplate').length, 9);
+});
+
+test('유료 장식 40종은 슬롯별 8개와 등급 피라미드로 고르게 배치된다', () => {
+    const paidItems = DRAGON_DECOR_ITEMS.filter((item) => item.price > 0);
+    assert.equal(paidItems.length, 40);
+    DRAGON_DECOR_SLOTS.forEach((slot) => {
+        assert.equal(paidItems.filter((item) => item.slot === slot.id).length, 8);
+    });
+    assert.deepEqual(
+        Object.fromEntries(['starter', 'common', 'rare', 'hero', 'legendary'].map((rarity) => [
+            rarity,
+            paidItems.filter((item) => item.rarity === rarity).length
+        ])),
+        { starter: 8, common: 12, rare: 10, hero: 7, legendary: 3 }
+    );
+    assert.equal(paidItems.reduce((sum, item) => sum + item.price, 0), 143600);
 });
 
 test('기존에 산 배경은 새 프레임 소유·장착 상태로 그대로 이어진다', () => {
@@ -144,22 +163,30 @@ test('프레임은 모서리 테마 이름을 쓰고 좌우 소품은 최적화�
     assert.equal(getDragonDecorItemsForSlot('wallpaper').every((item) => item.name.includes('프레임')), true);
     assert.deepEqual(
         getDragonDecorItemsForSlot('pedestal').map((item) => item.preview),
-        ['stone', 'oak', 'cloud', 'crystal', 'rune', 'moonstone', 'ember', 'root']
+        ['stone', 'oak', 'cloud', 'root', 'ember', 'crystal', 'moonstone', 'rune', 'celestial']
     );
     const props = [
         ...getDragonDecorItemsForSlot('leftProp'),
         ...getDragonDecorItemsForSlot('rightProp')
     ].filter((item) => !item.isDefault);
-    assert.equal(props.length, 8);
+    assert.equal(props.length, 16);
     assert.deepEqual(props.map((item) => item.image), [
-        '/assets/dragons/decor/left-chronicle-lectern.webp',
         '/assets/dragons/decor/left-dragonheart-crystals.webp',
+        '/assets/dragons/decor/left-cloud-harp.webp',
+        '/assets/dragons/decor/left-chronicle-lectern.webp',
         '/assets/dragons/decor/left-guardian-brazier.webp',
         '/assets/dragons/decor/left-ancestor-runestone.webp',
+        '/assets/dragons/decor/left-moonwell.webp',
+        '/assets/dragons/decor/left-storm-spire.webp',
+        '/assets/dragons/decor/left-royal-banner.webp',
+        '/assets/dragons/decor/right-hatchling-nest.webp',
         '/assets/dragons/decor/right-bond-shrine.webp',
-        '/assets/dragons/decor/right-celestial-orrery.webp',
+        '/assets/dragons/decor/right-forest-spring.webp',
         '/assets/dragons/decor/right-treasure-vault.webp',
-        '/assets/dragons/decor/right-hatchling-nest.webp'
+        '/assets/dragons/decor/right-crystal-egg.webp',
+        '/assets/dragons/decor/right-celestial-orrery.webp',
+        '/assets/dragons/decor/right-ember-anvil.webp',
+        '/assets/dragons/decor/right-golden-relic.webp'
     ]);
 });
 
@@ -180,7 +207,7 @@ test('장착한 5개 슬롯은 하나의 pet_data 계약으로 복원된다', ()
     assert.equal(DRAGON_DECOR_ITEMS.every((item) => item.slot && item.id), true);
 });
 
-test('문패 8종은 단계적으로 화려해지는 개별 WebP와 전설 잠금 조건을 쓴다', () => {
+test('문패 9종은 단계적으로 화려해지는 개별 WebP와 전설 잠금 조건을 쓴다', () => {
     const nameplates = getDragonDecorItemsForSlot('nameplate');
     assert.deepEqual(nameplates.map((item) => item.image), [
         '/assets/dragons/nameplates/nameplate-simple.webp',
@@ -190,8 +217,9 @@ test('문패 8종은 단계적으로 화려해지는 개별 WebP와 전설 잠�
         '/assets/dragons/nameplates/nameplate-rune.webp',
         '/assets/dragons/nameplates/nameplate-celestial.webp',
         '/assets/dragons/nameplates/nameplate-ember.webp',
+        '/assets/dragons/nameplates/nameplate-storm.webp',
         '/assets/dragons/nameplates/nameplate-legend.webp'
     ]);
-    assert.deepEqual(nameplates.map((item) => item.price), [0, 120, 220, 360, 420, 480, 540, 800]);
+    assert.deepEqual(nameplates.map((item) => item.price), [0, 500, 1200, 1400, 1600, 2000, 3500, 4200, 10000]);
     assert.equal(nameplates.at(-1).requiredWriterLevel, 10);
 });
