@@ -119,7 +119,6 @@ const LandingPage = ({ onStudentLoginClick }) => {
 
         <section className="landing-capabilities" aria-labelledby="landing-capabilities-title">
           <div className="landing-section-heading landing-section-heading-centered">
-            <span>아지트에서 할 수 있는 일</span>
             <h2 id="landing-capabilities-title">학생과 선생님이 함께 만드는 글쓰기</h2>
           </div>
 
