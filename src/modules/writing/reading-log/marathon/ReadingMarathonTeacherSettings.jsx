@@ -15,19 +15,33 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 
 const formatDate = (dateValue) => {
     if (!dateValue) return '정하지 않음';
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(dateValue)
+        ? new Date(`${dateValue}T00:00:00`)
+        : new Date(dateValue);
     return new Intl.DateTimeFormat('ko-KR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
-    }).format(new Date(`${dateValue}T00:00:00`));
+    }).format(date);
+};
+
+const finishReasonLabel = (reason) => {
+    if (reason === 'completed') return '🏁 목표 완주';
+    if (reason === 'ended_early') return '⏹ 중간 종료';
+    return '🔄 새 마라톤으로 교체';
 };
 
 const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const [snapshot, setSnapshot] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [ending, setEnding] = useState(false);
     const [pageSavingId, setPageSavingId] = useState(null);
     const [pageValues, setPageValues] = useState({});
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState('');
+    const [history, setHistory] = useState([]);
     const [form, setForm] = useState({
         title: `${className || '우리 반'} 독서마라톤`,
         targetDistanceM: DEFAULT_TARGET_DISTANCE_M,
@@ -60,6 +74,9 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         let active = true;
         const load = async () => {
             setLoading(true);
+            setHistoryOpen(false);
+            setHistory([]);
+            setHistoryError('');
             const { data, error } = await supabase.rpc('get_reading_marathon_snapshot', { p_class_id: classId });
             if (!active) return;
             setLoading(false);
@@ -72,6 +89,29 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         load();
         return () => { active = false; };
     }, [applySnapshot, classId]);
+
+    const loadHistory = useCallback(async () => {
+        if (!classId) return;
+        setHistoryLoading(true);
+        setHistoryError('');
+        const { data, error } = await supabase.rpc('get_teacher_reading_marathon_history', {
+            p_class_id: classId,
+            p_limit: 20
+        });
+        setHistoryLoading(false);
+        if (error) {
+            console.error('지난 독서마라톤 기록 로드 실패:', error.message);
+            setHistoryError('지난 마라톤 기록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+        setHistory(Array.isArray(data?.campaigns) ? data.campaigns : []);
+    }, [classId]);
+
+    const toggleHistory = async () => {
+        const nextOpen = !historyOpen;
+        setHistoryOpen(nextOpen);
+        if (nextOpen && history.length === 0) await loadHistory();
+    };
 
     const leaderboard = useMemo(
         () => (snapshot?.leaderboard || []).filter((row) => row.distance_m > 0),
@@ -99,7 +139,41 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
             return;
         }
         applySnapshot(data);
+        if (startNew) {
+            setHistory([]);
+            if (historyOpen) await loadHistory();
+        }
         alert(startNew ? '새 독서마라톤을 시작했습니다! 🏃' : '독서마라톤 설정을 저장했습니다.');
+    };
+
+    const finishCampaign = async () => {
+        if (!snapshot?.campaign || ending) return;
+        const isCompletedCampaign = snapshot.campaign.status === 'completed';
+        const shouldFinish = window.confirm(
+            isCompletedCampaign
+                ? `‘${snapshot.campaign.title}’의 완주 결과를 보관하고 새 마라톤을 준비할까요?\n\n최종 거리와 학생별 순위는 지난 마라톤 결과에 그대로 남습니다.`
+                : `‘${snapshot.campaign.title}’을 지금 종료할까요?\n\n현재 거리와 학생별 순위는 지난 마라톤 결과에 그대로 보관되며, 학생 화면에서는 내려갑니다.`
+        );
+        if (!shouldFinish) return;
+
+        setEnding(true);
+        const { data, error } = await supabase.rpc('finish_teacher_reading_marathon', {
+            p_class_id: classId
+        });
+        setEnding(false);
+        if (error) {
+            console.error('독서마라톤 중간 종료 실패:', error.message);
+            alert(error.message || '독서마라톤을 종료하지 못했습니다.');
+            return;
+        }
+
+        applySnapshot(data);
+        setForm((current) => ({ ...current, enabled: true }));
+        setHistory([]);
+        if (historyOpen) await loadHistory();
+        alert(isCompletedCampaign
+            ? '완주 결과를 보관했습니다. 아래에서 새 마라톤을 만들어주세요.'
+            : '현재 독서마라톤을 종료했습니다. 아래에서 새 마라톤을 시작할 수 있습니다.');
     };
 
     const savePageCount = async (book) => {
@@ -264,7 +338,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 <div className="reading-marathon-section-heading">
                     <div>
                         <span>운영 설정</span>
-                        <h4 id="reading-marathon-config-title">마라톤 설정 바꾸기</h4>
+                        <h4 id="reading-marathon-config-title">{campaign ? '마라톤 설정 바꾸기' : '새 마라톤 시작하기'}</h4>
                     </div>
                 </div>
                 <form onSubmit={(event) => { event.preventDefault(); saveCampaign(); }} className="reading-marathon-settings__form">
@@ -293,11 +367,93 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 </label>
                 <p className="reading-marathon-settings__rule">교사가 확인 완료한 독서록만 반영합니다. 한 페이지는 10m이며, 한 학생의 같은 책은 한 번만 인정됩니다.</p>
                 {completed ? (
-                    <Button type="button" onClick={() => saveCampaign({ startNew: true })} disabled={saving}>새 마라톤 시작하기 🏁</Button>
+                    <Button type="button" onClick={finishCampaign} disabled={saving || ending}>
+                        {ending ? '완주 기록 보관 중...' : '완주 기록 보관하고 새 마라톤 준비하기 🏁'}
+                    </Button>
                 ) : (
                     <Button type="submit" disabled={saving}>{saving ? '저장 중...' : snapshot?.campaign ? '설정 저장하기' : '독서마라톤 만들기'}</Button>
                 )}
+                {campaign?.started_at && !completed && (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="reading-marathon-finish-button"
+                        style={{ borderColor: '#fca5a5', backgroundColor: '#fff', color: '#b91c1c' }}
+                        onClick={finishCampaign}
+                        disabled={saving || ending}
+                    >
+                        {ending ? '종료 처리 중...' : '현재 마라톤 중간 종료하기 ⏹'}
+                    </Button>
+                )}
                 </form>
+            </section>
+
+            <section className="reading-marathon-history" aria-labelledby="reading-marathon-history-title">
+                <button
+                    type="button"
+                    className="reading-marathon-history__toggle"
+                    aria-expanded={historyOpen}
+                    aria-controls="reading-marathon-history-list"
+                    onClick={toggleHistory}
+                >
+                    <span>
+                        <strong id="reading-marathon-history-title">🏅 지난 마라톤 결과 보기</strong>
+                        <small>종료한 마라톤의 최종 거리와 학생별 순위를 다시 확인합니다.</small>
+                    </span>
+                    <em>{historyOpen ? '닫기 ▴' : '열기 ▾'}</em>
+                </button>
+
+                {historyOpen && (
+                    <div id="reading-marathon-history-list" className="reading-marathon-history__list">
+                        {historyLoading ? (
+                            <p className="reading-marathon-history__message">지난 기록을 불러오는 중... 🏃</p>
+                        ) : historyError ? (
+                            <div className="reading-marathon-history__message is-error">
+                                <p>{historyError}</p>
+                                <Button type="button" size="sm" variant="ghost" onClick={loadHistory}>다시 불러오기</Button>
+                            </div>
+                        ) : history.length === 0 ? (
+                            <p className="reading-marathon-history__message">아직 종료한 마라톤 기록이 없습니다.</p>
+                        ) : history.map((pastCampaign) => {
+                            const pastLeaderboard = Array.isArray(pastCampaign.leaderboard) ? pastCampaign.leaderboard : [];
+                            return (
+                                <details className="reading-marathon-history-card" key={pastCampaign.id}>
+                                    <summary>
+                                        <span>
+                                            <small>{finishReasonLabel(pastCampaign.finish_reason)}</small>
+                                            <strong>{pastCampaign.title}</strong>
+                                            <em>{formatDate(pastCampaign.started_at)} ~ {formatDate(pastCampaign.finished_at)}</em>
+                                        </span>
+                                        <span>
+                                            <strong>{formatMarathonDistance(pastCampaign.total_distance_m)}</strong>
+                                            <em>{Math.round(Number(pastCampaign.progress_percent) || 0)}% 달성 · 결과 펼치기 ▾</em>
+                                        </span>
+                                    </summary>
+                                    <div className="reading-marathon-history-card__body">
+                                        <dl>
+                                            <div><dt>최종 거리</dt><dd>{formatMarathonDistance(pastCampaign.total_distance_m)}</dd></div>
+                                            <div><dt>목표 거리</dt><dd>{formatMarathonDistance(pastCampaign.target_distance_m)}</dd></div>
+                                            <div><dt>참여 학생</dt><dd>{Number(pastCampaign.contributors) || 0}명</dd></div>
+                                            <div><dt>함께 읽은 책</dt><dd>{Number(pastCampaign.book_count) || 0}권</dd></div>
+                                        </dl>
+                                        <h5>학생별 최종 독서 기여 순위</h5>
+                                        {pastLeaderboard.length > 0 ? (
+                                            <ol className="reading-marathon-teacher-ranking">
+                                                {pastLeaderboard.map((row) => (
+                                                    <li key={row.student_id}>
+                                                        <span>{Number(row.rank) || 0}위</span>
+                                                        <strong>{row.name}</strong>
+                                                        <em>{Number(row.book_count) || 0}권 · {formatMarathonDistance(row.distance_m)}</em>
+                                                    </li>
+                                                ))}
+                                            </ol>
+                                        ) : <p className="reading-marathon-history__message">반영된 학생 기록이 없습니다.</p>}
+                                    </div>
+                                </details>
+                            );
+                        })}
+                    </div>
+                )}
             </section>
         </section>
     );

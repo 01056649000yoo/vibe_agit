@@ -258,6 +258,61 @@
 .reading-marathon-custom-target em { font-style: normal; }
 .reading-marathon-settings__rule { grid-column: 1 / -1; margin: 0; color: #78716c; font-size: .75rem; }
 .reading-marathon-settings__form > button { grid-column: 1 / -1; min-height: 48px; }
+.reading-marathon-finish-button:hover { box-shadow: 0 0 0 3px rgba(239,68,68,.1) !important; }
+
+.reading-marathon-history {
+    margin-top: 18px;
+    overflow: hidden;
+    border: 1px solid #d6d3d1;
+    border-radius: 19px;
+    background: rgba(255,255,255,.78);
+}
+
+.reading-marathon-history__toggle {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 17px 19px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.reading-marathon-history__toggle:hover { background: #fafaf9; }
+.reading-marathon-history__toggle:focus-visible { outline: 3px solid #fb923c; outline-offset: -4px; }
+.reading-marathon-history__toggle > span { display: grid; gap: 4px; }
+.reading-marathon-history__toggle strong { color: #431407; }
+.reading-marathon-history__toggle small { color: #78716c; font-size: .74rem; }
+.reading-marathon-history__toggle em { color: #9a3412; font-size: .75rem; font-style: normal; font-weight: 950; white-space: nowrap; }
+
+.reading-marathon-history__list { display: grid; gap: 10px; padding: 0 15px 15px; }
+.reading-marathon-history__message { margin: 0; padding: 24px 16px; border-radius: 13px; background: #fafaf9; color: #78716c; font-size: .8rem; text-align: center; }
+.reading-marathon-history__message.is-error { border: 1px solid #fecaca; background: #fef2f2; color: #b91c1c; }
+.reading-marathon-history__message.is-error p { margin: 0 0 10px; }
+
+.reading-marathon-history-card { overflow: hidden; border: 1px solid #e7e5e4; border-radius: 15px; background: #fff; }
+.reading-marathon-history-card[open] { border-color: #fdba74; box-shadow: 0 6px 18px rgba(154,52,18,.07); }
+.reading-marathon-history-card > summary { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 15px; padding: 15px 16px; cursor: pointer; list-style: none; }
+.reading-marathon-history-card > summary::-webkit-details-marker { display: none; }
+.reading-marathon-history-card > summary:hover { background: #fffaf5; }
+.reading-marathon-history-card > summary > span { display: grid; min-width: 0; gap: 3px; }
+.reading-marathon-history-card > summary > span:last-child { justify-items: end; }
+.reading-marathon-history-card > summary small { color: #c2410c; font-size: .68rem; font-weight: 950; }
+.reading-marathon-history-card > summary strong { overflow: hidden; color: #431407; text-overflow: ellipsis; white-space: nowrap; }
+.reading-marathon-history-card > summary > span:last-child strong { color: #c2410c; }
+.reading-marathon-history-card > summary em { color: #a8a29e; font-size: .68rem; font-style: normal; }
+
+.reading-marathon-history-card__body { padding: 0 16px 16px; border-top: 1px solid #ffedd5; }
+.reading-marathon-history-card__body dl { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 7px; margin: 14px 0; }
+.reading-marathon-history-card__body dl div { padding: 10px 6px; border-radius: 11px; background: #fff7ed; text-align: center; }
+.reading-marathon-history-card__body dt { color: #9a3412; font-size: .64rem; font-weight: 850; }
+.reading-marathon-history-card__body dd { margin: 4px 0 0; color: #7c2d12; font-size: .82rem; font-weight: 950; }
+.reading-marathon-history-card__body h5 { margin: 17px 0 7px; color: #7c2d12; font-size: .8rem; }
+.reading-marathon-history-card__body .reading-marathon-teacher-ranking { max-height: 270px; }
 
 .reading-marathon-settings__tracks > section h4 { margin: 0 0 10px; color: #7c2d12; }
 .reading-marathon-settings__tracks > section > p { margin: 0 0 12px; color: #78716c; font-size: .78rem; line-height: 1.55; }
@@ -294,6 +349,10 @@
     .reading-marathon-settings__form fieldset,
     .reading-marathon-settings__rule,
     .reading-marathon-settings__form > button { grid-column: auto; }
+    .reading-marathon-history__toggle { align-items: flex-start; flex-direction: column; }
+    .reading-marathon-history-card > summary { grid-template-columns: 1fr; }
+    .reading-marathon-history-card > summary > span:last-child { justify-items: start; }
+    .reading-marathon-history-card__body dl { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .reading-marathon-course__caption { flex-direction: column; gap: 2px; }
     .reading-marathon-pending-list > div { grid-template-columns: minmax(0,1fr) auto; }
     .reading-marathon-pending-list > div > span { grid-column: 1 / -1; }
