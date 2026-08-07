@@ -75,10 +75,8 @@ const LandingPage = ({ onStudentLoginClick }) => {
           />
         </section>
 
-        <section className="landing-entry" aria-labelledby="landing-entry-title">
+        <section className="landing-entry" aria-label="로그인 선택">
           <div className="landing-section-heading">
-            <span>아지트 입구</span>
-            <h1 id="landing-entry-title">누구로 들어갈까요?</h1>
             <p>학생은 선생님께 받은 코드로, 선생님은 Google 계정으로 들어가요.</p>
           </div>
 
