@@ -24,6 +24,7 @@ import TeacherProfileModal from './TeacherProfileModal';
 import ActivityDetailModal from './ActivityDetailModal';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
+import './TeacherDashboard.css';
 
 const DEFAULT_WRITING_CARD_LAYOUT = { columns: 4, density: 'comfortable' };
 
@@ -161,14 +162,10 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
     const showsWritingLayoutControls = !isMobile && activeNavGroup.id === 'writing';
 
     return (
-        <div style={{
-            width: '100vw', height: '100vh', background: '#F8F9FA',
-            display: 'flex', flexDirection: 'column', overflow: 'hidden', boxSizing: 'border-box'
-        }}>
+        <div className="teacher-dashboard">
             {/* 상단 슬림 헤더 (고정) */}
-            <header style={{
+            <header className="teacher-dashboard__header" style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: isMobile ? '8px 16px' : '12px 24px',
                 background: 'white', borderBottom: '1px solid #E9ECEF',
                 flexShrink: 0, zIndex: 100, width: '100%', boxSizing: 'border-box'
             }}>
@@ -221,9 +218,9 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
             </header>
 
             {/* 교사 업무 영역 네비게이션 */}
-            <nav style={{
+            <nav className="teacher-dashboard__nav" style={{
                 display: 'flex', background: 'white', borderBottom: '1px solid #E9ECEF',
-                padding: isMobile ? '0 8px' : '0 24px', flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box', overflowX: 'auto'
+                flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box', overflowX: 'auto'
             }} role="tablist" aria-label="교사 업무 메뉴">
                 {TEACHER_NAV_GROUPS.map((group) => (
                     <button
@@ -276,14 +273,11 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
             </nav>
 
             {/* 메인 콘텐츠 영역 */}
-            <main style={{
-                flex: 1, width: '100%', maxWidth: '1600px', margin: '0 auto', padding: isMobile ? '16px' : '20px 24px',
-                boxSizing: 'border-box', overflowY: 'auto'
-            }}>
-                <div style={{
+            <main className="teacher-dashboard__main">
+                <div className="teacher-dashboard__workspace" style={{
                     display: usesSecondarySidebar ? 'grid' : 'block',
-                    gridTemplateColumns: usesSecondarySidebar ? '180px minmax(0, 1fr)' : undefined,
-                    gap: usesSecondarySidebar ? '20px' : undefined,
+                    gridTemplateColumns: usesSecondarySidebar ? 'clamp(180px, 10vw, 240px) minmax(0, 1fr)' : undefined,
+                    gap: usesSecondarySidebar ? 'clamp(20px, 1.25vw, 32px)' : undefined,
                     alignItems: 'start'
                 }}>
                 {secondaryTabs.length > 0 && (

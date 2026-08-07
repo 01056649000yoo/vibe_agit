@@ -10,7 +10,7 @@ const GameManager = ({ activeClass, isMobile }) => {
     if (!activeClass) return <div style={{ padding: '60px', textAlign: 'center', color: '#7F8C8D' }}>학급을 먼저 선택해주세요.</div>;
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '10px' : '0' }}>
+        <div style={{ width: '100%', padding: isMobile ? '10px' : '0', boxSizing: 'border-box' }}>
             <RegisteredGameModuleCards activeClass={activeClass} isMobile={isMobile} />
         </div>
     );
