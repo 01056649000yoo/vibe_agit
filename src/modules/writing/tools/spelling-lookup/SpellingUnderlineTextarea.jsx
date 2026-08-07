@@ -1,6 +1,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { findSpellingIssues } from './spellingDetectionRules';
 import { openSpellingLookup } from './events';
+import { useWritingEditorSettings } from '../../editor-settings/WritingEditorSettingsContext';
+import { SPELLING_LOOKUP_TOOL_ID } from '../../editor-settings/settings';
 import './SpellingUnderlineTextarea.css';
 
 /** 손을 멈추고 이만큼 지나면 다시 훑는다. 한글 한 글자를 조합하는 시간보다 넉넉하다. */
@@ -50,6 +52,8 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
     autoGrow = false,
     ...props
 }, forwardedRef) {
+    const { isToolEnabled } = useWritingEditorSettings();
+    const spellingLookupEnabled = isToolEnabled(SPELLING_LOOKUP_TOOL_ID);
     const textareaRef = useRef(null);
     const highlighterRef = useRef(null);
     const scrollFrameRef = useRef(0);
@@ -69,11 +73,12 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
     // 아직 훑지 않은 글자에 예전 위치의 밑줄이 남으면 엉뚱한 곳에 그어진다.
     // 훑은 문장과 화면의 문장이 어긋난 동안에는 겹치는 앞부분까지만 밑줄을 남긴다.
     const issues = useMemo(() => {
+        if (!spellingLookupEnabled) return [];
         const found = findSpellingIssues(scannedValue);
         if (scannedValue === normalizedValue) return found;
         const safeLength = commonPrefixLength(scannedValue, normalizedValue);
         return found.filter((issue) => issue.end <= safeLength);
-    }, [scannedValue, normalizedValue]);
+    }, [normalizedValue, scannedValue, spellingLookupEnabled]);
     const uniqueIssues = useMemo(() => {
         const seen = new Set();
         return issues.filter((issue) => {

@@ -14,6 +14,7 @@ import { useAuthStore } from './store/useAuthStore';
 import { useAppStore } from './store/useAppStore';
 import { getModule } from './modules/registry';
 import { useEnabledModules } from './modules/useEnabledModules';
+import { WritingEditorSettingsProvider } from './modules/writing/editor-settings/WritingEditorSettingsContext';
 
 // 지연 로딩 (Lazy Loading) 적용
 const LandingPage = lazy(() => import('./components/layout/LandingPage'))
@@ -297,7 +298,7 @@ function App() {
             )
           ) : studentSession ? (
             /* [2순위] 학생 모드 (교사 세션이 없을 때) */
-            <>
+            <WritingEditorSettingsProvider classId={studentSession?.classId || studentSession?.class_id}>
               {studentPageName === 'main' && (
                 <StudentDashboard
                   studentSession={studentSession}
@@ -357,7 +358,7 @@ function App() {
                   onOpenPlayground={() => setPlaygroundSignal((n) => n + 1)}
                 />
               </Suspense>
-            </>
+            </WritingEditorSettingsProvider>
         ) : isStudentLoginMode ? (
           /* [3순위] 학생 로그인 화면 */
           <StudentLogin

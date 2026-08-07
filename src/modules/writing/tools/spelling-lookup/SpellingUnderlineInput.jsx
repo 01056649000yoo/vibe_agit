@@ -1,5 +1,7 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import { findSpellingIssues } from './spellingDetectionRules';
+import { useWritingEditorSettings } from '../../editor-settings/WritingEditorSettingsContext';
+import { SPELLING_LOOKUP_TOOL_ID } from '../../editor-settings/settings';
 import './SpellingUnderlineTextarea.css';
 
 const buildHighlightedTitle = (text, issues) => {
@@ -26,11 +28,16 @@ const SpellingUnderlineInput = forwardRef(function SpellingUnderlineInput({
     containerStyle = {},
     ...props
 }, forwardedRef) {
+    const { isToolEnabled } = useWritingEditorSettings();
+    const spellingLookupEnabled = isToolEnabled(SPELLING_LOOKUP_TOOL_ID);
     const inputRef = useRef(null);
     const highlighterRef = useRef(null);
     // 본문과 같은 이유로 완성형(NFC)으로 맞춘 뒤 찾고 그린다.
     const normalizedValue = useMemo(() => String(value || '').normalize('NFC'), [value]);
-    const issues = useMemo(() => findSpellingIssues(normalizedValue), [normalizedValue]);
+    const issues = useMemo(
+        () => spellingLookupEnabled ? findSpellingIssues(normalizedValue) : [],
+        [normalizedValue, spellingLookupEnabled]
+    );
     useImperativeHandle(forwardedRef, () => inputRef.current);
 
     const sharedStyle = {

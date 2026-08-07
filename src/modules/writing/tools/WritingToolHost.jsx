@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { getWritingToolManifests } from './registry';
+import { useWritingEditorSettings } from '../editor-settings/WritingEditorSettingsContext';
 import './writingToolTrigger.css';
 
 /**
@@ -42,8 +43,13 @@ class WritingToolErrorBoundary extends React.Component {
 }
 
 const WritingToolHost = ({ disabled = false }) => {
+    const { isToolEnabled } = useWritingEditorSettings();
     // 열어 달라는 요청이 온 도구만 담는다. { [도구id]: { query, correction, at } }
     const [openRequests, setOpenRequests] = useState({});
+    const enabledTools = useMemo(
+        () => WRITING_TOOLS.filter((tool) => isToolEnabled(tool.id)),
+        [isToolEnabled]
+    );
 
     const requestOpen = useCallback((toolId, detail = {}) => {
         setOpenRequests((previous) => ({
@@ -75,8 +81,8 @@ const WritingToolHost = ({ disabled = false }) => {
     // 밑줄 칩처럼 도구 바깥에서 "이 낱말로 열어 줘" 하고 보내는 신호를 받는다.
     // 본체를 아직 안 받았어도 여기서 먼저 잡아 두므로 신호를 놓치지 않는다.
     const openEvents = useMemo(
-        () => WRITING_TOOLS.filter((tool) => tool.openEventName),
-        []
+        () => enabledTools.filter((tool) => tool.openEventName),
+        [enabledTools]
     );
     useEffect(() => {
         const listeners = openEvents.map((tool) => {
@@ -87,12 +93,14 @@ const WritingToolHost = ({ disabled = false }) => {
         return () => listeners.forEach((remove) => remove());
     }, [openEvents, requestOpen]);
 
+    if (enabledTools.length === 0) return null;
+
     return (
         <aside
             aria-label="글쓰기 도움 도구"
             className="writing-tool-host"
         >
-            {WRITING_TOOLS.map(({ id, label, triggerLabel, triggerHelp, Component }) => {
+            {enabledTools.map(({ id, label, triggerLabel, triggerHelp, Component }) => {
                 const request = Reflect.get(openRequests, id);
                 return (
                     <WritingToolErrorBoundary key={id} toolLabel={label}>

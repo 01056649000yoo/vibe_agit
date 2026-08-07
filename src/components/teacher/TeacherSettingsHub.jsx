@@ -2,6 +2,7 @@ import React, { lazy, useState } from 'react';
 import TeacherSettingsTab from './TeacherSettingsTab';
 
 const ClassManager = lazy(() => import('./ClassManager'));
+const TeacherWritingEditorManager = lazy(() => import('../../modules/writing/editor-settings/TeacherWritingEditorManager'));
 
 const SETTINGS_ITEMS = [
     { id: 'class', icon: '🏫', label: '학급 관리', description: '학급 생성·전환·보관' },
@@ -75,14 +76,7 @@ const TeacherSettingsHub = ({
                         onNavigate={onNavigate}
                     />
                 ) : section === 'writing-editor' ? (
-                    <section style={{ padding: isMobile ? '28px 20px' : '40px', border: '1px solid #DCE6EE', borderRadius: '20px', background: 'white', textAlign: 'center' }}>
-                        <div style={{ fontSize: '2.2rem' }}>✍️</div>
-                        <h3 style={{ margin: '12px 0 6px', color: '#334155' }}>글쓰기 창 설정 공간</h3>
-                        <p style={{ margin: '0 auto', maxWidth: '520px', color: '#64748B', fontSize: '0.86rem', lineHeight: 1.6 }}>
-                            학생 글쓰기 창의 표시 방식과 글쓰기 지원 기능을 업데이트할 때 이곳에서 한 번에 관리할 수 있도록 준비했습니다.
-                        </p>
-                        <span style={{ display: 'inline-block', marginTop: '16px', padding: '6px 10px', borderRadius: '999px', background: '#F1F5F9', color: '#64748B', fontSize: '0.72rem', fontWeight: '900' }}>업데이트 예정</span>
-                    </section>
+                    <TeacherWritingEditorManager activeClass={activeClass} isMobile={isMobile} />
                 ) : (
                     <TeacherSettingsTab
                         isMobile={isMobile} promptKind={section} compact
