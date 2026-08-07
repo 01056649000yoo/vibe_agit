@@ -27,6 +27,7 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
     const [searchMessage, setSearchMessage] = useState('');
     const [manualMode, setManualMode] = useState(false);
     const [manualBook, setManualBook] = useState(EMPTY_MANUAL_BOOK);
+    const [resolvingBookKey, setResolvingBookKey] = useState('');
 
     useEffect(() => {
         const cleanQuery = query.trim();
@@ -92,14 +93,36 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
         onSelectBook(null);
     };
 
-    const handleManualSelect = () => {
+    const resolvePageCount = async (book) => {
+        if (!book.isbn13 && !book.isbn10) return book;
+
+        const { data, error } = await supabase.functions.invoke('book-search', {
+            body: { isbn13: book.isbn13 || '', isbn10: book.isbn10 || '' }
+        });
+        if (error || !data?.pageCount) return book;
+        return { ...book, pageCount: Number(data.pageCount), pageCountSource: 'google' };
+    };
+
+    const selectBookWithPageCount = async (book, key) => {
+        setResolvingBookKey(key);
+        try {
+            onSelectBook(await resolvePageCount(book));
+        } catch {
+            // Google 조회 실패가 책 선택 자체를 막으면 안 된다.
+            onSelectBook(book);
+        } finally {
+            setResolvingBookKey('');
+        }
+    };
+
+    const handleManualSelect = async () => {
         if (!manualBook.title.trim()) {
             alert('책 제목을 적어주세요. 📖');
             return;
         }
 
         const digits = manualBook.isbn.replace(/[^0-9X]/gi, '').toUpperCase();
-        onSelectBook({
+        const book = {
             source: 'manual',
             title: manualBook.title.trim(),
             authors: manualBook.author.trim() ? [manualBook.author.trim()] : [],
@@ -110,7 +133,8 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
             sourceUrl: '',
             isbn10: digits.length === 10 ? digits : '',
             isbn13: digits.length === 13 ? digits : ''
-        });
+        };
+        await selectBookWithPageCount(book, `manual:${digits || book.title}`);
     };
 
     if (selectedBook) {
@@ -125,7 +149,7 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
                     <span className={`selected-reading-book-pages ${selectedBook.pageCount ? 'is-ready' : ''}`}>
                         {selectedBook.pageCount
                             ? `📄 총 ${Number(selectedBook.pageCount).toLocaleString('ko-KR')}쪽`
-                            : '📄 페이지 정보는 서지 API 연결 후 자동 반영돼요'}
+                            : '📄 저장할 때 쪽수 정보를 한 번 더 자동 확인해요'}
                     </span>
                     <Button
                         variant="outline"
@@ -158,7 +182,7 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
                     <h3>📚 어떤 책을 읽었나요?</h3>
                     <p>책을 찾으면 표지와 책 정보가 내 책장에 자동으로 정리돼요.</p>
                 </div>
-                <button type="button" onClick={() => setManualMode((value) => !value)} disabled={disabled}>
+                <button type="button" onClick={() => setManualMode((value) => !value)} disabled={disabled || Boolean(resolvingBookKey)}>
                     {manualMode ? '책 검색으로 찾기' : '직접 입력'}
                 </button>
             </div>
@@ -169,7 +193,9 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
                     <label><span>지은이</span><input value={manualBook.author} onChange={(event) => setManualBook((current) => ({ ...current, author: event.target.value }))} placeholder="지은이" disabled={disabled} /></label>
                     <label><span>출판사</span><input value={manualBook.publisher} onChange={(event) => setManualBook((current) => ({ ...current, publisher: event.target.value }))} placeholder="출판사" disabled={disabled} /></label>
                     <label><span>ISBN</span><input value={manualBook.isbn} onChange={(event) => setManualBook((current) => ({ ...current, isbn: event.target.value }))} placeholder="책 뒤쪽의 ISBN(선택)" disabled={disabled} /></label>
-                    <Button onClick={handleManualSelect} disabled={disabled}>이 책으로 독서록 쓰기</Button>
+                    <Button onClick={handleManualSelect} disabled={disabled || Boolean(resolvingBookKey)}>
+                        {resolvingBookKey ? '쪽수 확인 중...' : '이 책으로 독서록 쓰기'}
+                    </Button>
                 </div>
             ) : (
                 <>
@@ -187,22 +213,26 @@ const BookSearchPanel = ({ selectedBook, onSelectBook, disabled = false }) => {
                     {searchMessage && <div className="book-search-message">{searchMessage}</div>}
                     {results.length > 0 && (
                         <div className="book-search-results">
-                            {results.map((book, index) => (
+                            {results.map((book, index) => {
+                                const bookKey = `${book.source}:${book.isbn13 || book.isbn10 || `${book.title}:${index}`}`;
+                                const resolving = resolvingBookKey === bookKey;
+                                return (
                                 <button
                                     type="button"
-                                    key={`${book.isbn13 || book.isbn10 || book.title}-${index}`}
-                                    onClick={() => onSelectBook(book)}
-                                    disabled={disabled}
+                                    key={bookKey}
+                                    onClick={() => selectBookWithPageCount(book, bookKey)}
+                                    disabled={disabled || Boolean(resolvingBookKey)}
                                     className="book-search-result"
                                 >
                                     <BookCover src={book.thumbnailUrl} title={book.title} size="sm" />
                                     <span>
                                         <strong>{book.title}</strong>
                                         <em>{book.authors?.join(', ') || '지은이 정보 없음'}</em>
-                                        <small>{[book.publisher, book.publishedDate?.slice(0, 4), book.pageCount ? `${Number(book.pageCount).toLocaleString('ko-KR')}쪽` : null].filter(Boolean).join(' · ')}</small>
+                                        <small>{resolving ? 'Google Books에서 쪽수 확인 중…' : [book.publisher, book.publishedDate?.slice(0, 4)].filter(Boolean).join(' · ')}</small>
                                     </span>
                                 </button>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </>

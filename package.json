@@ -15,7 +15,7 @@
     "test:writing-editor": "node --test tests/writingEditorSettings.test.mjs",
     "test:dragon": "node --test tests/dragonGrowth.test.mjs",
     "test:vocab-tower": "node --test tests/vocabTower.test.mjs",
-    "test:reading-log": "node --test tests/readingLogDraftRules.test.mjs tests/readingMarathon.test.mjs",
+    "test:reading-log": "node --test tests/readingLogDraftRules.test.mjs tests/readingMarathon.test.mjs tests/googleBooksPageCount.test.mjs",
     "test:vibe-ai": "node --test tests/vibeAiEdgeFunction.test.mjs",
     "migrate": "node scripts/migrate.mjs",
     "migrate:status": "node scripts/migrate.mjs --status"

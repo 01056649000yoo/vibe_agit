@@ -111,7 +111,9 @@ const bookFromDraft = (book = {}) => ({
     thumbnailUrl: book.thumbnailUrl || book.thumbnail_url || '',
     sourceUrl: book.sourceUrl || book.source_url || '',
     isbn10: book.isbn10 || '',
-    isbn13: book.isbn13 || ''
+    isbn13: book.isbn13 || '',
+    pageCount: Number(book.pageCount || book.page_count) || null,
+    pageCountSource: book.pageCountSource || book.page_count_source || ''
 });
 
 const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, dailyStatus, onDone, onCancel }) => {
@@ -404,8 +406,8 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
             p_reading_status: form.readingStatus
         });
 
-        setSaving(false);
         if (result.error) {
+            setSaving(false);
             console.error('독서록 저장 실패:', result.error.message);
             if (result.error.code === '23505') {
                 alert('이 책에는 이미 독서록이 한 편 있어요. 책장에서 기존 독서록의 수정하기를 눌러 주세요.');
@@ -419,6 +421,18 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
             }
             return;
         }
+
+        const savedBookId = result.data?.book_id;
+        if (savedBookId && (form.selectedBook?.isbn13 || form.selectedBook?.isbn10)) {
+            // 클라이언트의 쪽수는 신뢰하지 않는다. 저장된 내 책의 ISBN을 서버가 Google Books에서
+            // 다시 확인한 뒤 book_catalog에 기록하고, DB 트리거가 마라톤 거리를 갱신한다.
+            try {
+                await supabase.functions.invoke('book-search', { body: { bookId: savedBookId } });
+            } catch {
+                // 외부 서지 서비스가 잠시 실패해도 이미 저장된 독서록 완료 흐름은 유지한다.
+            }
+        }
+        setSaving(false);
 
         setInitialForm(form);
         // 완성본이 들어갔으니 임시본은 지운다(이 기기 + 서버 모두).
@@ -590,7 +604,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                 .order('updated_at', { ascending: false }),
             supabase
                 .from('student_library_items')
-                .select('id, reading_status, started_on, finished_on, created_at, updated_at, book:book_catalog!student_library_items_book_id_fkey(id, source, isbn10, isbn13, title, authors, translators, publisher, published_date, thumbnail_url, source_url)')
+                .select('id, reading_status, started_on, finished_on, created_at, updated_at, book:book_catalog!student_library_items_book_id_fkey(id, source, isbn10, isbn13, title, authors, translators, publisher, published_date, thumbnail_url, source_url, page_count, page_count_source)')
                 .eq('student_id', studentSession.id)
                 .order('updated_at', { ascending: false }),
             supabase
@@ -727,7 +741,9 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                     thumbnailUrl: rawBook.thumbnail_url || '',
                     sourceUrl: rawBook.source_url || '',
                     isbn10: rawBook.isbn10 || '',
-                    isbn13: rawBook.isbn13 || ''
+                    isbn13: rawBook.isbn13 || '',
+                    pageCount: Number(rawBook.page_count) || null,
+                    pageCountSource: rawBook.page_count_source || ''
                 },
                 logs: [],
                 draft: null
