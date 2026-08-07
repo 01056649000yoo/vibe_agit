@@ -5,7 +5,7 @@ import WritingPolicyFields from './WritingPolicyFields';
 import { normalizeWritingPolicy } from './writingPolicy';
 import './writingPolicy.css';
 
-const WritingPolicySettings = ({ classId, writingType, defaults, title, description, onDirtyChange }) => {
+const WritingPolicySettings = ({ classId, writingType, defaults, title, description, kicker = '글쓰기 동기부여 설정', onDirtyChange }) => {
     const [policy, setPolicy] = useState(() => normalizeWritingPolicy(defaults));
     const [savedPolicy, setSavedPolicy] = useState(() => normalizeWritingPolicy(defaults));
     const [loading, setLoading] = useState(true);
@@ -70,7 +70,7 @@ const WritingPolicySettings = ({ classId, writingType, defaults, title, descript
         <section className="writing-policy-settings">
             <header>
                 <div>
-                    <span>글쓰기 동기부여 설정</span>
+                    <span>{kicker}</span>
                     <h3>{title}</h3>
                     <p>{description}</p>
                 </div>
