@@ -38,10 +38,6 @@
 .writing-editor-manager__device.is-mobile .writing-section-heading { align-items:flex-start; }
 .writing-editor-preview-actions { display:flex; justify-content:flex-end; gap:9px; margin-top:18px; }
 .writing-editor-manager__preview-note { margin:10px 0 0; color:#64748b; font-size:.72rem; text-align:center; }
-.writing-editor-home-preview { max-width:960px; margin:18px auto; border:1px solid var(--ui-border); border-radius:24px; background:var(--ui-page); overflow:hidden; }
-.writing-editor-home-preview .student-home-toolbar__action, .writing-editor-home-preview .student-home-toolbar__logout,
-.writing-editor-home-preview .student-home-growth button, .writing-editor-home-preview .student-todo-row,
-.writing-editor-home-preview .student-home-menu-card { pointer-events:none; }
 .writing-editor-manager__empty { padding:42px 16px; color:#64748b; text-align:center; }
 .writing-editor-manager__empty.is-error { color:#b91c1c; }
 @media (max-width:760px) {

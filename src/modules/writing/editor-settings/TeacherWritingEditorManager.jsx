@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/common/Button';
-import StudentHeader from '../../../components/student/StudentHeader';
-import StudentHomeGrowthPanel from '../../../components/student/StudentHomeGrowthPanel';
 import WritingEditorFields from '../../../components/writing/WritingEditorFields';
 import {
     WritingSectionHeader,
@@ -20,83 +18,12 @@ import {
     setWritingToolEnabled
 } from './settings';
 import './teacherWritingEditorManager.css';
-import '../../../components/student/DashboardMenu.css';
-import '../../../components/student/StudentDashboard.css';
-import '../../../components/student/StudentTodoCard.css';
 
 const PREVIEW_WIDTHS = Object.freeze({
     desktop: { label: 'PC', width: 1120 },
     tablet: { label: '태블릿', width: 820 },
     mobile: { label: '휴대폰', width: 390 }
 });
-
-const HOME_PREVIEW_MENUS = [
-    { icon: '📝', title: '과제 글쓰기', description: '선생님이 낸 글 확인하기', tone: 'amber' },
-    { icon: '📚', title: '독서록', description: '오늘 0/1편 완료', tone: 'green', badge: '새 독서록 1편 가능' },
-    { icon: '📔', title: '일기', description: '오늘 있었던 일 남기기', tone: 'blue', badge: '오늘 아직 안 썼어요' },
-    { icon: '👀', title: '친구 아지트', description: '친구들의 최신 글과 책장 보기', tone: 'blue' },
-    { icon: '🏡', title: '나의 아지트', description: '내 서재·칭호·드래곤 모아보기', tone: 'brown' },
-    { icon: '🎡', title: '아지트 놀이터', description: '포인트로 즐기는 놀거리', tone: 'orange' }
-];
-
-const StudentHomePreview = () => (
-    <div className="student-home-shell writing-editor-home-preview">
-        <div className="student-home-content">
-            <StudentHeader
-                hasActivity
-                openFeedback={() => {}}
-                setIsGuideOpen={() => {}}
-                onLogout={() => {}}
-                onOpenFootprint={() => {}}
-            />
-            <StudentHomeGrowthPanel
-                studentSession={{ name: '아지트 학생' }}
-                points={1250}
-                writerLevel={{ level: 2, name: '새싹 작가' }}
-                readerLevel={{ level: 1, name: '책싹 독자' }}
-                titleLoading={false}
-                dragonEnabled={false}
-                petData={{}}
-                dragonInfo={{}}
-                onOpenMyAgit={() => {}}
-                onOpenDragon={() => {}}
-                onOpenFootprint={() => {}}
-            />
-            <section className="student-todo-card" aria-label="오늘 할 일 미리보기">
-                <header className="student-todo-card__header"><h2>오늘 할 일</h2><strong>1개 남음</strong></header>
-                <div className="student-todo-card__rows">
-                    <button
-                        type="button"
-                        className="student-todo-row"
-                        style={{ '--todo-border': '#FFCC80', '--todo-bg': '#FFF8E1', '--todo-text': '#E65100', '--todo-chip': '#FB8C00' }}
-                    >
-                        <span className="student-todo-row__icon" aria-hidden="true">✏️</span>
-                        <span className="student-todo-row__label">아직 안 쓴 과제 <strong>1개</strong></span>
-                        <span className="student-todo-row__action">쓰러 가기</span>
-                    </button>
-                </div>
-            </section>
-            <section className="student-home-menu" aria-labelledby="student-home-preview-menu-title">
-                <header className="student-home-menu__header">
-                    <h2 id="student-home-preview-menu-title">주요 메뉴</h2>
-                    <p>글을 쓰고, 친구의 글을 읽고, 포인트로 놀아 보세요.</p>
-                </header>
-                <div className="student-home-menu-grid">
-                    {HOME_PREVIEW_MENUS.map((menu) => (
-                        <button key={menu.title} type="button" className={`student-home-menu-card tone-${menu.tone}`}>
-                            <span className="student-home-menu-card__icon" aria-hidden="true">{menu.icon}</span>
-                            <span className="student-home-menu-card__copy">
-                                <strong>{menu.title}</strong><small>{menu.description}</small>
-                                {menu.badge && <em>{menu.badge}</em>}
-                            </span>
-                            <span className="student-home-menu-card__arrow" aria-hidden="true">›</span>
-                        </button>
-                    ))}
-                </div>
-            </section>
-        </div>
-    </div>
-);
 
 const StudentWritingPreview = ({ settings, compact }) => {
     const [title, setTitle] = useState('비 오는 날의 운동장');
@@ -158,7 +85,6 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const [previewScreen, setPreviewScreen] = useState('writing');
     const [previewSize, setPreviewSize] = useState(isMobile ? 'mobile' : 'desktop');
 
     const loadSettings = useCallback(async () => {
@@ -281,14 +207,10 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
                 <div className="writing-editor-manager__preview-heading">
                     <div>
                         <span>학생 계정 없이 확인</span>
-                        <h3>학생 화면 미리보기</h3>
+                        <h3>학생 글쓰기 창 미리보기</h3>
                         <p>학생 개인정보와 실제 글은 불러오지 않는 안전한 샘플 화면입니다.</p>
                     </div>
                     <div className="writing-editor-manager__preview-controls">
-                        <div aria-label="미리볼 학생 화면">
-                            <button type="button" className={previewScreen === 'writing' ? 'is-active' : ''} onClick={() => setPreviewScreen('writing')}>글쓰기 창</button>
-                            <button type="button" className={previewScreen === 'home' ? 'is-active' : ''} onClick={() => setPreviewScreen('home')}>학생 홈</button>
-                        </div>
                         <div aria-label="미리보기 화면 폭">
                             {Object.entries(PREVIEW_WIDTHS).map(([id, item]) => (
                                 <button key={id} type="button" className={previewSize === id ? 'is-active' : ''} onClick={() => setPreviewSize(id)}>{item.label}</button>
@@ -304,9 +226,7 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
                             <strong>{preview.label} 미리보기</strong>
                         </div>
                         <div className="writing-editor-manager__device-screen">
-                            {previewScreen === 'writing'
-                                ? <StudentWritingPreview settings={draftSettings} compact={previewSize === 'mobile'} />
-                                : <StudentHomePreview />}
+                            <StudentWritingPreview settings={draftSettings} compact={previewSize === 'mobile'} />
                         </div>
                     </div>
                 </div>
