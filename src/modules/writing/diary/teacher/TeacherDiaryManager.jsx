@@ -218,9 +218,10 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
     }, [filter]);
 
     return (
-        <div className="teacher-diary">
+        <section className="teacher-diary">
             <header className="teacher-diary__header">
                 <div>
+                    <span className="teacher-diary__kicker">자율 글쓰기 관리</span>
                     <h2>📔 학생 일기</h2>
                     <p>학생이 하루에 한 편 남긴 일기를 읽고 한마디를 남겨요.</p>
                 </div>
@@ -449,7 +450,7 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                     </div>
                 )}
             </Modal>
-        </div>
+        </section>
     );
 };
 

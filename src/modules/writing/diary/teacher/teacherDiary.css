@@ -1,53 +1,70 @@
-/* 교사 일기 확인 화면. 공용 --ui-* 토큰을 쓰고 남색만 일기 고유 강조로 둔다. */
+/* 교사 일기 확인 화면. 독서록과 같은 자율 글쓰기 관리 틀을 쓴다. */
 
-.teacher-diary { display: flex; flex-direction: column; gap: var(--ui-space-4, 12px); }
+.teacher-diary {
+    display: flex;
+    width: 100%;
+    padding: 28px;
+    border: 1px solid #E2E8F0;
+    border-radius: 26px;
+    box-sizing: border-box;
+    background: #FFFFFF;
+    box-shadow: 0 8px 26px rgba(15, 23, 42, .04);
+    flex-direction: column;
+}
 
 .teacher-diary__header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: var(--ui-space-3, 8px);
+    gap: 20px;
 }
-.teacher-diary__header h2 { margin: 0; color: var(--ui-ink-strong); font-size: 1.25rem; }
-.teacher-diary__header p { margin: 3px 0 0; color: var(--ui-ink-muted); font-size: .82rem; }
+.teacher-diary__kicker { color: #2563EB; font-size: .78rem; font-weight: 900; }
+.teacher-diary__header h2 { margin: 7px 0; color: #1E293B; font-size: 1.7rem; }
+.teacher-diary__header p { margin: 0; color: #64748B; }
 /* 상단 업무 탭. `확인`이 매일 쓰는 것이라 기본이고, 큰 설정 폼은 열 때만 마운트한다. */
 .teacher-diary__sections {
-    display: flex;
-    flex-wrap: wrap;
-    border-bottom: 1px solid var(--ui-border);
-    gap: 4px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 24px 0 20px;
+    padding: 5px;
+    border: 1px solid #E2E8F0;
+    border-radius: 17px;
+    background: #F1F5F9;
 }
 .teacher-diary__sections button {
     display: flex;
-    min-height: 44px;
+    min-height: 50px;
     align-items: center;
-    padding: 10px 18px;
-    border: 1px solid transparent;
-    border-bottom: 0;
-    border-radius: var(--ui-radius-sm, 10px) var(--ui-radius-sm, 10px) 0 0;
+    justify-content: center;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 13px;
     background: transparent;
-    color: var(--ui-ink-muted);
+    color: #64748B;
     cursor: pointer;
-    gap: 8px;
-    font: inherit;
-    font-size: .88rem;
-    font-weight: 800;
+    gap: 9px;
+    font-size: .9rem;
+    font-weight: 900;
 }
+.teacher-diary__sections button span { line-height: 1.35; word-break: keep-all; }
 .teacher-diary__sections button.active {
-    border-color: var(--ui-border);
-    background: var(--ui-surface);
-    color: #3730A3;
-    margin-bottom: -1px;
+    background: #FFFFFF;
+    color: #1D4ED8;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .1);
 }
 .teacher-diary__sections button strong {
+    display: grid;
     min-width: 22px;
-    padding: 2px 7px;
+    height: 22px;
+    place-items: center;
+    padding: 0 5px;
     border-radius: 999px;
-    background: #4338CA;
-    color: #FFFFFF;
-    font-size: .72rem;
-    text-align: center;
+    background: #FEF3C7;
+    color: #B45309;
+    box-sizing: border-box;
+    font-size: .7rem;
 }
 .teacher-diary__policy { padding-top: 4px; }
 
@@ -142,20 +159,18 @@
 }
 
 /* 보기 전환 — 독서록과 같은 세 가지(검토 대기 / 학생별 / 전체 기록). */
-.teacher-diary__views { display: flex; flex-wrap: wrap; gap: 6px; }
+.teacher-diary__views { display: inline-grid; align-self: flex-start; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-bottom: 12px; padding: 4px; border-radius: 14px; background: #F1F5F9; }
 .teacher-diary__views button {
-    min-height: 44px;
-    padding: 8px 16px;
-    border: 1px solid var(--ui-border);
-    border-radius: var(--ui-radius-sm, 10px);
-    background: var(--ui-surface);
-    color: var(--ui-ink-muted);
+    padding: 9px 16px;
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: #64748B;
     cursor: pointer;
-    font: inherit;
-    font-size: .84rem;
-    font-weight: 800;
+    font-size: .85rem;
+    font-weight: 900;
 }
-.teacher-diary__views button.is-active { border-color: #A5B4FC; background: #EEF2FF; color: #3730A3; }
+.teacher-diary__views button.is-active { background: #FFFFFF; color: #1D4ED8; box-shadow: 0 1px 4px rgba(15, 23, 42, .12); }
 
 .teacher-diary__students { display: flex; flex-direction: column; gap: 8px; }
 .teacher-diary__student-search {
@@ -198,6 +213,11 @@
 .teacher-diary__student-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 
 @media (max-width: 640px) {
+    .teacher-diary { padding: 18px 14px; border-radius: 20px; }
+    .teacher-diary__header { flex-direction: column; }
+    .teacher-diary__sections { margin: 18px 0 16px; }
+    .teacher-diary__sections button { min-height: 48px; padding: 9px 8px; font-size: .8rem; }
+    .teacher-diary__views { display: grid; width: 100%; align-self: stretch; grid-template-columns: 1fr; box-sizing: border-box; }
     .teacher-diary__student-head small { margin-left: 0; width: 100%; }
     .teacher-diary__student-actions > * { flex: 1; }
 }
