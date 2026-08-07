@@ -283,7 +283,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                     </div>
                     <label className="reading-marathon-custom-target">
                         <span>직접 입력</span>
-                        <input type="number" min="1" max="10000" step="0.1" value={form.targetDistanceM / 1000} onChange={(event) => setForm((current) => ({ ...current, targetDistanceM: Number(event.target.value) * 1000 }))} />
+                        <input type="number" min="1" max="10000" step="0.001" value={form.targetDistanceM / 1000} onChange={(event) => setForm((current) => ({ ...current, targetDistanceM: Number(event.target.value) * 1000 }))} />
                         <em>km</em>
                     </label>
                 </fieldset>
