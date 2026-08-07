@@ -10,6 +10,12 @@ const capabilities = [
     tone: 'writing',
   },
   {
+    icon: '🧑‍🏫',
+    title: '글쓰기를 지도해요',
+    description: '선생님은 과제를 만들고 학생 글을 확인해, 의견과 평가로 성장 과정을 지도해요.',
+    tone: 'teaching',
+  },
+  {
     icon: '🌱',
     title: '함께 고치며 자라요',
     description: '선생님의 의견과 친구의 따뜻한 댓글을 보고 내 글을 더 좋게 다듬어요.',
@@ -113,7 +119,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
         <section className="landing-capabilities" aria-labelledby="landing-capabilities-title">
           <div className="landing-section-heading landing-section-heading-centered">
             <span>아지트에서 할 수 있는 일</span>
-            <h2 id="landing-capabilities-title">쓰고, 나누고, 즐기며 성장해요</h2>
+            <h2 id="landing-capabilities-title">학생과 선생님이 함께 만드는 글쓰기</h2>
           </div>
 
           <div className="capability-grid">

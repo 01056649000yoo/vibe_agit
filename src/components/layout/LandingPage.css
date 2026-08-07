@@ -297,7 +297,7 @@
 
 .capability-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -319,6 +319,11 @@
 .capability-card-growth {
   border-color: #bde4dc;
   background: #effaf7;
+}
+
+.capability-card-teaching {
+  border-color: #bfd8ee;
+  background: #f0f7fd;
 }
 
 .capability-card-play {
