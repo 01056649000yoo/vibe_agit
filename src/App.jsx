@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, Suspense, lazy } from 'react'
 import { supabase } from './lib/supabaseClient'
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from '@vercel/speed-insights/react'
 import './App.css'
 
 // 레이아웃 및 공통 컴포넌트
@@ -431,8 +429,6 @@ function App() {
         )}
         </Suspense>
       </ErrorBoundary>
-      <Analytics />
-      <SpeedInsights />
     </Layout>
   )
 }
