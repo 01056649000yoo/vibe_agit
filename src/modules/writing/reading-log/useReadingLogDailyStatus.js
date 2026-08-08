@@ -23,7 +23,7 @@ const normalizeStatus = (data) => {
     };
 };
 
-export const useReadingLogDailyStatus = (studentId, { enabled = true, initialStatus = null } = {}) => {
+const useReadingLogDailyStatus = (studentId, { enabled = true, initialStatus = null } = {}) => {
     const [status, setStatus] = useState(() => initialStatus ? normalizeStatus(initialStatus) : EMPTY_STATUS);
     const [loading, setLoading] = useState(Boolean(studentId && enabled && !initialStatus));
     const [error, setError] = useState('');

@@ -7,14 +7,33 @@
  *   1. 학생 계정으로 서비스 로그인
  *   2. F12 -> Console 탭
  *   3. 이 스크립트 전체를 복사 -> 콘솔에 붙여넣기 -> Enter
- *   4. 로딩 완료 메시지 뜨면  runStudentTests()  입력 -> Enter
+ *   4. configureAgitStudentSecurityTest('운영 API URL', '공개 anon 키') 실행
+ *   5. runStudentTests() 입력 -> Enter
  * 
  * ⚠️ 주의: 이 테스트는 "학생이 타인의 권한을 침해할 수 있는지"를 확인합니다.
  * ============================================================================
  */
 
-var SUPABASE_URL = 'https://rdtapjpppundovhtwzzc.supabase.co';
-var SUPABASE_ANON_KEY = 'sb_publishable_xu5EvZxaNPBrmi2OtJ0pbA_tlmY5qHF';
+// 운영 값을 코드에 남기지 않는다. 실행할 때 공개 URL·anon 키를 메모리로만 전달한다.
+var SUPABASE_URL = '';
+var SUPABASE_ANON_KEY = '';
+
+var configureAgitStudentSecurityTest = function (url, anonKey) {
+    var normalizedUrl = String(url || '').trim().replace(/\/$/, '');
+    var normalizedKey = String(anonKey || '').trim();
+    if (!/^https?:\/\//.test(normalizedUrl) || !normalizedKey) {
+        throw new Error('운영 API URL과 공개 anon 키를 모두 입력하세요.');
+    }
+    SUPABASE_URL = normalizedUrl;
+    SUPABASE_ANON_KEY = normalizedKey;
+    console.log('✅ 학생 보안 테스트 대상이 설정되었습니다:', new URL(normalizedUrl).host);
+};
+
+var requireAgitStudentSecurityConfig = function () {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        throw new Error("먼저 configureAgitStudentSecurityTest('운영 API URL', '공개 anon 키')를 실행하세요.");
+    }
+};
 
 // ── CDN에서 Supabase 로드 ──
 var _loadScript = function (src) {
@@ -215,6 +234,7 @@ async function testStudentAbuse(sb, myInfo) {
 
 // 🏁 메인 실행 함수
 async function runStudentTests() {
+    requireAgitStudentSecurityConfig();
     console.clear();
     results = [];
 
@@ -264,5 +284,5 @@ async function runStudentTests() {
 // CDN 로드
 _loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js')
     .then(function () {
-        console.log('%c🛡️ 학생 보안 테스트 스크립트 로드 완료! 콘솔에  runStudentTests()  를 입력하세요.', 'color: #3498DB; font-weight: bold');
+        console.log('%c🛡️ 로드 완료! configureAgitStudentSecurityTest(URL, ANON_KEY) 설정 후 runStudentTests()를 실행하세요.', 'color: #3498DB; font-weight: bold');
     });

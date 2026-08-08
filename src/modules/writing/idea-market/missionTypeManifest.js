@@ -35,5 +35,3 @@ export const meetingMissionType = {
         return '🎉 안건을 제출했어요! 친구 아지트에서 친구들과 함께 살펴볼 수 있어요.';
     }
 };
-
-export default meetingMissionType;

@@ -35,5 +35,3 @@ export const poemMissionType = {
         return null;
     },
 };
-
-export default poemMissionType;

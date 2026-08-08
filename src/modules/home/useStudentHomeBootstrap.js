@@ -4,7 +4,7 @@ import { STUDENT_HOME_INVALIDATE_EVENT, studentHomeApi } from './studentHomeApi'
 const FOCUS_STALE_MS = 60000;
 const MAX_FOCUS_JITTER_MS = 5000;
 
-export const useStudentHomeBootstrap = (studentSession) => {
+const useStudentHomeBootstrap = (studentSession) => {
     const studentId = studentSession?.id || null;
     const [state, setState] = useState({ studentId: null, data: null, loading: Boolean(studentId), error: null });
     const loadedAtRef = useRef(0);

@@ -85,47 +85,10 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 'get_student_assignment_workspace_v1',
                 { p_mission_id: missionId, p_post_id: requestedPostId }
             );
-            if (!workspaceError && Number(workspace?.version) === 1) {
-                if (requestId !== loadRequestIdRef.current) return;
-                applyWorkspace(workspace.mission, workspace.post);
-                return;
-            }
-            if (workspaceError) {
-                console.warn('[useMissionSubmit] 통합 글쓰기 RPC를 사용할 수 없어 기존 조회로 전환합니다:', workspaceError.message);
-            }
-
-            // 새 RPC가 아직 없는 배포 순서에서도 안전하게 동작하는 기존 조회 폴백.
-            let missionQuery = supabase
-                .from('writing_missions')
-                .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, base_reward, bonus_threshold, bonus_reward')
-                .eq('id', missionId);
-            if (classId) missionQuery = missionQuery.eq('class_id', classId);
-            const { data: missionData, error: missionError } = await missionQuery.maybeSingle();
-
-            if (missionError) throw missionError;
+            if (workspaceError) throw workspaceError;
+            if (Number(workspace?.version) !== 1) throw new Error('지원하지 않는 글쓰기 작업공간 응답입니다.');
             if (requestId !== loadRequestIdRef.current) return;
-
-            let postData = null;
-            if (studentId) {
-                let query = supabase.from('student_posts').select('id, title, content, structured_content, is_returned, is_confirmed, is_submitted, ai_feedback, original_title, original_content, show_original, teacher_edited_title, teacher_edited_content, teacher_edited_at, is_teacher_edited, student_answers, student_id, mission_id, updated_at');
-
-                if (requestedPostId) {
-                    query = query.eq('id', requestedPostId);
-                } else {
-                    query = query.eq('mission_id', missionId);
-                }
-                query = query.eq('student_id', studentId);
-                if (classId) query = query.eq('class_id', classId);
-
-                const { data, error: postError } = await query.maybeSingle();
-                if (postError) throw postError;
-                if (requestId !== loadRequestIdRef.current) return;
-                postData = data;
-                if (!postData && requestedPostId) {
-                    console.warn(`[useMissionSubmit] postId(${requestedPostId})에 해당하는 글을 찾을 수 없습니다.`);
-                }
-            }
-            applyWorkspace(missionData, postData);
+            applyWorkspace(workspace.mission, workspace.post);
         } catch (err) {
             if (requestId !== loadRequestIdRef.current) return;
             console.error('데이터 로드 실패:', err.message);
@@ -133,7 +96,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         } finally {
             if (requestId === loadRequestIdRef.current) setLoading(false);
         }
-    }, [missionId, requestedPostId, studentId, classId]);
+    }, [missionId, requestedPostId]);
 
     // 1. 미션 및 데이터 로딩
     useEffect(() => {

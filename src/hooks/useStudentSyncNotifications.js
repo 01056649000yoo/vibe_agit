@@ -46,5 +46,3 @@ export const useStudentSyncNotifications = (studentSession) => {
 
     return { teacherNotify, setTeacherNotify };
 };
-
-export default useStudentSyncNotifications;

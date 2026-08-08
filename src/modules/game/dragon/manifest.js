@@ -39,5 +39,3 @@ export const dragonManifest = {
     headerBackground: 'linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)'
   }
 };
-
-export default dragonManifest;

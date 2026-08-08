@@ -36,7 +36,7 @@
  */
 
 /** 파트 표시 이름 (메뉴 그룹 헤더) */
-export const PART_LABELS = {
+const PART_LABELS = {
   game: '게임·동기부여',
   community: '학급 커뮤니티',
   tool: '수업 도구',

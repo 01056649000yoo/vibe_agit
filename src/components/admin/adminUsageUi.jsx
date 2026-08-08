@@ -32,7 +32,7 @@ export const formatRelativeTime = (value) => {
 };
 
 /** 객체 동적 인덱싱 대신 switch — 알 수 없는 상태값이 와도 안전하게 기본값 반환 */
-export const getUsageStatusMeta = (status) => {
+const getUsageStatusMeta = (status) => {
     switch (status) {
         case USAGE_STATUS.ACTIVE: return USAGE_STATUS_META.ACTIVE;
         case USAGE_STATUS.IDLE: return USAGE_STATUS_META.IDLE;

@@ -98,20 +98,7 @@ export function getEnabledModules(enabledIds, audience) {
   });
 }
 
-/** 파트별로 묶어서 반환 (메뉴 그룹 렌더용) */
-export function groupByPart(modules) {
-  return modules.reduce((acc, m) => {
-    (acc[m.part] ||= []).push(m);
-    return acc;
-  }, {});
-}
-
 /** id로 모듈 찾기 */
 export function getModule(id) {
   return manifests.find((m) => m.id === id) ?? null;
-}
-
-/** 분량·보상 정책을 제공하는 글쓰기 유형. 새 유형은 매니페스트 등록만으로 이 목록에 들어온다. */
-export function getWritingPolicyModules() {
-  return manifests.filter((manifest) => manifest.writingPolicy?.type);
 }

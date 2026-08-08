@@ -8,7 +8,7 @@ import {
     getLegacyModuleFields,
     resolveEnabledModuleIds
 } from '../../registry';
-import { saveEnabledModules } from '../../useEnabledModules';
+import { saveEnabledModules } from '../../enabledModuleSettings';
 
 const TEACHER_GAME_MODULES = getAllModules()
     .filter((module) => (

@@ -5,7 +5,7 @@ export const DASHBOARD_IDS = Object.freeze({
     CLASS_FOOTPRINT: 'class-footprint'
 });
 
-export const DASHBOARD_CARD_CONTRACT_VERSION = 1;
+const DASHBOARD_CARD_CONTRACT_VERSION = 1;
 
 const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
@@ -30,7 +30,7 @@ export const getFirstDashboardValue = (source, paths, fallback = undefined) => {
     return fallback;
 };
 
-export const validateDashboardCard = (card, dashboardId) => {
+const validateDashboardCard = (card, dashboardId) => {
     const problems = [];
     if (!isRecord(card)) return ['카드가 객체가 아님'];
     if (!card.id) problems.push('id 없음');

@@ -20,5 +20,3 @@ export const ideaMarketManifest = {
   // 교사 화면은 그 미션의 teacherEntry 로 열린다: 미션 목록의 '학생 제안 보기'.
   teacherEntry: () => import('./IdeaMarketManager'),
 };
-
-export default ideaMarketManifest;

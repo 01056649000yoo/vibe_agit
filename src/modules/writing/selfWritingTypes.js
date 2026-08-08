@@ -37,18 +37,10 @@ export const FREE_WRITING_TYPE = Object.freeze({
     route: null
 });
 
-export const SELF_WRITING_TYPE_LIST = Object.freeze(Object.values(SELF_WRITING_TYPES));
-
-export const isSelfWriting = (post) => post?.writing_context === 'self';
+const isSelfWriting = (post) => post?.writing_context === 'self';
 
 /** 글의 자율 유형 정의. 자율 글이 아니면 `null` 이다. */
 export const getSelfWritingType = (post) => {
     if (!isSelfWriting(post)) return null;
     return SELF_WRITING_TYPES[post?.self_writing_type] || FREE_WRITING_TYPE;
 };
-
-export const isReadingLog = (post) => getSelfWritingType(post)?.id === 'reading_log';
-export const isDiary = (post) => getSelfWritingType(post)?.id === 'diary';
-
-/** 글 종류를 사람이 읽는 한 단어로. 과제 글은 `과제` 다. */
-export const writingTypeLabel = (post) => getSelfWritingType(post)?.label || '과제';

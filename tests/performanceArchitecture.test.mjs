@@ -48,7 +48,7 @@ test('친구 글 상세 화면은 고정 DB 폴링을 사용하지 않는다', a
 
 test('학생 설정은 짧은 고정 폴링을 사용하지 않는다', async () => {
     for (const file of [
-        'src/modules/useEnabledModules.js',
+        'src/modules/enabledModuleSettings.js',
         'src/modules/writing/editor-settings/WritingEditorSettingsContext.jsx'
     ]) {
         const source = await read(file);
@@ -85,8 +85,10 @@ test('교사 첫 화면은 bootstrap 한 번으로 공통 데이터를 받는다
 
 test('교사 과제 목록과 제출글에는 100개 상한이 있다', async () => {
     const source = await read('src/hooks/useMissionManager.js');
-    const limits = source.match(/\.limit\(100\)/g) || [];
-    assert.ok(limits.length >= 2, '과제 목록과 과제별 제출글에 각각 limit(100)이 필요합니다.');
+    const migration = await read('supabase/migrations/20261008_mission_overview_scaling.sql');
+    assert.match(source, /\.limit\(100\)/, '과제별 제출글에 limit(100)이 필요합니다.');
+    assert.match(migration, /v_limit INTEGER := LEAST\(GREATEST\(COALESCE\(p_limit, 100\), 1\), 100\)/,
+        '교사 과제 목록 RPC에 최대 100개 상한이 필요합니다.');
 });
 
 test('학생·교사 과제 목록은 각각 전용 RPC 한 번을 우선 사용한다', async () => {
@@ -106,6 +108,55 @@ test('학생 글쓰기 화면은 과제와 기존 글을 작업공간 RPC 한 �
     assert.match(source, /get_student_assignment_workspace_v1/);
     assert.match(migration, /CREATE OR REPLACE FUNCTION public\.get_student_assignment_workspace_v1/);
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_student_assignment_workspace_v1/);
+});
+
+test('핵심 통합 RPC 실패 시 과거 다중 조회로 조용히 돌아가지 않는다', async () => {
+    for (const file of [
+        'src/store/useAuthStore.js',
+        'src/components/student/MissionList.jsx',
+        'src/hooks/useMissionSubmit.js',
+        'src/hooks/useMissionManager.js'
+    ]) {
+        assert.doesNotMatch(await read(file), /기존 조회로 전환|기존 조회 폴백/, `${file}에 무거운 호환 폴백이 남아 있습니다.`);
+    }
+});
+
+test('친구 반응·댓글 쓰기는 권한 검증 RPC만 사용한다', async () => {
+    const interactions = await read('src/hooks/usePostInteractions.js');
+    const hideout = await read('src/modules/community/friends-hideout/useFriendsHideout.js');
+    const migration = await read('supabase/migrations/20261010_friend_interaction_writes.sql');
+    assert.match(interactions, /toggle_my_post_reaction_v1/);
+    assert.match(interactions, /create_my_post_comment_v1/);
+    assert.match(interactions, /update_my_post_comment_v1/);
+    assert.match(interactions, /delete_my_post_comment_v1/);
+    assert.match(hideout, /toggle_my_post_reaction_v1/);
+    assert.match(migration, /class_id = v_student\.class_id/);
+    assert.match(migration, /REVOKE ALL ON FUNCTION public\.toggle_my_post_reaction_v1/);
+});
+
+test('독서록 책장은 다섯 조회 대신 화면 전용 RPC 한 번을 사용한다', async () => {
+    const source = await read('src/modules/writing/reading-log/ReadingLogPage.jsx');
+    const section = source.slice(source.indexOf('const fetchLogs'), source.indexOf('const openList'));
+    assert.match(section, /get_my_reading_library_v1/);
+    assert.doesNotMatch(section, /Promise\.all|\.from\(/);
+});
+
+test('교사 글 상세는 반응·댓글을 한 RPC로 읽는다', async () => {
+    const source = await read('src/hooks/useMissionManager.js');
+    const section = source.slice(source.indexOf('const fetchReactionsAndComments'), source.indexOf('const handleEvaluationMode'));
+    assert.match(section, /get_teacher_post_detail_v1/);
+    assert.doesNotMatch(section, /\.from\('post_reactions'\)|\.from\('post_comments'\)/);
+});
+
+test('활동 보고서는 1,000개 고정 절단 대신 200개 커서 RPC를 사용한다', async () => {
+    const source = await read('src/components/teacher/ActivityReport.jsx');
+    const migration = await read('supabase/migrations/20261013_activity_report_workspace.sql');
+    assert.match(source, /get_teacher_activity_report_workspace_v1/);
+    assert.doesNotMatch(source, /\.limit\(1000\)/);
+    assert.doesNotMatch(await read('src/hooks/useEvaluation.js'), /\.limit\(1000\)/);
+    assert.match(await read('src/hooks/useEvaluation.js'), /get_teacher_mission_evaluation_report_v1/);
+    assert.match(migration, /LEAST\(GREATEST\(COALESCE\(p_limit,200\),1\),200\)/);
+    assert.match(migration, /next_offset/);
 });
 
 test('승인·회수 성공 뒤 전체 목록을 다시 조회하지 않는다', async () => {

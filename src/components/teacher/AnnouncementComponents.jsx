@@ -271,4 +271,4 @@ const AnnouncementBanner = ({ latestAnnouncement, onViewAll }) => {
     );
 };
 
-export { AnnouncementBanner, AnnouncementModal, AnnouncementListModal };
+export { AnnouncementListModal };

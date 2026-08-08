@@ -26,6 +26,7 @@ import {
 import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea';
 import WritingPolicyProgress from '../../modules/writing/policy/WritingPolicyProgress';
 import { writingPolicyFromMission } from '../../modules/writing/policy/writingPolicy';
+import ReactionNamesTooltip from './ReactionNamesTooltip';
 
 const GENRE_EDITORS = new Map(
     getGenreMissionTypes()
@@ -779,50 +780,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                             <span style={{ fontSize: '0.85rem', fontWeight: '900', color: isMine ? '#2980B9' : '#ADB5BD' }}>{typeReactions.length}</span>
                                         </button>
 
-                                        {/* 툴팁 */}
-                                        <AnimatePresence>
-                                            {hoveredType === icon.type && reactorNames.length > 0 && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                    exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                                                    style={{
-                                                        position: 'absolute',
-                                                        bottom: '100%',
-                                                        left: '20%',
-                                                        marginBottom: '10px',
-                                                        background: '#2D3436',
-                                                        color: 'white',
-                                                        padding: '10px 16px',
-                                                        borderRadius: '12px',
-                                                        fontSize: '0.8rem',
-                                                        fontWeight: '600',
-                                                        zIndex: 9999,
-                                                        boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
-                                                        pointerEvents: 'none',
-                                                        minWidth: 'max-content',
-                                                        maxWidth: '250px',
-                                                    }}
-                                                >
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}>
-                                                            <span style={{ fontSize: '0.9rem' }}>👥</span>
-                                                            <span style={{ color: '#BDC3C7', fontSize: '0.7rem' }}>반응을 보낸 친구들</span>
-                                                        </div>
-                                                        <div style={{ lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
-                                                            {(() => {
-                                                                const chunks = [];
-                                                                for (let i = 0; i < reactorNames.length; i += 5) {
-                                                                    chunks.push(reactorNames.slice(i, i + 5).join(', '));
-                                                                }
-                                                                return chunks.join(',\n');
-                                                            })()}
-                                                        </div>
-                                                    </div>
-                                                    <div style={{ position: 'absolute', top: '100%', left: '20px', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid #2D3436' }} />
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
+                                        <ReactionNamesTooltip open={hoveredType === icon.type} names={reactorNames} />
                                     </div>
                                 );
                             })}

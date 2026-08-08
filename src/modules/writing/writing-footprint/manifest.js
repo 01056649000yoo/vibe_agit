@@ -19,5 +19,3 @@ export const writingFootprintManifest = {
         'class-footprint': CLASS_FOOTPRINT_CARDS
     }
 };
-
-export default writingFootprintManifest;

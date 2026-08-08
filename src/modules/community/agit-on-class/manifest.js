@@ -17,5 +17,3 @@ export const agitOnClassManifest = {
   studentEntry: () => import('./AgitOnClassPage'),
   teacherEntry: () => import('./AgitManager'),
 };
-
-export default agitOnClassManifest;

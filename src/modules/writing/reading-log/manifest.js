@@ -40,5 +40,3 @@ export const readingLogManifest = {
         'class-operations': [readingLogOperationCard]
     }
 };
-
-export default readingLogManifest;

@@ -7,7 +7,7 @@ export const KOREAN_GRADE_BANDS = [
 
 // 2022 개정 국어과 교육과정 중 글쓰기 미션으로 직접 관찰할 수 있는
 // 쓰기 영역과 시 창작 관련 문학 영역 성취기준만 제공한다.
-export const KOREAN_ACHIEVEMENT_STANDARDS = [
+const KOREAN_ACHIEVEMENT_STANDARDS = [
     {
         code: '4국03-01',
         gradeBand: '3-4',
@@ -88,7 +88,7 @@ export const KOREAN_ACHIEVEMENT_STANDARDS = [
     }
 ];
 
-export const getGradeBand = (value) => {
+const getGradeBand = (value) => {
     if (value === '3-4' || value === '5-6') return value;
 
     const grade = Number(value);
@@ -117,11 +117,6 @@ export const getKoreanStandardsForGradeBand = (value) => {
     return gradeBand
         ? KOREAN_ACHIEVEMENT_STANDARDS.filter((standard) => standard.gradeBand === gradeBand)
         : [];
-};
-
-// 이전 호출부와 저장 데이터 호환용 별칭. 새 화면은 학년군 API를 사용한다.
-export const getKoreanStandardsForGrade = (grade) => {
-    return getKoreanStandardsForGradeBand(grade);
 };
 
 export const resolveKoreanStandards = (codes = [], gradeBandValue = null) => {

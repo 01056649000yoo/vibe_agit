@@ -66,7 +66,6 @@ export const useAuthStore = create((set, get) => ({
         if (!userId) return;
 
         const { force = false, touchLogin = true } = options;
-        const startTime = performance.now();
         console.log('⏱️ [AuthStore] 프로필 로드 시작...');
         set({ profileLoading: true });
 
@@ -96,87 +95,20 @@ export const useAuthStore = create((set, get) => ({
                     { p_touch_login: shouldTouchLogin }
                 );
 
-                if (!bootstrapError && bootstrap?.version === 1) {
-                    const teacherData = bootstrap.teacher || {};
-                    const fullProfile = {
-                        ...(bootstrap.profile || {}),
-                        role: bootstrap.profile?.role || 'TEACHER',
-                        teacherName: teacherData.name,
-                        schoolName: teacherData.school_name,
-                        phone: teacherData.phone
-                    };
-                    if (shouldTouchLogin) lastLoginTouchCache.set(userId, Date.now());
-                    profileFetchCache.set(userId, { profile: fullProfile, teacherBootstrap: bootstrap, timestamp: Date.now() });
-                    set({ profile: fullProfile, teacherBootstrap: bootstrap });
-                    return fullProfile;
-                }
-
-                if (bootstrapError) {
-                    console.warn('[AuthStore] 교사 bootstrap을 사용할 수 없어 기존 조회로 전환합니다:', bootstrapError.message);
-                }
-
-                const requests = [];
-                if (shouldTouchLogin) {
-                    requests.push(
-                        supabase
-                            .from('profiles')
-                            .update({ last_login_at: new Date().toISOString() })
-                            .eq('id', userId)
-                    );
-                } else {
-                    requests.push(Promise.resolve({ data: null, error: null }));
-                }
-
-                requests.push(
-                    supabase
-                        .from('profiles')
-                        .select('id, role, full_name, is_approved, primary_class_id, api_mode, created_at, last_login_at, ai_prompt_template, frequent_tags, default_rubric, mission_default_settings')
-                        .eq('id', userId)
-                        .maybeSingle()
-                );
-
-                requests.push(
-                    supabase
-                        .from('teachers')
-                        .select('name, school_name, phone')
-                        .eq('id', userId)
-                        .maybeSingle()
-                );
-
-                const [updateResult, profileResult, teacherResult] = await Promise.all(requests);
-
-                console.log(`✅ [AuthStore] 프로필 로드 완료 (${(performance.now() - startTime).toFixed(0)}ms)`);
-
-                if (shouldTouchLogin && !updateResult?.error) {
-                    lastLoginTouchCache.set(userId, Date.now());
-                }
-
-                const profileData = profileResult.data;
-                const teacherData = teacherResult.data;
-
-                if (profileData) {
-                    const fullProfile = {
-                        ...profileData,
-                        role: profileData.role || 'TEACHER',
-                        teacherName: teacherData?.name,
-                        schoolName: teacherData?.school_name,
-                        phone: teacherData?.phone
-                    };
-                    profileFetchCache.set(userId, { profile: fullProfile, timestamp: Date.now() });
-                    set({ profile: fullProfile, teacherBootstrap: null });
-                    return fullProfile;
-                } else if (teacherData) {
-                    const basicProfile = {
-                        role: 'TEACHER',
-                        teacherName: teacherData.name,
-                        schoolName: teacherData.school_name
-                    };
-                    profileFetchCache.set(userId, { profile: basicProfile, timestamp: Date.now() });
-                    set({ profile: basicProfile, teacherBootstrap: null });
-                    return basicProfile;
-                }
-
-                return null;
+                if (bootstrapError) throw bootstrapError;
+                if (bootstrap?.version !== 1) throw new Error('지원하지 않는 교사 초기 데이터 응답입니다.');
+                const teacherData = bootstrap.teacher || {};
+                const fullProfile = {
+                    ...(bootstrap.profile || {}),
+                    role: bootstrap.profile?.role || 'TEACHER',
+                    teacherName: teacherData.name,
+                    schoolName: teacherData.school_name,
+                    phone: teacherData.phone
+                };
+                if (shouldTouchLogin) lastLoginTouchCache.set(userId, Date.now());
+                profileFetchCache.set(userId, { profile: fullProfile, teacherBootstrap: bootstrap, timestamp: Date.now() });
+                set({ profile: fullProfile, teacherBootstrap: bootstrap });
+                return fullProfile;
             })();
 
             profileFetchInflight.set(userId, fetchPromise);

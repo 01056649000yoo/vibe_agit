@@ -20,7 +20,7 @@ function normalize(text) {
  * @param {string} content  학생이 쓴 글
  * @returns {boolean}
  */
-export function isEchoOfContent(feedback, content) {
+function isEchoOfContent(feedback, content) {
     const f = normalize(feedback);
     const c = normalize(content);
     if (!f || !c || c.length < 20) return false; // 너무 짧으면 판단 불가
@@ -36,7 +36,7 @@ export function isEchoOfContent(feedback, content) {
 }
 
 /** 오류가 없을 때 학생에게 보여줄 기본 안내 */
-export const NO_ISSUE_FEEDBACK =
+const NO_ISSUE_FEEDBACK =
     '안녕! 선생님이야 😊\n\n네 글을 꼼꼼히 살펴봤는데, 고칠 곳을 찾지 못했어. 정말 잘 썼구나! 👏\n\n앞으로도 지금처럼 자신 있게 써 보자.';
 
 /**

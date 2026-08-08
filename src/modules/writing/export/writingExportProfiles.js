@@ -94,7 +94,7 @@ const diaryProfile = {
     ].filter(Boolean)
 };
 
-export const WRITING_EXPORT_PROFILES = Object.freeze({
+const WRITING_EXPORT_PROFILES = Object.freeze({
     assignment: assignmentProfile,
     reading_log: readingLogProfile,
     diary: diaryProfile

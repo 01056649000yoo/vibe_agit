@@ -33,5 +33,3 @@ export const diaryManifest = {
     studentEntry: () => import('./DiaryPage'),
     teacherEntry: () => import('./teacher/TeacherDiaryManager')
 };
-
-export default diaryManifest;

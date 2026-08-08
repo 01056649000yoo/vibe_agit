@@ -594,56 +594,24 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
 
     const fetchLogs = useCallback(async () => {
         setLoading(true);
-        const [logsResult, libraryResult, linksResult, reviewsResult, draftsResult] = await Promise.all([
-            supabase
-                .from('student_posts')
-                .select('id, title, structured_content, visibility, published_at, created_at, updated_at')
-                .eq('student_id', studentSession.id)
-                .eq('writing_context', 'self')
-                .eq('self_writing_type', 'reading_log')
-                .order('updated_at', { ascending: false }),
-            supabase
-                .from('student_library_items')
-                .select('id, reading_status, started_on, finished_on, created_at, updated_at, book:book_catalog!student_library_items_book_id_fkey(id, source, isbn10, isbn13, title, authors, translators, publisher, published_date, thumbnail_url, source_url, page_count, page_count_source)')
-                .eq('student_id', studentSession.id)
-                .order('updated_at', { ascending: false }),
-            supabase
-                .from('reading_log_entries')
-                .select('post_id, library_item_id')
-                .eq('student_id', studentSession.id),
-            supabase
-                .from('reading_log_teacher_reviews')
-                .select('post_id, review_status, teacher_comment, reviewed_at')
-                .eq('student_id', studentSession.id),
-            supabase.rpc('get_my_reading_log_draft_statuses')
-        ]);
+        const { data: workspace, error } = await supabase.rpc('get_my_reading_library_v1', { p_limit: 50 });
 
-        if (logsResult.error || libraryResult.error || linksResult.error) {
-            console.error('독서 책장 로드 실패:', logsResult.error?.message || libraryResult.error?.message || linksResult.error?.message);
+        if (error || Number(workspace?.version) !== 1) {
+            console.error('독서 책장 로드 실패:', error?.message || '지원하지 않는 응답입니다.');
             setLogs([]);
             setLibraryItems([]);
             setLogLinks([]);
             setTeacherReviews([]);
             setDraftStatuses([]);
         } else {
-            setLogs(logsResult.data || []);
-            setLibraryItems(libraryResult.data || []);
-            setLogLinks(linksResult.data || []);
-            if (reviewsResult.error) {
-                console.error('독서록 선생님 확인 로드 실패:', reviewsResult.error.message);
-                setTeacherReviews([]);
-            } else {
-                setTeacherReviews(reviewsResult.data || []);
-            }
-            if (draftsResult.error) {
-                console.error('독서록 작성 상태 로드 실패:', draftsResult.error.message);
-                setDraftStatuses([]);
-            } else {
-                setDraftStatuses(draftsResult.data || []);
-            }
+            setLogs(workspace.logs || []);
+            setLibraryItems(workspace.library_items || []);
+            setLogLinks(workspace.links || []);
+            setTeacherReviews(workspace.reviews || []);
+            setDraftStatuses(workspace.draft_statuses || []);
         }
         setLoading(false);
-    }, [studentSession.id]);
+    }, []);
 
     useEffect(() => {
         if (isEditing) return undefined;

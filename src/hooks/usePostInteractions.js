@@ -144,30 +144,18 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         };
     }, [fetchInteractions, postId]);
 
-    const syncReactionWithDB = useMemo(() => debounce(async (type, isRemoving) => {
+    const syncReactionWithDB = useMemo(() => debounce(async (type) => {
         try {
-            if (isRemoving) {
-                const { error } = await supabase
-                    .from('post_reactions')
-                    .delete()
-                    .eq('post_id', postId)
-                    .eq('student_id', studentId);
-                if (error) throw error;
-            } else {
-                const { error } = await supabase
-                    .from('post_reactions')
-                    .upsert({
-                        post_id: postId,
-                        student_id: studentId,
-                        reaction_type: type
-                    }, { onConflict: 'post_id,student_id' });
-                if (error) throw error;
-            }
+            const { error } = await supabase.rpc('toggle_my_post_reaction_v1', {
+                p_post_id: postId,
+                p_reaction_type: type
+            });
+            if (error) throw error;
         } catch (err) {
             console.error('[usePostInteractions] DB 동기화 실패:', err.message);
             fetchInteractions();
         }
-    }, 1000), [postId, studentId, fetchInteractions]);
+    }, 1000), [postId, fetchInteractions]);
 
     const handleReaction = useCallback(async (type) => {
         if (!studentId || !postId) return;
@@ -195,7 +183,7 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
             }];
         });
 
-        syncReactionWithDB(type, isRemoving);
+        syncReactionWithDB(type);
     }, [studentId, postId, syncReactionWithDB, studentName]);
 
     const addComment = useCallback(async (content) => {
@@ -226,17 +214,17 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
 
         (async () => {
             try {
-                const { data: insertedComment, error } = await supabase
-                    .from('post_comments')
-                    .insert({
-                        post_id: postId,
-                        student_id: studentId,
-                        content: content.trim(),
-                        status: 'pending' // [추가] 초기 상태는 대기중
-                    }).select('id').single();
+                const { data: result, error } = await supabase.rpc('create_my_post_comment_v1', {
+                    p_post_id: postId,
+                    p_content: content.trim()
+                });
 
                 if (error) throw error;
-                const newCommentId = insertedComment.id;
+                const newCommentId = result?.comment?.id;
+                if (!newCommentId) throw new Error('저장된 댓글 ID를 받지 못했습니다.');
+                setComments((current) => current.map((comment) => (
+                    comment.id === tempId ? { ...comment, ...result.comment, id: newCommentId, isOptimistic: false } : comment
+                )));
 
                 checkContentSafety(content, { commentId: newCommentId }).then(async (safety) => {
                     // 예전에는 부적절 판정이면 댓글을 지웠다. 그러면 학생은 애써 쓴 글을 잃고,
@@ -286,16 +274,10 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
 
         (async () => {
             try {
-                const { error } = await supabase
-                    .from('post_comments')
-                    .update({
-                        content: newContent.trim(),
-                        status: 'pending',
-                        moderation_reason: null,
-                        moderated_at: null,
-                        moderated_by: null
-                    })
-                    .eq('id', commentId);
+                const { error } = await supabase.rpc('update_my_post_comment_v1', {
+                    p_comment_id: commentId,
+                    p_content: newContent.trim()
+                });
                 if (error) throw error;
 
                 checkContentSafety(newContent, { commentId }).then(async (safety) => {
@@ -329,10 +311,9 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         }
 
         try {
-            const { error } = await supabase
-                .from('post_comments')
-                .delete()
-                .eq('id', commentId);
+            const { error } = await supabase.rpc('delete_my_post_comment_v1', {
+                p_comment_id: commentId
+            });
             
             if (error) throw error;
             return true;

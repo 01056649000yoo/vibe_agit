@@ -4,10 +4,10 @@ import React, { useMemo } from 'react';
 export const HEAT = ['#EFEADF', '#b7d3f6', '#6da7ec', '#2a78d6', '#184f95'];
 export const INK = '#3E2E23';
 export const INK_SOFT = '#8D7B6C';
-export const SERIES = '#2a78d6';
+const SERIES = '#2a78d6';
 export const GRID = 'rgba(62,46,35,.10)';
 
-export const POINT_LABELS = {
+const POINT_LABELS = {
     writing_reward: '글쓰기',
     vocab_tower: '어휘의 탑',
     dragon_care: '드래곤 돌보기',

@@ -442,49 +442,27 @@ export const useFriendsHideout = (studentSession, params) => {
         try {
             const classId = await resolveClassId();
             if (!classId) return false;
-            const { data: existingReaction, error: existingError } = await supabase
-                .from('post_reactions')
-                .select('id, reaction_type')
-                .eq('class_id', classId)
-                .eq('post_id', postId)
-                .eq('student_id', studentSession.id)
-                .maybeSingle();
-
-            if (existingError) throw existingError;
-
-            if (existingReaction?.reaction_type === 'agree') {
-                const { error } = await supabase
-                    .from('post_reactions')
-                    .delete()
-                    .eq('class_id', classId)
-                    .eq('id', existingReaction.id);
-                if (error) throw error;
-            } else if (existingReaction?.id) {
-                const { error } = await supabase
-                    .from('post_reactions')
-                    .update({ reaction_type: 'agree' })
-                    .eq('class_id', classId)
-                    .eq('id', existingReaction.id);
-                if (error) throw error;
-            } else {
-                const { error } = await supabase
-                    .from('post_reactions')
-                    .insert({
-                        class_id: classId,
-                        post_id: postId,
-                        student_id: studentSession.id,
-                        reaction_type: 'agree'
-                    });
-                if (error) throw error;
-            }
-
-            await fetchPosts(selectedMission.id);
+            const { data: result, error } = await supabase.rpc('toggle_my_post_reaction_v1', {
+                p_post_id: postId,
+                p_reaction_type: 'agree'
+            });
+            if (error) throw error;
+            setPosts((current) => current.map((post) => {
+                if (post.id !== postId) return post;
+                const withoutMine = (post.post_reactions || []).filter((reaction) => reaction.student_id !== studentSession.id);
+                return {
+                    ...post,
+                    post_reactions: result?.selected
+                        ? [...withoutMine, { post_id: postId, student_id: studentSession.id, reaction_type: 'agree' }]
+                        : withoutMine
+                };
+            }));
             return true;
         } catch (err) {
             console.error('회의 안건 선택 실패:', err.message);
             return false;
         }
-    }, [fetchPosts, resolveClassId, selectedMission?.id, studentSession.id]);
+    }, [resolveClassId, selectedMission?.id, studentSession.id]);
 
     const handleInitialPost = useCallback(async (postId) => {
         try {

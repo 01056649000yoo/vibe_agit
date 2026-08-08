@@ -19,7 +19,7 @@ const normSource = {
     url: KOREAN_NORMS_URL
 };
 
-export const ELEMENTARY_SPELLING_ENTRIES = [
+const ELEMENTARY_SPELLING_ENTRIES = [
     {
         id: 'dwae-doe',
         question: '돼요 / 되요',
@@ -238,7 +238,7 @@ export const ELEMENTARY_SPELLING_ENTRIES = [
     }
 ];
 
-export const POPULAR_SPELLING_ENTRY_IDS = [
+const POPULAR_SPELLING_ENTRY_IDS = [
     'dwae-doe',
     'an-anh',
     'wen-waen',

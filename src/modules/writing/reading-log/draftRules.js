@@ -17,7 +17,7 @@ export const autoTitleFor = (book) => `『${book.title}』을 읽고`;
  * 이 표시가 생기기 전에 태블릿에 남은 초안에는 표시가 없어서, 표시만 보면
  * 자동 제목이 `학생이 지은 제목` 으로 취급돼 책을 바꿔도 옛 책 이름이 그대로 남았다.
  */
-export const isAutoTitle = (title, book) => {
+const isAutoTitle = (title, book) => {
     const clean = String(title || '').trim();
     if (!clean) return true;
     return Boolean(book?.title) && clean === autoTitleFor(book);

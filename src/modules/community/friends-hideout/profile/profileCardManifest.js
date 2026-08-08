@@ -10,7 +10,7 @@ const FriendRelationshipCard = lazy(() => import('./cards/FriendRelationshipCard
  * 친구 화면은 공개 자기표현과 둘 사이의 관계만 보여 준다.
  * 전체 활동 통계·포인트 내역은 데이터가 있어도 이 화면에는 연결하지 않는다.
  */
-export const friendProfileCardManifest = [
+const friendProfileCardManifest = [
     {
         id: 'dragon',
         title: '대표 드래곤',

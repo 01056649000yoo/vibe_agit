@@ -39,5 +39,3 @@ export const vocabTowerManifest = {
     headerBackground: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)'
   }
 };
-
-export default vocabTowerManifest;

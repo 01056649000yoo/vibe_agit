@@ -1,6 +1,6 @@
 import { countContentChars } from '../../../lib/textMetrics.js';
 
-export const DEFAULT_WRITING_POLICY = Object.freeze({
+const DEFAULT_WRITING_POLICY = Object.freeze({
     is_enabled: true,
     min_chars: 0,
     min_paragraphs: 0,
@@ -36,7 +36,7 @@ export const normalizeWritingPolicy = (source = {}, defaults = DEFAULT_WRITING_P
     daily_reward_limit: Math.max(1, toSafeInteger(source.daily_reward_limit, defaults.daily_reward_limit || 1))
 });
 
-export const countWritingParagraphs = (value = '') => (
+const countWritingParagraphs = (value = '') => (
     String(value)
         .split(/\n+/)
         .filter((paragraph) => paragraph.trim().length > 0)

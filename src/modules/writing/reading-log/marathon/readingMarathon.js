@@ -1,4 +1,4 @@
-export const DEFAULT_METERS_PER_PAGE = 10;
+const DEFAULT_METERS_PER_PAGE = 10;
 export const DEFAULT_TARGET_DISTANCE_M = 42195;
 
 const COURSE_POINTS = Object.freeze([

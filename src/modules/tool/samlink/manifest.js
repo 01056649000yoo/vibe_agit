@@ -13,5 +13,3 @@ export const samlinkManifest = {
     href: 'https://샘링크.kr'
   }
 };
-
-export default samlinkManifest;

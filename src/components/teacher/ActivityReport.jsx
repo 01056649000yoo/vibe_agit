@@ -251,26 +251,27 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
             }
             setLoadingDetails(true);
             try {
-                // 1. 해당 학급의 모든 학생 목록 먼저 가져오기
-                const { data: classStudents, error: studentsError } = await supabase
-                    .from('students')
-                    .select('id, name')
-                    .eq('class_id', activeClass.id)
-                    .is('deleted_at', null)
-                    .order('name', { ascending: true });
-
-                if (studentsError) throw studentsError;
-
-                // 2. 선택된 미션들에 대한 제출물 가져오기 (컬럼 최적화 + DB 필터링 + 리미트)
-                const { data: postsData, error: postsError } = await supabase
-                    .from('student_posts')
-                    .select('id, student_id, mission_id, content, final_eval, initial_eval, eval_comment, is_submitted, is_confirmed, char_count')
-                    .eq('class_id', activeClass.id)
-                    .in('mission_id', selectedMissionIds)
-                    .eq('is_submitted', true)
-                    .limit(1000);
-
-                if (postsError) throw postsError;
+                // 학생 목록과 제출 글을 학급 범위 RPC로 읽는다. 제출 글은 200개씩 받아
+                // 1,000개에서 조용히 잘리던 문제 없이 필요한 만큼 이어서 가져온다.
+                let nextOffset = 0;
+                let classStudents = [];
+                const postsData = [];
+                do {
+                    const { data: workspace, error: workspaceError } = await supabase.rpc(
+                        'get_teacher_activity_report_workspace_v1',
+                        {
+                            p_class_id: activeClass.id,
+                            p_mission_ids: selectedMissionIds,
+                            p_limit: 200,
+                            p_offset: nextOffset
+                        }
+                    );
+                    if (workspaceError) throw workspaceError;
+                    if (Number(workspace?.version) !== 1) throw new Error('지원하지 않는 활동 보고서 응답입니다.');
+                    if (nextOffset === 0) classStudents = workspace.students || [];
+                    postsData.push(...(workspace.posts || []));
+                    nextOffset = workspace.next_offset;
+                } while (nextOffset != null);
 
                 // 로컬 저장소에서 기존 생성 결과 가져오기
                 let savedResults = persistenceKey

@@ -212,79 +212,11 @@ export const useMissionManager = (activeClass, bootstrapProfile = null) => {
                 p_class_id: activeClass.id,
                 p_limit: 100
             });
-            if (!overviewError && Number(overview?.version) === 1) {
-                setMissions(overview.missions || []);
-                setTotalStudentCount(Number(overview.total_students || 0));
-                setSubmissionCounts(overview.submission_counts || {});
-                return;
-            }
-            if (overviewError) {
-                console.warn('통합 과제 개요 RPC를 사용할 수 없어 기존 조회로 전환합니다:', overviewError.message);
-            }
-
-            // [Performance] 캐시 적용 (Pre-fetch된 데이터와 동기화)
-            const missionsData = await dataCache.get(`missions_v2_${activeClass.id}`, async () => {
-                const { data, error } = await supabase
-                    .from('writing_missions')
-                    .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
-                    .eq('class_id', activeClass.id)
-                    .eq('is_archived', false)
-                    .order('created_at', { ascending: false })
-                    .limit(100);
-                if (error) throw error;
-                return data || [];
-            }, 120000);
-
-            setMissions(missionsData || []);
-
-            // 학생 수 조회도 캐시 가능하지만 일단 병렬로 유지
-            const { count: studentCount, error: studentCountError } = await supabase
-                .from('students')
-                .select('id', { count: 'exact', head: true })
-                .eq('class_id', activeClass.id)
-                .is('deleted_at', null);
-
-            if (studentCountError) console.error('학생 수 조회 실패:', studentCountError);
-            else setTotalStudentCount(studentCount || 0);
-
-            if (missionsData && missionsData.length > 0) {
-                // [DB 부하 방지] 최근 100개 미션에 한해서만 제출 카운트 집계.
-                // (목록은 최신순 정렬 + 아카이브 제외, 100개 이전은 학급에서 사실상 거의 노출되지 않음)
-                // 또한 select 결과에도 hard limit(50000)을 두어 악성/비정상 누적 데이터로부터 방어.
-                const SUBMISSION_COUNT_MISSION_CAP = 100;
-                const SUBMISSION_COUNT_ROW_CAP = 50000;
-                const missionIds = missionsData.slice(0, SUBMISSION_COUNT_MISSION_CAP).map(m => m.id);
-                const missionTypeById = new Map(
-                    missionsData.map((mission) => [mission.id, mission.mission_type])
-                );
-                const { data: counts, error: countError } = await supabase
-                    .from('student_posts')
-                    .select('mission_id, student_id, is_submitted, is_confirmed, students!inner(id)')
-                    .eq('class_id', activeClass.id)
-                    .in('mission_id', missionIds)
-                    .is('students.deleted_at', null)
-                    .limit(SUBMISSION_COUNT_ROW_CAP);
-
-                if (!countError && counts) {
-                    const missionStudentSets = counts.reduce((acc, curr) => {
-                        const isMeetingMission = missionTypeById.get(curr.mission_id) === 'meeting';
-                        const shouldCount = isMeetingMission ? curr.is_submitted : curr.is_confirmed;
-                        if (!shouldCount) return acc;
-                        if (!acc[curr.mission_id]) {
-                            acc[curr.mission_id] = new Set();
-                        }
-                        if (curr.student_id) {
-                            acc[curr.mission_id].add(curr.student_id);
-                        }
-                        return acc;
-                    }, {});
-
-                    const stats = Object.fromEntries(
-                        Object.entries(missionStudentSets).map(([missionId, studentSet]) => [missionId, studentSet.size])
-                    );
-                    setSubmissionCounts(stats);
-                }
-            }
+            if (overviewError) throw overviewError;
+            if (Number(overview?.version) !== 1) throw new Error('지원하지 않는 교사 과제 개요 응답입니다.');
+            setMissions(overview.missions || []);
+            setTotalStudentCount(Number(overview.total_students || 0));
+            setSubmissionCounts(overview.submission_counts || {});
         } catch (err) {
             console.error('글쓰기 미션 로드 실패:', err.message);
         } finally {
@@ -451,18 +383,16 @@ export const useMissionManager = (activeClass, bootstrapProfile = null) => {
     const fetchReactionsAndComments = async (postId) => {
         if (!postId) return;
         try {
-            const { data: reactions, error: rxError } = await supabase
-                .from('post_reactions')
-                .select('id, reaction_type, student_id, created_at')
-                .eq('post_id', postId);
-            if (!rxError) setPostReactions(reactions || []);
-
-            const { data: comments, error: cmError } = await supabase
-                .from('post_comments')
-                .select('id, content, student_id, teacher_id, created_at, students(name)')
-                .eq('post_id', postId)
-                .order('created_at', { ascending: true });
-            if (!cmError) setPostComments(comments || []);
+            const { data: detail, error } = await supabase.rpc('get_teacher_post_detail_v1', { p_post_id: postId });
+            if (error) throw error;
+            setPostReactions((detail?.reactions || []).map((reaction) => ({
+                ...reaction,
+                students: reaction.student_name ? { name: reaction.student_name } : null
+            })));
+            setPostComments((detail?.comments || []).map((comment) => ({
+                ...comment,
+                students: comment.student_name ? { name: comment.student_name } : null
+            })));
         } catch (err) {
             console.error('반응/댓글 로드 실패:', err.message);
         }
@@ -504,9 +434,7 @@ export const useMissionManager = (activeClass, bootstrapProfile = null) => {
                     original_title, original_content, first_submitted_at, initial_eval, final_eval, eval_comment, student_answers,
                     awarded_base_reward, awarded_bonus_reward, awarded_bonus_threshold,
                     teacher_edited_title, teacher_edited_content, teacher_edited_at, teacher_edited_by, is_teacher_edited,
-                    students!inner(name, class_id),
-                    post_reactions(id, reaction_type, student_id, students(name)),
-                    post_comments(id, content, student_id, teacher_id, created_at, students(name))
+                    students!inner(name, class_id)
                 `)
                 .eq('mission_id', mission.id)
                 // 학급은 student_posts.class_id 로 직접 좁힌다 (students 경유 금지).

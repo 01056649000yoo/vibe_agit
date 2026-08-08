@@ -4,7 +4,6 @@ import { classKey, dataCache } from '../../../lib/cache';
 import { supabase } from '../../../lib/supabaseClient';
 
 const TITLE_STATUS_TTL_MS = 30000;
-const TITLE_STATUS_REFRESH_EVENT = 'agit:my-title-status-refresh';
 
 const EMPTY_STATUS = {
     writerTotalChars: 0,
@@ -25,16 +24,6 @@ const normalizeTitleStatus = (data) => ({
     readerLevelOverride: data?.reader_level_override == null ? null : Number(data.reader_level_override),
     season: data?.season || null
 });
-
-export const invalidateMyTitleStatus = ({ classId, studentId }) => {
-    if (!classId || !studentId) return;
-    dataCache.invalidate(classKey(classId, 'my-title-status', { student: studentId }));
-    if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent(TITLE_STATUS_REFRESH_EVENT, {
-            detail: { classId, studentId }
-        }));
-    }
-};
 
 /** 나의 아지트와 글쓰기 발자국이 함께 쓰는 유일한 칭호 데이터 경로. */
 const useMyTitleStatus = ({ studentSession, active = true, initialStatus = null, bootstrapLoading = false }) => {
@@ -84,16 +73,6 @@ const useMyTitleStatus = ({ studentSession, active = true, initialStatus = null,
         const timerId = window.setTimeout(() => load(), 0);
         return () => window.clearTimeout(timerId);
     }, [active, bootstrapLoading, initialStatus, load]);
-
-    useEffect(() => {
-        if (!active) return undefined;
-        const refresh = (event) => {
-            if (event.detail?.classId !== classId || event.detail?.studentId !== studentId) return;
-            load(true);
-        };
-        window.addEventListener(TITLE_STATUS_REFRESH_EVENT, refresh);
-        return () => window.removeEventListener(TITLE_STATUS_REFRESH_EVENT, refresh);
-    }, [active, classId, load, studentId]);
 
     const writerLevel = useMemo(
         () => getWriterLevel(status.writerTotalChars, status.writerCompletedPosts, status.writerLevelOverride),

@@ -28,44 +28,6 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
         return currentStudent;
     }, [studentSession]);
 
-    const fetchMissions = useCallback(async (currentStudent) => {
-        const classId = currentStudent.classId || currentStudent.class_id;
-        const { data: allMissions, error } = await supabase
-            .from('writing_missions')
-            .select('id, title, genre, created_at, mission_type, input_template, evaluation_rubric, guide, tags, base_reward')
-            .eq('class_id', classId)
-            .is('is_archived', false)
-            .order('created_at', { ascending: false })
-            .limit(MISSION_LIST_LIMIT);
-
-        if (error) throw error;
-
-        const nextMissions = allMissions || [];
-        setMissions(nextMissions);
-        return nextMissions;
-    }, []);
-
-    const fetchStudentPosts = useCallback(async (currentStudent) => {
-        const classId = currentStudent.classId || currentStudent.class_id;
-        const { data, error } = await supabase
-            .from('student_posts')
-            .select('id, mission_id, is_confirmed, is_submitted, is_returned, recalled_at, char_count, created_at')
-            .eq('class_id', classId)
-            .eq('student_id', currentStudent.id)
-            .order('created_at', { ascending: false })
-            .limit(MISSION_LIST_LIMIT);
-
-        if (error) throw error;
-
-        const nextPosts = {};
-        (data || []).forEach((post) => {
-            nextPosts[post.mission_id] = post;
-        });
-
-        setPosts(nextPosts);
-        return nextPosts;
-    }, []);
-
     const fetchData = useCallback(async () => {
         setLoading(true);
 
@@ -81,18 +43,10 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
             const { data: overview, error: overviewError } = await supabase.rpc('get_student_mission_list_v1', {
                 p_limit: MISSION_LIST_LIMIT
             });
-            if (!overviewError && Number(overview?.version) === 1) {
-                setMissions(overview.missions || []);
-                setPosts(Object.fromEntries((overview.posts || []).map((post) => [post.mission_id, post])));
-                return;
-            }
-            if (overviewError) {
-                console.warn('[MissionList] 통합 목록 RPC를 사용할 수 없어 기존 조회로 전환합니다:', overviewError.message);
-            }
-            await Promise.all([
-                fetchMissions(currentStudent),
-                fetchStudentPosts(currentStudent)
-            ]);
+            if (overviewError) throw overviewError;
+            if (Number(overview?.version) !== 1) throw new Error('지원하지 않는 과제 목록 응답입니다.');
+            setMissions(overview.missions || []);
+            setPosts(Object.fromEntries((overview.posts || []).map((post) => [post.mission_id, post])));
         } catch (err) {
             console.error('[MissionList] 데이터 로드 실패:', err.message);
             alert('데이터를 불러오는 데 실패했습니다.');
@@ -100,7 +54,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
             loadedAtRef.current = Date.now();
             setLoading(false);
         }
-    }, [fetchMissions, fetchStudentPosts, getCurrentStudent, onBack]);
+    }, [getCurrentStudent, onBack]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 1024);

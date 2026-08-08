@@ -7,15 +7,33 @@
  *   1. 앱을 브라우저에서 열기
  *   2. F12 → Console 탭
  *   3. 이 스크립트 전체를 복사 → 콘솔에 붙여넣기 → Enter
- *   4. 로딩 완료 메시지 뜨면  runAllTests()  입력 → Enter
+ *   4. configureAgitSecurityTest('운영 API URL', '공개 anon 키') 실행
+ *   5. runAllTests() 입력 → Enter
  * 
  * ⚠️ 주의: 읽기 전용 테스트 위주. 쓰기 테스트는 가짜 UUID로 수행하여 안전합니다.
  * ============================================================================
  */
 
-// ⚠️ 실제 값으로 교체하세요
-var SUPABASE_URL = 'https://rdtapjpppundovhtwzzc.supabase.co';
-var SUPABASE_ANON_KEY = 'sb_publishable_xu5EvZxaNPBrmi2OtJ0pbA_tlmY5qHF';
+// 운영 값을 코드에 남기지 않는다. 실행할 때 공개 URL·anon 키를 메모리로만 전달한다.
+var SUPABASE_URL = '';
+var SUPABASE_ANON_KEY = '';
+
+var configureAgitSecurityTest = function (url, anonKey) {
+    var normalizedUrl = String(url || '').trim().replace(/\/$/, '');
+    var normalizedKey = String(anonKey || '').trim();
+    if (!/^https?:\/\//.test(normalizedUrl) || !normalizedKey) {
+        throw new Error('운영 API URL과 공개 anon 키를 모두 입력하세요.');
+    }
+    SUPABASE_URL = normalizedUrl;
+    SUPABASE_ANON_KEY = normalizedKey;
+    console.log('✅ 보안 테스트 대상이 설정되었습니다:', new URL(normalizedUrl).host);
+};
+
+var requireAgitSecurityConfig = function () {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        throw new Error("먼저 configureAgitSecurityTest('운영 API URL', '공개 anon 키')를 실행하세요.");
+    }
+};
 
 // ── CDN에서 Supabase 로드 ──
 var _loadScript = function (src) {
@@ -598,6 +616,7 @@ async function testDirectWriteAttacks(sb) {
 // 🏁 전체 테스트 실행
 // ══════════════════════════════════════════════
 async function runAllTests() {
+    requireAgitSecurityConfig();
     console.clear();
     results.length = 0;
 
@@ -673,7 +692,8 @@ _loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supab
             '║  🛡️  보안 테스트 스크립트 로드 완료!                      ║\n' +
             '╠══════════════════════════════════════════════════════════╣\n' +
             '║                                                          ║\n' +
-            '║  📌 전체 테스트 실행:  runAllTests()                      ║\n' +
+            '║  1. configureAgitSecurityTest(URL, ANON_KEY)              ║\n' +
+            '║  2. 전체 테스트 실행: runAllTests()                       ║\n' +
             '║                                                          ║\n' +
             '║  📌 개별 테스트: (sb = supabase 클라이언트 필요)          ║\n' +
             '║     testAdminEscalation(sb)     ← Admin 권한 탈취        ║\n' +

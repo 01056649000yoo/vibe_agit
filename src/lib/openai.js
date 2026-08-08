@@ -6,7 +6,7 @@ import { supabase } from './supabaseClient';
 /**
  * OpenAI API를 호출하여 메시지를 생성합니다.
  */
-export const callOpenAI = async (payload, options = {}, retryCount = 0) => {
+const callOpenAI = async (payload, options = {}, retryCount = 0) => {
     let body = {};
     if (typeof payload === 'string') {
         body.prompt = payload;

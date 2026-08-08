@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { POINT_ACTIVITY_TYPES } from '../src/modules/points/pointTypes.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
@@ -52,4 +53,14 @@ test('DB 공용 엔진은 event_key 중복 방지와 클라이언트 권한 차�
     assert.match(migration, /uq_point_logs_student_event_key/);
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.point_engine_apply[\s\S]*authenticated/);
     assert.match(migration, /REVOKE INSERT, UPDATE, DELETE ON TABLE public\.point_logs/);
+});
+
+test('포인트 활동 유형 계약은 DB 엔진 허용 목록과 같다', async () => {
+    const migration = await read('supabase/migrations/20261005_assignment_approval_integrity.sql');
+    for (const activityType of Object.values(POINT_ACTIVITY_TYPES)) {
+        assert.ok(
+            migration.includes(`'${activityType}'`),
+            `${activityType}이 DB 포인트 엔진 허용 목록에 없습니다.`
+        );
+    }
 });

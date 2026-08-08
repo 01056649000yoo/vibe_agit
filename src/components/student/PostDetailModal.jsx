@@ -5,6 +5,7 @@ import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 import { supabase } from '../../lib/supabaseClient';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
 import Button from '../common/Button';
+import ReactionNamesTooltip from './ReactionNamesTooltip';
 
 // [최적화] 개별 댓글 컴포넌트 분리 및 메모이제이션 💬
 const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, isTeacher, onEdit, onDelete }) => {
@@ -516,68 +517,7 @@ const PostDetailModal = ({
                                             isMobile={isMobile}
                                         />
 
-                                        <AnimatePresence>
-                                            {hoveredType === icon.type && reactorNames.length > 0 && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                    exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                                                    style={{
-                                                        position: 'absolute',
-                                                        bottom: '100%',
-                                                        left: '20%', // 왼쪽 기준으로 고정
-                                                        marginBottom: '10px',
-                                                        background: '#2D3436',
-                                                        color: 'white',
-                                                        padding: '10px 16px',
-                                                        borderRadius: '12px',
-                                                        fontSize: '0.8rem',
-                                                        fontWeight: '600',
-                                                        zIndex: 9999,
-                                                        boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
-                                                        pointerEvents: 'none',
-                                                        minWidth: 'max-content',
-                                                        maxWidth: '250px', // 너무 길어지지 않게 제한
-                                                    }}
-                                                >
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}>
-                                                            <span style={{ fontSize: '0.9rem' }}>👥</span>
-                                                            <span style={{ color: '#BDC3C7', fontSize: '0.7rem' }}>반응을 보낸 친구들</span>
-                                                        </div>
-                                                        <div style={{ lineHeight: '1.5', whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
-                                                            {(() => {
-                                                                const MAX_DISPLAY = 15;
-                                                                const displayNames = reactorNames.slice(0, MAX_DISPLAY);
-                                                                const extraCount = reactorNames.length - MAX_DISPLAY;
-                                                                
-                                                                const chunks = [];
-                                                                for (let i = 0; i < displayNames.length; i += 5) {
-                                                                    chunks.push(displayNames.slice(i, i + 5).join(', '));
-                                                                }
-                                                                
-                                                                let text = chunks.join(',\n');
-                                                                if (extraCount > 0) {
-                                                                    text += `\n외 ${extraCount}명`;
-                                                                }
-                                                                return text;
-                                                            })()}
-                                                        </div>
-                                                    </div>
-                                                    {/* 말풍선 꼬리 - 왼쪽 정렬 기준 고정 */}
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: '100%',
-                                                        left: '20px',
-                                                        width: 0,
-                                                        height: 0,
-                                                        borderLeft: '6px solid transparent',
-                                                        borderRight: '6px solid transparent',
-                                                        borderTop: '6px solid #2D3436'
-                                                    }} />
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
+                                        <ReactionNamesTooltip open={hoveredType === icon.type} names={reactorNames} />
                                     </React.Fragment>
                                 );
                             })}

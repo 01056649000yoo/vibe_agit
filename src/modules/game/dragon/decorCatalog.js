@@ -111,5 +111,3 @@ export const normalizeDragonDecor = (petData = {}) => {
 
     return { equipped, owned };
 };
-
-export const isDragonDecorOwned = (petData, itemId) => normalizeDragonDecor(petData).owned.has(itemId);

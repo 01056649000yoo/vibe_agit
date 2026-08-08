@@ -1,6 +1,6 @@
 const DRAGON_ASSET_PATH = '/assets/dragons/v2';
 
-export const DEFAULT_DRAGON_SPECIES = 'star';
+const DEFAULT_DRAGON_SPECIES = 'star';
 
 export const DRAGON_SPECIES = [
     {
@@ -52,7 +52,7 @@ const DRAGON_STAGES = [
     { name: '전설의 작가 수호룡', form: 'legend', imageScale: 1.06 }
 ];
 
-export const READER_DRAGON_EFFECTS = [
+const READER_DRAGON_EFFECTS = [
     { level: 1, name: '고요한 빛', description: '아직 잔잔한 빛을 품고 있어요.', className: 'quiet', particles: 0 },
     { level: 2, name: '첫 책빛', description: '부드러운 책빛이 수호룡을 감싸요.', className: 'booklight', particles: 2 },
     { level: 3, name: '이야기 반짝임', description: '읽은 이야기의 반짝임이 떠올라요.', className: 'spark', particles: 3 },
@@ -62,7 +62,7 @@ export const READER_DRAGON_EFFECTS = [
     { level: 7, name: '아지트 수호광', description: '아지트 지킴이의 찬란한 빛이 완성됐어요.', className: 'guardian', particles: 7 }
 ];
 
-export const normalizeDragonSpecies = (speciesId) => (
+const normalizeDragonSpecies = (speciesId) => (
     SPECIES_BY_ID.has(speciesId) ? speciesId : DEFAULT_DRAGON_SPECIES
 );
 
