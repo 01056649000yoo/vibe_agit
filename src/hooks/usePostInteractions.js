@@ -126,25 +126,21 @@ export const usePostInteractions = (postId, studentId, studentName, classmates =
         }
     }, [postId, shouldShowComment, studentName]);
     useEffect(() => {
-        fetchInteractions();
+        void fetchInteractions();
+        if (!postId) return undefined;
 
-        if (!postId) return;
-
-        // [최적화] per-postId Realtime 채널 제거 → 30초 폴링으로 교체
-        // 기존: 게시글마다 comments_{postId}, reactions_{postId} 2개 채널 생성
-        //       → useClassAgitClass 의 class 레벨 채널이 동일 테이블(post_comments, post_reactions)을
-        //         이미 구독 중이어서 이중 구독 발생, Realtime WAL 부하의 63%를 차지
-        // 변경: 30초 폴링으로 다른 학생의 새 댓글·반응을 갱신
-        //       자신의 액션(댓글 작성·반응)은 기존 optimistic 업데이트로 즉시 UI에 반영됨
-        const POLL_INTERVAL_MS = 15000;
-        const pollId = window.setInterval(() => {
-            if (!document.hidden) {
-                fetchInteractions();
+        // 내 반응·댓글은 optimistic UI로 즉시 보이고, 다른 학생의 변화는 화면 복귀 때만 갱신한다.
+        // 상세 화면 하나당 15초 고정 폴링을 없애 1,000명 동시 열람 시의 지속 요청을 제거한다.
+        const refreshOnReturn = () => {
+            if (!document.hidden && Date.now() - lastFetchAtRef.current >= 60000) {
+                void fetchInteractions();
             }
-        }, POLL_INTERVAL_MS);
-
+        };
+        window.addEventListener('focus', refreshOnReturn);
+        document.addEventListener('visibilitychange', refreshOnReturn);
         return () => {
-            window.clearInterval(pollId);
+            window.removeEventListener('focus', refreshOnReturn);
+            document.removeEventListener('visibilitychange', refreshOnReturn);
         };
     }, [fetchInteractions, postId]);
 

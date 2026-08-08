@@ -6,10 +6,10 @@ import StudentFeedbackModal from './StudentFeedbackModal';
 import { useDragonPet } from '../../modules/game/dragon/useDragonPet';
 import { getDragonGrowthFromWriterLevel, getDragonStage, getPendingDragonGrowth } from '../../modules/game/dragon/presentation';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
-import { useRealtimeNotifications } from '../../hooks/useRealtimeNotifications'; // [신규] 분리된 리얼타임 훅
+import { useStudentSyncNotifications } from '../../hooks/useStudentSyncNotifications';
 import { getModule } from '../../modules/registry';
 import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
-import useMyTitleStatus, { invalidateMyTitleStatus } from '../../modules/writing/title-status/useMyTitleStatus';
+import useMyTitleStatus from '../../modules/writing/title-status/useMyTitleStatus';
 
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
@@ -72,8 +72,7 @@ const StudentDashboard = ({
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
         returnedCount, initialPetData,
-        handleClearFeedback, handleDirectRewriteGo, openFeedback,
-        fetchMyPoints, checkActivity
+        handleClearFeedback, handleDirectRewriteGo, openFeedback
     } = useStudentDashboard(studentSession, onNavigate, {
         bootstrap: homeBootstrap,
         bootstrapLoading: homeBootstrapLoading,
@@ -91,23 +90,8 @@ const StudentDashboard = ({
         bootstrapLoading: homeBootstrapLoading
     });
 
-    const refreshMyTitleStatus = React.useCallback(() => {
-        invalidateMyTitleStatus({
-            classId: studentSession?.class_id || studentSession?.classId,
-            studentId: studentSession?.id
-        });
-    }, [studentSession?.classId, studentSession?.class_id, studentSession?.id]);
-
-    // [신규] 실시간 알림 로직 전담 훅 (의존성 안정화)
-    const refetchDataControls = React.useMemo(() => ({
-        fetchMyPoints, refreshMyTitleStatus, checkActivity, refreshHome: onRefreshHome
-    }), [fetchMyPoints, refreshMyTitleStatus, checkActivity, onRefreshHome]);
-
-    const { teacherNotify, setTeacherNotify } = useRealtimeNotifications(
-        studentSession,
-        setPoints,
-        refetchDataControls
-    );
+    // 공용 홈 동기화 결과의 변화만 알림으로 보여 준다. 학생별 WebSocket은 열지 않는다.
+    const { teacherNotify, setTeacherNotify } = useStudentSyncNotifications(studentSession);
 
     // 드래곤 관련 상태 및 액션
     const {
@@ -248,7 +232,7 @@ const StudentDashboard = ({
                         />
                     </Suspense>
 
-                {/* 선생님의 실시간 알림(포인트·승인·회수). 상시 상태인 '다시 쓸 글'은
+                {/* 선생님의 동기화 알림(포인트·승인·회수). 상시 상태인 '다시 쓸 글'은
                     아래 할 일 카드가 맡는다 — 같은 것을 두 군데서 세지 않도록. */}
                 <TeacherNotifyBanner
                     teacherNotify={teacherNotify}

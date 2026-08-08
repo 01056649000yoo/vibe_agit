@@ -53,11 +53,50 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         setLoading(true);
         setLoadError('');
         setMission(null);
+
+        const applyWorkspace = (missionData, postData) => {
+            if (missionData?.is_archived) {
+                alert('보관된 미션입니다. 글을 수정하거나 제출할 수 없어요! 📂');
+                onBackRef.current?.();
+                return;
+            }
+
+            setMission(missionData || null);
+            const hasTeacherEditedDraft = Boolean(postData?.is_teacher_edited && postData?.is_returned);
+            setTitle(hasTeacherEditedDraft ? (postData.teacher_edited_title || postData.title || '') : (postData?.title || ''));
+            setContent(hasTeacherEditedDraft ? (postData.teacher_edited_content || postData.content || '') : (postData?.content || ''));
+            setIsReturned(Boolean(postData?.is_returned));
+            setIsConfirmed(Boolean(postData?.is_confirmed));
+            setIsSubmitted(Boolean(postData?.is_submitted));
+            setAiFeedback(postData?.ai_feedback || '');
+            setOriginalTitle(postData?.original_title || '');
+            setOriginalContent(postData?.original_content || '');
+            setShowOriginalToFriends(Boolean(postData?.show_original));
+            setIsTeacherEdited(Boolean(postData?.is_teacher_edited));
+            setTeacherEditedAt(postData?.teacher_edited_at || '');
+            setStudentAnswers(postData?.student_answers || []);
+            setStructuredContent(hasTeacherEditedDraft ? null : (postData?.structured_content || null));
+            setPostId(postData?.id || null);
+            setPostUpdatedAt(postData?.updated_at || null);
+        };
+
         try {
-            // 1. 미션 정보 가져오기
+            const { data: workspace, error: workspaceError } = await supabase.rpc(
+                'get_student_assignment_workspace_v1',
+                { p_mission_id: missionId, p_post_id: requestedPostId }
+            );
+            if (!workspaceError && Number(workspace?.version) === 1) {
+                if (requestId !== loadRequestIdRef.current) return;
+                applyWorkspace(workspace.mission, workspace.post);
+                return;
+            }
+            if (workspaceError) {
+                console.warn('[useMissionSubmit] 통합 글쓰기 RPC를 사용할 수 없어 기존 조회로 전환합니다:', workspaceError.message);
+            }
+
+            // 새 RPC가 아직 없는 배포 순서에서도 안전하게 동작하는 기존 조회 폴백.
             let missionQuery = supabase
                 .from('writing_missions')
-                // 미션 식별, 제목, 설명, 타입, 최소 글자/문단수 및 가이드 질문 등 필수 데이터만 로드
                 .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, base_reward, bonus_threshold, bonus_reward')
                 .eq('id', missionId);
             if (classId) missionQuery = missionQuery.eq('class_id', classId);
@@ -66,35 +105,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             if (missionError) throw missionError;
             if (requestId !== loadRequestIdRef.current) return;
 
-            if (missionData && missionData.is_archived) {
-                alert('보관된 미션입니다. 글을 수정하거나 제출할 수 없어요! 📂');
-                onBackRef.current?.();
-                return;
-            }
-
-            setMission(missionData);
-
-            // 같은 StudentWriting 인스턴스에서 다른 미션으로 이동해도 이전 글이 남지 않게 한다.
-            setTitle('');
-            setContent('');
-            setIsReturned(false);
-            setIsConfirmed(false);
-            setIsSubmitted(false);
-            setAiFeedback('');
-            setOriginalTitle('');
-            setOriginalContent('');
-            setShowOriginalToFriends(false);
-            setIsTeacherEdited(false);
-            setTeacherEditedAt('');
-            setStudentAnswers([]);
-            setStructuredContent(null);
-            setPostId(null);
-            setPostUpdatedAt(null);
-
-            // 2. 이미 작성 중인 글 확인
-            // [보안 강화] localStorage 폴백 제거 - Supabase 세션에서만 studentId 가져오기
+            let postData = null;
             if (studentId) {
-                // 학생이 기존에 작성하던 글의 제목, 내용, 제출 및 승인 상태, 피드백 정보만 로드
                 let query = supabase.from('student_posts').select('id, title, content, structured_content, is_returned, is_confirmed, is_submitted, ai_feedback, original_title, original_content, show_original, teacher_edited_title, teacher_edited_content, teacher_edited_at, is_teacher_edited, student_answers, student_id, mission_id, updated_at');
 
                 if (requestedPostId) {
@@ -105,33 +117,15 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                 query = query.eq('student_id', studentId);
                 if (classId) query = query.eq('class_id', classId);
 
-                const { data: postData, error: postError } = await query.maybeSingle();
+                const { data, error: postError } = await query.maybeSingle();
                 if (postError) throw postError;
                 if (requestId !== loadRequestIdRef.current) return;
-
-                if (postData) {
-                    console.log(`[useMissionSubmit] 기존 글 로드 성공 (ID: ${postData.id}, Title: ${postData.title})`);
-                    const hasTeacherEditedDraft = postData.is_teacher_edited && postData.is_returned;
-                    setTitle(hasTeacherEditedDraft ? (postData.teacher_edited_title || postData.title || '') : (postData.title || ''));
-                    setContent(hasTeacherEditedDraft ? (postData.teacher_edited_content || postData.content || '') : (postData.content || ''));
-                    setIsReturned(postData.is_returned || false);
-                    setIsConfirmed(postData.is_confirmed || false);
-                    setIsSubmitted(postData.is_submitted || false);
-                    setAiFeedback(postData.ai_feedback || '');
-                    setOriginalTitle(postData.original_title || '');
-                    setOriginalContent(postData.original_content || '');
-                    setShowOriginalToFriends(Boolean(postData.show_original));
-                    setIsTeacherEdited(!!postData.is_teacher_edited);
-                    setTeacherEditedAt(postData.teacher_edited_at || '');
-                    setStudentAnswers(postData.student_answers || []);
-                    // 교사가 일반 텍스트로 직접 고친 경우에는 수정된 본문에서 장르 구조를 다시 만든다.
-                    setStructuredContent(hasTeacherEditedDraft ? null : (postData.structured_content || null));
-                    setPostId(postData.id);
-                    setPostUpdatedAt(postData.updated_at || null);
-                } else if (requestedPostId) {
+                postData = data;
+                if (!postData && requestedPostId) {
                     console.warn(`[useMissionSubmit] postId(${requestedPostId})에 해당하는 글을 찾을 수 없습니다.`);
                 }
             }
+            applyWorkspace(missionData, postData);
         } catch (err) {
             if (requestId !== loadRequestIdRef.current) return;
             console.error('데이터 로드 실패:', err.message);

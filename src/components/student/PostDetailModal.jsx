@@ -249,16 +249,22 @@ const PostDetailModal = ({
             if (!nextOriginalAllowed) setShowOriginal(false);
         };
 
-        verifyPublicAccess();
-        const intervalId = window.setInterval(verifyPublicAccess, 15000);
-        const handleVisibilityChange = () => {
-            if (!document.hidden) verifyPublicAccess();
+        void verifyPublicAccess();
+        let lastVerifiedAt = Date.now();
+        const verifyIfStale = () => {
+            if (document.hidden || Date.now() - lastVerifiedAt < 60000) return;
+            lastVerifiedAt = Date.now();
+            void verifyPublicAccess();
         };
+        const handleVisibilityChange = () => {
+            if (!document.hidden) verifyIfStale();
+        };
+        window.addEventListener('focus', verifyIfStale);
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
             active = false;
-            window.clearInterval(intervalId);
+            window.removeEventListener('focus', verifyIfStale);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [enforcePublicAccess, onClose, post?.id]);

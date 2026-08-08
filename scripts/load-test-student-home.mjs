@@ -11,6 +11,8 @@ const accessToken = process.env.AGIT_LOAD_TEST_ACCESS_TOKEN;
 const targetUsers = Number(process.env.AGIT_LOAD_TEST_USERS || 1000);
 const rampPerSecond = Number(process.env.AGIT_LOAD_TEST_RAMP_PER_SECOND || 50);
 const durationSeconds = Number(process.env.AGIT_LOAD_TEST_DURATION_SECONDS || 600);
+const syncMinMs = Number(process.env.AGIT_LOAD_TEST_SYNC_MIN_MS || 240000);
+const syncMaxMs = Number(process.env.AGIT_LOAD_TEST_SYNC_MAX_MS || 360000);
 
 if (!baseUrl || !anonKey || !accessToken) {
   console.error('필수 환경변수: AGIT_LOAD_TEST_URL, AGIT_LOAD_TEST_ANON_KEY, AGIT_LOAD_TEST_ACCESS_TOKEN');
@@ -26,6 +28,11 @@ if (!isLocal && process.env.AGIT_LOAD_TEST_ALLOW_REMOTE !== 'I_UNDERSTAND_READ_O
 
 if (!Number.isInteger(targetUsers) || targetUsers < 1 || targetUsers > 2000) {
   console.error('AGIT_LOAD_TEST_USERS는 1~2000 사이 정수여야 합니다.');
+  process.exit(1);
+}
+if (!Number.isFinite(syncMinMs) || !Number.isFinite(syncMaxMs)
+    || syncMinMs < 1000 || syncMaxMs < syncMinMs) {
+  console.error('동기화 간격은 AGIT_LOAD_TEST_SYNC_MIN_MS <= AGIT_LOAD_TEST_SYNC_MAX_MS이며 최소 1000ms여야 합니다.');
   process.exit(1);
 }
 
@@ -63,7 +70,8 @@ async function virtualStudent(index) {
   while (!stopped) {
     await requestHome();
     // 모든 학생이 같은 순간 재조회하지 않도록 실제 앱과 같은 지터를 준다.
-    await wait(3000 + ((index * 977) % 4000));
+    const syncRange = syncMaxMs - syncMinMs;
+    await wait(syncMinMs + (syncRange > 0 ? ((index * 977) % (syncRange + 1)) : 0));
   }
 }
 
@@ -88,6 +96,7 @@ const percentile = (rate) => latencies[Math.min(latencies.length - 1, Math.floor
 const failureRate = requests === 0 ? 1 : failures / requests;
 const result = {
   users: targetUsers,
+  syncIntervalMs: { min: syncMinMs, max: syncMaxMs },
   requests,
   failures,
   failureRatePercent: Number((failureRate * 100).toFixed(3)),

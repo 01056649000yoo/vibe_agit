@@ -144,35 +144,57 @@ function App() {
     if (!studentSession) return undefined;
     if (internalPage?.name === 'writing') return undefined;
 
-    const verifyActiveStudent = () => {
-      useAuthStore.getState().verifyStudentSession({ notify: true });
-    };
+    let active = true;
+    let syncInFlight = false;
+    let lastSyncAt = Date.now();
+    let focusTimerId = null;
+    let periodicTimerId = null;
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        verifyActiveStudent();
+    const syncActiveStudent = async () => {
+      if (!active || syncInFlight) return;
+      syncInFlight = true;
+      try {
+        const valid = await useAuthStore.getState().verifyStudentSession({ notify: true });
+        if (valid && active) await refreshStudentHome({ force: true });
+        lastSyncAt = Date.now();
+      } finally {
+        syncInFlight = false;
       }
     };
 
-    let verifyTimerId = null;
+    const queueFocusSync = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - lastSyncAt < 60000) return;
+      if (focusTimerId) window.clearTimeout(focusTimerId);
+      focusTimerId = window.setTimeout(() => {
+        focusTimerId = null;
+        void syncActiveStudent();
+      }, Math.floor(Math.random() * 5000));
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') queueFocusSync();
+    };
+
     const scheduleVerification = () => {
-      // 모든 교실이 같은 순간 DB를 치지 않도록 4~6분 사이로 분산한다.
+      // 인증 확인과 홈 갱신을 한 주기로 묶고, 모든 교실이 같은 순간 치지 않도록 분산한다.
       const delay = 240000 + Math.floor(Math.random() * 120000);
-      verifyTimerId = window.setTimeout(async () => {
-        await verifyActiveStudent();
-        scheduleVerification();
+      periodicTimerId = window.setTimeout(async () => {
+        await syncActiveStudent();
+        if (active) scheduleVerification();
       }, delay);
     };
     scheduleVerification();
-    window.addEventListener('focus', verifyActiveStudent);
+    window.addEventListener('focus', queueFocusSync);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      if (verifyTimerId) window.clearTimeout(verifyTimerId);
-      window.removeEventListener('focus', verifyActiveStudent);
+      active = false;
+      if (focusTimerId) window.clearTimeout(focusTimerId);
+      if (periodicTimerId) window.clearTimeout(periodicTimerId);
+      window.removeEventListener('focus', queueFocusSync);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [studentSession, verifyStudentSession, internalPage?.name]);
+  }, [studentSession, verifyStudentSession, refreshStudentHome, internalPage?.name]);
 
   // [보안 수정] 교사 프로필 설정 - 서버 사이드 RPC 사용
   const handleTeacherStart = async () => {

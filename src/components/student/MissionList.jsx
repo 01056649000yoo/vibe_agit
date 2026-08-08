@@ -5,6 +5,8 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { isPendingRewrite } from '../../lib/writingStatus';
 
+const MISSION_LIST_LIMIT = 100;
+
 /**
  * 역할: 학생 - 글쓰기 미션 목록 확인
  */
@@ -34,7 +36,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
             .eq('class_id', classId)
             .is('is_archived', false)
             .order('created_at', { ascending: false })
-            .limit(500);
+            .limit(MISSION_LIST_LIMIT);
 
         if (error) throw error;
 
@@ -51,7 +53,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
             .eq('class_id', classId)
             .eq('student_id', currentStudent.id)
             .order('created_at', { ascending: false })
-            .limit(500);
+            .limit(MISSION_LIST_LIMIT);
 
         if (error) throw error;
 
@@ -76,6 +78,17 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
         }
 
         try {
+            const { data: overview, error: overviewError } = await supabase.rpc('get_student_mission_list_v1', {
+                p_limit: MISSION_LIST_LIMIT
+            });
+            if (!overviewError && Number(overview?.version) === 1) {
+                setMissions(overview.missions || []);
+                setPosts(Object.fromEntries((overview.posts || []).map((post) => [post.mission_id, post])));
+                return;
+            }
+            if (overviewError) {
+                console.warn('[MissionList] 통합 목록 RPC를 사용할 수 없어 기존 조회로 전환합니다:', overviewError.message);
+            }
             await Promise.all([
                 fetchMissions(currentStudent),
                 fetchStudentPosts(currentStudent)

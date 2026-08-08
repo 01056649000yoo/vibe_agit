@@ -208,16 +208,31 @@ export const useMissionManager = (activeClass, bootstrapProfile = null) => {
         if (!activeClass?.id) return;
         setLoading(true);
         try {
+            const { data: overview, error: overviewError } = await supabase.rpc('get_teacher_mission_overview_v1', {
+                p_class_id: activeClass.id,
+                p_limit: 100
+            });
+            if (!overviewError && Number(overview?.version) === 1) {
+                setMissions(overview.missions || []);
+                setTotalStudentCount(Number(overview.total_students || 0));
+                setSubmissionCounts(overview.submission_counts || {});
+                return;
+            }
+            if (overviewError) {
+                console.warn('통합 과제 개요 RPC를 사용할 수 없어 기존 조회로 전환합니다:', overviewError.message);
+            }
+
             // [Performance] 캐시 적용 (Pre-fetch된 데이터와 동기화)
             const missionsData = await dataCache.get(`missions_v2_${activeClass.id}`, async () => {
                 const { data, error } = await supabase
                     .from('writing_missions')
                     .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
                     .eq('class_id', activeClass.id)
+                    .eq('is_archived', false)
                     .order('created_at', { ascending: false })
                     .limit(100);
                 if (error) throw error;
-                return (data || []).filter(m => !m.is_archived);
+                return data || [];
             }, 120000);
 
             setMissions(missionsData || []);
