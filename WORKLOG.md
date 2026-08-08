@@ -21,6 +21,24 @@
 
 ---
 
+## 2026-08-08 — `agent/performance-scaling-harness` 브랜치 병합 + 낡은 브랜치 정리 (Claude)
+- **한 일**: 사용자가 "작업내역 점검하고 와"라고 해서 브랜치 상태를 점검하다가, 제 세션 커밋 이후 GPT/Codex가
+  `main`에 직접 60개 커밋을 푸시한 것과 별개로, `main`엔 없는 커밋 7개짜리 `agent/performance-scaling-harness`
+  브랜치(1,000명 성능·보안 하네스, DB 마이그레이션 10개, Edge Function 정리 등 139개 파일)가 병합 안 된 채
+  남아있는 걸 발견했다. 사용자 확인 후 병합하고, 완전히 낡은 브랜치 3개(`agit-rooms`, `feat/admin-usage-dashboard`,
+  `claude/blissful-galileo` — 각각 main보다 948·414·617커밋 뒤처지고 고유 커밋이 없거나 무관)도 정리했다.
+- **변경**: `main`이 `agent/performance-scaling-harness`(`15b43f0`)를 **fast-forward 병합**(충돌 0건 — 두 브랜치의
+  공통 조상이 정확히 main의 이전 tip이라 자연스럽게 이어졌다). 로컬·원격 양쪽에서 병합된 브랜치와 낡은 브랜치
+  3개를 전부 삭제했다. DB 마이그레이션 10개(`20261006`~`20261015`)와 Edge Function(`vibe-ai`·`send-feedback`
+  갱신, `set-student-metadata` 삭제)은 **GPT/Codex가 이미 운영에 적용해둔 상태**였다(`npm run migrate:status`
+  확인 결과 116/116 전부 적용, 새로 적용할 것 없음) — 이번 작업은 그 실제 운영 상태를 git 히스토리에
+  뒤늦게 반영한 것에 가깝다.
+- **결과/검증**: 병합 후 아키텍처 테스트 22건·보안 테스트 12건·전체 단위 테스트 65건, ESLint 0경고,
+  프로덕션 빌드 전부 통과 확인 후 `origin/main`에 푸시. GitHub Actions 배포(`31261130266`)가 28초 만에
+  성공. `ROADMAP.md`는 이미 GPT/Codex가 이 병합 내용에 맞춰 Stage 3c를 정확히 갱신해둬서 별도 정정이
+  필요 없었다.
+- **남은 것 / 다음**: 없음. 브랜치 목록이 `main` 하나로 깨끗해졌다.
+
 ## 2026-08-08 — DB·AI·Edge·운영 경계 보안 강화 및 운영 적용 (GPT/Codex)
 - **한 일**: 교사 가입 시 자동승인 스위치는 유지하면서 직접 프로필 INSERT/승인 변경 우회를 막고, 권한 판정에서 JWT
   메타데이터 fallback을 제거했다. 승인 교사는 담당 학급 학생만 읽고 학생은 같은 반 친구 행을 수정하지 못하도록 RLS를
