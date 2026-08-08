@@ -4,6 +4,7 @@ import Button from '../common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabaseClient';
+import { readLocalStorageJson } from '../../lib/browserStorage';
 import RubricSettings from '../../modules/writing/evaluation/RubricSettings';
 
 const MissionStudentPreview = React.lazy(() => import('./MissionStudentPreview'));
@@ -58,12 +59,11 @@ const MissionForm = ({
                 if (error) throw error;
                 if (!data || !isMounted) return;
 
-                const savedLevels = localStorage.getItem('default_rubric_levels');
-                const defaultLevels = savedLevels ? JSON.parse(savedLevels) : [
+                const defaultLevels = readLocalStorageJson('default_rubric_levels', [
                     { score: 3, label: '우수' },
                     { score: 2, label: '보통' },
                     { score: 1, label: '노력' }
-                ];
+                ]);
 
                 setFormData({
                     title: data.title || '',

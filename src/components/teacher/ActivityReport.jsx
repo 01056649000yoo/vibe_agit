@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { readLocalStorageJson } from '../../lib/browserStorage';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import { callAI } from '../../lib/openai';
@@ -263,7 +264,8 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                 // 2. 선택된 미션들에 대한 제출물 가져오기 (컬럼 최적화 + DB 필터링 + 리미트)
                 const { data: postsData, error: postsError } = await supabase
                     .from('student_posts')
-                    .select('id, student_id, mission_id, content, final_eval, initial_eval, eval_comment, is_submitted, is_confirmed, char_count, writing_missions(id, title, is_archived, evaluation_rubric)')
+                    .select('id, student_id, mission_id, content, final_eval, initial_eval, eval_comment, is_submitted, is_confirmed, char_count')
+                    .eq('class_id', activeClass.id)
                     .in('mission_id', selectedMissionIds)
                     .eq('is_submitted', true)
                     .limit(1000);
@@ -271,11 +273,9 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                 if (postsError) throw postsError;
 
                 // 로컬 저장소에서 기존 생성 결과 가져오기
-                let savedResults = {};
-                if (persistenceKey) {
-                    const saved = localStorage.getItem(persistenceKey);
-                    if (saved) savedResults = JSON.parse(saved);
-                }
+                let savedResults = persistenceKey
+                    ? readLocalStorageJson(persistenceKey, {})
+                    : {};
 
                 // [추가] 불러오기 예약된 이력이 있다면 덮어쓰기 (Ref 사용으로 재렌더링 방지)
                 if (pendingHistoryRef.current) {
@@ -296,11 +296,14 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                 }
 
                 // 평어는 보관 여부와 관계없이 평가 결과가 있는 글만 근거로 사용한다.
-                const submittedPosts = postsData || [];
+                const missionMap = new Map(selectedMissions.map((mission) => [mission.id, mission]));
+                const submittedPosts = (postsData || []).map((post) => ({
+                    ...post,
+                    writing_missions: missionMap.get(post.mission_id) || null
+                }));
                 const evaluablePosts = submittedPosts.filter((post) => (
                     post.initial_eval !== null || post.final_eval !== null
                 ));
-                const missionMap = new Map(selectedMissions.map((mission) => [mission.id, mission]));
                 const unevaluatedSubmissions = submittedPosts
                     .filter((post) => post.initial_eval === null && post.final_eval === null)
                     .map((post) => ({
@@ -357,8 +360,7 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
     // 4. 저장 로직 (로컬 스토리지)
     const saveToPersistence = (studentId, synthesis) => {
         if (!persistenceKey) return;
-        const saved = localStorage.getItem(persistenceKey);
-        const data = saved ? JSON.parse(saved) : {};
+        const data = readLocalStorageJson(persistenceKey, {});
         Reflect.set(data, studentId, synthesis);
         localStorage.setItem(persistenceKey, JSON.stringify(data));
     };

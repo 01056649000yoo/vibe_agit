@@ -47,6 +47,11 @@
 - 기존 드래곤·어휘의 탑 교사 관리는 `src/modules/game/legacy/LegacyGameManager.jsx`의 운영 호환 영역이다.
   실기기 스모크 전에는 기능을 섣불리 분할하지 말고, 이후 각각의 `teacherEntry`로 옮긴다.
 - 상세 계약과 예시는 `src/modules/game/README.md`를 읽는다.
+- **포인트는 `src/modules/points/`의 코어 계약을 쓴다.** 새 콘텐츠 화면에서 `students.total_points`,
+  `point_logs`, `increment_student_points`를 직접 쓰거나 호출하지 않는다. 콘텐츠 전용 RPC가 권한·완료 조건을 검증한 뒤
+  DB 내부 전용 `point_engine_apply()`를 호출한다. 화면 호출은 `pointApi.js`에 전용 메서드를 추가한다.
+- 전용 RPC 한 번 안에서 콘텐츠 상태와 포인트를 함께 처리하고, 재클릭·재시도 중복을 막는 안정적인 `event_key`를 반드시 둔다.
+  새 콘텐츠 연결 예시와 활동 유형 추가 절차는 `src/modules/points/README.md`를 읽는다.
 
 ### 평가·평어
 - 성취기준은 **2022 개정 국어과만** 사용하고 `3~4학년군 / 5~6학년군`으로 적용한다.

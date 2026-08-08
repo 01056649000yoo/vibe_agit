@@ -5,6 +5,7 @@ import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import RubricSettings, { createDefaultEvaluationRubric } from '../evaluation/RubricSettings';
+import { pointApi } from '../../points/pointApi';
 
 const MissionStudentPreview = React.lazy(() => import('../../../components/teacher/MissionStudentPreview'));
 
@@ -87,10 +88,12 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                     post_reactions(id, reaction_type),
                     post_comments(id)
                 `)
+                .eq('class_id', activeClass.id)
                 .eq('mission_id', meetingId)
                 .eq('is_submitted', true)
                 .is('students.deleted_at', null)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(200);
 
             if (error) throw error;
             setIdeas(data || []);
@@ -99,7 +102,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
         } finally {
             setIdeasLoading(false);
         }
-    }, []);
+    }, [activeClass?.id]);
 
     useEffect(() => {
         if (mode === 'legacy') {
@@ -227,30 +230,6 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
         setActiveTab('create');
     };
 
-    /**
-     * 그 안건에 이미 나간 `결정 보상` 기록을 찾는다.
-     *
-     * 글쓰기 미션의 `승인 취소`(useMissionManager.handleRecovery)와 같은 방식이다 —
-     * 지급할 때 `p_post_id`·`p_mission_id` 를 남겨 두고, 회수할 때 그 기록의 **실제 금액**을 거둔다.
-     * 보상 설정이 중간에 바뀌어도 지급액과 회수액이 어긋나지 않는다.
-     */
-    const findDecisionRewardLog = async (postId) => {
-        const { data, error } = await supabase
-            .from('point_logs')
-            .select('id, amount, reason, created_at, student_id, post_id, mission_id')
-            .eq('post_id', postId)
-            .gt('amount', 0)
-            .ilike('reason', '%안건 결정%')
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-        if (error) {
-            console.error('[IdeaMarketManager] 결정 보상 내역 조회 실패:', error.message);
-            return null;
-        }
-        return data?.[0] || null;
-    };
-
     // 아이디어 상태 변경
     const handleStatusChange = async (postId, newStatus) => {
         const idea = ideas.find(i => i.id === postId);
@@ -263,85 +242,25 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
         const isDecided = newStatus === '결정됨';
         const wasDecided = (idea?.status || '제안중') === '결정됨';
 
-        // 이미 나간 보상이 있는지 먼저 본다. 결정할 때는 **중복 지급**을 막고,
-        // 결정을 되돌릴 때는 그 금액을 그대로 회수한다.
-        let rewardLog = null;
-        if (isDecided || wasDecided) {
-            rewardLog = await findDecisionRewardLog(postId);
-        }
-
         if (isDecided) {
-            let message;
-            if (rewardLog) {
-                message = `"${idea?.title || '이 아이디어'}"를 최종 결정하시겠습니까?\n` +
-                    `ℹ️ 이 안건에는 이미 ${rewardLog.amount}P가 지급되어 있어 **다시 지급하지 않습니다.**`;
-            } else if (isBonusEligible) {
-                message = `"${idea?.title || '이 아이디어'}"를 최종 결정하시겠습니까?\n확인 시 학생에게 ${reward}P가 지급됩니다.\n(기준: ${totalThreshold}자 달성 / 현재: ${idea?.char_count || 0}자)`;
-            } else {
-                message = `"${idea?.title || '이 아이디어'}"를 최종 결정하시겠습니까?\n⚠️ 글자수 기준(${totalThreshold}자) 미달로 추가 포인트가 지급되지 않습니다.\n(기준: 기본 ${baseThreshold}자 + 추가 ${bonusThreshold}자 / 현재: ${idea?.char_count || 0}자)`;
-            }
+            const message = isBonusEligible
+                ? `"${idea?.title || '이 아이디어'}"를 최종 결정하시겠습니까?\n보상 이력이 없다면 학생에게 ${reward}P가 지급됩니다.\n(기준: ${totalThreshold}자 달성 / 현재: ${idea?.char_count || 0}자)`
+                : `"${idea?.title || '이 아이디어'}"를 최종 결정하시겠습니까?\n⚠️ 글자수 기준(${totalThreshold}자) 미달로 추가 포인트가 지급되지 않습니다.\n(기준: 기본 ${baseThreshold}자 + 추가 ${bonusThreshold}자 / 현재: ${idea?.char_count || 0}자)`;
             if (!confirm(message)) return;
         }
 
-        // 결정을 되돌리는 경우 — 글쓰기 미션의 `승인 취소`와 같은 절차를 밟는다.
-        let amountToRecover = 0;
         if (wasDecided && !isDecided) {
-            if (rewardLog) {
-                amountToRecover = rewardLog.amount;
-                if (!confirm(`결정을 취소하고 지급된 ${amountToRecover}P를 회수하시겠습니까? ⚠️\n학생의 총점에서 해당 포인트가 차감됩니다.`)) return;
-            } else if (!confirm('지급된 결정 포인트 내역을 찾을 수 없습니다. 🔍\n이미 회수되었거나 기준 미달로 지급되지 않았을 수 있어요.\n\n포인트 회수 없이 [결정 취소]만 진행할까요?')) {
-                return;
-            }
+            if (!confirm('결정을 취소하시겠습니까? ⚠️\n이 안건에 실제로 지급되어 남아 있는 포인트가 있다면 함께 회수됩니다.')) return;
         }
 
         try {
-            const updateData = {
-                status: newStatus,
-                is_confirmed: isDecided
-            };
-
-            // 글 상태 두 가지를 함께 맞춘다. `20260808_fix_pending_rewrite_states.sql` 의 CHECK 제약이
-            //   ① 반려 상태면 제출·승인일 수 없고  ② 승인이면 반드시 제출 상태여야 한다
-            // 고 요구하는데, 예전에는 `is_confirmed` 만 켜서 **반려된 안건을 결정하면 교사 화면에
-            // 날 DB 오류가 떴다**. 결정한다는 것은 곧 "제출된 글로 확정하고 다시 쓰기 요청을 거둔다"는
-            // 뜻이므로 두 값을 여기서 명시한다.
-            if (isDecided) {
-                updateData.is_submitted = true;
-                updateData.is_returned = false;
-            }
-
-            const { error } = await supabase
-                .from('student_posts')
-                .update(updateData)
-                .eq('id', postId);
-
-            if (error) throw error;
-
-            // 결정 → 보상 지급. 이미 지급된 안건이면 건너뛴다(결정↔취소를 반복해도 한 번만 나간다).
-            if (isDecided && !rewardLog && isBonusEligible && selectedMeeting && idea?.student_id) {
-                const decidedReward = selectedMeeting.bonus_reward || 50;
-                const { error: rpcError } = await supabase.rpc('increment_student_points', {
-                    p_student_id: idea.student_id,
-                    p_amount: decidedReward,
-                    p_reason: `회의 안건 결정! "${(idea.title || '').slice(0, 20)}" 🏛️✅`,
-                    p_post_id: postId,
-                    p_mission_id: idea.mission_id || selectedMeeting.id
-                });
-                if (rpcError) throw rpcError;
-                alert(`✅ 안건을 결정하고 ${decidedReward}포인트를 지급했습니다.`);
-            }
-
-            // 결정 취소 → 지급됐던 금액만 정확히 회수
-            if (wasDecided && !isDecided && amountToRecover > 0 && idea?.student_id) {
-                const { error: rpcError } = await supabase.rpc('increment_student_points', {
-                    p_student_id: idea.student_id,
-                    p_amount: -amountToRecover,
-                    p_reason: `회의 안건 결정 취소로 인한 포인트 회수 ⚠️ "${(idea.title || '').slice(0, 20)}"`,
-                    p_post_id: postId,
-                    p_mission_id: idea.mission_id || selectedMeeting?.id || null
-                });
-                if (rpcError) throw rpcError;
-                alert(`✅ ${amountToRecover}포인트 회수 및 결정 취소가 완료되었습니다.`);
+            const result = await pointApi.setMeetingIdeaStatus(postId, newStatus);
+            if (result?.points_awarded > 0) {
+                alert(`✅ 안건을 결정하고 ${result.points_awarded}포인트를 지급했습니다.`);
+            } else if (result?.points_recovered > 0) {
+                alert(`✅ 결정 취소와 ${result.points_recovered}포인트 회수가 함께 완료되었습니다.`);
+            } else if (isDecided && result?.already_rewarded) {
+                alert('✅ 안건을 결정했습니다. 이전에 지급된 보상은 다시 지급하지 않았습니다.');
             }
 
             if (selectedMeeting?.id) fetchIdeas(selectedMeeting.id);

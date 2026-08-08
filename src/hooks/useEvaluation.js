@@ -61,10 +61,20 @@ export const useEvaluation = () => {
     const fetchMissionReport = useCallback(async (missionId) => {
         setLoading(true);
         try {
+            const { data: mission, error: missionError } = await supabase
+                .from('writing_missions')
+                .select('class_id')
+                .eq('id', missionId)
+                .maybeSingle();
+            if (missionError) throw missionError;
+            if (!mission?.class_id) throw new Error('평가할 과제의 학급 정보를 찾을 수 없습니다.');
+
             const { data, error } = await supabase
                 .from('student_posts')
                 .select('id, student_id, initial_eval, final_eval, eval_comment, students(name)')
-                .eq('mission_id', missionId);
+                .eq('class_id', mission.class_id)
+                .eq('mission_id', missionId)
+                .limit(1000);
 
             if (error) throw error;
             return { success: true, data };

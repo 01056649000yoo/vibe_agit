@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useDataExport } from './useDataExport';
 import { dataCache } from '../lib/cache';
 import { generateUnambiguousCode } from '../lib/codeGenerator';
+import { pointApi } from '../modules/points/pointApi';
 
 export const useStudentManager = (classId) => {
     const [students, setStudents] = useState([]);
@@ -39,50 +40,17 @@ export const useStudentManager = (classId) => {
     const fetchStudents = useCallback(async () => {
         if (!classId) return;
 
-        const [ studentsData, statsData ] = await Promise.all([
-            dataCache.get(`students_${classId}`, async () => {
-                const { data, error } = await supabase
-                    .from('students')
-                    // 학생 관리 목록에 필요한 모든 필수 정보 선택
-                    .select('id, name, total_points, student_code, created_at, pet_data, class_id')
-                    .eq('class_id', classId)
-                    .is('deleted_at', null)
-                    .order('name');
-                
-                if (error) throw error;
-                return data || [];
-            }, 120000),
-            dataCache.get(`stats_${classId}`, async () => {
-                const { data, error } = await supabase.rpc('get_class_activity_stats', { p_class_id: classId });
-                if (error) throw error;
-                return data || [];
-            }, 60000)
-        ]);
+        const studentsData = await dataCache.get(`point_manager_${classId}`, async () => {
+            const snapshot = await pointApi.getTeacherSnapshot(classId);
+            return snapshot?.students || [];
+        }, 60000);
 
         if (!studentsData) {
             console.error('학생 목록 로드 실패 (데이터 없음)');
             return;
         }
 
-        const statsMap = {};
-        if (statsData) {
-            statsData.forEach(stat => {
-                statsMap[stat.student_id] = stat;
-            });
-        }
-
-        const studentsWithStats = studentsData.map(s => {
-            const stat = statsMap[s.id] || { score_all: 0, score_week: 0, score_month: 0 };
-            return {
-                ...s,
-                activity_score: stat.score_all || 0, 
-                score_all: stat.score_all || 0,
-                score_week: stat.score_week || 0,
-                score_month: stat.score_month || 0
-            };
-        });
-
-        setStudents(studentsWithStats);
+        setStudents(studentsData);
     }, [classId]);
 
     useEffect(() => {
@@ -99,7 +67,7 @@ export const useStudentManager = (classId) => {
         const code = generateUnambiguousCode(8);
         try {
             // RPC 함수를 통해 학생 추가 및 초기 포인트 부여 (point_logs INSERT도 함수 내에서 처리)
-            const { data: newStudentId, error } = await supabase.rpc('add_student_with_bonus', {
+            const { error } = await supabase.rpc('add_student_with_bonus', {
                 p_class_id: classId,
                 p_name: studentName,
                 p_student_code: code,
@@ -107,22 +75,10 @@ export const useStudentManager = (classId) => {
             });
 
             if (error) throw error;
-
-            // 추가된 학생 정보 조회
-            const { data: newStudentData, error: fetchError } = await supabase
-                .from('students')
-                // 새 학생 추가 후 상태 동기화를 위해 필수 필드(이름, 코드, 포인트, 펫 등)만 선택
-                .select('id, name, total_points, student_code, created_at, pet_data, class_id')
-                .eq('id', newStudentId)
-                .single();
-
-            if (fetchError) throw fetchError;
-
-            if (newStudentData) {
-                dataCache.invalidate(`students_${classId}`);
-                await fetchStudents();
-                setStudentName('');
-            }
+            dataCache.invalidate(`students_${classId}`);
+            dataCache.invalidate(`point_manager_${classId}`);
+            await fetchStudents();
+            setStudentName('');
         } catch (err) {
             console.error('학생 추가 실패:', err.message);
             alert('학생을 추가하는 중 오류가 발생했습니다.');
@@ -165,16 +121,13 @@ export const useStudentManager = (classId) => {
         setIsPointModalOpen(false);
 
         try {
-            // RPC 함수를 통해 포인트 변경 및 로그 기록 (point_logs INSERT도 함수 내에서 처리)
-            const operations = targets.map(async (t) => {
-                const { error } = await supabase.rpc('teacher_manage_points', {
-                    target_student_id: t.id,
-                    points_amount: actualAmount,
-                    reason_text: reason
-                });
-                if (error) throw error;
-            });
-            await Promise.all(operations);
+            // 선택된 모든 학생을 한 트랜잭션에서 처리해 일부만 반영되는 상태를 막는다.
+            await pointApi.adjustStudents(
+                targets.map((student) => student.id),
+                actualAmount,
+                reason
+            );
+            dataCache.invalidate(`point_manager_${classId}`);
             alert(`${targets.length}명의 포인트 처리가 완료되었습니다! ✨`);
             setSelectedIds([]);
         } catch (error) {
@@ -197,6 +150,7 @@ export const useStudentManager = (classId) => {
             // [추가] 캐시 무효화: 소프트 딜리트 시에도 목록 갱신을 위해 캐시 무효화
             dataCache.invalidate(`students_${classId}`);
             dataCache.invalidate(`stats_${classId}`);
+            dataCache.invalidate(`point_manager_${classId}`);
 
             setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
             setSelectedIds(prev => prev.filter(id => id !== deleteTarget.id));
@@ -224,6 +178,7 @@ export const useStudentManager = (classId) => {
             // [추가] 캐시 무효화: 즉시 삭제 시 학급 전체 학생 목록 및 통계 캐시 갱신 유도
             dataCache.invalidate(`students_${classId}`);
             dataCache.invalidate(`stats_${classId}`);
+            dataCache.invalidate(`point_manager_${classId}`);
 
             setStudents(prev => prev.filter(s => s.id !== deleteTarget.id));
             setSelectedIds(prev => prev.filter(id => id !== deleteTarget.id));
@@ -274,6 +229,8 @@ export const useStudentManager = (classId) => {
                 .eq('id', studentId);
 
             if (error) throw error;
+            dataCache.invalidate(`students_${classId}`);
+            dataCache.invalidate(`point_manager_${classId}`);
             await fetchStudents();
             alert('학생 정보가 성공적으로 복구되었습니다! ♻️');
         } catch (err) {
@@ -286,14 +243,13 @@ export const useStudentManager = (classId) => {
         setHistoryStudent(student);
         setIsHistoryModalOpen(true);
         setLoadingHistory(true);
-        const { data, error } = await supabase
-            .from('point_logs')
-            // 포인트 변동 내역 표시를 위해 변동량, 사유, 일시 선택
-            .select('id, amount, reason, created_at, student_id')
-            .eq('student_id', student.id)
-            .order('created_at', { ascending: false });
-
-        if (!error) setHistoryLogs(data || []);
+        try {
+            const result = await pointApi.getStudentHistory(student.id);
+            setHistoryLogs(result?.logs || []);
+        } catch (error) {
+            console.error('포인트 내역 조회 실패:', error.message);
+            setHistoryLogs([]);
+        }
         setLoadingHistory(false);
     };
 

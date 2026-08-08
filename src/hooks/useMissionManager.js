@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabaseClient';
 import { callAI } from '../lib/openai';
 import { sanitizeFeedback } from '../utils/aiFeedbackGuard';
 import { dataCache } from '../lib/cache';
-import { calculateWritingReward, writingPolicyFromMission } from '../modules/writing/policy/writingPolicy';
+import { readLocalStorageJson } from '../lib/browserStorage';
+import { pointApi } from '../modules/points/pointApi';
 
 export const useMissionManager = (activeClass) => {
     const [missions, setMissions] = useState([]);
@@ -106,8 +107,7 @@ export const useMissionManager = (activeClass) => {
         ];
 
         // 로컬 스토리지에서 기본 설정 불러오기
-        const savedSettings = typeof window !== 'undefined' ? localStorage.getItem('mission_default_settings') : null;
-        const defaults = savedSettings ? JSON.parse(savedSettings) : {};
+        const defaults = readLocalStorageJson('mission_default_settings', {});
 
         return {
             title: '',
@@ -131,30 +131,6 @@ export const useMissionManager = (activeClass) => {
     }, []);
 
     const [formData, setFormData] = useState(getResetFormData);
-
-    const calculateApprovalPoints = useCallback((mission, post) => {
-        if (!mission || !post) return 0;
-        return calculateWritingReward(
-            writingPolicyFromMission(mission, post),
-            { charCount: post.char_count, paragraphCount: post.paragraph_count }
-        ).total;
-    }, []);
-
-    const clearZeroPointLogsForPost = useCallback(async (post) => {
-        if (!post?.student_id || !post?.mission_id || !post?.id) return;
-
-        const { error } = await supabase
-            .from('point_logs')
-            .delete()
-            .eq('student_id', post.student_id)
-            .eq('mission_id', post.mission_id)
-            .eq('post_id', post.id)
-            .eq('amount', 0);
-
-        if (error) {
-            console.warn('[Approval] Failed to clear zero-point logs before approval:', error.message);
-        }
-    }, []);
 
     const handleSaveDefaultRubric = async () => {
         if (!formData.evaluation_rubric?.levels) return;
@@ -267,6 +243,7 @@ export const useMissionManager = (activeClass) => {
                 const { data: counts, error: countError } = await supabase
                     .from('student_posts')
                     .select('mission_id, student_id, is_submitted, is_confirmed, students!inner(id)')
+                    .eq('class_id', activeClass.id)
                     .in('mission_id', missionIds)
                     .is('students.deleted_at', null)
                     .limit(SUBMISSION_COUNT_ROW_CAP);
@@ -305,24 +282,23 @@ export const useMissionManager = (activeClass) => {
     }, [activeClass?.id, fetchMissions]);
 
     const buildMissionFormData = useCallback((mission) => {
-        const savedLevels = localStorage.getItem('default_rubric_levels');
-        const defaultLevels = savedLevels ? JSON.parse(savedLevels) : [
-            { score: 3, label: '?곗닔' },
-            { score: 2, label: '蹂댄넻' },
-            { score: 1, label: '?몃젰' }
-        ];
+        const defaultLevels = readLocalStorageJson('default_rubric_levels', [
+            { score: 3, label: '우수' },
+            { score: 2, label: '보통' },
+            { score: 1, label: '노력' }
+        ]);
 
         return {
             title: mission.title || '',
             guide: mission.guide || '',
-            genre: mission.genre || '?쇨린',
+            genre: mission.genre || '일기',
             min_chars: mission.min_chars ?? 100,
             min_paragraphs: mission.min_paragraphs ?? 1,
             base_reward: mission.base_reward ?? 100,
             bonus_threshold: mission.bonus_threshold ?? 100,
             bonus_reward: mission.bonus_reward ?? 10,
             allow_comments: mission.allow_comments ?? true,
-            mission_type: mission.mission_type || mission.genre || '?쇨린',
+            mission_type: mission.mission_type || mission.genre || '일기',
             guide_questions: mission.guide_questions || [],
             tags: mission.tags || [],
             evaluation_rubric: mission.evaluation_rubric || {
@@ -362,37 +338,6 @@ export const useMissionManager = (activeClass) => {
         setIsEditing(true);
         setEditingMissionId(mission.id);
         setFormData(buildMissionFormData(missionForEdit));
-        setIsFormOpen(true);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-
-        const savedLevels = localStorage.getItem('default_rubric_levels');
-        const defaultLevels = savedLevels ? JSON.parse(savedLevels) : [
-            { score: 3, label: '우수' },
-            { score: 2, label: '보통' },
-            { score: 1, label: '노력' }
-        ];
-
-        setFormData({
-            title: mission.title,
-            guide: mission.guide,
-            genre: mission.genre,
-            min_chars: mission.min_chars,
-            min_paragraphs: mission.min_paragraphs,
-            base_reward: mission.base_reward,
-            bonus_threshold: mission.bonus_threshold,
-            bonus_reward: mission.bonus_reward,
-            allow_comments: mission.allow_comments,
-            mission_type: mission.mission_type || mission.genre,
-            guide_questions: mission.guide_questions || [],
-            tags: mission.tags || [],
-            evaluation_rubric: mission.evaluation_rubric || {
-                use_rubric: false,
-                levels: defaultLevels
-            }
-        });
-        setEditingMissionId(mission.id);
-        setIsEditing(true);
         setIsFormOpen(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -842,7 +787,11 @@ ${postArray.map((p, idx) => {
             // [최종 최적화] 수집된 DB 작업들을 일괄 처리
             const dbTasks = [];
             if (allUpdatePromises.length > 0) {
-                dbTasks.push(Promise.all(allUpdatePromises));
+                dbTasks.push(Promise.all(allUpdatePromises).then((results) => {
+                    const failed = results.find((result) => result.error);
+                    if (failed?.error) throw failed.error;
+                    return results;
+                }));
             }
 
             if (dbTasks.length > 0) {
@@ -888,45 +837,12 @@ ${postArray.map((p, idx) => {
 
         try {
             setLoadingPosts(true);
-            await clearZeroPointLogsForPost(post);
-            const missionDetails = await fetchMissionDetails(post.mission_id);
-            const rewardMission = missionDetails || selectedMission;
-            const totalPointsToGive = calculateApprovalPoints(rewardMission, post);
-            const appliedBaseReward = post.awarded_base_reward ?? rewardMission?.base_reward ?? 0;
-            const isBonusAchieved = totalPointsToGive > appliedBaseReward;
+            const data = await pointApi.approveAssignment(post.id, tempFeedback);
 
-            if (!rewardMission || rewardMission.base_reward == null) {
-                throw new Error('미션 보상 정보를 다시 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.');
-            }
-            if (totalPointsToGive <= 0) {
-                throw new Error('계산된 포인트가 0점입니다. 미션 보상 설정을 확인한 뒤 다시 시도해주세요.');
-            }
-
-            const { error: postError } = await supabase
-                .from('student_posts')
-                .update({
-                    is_submitted: true,
-                    is_confirmed: true,
-                    is_returned: false,
-                    ai_feedback: tempFeedback
-                })
-                .eq('id', post.id);
-
-            if (postError) throw postError;
-
-            // [수정] RPC를 사용하여 포인트 증액과 로그 생성을 한 번에 처리
-            console.log(`[Approval] Awarding points to student: ${post.student_id}, Post: ${post.id}, Mission: ${post.mission_id}, Amount: ${totalPointsToGive}`);
-            const { error: rpcError } = await supabase.rpc('increment_student_points', {
-                p_student_id: post.student_id,
-                p_amount: totalPointsToGive,
-                p_reason: `[${rewardMission.title}] 미션 승인 보상 ${isBonusAchieved ? '(보너스 달성! 🔥)' : ''}`,
-                p_post_id: post.id,
-                p_mission_id: post.mission_id
-            });
-
-            if (rpcError) throw rpcError;
-
-            alert(`✅ ${totalPointsToGive}포인트가 성공적으로 지급되었습니다!`);
+            const awardedPoints = Number(data?.points_awarded || 0);
+            alert(data?.status === 'already_approved'
+                ? '이미 승인된 글입니다. 포인트는 다시 지급하지 않았습니다.'
+                : `✅ 승인과 ${awardedPoints}포인트 지급이 함께 완료되었습니다!`);
             setSelectedPost(null);
             if (selectedMission) fetchPostsForMission(selectedMission);
             fetchMissions();
@@ -949,40 +865,8 @@ ${postArray.map((p, idx) => {
 
         setLoadingPosts(true);
         try {
-            await Promise.all(toApprove.map((post) => clearZeroPointLogsForPost(post)));
-            const missionDetails = selectedMission?.id
-                ? await fetchMissionDetails(selectedMission.id)
-                : null;
-            const rewardMission = missionDetails || selectedMission;
-
-            if (!rewardMission || rewardMission.base_reward == null) {
-                throw new Error('미션 보상 정보를 다시 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.');
-            }
-            // [최적화] N번의 글 승인 통신과 N번의 포인트 RPC 호출(총 2N회)을 하나의 데이터 배열로 묶어(Bulk) 서버리스 함수 1회 호출로 해결.
-            const submissions = toApprove.map((post) => {
-                const amount = calculateApprovalPoints(rewardMission, post);
-                const appliedBaseReward = post.awarded_base_reward ?? rewardMission.base_reward ?? 0;
-                const isBonus = amount > appliedBaseReward;
-
-                return {
-                    post_id: post.id,
-                    student_id: post.student_id,
-                    mission_id: post.mission_id,
-                    amount: amount,
-                    reason: `일괄 승인 보상: ${rewardMission.title}${isBonus ? ' (보너스 달성! 🔥)' : ''}`
-                };
-            });
-
-            if (submissions.some((item) => item.amount <= 0)) {
-                throw new Error('일부 글의 계산 포인트가 0점입니다. 미션 보상 설정을 확인한 뒤 다시 시도해주세요.');
-            }
-
-            const { error } = await supabase.rpc('bulk_approve_posts', {
-                p_submissions: submissions
-            });
-
-            if (error) throw error;
-            alert(`🎉 ${toApprove.length}건 일괄 승인 완료!`);
+            const data = await pointApi.approveAssignments(toApprove.map((post) => post.id));
+            alert(`🎉 ${data?.approved_count ?? toApprove.length}건 승인, ${data?.points_awarded ?? 0}포인트 지급 완료!`);
             fetchPostsForMission(selectedMission);
             fetchMissions();
         } catch (err) {
@@ -998,135 +882,18 @@ ${postArray.map((p, idx) => {
 
         setLoadingPosts(true);
         try {
-            // [개선] 3단계 레이어 검색 로직 (더욱 유연하게)
-            let logs = null;
-            let logFetchError = null;
+            const data = await pointApi.recoverAssignment(post.id, tempFeedback);
 
-            // 1. post_id로 직접 검색
-            console.log(`[Recovery] Searching for log by post_id: ${post.id}`);
-            const step1 = await supabase
-                .from('point_logs')
-                // 포인트 회수 및 내역 조회를 위해 식별값, 금액, 사유, 일시 및 연관 ID만 선택
-                .select('id, amount, reason, created_at, student_id, mission_id, post_id')
-                .eq('post_id', post.id)
-                .eq('mission_id', post.mission_id)
-                .gt('amount', 0)
-                .ilike('reason', '%승인%')
-                .order('created_at', { ascending: false })
-                .limit(1);
-
-            logs = step1.data;
-            logFetchError = step1.error;
-
-            // 2. mission_id + student_id로 검색
-            if (!logs || logs.length === 0) {
-                console.log(`[Recovery] No post_id log found. Trying mission_id: ${selectedMission.id} for student: ${post.student_id}`);
-                const step2 = await supabase
-                    .from('point_logs')
-                    // mission_id 매칭 시에도 필요한 필수 필드만 선택
-                    .select('id, amount, reason, created_at, student_id, mission_id, post_id')
-                    .eq('student_id', post.student_id)
-                    .eq('mission_id', selectedMission.id)
-                    .gt('amount', 0)
-                    .ilike('reason', '%승인%')
-                    .order('created_at', { ascending: false })
-                    .limit(1);
-                if (step2.data && step2.data.length > 0) {
-                    logs = step2.data;
-                    console.log(`[Recovery] Found log via mission_id:`, logs[0]);
-                }
-            }
-
-            // 3. 제목 키워드로 검색 (공백 무관 검색 패턴)
-            if (!logs || logs.length === 0) {
-                console.log(`[Recovery] No mission_id log found. Trying keyword search...`);
-                const cleanTitle = selectedMission.title.replace(/[^\w\sㄱ-ㅎㅏ-ㅣ가-힣]/g, '').trim();
-                const keywords = cleanTitle.split(/\s+/).filter(k => k.length > 0);
-                const searchPattern = `%${keywords.join('%')}%`;
-
-                const step3 = await supabase
-                    .from('point_logs')
-                    // 키워드 검색 시에도 필요한 필수 필드만 선택
-                    .select('id, amount, reason, created_at, student_id, mission_id, post_id')
-                    .eq('student_id', post.student_id)
-                    .ilike('reason', searchPattern)
-                    .gt('amount', 0)
-                    .ilike('reason', '%승인%')
-                    .order('created_at', { ascending: false })
-                    .limit(1);
-
-                if (step3.data && step3.data.length > 0) {
-                    logs = step3.data;
-                    console.log(`[Recovery] Found log via keyword search:`, logs[0]);
-                } else {
-                    // [추가] 4. 최후의 수단: student_id + 가장 최근의 '승인' 보상 기록 (PostID/MissionID 무관)
-                    console.log(`[Recovery] Keyword search failed. Trying most recent reward for student...`);
-                    const step4 = await supabase
-                        .from('point_logs')
-                        // 최후의 수단으로 최근 승인 내역 조회 시에도 필수 필드만 선택
-                        .select('id, amount, reason, created_at, student_id, mission_id, post_id')
-                        .eq('student_id', post.student_id)
-                        .gt('amount', 0)
-                        .ilike('reason', '%승인%')
-                        .order('created_at', { ascending: false })
-                        .limit(1);
-                    if (step4.data && step4.data.length > 0) {
-                        logs = step4.data;
-                        console.log(`[Recovery] Found log via student reward history:`, logs[0]);
-                    }
-                }
-            }
-
-            if (!logs || logs.length === 0) {
-                console.warn(`[Recovery] All search steps failed to find a positive point log for this post/mission.`);
-            }
-
-            // 만약 컬럼 부재 에러(42703)가 났다면 DB 업데이트가 안 된 것임
-            if (logFetchError && logFetchError.code === '42703') {
-                console.warn('DB에 post_id 컬럼이 없습니다. SQL을 다시 실행해주세요.');
-            }
-
-            let amountToRecover = calculateApprovalPoints(selectedMission, post);
-            if (logs && logs.length > 0) {
-                amountToRecover = logs[0].amount;
-            } else {
-                // [핵심 해결] 내역을 못 찾은 경우 사용자에게 물어보고 진행
-                if (!confirm('포인트 지급 내역을 찾을 수 없습니다. 🔍\n미션 제목이 바뀌었거나 이미 회수된 상태일 수 있어요.\n\n지급된 포인트 회수 없이 [승인 취소]만 진행할까요?')) {
-                    return;
-                }
-            }
-
-            // 1. 글 승인 상태 취소
-            const { error: postError } = await supabase
-                .from('student_posts')
-                .update({
-                    is_confirmed: false,
-                    is_submitted: true,
-                    ai_feedback: tempFeedback
-                })
-                .eq('id', post.id);
-
-            if (postError) throw postError;
-
-            // 2. 포인트 회수가 가능한 경우에만 RPC 호출
-            if (amountToRecover > 0) {
-                const { error: rpcError } = await supabase.rpc('increment_student_points', {
-                    p_student_id: post.student_id,
-                    p_amount: -amountToRecover,
-                    p_reason: `[${selectedMission.title}] 승인 취소로 인한 포인트 회수 ⚠️`,
-                    p_post_id: post.id,
-                    p_mission_id: post.mission_id
-                });
-                if (rpcError) throw rpcError;
-            }
-
-            alert(`✅ ${amountToRecover}포인트 회수 및 승인 취소가 완료되었습니다.`);
+            const recoveredPoints = Number(data?.points_recovered || 0);
+            alert(data?.status === 'already_recovered'
+                ? '이미 승인이 취소된 글입니다. 포인트를 추가로 회수하지 않았습니다.'
+                : `✅ 승인 취소와 ${recoveredPoints}포인트 회수가 함께 완료되었습니다.`);
             setSelectedPost(null);
             if (selectedMission) fetchPostsForMission(selectedMission);
             fetchMissions();
         } catch (err) {
             console.error('회수 실패:', err.message);
-            alert('회수 처리 중 오류가 발생했습니다.');
+            alert('회수 처리 중 오류가 발생했습니다: ' + err.message);
         } finally {
             setLoadingPosts(false);
         }
@@ -1143,52 +910,8 @@ ${postArray.map((p, idx) => {
 
         setLoadingPosts(true);
         try {
-            const recoveryPromises = toRecover.map(async (post) => {
-                // [개선] 일괄 회수 시에도 post_id 기반 검색 우선
-                let { data: logs } = await supabase
-                    .from('point_logs')
-                    .select('amount')
-                    .eq('post_id', post.id)
-                    .eq('mission_id', post.mission_id)
-                    .gt('amount', 0)
-                    .ilike('reason', '%승인%')
-                    .order('created_at', { ascending: false })
-                    .limit(1);
-
-                if (!logs || logs.length === 0) {
-                    const legacyResult = await supabase
-                        .from('point_logs')
-                        .select('amount')
-                        .eq('student_id', post.student_id)
-                        .eq('mission_id', post.mission_id)
-                        .ilike('reason', `%${selectedMission.title}%`)
-                        .gt('amount', 0)
-                        .ilike('reason', '%승인%')
-                        .order('created_at', { ascending: false })
-                        .limit(1);
-                    logs = legacyResult.data;
-                }
-
-                const amount = logs && logs.length > 0
-                    ? logs[0].amount
-                    : calculateApprovalPoints(selectedMission, post);
-                if (amount > 0) {
-                        // 1. 승인 상태 복구
-                        await supabase.from('student_posts').update({ is_confirmed: false, is_submitted: true }).eq('id', post.id);
-
-                        // 2. [수정] RPC를 통한 일괄 회수 처리
-                        await supabase.rpc('increment_student_points', {
-                            p_student_id: post.student_id,
-                            p_amount: -amount,
-                            p_reason: `[일괄 회수] 승인 취소: ${selectedMission.title} ⚠️`,
-                            p_post_id: post.id,
-                            p_mission_id: post.mission_id
-                        });
-                    }
-            });
-
-            await Promise.all(recoveryPromises);
-            alert('일괄 회수 처리가 원활하게 완료되었습니다.');
+            const data = await pointApi.recoverAssignments(toRecover.map((post) => post.id));
+            alert(`✅ ${data?.recovered_count ?? toRecover.length}건 승인 취소, ${data?.points_recovered ?? 0}포인트 회수 완료!`);
             if (selectedMission) fetchPostsForMission(selectedMission);
             fetchMissions();
         } catch (err) {
@@ -1211,7 +934,7 @@ ${postArray.map((p, idx) => {
         setLoadingPosts(true);
         try {
             const rewritePromises = toRewrite.map(async (post) => {
-                await supabase
+                const { error } = await supabase
                     .from('student_posts')
                     .update({
                         is_submitted: false,
@@ -1219,6 +942,7 @@ ${postArray.map((p, idx) => {
                         is_confirmed: false
                     })
                     .eq('id', post.id);
+                if (error) throw error;
             });
 
             await Promise.all(rewritePromises);
