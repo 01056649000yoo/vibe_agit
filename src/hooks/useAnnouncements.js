@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-export const useAnnouncements = (role = 'TEACHER') => {
-    const [announcements, setAnnouncements] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [latestAnnouncement, setLatestAnnouncement] = useState(null);
+export const useAnnouncements = (role = 'TEACHER', initialAnnouncements = null) => {
+    const hasInitialAnnouncements = Array.isArray(initialAnnouncements);
+    const [announcements, setAnnouncements] = useState(() => initialAnnouncements || []);
+    const [loading, setLoading] = useState(() => !hasInitialAnnouncements);
+    const [latestAnnouncement, setLatestAnnouncement] = useState(() => initialAnnouncements?.[0] || null);
 
     const fetchAnnouncements = useCallback(async () => {
         try {
@@ -36,8 +37,8 @@ export const useAnnouncements = (role = 'TEACHER') => {
     // 리얼타임 한도(`max_events_per_second=100`)를 아끼려고 빼고, 화면을 열 때 불러오는 것만 남긴다.
     // 공지는 자주 바뀌지 않고 즉시성이 필요하지도 않다. 갱신이 필요하면 `refresh()` 를 부른다.
     useEffect(() => {
-        fetchAnnouncements();
-    }, [fetchAnnouncements]);
+        if (!hasInitialAnnouncements) fetchAnnouncements();
+    }, [fetchAnnouncements, hasInitialAnnouncements]);
 
     return { announcements, latestAnnouncement, loading, refresh: fetchAnnouncements };
 };

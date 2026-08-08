@@ -15,7 +15,7 @@ import {
   CONFIGURED_MARK,
 } from './registry';
 
-const MODULE_SETTINGS_REFRESH_MS = 10000;
+const MODULE_SETTINGS_STALE_MS = 60000;
 
 const sameIds = (left, right) => {
   if (left === right) return true;
@@ -34,6 +34,8 @@ export function useEnabledModules(classId, audience = 'student') {
 
   useEffect(() => {
     let cancelled = false;
+    let loadedAt = 0;
+    let focusTimerId = null;
     if (!classId || !supabase) return;
 
     const loadModules = async () => {
@@ -49,8 +51,8 @@ export function useEnabledModules(classId, audience = 'student') {
         enabledIds: error ? null : resolveEnabledModuleIds(data?.enabled_modules, data),
         error: error ?? null,
       };
-      // 10초 안전 폴링이 같은 값을 매번 새 객체로 넣으면 App 전체가 다시 렌더된다.
-      // 글쓰기처럼 입력 상태가 중요한 화면은 부모 렌더와 무관해야 하지만, 셸에서도 불필요한 파동을 차단한다.
+      loadedAt = Date.now();
+      // 같은 값이면 App 전체를 다시 렌더하지 않는다.
       setModuleState((previous) => (
         previous.classId === nextState.classId &&
         sameIds(previous.enabledIds, nextState.enabledIds) &&
@@ -64,26 +66,24 @@ export function useEnabledModules(classId, audience = 'student') {
 
     // [실시간 구독 제거 — 2026-07-30]
     // 교사가 모듈을 켜고 끄면 `classes` 를 학급 단위로 구독해 즉시 반영했다. 학급 전원에게 퍼지는
-    // 구독이라 리얼타임 한도(`max_events_per_second=100`)를 쓰는데, 아래 주기 조회와 화면 복귀
-    // 갱신이 이미 같은 일을 하도록 만들어져 있었다("Realtime 연결 상태와 무관하게 수렴"). 그래서 뺐다.
-    // 모듈 토글은 드물게 일어나고, 늦어도 아래 주기 안에 반영된다.
+    // 구독은 학생 수만큼 연결을 소비한다. 모듈 토글은 드물므로 화면 복귀 갱신으로 수렴시킨다.
 
-    // 학생 화면이 최종 설정으로 수렴하도록 보이는 탭에서만 가벼운 단일 행 조회를 주기적으로 수행한다.
-    const refreshTimer = window.setInterval(() => {
-      if (document.visibilityState === 'visible') loadModules();
-    }, MODULE_SETTINGS_REFRESH_MS);
-
-    // 탭으로 돌아올 때 최종 상태를 즉시 다시 확인한다.
-    const handleFocus = () => loadModules();
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') loadModules();
+    // 설정 변경은 드물다. 화면 복귀 시 오래된 경우만 무작위 지연을 두고 갱신한다.
+    const handleFocus = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - loadedAt < MODULE_SETTINGS_STALE_MS) return;
+      if (focusTimerId) window.clearTimeout(focusTimerId);
+      focusTimerId = window.setTimeout(() => {
+        focusTimerId = null;
+        void loadModules();
+      }, Math.floor(Math.random() * 5000));
     };
+    const handleVisibilityChange = () => handleFocus();
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       cancelled = true;
-      window.clearInterval(refreshTimer);
+      if (focusTimerId) window.clearTimeout(focusTimerId);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };

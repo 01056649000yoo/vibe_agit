@@ -8,6 +8,8 @@ import ExportSelectModal from '../common/ExportSelectModal';
 import ModalCloseButton from '../common/ModalCloseButton';
 import { dataCache } from '../../lib/cache';
 
+const ARCHIVE_PAGE_SIZE = 50;
+
 /**
  * 역할: 선생님 - 보관된 미션 관리 및 글 모아보기 📂
  */
@@ -17,6 +19,9 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
     const [selectedTags, setSelectedTags] = useState([]);
     const [allTags, setAllTags] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [archiveHasMore, setArchiveHasMore] = useState(false);
+    const [archiveTotal, setArchiveTotal] = useState(0);
     const [selectedMission, setSelectedMission] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(false);
@@ -133,57 +138,37 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
         }
     };
 
-    const fetchArchivedMissions = useCallback(async () => {
+    const fetchArchivedMissions = useCallback(async ({ offset = 0, append = false } = {}) => {
         if (!activeClass?.id) return;
-        setLoading(true);
+        if (append) setLoadingMore(true);
+        else setLoading(true);
         try {
-            // 미션 정보와 함께, 전체 학생 수와 제출된 글 수를 계산하기 위해 데이터 조회
-            const { data: missions, error: missionError } = await supabase
-                .from('writing_missions')
-                .select('id, title, archived_at, genre, allow_comments, tags, min_chars, max_chars')
-                .eq('class_id', activeClass.id)
-                .eq('is_archived', true)
-                .order('archived_at', { ascending: false })
-                .limit(500);
+            // 보관 미션·전체 학생 수·미션별 제출 수를 DB에서 한 번에 묶어 가져온다.
+            const { data, error } = await supabase.rpc('get_teacher_archived_missions_page', {
+                p_class_id: activeClass.id,
+                p_limit: ARCHIVE_PAGE_SIZE,
+                p_offset: offset
+            });
+            if (error) throw error;
 
-            if (missionError) throw missionError;
-
-            // 추가 정보(제출 수, 전체 학생 수) 구하기
-            const { count: totalStudents } = await supabase
-                .from('students')
-                .select('*', { count: 'exact', head: true })
-                .eq('class_id', activeClass.id);
-
-            // 각 미션별 제출된 글 수 조회
-            const missionsWithStats = await Promise.all(missions.map(async (m) => {
-                const { count: submittedCount } = await supabase
-                    .from('student_posts')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('class_id', activeClass.id)
-                    .eq('mission_id', m.id)
-                    .eq('is_submitted', true);
-
-                return {
-                    ...m,
-                    totalStudents: totalStudents || 0,
-                    submittedCount: submittedCount || 0
-                };
-            }));
-
-            setArchivedMissions(missionsWithStats || []);
+            const missions = Array.isArray(data?.items) ? data.items : [];
+            setArchivedMissions((previous) => append ? [...previous, ...missions] : missions);
+            setArchiveHasMore(Boolean(data?.has_more));
+            setArchiveTotal(Number(data?.total) || 0);
 
             // 모든 태그 추출 (중복 제거)
-            const tags = new Set();
-            missions.forEach(m => {
-                if (m.tags && Array.isArray(m.tags)) {
-                    m.tags.forEach(t => tags.add(t));
-                }
+            setAllTags((previous) => {
+                const tags = new Set(append ? previous : []);
+                missions.forEach((mission) => {
+                    if (Array.isArray(mission.tags)) mission.tags.forEach((tag) => tags.add(tag));
+                });
+                return Array.from(tags).sort();
             });
-            setAllTags(Array.from(tags).sort());
         } catch (err) {
             console.error('보관된 미션 로드 실패:', err.message);
         } finally {
-            setLoading(false);
+            if (append) setLoadingMore(false);
+            else setLoading(false);
         }
     }, [activeClass?.id]);
 
@@ -415,12 +400,13 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                     <p style={{ fontSize: '1.1rem' }}>{selectedTags.length > 0 ? '해당 태그를 포함한 미션이 없습니다.' : '아직 보관된 미션이 없습니다.'}</p>
                 </Card>
             ) : (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : `repeat(${cardLayout?.columns || 4}, minmax(0, 1fr))`,
-                    gap: '12px',
-                    justifyContent: 'start'
-                }}>
+                <>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: isMobile ? '1fr' : `repeat(${cardLayout?.columns || 4}, minmax(0, 1fr))`,
+                        gap: '12px',
+                        justifyContent: 'start'
+                    }}>
                     {filteredMissions.map((mission) => (
                         <motion.div
                             key={mission.id}
@@ -628,7 +614,19 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                             </div>
                         </motion.div>
                     ))}
-                </div>
+                    </div>
+                    {archiveHasMore && selectedTags.length === 0 && (
+                        <div style={{ textAlign: 'center', marginTop: '18px' }}>
+                            <Button
+                                onClick={() => fetchArchivedMissions({ offset: archivedMissions.length, append: true })}
+                                disabled={loadingMore}
+                                style={{ minWidth: '180px' }}
+                            >
+                                {loadingMore ? '불러오는 중...' : `지난 과제 더 보기 (${archivedMissions.length}/${archiveTotal})`}
+                            </Button>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* 글 모아보기 모달 */}

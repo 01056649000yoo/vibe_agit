@@ -15,6 +15,7 @@ export const diaryManifest = {
     part: 'writing',
     audience: 'student',
     core: true,
+    performance: { home: 'summary', load: 'on-open', writes: 'rpc', realtime: 'core-only', maxInitialRows: 50 },
     studentRoute: 'diaries',
     writingPolicy: {
         type: 'diary',

@@ -16,6 +16,16 @@ const EMPTY_STATUS = {
     season: null
 };
 
+const normalizeTitleStatus = (data) => ({
+    writerTotalChars: Number(data?.writer_total_chars || 0),
+    writerCompletedPosts: Number(data?.writer_completed_posts || 0),
+    writerLevelOverride: data?.writer_level_override == null ? null : Number(data.writer_level_override),
+    readerScore: Number(data?.reader_score || 0),
+    readerPostCount: Number(data?.reader_post_count || 0),
+    readerLevelOverride: data?.reader_level_override == null ? null : Number(data.reader_level_override),
+    season: data?.season || null
+});
+
 export const invalidateMyTitleStatus = ({ classId, studentId }) => {
     if (!classId || !studentId) return;
     dataCache.invalidate(classKey(classId, 'my-title-status', { student: studentId }));
@@ -27,11 +37,11 @@ export const invalidateMyTitleStatus = ({ classId, studentId }) => {
 };
 
 /** 나의 아지트와 글쓰기 발자국이 함께 쓰는 유일한 칭호 데이터 경로. */
-const useMyTitleStatus = ({ studentSession, active = true }) => {
+const useMyTitleStatus = ({ studentSession, active = true, initialStatus = null, bootstrapLoading = false }) => {
     const classId = studentSession?.class_id || studentSession?.classId;
     const studentId = studentSession?.id;
-    const [status, setStatus] = useState(EMPTY_STATUS);
-    const [loading, setLoading] = useState(true);
+    const [status, setStatus] = useState(() => initialStatus ? normalizeTitleStatus(initialStatus) : EMPTY_STATUS);
+    const [loading, setLoading] = useState(!initialStatus);
     const [errorMessage, setErrorMessage] = useState('');
 
     const load = useCallback(async (forceRefresh = false) => {
@@ -49,19 +59,7 @@ const useMyTitleStatus = ({ studentSession, active = true }) => {
             const next = await dataCache.get(cacheKey, async () => {
                 const { data, error } = await supabase.rpc('get_my_title_status');
                 if (error) throw error;
-                return {
-                    writerTotalChars: Number(data?.writer_total_chars || 0),
-                    writerCompletedPosts: Number(data?.writer_completed_posts || 0),
-                    writerLevelOverride: data?.writer_level_override == null
-                        ? null
-                        : Number(data.writer_level_override),
-                    readerScore: Number(data?.reader_score || 0),
-                    readerPostCount: Number(data?.reader_post_count || 0),
-                    readerLevelOverride: data?.reader_level_override == null
-                        ? null
-                        : Number(data.reader_level_override),
-                    season: data?.season || null
-                };
+                return normalizeTitleStatus(data);
             }, TITLE_STATUS_TTL_MS);
             setStatus(next || EMPTY_STATUS);
         } catch (error) {
@@ -74,10 +72,18 @@ const useMyTitleStatus = ({ studentSession, active = true }) => {
     }, [classId, studentId]);
 
     useEffect(() => {
+        if (!initialStatus) return;
+        setStatus(normalizeTitleStatus(initialStatus));
+        setLoading(false);
+        setErrorMessage('');
+    }, [initialStatus]);
+
+    useEffect(() => {
         if (!active) return undefined;
+        if (initialStatus || bootstrapLoading) return undefined;
         const timerId = window.setTimeout(() => load(), 0);
         return () => window.clearTimeout(timerId);
-    }, [active, load]);
+    }, [active, bootstrapLoading, initialStatus, load]);
 
     useEffect(() => {
         if (!active) return undefined;

@@ -6,7 +6,7 @@ import {
     normalizeWritingEditorSettings
 } from './settings';
 
-const REFRESH_INTERVAL_MS = 30000;
+const SETTINGS_STALE_MS = 60000;
 const errorKey = (error) => error ? `${error.code || ''}:${error.message || ''}` : '';
 
 const WritingEditorSettingsContext = createContext({
@@ -26,6 +26,8 @@ export const WritingEditorSettingsProvider = ({ classId, overrideSettings, child
     useEffect(() => {
         if (overrideSettings || !classId) return undefined;
         let cancelled = false;
+        let loadedAt = 0;
+        let focusTimerId = null;
 
         const loadSettings = async () => {
             const { data, error } = await supabase
@@ -41,6 +43,7 @@ export const WritingEditorSettingsProvider = ({ classId, overrideSettings, child
                     : normalizeWritingEditorSettings(data?.writing_editor_settings),
                 error: error || null
             };
+            loadedAt = Date.now();
             setState((previous) => (
                 previous.classId === nextState.classId
                 && JSON.stringify(previous.settings) === JSON.stringify(nextState.settings)
@@ -51,17 +54,23 @@ export const WritingEditorSettingsProvider = ({ classId, overrideSettings, child
         };
 
         const initialTimer = window.setTimeout(() => void loadSettings(), 0);
-        const refreshTimer = window.setInterval(() => {
-            if (document.visibilityState === 'visible') void loadSettings();
-        }, REFRESH_INTERVAL_MS);
-        const handleFocus = () => void loadSettings();
+        const handleFocus = () => {
+            if (document.visibilityState !== 'visible' || Date.now() - loadedAt < SETTINGS_STALE_MS) return;
+            if (focusTimerId) window.clearTimeout(focusTimerId);
+            focusTimerId = window.setTimeout(() => {
+                focusTimerId = null;
+                void loadSettings();
+            }, Math.floor(Math.random() * 5000));
+        };
         window.addEventListener('focus', handleFocus);
+        document.addEventListener('visibilitychange', handleFocus);
 
         return () => {
             cancelled = true;
             window.clearTimeout(initialTimer);
-            window.clearInterval(refreshTimer);
+            if (focusTimerId) window.clearTimeout(focusTimerId);
             window.removeEventListener('focus', handleFocus);
+            document.removeEventListener('visibilitychange', handleFocus);
         };
     }, [classId, overrideSettings]);
 

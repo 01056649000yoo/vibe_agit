@@ -2,7 +2,7 @@ import React, { lazy, Suspense } from 'react';
 
 const MissionManager = lazy(() => import('./MissionManager'));
 
-const TeacherMissionTab = ({ activeClass, isMobile, cardLayout, navigationTarget, onNavigationHandled }) => (
+const TeacherMissionTab = ({ activeClass, isMobile, cardLayout, navigationTarget, onNavigationHandled, bootstrapProfile }) => (
     <section
         aria-labelledby="teacher-missions-heading"
         style={{
@@ -19,6 +19,7 @@ const TeacherMissionTab = ({ activeClass, isMobile, cardLayout, navigationTarget
                     cardLayout={cardLayout}
                     navigationTarget={navigationTarget}
                     onNavigationHandled={onNavigationHandled}
+                    bootstrapProfile={bootstrapProfile}
                 />
             </Suspense>
         </div>

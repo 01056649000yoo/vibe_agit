@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { supabase } from '../../lib/supabaseClient';
 import useReadingLogDailyStatus from '../../modules/writing/reading-log/useReadingLogDailyStatus';
 import useDiaryDailyStatus from '../../modules/writing/diary/useDiaryDailyStatus';
 import './DashboardMenu.css';
@@ -33,74 +32,19 @@ const DashboardMenu = ({
     playgroundCount = 0,
     agitSettings,
     studentSession,
+    homeBootstrap,
     enabledModules = []
 }) => {
     const agitOnClassEnabled = enabledModules.some((module) => module.id === 'agit-on-class');
-    const [hasNewMission, setHasNewMission] = useState(false);
-    const [hasNewAgitUpdate, setHasNewAgitUpdate] = useState(false);
-    const readingDailyStatus = useReadingLogDailyStatus(studentSession?.id);
-    const diaryDailyStatus = useDiaryDailyStatus(studentSession?.id);
-
-    useEffect(() => {
-        const classId = studentSession?.class_id || studentSession?.classId;
-        const studentId = studentSession?.id;
-        if (!classId || !studentId) return undefined;
-
-        const checkNewItems = async () => {
-            try {
-                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-                const { data: allRecent, error: missionError } = await supabase
-                    .from('writing_missions')
-                    .select('id, created_at')
-                    .eq('class_id', classId)
-                    .eq('is_archived', false)
-                    .order('created_at', { ascending: false })
-                    .limit(200);
-                if (missionError) throw missionError;
-
-                const recentMissions = (allRecent || []).filter((mission) => mission.created_at > twentyFourHoursAgo);
-                if (recentMissions.length > 0) {
-                    const missionIds = recentMissions.map((mission) => mission.id);
-                    const { data: myPosts, error: postError } = await supabase
-                        .from('student_posts')
-                        .select('mission_id')
-                        .eq('class_id', classId)
-                        .eq('student_id', studentId)
-                        .in('mission_id', missionIds)
-                        .eq('is_submitted', true)
-                        .limit(200);
-                    if (postError) throw postError;
-                    const submittedMissionIds = new Set((myPosts || []).map((post) => post.mission_id));
-                    setHasNewMission(recentMissions.some((mission) => !submittedMissionIds.has(mission.id)));
-                } else {
-                    setHasNewMission(false);
-                }
-
-                if (!agitOnClassEnabled) return;
-                const { data: latestHonor, error: honorError } = await supabase
-                    .from('agit_honor_roll')
-                    .select('created_at')
-                    .eq('class_id', classId)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-                if (honorError) throw honorError;
-
-                if (latestHonor?.created_at) {
-                    const lastAccessMenu = localStorage.getItem(`last_visit_agit_menu_${classId}`);
-                    const latestAgitTime = new Date(latestHonor.created_at);
-                    const hasUnseenUpdate = !lastAccessMenu || latestAgitTime > new Date(lastAccessMenu);
-                    const isWithin24h = latestAgitTime > new Date(Date.now() - 24 * 60 * 60 * 1000);
-                    setHasNewAgitUpdate(hasUnseenUpdate && isWithin24h);
-                }
-            } catch (error) {
-                console.error('학생 홈 새 소식 확인 실패:', error.message);
-            }
-        };
-
-        const timerId = window.setTimeout(checkNewItems, 1000);
-        return () => window.clearTimeout(timerId);
-    }, [agitOnClassEnabled, studentSession?.classId, studentSession?.class_id, studentSession?.id]);
+    const hasNewMission = Boolean(homeBootstrap?.home?.has_new_mission);
+    const readingDailyStatus = useReadingLogDailyStatus(studentSession?.id, {
+        enabled: !homeBootstrap,
+        initialStatus: homeBootstrap?.reading_daily
+    });
+    const diaryDailyStatus = useDiaryDailyStatus(studentSession?.id, {
+        enabled: !homeBootstrap,
+        initialStatus: homeBootstrap?.diary_daily
+    });
 
     const readingDescription = readingDailyStatus.loading
         ? '오늘 작성 현황을 확인하고 있어요'
@@ -126,7 +70,6 @@ const DashboardMenu = ({
         if (agitSettings?.isMenuEnabled === false) return;
         const classId = studentSession?.class_id || studentSession?.classId;
         if (classId) localStorage.setItem(`last_visit_agit_menu_${classId}`, new Date().toISOString());
-        setHasNewAgitUpdate(false);
         setIsAgitOpen(true);
     };
 
@@ -193,7 +136,7 @@ const DashboardMenu = ({
                         title="두근두근 우리반 아지트"
                         description={agitSettings?.isMenuEnabled === false ? '선생님이 준비하고 있어요' : '친구들과 함께 에너지 모으기'}
                         badge={agitSettings?.isMenuEnabled === false ? '준비 중' : '입장하기'}
-                        isNew={hasNewAgitUpdate && agitSettings?.isMenuEnabled !== false}
+                        isNew={false}
                         tone="rose"
                         disabled={agitSettings?.isMenuEnabled === false}
                         onClick={openAgitOnClass}

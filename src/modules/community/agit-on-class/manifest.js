@@ -13,6 +13,7 @@ export const agitOnClassManifest = {
   audience: 'both',
   defaultEnabled: false,
   available: false,
+  performance: { home: 'summary', load: 'on-open', writes: 'legacy-bounded', realtime: 'none', maxInitialRows: 50 },
   studentEntry: () => import('./AgitOnClassPage'),
   teacherEntry: () => import('./AgitManager'),
 };

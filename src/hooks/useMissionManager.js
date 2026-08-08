@@ -6,7 +6,7 @@ import { dataCache } from '../lib/cache';
 import { readLocalStorageJson } from '../lib/browserStorage';
 import { pointApi } from '../modules/points/pointApi';
 
-export const useMissionManager = (activeClass) => {
+export const useMissionManager = (activeClass, bootstrapProfile = null) => {
     const [missions, setMissions] = useState([]);
     const [submissionCounts, setSubmissionCounts] = useState({});
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -26,11 +26,12 @@ export const useMissionManager = (activeClass) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editingMissionId, setEditingMissionId] = useState(null);
     const [isEvaluationMode, setIsEvaluationMode] = useState(false);
-    const [frequentTags, setFrequentTags] = useState([]);
-    const [defaultRubric, setDefaultRubric] = useState(null);
-    const [missionDefaultSettings, setMissionDefaultSettings] = useState(null);
+    const [frequentTags, setFrequentTags] = useState(() => bootstrapProfile?.frequent_tags || []);
+    const [defaultRubric, setDefaultRubric] = useState(() => bootstrapProfile?.default_rubric || null);
+    const [missionDefaultSettings, setMissionDefaultSettings] = useState(() => bootstrapProfile?.mission_default_settings || null);
 
     useEffect(() => {
+        if (bootstrapProfile) return;
         const fetchProfileData = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
@@ -48,7 +49,7 @@ export const useMissionManager = (activeClass) => {
             }
         };
         fetchProfileData();
-    }, []);
+    }, [bootstrapProfile]);
 
     // defaultRubric이 로드되면 폼 데이터에도 반영 (새 글 작성 시에만 초기값으로 세팅)
     useEffect(() => {
@@ -213,7 +214,8 @@ export const useMissionManager = (activeClass) => {
                     .from('writing_missions')
                     .select('id, title, guide, genre, mission_type, input_template, template_config, min_chars, min_paragraphs, guide_questions, is_archived, created_at, base_reward, bonus_threshold, bonus_reward, allow_comments, tags, evaluation_rubric')
                     .eq('class_id', activeClass.id)
-                    .order('created_at', { ascending: false });
+                    .order('created_at', { ascending: false })
+                    .limit(100);
                 if (error) throw error;
                 return (data || []).filter(m => !m.is_archived);
             }, 120000);
@@ -495,7 +497,8 @@ export const useMissionManager = (activeClass) => {
                 // 학급은 student_posts.class_id 로 직접 좁힌다 (students 경유 금지).
                 .eq('class_id', activeClass.id)
                 .is('students.deleted_at', null)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(100);
 
             if (error) throw error;
             setPosts(data || []);
@@ -844,8 +847,17 @@ ${postArray.map((p, idx) => {
                 ? '이미 승인된 글입니다. 포인트는 다시 지급하지 않았습니다.'
                 : `✅ 승인과 ${awardedPoints}포인트 지급이 함께 완료되었습니다!`);
             setSelectedPost(null);
-            if (selectedMission) fetchPostsForMission(selectedMission);
-            fetchMissions();
+            if (data?.status !== 'already_approved') {
+                setPosts((current) => current.map((item) => item.id === post.id
+                    ? { ...item, is_submitted: true, is_confirmed: true, is_returned: false, ai_feedback: tempFeedback }
+                    : item));
+                if (selectedMission?.mission_type !== 'meeting') {
+                    setSubmissionCounts((current) => ({
+                        ...current,
+                        [post.mission_id]: (current[post.mission_id] || 0) + 1
+                    }));
+                }
+            }
         } catch (err) {
             console.error('승인 처리 실패:', err.message);
             alert('승인 중 오류가 발생했습니다: ' + err.message);
@@ -867,8 +879,16 @@ ${postArray.map((p, idx) => {
         try {
             const data = await pointApi.approveAssignments(toApprove.map((post) => post.id));
             alert(`🎉 ${data?.approved_count ?? toApprove.length}건 승인, ${data?.points_awarded ?? 0}포인트 지급 완료!`);
-            fetchPostsForMission(selectedMission);
-            fetchMissions();
+            const approvedIds = new Set(toApprove.map((post) => post.id));
+            setPosts((current) => current.map((post) => approvedIds.has(post.id)
+                ? { ...post, is_submitted: true, is_confirmed: true, is_returned: false }
+                : post));
+            if (selectedMission.mission_type !== 'meeting') {
+                setSubmissionCounts((current) => ({
+                    ...current,
+                    [selectedMission.id]: (current[selectedMission.id] || 0) + Number(data?.approved_count ?? toApprove.length)
+                }));
+            }
         } catch (err) {
             console.error('일괄 승인 실패:', err.message);
             alert('일괄 처리 중 오류가 발생했습니다.');
@@ -889,8 +909,17 @@ ${postArray.map((p, idx) => {
                 ? '이미 승인이 취소된 글입니다. 포인트를 추가로 회수하지 않았습니다.'
                 : `✅ 승인 취소와 ${recoveredPoints}포인트 회수가 함께 완료되었습니다.`);
             setSelectedPost(null);
-            if (selectedMission) fetchPostsForMission(selectedMission);
-            fetchMissions();
+            if (data?.status !== 'already_recovered') {
+                setPosts((current) => current.map((item) => item.id === post.id
+                    ? { ...item, is_confirmed: false, ai_feedback: tempFeedback }
+                    : item));
+                if (selectedMission?.mission_type !== 'meeting') {
+                    setSubmissionCounts((current) => ({
+                        ...current,
+                        [post.mission_id]: Math.max(0, (current[post.mission_id] || 0) - 1)
+                    }));
+                }
+            }
         } catch (err) {
             console.error('회수 실패:', err.message);
             alert('회수 처리 중 오류가 발생했습니다: ' + err.message);
@@ -912,8 +941,16 @@ ${postArray.map((p, idx) => {
         try {
             const data = await pointApi.recoverAssignments(toRecover.map((post) => post.id));
             alert(`✅ ${data?.recovered_count ?? toRecover.length}건 승인 취소, ${data?.points_recovered ?? 0}포인트 회수 완료!`);
-            if (selectedMission) fetchPostsForMission(selectedMission);
-            fetchMissions();
+            const recoveredIds = new Set(toRecover.map((post) => post.id));
+            setPosts((current) => current.map((post) => recoveredIds.has(post.id)
+                ? { ...post, is_confirmed: false }
+                : post));
+            if (selectedMission.mission_type !== 'meeting') {
+                setSubmissionCounts((current) => ({
+                    ...current,
+                    [selectedMission.id]: Math.max(0, (current[selectedMission.id] || 0) - Number(data?.recovered_count ?? toRecover.length))
+                }));
+            }
         } catch (err) {
             console.error('일괄 회수 실패:', err.message);
             alert('일괄 회수 중 오류가 발생했습니다.');

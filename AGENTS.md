@@ -47,6 +47,21 @@
 - 기존 드래곤·어휘의 탑 교사 관리는 `src/modules/game/legacy/LegacyGameManager.jsx`의 운영 호환 영역이다.
   실기기 스모크 전에는 기능을 섣불리 분할하지 말고, 이후 각각의 `teacherEntry`로 옮긴다.
 - 상세 계약과 예시는 `src/modules/game/README.md`를 읽는다.
+
+### 1,000명 성능 하네스
+- 새 콘텐츠는 등록 매니페스트에 `performance` 성능표를 반드시 작성한다. 홈 요약 여부, 열 때 로드, RPC 쓰기,
+  Realtime 사용, 첫 목록 상한(최대 100)을 선언하며 누락하면 `npm run test:architecture`와 Docker 빌드가 실패한다.
+- 학생 홈에 새 `supabase.from()`·`supabase.rpc()`를 직접 추가하지 않는다. 코어 요약은
+  `get_student_home_bootstrap_v1`, 선택 콘텐츠 상세는 **그 콘텐츠를 실제로 열 때** 전용 RPC로 읽는다.
+- 새 콘텐츠는 홈에서 자체 폴링·`postgres_changes` 구독을 시작하지 않는다. 갱신은 공용 bootstrap 무효화,
+  화면 복귀 또는 사용자 동작 응답으로 한다. 불가피한 예외는 `PERFORMANCE_HARNESS.md`에 근거와 부하 예산을 기록한다.
+- 학생 데이터 폴링은 60초 미만 금지이며 고정 `setInterval` 대신 공용 지연 정책+무작위 분산을 쓴다.
+- 목록 RPC는 학급/학생 직접 범위, 안정 정렬, 페이지 상한을 갖는다. 사용자 동작 1회는 기능 전용 RPC 1회로
+  상태 변경을 끝내며 포인트가 있으면 내부 `point_engine_apply()`까지 같은 트랜잭션에서 처리한다.
+- 여러 학생용 화면이나 데이터 훅을 고친 뒤 `npm run test:architecture`를 실행한다. Docker 빌드도 이 검사를
+  자동 실행하므로 규칙 위반 코드는 운영 이미지가 되지 못한다. 상세 계약은 `PERFORMANCE_HARNESS.md`를 읽는다.
+- DB/RPC 변경은 운영 적용 전에 `npm run migrate:check`로 실제 스키마+기능 스모크를 실행하고 전체 롤백을 확인한다.
+  학생 홈 읽기 부하는 격리된 시험 학급에서 `npm run load:test:student-home`으로 측정한다.
 - **포인트는 `src/modules/points/`의 코어 계약을 쓴다.** 새 콘텐츠 화면에서 `students.total_points`,
   `point_logs`, `increment_student_points`를 직접 쓰거나 호출하지 않는다. 콘텐츠 전용 RPC가 권한·완료 조건을 검증한 뒤
   DB 내부 전용 `point_engine_apply()`를 호출한다. 화면 호출은 `pointApi.js`에 전용 메서드를 추가한다.

@@ -43,7 +43,7 @@ const loadWritingCardLayout = () => {
 /**
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
  */
-const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onProfileUpdate, isAdmin, onSwitchToAdminMode, onLogout }) => {
+const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, setActiveClass, onProfileUpdate, isAdmin, onSwitchToAdminMode, onLogout }) => {
     const [currentTab, setCurrentTab] = useState('dashboard');
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [selectedActivityPost, setSelectedActivityPost] = useState(null);
@@ -65,7 +65,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
         handleUpdateTeacherProfile, handleTestAIConnection,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses
-    } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass);
+    } = useTeacherDashboard(session, profile, onProfileUpdate, activeClass, setActiveClass, teacherBootstrap);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -207,7 +207,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                     <Button variant="ghost" size="sm" onClick={() => setIsEditProfileOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
                         ⚙️ 정보 수정
                     </Button>
-                    <TeacherAnnouncementManager isMobile={isMobile} />
+                    <TeacherAnnouncementManager isMobile={isMobile} initialAnnouncements={teacherBootstrap?.announcements} />
                     <Button variant="ghost" size="sm" onClick={() => setIsFeedbackOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
                         📢 의견 보내기
                     </Button>
@@ -353,6 +353,7 @@ const TeacherDashboard = ({ profile, session, activeClass, setActiveClass, onPro
                                 cardLayout={writingCardLayout}
                                 navigationTarget={workspaceTarget}
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
+                                bootstrapProfile={teacherBootstrap?.profile || profile}
                             />
                         ) : visibleTab === 'operations' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (
                             <TeacherOperationsHub

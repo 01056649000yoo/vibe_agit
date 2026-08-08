@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabaseClient';
 
 const ACTIVE_MISSION_LIMIT = 500;
 
-export const useStudentDashboard = (studentSession, onNavigate) => {
+export const useStudentDashboard = (studentSession, onNavigate, options = {}) => {
+    const { bootstrap = null, bootstrapLoading = false, refreshBootstrap = null } = options;
     const RETURNED_COUNT_CACHE_MS = 30000;
     const [points, setPoints] = useState(0);
     const [hasActivity, setHasActivity] = useState(false);
@@ -33,6 +34,24 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     );
     const returnedCountCacheRef = useRef({ value: 0, fetchedAt: 0 });
 
+    const applyBootstrap = useCallback((payload) => {
+        if (!payload?.student) return null;
+        const student = payload.student;
+        setPoints(Number(student.total_points || 0));
+        if (student.pet_data) setPetData(student.pet_data);
+        if (student.last_feedback_check) {
+            lastCheckRef.current = student.last_feedback_check;
+            lastCheckLoadedRef.current = true;
+        }
+        const home = payload.home || {};
+        setHasActivity(Boolean(home.has_activity));
+        const nextReturned = Number(home.returned_count || 0);
+        returnedCountCacheRef.current = { value: nextReturned, fetchedAt: Date.now() };
+        setReturnedCount(nextReturned);
+        setIsLoading(false);
+        return student;
+    }, []);
+
     const fetchActiveMissionIds = useCallback(async () => {
         if (!sessionClassId) return [];
 
@@ -52,6 +71,10 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const fetchMyPoints = useCallback(async () => {
         if (!studentSession?.id) return;
         try {
+            if (refreshBootstrap) {
+                const payload = await refreshBootstrap({ force: true });
+                return applyBootstrap(payload);
+            }
             const { data: studentSnapshot, error: snapshotError } = await supabase
                 .rpc('get_student_dashboard_snapshot');
 
@@ -76,7 +99,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             console.error('학생 대시보드 상태 로드 실패:', err.message);
         }
         return null;
-    }, [studentSession?.id]);
+    }, [applyBootstrap, refreshBootstrap, studentSession?.id]);
     // 스냅샷이 기준선을 못 준 경우의 폴백. 학생 id 로 직접 읽는다.
     const ensureLastCheckLoaded = useCallback(async () => {
         if (lastCheckLoadedRef.current || !studentSession?.id) return;
@@ -98,6 +121,11 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
     const checkActivity = useCallback(async () => {
         try {
             if (!studentSession?.id) return;
+            if (refreshBootstrap) {
+                const payload = await refreshBootstrap({ force: true });
+                applyBootstrap(payload);
+                return Boolean(payload?.home?.has_activity);
+            }
 
             const lastCheckTime = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
 
@@ -131,7 +159,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         } catch (err) {
             console.error('활동 확인 실패:', err.message);
         }
-    }, [studentSession?.id, scopeToClass]);
+    }, [applyBootstrap, refreshBootstrap, studentSession?.id, scopeToClass]);
 
     const fetchReturnedCount = useCallback(async (forceRefresh = false) => {
         if (!studentSession?.id || !sessionClassId) return 0;
@@ -145,6 +173,11 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
         }
 
         try {
+            if (refreshBootstrap) {
+                const payload = await refreshBootstrap({ force: forceRefresh });
+                applyBootstrap(payload);
+                return Number(payload?.home?.returned_count || 0);
+            }
             const activeMissionIds = await fetchActiveMissionIds();
             if (activeMissionIds.length === 0) {
                 returnedCountCacheRef.current = { value: 0, fetchedAt: now };
@@ -173,7 +206,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             console.error('반려 글 개수 로드 실패:', err.message);
             return cached.value || 0;
         }
-    }, [studentSession?.id, sessionClassId, fetchActiveMissionIds]);
+    }, [applyBootstrap, fetchActiveMissionIds, refreshBootstrap, sessionClassId, studentSession?.id]);
 
     const handleClearFeedback = async () => {
         try {
@@ -302,6 +335,11 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
 
     useEffect(() => {
         if (studentSession?.id) {
+            if (bootstrap) {
+                applyBootstrap(bootstrap);
+                return;
+            }
+            if (bootstrapLoading) return;
             const loadData = () => {
                 // 블로킹 없이 각 요청을 개별 비동기 실행하도록 뜯어 고쳐 체감 로딩 시간(TTI) 제로화
                 setIsLoading(false); // 즉시 렌더링을 허용 (데이터는 각자 도착하는 대로 채워짐)
@@ -316,7 +354,7 @@ export const useStudentDashboard = (studentSession, onNavigate) => {
             };
             loadData();
         }
-    }, [studentSession?.id, fetchMyPoints, checkActivity, fetchReturnedCount, ensureLastCheckLoaded]);
+    }, [applyBootstrap, bootstrap, bootstrapLoading, studentSession?.id, fetchMyPoints, checkActivity, fetchReturnedCount, ensureLastCheckLoaded]);
 
     return {
         points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,

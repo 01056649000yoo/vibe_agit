@@ -23,9 +23,9 @@ const normalizeStatus = (data) => {
     };
 };
 
-export const useReadingLogDailyStatus = (studentId, { enabled = true } = {}) => {
-    const [status, setStatus] = useState(EMPTY_STATUS);
-    const [loading, setLoading] = useState(Boolean(studentId && enabled));
+export const useReadingLogDailyStatus = (studentId, { enabled = true, initialStatus = null } = {}) => {
+    const [status, setStatus] = useState(() => initialStatus ? normalizeStatus(initialStatus) : EMPTY_STATUS);
+    const [loading, setLoading] = useState(Boolean(studentId && enabled && !initialStatus));
     const [error, setError] = useState('');
 
     const refresh = useCallback(async () => {
@@ -46,10 +46,18 @@ export const useReadingLogDailyStatus = (studentId, { enabled = true } = {}) => 
     }, [enabled, studentId]);
 
     useEffect(() => {
+        if (initialStatus) {
+            const timerId = window.setTimeout(() => {
+                setStatus(normalizeStatus(initialStatus));
+                setLoading(false);
+                setError('');
+            }, 0);
+            return () => window.clearTimeout(timerId);
+        }
         if (!studentId || !enabled) return undefined;
         const timerId = window.setTimeout(refresh, 0);
         return () => window.clearTimeout(timerId);
-    }, [enabled, refresh, studentId]);
+    }, [enabled, initialStatus, refresh, studentId]);
 
     return { ...status, loading, error, refresh };
 };

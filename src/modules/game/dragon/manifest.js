@@ -15,6 +15,7 @@ export const dragonManifest = {
   part: 'game',
   audience: 'student',
   defaultEnabled: true, // 기존 동작 보존: 지금까지 모든 학급에 노출돼 있었음
+  performance: { home: 'summary', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 0 },
   studentEntry: () => import('./DragonHideoutModal'),
   myAgitEntry: () => import('./MyAgitCard'),
   teacherEntry: () => import('./TeacherManager'),

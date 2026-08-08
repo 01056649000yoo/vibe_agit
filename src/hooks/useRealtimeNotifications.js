@@ -33,15 +33,19 @@ export const useRealtimeNotifications = (studentSession, setPoints, refetchDataC
             pendingFetchTypesRef.current = { points: false, activity: false };
             visibilityQueuedFetchRef.current = false;
 
-            if (points) {
-                callbacksRef.current.refetchDataControls?.fetchMyPoints?.();
-                // 작가·독자 칭호는 공용 모듈의 단일 캐시를 무효화한다.
-                callbacksRef.current.refetchDataControls?.refreshMyTitleStatus?.();
-            }
-
-            if (activity) {
-                callbacksRef.current.refetchDataControls?.checkActivity?.();
-                callbacksRef.current.refetchDataControls?.fetchReturnedCount?.(true);
+            const controls = callbacksRef.current.refetchDataControls;
+            if ((points || activity) && controls?.refreshHome) {
+                // 포인트·반려·새 소식을 한 bootstrap으로 갱신한다.
+                controls.refreshHome({ force: true });
+            } else {
+                if (points) {
+                    controls?.fetchMyPoints?.();
+                    controls?.refreshMyTitleStatus?.();
+                }
+                if (activity) {
+                    controls?.checkActivity?.();
+                    controls?.fetchReturnedCount?.(true);
+                }
             }
         }, FETCH_DEBOUNCE_MS);
     };

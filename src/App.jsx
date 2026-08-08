@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense, lazy } from 'react'
 import { supabase } from './lib/supabaseClient'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
@@ -12,9 +12,11 @@ import PrivacyPolicy from './components/layout/PrivacyPolicy'
 import TermsOfService from './components/layout/TermsOfService'
 import { useAuthStore } from './store/useAuthStore';
 import { useAppStore } from './store/useAppStore';
-import { getModule } from './modules/registry';
-import { useEnabledModules } from './modules/useEnabledModules';
+import { getEnabledModules, getModule, resolveEnabledModuleIds } from './modules/registry';
+import useStudentHomeBootstrap from './modules/home/useStudentHomeBootstrap';
 import { WritingEditorSettingsProvider } from './modules/writing/editor-settings/WritingEditorSettingsContext';
+
+const DEFAULT_STUDENT_EDITOR_SETTINGS = Object.freeze({ enabled_tools: ['spelling-lookup'] });
 
 // 지연 로딩 (Lazy Loading) 적용
 const LandingPage = lazy(() => import('./components/layout/LandingPage'))
@@ -42,7 +44,7 @@ const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNa
  */
 function App() {
   const { 
-    session, profile, studentSession, loading, profileLoading,
+    session, profile, teacherBootstrap, studentSession, loading, profileLoading,
     checkSessions, fetchProfile, verifyStudentSession, logout: handleLogout, studentLogout: handleStudentLogout 
   } = useAuthStore();
 
@@ -56,11 +58,18 @@ function App() {
     isAdminMode, setAdminMode: setAdminModeHandler
   } = useAppStore();
 
-  // 학생 선택 모듈 상태를 앱 셸에서 한 번만 읽어 놀이터 진입점을 게이팅한다.
-  const { modules: enabledStudentModules } = useEnabledModules(
-    studentSession?.classId || studentSession?.class_id,
-    'student'
-  );
+  const {
+    data: studentHomeBootstrap,
+    loading: studentHomeBootstrapLoading,
+    refresh: refreshStudentHome
+  } = useStudentHomeBootstrap(studentSession);
+  // 홈 RPC가 받은 같은 학급 설정을 앱 셸·메뉴·편집기가 함께 쓴다.
+  const enabledStudentModules = useMemo(() => {
+    if (!studentSession || !studentHomeBootstrap?.class_config) return [];
+    const config = studentHomeBootstrap.class_config;
+    const ids = resolveEnabledModuleIds(config.enabled_modules, config);
+    return getEnabledModules(ids, 'student');
+  }, [studentHomeBootstrap, studentSession]);
   const studentPageName = internalPage.name;
   // 하단 내비의 '나의 아지트'는 페이지가 아니라 홈 위에 뜨는 판이라,
   // 홈으로 보낸 뒤 이 값을 올려 대시보드에 "열어라"라고 알린다.
@@ -122,6 +131,7 @@ function App() {
         } else {
           useAuthStore.getState().setSession(null);
           useAuthStore.getState().setProfile(null);
+          useAuthStore.getState().setTeacherBootstrap(null);
         }
       });
       return () => {
@@ -144,12 +154,21 @@ function App() {
       }
     };
 
-    const intervalId = window.setInterval(verifyActiveStudent, 120000); // [최적화] 60초 → 120초: get_student_by_auth 호출 50% 감소
+    let verifyTimerId = null;
+    const scheduleVerification = () => {
+      // 모든 교실이 같은 순간 DB를 치지 않도록 4~6분 사이로 분산한다.
+      const delay = 240000 + Math.floor(Math.random() * 120000);
+      verifyTimerId = window.setTimeout(async () => {
+        await verifyActiveStudent();
+        scheduleVerification();
+      }, delay);
+    };
+    scheduleVerification();
     window.addEventListener('focus', verifyActiveStudent);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.clearInterval(intervalId);
+      if (verifyTimerId) window.clearTimeout(verifyTimerId);
       window.removeEventListener('focus', verifyActiveStudent);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
@@ -284,10 +303,11 @@ function App() {
           ) : (
               <TeacherDashboard
                 profile={profile}
+                teacherBootstrap={teacherBootstrap}
                 session={session}
                 activeClass={activeClass}
                 setActiveClass={setActiveClass}
-                onProfileUpdate={() => fetchProfile(session.user.id)}
+                onProfileUpdate={() => fetchProfile(session.user.id, { force: true, touchLogin: false })}
                 onLogout={handleLogout}
                 onNavigate={setInternalPage} // store 액션 직접 전달
                 internalPage={internalPage}
@@ -298,13 +318,19 @@ function App() {
             )
           ) : studentSession ? (
             /* [2순위] 학생 모드 (교사 세션이 없을 때) */
-            <WritingEditorSettingsProvider classId={studentSession?.classId || studentSession?.class_id}>
+            <WritingEditorSettingsProvider
+              classId={studentSession?.classId || studentSession?.class_id}
+              overrideSettings={studentHomeBootstrap?.class_config?.writing_editor_settings || DEFAULT_STUDENT_EDITOR_SETTINGS}
+            >
               {studentPageName === 'main' && (
                 <StudentDashboard
                   studentSession={studentSession}
                   onLogout={handleStudentLogout}
                   onNavigate={setInternalPage}
                   enabledModules={enabledStudentModules}
+                  homeBootstrap={studentHomeBootstrap}
+                  homeBootstrapLoading={studentHomeBootstrapLoading}
+                  onRefreshHome={refreshStudentHome}
                   myAgitSignal={myAgitSignal}
                   playgroundSignal={playgroundSignal}
                 />

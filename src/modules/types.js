@@ -31,6 +31,8 @@
  * @property {boolean}  [toggleable] false면 학급 ON/OFF 대신 자체 조건(예: 미션 생성)으로 활성화
  * @property {string[]} [legacyFields] 기존 노출 상태를 초기값으로 읽을 classes 컬럼
  * @property {(settings: Object) => boolean|undefined} [resolveLegacyEnabled] 기존 설정에서 초기 ON/OFF를 계산
+ * @property {{home: 'summary'|'none', load: 'on-open', writes: 'rpc'|'none'|'legacy-bounded', realtime: 'none'|'core-only', maxInitialRows: number}} performance
+ *   신규 콘텐츠 성능 계약. 홈 데이터 크기·지연 로딩·쓰기 방식·실시간 연결·첫 목록 상한을 명시한다.
  */
 
 /** 파트 표시 이름 (메뉴 그룹 헤더) */
@@ -50,6 +52,17 @@ export function validateManifest(m) {
   if (!PART_LABELS[m.part]) problems.push(`part가 유효하지 않음: ${m.part}`);
   if (!['student', 'teacher', 'both'].includes(m.audience)) problems.push(`audience 유효하지 않음: ${m.audience}`);
   if (!m.studentEntry && !m.teacherEntry) problems.push('studentEntry/teacherEntry 둘 다 없음');
+  if (!m.performance || typeof m.performance !== 'object') {
+    problems.push('performance 계약 없음');
+  } else {
+    if (!['summary', 'none'].includes(m.performance.home)) problems.push('performance.home 유효하지 않음');
+    if (m.performance.load !== 'on-open') problems.push('performance.load는 on-open이어야 함');
+    if (!['rpc', 'none', 'legacy-bounded'].includes(m.performance.writes)) problems.push('performance.writes 유효하지 않음');
+    if (!['none', 'core-only'].includes(m.performance.realtime)) problems.push('performance.realtime 유효하지 않음');
+    if (!Number.isInteger(m.performance.maxInitialRows) || m.performance.maxInitialRows < 0 || m.performance.maxInitialRows > 100) {
+      problems.push('performance.maxInitialRows는 0~100 정수여야 함');
+    }
+  }
   if (m.myAgit && typeof m.myAgitEntry !== 'function') problems.push('myAgit 설정은 있지만 myAgitEntry가 없음');
   if (m.dashboardCards && (typeof m.dashboardCards !== 'object' || Array.isArray(m.dashboardCards))) {
     problems.push('dashboardCards가 객체가 아님');

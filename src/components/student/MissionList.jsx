@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
@@ -13,6 +13,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     const [posts, setPosts] = useState({});
     const [loading, setLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
+    const loadedAtRef = useRef(0);
 
     const getCurrentStudent = useCallback(() => {
         let currentStudent = studentSession;
@@ -83,6 +84,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
             console.error('[MissionList] 데이터 로드 실패:', err.message);
             alert('데이터를 불러오는 데 실패했습니다.');
         } finally {
+            loadedAtRef.current = Date.now();
             setLoading(false);
         }
     }, [fetchMissions, fetchStudentPosts, getCurrentStudent, onBack]);
@@ -94,31 +96,18 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     }, []);
 
     useEffect(() => {
-        fetchData();
-
-        const currentStudent = getCurrentStudent();
-        const classId = currentStudent?.classId || currentStudent?.class_id;
-
-        if (!classId) return;
-
-        const channel = supabase
-            .channel(`mission_list_changes_${classId}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'writing_missions',
-                filter: `class_id=eq.${classId}`
-            }, () => {
-                fetchMissions(currentStudent).catch((err) => {
-                    console.error('[MissionList] 미션 목록 갱신 실패:', err.message);
-                });
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
+        void fetchData();
+        const refreshIfStale = () => {
+            if (document.visibilityState !== 'visible' || Date.now() - loadedAtRef.current < 30000) return;
+            void fetchData();
         };
-    }, [fetchData, fetchMissions, getCurrentStudent]);
+        window.addEventListener('focus', refreshIfStale);
+        document.addEventListener('visibilitychange', refreshIfStale);
+        return () => {
+            window.removeEventListener('focus', refreshIfStale);
+            document.removeEventListener('visibilitychange', refreshIfStale);
+        };
+    }, [fetchData]);
 
     const handleMissionClick = (mission) => {
         onNavigate('writing', { missionId: mission.id });

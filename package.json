@@ -19,8 +19,12 @@
     "test:vibe-ai": "node --test tests/vibeAiEdgeFunction.test.mjs",
     "test:storage": "node --test tests/browserStorage.test.mjs",
     "test:points": "node --test tests/pointModule.test.mjs",
+    "test:architecture": "node --test tests/pointModule.test.mjs tests/performanceArchitecture.test.mjs",
+    "load:test:student-home": "node scripts/load-test-student-home.mjs",
     "migrate": "node scripts/migrate.mjs",
-    "migrate:status": "node scripts/migrate.mjs --status"
+    "migrate:status": "node scripts/migrate.mjs --status",
+    "migrate:check": "node scripts/check-migrations.mjs",
+    "smoke:student-scaling": "node scripts/run-rollback-smoke.mjs tests/sql/20261006_student_scaling_harness.smoke.sql"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",

@@ -48,6 +48,7 @@ const moveToStudentEntry = () => {
 export const useAuthStore = create((set, get) => ({
     session: null,
     profile: null,
+    teacherBootstrap: null,
     studentSession: null,
     profileLoading: false,
     loading: hasStoredSession, // 저장된 세션이 없으면 즉시 false → 랜딩페이지 바로 표시
@@ -55,6 +56,7 @@ export const useAuthStore = create((set, get) => ({
     // 상태 변경 액션들
     setSession: (session) => set({ session }),
     setProfile: (profile) => set({ profile }),
+    setTeacherBootstrap: (teacherBootstrap) => set({ teacherBootstrap }),
     setStudentSession: (studentSession) => set({ studentSession }),
     setProfileLoading: (profileLoading) => set({ profileLoading }),
     setLoading: (loading) => set({ loading }),
@@ -71,7 +73,7 @@ export const useAuthStore = create((set, get) => ({
         const cached = profileFetchCache.get(userId);
         if (!force && cached && (Date.now() - cached.timestamp) < PROFILE_FETCH_DEDUPE_MS) {
             if (cached.profile) {
-                set({ profile: cached.profile });
+                set({ profile: cached.profile, teacherBootstrap: cached.teacherBootstrap || null });
             }
             set({ profileLoading: false });
             return cached.profile;
@@ -89,6 +91,30 @@ export const useAuthStore = create((set, get) => ({
                     (Date.now() - lastLoginTouchCache.get(userId)) > LAST_LOGIN_TOUCH_MS
                 );
 
+                const { data: bootstrap, error: bootstrapError } = await supabase.rpc(
+                    'get_teacher_app_bootstrap_v1',
+                    { p_touch_login: shouldTouchLogin }
+                );
+
+                if (!bootstrapError && bootstrap?.version === 1) {
+                    const teacherData = bootstrap.teacher || {};
+                    const fullProfile = {
+                        ...(bootstrap.profile || {}),
+                        role: bootstrap.profile?.role || 'TEACHER',
+                        teacherName: teacherData.name,
+                        schoolName: teacherData.school_name,
+                        phone: teacherData.phone
+                    };
+                    if (shouldTouchLogin) lastLoginTouchCache.set(userId, Date.now());
+                    profileFetchCache.set(userId, { profile: fullProfile, teacherBootstrap: bootstrap, timestamp: Date.now() });
+                    set({ profile: fullProfile, teacherBootstrap: bootstrap });
+                    return fullProfile;
+                }
+
+                if (bootstrapError) {
+                    console.warn('[AuthStore] 교사 bootstrap을 사용할 수 없어 기존 조회로 전환합니다:', bootstrapError.message);
+                }
+
                 const requests = [];
                 if (shouldTouchLogin) {
                     requests.push(
@@ -104,7 +130,7 @@ export const useAuthStore = create((set, get) => ({
                 requests.push(
                     supabase
                         .from('profiles')
-                        .select('id, role, full_name, is_approved, primary_class_id, api_mode, created_at, last_login_at')
+                        .select('id, role, full_name, is_approved, primary_class_id, api_mode, created_at, last_login_at, ai_prompt_template, frequent_tags, default_rubric, mission_default_settings')
                         .eq('id', userId)
                         .maybeSingle()
                 );
@@ -137,7 +163,7 @@ export const useAuthStore = create((set, get) => ({
                         phone: teacherData?.phone
                     };
                     profileFetchCache.set(userId, { profile: fullProfile, timestamp: Date.now() });
-                    set({ profile: fullProfile });
+                    set({ profile: fullProfile, teacherBootstrap: null });
                     return fullProfile;
                 } else if (teacherData) {
                     const basicProfile = {
@@ -146,7 +172,7 @@ export const useAuthStore = create((set, get) => ({
                         schoolName: teacherData.school_name
                     };
                     profileFetchCache.set(userId, { profile: basicProfile, timestamp: Date.now() });
-                    set({ profile: basicProfile });
+                    set({ profile: basicProfile, teacherBootstrap: null });
                     return basicProfile;
                 }
 
@@ -187,7 +213,7 @@ export const useAuthStore = create((set, get) => ({
                         const { data: studentResult } = await supabase.rpc('get_student_by_auth');
                         if (studentResult?.success) {
                             const sessionData = buildStudentSession(studentResult.student);
-                            set({ studentSession: sessionData, session: null, profile: null });
+                            set({ studentSession: sessionData, session: null, profile: null, teacherBootstrap: null });
                             localStorage.setItem('student_session', JSON.stringify(sessionData));
                         } else {
                             console.warn('[AuthStore] 학생 auth 바인딩 해제됨');
@@ -207,7 +233,7 @@ export const useAuthStore = create((set, get) => ({
                 }
             } else {
                 localStorage.removeItem('student_session');
-                set({ session: null, profile: null, studentSession: null, profileLoading: false });
+                set({ session: null, profile: null, teacherBootstrap: null, studentSession: null, profileLoading: false });
             }
         } catch (e) {
             console.error("[AuthStore] 세션 체크 중 오류:", e);
@@ -244,14 +270,14 @@ export const useAuthStore = create((set, get) => ({
 
             if (studentResult?.success) {
                 const sessionData = buildStudentSession(studentResult.student);
-                set({ studentSession: sessionData, session: null, profile: null });
+                set({ studentSession: sessionData, session: null, profile: null, teacherBootstrap: null });
                 localStorage.setItem('student_session', JSON.stringify(sessionData));
                 return true;
             }
 
             await supabase.auth.signOut();
             clearStudentClientState();
-            set({ studentSession: null, session: null, profile: null, profileLoading: false, loading: false });
+            set({ studentSession: null, session: null, profile: null, teacherBootstrap: null, profileLoading: false, loading: false });
 
             if (notify) {
                 window.alert('다른 기기에서 이 학생 코드로 다시 로그인되어 현재 기기의 연결이 해제되었어요.');
@@ -271,7 +297,7 @@ export const useAuthStore = create((set, get) => ({
         } catch (err) {
             console.warn('[AuthStore] Logout failed:', err);
         } finally {
-            set({ session: null, profile: null, studentSession: null, profileLoading: false, loading: false });
+            set({ session: null, profile: null, teacherBootstrap: null, studentSession: null, profileLoading: false, loading: false });
             clearStudentClientState();
             moveToStudentEntry();
         }
@@ -285,7 +311,7 @@ export const useAuthStore = create((set, get) => ({
         } catch (e) {
             console.warn('[AuthStore] 학생 로그아웃 실패:', e);
         } finally {
-            set({ studentSession: null, session: null, profile: null, profileLoading: false, loading: false });
+            set({ studentSession: null, session: null, profile: null, teacherBootstrap: null, profileLoading: false, loading: false });
             clearStudentClientState();
             moveToStudentEntry();
         }

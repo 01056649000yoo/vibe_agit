@@ -9,6 +9,7 @@ import {
     getWritingPolicyError,
     writingPolicyFromMission
 } from '../modules/writing/policy/writingPolicy';
+import { studentHomeApi } from '../modules/home/studentHomeApi';
 
 export const useMissionSubmit = (studentSession, missionId, params, onBack, onNavigate) => {
     const studentId = studentSession?.id || null;
@@ -150,45 +151,6 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         };
     }, [missionId, fetchMission]);
 
-    // 2. 선생님의 미션 수정 실시간 감지 (의존성 최소화로 웹소켓 폭탄 방지)
-    useEffect(() => {
-        if (!missionId) return;
-
-        let alertTimerId = null;
-
-        const channel = supabase
-            .channel(`mission_updates_${missionId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'writing_missions',
-                    filter: `id=eq.${missionId}`
-                },
-                (payload) => {
-                    console.log('🔔 실시간 미션 정보 업데이트됨:', payload.new);
-                    setMission(prev => ({ ...prev, ...payload.new }));
-                    // [썬더링 허드 방지] 교사가 미션을 수정하면 해당 미션을 수행 중인 모든 학생이 동시에
-                    // alert를 보고 동시에 반응(재저장/새로고침)할 수 있음. 0~4초 랜덤 지연으로 분산.
-                    if (alertTimerId) clearTimeout(alertTimerId);
-                    const jitterMs = Math.floor(Math.random() * 4000);
-                    alertTimerId = setTimeout(() => {
-                        alertTimerId = null;
-                        alert(payload.new?.is_archived
-                            ? '📂 선생님이 이 미션을 보관했어요. 작성 중인 내용은 보존되지만 더 이상 수정하거나 제출할 수 없어요.'
-                            : '📢 선생님이 미션 내용을 수정하셨어요! 바뀐 기준을 확인해주세요.');
-                    }, jitterMs);
-                }
-            )
-            .subscribe();
-
-        return () => {
-            if (alertTimerId) clearTimeout(alertTimerId);
-            supabase.removeChannel(channel);
-        };
-    }, [missionId]);
-
     // 임시 저장 처리
     const handleSave = async (showMsg = true, draftOverride = null) => {
         // [보안 강화] Supabase 세션에서만 studentId 가져오기 - localStorage 폴백 제거
@@ -313,76 +275,19 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
 
         setSubmitting(true);
         try {
-            // 제출 전 최신 데이터로 다시 계산 (동기화 보장)
-            const finalCharCount = countContentChars(content);
-            const finalParagraphCount = getParagraphCount();
+            const { data: submitResult, error: submitError } = await supabase.rpc('submit_assignment_post_v1', {
+                p_mission_id: missionId,
+                p_title: title.trim(),
+                p_content: content,
+                p_student_answers: studentAnswers,
+                p_structured_content: structuredContent
+            });
+            if (submitError) throw submitError;
+            if (!submitResult?.success) throw new Error(submitResult?.error || '글을 제출하지 못했습니다.');
 
-            // 2. 글 저장 (student_posts) - upsert 사용
-            // 최초 제출 시의 데이터를 보존하기 위해 original_title, original_content를 조건부로 업데이트합니다.
-            let existingPostQuery = supabase
-                .from('student_posts')
-                .select('original_content')
-                .eq('student_id', currentStudentId)
-                .eq('mission_id', missionId);
-            if (classId) existingPostQuery = existingPostQuery.eq('class_id', classId);
-            const { data: existingPost, error: existingPostError } = await existingPostQuery.maybeSingle();
-            if (existingPostError) throw existingPostError;
-
-            const isFirstTime = !existingPost || !existingPost.original_content;
-
-            const updateData = {
-                student_id: currentStudentId,
-                mission_id: missionId,
-                title: title.trim(),
-                content: content,
-                char_count: finalCharCount,
-                paragraph_count: finalParagraphCount,
-                awarded_base_reward: mission?.base_reward ?? null,
-                awarded_bonus_reward: mission?.bonus_reward ?? null,
-                awarded_bonus_threshold: mission?.bonus_threshold ?? null,
-                is_submitted: true,
-                is_returned: false,
-                is_confirmed: false,
-                is_teacher_edited: false,
-                teacher_edited_title: null,
-                teacher_edited_content: null,
-                teacher_edited_at: null,
-                teacher_edited_by: null,
-                student_answers: studentAnswers, // [신규] 답변 저장
-                structured_content: structuredContent,
-                ...(missionType?.postStatus ? { status: missionType.postStatus } : {})
-            };
-
-            // 최초 제출인 경우 원본 데이터 기록
-            if (isFirstTime) {
-                updateData.original_title = title.trim();
-                updateData.original_content = content;
-                updateData.first_submitted_at = new Date().toISOString();
-            }
-
-            const { error: postError } = await supabase
-                .from('student_posts')
-                .upsert(updateData, { onConflict: 'student_id,mission_id' });
-
-            if (postError) {
-                console.error('❌ student_posts 저장 실패:', postError.message, postError.details);
-                throw postError;
-            }
-
-            let extensionResult = null;
-            if (missionType?.afterSubmit) {
-                try {
-                    extensionResult = await missionType.afterSubmit({
-                        missionId,
-                        studentId: currentStudentId,
-                        mission,
-                        isFirstTime
-                    });
-                } catch (extensionError) {
-                    // 글 제출은 성공했으므로 장르별 후속 처리 실패가 제출 자체를 되돌리지는 않는다.
-                    console.error(`[useMissionSubmit] ${missionType.id} 제출 후 처리 실패:`, extensionError.message);
-                }
-            }
+            const isFirstTime = Boolean(submitResult.is_first_time);
+            const extensionResult = submitResult;
+            setPostId(submitResult.post_id || null);
 
             // 5. 성공 피드백 (폭죽 효과)
             confetti({
@@ -395,6 +300,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             // 대시보드 통계 불일치 방지를 위한 캐시 무효화
             if (currentStudentId) {
                 dataCache.invalidate(`stats_${currentStudentId}`);
+                studentHomeApi.invalidate(currentStudentId);
             }
 
             const successMessage = missionType?.getSubmitSuccessMessage?.({

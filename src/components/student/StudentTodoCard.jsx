@@ -35,10 +35,19 @@ const TONES = {
     news: { border: '#B39DDB', bg: '#F3E5F5', text: '#5E35B1', chip: '#7E57C2' }
 };
 
-const StudentTodoCard = ({ studentSession, returnedCount = 0, hasActivity, onNavigate, onOpenFeedback, onGoRewrite }) => {
+const StudentTodoCard = ({
+    studentSession,
+    initialPendingMissions,
+    returnedCount = 0,
+    hasActivity,
+    onNavigate,
+    onOpenFeedback,
+    onGoRewrite
+}) => {
     const classId = studentSession?.class_id || studentSession?.classId;
     const studentId = studentSession?.id;
-    const [pendingMissions, setPendingMissions] = useState(null);
+    const hasInitialPending = initialPendingMissions != null && Number.isFinite(Number(initialPendingMissions));
+    const [pendingMissions, setPendingMissions] = useState(hasInitialPending ? Number(initialPendingMissions) : null);
 
     const load = useCallback(async () => {
         if (!classId || !studentId) return;
@@ -85,9 +94,13 @@ const StudentTodoCard = ({ studentSession, returnedCount = 0, hasActivity, onNav
     }, [classId, studentId]);
 
     useEffect(() => {
+        if (hasInitialPending) {
+            const timerId = window.setTimeout(() => setPendingMissions(Number(initialPendingMissions)), 0);
+            return () => window.clearTimeout(timerId);
+        }
         const timerId = window.setTimeout(load, 0);
         return () => window.clearTimeout(timerId);
-    }, [load]);
+    }, [hasInitialPending, initialPendingMissions, load]);
 
     // 아직 세는 중이면 자리만 잡아 둔다. 숫자가 늦게 튀어나와 화면이 밀리지 않게.
     if (pendingMissions === null) {

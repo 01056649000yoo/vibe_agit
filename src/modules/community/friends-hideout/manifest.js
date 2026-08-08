@@ -12,6 +12,7 @@ export const friendsHideoutManifest = {
   part: 'community',
   audience: 'student',
   core: true, // 모듈 구조·지연 로딩은 유지하지만 학급별로 끌 수 없다.
+  performance: { home: 'none', load: 'on-open', writes: 'legacy-bounded', realtime: 'none', maxInitialRows: 50 },
   studentRoute: 'friends_hideout',
   studentEntry: () => import('./FriendsHideout'),
 };

@@ -67,7 +67,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
         <section className="landing-hero" aria-label="끄적끄적 아지트 소개">
           <img
             className="landing-hero-image"
-            src="/assets/landing-hero-reference.png"
+            src="/assets/landing-hero-reference.jpg"
             alt="끄적끄적 아지트, 글쓰기를 중심으로 문해력 활동을 이어가는 공간"
             width="1723"
             height="913"

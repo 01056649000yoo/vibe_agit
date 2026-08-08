@@ -5,6 +5,7 @@ export const samlinkManifest = {
   icon: '🔗',
   part: 'tool',
   audience: 'teacher',
+  performance: { home: 'none', load: 'on-open', writes: 'none', realtime: 'none', maxInitialRows: 0 },
   teacherEntry: () => import('./TeacherEntry'),
   tool: {
     order: 10,

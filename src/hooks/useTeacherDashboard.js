@@ -4,28 +4,46 @@ import { callAI } from '../lib/openai';
 import { dataCache } from '../lib/cache';
 import { DEFAULT_FEEDBACK_PROMPT, DEFAULT_REPORT_PROMPT } from '../constants/aiPrompts';
 
+const parsePromptTemplates = (storedPrompt) => {
+    const rawPrompt = storedPrompt?.trim();
+    if (!rawPrompt) return { feedback: DEFAULT_FEEDBACK_PROMPT, report: DEFAULT_REPORT_PROMPT };
+    if (rawPrompt.startsWith('{') && rawPrompt.endsWith('}')) {
+        try {
+            const parsed = JSON.parse(rawPrompt);
+            return {
+                feedback: parsed.feedback || DEFAULT_FEEDBACK_PROMPT,
+                report: parsed.report || DEFAULT_REPORT_PROMPT
+            };
+        } catch {
+            return { feedback: rawPrompt, report: DEFAULT_REPORT_PROMPT };
+        }
+    }
+    return { feedback: rawPrompt, report: DEFAULT_REPORT_PROMPT };
+};
 
-export const useTeacherDashboard = (session, profile, onProfileUpdate, activeClass, setActiveClass) => {
-    const [classes, setClasses] = useState([]);
-    const [loadingClasses, setLoadingClasses] = useState(true);
+export const useTeacherDashboard = (session, profile, onProfileUpdate, activeClass, setActiveClass, teacherBootstrap = null) => {
+    const initialPrompts = parsePromptTemplates(teacherBootstrap?.profile?.ai_prompt_template);
+    const initialTeacher = teacherBootstrap?.teacher || { name: '', school_name: '', phone: '' };
+    const [classes, setClasses] = useState(() => teacherBootstrap?.classes || []);
+    const [loadingClasses, setLoadingClasses] = useState(() => !teacherBootstrap);
 
     // AI 설정 관련 상태
-    const [promptTemplate, setPromptTemplate] = useState(DEFAULT_FEEDBACK_PROMPT);
-    const [originalPrompt, setOriginalPrompt] = useState(""); // 초기에 저장이 가능하도록 빈값으로 설정
-    const [reportPromptTemplate, setReportPromptTemplate] = useState(DEFAULT_REPORT_PROMPT);
-    const [originalReportPrompt, setOriginalReportPrompt] = useState(""); // 초기에 저장이 가능하도록 빈값으로 설정
+    const [promptTemplate, setPromptTemplate] = useState(initialPrompts.feedback);
+    const [originalPrompt, setOriginalPrompt] = useState(initialPrompts.feedback);
+    const [reportPromptTemplate, setReportPromptTemplate] = useState(initialPrompts.report);
+    const [originalReportPrompt, setOriginalReportPrompt] = useState(initialPrompts.report);
     const [savingKey, setSavingKey] = useState(false);
     const [testingKey, setTestingKey] = useState(false);
 
     // 선생님 인적 사항 상태
-    const [teacherInfo, setTeacherInfo] = useState({ name: '', school_name: '', phone: '' });
+    const [teacherInfo, setTeacherInfo] = useState(initialTeacher);
     const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-    const [editName, setEditName] = useState('');
-    const [editSchool, setEditSchool] = useState('');
-    const [editPhone, setEditPhone] = useState('');
+    const [editName, setEditName] = useState(initialTeacher.name || '');
+    const [editSchool, setEditSchool] = useState(initialTeacher.school_name || '');
+    const [editPhone, setEditPhone] = useState(initialTeacher.phone || '');
 
     // AI 상태 관련
-    const [aiStatus, setAiStatus] = useState('disconnected'); // 초기값은 안전하게 '연결되지 않음'으로 시작
+    const [aiStatus, setAiStatus] = useState(teacherBootstrap ? 'connected' : 'disconnected');
 
     const fetchTeacherInfo = useCallback(async () => {
         if (!session?.user?.id) return;
@@ -116,6 +134,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     }, [session?.user?.id]);
 
     useEffect(() => {
+        if (teacherBootstrap) return;
         if (session?.user?.id) {
             // [async-parallel] 초기 데이터 로딩을 병렬로 처리하여 첫 로딩 속도 향상
             Promise.all([
@@ -124,7 +143,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 fetchTeacherInfo()
             ]).catch(err => console.error("초기 로딩 중 오류:", err));
         }
-    }, [session?.user?.id, fetchAllClasses, fetchApiSettings, fetchTeacherInfo]);
+    }, [session?.user?.id, fetchAllClasses, fetchApiSettings, fetchTeacherInfo, teacherBootstrap]);
 
     // 활성 학급 자동 선택 로직
     useEffect(() => {

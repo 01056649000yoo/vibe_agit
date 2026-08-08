@@ -12,6 +12,7 @@ export const writingFootprintManifest = {
     part: 'writing',
     audience: 'student',
     core: true,
+    performance: { home: 'none', load: 'on-open', writes: 'none', realtime: 'none', maxInitialRows: 31 },
     // 페이지가 아니라 모달로 연다 — 학생이 헤더 버튼으로 수시로 열어 본다.
     studentEntry: () => import('./WritingFootprintModal'),
     dashboardCards: {

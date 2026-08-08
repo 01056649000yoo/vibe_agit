@@ -25,7 +25,7 @@ const GENRE_MISSION_BUILDERS = new Map(
  */
 const MissionManager = ({
     activeClass, isDashboardMode = true, cardLayout,
-    navigationTarget, onNavigationHandled
+    navigationTarget, onNavigationHandled, bootstrapProfile
 }) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [isMissionTypePickerOpen, setIsMissionTypePickerOpen] = useState(false);
@@ -54,7 +54,7 @@ const MissionManager = ({
         isEvaluationMode, setIsEvaluationMode, handleEvaluationMode,
         frequentTags, saveFrequentTag, removeFrequentTag,
         addTeacherComment, deleteTeacherComment, handleTeacherEditPost
-    } = useMissionManager(activeClass);
+    } = useMissionManager(activeClass, bootstrapProfile);
 
     const [reportMission, setReportMission] = useState(null);
 

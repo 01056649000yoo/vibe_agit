@@ -6,14 +6,16 @@ import './readingMarathon.css';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
-const ReadingMarathonDashboardCard = ({ studentSession }) => {
+const ReadingMarathonDashboardCard = ({ studentSession, initialSnapshot = null }) => {
     const classId = studentSession?.class_id || studentSession?.classId;
-    const [snapshot, setSnapshot] = useState(null);
+    const [snapshot, setSnapshot] = useState(() => initialSnapshot ? normalizeMarathonSnapshot(initialSnapshot) : null);
+    const [fullLoaded, setFullLoaded] = useState(Boolean(initialSnapshot?.leaderboard));
+    const [detailsLoading, setDetailsLoading] = useState(false);
     const [failed, setFailed] = useState(false);
     const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
-        if (!classId) return undefined;
+        if (!classId || initialSnapshot) return undefined;
         let active = true;
         const load = async () => {
             const { data, error } = await supabase.rpc('get_reading_marathon_snapshot', { p_class_id: classId });
@@ -24,10 +26,40 @@ const ReadingMarathonDashboardCard = ({ studentSession }) => {
                 return;
             }
             setSnapshot(normalizeMarathonSnapshot(data));
+            setFullLoaded(true);
         };
         load();
         return () => { active = false; };
-    }, [classId]);
+    }, [classId, initialSnapshot]);
+
+    useEffect(() => {
+        if (!initialSnapshot) return;
+        const timerId = window.setTimeout(() => {
+            setSnapshot(normalizeMarathonSnapshot(initialSnapshot));
+            setFullLoaded(Boolean(initialSnapshot.leaderboard));
+            setFailed(false);
+        }, 0);
+        return () => window.clearTimeout(timerId);
+    }, [initialSnapshot]);
+
+    useEffect(() => {
+        if (!expanded || fullLoaded || !classId) return undefined;
+        let active = true;
+        const loadDetails = async () => {
+            setDetailsLoading(true);
+            const { data, error } = await supabase.rpc('get_reading_marathon_snapshot', { p_class_id: classId });
+            if (!active) return;
+            if (error) {
+                console.error('독서마라톤 상세 로드 실패:', error.message);
+            } else {
+                setSnapshot(normalizeMarathonSnapshot(data));
+                setFullLoaded(true);
+            }
+            setDetailsLoading(false);
+        };
+        void loadDetails();
+        return () => { active = false; };
+    }, [classId, expanded, fullLoaded]);
 
     if (failed || !snapshot?.campaign?.is_enabled) return null;
 
@@ -61,6 +93,7 @@ const ReadingMarathonDashboardCard = ({ studentSession }) => {
 
             {expanded && (
                 <div id={detailsId} className="reading-marathon-card__details">
+                    {detailsLoading && <p role="status">순위와 상세 기록을 불러오고 있어요…</p>}
                     <ReadingMarathonCourse title={snapshot.campaign.title} summary={snapshot.summary} completed={completed} />
 
                     <div className="reading-marathon-card__tracks">

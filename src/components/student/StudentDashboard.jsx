@@ -29,10 +29,17 @@ const WritingFootprintModal = lazy(() => import('../../modules/writing/writing-f
 const MyAgitPanel = lazy(() => import('./MyAgitPanel'));
 const ReadingMarathonDashboardCard = lazy(() => import('../../modules/writing/reading-log/marathon/ReadingMarathonDashboardCard'));
 
-// [신규] 아지트 실시간 데이터 연동 훅
-import { useClassAgitClass } from '../../hooks/useClassAgitClass';
-
-const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules = [], myAgitSignal = 0, playgroundSignal = 0 }) => {
+const StudentDashboard = ({
+    studentSession,
+    onLogout,
+    onNavigate,
+    enabledModules = [],
+    homeBootstrap,
+    homeBootstrapLoading = false,
+    onRefreshHome,
+    myAgitSignal = 0,
+    playgroundSignal = 0
+}) => {
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
@@ -58,13 +65,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
     }, [playgroundSignal]);
 
 
-    // [신규] 아지트 온도 및 활성화 정보 실시간 동기화
-    // 아지트 설정만 받는다. 게임별 설정은 각 표준 StudentEntry가 열릴 때 직접 조회한다.
-    const { agitSettings } = useClassAgitClass(
-        studentSession?.classId || studentSession?.class_id,
-        studentSession?.id,
-        { lightweight: true }
-    );
+    const agitSettings = homeBootstrap?.class_config?.agit_settings || {};
 
     // 전반적인 대시보드 데이터 및 비즈니스 로직
     const {
@@ -73,13 +74,22 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
         returnedCount, initialPetData,
         handleClearFeedback, handleDirectRewriteGo, openFeedback,
         fetchMyPoints, checkActivity
-    } = useStudentDashboard(studentSession, onNavigate);
+    } = useStudentDashboard(studentSession, onNavigate, {
+        bootstrap: homeBootstrap,
+        bootstrapLoading: homeBootstrapLoading,
+        refreshBootstrap: onRefreshHome
+    });
 
     const {
         writerLevel,
         readerLevel,
         loading: titleStatusLoading
-    } = useMyTitleStatus({ studentSession, active: true });
+    } = useMyTitleStatus({
+        studentSession,
+        active: true,
+        initialStatus: homeBootstrap?.title_status,
+        bootstrapLoading: homeBootstrapLoading
+    });
 
     const refreshMyTitleStatus = React.useCallback(() => {
         invalidateMyTitleStatus({
@@ -90,8 +100,8 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
 
     // [신규] 실시간 알림 로직 전담 훅 (의존성 안정화)
     const refetchDataControls = React.useMemo(() => ({
-        fetchMyPoints, refreshMyTitleStatus, checkActivity
-    }), [fetchMyPoints, refreshMyTitleStatus, checkActivity]);
+        fetchMyPoints, refreshMyTitleStatus, checkActivity, refreshHome: onRefreshHome
+    }), [fetchMyPoints, refreshMyTitleStatus, checkActivity, onRefreshHome]);
 
     const { teacherNotify, setTeacherNotify } = useRealtimeNotifications(
         studentSession,
@@ -232,7 +242,10 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     />
 
                     <Suspense fallback={null}>
-                        <ReadingMarathonDashboardCard studentSession={studentSession} />
+                        <ReadingMarathonDashboardCard
+                            studentSession={studentSession}
+                            initialSnapshot={homeBootstrap?.reading_marathon}
+                        />
                     </Suspense>
 
                 {/* 선생님의 실시간 알림(포인트·승인·회수). 상시 상태인 '다시 쓸 글'은
@@ -246,6 +259,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                 {/* 오늘 할 일 — 홈에서 가장 먼저 보여야 하는 것 */}
                 <StudentTodoCard
                     studentSession={studentSession}
+                    initialPendingMissions={homeBootstrap?.home?.pending_missions}
                     returnedCount={returnedCount}
                     hasActivity={hasActivity}
                     onNavigate={onNavigate}
@@ -263,6 +277,7 @@ const StudentDashboard = ({ studentSession, onLogout, onNavigate, enabledModules
                     setIsAgitOpen={setIsAgitOpen}
                     agitSettings={agitSettings}
                     studentSession={studentSession}
+                    homeBootstrap={homeBootstrap}
                     enabledModules={enabledModules}
                 />
 

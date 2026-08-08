@@ -12,6 +12,7 @@ export const ideaMarketManifest = {
   part: 'writing',
   audience: 'both',
   toggleable: false,
+  performance: { home: 'none', load: 'on-open', writes: 'rpc', realtime: 'core-only', maxInitialRows: 100 },
   writingMissionTypes: ['meeting'],
   // 학생은 별도 페이지가 아니라 **'제안하는 글' 미션**으로 들어온다.
   // 교사가 회의 미션을 내면 과제 목록에 뜨고, 학생은 일반 글쓰기 화면에서 안건을 낸다.

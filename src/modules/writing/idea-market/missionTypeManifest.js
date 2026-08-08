@@ -1,5 +1,3 @@
-import { supabase } from '../../../lib/supabaseClient';
-
 export const meetingMissionType = {
     id: 'meeting',
     name: '회의 안건 미션',
@@ -30,13 +28,6 @@ export const meetingMissionType = {
         { type: 'disagree', label: '다른 생각이에요', emoji: '💭' }
     ],
     ownPostReactionsReadOnly: true,
-    afterSubmit: async ({ missionId }) => {
-        const { data, error } = await supabase.rpc('reward_for_idea_submission', {
-            p_mission_id: missionId
-        });
-        if (error) throw error;
-        return data;
-    },
     getSubmitSuccessMessage: ({ extensionResult }) => {
         if (extensionResult?.success && extensionResult.points_awarded > 0) {
             return `🎉 안건을 제출했어요! 친구 아지트에서 함께 살펴볼 수 있어요.\n제출 보상 +${extensionResult.points_awarded}P를 받았어요! 🪙`;

@@ -4,8 +4,8 @@ import { AnnouncementListModal } from './AnnouncementComponents';
 import Button from '../common/Button';
 import { useAuthStore } from '../../store/useAuthStore';
 
-const TeacherAnnouncementManager = ({ isMobile }) => {
-    const { announcements, latestAnnouncement, loading } = useAnnouncements('TEACHER');
+const TeacherAnnouncementManager = ({ isMobile, initialAnnouncements }) => {
+    const { announcements, latestAnnouncement, loading } = useAnnouncements('TEACHER', initialAnnouncements);
     const session = useAuthStore((state) => state.session);
     const [showList, setShowList] = useState(false);
     const storageKey = `teacher_latest_announcement_seen_${session?.user?.id || 'guest'}`;
