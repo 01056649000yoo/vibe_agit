@@ -17,6 +17,9 @@
     "test:vocab-tower": "node --test tests/vocabTower.test.mjs",
     "test:reading-log": "node --test tests/readingLogDraftRules.test.mjs tests/readingMarathon.test.mjs tests/googleBooksPageCount.test.mjs",
     "test:vibe-ai": "node --test tests/vibeAiEdgeFunction.test.mjs",
+    "test:security:static": "node --test tests/securityArchitecture.test.mjs tests/vibeAiEdgeFunction.test.mjs",
+    "test:security:ops": "node scripts/check-operational-security.mjs",
+    "test:security": "npm run test:security:static && npm run migrate:check && npm run smoke:security-boundary && npm run test:security:ops",
     "test:storage": "node --test tests/browserStorage.test.mjs",
     "test:points": "node --test tests/pointModule.test.mjs",
     "test:architecture": "node --test tests/pointModule.test.mjs tests/performanceArchitecture.test.mjs",
@@ -24,16 +27,17 @@
     "migrate": "node scripts/migrate.mjs",
     "migrate:status": "node scripts/migrate.mjs --status",
     "migrate:check": "node scripts/check-migrations.mjs",
-    "smoke:student-scaling": "node scripts/run-rollback-smoke.mjs tests/sql/20261006_student_scaling_harness.smoke.sql"
+    "smoke:student-scaling": "node scripts/run-rollback-smoke.mjs tests/sql/20261006_student_scaling_harness.smoke.sql",
+    "smoke:security-boundary": "node scripts/run-rollback-smoke.mjs tests/sql/20261014_security_boundary_hardening.smoke.sql"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.89.0",
+    "@supabase/supabase-js": "^2.112.2",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.26.2",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "xlsx": "^0.18.5",
+    "write-excel-file": "^4.1.1",
     "zustand": "^5.0.12"
   },
   "devDependencies": {

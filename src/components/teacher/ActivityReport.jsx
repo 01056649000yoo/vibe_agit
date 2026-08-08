@@ -4,7 +4,8 @@ import { readLocalStorageJson } from '../../lib/browserStorage';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import { callAI } from '../../lib/openai';
-// xlsx는 exportToExcel() 호출 시 동적 로드 (429KB 초기 로드 제거)
+import { exportObjectsToExcel } from '../../lib/excelExport';
+// XLSX 생성기는 내보내기 버튼을 누를 때 공용 유틸리티에서 지연 로드한다.
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import BulkAIProgressModal from './BulkAIProgressModal';
 import PromptRuleButton from './PromptRuleButton';
@@ -614,7 +615,6 @@ ${activitiesInfo}`;
 
     // 7. 엑셀 내보내기
     const exportToExcel = async () => {
-        const XLSX = await import('xlsx');
         const data = studentPosts.map(s => {
             const achievements = s.posts.map(p => `${p.writing_missions.title}: ${p.final_eval || p.initial_eval || '-'}점`).join(', ');
             return {
@@ -625,14 +625,11 @@ ${activitiesInfo}`;
             };
         });
 
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "글쓰기 평어 문장");
-
-        // 컬럼 너비 설정
-        worksheet['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 40 }, { wch: 60 }];
-
-        XLSX.writeFile(workbook, `글쓰기평어_덧붙임문장_${activeClass.name}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        await exportObjectsToExcel(
+            data,
+            `글쓰기평어_덧붙임문장_${activeClass.name}_${new Date().toISOString().slice(0, 10)}`,
+            { sheetName: '글쓰기 평어 문장', columnWidths: [10, 12, 40, 60] }
+        );
     };
 
     // 8. 구글 문서용 클립보드 복사

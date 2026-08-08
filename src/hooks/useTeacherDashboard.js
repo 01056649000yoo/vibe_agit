@@ -240,7 +240,9 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
                 ai_prompt_template: packedPrompt,
             };
 
-            const profileResult = await supabase.from('profiles').upsert(profileUpdatePayload, { onConflict: 'id' });
+            const profileResult = await supabase.from('profiles')
+                .update({ ai_prompt_template: profileUpdatePayload.ai_prompt_template })
+                .eq('id', session.user.id);
 
             if (profileResult.error) throw profileResult.error;
 

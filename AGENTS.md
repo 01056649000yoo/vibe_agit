@@ -92,3 +92,10 @@
 - 프론트 빌드: `npm run build` (Vite). 프로덕션 이미지: 레포 `Dockerfile`(build-arg로
   `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`/`VITE_GOOGLE_CLIENT_ID` 주입).
 - 로컬에서 실도메인 테스트: `/etc/hosts`에 apex·api를 `127.0.0.1`로 매핑(NAT 루프백 우회). 테스트 후 제거.
+
+## 보안 변경 규칙 (2026-08-08)
+- 새 테이블·RPC·Edge 함수·외부 API·브라우저 저장 항목을 추가하면 [`SECURITY_HARNESS.md`](SECURITY_HARNESS.md)를 먼저 확인한다.
+- 권한은 DB의 실제 연결·승인 상태로 판정하며 JWT `app_metadata`만 믿지 않는다. 학생은 본인 쓰기, 교사는 담당 학급으로 제한한다.
+- AI·메일처럼 비용이나 외부 전송이 있는 기능은 승인 확인·입력 상한·서버 속도 제한이 모두 있어야 한다.
+- 작업 후 정적·마이그레이션·핵심 역할 스모크·운영 설정을 묶은 `npm run test:security`를 실행한다.
+- 운영 의존성은 `npm audit --omit=dev` 0건을 기준으로 하고, 새 Edge 함수는 운영 허용 목록에 의도적으로 등록한다.

@@ -6,7 +6,7 @@
 
 1. `get_teacher_writing_content_export`: 학급·학생·글 유형을 검증하고 공용 행 계약을 반환한다.
 2. `writingExportProfiles.js`: 콘텐츠별 Excel 열과 Google Docs 제목·메타정보를 정한다.
-3. `useDataExport.js`: Google 권한, Docs API 요청, XLSX 파일 생성을 담당한다.
+3. `useDataExport.js`: Google 권한과 Docs API 요청을 담당하고, XLSX 생성은 공용 `excelExport`를 사용한다.
 
 미션 내보내기의 기존 `get_writing_export_data` 호출부는 운영 호환을 위해 유지한다. 신규 콘텐츠와 독서록은
 공용 계약을 사용하고, 미션도 후속 회귀 검증 뒤 같은 계약으로 옮길 수 있다.
@@ -30,4 +30,3 @@
 - 한 학생 단위로 조회하며 서버 상한을 둔다. 현재 기본 500편, 최대 2,000편이다.
 - 본문은 내보내기 버튼을 누를 때만 조회하고 학생별 요약·목록에는 포함하지 않는다.
 - 콘텐츠 전용 필드는 `source_title`, `source_authors`, 검토 정보 같은 선택 열에 담고 표현은 프로필에서 결정한다.
-

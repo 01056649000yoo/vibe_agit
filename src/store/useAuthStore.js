@@ -21,7 +21,6 @@ const hasStoredSession = (() => {
 const buildStudentSession = (student) => ({
     id: student.id,
     name: student.name,
-    code: student.code,
     classId: student.classId,
     className: student.className,
     role: 'STUDENT'

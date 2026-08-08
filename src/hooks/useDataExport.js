@@ -5,7 +5,7 @@ import {
     toWritingExportDocumentEntries,
     toWritingExportExcelRows
 } from '../modules/writing/export/writingExportProfiles';
-// import * as XLSX from 'xlsx'; // 동적 임포트로 변경하여 초기 로딩 속도 최적화
+import { exportObjectsToExcel } from '../lib/excelExport';
 
 const GOOGLE_DOCS_API_ROOT = 'https://docs.googleapis.com/v1';
 
@@ -516,12 +516,10 @@ export const useDataExport = (classId) => {
         }
 
         try {
-            const XLSX = await import('xlsx');
             const profile = getWritingExportProfile(contentType);
-            const worksheet = XLSX.utils.json_to_sheet(toWritingExportExcelRows(data, contentType));
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, profile.sheetName.slice(0, 31));
-            XLSX.writeFile(workbook, `${fileName}.xlsx`);
+            await exportObjectsToExcel(toWritingExportExcelRows(data, contentType), fileName, {
+                sheetName: profile.sheetName
+            });
         } catch (error) {
             console.error('Writing content Excel export failed:', error);
             alert('엑셀 파일 생성 중 오류가 발생했습니다.');
@@ -535,13 +533,7 @@ export const useDataExport = (classId) => {
         }
 
         try {
-            // [최적화] xlsx 라이브러리를 필요할 때만 불러옵니다 (Dynamic Import)
-            const XLSX = await import('xlsx');
-
-            const worksheet = XLSX.utils.json_to_sheet(data);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
-            XLSX.writeFile(workbook, `${fileName}.xlsx`);
+            await exportObjectsToExcel(data, fileName, { sheetName: 'Data' });
         } catch (error) {
             console.error('Excel Export Failed:', error);
             alert('엑셀 파일 생성 중 오류가 발생했습니다.');

@@ -5,7 +5,7 @@
 >
 > **비밀 값은 여기 쓰지 않는다.** 열쇠·비밀번호는 *어디에 있는지*만 적는다.
 
-**최종 점검: 2026-07-30 — 복구 리허설 통과** (아지트 표 85개 / 연구소 표 91개 모두 온전, 권한 일치)
+**최종 설정 점검: 2026-08-08 — 백업 파일 권한 강화** (복구 리허설 최종 통과는 2026-07-30)
 
 ---
 
@@ -47,6 +47,7 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 - 스크립트: `~/scripts/sh_mirror_backup.sh` · `~/.db-backup/backup.sh` · `~/literacy/scripts/backup-db.sh` · `~/scripts/restore_rehearsal.sh`
 - 로그: `~/backups/auto/sync.log` · `~/.db-backup/backup.log` · `~/backups/auto/rehearsal.log`
 - 내장 산출물: `~/backups/auto/YYYYMMDD/`
+- 로컬 평문 백업 디렉터리는 `700`, 파일은 `600`으로 유지한다. 백업 스크립트가 `umask 077`로 새 산출물에도 같은 권한을 적용한다.
 
 ### 하루치 산출물 (7개)
 

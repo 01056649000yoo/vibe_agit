@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Card from '../common/Card';
 import Button from '../common/Button';
 
-const FeedbackModal = ({ isOpen, onClose, userId }) => {
+const FeedbackModal = ({ isOpen, onClose }) => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,23 +17,18 @@ const FeedbackModal = ({ isOpen, onClose, userId }) => {
 
         setIsSubmitting(true);
         try {
-            // 1. DB에 저장
-            const { error: dbError } = await supabase
-                .from('feedback_reports')
-                .insert({
-                    teacher_id: userId,
-                    title: title,
-                    content: content,
-                    status: 'open'
-                });
-
-            if (dbError) throw dbError;
+            // 승인 확인·입력 검증·속도 제한을 서버 RPC 한 곳에서 처리한다.
+            const { data: feedbackResult, error: dbError } = await supabase.rpc('submit_teacher_feedback_v1', {
+                p_title: title.trim(),
+                p_content: content.trim()
+            });
+            if (dbError || !feedbackResult?.feedback_id) throw dbError || new Error('의견 접수 결과가 없습니다.');
 
             // 2. 이메일 전송 (Edge Function 호출)
             // 성공/실패 여부와 관계없이 사용자에게는 "전송 완료" 처리
             // 실제 구현 시에는 Supabase Edge Function URL을 호출합니다.
             supabase.functions.invoke('send-feedback', {
-                body: { title, content, teacherId: userId }
+                body: { feedbackId: feedbackResult.feedback_id }
             }).then(({ error }) => {
                 if (error) console.error('이메일 전송 실패:', error);
             });
@@ -83,6 +78,7 @@ const FeedbackModal = ({ isOpen, onClose, userId }) => {
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="예: 학생 등록 시 오류가 발생해요 / 이런 기능이 있으면 좋겠어요"
+                                    maxLength={120}
                                     style={{
                                         width: '100%', padding: '12px', borderRadius: '12px',
                                         border: '1px solid #DEE2E6', boxSizing: 'border-box',
@@ -97,6 +93,7 @@ const FeedbackModal = ({ isOpen, onClose, userId }) => {
                                     onChange={(e) => setContent(e.target.value)}
                                     placeholder="상세 내용을 입력해주세요."
                                     rows={6}
+                                    maxLength={5000}
                                     style={{
                                         width: '100%', padding: '12px', borderRadius: '12px',
                                         border: '1px solid #DEE2E6', boxSizing: 'border-box',

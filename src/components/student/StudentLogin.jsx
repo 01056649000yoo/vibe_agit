@@ -85,7 +85,6 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
             const sessionData = {
                 id: studentInfo.id,
                 name: studentInfo.name,
-                code: studentInfo.code,
                 classId: studentInfo.classId,
                 className: studentInfo.className,
                 role: 'STUDENT'
@@ -98,7 +97,6 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
             onLoginSuccess({
                 id: studentInfo.id,
                 name: studentInfo.name,
-                student_code: studentInfo.code,
                 class_id: studentInfo.classId,
                 classes: { name: studentInfo.className }
             });
