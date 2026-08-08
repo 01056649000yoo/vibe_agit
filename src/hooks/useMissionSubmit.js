@@ -108,6 +108,66 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         };
     }, [missionId, fetchMission]);
 
+    // 2. 선생님의 미션 수정 감지 — Realtime 대신 화면 복귀 시점에 미션만 가볍게 다시 읽는다.
+    // 글쓰기 중인 title/content는 건드리지 않고 mission만 갱신해, 다시 쓰기 도중 초안이
+    // 서버의 지난 저장본으로 덮이는 일이 없게 한다. 학생이 계속 이 탭에만 머물러 있으면(한 번도
+    // 안 벗어나면) 다음 저장·제출 시점의 서버 재검증이 최종 방어선이 된다.
+    const missionRef = useRef(null);
+    missionRef.current = mission;
+
+    useEffect(() => {
+        if (!missionId) return undefined;
+        let cancelled = false;
+        let alertTimerId = null;
+
+        const checkMissionFreshness = async () => {
+            if (document.visibilityState !== 'visible') return;
+            const previous = missionRef.current;
+            if (!previous) return;
+            try {
+                const { data: workspace, error } = await supabase.rpc(
+                    'get_student_assignment_workspace_v1',
+                    { p_mission_id: missionId, p_post_id: requestedPostId }
+                );
+                if (cancelled || error || Number(workspace?.version) !== 1) return;
+                const fresh = workspace.mission;
+                if (!fresh) return;
+
+                const archivedJustNow = Boolean(fresh.is_archived) && !previous.is_archived;
+                const contentChanged = !archivedJustNow && (
+                    fresh.title !== previous.title
+                    || fresh.guide !== previous.guide
+                    || JSON.stringify(fresh.guide_questions || []) !== JSON.stringify(previous.guide_questions || [])
+                );
+
+                setMission(fresh);
+                if (!archivedJustNow && !contentChanged) return;
+
+                // [흔들림 방지] 같은 미션을 쓰던 학생 전원이 비슷한 시점에 화면으로 돌아와 동시에
+                // alert를 보고 동시에 반응(재저장 등)할 수 있어 0~4초 랜덤 지연으로 분산한다.
+                if (alertTimerId) clearTimeout(alertTimerId);
+                const jitterMs = Math.floor(Math.random() * 4000);
+                alertTimerId = setTimeout(() => {
+                    alertTimerId = null;
+                    alert(archivedJustNow
+                        ? '📂 선생님이 이 미션을 보관했어요. 작성 중인 내용은 보존되지만 더 이상 수정하거나 제출할 수 없어요.'
+                        : '📢 선생님이 미션 내용을 수정하셨어요! 바뀐 기준을 확인해주세요.');
+                }, jitterMs);
+            } catch (err) {
+                console.error('[useMissionSubmit] 미션 최신 상태 확인 실패:', err.message);
+            }
+        };
+
+        window.addEventListener('focus', checkMissionFreshness);
+        document.addEventListener('visibilitychange', checkMissionFreshness);
+        return () => {
+            cancelled = true;
+            if (alertTimerId) clearTimeout(alertTimerId);
+            window.removeEventListener('focus', checkMissionFreshness);
+            document.removeEventListener('visibilitychange', checkMissionFreshness);
+        };
+    }, [missionId, requestedPostId]);
+
     // 임시 저장 처리
     const handleSave = async (showMsg = true, draftOverride = null) => {
         // [보안 강화] Supabase 세션에서만 studentId 가져오기 - localStorage 폴백 제거

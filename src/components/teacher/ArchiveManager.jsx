@@ -615,7 +615,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                         </motion.div>
                     ))}
                     </div>
-                    {archiveHasMore && selectedTags.length === 0 && (
+                    {archiveHasMore && (
                         <div style={{ textAlign: 'center', marginTop: '18px' }}>
                             <Button
                                 onClick={() => fetchArchivedMissions({ offset: archivedMissions.length, append: true })}

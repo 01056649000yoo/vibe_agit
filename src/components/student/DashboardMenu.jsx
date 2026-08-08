@@ -136,7 +136,6 @@ const DashboardMenu = ({
                         title="두근두근 우리반 아지트"
                         description={agitSettings?.isMenuEnabled === false ? '선생님이 준비하고 있어요' : '친구들과 함께 에너지 모으기'}
                         badge={agitSettings?.isMenuEnabled === false ? '준비 중' : '입장하기'}
-                        isNew={false}
                         tone="rose"
                         disabled={agitSettings?.isMenuEnabled === false}
                         onClick={openAgitOnClass}

@@ -42,8 +42,9 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     const [editSchool, setEditSchool] = useState(initialTeacher.school_name || '');
     const [editPhone, setEditPhone] = useState(initialTeacher.phone || '');
 
-    // AI 상태 관련
-    const [aiStatus, setAiStatus] = useState(teacherBootstrap ? 'connected' : 'disconnected');
+    // AI 상태 관련 — bootstrap 로드는 프로필 조회 성공일 뿐 실제 AI 연결 확인이 아니다.
+    // 실제 확인은 `handleTestAIConnection`(테스트 버튼)에서만 이뤄지므로 그 전까지는 '확인 필요'로 둔다.
+    const [aiStatus, setAiStatus] = useState('disconnected');
 
     const fetchTeacherInfo = useCallback(async () => {
         if (!session?.user?.id) return;

@@ -6,6 +6,8 @@ import Button from '../common/Button';
 import { isPendingRewrite } from '../../lib/writingStatus';
 
 const MISSION_LIST_LIMIT = 100;
+// AGENTS.md 학생 폴링 하한(60초)과 다른 화면 재조회 간격에 맞춘다.
+const MISSION_LIST_STALE_MS = 60000;
 
 /**
  * 역할: 학생 - 글쓰기 미션 목록 확인
@@ -65,7 +67,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
     useEffect(() => {
         void fetchData();
         const refreshIfStale = () => {
-            if (document.visibilityState !== 'visible' || Date.now() - loadedAtRef.current < 30000) return;
+            if (document.visibilityState !== 'visible' || Date.now() - loadedAtRef.current < MISSION_LIST_STALE_MS) return;
             void fetchData();
         };
         window.addEventListener('focus', refreshIfStale);
