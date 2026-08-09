@@ -3,11 +3,30 @@
 이 저장소는 **여러 AI 모델(Claude, GPT/Codex 등)이 번갈아 작업**한다.
 모델이 바뀌어도 맥락이 끊기지 않도록 아래 규칙을 반드시 지킨다. (Claude는 `CLAUDE.md`가 이 파일을 가리킨다.)
 
+## 문서 지도 — 뭐가 어디 있는지
+
+| 문서 | 뭐가 있나 |
+|---|---|
+| **AGENTS.md**(이 파일) | 어떻게 작업할지 — 읽는 순서, 절대 규칙, 운영 함정, 검증 명령 |
+| **[ROADMAP.md](ROADMAP.md)** | 앞으로 할 일만 — 현재 위치, 스테이지별 계획, 결정 기록. 지난 작업 서술은 없다 |
+| **[WORKLOG.md](WORKLOG.md)** | 날짜별 작업 이력 — "언제 무엇을 왜 했는지"는 전부 여기 |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** | 이 시스템이 왜 이렇게 생겼는지 — 목표 아키텍처, 핵심 설계 불변식, 맥미니 인프라 상식 |
+| **[PERFORMANCE_HARNESS.md](PERFORMANCE_HARNESS.md)** | 성능 설계 원칙·1,000명 합격선·측정 기록표 |
+| **[SECURITY_HARNESS.md](SECURITY_HARNESS.md)** | 보안 설계 원칙·검사 명령 |
+| **[INTEGRATION_PLAN.md](INTEGRATION_PLAN.md)** | 맥미니 이관(Stage 1)의 상세 절차·검증 사실 |
+| **[backup.md](backup.md)** | 백업·복구 절차, 매월 1일 자동 리허설 |
+| **[MANUAL_ACCEPTANCE_CHECKLIST.md](MANUAL_ACCEPTANCE_CHECKLIST.md)** | 브라우저 없이는 확인 못 하는 실기기 인수 검사표 |
+
 ## 세션 시작 시 (필수)
-1. **`ROADMAP.md`** 를 먼저 읽는다 — 비전, "현재 위치", 진행할 스테이지, 대원칙, 결정 기록.
-2. **`WORKLOG.md`** 상단 몇 항목을 읽는다 — 직전까지 무엇을 왜 했는지, 무엇이 남았는지.
-3. 이관/인프라 상세가 필요하면 **`INTEGRATION_PLAN.md`**.
-4. **백업·복구를 건드릴 일이면 [`backup.md`](backup.md)** — 무엇이 언제 어디로 가는지, 복구 절차,
+1. **`git log --oneline -20`와 `git branch -a`를 먼저 본다.** 이 저장소는 다른 모델(Claude/GPT)이 세션
+   사이에 독립적으로 작업할 수 있다 — 실제로 한쪽이 대규모 작업을 별도 브랜치에 해뒀는데 다른 쪽이 한참
+   뒤에야 발견한 적이 있다. 병합 안 된 브랜치, 낯선 최근 커밋이 있으면 먼저 파악하고 시작한다.
+2. **`ROADMAP.md`** 를 읽는다 — 비전, "현재 위치", 진행할 스테이지, 대원칙, 결정 기록.
+   **단, "다음 할 일" 메모는 실행 전에 실제 코드로 재확인한다.** 다른 모델이 이미 처리했는데 메모만
+   안 지워진 경우가 실제로 여러 번 있었다(성능 최적화 항목 4개 연속으로 이미 끝나 있었음).
+3. **`WORKLOG.md`** 상단 몇 항목을 읽는다 — 직전까지 무엇을 왜 했는지, 무엇이 남았는지.
+4. 시스템이 어떻게 생겼는지 궁금하면 **`ARCHITECTURE.md`**, 이관/인프라 상세가 필요하면 **`INTEGRATION_PLAN.md`**.
+5. **백업·복구를 건드릴 일이면 [`backup.md`](backup.md)** — 무엇이 언제 어디로 가는지, 복구 절차,
    매월 1일 자동 리허설. 백업 설정을 바꾸면 그 파일도 함께 고친다.
 
 ## 작업 후 (필수)
@@ -29,6 +48,20 @@
   ③`(class_id, 정렬열 DESC)` 인덱스를 두고 항상 상한(`limit`/페이지)을 건다
   ④캐시는 `src/lib/cache.js` 의 `dataCache` + `classKey()` 로만 만든다.
   **전체 규칙·측정치·이유는 [WORKLOG.md](WORKLOG.md) 의 `학급 글 조회 기준 (2026-07-28 확정)` 항목을 읽을 것.**
+
+## 운영 함정 모음 (실제로 겪은 것들)
+
+- **`docker-compose.yml`은 `docker-compose.pg17.yml` + `docker-compose.agit.yml`과 항상 같이 써야 한다.**
+  `~/agit-supabase/.env`에 `COMPOSE_FILE=docker-compose.yml:docker-compose.pg17.yml:docker-compose.agit.yml`이
+  걸려 있어 `-f` 없이 `docker compose up -d`만 써도 되지만, 이 설정을 지우거나 다른 방식(예: 컨테이너 개별
+  `docker restart`)으로 재기동하면 `secrets.agit.env` 연결이 빠져 함수 시크릿이 통째로 누락될 수 있다.
+  실제로 `ADMIN_MODE_PASSWORD`가 이렇게 빠져 관리자 로그인이 안 됐던 적이 있다. 상세는 `ARCHITECTURE.md`.
+- **`git add -A -- <경로1> <경로2> ...`에서 경로 하나라도 안 맞으면 명령 전체가 조용히 실패한다.**
+  이미 `git rm`으로 스테이징된 경로를 같은 `-A --` 목록에 다시 넣으면 "did not match any files" 에러로
+  전체가 실패하는데, 다른 파일들은 스테이징된 것처럼 착각하기 쉽다. 커밋 전 `git status -s`의 **앞 칸**
+  (스테이징 여부)과 **뒤 칸**(작업트리 수정 여부)을 반드시 구분해서 본다 — `M ` 은 스테이징됨, ` M` 은
+  안 됨. 실제로 이 실수로 커밋 하나에서 파일 6개가 빠진 적이 있다(다행히 빌드 테스트 게이트가 잡아줬다).
+- **`agit-db`(아지트) vs `supabase-db`(다른 앱 Jarvis)** — 이름이 비슷해 실제로 헷갈렸다. 자세한 건 아래.
 
 ## 현재 운영 구조 (2026-07-24 컷오버 후)
 - 본 서비스: 맥미니. 앱=Docker `agit-app`(127.0.0.1:8300) ← 호스트 Caddy(`/etc/caddy/Caddyfile`) 프록시.
@@ -99,3 +132,17 @@
 - AI·메일처럼 비용이나 외부 전송이 있는 기능은 승인 확인·입력 상한·서버 속도 제한이 모두 있어야 한다.
 - 작업 후 정적·마이그레이션·핵심 역할 스모크·운영 설정을 묶은 `npm run test:security`를 실행한다.
 - 운영 의존성은 `npm audit --omit=dev` 0건을 기준으로 하고, 새 Edge 함수는 운영 허용 목록에 의도적으로 등록한다.
+
+## 커밋 전 검증 치트시트
+
+코드를 고쳤으면 관련 있는 것만 골라 돌린다. 전부 통과해야 커밋한다.
+
+| 언제 | 명령 |
+|---|---|
+| 항상 | `npm run lint` (0경고·0오류 기준), `npm run build` |
+| 학생 홈·목록·쓰기 화면을 고쳤으면 | `npm run test:architecture` — 1,000명 하네스 규칙(폴링·N+1·Realtime 재도입 등) 자동 검사 |
+| 보안 관련(RLS·Edge 함수·인증)을 고쳤으면 | `npm run test:security` (정적 검사+`migrate:check`+권한 스모크+운영 설정 검사) |
+| 새 SQL 마이그레이션을 만들었으면 | `npm run migrate:check` (ROLLBACK 검증) → 승인 후 `npm run migrate` |
+| 관련 기능 단위 테스트 | `npm run test:<영역>` (예: `test:dragon`, `test:points`, `test:reading-log` — `npm run`으로 전체 목록 확인) |
+| 학생 홈 부하가 걱정되면 | `npm run load:test:student-home` (격리된 시험 학급 계정으로, 결과는 `PERFORMANCE_HARNESS.md` 측정 기록표에 추가) |
+| 맞춤법 규칙을 고쳤으면 | `npm run spelling:check` (오탐 0 기준) |

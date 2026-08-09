@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-start-context.sh",
+            "timeout": 15,
+            "statusMessage": "작업 지침(AGENTS.md) 불러오는 중..."
+          }
+        ]
+      }
+    ]
+  }
+}
