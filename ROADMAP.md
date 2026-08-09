@@ -687,6 +687,9 @@ SSO가 되려면 둘을 한 스택·한 인증으로 통일해야 한다 (JWT �
 
 ## 📝 결정 기록
 
+- 2026-08-10: **프로젝트 Codex 셸 훅은 운영체제별 실행 명령을 둔다.** POSIX는 기존 `/bin/bash`,
+  Windows는 `commandWindows`에서 설치된 Git Bash를 명시적으로 사용한다. 공통 스크립트 본문은 하나로
+  유지하고 저장소 루트는 실행 시 `git rev-parse`로 찾는다.
 - 2026-08-10: **프로젝트의 모든 셸 훅은 Git 체크아웃 시 LF를 강제한다.** Windows의
   `core.autocrlf=true` 환경에서 CRLF로 바뀌면 Bash 구문 검사가 실패하므로 `.gitattributes`의
   `*.sh text eol=lf` 규칙을 공통 안전장치로 둔다.

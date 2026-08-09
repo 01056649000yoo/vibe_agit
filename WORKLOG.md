@@ -21,6 +21,20 @@
 
 ---
 
+## 2026-08-10 — Codex SessionStart 훅 Windows 실행 수정 (GPT/Codex)
+- **한 일**: 새 세션에서 `AGENTS.md`만 기본 로드되고 SessionStart 훅이 넣어야 할 WORKLOG 최신 항목이
+  보이지 않는 현상을 실제 모델 입력과 최신 Codex 공식 매뉴얼로 점검했다. 훅 기능·설정 구조·스크립트 출력은
+  정상이지만 Windows에서 POSIX 전용 `/bin/bash` 명령을 실행할 수 없는 것이 원인임을 확인했다.
+- **변경**: `.codex/hooks.json`에 공식 Windows 전용 필드 `commandWindows`를 추가해 설치된 Git Bash를
+  명시적으로 실행하고, 저장소 하위 디렉터리에서 시작해도 `git rev-parse --show-toplevel`로 훅 경로를 찾게 했다.
+  앱·DB·운영 인프라 변경은 없다.
+- **결과/검증**: JSON 파싱과 Bash 구문 검사를 통과했다. Windows 명령을 PowerShell에서 그대로 실행해
+  `AGENTS.md`와 WORKLOG 구분자가 모두 출력되고 최신 WORKLOG 날짜 항목이 정확히 1개만 포함됨을 확인했다.
+  이어 `codex exec --ephemeral --dangerously-bypass-hook-trust` 일회성 세션에서 `SessionStart Completed`와
+  최신 항목 인식 결과 `HOOK_WINDOWS_OK`를 받아 실제 모델 컨텍스트 주입까지 검증했다.
+- **남은 것 / 다음**: 없음. `/hooks`에서 새 해시를 신뢰한 뒤 우회 옵션 없는 임시 세션에서도
+  `HOOK_TRUSTED_OK`를 받아 영구 신뢰와 자동 주입을 최종 확인했다.
+
 ## 2026-08-10 — GitHub 동기화 및 Codex 훅 Windows 실행 보강 (GPT/Codex)
 - **한 일**: 로컬 `main`의 미푸시 조사 커밋 1개와 원격의 신규 238개 커밋을 대조하고, 원격 최신 이력 위로
   조사 기록을 재배치했다. 새 `.codex` SessionStart 훅의 내용과 신뢰 기록도 함께 검토했다.
