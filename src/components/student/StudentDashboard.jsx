@@ -7,7 +7,6 @@ import { useDragonPet } from '../../modules/game/dragon/useDragonPet';
 import { getDragonGrowthFromWriterLevel, getDragonStage, getPendingDragonGrowth } from '../../modules/game/dragon/presentation';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useStudentSyncNotifications } from '../../hooks/useStudentSyncNotifications';
-import { getModule } from '../../modules/registry';
 import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
 import useMyTitleStatus from '../../modules/writing/title-status/useMyTitleStatus';
 
@@ -24,7 +23,6 @@ const DragonHideoutModal = lazy(() => import('../../modules/game/dragon/DragonHi
 const DragonGrowthCelebrationModal = lazy(() => import('../../modules/game/dragon/DragonGrowthCelebrationModal'));
 const BackgroundShopModal = lazy(() => import('../../modules/game/dragon/BackgroundShopModal'));
 // [bundle-dynamic-imports] 조건부 렌더링되는 대형 컴포넌트를 lazy loading으로 전환
-const AgitOnClassPage = lazy(getModule('agit-on-class').studentEntry);
 const WritingFootprintModal = lazy(() => import('../../modules/writing/writing-footprint/WritingFootprintModal'));
 const MyAgitPanel = lazy(() => import('./MyAgitPanel'));
 const ReadingMarathonDashboardCard = lazy(() => import('../../modules/writing/reading-log/marathon/ReadingMarathonDashboardCard'));
@@ -43,7 +41,6 @@ const StudentDashboard = ({
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
     const [isShopOpen, setIsShopOpen] = useState(false);
     const [isDragonModalOpen, setIsDragonModalOpen] = useState(false);
-    const [isAgitOpen, setIsAgitOpen] = useState(false); // [신규] 아지트 오픈 상태
     const [activeGameModuleId, setActiveGameModuleId] = useState(null);
     const [isGuideOpen, setIsGuideOpen] = useState(false);
     const [isFootprintOpen, setIsFootprintOpen] = useState(false);
@@ -64,8 +61,6 @@ const StudentDashboard = ({
         return () => window.clearTimeout(timerId);
     }, [playgroundSignal]);
 
-
-    const agitSettings = homeBootstrap?.class_config?.agit_settings || {};
 
     // 전반적인 대시보드 데이터 및 비즈니스 로직
     const {
@@ -130,7 +125,7 @@ const StudentDashboard = ({
     const dragonEnabled = enabledModules.some((module) => module.id === 'dragon');
 
     const hasBlockingOverlay = isDragonModalOpen || isShopOpen || isMyAgitOpen || isFootprintOpen
-        || isGuideOpen || showFeedback || isPlaygroundOpen || isAgitOpen
+        || isGuideOpen || showFeedback || isPlaygroundOpen
         || Boolean(activeGameModuleId);
 
     useEffect(() => {
@@ -258,11 +253,8 @@ const StudentDashboard = ({
                     onOpenMyAgit={() => setIsMyAgitOpen(true)}
                     onOpenPlayground={() => setIsPlaygroundOpen(true)}
                     playgroundCount={playgroundItems.length}
-                    setIsAgitOpen={setIsAgitOpen}
-                    agitSettings={agitSettings}
                     studentSession={studentSession}
                     homeBootstrap={homeBootstrap}
-                    enabledModules={enabledModules}
                 />
 
                 <AgitPlayground
@@ -399,37 +391,6 @@ const StudentDashboard = ({
                                 setIsPlaygroundOpen(true);
                             }}
                         />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-                {isAgitOpen && isOn('agit-on-class') && (
-                    <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        style={{
-                            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-                            background: 'white', zIndex: 20000, overflow: 'hidden'
-                        }}
-                    >
-                        <Suspense fallback={
-                            <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'white' }}>
-                                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏠</div>
-                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#8D6E63' }}>우리반 아지트로 이동 중...</div>
-                            </div>
-                        }>
-                            <AgitOnClassPage
-                                studentSession={studentSession}
-                                onBack={() => setIsAgitOpen(false)}
-                                onNavigate={(path) => {
-                                    setIsAgitOpen(false);
-                                    onNavigate(path);
-                                }}
-                            />
-                        </Suspense>
                     </motion.div>
                 )}
             </AnimatePresence>

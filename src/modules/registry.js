@@ -11,7 +11,6 @@ export const CONFIGURED_MARK = '__configured__';
 import { dragonManifest } from './game/dragon/manifest';
 import { vocabTowerManifest } from './game/vocab-tower/manifest';
 import { friendsHideoutManifest } from './community/friends-hideout/manifest';
-import { agitOnClassManifest } from './community/agit-on-class/manifest';
 import { ideaMarketManifest } from './writing/idea-market/manifest';
 import { readingLogManifest } from './writing/reading-log/manifest';
 import { diaryManifest } from './writing/diary/manifest';
@@ -23,7 +22,6 @@ const manifests = [
   dragonManifest, // src/modules/game/dragon/
   vocabTowerManifest, // src/modules/game/vocab-tower/
   friendsHideoutManifest, // src/modules/community/friends-hideout/
-  agitOnClassManifest, // src/modules/community/agit-on-class/
   ideaMarketManifest, // src/modules/writing/idea-market/
   readingLogManifest, // src/modules/writing/reading-log/
   diaryManifest, // src/modules/writing/diary/

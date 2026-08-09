@@ -26,16 +26,12 @@ const MenuCard = ({ icon, title, description, badge, isNew, tone, onClick, disab
 
 const DashboardMenu = ({
     onNavigate,
-    setIsAgitOpen,
     onOpenMyAgit,
     onOpenPlayground,
     playgroundCount = 0,
-    agitSettings,
     studentSession,
-    homeBootstrap,
-    enabledModules = []
+    homeBootstrap
 }) => {
-    const agitOnClassEnabled = enabledModules.some((module) => module.id === 'agit-on-class');
     const hasNewMission = Boolean(homeBootstrap?.home?.has_new_mission);
     const readingDailyStatus = useReadingLogDailyStatus(studentSession?.id, {
         enabled: !homeBootstrap,
@@ -65,13 +61,6 @@ const DashboardMenu = ({
     const diaryBadge = diaryDailyStatus.loading
         ? null
         : diaryDailyStatus.hasTodayDiary ? '오늘 작성 완료' : '오늘 아직 안 썼어요';
-
-    const openAgitOnClass = () => {
-        if (agitSettings?.isMenuEnabled === false) return;
-        const classId = studentSession?.class_id || studentSession?.classId;
-        if (classId) localStorage.setItem(`last_visit_agit_menu_${classId}`, new Date().toISOString());
-        setIsAgitOpen(true);
-    };
 
     return (
         <section className="student-home-menu" aria-labelledby="student-home-menu-title">
@@ -128,17 +117,6 @@ const DashboardMenu = ({
                         description={`포인트로 즐기는 놀거리 ${playgroundCount}개`}
                         tone="orange"
                         onClick={onOpenPlayground}
-                    />
-                )}
-                {agitOnClassEnabled && (
-                    <MenuCard
-                        icon={agitSettings?.isMenuEnabled === false ? '🔒' : '🎈'}
-                        title="두근두근 우리반 아지트"
-                        description={agitSettings?.isMenuEnabled === false ? '선생님이 준비하고 있어요' : '친구들과 함께 에너지 모으기'}
-                        badge={agitSettings?.isMenuEnabled === false ? '준비 중' : '입장하기'}
-                        tone="rose"
-                        disabled={agitSettings?.isMenuEnabled === false}
-                        onClick={openAgitOnClass}
                     />
                 )}
             </div>

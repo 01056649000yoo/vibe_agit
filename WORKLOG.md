@@ -21,6 +21,24 @@
 
 ---
 
+## 2026-08-09 — 아지트온클래스 완전 삭제 (Claude)
+- **한 일**: 2026-07-27부터 "나중에 필요하면 `available: true`로 되돌린다"는 전제로 UI만 숨겨 보관해온
+  아지트온클래스(학급 공동 목표·온도 게임)를, 사용자가 "굳이 쓸 일이 없다"고 판단해 완전히 삭제했다.
+  숨김 보관은 코드·DB가 계속 남아있어야 해서(오늘 발견한 죽은 실시간 구독도 이게 원인이었다) 유지
+  비용이 실제로 있다고 보고 삭제를 추천했고, 사용자가 동의했다.
+- **변경**: 프런트엔드 — 모듈 폴더 전체(`src/modules/community/agit-on-class/`: `AgitManager.jsx`·
+  `AgitOnClassPage.jsx`·`manifest.js`·`README.md`), 전용 훅 `useClassAgitClass.js`, `registry.js` 등록,
+  `DashboardMenu.jsx`/`StudentDashboard.jsx`의 진입점(`isAgitOpen`·`agitSettings`·카드)을 제거했다.
+  안 쓰던 배경 이미지 `public/agit_hideout_bg.png`(800KB)도 같이 지웠다.
+  DB — `20261016_remove_agit_on_class.sql`: `agit_honor_roll` 테이블과 `classes.agit_settings` 컬럼을
+  삭제하고 `get_student_home_bootstrap_v1()`에서 해당 필드를 뺐다. 이름이 비슷한
+  `writing_helper.classes.agit_class_id`(연구소 통합용, 다른 스키마)는 무관해서 건드리지 않았다 —
+  스모크 테스트에 "이 컬럼은 그대로 있어야 한다"는 확인도 넣었다.
+- **결과/검증**: `npm run migrate:check` ROLLBACK 통과 후 운영 적용(117/117), 적용 후 스모크 재검증 통과.
+  ESLint 0경고, 프로덕션 빌드, 아키텍처 테스트 22건·보안 테스트 12건 포함 전체 단위 테스트 통과.
+  `ROADMAP.md`의 "숨김 보관" 관련 현재 상태 서술을 삭제 완료로 정정하고 결정 기록에 남겼다.
+- **남은 것 / 다음**: 없음. 비슷한 컨셉(학급 공동 목표 게임)이 나중에 필요해지면 새로 만든다.
+
 ## 2026-08-09 — 성능·보안 하네스 병합분 코드 리뷰 → 5건 수정 (Claude)
 - **한 일**: 사용자가 "개인 서버에서 도니까 안정성이 최우선"이라며 GPT/Codex의 DB·Realtime·보안 최적화를
   다시 점검해달라고 해서, 병합 범위(`2c3d080..15b43f0`)를 코드 리뷰했다. DB 트랜잭션 원자성·`event_key`
