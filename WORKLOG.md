@@ -21,6 +21,31 @@
 
 ---
 
+## 2026-08-09 — 관리자모드 비밀번호 오류 원인 규명·수정 (Claude)
+- **한 일**: 사용자가 관리자모드 진입 시 "서버에 관리자 비밀번호가 설정되지 않았습니다" 오류를 신고했다.
+  아지트온클래스 삭제와는 무관 — `verify-admin-mode` Edge Function이 `ADMIN_MODE_PASSWORD` 환경변수를
+  못 찾을 때 나는 메시지다. 확인해보니 이 값 자체는 `~/agit-supabase/secrets.agit.env`에 있었지만,
+  **실제로 떠 있는 `agit-edge-functions` 컨테이너의 프로세스 환경에는 없었다**(값 0건).
+- **원인**: 이 스택은 `docker-compose.yml`+`docker-compose.pg17.yml`(PG17)+`docker-compose.agit.yml`
+  (아지트 전용 포트·`secrets.agit.env` 연결) 세 파일을 **항상 같이** 써야 하는데, `docker-compose.yml`
+  맨 위 "Usage" 안내는 `docker compose up -d`만 적혀 있어 세 번째 파일(시크릿 연결)이 빠지기 쉬웠다.
+  2026-08-08 GPT/Codex의 보안 강화 작업(WORKLOG 위 항목, DB·Kong·Edge 복구 포함) 중
+  `agit-edge-functions`가 이 안내대로 재기동되면서 `docker-compose.agit.yml`의 `env_file:
+  secrets.agit.env` 연결이 빠졌고, 그 결과 `ADMIN_MODE_PASSWORD`뿐 아니라 함수별 시크릿이 전부
+  누락된 채 그날부터 계속 떠 있었다(관리자모드를 그 뒤로 아무도 안 눌러봐서 지금까지 몰랐던 것으로 보임).
+- **변경(git 밖, `~/agit-supabase/`)**: ①`docker compose -f docker-compose.yml -f docker-compose.pg17.yml
+  -f docker-compose.agit.yml up -d --no-deps functions`로 `agit-edge-functions`를 올바른 설정으로
+  재기동(다른 컨테이너는 안 건드림). ②재발 방지로 `.env`에 `COMPOSE_FILE=docker-compose.yml:
+  docker-compose.pg17.yml:docker-compose.agit.yml`을 추가해, `-f` 없이 그냥 `docker compose up -d`만
+  써도 항상 세 파일이 다 적용되게 했다. 기존 `.env`는 `.env.bak-20260809`로 백업.
+- **결과/검증**: 컨테이너 재기동 후 `ADMIN_MODE_PASSWORD`·`OPENAI_API_KEY` 등 시크릿이 컨테이너
+  환경에 정상 로드됨을 확인. `COMPOSE_FILE` 추가 후 `-f` 없이 `docker compose up -d --no-deps functions`를
+  다시 실행해도 같은(정상) 설정으로 수렴함을 확인(별도 재기동 없이 "Running"으로 유지).
+- **남은 것 / 다음**: 사용자가 실제로 관리자모드 로그인 재시도해 확인. 8/8 보안 강화 작업 때 다른
+  컨테이너(DB·Kong 등)도 같은 방식(부분 재기동)으로 손댔다고 기록돼 있어, 혹시 다른 곳도 비슷하게
+  시크릿이 빠졌을 가능성은 낮지만(그쪽은 별도로 healthy 확인됐다고 기록됨) 이상 신고가 더 들어오면
+  같은 원인(불완전한 재기동)부터 의심할 것.
+
 ## 2026-08-09 — 아지트온클래스 완전 삭제 (Claude)
 - **한 일**: 2026-07-27부터 "나중에 필요하면 `available: true`로 되돌린다"는 전제로 UI만 숨겨 보관해온
   아지트온클래스(학급 공동 목표·온도 게임)를, 사용자가 "굳이 쓸 일이 없다"고 판단해 완전히 삭제했다.
