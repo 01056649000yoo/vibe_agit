@@ -31,11 +31,12 @@
   `.codex/hooks/session-start-context.sh`가 저장소 루트를 기준으로 `AGENTS.md` 전체와 `WORKLOG.md` 최신 항목
   1개만 출력한다. `additionalContextLimit: 0`으로 약 17KB의 내용을 미리보기로 줄이지 않고 developer context에
   온전히 전달한다. `AGENTS.md`에도 훅 위치·동작·최초 신뢰 절차를 기록했다. 앱·DB·운영 인프라 변경은 없다.
-- **결과/검증**: `bash -n`과 `jq -e` 스키마 검사 통과, 최종 독립 실행 결과 16,921바이트이며 최신 WORKLOG
+- **결과/검증**: `bash -n`과 `jq -e` 스키마 검사 통과, 최종 독립 실행 결과 16,993바이트이며 최신 WORKLOG
   1개만 포함함을 확인했다. 마지막으로 일회성 읽기 전용 `codex exec --ephemeral` 세션에서 실제
-  `SessionStart Completed`와 모델 응답 `HOOK_OK`를 확인해 모델 컨텍스트 주입까지 끝단 검증했다.
-- **남은 것 / 다음**: 다음 일반 Codex 세션에서 `/hooks`를 열어 이 프로젝트 훅의 현재 해시를 한 번 신뢰한다.
-  이후에는 새 세션·재개·`/clear`·자동/수동 compact 때 자동 실행된다. 훅 파일이 바뀌면 보안상 다시 신뢰해야 한다.
+  `SessionStart Completed`와 모델 응답 `HOOK_OK`를 확인해 모델 컨텍스트 주입까지 끝단 검증했다. 이어서 일반
+  Codex CLI의 `/hooks`에서 현재 해시를 신뢰 처리하고 `SessionStart: Installed 1 / Active 1 / Review 0`을 확인했다.
+- **남은 것 / 다음**: 없음. 이후 새 세션·재개·`/clear`·자동/수동 compact 때 자동 실행된다. 훅 파일이
+  바뀌면 Codex 보안 정책상 새 해시를 다시 신뢰해야 한다.
 
 ## 2026-08-10 — 문서 구조 재편 + Claude 세션 시작 자동 컨텍스트 주입 (Claude)
 - **한 일**: `ROADMAP.md`가 1,527줄까지 불어나 있었는데, 그중 "🧭 현재 위치" 섹션 하나가 525줄로
