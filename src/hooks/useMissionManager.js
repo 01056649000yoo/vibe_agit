@@ -760,7 +760,6 @@ ${postArray.map((p, idx) => {
         if (!confirm('학생에게 이 글을 돌려보내고 다시 쓰기를 요청할까요? ♻️\n학생의 화면에 안내 문구가 표시됩니다.')) return;
 
         try {
-            // [최적화] 글 상태 업데이트와 포인트 로그 삽입을 병렬 처리
             const { error: postError } = await supabase.from('student_posts').update({
                 is_submitted: false,
                 is_returned: true,
@@ -771,7 +770,10 @@ ${postArray.map((p, idx) => {
 
             alert('다시 쓰기 요청을 전달했습니다! 📤');
             setSelectedPost(null);
-            if (selectedMission) fetchPostsForMission(selectedMission);
+            // 이 버튼은 미확인 제출글에서만 열리므로(is_confirmed=false) 승인 수는 그대로 둔다.
+            setPosts((current) => current.map((item) => item.id === post.id
+                ? { ...item, is_submitted: false, is_returned: true, ai_feedback: tempFeedback }
+                : item));
         } catch (err) {
             console.error('다시 쓰기 요청 실패:', err.message);
             alert(`요청 중 오류 발생: ${err.message}`);
@@ -927,7 +929,18 @@ ${postArray.map((p, idx) => {
 
             await Promise.all(rewritePromises);
             alert(`✅ ${toRewrite.length}건 일괄 다시 쓰기 요청 완료!`);
-            if (selectedMission) fetchPostsForMission(selectedMission);
+            const rewrittenIds = new Set(toRewrite.map((post) => post.id));
+            setPosts((current) => current.map((post) => rewrittenIds.has(post.id)
+                ? { ...post, is_submitted: false, is_returned: true, is_confirmed: false }
+                : post));
+            // 이미 승인돼 있던 글도 되돌릴 수 있는 버튼이라, 그중 승인 상태였던 것만 승인 수에서 뺀다.
+            const unconfirmedCount = toRewrite.filter((post) => post.is_confirmed).length;
+            if (unconfirmedCount > 0 && selectedMission.mission_type !== 'meeting') {
+                setSubmissionCounts((current) => ({
+                    ...current,
+                    [selectedMission.id]: Math.max(0, (current[selectedMission.id] || 0) - unconfirmedCount)
+                }));
+            }
         } catch (err) {
             console.error('일괄 다시 쓰기 요청 실패:', err.message);
             alert('일괄 처리 중 오류가 발생했습니다.');
