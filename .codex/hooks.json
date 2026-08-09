@@ -1,0 +1,19 @@
+{
+  "description": "Restore repository instructions and the latest handoff note whenever a Codex session starts or resumes.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume|clear|compact)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/bash \"$(git rev-parse --show-toplevel)/.codex/hooks/session-start-context.sh\"",
+            "timeout": 15,
+            "statusMessage": "작업 지침(AGENTS.md)과 최신 인수인계 불러오는 중...",
+            "additionalContextLimit": 0
+          }
+        ]
+      }
+    ]
+  }
+}

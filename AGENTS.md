@@ -29,6 +29,11 @@
 5. **백업·복구를 건드릴 일이면 [`backup.md`](backup.md)** — 무엇이 언제 어디로 가는지, 복구 절차,
    매월 1일 자동 리허설. 백업 설정을 바꾸면 그 파일도 함께 고친다.
 
+> **Codex 자동 주입**: `.codex/hooks.json`의 `SessionStart` 훅이 `startup`·`resume`·`clear`·`compact` 때마다
+> 이 파일 전체와 `WORKLOG.md` 최신 항목 1개를 developer context에 다시 넣는다. Codex 자체의 `AGENTS.md`
+> 자동 로드에 더해 압축·재개 뒤에도 지침을 복원하기 위한 안전장치다. 훅이 새로 생겼거나 내용이 바뀌었으면
+> Codex에서 `/hooks`를 열어 현재 해시를 한 번 신뢰해야 한다.
+
 ## 작업 후 (필수)
 1. **`WORKLOG.md` 맨 위에 항목 추가** (형식은 그 파일 상단 규칙 참조). 최신이 위.
 2. **`ROADMAP.md` 갱신**: 완료 체크박스 `[x]`, 방향이 바뀌면 "결정 기록"에 한 줄.

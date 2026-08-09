@@ -21,6 +21,22 @@
 
 ---
 
+## 2026-08-10 — Codex 세션 시작 자동 컨텍스트 주입 추가 (GPT/Codex)
+- **한 일**: Claude 전용 SessionStart 훅과 저장소 전체 작업 이력을 대조하고, 최신 Codex 공식 매뉴얼과 현재
+  설치된 CLI(`0.146.0-alpha.3`)에서 프로젝트 로컬 lifecycle hook 지원 여부를 확인했다. `main` 단일 브랜치,
+  전체 커밋 1,106개, WORKLOG 항목 334개를 훑었고 기존 Claude 훅은 `AGENTS.md` 전체와 WORKLOG 최신 항목
+  1개를 주입하는 구조임을 확인했다. Codex는 원래 `AGENTS.md`를 세션마다 자동 로드하지만, 같은 안전장치를
+  명시적으로 제공하고 컨텍스트 압축 뒤에도 복원되게 Codex 전용 `SessionStart` 훅을 추가했다.
+- **변경**: `.codex/hooks.json`이 `startup`·`resume`·`clear`·`compact`를 모두 매칭하고,
+  `.codex/hooks/session-start-context.sh`가 저장소 루트를 기준으로 `AGENTS.md` 전체와 `WORKLOG.md` 최신 항목
+  1개만 출력한다. `additionalContextLimit: 0`으로 약 17KB의 내용을 미리보기로 줄이지 않고 developer context에
+  온전히 전달한다. `AGENTS.md`에도 훅 위치·동작·최초 신뢰 절차를 기록했다. 앱·DB·운영 인프라 변경은 없다.
+- **결과/검증**: `bash -n`과 `jq -e` 스키마 검사 통과, 최종 독립 실행 결과 16,921바이트이며 최신 WORKLOG
+  1개만 포함함을 확인했다. 마지막으로 일회성 읽기 전용 `codex exec --ephemeral` 세션에서 실제
+  `SessionStart Completed`와 모델 응답 `HOOK_OK`를 확인해 모델 컨텍스트 주입까지 끝단 검증했다.
+- **남은 것 / 다음**: 다음 일반 Codex 세션에서 `/hooks`를 열어 이 프로젝트 훅의 현재 해시를 한 번 신뢰한다.
+  이후에는 새 세션·재개·`/clear`·자동/수동 compact 때 자동 실행된다. 훅 파일이 바뀌면 보안상 다시 신뢰해야 한다.
+
 ## 2026-08-10 — 문서 구조 재편 + Claude 세션 시작 자동 컨텍스트 주입 (Claude)
 - **한 일**: `ROADMAP.md`가 1,527줄까지 불어나 있었는데, 그중 "🧭 현재 위치" 섹션 하나가 525줄로
   날짜별 완료 서술(사실상 WORKLOG를 그대로 복붙한 것)과 진짜 미래 계획이 뒤섞여 있었다. 사용자 제안으로
