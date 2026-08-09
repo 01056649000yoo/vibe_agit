@@ -21,6 +21,23 @@
 
 ---
 
+## 2026-08-09 — "교사 대시보드 여전히 느림" 재확인 → 이미 해결돼 있었음 (Claude)
+- **한 일**: ROADMAP Stage 1.5의 "교사 콜드 로그인 첫 과제 화면 약 11회" 메모를 실제로 최적화해달라는
+  요청을 받고 `TeacherDashboard → useTeacherDashboard → TeacherWritingHub → TeacherMissionTab →
+  MissionManager → useMissionManager`까지 기본 진입 경로 전체를 코드로 추적했다.
+- **발견**: 이미 `get_teacher_app_bootstrap_v1`(`20261007_teacher_app_bootstrap.sql`)이 프로필·교사정보·
+  학급 목록·공지·`frequent_tags`·`default_rubric`·`mission_default_settings`를 1회로 묶어
+  `useAuthStore.fetchProfile`에서 호출하고 있었고, `useTeacherDashboard`·`useMissionManager` 둘 다
+  `teacherBootstrap`/`bootstrapProfile`이 있으면 개별 조회를 건너뛰도록 이미 배선돼 있었다. 실제로
+  기본 화면(과제 목록)까지 도달하는 데 걸리는 DB 호출은 **로그인 bootstrap 1회 + 과제 개요 RPC 1회,
+  총 2회**뿐이었다 — "11회" 메모는 이 RPC가 배선되기 전 수치가 그대로 남아있던 것이었다.
+- **변경**: 코드 변경 없음(이미 되어 있었음). `ROADMAP.md`의 "교사 대시보드"·"1,000명 동시 사용 점검"
+  두 곳의 stale한 "미완료"/"11회" 서술을 정정하고, 대신 진짜로 아직 남아있는 것(교사가 글 승인한 뒤
+  재조회가 5회 — 승인 RPC 1+글 목록 2+과제 통계 2)을 새로 짚어 다음 순서에 넣었다.
+- **결과/검증**: 해당 없음(코드 추적·문서 정정만).
+- **남은 것 / 다음**: ①실제 브라우저 네트워크 탭으로 "2회" 최종 실측 확인, ②승인 후 재조회 5회를
+  로컬 상태 갱신으로 줄이는 작업 — 사용자에게 계속 진행할지 확인 후 착수.
+
 ## 2026-08-09 — 관리자모드 비밀번호 오류 원인 규명·수정 (Claude)
 - **한 일**: 사용자가 관리자모드 진입 시 "서버에 관리자 비밀번호가 설정되지 않았습니다" 오류를 신고했다.
   아지트온클래스 삭제와는 무관 — `verify-admin-mode` Edge Function이 `ADMIN_MODE_PASSWORD` 환경변수를
