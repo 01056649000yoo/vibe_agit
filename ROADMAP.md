@@ -687,6 +687,9 @@ SSO가 되려면 둘을 한 스택·한 인증으로 통일해야 한다 (JWT �
 
 ## 📝 결정 기록
 
+- 2026-08-10: **프로젝트의 모든 셸 훅은 Git 체크아웃 시 LF를 강제한다.** Windows의
+  `core.autocrlf=true` 환경에서 CRLF로 바뀌면 Bash 구문 검사가 실패하므로 `.gitattributes`의
+  `*.sh text eol=lf` 규칙을 공통 안전장치로 둔다.
 - 2026-08-10: **Codex에도 프로젝트 로컬 `SessionStart` 훅을 둔다.** Codex가 원래 자동으로 읽는
   `AGENTS.md`를 명시적으로 재주입하고 WORKLOG 최신 항목 1개를 함께 넣어, 새 세션뿐 아니라
   `resume`·`clear`·`compact` 뒤에도 모델 교대 규칙과 직전 인수인계를 복원한다. 훅은 저장소의

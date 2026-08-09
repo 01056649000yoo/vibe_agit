@@ -21,6 +21,16 @@
 
 ---
 
+## 2026-08-10 — GitHub 동기화 및 Codex 훅 Windows 실행 보강 (GPT/Codex)
+- **한 일**: 로컬 `main`의 미푸시 조사 커밋 1개와 원격의 신규 238개 커밋을 대조하고, 원격 최신 이력 위로
+  조사 기록을 재배치했다. 새 `.codex` SessionStart 훅의 내용과 신뢰 기록도 함께 검토했다.
+- **변경**: 과거 조사 기록은 WORKLOG에 보존하고, 아직 유효한 회의 안건 결정 보상 조건만 ROADMAP 후속 과제로
+  남겼다. Windows의 `core.autocrlf=true` 체크아웃에서도 셸 훅이 깨지지 않도록 `.gitattributes`에
+  `*.sh text eol=lf`를 추가했다. 앱·DB·운영 인프라 변경은 없다.
+- **결과/검증**: 훅 JSON 파싱과 `bash -n` 검사를 통과했다. 원격 기록상 Codex `/hooks` 상태는
+  `SessionStart: Installed 1 / Active 1 / Review 0`으로 신뢰 승인이 완료돼 있다.
+- **남은 것 / 다음**: 없음. 훅 내용이 바뀌면 새 해시를 `/hooks`에서 다시 신뢰해야 한다.
+
 ## 2026-08-10 — Codex 세션 시작 자동 컨텍스트 주입 추가 (GPT/Codex)
 - **한 일**: Claude 전용 SessionStart 훅과 저장소 전체 작업 이력을 대조하고, 최신 Codex 공식 매뉴얼과 현재
   설치된 CLI(`0.146.0-alpha.3`)에서 프로젝트 로컬 lifecycle hook 지원 여부를 확인했다. `main` 단일 브랜치,
