@@ -29,6 +29,17 @@ import TeacherAnnouncementManager from './TeacherAnnouncementManager';
 import './TeacherDashboard.css';
 
 const DEFAULT_WRITING_CARD_LAYOUT = { columns: 4, density: 'comfortable' };
+const TEACHER_TAB_STORAGE_KEY = 'teacher-dashboard-current-tab-v1';
+const TEACHER_TAB_IDS = TEACHER_NAV_GROUPS.flatMap(group => group.tabs.map(tab => tab.id));
+
+const loadTeacherTab = () => {
+    try {
+        const savedTab = window.sessionStorage.getItem(TEACHER_TAB_STORAGE_KEY);
+        return TEACHER_TAB_IDS.includes(savedTab) ? savedTab : 'dashboard';
+    } catch {
+        return 'dashboard';
+    }
+};
 
 const loadWritingCardLayout = () => {
     try {
@@ -46,7 +57,7 @@ const loadWritingCardLayout = () => {
  * 역할: 선생님 메인 대시보드 (와이드 2단 레이아웃) ✨
  */
 const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, setActiveClass, onProfileUpdate, isAdmin, onSwitchToAdminMode, onLogout }) => {
-    const [currentTab, setCurrentTab] = useState('dashboard');
+    const [currentTab, setCurrentTab] = useState(loadTeacherTab);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [selectedActivityPost, setSelectedActivityPost] = useState(null);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -78,6 +89,14 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     useEffect(() => {
         window.localStorage.setItem('teacher-writing-card-layout-v1', JSON.stringify(writingCardLayout));
     }, [writingCardLayout]);
+
+    useEffect(() => {
+        try {
+            window.sessionStorage.setItem(TEACHER_TAB_STORAGE_KEY, currentTab);
+        } catch {
+            // 저장소가 차단된 환경에서는 기존 기본 탭 동작을 유지한다.
+        }
+    }, [currentTab]);
 
     const handleTabChange = useCallback((tabId) => {
         setWorkspaceTarget(null);
@@ -156,8 +175,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
 
 
     const hasZeroClasses = classes.length === 0;
-    const teacherTabs = TEACHER_NAV_GROUPS.flatMap(group => group.tabs.map(tab => tab.id));
-    const visibleTab = teacherTabs.includes(currentTab) ? currentTab : 'dashboard';
+    const visibleTab = TEACHER_TAB_IDS.includes(currentTab) ? currentTab : 'dashboard';
     const activeNavGroup = TEACHER_NAV_GROUPS.find(group => group.tabs.some(tab => tab.id === visibleTab)) || TEACHER_NAV_GROUPS[0];
     const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
     const usesSecondarySidebar = !isMobile && activeNavGroup.secondaryShape === 'sidebar';
