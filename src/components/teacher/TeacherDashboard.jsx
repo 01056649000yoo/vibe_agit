@@ -19,6 +19,7 @@ const TeacherWritingFootprintDashboard = lazy(() => import('../../modules/writin
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
 import ClassSwitcher from './ClassSwitcher';
+import TeacherGuideButton from './TeacherGuideButton';
 import TeacherWritingHub from './TeacherWritingHub';
 import TeacherSettingsHub from './TeacherSettingsHub';
 import TeacherProfileModal from './TeacherProfileModal';
@@ -282,24 +283,30 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             borderRadius: '16px', background: '#E2E8F0', position: usesSecondarySidebar ? 'sticky' : undefined, top: usesSecondarySidebar ? 0 : undefined
                         }}
                     >
+                        {/* 메뉴 버튼과 사용법 ⓘ 는 형제로 둔다 — 버튼 안에 버튼을 넣을 수 없고,
+                            ⓘ 를 눌렀을 때 메뉴까지 함께 눌리면 안 되기 때문이다. */}
                         {secondaryTabs.map(tab => (
-                            <button
+                            <div
                                 key={tab.id}
-                                type="button"
-                                role="tab"
-                                aria-selected={visibleTab === tab.id}
-                                onClick={() => handleTabChange(tab.id)}
-                                style={{
-                                    flex: isMobile ? '1 0 auto' : 'none', padding: usesSecondarySidebar ? '13px 14px' : '9px 16px', border: 'none', borderRadius: '11px',
-                                    background: visibleTab === tab.id ? 'white' : 'transparent',
-                                    color: visibleTab === tab.id ? '#1D4ED8' : '#64748B',
-                                    boxShadow: visibleTab === tab.id ? '0 1px 4px rgba(15, 23, 42, 0.12)' : 'none',
-                                    fontWeight: '800', fontSize: isMobile ? '0.85rem' : '0.9rem', cursor: 'pointer', whiteSpace: 'nowrap',
-                                    textAlign: usesSecondarySidebar ? 'left' : 'center'
-                                }}
+                                className={`teacher-subtab${visibleTab === tab.id ? ' is-active' : ''}`}
+                                style={{ flex: isMobile ? '1 0 auto' : undefined }}
                             >
-                                {tab.label}
-                            </button>
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={visibleTab === tab.id}
+                                    onClick={() => handleTabChange(tab.id)}
+                                    className="teacher-subtab__button"
+                                    style={{
+                                        padding: usesSecondarySidebar ? '13px 14px' : '9px 16px',
+                                        fontSize: isMobile ? '0.85rem' : '0.9rem',
+                                        textAlign: usesSecondarySidebar ? 'left' : 'center'
+                                    }}
+                                >
+                                    {tab.label}
+                                </button>
+                                <TeacherGuideButton tabId={tab.id} />
+                            </div>
                         ))}
                     </div>
                 )}
