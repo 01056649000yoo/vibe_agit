@@ -5,10 +5,21 @@ import { useWritingEditorSettings } from '../../editor-settings/WritingEditorSet
 import { SPELLING_LOOKUP_TOOL_ID } from '../../editor-settings/settings';
 import { spellingLearningApi } from '../../spelling-learning/api';
 import { findClassSpellingIssues } from '../../spelling-learning/detection';
+import { loadElementarySpellingDetector } from './elementarySpellingDetectorLoader';
 import './SpellingUnderlineTextarea.css';
 
 /** 손을 멈추고 이만큼 지나면 다시 훑는다. 한글 한 글자를 조합하는 시간보다 넉넉하다. */
 const SCAN_DELAY_MS = 350;
+
+const appendNonOverlappingIssues = (current, candidates, limit) => {
+    const next = [...current];
+    for (const candidate of candidates) {
+        if (next.length >= limit) break;
+        const overlaps = next.some((item) => candidate.start < item.end && candidate.end > item.start);
+        if (!overlaps) next.push(candidate);
+    }
+    return next;
+};
 
 /** 두 문장이 앞에서부터 몇 글자까지 똑같은지. */
 const commonPrefixLength = (left, right) => {
@@ -67,6 +78,16 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
     // 손을 잠깐 멈춘 뒤에만 다시 찾는다. 글을 쓰는 중에는 직전 밑줄이 그대로 남아 있다.
     const [scannedValue, setScannedValue] = useState(normalizedValue);
     const [classEntries, setClassEntries] = useState([]);
+    const [elementaryDetector, setElementaryDetector] = useState(null);
+    useEffect(() => {
+        if (!spellingLookupEnabled) return undefined;
+        let active = true;
+        loadElementarySpellingDetector()
+            .then((detector) => { if (active) setElementaryDetector(() => detector); })
+            .catch(() => {});
+        return () => { active = false; };
+    }, [spellingLookupEnabled]);
+
     useEffect(() => {
         if (!spellingLookupEnabled) return undefined;
         let active = true;
@@ -87,14 +108,19 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
     const issues = useMemo(() => {
         if (!spellingLookupEnabled) return [];
         const staticIssues = findSpellingIssues(scannedValue);
-        const remaining = Math.max(0, MAX_SPELLING_ISSUES - staticIssues.length);
-        const customIssues = findClassSpellingIssues(scannedValue, classEntries, remaining)
-            .filter((custom) => !staticIssues.some((item) => custom.start < item.end && custom.end > item.start));
-        const found = [...staticIssues, ...customIssues].sort((a, b) => a.start - b.start).slice(0, MAX_SPELLING_ISSUES);
+        const elementaryIssues = elementaryDetector
+            ? elementaryDetector(scannedValue, MAX_SPELLING_ISSUES)
+            : [];
+        let found = appendNonOverlappingIssues(staticIssues, elementaryIssues, MAX_SPELLING_ISSUES);
+        const remaining = Math.max(0, MAX_SPELLING_ISSUES - found.length);
+        const customIssues = findClassSpellingIssues(scannedValue, classEntries, remaining);
+        found = appendNonOverlappingIssues(found, customIssues, MAX_SPELLING_ISSUES)
+            .sort((a, b) => a.start - b.start)
+            .slice(0, MAX_SPELLING_ISSUES);
         if (scannedValue === normalizedValue) return found;
         const safeLength = commonPrefixLength(scannedValue, normalizedValue);
         return found.filter((issue) => issue.end <= safeLength);
-    }, [classEntries, normalizedValue, scannedValue, spellingLookupEnabled]);
+    }, [classEntries, elementaryDetector, normalizedValue, scannedValue, spellingLookupEnabled]);
     const uniqueIssues = useMemo(() => {
         const seen = new Set();
         return issues.filter((issue) => {

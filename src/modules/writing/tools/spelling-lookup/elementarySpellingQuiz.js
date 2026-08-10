@@ -1,24 +1,64 @@
 const INLINE_CHOICES_PATTERN = /\(([^()]+)\)/g;
+const TRAILING_SENTENCE_MARK_PATTERN = /[.!?。！？]+$/;
+
+const splitChoiceParts = (choice) => choice.split(',').map((part) => part.trim());
+
+const fillQuestionChoices = (question, choice) => {
+    const parts = splitChoiceParts(choice);
+    let partIndex = 0;
+    return question.replace(
+        INLINE_CHOICES_PATTERN,
+        () => parts.at(partIndex++) || choice
+    );
+};
+
+const createDetectionPattern = (question, choice) => {
+    const solution = fillQuestionChoices(question, choice);
+    const groups = [...question.matchAll(INLINE_CHOICES_PATTERN)];
+    const parts = splitChoiceParts(choice);
+
+    // 빈칸이 하나면 주변 문맥을 함께 보되 실제 밑줄은 틀린 선택지에만 긋는다.
+    // `되/돼`, `데/대`처럼 낱말만 보면 둘 다 맞을 수 있는 항목의 오탐을 막기 위해서다.
+    if (groups.length === 1 && parts.length === 1) {
+        const target = parts[0];
+        const targetIndex = solution.indexOf(target);
+        const start = Math.max(0, targetIndex - 12);
+        const end = Math.min(solution.length, targetIndex + target.length + 8);
+        const text = solution.slice(start, end).replace(TRAILING_SENTENCE_MARK_PATTERN, '');
+        return Object.freeze({
+            text,
+            target,
+            targetOffset: targetIndex - start
+        });
+    }
+
+    // 두 빈칸이 한 선택지로 묶인 문항(든/던)은 짧은 문장 전체를 문맥으로 쓴다.
+    return Object.freeze({
+        text: solution.replace(TRAILING_SENTENCE_MARK_PATTERN, ''),
+        target: solution.replace(TRAILING_SENTENCE_MARK_PATTERN, ''),
+        targetOffset: 0
+    });
+};
 
 const createQuizQuestion = (number, question, answer, explanation, customChoices) => {
     const inlineChoices = [...question.matchAll(INLINE_CHOICES_PATTERN)]
         .flatMap((match) => match[1].split('/').map((choice) => choice.trim()));
-    const answerParts = answer.split(',').map((part) => part.trim());
-    let answerIndex = 0;
-    const solution = question.replace(
-        INLINE_CHOICES_PATTERN,
-        () => answerParts.at(answerIndex++) || answer
-    );
+    const choices = customChoices || [...new Set(inlineChoices)];
+    const solution = fillQuestionChoices(question, answer);
+    const detectionPatterns = choices
+        .filter((choice) => choice !== answer)
+        .map((choice) => createDetectionPattern(question, choice));
 
     return Object.freeze({
         id: `spelling-quiz-${String(number).padStart(3, '0')}`,
         number,
         question,
         prompt: question.replace(INLINE_CHOICES_PATTERN, '＿＿＿＿'),
-        choices: Object.freeze(customChoices || [...new Set(inlineChoices)]),
+        choices: Object.freeze(choices),
         answer,
         explanation,
-        solution
+        solution,
+        detectionPatterns: Object.freeze(detectionPatterns)
     });
 };
 

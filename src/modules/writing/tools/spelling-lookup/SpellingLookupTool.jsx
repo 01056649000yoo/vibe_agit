@@ -3,11 +3,11 @@ import { ArrowRight, BookOpen, ExternalLink, Search, X } from 'lucide-react';
 import ModalPortal from '../../../../components/common/ModalPortal';
 import { supabase } from '../../../../lib/supabaseClient';
 import {
+    createRandomElementarySpellingQuiz,
     createOfficialDictionarySearchUrl,
     getPopularSpellingEntries,
     searchElementarySpelling
 } from './elementarySpellingEntries';
-import { getElementarySpellingQuizQuestions } from './elementarySpellingQuiz';
 import { spellingLearningApi } from '../../spelling-learning/api';
 import { flushSpellingSearches, rememberSpellingSearch } from '../../spelling-learning/searchSession';
 import './SpellingLookupTool.css';
@@ -32,8 +32,8 @@ const getErrorPayload = async (error) => {
  * 맞춤법 수첩 본체.
  *
  * 여는 버튼과 "열어 달라"는 신호 처리는 공통 호스트(`WritingToolHost`)가 맡는다.
- * 이 컴포넌트는 **열려 있을 때만 화면에 올라온다** — 그래야 글쓰기 창을 열기만 한 학생이
- * 이 무거운 파일(설명·예문·사전)을 받지 않는다.
+ * 이 컴포넌트는 **열려 있을 때만 화면에 올라온다**. 300개 검사 데이터는 글쓰기 중
+ * 별도 청크로 미리 받을 수 있지만, 모달 UI와 사전 검색 코드는 수첩을 열 때만 받는다.
  */
 const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) => {
     const [activeView, setActiveView] = useState('lookup');
@@ -48,10 +48,10 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
     const [quizSelection, setQuizSelection] = useState('');
     const [quizScore, setQuizScore] = useState(0);
     const [quizFinished, setQuizFinished] = useState(false);
+    const [quizQuestions, setQuizQuestions] = useState(() => createRandomElementarySpellingQuiz(5));
     const inputRef = useRef(null);
     const searchRequestRef = useRef(0);
     const popularEntries = useMemo(() => getPopularSpellingEntries(), []);
-    const quizQuestions = useMemo(() => getElementarySpellingQuizQuestions(), []);
     const activeQuizQuestion = quizQuestions.at(quizIndex);
     const results = useMemo(() => {
         if (!searchedQuery) return [];
@@ -87,6 +87,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
     };
 
     const restartQuiz = () => {
+        setQuizQuestions(createRandomElementarySpellingQuiz(5));
         setQuizIndex(0);
         setQuizSelection('');
         setQuizScore(0);
@@ -192,8 +193,8 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
         setDictionaryMessage(items.length === 0 ? '표준국어대사전에서 일치하는 낱말을 찾지 못했어요.' : '');
     };
 
-    // 밑줄 칩으로 열렸을 때는 학생이 쓴 **틀린 말**이 아니라 사전에 실제로 있는 **표제어**로 찾는다.
-    // `됬` 을 그대로 찾으면 사전은 늘 빈손으로 돌아온다 — 찾을 말은 `되다` 다.
+    // 밑줄 칩으로 열렸을 때는 학생이 쓴 표현보다 수첩이 제안한 바른 표현을 먼저 찾는다.
+    // 명백한 오기뿐 아니라 문맥에 따라 쓰임이 달라지는 300개 항목도 같은 흐름을 쓴다.
     useEffect(() => {
         const openingQuery = correction?.lookup || initialQuery;
         if (openingQuery.trim()) runSearch(openingQuery);
@@ -219,7 +220,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
                             </span>
                             <div>
                                 <span>나의 맞춤법 수첩</span>
-                                <h2 id="spelling-lookup-title">{activeView === 'lookup' ? '맞춤법 찾아보기' : '맞춤법 100문제'}</h2>
+                                <h2 id="spelling-lookup-title">{activeView === 'lookup' ? '맞춤법 찾아보기' : '맞춤법 랜덤 5문제'}</h2>
                             </div>
                         </div>
                         <button
@@ -234,7 +235,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
 
                     <div className="spelling-lookup-tabs" role="tablist" aria-label="맞춤법 수첩 보기 선택">
                         <button type="button" role="tab" aria-selected={activeView === 'lookup'} className={activeView === 'lookup' ? 'is-active' : ''} onClick={() => setActiveView('lookup')}>🔎 찾아보기</button>
-                        <button type="button" role="tab" aria-selected={activeView === 'quiz'} className={activeView === 'quiz' ? 'is-active' : ''} onClick={() => setActiveView('quiz')}>✏️ 100문제</button>
+                        <button type="button" role="tab" aria-selected={activeView === 'quiz'} className={activeView === 'quiz' ? 'is-active' : ''} onClick={() => setActiveView('quiz')}>✏️ 랜덤 5문제</button>
                     </div>
 
                     {activeView === 'lookup' && <>
@@ -247,7 +248,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
                                 <span className="spelling-correction-right">{correction.right}</span>
                             </p>
                             <span className="spelling-correction-help">
-                                틀린 말은 사전에 실려 있지 않아서, 바른 표기 &lsquo;{correction.lookup}&rsquo;(으)로 찾아봤어요.
+                                이 문장에서는 &lsquo;{correction.lookup}&rsquo;의 표기와 쓰임을 수첩 설명에서 확인해 보세요.
                             </span>
                         </div>
                     )}
@@ -400,6 +401,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
 
                     {activeView === 'quiz' && <div className="spelling-quiz-pane" role="tabpanel">
                         {!quizFinished && <>
+                            <p className="spelling-lookup-promise">기본 자료 300개 중에서 수첩을 열 때마다 새로운 5문제를 골라요.</p>
                             <div className="spelling-quiz-status">
                                 <span><b>{quizIndex + 1}</b> / {quizQuestions.length}</span>
                                 <span>맞힌 문제 <b>{quizScore}</b>개</span>
@@ -408,7 +410,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
                                 <span style={{ width: `${((quizIndex + (quizSelection ? 1 : 0)) / quizQuestions.length) * 100}%` }} />
                             </div>
                             <article className="spelling-quiz-card">
-                                <span className="spelling-quiz-number">문제 {activeQuizQuestion.number}</span>
+                                <span className="spelling-quiz-number">랜덤 문제 {activeQuizQuestion.sessionNumber}</span>
                                 <h3>{activeQuizQuestion.prompt}</h3>
                                 <div className="spelling-quiz-choices">
                                     {activeQuizQuestion.choices.map((choice) => {
@@ -441,10 +443,10 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
                         </>}
                         {quizFinished && <div className="spelling-quiz-finish" role="status">
                             <span aria-hidden="true">🎉</span>
-                            <strong>100문제를 모두 풀었어요!</strong>
+                            <strong>랜덤 5문제를 모두 풀었어요!</strong>
                             <p><b>{quizScore}</b>개를 맞혔어요.</p>
                             <small>틀린 문제의 설명을 떠올리며 다시 도전해 보세요.</small>
-                            <button type="button" onClick={restartQuiz}>처음부터 다시 풀기</button>
+                            <button type="button" onClick={restartQuiz}>새 문제 5개 풀기</button>
                         </div>}
                     </div>}
 

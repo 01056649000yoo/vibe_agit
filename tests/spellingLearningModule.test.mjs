@@ -5,8 +5,21 @@ import test from 'node:test';
 const migration = await readFile('supabase/migrations/20261017_spelling_learning_module.sql', 'utf8');
 const manifest = await readFile('src/modules/writing/spelling-learning/manifest.js', 'utf8');
 const lookup = await readFile('src/modules/writing/tools/spelling-lookup/SpellingLookupTool.jsx', 'utf8');
+const lookupManifest = await readFile('src/modules/writing/tools/spelling-lookup/manifest.js', 'utf8');
+const underlineTextarea = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea.jsx', 'utf8');
+const underlineInput = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineInput.jsx', 'utf8');
 const teacherEntry = await readFile('src/modules/writing/spelling-learning/TeacherEntry.jsx', 'utf8');
-const { ELEMENTARY_SPELLING_ENTRY_IDS, getElementarySpellingEntries, searchElementarySpelling } = await import(
+const {
+    ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS,
+    ELEMENTARY_SPELLING_DETECTION_RULE_COUNT,
+    ELEMENTARY_SPELLING_DETECTION_RULES,
+    ELEMENTARY_SPELLING_ENTRY_IDS,
+    createRandomElementarySpellingQuiz,
+    findElementarySpellingIssues,
+    getElementarySpellingEntries,
+    getElementarySpellingQuizPool,
+    searchElementarySpelling
+} = await import(
     '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js'
 );
 const { ELEMENTARY_SPELLING_QUIZ_QUESTIONS } = await import(
@@ -60,6 +73,24 @@ test('300개 기본 자료는 틀린 표현과 분류·문장으로 바로 찾�
     assert.ok(searchElementarySpelling('선생님 말씀대로 따라 했다').some((entry) => entry.id === 'practice-spelling-quiz-100'));
 });
 
+test('기본 자료 300개는 모두 글쓰기 밑줄 규칙을 가진다', () => {
+    assert.equal(ELEMENTARY_SPELLING_DETECTION_RULE_COUNT, 300);
+    assert.equal(ELEMENTARY_SPELLING_DETECTION_RULES.length, 300);
+    assert.equal(new Set(ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS).size, 300);
+    assert.deepEqual(new Set(ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS), new Set(ELEMENTARY_SPELLING_ENTRY_IDS));
+    assert.ok(ELEMENTARY_SPELLING_DETECTION_RULES.every((rule) => rule.patterns.length > 0));
+    for (const rule of ELEMENTARY_SPELLING_DETECTION_RULES) {
+        assert.ok(findElementarySpellingIssues(rule.patterns[0].text, 300)
+            .some((issue) => issue.entryId === rule.entryId), `${rule.entryId}: 대표 오류 문맥을 찾지 못합니다.`);
+    }
+    assert.equal(findElementarySpellingIssues('김치찌게를 먹었다.')[0]?.right, '찌개');
+    assert.equal(findElementarySpellingIssues('카드로 결재했다.')[0]?.right, '결제');
+    assert.ok(findElementarySpellingIssues('선생님 말씀데로 따라 했다.')
+        .some((issue) => issue.entryId === 'practice-spelling-quiz-100'));
+    assert.match(underlineTextarea, /loadElementarySpellingDetector/);
+    assert.match(underlineInput, /loadElementarySpellingDetector/);
+});
+
 test('초등 맞춤법 문제은행은 순서가 있는 고유 문항 100개와 해설을 가진다', () => {
     assert.equal(ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length, 100);
     assert.equal(new Set(ELEMENTARY_SPELLING_QUIZ_QUESTIONS.map((question) => question.id)).size, 100);
@@ -70,17 +101,39 @@ test('초등 맞춤법 문제은행은 순서가 있는 고유 문항 100개와 
         assert.ok(question.choices.includes(question.answer), `${question.number}: 정답이 선택지에 없습니다.`);
         assert.ok(question.explanation.length >= 8, `${question.number}: 설명이 너무 짧습니다.`);
         assert.ok(question.solution.length >= 5, `${question.number}: 완성 문장이 너무 짧습니다.`);
+        assert.ok(question.detectionPatterns.length >= 1, `${question.number}: 밑줄 문맥이 없습니다.`);
         assert.doesNotMatch(question.prompt, /\([^()]+\s\/\s[^()]+\)/);
         assert.doesNotMatch(question.solution, /\([^()]+\s\/\s[^()]+\)/);
+        for (const detectionPattern of question.detectionPatterns) {
+            assert.ok(findElementarySpellingIssues(detectionPattern.text, 300)
+                .some((issue) => issue.entryId === `practice-${question.id}`), `${question.number}: 틀린 선택지를 찾지 못합니다.`);
+        }
     }
     assert.match(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[33].question, /높이가/);
     assert.match(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[36].question, /서로 답을/);
     assert.deepEqual(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[70].choices, ['든, 든', '던, 던']);
     assert.equal(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[70].solution, '사과든 배든 하나 골라라.');
-    assert.match(lookup, /✏️ 100문제/);
+    assert.match(lookup, /✏️ 랜덤 5문제/);
     assert.match(lookup, /role="progressbar"/);
-    assert.match(lookup, /처음부터 다시 풀기/);
+    assert.match(lookup, /새 문제 5개 풀기/);
     assert.match(lookup, /점수는 저장하지 않아요/);
+});
+
+test('퀴즈는 기본 자료 300개 전체에서 열 때마다 중복 없는 5문제를 뽑는다', () => {
+    const pool = getElementarySpellingQuizPool();
+    assert.equal(pool.length, 300);
+    assert.equal(new Set(pool.map((question) => question.id)).size, 300);
+    assert.equal(new Set(pool.map((question) => question.sourceEntryId)).size, 300);
+    assert.ok(pool.every((question) => question.choices.length >= 2));
+    assert.ok(pool.every((question) => question.choices.includes(question.answer)));
+
+    const firstFive = createRandomElementarySpellingQuiz(5, () => 0);
+    const anotherFive = createRandomElementarySpellingQuiz(5, () => 0.999999);
+    assert.equal(firstFive.length, 5);
+    assert.equal(new Set(firstFive.map((question) => question.id)).size, 5);
+    assert.deepEqual(firstFive.map((question) => question.sessionNumber), [1, 2, 3, 4, 5]);
+    assert.notDeepEqual(firstFive.map((question) => question.id), anotherFive.map((question) => question.id));
+    assert.match(lookupManifest, /기본 자료 300개/);
 });
 
 test('학생 검색은 입력 중 직접 쓰지 않고 닫을 때 배치 RPC로 모은다', () => {
