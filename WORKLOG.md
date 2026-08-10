@@ -39,13 +39,20 @@
   `TeacherDiaryManager.jsx`(`maxWidth` 720→880), `teacherDiary.css`(`.teacher-diary__content`).
   공용 `Modal.jsx` 의 85vh 는 **건드리지 않았다** — 앱의 모든 모달에 영향이 가므로.
   모바일(독서록 760px 이하 전체화면, 일기 640px 이하)은 이미 적절해 그대로 뒀다. DB·인프라 변경 없음.
-- **결과/검증**: ESLint 0경고·0오류, 프로덕션 빌드 통과(3.02s). 실제 화면 확인은 브라우저가 있는
-  환경에서 필요 — 태블릿 가로(1024px 안팎)에서 880px 창이 너무 꽉 차 보이지 않는지 눈으로 볼 것.
+- **결과/검증**: ESLint 0경고·0오류, 프로덕션 빌드 통과(3.02s). 커밋 `12b175d` 푸시 →
+  **GitHub Actions Deploy run `31346289769` 성공(25초)**: 이미지 빌드·`agit-app` 재시작·HTTP 검증 통과.
+  방학 중 사용자가 없어 바로 배포했다. 운영에 실제로 반영됐는지 배포된 번들을 직접 받아 확인했다 —
+  `TeacherReadingLogManager-D3JB-JEl.js`에 `min(880px`·`min-height:200px` 있고 옛 `min(1040px` 없음,
+  `TeacherDiaryManager-CCYrh1HZ.css`에 `padding:24px`·`max-height:420px` 있고 옛 `max-height:320px` 없음.
+  화면을 눈으로 본 것은 아니다 — 태블릿 가로(1024px 안팎)에서 880px 창이 꽉 차 보이지 않는지는 확인 필요.
+  (확인 방법 메모: 자산 파일명 해시는 로컬 빌드와 운영이 다르다. 운영 `.env` 값이 빌드에 박혀서 그렇다.
+  로컬 파일명으로 URL을 찍으면 SPA 폴백 index.html이 200으로 와서 "배포 안 된 것처럼" 보이니,
+  `/` → 진입 스크립트 → 청크를 따라가며 실제 이름을 찾아야 한다.)
 - **덤으로 알게 된 것**: 독서록 교사 화면의 CSS 는 별도 `.css` 파일이 아니라
   `TeacherReadingLogManager.jsx` 안 `<style>` 블록(877~1034줄, 약 160줄)에 들어 있다.
   `.css` 파일만 찾으면 없는 것처럼 보이니 주의. 이 파일이 957줄→ROADMAP 3c-5번 "대형 파일 분할"
   대상에 이미 올라 있는데, 분할할 때 이 스타일 블록을 `teacherReadingLog.css` 로 빼는 게 자연스럽다.
-- **남은 것 / 다음**: 없음(치수 조정 완료). 실기기 눈 확인만 남음.
+- **남은 것 / 다음**: 없음(치수 조정·배포 완료). 실기기 눈 확인만 남음 — 답답하면 820px로 더 줄일 수 있다.
 
 ## 2026-08-10 — Claude SessionStart 훅이 매번 죽던 문제 수정 (jq 의존 제거) (Claude)
 - **배경**: 사용자 질문 — "SessionStart 훅이 최신 인수인계 항목을 자동으로 불러오고 있니?"
