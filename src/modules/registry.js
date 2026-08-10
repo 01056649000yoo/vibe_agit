@@ -16,6 +16,7 @@ import { readingLogManifest } from './writing/reading-log/manifest';
 import { diaryManifest } from './writing/diary/manifest';
 import { writingFootprintManifest } from './writing/writing-footprint/manifest';
 import { samlinkManifest } from './tool/samlink/manifest';
+import { spellingLearningManifest } from './writing/spelling-learning/manifest';
 
 /** 등록된 모듈 매니페스트 목록 */
 const manifests = [
@@ -27,6 +28,7 @@ const manifests = [
   diaryManifest, // src/modules/writing/diary/
   writingFootprintManifest, // src/modules/writing/writing-footprint/
   samlinkManifest, // src/modules/tool/samlink/
+  spellingLearningManifest, // src/modules/writing/spelling-learning/
 ];
 
 // 개발 중 매니페스트 실수 조기 발견 (프로덕션 빌드에서는 console이 제거됨)

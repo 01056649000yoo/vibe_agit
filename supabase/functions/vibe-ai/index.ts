@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
         if (!authHeader) throw new HttpError(401, '로그인이 필요합니다.')
         const payload = await req.json().catch(() => { throw new HttpError(400, '요청 형식이 올바르지 않습니다.') })
         const { prompt, content, studentId, type, commentId } = payload ?? {}
-        const allowedTypes = new Set(['SAFETY_CHECK', 'AI_FEEDBACK', 'GENERAL', 'CONNECTION_TEST', 'DIAG'])
+        const allowedTypes = new Set(['SAFETY_CHECK', 'AI_FEEDBACK', 'GENERAL', 'CONNECTION_TEST', 'DIAG', 'SPELLING_DRAFT'])
         if (!allowedTypes.has(type)) throw new HttpError(400, '허용되지 않은 AI 요청입니다.')
 
         const { data: userData, error: userError } = await supabaseClient.auth.getUser()
@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
             }, 200, headers)
         }
 
-        const maxPromptLength = isStudentRequest ? 300 : 10000
+        const maxPromptLength = isStudentRequest ? 300 : (type === 'SPELLING_DRAFT' ? 80 : 10000)
         if (!finalPrompt.trim()) throw new HttpError(400, 'AI에게 전달할 내용이 없습니다.')
         if (finalPrompt.length > maxPromptLength) throw new HttpError(400, '내용이 너무 깁니다.')
 
@@ -166,6 +166,14 @@ Deno.serve(async (req) => {
 욕설, 비꼼, 따돌림, 무시, 의미 없는 무작위 문자열이나 도배가 하나라도 있으면 부적절해.
 반드시 {"is_appropriate":boolean,"reason":"부적절할 때 다정한 2~3문장 안내"} JSON만 답해줘.
 분석할 내용: "${textToCheck}"`
+        } else if (type === 'SPELLING_DRAFT') {
+            const expression = finalPrompt.replace(/["\\]/g, '').trim()
+            finalPrompt = `초등학생 맞춤법 수첩에 넣을 교사용 검토 초안을 만들어줘.
+입력된 문제 표현만 분석하고 개인정보나 문장을 추측하지 마.
+반드시 마크다운 없이 다음 JSON 객체 하나만 답해줘.
+{"wrong_expression":"입력 표현","correct_expression":"바른 표현","label":"40자 이내 학습 유형","explanation":"초등학생이 이해할 2~3문장 설명","examples":["바른 예문 1","바른 예문 2"]}
+문맥에 따라 입력 표현이 맞을 수도 있으면 explanation에 그 조건을 분명히 적어 교사가 오탐 가능성을 검토하게 해.
+입력 표현: ${expression}`
         }
 
         const { data: setting } = await supabaseAdmin

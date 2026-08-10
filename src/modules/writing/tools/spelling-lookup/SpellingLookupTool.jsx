@@ -7,6 +7,8 @@ import {
     getPopularSpellingEntries,
     searchElementarySpelling
 } from './elementarySpellingEntries';
+import { spellingLearningApi } from '../../spelling-learning/api';
+import { flushSpellingSearches, rememberSpellingSearch } from '../../spelling-learning/searchSession';
 import './SpellingLookupTool.css';
 
 const MAX_QUERY_LENGTH = 180;
@@ -39,15 +41,37 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
     const [dictionaryLoading, setDictionaryLoading] = useState(false);
     const [dictionaryMessage, setDictionaryMessage] = useState('');
     const [dictionarySearchedQuery, setDictionarySearchedQuery] = useState('');
+    const [classEntries, setClassEntries] = useState([]);
     const inputRef = useRef(null);
     const searchRequestRef = useRef(0);
     const popularEntries = useMemo(() => getPopularSpellingEntries(), []);
-    const results = useMemo(
-        () => searchedQuery ? searchElementarySpelling(searchedQuery) : [],
-        [searchedQuery]
-    );
+    const results = useMemo(() => {
+        if (!searchedQuery) return [];
+        const normalized = searchedQuery.normalize('NFC').toLocaleLowerCase('ko-KR');
+        const custom = classEntries.filter((entry) => [entry.wrong_expression, entry.correct_expression]
+            .some((value) => normalized.includes(String(value || '').normalize('NFC').toLocaleLowerCase('ko-KR'))))
+            .map((entry) => ({
+                id: `class:${entry.id}`,
+                question: entry.wrong_expression,
+                answer: entry.correct_expression,
+                explanation: entry.explanation,
+                examples: entry.examples || [],
+                label: entry.label,
+                source: { label: '우리 반 맞춤법 수첩', url: '#' }
+            }));
+        return [...custom, ...searchElementarySpelling(searchedQuery)].slice(0, 20);
+    }, [classEntries, searchedQuery]);
 
-    const closeTool = useCallback(() => onClose?.(), [onClose]);
+    const closeTool = useCallback(() => {
+        flushSpellingSearches().catch(() => {});
+        onClose?.();
+    }, [onClose]);
+
+    useEffect(() => {
+        spellingLearningApi.getStudentEntries()
+            .then((entries) => setClassEntries(Array.isArray(entries) ? entries : []))
+            .catch(() => setClassEntries([]));
+    }, []);
 
     useEffect(() => {
         const previousOverflow = document.body.style.overflow;
@@ -83,6 +107,17 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
         setDictionaryLoading(false);
         setDictionaryMessage('');
         setDictionarySearchedQuery('');
+
+        const localMatches = searchElementarySpelling(trimmed);
+        const classMatch = classEntries.find((entry) => [entry.wrong_expression, entry.correct_expression]
+            .some((value) => trimmed.includes(String(value || ''))));
+        const firstMatch = classMatch || localMatches[0];
+        rememberSpellingSearch({
+            entryKey: classMatch ? `class:${classMatch.id}` : (firstMatch?.id ? `common:${firstMatch.id}` : `unmatched:${trimmed.normalize('NFC').toLocaleLowerCase('ko-KR')}`),
+            label: classMatch?.label || firstMatch?.label || '미분류',
+            query: trimmed,
+            matched: !!firstMatch
+        });
 
         if (!includeOfficial) return;
 
@@ -248,10 +283,10 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
                                                 <span key={example}>{example}</span>
                                             ))}
                                         </div>
-                                        <a href={entry.source.url} target="_blank" rel="noreferrer">
+                                        {entry.source.url !== '#' && <a href={entry.source.url} target="_blank" rel="noreferrer">
                                             {entry.source.label}에서 더 보기
                                             <ExternalLink size={15} aria-hidden="true" />
-                                        </a>
+                                        </a>}
                                     </article>
                                 ))}
                             </>

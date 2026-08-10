@@ -235,7 +235,7 @@ export const TrendLine = ({ rows, valueKey, unit, fluid = false, compact = false
     );
 };
 
-export const PointTypeBars = ({ rows = [], emptyMessage, color = SERIES, compact = false }) => {
+export const PointTypeBars = ({ rows = [], emptyMessage, color = SERIES, compact = false, unit = 'P' }) => {
     if (!rows.length) return <p style={{
         color: INK_SOFT, fontSize: compact ? 'var(--footprint-fs-sm, .7rem)' : '.85rem',
         ...(compact ? { flex: 1, display: 'grid', placeItems: 'center', margin: 0 } : {})
@@ -253,7 +253,7 @@ export const PointTypeBars = ({ rows = [], emptyMessage, color = SERIES, compact
                 <span style={{ height: compact ? '8px' : '13px', background: 'rgba(62,46,35,.06)', borderRadius: '5px', overflow: 'hidden' }}>
                     <span style={{ display: 'block', height: '100%', width: `${Math.max((Number(row.total || 0) / maximum) * 100, 3)}%`, background: color, borderRadius: '5px' }} />
                 </span>
-                <span style={{ fontSize: compact ? 'var(--footprint-fs-sm, .64rem)' : '.82rem', fontWeight: 900, color: INK, textAlign: 'right' }}>{num(row.total)}P</span>
+                <span style={{ fontSize: compact ? 'var(--footprint-fs-sm, .64rem)' : '.82rem', fontWeight: 900, color: INK, textAlign: 'right' }}>{num(row.total)}{unit}</span>
             </div>)}
         </div>
     );

@@ -3,6 +3,8 @@ import { findSpellingIssues, MAX_SPELLING_ISSUES } from './spellingDetectionRule
 import { openSpellingLookup } from './events';
 import { useWritingEditorSettings } from '../../editor-settings/WritingEditorSettingsContext';
 import { SPELLING_LOOKUP_TOOL_ID } from '../../editor-settings/settings';
+import { spellingLearningApi } from '../../spelling-learning/api';
+import { findClassSpellingIssues } from '../../spelling-learning/detection';
 import './SpellingUnderlineTextarea.css';
 
 /** 손을 멈추고 이만큼 지나면 다시 훑는다. 한글 한 글자를 조합하는 시간보다 넉넉하다. */
@@ -64,6 +66,16 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
     // 글자를 칠 때마다 글 전체를 훑으면 학교 태블릿에서 타이핑이 밀린다.
     // 손을 잠깐 멈춘 뒤에만 다시 찾는다. 글을 쓰는 중에는 직전 밑줄이 그대로 남아 있다.
     const [scannedValue, setScannedValue] = useState(normalizedValue);
+    const [classEntries, setClassEntries] = useState([]);
+    useEffect(() => {
+        if (!spellingLookupEnabled) return undefined;
+        let active = true;
+        spellingLearningApi.getStudentEntries()
+            .then((entries) => { if (active) setClassEntries(Array.isArray(entries) ? entries : []); })
+            .catch(() => {});
+        return () => { active = false; };
+    }, [spellingLookupEnabled]);
+
     useEffect(() => {
         if (scannedValue === normalizedValue) return undefined;
         const timer = setTimeout(() => setScannedValue(normalizedValue), SCAN_DELAY_MS);
@@ -74,11 +86,15 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
     // 훑은 문장과 화면의 문장이 어긋난 동안에는 겹치는 앞부분까지만 밑줄을 남긴다.
     const issues = useMemo(() => {
         if (!spellingLookupEnabled) return [];
-        const found = findSpellingIssues(scannedValue);
+        const staticIssues = findSpellingIssues(scannedValue);
+        const remaining = Math.max(0, MAX_SPELLING_ISSUES - staticIssues.length);
+        const customIssues = findClassSpellingIssues(scannedValue, classEntries, remaining)
+            .filter((custom) => !staticIssues.some((item) => custom.start < item.end && custom.end > item.start));
+        const found = [...staticIssues, ...customIssues].sort((a, b) => a.start - b.start).slice(0, MAX_SPELLING_ISSUES);
         if (scannedValue === normalizedValue) return found;
         const safeLength = commonPrefixLength(scannedValue, normalizedValue);
         return found.filter((issue) => issue.end <= safeLength);
-    }, [normalizedValue, scannedValue, spellingLookupEnabled]);
+    }, [classEntries, normalizedValue, scannedValue, spellingLookupEnabled]);
     const uniqueIssues = useMemo(() => {
         const seen = new Set();
         return issues.filter((issue) => {

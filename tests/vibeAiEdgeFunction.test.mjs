@@ -35,7 +35,14 @@ test('댓글 판정은 서버가 본인 pending 댓글을 읽어 상태까지 �
 test('commentId 없는 구버전 댓글 판정 경로는 더 이상 허용하지 않는다', () => {
     assert.match(edgeSource, /typeof commentId !== 'string' \|\| !commentId/);
     assert.doesNotMatch(edgeSource, /commentId != null/);
-    assert.match(edgeSource, /const maxPromptLength = isStudentRequest \? 300 : 10000/);
+    assert.match(edgeSource, /const maxPromptLength = isStudentRequest \? 300 : \(type === 'SPELLING_DRAFT' \? 80 : 10000\)/);
+});
+
+test('맞춤법 초안은 승인 교사 전용 속도 제한과 짧은 입력 상한을 사용한다', () => {
+    assert.match(edgeSource, /'SPELLING_DRAFT'/);
+    assert.match(edgeSource, /type === 'SPELLING_DRAFT' \? 80 : 10000/);
+    assert.match(edgeSource, /consume_ai_request_v1/);
+    assert.match(edgeSource, /반드시 마크다운 없이 다음 JSON 객체 하나만 답해줘/);
 });
 
 test('댓글 수정은 먼저 pending으로 되돌리고 같은 댓글 ID로 다시 판정한다', () => {

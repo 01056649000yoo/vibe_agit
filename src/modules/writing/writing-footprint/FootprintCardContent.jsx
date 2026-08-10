@@ -95,6 +95,7 @@ const FootprintCardContent = ({ card, context, compact = false, expanded = false
             rows={rows}
             emptyMessage={card.emptyMessage}
             color={card.color}
+            unit={card.unit}
         />;
         return expanded
             ? <div style={{ padding: '20px', border: '1px solid #E2E8F0', borderRadius: '18px', background: '#FFFFFF' }}>{content}</div>
