@@ -4,7 +4,12 @@ import Card from '../common/Card';
 import StudentGuideModal from './StudentGuideModal';
 import StudentFeedbackModal from './StudentFeedbackModal';
 import { useDragonPet } from '../../modules/game/dragon/useDragonPet';
-import { getDragonGrowthFromWriterLevel, getDragonStage, getPendingDragonGrowth } from '../../modules/game/dragon/presentation';
+import {
+    getDragonGrowthFromWriterLevel,
+    getDragonStage,
+    getPendingDragonGrowth,
+    shouldOpenDragonSpeciesReselectionAfterGrowth
+} from '../../modules/game/dragon/presentation';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import { useStudentSyncNotifications } from '../../hooks/useStudentSyncNotifications';
 import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
@@ -47,6 +52,7 @@ const StudentDashboard = ({
     const [isMyAgitOpen, setIsMyAgitOpen] = useState(false);
     const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false);
     const [growthCelebration, setGrowthCelebration] = useState(null);
+    const [openSpeciesPickerAfterGrowth, setOpenSpeciesPickerAfterGrowth] = useState(false);
 
     // 하단 내비의 '나의 아지트'를 누르면 홈으로 온 뒤 이 신호가 올라온다.
     useEffect(() => {
@@ -137,8 +143,23 @@ const StudentDashboard = ({
     }, [dragonEnabled, growthCelebration, hasBlockingOverlay, petData, titleStatusLoading, writerLevel]);
 
     const handleGrowthCelebrationConfirm = async () => {
-        const success = await acknowledgeGrowth();
-        if (success) setGrowthCelebration(null);
+        const acknowledgment = await acknowledgeGrowth();
+        if (!acknowledgment) return;
+
+        const confirmedGrowth = {
+            ...growthCelebration,
+            toLevel: acknowledgment.level
+        };
+        const shouldOpenSpeciesPicker = shouldOpenDragonSpeciesReselectionAfterGrowth(
+            confirmedGrowth,
+            acknowledgment.petData
+        );
+
+        setGrowthCelebration(null);
+        if (shouldOpenSpeciesPicker) {
+            setOpenSpeciesPickerAfterGrowth(true);
+            setIsDragonModalOpen(true);
+        }
     };
 
     // 현재 모습은 화면의 img가 받고, 다음 한 단계만 브라우저가 한가할 때 미리 받는다.
@@ -309,7 +330,10 @@ const StudentDashboard = ({
                     <Suspense fallback={null}>
                         <DragonHideoutModal
                             isOpen={isDragonModalOpen}
-                            onClose={() => setIsDragonModalOpen(false)}
+                            onClose={() => {
+                                setIsDragonModalOpen(false);
+                                setOpenSpeciesPickerAfterGrowth(false);
+                            }}
                             isMobile={isMobile}
                             petData={displayPetData}
                             dragonInfo={dragonInfo}
@@ -321,8 +345,10 @@ const StudentDashboard = ({
                             isBusy={isBusy}
                             readerLevel={readerLevel}
                             selectSpecies={selectSpecies}
+                            initiallyOpenSpeciesPicker={openSpeciesPickerAfterGrowth}
                             onGoWrite={(target) => {
                                 setIsDragonModalOpen(false);
+                                setOpenSpeciesPickerAfterGrowth(false);
                                 onNavigate(target);
                             }}
                         />

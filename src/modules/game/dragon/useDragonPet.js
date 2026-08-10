@@ -195,8 +195,12 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
             const { data: result, error } = await supabase.rpc('acknowledge_my_dragon_growth');
             if (error) throw error;
             if (!result?.success) throw new Error(result?.error || '성장 확인 저장 실패');
-            setPetData(normalizePetData(result.pet_data));
-            return true;
+            const nextPetData = normalizePetData(result.pet_data);
+            setPetData(nextPetData);
+            return {
+                level: Number(result.level || nextPetData.level || 1),
+                petData: nextPetData
+            };
         } catch (error) {
             console.error('수호룡 성장 확인 저장 실패:', error.message);
             alert('새 모습을 기록하지 못했어요. 잠시 후 다시 눌러 주세요.');

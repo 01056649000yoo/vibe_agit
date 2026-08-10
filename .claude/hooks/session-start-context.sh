@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# SessionStart hook: AGENTS.md 전체 + WORKLOG.md 최신 항목 1개를 세션 컨텍스트에 강제로 주입한다.
-# 목적: 사용자가 매번 "지침 읽어"라고 말 안 해도, 이 저장소의 작업 규칙과 직전 인수인계를
-#       세션 시작 시 항상 확인하게 한다.
+# SessionStart hook: 공용 SESSION_CONTEXT.md만 세션 컨텍스트에 주입한다.
+# 상세 규칙과 이력은 문서 안의 LLM 위키 라우팅을 따라 필요할 때 읽는다.
 #
 # [2026-08-10] `jq` 로 JSON 을 만들다가 **작업 PC 에 jq 가 없어 훅이 매번 죽고 있었다**
 # (`jq: command not found`). 그래서 아무것도 주입되지 않았다.
@@ -12,29 +11,15 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 [ -n "$REPO_ROOT" ] || exit 0
-[ -r "$REPO_ROOT/AGENTS.md" ] && [ -r "$REPO_ROOT/WORKLOG.md" ] || exit 0
+[ -r "$REPO_ROOT/SESSION_CONTEXT.md" ] || exit 0
 command -v node >/dev/null 2>&1 || exit 0
 
 HOOK_REPO_ROOT="$REPO_ROOT" node -e '
 const fs = require("fs");
 const root = process.env.HOOK_REPO_ROOT;
-const agents = fs.readFileSync(root + "/AGENTS.md", "utf8");
-const worklog = fs.readFileSync(root + "/WORKLOG.md", "utf8");
-
-// WORKLOG 는 최신이 맨 위다. 첫 "## " 부터 다음 "## " 직전까지가 최신 항목 1개.
-const lines = worklog.split(/\r?\n/);
-const start = lines.findIndex((l) => l.startsWith("## "));
-let entry = "";
-if (start >= 0) {
-  const rest = lines.slice(start + 1);
-  const next = rest.findIndex((l) => l.startsWith("## "));
-  entry = [lines[start]].concat(next === -1 ? rest : rest.slice(0, next)).join("\n");
-}
-
 const context =
-  "=== AGENTS.md (이 저장소의 작업 지침, 항상 준수) ===\n" + agents +
-  "\n\n=== WORKLOG.md 최신 항목 (직전 세션 요약) ===\n" + entry +
-  "\n\n(전체 ROADMAP.md·WORKLOG.md·ARCHITECTURE.md는 필요할 때 직접 Read할 것)";
+  "=== SESSION_CONTEXT.md (짧은 활성 컨텍스트) ===\n" +
+  fs.readFileSync(root + "/SESSION_CONTEXT.md", "utf8");
 
 process.stdout.write(JSON.stringify({
   hookSpecificOutput: {

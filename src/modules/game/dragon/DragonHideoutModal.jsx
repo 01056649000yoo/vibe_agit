@@ -57,11 +57,14 @@ const DragonHideoutModal = ({
     isBusy,
     readerLevel,
     selectSpecies,
-    onGoWrite
+    onGoWrite,
+    initiallyOpenSpeciesPicker = false
 }) => {
     const [bondFeedback, setBondFeedback] = useState('idle');
     const [bondReaction, setBondReaction] = useState(null);
-    const [speciesPickerOpen, setSpeciesPickerOpen] = useState(() => !petData?.species);
+    const [speciesPickerOpen, setSpeciesPickerOpen] = useState(() => (
+        !petData?.species || initiallyOpenSpeciesPicker
+    ));
     const readerEffect = getReaderDragonEffect(readerLevel);
     const canReselect = canReselectDragonSpecies(petData, petData.level);
     const exp = Math.min(100, Math.max(0, Number(petData?.exp || 0)));

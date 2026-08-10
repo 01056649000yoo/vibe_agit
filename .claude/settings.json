@@ -7,7 +7,7 @@
             "type": "command",
             "command": "bash .claude/hooks/session-start-context.sh",
             "timeout": 15,
-            "statusMessage": "작업 지침(AGENTS.md) 불러오는 중..."
+            "statusMessage": "짧은 작업 컨텍스트와 문서 지도 불러오는 중..."
           }
         ]
       }

@@ -8,7 +8,8 @@ import {
     getPendingDragonGrowth,
     getDragonStage,
     getReaderDragonEffect,
-    getReaderSceneTheme
+    getReaderSceneTheme,
+    shouldOpenDragonSpeciesReselectionAfterGrowth
 } from '../src/modules/game/dragon/presentation.js';
 import { getReaderLevel, getWriterLevel } from '../src/constants/writerLevels.js';
 import {
@@ -95,6 +96,20 @@ test('작가 3단계부터 종류를 한 번만 다시 고를 수 있다', () =>
     assert.equal(canReselectDragonSpecies({ species: 'star' }, 3), true);
     assert.equal(canReselectDragonSpecies({ species: 'star', speciesReselectedAt: 'done' }, 10), false);
     assert.equal(canReselectDragonSpecies({}, 10), false);
+});
+
+test('작가 3단계를 처음 넘어선 성장 확인 뒤에만 재선택 화면을 자동으로 연다', () => {
+    const selectedPet = { species: 'star' };
+    assert.equal(shouldOpenDragonSpeciesReselectionAfterGrowth({ fromLevel: 2, toLevel: 3 }, selectedPet), true);
+    assert.equal(shouldOpenDragonSpeciesReselectionAfterGrowth({ fromLevel: 1, toLevel: 4 }, selectedPet), true);
+    assert.equal(shouldOpenDragonSpeciesReselectionAfterGrowth({ fromLevel: 3, toLevel: 4 }, selectedPet), false);
+    assert.equal(shouldOpenDragonSpeciesReselectionAfterGrowth(
+        { fromLevel: 2, toLevel: 3 },
+        { species: 'star', speciesReselectedAt: 'done' }
+    ), false);
+    assert.equal(shouldOpenDragonSpeciesReselectionAfterGrowth({ fromLevel: 2, toLevel: 3 }, {}), false);
+    // 화면의 예상 단계보다 서버가 확정한 단계가 낮으면 자동 진입하지 않는다.
+    assert.equal(shouldOpenDragonSpeciesReselectionAfterGrowth({ fromLevel: 2, toLevel: 2 }, selectedPet), false);
 });
 
 test('현재 작가 칭호 구간 안의 진행도를 0~100으로 계산한다', () => {

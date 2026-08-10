@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/common/Button';
 import FeatureAvailabilitySwitch from '../../../components/common/FeatureAvailabilitySwitch';
+import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import { supabase } from '../../../lib/supabaseClient';
 import {
     CONFIGURED_MARK,
@@ -246,7 +247,10 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile }) => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', paddingBottom: '20px', marginBottom: '20px', borderBottom: '1px solid #E2E8F0', flexWrap: 'wrap' }}>
                             <span style={{ fontSize: '2.3rem' }}>{selected.module.icon || '🎮'}</span>
                             <div style={{ flex: 1, minWidth: '160px' }}>
-                                <h2 style={{ margin: 0, color: '#1E293B', fontSize: '1.35rem' }}>{selected.module.name}</h2>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                                    <h2 style={{ margin: 0, color: '#1E293B', fontSize: '1.35rem' }}>{selected.module.name}</h2>
+                                    <TeacherGuideButton tabId={selected.module.id} />
+                                </div>
                                 <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.82rem' }}>{selected.module.description}</p>
                             </div>
                             <FeatureAvailabilitySwitch

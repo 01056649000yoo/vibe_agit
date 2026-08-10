@@ -103,6 +103,13 @@ export const canReselectDragonSpecies = (petData, writerLevel) => (
     && !petData?.speciesReselectedAt
 );
 
+/** 3단계를 처음 넘어선 성장 확인 직후에만 재선택 화면을 자동으로 연다. */
+export const shouldOpenDragonSpeciesReselectionAfterGrowth = (growth, petData) => (
+    Number(growth?.fromLevel || 1) < 3
+    && Number(growth?.toLevel || 1) >= 3
+    && canReselectDragonSpecies(petData, growth?.toLevel)
+);
+
 /** 작가 칭호의 현재 단계·진행도를 드래곤 표시값으로 바꾼다. 저장된 예전 먹이 레벨은 쓰지 않는다. */
 export const getDragonGrowthFromWriterLevel = (writerLevel) => {
     const level = Math.min(10, Math.max(1, Math.floor(Number(writerLevel?.level) || 1)));

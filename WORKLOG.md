@@ -21,6 +21,46 @@
 
 ---
 
+## 2026-08-10 — 교사 작가 수호룡 관리 사용법 안내 추가 (Codex)
+- **배경**: 수호룡 성장은 자동이고 학기 마감·새 시즌은 동결·초기화 범위가 달라, 교사 화면에서 기능 이름만으로
+  정확히 이해하기 어려웠다.
+- **한 일**: 아지트 놀이터의 `작가 수호룡` 제목 옆에 공용 안내 아이콘을 붙였다. 안내에는 성장 기준,
+  작가 3단계 1회 재선택, 작별 기간의 동결 시점, 새 학기에 보존되는 포인트·소품·지난 글을 정리했다.
+  등록형 게임 헤더에서 모듈 ID로 `TeacherGuideButton`을 사용하므로 안내가 등록된 수호룡에만 아이콘이 보인다.
+- **변경**: `constants/teacherGuides.js`, `RegisteredGameModuleCards.jsx`, `ROADMAP.md`. DB·인프라 변경 없음.
+- **결과/검증**: ESLint 0경고·0오류, 전체 Node 테스트 93건, 프로덕션 빌드, `git diff --check` 통과.
+- **남은 것 / 다음**: 교사 실기기에서 수호룡 제목 옆 아이콘 위치와 안내창이 고정 영역 위에 정상 표시되는지 확인한다.
+
+## 2026-08-10 — 작가 3단계 수호룡 재선택 화면 자동 연결 (Codex)
+- **배경**: 최초 수호룡 선택은 방 진입 즉시 선택창이 열리지만, 작가 3단계의 1회 재선택은 방 안의 조건부 버튼만
+  있어 성장 축하 뒤 선택창이 뜨지 않았다. 사용자에게는 간헐적으로 누락되는 것처럼 보일 수 있었다.
+- **한 일**: 성장 확인 구간이 3단계를 처음 통과하고, 수호룡을 이미 선택했으며, 재선택 기회를 쓰지 않은 경우에만
+  성장 축하 확인 직후 수호룡 방의 종 선택 화면을 자동으로 연다. 1→4처럼 단계를 건너뛴 성장도 포함한다.
+  성장 확인 RPC가 돌려준 확정 단계와 최신 `pet_data`로 최종 판정해 오래된 bootstrap 상태도 방어한다.
+  성장 확인 기록을 이미 서버가 보관하므로 별도 DB 필드는 추가하지 않았고 기존 수동 `다시 고르기` 버튼도 유지했다.
+- **변경**: `StudentDashboard.jsx`, `DragonHideoutModal.jsx`, `presentation.js`, `tests/dragonGrowth.test.mjs`.
+  DB·마이그레이션·운영 인프라 변경 없음.
+- **결과/검증**: 재검토에서 성장 확인 RPC의 서버 확정 단계·최신 `pet_data`를 사용하도록 보강했다.
+  `test:dragon` 16건, `test:architecture` 22건과 전체 Node 테스트 93건, ESLint 0경고·0오류,
+  프로덕션 빌드, `git diff --check` 통과.
+- **남은 것 / 다음**: 실기기 테스트 학생으로 2→3 성장 축하 확인 뒤 선택창 자동 진입과 취소·재선택 저장을 확인한다.
+
+## 2026-08-10 — SessionStart 컨텍스트 경량화와 LLM 위키 인덱스 추가 (Codex)
+- **배경**: 기존 Codex 훅이 `startup`·`resume`·`clear`·`compact`마다 `AGENTS.md` 전체와 WORKLOG 최신 항목을
+  무제한으로 다시 넣어, 한 번에 약 10,000자(추정 4,000~6,700토큰)가 반복 소비됐다.
+- **한 일**: 훅 전용 `SESSION_CONTEXT.md`에 시작 순서·절대 규칙 요약·현재 위치·종료 절차만 모으고,
+  `docs/wiki/README.md`에 작업 주제별 정본과 부분 검색 방법을 만들었다. 훅은 활성 컨텍스트 한 파일만 출력하며
+  Codex는 안전 상한 `additionalContextLimit: 12000`을 사용하도록 바꿨다. Claude의 SessionStart 훅도 같은 파일을
+  Claude 훅 규격의 `additionalContext` JSON으로 주입하도록 통일했다.
+- **변경**: `SESSION_CONTEXT.md`, `docs/wiki/README.md` 신규. `.codex/hooks.json`,
+  `.codex/hooks/session-start-context.sh`, `.claude/settings.json`, `.claude/hooks/session-start-context.sh`,
+  `CLAUDE.md`, `AGENTS.md`, `ROADMAP.md` 수정. 앱·DB·운영 인프라 변경 없음.
+- **결과/검증**: Bash 구문 검사, `hooks.json` 파싱, 문서 링크 대상 존재 확인, `git diff --check` 통과.
+  실제 훅 출력은 10,072자·177줄에서 1,310자·36줄로 줄어 약 87% 감소했다(추정 524~873토큰).
+  Claude 훅도 `SessionStart` JSON 파싱과 공용 컨텍스트 주입을 확인했으며 출력은 1,275자다.
+- **남은 것 / 다음**: 훅 변경으로 Codex가 신뢰를 다시 요구하면 `/hooks`에서 새 해시를 승인한다. WORKLOG 월별 분리는
+  기존 링크 영향을 별도로 조사한 뒤 필요할 때 진행한다.
+
 ## 2026-08-10 — 설명 정보 아이콘 공용 컴포넌트화 (Codex)
 - **배경**: 문자 `ⓘ`의 실제 그림 중심이 원형 버튼의 클릭 범위 중심과 달라 보였다. 폰트 글리프에 기대면
   운영체제·브라우저마다 같은 문제가 반복될 수 있고, 화면마다 설명 아이콘을 따로 만들 가능성도 있었다.
