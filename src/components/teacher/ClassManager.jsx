@@ -21,7 +21,6 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
     const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
     const [deletedClasses, setDeletedClasses] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
-    const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 
     const handleOpenTrash = async () => {
         if (fetchDeletedClasses) {
@@ -126,6 +125,35 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
         }
     };
 
+    const handleRenameClass = async () => {
+        if (!activeClass?.id) return;
+        const nextName = window.prompt('바꿀 학급 이름을 입력해 주세요.', activeClass.name)?.trim();
+        if (!nextName || nextName === activeClass.name) return;
+        if (nextName.length > 40) {
+            window.alert('학급 이름은 40자 이내로 입력해 주세요.');
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const { data, error } = await supabase
+                .from('classes')
+                .update({ name: nextName })
+                .eq('id', activeClass.id)
+                .eq('teacher_id', userId)
+                .select()
+                .single();
+            if (error) throw error;
+            setClasses?.((current) => current.map((item) => item.id === data.id ? data : item));
+            setActiveClass?.(data);
+        } catch (error) {
+            console.error('학급 이름 변경 실패:', error.message);
+            window.alert('학급 이름을 바꾸지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     return (
         <div style={{ width: '100%' }}>
             {!activeClass ? (
@@ -204,8 +232,21 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     )}
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                <section style={{ padding: isMobile ? '16px' : '20px', background: 'white', border: '1px solid #DCE6EE', borderRadius: '20px', boxShadow: '0 5px 18px rgba(15,23,42,.04)' }}>
+                    <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                        <div style={{ minWidth: 0 }}>
+                            <span style={{ color: '#2563EB', fontSize: '.72rem', fontWeight: 900 }}>현재 관리 중인 학급</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap', marginTop: '4px' }}>
+                                <h3 style={{ margin: 0, color: '#1E293B', fontSize: '1.2rem' }}>🏫 {activeClass.name}</h3>
+                                {activeClass.id === primaryClassId && <span style={badgeStyle}>⭐ 주 학급</span>}
+                                <span style={{ ...badgeStyle, background: '#DCFCE7', color: '#15803D' }}>● 운영 중</span>
+                            </div>
+                        </div>
+                        <span style={{ padding: '6px 9px', borderRadius: '9px', background: '#EFF6FF', color: '#1D4ED8', fontSize: '.7rem', fontWeight: 900 }}>학급 기능 6개</span>
+                    </header>
+
+                    {classes.length > 1 && <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #EEF2F7' }}>
+                        <strong style={{ display: 'block', marginBottom: '8px', color: '#64748B', fontSize: '.72rem' }}>관리할 학급 선택</strong>
                         <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', minWidth: 0 }}>
                             {classes.map((cls) => {
                                 const selected = cls.id === activeClass.id;
@@ -222,36 +263,17 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                                 );
                             })}
                         </div>
-                        <div style={{ display: 'flex', gap: '7px' }}>
-                            <button type="button" onClick={handleOpenTrash} style={smallActionStyle}>복구함</button>
-                            <button type="button" onClick={() => setIsModalOpen(true)} style={{ ...smallActionStyle, background: '#2563EB', color: 'white', borderColor: '#2563EB' }}>+ 학급 추가</button>
-                        </div>
+                    </div>}
+
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,minmax(0,1fr))' : 'repeat(3,minmax(0,1fr))', gap: '9px', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #EEF2F7' }}>
+                        {onNavigate && <ClassActionButton icon="👥" label="학생 명단" description="학생 추가·별명·코드" onClick={() => onNavigate({ tab: 'students', section: 'students' })} />}
+                        <ClassActionButton icon="✏️" label="이름 바꾸기" description="학급 이름 수정" onClick={handleRenameClass} disabled={isSaving} />
+                        <ClassActionButton icon="➕" label="학급 추가" description="새 학급 만들기" onClick={() => setIsModalOpen(true)} />
+                        <ClassActionButton icon="⭐" label="주 학급 지정" description={activeClass.id === primaryClassId ? '현재 주 학급' : '로그인 후 기본 학급'} onClick={() => onSetPrimaryClass?.(activeClass.id)} disabled={activeClass.id === primaryClassId || isSaving} />
+                        <ClassActionButton icon="♻️" label="삭제 학급 복구" description="3일 안에 되돌리기" onClick={handleOpenTrash} />
+                        <ClassActionButton danger icon="🗑️" label="학급 삭제" description="복구함으로 이동" onClick={() => handleDeleteClass(activeClass.id, activeClass.name)} disabled={isSaving} />
                     </div>
-
-                    <section style={{ padding: isMobile ? '16px' : '18px 20px', background: 'white', border: '1px solid #DCE6EE', borderRadius: '18px', boxShadow: '0 5px 18px rgba(15,23,42,.04)' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
-                            <div style={{ flex: 1, minWidth: '190px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-                                    <h3 style={{ margin: 0, color: '#1E293B', fontSize: '1.2rem' }}>🏫 {activeClass.name}</h3>
-                                    {activeClass.id === primaryClassId && <span style={badgeStyle}>⭐ 주 학급</span>}
-                                    <span style={{ ...badgeStyle, background: '#DCFCE7', color: '#15803D' }}>● 운영 중</span>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', position: 'relative' }}>
-                                {onNavigate && <button type="button" onClick={() => onNavigate({ tab: 'students', section: 'students' })} style={smallActionStyle}>학생 관리</button>}
-                                {activeClass.id !== primaryClassId && <button type="button" onClick={() => onSetPrimaryClass?.(activeClass.id)} style={smallActionStyle}>주 학급 설정</button>}
-                                <button type="button" onClick={() => setIsActionMenuOpen((current) => !current)} aria-label="학급 추가 관리" style={{ ...smallActionStyle, width: '36px', padding: 0 }}>⋮</button>
-                                {isActionMenuOpen && (
-                                    <div style={{ position: 'absolute', zIndex: 5, top: '42px', right: 0, width: '170px', padding: '6px', borderRadius: '12px', border: '1px solid #E2E8F0', background: 'white', boxShadow: '0 12px 30px rgba(15,23,42,.16)' }}>
-                                        <button type="button" disabled={isSaving} onClick={() => { setIsActionMenuOpen(false); handleDeleteClass(activeClass.id, activeClass.name); }} style={{ width: '100%', padding: '10px', border: 'none', borderRadius: '8px', background: 'transparent', color: '#DC2626', textAlign: 'left', fontWeight: '800', cursor: 'pointer' }}>🗑️ 학급 삭제</button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </section>
-
-                </div>
+                </section>
             )}
 
             {/* 학급 생성 모달 */}
@@ -363,14 +385,26 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
     );
 };
 
-const smallActionStyle = {
-    minHeight: '36px', padding: '7px 10px', borderRadius: '10px', border: '1px solid #CBD5E1',
-    background: 'white', color: '#475569', fontSize: '0.75rem', fontWeight: '900', cursor: 'pointer'
-};
-
 const badgeStyle = {
     display: 'inline-flex', alignItems: 'center', padding: '4px 7px', borderRadius: '999px',
     background: '#FEF3C7', color: '#92400E', fontSize: '0.66rem', fontWeight: '900'
 };
+
+const ClassActionButton = ({ icon, label, description, onClick, disabled = false, danger = false }) => (
+    <button type="button" onClick={onClick} disabled={disabled} style={{
+        minWidth: 0, minHeight: '64px', padding: '10px 11px', borderRadius: '12px',
+        border: `1px solid ${danger ? '#FECACA' : '#DCE6EE'}`,
+        background: disabled ? '#F8FAFC' : danger ? '#FFF7F7' : '#F8FAFC',
+        color: disabled ? '#94A3B8' : danger ? '#B91C1C' : '#334155',
+        display: 'flex', alignItems: 'center', gap: '9px', textAlign: 'left', cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? .68 : 1, boxSizing: 'border-box'
+    }}>
+        <span aria-hidden="true" style={{ flex: '0 0 24px', fontSize: '1.15rem', textAlign: 'center' }}>{icon}</span>
+        <span style={{ minWidth: 0 }}>
+            <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '.8rem' }}>{label}</strong>
+            <small style={{ display: 'block', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: disabled ? '#94A3B8' : danger ? '#DC2626' : '#7C8A9E', fontSize: '.66rem' }}>{description}</small>
+        </span>
+    </button>
+);
 
 export default ClassManager;
