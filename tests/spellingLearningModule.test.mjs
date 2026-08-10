@@ -5,6 +5,10 @@ import test from 'node:test';
 const migration = await readFile('supabase/migrations/20261017_spelling_learning_module.sql', 'utf8');
 const manifest = await readFile('src/modules/writing/spelling-learning/manifest.js', 'utf8');
 const lookup = await readFile('src/modules/writing/tools/spelling-lookup/SpellingLookupTool.jsx', 'utf8');
+const teacherEntry = await readFile('src/modules/writing/spelling-learning/TeacherEntry.jsx', 'utf8');
+const { ELEMENTARY_SPELLING_ENTRY_IDS, getElementarySpellingEntries } = await import(
+    '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js'
+);
 
 test('맞춤법 학습 기능은 등록 모듈과 성능 계약을 가진다', () => {
     assert.match(manifest, /id: 'spelling-learning'/);
@@ -14,6 +18,15 @@ test('맞춤법 학습 기능은 등록 모듈과 성능 계약을 가진다', (
     assert.match(manifest, /maxInitialRows: 100/);
     assert.match(manifest, /settingsEntry:/);
     assert.doesNotMatch(manifest, /teacherEntry:|part: 'tool'/);
+});
+
+test('교사 등록 데이터는 기존 학생 수첩 기본 자료와 우리 반 자료를 함께 보여준다', () => {
+    const builtInEntries = getElementarySpellingEntries();
+    assert.equal(builtInEntries.length, ELEMENTARY_SPELLING_ENTRY_IDS.length);
+    assert.ok(builtInEntries.length > 0);
+    assert.match(teacherEntry, /getElementarySpellingEntries/);
+    assert.match(teacherEntry, /기본 자료/);
+    assert.match(teacherEntry, /MAX_VISIBLE_ENTRIES = 100/);
 });
 
 test('학생 검색은 입력 중 직접 쓰지 않고 닫을 때 배치 RPC로 모은다', () => {

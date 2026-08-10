@@ -251,6 +251,8 @@ export const ELEMENTARY_SPELLING_ENTRY_IDS = Object.freeze(
     ELEMENTARY_SPELLING_ENTRIES.map((entry) => entry.id)
 );
 
+export const getElementarySpellingEntries = () => ELEMENTARY_SPELLING_ENTRIES;
+
 const normalize = (value) => value
     .normalize('NFC')
     .toLocaleLowerCase('ko-KR')

@@ -1,13 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { getElementarySpellingEntries } from '../tools/spelling-lookup/elementarySpellingEntries';
 import { spellingLearningApi } from './api';
 import './TeacherEntry.css';
 
 const EMPTY = { wrong_expression: '', correct_expression: '', label: '미분류', explanation: '', examples: [] };
+const BUILT_IN_ENTRIES = getElementarySpellingEntries().map((entry) => ({
+    ...entry,
+    id: `built-in:${entry.id}`,
+    status: 'built-in'
+}));
 const DATA_FILTERS = [
     { id: 'all', label: '전체' },
+    { id: 'built-in', label: '기본 자료' },
     { id: 'approved', label: '적용 중' },
     { id: 'draft', label: '초안' }
 ];
+const MAX_VISIBLE_ENTRIES = 100;
 
 const TeacherEntry = ({ activeClass }) => {
     const classId = activeClass?.id;
@@ -29,13 +37,15 @@ const TeacherEntry = ({ activeClass }) => {
 
     useEffect(() => { load(); }, [load]);
 
-    const entries = useMemo(() => workspace.entries || [], [workspace.entries]);
+    const classEntries = useMemo(() => workspace.entries || [], [workspace.entries]);
+    const entries = useMemo(() => [...classEntries, ...BUILT_IN_ENTRIES], [classEntries]);
     const filteredEntries = useMemo(
         () => dataFilter === 'all' ? entries : entries.filter((entry) => entry.status === dataFilter),
         [dataFilter, entries]
     );
-    const approvedCount = entries.filter((entry) => entry.status === 'approved').length;
-    const draftCount = entries.length - approvedCount;
+    const visibleEntries = filteredEntries.slice(0, MAX_VISIBLE_ENTRIES);
+    const approvedCount = classEntries.filter((entry) => entry.status === 'approved').length;
+    const draftCount = classEntries.filter((entry) => entry.status === 'draft').length;
 
     const generate = async () => {
         if (!draft.wrong_expression.trim()) return;
@@ -69,7 +79,7 @@ const TeacherEntry = ({ activeClass }) => {
                     <strong>✨ 항목 만들기</strong><small>AI 초안을 확인하고 승인합니다.</small>
                 </button>
                 <button type="button" role="tab" aria-selected={activeTab === 'data'} className={activeTab === 'data' ? 'is-active' : ''} onClick={() => setActiveTab('data')}>
-                    <strong>📚 등록 데이터</strong><small>현재 등록된 {entries.length}개 항목을 확인합니다.</small>
+                    <strong>📚 등록 데이터</strong><small>기본 {BUILT_IN_ENTRIES.length}개 · 우리 반 {classEntries.length}개</small>
                 </button>
             </div>
 
@@ -93,21 +103,24 @@ const TeacherEntry = ({ activeClass }) => {
 
             {activeTab === 'data' && <section className="spelling-learning-card spelling-learning-data" role="tabpanel">
                 <div className="spelling-learning-data-heading">
-                    <div><span>우리 반 수첩 현황</span><h3>현재 등록된 맞춤법 데이터</h3><p>승인된 항목만 학생 글쓰기의 밑줄과 맞춤법 수첩에 적용됩니다.</p></div>
-                    <div className="spelling-learning-counts"><span><b>{entries.length}</b>전체</span><span><b>{approvedCount}</b>적용 중</span><span><b>{draftCount}</b>초안</span></div>
+                    <div><span>맞춤법 수첩 현황</span><h3>현재 등록된 맞춤법 데이터</h3><p>기본 자료는 모든 학생에게 제공되며, 우리 반 자료는 승인된 항목만 추가로 적용됩니다.</p></div>
+                    <div className="spelling-learning-counts"><span><b>{entries.length}</b>전체</span><span><b>{BUILT_IN_ENTRIES.length}</b>기본</span><span><b>{approvedCount}</b>적용 중</span><span><b>{draftCount}</b>초안</span></div>
                 </div>
                 <div className="spelling-learning-filters" role="group" aria-label="등록 데이터 상태 필터">
                     {DATA_FILTERS.map((filter) => <button key={filter.id} type="button" className={dataFilter === filter.id ? 'is-active' : ''} onClick={() => setDataFilter(filter.id)}>{filter.label}</button>)}
                 </div>
                 <div className="spelling-learning-entry-list">
-                    {filteredEntries.map((entry) => <article className="spelling-learning-entry" key={entry.id}>
+                    {visibleEntries.map((entry) => {
+                        const isBuiltIn = entry.status === 'built-in';
+                        return <article className={`spelling-learning-entry${isBuiltIn ? ' is-built-in' : ''}`} key={entry.id}>
                         <div className="spelling-learning-entry-title">
-                            <div><strong><del>{entry.wrong_expression}</del><span aria-hidden="true">→</span>{entry.correct_expression}</strong><small>{entry.label || '미분류'}</small></div>
-                            <span className={`spelling-learning-status is-${entry.status}`}>{entry.status === 'approved' ? '적용 중' : '초안'}</span>
+                            <div><strong>{isBuiltIn ? entry.question : <del>{entry.wrong_expression}</del>}<span aria-hidden="true">→</span>{isBuiltIn ? entry.answer : entry.correct_expression}</strong><small>{isBuiltIn ? '학생 맞춤법 수첩 기본 자료' : (entry.label || '미분류')}</small></div>
+                            <span className={`spelling-learning-status is-${entry.status}`}>{isBuiltIn ? '기본 제공' : entry.status === 'approved' ? '적용 중' : '초안'}</span>
                         </div>
                         {entry.explanation && <p>{entry.explanation}</p>}
                         {Array.isArray(entry.examples) && entry.examples.length > 0 && <div className="spelling-learning-examples"><b>바른 예문</b>{entry.examples.map((example, index) => <span key={`${entry.id}-${index}`}>{example}</span>)}</div>}
-                    </article>)}
+                    </article>})}
+                    {filteredEntries.length > MAX_VISIBLE_ENTRIES && <div className="spelling-learning-entry-limit">처음 {MAX_VISIBLE_ENTRIES}개를 표시했습니다. 상태 필터를 선택하면 나머지 항목도 확인할 수 있습니다.</div>}
                     {!filteredEntries.length && <div className="spelling-learning-empty">{entries.length ? '이 상태의 항목이 없습니다.' : '아직 등록된 맞춤법 항목이 없습니다.'}</div>}
                 </div>
             </section>}
