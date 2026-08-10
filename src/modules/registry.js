@@ -17,6 +17,7 @@ import { diaryManifest } from './writing/diary/manifest';
 import { writingFootprintManifest } from './writing/writing-footprint/manifest';
 import { samlinkManifest } from './tool/samlink/manifest';
 import { spellingLearningManifest } from './writing/spelling-learning/manifest';
+import { neighborAgitManifest } from './community/neighbor-agit/manifest';
 
 /** 등록된 모듈 매니페스트 목록 */
 const manifests = [
@@ -29,6 +30,7 @@ const manifests = [
   writingFootprintManifest, // src/modules/writing/writing-footprint/
   samlinkManifest, // src/modules/tool/samlink/
   spellingLearningManifest, // src/modules/writing/spelling-learning/
+  neighborAgitManifest, // src/modules/community/neighbor-agit/
 ];
 
 // 개발 중 매니페스트 실수 조기 발견 (프로덕션 빌드에서는 console이 제거됨)

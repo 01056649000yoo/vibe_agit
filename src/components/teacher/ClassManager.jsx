@@ -251,16 +251,6 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                         </div>
                     </section>
 
-                    <section style={{ padding: isMobile ? '14px' : '15px 18px', border: '1px solid #E2E8F0', borderRadius: '16px', background: '#F8FAFC', display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: '12px', flexDirection: isMobile ? 'column' : 'row' }}>
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                                <strong style={{ color: '#334155', fontSize: '0.88rem' }}>🔗 학급 간 글 공유</strong>
-                                <span style={{ ...badgeStyle, background: '#E2E8F0', color: '#64748B' }}>비공개</span>
-                            </div>
-                            <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.74rem' }}>연결을 승인한 학급끼리 선택한 글을 공유하는 기능이 이곳에 추가됩니다.</p>
-                        </div>
-                        <span style={{ padding: '6px 9px', borderRadius: '9px', background: 'white', border: '1px solid #E2E8F0', color: '#94A3B8', fontSize: '0.7rem', fontWeight: '900', whiteSpace: 'nowrap' }}>업데이트 예정</span>
-                    </section>
                 </div>
             )}
 
