@@ -689,6 +689,9 @@ SSO가 되려면 둘을 한 스택·한 인증으로 통일해야 한다 (JWT �
 
 ## 📝 결정 기록
 
+- 2026-08-10: **화면에 설명을 덧붙이는 정보 아이콘은 공용 `GuideInfoButton`만 사용한다.** 문자
+  `ⓘ`·`!`·`?`나 화면별 버튼은 폰트에 따라 그림과 클릭 범위의 중심이 어긋나므로 직접 만들지 않는다.
+  교사 메뉴 사용법은 이를 포함한 `TeacherGuideButton`과 `constants/teacherGuides.js`에 모은다.
 - 2026-08-10: **프로젝트 Codex 셸 훅은 운영체제별 실행 명령을 둔다.** POSIX는 기존 `/bin/bash`,
   Windows는 `commandWindows`에서 설치된 Git Bash를 명시적으로 사용한다. 공통 스크립트 본문은 하나로
   유지하고 저장소 루트는 실행 시 `git rev-parse`로 찾는다.

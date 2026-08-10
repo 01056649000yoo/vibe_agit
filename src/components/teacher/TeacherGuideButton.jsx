@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Modal from '../common/Modal';
 import ModalPortal from '../common/ModalPortal';
+import GuideInfoButton from '../common/GuideInfoButton';
 import { TEACHER_GUIDES } from '../../constants/teacherGuides';
 
 /**
@@ -27,18 +28,15 @@ const TeacherGuideButton = ({ tabId, className = '' }) => {
 
     return (
         <>
-            <button
-                type="button"
-                className={`teacher-guide-dot ${className}`.trim()}
-                aria-label={`${guide.title} 사용법 보기`}
+            <GuideInfoButton
+                className={className}
+                label={`${guide.title} 사용법 보기`}
                 title={`${guide.title} 사용법`}
                 onClick={(event) => {
                     event.stopPropagation();
                     setIsOpen(true);
                 }}
-            >
-                ⓘ
-            </button>
+            />
 
             <ModalPortal>
                 <Modal
