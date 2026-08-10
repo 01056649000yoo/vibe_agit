@@ -7,6 +7,7 @@ import {
     getPopularSpellingEntries,
     searchElementarySpelling
 } from './elementarySpellingEntries';
+import { getElementarySpellingQuizQuestions } from './elementarySpellingQuiz';
 import { spellingLearningApi } from '../../spelling-learning/api';
 import { flushSpellingSearches, rememberSpellingSearch } from '../../spelling-learning/searchSession';
 import './SpellingLookupTool.css';
@@ -35,6 +36,7 @@ const getErrorPayload = async (error) => {
  * 이 무거운 파일(설명·예문·사전)을 받지 않는다.
  */
 const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) => {
+    const [activeView, setActiveView] = useState('lookup');
     const [query, setQuery] = useState(initialQuery.slice(0, MAX_QUERY_LENGTH));
     const [searchedQuery, setSearchedQuery] = useState(initialQuery.slice(0, MAX_QUERY_LENGTH));
     const [dictionaryItems, setDictionaryItems] = useState([]);
@@ -42,9 +44,15 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
     const [dictionaryMessage, setDictionaryMessage] = useState('');
     const [dictionarySearchedQuery, setDictionarySearchedQuery] = useState('');
     const [classEntries, setClassEntries] = useState([]);
+    const [quizIndex, setQuizIndex] = useState(0);
+    const [quizSelection, setQuizSelection] = useState('');
+    const [quizScore, setQuizScore] = useState(0);
+    const [quizFinished, setQuizFinished] = useState(false);
     const inputRef = useRef(null);
     const searchRequestRef = useRef(0);
     const popularEntries = useMemo(() => getPopularSpellingEntries(), []);
+    const quizQuestions = useMemo(() => getElementarySpellingQuizQuestions(), []);
+    const activeQuizQuestion = quizQuestions.at(quizIndex);
     const results = useMemo(() => {
         if (!searchedQuery) return [];
         const normalized = searchedQuery.normalize('NFC').toLocaleLowerCase('ko-KR');
@@ -61,6 +69,29 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
             }));
         return [...custom, ...searchElementarySpelling(searchedQuery)].slice(0, 20);
     }, [classEntries, searchedQuery]);
+
+    const selectQuizAnswer = (choice) => {
+        if (quizSelection || quizFinished) return;
+        setQuizSelection(choice);
+        if (choice === activeQuizQuestion.answer) setQuizScore((score) => score + 1);
+    };
+
+    const advanceQuiz = () => {
+        if (!quizSelection) return;
+        if (quizIndex === quizQuestions.length - 1) {
+            setQuizFinished(true);
+            return;
+        }
+        setQuizIndex((index) => index + 1);
+        setQuizSelection('');
+    };
+
+    const restartQuiz = () => {
+        setQuizIndex(0);
+        setQuizSelection('');
+        setQuizScore(0);
+        setQuizFinished(false);
+    };
 
     const closeTool = useCallback(() => {
         flushSpellingSearches().catch(() => {});
@@ -188,7 +219,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
                             </span>
                             <div>
                                 <span>나의 맞춤법 수첩</span>
-                                <h2 id="spelling-lookup-title">맞춤법 찾아보기</h2>
+                                <h2 id="spelling-lookup-title">{activeView === 'lookup' ? '맞춤법 찾아보기' : '맞춤법 100문제'}</h2>
                             </div>
                         </div>
                         <button
@@ -201,6 +232,12 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
                         </button>
                     </header>
 
+                    <div className="spelling-lookup-tabs" role="tablist" aria-label="맞춤법 수첩 보기 선택">
+                        <button type="button" role="tab" aria-selected={activeView === 'lookup'} className={activeView === 'lookup' ? 'is-active' : ''} onClick={() => setActiveView('lookup')}>🔎 찾아보기</button>
+                        <button type="button" role="tab" aria-selected={activeView === 'quiz'} className={activeView === 'quiz' ? 'is-active' : ''} onClick={() => setActiveView('quiz')}>✏️ 100문제</button>
+                    </div>
+
+                    {activeView === 'lookup' && <>
                     {correction?.right && (
                         <div className="spelling-correction-card">
                             <span className="spelling-correction-label">이렇게 고쳐 써요</span>
@@ -359,8 +396,62 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
                         )}
                     </div>
 
+                    </>}
+
+                    {activeView === 'quiz' && <div className="spelling-quiz-pane" role="tabpanel">
+                        {!quizFinished && <>
+                            <div className="spelling-quiz-status">
+                                <span><b>{quizIndex + 1}</b> / {quizQuestions.length}</span>
+                                <span>맞힌 문제 <b>{quizScore}</b>개</span>
+                            </div>
+                            <div className="spelling-quiz-progress" role="progressbar" aria-label="맞춤법 문제 풀이 진행률" aria-valuemin="0" aria-valuemax={quizQuestions.length} aria-valuenow={quizIndex + (quizSelection ? 1 : 0)}>
+                                <span style={{ width: `${((quizIndex + (quizSelection ? 1 : 0)) / quizQuestions.length) * 100}%` }} />
+                            </div>
+                            <article className="spelling-quiz-card">
+                                <span className="spelling-quiz-number">문제 {activeQuizQuestion.number}</span>
+                                <h3>{activeQuizQuestion.prompt}</h3>
+                                <div className="spelling-quiz-choices">
+                                    {activeQuizQuestion.choices.map((choice) => {
+                                        const isCorrect = choice === activeQuizQuestion.answer;
+                                        const isSelected = choice === quizSelection;
+                                        const resultClass = quizSelection
+                                            ? isCorrect ? ' is-correct' : isSelected ? ' is-wrong' : ''
+                                            : '';
+                                        return <button
+                                            type="button"
+                                            key={choice}
+                                            className={resultClass}
+                                            aria-pressed={isSelected}
+                                            disabled={!!quizSelection}
+                                            onClick={() => selectQuizAnswer(choice)}
+                                        >
+                                            {choice}
+                                        </button>;
+                                    })}
+                                </div>
+                                {quizSelection && <div className={`spelling-quiz-feedback${quizSelection === activeQuizQuestion.answer ? ' is-correct' : ' is-wrong'}`} role="status">
+                                    <strong>{quizSelection === activeQuizQuestion.answer ? '정답이에요!' : '다시 기억해 봐요.'}</strong>
+                                    <p>정답 <b>{activeQuizQuestion.answer}</b></p>
+                                    <span>{activeQuizQuestion.explanation}</span>
+                                </div>}
+                                <button type="button" className="spelling-quiz-next" disabled={!quizSelection} onClick={advanceQuiz}>
+                                    {quizIndex === quizQuestions.length - 1 ? '결과 보기' : '다음 문제'}
+                                </button>
+                            </article>
+                        </>}
+                        {quizFinished && <div className="spelling-quiz-finish" role="status">
+                            <span aria-hidden="true">🎉</span>
+                            <strong>100문제를 모두 풀었어요!</strong>
+                            <p><b>{quizScore}</b>개를 맞혔어요.</p>
+                            <small>틀린 문제의 설명을 떠올리며 다시 도전해 보세요.</small>
+                            <button type="button" onClick={restartQuiz}>처음부터 다시 풀기</button>
+                        </div>}
+                    </div>}
+
                     <footer className="spelling-lookup-footer">
-                        설명을 읽은 뒤 글쓰기 창으로 돌아가 직접 판단하고 고쳐 보세요.
+                        {activeView === 'lookup'
+                            ? '설명을 읽은 뒤 글쓰기 창으로 돌아가 직접 판단하고 고쳐 보세요.'
+                            : '정답과 설명은 이 기기에서만 확인하며 점수는 저장하지 않아요.'}
                     </footer>
                 </section>
             </div>

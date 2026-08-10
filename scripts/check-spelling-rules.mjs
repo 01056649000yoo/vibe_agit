@@ -24,6 +24,9 @@ import {
     ELEMENTARY_SPELLING_ENTRY_IDS,
     getElementarySpellingEntries
 } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
+import {
+    ELEMENTARY_SPELLING_QUIZ_QUESTIONS
+} from '../src/modules/writing/tools/spelling-lookup/elementarySpellingQuiz.js';
 
 // ── 전부 올바른 문장. 여기 밑줄이 그어지면 오탐이다 ──────────────────────────
 const 정상 = [
@@ -193,4 +196,19 @@ if (전체수첩항목.length !== 200 || 중복수첩아이디 > 0 || 불완전�
     process.exit(1);
 }
 console.log(`수첩  기본 자료 ${전체수첩항목.length}개 · ID 중복 0개 · 설명/예문/출처 확인`);
+
+const 중복문제아이디 = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length - new Set(
+    ELEMENTARY_SPELLING_QUIZ_QUESTIONS.map((question) => question.id)
+).size;
+const 잘못된문제 = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.filter((question, index) => (
+    question.number !== index + 1 ||
+    question.choices.length < 2 ||
+    !question.choices.includes(question.answer) ||
+    !question.explanation
+));
+if (ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length !== 100 || 중복문제아이디 > 0 || 잘못된문제.length > 0) {
+    console.error(`\n실패 — 문제은행 품질 오류: 전체 ${ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length}개, ID 중복 ${중복문제아이디}개, 잘못된 문항 ${잘못된문제.length}개`);
+    process.exit(1);
+}
+console.log(`문제은행  연속된 100문제 · ID 중복 0개 · 선택지/정답/설명 확인`);
 console.log('\n통과');

@@ -9,6 +9,9 @@ const teacherEntry = await readFile('src/modules/writing/spelling-learning/Teach
 const { ELEMENTARY_SPELLING_ENTRY_IDS, getElementarySpellingEntries, searchElementarySpelling } = await import(
     '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js'
 );
+const { ELEMENTARY_SPELLING_QUIZ_QUESTIONS } = await import(
+    '../src/modules/writing/tools/spelling-lookup/elementarySpellingQuiz.js'
+);
 
 test('맞춤법 학습 기능은 등록 모듈과 성능 계약을 가진다', () => {
     assert.match(manifest, /id: 'spelling-learning'/);
@@ -50,6 +53,26 @@ test('200개 기본 자료는 틀린 표현과 분류로 바로 찾을 수 있�
     assert.equal(searchElementarySpelling('설레였다')[0]?.id, 'seolletda');
     assert.equal(searchElementarySpelling('수영을 못해요')[0]?.id, 'mot-hada');
     assert.ok(searchElementarySpelling('외래어 표기').every((entry) => entry.category === '외래어 표기'));
+});
+
+test('초등 맞춤법 문제은행은 순서가 있는 고유 문항 100개와 해설을 가진다', () => {
+    assert.equal(ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length, 100);
+    assert.equal(new Set(ELEMENTARY_SPELLING_QUIZ_QUESTIONS.map((question) => question.id)).size, 100);
+    assert.equal(new Set(ELEMENTARY_SPELLING_QUIZ_QUESTIONS.map((question) => question.question)).size, 100);
+    for (const [index, question] of ELEMENTARY_SPELLING_QUIZ_QUESTIONS.entries()) {
+        assert.equal(question.number, index + 1);
+        assert.ok(question.choices.length >= 2, `${question.number}: 선택지가 부족합니다.`);
+        assert.ok(question.choices.includes(question.answer), `${question.number}: 정답이 선택지에 없습니다.`);
+        assert.ok(question.explanation.length >= 8, `${question.number}: 설명이 너무 짧습니다.`);
+        assert.doesNotMatch(question.prompt, /\([^()]+\s\/\s[^()]+\)/);
+    }
+    assert.match(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[33].question, /높이가/);
+    assert.match(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[36].question, /서로 답을/);
+    assert.deepEqual(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[70].choices, ['든, 든', '던, 던']);
+    assert.match(lookup, /✏️ 100문제/);
+    assert.match(lookup, /role="progressbar"/);
+    assert.match(lookup, /처음부터 다시 풀기/);
+    assert.match(lookup, /점수는 저장하지 않아요/);
 });
 
 test('학생 검색은 입력 중 직접 쓰지 않고 닫을 때 배치 RPC로 모은다', () => {
