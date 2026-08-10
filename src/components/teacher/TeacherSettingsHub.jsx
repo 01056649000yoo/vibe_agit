@@ -5,6 +5,11 @@ import { getAllModules } from '../../modules/registry';
 const ClassManager = lazy(() => import('./ClassManager'));
 const TeacherWritingEditorManager = lazy(() => import('../../modules/writing/editor-settings/TeacherWritingEditorManager'));
 
+// 등록 모듈 설정도 모두 이 슬롯 안에 들어온다. 메뉴마다 폭을 다시 정하지 않도록
+// 데스크톱 폭·항목 여백·모바일 최소 폭을 공통 호스트에서 고정한다.
+const SETTINGS_NAV_WIDTH = '270px';
+const SETTINGS_MOBILE_ITEM_WIDTH = '184px';
+
 const MODULE_SETTINGS_ITEMS = getAllModules()
     .filter((module) => module.available !== false && typeof module.settingsEntry === 'function')
     .sort((left, right) => (left.settings?.order ?? 100) - (right.settings?.order ?? 100))
@@ -39,7 +44,7 @@ const TeacherSettingsHub = ({
 
     return (
         <div style={{
-            display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : '210px minmax(0, 1fr)',
+            display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : `${SETTINGS_NAV_WIDTH} minmax(0, 1fr)`,
             gap: isMobile ? '12px' : '20px', alignItems: 'start', width: '100%'
         }}>
             <aside style={{
@@ -60,16 +65,18 @@ const TeacherSettingsHub = ({
                         const active = item.id === section;
                         return (
                             <button key={item.id} type="button" onClick={() => setSection(item.id)} aria-current={active ? 'page' : undefined} style={{
-                                minWidth: isMobile ? '148px' : 0, width: isMobile ? 'auto' : '100%', padding: '12px',
+                                minWidth: isMobile ? SETTINGS_MOBILE_ITEM_WIDTH : 0, width: isMobile ? SETTINGS_MOBILE_ITEM_WIDTH : '100%',
+                                minHeight: isMobile ? '58px' : '68px', padding: isMobile ? '11px 14px' : '13px 15px',
                                 border: active ? '1px solid #C7D7FE' : '1px solid transparent', borderRadius: '12px',
                                 background: active ? 'white' : 'transparent', color: active ? '#315FC4' : '#526176',
                                 boxShadow: active ? '0 4px 14px rgba(37,99,235,.09)' : 'none', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '9px', textAlign: 'left', whiteSpace: 'nowrap'
+                                display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left', whiteSpace: 'nowrap',
+                                boxSizing: 'border-box', overflow: 'hidden'
                             }}>
-                                <span aria-hidden="true" style={{ fontSize: '1.1rem' }}>{item.icon}</span>
-                                <span style={{ minWidth: 0 }}>
-                                    <strong style={{ display: 'block', fontSize: '0.86rem' }}>{item.label}</strong>
-                                    {!isMobile && <span style={{ display: 'block', marginTop: '2px', color: '#94A3B8', fontSize: '0.66rem' }}>{item.description}</span>}
+                                <span aria-hidden="true" style={{ flex: '0 0 25px', width: '25px', fontSize: '1.1rem', textAlign: 'center' }}>{item.icon}</span>
+                                <span style={{ flex: 1, minWidth: 0, paddingRight: '2px', overflow: 'hidden' }}>
+                                    <strong title={item.label} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.86rem' }}>{item.label}</strong>
+                                    {!isMobile && <span title={item.description} style={{ display: 'block', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', color: '#94A3B8', fontSize: '0.68rem' }}>{item.description}</span>}
                                 </span>
                             </button>
                         );

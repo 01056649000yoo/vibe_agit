@@ -26,6 +26,8 @@
  *   교사 수업 도구 런처 정보. part가 tool이면 teacherEntry를 선택할 때만 지연 로딩한다.
  * @property {{order?: number, label?: string, description?: string}} [settings]
  *   교사 통합 설정 메뉴 정보. settingsEntry가 있을 때 해당 화면을 선택한 뒤에만 지연 로딩한다.
+ *   메뉴 슬롯 크기는 공통 설정 호스트가 데스크톱 270px·항목 좌우 15px·최소 높이 68px로 보장하므로
+ *   모듈은 별도 메뉴 폭을 만들지 않고 짧은 label/description만 제공한다.
  * @property {string}   [studentRoute] 학생 화면 내부 라우트 이름
  * @property {string[]} [writingMissionTypes] 이 모듈이 처리하는 글쓰기 입력 미션 유형
  * @property {boolean}  [defaultEnabled]  학급 설정이 없을 때 기본 노출 여부 (기본 false)
