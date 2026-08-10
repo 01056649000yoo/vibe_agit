@@ -327,7 +327,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     </div>
                 )}
                 <div style={{ minWidth: 0 }}>
-                {secondaryTabs.length > 0 && !['writing', 'operations'].includes(activeNavGroup.id) && (
+                {secondaryTabs.length > 0 && !['writing', 'operations', 'records'].includes(activeNavGroup.id) && (
                     <div className="teacher-tab-heading">
                         <h2>{activeTab.label}</h2>
                         <TeacherGuideButton tabId={visibleTab} variant="help" />

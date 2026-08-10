@@ -10,6 +10,7 @@ import { exportObjectsToExcel } from '../../lib/excelExport';
 import { FileDown, FileText, CheckCircle2, Circle, RefreshCw, ChevronDown, ChevronUp, Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import BulkAIProgressModal from './BulkAIProgressModal';
 import PromptRuleButton from './PromptRuleButton';
+import TeacherGuideButton from './TeacherGuideButton';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../modules/writing/evaluation/RubricSettings';
 import MissionEvaluationEntry from '../../modules/writing/evaluation/MissionEvaluationEntry';
 import {
@@ -664,9 +665,12 @@ ${activitiesInfo}`;
                 boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
             }}>
                 <div>
-                    <h2 style={{ margin: '0 0 4px 0', fontSize: '1.6rem', fontWeight: '950', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '1.8rem' }}>📘</span> 평어 도우미 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>2022 성취기준 연동</span>
-                    </h2>
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '9px', marginBottom: '4px' }}>
+                        <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '950', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '1.8rem' }}>📘</span> 평어 도우미 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>2022 성취기준 연동</span>
+                        </h2>
+                        <TeacherGuideButton tabId="activity" variant="help" />
+                    </div>
                     <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>작성 중인 국어 평어의 앞이나 뒤에 붙일 글쓰기 평가 문장을 만듭니다.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
