@@ -148,14 +148,22 @@ const RULES = [
 const COMBINED_PATTERN = new RegExp(RULES.map((rule) => `(${rule.source})`).join('|'), 'g');
 
 export const SPELLING_DETECTION_RULE_COUNT = RULES.length;
+export const SPELLING_DETECTION_ENTRY_IDS = Object.freeze([
+    ...new Set(RULES.map((rule) => rule.entryId).filter(Boolean))
+]);
+/** 오류가 아주 많은 붙여넣기에서도 밑줄 DOM과 검사 시간이 끝없이 늘지 않게 한다. */
+export const MAX_SPELLING_ISSUES = 50;
 
 /**
  * 브라우저·키보드의 맞춤법 엔진과 관계없이 수첩 규칙으로 확인 가능한 위치를 찾는다.
  * 문맥에 따라 둘 다 맞을 수 있는 표현은 위 판정 기준에 따라 애초에 규칙에 없다.
  */
-export const findSpellingIssues = (value) => {
+export const findSpellingIssues = (value, limit = MAX_SPELLING_ISSUES) => {
     const text = String(value || '');
     if (!text) return [];
+
+    const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : MAX_SPELLING_ISSUES;
+    if (safeLimit === 0) return [];
 
     const issues = [];
     COMBINED_PATTERN.lastIndex = 0;
@@ -177,6 +185,7 @@ export const findSpellingIssues = (value) => {
                 right: rule.right,
                 lookup: rule.lookup || rule.right
             });
+            if (issues.length >= safeLimit) break;
         }
 
         // 길이 0으로 매치되는 규칙은 없지만, 만약 생기면 무한 반복을 막는다.

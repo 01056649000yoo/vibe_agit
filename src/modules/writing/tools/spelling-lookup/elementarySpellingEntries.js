@@ -4,7 +4,7 @@
  * 이 파일은 학생이 **수첩을 열 때만** 내려간다. 글쓰기 창에 늘 따라다니는
  * 밑줄 감지 규칙은 `spellingDetectionRules.js` 에 따로 있다 — 그쪽이 훨씬 가볍다.
  */
-import { findDetectedEntryIds } from './spellingDetectionRules';
+import { findDetectedEntryIds } from './spellingDetectionRules.js';
 
 const DICTIONARY_SEARCH_URL = 'https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=';
 const KOREAN_NORMS_URL = 'https://korean.go.kr/kornorms/main/main.do';
@@ -246,6 +246,10 @@ const POPULAR_SPELLING_ENTRY_IDS = [
     'hal-su-itda',
     'myeochil'
 ];
+
+export const ELEMENTARY_SPELLING_ENTRY_IDS = Object.freeze(
+    ELEMENTARY_SPELLING_ENTRIES.map((entry) => entry.id)
+);
 
 const normalize = (value) => value
     .normalize('NFC')

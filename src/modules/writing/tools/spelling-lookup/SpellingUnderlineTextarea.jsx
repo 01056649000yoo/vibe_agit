@@ -1,12 +1,12 @@
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { findSpellingIssues } from './spellingDetectionRules';
+import { findSpellingIssues, MAX_SPELLING_ISSUES } from './spellingDetectionRules';
 import { openSpellingLookup } from './events';
 import { useWritingEditorSettings } from '../../editor-settings/WritingEditorSettingsContext';
 import { SPELLING_LOOKUP_TOOL_ID } from '../../editor-settings/settings';
 import './SpellingUnderlineTextarea.css';
 
 /** 손을 멈추고 이만큼 지나면 다시 훑는다. 한글 한 글자를 조합하는 시간보다 넉넉하다. */
-const SCAN_DELAY_MS = 250;
+const SCAN_DELAY_MS = 350;
 
 /** 두 문장이 앞에서부터 몇 글자까지 똑같은지. */
 const commonPrefixLength = (left, right) => {
@@ -178,7 +178,9 @@ const SpellingUnderlineTextarea = forwardRef(function SpellingUnderlineTextarea(
 
             {uniqueIssues.length > 0 && (
                 <div className="spelling-underline-notice" role="status">
-                    <span>〰️ 맞춤법 수첩에서 확인해 볼 표현 {issues.length}개</span>
+                    <span>
+                        〰️ 맞춤법 수첩에서 확인해 볼 표현 {issues.length >= MAX_SPELLING_ISSUES ? `${MAX_SPELLING_ISSUES}개 이상` : `${issues.length}개`}
+                    </span>
                     <div>
                         {uniqueIssues.slice(0, 4).map((issue) => (
                             <button

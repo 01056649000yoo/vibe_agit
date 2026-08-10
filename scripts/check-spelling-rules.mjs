@@ -16,8 +16,13 @@
 
 import {
     findSpellingIssues,
+    MAX_SPELLING_ISSUES,
+    SPELLING_DETECTION_ENTRY_IDS,
     SPELLING_DETECTION_RULE_COUNT
 } from '../src/modules/writing/tools/spelling-lookup/spellingDetectionRules.js';
+import {
+    ELEMENTARY_SPELLING_ENTRY_IDS
+} from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
 
 // ── 전부 올바른 문장. 여기 밑줄이 그어지면 오탐이다 ──────────────────────────
 const 정상 = [
@@ -157,6 +162,20 @@ if (오탐 > 0) {
 }
 if (미탐 > 0) {
     console.error('\n실패 — 틀린 글을 놓친다.');
+    process.exit(1);
+}
+
+const 반복오류 = '되요 '.repeat(MAX_SPELLING_ISSUES + 10);
+const 제한결과 = findSpellingIssues(반복오류);
+if (제한결과.length !== MAX_SPELLING_ISSUES) {
+    console.error(`\n실패 — 밑줄 결과 상한이 ${MAX_SPELLING_ISSUES}개로 지켜지지 않는다.`);
+    process.exit(1);
+}
+
+const 수첩항목 = new Set(ELEMENTARY_SPELLING_ENTRY_IDS);
+const 없는수첩항목 = SPELLING_DETECTION_ENTRY_IDS.filter((id) => !수첩항목.has(id));
+if (없는수첩항목.length > 0) {
+    console.error(`\n실패 — 감지 규칙이 가리키는 수첩 항목이 없다: ${없는수첩항목.join(', ')}`);
     process.exit(1);
 }
 console.log('\n통과');
