@@ -87,9 +87,12 @@
 .teacher-class-bar__select {
     position: absolute;
     top: 0;
-    left: 0;
+    /* 알약 왼쪽 끝에 맞추면 목록이 오른쪽으로만 쏠린다. 넓힌 폭의 절반만큼 되돌려
+       알약 한가운데를 기준으로 좌우 균등하게 펼쳐지게 한다. */
+    left: 50%;
     width: max(100%, 240px);
     height: 100%;
+    margin-left: calc(-.5 * max(100%, 240px));
     padding: 0;
     border: 0;
     border-radius: inherit;
