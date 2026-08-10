@@ -12,12 +12,23 @@ import { supabase } from '../lib/supabaseClient';
  */
 
 export const PRESET_KIND = { FEEDBACK: 'feedback', REPORT: 'report' };
-const MAX_PROMPT_LENGTH = 200;
+
+/**
+ * 규칙 1개의 최대 길이.
+ *
+ * 200자였는데 실제로 써 보니 역할·근거·문체·금지사항을 다 적기엔 너무 짧아서
+ * AI 가 규칙을 제대로 못 알아듣는 경우가 있었다(2026-08-10, 사용자 요청으로 1,000자).
+ * DB(`ai_prompt_presets.content`)는 길이 제한이 없는 TEXT 라 스키마 변경은 필요 없다.
+ * 화면(PromptRuleModal)도 이 값을 가져다 쓰므로 한도는 여기 한 곳에서만 고친다.
+ */
+export const MAX_PROMPT_LENGTH = 1000;
 
 const validatePrompt = (content) => {
     const value = String(content || '').trim();
     if (!value) throw new Error('프롬프트 내용을 입력해주세요.');
-    if (value.length > MAX_PROMPT_LENGTH) throw new Error('프롬프트는 200자 이내로 작성해주세요.');
+    if (value.length > MAX_PROMPT_LENGTH) {
+        throw new Error(`프롬프트는 ${MAX_PROMPT_LENGTH}자 이내로 작성해주세요.`);
+    }
     return value;
 };
 

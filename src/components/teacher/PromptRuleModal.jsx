@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { refinePromptWithAI } from '../../utils/refinePrompt';
 import Button from '../common/Button';
-import useAiPromptPresets, { PRESET_KIND } from '../../hooks/useAiPromptPresets';
+import useAiPromptPresets, { PRESET_KIND, MAX_PROMPT_LENGTH } from '../../hooks/useAiPromptPresets';
 import { DEFAULT_FEEDBACK_PROMPT, DEFAULT_REPORT_PROMPT } from '../../constants/aiPrompts';
-
-const MAX_PROMPT_LENGTH = 200;
 
 /**
  * AI 규칙 보관함 모달.
@@ -94,7 +92,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
             return;
         }
         if (!draft.trim() || isTooLong) {
-            flash('프롬프트를 200자 이내로 작성해주세요.');
+            flash(`프롬프트를 ${MAX_PROMPT_LENGTH}자 이내로 작성해주세요.`);
             return;
         }
         const ok = await savePreset(name, draft);
@@ -160,7 +158,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             🗂️ {label} 보관함
                         </h3>
                         <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', color: '#6B7280' }}>
-                            제목을 먼저 정하고 200자 이내 개조식 프롬프트를 저장해두세요.
+                            제목을 먼저 정하고 {MAX_PROMPT_LENGTH.toLocaleString()}자 이내 개조식 프롬프트를 저장해두세요.
                             <strong style={{ color: accent }}> {embedded ? '선택해 적용한 규칙이 AI 실행에 사용됩니다.' : '그냥 닫으면 지금 규칙이 그대로 쓰입니다.'}</strong>
                         </p>
                     </div>
@@ -293,7 +291,8 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                     onClick={async () => {
                                         setRefineError(''); setRefined(null); setRefining(true);
                                         try {
-                                            setRefined(await refinePromptWithAI(draft));
+                                            // 평어와 피드백은 다듬는 기준이 달라 종류를 함께 넘긴다
+                                            setRefined(await refinePromptWithAI(draft, kind));
                                         } catch (err) {
                                             setRefineError(err?.message || 'AI 다듬기에 실패했습니다.');
                                         } finally {
@@ -337,8 +336,9 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                             <span style={{ color: '#374151', fontSize: '0.8rem', fontWeight: 800 }}>2. AI 프롬프트</span>
-                            <span style={{ color: isTooLong ? '#DC2626' : draft.length >= 180 ? '#D97706' : '#6B7280', fontSize: '0.76rem', fontWeight: 800 }}>
-                                {draft.length}/{MAX_PROMPT_LENGTH}자
+                            {/* 한도의 90%부터 주황색으로 미리 알린다 */}
+                            <span style={{ color: isTooLong ? '#DC2626' : draft.length >= MAX_PROMPT_LENGTH * 0.9 ? '#D97706' : '#6B7280', fontSize: '0.76rem', fontWeight: 800 }}>
+                                {draft.length.toLocaleString()}/{MAX_PROMPT_LENGTH.toLocaleString()}자
                             </span>
                         </div>
 
@@ -357,7 +357,9 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             }}
                         />
                         <div style={{ marginTop: '6px', color: isTooLong ? '#DC2626' : '#6B7280', fontSize: '0.75rem', lineHeight: 1.5 }}>
-                            {isTooLong ? '기존 프롬프트가 200자를 넘습니다. 핵심만 남겨 줄여야 저장하거나 적용할 수 있습니다.' : '역할·내용·말투·제한을 줄바꿈한 개조식으로 적으면 수정하기 쉽습니다.'}
+                            {isTooLong
+                                ? `프롬프트가 ${MAX_PROMPT_LENGTH.toLocaleString()}자를 넘습니다. 줄여야 저장하거나 적용할 수 있습니다. ✨ AI로 다듬기로 정리할 수 있습니다.`
+                                : '역할·내용·말투·제한을 줄바꿈한 개조식으로 적으면 수정하기 쉽습니다.'}
                         </div>
 
                         {/* AI 다듬기 결과 — 원문은 그대로 두고, 교사가 확인 후 채택 */}
@@ -378,7 +380,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                     ✨ AI가 다듬은 규칙 (아직 적용 전)
                                 </div>
                                 <div style={{
-                                    maxHeight: '160px', overflowY: 'auto', whiteSpace: 'pre-wrap',
+                                    maxHeight: '240px', overflowY: 'auto', whiteSpace: 'pre-wrap',
                                     fontSize: '0.83rem', lineHeight: 1.6, color: '#2C3E50',
                                     background: 'white', padding: '10px', borderRadius: '8px', border: '1px solid #DCFCE7'
                                 }}>
