@@ -145,7 +145,7 @@ const TeacherCommentManager = ({ activeClass }) => {
     return (
         <div className="teacher-comments">
             <header className="teacher-comments__header">
-                <div>
+                <div className="teacher-comments__heading-copy">
                     <div className="teacher-comments__title-row">
                         <h2>🗨️ 학생 댓글 관리</h2>
                         <TeacherGuideButton tabId="comments" variant="help" />
@@ -153,6 +153,7 @@ const TeacherCommentManager = ({ activeClass }) => {
                     <p>친구 글에 남긴 댓글을 한자리에서 보고, AI가 막은 것을 풀어 주거나 지울 수 있어요.</p>
                 </div>
                 <input
+                    className="teacher-comments__search"
                     type="search"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
