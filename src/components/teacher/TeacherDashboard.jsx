@@ -177,6 +177,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const hasZeroClasses = classes.length === 0;
     const visibleTab = TEACHER_TAB_IDS.includes(currentTab) ? currentTab : 'dashboard';
     const activeNavGroup = TEACHER_NAV_GROUPS.find(group => group.tabs.some(tab => tab.id === visibleTab)) || TEACHER_NAV_GROUPS[0];
+    const activeTab = activeNavGroup.tabs.find(tab => tab.id === visibleTab) || activeNavGroup.tabs[0];
     const secondaryTabs = activeNavGroup.tabs.length > 1 ? activeNavGroup.tabs : [];
     const usesSecondarySidebar = !isMobile && activeNavGroup.secondaryShape === 'sidebar';
     const showsWritingLayoutControls = !isMobile && activeNavGroup.id === 'writing';
@@ -301,8 +302,6 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                             borderRadius: '16px', background: '#E2E8F0', position: usesSecondarySidebar ? 'sticky' : undefined, top: usesSecondarySidebar ? 0 : undefined
                         }}
                     >
-                        {/* 메뉴 버튼과 사용법 ⓘ 는 형제로 둔다 — 버튼 안에 버튼을 넣을 수 없고,
-                            ⓘ 를 눌렀을 때 메뉴까지 함께 눌리면 안 되기 때문이다. */}
                         {secondaryTabs.map(tab => (
                             <div
                                 key={tab.id}
@@ -323,12 +322,17 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 >
                                     {tab.label}
                                 </button>
-                                <TeacherGuideButton tabId={tab.id} />
                             </div>
                         ))}
                     </div>
                 )}
                 <div style={{ minWidth: 0 }}>
+                {secondaryTabs.length > 0 && (
+                    <div className="teacher-tab-heading">
+                        <h2>{activeTab.label}</h2>
+                        <TeacherGuideButton tabId={visibleTab} variant="help" />
+                    </div>
+                )}
                 <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px', color: '#ADB5BD' }}>로딩 중... ✨</div>}>
                     {/* 학급 데이터 로딩 중이면 스켈레톤 표시 */}
                     {loadingClasses ? (

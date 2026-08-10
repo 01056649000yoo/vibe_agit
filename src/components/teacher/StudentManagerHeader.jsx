@@ -147,7 +147,7 @@ const StudentManagerHeader = ({
             {/* 이 메뉴는 세부 메뉴 목록이 없어(그룹에 탭이 하나뿐) 화면 제목 옆에 사용법 ⓘ 를 둔다 */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                 <h3 style={{ margin: 0, fontSize: '1.12rem', color: '#212529', fontWeight: '900' }}>👥 학생 명단 <span style={{ color: '#94A3B8', fontSize: '0.8rem' }}>{students.length}명</span></h3>
-                <TeacherGuideButton tabId="students" />
+                <TeacherGuideButton tabId="students" variant="help" />
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-end' }}>
                 <input type="search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="학생 이름 검색" aria-label="학생 이름 검색" style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.82rem', width: '140px' }} />

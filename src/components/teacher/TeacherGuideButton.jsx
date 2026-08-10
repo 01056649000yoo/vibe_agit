@@ -5,7 +5,7 @@ import GuideInfoButton from '../common/GuideInfoButton';
 import { TEACHER_GUIDES } from '../../constants/teacherGuides';
 
 /**
- * 메뉴 이름 옆 ⓘ — 누르면 그 메뉴 사용법을 보여 준다.
+ * 현재 화면 제목 옆 도움말 버튼 — 누르면 그 메뉴 사용법을 보여 준다.
  *
  * 안내 글은 `constants/teacherGuides.js` 한 곳에 모아 둔다. 화면마다 흩어 두면
  * 기능을 고칠 때 안내만 옛날 내용으로 남기 쉽다.
@@ -19,7 +19,7 @@ import { TEACHER_GUIDES } from '../../constants/teacherGuides';
  * 그 안에서 그리면 창의 `z-index: 9999` 가 막대 안에서만 유효해서, 바깥의 고정 헤더(z-index 10)가
  * 창을 덮어 버린다(2026-08-10 실제로 발생). body 로 빼면 이 문제가 사라진다.
  */
-const TeacherGuideButton = ({ tabId, className = '' }) => {
+const TeacherGuideButton = ({ tabId, className = '', variant = 'icon' }) => {
     const [isOpen, setIsOpen] = useState(false);
     // 정해진 목록에서만 꺼낸다(Button.jsx 의 variant 조회와 같은 방식)
     const guide = Reflect.get(TEACHER_GUIDES, tabId);
@@ -30,6 +30,7 @@ const TeacherGuideButton = ({ tabId, className = '' }) => {
         <>
             <GuideInfoButton
                 className={className}
+                variant={variant}
                 label={`${guide.title} 사용법 보기`}
                 title={`${guide.title} 사용법`}
                 onClick={(event) => {
@@ -42,7 +43,7 @@ const TeacherGuideButton = ({ tabId, className = '' }) => {
                 <Modal
                     isOpen={isOpen}
                     onClose={() => setIsOpen(false)}
-                    title={`ⓘ ${guide.title} 사용법`}
+                    title={`💡 ${guide.title} 도움말`}
                     maxWidth="620px"
                 >
                     <div className="teacher-guide">
