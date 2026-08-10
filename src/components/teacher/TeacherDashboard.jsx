@@ -169,29 +169,32 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                 background: 'white', borderBottom: '1px solid #E9ECEF',
                 flexShrink: 0, zIndex: 100, width: '100%', boxSizing: 'border-box'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
-                    <div style={{
-                        display: 'flex', alignItems: 'center', gap: '8px', background: '#EEF2FF',
-                        padding: isMobile ? '4px 12px' : '6px 16px', borderRadius: '12px',
-                        border: '1px solid #E0E7FF', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                    }}>
-                        <span style={{ fontSize: isMobile ? '1.1rem' : '1.3rem' }}>🏫</span>
-                        <h2 style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.2rem', color: '#4F46E5', fontWeight: '900', letterSpacing: '-0.5px' }}>
+                {/* 학급 이름표 = 학급 바꾸는 곳.
+                    예전에는 이름표 옆에 작은 select 를 따로 뒀는데, 같은 학급 이름을 두 번 보여주면서
+                    정작 누르는 곳은 글자 0.8rem 짜리로 작았다. 이름표 자체를 고르는 단추로 만든다.
+                    보이는 건 하나지만 실제 조작은 브라우저 기본 select 라 키보드·태블릿에서 그대로 동작한다. */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', minWidth: 0 }}>
+                    <div
+                        className={classes.length > 1 ? 'teacher-class-switch teacher-class-switch--pickable' : 'teacher-class-switch'}
+                    >
+                        <span className="teacher-class-switch__icon" aria-hidden="true">🏫</span>
+                        <h2 className="teacher-class-switch__name">
                             {activeClass ? activeClass.name : '학급 관리'}
                         </h2>
+                        {classes.length > 1 && (
+                            <>
+                                <span className="teacher-class-switch__caret" aria-hidden="true">▾</span>
+                                <select
+                                    className="teacher-class-switch__select"
+                                    aria-label="학급 바꾸기"
+                                    value={activeClass?.id || ''}
+                                    onChange={(e) => setActiveClass(classes.find(c => c.id === e.target.value))}
+                                >
+                                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </>
+                        )}
                     </div>
-                    {classes.length > 1 && (
-                        <select
-                            value={activeClass?.id || ''}
-                            onChange={(e) => setActiveClass(classes.find(c => c.id === e.target.value))}
-                            style={{
-                                padding: '4px 6px', borderRadius: '8px', border: '1px solid #DEE2E6',
-                                background: '#F8F9FA', color: '#495057', fontSize: '0.8rem', fontWeight: 'bold'
-                            }}
-                        >
-                            {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     {!isMobile && (
