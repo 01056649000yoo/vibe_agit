@@ -26,7 +26,11 @@ test('교사 등록 데이터는 기존 학생 수첩 기본 자료와 우리 �
     assert.ok(builtInEntries.length > 0);
     assert.match(teacherEntry, /getElementarySpellingEntries/);
     assert.match(teacherEntry, /기본 자료/);
-    assert.match(teacherEntry, /MAX_VISIBLE_ENTRIES = 100/);
+    assert.match(teacherEntry, /우리 반 자료/);
+    assert.match(teacherEntry, /type="search"/);
+    assert.match(teacherEntry, /PAGE_SIZE = 20/);
+    assert.match(teacherEntry, /spelling-learning-entry-summary/);
+    assert.doesNotMatch(teacherEntry, /초안 저장|적용 중/);
 });
 
 test('학생 검색은 입력 중 직접 쓰지 않고 닫을 때 배치 RPC로 모은다', () => {

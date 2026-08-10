@@ -7,15 +7,31 @@ const EMPTY = { wrong_expression: '', correct_expression: '', label: '미분류'
 const BUILT_IN_ENTRIES = getElementarySpellingEntries().map((entry) => ({
     ...entry,
     id: `built-in:${entry.id}`,
-    status: 'built-in'
+    kind: 'built-in'
 }));
 const DATA_FILTERS = [
     { id: 'all', label: '전체' },
     { id: 'built-in', label: '기본 자료' },
-    { id: 'approved', label: '적용 중' },
-    { id: 'draft', label: '초안' }
+    { id: 'class', label: '우리 반 자료' }
 ];
-const MAX_VISIBLE_ENTRIES = 100;
+const PAGE_SIZE = 20;
+
+const normalizeSearchValue = (value) => String(value || '')
+    .normalize('NFC')
+    .toLocaleLowerCase('ko-KR')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const getEntrySearchText = (entry) => normalizeSearchValue([
+    entry.question,
+    entry.answer,
+    entry.wrong_expression,
+    entry.correct_expression,
+    entry.label,
+    entry.explanation,
+    ...(entry.searchable || []),
+    ...(entry.examples || [])
+].filter(Boolean).join(' '));
 
 const TeacherEntry = ({ activeClass }) => {
     const classId = activeClass?.id;
@@ -25,50 +41,103 @@ const TeacherEntry = ({ activeClass }) => {
     const [message, setMessage] = useState('');
     const [activeTab, setActiveTab] = useState('create');
     const [dataFilter, setDataFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+    const [expandedEntryId, setExpandedEntryId] = useState(null);
 
     const load = useCallback(async () => {
         if (!classId) return;
         try {
-            setWorkspace(await spellingLearningApi.getTeacherWorkspace(classId) || workspace);
+            const nextWorkspace = await spellingLearningApi.getTeacherWorkspace(classId);
+            setWorkspace(nextWorkspace || { entries: [], top_searches: [] });
         } catch (error) {
             setMessage(error.message || '맞춤법 데이터를 불러오지 못했습니다.');
         }
-    }, [classId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [classId]);
 
     useEffect(() => { load(); }, [load]);
+    useEffect(() => {
+        setVisibleCount(PAGE_SIZE);
+        setExpandedEntryId(null);
+    }, [dataFilter, searchQuery]);
 
-    const classEntries = useMemo(() => workspace.entries || [], [workspace.entries]);
-    const entries = useMemo(() => [...classEntries, ...BUILT_IN_ENTRIES], [classEntries]);
-    const filteredEntries = useMemo(
-        () => dataFilter === 'all' ? entries : entries.filter((entry) => entry.status === dataFilter),
-        [dataFilter, entries]
+    const classEntries = useMemo(
+        () => (workspace.entries || []).map((entry) => ({ ...entry, kind: 'class' })),
+        [workspace.entries]
     );
-    const visibleEntries = filteredEntries.slice(0, MAX_VISIBLE_ENTRIES);
-    const approvedCount = classEntries.filter((entry) => entry.status === 'approved').length;
-    const draftCount = classEntries.filter((entry) => entry.status === 'draft').length;
+    const entries = useMemo(() => [...classEntries, ...BUILT_IN_ENTRIES], [classEntries]);
+    const filteredEntries = useMemo(() => {
+        const normalizedQuery = normalizeSearchValue(searchQuery);
+        const terms = normalizedQuery ? normalizedQuery.split(' ') : [];
+        return entries.filter((entry) => {
+            if (dataFilter !== 'all' && entry.kind !== dataFilter) return false;
+            if (!terms.length) return true;
+            const searchText = getEntrySearchText(entry);
+            return terms.every((term) => searchText.includes(term));
+        });
+    }, [dataFilter, entries, searchQuery]);
+    const visibleEntries = filteredEntries.slice(0, visibleCount);
+
+    const duplicateEntry = useMemo(() => {
+        const wrongExpression = normalizeSearchValue(draft.wrong_expression);
+        if (!wrongExpression) return null;
+        return entries.find((entry) => {
+            if (entry.id === draft.id) return false;
+            const candidates = entry.kind === 'built-in'
+                ? [entry.question, ...(entry.searchable || [])]
+                : [entry.wrong_expression];
+            return candidates.some((candidate) => normalizeSearchValue(candidate) === wrongExpression);
+        }) || null;
+    }, [draft.id, draft.wrong_expression, entries]);
 
     const generate = async () => {
         if (!draft.wrong_expression.trim()) return;
-        setLoading(true); setMessage('');
+        setLoading(true);
+        setMessage('');
         try {
             const generated = await spellingLearningApi.generateDraft(draft.wrong_expression.trim());
-            setDraft({ ...EMPTY, ...generated, wrong_expression: draft.wrong_expression.trim() });
-            setMessage('AI가 초안을 만들었습니다. 내용을 확인하고 승인해 주세요.');
+            setDraft({ ...EMPTY, ...generated, id: draft.id, wrong_expression: draft.wrong_expression.trim() });
+            setMessage('AI가 내용을 만들었습니다. 바른 표현과 설명을 확인해 주세요.');
         } catch (error) {
-            setMessage(error.message || 'AI 초안을 만들지 못했습니다.');
-        } finally { setLoading(false); }
+            setMessage(error.message || 'AI 내용을 만들지 못했습니다.');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const save = async (approve) => {
-        setLoading(true); setMessage('');
+    const save = async () => {
+        setLoading(true);
+        setMessage('');
         try {
-            await spellingLearningApi.saveEntry(classId, draft, approve);
+            await spellingLearningApi.saveEntry(classId, draft, true);
             setDraft(EMPTY);
-            setMessage(approve ? '확인한 항목을 우리 반 수첩에 적용했습니다.' : '초안을 저장했습니다.');
+            setMessage('우리 반 맞춤법 자료로 등록했습니다.');
             await load();
+            setActiveTab('data');
+            setDataFilter('class');
         } catch (error) {
-            setMessage(error.message || '항목을 저장하지 못했습니다.');
-        } finally { setLoading(false); }
+            setMessage(error.message || '항목을 등록하지 못했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const editEntry = (entry) => {
+        setDraft({
+            id: entry.id,
+            wrong_expression: entry.wrong_expression || '',
+            correct_expression: entry.correct_expression || '',
+            label: entry.label || '미분류',
+            explanation: entry.explanation || '',
+            examples: Array.isArray(entry.examples) ? entry.examples : []
+        });
+        setMessage('우리 반 자료를 수정하고 있습니다.');
+        setActiveTab('create');
+    };
+
+    const resetDraft = () => {
+        setDraft(EMPTY);
+        setMessage('');
     };
 
     return <section className="spelling-learning-manager">
@@ -76,7 +145,7 @@ const TeacherEntry = ({ activeClass }) => {
         {classId && <>
             <div className="spelling-learning-tabs" role="tablist" aria-label="맞춤법 배움 데이터 관리">
                 <button type="button" role="tab" aria-selected={activeTab === 'create'} className={activeTab === 'create' ? 'is-active' : ''} onClick={() => setActiveTab('create')}>
-                    <strong>✨ 항목 만들기</strong><small>AI 초안을 확인하고 승인합니다.</small>
+                    <strong>✨ 항목 만들기</strong><small>확인한 내용을 우리 반 자료로 등록합니다.</small>
                 </button>
                 <button type="button" role="tab" aria-selected={activeTab === 'data'} className={activeTab === 'data' ? 'is-active' : ''} onClick={() => setActiveTab('data')}>
                     <strong>📚 등록 데이터</strong><small>기본 {BUILT_IN_ENTRIES.length}개 · 우리 반 {classEntries.length}개</small>
@@ -85,14 +154,21 @@ const TeacherEntry = ({ activeClass }) => {
 
             {activeTab === 'create' && <div className="spelling-learning-grid" role="tabpanel">
                 <section className="spelling-learning-card">
-                    <h3>문제 표현으로 항목 만들기</h3>
-                    <label>아이들이 자주 헷갈리는 표현<input value={draft.wrong_expression} maxLength={80} onChange={(e) => setDraft({ ...draft, wrong_expression: e.target.value })} placeholder="예: 안되요" /></label>
-                    <button type="button" onClick={generate} disabled={loading || !draft.wrong_expression.trim()}>AI 초안 만들기</button>
-                    <label>바른 표현<input value={draft.correct_expression} maxLength={80} onChange={(e) => setDraft({ ...draft, correct_expression: e.target.value })} /></label>
-                    <label>배움 라벨<input value={draft.label} maxLength={40} onChange={(e) => setDraft({ ...draft, label: e.target.value })} /></label>
-                    <label>학생용 설명<textarea value={draft.explanation} maxLength={600} onChange={(e) => setDraft({ ...draft, explanation: e.target.value })} /></label>
-                    <label>바른 예문<textarea value={(draft.examples || []).join('\n')} maxLength={600} onChange={(e) => setDraft({ ...draft, examples: e.target.value.split('\n').filter(Boolean).slice(0, 4) })} /></label>
-                    <div className="spelling-learning-actions"><button type="button" className="secondary" onClick={() => save(false)} disabled={loading}>초안 저장</button><button type="button" onClick={() => save(true)} disabled={loading || !draft.correct_expression.trim() || !draft.explanation.trim()}>확인하고 승인</button></div>
+                    <div className="spelling-learning-form-heading">
+                        <div><span>{draft.id ? '우리 반 자료 수정' : '새 자료 등록'}</span><h3>{draft.id ? '등록한 맞춤법 자료 고치기' : '문제 표현으로 항목 만들기'}</h3></div>
+                        {draft.id && <button type="button" className="text-button" onClick={resetDraft}>수정 취소</button>}
+                    </div>
+                    <label>아이들이 자주 헷갈리는 표현<input value={draft.wrong_expression} maxLength={80} onChange={(event) => setDraft({ ...draft, wrong_expression: event.target.value })} placeholder="예: 안되요" /></label>
+                    {duplicateEntry && <p className="spelling-learning-duplicate">이미 비슷한 자료가 있습니다: <b>{duplicateEntry.kind === 'built-in' ? duplicateEntry.question : duplicateEntry.wrong_expression}</b></p>}
+                    <button type="button" onClick={generate} disabled={loading || !draft.wrong_expression.trim()}>AI로 내용 만들기</button>
+                    <label>바른 표현<input value={draft.correct_expression} maxLength={80} onChange={(event) => setDraft({ ...draft, correct_expression: event.target.value })} /></label>
+                    <label>배움 라벨<input value={draft.label} maxLength={40} onChange={(event) => setDraft({ ...draft, label: event.target.value })} /></label>
+                    <label>학생용 설명<textarea value={draft.explanation} maxLength={600} onChange={(event) => setDraft({ ...draft, explanation: event.target.value })} /></label>
+                    <label>바른 예문<textarea value={(draft.examples || []).join('\n')} maxLength={600} onChange={(event) => setDraft({ ...draft, examples: event.target.value.split('\n').filter(Boolean).slice(0, 4) })} /></label>
+                    <div className="spelling-learning-actions">
+                        {draft.id && <button type="button" className="secondary" onClick={resetDraft} disabled={loading}>취소</button>}
+                        <button type="button" onClick={save} disabled={loading || !draft.wrong_expression.trim() || !draft.correct_expression.trim() || !draft.explanation.trim()}>{draft.id ? '수정 내용 등록' : '우리 반에 등록'}</button>
+                    </div>
                 </section>
                 <section className="spelling-learning-card">
                     <h3>자주 찾아본 표현</h3>
@@ -103,25 +179,43 @@ const TeacherEntry = ({ activeClass }) => {
 
             {activeTab === 'data' && <section className="spelling-learning-card spelling-learning-data" role="tabpanel">
                 <div className="spelling-learning-data-heading">
-                    <div><span>맞춤법 수첩 현황</span><h3>현재 등록된 맞춤법 데이터</h3><p>기본 자료는 모든 학생에게 제공되며, 우리 반 자료는 승인된 항목만 추가로 적용됩니다.</p></div>
-                    <div className="spelling-learning-counts"><span><b>{entries.length}</b>전체</span><span><b>{BUILT_IN_ENTRIES.length}</b>기본</span><span><b>{approvedCount}</b>적용 중</span><span><b>{draftCount}</b>초안</span></div>
+                    <div><span>맞춤법 수첩 현황</span><h3>등록된 맞춤법 자료 찾기</h3><p>기본 자료는 읽기 전용이며, 우리 반에서 추가한 자료는 펼쳐서 수정할 수 있습니다.</p></div>
+                    <div className="spelling-learning-counts"><span><b>{entries.length}</b>전체</span><span><b>{BUILT_IN_ENTRIES.length}</b>기본</span><span><b>{classEntries.length}</b>우리 반</span></div>
                 </div>
-                <div className="spelling-learning-filters" role="group" aria-label="등록 데이터 상태 필터">
-                    {DATA_FILTERS.map((filter) => <button key={filter.id} type="button" className={dataFilter === filter.id ? 'is-active' : ''} onClick={() => setDataFilter(filter.id)}>{filter.label}</button>)}
+                <label className="spelling-learning-search">
+                    <span>등록 데이터 검색</span>
+                    <input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="틀린 표현, 바른 표현, 설명, 라벨 검색" />
+                </label>
+                <div className="spelling-learning-filter-row">
+                    <div className="spelling-learning-filters" role="group" aria-label="등록 데이터 종류 필터">
+                        {DATA_FILTERS.map((filter) => {
+                            const count = filter.id === 'all' ? entries.length : filter.id === 'built-in' ? BUILT_IN_ENTRIES.length : classEntries.length;
+                            return <button key={filter.id} type="button" className={dataFilter === filter.id ? 'is-active' : ''} onClick={() => setDataFilter(filter.id)}>{filter.label} <b>{count}</b></button>;
+                        })}
+                    </div>
+                    <span className="spelling-learning-result-count">{filteredEntries.length}개 찾음</span>
                 </div>
                 <div className="spelling-learning-entry-list">
                     {visibleEntries.map((entry) => {
-                        const isBuiltIn = entry.status === 'built-in';
+                        const isBuiltIn = entry.kind === 'built-in';
+                        const isExpanded = expandedEntryId === entry.id;
+                        const leftText = isBuiltIn ? entry.question : entry.wrong_expression;
+                        const rightText = isBuiltIn ? entry.answer : entry.correct_expression;
                         return <article className={`spelling-learning-entry${isBuiltIn ? ' is-built-in' : ''}`} key={entry.id}>
-                        <div className="spelling-learning-entry-title">
-                            <div><strong>{isBuiltIn ? entry.question : <del>{entry.wrong_expression}</del>}<span aria-hidden="true">→</span>{isBuiltIn ? entry.answer : entry.correct_expression}</strong><small>{isBuiltIn ? '학생 맞춤법 수첩 기본 자료' : (entry.label || '미분류')}</small></div>
-                            <span className={`spelling-learning-status is-${entry.status}`}>{isBuiltIn ? '기본 제공' : entry.status === 'approved' ? '적용 중' : '초안'}</span>
-                        </div>
-                        {entry.explanation && <p>{entry.explanation}</p>}
-                        {Array.isArray(entry.examples) && entry.examples.length > 0 && <div className="spelling-learning-examples"><b>바른 예문</b>{entry.examples.map((example, index) => <span key={`${entry.id}-${index}`}>{example}</span>)}</div>}
-                    </article>})}
-                    {filteredEntries.length > MAX_VISIBLE_ENTRIES && <div className="spelling-learning-entry-limit">처음 {MAX_VISIBLE_ENTRIES}개를 표시했습니다. 상태 필터를 선택하면 나머지 항목도 확인할 수 있습니다.</div>}
-                    {!filteredEntries.length && <div className="spelling-learning-empty">{entries.length ? '이 상태의 항목이 없습니다.' : '아직 등록된 맞춤법 항목이 없습니다.'}</div>}
+                            <button type="button" className="spelling-learning-entry-summary" aria-expanded={isExpanded} onClick={() => setExpandedEntryId(isExpanded ? null : entry.id)}>
+                                <span className="spelling-learning-entry-expression"><b>{leftText}</b><span aria-hidden="true">→</span><strong>{rightText}</strong></span>
+                                <span className="spelling-learning-entry-meta"><span className={`spelling-learning-source is-${entry.kind}`}>{isBuiltIn ? '기본 자료' : '우리 반 자료'}</span><span className="spelling-learning-expand" aria-hidden="true">{isExpanded ? '−' : '+'}</span></span>
+                            </button>
+                            {isExpanded && <div className="spelling-learning-entry-detail">
+                                {!isBuiltIn && entry.label && <span className="spelling-learning-entry-label">{entry.label}</span>}
+                                {entry.explanation && <p>{entry.explanation}</p>}
+                                {Array.isArray(entry.examples) && entry.examples.length > 0 && <div className="spelling-learning-examples"><b>바른 예문</b>{entry.examples.map((example, index) => <span key={`${entry.id}-${index}`}>{example}</span>)}</div>}
+                                {!isBuiltIn && <div className="spelling-learning-entry-actions"><button type="button" className="secondary" onClick={() => editEntry(entry)}>수정</button></div>}
+                            </div>}
+                        </article>;
+                    })}
+                    {visibleCount < filteredEntries.length && <button type="button" className="spelling-learning-load-more" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>다음 {Math.min(PAGE_SIZE, filteredEntries.length - visibleCount)}개 더 보기</button>}
+                    {!filteredEntries.length && <div className="spelling-learning-empty">{searchQuery.trim() ? '검색 결과가 없습니다. 다른 표현이나 설명으로 찾아보세요.' : '이 종류의 등록 자료가 없습니다.'}</div>}
                 </div>
             </section>}
         </>}
