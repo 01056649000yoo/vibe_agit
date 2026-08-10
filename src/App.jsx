@@ -294,7 +294,7 @@ function App() {
           </div>
         ) : session ? (
           /* [1순위] 교사 세션 존재 시 */
-          profileLoading ? (
+          profileLoading && !profile ? (
             <Loading />
           ) : (!profile || !profile.role) ? (
             <TeacherProfileSetup
