@@ -186,16 +186,21 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                     </div>
                 )}
 
-                {/* 본문 */}
+                {/* 본문
+                    바깥 창이 `maxHeight:88vh` + `overflow:hidden` 이라, 안쪽에서 넘치는 쪽이
+                    스스로 스크롤하지 않으면 내용이 그냥 잘려 나가고 스크롤바도 안 생긴다.
+                    PC 는 좌우 칸이 각자 스크롤하고, 모바일(위아래 배치)은 본문 전체가 스크롤한다.
+                    `minHeight:0` 이 없으면 그리드 칸이 내용 높이만큼 부풀어 스크롤이 안 걸린다. */}
                 <div style={{
                     flex: 1, minHeight: 0, display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : '260px 1fr'
+                    gridTemplateColumns: isMobile ? '1fr' : '260px 1fr',
+                    overflowY: embedded ? 'visible' : (isMobile ? 'auto' : 'hidden')
                 }}>
                     {/* 저장된 규칙 목록 */}
                     <div style={{
                         borderRight: isMobile ? 'none' : '1px solid #F1F3F5',
                         borderBottom: isMobile ? '1px solid #F1F3F5' : 'none',
-                        padding: '16px', overflowY: 'auto',
+                        padding: '16px', minHeight: 0, overflowY: 'auto',
                         maxHeight: isMobile ? '180px' : 'none', background: '#FCFCFD'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
@@ -263,8 +268,11 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                         })}
                     </div>
 
-                    {/* 편집기 */}
-                    <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    {/* 편집기 — AI 다듬기 결과·오류 안내가 붙으면 여기가 제일 먼저 넘친다 */}
+                    <div style={{
+                        padding: '16px 20px', display: 'flex', flexDirection: 'column', minHeight: 0,
+                        overflowY: embedded || isMobile ? 'visible' : 'auto'
+                    }}>
                         <div style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             marginBottom: '8px', flexWrap: 'wrap', gap: '8px'
