@@ -3,6 +3,7 @@ import Button from '../../../../components/common/Button';
 import Card from '../../../../components/common/Card';
 import FeatureAvailabilitySwitch from '../../../../components/common/FeatureAvailabilitySwitch';
 import Modal from '../../../../components/common/Modal';
+import TeacherGuideButton from '../../../../components/teacher/TeacherGuideButton';
 import { supabase } from '../../../../lib/supabaseClient';
 import { useDataExport } from '../../../../hooks/useDataExport';
 import WritingPolicySettings from '../../policy/WritingPolicySettings';
@@ -280,17 +281,20 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                     <h2>📔 학생 일기</h2>
                     <p>학생이 하루에 한 편 남긴 일기를 읽고 한마디를 남겨요.</p>
                 </div>
-                <FeatureAvailabilitySwitch
-                    checked={diaryEnabled}
-                    disabled={availabilityLoading || !classId}
-                    loading={availabilitySaving}
-                    onChange={changeDiaryAvailability}
-                    enabledLabel="학생 일기 사용 중"
-                    disabledLabel="학생 일기 사용 안 함"
-                    enabledDescription="학생 화면에 일기 탭이 보입니다."
-                    disabledDescription="기존 일기는 보관하고 작성·수정만 막습니다."
-                    ariaLabel="학생 일기 사용"
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <TeacherGuideButton tabId="diaries" variant="help" />
+                    <FeatureAvailabilitySwitch
+                        checked={diaryEnabled}
+                        disabled={availabilityLoading || !classId}
+                        loading={availabilitySaving}
+                        onChange={changeDiaryAvailability}
+                        enabledLabel="학생 일기 사용 중"
+                        disabledLabel="학생 일기 사용 안 함"
+                        enabledDescription="학생 화면에 일기 탭이 보입니다."
+                        disabledDescription="기존 일기는 보관하고 작성·수정만 막습니다."
+                        ariaLabel="학생 일기 사용"
+                    />
+                </div>
             </header>
 
             <nav className="teacher-diary__sections" role="tablist" aria-label="학생 일기 업무">

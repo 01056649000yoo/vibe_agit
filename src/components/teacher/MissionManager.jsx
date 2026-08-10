@@ -13,6 +13,7 @@ import PostDetailViewer from './PostDetailViewer';
 import ArchiveConfirmModal from './ArchiveConfirmModal';
 import BulkAIProgressModal from './BulkAIProgressModal';
 import EvaluationReport from './EvaluationReport';
+import TeacherGuideButton from './TeacherGuideButton';
 
 const GENRE_MISSION_BUILDERS = new Map(
     getGenreMissionTypes()
@@ -220,6 +221,7 @@ const MissionManager = ({
                     {isDashboardMode ? '✍️ 선생님 과제' : '✍️ 글쓰기 미션 관리'}
                 </h3>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {isDashboardMode && <TeacherGuideButton tabId="dashboard" variant="help" />}
                     <Button
                         onClick={() => {
                             if (isFormOpen) {

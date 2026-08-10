@@ -7,6 +7,7 @@ import { useDataExport } from '../../hooks/useDataExport';
 import ExportSelectModal from '../common/ExportSelectModal';
 import ModalCloseButton from '../common/ModalCloseButton';
 import { dataCache } from '../../lib/cache';
+import TeacherGuideButton from './TeacherGuideButton';
 
 const ARCHIVE_PAGE_SIZE = 50;
 
@@ -287,9 +288,12 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
 
     return (
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: isMobile ? '1.25rem' : '1.2rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                📂 보관함 <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#95A5A6' }}>지난 과제와 학생 글</span>
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
+                <h3 style={{ margin: 0, fontSize: isMobile ? '1.25rem' : '1.2rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    📂 보관함 <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#95A5A6' }}>지난 과제와 학생 글</span>
+                </h3>
+                <TeacherGuideButton tabId="archive" variant="help" />
+            </div>
 
             {/* 태그 필터링 UI */}
             {allTags.length > 0 && (

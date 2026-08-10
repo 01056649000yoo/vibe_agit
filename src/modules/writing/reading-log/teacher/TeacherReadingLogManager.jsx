@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useStat
 import Button from '../../../../components/common/Button';
 import ExportSelectModal from '../../../../components/common/ExportSelectModal';
 import ModalCloseButton from '../../../../components/common/ModalCloseButton';
+import TeacherGuideButton from '../../../../components/teacher/TeacherGuideButton';
 import { useDataExport } from '../../../../hooks/useDataExport';
 import { supabase } from '../../../../lib/supabaseClient';
 import { classKey, classScope, dataCache } from '../../../../lib/cache';
@@ -572,9 +573,12 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                     <h2>📚 학생 독서록</h2>
                     <p>승인 절차 없이 학생이 완료하고 포인트를 받으며, 선생님은 확인 표시와 짧은 한마디만 남겨요.</p>
                 </div>
-                {section === 'reviews' && (
-                    <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>새로고침</Button>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <TeacherGuideButton tabId="reading-logs" variant="help" />
+                    {section === 'reviews' && (
+                        <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>새로고침</Button>
+                    )}
+                </div>
             </header>
 
             <nav className="teacher-reading-sections" role="tablist" aria-label="학생 독서록 관리 메뉴">
