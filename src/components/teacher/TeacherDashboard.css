@@ -69,6 +69,9 @@
     white-space: nowrap;
     cursor: pointer;
     transition: background var(--ui-motion-fast), border-color var(--ui-motion-fast);
+    /* 안쪽 select 를 알약보다 넓게 두기 때문에, 넘치는 부분이 보이거나 눌리지 않도록 잘라낸다.
+       (자기 자신의 box-shadow 인 초점 테두리는 잘리지 않는다) */
+    overflow: hidden;
 }
 
 .teacher-class-bar__switch:hover { border-color: #A5B4FC; background: #EEF2FF; }
@@ -76,11 +79,16 @@
 
 .teacher-class-bar__caret { font-size: .68rem; opacity: .75; }
 
-/* 실제로 누르는 건 이 select 다. 알약 버튼을 덮어 어디를 눌러도 목록이 열린다. */
+/* 실제로 누르는 건 이 select 다. 알약 버튼을 덮어 어디를 눌러도 목록이 열린다.
+   **너비가 중요하다** — 브라우저가 여는 목록은 이 요소의 너비를 따라간다.
+   알약(약 110px)에 맞추면 목록도 그만큼 좁아져 학급 이름이 답답해진다.
+   그래서 알약보다 넓게 잡고, 넘치는 부분은 부모의 overflow 로 잘라
+   보이는 모양과 눌리는 범위는 알약 그대로 유지한다. */
 .teacher-class-bar__select {
     position: absolute;
-    inset: 0;
-    width: 100%;
+    top: 0;
+    left: 0;
+    width: max(100%, 240px);
     height: 100%;
     padding: 0;
     border: 0;
@@ -89,6 +97,12 @@
     appearance: none;
     font: inherit;
     cursor: pointer;
+}
+
+/* 목록에 뜨는 학급 이름에도 숨 쉴 여백을 준다(브라우저가 지원하는 만큼만 적용된다) */
+.teacher-class-bar__select option {
+    padding: 8px 12px;
+    font-size: .95rem;
 }
 
 @media (pointer: coarse) {
