@@ -4,12 +4,12 @@ import PromptRuleModal from './PromptRuleModal';
 import { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 
 /**
- * AI 실행 버튼 옆에 붙는 "규칙" 버튼.
+ * AI 실행 버튼 옆에 붙는 "작성 기준" 버튼.
  *
- * 지금 어떤 규칙이 적용될지 이름으로 보여주고, 누르면 보관함 모달을 연다.
- * 누르지 않으면 아무 일도 일어나지 않는다 — 저장된 규칙 그대로 실행된다.
+ * 지금 어떤 기준으로 쓰이는지 이름으로 보여주고, 누르면 기준을 고르는 창을 연다.
+ * 누르지 않으면 아무 일도 일어나지 않는다 — 지금 기준 그대로 실행된다.
  *
- * 활성 프리셋 이름만 가볍게 조회한다(보관함 전체는 모달을 열 때 불러온다).
+ * 활성 기준의 이름만 가볍게 조회한다(전체 목록은 창을 열 때 불러온다).
  */
 const PromptRuleButton = ({ kind = PRESET_KIND.FEEDBACK, isMobile = false, style, onApplied }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -42,13 +42,15 @@ const PromptRuleButton = ({ kind = PRESET_KIND.FEEDBACK, isMobile = false, style
         return () => { cancelled = true; };
     }, [kind, refreshToken]);
 
-    const accent = kind === PRESET_KIND.REPORT ? '#059669' : '#4F46E5';
+    const isReport = kind === PRESET_KIND.REPORT;
+    const accent = isReport ? '#059669' : '#4F46E5';
+    const kindLabel = isReport ? '평어 기준' : '피드백 기준';
 
     return (
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                title="AI에게 줄 규칙을 고르거나 고칩니다"
+                title={`AI가 ${isReport ? '평어를' : '피드백을'} 쓸 때 지킬 기준을 고르거나 고칩니다`}
                 style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
                     padding: isMobile ? '8px 10px' : '10px 14px',
@@ -60,7 +62,7 @@ const PromptRuleButton = ({ kind = PRESET_KIND.FEEDBACK, isMobile = false, style
             >
                 <span>🗂️</span>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    규칙{activeName ? `: ${activeName}` : ''}
+                    {kindLabel}{activeName ? `: ${activeName}` : ''}
                 </span>
             </button>
 

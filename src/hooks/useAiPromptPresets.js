@@ -25,9 +25,9 @@ export const MAX_PROMPT_LENGTH = 1000;
 
 const validatePrompt = (content) => {
     const value = String(content || '').trim();
-    if (!value) throw new Error('프롬프트 내용을 입력해주세요.');
+    if (!value) throw new Error('기준 내용을 입력해주세요.');
     if (value.length > MAX_PROMPT_LENGTH) {
-        throw new Error(`프롬프트는 ${MAX_PROMPT_LENGTH}자 이내로 작성해주세요.`);
+        throw new Error(`기준은 ${MAX_PROMPT_LENGTH.toLocaleString()}자 이내로 작성해주세요.`);
     }
     return value;
 };
@@ -83,7 +83,7 @@ const useAiPromptPresets = (kind = PRESET_KIND.FEEDBACK) => {
             const packed = parsePacked(profileResult.data?.ai_prompt_template);
             setAppliedContent(kind === PRESET_KIND.REPORT ? packed.report : packed.feedback);
         } catch (err) {
-            setError(err.message || '규칙을 불러오지 못했습니다.');
+            setError(err.message || '기준을 불러오지 못했습니다.');
         } finally {
             setLoading(false);
         }
@@ -149,7 +149,7 @@ const useAiPromptPresets = (kind = PRESET_KIND.FEEDBACK) => {
         setError(null);
         try {
             const target = presets.find(p => p.id === presetId);
-            if (!target) throw new Error('규칙을 찾을 수 없습니다.');
+            if (!target) throw new Error('기준을 찾을 수 없습니다.');
 
             const teacherId = await writeAppliedContent(target.content);
 
@@ -170,7 +170,7 @@ const useAiPromptPresets = (kind = PRESET_KIND.FEEDBACK) => {
             await load();
             return true;
         } catch (err) {
-            setError(err.message || '규칙 적용에 실패했습니다.');
+            setError(err.message || '기준을 바꾸지 못했습니다.');
             return false;
         } finally {
             setSaving(false);
@@ -207,7 +207,7 @@ const useAiPromptPresets = (kind = PRESET_KIND.FEEDBACK) => {
             await load();
             return true;
         } catch (err) {
-            setError(err.message || '규칙 저장에 실패했습니다.');
+            setError(err.message || '기준을 저장하지 못했습니다.');
             return false;
         } finally {
             setSaving(false);

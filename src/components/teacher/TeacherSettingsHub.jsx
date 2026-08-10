@@ -6,8 +6,10 @@ const TeacherWritingEditorManager = lazy(() => import('../../modules/writing/edi
 
 const SETTINGS_ITEMS = [
     { id: 'class', icon: '🏫', label: '학급 관리', description: '학급 생성·전환·보관' },
-    { id: 'feedback', icon: '🤖', label: 'AI 피드백', description: '학생 피드백 규칙' },
-    { id: 'report', icon: '📋', label: '평어 도우미', description: '평어 작성 규칙' },
+    // `평어 도우미` 는 평가·기록 탭의 실제 작성 화면 이름이다. 여기는 그 화면이 쓸
+    // 기준을 정하는 곳이라 `평어 기준` 으로 구분한다(2026-08-10, 같은 이름이 두 곳에 있어 혼동).
+    { id: 'feedback', icon: '🤖', label: '피드백 기준', description: 'AI가 학생에게 쓸 때 지킬 기준' },
+    { id: 'report', icon: '📋', label: '평어 기준', description: 'AI가 평어를 쓸 때 지킬 기준' },
     { id: 'writing-editor', icon: '✍️', label: '글쓰기 창 관리', description: '글쓰기 화면 설정' }
 ];
 

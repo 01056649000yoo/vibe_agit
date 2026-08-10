@@ -10,7 +10,7 @@ const TeacherSettingsTab = ({
     promptKind = PRESET_KIND.FEEDBACK, compact = false
 }) => {
     const isFeedback = promptKind === PRESET_KIND.FEEDBACK;
-    const label = isFeedback ? 'AI 피드백' : '평어 도우미';
+    const label = isFeedback ? '피드백 기준' : '평어 기준';
 
     const handleApplied = (content) => {
         if (isFeedback) setPromptTemplate?.(content);
@@ -30,7 +30,7 @@ const TeacherSettingsTab = ({
             }}>
                 <div>
                     <strong style={{ color: '#334155', fontSize: '0.95rem' }}>공용 AI 연결 상태</strong>
-                    <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.76rem' }}>규칙 보관함에서 선택한 내용이 실제 AI 실행에 사용됩니다.</p>
+                    <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.76rem' }}>아래에서 고른 기준이 실제 AI 실행에 사용됩니다.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '7px 10px', borderRadius: '11px', background: aiStatus === 'connected' ? '#ECFDF5' : '#FEF2F2', color: aiStatus === 'connected' ? '#047857' : '#B91C1C', fontSize: '0.76rem', fontWeight: '800' }}>
                     <span>{aiStatus === 'testing' ? '● 확인 중' : aiStatus === 'connected' ? '● 연결됨' : '● 확인 필요'}</span>
