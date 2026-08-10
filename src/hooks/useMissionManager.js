@@ -656,9 +656,10 @@ ${postArray.map((p, idx) => {
         setProgress({ current: 0, total: targetPosts.length });
 
         try {
-            const allUpdatePromises = [];
-            const processedIds = [];
             const CHUNK_SIZE = 2;
+            const AI_REQUEST_INTERVAL_MS = 2000;
+            const processedIds = new Set();
+            let lastAIRequestAt = 0;
 
             const toAIPayload = (p) => ({
                 id: p.id,
@@ -668,20 +669,36 @@ ${postArray.map((p, idx) => {
                 student_name: p.students?.name
             });
 
-            const queueFeedbackUpdate = (post, feedback) => {
-                if (!post || !feedback || processedIds.includes(post.id)) return;
+            // 한 교사 브라우저에서 최대 30 RPM만 시작한다. 여러 교사 사이의
+            // 전역 동시성·TPM 제한은 Edge/DB 대기열에서 별도로 제어해야 한다.
+            const fetchPacedAIFeedback = async (payload) => {
+                const elapsed = Date.now() - lastAIRequestAt;
+                if (lastAIRequestAt > 0 && elapsed < AI_REQUEST_INTERVAL_MS) {
+                    await new Promise(resolve => setTimeout(resolve, AI_REQUEST_INTERVAL_MS - elapsed));
+                }
+                lastAIRequestAt = Date.now();
+                return fetchAIFeedback(payload);
+            };
 
-                processedIds.push(post.id);
-                allUpdatePromises.push(
-                    supabase
-                        .from('student_posts')
-                        .update({
-                            ai_feedback: feedback,
-                            is_submitted: false,
-                            is_returned: true
-                        })
-                        .eq('id', post.id)
-                );
+            const saveFeedback = async (post, feedback) => {
+                if (!post || !feedback || processedIds.has(post.id)) return false;
+
+                const { error } = await supabase
+                    .from('student_posts')
+                    .update({
+                        ai_feedback: feedback,
+                        is_submitted: false,
+                        is_returned: true
+                    })
+                    .eq('id', post.id);
+
+                if (error) {
+                    console.error(`피드백 저장 실패 (${post.id}):`, error.message);
+                    return false;
+                }
+
+                processedIds.add(post.id);
+                return true;
             };
 
             const normalizeAIResults = (results, chunk) => {
@@ -697,23 +714,26 @@ ${postArray.map((p, idx) => {
                 const chunk = targetPosts.slice(i, i + CHUNK_SIZE);
                 try {
                     const results = normalizeAIResults(
-                        await fetchAIFeedback(chunk.map(toAIPayload)),
+                        await fetchPacedAIFeedback(chunk.map(toAIPayload)),
                         chunk
                     );
+                    const returnedIds = new Set(results.map(res => String(res.id)));
 
-                    for (const res of results) {
-                        const post = chunk.find(p => p.id === res.id);
-                        queueFeedbackUpdate(post, res.feedback);
-                    }
+                    await Promise.all(results.map((res) => {
+                        const post = chunk.find(p => String(p.id) === String(res.id));
+                        return saveFeedback(post, res.feedback);
+                    }));
 
-                    const missingPosts = chunk.filter(p => !processedIds.includes(p.id));
+                    // 응답에서 빠진 학생만 단건으로 다시 생성한다. DB 저장 실패 때문에
+                    // 같은 AI 피드백을 불필요하게 재생성하지 않는다.
+                    const missingPosts = chunk.filter(p => !returnedIds.has(String(p.id)));
                     for (const post of missingPosts) {
                         const retryResults = normalizeAIResults(
-                            await fetchAIFeedback([toAIPayload(post)]),
+                            await fetchPacedAIFeedback([toAIPayload(post)]),
                             [post]
                         );
-                        const retryFeedback = retryResults.find(res => res.id === post.id)?.feedback;
-                        queueFeedbackUpdate(post, retryFeedback);
+                        const retryFeedback = retryResults.find(res => String(res.id) === String(post.id))?.feedback;
+                        await saveFeedback(post, retryFeedback);
                     }
                     
                     setProgress(prev => ({ 
@@ -721,33 +741,23 @@ ${postArray.map((p, idx) => {
                         current: Math.min(i + chunk.length, targetPosts.length) 
                     }));
 
-                    // [최적화] API 부하 방지 지연 최소화 (청크 처리에 따라 빈도 감소)
-                    if (i + CHUNK_SIZE < targetPosts.length) {
-                        await new Promise(resolve => setTimeout(resolve, 300));
-                    }
                 } catch (innerErr) {
                     console.error(`Chunk 처리 중 에러:`, innerErr);
                 }
             }
 
-            // [최종 최적화] 수집된 DB 작업들을 일괄 처리
-            const dbTasks = [];
-            if (allUpdatePromises.length > 0) {
-                dbTasks.push(Promise.all(allUpdatePromises).then((results) => {
-                    const failed = results.find((result) => result.error);
-                    if (failed?.error) throw failed.error;
-                    return results;
-                }));
+            if (processedIds.size > 0) {
+                setShowCompleteToast(true);
+                setTimeout(() => setShowCompleteToast(false), 3000);
             }
 
-            if (dbTasks.length > 0) {
-                await Promise.all(dbTasks);
+            const failedCount = targetPosts.length - processedIds.size;
+            if (failedCount > 0) {
+                alert(`${processedIds.size}건은 저장했고, ${failedCount}건은 처리하지 못했습니다.\n미처리 글은 제출 상태로 남아 있으니 잠시 후 다시 실행해 주세요.`);
+            } else {
+                alert('모든 글에 대한 일괄 처리가 완료되었습니다! ✨');
             }
-
-            setShowCompleteToast(true);
-            setTimeout(() => setShowCompleteToast(false), 3000);
-            alert('모든 글에 대한 일괄 처리가 완료되었습니다! ✨');
-            fetchPostsForMission(selectedMission);
+            await fetchPostsForMission(selectedMission);
         } catch {
             alert('일괄 처리 중 오류가 발생했습니다.');
         } finally {

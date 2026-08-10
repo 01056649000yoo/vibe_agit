@@ -38,6 +38,21 @@
 .writing-editor-manager__device.is-mobile .writing-section-heading { align-items:flex-start; }
 .writing-editor-preview-actions { display:flex; justify-content:flex-end; gap:9px; margin-top:18px; }
 .writing-editor-manager__preview-note { margin:10px 0 0; color:#64748b; font-size:.72rem; text-align:center; }
+.writing-editor-manager__preview-placeholder { display:grid; width:100%; min-height:150px; place-items:center; gap:5px; padding:24px; border:1px dashed #bfdbfe; border-radius:16px; background:#f8fbff; color:#475569; cursor:pointer; }
+.writing-editor-manager__preview-placeholder > span { font-size:1.65rem; }
+.writing-editor-manager__preview-placeholder > strong { color:#1e3a8a; font-size:.9rem; }
+.writing-editor-manager__preview-placeholder > small { color:#64748b; font-size:.74rem; }
+.writing-editor-preview-tool { display:inline-flex; margin-bottom:14px; padding:9px 12px; border:1px solid #bfdbfe; border-radius:11px; background:#eff6ff; color:#1d4ed8; font-size:.78rem; font-weight:900; }
+.writing-editor-preview-fields { display:grid; gap:14px; }
+.writing-editor-preview-fields > div { padding:16px; border:1px solid #dbeafe; border-radius:14px; background:#fff; }
+.writing-editor-preview-fields small, .writing-editor-preview-fields strong { display:block; }
+.writing-editor-preview-fields small { margin-bottom:8px; color:#64748b; font-size:.7rem; font-weight:850; }
+.writing-editor-preview-fields strong { color:#172033; font-size:1.55rem; }
+.writing-editor-preview-fields p { min-height:180px; margin:0; color:#334155; font-size:1rem; line-height:1.8; }
+.writing-editor-preview-fields.is-compact strong { font-size:1.25rem; }
+.writing-editor-preview-fields.is-compact p { min-height:150px; font-size:.92rem; }
+.writing-editor-preview-typo { text-decoration:underline wavy #ef4444 1.5px; text-underline-offset:4px; }
+.writing-editor-preview-notice { margin-top:12px; padding:10px 12px; border-radius:11px; background:#fff7ed; color:#9a3412; font-size:.75rem; }
 .writing-editor-manager__empty { padding:42px 16px; color:#64748b; text-align:center; }
 .writing-editor-manager__empty.is-error { color:#b91c1c; }
 @media (max-width:760px) {

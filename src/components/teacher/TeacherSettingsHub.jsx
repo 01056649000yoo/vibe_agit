@@ -1,10 +1,11 @@
-import React, { lazy, useState } from 'react';
+import React, { lazy, useEffect, useState } from 'react';
 import TeacherSettingsTab from './TeacherSettingsTab';
 import { getAllModules } from '../../modules/registry';
 import { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 
 const ClassManager = lazy(() => import('./ClassManager'));
-const TeacherWritingEditorManager = lazy(() => import('../../modules/writing/editor-settings/TeacherWritingEditorManager'));
+const loadTeacherWritingEditorManager = () => import('../../modules/writing/editor-settings/TeacherWritingEditorManager');
+const TeacherWritingEditorManager = lazy(loadTeacherWritingEditorManager);
 
 // 등록 모듈 설정도 모두 이 슬롯 안에 들어온다. 메뉴마다 폭을 다시 정하지 않도록
 // 데스크톱 폭·항목 여백·모바일 최소 폭을 공통 호스트에서 고정한다.
@@ -41,6 +42,16 @@ const TeacherSettingsHub = ({
     const selected = SETTINGS_ITEMS.find((item) => item.id === section) || SETTINGS_ITEMS[0];
     const SelectedModuleEntry = selected.Entry;
 
+    useEffect(() => {
+        const preload = () => void loadTeacherWritingEditorManager();
+        if ('requestIdleCallback' in window) {
+            const idleId = window.requestIdleCallback(preload, { timeout: 2500 });
+            return () => window.cancelIdleCallback(idleId);
+        }
+        const timerId = window.setTimeout(preload, 1200);
+        return () => window.clearTimeout(timerId);
+    }, []);
+
     return (
         <div style={{
             display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : `${SETTINGS_NAV_WIDTH} minmax(0, 1fr)`,
@@ -63,7 +74,14 @@ const TeacherSettingsHub = ({
                     {SETTINGS_ITEMS.map((item) => {
                         const active = item.id === section;
                         return (
-                            <button key={item.id} type="button" onClick={() => setSection(item.id)} aria-current={active ? 'page' : undefined} style={{
+                            <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => setSection(item.id)}
+                                onMouseEnter={item.id === 'writing-editor' ? loadTeacherWritingEditorManager : undefined}
+                                onFocus={item.id === 'writing-editor' ? loadTeacherWritingEditorManager : undefined}
+                                aria-current={active ? 'page' : undefined}
+                                style={{
                                 minWidth: isMobile ? SETTINGS_MOBILE_ITEM_WIDTH : 0, width: isMobile ? SETTINGS_MOBILE_ITEM_WIDTH : '100%',
                                 minHeight: isMobile ? '58px' : '68px', padding: isMobile ? '11px 14px' : '13px 15px',
                                 border: active ? '1px solid #C7D7FE' : '1px solid transparent', borderRadius: '12px',
@@ -71,7 +89,8 @@ const TeacherSettingsHub = ({
                                 boxShadow: active ? '0 4px 14px rgba(37,99,235,.09)' : 'none', cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left', whiteSpace: 'nowrap',
                                 boxSizing: 'border-box', overflow: 'hidden'
-                            }}>
+                                }}
+                            >
                                 <span aria-hidden="true" style={{ flex: '0 0 25px', width: '25px', fontSize: '1.1rem', textAlign: 'center' }}>{item.icon}</span>
                                 <span style={{ flex: 1, minWidth: 0, paddingRight: '2px', overflow: 'hidden' }}>
                                     <strong title={item.label} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.86rem' }}>{item.label}</strong>

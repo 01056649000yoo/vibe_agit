@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../components/common/Button';
-import WritingEditorFields from '../../../components/writing/WritingEditorFields';
 import {
     WritingSectionHeader,
     WritingWorkspace,
@@ -8,8 +7,6 @@ import {
     WritingWorkspacePath
 } from '../../../components/writing/WritingWorkspace';
 import { supabase } from '../../../lib/supabaseClient';
-import WritingToolHost from '../tools/WritingToolHost';
-import { WritingEditorSettingsProvider } from './WritingEditorSettingsContext';
 import {
     DEFAULT_WRITING_EDITOR_SETTINGS,
     SPELLING_LOOKUP_TOOL_ID,
@@ -25,21 +22,12 @@ const PREVIEW_WIDTHS = Object.freeze({
     mobile: { label: '휴대폰', width: 390 }
 });
 
+// 관리 화면에서는 실제 학생 입력기·맞춤법 RPC를 실행하지 않는다. 설정의 모양만
+// 확인할 수 있는 정적 샘플이라 탭 진입과 미리보기 전환이 가볍다.
 const StudentWritingPreview = ({ settings, compact }) => {
-    const [title, setTitle] = useState('비 오는 날의 운동장');
-    const [content, setContent] = useState('비가 와서 운동장에 나가지 못했지만, 친구와 재미있는 이야기를 했습니다. 마춤법이 궁금한 표현은 직접 찾아볼 수 있어요.');
-
+    const searchEnabled = isWritingToolEnabled(settings, SPELLING_LOOKUP_TOOL_ID);
     return (
-        <WritingEditorSettingsProvider overrideSettings={settings}>
-            <div
-                className="writing-editor-preview-interaction-guard"
-                onClickCapture={(event) => {
-                    if (event.target?.closest?.('button')) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                }}
-            >
+        <div className="writing-editor-preview-interaction-guard">
                 <WritingWorkspace tone="assignment" className="writing-editor-preview-workspace">
                     <WritingWorkspaceHeader
                         onBack={() => {}}
@@ -59,22 +47,29 @@ const StudentWritingPreview = ({ settings, compact }) => {
                             title="본격 글쓰기"
                             description="제목과 내용을 차근차근 적어보세요."
                         />
-                        <WritingToolHost disabled />
-                        <WritingEditorFields
-                            title={title}
-                            onTitleChange={setTitle}
-                            content={content}
-                            onContentChange={setContent}
-                            isMobile={compact}
-                        />
+                        {searchEnabled && (
+                            <div className="writing-editor-preview-tool">🔎 맞춤법 찾아보기</div>
+                        )}
+                        <div className={`writing-editor-preview-fields ${compact ? 'is-compact' : ''}`}>
+                            <div>
+                                <small>글 제목</small>
+                                <strong>비 오는 날의 운동장</strong>
+                            </div>
+                            <div>
+                                <small>글 내용</small>
+                                <p>비가 와서 운동장에 나가지 못했지만, 친구와 재미있는 이야기를 했습니다. {searchEnabled ? <span className="writing-editor-preview-typo">마춤법</span> : '마춤법'}이 궁금한 표현은 직접 찾아볼 수 있어요.</p>
+                            </div>
+                        </div>
+                        {searchEnabled && (
+                            <div className="writing-editor-preview-notice">〰️ 맞춤법 수첩에서 확인해 볼 표현 1개　 <strong>마춤법 → 맞춤법</strong></div>
+                        )}
                     </section>
                     <div className="writing-editor-preview-actions">
                         <Button type="button" variant="outline" disabled>저장</Button>
                         <Button type="button" disabled>검토하고 제출하기</Button>
                     </div>
                 </WritingWorkspace>
-            </div>
-        </WritingEditorSettingsProvider>
+        </div>
     );
 };
 
@@ -86,6 +81,7 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
     const [saving, setSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [previewSize, setPreviewSize] = useState(isMobile ? 'mobile' : 'desktop');
+    const [showPreview, setShowPreview] = useState(false);
 
     const loadSettings = useCallback(async () => {
         if (!classId) return;
@@ -144,7 +140,6 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
     };
 
     if (!activeClass) return <div className="writing-editor-manager__empty">학급을 먼저 선택해주세요.</div>;
-    if (loading) return <div className="writing-editor-manager__empty">글쓰기 창 설정을 불러오는 중입니다...</div>;
     if (errorMessage) {
         return (
             <div className="writing-editor-manager__empty is-error">
@@ -179,6 +174,7 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
                             type="button"
                             role="switch"
                             aria-checked={searchEnabled}
+                            disabled={loading}
                             className={`writing-editor-manager__switch ${searchEnabled ? 'is-on' : ''}`}
                             onClick={() => setDraftSettings((current) => (
                                 setWritingToolEnabled(
@@ -195,10 +191,10 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
                 </div>
 
                 <div className="writing-editor-manager__save-row">
-                    <p>{hasChanges ? '아래 미리보기에는 변경 내용이 반영됐지만 학생에게는 아직 저장되지 않았습니다.' : '저장된 설정과 미리보기가 같습니다.'}</p>
+                    <p>{loading ? '글쓰기 창 설정을 불러오는 중입니다...' : hasChanges ? '아래 미리보기에는 변경 내용이 반영됐지만 학생에게는 아직 저장되지 않았습니다.' : '저장된 설정과 미리보기가 같습니다.'}</p>
                     <div>
-                        <Button type="button" variant="outline" disabled={!hasChanges || saving} onClick={() => setDraftSettings(savedSettings)}>되돌리기</Button>
-                        <Button type="button" disabled={!hasChanges} loading={saving} loadingText="저장 중..." onClick={handleSave}>학생 화면에 적용</Button>
+                        <Button type="button" variant="outline" disabled={loading || !hasChanges || saving} onClick={() => setDraftSettings(savedSettings)}>되돌리기</Button>
+                        <Button type="button" disabled={loading || !hasChanges} loading={saving} loadingText="저장 중..." onClick={handleSave}>학생 화면에 적용</Button>
                     </div>
                 </div>
             </section>
@@ -208,29 +204,44 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
                     <div>
                         <span>학생 계정 없이 확인</span>
                         <h3>학생 글쓰기 창 미리보기</h3>
-                        <p>학생 개인정보와 실제 글은 불러오지 않는 안전한 샘플 화면입니다.</p>
+                        <p>학생 개인정보·학급 맞춤법 데이터·실제 글을 불러오지 않는 가벼운 샘플 화면입니다.</p>
                     </div>
                     <div className="writing-editor-manager__preview-controls">
-                        <div aria-label="미리보기 화면 폭">
-                            {Object.entries(PREVIEW_WIDTHS).map(([id, item]) => (
-                                <button key={id} type="button" className={previewSize === id ? 'is-active' : ''} onClick={() => setPreviewSize(id)}>{item.label}</button>
-                            ))}
-                        </div>
+                        {showPreview && (
+                            <div aria-label="미리보기 화면 폭">
+                                {Object.entries(PREVIEW_WIDTHS).map(([id, item]) => (
+                                    <button key={id} type="button" className={previewSize === id ? 'is-active' : ''} onClick={() => setPreviewSize(id)}>{item.label}</button>
+                                ))}
+                            </div>
+                        )}
+                        <Button type="button" variant="outline" onClick={() => setShowPreview(current => !current)}>
+                            {showPreview ? '미리보기 접기' : '미리보기 열기'}
+                        </Button>
                     </div>
                 </div>
 
-                <div className="writing-editor-manager__device-stage">
-                    <div className={`writing-editor-manager__device is-${previewSize}`} style={{ maxWidth: `${preview.width}px` }}>
-                        <div className="writing-editor-manager__device-bar">
-                            <span /><span /><span />
-                            <strong>{preview.label} 미리보기</strong>
+                {showPreview ? (
+                    <>
+                        <div className="writing-editor-manager__device-stage">
+                            <div className={`writing-editor-manager__device is-${previewSize}`} style={{ maxWidth: `${preview.width}px` }}>
+                                <div className="writing-editor-manager__device-bar">
+                                    <span /><span /><span />
+                                    <strong>{preview.label} 미리보기</strong>
+                                </div>
+                                <div className="writing-editor-manager__device-screen">
+                                    <StudentWritingPreview settings={draftSettings} compact={previewSize === 'mobile'} />
+                                </div>
+                            </div>
                         </div>
-                        <div className="writing-editor-manager__device-screen">
-                            <StudentWritingPreview settings={draftSettings} compact={previewSize === 'mobile'} />
-                        </div>
-                    </div>
-                </div>
-                <p className="writing-editor-manager__preview-note">미리보기에서는 입력 모양만 확인할 수 있으며 저장·제출·사전 서버 검색 버튼은 작동하지 않습니다.</p>
+                        <p className="writing-editor-manager__preview-note">미리보기에서는 입력 모양만 확인할 수 있으며 저장·제출·사전 서버 검색 버튼은 작동하지 않습니다.</p>
+                    </>
+                ) : (
+                    <button type="button" className="writing-editor-manager__preview-placeholder" onClick={() => setShowPreview(true)}>
+                        <span>🖥️</span>
+                        <strong>전체 미리보기는 접혀 있습니다.</strong>
+                        <small>필요할 때만 열어 학생 화면의 모양을 확인하세요.</small>
+                    </button>
+                )}
             </section>
         </div>
     );
