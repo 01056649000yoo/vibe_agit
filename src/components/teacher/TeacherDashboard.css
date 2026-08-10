@@ -222,6 +222,19 @@
 .teacher-guide__notes { margin-bottom: 0; }
 .teacher-guide__notes li strong { color: #4F46E5; }
 
+/* 화면에 실제로 있는 버튼·메뉴 이름 */
+.teacher-guide__key {
+    padding: 2px 7px;
+    border: 1px solid var(--ui-border);
+    border-radius: 7px;
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink-strong);
+    font-family: inherit;
+    font-size: .88em;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
 .teacher-dashboard__main {
     flex: 1;
     width: 100%;
