@@ -27,6 +27,7 @@ const getEntrySearchText = (entry) => normalizeSearchValue([
     entry.answer,
     entry.wrong_expression,
     entry.correct_expression,
+    entry.category,
     entry.label,
     entry.explanation,
     ...(entry.searchable || []),
@@ -184,7 +185,7 @@ const TeacherEntry = ({ activeClass }) => {
                 </div>
                 <label className="spelling-learning-search">
                     <span>등록 데이터 검색</span>
-                    <input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="틀린 표현, 바른 표현, 설명, 라벨 검색" />
+                    <input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="틀린 표현, 바른 표현, 설명, 분류 검색" />
                 </label>
                 <div className="spelling-learning-filter-row">
                     <div className="spelling-learning-filters" role="group" aria-label="등록 데이터 종류 필터">
@@ -207,7 +208,7 @@ const TeacherEntry = ({ activeClass }) => {
                                 <span className="spelling-learning-entry-meta"><span className={`spelling-learning-source is-${entry.kind}`}>{isBuiltIn ? '기본 자료' : '우리 반 자료'}</span><span className="spelling-learning-expand" aria-hidden="true">{isExpanded ? '−' : '+'}</span></span>
                             </button>
                             {isExpanded && <div className="spelling-learning-entry-detail">
-                                {!isBuiltIn && entry.label && <span className="spelling-learning-entry-label">{entry.label}</span>}
+                                {(isBuiltIn ? entry.category : entry.label) && <span className="spelling-learning-entry-label">{isBuiltIn ? entry.category : entry.label}</span>}
                                 {entry.explanation && <p>{entry.explanation}</p>}
                                 {Array.isArray(entry.examples) && entry.examples.length > 0 && <div className="spelling-learning-examples"><b>바른 예문</b>{entry.examples.map((example, index) => <span key={`${entry.id}-${index}`}>{example}</span>)}</div>}
                                 {!isBuiltIn && <div className="spelling-learning-entry-actions"><button type="button" className="secondary" onClick={() => editEntry(entry)}>수정</button></div>}

@@ -21,7 +21,8 @@ import {
     SPELLING_DETECTION_RULE_COUNT
 } from '../src/modules/writing/tools/spelling-lookup/spellingDetectionRules.js';
 import {
-    ELEMENTARY_SPELLING_ENTRY_IDS
+    ELEMENTARY_SPELLING_ENTRY_IDS,
+    getElementarySpellingEntries
 } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
 
 // ── 전부 올바른 문장. 여기 밑줄이 그어지면 오탐이다 ──────────────────────────
@@ -178,4 +179,18 @@ if (없는수첩항목.length > 0) {
     console.error(`\n실패 — 감지 규칙이 가리키는 수첩 항목이 없다: ${없는수첩항목.join(', ')}`);
     process.exit(1);
 }
+
+const 전체수첩항목 = getElementarySpellingEntries();
+const 중복수첩아이디 = 전체수첩항목.length - new Set(전체수첩항목.map((entry) => entry.id)).size;
+const 불완전수첩항목 = 전체수첩항목.filter((entry) => (
+    !entry.category ||
+    !entry.explanation ||
+    entry.examples?.length !== 2 ||
+    !entry.source?.url
+));
+if (전체수첩항목.length !== 200 || 중복수첩아이디 > 0 || 불완전수첩항목.length > 0) {
+    console.error(`\n실패 — 수첩 데이터 품질 오류: 전체 ${전체수첩항목.length}개, ID 중복 ${중복수첩아이디}개, 불완전 ${불완전수첩항목.length}개`);
+    process.exit(1);
+}
+console.log(`수첩  기본 자료 ${전체수첩항목.length}개 · ID 중복 0개 · 설명/예문/출처 확인`);
 console.log('\n통과');

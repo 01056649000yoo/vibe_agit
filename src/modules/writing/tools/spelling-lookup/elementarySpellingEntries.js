@@ -5,6 +5,7 @@
  * 밑줄 감지 규칙은 `spellingDetectionRules.js` 에 따로 있다 — 그쪽이 훨씬 가볍다.
  */
 import { findDetectedEntryIds } from './spellingDetectionRules.js';
+import { ADDITIONAL_ELEMENTARY_SPELLING_ENTRIES } from './elementarySpellingCatalog.js';
 
 const DICTIONARY_SEARCH_URL = 'https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=';
 const KOREAN_NORMS_URL = 'https://korean.go.kr/kornorms/main/main.do';
@@ -19,7 +20,7 @@ const normSource = {
     url: KOREAN_NORMS_URL
 };
 
-const ELEMENTARY_SPELLING_ENTRIES = [
+const BASE_ELEMENTARY_SPELLING_ENTRIES = [
     {
         id: 'dwae-doe',
         question: '돼요 / 되요',
@@ -247,6 +248,50 @@ const POPULAR_SPELLING_ENTRY_IDS = [
     'myeochil'
 ];
 
+const BASE_ENTRY_CATEGORIES = {
+    'dwae-doe': '용언 활용',
+    'an-anh': '뜻 구별',
+    'wen-waen': '낱말 표기',
+    'eotteoke-eotteokhae': '뜻 구별',
+    myeochil: '낱말 표기',
+    geumse: '낱말 표기',
+    oraenman: '낱말 표기',
+    yeokhal: '낱말 표기',
+    seollem: '낱말 표기',
+    bwaeyo: '용언 활용',
+    anieyo: '어미 구별',
+    'hal-su-itda': '띄어쓰기',
+    'geot-gatda': '띄어쓰기',
+    'natda-nata': '뜻 구별',
+    'machida-matchuda': '뜻 구별',
+    'gareuchida-garikida': '뜻 구별',
+    kkaekkeusi: '부사 표기',
+    gomgomi: '부사 표기',
+    'bandeusi-bandeusi': '뜻 구별',
+    'han-beon': '띄어쓰기',
+    'de-dae': '어미 구별',
+    ittaga: '뜻 구별',
+    'roseo-rosseo': '어미 구별',
+    'neurida-neurida': '뜻 구별'
+};
+
+const additionalEntries = ADDITIONAL_ELEMENTARY_SPELLING_ENTRIES.map(({
+    sourceQuery,
+    sourceType,
+    ...entry
+}) => ({
+    ...entry,
+    source: sourceType === 'norm' ? normSource : dictionarySource(sourceQuery || entry.answer)
+}));
+
+const ELEMENTARY_SPELLING_ENTRIES = [
+    ...BASE_ELEMENTARY_SPELLING_ENTRIES.map((entry) => ({
+        ...entry,
+        category: BASE_ENTRY_CATEGORIES[entry.id]
+    })),
+    ...additionalEntries
+];
+
 export const ELEMENTARY_SPELLING_ENTRY_IDS = Object.freeze(
     ELEMENTARY_SPELLING_ENTRIES.map((entry) => entry.id)
 );
@@ -266,7 +311,13 @@ export const searchElementarySpelling = (query) => {
 
     return ELEMENTARY_SPELLING_ENTRIES
         .map((entry) => {
-            const candidates = [entry.question, entry.answer, ...entry.searchable];
+            const candidates = [
+                entry.question,
+                entry.answer,
+                entry.category,
+                ...entry.searchable,
+                ...entry.examples
+            ];
             const normalizedCandidates = candidates.map(normalize);
             const exact = normalizedCandidates.some((candidate) => candidate === normalizedQuery);
             const startsWith = normalizedCandidates.some((candidate) => candidate.startsWith(normalizedQuery));
