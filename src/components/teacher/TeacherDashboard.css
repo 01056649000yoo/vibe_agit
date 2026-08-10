@@ -49,11 +49,11 @@
     white-space: nowrap;
 }
 
+.teacher-class-switchwrap { position: relative; flex-shrink: 0; }
+
 /* 전환 버튼 — 알약 모양의 가벼운 보조 단추. 현재 이름보다 시선을 끌지 않아야 한다. */
 .teacher-class-bar__switch {
-    position: relative;
     display: inline-flex;
-    flex-shrink: 0;
     align-items: center;
     gap: 7px;
     min-height: 38px;
@@ -69,48 +69,63 @@
     white-space: nowrap;
     cursor: pointer;
     transition: background var(--ui-motion-fast), border-color var(--ui-motion-fast);
-    /* 안쪽 select 를 알약보다 넓게 두기 때문에, 넘치는 부분이 보이거나 눌리지 않도록 잘라낸다.
-       (자기 자신의 box-shadow 인 초점 테두리는 잘리지 않는다) */
-    overflow: hidden;
 }
 
 .teacher-class-bar__switch:hover { border-color: #A5B4FC; background: #EEF2FF; }
-.teacher-class-bar__switch:focus-within { border-color: #6366F1; box-shadow: var(--ui-focus-ring); }
+.teacher-class-bar__switch:focus-visible { outline: none; border-color: #6366F1; box-shadow: var(--ui-focus-ring); }
+.teacher-class-bar__switch[aria-expanded="true"] { border-color: #A5B4FC; background: #EEF2FF; }
 
 .teacher-class-bar__caret { font-size: .68rem; opacity: .75; }
 
-/* 실제로 누르는 건 이 select 다. 알약 버튼을 덮어 어디를 눌러도 목록이 열린다.
-   **너비가 중요하다** — 브라우저가 여는 목록은 이 요소의 너비를 따라간다.
-   알약(약 110px)에 맞추면 목록도 그만큼 좁아져 학급 이름이 답답해진다.
-   그래서 알약보다 넓게 잡고, 넘치는 부분은 부모의 overflow 로 잘라
-   보이는 모양과 눌리는 범위는 알약 그대로 유지한다. */
-.teacher-class-bar__select {
+/* 펼쳐지는 학급 목록 — 직접 그리므로 여백·정렬·폭을 그대로 통제할 수 있다.
+   알약 왼쪽에 맞춰 아래로 편다(가운데 정렬은 헤더 왼쪽에서 화면 밖으로 밀려난다). */
+.teacher-class-menu {
     position: absolute;
-    top: 0;
-    /* 알약 왼쪽 끝에 맞추면 목록이 오른쪽으로만 쏠린다. 넓힌 폭의 절반만큼 되돌려
-       알약 한가운데를 기준으로 좌우 균등하게 펼쳐지게 한다. */
-    left: 50%;
-    width: max(100%, 240px);
-    height: 100%;
-    margin-left: calc(-.5 * max(100%, 240px));
-    padding: 0;
-    border: 0;
-    border-radius: inherit;
-    opacity: 0;
-    appearance: none;
-    font: inherit;
-    cursor: pointer;
+    z-index: 200;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 260px;
+    max-width: min(360px, 80vw);
+    max-height: 340px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 6px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow-md);
+    list-style: none;
 }
 
-/* 목록에 뜨는 학급 이름에도 숨 쉴 여백을 준다(브라우저가 지원하는 만큼만 적용된다) */
-.teacher-class-bar__select option {
-    padding: 8px 12px;
-    font-size: .95rem;
+.teacher-class-menu__item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 14px;
+    border: 0;
+    border-radius: var(--ui-radius-sm);
+    background: transparent;
+    color: var(--ui-ink-strong);
+    font-size: .92rem;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--ui-motion-fast);
 }
+
+.teacher-class-menu__item:hover { background: var(--ui-surface-muted); }
+.teacher-class-menu__item:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
+.teacher-class-menu__item.is-selected { background: #EEF2FF; color: #4F46E5; font-weight: 900; }
+
+/* 체크 자리를 고정 폭으로 비워 둬서 학급 이름 시작선이 모두 같다 */
+.teacher-class-menu__check { width: 14px; flex-shrink: 0; color: #4F46E5; font-size: .85rem; }
+.teacher-class-menu__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (pointer: coarse) {
-    /* 손가락으로 누르는 기기에서는 알약을 조금 키운다 */
+    /* 손가락으로 누르는 기기에서는 알약과 목록 항목을 키운다 */
     .teacher-class-bar__switch { min-height: 44px; padding: 0 20px; }
+    .teacher-class-menu__item { padding: 14px; }
 }
 
 @media (max-width: 768px) {
@@ -118,6 +133,7 @@
     .teacher-class-bar__icon { font-size: 1.1rem; }
     .teacher-class-bar__name { max-width: 46vw; font-size: 1.05rem; }
     .teacher-class-bar__switch { min-height: 36px; padding: 0 15px; font-size: .78rem; }
+    .teacher-class-menu { min-width: 220px; max-width: 74vw; }
 }
 
 .teacher-dashboard__main {

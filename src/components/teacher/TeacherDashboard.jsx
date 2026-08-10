@@ -18,6 +18,7 @@ const TeacherWritingFootprintDashboard = lazy(() => import('../../modules/writin
 
 // 별도 파일 분리 컴포넌트 및 커스텀 훅 임포트
 import { useTeacherDashboard } from '../../hooks/useTeacherDashboard';
+import ClassSwitcher from './ClassSwitcher';
 import TeacherWritingHub from './TeacherWritingHub';
 import TeacherSettingsHub from './TeacherSettingsHub';
 import TeacherProfileModal from './TeacherProfileModal';
@@ -169,28 +170,18 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                 background: 'white', borderBottom: '1px solid #E9ECEF',
                 flexShrink: 0, zIndex: 100, width: '100%', boxSizing: 'border-box'
             }}>
-                {/* 현재 학급 이름은 고정해서 읽기만 하고, 바꾸는 건 오른쪽 알약 버튼이 맡는다.
-                    이름을 감싸던 박스를 걷어내 헤더가 가벼워 보이게 했다.
-                    조작은 브라우저 기본 select 를 버튼 위에 투명하게 덮어 그대로 쓴다 —
-                    학교 태블릿·키보드에서 가장 확실하기 때문이다. */}
+                {/* 현재 학급 이름은 고정해서 읽기만 하고, 바꾸는 건 오른쪽 알약 버튼이 맡는다. */}
                 <div className="teacher-class-bar">
                     <span className="teacher-class-bar__icon" aria-hidden="true">🏫</span>
                     <h2 className="teacher-class-bar__name">
                         {activeClass ? activeClass.name : '학급 관리'}
                     </h2>
                     {classes.length > 1 && (
-                        <div className="teacher-class-bar__switch">
-                            <span>바꾸기</span>
-                            <span className="teacher-class-bar__caret" aria-hidden="true">▾</span>
-                            <select
-                                className="teacher-class-bar__select"
-                                aria-label="학급 바꾸기"
-                                value={activeClass?.id || ''}
-                                onChange={(e) => setActiveClass(classes.find(c => c.id === e.target.value))}
-                            >
-                                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                        </div>
+                        <ClassSwitcher
+                            classes={classes}
+                            activeClass={activeClass}
+                            onSelect={setActiveClass}
+                        />
                     )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
