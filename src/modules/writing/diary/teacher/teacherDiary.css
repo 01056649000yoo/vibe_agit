@@ -122,17 +122,19 @@
 
 .teacher-diary__detail { display: flex; flex-direction: column; gap: var(--ui-space-4, 12px); }
 .teacher-diary__detail h3 { margin: 0; color: var(--ui-ink-strong); font-size: 1.05rem; }
+/* 글 상자는 독서록 확인 창과 같은 여백·글씨 크기를 쓴다 — 두 화면이 하는 일이 같다. */
 .teacher-diary__content {
-    max-height: 320px;
+    min-height: 200px;
+    max-height: 420px;
     margin: 0;
-    padding: 16px;
+    padding: 24px;
     overflow-y: auto;
     border: 1px solid var(--ui-border);
     border-radius: var(--ui-radius-md, 14px);
     background: var(--ui-surface-muted);
     color: var(--ui-ink);
-    font-size: .92rem;
-    line-height: 1.75;
+    font-size: 1rem;
+    line-height: 1.8;
     white-space: pre-wrap;
 }
 .teacher-diary__comment { display: flex; flex-direction: column; gap: 6px; }
@@ -154,6 +156,7 @@
 }
 @media (max-width: 640px) {
     .teacher-diary__grid { grid-template-columns: 1fr; }
+    .teacher-diary__content { padding: 18px; }
     .teacher-diary__actions { flex-direction: column-reverse; }
     .teacher-diary__actions > * { width: 100%; }
 }

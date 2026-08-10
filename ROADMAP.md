@@ -370,6 +370,8 @@ SSO가 되려면 둘을 한 스택·한 인증으로 통일해야 한다 (JWT �
 5. [ ] 대형 파일 분할: 현재 1,000줄+인 `ActivityReport`, `IdeaMarketManager`, `useMissionManager`,
    `StudentWriting`, 학생·교사 독서록 화면 6개를 기능 경계대로 분할한다. 파일이 크다는 이유만으로 동작 중인 코드를
    먼저 건드리지는 않고, 해당 기능을 수정할 때 공용 부품/API 경계부터 뺀다.
+   - 교사 독서록(`TeacherReadingLogManager`, 957줄)은 그중 약 160줄이 인라인 `<style>` 블록이다(2026-08-10 확인).
+     손댈 때 `teacherReadingLog.css`로 먼저 빼면 코드 자체는 800줄 아래로 떨어진다.
 6. [x] **삭제 확정 기능: 아지트온클래스 완전 삭제** (2026-08-09) — 굳이 되살릴 계획이 없어 "숨김 보관"에서
    완전 삭제로 재결정. 모듈 폴더 3개 파일·전용 훅(`useClassAgitClass.js`)·registry 등록·
    `DashboardMenu`/`StudentDashboard`의 진입점을 제거했다. DB는 `20261016_remove_agit_on_class.sql`로

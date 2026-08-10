@@ -983,14 +983,15 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 .teacher-reading-empty.done strong { display:block; font-size:1.15rem; }
                 .teacher-reading-empty.done p { margin:8px 0 16px; color:#3F8F5F; }
                 .teacher-reading-modal-backdrop { position:fixed; inset:0; z-index:2700; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(15,23,42,.62); }
-                .teacher-reading-modal { width:min(1040px, 100%); max-height:92vh; overflow-y:auto; border-radius:26px; background:white; box-shadow:0 30px 90px rgba(15,23,42,.32); }
-                .teacher-reading-modal > header { position:sticky; top:0; z-index:1; display:flex; justify-content:space-between; gap:18px; padding:24px 28px; border-bottom:1px solid #E2E8F0; background:white; }
+                /* 일기 확인 창(공용 Modal, 880px)과 같은 크기로 맞춘다 — 둘은 하는 일이 같으므로 크기도 같아야 한다. */
+                .teacher-reading-modal { width:min(880px, 100%); max-height:86vh; overflow-y:auto; border-radius:26px; background:white; box-shadow:0 30px 90px rgba(15,23,42,.32); }
+                .teacher-reading-modal > header { position:sticky; top:0; z-index:1; display:flex; justify-content:space-between; gap:18px; padding:20px 24px; border-bottom:1px solid #E2E8F0; background:white; }
                 .teacher-reading-modal > header span { color:#64748B; font-size:.84rem; font-weight:800; }
                 .teacher-reading-modal > header h2 { margin:6px 0 0; color:#1E293B; }
                 .teacher-reading-detail-loading { padding:100px 24px; text-align:center; color:#94A3B8; }
-                .teacher-reading-detail-meta { display:flex; justify-content:space-between; gap:12px; padding:18px 30px 0; color:#64748B; font-size:.82rem; font-weight:800; }
-                .teacher-reading-content { min-height:260px; margin:18px 30px 24px; padding:34px; border:1px solid #E2E8F0; border-radius:20px; background:#FFFEFA; color:#334155; font-size:1.08rem; line-height:1.9; white-space:pre-wrap; overflow-wrap:anywhere; }
-                .teacher-reading-review-box { margin:0 30px 30px; padding:22px; border-radius:20px; background:#EFF6FF; }
+                .teacher-reading-detail-meta { display:flex; justify-content:space-between; gap:12px; padding:16px 24px 0; color:#64748B; font-size:.82rem; font-weight:800; }
+                .teacher-reading-content { min-height:200px; margin:14px 24px 20px; padding:24px; border:1px solid #E2E8F0; border-radius:20px; background:#FFFEFA; color:#334155; font-size:1rem; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; }
+                .teacher-reading-review-box { margin:0 24px 24px; padding:20px; border-radius:20px; background:#EFF6FF; }
                 .teacher-reading-review-box.is-reviewed { border:2px solid #86EFAC; background:linear-gradient(145deg,#F0FDF4,#FFFFFF); }
                 .teacher-reading-review-box > div:first-child { display:flex; align-items:center; justify-content:space-between; gap:12px; }
                 .teacher-reading-review-box h3 { margin:0; color:#1E3A8A; }

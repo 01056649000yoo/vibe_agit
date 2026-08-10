@@ -487,7 +487,7 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                 isOpen={Boolean(selected)}
                 onClose={() => setSelected(null)}
                 title={selected ? `📔 ${selected.student_name || ''} · ${formatDiaryDate(selected.diary_date)}` : '📔 일기'}
-                maxWidth="720px"
+                maxWidth="880px"
             >
                 {detailLoading ? (
                     <p style={{ textAlign: 'center', padding: '32px' }}>일기를 펼치는 중...</p>
