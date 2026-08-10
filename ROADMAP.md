@@ -42,6 +42,19 @@
 [SECURITY_HARNESS.md](SECURITY_HARNESS.md)를 본다. 이 섹션은 **지금 뭘 하는 중이고 다음이 뭔지**만 담는다
 — "어떻게 완료했는지"는 여기 적지 않는다(WORKLOG 담당).
 
+### 집에서 이어서 할 운영 반영 — 맞춤법 배움 데이터
+
+- [ ] 맥미니에서 `git pull` 후 `npm run migrate:status`로 `20261017_spelling_learning_module.sql` 미적용 상태 확인
+- [ ] `npm run migrate:check`로 실제 `agit-db` 스키마에서 마이그레이션과 롤백 검증
+- [ ] 검증 결과를 확인한 뒤 `npm run migrate`로 운영 DB에 적용 (`supabase-db`가 아니라 `agit-db`)
+- [ ] `supabase/functions/vibe-ai/index.ts`를 운영 `vibe-ai` Edge 함수에 배포하고 기존 환경변수·허용 Origin 유지 확인
+- [ ] 교사 계정으로 `수업 도구 → 맞춤법 배움 데이터`에서 AI 초안 생성·수정·승인 확인
+- [ ] 학생 계정으로 승인 항목의 밑줄·수첩 검색을 확인하고, 수첩을 닫은 뒤 교사 화면과 `학급 발자국` 집계 확인
+- [ ] `npm run test:security`와 운영 핵심 스모크 실행 후 결과·배포 정보를 `WORKLOG.md`에 기록
+
+**주의**: DB 마이그레이션과 Edge 함수 중 하나만 반영된 중간 상태에서는 새 화면이 정상 동작하지 않는다. 두 작업을
+같은 운영 반영 묶음으로 처리하되, DB는 반드시 `migrate:check` 통과 후 적용한다.
+
 **다음 세션에서 정할 것**: 나의 아지트 디자인 3차 vs Stage 2(연구소 연동+서바이벌 흡수) 착수 vs
 Stage 3c 잔여 정리, 순서 미정. 결정 기록 최신 항목을 먼저 확인할 것.
 
