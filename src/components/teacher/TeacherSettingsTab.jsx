@@ -4,7 +4,7 @@ import { PromptRuleManager } from './PromptRuleModal';
 import { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 
 const TeacherSettingsTab = ({
-    isMobile, testingKey, aiStatus,
+    isMobile, testingKey,
     setPromptTemplate, setReportPromptTemplate,
     handleTestAIConnection,
     promptKind = PRESET_KIND.FEEDBACK, compact = false
@@ -28,16 +28,14 @@ const TeacherSettingsTab = ({
                 flexDirection: isMobile ? 'column' : 'row', gap: '12px', paddingBottom: '18px',
                 marginBottom: '20px', borderBottom: '1px solid #E2E8F0'
             }}>
-                <div>
-                    <strong style={{ color: '#334155', fontSize: '0.95rem' }}>공용 AI 연결 상태</strong>
-                    <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.76rem' }}>아래에서 고른 기준이 실제 AI 실행에 사용됩니다.</p>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '7px 10px', borderRadius: '11px', background: aiStatus === 'connected' ? '#ECFDF5' : '#FEF2F2', color: aiStatus === 'connected' ? '#047857' : '#B91C1C', fontSize: '0.76rem', fontWeight: '800' }}>
-                    <span>{aiStatus === 'testing' ? '● 확인 중' : aiStatus === 'connected' ? '● 연결됨' : '● 확인 필요'}</span>
-                    <Button type="button" variant="ghost" size="sm" onClick={handleTestAIConnection} disabled={testingKey} style={{ padding: '4px 8px', color: 'inherit', background: 'white', border: '1px solid currentColor', boxShadow: 'none' }}>
-                        {testingKey ? '확인 중' : '연결 테스트'}
-                    </Button>
-                </div>
+                <p style={{ margin: 0, color: '#64748B', fontSize: '0.76rem' }}>아래에서 고른 기준이 실제 AI 실행에 사용됩니다.</p>
+                <Button
+                    type="button" variant="ghost" size="sm" onClick={handleTestAIConnection} disabled={testingKey}
+                    title="AI 기능에 문제가 있을 때 연결 상태를 점검합니다"
+                    style={{ padding: '6px 10px', color: '#64748B', background: '#F8FAFC', border: '1px solid #CBD5E1', boxShadow: 'none' }}
+                >
+                    {testingKey ? '점검 중…' : '🔌 AI 연결 점검'}
+                </Button>
             </div>
 
             <PromptRuleManager

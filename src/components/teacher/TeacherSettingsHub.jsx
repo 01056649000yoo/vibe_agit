@@ -33,7 +33,7 @@ const SETTINGS_ITEMS = [
 const TeacherSettingsHub = ({
     isMobile, session, classes, activeClass, setActiveClass, setClasses,
     profile, fetchAllClasses, fetchDeletedClasses, handleRestoreClass, handleSetPrimaryClass,
-    handleTestAIConnection, testingKey, aiStatus,
+    handleTestAIConnection, testingKey,
     setPromptTemplate, setReportPromptTemplate, onNavigate
 }) => {
     const [section, setSection] = useState('class');
@@ -133,7 +133,7 @@ const TeacherSettingsHub = ({
                         <TeacherSettingsTab
                             isMobile={isMobile} promptKind={promptKind} compact
                             handleTestAIConnection={handleTestAIConnection}
-                            testingKey={testingKey} aiStatus={aiStatus}
+                            testingKey={testingKey}
                             setPromptTemplate={setPromptTemplate} setReportPromptTemplate={setReportPromptTemplate}
                         />
                     </div>
@@ -145,7 +145,7 @@ const TeacherSettingsHub = ({
                     <TeacherSettingsTab
                         isMobile={isMobile} promptKind={section} compact
                         handleTestAIConnection={handleTestAIConnection}
-                        testingKey={testingKey} aiStatus={aiStatus}
+                        testingKey={testingKey}
                         setPromptTemplate={setPromptTemplate} setReportPromptTemplate={setReportPromptTemplate}
                     />
                 )}

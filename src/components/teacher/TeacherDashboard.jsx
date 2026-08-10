@@ -63,7 +63,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         teacherInfo, isEditProfileOpen, setIsEditProfileOpen,
         editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
         setPromptTemplate, reportPromptTemplate, setReportPromptTemplate,
-        testingKey, aiStatus,
+        testingKey,
         handleUpdateTeacherProfile, handleTestAIConnection,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses
@@ -381,7 +381,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 fetchAllClasses={fetchAllClasses} fetchDeletedClasses={fetchDeletedClasses}
                                 handleRestoreClass={handleRestoreClass} handleSetPrimaryClass={handleSetPrimaryClass}
                                 handleTestAIConnection={handleTestAIConnection}
-                                testingKey={testingKey} aiStatus={aiStatus}
+                                testingKey={testingKey}
                                 setPromptTemplate={setPromptTemplate} setReportPromptTemplate={setReportPromptTemplate}
                                 onNavigate={handleWorkspaceNavigate}
                             />

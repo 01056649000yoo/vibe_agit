@@ -42,10 +42,6 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
     const [editSchool, setEditSchool] = useState(initialTeacher.school_name || '');
     const [editPhone, setEditPhone] = useState(initialTeacher.phone || '');
 
-    // AI 상태 관련 — bootstrap 로드는 프로필 조회 성공일 뿐 실제 AI 연결 확인이 아니다.
-    // 실제 확인은 `handleTestAIConnection`(테스트 버튼)에서만 이뤄지므로 그 전까지는 '확인 필요'로 둔다.
-    const [aiStatus, setAiStatus] = useState('disconnected');
-
     const fetchTeacherInfo = useCallback(async () => {
         if (!session?.user?.id) return;
         try {
@@ -79,8 +75,6 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
             .single();
 
         if (data) {
-            setAiStatus('connected');
-
             if (data.ai_prompt_template) {
                 const rawPrompt = data.ai_prompt_template.trim();
                 // JSON 형식인지 확인하여 피드백/리포트 프롬프트 분리 추출
@@ -266,17 +260,14 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
 
     const handleTestAIConnection = async () => {
         setTestingKey(true);
-        setAiStatus('testing');
         try {
             const aiResponse = await callAI({
                 prompt: "정상 연결 여부 확인을 위해 '연결 성공'이라고 짧게 대답해줘.",
                 type: 'CONNECTION_TEST'
             });
             alert(`✅ 연결 성공!\nAI 응답: ${aiResponse}`);
-            setAiStatus('connected');
         } catch (err) {
             console.error('API 테스트 실패:', err.message);
-            setAiStatus('disconnected');
             alert(`❌ 연결 실패: ${err.message}`);
         } finally {
             setTestingKey(false);
@@ -355,7 +346,7 @@ export const useTeacherDashboard = (session, profile, onProfileUpdate, activeCla
         editName, setEditName, editSchool, setEditSchool, editPhone, setEditPhone,
         promptTemplate, setPromptTemplate, originalPrompt,
         reportPromptTemplate, setReportPromptTemplate, originalReportPrompt,
-        savingKey, testingKey, aiStatus,
+        savingKey, testingKey,
         handleUpdateTeacherProfile, handleSaveTeacherSettings, handleTestAIConnection,
         handleWithdrawal, handleSwitchGoogleAccount, handleSetPrimaryClass, handleRestoreClass,
         fetchAllClasses, fetchDeletedClasses
