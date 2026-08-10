@@ -169,32 +169,29 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                 background: 'white', borderBottom: '1px solid #E9ECEF',
                 flexShrink: 0, zIndex: 100, width: '100%', boxSizing: 'border-box'
             }}>
-                {/* 학급 이름표 = 학급 바꾸는 곳.
-                    예전에는 이름표 옆에 작은 select 를 따로 뒀는데, 같은 학급 이름을 두 번 보여주면서
-                    정작 누르는 곳은 글자 0.8rem 짜리로 작았다. 이름표 자체를 고르는 단추로 만든다.
-                    보이는 건 하나지만 실제 조작은 브라우저 기본 select 라 키보드·태블릿에서 그대로 동작한다. */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px', minWidth: 0 }}>
-                    <div
-                        className={classes.length > 1 ? 'teacher-class-switch teacher-class-switch--pickable' : 'teacher-class-switch'}
-                    >
-                        <span className="teacher-class-switch__icon" aria-hidden="true">🏫</span>
-                        <h2 className="teacher-class-switch__name">
-                            {activeClass ? activeClass.name : '학급 관리'}
-                        </h2>
-                        {classes.length > 1 && (
-                            <>
-                                <span className="teacher-class-switch__caret" aria-hidden="true">▾</span>
-                                <select
-                                    className="teacher-class-switch__select"
-                                    aria-label="학급 바꾸기"
-                                    value={activeClass?.id || ''}
-                                    onChange={(e) => setActiveClass(classes.find(c => c.id === e.target.value))}
-                                >
-                                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                </select>
-                            </>
-                        )}
-                    </div>
+                {/* 현재 학급 이름은 고정해서 읽기만 하고, 바꾸는 건 오른쪽 알약 버튼이 맡는다.
+                    이름을 감싸던 박스를 걷어내 헤더가 가벼워 보이게 했다.
+                    조작은 브라우저 기본 select 를 버튼 위에 투명하게 덮어 그대로 쓴다 —
+                    학교 태블릿·키보드에서 가장 확실하기 때문이다. */}
+                <div className="teacher-class-bar">
+                    <span className="teacher-class-bar__icon" aria-hidden="true">🏫</span>
+                    <h2 className="teacher-class-bar__name">
+                        {activeClass ? activeClass.name : '학급 관리'}
+                    </h2>
+                    {classes.length > 1 && (
+                        <div className="teacher-class-bar__switch">
+                            <span>바꾸기</span>
+                            <span className="teacher-class-bar__caret" aria-hidden="true">▾</span>
+                            <select
+                                className="teacher-class-bar__select"
+                                aria-label="학급 바꾸기"
+                                value={activeClass?.id || ''}
+                                onChange={(e) => setActiveClass(classes.find(c => c.id === e.target.value))}
+                            >
+                                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </div>
+                    )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     {!isMobile && (

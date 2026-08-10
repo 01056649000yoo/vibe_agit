@@ -25,54 +25,58 @@
     padding: 0 clamp(24px, 1.5vw, 48px);
 }
 
-/* 현재 학급 이름표 겸 학급 바꾸는 단추.
-   학급이 하나면 그냥 이름표, 둘 이상이면 눌러서 고르는 단추가 된다. */
-.teacher-class-switch {
-    position: relative;
+/* 헤더 왼쪽: 현재 학급 이름(고정) + 오른쪽 전환 버튼.
+   이름을 박스로 감싸지 않는다 — 헤더가 무거워 보인다. 색과 굵기만으로 구분한다. */
+.teacher-class-bar {
     display: flex;
     min-width: 0;
-    max-width: min(360px, 42vw);
     align-items: center;
     gap: 10px;
-    min-height: 48px;
-    padding: 0 18px;
-    border: 1px solid #E0E7FF;
-    border-radius: 14px;
-    background: #EEF2FF;
 }
 
-.teacher-class-switch__icon { font-size: 1.35rem; line-height: 1; }
+.teacher-class-bar__icon { font-size: 1.3rem; line-height: 1; }
 
-.teacher-class-switch__name {
+.teacher-class-bar__name {
     min-width: 0;
+    max-width: min(320px, 34vw);
     margin: 0;
     overflow: hidden;
     color: #4F46E5;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 900;
     letter-spacing: -.5px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* 고를 수 있을 때만 눌리는 느낌을 준다 */
-.teacher-class-switch--pickable { padding-right: 42px; cursor: pointer; transition: background var(--ui-motion-fast), border-color var(--ui-motion-fast); }
-.teacher-class-switch--pickable:hover { border-color: #A5B4FC; background: #E4E9FF; }
-.teacher-class-switch--pickable:focus-within { border-color: #6366F1; box-shadow: var(--ui-focus-ring); }
-
-.teacher-class-switch__caret {
-    position: absolute;
-    top: 50%;
-    right: 16px;
+/* 전환 버튼 — 알약 모양의 가벼운 보조 단추. 현재 이름보다 시선을 끌지 않아야 한다. */
+.teacher-class-bar__switch {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 5px;
+    min-height: 34px;
+    margin-left: 2px;
+    padding: 0 13px;
+    border: 1px solid #E0E7FF;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-surface);
     color: #6366F1;
-    font-size: .9rem;
-    transform: translateY(-50%);
-    pointer-events: none;
+    font-size: .8rem;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background var(--ui-motion-fast), border-color var(--ui-motion-fast);
 }
 
-/* 실제로 누르는 건 이 select 다. 이름표 전체를 덮어 어디를 눌러도 열린다.
-   투명하게 깔아 두고 보이는 글자는 위의 __name 이 담당한다. */
-.teacher-class-switch__select {
+.teacher-class-bar__switch:hover { border-color: #A5B4FC; background: #EEF2FF; }
+.teacher-class-bar__switch:focus-within { border-color: #6366F1; box-shadow: var(--ui-focus-ring); }
+
+.teacher-class-bar__caret { font-size: .68rem; opacity: .75; }
+
+/* 실제로 누르는 건 이 select 다. 알약 버튼을 덮어 어디를 눌러도 목록이 열린다. */
+.teacher-class-bar__select {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -86,12 +90,16 @@
     cursor: pointer;
 }
 
+@media (pointer: coarse) {
+    /* 손가락으로 누르는 기기에서는 알약을 조금 키운다 */
+    .teacher-class-bar__switch { min-height: 40px; padding: 0 16px; }
+}
+
 @media (max-width: 768px) {
-    .teacher-class-switch { min-height: 42px; max-width: 60vw; padding: 0 14px; gap: 8px; }
-    .teacher-class-switch--pickable { padding-right: 36px; }
-    .teacher-class-switch__icon { font-size: 1.15rem; }
-    .teacher-class-switch__name { font-size: 1.05rem; }
-    .teacher-class-switch__caret { right: 13px; }
+    .teacher-class-bar { gap: 8px; }
+    .teacher-class-bar__icon { font-size: 1.1rem; }
+    .teacher-class-bar__name { max-width: 46vw; font-size: 1.05rem; }
+    .teacher-class-bar__switch { padding: 0 12px; font-size: .76rem; }
 }
 
 .teacher-dashboard__main {
