@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { supabase } from '../../lib/supabaseClient';
+import TeacherGuideButton from './TeacherGuideButton';
 import './teacherComments.css';
 
 /**
@@ -145,7 +146,10 @@ const TeacherCommentManager = ({ activeClass }) => {
         <div className="teacher-comments">
             <header className="teacher-comments__header">
                 <div>
-                    <h2>🗨️ 학생 댓글 관리</h2>
+                    <div className="teacher-comments__title-row">
+                        <h2>🗨️ 학생 댓글 관리</h2>
+                        <TeacherGuideButton tabId="comments" variant="help" />
+                    </div>
                     <p>친구 글에 남긴 댓글을 한자리에서 보고, AI가 막은 것을 풀어 주거나 지울 수 있어요.</p>
                 </div>
                 <input

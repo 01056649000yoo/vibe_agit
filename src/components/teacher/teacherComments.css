@@ -10,6 +10,7 @@
     gap: var(--ui-space-4, 12px);
 }
 .teacher-comments__header h2 { margin: 0; color: var(--ui-ink-strong); font-size: 1.25rem; }
+.teacher-comments__title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .teacher-comments__header p { margin: 3px 0 0; color: var(--ui-ink-muted); font-size: .82rem; }
 .teacher-comments__header input {
     min-height: 44px;
