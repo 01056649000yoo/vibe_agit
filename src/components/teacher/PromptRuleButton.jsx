@@ -4,6 +4,15 @@ import PromptRuleModal from './PromptRuleModal';
 import { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 
 /**
+ * 기준 종류별 강조색. 이 버튼 옆에 붙는 AI 실행 버튼도 같은 색을 써야
+ * 두 버튼이 한 벌로 보이므로, 색을 여기서 한 번만 정하고 내보낸다.
+ */
+export const PROMPT_ACCENT = {
+    [PRESET_KIND.FEEDBACK]: '#4F46E5',
+    [PRESET_KIND.REPORT]: '#059669'
+};
+
+/**
  * AI 실행 버튼 옆에 붙는 "작성 기준" 버튼.
  *
  * 지금 어떤 기준으로 쓰이는지 이름으로 보여주고, 누르면 기준을 고르는 창을 연다.
@@ -43,24 +52,28 @@ const PromptRuleButton = ({ kind = PRESET_KIND.FEEDBACK, isMobile = false, style
     }, [kind, refreshToken]);
 
     const isReport = kind === PRESET_KIND.REPORT;
-    const accent = isReport ? '#059669' : '#4F46E5';
+    const accent = PROMPT_ACCENT[isReport ? PRESET_KIND.REPORT : PRESET_KIND.FEEDBACK];
     const kindLabel = isReport ? '평어 기준' : '피드백 기준';
 
     return (
         <>
+            {/* 치수는 공용 Button 의 size="sm" 과 같게 맞춘다 —
+                옆에 나란히 서는 AI 실행 버튼과 높이·모서리·글자 크기가 어긋나 보이지 않게. */}
             <button
+                type="button"
                 onClick={() => setIsOpen(true)}
                 title={`AI가 ${isReport ? '평어를' : '피드백을'} 쓸 때 지킬 기준을 고르거나 고칩니다`}
                 style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    padding: isMobile ? '8px 10px' : '10px 14px',
-                    borderRadius: '10px', cursor: 'pointer',
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                    minHeight: 'var(--ui-control-sm)', padding: '7px 14px',
+                    borderRadius: 'var(--ui-radius-sm)', cursor: 'pointer',
                     border: `1px solid ${accent}40`, background: `${accent}0D`,
-                    color: accent, fontWeight: 800, fontSize: '0.82rem',
-                    maxWidth: '100%', ...style
+                    color: accent, fontWeight: 800, fontSize: '0.86rem',
+                    lineHeight: 'var(--ui-line-compact)',
+                    minWidth: 0, maxWidth: '100%', ...style
                 }}
             >
-                <span>🗂️</span>
+                <span aria-hidden="true">🗂️</span>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {kindLabel}{activeName ? `: ${activeName}` : ''}
                 </span>

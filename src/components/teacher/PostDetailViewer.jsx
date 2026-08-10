@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalCloseButton from '../common/ModalCloseButton';
-import PromptRuleButton from './PromptRuleButton';
+import PromptRuleButton, { PROMPT_ACCENT } from './PromptRuleButton';
 import { useEvaluation } from '../../hooks/useEvaluation';
 
 const PostDetailViewer = ({
@@ -482,22 +482,28 @@ const PostDetailViewer = ({
                                         border: '1px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                                         display: 'flex', flexDirection: 'column', overflow: 'hidden'
                                     }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                            <h4 style={{ margin: 0, color: '#1F2937', fontWeight: '900', fontSize: '1.05rem' }}>
+                                        {/* 제목과 조작 버튼은 줄을 나눈다.
+                                            한 줄에 같이 두면 기준 이름이 조금만 길어도 줄바꿈이 일어나
+                                            제목까지 두 줄로 밀린다(사이드바 폭이 380px 로 좁다). */}
+                                        <div style={{ marginBottom: '16px' }}>
+                                            <h4 style={{ margin: '0 0 10px', color: '#1F2937', fontWeight: '900', fontSize: '1.05rem' }}>
                                                 📝 선생님 피드백
                                             </h4>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                {/* 규칙을 이 자리에서 바로 고르고 고칠 수 있게 한다 */}
-                                                <PromptRuleButton kind="feedback" style={{ padding: '6px 10px', fontSize: '0.78rem' }} />
+                                            {/* 두 버튼은 같은 규격(size="sm")·같은 강조색을 써서 한 벌로 보이게 한다.
+                                                기준 버튼이 남는 폭을 차지하고 긴 이름은 말줄임표로 잘린다. */}
+                                            <div style={{ display: 'flex', alignItems: 'stretch', gap: '8px' }}>
+                                                <PromptRuleButton kind="feedback" style={{ flex: '1 1 auto', minWidth: 0 }} />
                                                 <Button
+                                                    size="sm"
                                                     onClick={handleGenerateSingleAI}
                                                     disabled={isGenerating}
                                                     style={{
-                                                        backgroundColor: '#3498DB', color: 'white', padding: '6px 12px',
-                                                        fontSize: '0.8rem', borderRadius: '10px'
+                                                        flexShrink: 0, whiteSpace: 'nowrap',
+                                                        background: PROMPT_ACCENT.feedback, color: 'white',
+                                                        border: '1px solid transparent', boxShadow: 'none'
                                                     }}
                                                 >
-                                                    {isGenerating ? '✨ 분석 중...' : '✨ AI 생성'}
+                                                    {isGenerating ? '✨ 분석 중…' : '✨ AI 생성'}
                                                 </Button>
                                             </div>
                                         </div>
