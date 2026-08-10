@@ -3,11 +3,15 @@ export const spellingLearningManifest = {
     name: '맞춤법 배움 데이터',
     description: '우리 반이 자주 헷갈리는 표현을 만들고 살펴봅니다.',
     icon: '✍️',
-    part: 'tool',
+    part: 'writing',
     audience: 'teacher',
     core: true,
-    teacherEntry: () => import('./TeacherEntry'),
-    tool: { order: 20 },
+    settingsEntry: () => import('./TeacherEntry'),
+    settings: {
+        order: 50,
+        label: '맞춤법 배움 데이터',
+        description: '우리 반 맞춤법 항목과 검색 기록'
+    },
     performance: {
         home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 100
     },

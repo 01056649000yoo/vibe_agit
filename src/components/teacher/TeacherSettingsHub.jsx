@@ -1,8 +1,21 @@
 import React, { lazy, useState } from 'react';
 import TeacherSettingsTab from './TeacherSettingsTab';
+import { getAllModules } from '../../modules/registry';
 
 const ClassManager = lazy(() => import('./ClassManager'));
 const TeacherWritingEditorManager = lazy(() => import('../../modules/writing/editor-settings/TeacherWritingEditorManager'));
+
+const MODULE_SETTINGS_ITEMS = getAllModules()
+    .filter((module) => module.available !== false && typeof module.settingsEntry === 'function')
+    .sort((left, right) => (left.settings?.order ?? 100) - (right.settings?.order ?? 100))
+    .map((module) => ({
+        id: `module:${module.id}`,
+        icon: module.icon || '🧩',
+        label: module.settings?.label || module.name,
+        description: module.settings?.description || module.description,
+        Entry: lazy(module.settingsEntry),
+        module
+    }));
 
 const SETTINGS_ITEMS = [
     { id: 'class', icon: '🏫', label: '학급 관리', description: '학급 생성·전환·보관' },
@@ -10,7 +23,8 @@ const SETTINGS_ITEMS = [
     // 기준을 정하는 곳이라 `평어 기준` 으로 구분한다(2026-08-10, 같은 이름이 두 곳에 있어 혼동).
     { id: 'feedback', icon: '🤖', label: '피드백 기준', description: 'AI가 학생에게 쓸 때 지킬 기준' },
     { id: 'report', icon: '📋', label: '평어 기준', description: 'AI가 평어를 쓸 때 지킬 기준' },
-    { id: 'writing-editor', icon: '✍️', label: '글쓰기 창 관리', description: '글쓰기 화면 설정' }
+    { id: 'writing-editor', icon: '✍️', label: '글쓰기 창 관리', description: '글쓰기 화면 설정' },
+    ...MODULE_SETTINGS_ITEMS
 ];
 
 const TeacherSettingsHub = ({
@@ -21,6 +35,7 @@ const TeacherSettingsHub = ({
 }) => {
     const [section, setSection] = useState('class');
     const selected = SETTINGS_ITEMS.find((item) => item.id === section) || SETTINGS_ITEMS[0];
+    const SelectedModuleEntry = selected.Entry;
 
     return (
         <div style={{
@@ -79,6 +94,10 @@ const TeacherSettingsHub = ({
                     />
                 ) : section === 'writing-editor' ? (
                     <TeacherWritingEditorManager activeClass={activeClass} isMobile={isMobile} />
+                ) : SelectedModuleEntry ? (
+                    <React.Suspense fallback={<div style={{ padding: '60px', textAlign: 'center', color: '#94A3B8' }}>{selected.label}을 불러오는 중입니다...</div>}>
+                        <SelectedModuleEntry activeClass={activeClass} isMobile={isMobile} module={selected.module} />
+                    </React.Suspense>
                 ) : (
                     <TeacherSettingsTab
                         isMobile={isMobile} promptKind={section} compact

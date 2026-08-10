@@ -14,6 +14,7 @@
  * @property {() => Promise<any>} [studentEntry]  학생 진입 컴포넌트 (React.lazy용 동적 import)
  * @property {() => Promise<any>} [myAgitEntry]  나의 아지트 확장 카드 (React.lazy용 동적 import)
  * @property {() => Promise<any>} [teacherEntry]  교사 설정/관리 컴포넌트
+ * @property {() => Promise<any>} [settingsEntry] 교사 통합 설정의 모듈별 관리 컴포넌트
  * @property {Record<string, Array<Object>>} [dashboardCards]
  *   교사 대시보드 확장 카드. 키는 대시보드 id이며 공통 카드 호스트가 기본·전체화면·모달 노출을 담당한다.
  * @property {{name?: string, description?: string, background?: string, borderColor?: string, order?: number, entryMode?: 'standard'|'legacy'}} [playground]
@@ -23,6 +24,8 @@
  *   교사 아지트 놀이터 관리 카드 표시 정보. teacherEntry가 있으면 공통 관리 셸에서 지연 로딩한다.
  * @property {{order?: number, launchMode?: 'embedded'|'external', href?: string}} [tool]
  *   교사 수업 도구 런처 정보. part가 tool이면 teacherEntry를 선택할 때만 지연 로딩한다.
+ * @property {{order?: number, label?: string, description?: string}} [settings]
+ *   교사 통합 설정 메뉴 정보. settingsEntry가 있을 때 해당 화면을 선택한 뒤에만 지연 로딩한다.
  * @property {string}   [studentRoute] 학생 화면 내부 라우트 이름
  * @property {string[]} [writingMissionTypes] 이 모듈이 처리하는 글쓰기 입력 미션 유형
  * @property {boolean}  [defaultEnabled]  학급 설정이 없을 때 기본 노출 여부 (기본 false)
@@ -51,7 +54,7 @@ export function validateManifest(m) {
   if (!m.name) problems.push('name 없음');
   if (!PART_LABELS[m.part]) problems.push(`part가 유효하지 않음: ${m.part}`);
   if (!['student', 'teacher', 'both'].includes(m.audience)) problems.push(`audience 유효하지 않음: ${m.audience}`);
-  if (!m.studentEntry && !m.teacherEntry) problems.push('studentEntry/teacherEntry 둘 다 없음');
+  if (!m.studentEntry && !m.teacherEntry && !m.settingsEntry) problems.push('studentEntry/teacherEntry/settingsEntry 모두 없음');
   if (!m.performance || typeof m.performance !== 'object') {
     problems.push('performance 계약 없음');
   } else {
@@ -64,6 +67,7 @@ export function validateManifest(m) {
     }
   }
   if (m.myAgit && typeof m.myAgitEntry !== 'function') problems.push('myAgit 설정은 있지만 myAgitEntry가 없음');
+  if (m.settings && typeof m.settingsEntry !== 'function') problems.push('settings 설정은 있지만 settingsEntry가 없음');
   if (m.dashboardCards && (typeof m.dashboardCards !== 'object' || Array.isArray(m.dashboardCards))) {
     problems.push('dashboardCards가 객체가 아님');
   } else if (m.dashboardCards) {

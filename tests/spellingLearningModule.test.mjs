@@ -12,6 +12,8 @@ test('맞춤법 학습 기능은 등록 모듈과 성능 계약을 가진다', (
     assert.match(manifest, /writes: 'rpc'/);
     assert.match(manifest, /realtime: 'none'/);
     assert.match(manifest, /maxInitialRows: 100/);
+    assert.match(manifest, /settingsEntry:/);
+    assert.doesNotMatch(manifest, /teacherEntry:|part: 'tool'/);
 });
 
 test('학생 검색은 입력 중 직접 쓰지 않고 닫을 때 배치 RPC로 모은다', () => {
