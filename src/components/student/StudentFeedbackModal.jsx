@@ -84,7 +84,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                             >
                                 <span style={{ fontSize: '1rem' }}>🗑️</span> 비우기
                             </Button>
-                            <ModalCloseButton onClick={onClose} label="내 글 소식 닫기" style={{ background: 'transparent', border: 0, color: '#BDC3C7' }} />
+                            <ModalCloseButton onClick={onClose} label="내 글 소식 닫기" />
                         </div>
                     </div>
 

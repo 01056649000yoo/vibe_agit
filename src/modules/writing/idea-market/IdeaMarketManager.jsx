@@ -1057,11 +1057,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                 </div>
                                 <ModalCloseButton
                                     onClick={() => setDetailModal(null)}
-                                    style={{
-                                        background: '#F1F5F9', border: 'none',
-                                        width: isMobile ? '38px' : '42px', height: isMobile ? '38px' : '42px',
-                                        color: '#64748B', marginLeft: '16px', flexShrink: 0
-                                    }}
+                                    style={{ marginLeft: '16px' }}
                                     label="제안 상세창 닫기"
                                 />
                             </div>

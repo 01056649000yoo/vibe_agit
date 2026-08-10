@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEvaluation } from '../../hooks/useEvaluation';
 import Button from '../common/Button';
+import ModalCloseButton from '../common/ModalCloseButton';
 import {
     formatKoreanGradeBand,
     resolveKoreanStandards
@@ -109,7 +110,7 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                     <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📊 학생 평가 리포트</h2>
                     <div style={{ fontSize: '0.9rem', color: '#7F8C8D', fontWeight: 'bold' }}>미션: {mission.title}</div>
                 </div>
-                <Button variant="ghost" onClick={onClose} style={{ fontSize: '1.2rem' }}>✕ 닫기</Button>
+                <ModalCloseButton onClick={onClose} label="학생 평가 리포트 닫기" />
             </header>
 
             <main style={{

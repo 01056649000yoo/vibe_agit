@@ -651,7 +651,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                     <h3 style={{ margin: 0, color: '#2C3E50', fontWeight: '900' }}>📂 {selectedMission.title} - 모든 글</h3>
                                     <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>제출된 모든 학생의 글을 한꺼번에 확인합니다.</p>
                                 </div>
-                                <ModalCloseButton onClick={() => setSelectedMission(null)} label="보관 글 모음 닫기" style={{ background: 'transparent', border: 0, color: '#ADB5BD' }} />
+                                <ModalCloseButton onClick={() => setSelectedMission(null)} label="보관 글 모음 닫기" />
                             </header>
 
                             <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '32px', background: '#FAFAFA' }}>

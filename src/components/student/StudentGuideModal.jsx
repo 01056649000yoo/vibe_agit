@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
+import ModalCloseButton from '../common/ModalCloseButton';
 
 /**
  * 🐉 학생 전용 사용법 가이드 모달
@@ -88,26 +89,11 @@ const StudentGuideModal = ({ isOpen, onClose }) => {
                         }}
                     >
                         {/* 닫기 버튼 */}
-                        <button
+                        <ModalCloseButton
                             onClick={onClose}
-                            style={{
-                                position: 'absolute',
-                                top: '20px',
-                                right: '20px',
-                                background: '#FF8A65',
-                                border: 'none',
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '50%',
-                                color: 'white',
-                                fontSize: '1.2rem',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 0 #E64A19'
-                            }}
-                        >
-                            ✕
-                        </button>
+                            label="이용 안내 닫기"
+                            style={{ position: 'absolute', top: '20px', right: '20px' }}
+                        />
 
                         <header style={{ textAlign: 'center', marginBottom: '35px' }}>
                             <motion.div

@@ -1,6 +1,7 @@
 import React from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import ModalCloseButton from '../common/ModalCloseButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabaseClient';
@@ -399,27 +400,10 @@ const MissionForm = ({
                                                         학생들이 생각의 깊이를 더할 수 있도록 글의 구조를 잡는 징검다리 질문을 디자인합니다.
                                                     </p>
                                                 </div>
-                                                <button
+                                                <ModalCloseButton
                                                     onClick={() => setIsQuestionModalOpen(false)}
-                                                    style={{
-                                                        border: 'none',
-                                                        background: '#F1F5F9',
-                                                        width: '48px',
-                                                        height: '48px',
-                                                        borderRadius: '16px',
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        fontSize: '1.2rem',
-                                                        color: '#64748B',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                    onMouseOver={e => e.currentTarget.style.background = '#E2E8F0'}
-                                                    onMouseOut={e => e.currentTarget.style.background = '#F1F5F9'}
-                                                >
-                                                    ✕
-                                                </button>
+                                                    label="핵심 질문 설계 마법사 닫기"
+                                                />
                                             </div>
 
                                             {/* AI 생성 컨트롤바 */}

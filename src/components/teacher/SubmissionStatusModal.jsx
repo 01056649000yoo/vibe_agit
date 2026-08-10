@@ -134,7 +134,7 @@ const SubmissionStatusModal = ({
                                 <span style={{ fontSize: '0.8rem', color: '#1976D2', background: '#E3F2FD', padding: '2px 8px', borderRadius: '6px', fontWeight: 'bold' }}>{selectedMission.genre}</span>
                                 <h4 style={{ margin: '8px 0 0 0', fontSize: '1.2rem', color: '#2C3E50', fontWeight: '900' }}>{selectedMission.title} ({posts.length}명)</h4>
                             </div>
-                            <ModalCloseButton onClick={() => setSelectedMission(null)} label="제출 현황 닫기" style={{ background: 'transparent', border: 0, color: '#ADB5BD' }} />
+                            <ModalCloseButton onClick={() => setSelectedMission(null)} label="제출 현황 닫기" />
                         </div>
 
                         <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '24px', background: '#FAFAFA' }}>
@@ -401,7 +401,7 @@ const SubmissionStatusModal = ({
                                             <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📂 학생 글 모아보기</h3>
                                             <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>한 화면에 {collectDisplayLimit}개씩 표시됩니다. (총 {posts.length}건)</p>
                                         </div>
-                                        <Button onClick={() => setIsCollectViewOpen(false)} style={{ background: '#F8F9FA', color: '#495057', border: '1px solid #E9ECEF', borderRadius: '12px' }}>✕ 닫기</Button>
+                                        <ModalCloseButton onClick={() => setIsCollectViewOpen(false)} label="학생 글 모아보기 닫기" />
                                     </header>
                                     <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '32px', background: '#FAFAFA' }}>
                                         <div style={{
@@ -482,7 +482,7 @@ const SubmissionStatusModal = ({
                                         <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📊 학생 반응 및 댓글 모아보기</h3>
                                         <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>한 화면에 {reactionDisplayLimit}개씩 표시됩니다. (총 {posts.length}건)</p>
                                     </div>
-                                    <Button onClick={() => setIsReactionViewOpen(false)} style={{ background: '#F8F9FA', color: '#495057', border: '1px solid #E9ECEF', borderRadius: '12px' }}>✕ 닫기</Button>
+                                    <ModalCloseButton onClick={() => setIsReactionViewOpen(false)} label="학생 반응 및 댓글 모아보기 닫기" />
                                 </header>
                                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '40px', background: '#FAFAFA' }}>
                                     <div style={{

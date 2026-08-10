@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { readLocalStorageJson } from '../../lib/browserStorage';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
+import ModalCloseButton from '../common/ModalCloseButton';
 import { callAI } from '../../lib/openai';
 import { exportObjectsToExcel } from '../../lib/excelExport';
 // XLSX 생성기는 내보내기 버튼을 누를 때 공용 유틸리티에서 지연 로드한다.
@@ -1161,10 +1162,13 @@ ${activitiesInfo}`;
                                         {rubricMission.title} · 글의 종류와 수업 내용에 맞는 기준을 교사가 선택합니다.
                                     </p>
                                 </div>
-                                <Button variant="ghost" onClick={() => {
-                                    setRubricMission(null);
-                                    setRubricDraft(null);
-                                }}>✕ 닫기</Button>
+                                <ModalCloseButton
+                                    onClick={() => {
+                                        setRubricMission(null);
+                                        setRubricDraft(null);
+                                    }}
+                                    label="미션별 성취기준 선택 닫기"
+                                />
                             </div>
 
                             <RubricSettings

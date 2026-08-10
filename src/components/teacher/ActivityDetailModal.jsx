@@ -27,7 +27,7 @@ const ActivityDetailModal = ({ post, onClose }) => {
                         <span style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.9rem' }}>{post.students?.name || '학생'}의 글</span>
                         <h3 style={{ margin: '4px 0 0 0', color: '#2C3E50', fontWeight: '900' }}>{post.title || '제목 없음'}</h3>
                     </div>
-                    <ModalCloseButton onClick={onClose} label="최근 활동 글 닫기" style={{ background: 'transparent', border: 0, color: '#ADB5BD' }} />
+                    <ModalCloseButton onClick={onClose} label="최근 활동 글 닫기" />
                 </header>
                 <div style={{ flex: 1, overflowY: 'auto', padding: '32px', lineHeight: '1.8', whiteSpace: 'pre-wrap', color: '#444', fontSize: '1.1rem' }}>
                     {isCommentActivity && (

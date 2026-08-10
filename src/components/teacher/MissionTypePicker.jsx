@@ -13,7 +13,7 @@ const MissionTypePicker = ({ isMobile, onSelectFreeform, onSelectGenre, onClose 
                 <h4 style={{ margin: 0, color: '#1E293B', fontSize: '1.05rem', fontWeight: '900' }}>어떤 미션을 만들까요?</h4>
                 <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.82rem' }}>자유 입력을 기본으로 사용하고, 필요할 때만 장르별 틀을 선택합니다.</p>
             </div>
-            <ModalCloseButton onClick={onClose} label="미션 종류 선택 닫기" style={{ border: 0, background: 'transparent', color: '#94A3B8' }} />
+            <ModalCloseButton onClick={onClose} label="미션 종류 선택 닫기" />
         </div>
 
         <div style={{ marginBottom: '16px' }}>

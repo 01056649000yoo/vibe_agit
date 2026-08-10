@@ -702,7 +702,7 @@ const PostDetailViewer = ({
                                 >
                                     <header style={{ padding: '24px 32px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#2C3E50' }}>📊 성장 및 성취도 평가</h3>
-                                        <ModalCloseButton onClick={() => setIsEvalModalOpen(false)} label="성장 및 성취도 평가 닫기" style={{ border: 0, background: 'transparent', color: '#ADB5BD' }} />
+                                        <ModalCloseButton onClick={() => setIsEvalModalOpen(false)} label="성장 및 성취도 평가 닫기" />
                                     </header>
 
                                     <div style={{ flex: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>

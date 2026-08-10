@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../../../components/common/Button';
+import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import { supabase } from '../../../lib/supabaseClient';
 import { useEvaluation } from '../../../hooks/useEvaluation';
 import { formatKoreanGradeBand, resolveKoreanStandards } from './koreanAchievementStandards';
@@ -130,7 +131,7 @@ const MissionEvaluationEntry = ({ mission, activeClass, isMobile, onClose, onSav
                             {mission.title} · 평가 {evaluatedCount}/{posts.length}명
                         </div>
                     </div>
-                    <Button variant="ghost" onClick={onClose}>✕ 닫기</Button>
+                    <ModalCloseButton onClick={onClose} label="평가결과 입력 닫기" />
                 </header>
 
                 {standards.length > 0 && (

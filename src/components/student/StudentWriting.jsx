@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useState, useRef, useEffect } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import ModalPortal from '../common/ModalPortal';
+import ModalCloseButton from '../common/ModalCloseButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMissionSubmit } from '../../hooks/useMissionSubmit';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
@@ -929,14 +930,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                         {studentLabels.previewDescription || '문단이 잘 나뉘었는지, 제목과 본문이 의도대로 보이는지 마지막으로 확인해보세요.'}
                                     </div>
                                 </div>
-                                <button
-                                    type="button"
+                                <ModalCloseButton
                                     onClick={() => setIsPreviewOpen(false)}
-                                    aria-label="제출 전 검토 창 닫기"
-                                    style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: '#90A4AE' }}
-                                >
-                                    ✕
-                                </button>
+                                    label="제출 전 검토 창 닫기"
+                                />
                             </div>
 
                             <div style={{

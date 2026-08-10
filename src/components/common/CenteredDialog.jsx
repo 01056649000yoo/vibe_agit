@@ -61,9 +61,8 @@ const CenteredDialog = ({
                         }}>{title}</h2>
                         {description && <p style={{ margin: '5px 0 0', fontSize: 'var(--ui-font-xs)', fontWeight: 750, lineHeight: 1.45, opacity: .9 }}>{description}</p>}
                     </div>
-                    <ModalCloseButton onClick={onClose} label={closeLabel || `${title} 닫기`} style={{
-                        flexShrink: 0, borderColor: 'rgba(255,255,255,.55)', color: 'white', background: 'rgba(255,255,255,.16)'
-                    }} />
+                    {/* 머리말이 진한 색이라 어두운 배경용 */}
+                    <ModalCloseButton onClick={onClose} label={closeLabel || `${title} 닫기`} tone="onDark" />
                 </header>
                 <div style={{ padding: bodyPadding }}>{children}</div>
             </section>

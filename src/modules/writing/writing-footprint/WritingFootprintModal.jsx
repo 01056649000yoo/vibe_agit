@@ -36,7 +36,7 @@ const WritingFootprintModal = ({ isOpen, onClose, studentSession, points = 0 }) 
                     background: '#FFFDF7', borderBottom: `1px solid ${GRID}`
                 }}>
                     <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: INK }}>👣 나의 글쓰기 발자국</h2>
-                    <ModalCloseButton onClick={onClose} label="글쓰기 발자국 닫기" style={{ border: 0, background: 'transparent', color: INK_SOFT }} />
+                    <ModalCloseButton onClick={onClose} label="글쓰기 발자국 닫기" />
                 </header>
                 <div style={{ padding: '4px 22px 26px' }}>
                     {loading ? <p style={{ padding: '70px 0', textAlign: 'center', color: INK_SOFT, fontWeight: 800 }}>발자국을 모아보는 중... 👣</p>

@@ -142,7 +142,7 @@ const StudentModals = ({
                         <Card style={{ padding: '32px', borderRadius: '32px', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                                 <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#2C3E50', fontWeight: '900' }}>🗑️ 삭제된 학생 복구</h2>
-                                <ModalCloseButton onClick={() => setIsTrashModalOpen(false)} label="삭제된 학생 복구 닫기" style={{ background: 'transparent', border: 0, color: '#ADB5BD' }} />
+                                <ModalCloseButton onClick={() => setIsTrashModalOpen(false)} label="삭제된 학생 복구 닫기" />
                             </div>
 
                             <div style={{ background: '#FFFCEB', padding: '16px', borderRadius: '16px', border: '1px solid #FFE082', marginBottom: '24px' }}>
@@ -314,12 +314,11 @@ const StudentModals = ({
                                     ))}
                                 </div>
                             </div>
-                            <button
+                            <ModalCloseButton
                                 onClick={() => setIsRankingModalOpen(false)}
-                                style={{ position: 'absolute', top: '30px', right: '30px', background: '#F8F9FA', border: 'none', width: '50px', height: '50px', borderRadius: '50%', fontSize: '1.2rem', cursor: 'pointer', color: '#7F8C8D', fontWeight: 'bold' }}
-                            >
-                                ✕
-                            </button>
+                                label="학급 랭킹 닫기"
+                                style={{ position: 'absolute', top: '30px', right: '30px' }}
+                            />
                         </div>
 
                         {/* 랭킹 리스트 영역 */}

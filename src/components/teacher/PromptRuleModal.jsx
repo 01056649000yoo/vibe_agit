@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { refinePromptWithAI } from '../../utils/refinePrompt';
 import Button from '../common/Button';
+import ModalCloseButton from '../common/ModalCloseButton';
 import useAiPromptPresets, { PRESET_KIND, MAX_PROMPT_LENGTH } from '../../hooks/useAiPromptPresets';
 import { DEFAULT_FEEDBACK_PROMPT, DEFAULT_REPORT_PROMPT } from '../../constants/aiPrompts';
 
@@ -166,15 +167,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             <strong style={{ color: accent }}> {embedded ? '고른 기준이 실제 AI 실행에 사용됩니다.' : '그냥 닫으면 지금 기준이 그대로 쓰입니다.'}</strong>
                         </p>
                     </div>
-                    {!embedded && <button
-                        onClick={onClose}
-                        style={{
-                            background: '#F1F3F5', border: 'none', width: '36px', height: '36px',
-                            borderRadius: '50%', cursor: 'pointer', color: '#868E96', fontSize: '1.1rem'
-                        }}
-                    >
-                        ✕
-                    </button>}
+                    {!embedded && <ModalCloseButton onClick={onClose} label={`${label} 정하기 닫기`} />}
                 </div>
 
                 {notice && (

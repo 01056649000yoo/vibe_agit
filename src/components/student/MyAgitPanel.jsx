@@ -308,8 +308,7 @@ const MyAgitPanel = ({
                 <div style={{ width: 'min(560px, 100%)', margin: '0 auto', padding: '18px 18px 90px' }}>
                     <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                         <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 900, color: INK }}>🏡 나의 아지트</h2>
-                        <ModalCloseButton onClick={onClose} label="나의 아지트 닫기"
-                            style={{ border: 0, background: 'transparent', color: INK_SOFT }} />
+                        <ModalCloseButton onClick={onClose} label="나의 아지트 닫기" />
                     </header>
 
                     <MyTitleStatusPanel active={isOpen} studentSession={studentSession} points={points} />

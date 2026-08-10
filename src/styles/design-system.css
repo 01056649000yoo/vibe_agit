@@ -132,24 +132,39 @@
   box-shadow: var(--ui-focus-ring), var(--ui-shadow-md) !important;
 }
 
+/* 모달 닫기 버튼(ModalCloseButton) 전용 기본형.
+   모양은 tone·size 두 가지 조합으로만 정하고, 부르는 곳에서 색·테두리를 덮어쓰지 않는다. */
 .ui-icon-button {
   display: grid;
-  width: var(--ui-control-md);
-  height: var(--ui-control-md);
+  flex: 0 0 auto;
   padding: 0;
   place-items: center;
-  border: 1px solid var(--ui-border);
+  border: 0;
   border-radius: 50%;
-  background: var(--ui-surface);
-  color: var(--ui-ink-muted);
+  line-height: 0;
+  cursor: pointer;
+  transition: background var(--ui-motion-fast), color var(--ui-motion-fast);
 }
 
+.ui-icon-button--md { width: 38px; height: 38px; }
+.ui-icon-button--sm { width: 34px; height: 34px; }
+
+/* 밝은 배경 위 — 기본 */
+.ui-icon-button--default { background: var(--ui-surface-muted); color: var(--ui-ink-muted); }
+.ui-icon-button--default:hover:not(:disabled) { background: var(--ui-border); color: var(--ui-ink-strong); }
+
+/* 어두운 배경·사진 위 (드래곤 방, 축하창 등) */
+.ui-icon-button--onDark { background: rgba(255, 255, 255, .18); color: #ffffff; }
+.ui-icon-button--onDark:hover:not(:disabled) { background: rgba(255, 255, 255, .3); }
+
+.ui-icon-button:disabled { cursor: default; opacity: .5; }
 .ui-icon-button:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
-.ui-icon-button:hover { box-shadow: none; filter: brightness(1.03); }
 
 @media (pointer: coarse) {
   .ui-button { min-height: var(--ui-control-md) !important; }
-  .ui-icon-button { width: var(--ui-control-md); height: var(--ui-control-md); }
+  /* 학교 태블릿에서 손가락으로 눌러야 하므로 터치 기기에서는 44px 로 키운다 */
+  .ui-icon-button--md,
+  .ui-icon-button--sm { width: var(--ui-control-md); height: var(--ui-control-md); }
 }
 
 @media (prefers-reduced-motion: reduce) {

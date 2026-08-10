@@ -102,7 +102,7 @@ const TitleGuide = ({ kind, currentLevel, currentValue, currentUnit, onClose }) 
                             </div>
                         </div>
                         <ModalCloseButton onClick={onClose} label="칭호 설명 닫기"
-                            style={{ alignSelf: 'flex-start', border: 0, background: 'transparent', color: INK_SOFT }} />
+                            style={{ alignSelf: 'flex-start' }} />
                     </header>
                     <div style={{ padding: '14px 18px 20px' }}>
                         <p style={{ margin: '0 0 13px', color: INK_SOFT, fontSize: '.78rem', fontWeight: 750, lineHeight: 1.55 }}>

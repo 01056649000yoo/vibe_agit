@@ -70,15 +70,7 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = '600px' }) => {
                             zIndex: 10
                         }}>
                             <h3 id={titleId} style={{ margin: 0, color: 'var(--ui-ink-strong)', fontWeight: '900', fontSize: 'var(--ui-font-lg)' }}>{title}</h3>
-                            <ModalCloseButton
-                                onClick={onClose}
-                                label={`${title} 닫기`}
-                                style={{
-                                    flexShrink: 0,
-                                    background: 'var(--ui-surface-muted)',
-                                    color: 'var(--ui-ink-muted)'
-                                }}
-                            />
+                            <ModalCloseButton onClick={onClose} label={`${title} 닫기`} />
                         </div>
 
                         {/* 콘텐츠 섹션 (스크롤 가능) */}

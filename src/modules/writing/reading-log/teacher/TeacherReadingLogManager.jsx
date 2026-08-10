@@ -760,7 +760,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                                     <ModalCloseButton
                                         onClick={() => setExpandedId(null)}
                                         label="학생 책장 닫기"
-                                        style={{ width: '34px', height: '34px', border: 0, background: 'white', color: '#64748B' }}
+                                        size="sm"
                                     />
                                 </header>
                                 {studentLogsLoading === expandedId ? (
@@ -815,7 +815,6 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                                 onClick={() => setSelected(null)}
                                 disabled={saving}
                                 label="독서록 상세 창 닫기"
-                                style={{ width: '38px', height: '38px', border: 0, background: '#F1F5F9', color: '#64748B' }}
                             />
                         </header>
 
