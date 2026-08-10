@@ -1,5 +1,6 @@
 import React, { lazy, useEffect, useState } from 'react';
 import TeacherSettingsTab from './TeacherSettingsTab';
+import TeacherGuideButton from './TeacherGuideButton';
 import { getAllModules } from '../../modules/registry';
 import { PRESET_KIND } from '../../hooks/useAiPromptPresets';
 
@@ -103,9 +104,12 @@ const TeacherSettingsHub = ({
             </aside>
 
             <main style={{ minWidth: 0 }}>
-                <div style={{ marginBottom: '14px' }}>
-                    <h2 style={{ margin: 0, color: '#172033', fontSize: isMobile ? '1.25rem' : '1.4rem' }}>{selected.icon} {selected.label}</h2>
-                    <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.82rem' }}>{selected.description}</p>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
+                    <div>
+                        <h2 style={{ margin: 0, color: '#172033', fontSize: isMobile ? '1.25rem' : '1.4rem' }}>{selected.icon} {selected.label}</h2>
+                        <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.82rem' }}>{selected.description}</p>
+                    </div>
+                    <TeacherGuideButton tabId={`settings:${selected.id}`} variant="help" />
                 </div>
 
                 {section === 'class' ? (
