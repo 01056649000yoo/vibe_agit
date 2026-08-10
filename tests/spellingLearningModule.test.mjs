@@ -25,14 +25,18 @@ test('맞춤법 학습 기능은 등록 모듈과 성능 계약을 가진다', (
 
 test('교사 등록 데이터는 기존 학생 수첩 기본 자료와 우리 반 자료를 함께 보여준다', () => {
     const builtInEntries = getElementarySpellingEntries();
-    assert.equal(builtInEntries.length, 200);
+    const referenceEntries = builtInEntries.filter((entry) => entry.contentType === 'reference');
+    const practiceEntries = builtInEntries.filter((entry) => entry.contentType === 'practice');
+    assert.equal(builtInEntries.length, 300);
+    assert.equal(referenceEntries.length, 200);
+    assert.equal(practiceEntries.length, 100);
     assert.equal(builtInEntries.length, ELEMENTARY_SPELLING_ENTRY_IDS.length);
-    assert.equal(new Set(ELEMENTARY_SPELLING_ENTRY_IDS).size, 200);
-    assert.equal(new Set(builtInEntries.map((entry) => entry.question)).size, 200);
+    assert.equal(new Set(ELEMENTARY_SPELLING_ENTRY_IDS).size, 300);
+    assert.equal(new Set(builtInEntries.map((entry) => entry.question)).size, 300);
     for (const entry of builtInEntries) {
         assert.ok(entry.category, `${entry.id}: 분류가 필요합니다.`);
         assert.ok(entry.explanation.length >= 10, `${entry.id}: 설명이 너무 짧습니다.`);
-        assert.equal(entry.examples.length, 2, `${entry.id}: 바른 예문은 2개여야 합니다.`);
+        assert.equal(entry.examples.length, entry.contentType === 'practice' ? 1 : 2, `${entry.id}: 바른 예문 수가 맞지 않습니다.`);
         assert.match(entry.source.label, /국립국어원/);
         assert.match(entry.source.url, /^https:\/\/(?:stdict\.)?korean\.go\.kr\//);
         assert.equal('sourceQuery' in entry, false);
@@ -48,11 +52,12 @@ test('교사 등록 데이터는 기존 학생 수첩 기본 자료와 우리 �
     assert.doesNotMatch(teacherEntry, /초안 저장|적용 중/);
 });
 
-test('200개 기본 자료는 틀린 표현과 분류로 바로 찾을 수 있다', () => {
+test('300개 기본 자료는 틀린 표현과 분류·문장으로 바로 찾을 수 있다', () => {
     assert.equal(searchElementarySpelling('도데체')[0]?.id, 'dodaeche');
     assert.equal(searchElementarySpelling('설레였다')[0]?.id, 'seolletda');
     assert.equal(searchElementarySpelling('수영을 못해요')[0]?.id, 'mot-hada');
     assert.ok(searchElementarySpelling('외래어 표기').every((entry) => entry.category === '외래어 표기'));
+    assert.ok(searchElementarySpelling('선생님 말씀대로 따라 했다').some((entry) => entry.id === 'practice-spelling-quiz-100'));
 });
 
 test('초등 맞춤법 문제은행은 순서가 있는 고유 문항 100개와 해설을 가진다', () => {
@@ -64,11 +69,14 @@ test('초등 맞춤법 문제은행은 순서가 있는 고유 문항 100개와 
         assert.ok(question.choices.length >= 2, `${question.number}: 선택지가 부족합니다.`);
         assert.ok(question.choices.includes(question.answer), `${question.number}: 정답이 선택지에 없습니다.`);
         assert.ok(question.explanation.length >= 8, `${question.number}: 설명이 너무 짧습니다.`);
+        assert.ok(question.solution.length >= 5, `${question.number}: 완성 문장이 너무 짧습니다.`);
         assert.doesNotMatch(question.prompt, /\([^()]+\s\/\s[^()]+\)/);
+        assert.doesNotMatch(question.solution, /\([^()]+\s\/\s[^()]+\)/);
     }
     assert.match(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[33].question, /높이가/);
     assert.match(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[36].question, /서로 답을/);
     assert.deepEqual(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[70].choices, ['든, 든', '던, 던']);
+    assert.equal(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[70].solution, '사과든 배든 하나 골라라.');
     assert.match(lookup, /✏️ 100문제/);
     assert.match(lookup, /role="progressbar"/);
     assert.match(lookup, /처음부터 다시 풀기/);

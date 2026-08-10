@@ -6,6 +6,7 @@
  */
 import { findDetectedEntryIds } from './spellingDetectionRules.js';
 import { ADDITIONAL_ELEMENTARY_SPELLING_ENTRIES } from './elementarySpellingCatalog.js';
+import { ELEMENTARY_SPELLING_QUIZ_QUESTIONS } from './elementarySpellingQuiz.js';
 
 const DICTIONARY_SEARCH_URL = 'https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=';
 const KOREAN_NORMS_URL = 'https://korean.go.kr/kornorms/main/main.do';
@@ -281,15 +282,30 @@ const additionalEntries = ADDITIONAL_ELEMENTARY_SPELLING_ENTRIES.map(({
     ...entry
 }) => ({
     ...entry,
+    contentType: 'reference',
     source: sourceType === 'norm' ? normSource : dictionarySource(sourceQuery || entry.answer)
+}));
+
+const practiceEntries = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.map((question) => ({
+    id: `practice-${question.id}`,
+    question: question.question,
+    answer: question.answer,
+    searchable: [question.prompt, question.solution, ...question.choices],
+    category: '문장 연습',
+    explanation: question.explanation,
+    examples: [question.solution],
+    contentType: 'practice',
+    source: normSource
 }));
 
 const ELEMENTARY_SPELLING_ENTRIES = [
     ...BASE_ELEMENTARY_SPELLING_ENTRIES.map((entry) => ({
         ...entry,
-        category: BASE_ENTRY_CATEGORIES[entry.id]
+        category: BASE_ENTRY_CATEGORIES[entry.id],
+        contentType: 'reference'
     })),
-    ...additionalEntries
+    ...additionalEntries,
+    ...practiceEntries
 ];
 
 export const ELEMENTARY_SPELLING_ENTRY_IDS = Object.freeze(

@@ -3,6 +3,12 @@ const INLINE_CHOICES_PATTERN = /\(([^()]+)\)/g;
 const createQuizQuestion = (number, question, answer, explanation, customChoices) => {
     const inlineChoices = [...question.matchAll(INLINE_CHOICES_PATTERN)]
         .flatMap((match) => match[1].split('/').map((choice) => choice.trim()));
+    const answerParts = answer.split(',').map((part) => part.trim());
+    let answerIndex = 0;
+    const solution = question.replace(
+        INLINE_CHOICES_PATTERN,
+        () => answerParts.at(answerIndex++) || answer
+    );
 
     return Object.freeze({
         id: `spelling-quiz-${String(number).padStart(3, '0')}`,
@@ -11,7 +17,8 @@ const createQuizQuestion = (number, question, answer, explanation, customChoices
         prompt: question.replace(INLINE_CHOICES_PATTERN, '＿＿＿＿'),
         choices: Object.freeze(customChoices || [...new Set(inlineChoices)]),
         answer,
-        explanation
+        explanation,
+        solution
     });
 };
 

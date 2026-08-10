@@ -188,14 +188,26 @@ const 중복수첩아이디 = 전체수첩항목.length - new Set(전체수첩�
 const 불완전수첩항목 = 전체수첩항목.filter((entry) => (
     !entry.category ||
     !entry.explanation ||
-    entry.examples?.length !== 2 ||
+    !entry.examples?.length ||
     !entry.source?.url
 ));
-if (전체수첩항목.length !== 200 || 중복수첩아이디 > 0 || 불완전수첩항목.length > 0) {
+const 사전형수첩항목 = 전체수첩항목.filter((entry) => entry.contentType === 'reference');
+const 문장형수첩항목 = 전체수첩항목.filter((entry) => entry.contentType === 'practice');
+const 잘못된예문수 = 전체수첩항목.filter((entry) => (
+    entry.examples.length !== (entry.contentType === 'practice' ? 1 : 2)
+));
+if (
+    전체수첩항목.length !== 300 ||
+    사전형수첩항목.length !== 200 ||
+    문장형수첩항목.length !== 100 ||
+    중복수첩아이디 > 0 ||
+    불완전수첩항목.length > 0 ||
+    잘못된예문수.length > 0
+) {
     console.error(`\n실패 — 수첩 데이터 품질 오류: 전체 ${전체수첩항목.length}개, ID 중복 ${중복수첩아이디}개, 불완전 ${불완전수첩항목.length}개`);
     process.exit(1);
 }
-console.log(`수첩  기본 자료 ${전체수첩항목.length}개 · ID 중복 0개 · 설명/예문/출처 확인`);
+console.log(`수첩  기본 자료 ${전체수첩항목.length}개(사전형 200 + 문장형 100) · ID 중복 0개 · 설명/예문/출처 확인`);
 
 const 중복문제아이디 = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length - new Set(
     ELEMENTARY_SPELLING_QUIZ_QUESTIONS.map((question) => question.id)
@@ -204,7 +216,8 @@ const 잘못된문제 = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.filter((question, ind
     question.number !== index + 1 ||
     question.choices.length < 2 ||
     !question.choices.includes(question.answer) ||
-    !question.explanation
+    !question.explanation ||
+    !question.solution
 ));
 if (ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length !== 100 || 중복문제아이디 > 0 || 잘못된문제.length > 0) {
     console.error(`\n실패 — 문제은행 품질 오류: 전체 ${ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length}개, ID 중복 ${중복문제아이디}개, 잘못된 문항 ${잘못된문제.length}개`);
