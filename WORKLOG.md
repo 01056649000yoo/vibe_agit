@@ -21,6 +21,12 @@
 
 ---
 
+## 2026-08-10 — Tailscale 원격 운영 DB 마이그레이션 상태 확인 (Codex)
+- **한 일**: 작업 PC에서 Tailscale 경유 `ssh macmini` 연결과 키 인증을 확인하고, 맥미니 `~/vibe_agit`에서 `git pull --ff-only origin main` 후 `migrate:status → migrate:check → migrate → migrate:status`를 순서대로 실행했다.
+- **변경**: git 밖 운영 상태만 확인했다. 실행 시점에 운영 `agit-db`는 이미 마이그레이션 **118/118·대기 0**이어서 추가 DB 변경은 발생하지 않았다.
+- **결과/검증**: `20261017_spelling_learning_module.sql`의 적용 기록과 체크섬 정합성을 확인했고, `spelling_learning_entries`·`class_spelling_daily_stats` 테이블 및 학생 조회·교사 작업공간·검색 기록 RPC가 실제 운영 DB에 존재함을 확인했다. 대상은 `supabase-db`가 아닌 `agit-db`다.
+- **남은 것 / 다음**: 운영 `vibe-ai` Edge 함수 배포와 교사·학생 역할별 맞춤법 배움 데이터 스모크, 전체 `npm run test:security`는 별도 운영 반영 작업으로 남아 있다.
+
 ## 2026-08-10 — 학생 댓글 관리 검색창·도움말 정렬 보정 (Codex)
 - **배경**: 댓글 관리 상단의 검색창이 가용 폭을 넘어서 우측이 잘리고, 제목과 도움말 버튼의 간격도 다소 붙어 보였다.
 - **변경**: 상단을 유연한 2열 그리드로 바꾸고 검색창에 최대 폭과 `border-box`를 적용해 컨테이너 안에서 줄어들게 했다. 제목과 도움말 간격은 조금 넓히고, 좁은 화면에서는 검색창이 온전한 한 줄을 차지하도록 했다.

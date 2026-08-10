@@ -44,9 +44,9 @@
 
 ### 집에서 이어서 할 운영 반영 — 맞춤법 배움 데이터
 
-- [ ] 맥미니에서 `git pull` 후 `npm run migrate:status`로 `20261017_spelling_learning_module.sql` 미적용 상태 확인
-- [ ] `npm run migrate:check`로 실제 `agit-db` 스키마에서 마이그레이션과 롤백 검증
-- [ ] 검증 결과를 확인한 뒤 `npm run migrate`로 운영 DB에 적용 (`supabase-db`가 아니라 `agit-db`)
+- [x] 맥미니에서 `git pull` 후 `npm run migrate:status`로 `20261017_spelling_learning_module.sql` 적용 상태 확인 (118/118·대기 0)
+- [x] `npm run migrate:check` 실행 — 이미 적용되어 롤백 대상은 없었고 적용 기록·체크섬·실제 테이블/RPC를 직접 확인
+- [x] 운영 `agit-db` 적용 상태 확인 (`supabase-db`가 아니라 `agit-db`)
 - [ ] `supabase/functions/vibe-ai/index.ts`를 운영 `vibe-ai` Edge 함수에 배포하고 기존 환경변수·허용 Origin 유지 확인
 - [ ] 교사 계정으로 `수업 도구 → 맞춤법 배움 데이터`에서 AI 초안 생성·수정·승인 확인
 - [ ] 학생 계정으로 승인 항목의 밑줄·수첩 검색을 확인하고, 수첩을 닫은 뒤 교사 화면과 `학급 발자국` 집계 확인
