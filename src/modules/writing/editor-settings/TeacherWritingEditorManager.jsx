@@ -155,7 +155,6 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
                 <div className="writing-editor-manager__heading">
                     <div>
                         <span>학급별 글쓰기 지원 기능</span>
-                        <h3>학생 글쓰기 창 관리</h3>
                         <p>기능을 켜고 끈 뒤 아래 미리보기에서 학생에게 보일 모습을 바로 확인하세요.</p>
                     </div>
                     <span className="writing-editor-manager__class-name">{activeClass.name}</span>

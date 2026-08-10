@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import GuideInfoButton from '../../../components/common/GuideInfoButton';
 import { spellingLearningApi } from './api';
 import './TeacherEntry.css';
 
@@ -63,10 +62,6 @@ const TeacherEntry = ({ activeClass }) => {
     };
 
     return <section className="spelling-learning-manager">
-        <header>
-            <div><span>맞춤법 학습 모듈</span><h2>우리 반 맞춤법 배움 데이터</h2></div>
-            <GuideInfoButton label="맞춤법 배움 데이터 사용법" title="맞춤법 배움 데이터 사용법" onClick={() => setMessage('문제 표현만 입력하면 AI가 초안을 만듭니다. 교사가 확인해 승인하기 전에는 학생에게 보이지 않습니다.')} />
-        </header>
         {!classId && <p className="spelling-learning-message">먼저 학급을 선택해 주세요.</p>}
         {classId && <>
             <div className="spelling-learning-tabs" role="tablist" aria-label="맞춤법 배움 데이터 관리">

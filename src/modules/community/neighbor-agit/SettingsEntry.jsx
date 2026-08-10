@@ -6,8 +6,7 @@ const NeighborAgitSettingsEntry = ({ activeClass, isMobile }) => (
     }}>
         <div style={{ maxWidth: '560px' }}>
             <div aria-hidden="true" style={{ fontSize: '3rem' }}>🤝</div>
-            <h3 style={{ margin: '12px 0 8px', color: '#134E4A', fontSize: '1.25rem' }}>이웃 아지트</h3>
-            <p style={{ margin: 0, color: '#52706D', fontSize: '.88rem', lineHeight: 1.7 }}>
+            <p style={{ margin: '12px 0 0', color: '#52706D', fontSize: '.88rem', lineHeight: 1.7 }}>
                 {activeClass?.name ? `${activeClass.name}과 ` : '우리 학급과 '}연결한 다른 학급의 글을 읽고 나누는 독립 공간을 준비하고 있습니다.
                 학급 생성·삭제 같은 기본 관리는 왼쪽의 학급 관리에서 계속합니다.
             </p>

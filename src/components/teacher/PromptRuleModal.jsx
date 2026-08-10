@@ -153,8 +153,8 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                     boxShadow: embedded ? '0 4px 18px rgba(15,23,42,.04)' : '0 24px 60px rgba(15,23,42,0.25)'
                 }}
             >
-                {/* 헤더 */}
-                <div style={{
+                {/* 독립 모달일 때만 제목을 표시한다. 설정 허브 안에서는 바깥 탭 제목을 사용한다. */}
+                {!embedded && <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '20px 24px', borderBottom: '1px solid #F1F3F5', background: '#FAFBFC'
                 }}>
@@ -167,8 +167,8 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             <strong style={{ color: accent }}> {embedded ? '고른 기준이 실제 AI 실행에 사용됩니다.' : '그냥 닫으면 지금 기준이 그대로 쓰입니다.'}</strong>
                         </p>
                     </div>
-                    {!embedded && <ModalCloseButton onClick={onClose} label={`${label} 정하기 닫기`} />}
-                </div>
+                    <ModalCloseButton onClick={onClose} label={`${label} 정하기 닫기`} />
+                </div>}
 
                 {notice && (
                     <div style={{ padding: '10px 24px', background: '#F0FDF4', color: '#166534', fontSize: '0.86rem', fontWeight: 600 }}>
