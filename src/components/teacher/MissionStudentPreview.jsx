@@ -10,11 +10,15 @@ import {
 } from '../writing/WritingWorkspace';
 import WritingPolicyProgress from '../../modules/writing/policy/WritingPolicyProgress';
 import { writingPolicyFromMission } from '../../modules/writing/policy/writingPolicy';
-import PoemEditor from '../../modules/writing/mission-types/poem/PoemEditor';
-import { getGenreMissionType } from '../../modules/writing/mission-types/registry';
+import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
 import './MissionStudentPreview.css';
 
 const EMPTY_METRICS = Object.freeze({ charCount: 0, paragraphCount: 0 });
+const PREVIEW_EDITORS = new Map(
+    getGenreMissionTypes()
+        .filter((missionType) => missionType.studentEditorEntry)
+        .map((missionType) => [missionType.id, React.lazy(missionType.studentEditorEntry)])
+);
 
 const MissionStudentPreview = ({ isOpen, onClose, mission }) => {
     const title = mission?.title?.trim() || '글쓰기 주제를 입력해주세요';
@@ -25,10 +29,10 @@ const MissionStudentPreview = ({ isOpen, onClose, mission }) => {
         : [];
     const hasQuestions = questions.length > 0;
     const policy = writingPolicyFromMission(mission);
-    const genreMissionType = getGenreMissionType(mission?.mission_type);
+    const genreMissionType = getGenreMissionType(mission?.mission_type || mission?.input_template);
     const studentLabels = genreMissionType?.studentLabels || {};
-    const isPoem = genreMissionType?.id === 'poem';
     const isMeeting = genreMissionType?.id === 'meeting';
+    const previewGenreEditor = PREVIEW_EDITORS.get(genreMissionType?.id) || null;
     const displayGenre = genreMissionType
         ? `${genreMissionType.icon} ${genreMissionType.name}`
         : genre;
@@ -128,19 +132,21 @@ const MissionStudentPreview = ({ isOpen, onClose, mission }) => {
                                     title={studentLabels.editorHeading || '본격 글쓰기'}
                                     description="제목과 내용을 차근차근 적어보세요."
                                 />
-                                {isPoem ? (
-                                    <PoemEditor
-                                        title=""
-                                        setTitle={() => {}}
-                                        content=""
-                                        setContent={() => {}}
-                                        structuredContent={{ template: 'poem', version: 1, stanzas: [] }}
-                                        setStructuredContent={() => {}}
-                                        studentName="아지트 학생"
-                                        config={mission?.template_config || {}}
-                                        disabled
-                                        isMobile={false}
-                                    />
+                                {previewGenreEditor ? (
+                                    <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#64748B' }}>장르 글쓰기 틀을 준비하는 중...</div>}>
+                                        {React.createElement(previewGenreEditor, {
+                                            title: '',
+                                            setTitle: () => {},
+                                            content: '',
+                                            setContent: () => {},
+                                            structuredContent: null,
+                                            setStructuredContent: () => {},
+                                            studentName: '아지트 학생',
+                                            config: mission?.template_config || {},
+                                            disabled: true,
+                                            isMobile: false,
+                                        })}
+                                    </React.Suspense>
                                 ) : (
                                     <WritingEditorFields
                                         title=""

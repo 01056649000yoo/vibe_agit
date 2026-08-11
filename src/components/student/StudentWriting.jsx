@@ -29,6 +29,8 @@ import WritingPolicyProgress from '../../modules/writing/policy/WritingPolicyPro
 import { writingPolicyFromMission } from '../../modules/writing/policy/writingPolicy';
 import ReactionNamesTooltip from './ReactionNamesTooltip';
 
+const ReportDocument = lazy(() => import('../../modules/writing/mission-types/report/ReportDocument'));
+
 const GENRE_EDITORS = new Map(
     getGenreMissionTypes()
         .filter((missionType) => missionType.studentEditorEntry)
@@ -88,8 +90,12 @@ const isSameDraft = (a, b) => (
 );
 
 const hasStructuredDraftContent = (structuredContent) => (
-    Array.isArray(structuredContent?.stanzas) &&
-    structuredContent.stanzas.some((stanza) => stanza?.trim())
+    (Array.isArray(structuredContent?.stanzas)
+        && structuredContent.stanzas.some((stanza) => stanza?.trim()))
+    || (Array.isArray(structuredContent?.sections)
+        && structuredContent.sections.some((section) => (
+            section?.heading?.trim() || section?.body?.trim() || section?.image?.path
+        )))
 );
 
 // 읽기·쓰기·지우기는 독서록과 같은 파일을 쓴다(`modules/writing/drafts/localWritingDraft`).
@@ -160,6 +166,8 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const studentLabels = genreMissionType?.studentLabels || {};
     const activeReactionIcons = genreMissionType?.reactionIcons || REACTION_ICONS;
     const ownPostReactionsReadOnly = genreMissionType?.ownPostReactionsReadOnly === true;
+    const isReportWriting = structuredContent?.template === 'report'
+        || mission?.input_template === 'report';
 
     // 질문 개수가 변하면 studentAnswers 배열 초기화/유지 로직
     useEffect(() => {
@@ -220,7 +228,11 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
 
     // 통계 계산
     const charCount = countContentChars(content);
-    const genreParagraphCount = genreMissionType?.countParagraphs?.({ structuredContent, content });
+    const genreParagraphCount = genreMissionType?.countParagraphs?.({
+        structuredContent,
+        content,
+        config: mission?.template_config || {}
+    });
     const paragraphCount = Number.isFinite(genreParagraphCount)
         ? genreParagraphCount
         : content.split(/\n+/).filter((paragraph) => paragraph.trim().length > 0).length;
@@ -472,6 +484,29 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         }
     };
 
+    const ensureGenreDraftPost = async () => {
+        if (postId) return postId;
+        const draft = latestDraftRef.current;
+        const savedPostId = await handleSave(false, draft);
+        if (savedPostId) {
+            lastDbSavedDataRef.current = { ...draft, initialized: true };
+        }
+        return savedPostId || null;
+    };
+
+    const persistGenreDraft = async ({ structuredContent: nextStructuredContent, content: nextContent }) => {
+        const draft = {
+            ...latestDraftRef.current,
+            content: nextContent,
+            structuredContent: nextStructuredContent,
+        };
+        const savedPostId = await handleSave(false, draft);
+        if (savedPostId) {
+            lastDbSavedDataRef.current = { ...draft, initialized: true };
+        }
+        return savedPostId || false;
+    };
+
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!commentInput.trim() || submittingComment) return;
@@ -702,6 +737,9 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                 config={mission.template_config || {}}
                                 disabled={submitting || isLocked}
                                 isMobile={isMobile}
+                                postId={postId}
+                                ensureDraftPost={ensureGenreDraftPost}
+                                onPersistDraft={persistGenreDraft}
                             />
                         </Suspense>
                     ) : (
@@ -978,7 +1016,11 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                                     borderRadius: '22px',
                                     padding: '20px'
                                 }}>
-                                    {previewParagraphs.length > 0 ? (
+                                    {isReportWriting && structuredContent?.template === 'report' ? (
+                                        <Suspense fallback={<div style={{ padding: '36px', textAlign: 'center', color: '#64748B' }}>보고서 사진과 칸을 준비하는 중...</div>}>
+                                            <ReportDocument structuredContent={structuredContent} content={content} compact />
+                                        </Suspense>
+                                    ) : previewParagraphs.length > 0 ? (
                                         <div style={{
                                             background: '#FFFFFF',
                                             border: '1px solid #E3F2FD',

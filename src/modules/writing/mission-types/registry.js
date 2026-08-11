@@ -1,8 +1,10 @@
 import { poemMissionType } from './poem/manifest';
+import { reportMissionType } from './report/manifest';
 import { meetingMissionType } from '../idea-market/missionTypeManifest';
 
 const genreMissionTypes = [
     poemMissionType,
+    reportMissionType,
     meetingMissionType,
 ];
 

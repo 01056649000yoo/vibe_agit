@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { isPendingRewrite } from '../../lib/writingStatus';
+import { getGenreMissionType } from '../../modules/writing/mission-types/registry';
 
 const MISSION_LIST_LIMIT = 100;
 // AGENTS.md 학생 폴링 하한(60초)과 다른 화면 재조회 간격에 맞춘다.
@@ -143,7 +144,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                     missions.map((mission) => {
                         const post = posts[mission.id];
                         const isMeetingMission = mission.mission_type === 'meeting';
-                        const isPoemMission = mission.input_template === 'poem';
+                        const genreMissionType = getGenreMissionType(mission.input_template || mission.mission_type);
                         let statusBadge = null;
                         let borderColor = '#FFECB3';
                         let buttonText = isMeetingMission ? '안건 작성하기' : '글쓰기 시작';
@@ -226,7 +227,7 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
                                             fontSize: '0.75rem',
                                             fontWeight: '900'
                                         }}>
-                                            {isMeetingMission ? '🏛️ 회의 안건 미션' : isPoemMission ? '🌿 시 쓰기' : mission.genre}
+                                            {genreMissionType ? `${genreMissionType.icon} ${genreMissionType.name}` : mission.genre}
                                         </div>
                                         {statusBadge}
                                     </div>

@@ -42,7 +42,8 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         const missionType = getGenreMissionType(mission?.input_template);
         const genreCount = missionType?.countParagraphs?.({
             structuredContent: structuredValue,
-            content: contentValue
+            content: contentValue,
+            config: mission?.template_config || {}
         });
         if (Number.isFinite(genreCount)) return genreCount;
         return contentValue.split(/\n+/).filter((paragraph) => paragraph.trim().length > 0).length;
@@ -191,7 +192,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         try {
             const draft = draftOverride || { title, content, studentAnswers, structuredContent };
             const missionType = getGenreMissionType(mission?.input_template);
-            const { error } = await supabase
+            const { data: savedPost, error } = await supabase
                 .from('student_posts')
                 .upsert({
                     student_id: currentStudentId,
@@ -213,11 +214,14 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
                     student_answers: draft.studentAnswers, // [신규] 답변 저장
                     structured_content: draft.structuredContent,
                     ...(missionType?.postStatus ? { status: missionType.postStatus } : {})
-                }, { onConflict: 'student_id,mission_id' });
+                }, { onConflict: 'student_id,mission_id' })
+                .select('id')
+                .single();
 
             if (error) throw error;
+            setPostId(savedPost.id);
             if (showMsg) alert('안전하게 임시 저장되었습니다! 💾');
-            return true;
+            return savedPost.id;
         } catch (err) {
             console.error('임시 저장 실패:', err.message);
             if (showMsg) alert('저장 중 오류가 발생했습니다.');

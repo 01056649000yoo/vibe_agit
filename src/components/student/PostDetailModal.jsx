@@ -6,6 +6,8 @@ import { supabase } from '../../lib/supabaseClient';
 import { usePostInteractions } from '../../hooks/usePostInteractions';
 import Button from '../common/Button';
 import ReactionNamesTooltip from './ReactionNamesTooltip';
+import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
+import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
 
 // [최적화] 개별 댓글 컴포넌트 분리 및 메모이제이션 💬
 const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, isTeacher, onEdit, onDelete }) => {
@@ -189,6 +191,7 @@ const PostDetailModal = ({
     const bookInfo = post?.structured_content || {};
     const canShowOriginal = originalAllowed && Boolean(post?.original_content);
     const displayingOriginal = canShowOriginal && showOriginal;
+    const displayingReport = !displayingOriginal && isReportStructuredContent(post?.structured_content);
 
     const {
         reactions,
@@ -483,7 +486,11 @@ const PostDetailModal = ({
                         wordBreak: 'break-word',
                         transition: 'color 0.2s'
                     }}>
-                        {displayingOriginal ? (post.original_content || '기록된 처음글 내용이 없습니다.') : post.content}
+                        {displayingReport ? (
+                            <ReportDocument structuredContent={post.structured_content} content={post.content} />
+                        ) : displayingOriginal ? (
+                            post.original_content || '기록된 처음글 내용이 없습니다.'
+                        ) : post.content}
                     </div>
 
                     {/* 반응 섹션 */}

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 import MyPostEngagementPanel from '../../modules/writing/engagement/MyPostEngagementPanel';
+import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
+import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
 
 const formatDate = (value) => {
     if (!value) return '';
@@ -21,6 +23,7 @@ const MyShelfPostDetail = ({ summary, post, loading, errorMessage, onClose, onRe
     );
     const title = showOriginal ? (post?.original_title || post?.title) : post?.title;
     const content = showOriginal ? post?.original_content : post?.content;
+    const displayingReport = !showOriginal && isReportStructuredContent(post?.structured_content);
     const typeName = selfType ? selfType.label : '선생님 과제';
 
     return (
@@ -111,7 +114,9 @@ const MyShelfPostDetail = ({ summary, post, loading, errorMessage, onClose, onRe
                         )}
 
                         <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #ECEFF1', color: showOriginal ? '#78909C' : '#37474F', fontSize: '1rem', lineHeight: 1.9, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                            {content || '아직 내용이 없어요.'}
+                            {displayingReport ? (
+                                <ReportDocument structuredContent={post.structured_content} content={post.content} />
+                            ) : content || '아직 내용이 없어요.'}
                         </div>
 
                         {/* 확인 상태·선생님 의견·친구 댓글은 세 글쓰기가 같은 공용 부품을 쓴다. */}

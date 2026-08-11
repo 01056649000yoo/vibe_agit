@@ -61,6 +61,7 @@ const formatDate = (value) => {
 const missionTypeLabel = (type) => {
     if (type === 'meeting') return '회의 안건';
     if (type === 'poem') return '시 쓰기';
+    if (type === 'report') return '보고하는 글쓰기';
     return '자유 글쓰기';
 };
 

@@ -431,7 +431,7 @@ export const useMissionManager = (activeClass, bootstrapProfile = null) => {
                 .from('student_posts')
                 .select(`
                     id, title, content, student_id, mission_id, char_count, is_submitted, is_confirmed, is_returned, ai_feedback, created_at, updated_at, recalled_at, recalled_by,
-                    original_title, original_content, first_submitted_at, initial_eval, final_eval, eval_comment, student_answers,
+                    original_title, original_content, first_submitted_at, initial_eval, final_eval, eval_comment, student_answers, structured_content,
                     awarded_base_reward, awarded_bonus_reward, awarded_bonus_threshold,
                     teacher_edited_title, teacher_edited_content, teacher_edited_at, teacher_edited_by, is_teacher_edited,
                     students!inner(name, class_id)

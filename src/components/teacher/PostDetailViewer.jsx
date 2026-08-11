@@ -4,6 +4,8 @@ import Button from '../common/Button';
 import ModalCloseButton from '../common/ModalCloseButton';
 import PromptRuleButton, { PROMPT_ACCENT } from './PromptRuleButton';
 import { useEvaluation } from '../../hooks/useEvaluation';
+import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
+import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
 
 const PostDetailViewer = ({
     selectedPost, setSelectedPost, selectedMission,
@@ -24,6 +26,7 @@ const PostDetailViewer = ({
     const [editedTitle, setEditedTitle] = useState('');
     const [editedContent, setEditedContent] = useState('');
     const [isSavingTeacherEdit, setIsSavingTeacherEdit] = useState(false);
+    const isReportPost = isReportStructuredContent(selectedPost?.structured_content);
 
     // 현재 교사 uid 조회
     useEffect(() => {
@@ -264,7 +267,7 @@ const PostDetailViewer = ({
                                         📊 성장 평가
                                     </Button>
                                 )}
-                                {!selectedPost.is_confirmed && handleTeacherEditPost && (
+                                {!selectedPost.is_confirmed && handleTeacherEditPost && !isReportPost && (
                                     <Button
                                         onClick={() => {
                                             if (isTeacherEditMode) {
@@ -452,7 +455,9 @@ const PostDetailViewer = ({
                                                 fontSize: '1.15rem', color: '#1F2937', lineHeight: '1.8',
                                                 whiteSpace: 'pre-wrap', wordBreak: 'break-word'
                                             }}>
-                                                {selectedPost.content}
+                                                {isReportPost ? (
+                                                    <ReportDocument structuredContent={selectedPost.structured_content} content={selectedPost.content} compact />
+                                                ) : selectedPost.content}
                                             </div>
                                         </div>
                                     </div>
@@ -464,7 +469,9 @@ const PostDetailViewer = ({
                                         whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                                         padding: '0 10px'
                                     }}>
-                                        {selectedPost.content}
+                                        {isReportPost ? (
+                                            <ReportDocument structuredContent={selectedPost.structured_content} content={selectedPost.content} />
+                                        ) : selectedPost.content}
                                     </div>
                                 )}
                             </div>
@@ -766,7 +773,9 @@ const PostDetailViewer = ({
                                                 </div>
                                             </div>
                                             <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', fontSize: '1rem', color: '#333', maxHeight: '350px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: '1.8', fontWeight: '500' }}>
-                                                {selectedPost.content}
+                                                {isReportPost ? (
+                                                    <ReportDocument structuredContent={selectedPost.structured_content} content={selectedPost.content} compact />
+                                                ) : selectedPost.content}
                                             </div>
                                         </section>
 

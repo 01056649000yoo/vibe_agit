@@ -126,7 +126,7 @@ const RecentActivity = ({ classId, onPostClick, isMobile }) => {
         try {
             const postRequest = supabase
                 .from('student_posts')
-                .select('id, created_at, title, content, char_count, is_confirmed, writing_context, self_writing_type, students(name), writing_missions(title)')
+                .select('id, created_at, title, content, structured_content, char_count, is_confirmed, writing_context, self_writing_type, students(name), writing_missions(title)')
                 .eq('class_id', classId)
                 .eq('id', activity.post_id)
                 .single();

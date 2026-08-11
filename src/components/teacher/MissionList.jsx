@@ -1,7 +1,7 @@
 import React, { memo, useState } from 'react';
 import { motion } from 'framer-motion';
 import Button from '../common/Button';
-import { getGenreMissionType, resolveGenreMissionTypeId } from '../../modules/writing/mission-types/registry';
+import { getGenreMissionType, getGenreMissionTypes, resolveGenreMissionTypeId } from '../../modules/writing/mission-types/registry';
 
 // 컴포넌트 외부로 스타일 상수화 (Optimization 5)
 const EMPTY_STATE_STYLE = { textAlign: 'center', padding: '60px 20px', background: '#F8F9FA', borderRadius: '24px', border: '2px dashed #E9ECEF', width: '100%', boxSizing: 'border-box' };
@@ -155,8 +155,11 @@ const MissionList = ({
     const filters = [
         { id: 'all', label: '전체', count: missions.length },
         { id: 'freeform', label: '자유 글쓰기', count: missions.filter((mission) => !resolveGenreMissionTypeId(mission)).length },
-        { id: 'poem', label: '시 쓰기', count: missions.filter((mission) => resolveGenreMissionTypeId(mission) === 'poem').length },
-        { id: 'meeting', label: '회의 안건', count: missions.filter((mission) => resolveGenreMissionTypeId(mission) === 'meeting').length },
+        ...getGenreMissionTypes().map((missionType) => ({
+            id: missionType.id,
+            label: missionType.name,
+            count: missions.filter((mission) => resolveGenreMissionTypeId(mission) === missionType.id).length,
+        })),
     ];
     const visibleMissions = activeFilter === 'all'
         ? missions
