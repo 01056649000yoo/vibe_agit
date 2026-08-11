@@ -93,6 +93,10 @@ test('기본 자료 300개는 모두 글쓰기 밑줄 규칙을 가진다', () =
     assert.equal(findElementarySpellingIssues('김치찌게를 먹었다.')[0]?.right, '찌개');
     assert.equal(findElementarySpellingIssues('카드로 결재했다.')[0]?.right, '결제');
     assert.equal(findElementarySpellingIssues('카드로 결재했다.')[0]?.label, '결재 / 결제');
+    assert.equal(findElementarySpellingIssues('숙제는 반듯이 해야 해요.')[0]?.right, '반드시');
+    assert.equal(findElementarySpellingIssues('내일 반듯이 참석하세요.')[0]?.right, '반드시');
+    assert.equal(findElementarySpellingIssues('책을 반듯이 놓았어요.').length, 0);
+    assert.equal(findElementarySpellingIssues('책을 반드시 놓아야 해요.').length, 0);
     assert.ok(findElementarySpellingIssues('선생님 말씀데로 따라 했다.')
         .some((issue) => issue.entryId === 'practice-spelling-quiz-100'));
     assert.match(underlineTextarea, /loadElementarySpellingDetector/);

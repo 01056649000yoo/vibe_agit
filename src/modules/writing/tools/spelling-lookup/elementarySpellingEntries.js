@@ -291,7 +291,16 @@ const CONTEXTUAL_REFERENCE_PATTERNS = {
     'natda-nata': [pattern('감기가 낳았다', '낳았다', '나았다'), pattern('새끼를 나았다', '나았다', '낳았다')],
     'machida-matchuda': [pattern('정답을 맞췄다', '맞췄다', '맞혔다'), pattern('시간에 맞혔다', '맞혔다', '맞췄다')],
     'gareuchida-garikida': [pattern('수학을 가리켜', '가리켜', '가르쳐'), pattern('하늘을 가르쳤다', '가르쳤다', '가리켰다')],
-    'bandeusi-bandeusi': [pattern('약속은 반듯이', '반듯이', '반드시')],
+    'bandeusi-bandeusi': [
+        pattern('약속은 반듯이', '반듯이', '반드시'),
+        pattern('약속을 반듯이 지켜', '반듯이', '반드시'),
+        pattern('규칙을 반듯이 지켜', '반듯이', '반드시'),
+        pattern('숙제는 반듯이 해야', '반듯이', '반드시'),
+        pattern('반듯이 기억하', '반듯이', '반드시'),
+        pattern('반듯이 확인하', '반듯이', '반드시'),
+        pattern('반듯이 참석하', '반듯이', '반드시'),
+        pattern('반듯이 제출하', '반듯이', '반드시')
+    ],
     'han-beon': [pattern('한번만', '한번', '한 번')],
     'de-dae': [pattern('전학을 간데', '데', '대'), pattern('맛있데', '데', '대'), pattern('가 봤는대', '대', '데'), pattern('숙제하는 대', '대', '데')],
     ittaga: [pattern('교실에 이따가 집에', '이따가', '있다가')],
