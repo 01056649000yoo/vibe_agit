@@ -83,10 +83,10 @@ const ReportEditor = ({
         return nextDraft;
     };
 
-    const persistSections = async (nextSections) => {
+    const persistSections = async (nextSections, targetPostId = null) => {
         const nextDraft = commitSections(nextSections);
         if (!onPersistDraft) return true;
-        return onPersistDraft(nextDraft);
+        return onPersistDraft(nextDraft, targetPostId);
     };
 
     const updateSection = (sectionId, patch) => {
@@ -148,7 +148,7 @@ const ReportEditor = ({
                     ? { ...item, image: { ...uploaded, caption: item.image?.caption || '' } }
                     : item
             ));
-            const saved = await persistSections(next);
+            const saved = await persistSections(next, draftPostId);
             if (!saved) throw new Error('사진이 들어간 보고서 초안을 저장하지 못했습니다.');
             if (section.image?.path) await removeReportImage(section.image.path);
             setPhotoStatus('사진을 가볍게 줄여 저장했어요.');
@@ -198,7 +198,7 @@ const ReportEditor = ({
             />
 
             <div className="report-editor__intro">
-                <span>칸마다 소제목과 내용을 쓰고, 필요하면 사진을 넣어요.</span>
+                <span>사진은 왼쪽 칸에 알맞게 맞춰지고, 오른쪽에 소제목과 내용을 써요.</span>
                 <span>내용 칸 {sections.length}/{normalizedConfig.maxSections} · 사진 {imageCount}/{normalizedConfig.maxImages}</span>
             </div>
 
@@ -236,60 +236,32 @@ const ReportEditor = ({
                                 )}
                             </header>
 
-                            <SpellingUnderlineInput
-                                value={section.heading}
-                                onChange={(event) => updateSection(section.id, { heading: event.target.value })}
-                                placeholder="이 칸의 소제목"
-                                disabled={disabled}
-                                lang="ko"
-                                style={SECTION_TITLE_STYLE}
-                            />
-                            <div style={{ marginTop: '10px' }}>
-                                <SpellingUnderlineTextarea
-                                    value={section.body}
-                                    onChange={(event) => updateSection(section.id, { body: event.target.value })}
-                                    placeholder="관찰하거나 조사한 사실, 과정, 결과를 자세히 적어보세요."
-                                    disabled={disabled}
-                                    autoCapitalize="sentences"
-                                    lang="ko"
-                                    style={{ ...SECTION_BODY_STYLE, fontSize: isMobile ? '1rem' : '1.08rem' }}
-                                />
-                            </div>
-
-                            {section.image?.path ? (
-                                <div className="report-editor__photo-box">
-                                    {imageUrl ? (
-                                        <img
-                                            src={imageUrl}
-                                            alt={section.image.caption || `${index + 1}번 칸 사진`}
-                                            loading="lazy"
-                                            decoding="async"
-                                        />
-                                    ) : (
-                                        <div className="report-document__image-placeholder">사진을 불러오는 중...</div>
-                                    )}
-                                    <div style={{ marginTop: '8px', color: '#64748B', fontSize: '.74rem', fontWeight: 800 }}>
-                                        웹 최적화 완료 · {Math.max(1, Math.round((section.image.bytes || 0) / 1024))}KB
-                                        {section.image.width && section.image.height ? ` · ${section.image.width}×${section.image.height}px` : ''}
-                                    </div>
-                                    <SpellingUnderlineInput
-                                        value={section.image.caption || ''}
-                                        onChange={(event) => updateSection(section.id, {
-                                            image: { ...section.image, caption: event.target.value },
-                                        })}
-                                        placeholder="사진에서 무엇을 볼 수 있는지 설명해주세요 (필수)"
-                                        disabled={disabled}
-                                        lang="ko"
-                                        style={CAPTION_STYLE}
-                                    />
-                                    {!disabled && (
-                                        <div className="report-editor__photo-actions">
-                                            <label className="report-editor__file-label">
-                                                {isUploading ? '처리 중...' : '사진 바꾸기'}
+                            <div className="report-editor__section-layout">
+                                <div className="report-editor__photo-panel">
+                                    <div className="report-editor__photo-frame">
+                                        {section.image?.path ? (
+                                            imageUrl ? (
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={section.image.caption || `${index + 1}번 칸 사진`}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                />
+                                            ) : (
+                                                <div className="report-document__image-placeholder">사진을 불러오는 중...</div>
+                                            )
+                                        ) : !disabled ? (
+                                            <label
+                                                className="report-editor__file-label report-editor__file-label--frame"
+                                                style={{ opacity: imageCount >= normalizedConfig.maxImages ? .48 : 1 }}
+                                            >
+                                                <span aria-hidden="true">📷</span>
+                                                <span>{isUploading ? '사진 처리 중...' : '사진 넣기'}</span>
+                                                <small>자동으로 칸에 맞춰요</small>
                                                 <input
                                                     type="file"
                                                     accept="image/*"
-                                                    disabled={Boolean(uploadingSectionId)}
+                                                    disabled={Boolean(uploadingSectionId) || imageCount >= normalizedConfig.maxImages}
                                                     onChange={(event) => {
                                                         const file = event.target.files?.[0];
                                                         event.target.value = '';
@@ -297,34 +269,80 @@ const ReportEditor = ({
                                                     }}
                                                 />
                                             </label>
-                                            <button
-                                                type="button"
-                                                className="report-editor__icon-button report-editor__icon-button--danger"
-                                                onClick={() => handleRemovePhoto(section)}
-                                                disabled={Boolean(uploadingSectionId)}
-                                            >사진 빼기</button>
-                                        </div>
+                                        ) : (
+                                            <div className="report-editor__empty-photo">사진 없음</div>
+                                        )}
+                                    </div>
+
+                                    {section.image?.path && (
+                                        <>
+                                            <div className="report-editor__photo-meta">
+                                                최적화 완료 · {Math.max(1, Math.round((section.image.bytes || 0) / 1024))}KB
+                                            </div>
+                                            {!disabled && (
+                                                <div className="report-editor__photo-actions">
+                                                    <label className="report-editor__file-label">
+                                                        {isUploading ? '처리 중...' : '사진 바꾸기'}
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            disabled={Boolean(uploadingSectionId)}
+                                                            onChange={(event) => {
+                                                                const file = event.target.files?.[0];
+                                                                event.target.value = '';
+                                                                handlePhotoChange(section, file);
+                                                            }}
+                                                        />
+                                                    </label>
+                                                    <button
+                                                        type="button"
+                                                        className="report-editor__icon-button report-editor__icon-button--danger"
+                                                        onClick={() => handleRemovePhoto(section)}
+                                                        disabled={Boolean(uploadingSectionId)}
+                                                    >사진 빼기</button>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+
+                                    {isUploading && <div className="report-editor__status" role="status">{photoStatus}</div>}
+                                </div>
+
+                                <div className="report-editor__writing-panel">
+                                    <SpellingUnderlineInput
+                                        value={section.heading}
+                                        onChange={(event) => updateSection(section.id, { heading: event.target.value })}
+                                        placeholder="이 칸의 소제목"
+                                        disabled={disabled}
+                                        lang="ko"
+                                        style={SECTION_TITLE_STYLE}
+                                    />
+                                    <div style={{ marginTop: '10px' }}>
+                                        <SpellingUnderlineTextarea
+                                            value={section.body}
+                                            onChange={(event) => updateSection(section.id, { body: event.target.value })}
+                                            placeholder="관찰하거나 조사한 사실, 과정, 결과를 자세히 적어보세요."
+                                            disabled={disabled}
+                                            autoCapitalize="sentences"
+                                            lang="ko"
+                                            style={{ ...SECTION_BODY_STYLE, fontSize: isMobile ? '1rem' : '1.08rem' }}
+                                        />
+                                    </div>
+
+                                    {section.image?.path && (
+                                        <SpellingUnderlineInput
+                                            value={section.image.caption || ''}
+                                            onChange={(event) => updateSection(section.id, {
+                                                image: { ...section.image, caption: event.target.value },
+                                            })}
+                                            placeholder="사진에서 무엇을 볼 수 있는지 설명해주세요 (필수)"
+                                            disabled={disabled}
+                                            lang="ko"
+                                            style={CAPTION_STYLE}
+                                        />
                                     )}
                                 </div>
-                            ) : !disabled && (
-                                <div className="report-editor__photo-actions">
-                                    <label className="report-editor__file-label" style={{ opacity: imageCount >= normalizedConfig.maxImages ? .48 : 1 }}>
-                                        {isUploading ? '사진 처리 중...' : '＋ 이 칸에 사진 넣기'}
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            disabled={Boolean(uploadingSectionId) || imageCount >= normalizedConfig.maxImages}
-                                            onChange={(event) => {
-                                                const file = event.target.files?.[0];
-                                                event.target.value = '';
-                                                handlePhotoChange(section, file);
-                                            }}
-                                        />
-                                    </label>
-                                </div>
-                            )}
-
-                            {isUploading && <div className="report-editor__status" role="status">{photoStatus}</div>}
+                            </div>
                         </section>
                     );
                 })}

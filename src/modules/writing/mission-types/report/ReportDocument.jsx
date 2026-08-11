@@ -41,28 +41,30 @@ const ReportDocument = ({ structuredContent, content = '', compact = false }) =>
                 return (
                     <section className="report-document__section" key={section.id || index}>
                         <div className="report-document__number" aria-hidden="true">{index + 1}</div>
-                        <div className="report-document__body">
-                            {section.heading?.trim() && <h3>{section.heading}</h3>}
-                            {section.body?.trim() && <p>{section.body}</p>}
+                        <div className={`report-document__body${section.image?.path ? ' report-document__body--with-photo' : ''}`}>
                             {section.image?.path && (
                                 <figure>
-                                    {imageUrl ? (
-                                        <img
-                                            src={imageUrl}
-                                            alt={section.image.caption || `${index + 1}번 보고서 사진`}
-                                            loading="lazy"
-                                            decoding="async"
-                                            width={section.image.width || undefined}
-                                            height={section.image.height || undefined}
-                                        />
-                                    ) : (
-                                        <div className="report-document__image-placeholder">
-                                            {imageLoadFailed ? '사진을 불러오지 못했어요.' : '사진을 불러오는 중...'}
-                                        </div>
-                                    )}
+                                    <div className="report-document__photo-frame">
+                                        {imageUrl ? (
+                                            <img
+                                                src={imageUrl}
+                                                alt={section.image.caption || `${index + 1}번 보고서 사진`}
+                                                loading="lazy"
+                                                decoding="async"
+                                            />
+                                        ) : (
+                                            <div className="report-document__image-placeholder">
+                                                {imageLoadFailed ? '사진을 불러오지 못했어요.' : '사진을 불러오는 중...'}
+                                            </div>
+                                        )}
+                                    </div>
                                     {section.image.caption?.trim() && <figcaption>{section.image.caption}</figcaption>}
                                 </figure>
                             )}
+                            <div className="report-document__copy">
+                                {section.heading?.trim() && <h3>{section.heading}</h3>}
+                                {section.body?.trim() && <p>{section.body}</p>}
+                            </div>
                         </div>
                     </section>
                 );

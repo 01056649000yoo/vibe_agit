@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
     buildReportStructuredContent,
     normalizeReportConfig,
@@ -7,6 +8,28 @@ import {
     reportSectionsToContent,
     validateReportSubmission,
 } from '../src/modules/writing/mission-types/report/reportContent.js';
+
+const [reportEditorSource, studentWritingSource, missionSubmitSource, reportWritingCss] = await Promise.all([
+    readFile('src/modules/writing/mission-types/report/ReportEditor.jsx', 'utf8'),
+    readFile('src/components/student/StudentWriting.jsx', 'utf8'),
+    readFile('src/hooks/useMissionSubmit.js', 'utf8'),
+    readFile('src/modules/writing/mission-types/report/reportWriting.css', 'utf8'),
+]);
+
+test('첫 사진 저장은 생성된 초안 글 ID를 다음 저장까지 유지한다', () => {
+    assert.match(reportEditorSource, /persistSections\(next, draftPostId\)/);
+    assert.match(studentWritingSource, /persistGenreDraft = async \([^)]*targetPostId/);
+    assert.match(studentWritingSource, /handleSave\(false, draft, targetPostId\)/);
+    assert.match(missionSubmitSource, /targetPostId \|\| postId/);
+});
+
+test('보고서 편집 사진은 왼쪽 4대3 고정 프레임에 맞춘다', () => {
+    assert.match(reportEditorSource, /report-editor__section-layout/);
+    assert.match(reportEditorSource, /report-editor__photo-frame/);
+    assert.match(reportWritingCss, /\.report-editor__section-layout[\s\S]*?grid-template-columns/);
+    assert.match(reportWritingCss, /\.report-editor__photo-frame[\s\S]*?aspect-ratio: 4 \/ 3/);
+    assert.match(reportWritingCss, /\.report-editor__photo-frame img[\s\S]*?object-fit: cover/);
+});
 
 test('보고서 기본 틀은 학생이 바로 쓸 수 있는 세 칸으로 열린다', () => {
     const sections = normalizeReportSections(null, '', {});

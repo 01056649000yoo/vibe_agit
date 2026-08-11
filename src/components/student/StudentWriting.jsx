@@ -494,13 +494,16 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
         return savedPostId || null;
     };
 
-    const persistGenreDraft = async ({ structuredContent: nextStructuredContent, content: nextContent }) => {
+    const persistGenreDraft = async (
+        { structuredContent: nextStructuredContent, content: nextContent },
+        targetPostId = null
+    ) => {
         const draft = {
             ...latestDraftRef.current,
             content: nextContent,
             structuredContent: nextStructuredContent,
         };
-        const savedPostId = await handleSave(false, draft);
+        const savedPostId = await handleSave(false, draft, targetPostId);
         if (savedPostId) {
             lastDbSavedDataRef.current = { ...draft, initialized: true };
         }

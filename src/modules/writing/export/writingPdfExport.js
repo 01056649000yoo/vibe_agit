@@ -80,16 +80,20 @@ const renderReportEntry = (entry, imageUrls) => {
                     return `
                         <section class="report-sheet__section">
                             <div class="report-sheet__number">${index + 1}</div>
-                            <div class="report-sheet__section-body">
-                                ${section.heading?.trim() ? `<h2>${escapeHtml(section.heading)}</h2>` : ''}
-                                ${section.body?.trim() ? `<p>${escapeHtml(section.body)}</p>` : ''}
+                            <div class="report-sheet__section-body${section.image?.path ? ' report-sheet__section-body--with-photo' : ''}">
                                 ${section.image?.path ? `
                                     <figure>
-                                        ${imageUrl
-                                            ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(section.image.caption || `${index + 1}번 보고서 사진`)}">`
-                                            : '<div class="report-sheet__image-missing">사진을 불러오지 못했습니다.</div>'}
+                                        <div class="report-sheet__photo-frame">
+                                            ${imageUrl
+                                                ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(section.image.caption || `${index + 1}번 보고서 사진`)}">`
+                                                : '<div class="report-sheet__image-missing">사진을 불러오지 못했습니다.</div>'}
+                                        </div>
                                         ${section.image.caption?.trim() ? `<figcaption>${escapeHtml(section.image.caption)}</figcaption>` : ''}
                                     </figure>` : ''}
+                                <div class="report-sheet__copy">
+                                    ${section.heading?.trim() ? `<h2>${escapeHtml(section.heading)}</h2>` : ''}
+                                    ${section.body?.trim() ? `<p>${escapeHtml(section.body)}</p>` : ''}
+                                </div>
                             </div>
                         </section>`;
                 }).join('')}
@@ -208,7 +212,13 @@ export const buildWritingPdfHtml = ({
             font-size: 12pt;
             font-weight: 900;
         }
-        .report-sheet__section-body { min-width: 0; }
+        .report-sheet__section-body, .report-sheet__copy { min-width: 0; }
+        .report-sheet__section-body--with-photo {
+            display: grid;
+            grid-template-columns: 44mm minmax(0, 1fr);
+            align-items: start;
+            gap: 5mm;
+        }
         .report-sheet h2 {
             margin: 0 0 2.5mm;
             color: #134E4A;
@@ -229,18 +239,25 @@ export const buildWritingPdfHtml = ({
             widows: 3;
         }
         .report-sheet figure {
-            margin: 5mm 0 0;
+            min-width: 0;
+            margin: 0;
             break-inside: avoid;
             page-break-inside: avoid;
         }
-        .report-sheet img {
-            display: block;
-            max-width: 100%;
-            max-height: 92mm;
-            margin: 0 auto;
+        .report-sheet__photo-frame {
+            width: 44mm;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
             border: .35mm solid #D8E4E2;
             border-radius: 3mm;
-            object-fit: contain;
+            background: #F1F5F9;
+        }
+        .report-sheet__photo-frame img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
         }
         .report-sheet figcaption {
             margin-top: 2.5mm;
@@ -252,12 +269,12 @@ export const buildWritingPdfHtml = ({
         }
         .report-sheet__image-missing {
             display: grid;
-            min-height: 36mm;
+            width: 100%;
+            height: 100%;
             place-items: center;
-            border: .35mm dashed #94A3B8;
-            border-radius: 3mm;
             color: #64748B;
             font-size: 12pt;
+            text-align: center;
         }
     </style>
 </head>

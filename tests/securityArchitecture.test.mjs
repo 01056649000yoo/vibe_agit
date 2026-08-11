@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportImageApi, writingPdfMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -11,6 +11,7 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261014_security_boundary_hardening.sql', 'utf8'),
     readFile('supabase/migrations/20261018_report_writing_images.sql', 'utf8'),
     readFile('supabase/migrations/20261019_report_image_storage_optimization.sql', 'utf8'),
+    readFile('supabase/migrations/20261021_report_image_upsert_validation.sql', 'utf8'),
     readFile('src/modules/writing/mission-types/report/reportImageApi.js', 'utf8'),
     readFile('supabase/migrations/20261020_writing_pdf_export.sql', 'utf8')
 ]);
@@ -75,5 +76,11 @@ test('보고서 사진은 비공개 저장소와 실제 글 공개 상태로 보
     assert.match(reportMigration, /class\.teacher_id = auth\.uid\(\)/);
     assert.match(reportMigration, /mission\.input_template = 'report'/);
     assert.match(reportMigration, /validate_report_post_structure/);
+    assert.match(reportUpsertMigration, /TG_OP = 'INSERT'/);
+    assert.match(reportUpsertMigration, /post\.student_id = NEW\.student_id/);
+    assert.match(reportUpsertMigration, /post\.mission_id = NEW\.mission_id/);
+    assert.match(reportUpsertMigration, /v_expected_post_id := COALESCE\(v_existing_post_id, NEW\.id\)/);
+    assert.match(reportUpsertMigration, /v_path !~ \('\^' \|\| v_expected_post_id::TEXT/);
     assert.doesNotMatch(reportMigration, /app_metadata|auth\.jwt/);
+    assert.doesNotMatch(reportUpsertMigration, /app_metadata|auth\.jwt/);
 });

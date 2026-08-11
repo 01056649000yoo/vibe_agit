@@ -12,17 +12,7 @@ const canvasToBlob = (canvas, type, quality) => new Promise((resolve, reject) =>
     }, type, quality);
 });
 
-const loadImageSource = async (file) => {
-    if (typeof createImageBitmap === 'function') {
-        const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-        return {
-            source: bitmap,
-            width: bitmap.width,
-            height: bitmap.height,
-            release: () => bitmap.close?.(),
-        };
-    }
-
+const loadWithImageElement = async (file) => {
     const objectUrl = URL.createObjectURL(file);
     try {
         const image = await new Promise((resolve, reject) => {
@@ -41,6 +31,30 @@ const loadImageSource = async (file) => {
         URL.revokeObjectURL(objectUrl);
         throw error;
     }
+};
+
+const loadImageSource = async (file) => {
+    if (typeof createImageBitmap === 'function') {
+        try {
+            let bitmap;
+            try {
+                bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+            } catch {
+                bitmap = await createImageBitmap(file);
+            }
+            return {
+                source: bitmap,
+                width: bitmap.width,
+                height: bitmap.height,
+                release: () => bitmap.close?.(),
+            };
+        } catch {
+            // 태블릿 브라우저가 API는 제공하지만 특정 사진 형식이나 회전 옵션을
+            // 처리하지 못하는 경우 일반 이미지 디코더로 한 번 더 시도한다.
+        }
+    }
+
+    return loadWithImageElement(file);
 };
 
 const drawResized = (source, width, height) => {

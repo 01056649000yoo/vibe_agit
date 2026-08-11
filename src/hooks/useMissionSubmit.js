@@ -170,7 +170,7 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     }, [missionId, requestedPostId]);
 
     // 임시 저장 처리
-    const handleSave = async (showMsg = true, draftOverride = null) => {
+    const handleSave = async (showMsg = true, draftOverride = null, targetPostId = null) => {
         // [보안 강화] Supabase 세션에서만 studentId 가져오기 - localStorage 폴백 제거
         const currentStudentId = studentId;
         if (!currentStudentId) {
@@ -192,9 +192,11 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
         try {
             const draft = draftOverride || { title, content, studentAnswers, structuredContent };
             const missionType = getGenreMissionType(mission?.input_template);
+            const knownPostId = targetPostId || postId;
             const { data: savedPost, error } = await supabase
                 .from('student_posts')
                 .upsert({
+                    ...(knownPostId ? { id: knownPostId } : {}),
                     student_id: currentStudentId,
                     mission_id: missionId,
                     title: draft.title.trim(),
