@@ -8,6 +8,7 @@ import ExportSelectModal from '../common/ExportSelectModal';
 import ModalCloseButton from '../common/ModalCloseButton';
 import { dataCache } from '../../lib/cache';
 import TeacherGuideButton from './TeacherGuideButton';
+import { isReportPdfMission } from '../../modules/writing/mission-types/report/reportPdfModes';
 
 const ARCHIVE_PAGE_SIZE = 50;
 
@@ -36,7 +37,12 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
     const [exportTarget, setExportTarget] = useState(null);
 
     const handleExportClick = (mission) => {
-        setExportTarget({ type: 'mission', id: mission.id, title: mission.title });
+        setExportTarget({
+            type: 'mission',
+            id: mission.id,
+            title: mission.title,
+            showReportPdfOptions: isReportPdfMission(mission),
+        });
         setExportModalOpen(true);
     };
 
@@ -53,7 +59,8 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
         setExportTarget({
             type: 'bulk_missions',
             ids: selectedMissionIds, // 이미 클릭 순서대로 저장되어 있음
-            title: selectedTitles.join(', ')
+            title: selectedTitles.join(', '),
+            showReportPdfOptions: selectedMissions.some(isReportPdfMission),
         });
         setExportModalOpen(true);
     };
@@ -707,7 +714,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                 onConfirm={handleExportConfirm}
                 isGapiLoaded={isGapiLoaded}
                 isBulk={exportTarget?.type === 'bulk_missions'}
-                showReportPdfOptions
+                showReportPdfOptions={Boolean(exportTarget?.showReportPdfOptions)}
             />
         </div>
     );

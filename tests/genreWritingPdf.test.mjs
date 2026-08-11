@@ -6,6 +6,7 @@ import {
     buildWritingPdfHtml,
     normalizeWritingPdfEntry,
 } from '../src/modules/writing/export/writingPdfExport.js';
+import { isReportPdfMission } from '../src/modules/writing/mission-types/report/reportPdfModes.js';
 
 const POEM_ITEM = {
     작성자: '김하늘',
@@ -50,6 +51,12 @@ test('공용 PDF 출력기는 장르 이름을 하드코딩하지 않고 매니�
     assert.match(source, /getGenreMissionType\(entry\.inputTemplate\)\?\.pdfExport/);
     assert.match(source, /pdfExport\.renderEntry/);
     assert.doesNotMatch(source, /entry\.inputTemplate === ['"](?:poem|report)['"]/);
+});
+
+test('시 과제는 보고서 양식 선택 대상이 아니며 보고서만 두 양식을 고른다', () => {
+    assert.equal(isReportPdfMission({ input_template: 'poem', genre: '시' }), false);
+    assert.equal(isReportPdfMission({ input_template: 'report', genre: '보고하는 글' }), true);
+    assert.equal(isReportPdfMission({ genre: '보고하는 글' }), true);
 });
 
 test('시 PDF는 제목·지은이와 연 단위 시구를 시 형식으로 정렬한다', async () => {

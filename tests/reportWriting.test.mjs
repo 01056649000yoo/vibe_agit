@@ -69,7 +69,9 @@ test('보고서 PDF는 질문 포함 지도형과 질문 없는 완성본을 선
     assert.match(exportSelectSource, /질문 포함 지도형/);
     assert.match(exportSelectSource, /질문 없는 완성본/);
     assert.match(exportSelectSource, /reportPdfMode/);
-    assert.match(archiveManagerSource, /showReportPdfOptions/);
+    assert.match(archiveManagerSource, /showReportPdfOptions: isReportPdfMission\(mission\)/);
+    assert.match(archiveManagerSource, /showReportPdfOptions: selectedMissions\.some\(isReportPdfMission\)/);
+    assert.match(archiveManagerSource, /showReportPdfOptions=\{Boolean\(exportTarget\?\.showReportPdfOptions\)\}/);
     assert.match(studentManagerSource, /showReportPdfOptions/);
     assert.match(archiveManagerSource, /reportMode: options\.reportPdfMode/);
     assert.match(studentManagerHookSource, /reportMode: options\.reportPdfMode/);
