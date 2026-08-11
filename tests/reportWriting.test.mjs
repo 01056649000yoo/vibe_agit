@@ -13,6 +13,7 @@ const [
     reportEditorSource,
     reportDocumentSource,
     writingPdfSource,
+    reportPdfSource,
     studentWritingSource,
     missionSubmitSource,
     reportWritingCss,
@@ -25,6 +26,7 @@ const [
     readFile('src/modules/writing/mission-types/report/ReportEditor.jsx', 'utf8'),
     readFile('src/modules/writing/mission-types/report/ReportDocument.jsx', 'utf8'),
     readFile('src/modules/writing/export/writingPdfExport.js', 'utf8'),
+    readFile('src/modules/writing/mission-types/report/reportPdfExport.js', 'utf8'),
     readFile('src/components/student/StudentWriting.jsx', 'utf8'),
     readFile('src/hooks/useMissionSubmit.js', 'utf8'),
     readFile('src/modules/writing/mission-types/report/reportWriting.css', 'utf8'),
@@ -57,10 +59,10 @@ test('보고서 한 칸은 사진과 관찰 결과 글쓰기 창 하나만 보�
     assert.doesNotMatch(reportEditorSource, /사진에서 무엇을 볼 수 있는지 설명해주세요/);
     assert.doesNotMatch(reportEditorSource, /SECTION_TITLE_STYLE|CAPTION_STYLE/);
     assert.doesNotMatch(reportDocumentSource, /<figcaption>|<h3>/);
-    assert.doesNotMatch(writingPdfSource, /<figcaption>/);
-    assert.match(writingPdfSource, /교사의 질문/);
-    assert.match(writingPdfSource, /보고서 내용/);
-    assert.match(writingPdfSource, /report-sheet__question[\s\S]*?report-sheet__response/);
+    assert.doesNotMatch(reportPdfSource, /<figcaption>/);
+    assert.match(reportPdfSource, /교사의 질문/);
+    assert.match(reportPdfSource, /보고서 내용/);
+    assert.match(reportPdfSource, /report-sheet__question[\s\S]*?report-sheet__response/);
 });
 
 test('보고서 PDF는 질문 포함 지도형과 질문 없는 완성본을 선택해 내보낸다', () => {

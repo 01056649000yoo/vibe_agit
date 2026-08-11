@@ -118,6 +118,16 @@
 - 글쓰기를 독립 교과처럼 평가하지 않는다. 실제 평가 결과·교사 의견과 교사가 고른 국어 성취기준으로
   기존 국어 평어의 앞뒤에 붙일 짧은 문장만 생성한다.
 
+### 장르형 글쓰기 PDF
+- 일반 글 PDF는 공용 양식을 유지한다. `studentEditorEntry`로 별도 학생 입력 틀을 추가하는 장르는 같은 작업에서
+  장르 전용 PDF도 반드시 등록한다. 매니페스트에 `usesStructuredContent: true`와 지연 로딩 `pdfExport { id, load }`를
+  두고, `load()`가 반환하는 `renderEntry`와 인쇄 `styles`는 해당 장르 폴더가 소유한다.
+- 공용 `writingPdfExport.js`에 장르별 분기를 하드코딩하지 않는다. `input_template` 또는 구조화 콘텐츠의
+  `template`으로 매니페스트 렌더러를 찾는다. 사진 같은 지연 자산은 장르 렌더러의 수집·로딩 훅으로만 연결한다.
+- 12pt 미만 축소 금지, 긴 글의 자연스러운 페이지 넘김, 과거 평문 호환을 지킨다. `tests/genreWritingPdf.test.mjs`에
+  계약·구조·호환 회귀 검사를 추가하고 실제 A4 PDF를 렌더링해 확인한다. 상세 계약은
+  `src/modules/writing/export/README.md`를 읽는다.
+
 ## DB 마이그레이션 (2026-08-04 도구화)
 - **적용 여부는 추측하지 말고 물어본다**: `npm run migrate:status` — 아직 적용 안 된 파일만 보여준다(DB를 건드리지 않음).
 - **적용**: `npm run migrate` — 안 된 것만 파일명 순서대로 적용하고 `public.applied_migrations` 에 기록한다.

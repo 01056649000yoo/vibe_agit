@@ -3,7 +3,7 @@ import {
     normalizeReportSections,
     REPORT_TEMPLATE_ID,
     validateReportSubmission,
-} from './reportContent';
+} from './reportContent.js';
 
 export const reportMissionType = {
     id: REPORT_TEMPLATE_ID,
@@ -12,6 +12,11 @@ export const reportMissionType = {
     description: '글과 사진을 칸별로 정리하고 순서를 바꾸어 보고서를 만듭니다.',
     teacherEntry: () => import('./ReportMissionForm'),
     studentEditorEntry: () => import('./ReportEditor'),
+    usesStructuredContent: true,
+    pdfExport: {
+        id: REPORT_TEMPLATE_ID,
+        load: () => import('./reportPdfExport.js').then((module) => module.reportPdfExport),
+    },
     supportsEvaluation: true,
     unitLabel: '내용 칸',
     skipGenericParagraphValidation: true,

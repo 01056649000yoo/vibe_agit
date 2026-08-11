@@ -1,9 +1,8 @@
-const getWrittenStanzas = (structuredContent, content) => {
-    const stanzas = Array.isArray(structuredContent?.stanzas)
-        ? structuredContent.stanzas
-        : (content?.trim() ? content.split(/\n\s*\n/) : []);
-    return stanzas.filter((stanza) => stanza?.trim());
-};
+import { normalizePoemStanzas } from './poemContent.js';
+
+const getWrittenStanzas = (structuredContent, content) => (
+    normalizePoemStanzas(structuredContent, content)
+);
 
 export const poemMissionType = {
     id: 'poem',
@@ -12,6 +11,11 @@ export const poemMissionType = {
     description: '제목과 쓴이를 표시하고 연을 나누어 시를 씁니다.',
     teacherEntry: () => import('./PoemMissionForm'),
     studentEditorEntry: () => import('./PoemEditor'),
+    usesStructuredContent: true,
+    pdfExport: {
+        id: 'poem',
+        load: () => import('./poemPdfExport.js').then((module) => module.poemPdfExport),
+    },
     supportsEvaluation: true,
     unitLabel: '연 수',
     skipGenericParagraphValidation: true,

@@ -52,7 +52,7 @@ test('새 콘텐츠 프로필이 아직 없어도 공용 과제형 안전 프로
     assert.equal(profile.sheetName, '글 모음');
 });
 
-test('일반 글 PDF는 제목·글쓴이·본문을 12포인트 A4 양식으로 만든다', () => {
+test('일반 글 PDF는 제목·글쓴이·본문을 12포인트 A4 양식으로 만든다', async () => {
     const item = {
         작성자: '김학생',
         미션제목: '우리 동네 이야기',
@@ -61,7 +61,7 @@ test('일반 글 PDF는 제목·글쓴이·본문을 12포인트 A4 양식으로
         내용: '첫 문단입니다.\n\n둘째 문단입니다.'
     };
     const entry = normalizeWritingPdfEntry(item, 'assignment');
-    const html = buildWritingPdfHtml({ items: [item], title: '일반 글 모음' });
+    const html = await buildWritingPdfHtml({ items: [item], title: '일반 글 모음' });
 
     assert.equal(entry.author, '김학생');
     assert.match(html, /@page \{ size: A4 portrait/);
@@ -97,17 +97,17 @@ const REPORT_ITEM = {
     }
 };
 
-test('질문 포함 보고서 PDF는 질문을 한 줄형 안내 바에 두고 사진과 답변을 균형 있게 배치한다', () => {
+test('질문 포함 보고서 PDF는 질문을 한 줄형 안내 바에 두고 사진과 답변을 균형 있게 배치한다', async () => {
     const path = '11111111-1111-1111-1111-111111111111/section-1/photo.webp';
     const imageUrls = new Map([[path, 'https://example.test/signed-photo.webp?token=a&b=2']]);
-    const html = buildWritingPdfHtml({
+    const html = await buildWritingPdfHtml({
         items: [REPORT_ITEM],
         title: '보고서 모음',
         imageUrls,
         reportMode: REPORT_PDF_MODE_GUIDED,
     });
 
-    assert.deepEqual(collectWritingPdfImagePaths([REPORT_ITEM]), [path]);
+    assert.deepEqual(await collectWritingPdfImagePaths([REPORT_ITEM]), [path]);
     assert.equal(WRITING_PDF_MAX_ENTRIES, 100);
     assert.match(html, /pdf-entry--report-guided/);
     assert.match(html, /report-sheet__section/);
@@ -135,9 +135,9 @@ test('질문 포함 보고서 PDF는 질문을 한 줄형 안내 바에 두고 �
     assert.doesNotMatch(html, /font-size: (?:[0-9]|1[01])pt/);
 });
 
-test('질문 없는 완성 보고서 PDF는 사진과 학생 글만 정돈해 보여준다', () => {
+test('질문 없는 완성 보고서 PDF는 사진과 학생 글만 정돈해 보여준다', async () => {
     const path = REPORT_ITEM._structuredContent.sections.at(0).image.path;
-    const html = buildWritingPdfHtml({
+    const html = await buildWritingPdfHtml({
         items: [REPORT_ITEM],
         title: '완성 보고서 모음',
         imageUrls: new Map([[path, 'https://example.test/final-photo.webp']]),

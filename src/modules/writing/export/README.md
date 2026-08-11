@@ -7,7 +7,7 @@
 1. `get_teacher_writing_content_export`: 학급·학생·글 유형을 검증하고 공용 행 계약을 반환한다.
 2. `writingExportProfiles.js`: 콘텐츠별 Excel 열과 Google Docs 제목·메타정보를 정한다.
 3. `useDataExport.js`: Google 권한과 Docs API 요청을 담당하고, XLSX 생성은 공용 `excelExport`를 사용한다.
-4. `writingPdfExport.js`: 브라우저 인쇄 엔진으로 일반 글과 보고서를 각각의 A4 양식에 배치한다.
+4. `writingPdfExport.js`: 일반 글 A4 셸을 유지하고, 장르형 글은 미션 매니페스트의 `pdfExport` 계약에 맡긴다.
 
 미션 내보내기의 기존 `get_writing_export_data` 호출부는 운영 호환을 위해 유지한다. 신규 콘텐츠와 독서록은
 공용 계약을 사용하고, 미션도 후속 회귀 검증 뒤 같은 계약으로 옮길 수 있다.
@@ -37,8 +37,51 @@
 
 - 서버에서 PDF를 만들지 않는다. 교사가 내보내기를 눌렀을 때만 브라우저에서 A4 문서를 만들고 인쇄 창을 열며,
   `PDF로 저장`과 실제 프린터 출력을 같은 흐름으로 제공한다.
-- 일반 글은 제목·글쓴이·과제/콘텐츠명·본문 양식을, 보고하는 글은 내용 칸·사진·사진 설명 양식을 쓴다.
+- 일반 글은 제목·글쓴이·과제/콘텐츠명·본문 양식을 그대로 쓴다. 별도 학생 입력 틀이 있는 장르형 글은 그 틀의
+  의미 구조를 살린 전용 PDF를 쓴다. 현재 시는 제목·지은이·연 단위 시구, 보고서는 질문·사진·관찰 결과 구조다.
 - 본문과 설명은 12pt 아래로 줄이지 않는다. 한 페이지를 넘는 긴 글은 브라우저 인쇄 엔진이 다음 페이지로 자연스럽게
   이어 붙이며, 사진과 사진 설명은 가능한 한 같은 페이지에 둔다.
 - 한 번에 최대 100편만 만든다. 보고서 비공개 사진 주소는 PDF 출력을 누른 순간 최대 50개씩 서명하고, 입력 중이나
   목록을 보는 동안에는 사진을 미리 불러오지 않는다.
+
+## 장르형 글쓰기 PDF 추가 규칙 (필수)
+
+`studentEditorEntry`로 일반 본문 입력과 다른 학생용 글쓰기 틀을 등록했다면 같은 작업에서 PDF 양식도 반드시
+추가한다. 화면만 만들고 내보내기를 일반 글 양식에 맡긴 상태로 완료 처리하지 않는다.
+
+1. 장르 폴더에 `<장르>PdfExport.js`를 두고, 매니페스트에 `usesStructuredContent: true`와 `pdfExport`를 선언한다.
+2. 매니페스트의 `pdfExport`는 미션 타입과 같은 `id`, 교사가 내보내기를 누를 때만 실행되는 `load()`를 둔다.
+   `load()`가 반환하는 장르 PDF 객체는 아래 계약을 지킨다.
+   - `id`: 미션 타입 ID와 동일한 값
+   - `renderEntry(entry, context)`: 제목·지은이와 장르 구조를 A4 HTML로 반환
+   - `styles`: 해당 장르에서만 필요한 인쇄 CSS 문자열
+   - 사진 같은 지연 자산이 있으면 `collectImagePaths(entry)`와 `loadImageUrls(entries)`도 함께 제공
+3. 공용 `writingPdfExport.js`에 장르별 `if/switch`를 추가하지 않는다. 공용부는 `input_template` 또는
+   `structured_content.template`로 매니페스트를 찾아 렌더러를 호출한다.
+4. 구조화 데이터가 없는 과거 글도 평문에서 장르 구조를 복원하는 호환 경로를 둔다. 시는 빈 줄을 연 경계로 본다.
+5. 글자는 12pt 아래로 줄이지 않고, 제목·지은이·본문의 시각 계층과 장르 단위를 유지한다. 긴 글은 억지로 축소하지
+   않고 다음 페이지로 넘기며 한 연·한 사진 칸처럼 의미가 이어지는 단위는 가능한 한 페이지 사이에서 나누지 않는다.
+6. `tests/genreWritingPdf.test.mjs`에 장르 매니페스트 계약, 구조화 데이터, 과거 글 호환, HTML 순서·글자 크기
+   회귀 검사를 추가한다. 이 파일은 `npm run test:architecture`에 포함되어 있어 전용 PDF 누락 시 빌드가 실패한다.
+7. 완료 전 Chrome 인쇄 엔진 또는 Poppler로 실제 A4 PDF를 만들고 다시 렌더링해 페이지 수, 줄바꿈, 잘림·겹침,
+   한글 표시와 12pt 이상 글자를 눈으로 확인한다.
+
+예시:
+
+```js
+export const exampleMissionType = {
+    id: 'example',
+    studentEditorEntry: () => import('./ExampleEditor'),
+    usesStructuredContent: true,
+    pdfExport: {
+        id: 'example',
+        load: () => import('./examplePdfExport.js').then((module) => module.examplePdfExport),
+    },
+};
+
+export const examplePdfExport = {
+    id: 'example',
+    renderEntry,
+    styles,
+};
+```

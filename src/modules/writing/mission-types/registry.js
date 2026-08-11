@@ -1,6 +1,6 @@
-import { poemMissionType } from './poem/manifest';
-import { reportMissionType } from './report/manifest';
-import { meetingMissionType } from '../idea-market/missionTypeManifest';
+import { poemMissionType } from './poem/manifest.js';
+import { reportMissionType } from './report/manifest.js';
+import { meetingMissionType } from '../idea-market/missionTypeManifest.js';
 
 const genreMissionTypes = [
     poemMissionType,
