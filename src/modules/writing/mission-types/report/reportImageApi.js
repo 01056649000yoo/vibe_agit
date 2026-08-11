@@ -2,8 +2,8 @@ import { supabase } from '../../../../lib/supabaseClient';
 
 export const REPORT_IMAGE_BUCKET = 'report-images';
 export const REPORT_IMAGE_MAX_SOURCE_BYTES = 20 * 1024 * 1024;
-export const REPORT_IMAGE_MAX_STORED_BYTES = 1536 * 1024;
-export const REPORT_IMAGE_MAX_EDGE = 1600;
+export const REPORT_IMAGE_MAX_STORED_BYTES = 256 * 1024;
+export const REPORT_IMAGE_MAX_EDGE = 720;
 
 const canvasToBlob = (canvas, type, quality) => new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -70,11 +70,11 @@ export const optimizeReportImage = async (file) => {
         const initialScale = Math.min(1, REPORT_IMAGE_MAX_EDGE / Math.max(loaded.width, loaded.height));
         let width = Math.max(1, Math.round(loaded.width * initialScale));
         let height = Math.max(1, Math.round(loaded.height * initialScale));
-        let quality = 0.82;
+        let quality = 0.64;
         let blob = null;
         let outputType = 'image/webp';
 
-        for (let attempt = 0; attempt < 5; attempt += 1) {
+        for (let attempt = 0; attempt < 6; attempt += 1) {
             const canvas = drawResized(loaded.source, width, height);
             blob = await canvasToBlob(canvas, outputType, quality);
             if (attempt === 0 && blob.type !== outputType) {
@@ -85,7 +85,7 @@ export const optimizeReportImage = async (file) => {
             const shrink = Math.max(0.68, Math.sqrt(REPORT_IMAGE_MAX_STORED_BYTES / blob.size) * 0.94);
             width = Math.max(1, Math.round(width * shrink));
             height = Math.max(1, Math.round(height * shrink));
-            quality = Math.max(0.64, quality - 0.06);
+            quality = Math.max(0.42, quality - 0.06);
         }
 
         if (!blob || blob.size > REPORT_IMAGE_MAX_STORED_BYTES) {

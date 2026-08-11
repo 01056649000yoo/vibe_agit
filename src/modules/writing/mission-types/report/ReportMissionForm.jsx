@@ -9,6 +9,7 @@ import {
     REPORT_MAX_IMAGES,
     REPORT_MAX_SECTIONS,
 } from './reportContent';
+import { REPORT_IMAGE_MAX_EDGE, REPORT_IMAGE_MAX_STORED_BYTES } from './reportImageApi';
 
 const MissionStudentPreview = React.lazy(() => import('../../../../components/teacher/MissionStudentPreview'));
 
@@ -139,8 +140,8 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
                     min_sections: minSections,
                     max_sections: REPORT_MAX_SECTIONS,
                     max_images: clampNumber(form.max_images, 1, REPORT_MAX_IMAGES),
-                    image_max_edge: 1600,
-                    image_max_bytes: 1536 * 1024,
+                    image_max_edge: REPORT_IMAGE_MAX_EDGE,
+                    image_max_bytes: REPORT_IMAGE_MAX_STORED_BYTES,
                 },
                 min_chars: clampNumber(form.min_chars, 0, 10000),
                 min_paragraphs: minSections,

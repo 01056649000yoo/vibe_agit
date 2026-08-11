@@ -2,14 +2,16 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportImageApi] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
     readFile('src/store/useAuthStore.js', 'utf8'),
     readFile('Caddyfile.container', 'utf8'),
     readFile('supabase/migrations/20261014_security_boundary_hardening.sql', 'utf8'),
-    readFile('supabase/migrations/20261018_report_writing_images.sql', 'utf8')
+    readFile('supabase/migrations/20261018_report_writing_images.sql', 'utf8'),
+    readFile('supabase/migrations/20261019_report_image_storage_optimization.sql', 'utf8'),
+    readFile('src/modules/writing/mission-types/report/reportImageApi.js', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -55,6 +57,9 @@ test('권한 판정은 JWT app_metadata를 신뢰하지 않는다', () => {
 
 test('보고서 사진은 비공개 저장소와 실제 글 공개 상태로 보호한다', () => {
     assert.match(reportMigration, /'report-images',[\s\S]*?false,[\s\S]*?1572864/);
+    assert.match(reportStorageMigration, /'report-images',[\s\S]*?false,[\s\S]*?262144/);
+    assert.match(reportImageApi, /REPORT_IMAGE_MAX_STORED_BYTES = 256 \* 1024/);
+    assert.match(reportImageApi, /REPORT_IMAGE_MAX_EDGE = 720/);
     assert.match(reportMigration, /post\.student_id = public\.auth_student_id\(\)/);
     assert.match(reportMigration, /post\.is_submitted IS TRUE[\s\S]*?post\.visibility = 'class'/);
     assert.match(reportMigration, /class\.teacher_id = auth\.uid\(\)/);
