@@ -70,7 +70,7 @@ test('일반 글 PDF는 제목·글쓴이·본문을 12포인트 A4 양식으로
     assert.doesNotMatch(html, /font-size: (?:[0-9]|1[01])pt/);
 });
 
-test('보고서 PDF는 사진과 관찰 결과를 단순한 별도 양식으로 만든다', () => {
+test('보고서 PDF는 왼쪽 사진과 오른쪽 교사 질문·보고서 내용 양식으로 만든다', () => {
     const path = '11111111-1111-1111-1111-111111111111/section-1/photo.webp';
     const item = {
         작성자: '이학생',
@@ -105,10 +105,18 @@ test('보고서 PDF는 사진과 관찰 결과를 단순한 별도 양식으로 
     assert.match(html, /report-sheet__section/);
     assert.match(html, /report-sheet__section-body--with-photo/);
     assert.match(html, /report-sheet__photo-frame/);
-    assert.match(html, /grid-template-columns: 68mm minmax\(0, 1fr\)/);
-    assert.match(html, /width: 68mm/);
+    assert.match(html, /report-sheet__question/);
+    assert.match(html, /교사의 질문/);
+    assert.match(html, /관찰 결과/);
+    assert.match(html, /report-sheet__answer/);
+    assert.match(html, /보고서 내용/);
+    assert.ok(html.indexOf('관찰 결과') < html.indexOf('새잎이 두 장 나왔습니다.'));
+    assert.match(html, /grid-template-columns: 56mm minmax\(0, 1fr\)/);
+    assert.match(html, /width: 56mm/);
+    assert.match(html, /aspect-ratio: 5 \/ 4/);
     assert.match(html, /object-fit: cover/);
     assert.match(html, /signed-photo.webp\?token=a&amp;b=2/);
-    assert.match(html, /관찰 셋째 날 봉선화/);
+    assert.doesNotMatch(html, /width: 68mm/);
+    assert.doesNotMatch(html, /font-size: (?:[0-9]|1[01])pt/);
 });
 

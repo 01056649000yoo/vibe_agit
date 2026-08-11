@@ -77,6 +77,7 @@ const renderReportEntry = (entry, imageUrls) => {
             <main class="report-sheet">
                 ${sections.map((section, index) => {
                     const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
+                    const question = section.heading?.trim() || '';
                     const observation = section.body?.trim() || section.image?.caption?.trim() || '';
                     return `
                         <section class="report-sheet__section">
@@ -91,7 +92,16 @@ const renderReportEntry = (entry, imageUrls) => {
                                         </div>
                                     </figure>` : ''}
                                 <div class="report-sheet__copy">
-                                    ${observation ? `<p>${escapeHtml(observation)}</p>` : ''}
+                                    ${question ? `
+                                        <div class="report-sheet__question">
+                                            <span class="report-sheet__label">교사의 질문</span>
+                                            <h2>${escapeHtml(question)}</h2>
+                                        </div>` : ''}
+                                    ${observation ? `
+                                        <div class="report-sheet__answer">
+                                            <span class="report-sheet__label">보고서 내용</span>
+                                            <p>${escapeHtml(observation)}</p>
+                                        </div>` : ''}
                                 </div>
                             </div>
                         </section>`;
@@ -214,9 +224,39 @@ export const buildWritingPdfHtml = ({
         .report-sheet__section-body, .report-sheet__copy { min-width: 0; }
         .report-sheet__section-body--with-photo {
             display: grid;
-            grid-template-columns: 68mm minmax(0, 1fr);
+            grid-template-columns: 56mm minmax(0, 1fr);
             align-items: start;
-            gap: 5mm;
+            gap: 6mm;
+        }
+        .report-sheet__copy {
+            display: flex;
+            flex-direction: column;
+            gap: 4mm;
+        }
+        .report-sheet__question {
+            padding: 3mm 4mm;
+            border-left: 1.2mm solid #14B8A6;
+            border-radius: 0 2.5mm 2.5mm 0;
+            background: #F0FDFA;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        .report-sheet__question h2 {
+            margin: 0;
+            color: #134E4A;
+            font-size: 13pt;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+        .report-sheet__label {
+            display: block;
+            margin-bottom: 1mm;
+            color: #0F766E;
+            font-size: 12pt;
+            font-weight: 800;
+        }
+        .report-sheet__answer {
+            min-width: 0;
         }
         .report-sheet p {
             margin: 0;
@@ -235,8 +275,8 @@ export const buildWritingPdfHtml = ({
             page-break-inside: avoid;
         }
         .report-sheet__photo-frame {
-            width: 68mm;
-            aspect-ratio: 4 / 3;
+            width: 56mm;
+            aspect-ratio: 5 / 4;
             overflow: hidden;
             border: .35mm solid #D8E4E2;
             border-radius: 3mm;

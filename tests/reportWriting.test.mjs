@@ -40,7 +40,9 @@ test('보고서 한 칸은 사진과 관찰 결과 글쓰기 창 하나만 보�
     assert.doesNotMatch(reportEditorSource, /사진에서 무엇을 볼 수 있는지 설명해주세요/);
     assert.doesNotMatch(reportEditorSource, /SECTION_TITLE_STYLE|CAPTION_STYLE/);
     assert.doesNotMatch(reportDocumentSource, /<figcaption>|<h3>/);
-    assert.doesNotMatch(writingPdfSource, /<figcaption>|<h2>/);
+    assert.doesNotMatch(writingPdfSource, /<figcaption>/);
+    assert.match(writingPdfSource, /교사의 질문/);
+    assert.match(writingPdfSource, /보고서 내용/);
 });
 
 test('보고서 기본 틀은 학생이 바로 쓸 수 있는 세 칸으로 열린다', () => {
