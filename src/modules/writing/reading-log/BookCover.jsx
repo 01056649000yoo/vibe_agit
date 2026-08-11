@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
+import { normalizeBookCoverUrl } from './bookCoverUrl';
 
 const BookCover = ({ src, title, size = 'md' }) => {
-    const [imageFailed, setImageFailed] = useState(false);
+    const [failedSrc, setFailedSrc] = useState('');
+    const optimizedSrc = normalizeBookCoverUrl(src);
+    const imageFailed = failedSrc === optimizedSrc;
     const dimensions = size === 'sm'
         ? { width: 66, height: 96, fontSize: '1.8rem' }
         : { width: 112, height: 162, fontSize: '2.8rem' };
 
-    if (src && !imageFailed) {
+    if (optimizedSrc && !imageFailed) {
         return (
             <img
-                src={src}
+                src={optimizedSrc}
                 alt={`${title || '책'} 표지`}
                 loading="lazy"
+                decoding="async"
                 referrerPolicy="no-referrer"
-                onError={() => setImageFailed(true)}
+                onError={() => setFailedSrc(optimizedSrc)}
                 style={{
                     width: `${dimensions.width}px`,
                     height: `${dimensions.height}px`,

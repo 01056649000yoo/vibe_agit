@@ -8,6 +8,7 @@ import Button from '../common/Button';
 import ReactionNamesTooltip from './ReactionNamesTooltip';
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
+import { normalizeBookCoverUrl } from '../../modules/writing/reading-log/bookCoverUrl';
 
 // [최적화] 개별 댓글 컴포넌트 분리 및 메모이제이션 💬
 const CommentItem = memo(({ comment, studentId, studentName, classmateNameMap, isTeacher, onEdit, onDelete }) => {
@@ -189,6 +190,7 @@ const PostDetailModal = ({
     // 책 정보 블록은 독서록에만 있으므로 그 조건은 유형을 좁혀 그대로 둔다.
     const readingLog = selfType?.id === 'reading_log';
     const bookInfo = post?.structured_content || {};
+    const bookCoverUrl = normalizeBookCoverUrl(bookInfo.thumbnailUrl);
     const canShowOriginal = originalAllowed && Boolean(post?.original_content);
     const displayingOriginal = canShowOriginal && showOriginal;
     const displayingReport = !displayingOriginal && isReportStructuredContent(post?.structured_content);
@@ -467,8 +469,8 @@ const PostDetailModal = ({
                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '28px 20px 80px 20px' : '48px 60px 100px 60px', scrollbarWidth: 'thin' }}>
                     {readingLog && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '30px', padding: '18px', borderRadius: '20px', border: '1px solid #DCEDC8', background: 'linear-gradient(135deg,#F1F8E9,#FFFFFF)' }}>
-                            {bookInfo.thumbnailUrl ? (
-                                <img src={bookInfo.thumbnailUrl} alt={`${bookInfo.bookTitle || '책'} 표지`} loading="lazy" referrerPolicy="no-referrer" style={{ width: '62px', height: '90px', objectFit: 'cover', borderRadius: '7px 11px 11px 7px', boxShadow: '0 6px 14px rgba(55,71,79,.16)', flexShrink: 0 }} />
+                            {bookCoverUrl ? (
+                                <img src={bookCoverUrl} alt={`${bookInfo.bookTitle || '책'} 표지`} loading="lazy" decoding="async" referrerPolicy="no-referrer" style={{ width: '62px', height: '90px', objectFit: 'cover', borderRadius: '7px 11px 11px 7px', boxShadow: '0 6px 14px rgba(55,71,79,.16)', flexShrink: 0 }} />
                             ) : (
                                 <div style={{ width: '62px', height: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '7px 11px 11px 7px', background: 'linear-gradient(145deg,#8BC34A,#558B2F)', color: 'white', fontSize: '1.8rem', flexShrink: 0 }}>📖</div>
                             )}

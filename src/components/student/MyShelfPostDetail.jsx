@@ -4,6 +4,7 @@ import { getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 import MyPostEngagementPanel from '../../modules/writing/engagement/MyPostEngagementPanel';
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
+import { normalizeBookCoverUrl } from '../../modules/writing/reading-log/bookCoverUrl';
 
 const formatDate = (value) => {
     if (!value) return '';
@@ -18,6 +19,7 @@ const MyShelfPostDetail = ({ summary, post, loading, errorMessage, onClose, onRe
     const selfType = getSelfWritingType(post);
     const readingLog = selfType?.id === 'reading_log';
     const book = post?.structured_content || {};
+    const bookCoverUrl = normalizeBookCoverUrl(book.thumbnailUrl);
     const canCompare = Boolean(post?.original_content) && (
         post.original_title !== post.title || post.original_content !== post.content
     );
@@ -91,8 +93,8 @@ const MyShelfPostDetail = ({ summary, post, loading, errorMessage, onClose, onRe
 
                         {readingLog && (
                             <section style={{ display: 'flex', gap: '16px', alignItems: 'center', marginTop: '24px', padding: '16px', borderRadius: '18px', background: '#F7FBEF', border: '1px solid #DCEDC8' }}>
-                                {book.thumbnailUrl ? (
-                                    <img src={book.thumbnailUrl} alt={`${book.bookTitle || '책'} 표지`} loading="lazy" referrerPolicy="no-referrer" style={{ width: '58px', height: '84px', objectFit: 'cover', borderRadius: '7px 11px 11px 7px', boxShadow: '0 5px 12px rgba(55,71,79,.15)', flexShrink: 0 }} />
+                                {bookCoverUrl ? (
+                                    <img src={bookCoverUrl} alt={`${book.bookTitle || '책'} 표지`} loading="lazy" decoding="async" referrerPolicy="no-referrer" style={{ width: '58px', height: '84px', objectFit: 'cover', borderRadius: '7px 11px 11px 7px', boxShadow: '0 5px 12px rgba(55,71,79,.15)', flexShrink: 0 }} />
                                 ) : (
                                     <div style={{ width: '58px', height: '84px', display: 'grid', placeItems: 'center', borderRadius: '7px 11px 11px 7px', background: '#7CB342', color: 'white', fontSize: '1.6rem', flexShrink: 0 }}>📖</div>
                                 )}

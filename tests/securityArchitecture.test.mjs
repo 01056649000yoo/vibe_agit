@@ -55,6 +55,8 @@ test('정적 앱 응답에 CSP와 Permissions-Policy가 있다', () => {
         /img-src[^;]*https:\/\/api\.xn--vz0ba242ncqcba79xhwx\.site/,
         'private report image signed URLs must be allowed by img-src'
     );
+    assert.match(caddy, /img-src[^;]*https:\/\/search1\.kakaocdn\.net/);
+    assert.match(vercel, /img-src[^;]*https:\/\/search1\.kakaocdn\.net/);
     assert.match(caddy, /connect-src[^;]*https:\/\/www\.googleapis\.com/);
     assert.match(vercel, /connect-src[^;]*https:\/\/www\.googleapis\.com/);
 });

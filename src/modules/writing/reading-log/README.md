@@ -11,6 +11,15 @@
 완료 판정은 DB의 `writing_counts_as_completed()`를 사용하고, 의견·댓글·확인 상태는 공용
 `MyPostEngagementPanel`을 연결한다.
 
+## 책 표지
+
+- Kakao 검색 표지는 원본을 직접 받지 않고 `search1.kakaocdn.net`의 `R120x174.q85` 썸네일로 고정한다.
+  학생 화면 최대 표지 112×162px에 맞는 크기이며 지연 로딩·비동기 디코딩으로 표시한다.
+- 외부 이미지 허용은 Caddy와 Vercel CSP의 `img-src`에 정확한 Kakao CDN origin만 둔다. 광범위한 `https:`나
+  `*.kakaocdn.net` 와일드카드를 허용하지 않는다.
+- URL 정규화는 `bookCoverUrl.js` 한 곳을 사용한다. 검색 결과·선택 화면·내 서재·친구 글 상세에서 원본 URL을
+  직접 `<img>`에 넣지 않는다.
+
 ## 독서마라톤
 
 - 교사가 `학생 독서록 → 동기부여 설정`에서 켜고 목표 거리와 종료일을 정한다.

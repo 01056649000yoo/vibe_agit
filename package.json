@@ -17,7 +17,7 @@
     "test:report-writing": "node --test tests/reportWriting.test.mjs",
     "test:dragon": "node --test tests/dragonGrowth.test.mjs",
     "test:vocab-tower": "node --test tests/vocabTower.test.mjs",
-    "test:reading-log": "node --test tests/readingLogDraftRules.test.mjs tests/readingMarathon.test.mjs tests/googleBooksPageCount.test.mjs",
+    "test:reading-log": "node --test tests/readingLogDraftRules.test.mjs tests/readingMarathon.test.mjs tests/googleBooksPageCount.test.mjs tests/readingBookCover.test.mjs",
     "test:vibe-ai": "node --test tests/vibeAiEdgeFunction.test.mjs",
     "test:security:static": "node --test tests/securityArchitecture.test.mjs tests/vibeAiEdgeFunction.test.mjs",
     "test:security:ops": "node scripts/check-operational-security.mjs",

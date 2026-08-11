@@ -21,6 +21,12 @@
 
 ---
 
+## 2026-08-12 — 독서록 Kakao 책 표지 전송량·표시 경로 정리 (Codex)
+- **한 일**: 독서록 검색·선택·내 서재·친구 글 상세에서 Kakao 책 표지를 화면 크기에 맞는 `R120x174.q85` 썸네일로 통일했다. 표지는 지연 로딩과 비동기 디코딩을 사용하고, 이미지 주소가 바뀌면 이전 실패 상태 때문에 기본 표지에 고정되지 않도록 보완했다.
+- **변경**: 표지 URL 정규화를 `src/modules/writing/reading-log/bookCoverUrl.js` 한 곳으로 모으고, Caddy·Vercel CSP의 `img-src`에는 정확한 `https://search1.kakaocdn.net` origin만 추가했다. 독서록 README·ROADMAP과 회귀 테스트를 함께 갱신했으며 DB·RPC·마이그레이션 변경은 없다.
+- **결과/검증**: `npm.cmd run lint`, 독서록 테스트 27건, 아키텍처 테스트 32건, 정적 보안 테스트 16건, 프로덕션 빌드와 `npm.cmd audit --omit=dev`(취약점 0건)가 통과했다. 전체 `test:security`는 정적 검사 통과 뒤 이 Windows 환경에 Docker CLI가 없어 `migrate:check`에서 중단됐으며, 이번 작업은 DB 경계를 변경하지 않는다.
+- **남은 것 / 다음**: 배포 후 학생 실기기에서 Kakao 책 검색 결과·선택한 책·나의 책장·친구 공개 독서록의 표지가 정상 표시되고 전송 크기가 줄었는지 확인한다. 쌤링크 iframe CSP 허용은 별도 승인·작업 항목으로 남아 있다.
+
 ## 2026-08-11 — 수업 도구 쌤링크 차단 원인 확인 (Codex)
 - **원인**: 교사 수업 도구는 `https://샘링크.kr/?embed=agit`를 iframe으로 여는데, 2026-08-08 보안 강화 커밋 `50906ce`가 추가한 아지트 CSP의 `frame-src`에는 `https://accounts.google.com`만 있고 쌤링크 origin이 빠져 있다. 브라우저가 iframe 탐색을 시작하기 전에 차단하므로 화면이 막힌다.
 - **근거**: 운영 쌤링크 embed 주소는 `200 OK`이고 응답 CSP `frame-ancestors`가 아지트 운영 origin을 명시적으로 허용한다. 맥미니의 `samlink-app`과 `samlink-cleanup`도 6일째 실행 중이고, 아지트 `agit-app`도 정상이다. 반면 운영 아지트 응답 헤더는 실제로 `frame-src https://accounts.google.com`만 내려 준다. 따라서 쌤링크 서버·컨테이너·인증 장애가 아니라 아지트 쪽 허용 목록 누락이다.
