@@ -9,13 +9,30 @@ import {
     validateReportSubmission,
 } from '../src/modules/writing/mission-types/report/reportContent.js';
 
-const [reportEditorSource, reportDocumentSource, writingPdfSource, studentWritingSource, missionSubmitSource, reportWritingCss] = await Promise.all([
+const [
+    reportEditorSource,
+    reportDocumentSource,
+    writingPdfSource,
+    studentWritingSource,
+    missionSubmitSource,
+    reportWritingCss,
+    exportSelectSource,
+    archiveManagerSource,
+    studentManagerSource,
+    studentManagerHookSource,
+    dataExportSource,
+] = await Promise.all([
     readFile('src/modules/writing/mission-types/report/ReportEditor.jsx', 'utf8'),
     readFile('src/modules/writing/mission-types/report/ReportDocument.jsx', 'utf8'),
     readFile('src/modules/writing/export/writingPdfExport.js', 'utf8'),
     readFile('src/components/student/StudentWriting.jsx', 'utf8'),
     readFile('src/hooks/useMissionSubmit.js', 'utf8'),
     readFile('src/modules/writing/mission-types/report/reportWriting.css', 'utf8'),
+    readFile('src/components/common/ExportSelectModal.jsx', 'utf8'),
+    readFile('src/components/teacher/ArchiveManager.jsx', 'utf8'),
+    readFile('src/components/teacher/StudentManager.jsx', 'utf8'),
+    readFile('src/hooks/useStudentManager.js', 'utf8'),
+    readFile('src/hooks/useDataExport.js', 'utf8'),
 ]);
 
 test('첫 사진 저장은 생성된 초안 글 ID를 다음 저장까지 유지한다', () => {
@@ -44,6 +61,19 @@ test('보고서 한 칸은 사진과 관찰 결과 글쓰기 창 하나만 보�
     assert.match(writingPdfSource, /교사의 질문/);
     assert.match(writingPdfSource, /보고서 내용/);
     assert.match(writingPdfSource, /report-sheet__question[\s\S]*?report-sheet__response/);
+});
+
+test('보고서 PDF는 질문 포함 지도형과 질문 없는 완성본을 선택해 내보낸다', () => {
+    assert.match(exportSelectSource, /질문 포함 지도형/);
+    assert.match(exportSelectSource, /질문 없는 완성본/);
+    assert.match(exportSelectSource, /reportPdfMode/);
+    assert.match(archiveManagerSource, /showReportPdfOptions/);
+    assert.match(studentManagerSource, /showReportPdfOptions/);
+    assert.match(archiveManagerSource, /reportMode: options\.reportPdfMode/);
+    assert.match(studentManagerHookSource, /reportMode: options\.reportPdfMode/);
+    assert.match(dataExportSource, /reportMode/);
+    assert.match(writingPdfSource, /REPORT_PDF_MODE_GUIDED/);
+    assert.match(writingPdfSource, /REPORT_PDF_MODE_FINAL/);
 });
 
 test('보고서 기본 틀은 학생이 바로 쓸 수 있는 세 칸으로 열린다', () => {

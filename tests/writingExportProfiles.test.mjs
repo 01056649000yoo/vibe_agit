@@ -9,6 +9,8 @@ import {
     buildWritingPdfHtml,
     collectWritingPdfImagePaths,
     normalizeWritingPdfEntry,
+    REPORT_PDF_MODE_FINAL,
+    REPORT_PDF_MODE_GUIDED,
     WRITING_PDF_MAX_ENTRIES
 } from '../src/modules/writing/export/writingPdfExport.js';
 
@@ -70,42 +72,49 @@ test('일반 글 PDF는 제목·글쓴이·본문을 12포인트 A4 양식으로
     assert.doesNotMatch(html, /font-size: (?:[0-9]|1[01])pt/);
 });
 
-test('보고서 PDF는 상단 전체 폭 질문과 그 아래 왼쪽 사진·오른쪽 내용 양식으로 만든다', () => {
-    const path = '11111111-1111-1111-1111-111111111111/section-1/photo.webp';
-    const item = {
-        작성자: '이학생',
-        미션제목: '학교 화단 관찰',
-        학생글제목: '봉선화가 자라는 모습',
-        내용: '',
-        _inputTemplate: 'report',
-        _structuredContent: {
-            template: 'report',
-            version: 1,
-            sections: [{
-                id: 'section-1',
-                heading: '관찰 결과',
-                body: '새잎이 두 장 나왔습니다.',
-                image: {
-                    path,
-                    caption: '관찰 셋째 날 봉선화',
-                    width: 720,
-                    height: 540,
-                    bytes: 120000,
-                    mimeType: 'image/webp'
-                }
-            }]
-        }
-    };
-    const imageUrls = new Map([[path, 'https://example.test/signed-photo.webp?token=a&b=2']]);
-    const html = buildWritingPdfHtml({ items: [item], title: '보고서 모음', imageUrls });
+const REPORT_ITEM = {
+    작성자: '이학생',
+    미션제목: '학교 화단 관찰',
+    학생글제목: '봉선화가 자라는 모습',
+    내용: '',
+    _inputTemplate: 'report',
+    _structuredContent: {
+        template: 'report',
+        version: 1,
+        sections: [{
+            id: 'section-1',
+            heading: '관찰 결과',
+            body: '새잎이 두 장 나왔습니다.',
+            image: {
+                path: '11111111-1111-1111-1111-111111111111/section-1/photo.webp',
+                caption: '관찰 셋째 날 봉선화',
+                width: 720,
+                height: 540,
+                bytes: 120000,
+                mimeType: 'image/webp'
+            }
+        }]
+    }
+};
 
-    assert.deepEqual(collectWritingPdfImagePaths([item]), [path]);
+test('질문 포함 보고서 PDF는 질문을 한 줄형 안내 바에 두고 사진과 답변을 균형 있게 배치한다', () => {
+    const path = '11111111-1111-1111-1111-111111111111/section-1/photo.webp';
+    const imageUrls = new Map([[path, 'https://example.test/signed-photo.webp?token=a&b=2']]);
+    const html = buildWritingPdfHtml({
+        items: [REPORT_ITEM],
+        title: '보고서 모음',
+        imageUrls,
+        reportMode: REPORT_PDF_MODE_GUIDED,
+    });
+
+    assert.deepEqual(collectWritingPdfImagePaths([REPORT_ITEM]), [path]);
     assert.equal(WRITING_PDF_MAX_ENTRIES, 100);
-    assert.match(html, /pdf-entry--report/);
+    assert.match(html, /pdf-entry--report-guided/);
     assert.match(html, /report-sheet__section/);
     assert.match(html, /report-sheet__response--with-photo/);
     assert.match(html, /report-sheet__photo-frame/);
     assert.match(html, /report-sheet__question/);
+    assert.match(html, /report-sheet__question-label/);
     assert.match(html, /교사의 질문/);
     assert.match(html, /관찰 결과/);
     assert.match(html, /report-sheet__answer/);
@@ -115,12 +124,36 @@ test('보고서 PDF는 상단 전체 폭 질문과 그 아래 왼쪽 사진·오
         html,
         /report-sheet__question[\s\S]*?관찰 결과[\s\S]*?report-sheet__response report-sheet__response--with-photo[\s\S]*?report-sheet__photo-frame[\s\S]*?report-sheet__answer[\s\S]*?새잎이 두 장 나왔습니다\./
     );
-    assert.match(html, /grid-template-columns: 56mm minmax\(0, 1fr\)/);
-    assert.match(html, /width: 56mm/);
+    assert.match(html, /\.report-sheet__question \{[\s\S]*?display: flex;[\s\S]*?align-items: center;/);
+    assert.match(html, /\.report-sheet__section \{[\s\S]*?break-inside: avoid;/);
+    assert.match(html, /grid-template-columns: 52mm minmax\(0, 1fr\)/);
+    assert.match(html, /width: 52mm/);
     assert.match(html, /aspect-ratio: 5 \/ 4/);
     assert.match(html, /object-fit: cover/);
     assert.match(html, /signed-photo.webp\?token=a&amp;b=2/);
     assert.doesNotMatch(html, /width: 68mm/);
+    assert.doesNotMatch(html, /font-size: (?:[0-9]|1[01])pt/);
+});
+
+test('질문 없는 완성 보고서 PDF는 사진과 학생 글만 정돈해 보여준다', () => {
+    const path = REPORT_ITEM._structuredContent.sections.at(0).image.path;
+    const html = buildWritingPdfHtml({
+        items: [REPORT_ITEM],
+        title: '완성 보고서 모음',
+        imageUrls: new Map([[path, 'https://example.test/final-photo.webp']]),
+        reportMode: REPORT_PDF_MODE_FINAL,
+    });
+
+    assert.match(html, /pdf-entry--report-final/);
+    assert.match(html, /final-report__section--with-photo/);
+    assert.match(html, /final-report__photo-frame/);
+    assert.match(html, /final-report__body/);
+    assert.match(html, /새잎이 두 장 나왔습니다\./);
+    assert.match(html, /final-photo.webp/);
+    assert.doesNotMatch(html, /교사의 질문/);
+    assert.doesNotMatch(html, /보고서 내용/);
+    assert.doesNotMatch(html, /관찰 결과/);
+    assert.doesNotMatch(html, /<div class="report-sheet__number">/);
     assert.doesNotMatch(html, /font-size: (?:[0-9]|1[01])pt/);
 });
 

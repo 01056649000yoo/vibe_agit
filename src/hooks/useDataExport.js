@@ -532,7 +532,7 @@ export const useDataExport = (classId) => {
         }
     }, []);
 
-    const exportPdf = useCallback(async (data, fileName, contentType = 'assignment') => {
+    const exportPdf = useCallback(async (data, fileName, contentType = 'assignment', pdfOptions = {}) => {
         if (!data?.length) {
             alert('PDF로 내보낼 글이 없습니다.');
             return;
@@ -540,15 +540,20 @@ export const useDataExport = (classId) => {
 
         try {
             const { exportWritingEntriesToPdf } = await import('../modules/writing/export/writingPdfExport.js');
-            await exportWritingEntriesToPdf({ items: data, title: fileName, contentType });
+            await exportWritingEntriesToPdf({
+                items: data,
+                title: fileName,
+                contentType,
+                reportMode: pdfOptions.reportMode,
+            });
         } catch (error) {
             console.error('Writing PDF export failed:', error);
             alert('PDF 출력 화면을 열지 못했습니다: ' + (error.message || '잠시 후 다시 시도해 주세요.'));
         }
     }, []);
 
-    const exportWritingContentToPdf = useCallback(async (data, fileName, contentType) => {
-        await exportPdf(data, fileName, contentType);
+    const exportWritingContentToPdf = useCallback(async (data, fileName, contentType, pdfOptions) => {
+        await exportPdf(data, fileName, contentType, pdfOptions);
     }, [exportPdf]);
 
     const exportToExcel = useCallback(async (data, fileName) => {

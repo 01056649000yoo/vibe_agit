@@ -278,7 +278,9 @@ export const useStudentManager = (classId) => {
         }
         const fileName = `${exportTarget.title}_글모음`;
         if (format === 'excel') exportToExcel(data, fileName);
-        else if (format === 'pdf') await exportToPdf(data, fileName, 'assignment');
+        else if (format === 'pdf') {
+            await exportToPdf(data, fileName, 'assignment', { reportMode: options.reportPdfMode });
+        }
         else if (format === 'googleDoc') {
             await exportToGoogleDoc(data, fileName, options.usePageBreak, null, 'mission', googleAccessToken);
         }

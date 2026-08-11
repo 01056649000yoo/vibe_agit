@@ -115,7 +115,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
         if (format === 'excel') {
             exportToExcel(data, fileName);
         } else if (format === 'pdf') {
-            await exportToPdf(data, fileName, 'assignment');
+            await exportToPdf(data, fileName, 'assignment', { reportMode: options.reportPdfMode });
         } else if (format === 'googleDoc') {
             const groupBy = options.groupBy || 'mission';
 
@@ -707,6 +707,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                 onConfirm={handleExportConfirm}
                 isGapiLoaded={isGapiLoaded}
                 isBulk={exportTarget?.type === 'bulk_missions'}
+                showReportPdfOptions
             />
         </div>
     );

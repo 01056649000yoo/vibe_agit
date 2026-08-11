@@ -186,6 +186,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                 onConfirm={handleExportConfirm}
                 title={exportTarget?.title ? `${exportTarget.title} 학생` : '데이터 내보내기'}
                 isGapiLoaded={isGapiLoaded}
+                showReportPdfOptions
             />
         </div>
     );

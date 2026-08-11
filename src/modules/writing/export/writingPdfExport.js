@@ -2,6 +2,8 @@ import { isReportStructuredContent, normalizeReportSections } from '../mission-t
 import { getWritingExportProfile } from './writingExportProfiles.js';
 
 export const WRITING_PDF_MAX_ENTRIES = 100;
+export const REPORT_PDF_MODE_GUIDED = 'guided';
+export const REPORT_PDF_MODE_FINAL = 'final';
 const REPORT_IMAGE_URL_BATCH_SIZE = 50;
 
 const escapeHtml = (value) => String(value ?? '')
@@ -68,10 +70,10 @@ const renderNormalEntry = (entry) => `
         ${entry.metadata.length > 0 ? `<footer class="pdf-entry__metadata">${entry.metadata.map((line) => `<span>${escapeHtml(line)}</span>`).join('')}</footer>` : ''}
     </article>`;
 
-const renderReportEntry = (entry, imageUrls) => {
+const renderGuidedReportEntry = (entry, imageUrls) => {
     const sections = normalizeReportSections(entry.structuredContent, entry.content);
     return `
-        <article class="pdf-entry pdf-entry--report">
+        <article class="pdf-entry pdf-entry--report pdf-entry--report-guided">
             ${renderDocumentHeader(entry, '보고하는 글')}
             <div class="pdf-entry__rule"></div>
             <main class="report-sheet">
@@ -85,7 +87,7 @@ const renderReportEntry = (entry, imageUrls) => {
                             <div class="report-sheet__section-body">
                                 ${question ? `
                                     <div class="report-sheet__question">
-                                        <span class="report-sheet__label">교사의 질문</span>
+                                        <span class="report-sheet__question-label">교사의 질문</span>
                                         <h2>${escapeHtml(question)}</h2>
                                     </div>` : ''}
                                 ${section.image?.path || observation ? `
@@ -111,6 +113,37 @@ const renderReportEntry = (entry, imageUrls) => {
         </article>`;
 };
 
+const renderFinalReportEntry = (entry, imageUrls) => {
+    const sections = normalizeReportSections(entry.structuredContent, entry.content)
+        .filter((section) => section.image?.path || section.body?.trim() || section.image?.caption?.trim());
+    return `
+        <article class="pdf-entry pdf-entry--report pdf-entry--report-final">
+            ${renderDocumentHeader(entry, '완성 보고서')}
+            <div class="pdf-entry__rule"></div>
+            <main class="final-report">
+                ${sections.map((section, index) => {
+                    const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
+                    const observation = section.body?.trim() || section.image?.caption?.trim() || '';
+                    return `
+                        <section class="final-report__section${section.image?.path ? ' final-report__section--with-photo' : ''}">
+                            ${section.image?.path ? `
+                                <figure>
+                                    <div class="final-report__photo-frame">
+                                        ${imageUrl
+                                            ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(section.image.caption || `${index + 1}번째 보고서 사진`)}">`
+                                            : '<div class="report-sheet__image-missing">사진을 불러오지 못했습니다.</div>'}
+                                    </div>
+                                </figure>` : ''}
+                            ${observation ? `
+                                <div class="final-report__body">
+                                    <p>${escapeHtml(observation)}</p>
+                                </div>` : ''}
+                        </section>`;
+                }).join('')}
+            </main>
+        </article>`;
+};
+
 export const collectWritingPdfImagePaths = (items, contentType = 'assignment') => {
     const paths = new Set();
     (items || []).forEach((item) => {
@@ -128,12 +161,19 @@ export const buildWritingPdfHtml = ({
     title,
     contentType = 'assignment',
     imageUrls = new Map(),
+    reportMode = REPORT_PDF_MODE_GUIDED,
 }) => {
     const entries = (items || []).map((item) => normalizeWritingPdfEntry(item, contentType));
     const safeTitle = cleanFileTitle(title);
-    const body = entries.map((entry) => (
-        entry.isReport ? renderReportEntry(entry, imageUrls) : renderNormalEntry(entry)
-    )).join('');
+    const safeReportMode = reportMode === REPORT_PDF_MODE_FINAL
+        ? REPORT_PDF_MODE_FINAL
+        : REPORT_PDF_MODE_GUIDED;
+    const body = entries.map((entry) => {
+        if (!entry.isReport) return renderNormalEntry(entry);
+        return safeReportMode === REPORT_PDF_MODE_FINAL
+            ? renderFinalReportEntry(entry, imageUrls)
+            : renderGuidedReportEntry(entry, imageUrls);
+    }).join('');
 
     return `<!doctype html>
 <html lang="ko">
@@ -207,8 +247,10 @@ export const buildWritingPdfHtml = ({
             display: grid;
             grid-template-columns: 10mm minmax(0, 1fr);
             gap: 4mm;
-            padding: 5mm 0;
+            padding: 4.5mm 0;
             border-top: .35mm solid #CBD5E1;
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
         .report-sheet__section:first-child { border-top: 0; padding-top: 0; }
         .report-sheet__number {
@@ -225,14 +267,17 @@ export const buildWritingPdfHtml = ({
         .report-sheet__section-body, .report-sheet__response { min-width: 0; }
         .report-sheet__response--with-photo {
             display: grid;
-            grid-template-columns: 56mm minmax(0, 1fr);
-            align-items: start;
-            gap: 6mm;
+            grid-template-columns: 52mm minmax(0, 1fr);
+            align-items: stretch;
+            gap: 5mm;
         }
         .report-sheet__question {
+            display: flex;
+            align-items: center;
+            gap: 3mm;
             width: 100%;
-            margin-bottom: 4mm;
-            padding: 3mm 4mm;
+            margin-bottom: 3.5mm;
+            padding: 2.4mm 3.5mm;
             border-left: 1.2mm solid #14B8A6;
             border-radius: 0 2.5mm 2.5mm 0;
             background: #F0FDFA;
@@ -240,11 +285,24 @@ export const buildWritingPdfHtml = ({
             page-break-inside: avoid;
         }
         .report-sheet__question h2 {
+            flex: 1;
+            min-width: 0;
             margin: 0;
             color: #134E4A;
-            font-size: 13pt;
-            line-height: 1.5;
+            font-size: 12pt;
+            line-height: 1.4;
             overflow-wrap: anywhere;
+        }
+        .report-sheet__question-label {
+            flex: 0 0 auto;
+            padding: .6mm 2mm;
+            border-radius: 999px;
+            background: #CCFBF1;
+            color: #0F766E;
+            font-size: 12pt;
+            font-weight: 800;
+            line-height: 1.35;
+            white-space: nowrap;
         }
         .report-sheet__label {
             display: block;
@@ -255,6 +313,11 @@ export const buildWritingPdfHtml = ({
         }
         .report-sheet__answer {
             min-width: 0;
+            min-height: 41.6mm;
+            padding: 3mm 4mm;
+            border: .3mm solid #E2E8F0;
+            border-radius: 2.5mm;
+            background: #FAFCFC;
         }
         .report-sheet p {
             margin: 0;
@@ -273,7 +336,7 @@ export const buildWritingPdfHtml = ({
             page-break-inside: avoid;
         }
         .report-sheet__photo-frame {
-            width: 56mm;
+            width: 52mm;
             aspect-ratio: 5 / 4;
             overflow: hidden;
             border: .35mm solid #D8E4E2;
@@ -295,6 +358,53 @@ export const buildWritingPdfHtml = ({
             color: #64748B;
             font-size: 12pt;
             text-align: center;
+        }
+        .final-report { display: block; }
+        .final-report__section {
+            padding: 6mm 0;
+            border-top: .35mm solid #CBD5E1;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        .final-report__section:first-child { padding-top: 0; border-top: 0; }
+        .final-report__section--with-photo {
+            display: grid;
+            grid-template-columns: 58mm minmax(0, 1fr);
+            align-items: stretch;
+            gap: 7mm;
+        }
+        .final-report figure { min-width: 0; margin: 0; }
+        .final-report__photo-frame {
+            width: 58mm;
+            aspect-ratio: 5 / 4;
+            overflow: hidden;
+            border: .35mm solid #D8E4E2;
+            border-radius: 3mm;
+            background: #F1F5F9;
+        }
+        .final-report__photo-frame img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+        .final-report__body {
+            min-width: 0;
+            padding: 3.5mm 4.5mm;
+            border-left: 1.2mm solid #14B8A6;
+            border-radius: 0 2.5mm 2.5mm 0;
+            background: #F8FAFC;
+        }
+        .final-report__body p {
+            margin: 0;
+            color: #1F2937;
+            font-size: 12pt;
+            line-height: 1.78;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+            orphans: 3;
+            widows: 3;
         }
     </style>
 </head>
@@ -370,12 +480,17 @@ const printWritingHtml = async (html) => {
     }
 };
 
-export const exportWritingEntriesToPdf = async ({ items, title, contentType = 'assignment' }) => {
+export const exportWritingEntriesToPdf = async ({
+    items,
+    title,
+    contentType = 'assignment',
+    reportMode = REPORT_PDF_MODE_GUIDED,
+}) => {
     if (!Array.isArray(items) || items.length === 0) throw new Error('PDF로 내보낼 글이 없습니다.');
     if (items.length > WRITING_PDF_MAX_ENTRIES) {
         throw new Error(`PDF는 한 번에 ${WRITING_PDF_MAX_ENTRIES}편까지 내보낼 수 있습니다.`);
     }
     const imageUrls = await loadReportImageUrls(items, contentType);
-    const html = buildWritingPdfHtml({ items, title, contentType, imageUrls });
+    const html = buildWritingPdfHtml({ items, title, contentType, imageUrls, reportMode });
     await printWritingHtml(html);
 };
