@@ -12,17 +12,20 @@ import {
 
 const MissionStudentPreview = React.lazy(() => import('../../../../components/teacher/MissionStudentPreview'));
 
-const getInitialForm = (mission) => ({
-    title: mission?.title || '',
-    guide: mission?.guide || '',
-    default_sections: normalizeReportConfig(mission?.template_config).defaultSections,
-    min_sections: mission?.template_config?.min_sections ?? mission?.min_paragraphs ?? 2,
-    max_images: mission?.template_config?.max_images ?? 4,
-    min_chars: mission?.min_chars ?? 100,
-    base_reward: mission?.base_reward ?? 100,
-    allow_comments: mission?.allow_comments ?? true,
-    evaluation_rubric: createDefaultEvaluationRubric(mission?.evaluation_rubric),
-});
+const getInitialForm = (mission) => {
+    const normalizedConfig = normalizeReportConfig(mission?.template_config);
+    return {
+        title: mission?.title || '',
+        guide: mission?.guide || '',
+        default_sections: normalizedConfig.defaultSections,
+        min_sections: mission?.template_config?.min_sections ?? mission?.min_paragraphs ?? 2,
+        max_images: normalizedConfig.maxImages,
+        min_chars: mission?.min_chars ?? 100,
+        base_reward: mission?.base_reward ?? 100,
+        allow_comments: mission?.allow_comments ?? true,
+        evaluation_rubric: createDefaultEvaluationRubric(mission?.evaluation_rubric),
+    };
+};
 
 const clampNumber = (value, min, max) => Math.min(max, Math.max(min, Number(value) || min));
 
@@ -213,7 +216,7 @@ const ReportMissionForm = ({ activeClass, mission = null, isMobile, onBack, onSa
 
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '12px' }}>
                         <NumberSetting label="최소 완성 칸" value={form.min_sections} min={1} max={REPORT_MAX_SECTIONS} onChange={(value) => update('min_sections', value)} description="내용을 써야 하는 최소 칸 수입니다." />
-                        <NumberSetting label="사진 수 제한" value={form.max_images} min={1} max={REPORT_MAX_IMAGES} onChange={(value) => update('max_images', value)} description="사진은 최대 6장까지 허용합니다." />
+                        <NumberSetting label="사진 수 제한" value={form.max_images} min={1} max={REPORT_MAX_IMAGES} onChange={(value) => update('max_images', value)} description="사진은 최대 3장까지 허용합니다." />
                         <NumberSetting label="최소 글자 수" value={form.min_chars} min={0} max={10000} step={10} onChange={(value) => update('min_chars', value)} description="모든 내용 칸의 글을 합쳐 계산합니다." />
                         <NumberSetting label="완료 포인트" value={form.base_reward} min={0} max={10000} step={10} onChange={(value) => update('base_reward', value)} description="교사 승인 후 지급합니다." />
                     </div>

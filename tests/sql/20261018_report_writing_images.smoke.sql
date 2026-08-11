@@ -30,6 +30,10 @@ BEGIN
     IF to_regprocedure('public.validate_report_post_structure()') IS NULL THEN
         RAISE EXCEPTION 'report structure validation trigger function missing';
     END IF;
+    IF pg_get_functiondef('public.validate_report_post_structure()'::regprocedure)
+       !~ 'v_max_images[[:space:]]*:=[[:space:]]*LEAST\(3,' THEN
+        RAISE EXCEPTION 'report image count must be capped at three';
+    END IF;
     IF NOT EXISTS (
         SELECT 1
         FROM pg_trigger

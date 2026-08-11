@@ -141,7 +141,7 @@ BEGIN
     v_section_count := jsonb_array_length(v_sections);
     v_min_sections := LEAST(12, GREATEST(1, COALESCE((v_config ->> 'min_sections')::INTEGER, 2)));
     v_max_sections := LEAST(12, GREATEST(v_min_sections, COALESCE((v_config ->> 'max_sections')::INTEGER, 12)));
-    v_max_images := LEAST(6, GREATEST(1, COALESCE((v_config ->> 'max_images')::INTEGER, 4)));
+    v_max_images := LEAST(3, GREATEST(1, COALESCE((v_config ->> 'max_images')::INTEGER, 3)));
 
     IF v_section_count < 1 OR v_section_count > v_max_sections THEN
         RAISE EXCEPTION '보고서 칸 수가 허용 범위를 벗어났습니다.' USING ERRCODE = '22023';

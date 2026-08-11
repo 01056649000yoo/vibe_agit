@@ -28,7 +28,7 @@ test('보고서 제한값은 성능 상한 안에서 정규화된다', () => {
     assert.equal(config.defaultSections.length, 12);
     assert.equal(config.minSections, 12);
     assert.equal(config.maxSections, 12);
-    assert.equal(config.maxImages, 6);
+    assert.equal(config.maxImages, 3);
 });
 
 test('구조화 보고서는 검색·AI용 평문을 함께 만든다', () => {

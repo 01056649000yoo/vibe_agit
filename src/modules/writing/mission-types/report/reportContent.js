@@ -1,6 +1,6 @@
 export const REPORT_TEMPLATE_ID = 'report';
 export const REPORT_MAX_SECTIONS = 12;
-export const REPORT_MAX_IMAGES = 6;
+export const REPORT_MAX_IMAGES = 3;
 
 export const DEFAULT_REPORT_SECTION_TITLES = Object.freeze([
     '조사하거나 관찰한 까닭',
@@ -36,7 +36,7 @@ export const normalizeReportConfig = (config = {}) => {
         defaultSections: sectionTitles,
         minSections,
         maxSections: toBoundedInteger(config.max_sections, REPORT_MAX_SECTIONS, minSections, REPORT_MAX_SECTIONS),
-        maxImages: toBoundedInteger(config.max_images, 4, 1, REPORT_MAX_IMAGES),
+        maxImages: toBoundedInteger(config.max_images, REPORT_MAX_IMAGES, 1, REPORT_MAX_IMAGES),
     };
 };
 
