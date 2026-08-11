@@ -52,6 +52,7 @@
 - [x] 일반 글·보고하는 글 전용 A4 PDF 양식과 교사 내보내기 UI 구현
 - [x] 맥미니 `agit-db` 실제 스키마에서 `20261020_writing_pdf_export.sql`+스모크를 전부 `ROLLBACK` 검증
 - [x] 운영 DB에 `20261020_writing_pdf_export.sql` 적용 후 PDF 내보내기 앱 배포
+- [x] macOS Storage bind mount의 xattr 업로드 오류를 `agit-storage-data` named volume 전환으로 해결하고 백업·복구 검사 보완
 - [ ] 앱 배포 후 교사 과제 생성 → 학생 칸 이동·사진 추가/교체/삭제·제출 → 교사/친구/내 서재 열람을 실계정으로 확인
 - [ ] 학생 태블릿에서 큰 사진 2~3장을 넣고 타이핑 지연·사진 회전·업로드 실패 복구를 확인
 - [ ] 교사 실기기에서 일반 장문·사진 3장 보고서를 PDF로 저장하고 2페이지 넘김과 실제 인쇄를 확인

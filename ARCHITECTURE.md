@@ -85,6 +85,16 @@
   이 설정을 지우거나 우회하면 컨테이너를 재기동할 때 `secrets.agit.env` 연결이 빠져 함수 시크릿이
   통째로 누락될 수 있다 — 실제로 `ADMIN_MODE_PASSWORD`가 이렇게 빠진 적이 있다.
 
+### 아지트 Storage는 macOS bind mount가 아니라 named volume을 쓴다
+- `agit-storage`와 `agit-imgproxy`는 외부 Docker named volume **`agit-storage-data`**를 함께 사용한다.
+  Storage는 읽기/쓰기, imgproxy는 읽기 전용으로 마운트한다.
+- macOS Docker Desktop의 호스트 bind mount는 Storage API가 객체 메타데이터에 사용하는 확장 속성(xattr)을
+  지원하지 않아 `ENOTSUP: The file system does not support extended attributes`로 업로드가 실패한다.
+  [Supabase 공식 문서](https://supabase.com/docs/guides/self-hosting/docker#using-file-backend-in-storage-on-macos)도
+  macOS에서는 named volume 사용을 안내한다.
+- 이 볼륨은 `docker compose down -v`의 관리 대상 밖에 두어 실수로 지워지지 않게 한다. 새 장비 복구 시에는
+  `docker volume create agit-storage-data`를 먼저 실행해야 하며, 객체 파일 백업·복구 절차는 `backup.md`를 따른다.
+
 ### Realtime 버전을 올릴 때 주의
 - `SEED_SELF_HOST=false`라 테넌트 마이그레이션이 자동 실행되지 않는다. 이미지를 올리면 동시 접속
   한도(`max_concurrent_users=600`·`max_events_per_second=1000`·`max_joins_per_second=500`·

@@ -21,6 +21,12 @@
 
 ---
 
+## 2026-08-11 — 보고서 사진 업로드 xattr 오류 운영 수정 (Codex)
+- **원인**: 실제 학생 업로드가 인증·RLS와 256KB MIME/용량 검사를 통과한 뒤 `agit-storage`의 `FileBackend.uploadObject`에서 `ENOTSUP(95) — The file system does not support extended attributes`로 500 실패했다. Storage 경로가 macOS 호스트 폴더 bind mount였고 컨테이너에서 xattr 미지원 `fakeowner` 파일시스템으로 보인 것이 원인이다. 변경 전 `storage.objects`와 실제 파일은 모두 0개라 옮길 기존 사용자 사진은 없었다.
+- **변경**: git 밖 `~/agit-supabase/docker-compose.agit.yml`에서 `agit-storage`와 `agit-imgproxy`를 외부 영구 named volume `agit-storage-data`로 연결했다(Storage rw, imgproxy ro). 변경 전 bind 폴더·Storage 스키마·compose·백업 스크립트는 `~/backups/manual/20260811-storage-xattr-before/`에 600 권한으로 보관했다. 일일 백업에 `아지트Storage.tar.gz`를 추가하고 월간 리허설이 이를 임시 디렉터리에 실제로 풀도록 `~/scripts/sh_mirror_backup.sh`와 `~/scripts/restore_rehearsal.sh`를 갱신했다.
+- **결과/검증**: Storage 경로가 Linux `ext4` named volume이고 두 컨테이너가 healthy임을 확인했다. 운영 Storage API에 허용 형식 JPEG 518바이트를 업로드(200)해 같은 바이트 수로 다운로드하고 서명 URL 생성·삭제(200)까지 통과했으며, 삭제 뒤 DB 객체와 실제 파일은 모두 0개였다. 새 로컬 Storage 아카이브도 생성·목록 검사·임시 디렉터리 실제 복원을 통과했다. 전체 일일 백업의 암호화 드라이브·외장 재전송은 별도 명시 승인 없이 수동 실행하지 않았고 다음 04:00 자동 작업부터 새 산출물이 포함된다. 앱 코드·DB 마이그레이션 변경은 없다.
+- **남은 것 / 다음**: 학생 실계정·태블릿에서 보고서 WebP/JPEG 사진 추가·교체·삭제·제출을 확인하고, 다음 04:00 백업 뒤 `아지트Storage.tar.gz`의 내장·암호화 드라이브·외장 사본과 다음 월간 리허설 상태를 확인한다.
+
 ## 2026-08-11 — 일반 글·보고서 A4 PDF 내보내기 추가 (Codex)
 - **한 일**: 교사 글 내보내기에 `PDF / 인쇄`를 추가했다. 일반 글은 제목·글쓴이·과제명·본문 양식으로, `보고하는 글쓰기`는 내용 칸·사진·사진 설명이 함께 나오는 별도 양식으로 만든다. 본문·설명은 12pt 아래로 줄이지 않고 긴 글은 다음 페이지로 자연스럽게 이어지며, 한 번에 최대 100편을 브라우저 인쇄 창에서 PDF로 저장하거나 바로 인쇄할 수 있다.
 - **변경**: 공용 `writingPdfExport.js`를 학생별 과제 글·보관 과제·독서록·일기 내보내기에 연결했다. 서버 PDF 작업은 만들지 않았고 보고서 비공개 사진은 내보내기를 누를 때만 50개씩 서명한다. `20261020_writing_pdf_export.sql`은 기존 교사 내보내기 RPC에 `structured_content`와 `input_template`만 추가하며 학급 직접 범위·담당 교사/관리자 권한·같은 학급 조인·조회 상한을 유지한다. 사용자 요청에 따라 맥미니 운영 DB에 마이그레이션을 먼저 적용하고 `main` 푸시로 앱 자동 배포를 시작했다.

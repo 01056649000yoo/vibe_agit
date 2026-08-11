@@ -5,13 +5,14 @@
 >
 > **비밀 값은 여기 쓰지 않는다.** 열쇠·비밀번호는 *어디에 있는지*만 적는다.
 
-**최종 설정 점검: 2026-08-08 — 백업 파일 권한 강화** (복구 리허설 최종 통과는 2026-07-30)
+**최종 설정 점검: 2026-08-11 — 아지트 Storage named volume 백업·복구 검사 추가** (DB 복구 리허설 최종 통과는 2026-07-30)
 
 ---
 
 ## 1. 매월 점검 — 이것만 보면 된다
 
-매월 **1일 04:40**, `com.agit.restore-rehearsal` 이 백업을 **임시 DB 에 실제로 복원해** 확인하고 결과를 남긴다.
+매월 **1일 04:40**, `com.agit.restore-rehearsal` 이 DB 백업은 **임시 DB에 실제 복원**하고 아지트 Storage
+백업은 **임시 디렉터리에 실제로 풀어** 확인한 뒤 결과를 남긴다.
 실패하면 화면 알림도 뜬다.
 
 ```bash
@@ -39,7 +40,7 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 
 | 작업 | 시각 | 대상 | 사본 위치 | 보관 |
 |---|---|---|---|---|
-| `com.agit.backup` | 매일 **04:00** | `agit-db`(아지트) · `supabase-db`(연구소·쌤링크·수업도구·글쓰기도우미) · 자비스 · 스택 설정 · Caddyfile | ①내장 ②구글드라이브(**암호화**) ③외장SSD | 드라이브 30일 |
+| `com.agit.backup` | 매일 **04:00** | `agit-db`(아지트) · 아지트 Storage 객체 · `supabase-db`(연구소·쌤링크·수업도구·글쓰기도우미) · 자비스 · 스택 설정 · Caddyfile | ①내장 ②구글드라이브(**암호화**) ③외장SSD | 드라이브 30일 |
 | `com.samlink.db-backup` | 매일 **03:30** | `supabase-db` 전체 | 내장 + 드라이브(**암호화** `agitcrypt:samlink/`) | 14일 |
 | `local.literacy.backup` | 매일 **03:00** | literacy DB | 드라이브 동기화 폴더 | — |
 | `com.agit.restore-rehearsal` | **매월 1일 04:40** | 위 백업을 복원해 검증 | 로그·상태 파일 | — |
@@ -49,7 +50,7 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 - 내장 산출물: `~/backups/auto/YYYYMMDD/`
 - 로컬 평문 백업 디렉터리는 `700`, 파일은 `600`으로 유지한다. 백업 스크립트가 `umask 077`로 새 산출물에도 같은 권한을 적용한다.
 
-### 하루치 산출물 (7개)
+### 하루치 산출물 (8개)
 
 | 파일 | 내용 |
 |---|---|
@@ -58,6 +59,7 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 | `롤.sql` | 롤 15개. `pg_dump` 는 롤을 담지 않아 따로 뜬다 |
 | `리얼타임설정.dump` | `_realtime.tenants`(동시접속 한도·JWT) + `_realtime.extensions` |
 | `아지트DB스택설정.tar.gz` | `~/agit-supabase` (⚠️ `.env`·`secrets.agit.env` 포함) |
+| `아지트Storage.tar.gz` | Docker named volume `agit-storage-data`의 실제 사진 파일. DB의 `storage` 스키마와 함께 복구해야 함 |
 | `자비스.tar.gz` | `Jarvis_Brain_Local` |
 | `host_Caddyfile` | 호스트 Caddy 설정 |
 
@@ -130,6 +132,14 @@ psql -U supabase_admin -d postgres -f 롤.sql
 # 3) 본 덤프
 pg_restore -U supabase_admin -d 대상DB --no-owner 아지트DB.dump
 
+# 3-1) 아지트 Storage 객체 파일 — 새 스택에서 storage/imgproxy를 올리기 전에 실행
+docker volume create agit-storage-data
+docker run --rm --entrypoint sh \
+  -v agit-storage-data:/restore \
+  -v "$PWD:/backup:ro" \
+  supabase/storage-api:v1.48.26 \
+  -c 'tar xzf /backup/아지트Storage.tar.gz -C /restore'
+
 # 4) 리얼타임 설정 — 새 스택에는 시드된 행이 이미 있어 그대로 넣으면 PK 충돌이 난다.
 #    기존 행을 지운 뒤 얹거나, 한도 값만 UPDATE 한다 (값은 WORKLOG 2026-07-30 항목 참고)
 pg_restore -U supabase_admin -d 대상DB --no-owner --data-only 리얼타임설정.dump
@@ -140,6 +150,8 @@ pg_restore -U supabase_admin -d 대상DB --no-owner --data-only 리얼타임설�
 - 테이블·함수 소유자가 `supabase_admin` 이다. **`-U postgres` 로는 실패**한다.
 - `--no-privileges` 를 쓰지 않는다. 그러면 `anon`/`authenticated` 표 권한이 안 담겨,
   복원해도 **데이터는 있는데 PostgREST 가 표를 못 본다**(앱이 빈 화면).
+- `agit-storage-data`는 compose의 외부 영구 볼륨이다. 새 맥에서 복구할 때는 위 명령으로 볼륨을 먼저 만들고
+  객체 파일을 푼 뒤 `docker compose up -d storage imgproxy`를 실행한다.
 
 ### 덤프에 없는 것 (전체 재구축 시)
 
