@@ -79,6 +79,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     const {
         fetchWritingContentExportData,
         exportWritingContentToExcel,
+        exportWritingContentToPdf,
         exportWritingContentToGoogleDoc,
         authorizeGoogleExport,
         isGapiLoaded
@@ -331,6 +332,8 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
             const fileName = `${exportTarget.studentName}_독서록_모음`;
             if (format === 'excel') {
                 await exportWritingContentToExcel(data, fileName, 'reading_log');
+            } else if (format === 'pdf') {
+                await exportWritingContentToPdf(data, fileName, 'reading_log');
             } else {
                 await exportWritingContentToGoogleDoc(
                     data,

@@ -72,6 +72,7 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
     const {
         fetchWritingContentExportData,
         exportWritingContentToExcel,
+        exportWritingContentToPdf,
         exportWritingContentToGoogleDoc,
         authorizeGoogleExport
     } = useDataExport(classId);
@@ -247,6 +248,8 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
             const fileName = `${student.name}_일기_모음`;
             if (format === 'excel') {
                 await exportWritingContentToExcel(data, fileName, 'diary');
+            } else if (format === 'pdf') {
+                await exportWritingContentToPdf(data, fileName, 'diary');
             } else {
                 await exportWritingContentToGoogleDoc(data, fileName, 'diary', true, googleAccessToken);
             }
@@ -390,6 +393,14 @@ const TeacherDiaryManager = ({ activeClass, isMobile }) => {
                                             onClick={() => exportStudent(student, 'excel')}
                                         >
                                             {exportingId === student.student_id ? '내보내는 중...' : '📊 엑셀로'}
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={exportingId === student.student_id || student.total === 0}
+                                            onClick={() => exportStudent(student, 'pdf')}
+                                        >
+                                            🖨️ PDF로
                                         </Button>
                                         <Button
                                             variant="outline"

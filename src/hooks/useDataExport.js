@@ -149,7 +149,10 @@ export const useDataExport = (classId) => {
                 내용: post.content || '',
                 승인일: formatApprovalDate(post.approved_at, post.is_confirmed),
                 _missionId: post.mission_id,
-                _studentCreatedAt: post.student_created_at
+                _studentCreatedAt: post.student_created_at,
+                _postId: post.post_id,
+                _structuredContent: post.structured_content,
+                _inputTemplate: post.input_template
             }));
 
             if (type === 'student') {
@@ -163,13 +166,16 @@ export const useDataExport = (classId) => {
                 });
             }
 
-            return formattedData.map(({ 번호, 작성자, 미션제목, 학생글제목, 승인일, 내용 }) => ({
+            return formattedData.map(({ 번호, 작성자, 미션제목, 학생글제목, 승인일, 내용, _postId, _structuredContent, _inputTemplate }) => ({
                 번호,
                 작성자,
                 미션제목,
                 학생글제목,
                 승인일,
-                내용
+                내용,
+                _postId,
+                _structuredContent,
+                _inputTemplate
             }));
 
         } catch (error) {
@@ -526,6 +532,25 @@ export const useDataExport = (classId) => {
         }
     }, []);
 
+    const exportPdf = useCallback(async (data, fileName, contentType = 'assignment') => {
+        if (!data?.length) {
+            alert('PDF로 내보낼 글이 없습니다.');
+            return;
+        }
+
+        try {
+            const { exportWritingEntriesToPdf } = await import('../modules/writing/export/writingPdfExport.js');
+            await exportWritingEntriesToPdf({ items: data, title: fileName, contentType });
+        } catch (error) {
+            console.error('Writing PDF export failed:', error);
+            alert('PDF 출력 화면을 열지 못했습니다: ' + (error.message || '잠시 후 다시 시도해 주세요.'));
+        }
+    }, []);
+
+    const exportWritingContentToPdf = useCallback(async (data, fileName, contentType) => {
+        await exportPdf(data, fileName, contentType);
+    }, [exportPdf]);
+
     const exportToExcel = useCallback(async (data, fileName) => {
         if (!data || data.length === 0) {
             alert('출력할 데이터가 없습니다.');
@@ -533,7 +558,15 @@ export const useDataExport = (classId) => {
         }
 
         try {
-            await exportObjectsToExcel(data, fileName, { sheetName: 'Data' });
+            const rows = data.map((item) => ({
+                번호: item.번호,
+                작성자: item.작성자,
+                미션제목: item.미션제목,
+                학생글제목: item.학생글제목,
+                승인일: item.승인일,
+                내용: item.내용
+            }));
+            await exportObjectsToExcel(rows, fileName, { sheetName: 'Data' });
         } catch (error) {
             console.error('Excel Export Failed:', error);
             alert('엑셀 파일 생성 중 오류가 발생했습니다.');
@@ -544,8 +577,10 @@ export const useDataExport = (classId) => {
         fetchExportData,
         fetchWritingContentExportData,
         exportToExcel,
+        exportToPdf: exportPdf,
         exportToGoogleDoc,
         exportWritingContentToExcel,
+        exportWritingContentToPdf,
         exportWritingContentToGoogleDoc,
         authorizeGoogleExport: getAccessToken,
         // 기존 호출부 이름은 유지하되, 이제 GIS 토큰 클라이언트 준비 여부를 뜻한다.

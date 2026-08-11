@@ -4,7 +4,7 @@ import Card from './Card';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /**
- * 엑셀 또는 구글 문서 내보내기 옵션을 선택하는 모달
+ * 엑셀, PDF 또는 구글 문서 내보내기 옵션을 선택하는 모달
  * @param {boolean} isOpen 모달 표시 여부
  * @param {function} onClose 모달 닫기 함수
  * @param {string} title 내보낼 대상의 이름 (예: 홍길동, 나의 꿈 미션)
@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * @param {boolean} isGapiLoaded 구글 API 로드 여부 (비활성화 처리용)
  */
 const ExportSelectModal = ({ isOpen, onClose, title, onConfirm, isGapiLoaded, isBulk }) => {
-    const [format, setFormat] = useState('excel'); // 'excel' | 'googleDoc'
+    const [format, setFormat] = useState('excel'); // 'excel' | 'pdf' | 'googleDoc'
     const [usePageBreak, setUsePageBreak] = useState(true);
     const [groupBy, setGroupBy] = useState('mission'); // 'mission' | 'student'
 
@@ -31,14 +31,17 @@ const ExportSelectModal = ({ isOpen, onClose, title, onConfirm, isGapiLoaded, is
                     zIndex: 9999, backdropFilter: 'blur(3px)'
                 }} onClick={onClose}>
                     <motion.div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="export-select-title"
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <Card style={{ width: '360px', padding: '24px', borderRadius: '24px', textAlign: 'center' }}>
+                        <Card style={{ width: 'min(360px, calc(100vw - 32px))', maxHeight: '90vh', overflowY: 'auto', padding: '24px', borderRadius: '24px', textAlign: 'center' }}>
                             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📤</div>
-                            <h3 style={{ margin: '0 0 8px 0', color: '#2C3E50', fontWeight: '900' }}>데이터 내보내기</h3>
+                            <h3 id="export-select-title" style={{ margin: '0 0 8px 0', color: '#2C3E50', fontWeight: '900' }}>데이터 내보내기</h3>
                             <p style={{ color: '#7F8C8D', fontSize: '0.9rem', marginBottom: '24px' }}>
                                 <strong>{title}</strong>의 글을 어떤 형식으로 저장할까요?
                             </p>
@@ -46,6 +49,7 @@ const ExportSelectModal = ({ isOpen, onClose, title, onConfirm, isGapiLoaded, is
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
                                 {/* 엑셀 선택 */}
                                 <button
+                                    type="button"
                                     onClick={() => setFormat('excel')}
                                     style={{
                                         padding: '16px', borderRadius: '16px', border: '2px solid',
@@ -70,8 +74,36 @@ const ExportSelectModal = ({ isOpen, onClose, title, onConfirm, isGapiLoaded, is
                                     </div>
                                 </button>
 
+                                {/* PDF 선택 */}
+                                <button
+                                    type="button"
+                                    onClick={() => setFormat('pdf')}
+                                    style={{
+                                        padding: '16px', borderRadius: '16px', border: '2px solid',
+                                        borderColor: format === 'pdf' ? '#7C3AED' : '#E9ECEF',
+                                        background: format === 'pdf' ? '#F5F3FF' : 'white',
+                                        color: format === 'pdf' ? '#6D28D9' : '#495057',
+                                        display: 'flex', alignItems: 'center', gap: '12px',
+                                        cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left'
+                                    }}
+                                >
+                                    <span style={{ fontSize: '1.5rem' }}>🖨️</span>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>PDF / 인쇄</div>
+                                        <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>A4 양식으로 PDF 저장 또는 바로 인쇄</div>
+                                    </div>
+                                    <div style={{
+                                        width: '20px', height: '20px', borderRadius: '50%',
+                                        border: '2px solid', borderColor: format === 'pdf' ? '#7C3AED' : '#ADB5BD',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}>
+                                        {format === 'pdf' && <div style={{ width: '10px', height: '10px', background: '#7C3AED', borderRadius: '50%' }} />}
+                                    </div>
+                                </button>
+
                                 {/* 구글 문서 선택 */}
                                 <button
+                                    type="button"
                                     onClick={() => setFormat('googleDoc')}
                                     disabled={!isGapiLoaded}
                                     style={{
@@ -162,9 +194,13 @@ const ExportSelectModal = ({ isOpen, onClose, title, onConfirm, isGapiLoaded, is
                                     onClick={handleConfirm}
                                     style={{
                                         flex: 2,
-                                        backgroundColor: format === 'excel' ? '#27AE60' : '#4285F4',
+                                        backgroundColor: format === 'excel' ? '#27AE60' : format === 'pdf' ? '#7C3AED' : '#4285F4',
                                         color: 'white', fontWeight: 'bold',
-                                        boxShadow: format === 'excel' ? '0 4px 12px rgba(39, 174, 96, 0.3)' : '0 4px 12px rgba(66, 133, 244, 0.3)'
+                                        boxShadow: format === 'excel'
+                                            ? '0 4px 12px rgba(39, 174, 96, 0.3)'
+                                            : format === 'pdf'
+                                                ? '0 4px 12px rgba(124, 58, 237, 0.3)'
+                                                : '0 4px 12px rgba(66, 133, 244, 0.3)'
                                     }}
                                 >
                                     내보내기

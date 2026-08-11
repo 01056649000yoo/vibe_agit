@@ -5,6 +5,12 @@ import {
     toWritingExportDocumentEntries,
     toWritingExportExcelRows
 } from '../src/modules/writing/export/writingExportProfiles.js';
+import {
+    buildWritingPdfHtml,
+    collectWritingPdfImagePaths,
+    normalizeWritingPdfEntry,
+    WRITING_PDF_MAX_ENTRIES
+} from '../src/modules/writing/export/writingPdfExport.js';
 
 const READING_LOG = {
     student_code: '7',
@@ -42,5 +48,62 @@ test('새 콘텐츠 프로필이 아직 없어도 공용 과제형 안전 프로
     const profile = getWritingExportProfile('future_journal');
     assert.equal(profile.id, 'future_journal');
     assert.equal(profile.sheetName, '글 모음');
+});
+
+test('일반 글 PDF는 제목·글쓴이·본문을 12포인트 A4 양식으로 만든다', () => {
+    const item = {
+        작성자: '김학생',
+        미션제목: '우리 동네 이야기',
+        학생글제목: '<소중한 장소>',
+        승인일: '2026-08-11',
+        내용: '첫 문단입니다.\n\n둘째 문단입니다.'
+    };
+    const entry = normalizeWritingPdfEntry(item, 'assignment');
+    const html = buildWritingPdfHtml({ items: [item], title: '일반 글 모음' });
+
+    assert.equal(entry.author, '김학생');
+    assert.match(html, /@page \{ size: A4 portrait/);
+    assert.match(html, /font-size: 12pt/);
+    assert.match(html, /pdf-entry--normal/);
+    assert.match(html, /&lt;소중한 장소&gt;/);
+    assert.match(html, /첫 문단입니다/);
+    assert.doesNotMatch(html, /font-size: (?:[0-9]|1[01])pt/);
+});
+
+test('보고서 PDF는 칸 구조와 사진·설명을 별도 양식으로 만든다', () => {
+    const path = '11111111-1111-1111-1111-111111111111/section-1/photo.webp';
+    const item = {
+        작성자: '이학생',
+        미션제목: '학교 화단 관찰',
+        학생글제목: '봉선화가 자라는 모습',
+        내용: '',
+        _inputTemplate: 'report',
+        _structuredContent: {
+            template: 'report',
+            version: 1,
+            sections: [{
+                id: 'section-1',
+                heading: '관찰 결과',
+                body: '새잎이 두 장 나왔습니다.',
+                image: {
+                    path,
+                    caption: '관찰 셋째 날 봉선화',
+                    width: 720,
+                    height: 540,
+                    bytes: 120000,
+                    mimeType: 'image/webp'
+                }
+            }]
+        }
+    };
+    const imageUrls = new Map([[path, 'https://example.test/signed-photo.webp?token=a&b=2']]);
+    const html = buildWritingPdfHtml({ items: [item], title: '보고서 모음', imageUrls });
+
+    assert.deepEqual(collectWritingPdfImagePaths([item]), [path]);
+    assert.equal(WRITING_PDF_MAX_ENTRIES, 100);
+    assert.match(html, /pdf-entry--report/);
+    assert.match(html, /report-sheet__section/);
+    assert.match(html, /signed-photo.webp\?token=a&amp;b=2/);
+    assert.match(html, /관찰 셋째 날 봉선화/);
 });
 

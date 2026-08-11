@@ -35,7 +35,7 @@ export const useStudentManager = (classId) => {
         reason: '참여도가 높아요! 🌟'
     });
 
-    const { fetchExportData, exportToExcel, exportToGoogleDoc, authorizeGoogleExport, isGapiLoaded } = useDataExport(classId);
+    const { fetchExportData, exportToExcel, exportToPdf, exportToGoogleDoc, authorizeGoogleExport, isGapiLoaded } = useDataExport(classId);
 
     const fetchStudents = useCallback(async () => {
         if (!classId) return;
@@ -278,6 +278,7 @@ export const useStudentManager = (classId) => {
         }
         const fileName = `${exportTarget.title}_글모음`;
         if (format === 'excel') exportToExcel(data, fileName);
+        else if (format === 'pdf') await exportToPdf(data, fileName, 'assignment');
         else if (format === 'googleDoc') {
             await exportToGoogleDoc(data, fileName, options.usePageBreak, null, 'mission', googleAccessToken);
         }
