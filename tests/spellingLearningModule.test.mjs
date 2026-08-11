@@ -27,6 +27,9 @@ const {
 const { ELEMENTARY_SPELLING_QUIZ_QUESTIONS } = await import(
     '../src/modules/writing/tools/spelling-lookup/elementarySpellingQuiz.js'
 );
+const { EXPANDED_ELEMENTARY_SPELLING_ENTRIES } = await import(
+    '../src/modules/writing/tools/spelling-lookup/elementarySpellingExpansionCatalog.js'
+);
 
 test('맞춤법 학습 기능은 등록 모듈과 성능 계약을 가진다', () => {
     assert.match(manifest, /id: 'spelling-learning'/);
@@ -42,12 +45,13 @@ test('교사 등록 데이터는 기존 학생 수첩 기본 자료와 우리 �
     const builtInEntries = getElementarySpellingEntries();
     const referenceEntries = builtInEntries.filter((entry) => entry.contentType === 'reference');
     const practiceEntries = builtInEntries.filter((entry) => entry.contentType === 'practice');
-    assert.equal(builtInEntries.length, 300);
-    assert.equal(referenceEntries.length, 200);
+    assert.equal(builtInEntries.length, 500);
+    assert.equal(referenceEntries.length, 400);
     assert.equal(practiceEntries.length, 100);
+    assert.equal(EXPANDED_ELEMENTARY_SPELLING_ENTRIES.length, 200);
     assert.equal(builtInEntries.length, ELEMENTARY_SPELLING_ENTRY_IDS.length);
-    assert.equal(new Set(ELEMENTARY_SPELLING_ENTRY_IDS).size, 300);
-    assert.equal(new Set(builtInEntries.map((entry) => entry.question)).size, 300);
+    assert.equal(new Set(ELEMENTARY_SPELLING_ENTRY_IDS).size, 500);
+    assert.equal(new Set(builtInEntries.map((entry) => entry.question)).size, 500);
     for (const entry of builtInEntries) {
         assert.ok(entry.category, `${entry.id}: 분류가 필요합니다.`);
         assert.ok(entry.explanation.length >= 10, `${entry.id}: 설명이 너무 짧습니다.`);
@@ -69,25 +73,27 @@ test('교사 등록 데이터는 기존 학생 수첩 기본 자료와 우리 �
     assert.doesNotMatch(teacherEntry, /초안 저장|적용 중/);
 });
 
-test('300개 기본 자료는 틀린 표현과 분류·문장으로 바로 찾을 수 있다', () => {
+test('500개 기본 자료는 틀린 표현과 분류·문장으로 바로 찾을 수 있다', () => {
     assert.equal(searchElementarySpelling('도데체')[0]?.id, 'dodaeche');
     assert.equal(searchElementarySpelling('설레였다')[0]?.id, 'seolletda');
     assert.equal(searchElementarySpelling('수영을 못해요')[0]?.id, 'mot-hada');
+    assert.equal(searchElementarySpelling('괜찬다')[0]?.id, 'expansion-gwaenchanhda');
+    assert.equal(searchElementarySpelling('이번주')[0]?.id, 'expansion-ibeon-ju');
     assert.ok(searchElementarySpelling('외래어 표기').every((entry) => entry.category === '외래어 표기'));
     assert.ok(searchElementarySpelling('선생님 말씀대로 따라 했다').some((entry) => entry.id === 'practice-spelling-quiz-100'));
 });
 
-test('기본 자료 300개는 모두 글쓰기 밑줄 규칙을 가진다', () => {
-    assert.equal(ELEMENTARY_SPELLING_DETECTION_RULE_COUNT, 300);
-    assert.equal(ELEMENTARY_SPELLING_DETECTION_RULES.length, 300);
-    assert.equal(new Set(ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS).size, 300);
+test('기본 자료 500개는 모두 글쓰기 밑줄 규칙을 가진다', () => {
+    assert.equal(ELEMENTARY_SPELLING_DETECTION_RULE_COUNT, 500);
+    assert.equal(ELEMENTARY_SPELLING_DETECTION_RULES.length, 500);
+    assert.equal(new Set(ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS).size, 500);
     assert.deepEqual(new Set(ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS), new Set(ELEMENTARY_SPELLING_ENTRY_IDS));
     assert.ok(ELEMENTARY_SPELLING_DETECTION_RULES.every((rule) => rule.patterns.length > 0));
     assert.ok(ELEMENTARY_SPELLING_DETECTION_RULES.every((rule) => rule.label && rule.category));
-    assert.ok(ELEMENTARY_SPELLING_LABEL_COUNT >= 200);
-    assert.ok(ELEMENTARY_SPELLING_TRIGGER_COUNT >= 200);
+    assert.ok(ELEMENTARY_SPELLING_LABEL_COUNT >= 400);
+    assert.ok(ELEMENTARY_SPELLING_TRIGGER_COUNT >= 400);
     for (const rule of ELEMENTARY_SPELLING_DETECTION_RULES) {
-        assert.ok(findElementarySpellingIssues(rule.patterns[0].text, 300)
+        assert.ok(findElementarySpellingIssues(rule.patterns[0].text, 500)
             .some((issue) => issue.entryId === rule.entryId), `${rule.entryId}: 대표 오류 문맥을 찾지 못합니다.`);
     }
     assert.equal(findElementarySpellingIssues('김치찌게를 먹었다.')[0]?.right, '찌개');
@@ -103,7 +109,7 @@ test('기본 자료 300개는 모두 글쓰기 밑줄 규칙을 가진다', () =
     assert.match(underlineInput, /loadElementarySpellingDetector/);
 });
 
-test('후보 색인 검사는 기존 300개 순차 검사와 같은 결과를 낸다', () => {
+test('후보 색인 검사는 500개 순차 검사와 같은 결과를 낸다', () => {
     const findWithLegacyLoop = (value, limit = 50) => {
         const text = String(value || '').normalize('NFC');
         const issues = [];
@@ -161,7 +167,7 @@ test('초등 맞춤법 문제은행은 순서가 있는 고유 문항 100개와 
         assert.doesNotMatch(question.prompt, /\([^()]+\s\/\s[^()]+\)/);
         assert.doesNotMatch(question.solution, /\([^()]+\s\/\s[^()]+\)/);
         for (const detectionPattern of question.detectionPatterns) {
-            assert.ok(findElementarySpellingIssues(detectionPattern.text, 300)
+            assert.ok(findElementarySpellingIssues(detectionPattern.text, 500)
                 .some((issue) => issue.entryId === `practice-${question.id}`), `${question.number}: 틀린 선택지를 찾지 못합니다.`);
         }
     }
@@ -175,11 +181,11 @@ test('초등 맞춤법 문제은행은 순서가 있는 고유 문항 100개와 
     assert.match(lookup, /점수는 저장하지 않아요/);
 });
 
-test('퀴즈는 기본 자료 300개 전체에서 열 때마다 중복 없는 5문제를 뽑는다', () => {
+test('퀴즈는 기본 자료 500개 전체에서 열 때마다 중복 없는 5문제를 뽑는다', () => {
     const pool = getElementarySpellingQuizPool();
-    assert.equal(pool.length, 300);
-    assert.equal(new Set(pool.map((question) => question.id)).size, 300);
-    assert.equal(new Set(pool.map((question) => question.sourceEntryId)).size, 300);
+    assert.equal(pool.length, 500);
+    assert.equal(new Set(pool.map((question) => question.id)).size, 500);
+    assert.equal(new Set(pool.map((question) => question.sourceEntryId)).size, 500);
     assert.ok(pool.every((question) => question.choices.length >= 2));
     assert.ok(pool.every((question) => question.choices.includes(question.answer)));
 
@@ -189,7 +195,7 @@ test('퀴즈는 기본 자료 300개 전체에서 열 때마다 중복 없는 5�
     assert.equal(new Set(firstFive.map((question) => question.id)).size, 5);
     assert.deepEqual(firstFive.map((question) => question.sessionNumber), [1, 2, 3, 4, 5]);
     assert.notDeepEqual(firstFive.map((question) => question.id), anotherFive.map((question) => question.id));
-    assert.match(lookupManifest, /기본 자료 300개/);
+    assert.match(lookupManifest, /기본 자료 500개/);
 });
 
 test('학생 검색은 입력 중 직접 쓰지 않고 닫을 때 배치 RPC로 모은다', () => {

@@ -1,11 +1,12 @@
 /**
  * 맞춤법 수첩의 사전 본문(설명·예문·출처).
  *
- * 설명·예문·문제 본문은 수첩과 교사 화면에서 쓰고, 같은 300개 항목에서 만든
+ * 설명·예문·문제 본문은 수첩과 교사 화면에서 쓰고, 같은 500개 항목에서 만든
  * 밑줄 규칙은 글쓰기 화면이 열린 뒤 별도 청크로 한 번만 내려받는다.
  */
 import { findDetectedEntryIds } from './spellingDetectionRules.js';
 import { ADDITIONAL_ELEMENTARY_SPELLING_ENTRIES } from './elementarySpellingCatalog.js';
+import { EXPANDED_ELEMENTARY_SPELLING_ENTRIES } from './elementarySpellingExpansionCatalog.js';
 import { ELEMENTARY_SPELLING_QUIZ_QUESTIONS } from './elementarySpellingQuiz.js';
 import {
     collectSpellingCandidates,
@@ -352,7 +353,7 @@ const CONTEXT_ONLY_REFERENCE_PATTERNS = {
     yosae: [pattern('요세 날씨', '요세', '요새'), pattern('나는 요세', '요세', '요새')]
 };
 
-const additionalEntries = ADDITIONAL_ELEMENTARY_SPELLING_ENTRIES.map(({
+const createReferenceEntries = (entries) => entries.map(({
     sourceQuery,
     sourceType,
     ...entry
@@ -361,6 +362,9 @@ const additionalEntries = ADDITIONAL_ELEMENTARY_SPELLING_ENTRIES.map(({
     contentType: 'reference',
     source: sourceType === 'norm' ? normSource : dictionarySource(sourceQuery || entry.answer)
 }));
+
+const additionalEntries = createReferenceEntries(ADDITIONAL_ELEMENTARY_SPELLING_ENTRIES);
+const expandedEntries = createReferenceEntries(EXPANDED_ELEMENTARY_SPELLING_ENTRIES);
 
 const createPracticeLearningLabel = (question) => question.choices
     .map((choice) => choice.replace(/,\s*/g, '·'))
@@ -387,6 +391,7 @@ const ELEMENTARY_SPELLING_ENTRIES = [
         contentType: 'reference'
     })),
     ...additionalEntries,
+    ...expandedEntries,
     ...practiceEntries
 ].map((entry) => Object.freeze({
     ...entry,
@@ -456,7 +461,7 @@ export const ELEMENTARY_SPELLING_TRIGGER_COUNT = new Set(
     ELEMENTARY_INDEXED_PATTERNS.map((indexedPattern) => indexedPattern.target)
 ).size;
 
-/** 300개 기본 자료에서 본문 후보를 한 번 찾은 뒤 해당 라벨의 문맥만 확인한다. */
+/** 500개 기본 자료에서 본문 후보를 한 번 찾은 뒤 해당 라벨의 문맥만 확인한다. */
 export const findElementarySpellingIssues = (value, limit = 50) => {
     const text = String(value || '').normalize('NFC');
     const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : 50;
@@ -546,7 +551,7 @@ const takeRandomItems = (items, count, random) => {
     return selected;
 };
 
-/** 수첩을 열거나 다시 도전할 때 300개 중 겹치지 않는 문제만 뽑는다. */
+/** 수첩을 열거나 다시 도전할 때 500개 중 겹치지 않는 문제만 뽑는다. */
 export const createRandomElementarySpellingQuiz = (count = 5, random = Math.random) => {
     const safeCount = Math.min(Math.max(0, Math.floor(count)), ELEMENTARY_SPELLING_QUIZ_POOL.length);
     const selected = takeRandomItems(ELEMENTARY_SPELLING_QUIZ_POOL, safeCount, random);

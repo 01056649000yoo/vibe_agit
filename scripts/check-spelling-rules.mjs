@@ -34,6 +34,9 @@ import {
 import {
     ELEMENTARY_SPELLING_QUIZ_QUESTIONS
 } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingQuiz.js';
+import {
+    EXPANDED_ELEMENTARY_SPELLING_ENTRIES
+} from '../src/modules/writing/tools/spelling-lookup/elementarySpellingExpansionCatalog.js';
 
 // ── 전부 올바른 문장. 여기 밑줄이 그어지면 오탐이다 ──────────────────────────
 const 정상 = [
@@ -201,13 +204,13 @@ const 기본규칙아이디 = new Set(ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS);
 const 빈기본규칙 = ELEMENTARY_SPELLING_DETECTION_RULES.filter((rule) => rule.patterns.length === 0);
 const 라벨없는기본규칙 = ELEMENTARY_SPELLING_DETECTION_RULES.filter((rule) => !rule.label || !rule.category);
 if (
-    ELEMENTARY_SPELLING_DETECTION_RULE_COUNT !== 300 ||
-    기본규칙아이디.size !== 300 ||
+    ELEMENTARY_SPELLING_DETECTION_RULE_COUNT !== 500 ||
+    기본규칙아이디.size !== 500 ||
     빈기본규칙.length > 0 ||
     라벨없는기본규칙.length > 0 ||
     ELEMENTARY_SPELLING_ENTRY_IDS.some((id) => !기본규칙아이디.has(id))
 ) {
-    console.error(`\n실패 — 300개 기본 자료 밑줄 연결 오류: 규칙 ${ELEMENTARY_SPELLING_DETECTION_RULE_COUNT}개, 고유 항목 ${기본규칙아이디.size}개, 빈 규칙 ${빈기본규칙.length}개, 라벨 없음 ${라벨없는기본규칙.length}개`);
+    console.error(`\n실패 — 500개 기본 자료 밑줄 연결 오류: 규칙 ${ELEMENTARY_SPELLING_DETECTION_RULE_COUNT}개, 고유 항목 ${기본규칙아이디.size}개, 빈 규칙 ${빈기본규칙.length}개, 라벨 없음 ${라벨없는기본규칙.length}개`);
     process.exit(1);
 }
 console.log(`라벨 색인  학습 라벨 ${ELEMENTARY_SPELLING_LABEL_COUNT}개 · 검사 표현 ${ELEMENTARY_SPELLING_TRIGGER_COUNT}개 · 후보 문맥만 확인`);
@@ -230,8 +233,8 @@ const 예문오탐 = 전체수첩항목.flatMap((entry) => entry.examples.flatMa
         .map((issue) => ({ entryId: entry.id, example, issue }))
 )));
 if (
-    전체수첩항목.length !== 300 ||
-    사전형수첩항목.length !== 200 ||
+    전체수첩항목.length !== 500 ||
+    사전형수첩항목.length !== 400 ||
     문장형수첩항목.length !== 100 ||
     중복수첩아이디 > 0 ||
     불완전수첩항목.length > 0 ||
@@ -244,7 +247,54 @@ if (
     }
     process.exit(1);
 }
-console.log(`수첩  기본 자료 ${전체수첩항목.length}개(사전형 200 + 문장형 100) · 바른 예문 오탐 0건 · 설명/출처 확인`);
+console.log(`수첩  기본 자료 ${전체수첩항목.length}개(사전형 400 + 문장형 100) · 바른 예문 오탐 0건 · 설명/출처 확인`);
+
+const 기존항목 = 전체수첩항목.filter((entry) => !entry.id.startsWith('expansion-'));
+const 확장항목 = 전체수첩항목.filter((entry) => entry.id.startsWith('expansion-'));
+const normalizePair = (value) => String(value).normalize('NFC').replace(/[^가-힣a-z0-9]/gi, '');
+const 기존검색어 = new Set(기존항목.flatMap((entry) => (
+    [entry.answer, entry.question, ...entry.searchable].map(normalizePair).filter(Boolean)
+)));
+const 확장오답 = 확장항목.map((entry) => (
+    entry.question.split('/').map((choice) => choice.trim()).find((choice) => choice !== entry.answer)
+));
+const 확장분류수 = Object.fromEntries(
+    [...new Set(확장항목.map((entry) => entry.category))]
+        .map((category) => [category, 확장항목.filter((entry) => entry.category === category).length])
+);
+const 기대확장분류수 = {
+    '낱말 표기': 70,
+    사이시옷: 30,
+    '용언 활용': 30,
+    띄어쓰기: 40,
+    '외래어 표기': 30
+};
+const 기존과겹치는확장표현 = 확장항목.flatMap((entry) => (
+    [entry.answer, ...entry.question.split('/').map((choice) => choice.trim())]
+        .filter((value) => 기존검색어.has(normalizePair(value)))
+        .map((value) => `${entry.id}:${value}`)
+));
+const 못찾은확장오답 = 확장항목.flatMap((entry) => (
+    entry.question.split('/').map((choice) => choice.trim())
+        .filter((choice) => choice !== entry.answer)
+        .filter((wrong) => !findElementarySpellingIssues(`문장 ${wrong}.`, 500)
+            .some((issue) => issue.entryId === entry.id))
+        .map((wrong) => `${entry.id}:${wrong}`)
+));
+if (
+    EXPANDED_ELEMENTARY_SPELLING_ENTRIES.length !== 200 ||
+    확장항목.length !== 200 ||
+    new Set(확장오답).size !== 200 ||
+    JSON.stringify(확장분류수) !== JSON.stringify(기대확장분류수) ||
+    기존과겹치는확장표현.length > 0 ||
+    못찾은확장오답.length > 0
+) {
+    console.error(`\n실패 — 추가 200개 품질 오류: 원본 ${EXPANDED_ELEMENTARY_SPELLING_ENTRIES.length}개, 연결 ${확장항목.length}개, 고유 오답 ${new Set(확장오답).size}개, 기존 표현 중복 ${기존과겹치는확장표현.length}개, 밑줄 미탐 ${못찾은확장오답.length}개`);
+    if (기존과겹치는확장표현.length > 0) console.error(`  기존 표현 중복: ${기존과겹치는확장표현.slice(0, 10).join(', ')}`);
+    if (못찾은확장오답.length > 0) console.error(`  밑줄 미탐: ${못찾은확장오답.slice(0, 10).join(', ')}`);
+    process.exit(1);
+}
+console.log('추가 자료  낱말 70 · 사이시옷 30 · 활용 30 · 띄어쓰기 40 · 외래어 30 · 기존 300개와 표현 중복 0');
 
 const 중복문제아이디 = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length - new Set(
     ELEMENTARY_SPELLING_QUIZ_QUESTIONS.map((question) => question.id)
@@ -265,7 +315,7 @@ console.log(`문제은행  연속된 100문제 · ID 중복 0개 · 선택지/�
 
 const 놓친문제밑줄 = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.flatMap((question) => (
     question.detectionPatterns
-        .filter((item) => !findElementarySpellingIssues(item.text, 300)
+        .filter((item) => !findElementarySpellingIssues(item.text, 500)
             .some((issue) => issue.entryId === `practice-${question.id}`))
         .map(() => question.number)
 ));
@@ -276,12 +326,12 @@ if (놓친문제밑줄.length > 0) {
 
 const 전체문제후보 = getElementarySpellingQuizPool();
 if (
-    전체문제후보.length !== 300 ||
-    new Set(전체문제후보.map((question) => question.sourceEntryId)).size !== 300 ||
+    전체문제후보.length !== 500 ||
+    new Set(전체문제후보.map((question) => question.sourceEntryId)).size !== 500 ||
     전체문제후보.some((question) => !question.choices.includes(question.answer))
 ) {
-    console.error('\n실패 — 300개 랜덤 퀴즈 후보 구성이 올바르지 않다.');
+    console.error('\n실패 — 500개 랜덤 퀴즈 후보 구성이 올바르지 않다.');
     process.exit(1);
 }
-console.log('랜덤 퀴즈  300개 후보 · 열 때마다 중복 없는 5문제');
+console.log('랜덤 퀴즈  500개 후보 · 열 때마다 중복 없는 5문제');
 console.log('\n통과');

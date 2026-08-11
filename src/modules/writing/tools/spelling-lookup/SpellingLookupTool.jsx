@@ -32,7 +32,7 @@ const getErrorPayload = async (error) => {
  * 맞춤법 수첩 본체.
  *
  * 여는 버튼과 "열어 달라"는 신호 처리는 공통 호스트(`WritingToolHost`)가 맡는다.
- * 이 컴포넌트는 **열려 있을 때만 화면에 올라온다**. 300개 검사 데이터는 글쓰기 중
+ * 이 컴포넌트는 **열려 있을 때만 화면에 올라온다**. 500개 검사 데이터는 글쓰기 중
  * 별도 청크로 미리 받을 수 있지만, 모달 UI와 사전 검색 코드는 수첩을 열 때만 받는다.
  */
 const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) => {
@@ -194,7 +194,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
     };
 
     // 밑줄 칩으로 열렸을 때는 학생이 쓴 표현보다 수첩이 제안한 바른 표현을 먼저 찾는다.
-    // 명백한 오기뿐 아니라 문맥에 따라 쓰임이 달라지는 300개 항목도 같은 흐름을 쓴다.
+    // 명백한 오기뿐 아니라 문맥에 따라 쓰임이 달라지는 500개 항목도 같은 흐름을 쓴다.
     useEffect(() => {
         const openingQuery = correction?.lookup || initialQuery;
         if (openingQuery.trim()) runSearch(openingQuery);
@@ -401,7 +401,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
 
                     {activeView === 'quiz' && <div className="spelling-quiz-pane" role="tabpanel">
                         {!quizFinished && <>
-                            <p className="spelling-lookup-promise">기본 자료 300개 중에서 수첩을 열 때마다 새로운 5문제를 골라요.</p>
+                            <p className="spelling-lookup-promise">기본 자료 500개 중에서 수첩을 열 때마다 새로운 5문제를 골라요.</p>
                             <div className="spelling-quiz-status">
                                 <span><b>{quizIndex + 1}</b> / {quizQuestions.length}</span>
                                 <span>맞힌 문제 <b>{quizScore}</b>개</span>
