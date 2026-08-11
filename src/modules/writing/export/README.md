@@ -6,7 +6,8 @@
 
 1. `get_teacher_writing_content_export`: 학급·학생·글 유형을 검증하고 공용 행 계약을 반환한다.
 2. `writingExportProfiles.js`: 콘텐츠별 Excel 열과 Google Docs 제목·메타정보를 정한다.
-3. `useDataExport.js`: Google 권한과 Docs API 요청을 담당하고, XLSX 생성은 공용 `excelExport`를 사용한다.
+3. `useDataExport.js`: Google 권한과 Docs API 요청을 담당하고, XLSX 생성은 공용 `excelExport`를 사용한다. 사진은
+   장르 매니페스트의 `imageExport` 계약으로 내보내기 버튼을 누른 뒤에만 불러온다.
 4. `writingPdfExport.js`: 일반 글 A4 셸을 유지하고, 장르형 글은 미션 매니페스트의 `pdfExport` 계약에 맡긴다.
 
 미션 내보내기의 기존 `get_writing_export_data` 호출부는 운영 호환을 위해 유지한다. 신규 콘텐츠와 독서록은
@@ -43,6 +44,21 @@
   이어 붙이며, 사진과 사진 설명은 가능한 한 같은 페이지에 둔다.
 - 한 번에 최대 100편만 만든다. 보고서 비공개 사진 주소는 PDF 출력을 누른 순간 최대 50개씩 서명하고, 입력 중이나
   목록을 보는 동안에는 사진을 미리 불러오지 않는다.
+
+## 이미지 포함 Excel·Google Docs 원칙
+
+- 사진을 가진 장르는 매니페스트에 지연 `imageExport { id, load }`를 선언한다. 로더가 반환하는 객체는
+  `collectImages(entry)`로 글별 사진 순서·경로·크기를 제공하고 `loadImageUrls(entries)`로 담당 교사가 내보내기를
+  누른 순간에만 비공개 사진의 서명 URL을 만든다. 공용 내보내기 훅에 장르 이름을 하드코딩하지 않는다.
+- Excel은 기존 데이터 열을 유지하고 `내용` 뒤에 `사진 1`, `사진 2`, `사진 3` 열을 추가한다. 사진은 링크 문자열이
+  아니라 XLSX 이미지 레이어에 실제 파일로 포함하고 같은 글 행에 고정한다. WebP는 호환성을 위해 JPEG로 변환한다.
+- Google Docs는 제목·작성자·본문을 먼저 넣고 사진을 해당 글의 가장 마지막에 원래 순서대로 한 장씩 가운데 정렬한다.
+  Docs API가 PNG·JPEG·GIF만 받으므로 WebP는 브라우저에서 JPEG로 바꾼다.
+- 변환된 사진은 교사가 선택한 Google 계정의 Drive에 검색 불가 임시 파일로 올린 뒤 Docs가 사본을 저장하면 즉시
+  삭제한다. 파일 삭제가 실패하면 공개 권한 삭제를 다시 시도하고, 둘 다 실패하면 교사에게 직접 정리할 파일명을
+  알린다. Google Cloud 프로젝트에는 Google Docs API와 Google Drive API가 모두 활성화되어 있어야 한다.
+- 브라우저 CSP의 Google Drive API 허용 범위는 `https://www.googleapis.com` 하나로 제한한다. 사진 원본·서명 URL·
+  Google 액세스 토큰을 로그나 DB에 기록하지 않는다.
 
 ## 장르형 글쓰기 PDF 추가 규칙 (필수)
 

@@ -1,32 +1,11 @@
 import { escapePdfHtml, renderPdfDocumentHeader } from '../../export/pdfRenderContract.js';
 import { normalizeReportSections } from './reportContent.js';
+import { collectReportImagePaths, loadReportImageUrls } from './reportExportImages.js';
 import { REPORT_PDF_MODE_FINAL, REPORT_PDF_MODE_GUIDED } from './reportPdfModes.js';
-const REPORT_IMAGE_URL_BATCH_SIZE = 50;
 
 const getReportSections = (entry) => (
     normalizeReportSections(entry.structuredContent, entry.content)
 );
-
-const collectImagePaths = (entry) => (
-    getReportSections(entry)
-        .map((section) => section.image?.path)
-        .filter(Boolean)
-);
-
-const loadImageUrls = async (entries) => {
-    const paths = [...new Set(entries.flatMap(collectImagePaths))];
-    if (paths.length === 0) return new Map();
-    const { getReportImageUrls } = await import('./reportImageApi.js');
-    const urls = new Map();
-    for (let index = 0; index < paths.length; index += REPORT_IMAGE_URL_BATCH_SIZE) {
-        const batch = paths.slice(index, index + REPORT_IMAGE_URL_BATCH_SIZE);
-        const batchUrls = await getReportImageUrls(batch);
-        batchUrls.forEach((url, path) => urls.set(path, url));
-    }
-    const missing = paths.filter((path) => !urls.has(path));
-    if (missing.length > 0) throw new Error(`보고서 사진 ${missing.length}장을 불러오지 못했습니다.`);
-    return urls;
-};
 
 const renderGuidedReportEntry = (entry, imageUrls) => {
     const sections = getReportSections(entry);
@@ -277,6 +256,6 @@ export const reportPdfExport = {
             : renderGuidedReportEntry(entry, imageUrls)
     ),
     styles: REPORT_PDF_STYLES,
-    collectImagePaths,
-    loadImageUrls,
+    collectImagePaths: collectReportImagePaths,
+    loadImageUrls: loadReportImageUrls,
 };

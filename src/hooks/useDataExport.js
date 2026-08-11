@@ -5,7 +5,7 @@ import {
     toWritingExportDocumentEntries,
     toWritingExportExcelRows
 } from '../modules/writing/export/writingExportProfiles';
-import { exportObjectsToExcel } from '../lib/excelExport';
+import { exportObjectsToExcel, exportObjectsToExcelWithImages } from '../lib/excelExport';
 
 const GOOGLE_DOCS_API_ROOT = 'https://docs.googleapis.com/v1';
 
@@ -205,8 +205,21 @@ export const useDataExport = (classId) => {
             return;
         }
 
+        let cleanupGoogleDocImages = async () => {};
         try {
             const accessToken = authorizedAccessToken || await getAccessToken();
+            const { loadWritingExportImageAttachments } = await import('../modules/writing/export/writingImageExport.js');
+            const imageAttachments = await loadWritingExportImageAttachments(data);
+            const hasImages = imageAttachments.some((images) => images.length > 0);
+            let googleDocImages = imageAttachments;
+            let appendGoogleDocImageRequests = null;
+            if (hasImages) {
+                const imageExport = await import('../modules/writing/export/googleDocImageExport.js');
+                const prepared = await imageExport.prepareGoogleDocImageAttachments(imageAttachments, accessToken);
+                googleDocImages = prepared.attachmentsByItem;
+                cleanupGoogleDocImages = prepared.cleanup;
+                appendGoogleDocImageRequests = imageExport.appendGoogleDocImageRequests;
+            }
 
             const now = new Date();
             const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -380,6 +393,15 @@ export const useDataExport = (classId) => {
                 });
                 currentIndex += contentText.length;
 
+                // 사진은 글의 흐름을 방해하지 않도록 본문이 끝난 뒤에만 붙인다.
+                if (appendGoogleDocImageRequests) {
+                    currentIndex = appendGoogleDocImageRequests(
+                        requests,
+                        currentIndex,
+                        Reflect.get(googleDocImages, index),
+                    );
+                }
+
                 // (d) 학생 간 페이지 나누기 (추가 미션 내에서의 구분)
                 // 만약 다음 항목이 다른 그룹(미션/학생)이라면 여기서 나누지 않고 상단의 헤더 삽입부에서 나눔
                 const nextItem = index < data.length - 1 ? data[index + 1] : null;
@@ -413,6 +435,13 @@ export const useDataExport = (classId) => {
         } catch (error) {
             console.error('Google Doc Export Failed:', error);
             alert('구글 문서 생성에 실패했습니다: ' + (error.message || 'Google 인증 또는 문서 API 오류'));
+        } finally {
+            try {
+                await cleanupGoogleDocImages();
+            } catch (cleanupError) {
+                console.error('Temporary Google image cleanup failed:', cleanupError);
+                alert('임시 사진 정리에 실패했습니다. Google Drive에서 끄적끄적 임시사진을 삭제해 주세요.');
+            }
         }
     }, [getAccessToken, tokenClient]);
 
@@ -571,7 +600,14 @@ export const useDataExport = (classId) => {
                 승인일: item.승인일,
                 내용: item.내용
             }));
-            await exportObjectsToExcel(rows, fileName, { sheetName: 'Data' });
+            const { loadWritingExportImageAttachments, loadWritingExportImageBlobs } = await import('../modules/writing/export/writingImageExport.js');
+            const imageAttachments = await loadWritingExportImageAttachments(data);
+            if (imageAttachments.some((images) => images.length > 0)) {
+                const imageBlobs = await loadWritingExportImageBlobs(imageAttachments);
+                await exportObjectsToExcelWithImages(rows, imageBlobs, fileName, { sheetName: 'Data' });
+            } else {
+                await exportObjectsToExcel(rows, fileName, { sheetName: 'Data' });
+            }
         } catch (error) {
             console.error('Excel Export Failed:', error);
             alert('엑셀 파일 생성 중 오류가 발생했습니다.');

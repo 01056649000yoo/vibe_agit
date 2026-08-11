@@ -17,6 +17,10 @@ export const reportMissionType = {
         id: REPORT_TEMPLATE_ID,
         load: () => import('./reportPdfExport.js').then((module) => module.reportPdfExport),
     },
+    imageExport: {
+        id: REPORT_TEMPLATE_ID,
+        load: () => import('./reportExportImages.js').then((module) => module.reportImageExport),
+    },
     supportsEvaluation: true,
     unitLabel: '내용 칸',
     skipGenericParagraphValidation: true,

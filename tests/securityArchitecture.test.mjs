@@ -2,18 +2,20 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, vercel, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
     readFile('src/store/useAuthStore.js', 'utf8'),
     readFile('Caddyfile.container', 'utf8'),
+    readFile('vercel.json', 'utf8'),
     readFile('supabase/migrations/20261014_security_boundary_hardening.sql', 'utf8'),
     readFile('supabase/migrations/20261018_report_writing_images.sql', 'utf8'),
     readFile('supabase/migrations/20261019_report_image_storage_optimization.sql', 'utf8'),
     readFile('supabase/migrations/20261021_report_image_upsert_validation.sql', 'utf8'),
     readFile('src/modules/writing/mission-types/report/reportImageApi.js', 'utf8'),
-    readFile('supabase/migrations/20261020_writing_pdf_export.sql', 'utf8')
+    readFile('supabase/migrations/20261020_writing_pdf_export.sql', 'utf8'),
+    readFile('src/modules/writing/export/googleDocImageExport.js', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -53,6 +55,15 @@ test('정적 앱 응답에 CSP와 Permissions-Policy가 있다', () => {
         /img-src[^;]*https:\/\/api\.xn--vz0ba242ncqcba79xhwx\.site/,
         'private report image signed URLs must be allowed by img-src'
     );
+    assert.match(caddy, /connect-src[^;]*https:\/\/www\.googleapis\.com/);
+    assert.match(vercel, /connect-src[^;]*https:\/\/www\.googleapis\.com/);
+});
+
+test('Google Docs용 사진은 발견 불가 임시 공유 후 파일 또는 공개 권한을 제거한다', () => {
+    assert.match(googleDocImageExport, /type: 'anyone', role: 'reader', allowFileDiscovery: false/);
+    assert.match(googleDocImageExport, /GOOGLE_DOC_IMAGE_TYPES = new Set\(\['image\/jpeg', 'image\/png', 'image\/gif'\]\)/);
+    assert.match(googleDocImageExport, /method: 'DELETE'[\s\S]*permissions/);
+    assert.match(googleDocImageExport, /Promise\.allSettled/);
 });
 
 test('권한 판정은 JWT app_metadata를 신뢰하지 않는다', () => {
