@@ -49,11 +49,12 @@ export const createReportSection = (heading = '', stableIndex = null) => ({
     image: null,
 });
 
-const normalizeImage = (image) => {
+const normalizeImage = (image, fallbackCaption = '') => {
     if (!image || typeof image !== 'object' || !String(image.path || '').trim()) return null;
+    const caption = String(image.caption || '').trim() ? image.caption : fallbackCaption;
     return {
         path: cleanText(image.path, 300),
-        caption: cleanText(image.caption, 240),
+        caption: cleanText(caption, 240),
         width: Math.max(0, Number(image.width) || 0),
         height: Math.max(0, Number(image.height) || 0),
         bytes: Math.max(0, Number(image.bytes) || 0),
@@ -79,7 +80,7 @@ export const normalizeReportSections = (structuredContent, content = '', config 
             id,
             heading: cleanText(section?.heading, 80),
             body: cleanText(section?.body, 12000),
-            image: normalizeImage(section?.image),
+            image: normalizeImage(section?.image, section?.body),
         };
     });
 
@@ -102,14 +103,16 @@ export const buildReportStructuredContent = (sections) => ({
         id: cleanText(section.id, 80),
         heading: cleanText(section.heading, 80),
         body: cleanText(section.body, 12000),
-        image: normalizeImage(section.image),
+        image: normalizeImage(section.image, section.body),
     })),
 });
 
 export const reportSectionsToContent = (sections) => sections
     .map((section) => {
-        const parts = [section.heading?.trim(), section.body?.trim()];
-        if (section.image?.caption?.trim()) parts.push(`사진 설명: ${section.image.caption.trim()}`);
+        const body = section.body?.trim() || '';
+        const caption = section.image?.caption?.trim() || '';
+        const parts = [section.heading?.trim(), body];
+        if (caption && !body.startsWith(caption)) parts.push(`사진 설명: ${caption}`);
         return parts.filter(Boolean).join('\n');
     })
     .filter(Boolean)
@@ -137,7 +140,7 @@ export const validateReportSubmission = ({ structuredContent, content, config = 
         section.image?.path && !section.image.caption?.trim()
     ));
     if (missingCaptionIndex >= 0) {
-        return `${missingCaptionIndex + 1}번 칸의 사진이 무엇인지 짧게 설명해주세요. 🖼️`;
+        return `${missingCaptionIndex + 1}번 칸의 사진에 대한 관찰 결과를 적어주세요. 🖼️`;
     }
     return null;
 };

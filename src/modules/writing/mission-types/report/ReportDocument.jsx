@@ -38,6 +38,7 @@ const ReportDocument = ({ structuredContent, content = '', compact = false }) =>
         <div className={`report-document${compact ? ' report-document--compact' : ''}`}>
             {sections.map((section, index) => {
                 const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
+                const observation = section.body?.trim() || section.image?.caption?.trim() || '';
                 return (
                     <section className="report-document__section" key={section.id || index}>
                         <div className="report-document__number" aria-hidden="true">{index + 1}</div>
@@ -58,12 +59,10 @@ const ReportDocument = ({ structuredContent, content = '', compact = false }) =>
                                             </div>
                                         )}
                                     </div>
-                                    {section.image.caption?.trim() && <figcaption>{section.image.caption}</figcaption>}
                                 </figure>
                             )}
                             <div className="report-document__copy">
-                                {section.heading?.trim() && <h3>{section.heading}</h3>}
-                                {section.body?.trim() && <p>{section.body}</p>}
+                                {observation && <p>{observation}</p>}
                             </div>
                         </div>
                     </section>

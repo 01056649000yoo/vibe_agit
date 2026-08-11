@@ -9,8 +9,10 @@ import {
     validateReportSubmission,
 } from '../src/modules/writing/mission-types/report/reportContent.js';
 
-const [reportEditorSource, studentWritingSource, missionSubmitSource, reportWritingCss] = await Promise.all([
+const [reportEditorSource, reportDocumentSource, writingPdfSource, studentWritingSource, missionSubmitSource, reportWritingCss] = await Promise.all([
     readFile('src/modules/writing/mission-types/report/ReportEditor.jsx', 'utf8'),
+    readFile('src/modules/writing/mission-types/report/ReportDocument.jsx', 'utf8'),
+    readFile('src/modules/writing/export/writingPdfExport.js', 'utf8'),
     readFile('src/components/student/StudentWriting.jsx', 'utf8'),
     readFile('src/hooks/useMissionSubmit.js', 'utf8'),
     readFile('src/modules/writing/mission-types/report/reportWriting.css', 'utf8'),
@@ -29,6 +31,16 @@ test('보고서 편집 사진은 왼쪽 4대3 고정 프레임에 맞춘다', ()
     assert.match(reportWritingCss, /\.report-editor__section-layout[\s\S]*?grid-template-columns/);
     assert.match(reportWritingCss, /\.report-editor__photo-frame[\s\S]*?aspect-ratio: 4 \/ 3/);
     assert.match(reportWritingCss, /\.report-editor__photo-frame img[\s\S]*?object-fit: cover/);
+});
+
+test('보고서 한 칸은 사진과 관찰 결과 글쓰기 창 하나만 보여준다', () => {
+    assert.match(reportEditorSource, /사진에 대한 관찰 결과/);
+    assert.match(reportEditorSource, /사진을 보고 관찰한 모습, 변화, 알게 된 점을 적어보세요/);
+    assert.doesNotMatch(reportEditorSource, /이 칸의 소제목/);
+    assert.doesNotMatch(reportEditorSource, /사진에서 무엇을 볼 수 있는지 설명해주세요/);
+    assert.doesNotMatch(reportEditorSource, /SECTION_TITLE_STYLE|CAPTION_STYLE/);
+    assert.doesNotMatch(reportDocumentSource, /<figcaption>|<h3>/);
+    assert.doesNotMatch(writingPdfSource, /<figcaption>|<h2>/);
 });
 
 test('보고서 기본 틀은 학생이 바로 쓸 수 있는 세 칸으로 열린다', () => {
@@ -81,7 +93,32 @@ test('구조화 보고서는 검색·AI용 평문을 함께 만든다', () => {
     assert.match(plain, /사진 설명: 사흘째 새싹의 모습/);
 });
 
-test('사진 설명과 최소 완성 칸을 제출 전에 확인한다', () => {
+test('관찰 결과는 사진 제출용 설명에도 자동으로 연결된다', () => {
+    const observation = '잎이 어제보다 두 장 더 늘었고 줄기가 햇빛 쪽으로 기울었다.';
+    const sections = [{
+        id: 'a',
+        heading: '과거 소제목',
+        body: observation,
+        image: {
+            path: '11111111-1111-1111-1111-111111111111/a/photo.webp',
+            caption: '   ',
+            width: 720,
+            height: 540,
+            bytes: 100000,
+            mimeType: 'image/webp',
+        },
+    }];
+    const structured = buildReportStructuredContent(sections);
+
+    assert.equal(structured.sections.at(0).image.caption, observation);
+    assert.equal(validateReportSubmission({
+        structuredContent: structured,
+        content: reportSectionsToContent(sections),
+        config: { min_sections: 1 },
+    }), null);
+});
+
+test('관찰 결과를 쓴 최소 완성 칸 수를 제출 전에 확인한다', () => {
     const sections = [
         {
             id: 'a', heading: '첫째', body: '내용 하나',
@@ -101,14 +138,6 @@ test('사진 설명과 최소 완성 칸을 제출 전에 확인한다', () => {
     assert.match(missingSection, /최소 2개/);
 
     sections.at(1).body = '내용 둘';
-    const missingCaption = validateReportSubmission({
-        structuredContent: buildReportStructuredContent(sections),
-        content: reportSectionsToContent(sections),
-        config: { min_sections: 2 },
-    });
-    assert.match(missingCaption, /사진이 무엇인지/);
-
-    sections.at(0).image.caption = '관찰 첫날 사진';
     assert.equal(validateReportSubmission({
         structuredContent: buildReportStructuredContent(sections),
         content: reportSectionsToContent(sections),

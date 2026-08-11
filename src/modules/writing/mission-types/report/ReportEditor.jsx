@@ -22,23 +22,11 @@ const TITLE_INPUT_STYLE = {
     color: '#134E4A', background: 'transparent',
 };
 
-const SECTION_TITLE_STYLE = {
-    width: '100%', boxSizing: 'border-box', padding: '11px 12px', borderRadius: '12px',
-    border: '1px solid #99F6E4', outline: 'none', background: '#F0FDFA',
-    color: '#134E4A', fontWeight: '900', fontFamily: 'inherit',
-};
-
 const SECTION_BODY_STYLE = {
-    width: '100%', minHeight: '150px', boxSizing: 'border-box', padding: '14px',
-    border: '1px solid #E2E8F0', borderRadius: '14px', resize: 'vertical',
+    width: '100%', minHeight: '190px', boxSizing: 'border-box', padding: '16px',
+    border: '2px solid #99F6E4', borderRadius: '14px', resize: 'vertical',
     outline: 'none', background: '#FFFFFF', color: '#334155', lineHeight: 1.8,
     fontFamily: 'inherit',
-};
-
-const CAPTION_STYLE = {
-    width: '100%', boxSizing: 'border-box', marginTop: '10px', padding: '11px 12px',
-    border: '1px solid #CBD5E1', borderRadius: '11px', outline: 'none',
-    background: '#FFFFFF', color: '#475569', fontFamily: 'inherit',
 };
 
 const ReportEditor = ({
@@ -95,6 +83,15 @@ const ReportEditor = ({
         )));
     };
 
+    const updateObservation = (section, observation) => {
+        updateSection(section.id, {
+            body: observation,
+            image: section.image
+                ? { ...section.image, caption: observation.slice(0, 240) }
+                : null,
+        });
+    };
+
     const moveSection = (index, direction) => {
         const target = index + direction;
         if (target < 0 || target >= sections.length) return;
@@ -106,12 +103,12 @@ const ReportEditor = ({
 
     const handleAddSection = () => {
         if (sections.length >= normalizedConfig.maxSections) return;
-        commitSections([...sections, createReportSection(`내용 ${sections.length + 1}`)]);
+        commitSections([...sections, createReportSection(`관찰 결과 ${sections.length + 1}`)]);
     };
 
     const handleRemoveSection = async (section) => {
         if (sections.length <= normalizedConfig.minSections) return;
-        if (!window.confirm(`“${section.heading || '이 내용 칸'}”을 보고서에서 뺄까요?`)) return;
+        if (!window.confirm('이 사진과 관찰 결과 칸을 보고서에서 뺄까요?')) return;
         const next = sections.filter((item) => item.id !== section.id);
         try {
             const saved = await persistSections(next);
@@ -145,7 +142,13 @@ const ReportEditor = ({
 
             const next = sections.map((item) => (
                 item.id === section.id
-                    ? { ...item, image: { ...uploaded, caption: item.image?.caption || '' } }
+                    ? {
+                        ...item,
+                        image: {
+                            ...uploaded,
+                            caption: String(item.body || item.image?.caption || '').slice(0, 240),
+                        },
+                    }
                     : item
             ));
             const saved = await persistSections(next, draftPostId);
@@ -198,7 +201,7 @@ const ReportEditor = ({
             />
 
             <div className="report-editor__intro">
-                <span>사진은 왼쪽 칸에 알맞게 맞춰지고, 오른쪽에 소제목과 내용을 써요.</span>
+                <span>왼쪽에 사진을 넣고, 오른쪽 글쓰기 창에 사진을 관찰한 결과를 적어요.</span>
                 <span>내용 칸 {sections.length}/{normalizedConfig.maxSections} · 사진 {imageCount}/{normalizedConfig.maxImages}</span>
             </div>
 
@@ -206,10 +209,11 @@ const ReportEditor = ({
                 {sections.map((section, index) => {
                     const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
                     const isUploading = uploadingSectionId === section.id;
+                    const observation = section.body || section.image?.caption || '';
                     return (
                         <section className="report-editor__section" key={section.id}>
                             <header className="report-editor__section-header">
-                                <span className="report-editor__section-number">☰ {index + 1}번 내용 칸</span>
+                                <span className="report-editor__section-number">☰ {index + 1}번 사진 + 관찰 결과</span>
                                 {!disabled && (
                                     <div className="report-editor__section-actions">
                                         <button
@@ -217,14 +221,14 @@ const ReportEditor = ({
                                             className="report-editor__icon-button"
                                             onClick={() => moveSection(index, -1)}
                                             disabled={index === 0 || Boolean(uploadingSectionId)}
-                                            aria-label={`${index + 1}번 내용 칸 위로 이동`}
+                                            aria-label={`${index + 1}번 사진과 관찰 결과 칸 위로 이동`}
                                         >↑ 위로</button>
                                         <button
                                             type="button"
                                             className="report-editor__icon-button"
                                             onClick={() => moveSection(index, 1)}
                                             disabled={index === sections.length - 1 || Boolean(uploadingSectionId)}
-                                            aria-label={`${index + 1}번 내용 칸 아래로 이동`}
+                                            aria-label={`${index + 1}번 사진과 관찰 결과 칸 아래로 이동`}
                                         >↓ 아래로</button>
                                         <button
                                             type="button"
@@ -309,38 +313,20 @@ const ReportEditor = ({
                                 </div>
 
                                 <div className="report-editor__writing-panel">
-                                    <SpellingUnderlineInput
-                                        value={section.heading}
-                                        onChange={(event) => updateSection(section.id, { heading: event.target.value })}
-                                        placeholder="이 칸의 소제목"
+                                    <label
+                                        className="report-editor__writing-label"
+                                        htmlFor={`report-observation-${section.id}`}
+                                    >사진에 대한 관찰 결과</label>
+                                    <SpellingUnderlineTextarea
+                                        id={`report-observation-${section.id}`}
+                                        value={observation}
+                                        onChange={(event) => updateObservation(section, event.target.value)}
+                                        placeholder="사진을 보고 관찰한 모습, 변화, 알게 된 점을 적어보세요."
                                         disabled={disabled}
+                                        autoCapitalize="sentences"
                                         lang="ko"
-                                        style={SECTION_TITLE_STYLE}
+                                        style={{ ...SECTION_BODY_STYLE, fontSize: isMobile ? '1rem' : '1.08rem' }}
                                     />
-                                    <div style={{ marginTop: '10px' }}>
-                                        <SpellingUnderlineTextarea
-                                            value={section.body}
-                                            onChange={(event) => updateSection(section.id, { body: event.target.value })}
-                                            placeholder="관찰하거나 조사한 사실, 과정, 결과를 자세히 적어보세요."
-                                            disabled={disabled}
-                                            autoCapitalize="sentences"
-                                            lang="ko"
-                                            style={{ ...SECTION_BODY_STYLE, fontSize: isMobile ? '1rem' : '1.08rem' }}
-                                        />
-                                    </div>
-
-                                    {section.image?.path && (
-                                        <SpellingUnderlineInput
-                                            value={section.image.caption || ''}
-                                            onChange={(event) => updateSection(section.id, {
-                                                image: { ...section.image, caption: event.target.value },
-                                            })}
-                                            placeholder="사진에서 무엇을 볼 수 있는지 설명해주세요 (필수)"
-                                            disabled={disabled}
-                                            lang="ko"
-                                            style={CAPTION_STYLE}
-                                        />
-                                    )}
                                 </div>
                             </div>
                         </section>
@@ -358,7 +344,7 @@ const ReportEditor = ({
                     >
                         {sections.length >= normalizedConfig.maxSections
                             ? `내용 칸은 ${normalizedConfig.maxSections}개까지 만들 수 있어요`
-                            : '＋ 새 내용 칸 추가'}
+                            : '＋ 사진과 관찰 결과 칸 추가'}
                     </button>
                 </div>
             )}

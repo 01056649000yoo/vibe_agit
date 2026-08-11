@@ -94,6 +94,14 @@
     min-width: 0;
 }
 
+.report-editor__writing-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #0f766e;
+    font-size: .92rem;
+    font-weight: 950;
+}
+
 .report-editor__photo-frame {
     aspect-ratio: 4 / 3;
     overflow: hidden;
@@ -247,13 +255,6 @@
     min-width: 0;
 }
 
-.report-document__body h3 {
-    margin: 2px 0 10px;
-    color: #134e4a;
-    font-size: 1.05rem;
-    line-height: 1.45;
-}
-
 .report-document__body p {
     margin: 0;
     color: #334155;
@@ -287,14 +288,6 @@
     min-height: 0;
     height: 100%;
     border-radius: 0;
-}
-
-.report-document figcaption {
-    margin-top: 8px;
-    color: #64748b;
-    font-size: .83rem;
-    line-height: 1.55;
-    text-align: center;
 }
 
 .report-document__image-placeholder {

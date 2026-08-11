@@ -70,7 +70,7 @@ test('일반 글 PDF는 제목·글쓴이·본문을 12포인트 A4 양식으로
     assert.doesNotMatch(html, /font-size: (?:[0-9]|1[01])pt/);
 });
 
-test('보고서 PDF는 칸 구조와 사진·설명을 별도 양식으로 만든다', () => {
+test('보고서 PDF는 사진과 관찰 결과를 단순한 별도 양식으로 만든다', () => {
     const path = '11111111-1111-1111-1111-111111111111/section-1/photo.webp';
     const item = {
         작성자: '이학생',

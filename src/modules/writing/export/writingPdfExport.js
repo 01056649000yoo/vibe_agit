@@ -77,6 +77,7 @@ const renderReportEntry = (entry, imageUrls) => {
             <main class="report-sheet">
                 ${sections.map((section, index) => {
                     const imageUrl = section.image?.path ? imageUrls.get(section.image.path) : null;
+                    const observation = section.body?.trim() || section.image?.caption?.trim() || '';
                     return `
                         <section class="report-sheet__section">
                             <div class="report-sheet__number">${index + 1}</div>
@@ -88,11 +89,9 @@ const renderReportEntry = (entry, imageUrls) => {
                                                 ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(section.image.caption || `${index + 1}번 보고서 사진`)}">`
                                                 : '<div class="report-sheet__image-missing">사진을 불러오지 못했습니다.</div>'}
                                         </div>
-                                        ${section.image.caption?.trim() ? `<figcaption>${escapeHtml(section.image.caption)}</figcaption>` : ''}
                                     </figure>` : ''}
                                 <div class="report-sheet__copy">
-                                    ${section.heading?.trim() ? `<h2>${escapeHtml(section.heading)}</h2>` : ''}
-                                    ${section.body?.trim() ? `<p>${escapeHtml(section.body)}</p>` : ''}
+                                    ${observation ? `<p>${escapeHtml(observation)}</p>` : ''}
                                 </div>
                             </div>
                         </section>`;
@@ -219,15 +218,6 @@ export const buildWritingPdfHtml = ({
             align-items: start;
             gap: 5mm;
         }
-        .report-sheet h2 {
-            margin: 0 0 2.5mm;
-            color: #134E4A;
-            font-size: 15pt;
-            line-height: 1.4;
-            break-after: avoid;
-            page-break-after: avoid;
-            overflow-wrap: anywhere;
-        }
         .report-sheet p {
             margin: 0;
             color: #1F2937;
@@ -258,14 +248,6 @@ export const buildWritingPdfHtml = ({
             height: 100%;
             object-fit: cover;
             object-position: center;
-        }
-        .report-sheet figcaption {
-            margin-top: 2.5mm;
-            color: #475569;
-            font-size: 12pt;
-            line-height: 1.55;
-            text-align: center;
-            overflow-wrap: anywhere;
         }
         .report-sheet__image-missing {
             display: grid;
