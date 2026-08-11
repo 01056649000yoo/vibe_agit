@@ -128,6 +128,20 @@
   계약·구조·호환 회귀 검사를 추가하고 실제 A4 PDF를 렌더링해 확인한다. 상세 계약은
   `src/modules/writing/export/README.md`를 읽는다.
 
+### 장르형 글쓰기 이미지 내보내기
+- 사진을 가진 장르는 PDF 자산 로더와 별도로 매니페스트의 지연 `imageExport { id, load }` 계약을 등록한다.
+  장르 폴더가 글별 사진 순서·경로·크기 수집과 비공개 서명 URL 로딩을 소유하며, 공용 `useDataExport.js`에
+  `report` 같은 장르 이름이나 Storage 경로를 하드코딩하지 않는다.
+- Excel은 기존 데이터 열을 유지하고 `내용` 뒤 사진 열에 실제 이미지를 같은 글 행으로 넣는다. Google Docs는
+  제목·글쓴이·본문 다음, 해당 글의 마지막에 사진을 원래 순서대로 넣는다. 이미지가 없는 글의 기존 내보내기
+  경로는 바꾸지 않는다.
+- WebP처럼 Google Docs가 직접 받지 않는 형식은 브라우저에서 JPEG로 변환한다. Drive 임시 파일이 필요하면
+  교사의 명시적 내보내기 동작에서만 검색 불가 공개 권한으로 만들고, 문서 삽입 직후 파일 삭제와 실패 시 공개
+  권한 삭제까지 시도한다. 사진·서명 URL·Google 토큰은 로그나 DB에 남기지 않는다.
+- `tests/writingOfficeImages.test.mjs`에서 실제 XLSX 이미지와 Google Docs 요청 순서·임시 파일 정리를 검증한다.
+  외부 Google API origin을 추가했다면 Caddy와 Vercel CSP 및 `test:security:static`도 함께 갱신한다. 상세 계약은
+  `src/modules/writing/export/README.md`를 읽는다.
+
 ## DB 마이그레이션 (2026-08-04 도구화)
 - **적용 여부는 추측하지 말고 물어본다**: `npm run migrate:status` — 아직 적용 안 된 파일만 보여준다(DB를 건드리지 않음).
 - **적용**: `npm run migrate` — 안 된 것만 파일명 순서대로 적용하고 `public.applied_migrations` 에 기록한다.
