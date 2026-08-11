@@ -82,27 +82,28 @@ const renderReportEntry = (entry, imageUrls) => {
                     return `
                         <section class="report-sheet__section">
                             <div class="report-sheet__number">${index + 1}</div>
-                            <div class="report-sheet__section-body${section.image?.path ? ' report-sheet__section-body--with-photo' : ''}">
-                                ${section.image?.path ? `
-                                    <figure>
-                                        <div class="report-sheet__photo-frame">
-                                            ${imageUrl
-                                                ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(section.image.caption || `${index + 1}번 보고서 사진`)}">`
-                                                : '<div class="report-sheet__image-missing">사진을 불러오지 못했습니다.</div>'}
-                                        </div>
-                                    </figure>` : ''}
-                                <div class="report-sheet__copy">
-                                    ${question ? `
-                                        <div class="report-sheet__question">
-                                            <span class="report-sheet__label">교사의 질문</span>
-                                            <h2>${escapeHtml(question)}</h2>
-                                        </div>` : ''}
-                                    ${observation ? `
+                            <div class="report-sheet__section-body">
+                                ${question ? `
+                                    <div class="report-sheet__question">
+                                        <span class="report-sheet__label">교사의 질문</span>
+                                        <h2>${escapeHtml(question)}</h2>
+                                    </div>` : ''}
+                                ${section.image?.path || observation ? `
+                                    <div class="report-sheet__response${section.image?.path ? ' report-sheet__response--with-photo' : ''}">
+                                        ${section.image?.path ? `
+                                            <figure>
+                                                <div class="report-sheet__photo-frame">
+                                                    ${imageUrl
+                                                        ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(section.image.caption || `${index + 1}번 보고서 사진`)}">`
+                                                        : '<div class="report-sheet__image-missing">사진을 불러오지 못했습니다.</div>'}
+                                                </div>
+                                            </figure>` : ''}
+                                        ${observation ? `
                                         <div class="report-sheet__answer">
                                             <span class="report-sheet__label">보고서 내용</span>
                                             <p>${escapeHtml(observation)}</p>
                                         </div>` : ''}
-                                </div>
+                                    </div>` : ''}
                             </div>
                         </section>`;
                 }).join('')}
@@ -221,19 +222,16 @@ export const buildWritingPdfHtml = ({
             font-size: 12pt;
             font-weight: 900;
         }
-        .report-sheet__section-body, .report-sheet__copy { min-width: 0; }
-        .report-sheet__section-body--with-photo {
+        .report-sheet__section-body, .report-sheet__response { min-width: 0; }
+        .report-sheet__response--with-photo {
             display: grid;
             grid-template-columns: 56mm minmax(0, 1fr);
             align-items: start;
             gap: 6mm;
         }
-        .report-sheet__copy {
-            display: flex;
-            flex-direction: column;
-            gap: 4mm;
-        }
         .report-sheet__question {
+            width: 100%;
+            margin-bottom: 4mm;
             padding: 3mm 4mm;
             border-left: 1.2mm solid #14B8A6;
             border-radius: 0 2.5mm 2.5mm 0;

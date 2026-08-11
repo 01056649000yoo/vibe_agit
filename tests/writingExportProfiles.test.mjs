@@ -70,7 +70,7 @@ test('일반 글 PDF는 제목·글쓴이·본문을 12포인트 A4 양식으로
     assert.doesNotMatch(html, /font-size: (?:[0-9]|1[01])pt/);
 });
 
-test('보고서 PDF는 왼쪽 사진과 오른쪽 교사 질문·보고서 내용 양식으로 만든다', () => {
+test('보고서 PDF는 상단 전체 폭 질문과 그 아래 왼쪽 사진·오른쪽 내용 양식으로 만든다', () => {
     const path = '11111111-1111-1111-1111-111111111111/section-1/photo.webp';
     const item = {
         작성자: '이학생',
@@ -103,7 +103,7 @@ test('보고서 PDF는 왼쪽 사진과 오른쪽 교사 질문·보고서 내�
     assert.equal(WRITING_PDF_MAX_ENTRIES, 100);
     assert.match(html, /pdf-entry--report/);
     assert.match(html, /report-sheet__section/);
-    assert.match(html, /report-sheet__section-body--with-photo/);
+    assert.match(html, /report-sheet__response--with-photo/);
     assert.match(html, /report-sheet__photo-frame/);
     assert.match(html, /report-sheet__question/);
     assert.match(html, /교사의 질문/);
@@ -111,6 +111,10 @@ test('보고서 PDF는 왼쪽 사진과 오른쪽 교사 질문·보고서 내�
     assert.match(html, /report-sheet__answer/);
     assert.match(html, /보고서 내용/);
     assert.ok(html.indexOf('관찰 결과') < html.indexOf('새잎이 두 장 나왔습니다.'));
+    assert.match(
+        html,
+        /report-sheet__question[\s\S]*?관찰 결과[\s\S]*?report-sheet__response report-sheet__response--with-photo[\s\S]*?report-sheet__photo-frame[\s\S]*?report-sheet__answer[\s\S]*?새잎이 두 장 나왔습니다\./
+    );
     assert.match(html, /grid-template-columns: 56mm minmax\(0, 1fr\)/);
     assert.match(html, /width: 56mm/);
     assert.match(html, /aspect-ratio: 5 \/ 4/);
