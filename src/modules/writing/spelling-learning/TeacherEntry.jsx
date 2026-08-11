@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getElementarySpellingEntries } from '../tools/spelling-lookup/elementarySpellingEntries';
+import {
+    ELEMENTARY_SPELLING_CATEGORY_COUNTS,
+    SPELLING_CATEGORY_DEFINITIONS
+} from '../tools/spelling-lookup/catalog';
 import { spellingLearningApi } from './api';
 import './TeacherEntry.css';
 
@@ -28,6 +32,8 @@ const getEntrySearchText = (entry) => normalizeSearchValue([
     entry.wrong_expression,
     entry.correct_expression,
     entry.category,
+    entry.subcategory,
+    entry.detectionModeLabel,
     entry.learningLabel,
     entry.label,
     entry.explanation,
@@ -43,6 +49,7 @@ const TeacherEntry = ({ activeClass }) => {
     const [message, setMessage] = useState('');
     const [activeTab, setActiveTab] = useState('create');
     const [dataFilter, setDataFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const [expandedEntryId, setExpandedEntryId] = useState(null);
@@ -61,7 +68,7 @@ const TeacherEntry = ({ activeClass }) => {
     useEffect(() => {
         setVisibleCount(PAGE_SIZE);
         setExpandedEntryId(null);
-    }, [dataFilter, searchQuery]);
+    }, [categoryFilter, dataFilter, searchQuery]);
 
     const classEntries = useMemo(
         () => (workspace.entries || []).map((entry) => ({ ...entry, kind: 'class' })),
@@ -73,11 +80,12 @@ const TeacherEntry = ({ activeClass }) => {
         const terms = normalizedQuery ? normalizedQuery.split(' ') : [];
         return entries.filter((entry) => {
             if (dataFilter !== 'all' && entry.kind !== dataFilter) return false;
+            if (categoryFilter !== 'all' && entry.categoryId !== categoryFilter) return false;
             if (!terms.length) return true;
             const searchText = getEntrySearchText(entry);
             return terms.every((term) => searchText.includes(term));
         });
-    }, [dataFilter, entries, searchQuery]);
+    }, [categoryFilter, dataFilter, entries, searchQuery]);
     const visibleEntries = filteredEntries.slice(0, visibleCount);
 
     const duplicateEntry = useMemo(() => {
@@ -192,11 +200,27 @@ const TeacherEntry = ({ activeClass }) => {
                     <div className="spelling-learning-filters" role="group" aria-label="등록 데이터 종류 필터">
                         {DATA_FILTERS.map((filter) => {
                             const count = filter.id === 'all' ? entries.length : filter.id === 'built-in' ? BUILT_IN_ENTRIES.length : classEntries.length;
-                            return <button key={filter.id} type="button" className={dataFilter === filter.id ? 'is-active' : ''} onClick={() => setDataFilter(filter.id)}>{filter.label} <b>{count}</b></button>;
+                            return <button key={filter.id} type="button" className={dataFilter === filter.id ? 'is-active' : ''} onClick={() => {
+                                setDataFilter(filter.id);
+                                if (filter.id !== 'built-in') setCategoryFilter('all');
+                            }}>{filter.label} <b>{count}</b></button>;
                         })}
                     </div>
                     <span className="spelling-learning-result-count">{filteredEntries.length}개 찾음</span>
                 </div>
+                {dataFilter !== 'class' && <div className="spelling-learning-category-filters" role="group" aria-label="기본 맞춤법 분류 필터">
+                    <span>기본 자료 분류</span>
+                    <div className="spelling-learning-filters">
+                        <button type="button" className={categoryFilter === 'all' ? 'is-active' : ''} onClick={() => setCategoryFilter('all')}>전체 <b>{BUILT_IN_ENTRIES.length}</b></button>
+                        {SPELLING_CATEGORY_DEFINITIONS.map((category) => {
+                            const count = ELEMENTARY_SPELLING_CATEGORY_COUNTS[category.id] || 0;
+                            return <button key={category.id} type="button" className={categoryFilter === category.id ? 'is-active' : ''} title={category.description} onClick={() => {
+                                setCategoryFilter(category.id);
+                                setDataFilter('built-in');
+                            }}>{category.label} <b>{count}</b></button>;
+                        })}
+                    </div>
+                </div>}
                 <div className="spelling-learning-entry-list">
                     {visibleEntries.map((entry) => {
                         const isBuiltIn = entry.kind === 'built-in';
@@ -211,7 +235,8 @@ const TeacherEntry = ({ activeClass }) => {
                             {isExpanded && <div className="spelling-learning-entry-detail">
                                 <div className="spelling-learning-entry-labels">
                                     {(isBuiltIn ? entry.learningLabel : entry.label) && <span className="spelling-learning-entry-label">라벨 · {isBuiltIn ? entry.learningLabel : entry.label}</span>}
-                                    {isBuiltIn && entry.category && <span className="spelling-learning-entry-label is-category">분류 · {entry.category}</span>}
+                                    {isBuiltIn && entry.category && <span className="spelling-learning-entry-label is-category">분류 · {entry.category} › {entry.subcategory}</span>}
+                                    {isBuiltIn && entry.detectionModeLabel && <span className="spelling-learning-entry-label is-detection">검사 · {entry.detectionModeLabel}</span>}
                                 </div>
                                 {entry.explanation && <p>{entry.explanation}</p>}
                                 {Array.isArray(entry.examples) && entry.examples.length > 0 && <div className="spelling-learning-examples"><b>바른 예문</b>{entry.examples.map((example, index) => <span key={`${entry.id}-${index}`}>{example}</span>)}</div>}

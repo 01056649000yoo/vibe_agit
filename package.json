@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "badges:optimize": "node scripts/optimize-title-badges.mjs",
     "spelling:check": "node scripts/check-spelling-rules.mjs",
+    "spelling:benchmark": "node scripts/benchmark-spelling.mjs",
     "test:writing-policy": "node --test tests/writingPolicy.test.mjs",
     "test:writing-export": "node --test tests/writingExportProfiles.test.mjs",
     "test:writing-editor": "node --test tests/writingEditorSettings.test.mjs",

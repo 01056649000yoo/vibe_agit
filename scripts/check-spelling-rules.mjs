@@ -32,11 +32,10 @@ import {
     getElementarySpellingEntries
 } from '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js';
 import {
-    ELEMENTARY_SPELLING_QUIZ_QUESTIONS
-} from '../src/modules/writing/tools/spelling-lookup/elementarySpellingQuiz.js';
-import {
-    EXPANDED_ELEMENTARY_SPELLING_ENTRIES
-} from '../src/modules/writing/tools/spelling-lookup/elementarySpellingExpansionCatalog.js';
+    ELEMENTARY_SPELLING_CATEGORY_COUNTS,
+    SPELLING_CATEGORY_DEFINITIONS,
+    SPELLING_DETECTION_MODES
+} from '../src/modules/writing/tools/spelling-lookup/catalog/index.js';
 
 // ── 전부 올바른 문장. 여기 밑줄이 그어지면 오탐이다 ──────────────────────────
 const 정상 = [
@@ -219,6 +218,10 @@ const 전체수첩항목 = getElementarySpellingEntries();
 const 중복수첩아이디 = 전체수첩항목.length - new Set(전체수첩항목.map((entry) => entry.id)).size;
 const 불완전수첩항목 = 전체수첩항목.filter((entry) => (
     !entry.category ||
+    !entry.categoryId ||
+    !entry.subcategory ||
+    !entry.subcategoryId ||
+    !entry.detectionMode ||
     !entry.explanation ||
     !entry.examples?.length ||
     !entry.source?.url
@@ -249,8 +252,49 @@ if (
 }
 console.log(`수첩  기본 자료 ${전체수첩항목.length}개(사전형 400 + 문장형 100) · 바른 예문 오탐 0건 · 설명/출처 확인`);
 
-const 기존항목 = 전체수첩항목.filter((entry) => !entry.id.startsWith('expansion-'));
-const 확장항목 = 전체수첩항목.filter((entry) => entry.id.startsWith('expansion-'));
+const 기대분류수 = {
+    grammar: 130,
+    conjugation: 55,
+    meaning: 64,
+    word: 156,
+    compound: 49,
+    loanword: 46
+};
+const 분류정의 = new Map(SPELLING_CATEGORY_DEFINITIONS.map((category) => [category.id, category]));
+const 검출방식 = new Set(SPELLING_DETECTION_MODES.map((mode) => mode.id));
+const 잘못된분류 = 전체수첩항목.filter((entry) => {
+    const category = 분류정의.get(entry.categoryId);
+    return !category
+        || !category.subcategories.some((subcategory) => subcategory.id === entry.subcategoryId)
+        || !검출방식.has(entry.detectionMode);
+});
+const 잘못된순서 = 전체수첩항목.filter((entry, index) => entry.sortOrder !== index + 1);
+const 잘못된검출방식 = 전체수첩항목.filter((entry) => {
+    const hasContext = entry.detectionPatterns.some((pattern) => {
+        const target = pattern.target || pattern.text;
+        return pattern.text !== target || (pattern.targetOffset || 0) > 0;
+    });
+    const inferred = hasContext
+        ? 'context'
+        : entry.detectionPatterns.some((pattern) => pattern.text.includes(' ')) ? 'phrase' : 'exact';
+    return inferred !== entry.detectionMode;
+});
+const 분류수불일치 = Object.entries(기대분류수)
+    .filter(([categoryId, count]) => ELEMENTARY_SPELLING_CATEGORY_COUNTS[categoryId] !== count);
+if (
+    잘못된분류.length > 0
+    || 잘못된순서.length > 0
+    || 잘못된검출방식.length > 0
+    || 분류수불일치.length > 0
+) {
+    console.error(`\n실패 — 분류 계약 오류: 분류 ${잘못된분류.length}개, 순서 ${잘못된순서.length}개, 검출 방식 ${잘못된검출방식.length}개, 개수 불일치 ${분류수불일치.length}개`);
+    process.exit(1);
+}
+console.log('분류  문장 규칙 130 · 용언 활용 55 · 뜻 구별 64 · 낱말 표기 156 · 합성어·사이시옷 49 · 외래어 46');
+console.log('검출 계약  모든 항목에 세부 분류와 exact/phrase/context 방식 지정');
+
+const 기존항목 = 전체수첩항목.filter((entry) => entry.origin !== 'expansion');
+const 확장항목 = 전체수첩항목.filter((entry) => entry.origin === 'expansion');
 const normalizePair = (value) => String(value).normalize('NFC').replace(/[^가-힣a-z0-9]/gi, '');
 const 기존검색어 = new Set(기존항목.flatMap((entry) => (
     [entry.answer, entry.question, ...entry.searchable].map(normalizePair).filter(Boolean)
@@ -258,17 +302,6 @@ const 기존검색어 = new Set(기존항목.flatMap((entry) => (
 const 확장오답 = 확장항목.map((entry) => (
     entry.question.split('/').map((choice) => choice.trim()).find((choice) => choice !== entry.answer)
 ));
-const 확장분류수 = Object.fromEntries(
-    [...new Set(확장항목.map((entry) => entry.category))]
-        .map((category) => [category, 확장항목.filter((entry) => entry.category === category).length])
-);
-const 기대확장분류수 = {
-    '낱말 표기': 70,
-    사이시옷: 30,
-    '용언 활용': 30,
-    띄어쓰기: 40,
-    '외래어 표기': 30
-};
 const 기존과겹치는확장표현 = 확장항목.flatMap((entry) => (
     [entry.answer, ...entry.question.split('/').map((choice) => choice.trim())]
         .filter((value) => 기존검색어.has(normalizePair(value)))
@@ -282,24 +315,33 @@ const 못찾은확장오답 = 확장항목.flatMap((entry) => (
         .map((wrong) => `${entry.id}:${wrong}`)
 ));
 if (
-    EXPANDED_ELEMENTARY_SPELLING_ENTRIES.length !== 200 ||
     확장항목.length !== 200 ||
     new Set(확장오답).size !== 200 ||
-    JSON.stringify(확장분류수) !== JSON.stringify(기대확장분류수) ||
     기존과겹치는확장표현.length > 0 ||
     못찾은확장오답.length > 0
 ) {
-    console.error(`\n실패 — 추가 200개 품질 오류: 원본 ${EXPANDED_ELEMENTARY_SPELLING_ENTRIES.length}개, 연결 ${확장항목.length}개, 고유 오답 ${new Set(확장오답).size}개, 기존 표현 중복 ${기존과겹치는확장표현.length}개, 밑줄 미탐 ${못찾은확장오답.length}개`);
+    console.error(`\n실패 — 추가 200개 품질 오류: 연결 ${확장항목.length}개, 고유 오답 ${new Set(확장오답).size}개, 기존 표현 중복 ${기존과겹치는확장표현.length}개, 밑줄 미탐 ${못찾은확장오답.length}개`);
     if (기존과겹치는확장표현.length > 0) console.error(`  기존 표현 중복: ${기존과겹치는확장표현.slice(0, 10).join(', ')}`);
     if (못찾은확장오답.length > 0) console.error(`  밑줄 미탐: ${못찾은확장오답.slice(0, 10).join(', ')}`);
     process.exit(1);
 }
-console.log('추가 자료  낱말 70 · 사이시옷 30 · 활용 30 · 띄어쓰기 40 · 외래어 30 · 기존 300개와 표현 중복 0');
+console.log('추가 자료  200개 · 기존 300개와 표현 중복 0 · 전체 분류 체계에 통합');
 
-const 중복문제아이디 = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length - new Set(
-    ELEMENTARY_SPELLING_QUIZ_QUESTIONS.map((question) => question.id)
+const 문장형문제 = 문장형수첩항목.map((entry, index) => ({
+    id: entry.id,
+    number: index + 1,
+    question: entry.question,
+    choices: entry.quiz?.choices || [],
+    answer: entry.answer,
+    explanation: entry.explanation,
+    solution: entry.quiz?.solution || '',
+    prompt: entry.quiz?.prompt || '',
+    detectionPatterns: entry.detectionPatterns
+}));
+const 중복문제아이디 = 문장형문제.length - new Set(
+    문장형문제.map((question) => question.id)
 ).size;
-const 잘못된문제 = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.filter((question, index) => (
+const 잘못된문제 = 문장형문제.filter((question, index) => (
     question.number !== index + 1 ||
     question.choices.length < 2 ||
     !question.choices.includes(question.answer) ||
@@ -307,16 +349,16 @@ const 잘못된문제 = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.filter((question, ind
     !question.solution ||
     !question.detectionPatterns?.length
 ));
-if (ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length !== 100 || 중복문제아이디 > 0 || 잘못된문제.length > 0) {
-    console.error(`\n실패 — 문제은행 품질 오류: 전체 ${ELEMENTARY_SPELLING_QUIZ_QUESTIONS.length}개, ID 중복 ${중복문제아이디}개, 잘못된 문항 ${잘못된문제.length}개`);
+if (문장형문제.length !== 100 || 중복문제아이디 > 0 || 잘못된문제.length > 0) {
+    console.error(`\n실패 — 문제은행 품질 오류: 전체 ${문장형문제.length}개, ID 중복 ${중복문제아이디}개, 잘못된 문항 ${잘못된문제.length}개`);
     process.exit(1);
 }
 console.log(`문제은행  연속된 100문제 · ID 중복 0개 · 선택지/정답/설명 확인`);
 
-const 놓친문제밑줄 = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.flatMap((question) => (
+const 놓친문제밑줄 = 문장형문제.flatMap((question) => (
     question.detectionPatterns
         .filter((item) => !findElementarySpellingIssues(item.text, 500)
-            .some((issue) => issue.entryId === `practice-${question.id}`))
+            .some((issue) => issue.entryId === question.id))
         .map(() => question.number)
 ));
 if (놓친문제밑줄.length > 0) {

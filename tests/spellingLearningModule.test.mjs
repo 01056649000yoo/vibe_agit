@@ -24,12 +24,27 @@ const {
 } = await import(
     '../src/modules/writing/tools/spelling-lookup/elementarySpellingEntries.js'
 );
-const { ELEMENTARY_SPELLING_QUIZ_QUESTIONS } = await import(
-    '../src/modules/writing/tools/spelling-lookup/elementarySpellingQuiz.js'
-);
-const { EXPANDED_ELEMENTARY_SPELLING_ENTRIES } = await import(
-    '../src/modules/writing/tools/spelling-lookup/elementarySpellingExpansionCatalog.js'
-);
+const {
+    ELEMENTARY_SPELLING_CATEGORY_COUNTS,
+    SPELLING_CATEGORY_DEFINITIONS,
+    SPELLING_DETECTION_MODES
+} = await import('../src/modules/writing/tools/spelling-lookup/catalog/index.js');
+const ALL_ELEMENTARY_SPELLING_ENTRIES = getElementarySpellingEntries();
+const EXPANDED_ELEMENTARY_SPELLING_ENTRIES = ALL_ELEMENTARY_SPELLING_ENTRIES
+    .filter((entry) => entry.origin === 'expansion');
+const ELEMENTARY_SPELLING_QUIZ_QUESTIONS = ALL_ELEMENTARY_SPELLING_ENTRIES
+    .filter((entry) => entry.origin === 'practice')
+    .map((entry, index) => ({
+        id: entry.id,
+        number: index + 1,
+        question: entry.question,
+        choices: entry.quiz.choices,
+        answer: entry.answer,
+        explanation: entry.explanation,
+        solution: entry.quiz.solution,
+        prompt: entry.quiz.prompt,
+        detectionPatterns: entry.detectionPatterns
+    }));
 
 test('맞춤법 학습 기능은 등록 모듈과 성능 계약을 가진다', () => {
     assert.match(manifest, /id: 'spelling-learning'/);
@@ -54,6 +69,8 @@ test('교사 등록 데이터는 기존 학생 수첩 기본 자료와 우리 �
     assert.equal(new Set(builtInEntries.map((entry) => entry.question)).size, 500);
     for (const entry of builtInEntries) {
         assert.ok(entry.category, `${entry.id}: 분류가 필요합니다.`);
+        assert.ok(entry.subcategory, `${entry.id}: 세부 분류가 필요합니다.`);
+        assert.match(entry.detectionMode, /^(?:exact|phrase|context)$/);
         assert.ok(entry.explanation.length >= 10, `${entry.id}: 설명이 너무 짧습니다.`);
         assert.equal(entry.examples.length, entry.contentType === 'practice' ? 1 : 2, `${entry.id}: 바른 예문 수가 맞지 않습니다.`);
         assert.match(entry.source.label, /국립국어원/);
@@ -67,20 +84,56 @@ test('교사 등록 데이터는 기존 학생 수첩 기본 자료와 우리 �
     assert.match(teacherEntry, /type="search"/);
     assert.match(teacherEntry, /PAGE_SIZE = 20/);
     assert.match(teacherEntry, /entry\.category/);
+    assert.match(teacherEntry, /entry\.subcategory/);
+    assert.match(teacherEntry, /SPELLING_CATEGORY_DEFINITIONS/);
     assert.match(teacherEntry, /entry\.learningLabel/);
     assert.match(teacherEntry, /라벨 ·/);
     assert.match(teacherEntry, /spelling-learning-entry-summary/);
     assert.doesNotMatch(teacherEntry, /초안 저장|적용 중/);
 });
 
-test('500개 기본 자료는 틀린 표현과 분류·문장으로 바로 찾을 수 있다', () => {
+test('500개 기본 자료는 틀린 표현과 큰·세부 분류로 바로 찾을 수 있다', () => {
     assert.equal(searchElementarySpelling('도데체')[0]?.id, 'dodaeche');
     assert.equal(searchElementarySpelling('설레였다')[0]?.id, 'seolletda');
     assert.equal(searchElementarySpelling('수영을 못해요')[0]?.id, 'mot-hada');
     assert.equal(searchElementarySpelling('괜찬다')[0]?.id, 'expansion-gwaenchanhda');
     assert.equal(searchElementarySpelling('이번주')[0]?.id, 'expansion-ibeon-ju');
-    assert.ok(searchElementarySpelling('외래어 표기').every((entry) => entry.category === '외래어 표기'));
+    assert.ok(searchElementarySpelling('외래어').every((entry) => entry.categoryId === 'loanword'));
+    assert.ok(searchElementarySpelling('조사').every((entry) => entry.subcategoryId === 'particle'));
     assert.ok(searchElementarySpelling('선생님 말씀대로 따라 했다').some((entry) => entry.id === 'practice-spelling-quiz-100'));
+});
+
+test('500개는 성능과 정확도를 위한 여섯 분류·세 검출 방식 계약을 지킨다', () => {
+    assert.deepEqual(ELEMENTARY_SPELLING_CATEGORY_COUNTS, {
+        conjugation: 55,
+        meaning: 64,
+        word: 156,
+        grammar: 130,
+        compound: 49,
+        loanword: 46
+    });
+    assert.deepEqual(SPELLING_DETECTION_MODES.map((mode) => mode.id), ['exact', 'phrase', 'context']);
+    assert.deepEqual(SPELLING_CATEGORY_DEFINITIONS.map((category) => category.id), [
+        'grammar', 'conjugation', 'meaning', 'word', 'compound', 'loanword'
+    ]);
+    assert.deepEqual(ALL_ELEMENTARY_SPELLING_ENTRIES.map((entry) => entry.sortOrder),
+        Array.from({ length: 500 }, (_, index) => index + 1));
+
+    for (const entry of ALL_ELEMENTARY_SPELLING_ENTRIES) {
+        const category = SPELLING_CATEGORY_DEFINITIONS.find((item) => item.id === entry.categoryId);
+        assert.ok(category, `${entry.id}: 알 수 없는 큰 분류입니다.`);
+        assert.ok(category.subcategories.some((item) => item.id === entry.subcategoryId),
+            `${entry.id}: 큰 분류와 세부 분류가 맞지 않습니다.`);
+
+        const hasContext = entry.detectionPatterns.some((pattern) => {
+            const target = pattern.target || pattern.text;
+            return pattern.text !== target || (pattern.targetOffset || 0) > 0;
+        });
+        const expectedMode = hasContext
+            ? 'context'
+            : entry.detectionPatterns.some((pattern) => pattern.text.includes(' ')) ? 'phrase' : 'exact';
+        assert.equal(entry.detectionMode, expectedMode, `${entry.id}: 검출 방식이 패턴과 맞지 않습니다.`);
+    }
 });
 
 test('기본 자료 500개는 모두 글쓰기 밑줄 규칙을 가진다', () => {
@@ -127,7 +180,11 @@ test('후보 색인 검사는 500개 순차 검사와 같은 결과를 낸다', 
                         ruleId: rule.id,
                         entryId: rule.entryId,
                         label: rule.label,
+                        categoryId: rule.categoryId,
                         category: rule.category,
+                        subcategoryId: rule.subcategoryId,
+                        subcategory: rule.subcategory,
+                        detectionMode: rule.detectionMode,
                         start,
                         end: start + target.length,
                         text: text.slice(start, start + target.length),
@@ -168,7 +225,7 @@ test('초등 맞춤법 문제은행은 순서가 있는 고유 문항 100개와 
         assert.doesNotMatch(question.solution, /\([^()]+\s\/\s[^()]+\)/);
         for (const detectionPattern of question.detectionPatterns) {
             assert.ok(findElementarySpellingIssues(detectionPattern.text, 500)
-                .some((issue) => issue.entryId === `practice-${question.id}`), `${question.number}: 틀린 선택지를 찾지 못합니다.`);
+                .some((issue) => issue.entryId === question.id), `${question.number}: 틀린 선택지를 찾지 못합니다.`);
         }
     }
     assert.match(ELEMENTARY_SPELLING_QUIZ_QUESTIONS[33].question, /높이가/);
