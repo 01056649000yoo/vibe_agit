@@ -48,6 +48,11 @@ test('정적 앱 응답에 CSP와 Permissions-Policy가 있다', () => {
     assert.match(caddy, /Content-Security-Policy/);
     assert.match(caddy, /Permissions-Policy/);
     assert.match(caddy, /frame-ancestors 'none'/);
+    assert.match(
+        caddy,
+        /img-src[^;]*https:\/\/api\.xn--vz0ba242ncqcba79xhwx\.site/,
+        'private report image signed URLs must be allowed by img-src'
+    );
 });
 
 test('권한 판정은 JWT app_metadata를 신뢰하지 않는다', () => {

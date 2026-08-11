@@ -215,7 +215,7 @@ export const buildWritingPdfHtml = ({
         .report-sheet__section-body, .report-sheet__copy { min-width: 0; }
         .report-sheet__section-body--with-photo {
             display: grid;
-            grid-template-columns: 44mm minmax(0, 1fr);
+            grid-template-columns: 68mm minmax(0, 1fr);
             align-items: start;
             gap: 5mm;
         }
@@ -245,7 +245,7 @@ export const buildWritingPdfHtml = ({
             page-break-inside: avoid;
         }
         .report-sheet__photo-frame {
-            width: 44mm;
+            width: 68mm;
             aspect-ratio: 4 / 3;
             overflow: hidden;
             border: .35mm solid #D8E4E2;

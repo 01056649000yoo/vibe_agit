@@ -105,6 +105,8 @@ test('보고서 PDF는 칸 구조와 사진·설명을 별도 양식으로 만�
     assert.match(html, /report-sheet__section/);
     assert.match(html, /report-sheet__section-body--with-photo/);
     assert.match(html, /report-sheet__photo-frame/);
+    assert.match(html, /grid-template-columns: 68mm minmax\(0, 1fr\)/);
+    assert.match(html, /width: 68mm/);
     assert.match(html, /object-fit: cover/);
     assert.match(html, /signed-photo.webp\?token=a&amp;b=2/);
     assert.match(html, /관찰 셋째 날 봉선화/);
