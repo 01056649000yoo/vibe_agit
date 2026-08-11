@@ -14,6 +14,8 @@ const {
     ELEMENTARY_SPELLING_DETECTION_RULE_COUNT,
     ELEMENTARY_SPELLING_DETECTION_RULES,
     ELEMENTARY_SPELLING_ENTRY_IDS,
+    ELEMENTARY_SPELLING_LABEL_COUNT,
+    ELEMENTARY_SPELLING_TRIGGER_COUNT,
     createRandomElementarySpellingQuiz,
     findElementarySpellingIssues,
     getElementarySpellingEntries,
@@ -61,6 +63,8 @@ test('교사 등록 데이터는 기존 학생 수첩 기본 자료와 우리 �
     assert.match(teacherEntry, /type="search"/);
     assert.match(teacherEntry, /PAGE_SIZE = 20/);
     assert.match(teacherEntry, /entry\.category/);
+    assert.match(teacherEntry, /entry\.learningLabel/);
+    assert.match(teacherEntry, /라벨 ·/);
     assert.match(teacherEntry, /spelling-learning-entry-summary/);
     assert.doesNotMatch(teacherEntry, /초안 저장|적용 중/);
 });
@@ -79,16 +83,64 @@ test('기본 자료 300개는 모두 글쓰기 밑줄 규칙을 가진다', () =
     assert.equal(new Set(ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS).size, 300);
     assert.deepEqual(new Set(ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS), new Set(ELEMENTARY_SPELLING_ENTRY_IDS));
     assert.ok(ELEMENTARY_SPELLING_DETECTION_RULES.every((rule) => rule.patterns.length > 0));
+    assert.ok(ELEMENTARY_SPELLING_DETECTION_RULES.every((rule) => rule.label && rule.category));
+    assert.ok(ELEMENTARY_SPELLING_LABEL_COUNT >= 200);
+    assert.ok(ELEMENTARY_SPELLING_TRIGGER_COUNT >= 200);
     for (const rule of ELEMENTARY_SPELLING_DETECTION_RULES) {
         assert.ok(findElementarySpellingIssues(rule.patterns[0].text, 300)
             .some((issue) => issue.entryId === rule.entryId), `${rule.entryId}: 대표 오류 문맥을 찾지 못합니다.`);
     }
     assert.equal(findElementarySpellingIssues('김치찌게를 먹었다.')[0]?.right, '찌개');
     assert.equal(findElementarySpellingIssues('카드로 결재했다.')[0]?.right, '결제');
+    assert.equal(findElementarySpellingIssues('카드로 결재했다.')[0]?.label, '결재 / 결제');
     assert.ok(findElementarySpellingIssues('선생님 말씀데로 따라 했다.')
         .some((issue) => issue.entryId === 'practice-spelling-quiz-100'));
     assert.match(underlineTextarea, /loadElementarySpellingDetector/);
     assert.match(underlineInput, /loadElementarySpellingDetector/);
+});
+
+test('후보 색인 검사는 기존 300개 순차 검사와 같은 결과를 낸다', () => {
+    const findWithLegacyLoop = (value, limit = 50) => {
+        const text = String(value || '').normalize('NFC');
+        const issues = [];
+        for (const rule of ELEMENTARY_SPELLING_DETECTION_RULES) {
+            for (const item of rule.patterns) {
+                const target = item.target || item.text;
+                const targetOffset = Number.isInteger(item.targetOffset)
+                    ? item.targetOffset
+                    : Math.max(0, item.text.indexOf(target));
+                let matchStart = text.indexOf(item.text);
+                while (matchStart >= 0 && issues.length < limit) {
+                    const start = matchStart + targetOffset;
+                    issues.push({
+                        id: `${rule.id}-${start}`,
+                        ruleId: rule.id,
+                        entryId: rule.entryId,
+                        label: rule.label,
+                        category: rule.category,
+                        start,
+                        end: start + target.length,
+                        text: text.slice(start, start + target.length),
+                        wrong: target,
+                        right: item.right,
+                        lookup: item.lookup || item.right
+                    });
+                    matchStart = text.indexOf(item.text, matchStart + item.text.length);
+                }
+                if (issues.length >= limit) break;
+            }
+            if (issues.length >= limit) break;
+        }
+        return issues.sort((left, right) => left.start - right.start);
+    };
+
+    const representativeTexts = ELEMENTARY_SPELLING_DETECTION_RULES.flatMap((rule) => (
+        rule.patterns.map((item) => `😀 ${item.text} 다시 ${item.text}`)
+    ));
+    const combinedText = representativeTexts.join(' / ');
+    for (const text of [...representativeTexts, combinedText]) {
+        assert.deepEqual(findElementarySpellingIssues(text), findWithLegacyLoop(text));
+    }
 });
 
 test('초등 맞춤법 문제은행은 순서가 있는 고유 문항 100개와 해설을 가진다', () => {

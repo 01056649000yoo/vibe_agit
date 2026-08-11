@@ -55,7 +55,9 @@
 .spelling-learning-expand { width: 20px; color: #64748b; font-size: 1rem; text-align: center; }
 .spelling-learning-entry-detail { display: grid; gap: 10px; padding: 0 14px 14px; border-top: 1px solid rgba(226, 232, 240, .7); }
 .spelling-learning-entry-detail > p { margin: 11px 0 0; color: #475569; font-size: .78rem; line-height: 1.6; }
-.spelling-learning-entry-label { justify-self: start; margin-top: 11px; padding: 4px 7px; border-radius: 999px; background: #f5f3ff; color: #6d28d9; font-size: .68rem; font-weight: 850; }
+.spelling-learning-entry-labels { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 11px; }
+.spelling-learning-entry-label { padding: 4px 7px; border-radius: 999px; background: #f5f3ff; color: #6d28d9; font-size: .68rem; font-weight: 850; }
+.spelling-learning-entry-label.is-category { background: #eff6ff; color: #1d4ed8; }
 .spelling-learning-examples { display: grid; gap: 5px; padding: 10px 12px; border-radius: 10px; background: #f8fafc; color: #475569; font-size: .74rem; }
 .spelling-learning-examples b { color: #334155; }
 .spelling-learning-entry-actions { display: flex; justify-content: flex-end; }

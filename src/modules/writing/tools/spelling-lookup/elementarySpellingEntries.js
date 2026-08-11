@@ -7,6 +7,10 @@
 import { findDetectedEntryIds } from './spellingDetectionRules.js';
 import { ADDITIONAL_ELEMENTARY_SPELLING_ENTRIES } from './elementarySpellingCatalog.js';
 import { ELEMENTARY_SPELLING_QUIZ_QUESTIONS } from './elementarySpellingQuiz.js';
+import {
+    collectSpellingCandidates,
+    createSpellingCandidateIndex
+} from '../../spelling-learning/candidateIndex.js';
 
 const DICTIONARY_SEARCH_URL = 'https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=';
 const KOREAN_NORMS_URL = 'https://korean.go.kr/kornorms/main/main.do';
@@ -349,12 +353,17 @@ const additionalEntries = ADDITIONAL_ELEMENTARY_SPELLING_ENTRIES.map(({
     source: sourceType === 'norm' ? normSource : dictionarySource(sourceQuery || entry.answer)
 }));
 
+const createPracticeLearningLabel = (question) => question.choices
+    .map((choice) => choice.replace(/,\s*/g, '·'))
+    .join(' / ');
+
 const practiceEntries = ELEMENTARY_SPELLING_QUIZ_QUESTIONS.map((question) => ({
     id: `practice-${question.id}`,
     question: question.question,
     answer: question.answer,
     searchable: [question.prompt, question.solution, ...question.choices],
     category: '문장 연습',
+    learningLabel: createPracticeLearningLabel(question),
     explanation: question.explanation,
     examples: [question.solution],
     detectionPatterns: question.detectionPatterns,
@@ -370,7 +379,10 @@ const ELEMENTARY_SPELLING_ENTRIES = [
     })),
     ...additionalEntries,
     ...practiceEntries
-];
+].map((entry) => Object.freeze({
+    ...entry,
+    learningLabel: entry.learningLabel || entry.question
+}));
 
 const splitEntryChoices = (entry) => entry.question.split('/').map((choice) => choice.trim());
 
@@ -398,46 +410,76 @@ export const ELEMENTARY_SPELLING_DETECTION_RULES = Object.freeze(
         return Object.freeze({
             id: `elementary-${entry.id}`,
             entryId: entry.id,
+            label: entry.learningLabel,
+            category: entry.category,
             patterns: Object.freeze(patterns.map((item) => Object.freeze(item)))
         });
     })
+);
+
+const ELEMENTARY_INDEXED_PATTERNS = Object.freeze(
+    ELEMENTARY_SPELLING_DETECTION_RULES.flatMap((rule) => rule.patterns.map((item) => {
+        const target = item.target || item.text;
+        return Object.freeze({
+            rule,
+            item,
+            target,
+            targetOffset: Number.isInteger(item.targetOffset)
+                ? item.targetOffset
+                : Math.max(0, item.text.indexOf(target))
+        });
+    }))
+);
+
+const ELEMENTARY_SPELLING_CANDIDATE_INDEX = createSpellingCandidateIndex(
+    ELEMENTARY_INDEXED_PATTERNS,
+    (indexedPattern) => indexedPattern.target
 );
 
 export const ELEMENTARY_SPELLING_DETECTION_RULE_COUNT = ELEMENTARY_SPELLING_DETECTION_RULES.length;
 export const ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS = Object.freeze(
     ELEMENTARY_SPELLING_DETECTION_RULES.map((rule) => rule.entryId)
 );
+export const ELEMENTARY_SPELLING_LABEL_COUNT = new Set(
+    ELEMENTARY_SPELLING_DETECTION_RULES.map((rule) => rule.label)
+).size;
+export const ELEMENTARY_SPELLING_TRIGGER_COUNT = new Set(
+    ELEMENTARY_INDEXED_PATTERNS.map((indexedPattern) => indexedPattern.target)
+).size;
 
-/** 300개 기본 자료에서 만든 문맥형 밑줄 규칙. */
+/** 300개 기본 자료에서 본문 후보를 한 번 찾은 뒤 해당 라벨의 문맥만 확인한다. */
 export const findElementarySpellingIssues = (value, limit = 50) => {
     const text = String(value || '').normalize('NFC');
     const safeLimit = Number.isFinite(limit) ? Math.max(0, Math.floor(limit)) : 50;
     if (!text || safeLimit === 0) return [];
 
     const issues = [];
-    for (const rule of ELEMENTARY_SPELLING_DETECTION_RULES) {
-        for (const item of rule.patterns) {
-            if (!item.text) continue;
-            let matchStart = text.indexOf(item.text);
-            while (matchStart >= 0 && issues.length < safeLimit) {
-                const targetOffset = Number.isInteger(item.targetOffset)
-                    ? item.targetOffset
-                    : Math.max(0, item.text.indexOf(item.target));
-                const start = matchStart + targetOffset;
-                const target = item.target || item.text;
-                issues.push({
-                    id: `${rule.id}-${start}`,
-                    ruleId: rule.id,
-                    entryId: rule.entryId,
-                    start,
-                    end: start + target.length,
-                    text: text.slice(start, start + target.length),
-                    wrong: target,
-                    right: item.right,
-                    lookup: item.lookup || item.right
-                });
-                matchStart = text.indexOf(item.text, matchStart + item.text.length);
-            }
+    const candidates = collectSpellingCandidates(text, ELEMENTARY_SPELLING_CANDIDATE_INDEX);
+    for (const { item: indexedPattern, starts } of candidates) {
+        const { rule, item, target, targetOffset } = indexedPattern;
+        let nextAllowedMatchStart = 0;
+        for (const targetStart of starts) {
+            const matchStart = targetStart - targetOffset;
+            if (
+                matchStart < nextAllowedMatchStart ||
+                !text.startsWith(item.text, matchStart)
+            ) continue;
+
+            const start = matchStart + targetOffset;
+            issues.push({
+                id: `${rule.id}-${start}`,
+                ruleId: rule.id,
+                entryId: rule.entryId,
+                label: rule.label,
+                category: rule.category,
+                start,
+                end: start + target.length,
+                text: text.slice(start, start + target.length),
+                wrong: target,
+                right: item.right,
+                lookup: item.lookup || item.right
+            });
+            nextAllowedMatchStart = matchStart + item.text.length;
             if (issues.length >= safeLimit) break;
         }
         if (issues.length >= safeLimit) break;
@@ -532,6 +574,7 @@ export const searchElementarySpelling = (query) => {
                 entry.question,
                 entry.answer,
                 entry.category,
+                entry.learningLabel,
                 ...entry.searchable,
                 ...entry.examples
             ];

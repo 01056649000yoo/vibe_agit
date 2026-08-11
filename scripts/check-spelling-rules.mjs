@@ -25,6 +25,8 @@ import {
     ELEMENTARY_SPELLING_DETECTION_RULE_COUNT,
     ELEMENTARY_SPELLING_DETECTION_RULES,
     ELEMENTARY_SPELLING_ENTRY_IDS,
+    ELEMENTARY_SPELLING_LABEL_COUNT,
+    ELEMENTARY_SPELLING_TRIGGER_COUNT,
     findElementarySpellingIssues,
     getElementarySpellingQuizPool,
     getElementarySpellingEntries
@@ -190,15 +192,18 @@ if (없는수첩항목.length > 0) {
 
 const 기본규칙아이디 = new Set(ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS);
 const 빈기본규칙 = ELEMENTARY_SPELLING_DETECTION_RULES.filter((rule) => rule.patterns.length === 0);
+const 라벨없는기본규칙 = ELEMENTARY_SPELLING_DETECTION_RULES.filter((rule) => !rule.label || !rule.category);
 if (
     ELEMENTARY_SPELLING_DETECTION_RULE_COUNT !== 300 ||
     기본규칙아이디.size !== 300 ||
     빈기본규칙.length > 0 ||
+    라벨없는기본규칙.length > 0 ||
     ELEMENTARY_SPELLING_ENTRY_IDS.some((id) => !기본규칙아이디.has(id))
 ) {
-    console.error(`\n실패 — 300개 기본 자료 밑줄 연결 오류: 규칙 ${ELEMENTARY_SPELLING_DETECTION_RULE_COUNT}개, 고유 항목 ${기본규칙아이디.size}개, 빈 규칙 ${빈기본규칙.length}개`);
+    console.error(`\n실패 — 300개 기본 자료 밑줄 연결 오류: 규칙 ${ELEMENTARY_SPELLING_DETECTION_RULE_COUNT}개, 고유 항목 ${기본규칙아이디.size}개, 빈 규칙 ${빈기본규칙.length}개, 라벨 없음 ${라벨없는기본규칙.length}개`);
     process.exit(1);
 }
+console.log(`라벨 색인  학습 라벨 ${ELEMENTARY_SPELLING_LABEL_COUNT}개 · 검사 표현 ${ELEMENTARY_SPELLING_TRIGGER_COUNT}개 · 후보 문맥만 확인`);
 
 const 전체수첩항목 = getElementarySpellingEntries();
 const 중복수첩아이디 = 전체수첩항목.length - new Set(전체수첩항목.map((entry) => entry.id)).size;

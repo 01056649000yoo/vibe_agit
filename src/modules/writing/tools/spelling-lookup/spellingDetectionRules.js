@@ -177,6 +177,7 @@ export const findSpellingIssues = (value, limit = MAX_SPELLING_ISSUES) => {
                 id: `${rule.id}-${match.index}`,
                 ruleId: rule.id,
                 entryId: rule.entryId || rule.id,
+                label: rule.label || `${rule.wrong} / ${rule.right}`,
                 start: match.index,
                 end: match.index + match[0].length,
                 text: match[0],
