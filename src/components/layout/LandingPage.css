@@ -334,28 +334,40 @@
 }
 
 .landing-support-footer {
-  margin: 14px 8px 0;
-  padding: 12px 0 2px;
+  margin: 15px 6px 0;
+  padding: 12px 0 4px;
   border-top: 1px solid #eee7df;
   text-align: center;
 }
 
 .landing-support-footer nav {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.18fr) auto minmax(0, 0.82fr);
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 5px;
+  width: 100%;
+  column-gap: 8px;
   color: #b0a69d;
 }
 
+.landing-support-footer nav > span {
+  color: #c0b7af;
+  font-size: 0.78rem;
+}
+
 .landing-support-footer a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 2px;
   color: #665e56;
-  font-size: 0.76rem;
-  font-weight: 700;
-  line-height: 1.5;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
   text-decoration-color: #c6bdb5;
   text-underline-offset: 3px;
+  white-space: nowrap;
 }
 
 .landing-support-footer a:hover {
@@ -672,12 +684,23 @@
   }
 
   .landing-support-footer {
-    margin: 11px 3px 0;
-    padding: 9px 0 1px;
+    margin: 12px 0 0;
+    padding: 10px 0 2px;
+  }
+
+  .landing-support-footer nav {
+    column-gap: 3px;
+  }
+
+  .landing-support-footer nav > span {
+    font-size: 0.66rem;
   }
 
   .landing-support-footer a {
-    font-size: 0.7rem;
+    min-height: 30px;
+    padding: 0;
+    font-size: clamp(0.66rem, 2.95vw, 0.72rem);
+    letter-spacing: -0.025em;
   }
 
   .landing-feature-modal-backdrop {
