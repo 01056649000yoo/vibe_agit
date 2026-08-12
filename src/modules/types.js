@@ -30,6 +30,8 @@
  *   모듈은 별도 메뉴 폭을 만들지 않고 짧은 label/description만 제공한다.
  * @property {string}   [studentRoute] 학생 화면 내부 라우트 이름
  * @property {string[]} [writingMissionTypes] 이 모듈이 처리하는 글쓰기 입력 미션 유형
+ * @property {Array<{eventType: string, icon: string, tone: string, title: string, message: string|Function, action: 'confirm'|'rewrite'|'post'|'custom', actionLabel: string, handleAction?: Function}>} [notifications]
+ *   기능 RPC가 발행하는 학생 활동 알림의 표시 계약. 공용 알림 셸은 이 목록을 자동으로 합친다.
  * @property {boolean}  [defaultEnabled]  학급 설정이 없을 때 기본 노출 여부 (기본 false)
  * @property {boolean}  [available] false면 코드·데이터는 보존하되 교사·학생 UI에서 숨김
  * @property {boolean}  [core]    true면 항상 켜짐(끌 수 없음). 코어 인접 기능용
@@ -75,6 +77,19 @@ export function validateManifest(m) {
   } else if (m.dashboardCards) {
     Object.entries(m.dashboardCards).forEach(([dashboardId, cards]) => {
       if (!Array.isArray(cards)) problems.push(`dashboardCards.${dashboardId}가 배열이 아님`);
+    });
+  }
+  if (m.notifications && !Array.isArray(m.notifications)) {
+    problems.push('notifications가 배열이 아님');
+  } else if (m.notifications) {
+    m.notifications.forEach((notification, index) => {
+      if (!notification?.eventType) problems.push(`notifications.${index}.eventType 없음`);
+      if (!['confirm', 'rewrite', 'post', 'custom'].includes(notification?.action)) {
+        problems.push(`notifications.${index}.action 유효하지 않음`);
+      }
+      if (notification?.action === 'custom' && typeof notification.handleAction !== 'function') {
+        problems.push(`notifications.${index}.handleAction 없음`);
+      }
     });
   }
   if (m.management?.legacy !== true && m.teacherEntry && m.audience === 'student') {

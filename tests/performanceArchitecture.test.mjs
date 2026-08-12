@@ -19,7 +19,7 @@ test('학생 과제 목록과 글쓰기 화면은 Realtime 연결을 열지 않�
         'src/components/student/MissionList.jsx',
         'src/hooks/useMissionSubmit.js',
         'src/components/student/StudentDashboard.jsx',
-        'src/hooks/useStudentSyncNotifications.js'
+        'src/modules/notifications/ActivityNotificationPanel.jsx'
     ]) {
         const source = await read(file);
         assert.doesNotMatch(source, /\.channel\(|postgres_changes/, `${file}에 학생별 Realtime이 다시 들어왔습니다.`);
@@ -33,6 +33,22 @@ test('학생 상시 알림은 WebSocket 대신 분산된 공용 홈 동기화를
     assert.doesNotMatch(dashboard, /useRealtimeNotifications/);
     assert.match(app, /240000[\s\S]*120000/);
     assert.match(app, /refreshStudentHome\(\{ force: true \}\)/);
+});
+
+test('학생 활동 알림은 bootstrap 요약과 열 때만 목록 RPC를 사용한다', async () => {
+    const dashboard = await read('src/components/student/StudentDashboard.jsx');
+    const api = await read('src/modules/notifications/notificationApi.js');
+    const panel = await read('src/modules/notifications/ActivityNotificationPanel.jsx');
+    const migration = await read('supabase/migrations/20261023_student_activity_notifications.sql');
+
+    assert.match(dashboard, /homeBootstrap\?\.activity_notifications/);
+    assert.doesNotMatch(dashboard, /supabase\.(?:from|rpc)\(/);
+    assert.match(api, /get_my_activity_notifications_v1/);
+    assert.match(api, /mark_my_activity_notifications_read_v1/);
+    assert.match(panel, /listUnread\(\{ limit: 50 \}\)/);
+    assert.doesNotMatch(panel, /setInterval\s*\(|\.channel\(|postgres_changes/);
+    assert.match(migration, /activity_notifications[\s\S]*unread_count[\s\S]*latest/);
+    assert.match(migration, /LIMIT v_limit \+ 1/);
 });
 
 test('친구 글 상세 화면은 고정 DB 폴링을 사용하지 않는다', async () => {

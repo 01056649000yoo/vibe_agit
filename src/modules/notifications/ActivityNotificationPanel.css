@@ -1,0 +1,173 @@
+.student-home-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: var(--ui-space-6);
+}
+.activity-notification-panel { display: flex; min-width: 0; flex-direction: column; }
+.activity-notification-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-3);
+    margin: 0 2px 11px;
+}
+.activity-notification-panel__header h2 {
+    margin: 0;
+    color: var(--ui-ink-strong);
+    font-size: 1.08rem;
+    font-weight: 950;
+}
+.activity-notification-panel__header > strong {
+    padding: 4px 9px;
+    border-radius: var(--ui-radius-pill);
+    background: #F3E5F5;
+    color: #6A1B9A;
+    font-size: .68rem;
+    font-weight: 900;
+}
+.activity-notification-panel__body {
+    display: grid;
+    min-height: 116px;
+    flex: 1;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 14px;
+    border: 1px solid var(--ui-border);
+    border-left: 4px solid #7E57C2;
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
+    color: var(--ui-ink-strong);
+    font: inherit;
+    text-align: left;
+    box-sizing: border-box;
+}
+.activity-notification-panel__body:not(:disabled) { cursor: pointer; }
+.activity-notification-panel__body:disabled { opacity: 1; }
+.activity-notification-panel__body:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
+.activity-notification-panel__body--positive { border-left-color: #43A047; }
+.activity-notification-panel__body--warning,
+.activity-notification-panel__body--rewrite { border-left-color: #F4511E; }
+.activity-notification-panel__body--points { border-left-color: #FB8C00; }
+.activity-notification-panel__body--empty { border-left-color: var(--ui-border-strong); }
+.activity-notification-panel__icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 13px;
+    background: #F3E5F5;
+    color: #6A1B9A;
+    font-size: 1.2rem;
+    font-weight: 950;
+}
+.activity-notification-panel__copy { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.activity-notification-panel__copy strong { font-size: .86rem; font-weight: 950; }
+.activity-notification-panel__copy small {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--ui-ink-muted);
+    font-size: .7rem;
+    font-weight: 750;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+.activity-notification-panel__action {
+    padding: 6px 9px;
+    border-radius: 10px;
+    background: #7E57C2;
+    color: white;
+    font-size: .68rem;
+    font-weight: 900;
+}
+.activity-notification-panel__empty {
+    grid-column: 1 / -1;
+    color: var(--ui-ink-muted);
+    font-size: .8rem;
+    font-weight: 800;
+    text-align: center;
+}
+.activity-notification-modal__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 4300;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(25, 20, 30, .48);
+}
+.activity-notification-modal {
+    width: min(420px, 100%);
+    padding: 20px;
+    border: 1px solid rgba(126, 87, 194, .25);
+    border-radius: 24px;
+    background: white;
+    box-shadow: 0 24px 65px rgba(35, 25, 50, .25);
+    box-sizing: border-box;
+    text-align: center;
+}
+.activity-notification-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--ui-ink-muted);
+    font-size: .76rem;
+    font-weight: 900;
+}
+.activity-notification-modal__icon {
+    display: grid;
+    width: 64px;
+    height: 64px;
+    place-items: center;
+    margin: 12px auto 10px;
+    border-radius: 20px;
+    background: #F3E5F5;
+    color: #6A1B9A;
+    font-size: 1.8rem;
+    font-weight: 950;
+}
+.activity-notification-modal h2 { margin: 0; color: var(--ui-ink-strong); font-size: 1.2rem; }
+.activity-notification-modal > p { margin: 9px 0; color: var(--ui-ink); font-size: .88rem; font-weight: 750; line-height: 1.55; }
+.activity-notification-modal time { color: var(--ui-ink-muted); font-size: .68rem; font-weight: 700; }
+.activity-notification-modal__pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; }
+.activity-notification-modal__pager button {
+    min-height: 34px;
+    padding: 6px 11px;
+    border: 1px solid var(--ui-border);
+    border-radius: 10px;
+    background: var(--ui-surface-muted);
+    color: var(--ui-ink);
+    font: inherit;
+    font-size: .7rem;
+    font-weight: 850;
+    cursor: pointer;
+}
+.activity-notification-modal__pager button:disabled { cursor: default; opacity: .4; }
+.activity-notification-modal__pager strong { font-size: .72rem; }
+.activity-notification-modal__primary {
+    width: 100%;
+    min-height: 46px;
+    margin-top: 17px;
+    border: 0;
+    border-radius: 14px;
+    background: #7E57C2;
+    color: white;
+    font: inherit;
+    font-size: .85rem;
+    font-weight: 950;
+    cursor: pointer;
+}
+.activity-notification-modal__primary:disabled { opacity: .6; cursor: wait; }
+.activity-notification-modal > small { display: block; margin-top: 8px; color: var(--ui-ink-muted); font-size: .64rem; }
+.activity-notification-modal .activity-notification-modal__error { color: #C62828; font-size: .72rem; }
+.activity-notification-modal__state { padding: 44px 10px; color: var(--ui-ink-muted); font-size: .84rem; font-weight: 800; }
+
+@media (hover: hover) {
+    .activity-notification-panel__body:not(:disabled):hover { border-top-color: var(--ui-border-strong); border-right-color: var(--ui-border-strong); border-bottom-color: var(--ui-border-strong); box-shadow: var(--ui-shadow-xs); }
+}
+@media (max-width: 680px) {
+    .student-home-action-grid { grid-template-columns: 1fr; }
+}

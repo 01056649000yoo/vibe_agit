@@ -5,6 +5,7 @@ import { sanitizeFeedback } from '../utils/aiFeedbackGuard';
 import { dataCache } from '../lib/cache';
 import { readLocalStorageJson } from '../lib/browserStorage';
 import { pointApi } from '../modules/points/pointApi';
+import { assignmentApi } from '../modules/writing/assignmentApi';
 
 export const useMissionManager = (activeClass, bootstrapProfile = null) => {
     const [missions, setMissions] = useState([]);
@@ -683,16 +684,9 @@ ${postArray.map((p, idx) => {
             const saveFeedback = async (post, feedback) => {
                 if (!post || !feedback || processedIds.has(post.id)) return false;
 
-                const { error } = await supabase
-                    .from('student_posts')
-                    .update({
-                        ai_feedback: feedback,
-                        is_submitted: false,
-                        is_returned: true
-                    })
-                    .eq('id', post.id);
-
-                if (error) {
+                try {
+                    await assignmentApi.requestRewrite(post.id, feedback);
+                } catch (error) {
                     console.error(`피드백 저장 실패 (${post.id}):`, error.message);
                     return false;
                 }
@@ -770,13 +764,7 @@ ${postArray.map((p, idx) => {
         if (!confirm('학생에게 이 글을 돌려보내고 다시 쓰기를 요청할까요? ♻️\n학생의 화면에 안내 문구가 표시됩니다.')) return;
 
         try {
-            const { error: postError } = await supabase.from('student_posts').update({
-                is_submitted: false,
-                is_returned: true,
-                ai_feedback: tempFeedback
-            }).eq('id', post.id);
-
-            if (postError) throw postError;
+            await assignmentApi.requestRewrite(post.id, tempFeedback);
 
             alert('다시 쓰기 요청을 전달했습니다! 📤');
             setSelectedPost(null);
@@ -915,7 +903,7 @@ ${postArray.map((p, idx) => {
     };
 
     const handleBulkRequestRewrite = async () => {
-        const toRewrite = posts.filter(p => (p.is_submitted || p.is_confirmed) && !p.is_returned);
+        const toRewrite = posts.filter(p => p.is_submitted && !p.is_confirmed && !p.is_returned);
         if (toRewrite.length === 0) {
             alert('다시 쓰기를 요청할 미확인 제출글이 없습니다.');
             return;
@@ -925,32 +913,13 @@ ${postArray.map((p, idx) => {
 
         setLoadingPosts(true);
         try {
-            const rewritePromises = toRewrite.map(async (post) => {
-                const { error } = await supabase
-                    .from('student_posts')
-                    .update({
-                        is_submitted: false,
-                        is_returned: true,
-                        is_confirmed: false
-                    })
-                    .eq('id', post.id);
-                if (error) throw error;
-            });
-
-            await Promise.all(rewritePromises);
-            alert(`✅ ${toRewrite.length}건 일괄 다시 쓰기 요청 완료!`);
+            const result = await assignmentApi.requestRewrites(toRewrite.map((post) => post.id));
+            const requestedCount = Number(result?.requested_count ?? toRewrite.length);
+            alert(`✅ ${requestedCount}건 일괄 다시 쓰기 요청 완료!`);
             const rewrittenIds = new Set(toRewrite.map((post) => post.id));
             setPosts((current) => current.map((post) => rewrittenIds.has(post.id)
                 ? { ...post, is_submitted: false, is_returned: true, is_confirmed: false }
                 : post));
-            // 이미 승인돼 있던 글도 되돌릴 수 있는 버튼이라, 그중 승인 상태였던 것만 승인 수에서 뺀다.
-            const unconfirmedCount = toRewrite.filter((post) => post.is_confirmed).length;
-            if (unconfirmedCount > 0 && selectedMission.mission_type !== 'meeting') {
-                setSubmissionCounts((current) => ({
-                    ...current,
-                    [selectedMission.id]: Math.max(0, (current[selectedMission.id] || 0) - unconfirmedCount)
-                }));
-            }
         } catch (err) {
             console.error('일괄 다시 쓰기 요청 실패:', err.message);
             alert('일괄 처리 중 오류가 발생했습니다.');

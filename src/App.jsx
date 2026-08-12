@@ -60,7 +60,8 @@ function App() {
   const {
     data: studentHomeBootstrap,
     loading: studentHomeBootstrapLoading,
-    refresh: refreshStudentHome
+    refresh: refreshStudentHome,
+    refreshIfStale: refreshStudentHomeIfStale
   } = useStudentHomeBootstrap(studentSession);
   // 홈 RPC가 받은 같은 학급 설정을 앱 셸·메뉴·편집기가 함께 쓴다.
   const enabledStudentModules = useMemo(() => {
@@ -85,6 +86,7 @@ function App() {
   // 페이지가 바뀔 때 히스토리를 쌓고, 뒤로가기가 오면 그 페이지로 되돌린다.
   const skipHistoryPushRef = useRef(false);
   const lastStudentPageRef = useRef(null);
+  const previousStudentHomePageRef = useRef(null);
 
   useEffect(() => {
     if (!studentSession) { lastStudentPageRef.current = null; return; }
@@ -100,6 +102,18 @@ function App() {
     }
     lastStudentPageRef.current = studentPageName;
   }, [studentSession, studentPageName]);
+
+  useEffect(() => {
+    if (!studentSession) {
+      previousStudentHomePageRef.current = null;
+      return;
+    }
+    const previousPage = previousStudentHomePageRef.current;
+    previousStudentHomePageRef.current = studentPageName;
+    if (studentPageName === 'main' && previousPage && previousPage !== 'main') {
+      void refreshStudentHomeIfStale();
+    }
+  }, [refreshStudentHomeIfStale, studentPageName, studentSession]);
 
   useEffect(() => {
     if (!studentSession) return undefined;

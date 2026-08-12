@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, vercel, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, vercel, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -15,7 +15,8 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, vercel, migration, repo
     readFile('supabase/migrations/20261021_report_image_upsert_validation.sql', 'utf8'),
     readFile('src/modules/writing/mission-types/report/reportImageApi.js', 'utf8'),
     readFile('supabase/migrations/20261020_writing_pdf_export.sql', 'utf8'),
-    readFile('src/modules/writing/export/googleDocImageExport.js', 'utf8')
+    readFile('src/modules/writing/export/googleDocImageExport.js', 'utf8'),
+    readFile('supabase/migrations/20261023_student_activity_notifications.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -101,4 +102,14 @@ test('보고서 사진은 비공개 저장소와 실제 글 공개 상태로 보
     assert.match(reportUpsertMigration, /v_path !~ \('\^' \|\| v_expected_post_id::TEXT/);
     assert.doesNotMatch(reportMigration, /app_metadata|auth\.jwt/);
     assert.doesNotMatch(reportUpsertMigration, /app_metadata|auth\.jwt/);
+});
+
+test('학생 활동 알림 원장은 직접 공개하지 않고 본인 학급·학생 RPC로만 읽는다', () => {
+    assert.match(notificationMigration, /ALTER TABLE public\.student_notification_events ENABLE ROW LEVEL SECURITY/);
+    assert.match(notificationMigration, /REVOKE ALL ON TABLE public\.student_notification_events FROM PUBLIC, anon, authenticated/);
+    assert.match(notificationMigration, /REVOKE ALL ON FUNCTION public\.notification_emit_v1[\s\S]*PUBLIC, anon, authenticated, service_role/);
+    assert.match(notificationMigration, /auth\.uid\(\) IS NULL OR public\.auth_user_role\(\) <> 'STUDENT'/);
+    assert.match(notificationMigration, /event\.class_id = v_student\.class_id[\s\S]*event\.student_id = v_student\.id/);
+    assert.match(notificationMigration, /cardinality\(p_ids\), 0\) NOT BETWEEN 1 AND 50/);
+    assert.doesNotMatch(notificationMigration, /auth\.jwt|app_metadata/);
 });

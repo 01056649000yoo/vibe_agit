@@ -11,13 +11,12 @@ import {
     shouldOpenDragonSpeciesReselectionAfterGrowth
 } from '../../modules/game/dragon/presentation';
 import { useStudentDashboard } from '../../hooks/useStudentDashboard';
-import { useStudentSyncNotifications } from '../../hooks/useStudentSyncNotifications';
 import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
 import useMyTitleStatus from '../../modules/writing/title-status/useMyTitleStatus';
+import ActivityNotificationPanel from '../../modules/notifications/ActivityNotificationPanel';
 
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
-import TeacherNotifyBanner from './TeacherNotifyBanner';
 import DashboardMenu from './DashboardMenu';
 import StudentHomeGrowthPanel from './StudentHomeGrowthPanel';
 import StudentTodoCard from './StudentTodoCard';
@@ -51,13 +50,18 @@ const StudentDashboard = ({
     const [isFootprintOpen, setIsFootprintOpen] = useState(false);
     const [isMyAgitOpen, setIsMyAgitOpen] = useState(false);
     const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false);
+    const [myAgitInitialPost, setMyAgitInitialPost] = useState(null);
+    const [activityOverride, setActivityOverride] = useState(null);
     const [growthCelebration, setGrowthCelebration] = useState(null);
     const [openSpeciesPickerAfterGrowth, setOpenSpeciesPickerAfterGrowth] = useState(false);
 
     // 하단 내비의 '나의 아지트'를 누르면 홈으로 온 뒤 이 신호가 올라온다.
     useEffect(() => {
         if (!myAgitSignal) return undefined;
-        const timerId = window.setTimeout(() => setIsMyAgitOpen(true), 0);
+        const timerId = window.setTimeout(() => {
+            setMyAgitInitialPost(null);
+            setIsMyAgitOpen(true);
+        }, 0);
         return () => window.clearTimeout(timerId);
     }, [myAgitSignal]);
 
@@ -66,7 +70,6 @@ const StudentDashboard = ({
         const timerId = window.setTimeout(() => setIsPlaygroundOpen(true), 0);
         return () => window.clearTimeout(timerId);
     }, [playgroundSignal]);
-
 
     // 전반적인 대시보드 데이터 및 비즈니스 로직
     const {
@@ -90,9 +93,6 @@ const StudentDashboard = ({
         initialStatus: homeBootstrap?.title_status,
         bootstrapLoading: homeBootstrapLoading
     });
-
-    // 공용 홈 동기화 결과의 변화만 알림으로 보여 준다. 학생별 WebSocket은 열지 않는다.
-    const { teacherNotify, setTeacherNotify } = useStudentSyncNotifications(studentSession);
 
     // 드래곤 관련 상태 및 액션
     const {
@@ -185,6 +185,14 @@ const StudentDashboard = ({
         .filter((module) => module.part === 'game' && module.playground !== false)
         .sort((a, b) => (a.playground?.order ?? 100) - (b.playground?.order ?? 100));
     const activeGameModule = gameModules.find((module) => module.id === activeGameModuleId) || null;
+    const serverActivitySummary = homeBootstrap?.activity_notifications || {
+        version: 1,
+        unread_count: 0,
+        latest: null
+    };
+    const activitySummary = activityOverride?.bootstrapGeneratedAt === homeBootstrap?.generated_at
+        ? activityOverride.summary
+        : serverActivitySummary;
 
     const openGameModule = (module) => {
         setIsPlaygroundOpen(false);
@@ -236,7 +244,10 @@ const StudentDashboard = ({
                         dragonEnabled={isOn('dragon')}
                         petData={displayPetData}
                         dragonInfo={dragonInfo}
-                        onOpenMyAgit={() => setIsMyAgitOpen(true)}
+                        onOpenMyAgit={() => {
+                            setMyAgitInitialPost(null);
+                            setIsMyAgitOpen(true);
+                        }}
                         onOpenDragon={() => setIsDragonModalOpen(true)}
                         onOpenFootprint={() => setIsFootprintOpen(true)}
                     />
@@ -248,30 +259,38 @@ const StudentDashboard = ({
                         />
                     </Suspense>
 
-                {/* 선생님의 동기화 알림(포인트·승인·회수). 상시 상태인 '다시 쓸 글'은
-                    아래 할 일 카드가 맡는다 — 같은 것을 두 군데서 세지 않도록. */}
-                <TeacherNotifyBanner
-                    teacherNotify={teacherNotify}
-                    setTeacherNotify={setTeacherNotify}
-                    handleDirectRewriteGo={handleDirectRewriteGo}
-                />
-
-                {/* 오늘 할 일 — 홈에서 가장 먼저 보여야 하는 것 */}
-                <StudentTodoCard
-                    studentSession={studentSession}
-                    initialPendingMissions={homeBootstrap?.home?.pending_missions}
-                    returnedCount={returnedCount}
-                    hasActivity={hasActivity}
-                    onNavigate={onNavigate}
-                    onOpenFeedback={openFeedback}
-                    onGoRewrite={handleDirectRewriteGo}
-                />
+                <div className="student-home-action-grid">
+                    <StudentTodoCard
+                        unstartedCount={Number(homeBootstrap?.home?.unstarted_missions || 0)}
+                        draftCount={Number(homeBootstrap?.home?.draft_missions || 0)}
+                        returnedCount={returnedCount}
+                        loading={homeBootstrapLoading}
+                        onNavigate={onNavigate}
+                        onGoRewrite={handleDirectRewriteGo}
+                    />
+                    <ActivityNotificationPanel
+                        summary={activitySummary}
+                        loading={homeBootstrapLoading}
+                        onSummaryChange={(summary) => setActivityOverride({
+                            bootstrapGeneratedAt: homeBootstrap?.generated_at,
+                            summary
+                        })}
+                        onNavigate={onNavigate}
+                        onOpenPost={(post) => {
+                            setMyAgitInitialPost(post);
+                            setIsMyAgitOpen(true);
+                        }}
+                    />
+                </div>
 
 
                 {/* 주요 활동 메뉴 */}
                 <DashboardMenu
                     onNavigate={onNavigate}
-                    onOpenMyAgit={() => setIsMyAgitOpen(true)}
+                    onOpenMyAgit={() => {
+                        setMyAgitInitialPost(null);
+                        setIsMyAgitOpen(true);
+                    }}
                     onOpenPlayground={() => setIsPlaygroundOpen(true)}
                     playgroundCount={playgroundItems.length}
                     studentSession={studentSession}
@@ -288,8 +307,12 @@ const StudentDashboard = ({
                     <Suspense fallback={null}>
                         <MyAgitPanel
                             isOpen={isMyAgitOpen}
-                            onClose={() => setIsMyAgitOpen(false)}
+                            onClose={() => {
+                                setIsMyAgitOpen(false);
+                                setMyAgitInitialPost(null);
+                            }}
                             studentSession={studentSession}
+                            initialPost={myAgitInitialPost}
                             points={points}
                             enabledModules={enabledModules}
                             moduleRuntimeById={{
@@ -297,6 +320,7 @@ const StudentDashboard = ({
                             }}
                             onOpenModule={(module) => {
                                 setIsMyAgitOpen(false);
+                                setMyAgitInitialPost(null);
                                 openGameModule(module);
                             }}
                         />
