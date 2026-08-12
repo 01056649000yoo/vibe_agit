@@ -203,15 +203,15 @@
 }
 
 .landing-experiences {
-  padding: 5px 10px 0;
+  padding: 11px 10px 0;
 }
 
 .landing-experiences-heading {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 7px;
+  gap: 9px;
+  margin-bottom: 9px;
 }
 
 .landing-experiences-heading h2 {
@@ -219,14 +219,14 @@
   color: #7a7066;
   background: none;
   -webkit-text-fill-color: currentColor;
-  font-size: 0.74rem;
-  font-weight: 800;
+  font-size: 0.88rem;
+  font-weight: 900;
   letter-spacing: -0.015em;
 }
 
 .landing-experiences-heading span {
   color: #a0968d;
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
@@ -248,14 +248,14 @@
 
 .landing-experience-button {
   min-width: 0;
-  min-height: 62px;
-  padding: 8px 10px;
+  min-height: 78px;
+  padding: 11px 12px;
   border: 0;
   border-right: 1px solid rgba(103, 89, 75, 0.12);
   border-radius: 0;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   color: #453d35;
   text-align: left;
   box-shadow: none;
@@ -298,44 +298,44 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  border-radius: 11px;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 13px;
   background: rgba(255, 255, 255, 0.78);
-  font-size: 1rem;
+  font-size: 1.2rem;
 }
 
 .landing-experience-copy {
   display: grid;
   flex: 1;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
-  line-height: 1.2;
+  line-height: 1.16;
 }
 
 .landing-experience-copy small {
   color: #756b62;
-  font-size: 0.66rem;
+  font-size: 0.73rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .landing-experience-copy strong {
   color: #3e3730;
-  font-size: 0.82rem;
+  font-size: 0.96rem;
   font-weight: 900;
 }
 
 .landing-experience-more {
   color: #8b8177;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 900;
 }
 
 .landing-support-footer {
-  margin: 12px 8px 0;
-  padding: 10px 0 1px;
+  margin: 14px 8px 0;
+  padding: 12px 0 2px;
   border-top: 1px solid #eee7df;
   text-align: center;
 }
@@ -351,7 +351,7 @@
 
 .landing-support-footer a {
   color: #665e56;
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   font-weight: 700;
   line-height: 1.5;
   text-decoration-color: #c6bdb5;
@@ -615,20 +615,20 @@
   }
 
   .landing-experiences {
-    padding: 4px 4px 0;
+    padding: 7px 4px 0;
   }
 
   .landing-experiences-heading {
     gap: 5px;
-    margin-bottom: 5px;
+    margin-bottom: 7px;
   }
 
   .landing-experiences-heading h2 {
-    font-size: 0.69rem;
+    font-size: 0.75rem;
   }
 
   .landing-experiences-heading span {
-    font-size: 0.61rem;
+    font-size: 0.64rem;
   }
 
   .landing-experiences-heading span::before {
@@ -636,30 +636,34 @@
   }
 
   .landing-experience-button {
-    min-height: 64px;
-    padding: 7px 4px;
+    min-height: 72px;
+    padding: 8px 4px;
     flex-direction: column;
     justify-content: center;
-    gap: 3px;
+    gap: 4px;
     text-align: center;
   }
 
   .landing-experience-icon {
-    width: 27px;
-    height: 27px;
-    flex-basis: 27px;
-    border-radius: 9px;
-    font-size: 0.86rem;
+    width: 31px;
+    height: 31px;
+    flex-basis: 31px;
+    border-radius: 10px;
+    font-size: 0.96rem;
   }
 
   .landing-experience-copy {
     flex: 0 0 auto;
   }
 
-  .landing-experience-copy small,
+  .landing-experience-copy small {
+    display: block;
+    font-size: 0.66rem;
+  }
+
   .landing-experience-copy strong {
     display: block;
-    font-size: 0.64rem;
+    font-size: 0.75rem;
   }
 
   .landing-experience-more {
@@ -667,12 +671,12 @@
   }
 
   .landing-support-footer {
-    margin: 9px 3px 0;
-    padding: 8px 0 1px;
+    margin: 11px 3px 0;
+    padding: 9px 0 1px;
   }
 
   .landing-support-footer a {
-    font-size: 0.67rem;
+    font-size: 0.7rem;
   }
 
   .landing-feature-modal-backdrop {
