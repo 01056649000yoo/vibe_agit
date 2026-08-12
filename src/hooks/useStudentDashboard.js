@@ -33,6 +33,7 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
         [sessionClassId]
     );
     const returnedCountCacheRef = useRef({ value: 0, fetchedAt: 0 });
+    const feedbackReadRef = useRef(false);
 
     const applyBootstrap = useCallback((payload) => {
         if (!payload?.student) return null;
@@ -208,9 +209,9 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
         }
     }, [applyBootstrap, fetchActiveMissionIds, refreshBootstrap, sessionClassId, studentSession?.id]);
 
-    const handleClearFeedback = async () => {
+    const handleMarkFeedbackRead = useCallback(async () => {
         try {
-            // [수정] RLS 정책으로 인해 직접 update가 불가능하므로 RPC(mark_feedback_as_read) 사용
+            // 원본 반응·댓글은 남기고, 새 소식 조회 기준 시각만 서버에서 갱신한다.
             const { error } = await supabase.rpc('mark_feedback_as_read', {
                 p_student_id: studentSession.id
             });
@@ -219,12 +220,20 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
 
             lastCheckRef.current = new Date().toISOString();
             lastCheckLoadedRef.current = true;
-            setFeedbacks([]);
+            feedbackReadRef.current = true;
             setHasActivity(false);
+            return true;
         } catch (err) {
             console.error('알림 확인 시간 저장 실패:', err);
+            return false;
         }
-    };
+    }, [studentSession?.id]);
+
+    const handleCloseFeedback = useCallback(() => {
+        setShowFeedback(false);
+        // 자동 읽음 처리된 목록은 현재 창에서만 유지하고 닫을 때 정리한다.
+        if (feedbackReadRef.current) setFeedbacks([]);
+    }, []);
 
     const handleDirectRewriteGo = async () => {
         try {
@@ -326,11 +335,13 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
     };
 
     const openFeedback = async (tabIndex = 0) => {
+        feedbackReadRef.current = false;
         setFeedbackInitialTab(tabIndex);
+        setLoadingFeedback(true);
         setShowFeedback(true);
         // 기준선을 못 읽은 채 조회하면 1970년 기준이 되어 지난 소식이 전부 뜬다.
         await ensureLastCheckLoaded();
-        fetchFeedbacks();
+        await fetchFeedbacks();
     };
 
     useEffect(() => {
@@ -357,10 +368,10 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
     }, [applyBootstrap, bootstrap, bootstrapLoading, studentSession?.id, fetchMyPoints, checkActivity, fetchReturnedCount, ensureLastCheckLoaded]);
 
     return {
-        points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
+        points, setPoints, hasActivity, showFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
         returnedCount, isLoading, initialPetData: petData,
-        handleClearFeedback, handleDirectRewriteGo, openFeedback,
+        handleMarkFeedbackRead, handleCloseFeedback, handleDirectRewriteGo, openFeedback,
         fetchMyPoints, checkActivity, fetchReturnedCount // 새로운 훅에 넘기기 위한 내보내기
     };
 };

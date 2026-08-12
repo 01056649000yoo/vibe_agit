@@ -73,10 +73,10 @@ const StudentDashboard = ({
 
     // 전반적인 대시보드 데이터 및 비즈니스 로직
     const {
-        points, setPoints, hasActivity, showFeedback, setShowFeedback, feedbacks,
+        points, setPoints, hasActivity, showFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
         returnedCount, initialPetData,
-        handleClearFeedback, handleDirectRewriteGo, openFeedback
+        handleMarkFeedbackRead, handleCloseFeedback, handleDirectRewriteGo, openFeedback
     } = useStudentDashboard(studentSession, onNavigate, {
         bootstrap: homeBootstrap,
         bootstrapLoading: homeBootstrapLoading,
@@ -341,12 +341,12 @@ const StudentDashboard = ({
                 {/* 피드백 모아보기 모달 */}
                 <StudentFeedbackModal
                     isOpen={showFeedback}
-                    onClose={() => setShowFeedback(false)}
+                    onClose={handleCloseFeedback}
                     feedbacks={feedbacks}
                     loading={loadingFeedback}
                     onNavigate={onNavigate}
                     initialTab={feedbackInitialTab}
-                    onClear={handleClearFeedback}
+                    onMarkRead={handleMarkFeedbackRead}
                 />
 
                 {/* 드래곤 아지트 모달 (모듈: game/dragon) — 열릴 때만 로드 */}

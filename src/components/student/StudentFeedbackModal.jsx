@@ -8,13 +8,53 @@ import ModalCloseButton from '../common/ModalCloseButton';
  * 역할: 학생 - 내 글 소식(알림) 모달 🔔
  * 친구들의 반응과 친구·선생님 댓글을 한눈에 확인하고 바로 이동합니다.
  */
-const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate, initialTab = 0, onClear }) => {
+const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate, initialTab = 0, onMarkRead }) => {
     const [activeTab, setActiveTab] = React.useState(initialTab);
+    const [visitedTabs, setVisitedTabs] = React.useState(() => new Set());
+    const [readStatus, setReadStatus] = React.useState('idle');
+    const readRequestRef = React.useRef(0);
 
-    // 탭 변경 시 상태 업데이트 (initialTab이 바뀌면 동기화)
+    const requiredTabs = React.useMemo(() => {
+        const tabs = [];
+        if (feedbacks.some(item => item.type === 'reaction')) tabs.push(1);
+        if (feedbacks.some(item => item.type === 'comment')) tabs.push(2);
+        return tabs;
+    }, [feedbacks]);
+
+    // 창을 새로 열 때만 탭 확인 상태를 초기화한다. 전체 탭은 개별 탭 확인으로 세지 않는다.
     React.useEffect(() => {
+        readRequestRef.current += 1;
+        if (!isOpen) return;
         setActiveTab(initialTab);
-    }, [initialTab]);
+        setVisitedTabs(new Set(initialTab === 1 || initialTab === 2 ? [initialTab] : []));
+        setReadStatus('idle');
+    }, [initialTab, isOpen]);
+
+    React.useEffect(() => {
+        if (!isOpen || loading || readStatus !== 'idle' || requiredTabs.length === 0) return undefined;
+        if (!requiredTabs.every(tabId => visitedTabs.has(tabId))) return undefined;
+
+        const requestId = ++readRequestRef.current;
+        setReadStatus('saving');
+        const markRead = async () => {
+            const saved = await onMarkRead();
+            if (readRequestRef.current === requestId) setReadStatus(saved ? 'done' : 'error');
+        };
+        markRead();
+        return undefined;
+    }, [isOpen, loading, onMarkRead, readStatus, requiredTabs, visitedTabs]);
+
+    const handleTabChange = (tabId) => {
+        setActiveTab(tabId);
+        if (tabId === 1 || tabId === 2) {
+            setVisitedTabs(current => {
+                if (current.has(tabId)) return current;
+                const next = new Set(current);
+                next.add(tabId);
+                return next;
+            });
+        }
+    };
 
     const handleNotificationClick = (item) => {
         // 소셜 알림(리액션/댓글) 클릭 시 해당 글 보기
@@ -61,31 +101,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                 >
                     <div style={{ padding: '24px 32px 10px 32px', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#2C3E50' }}>🔔 내 글 소식</h2>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                    if (window.confirm('소식을 모두 비울까요?\n\n비우면 지금 목록에 있는 소식은 다시 볼 수 없어요.\n(친구들이 남긴 반응과 댓글은 글에 그대로 남아 있어요.)')) {
-                                        onClear();
-                                    }
-                                }}
-                                style={{
-                                    fontSize: '0.8rem',
-                                    color: '#90A4AE',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '5px',
-                                    padding: '6px 12px',
-                                    background: '#F5F7F8',
-                                    borderRadius: '20px',
-                                    border: '1px solid #ECEFF1'
-                                }}
-                            >
-                                <span style={{ fontSize: '1rem' }}>🗑️</span> 비우기
-                            </Button>
-                            <ModalCloseButton onClick={onClose} label="내 글 소식 닫기" />
-                        </div>
+                        <ModalCloseButton onClick={onClose} label="내 글 소식 닫기" />
                     </div>
 
                     {/* 탭 메뉴 */}
@@ -97,7 +113,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                         ].map(tab => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => handleTabChange(tab.id)}
                                 style={{
                                     padding: '8px 16px',
                                     borderRadius: '15px',
@@ -117,6 +133,16 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                             </button>
                         ))}
                     </div>
+
+                    {readStatus !== 'idle' && (
+                        <div aria-live="polite" style={{ minHeight: '24px', padding: '0 28px 6px', color: readStatus === 'error' ? '#C62828' : '#607D8B', fontSize: '0.75rem', fontWeight: 800 }}>
+                            {readStatus === 'saving' && '확인한 소식을 정리하고 있어요…'}
+                            {readStatus === 'done' && '모두 확인했어요. 창을 닫으면 목록이 정리돼요.'}
+                            {readStatus === 'error' && (
+                                <Button size="sm" variant="ghost" onClick={() => setReadStatus('idle')}>읽음 처리 다시 시도</Button>
+                            )}
+                        </div>
+                    )}
 
                     <div style={{ flex: 1, overflowY: 'auto', maxHeight: '60vh', padding: '16px 24px 24px 24px' }}>
                         {loading ? (

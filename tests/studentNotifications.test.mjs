@@ -59,6 +59,24 @@ test('내 글 소식은 빨간 점 대신 문자 배지와 버튼 전체 강조�
     assert.match(headerCss, /prefers-reduced-motion: reduce[\s\S]*?animation: none/);
 });
 
+test('내 글 소식은 새 항목이 있는 개별 탭을 모두 보면 자동 읽음 처리하고 닫을 때 목록을 정리한다', async () => {
+    const [modal, hook, dashboard] = await Promise.all([
+        read('src/components/student/StudentFeedbackModal.jsx'),
+        read('src/hooks/useStudentDashboard.js'),
+        read('src/components/student/StudentDashboard.jsx')
+    ]);
+
+    assert.match(modal, /requiredTabs\.every\(tabId => visitedTabs\.has\(tabId\)\)/);
+    assert.match(modal, /if \(tabId === 1 \|\| tabId === 2\)/);
+    assert.match(modal, /const saved = await onMarkRead\(\)/);
+    assert.match(modal, /모두 확인했어요\. 창을 닫으면 목록이 정리돼요/);
+    assert.doesNotMatch(modal, /소식을 모두 비울까요|🗑️.*비우기/);
+    assert.match(hook, /feedbackReadRef\.current = true/);
+    assert.match(hook, /if \(feedbackReadRef\.current\) setFeedbacks\(\[\]\)/);
+    assert.match(dashboard, /onClose=\{handleCloseFeedback\}/);
+    assert.match(dashboard, /onMarkRead=\{handleMarkFeedbackRead\}/);
+});
+
 test('활동 알림은 단일 원장·중복 방지·학생 범위 RPC 계약을 갖는다', async () => {
     const migration = await read('supabase/migrations/20261023_student_activity_notifications.sql');
 
