@@ -82,7 +82,7 @@
 - [x] 로그인·새로고침 즉시 확인, 홈 복귀 60초 stale 재검증, 4~6분 공용 분산 동기화와 상세 최대 50건 계약 구현
 - [x] 새 SQL을 실제 `agit-db` 스키마에서 스모크 포함 전체 ROLLBACK 검증
 - [x] 운영 DB에 `20261023_student_activity_notifications.sql` 적용하고 적용 후 롤백 스모크·124/124 상태 확인
-- [ ] 앱 변경 커밋을 배포하고 운영 번들에서 알림 패널 확인
+- [x] 앱 변경을 PR #2로 `main`에 병합하고 운영 번들에서 알림 패널·빈 상태 문구 확인
 - [ ] 학생·교사 실계정으로 네 이벤트 유형, 읽음 유지, 글/편집기 이동과 PC·모바일 2분할 확인
 
 ### 운영 호스팅·자동 배포 단일화
@@ -91,7 +91,7 @@
 - [x] 보안 헤더·외부 origin 허용 기준을 `Caddyfile.container` 한 곳으로 모으고 Vercel CSP 검증 제거
 - [x] `main` 푸시 → GitHub Actions → self-hosted 러너 → Docker 빌드·컨테이너 교체·HTTP 200 확인 계약을 자동 검사
 - [ ] 저장소 밖 GitHub–Vercel 연동을 해제해 PR에 붙는 Vercel 배포·Preview Comments 검사 제거
-- [ ] 현재 기능 브랜치를 `main`에 병합한 뒤 GitHub Actions `Deploy` 성공과 운영 컨테이너 반영 확인
+- [x] PR #2를 `main`에 병합하고 GitHub Actions `Deploy` 성공과 운영 컨테이너 반영 확인
 
 **Stage 0~1 완료(컷오버), Stage 1.5(속도)·Stage 3(모듈화)는 대부분 완료.** 상세 이력은
 [WORKLOG.md](WORKLOG.md), 시스템이 어떻게 생겼는지는 [ARCHITECTURE.md](ARCHITECTURE.md),
