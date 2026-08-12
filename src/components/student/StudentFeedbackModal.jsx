@@ -6,7 +6,7 @@ import ModalCloseButton from '../common/ModalCloseButton';
 
 /**
  * 역할: 학생 - 내 글 소식(알림) 모달 🔔
- * 선생님의 피드백, 친구들의 반응/댓글을 한눈에 확인하고 바로 이동합니다.
+ * 친구들의 반응과 친구·선생님 댓글을 한눈에 확인하고 바로 이동합니다.
  */
 const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate, initialTab = 0, onClear }) => {
     const [activeTab, setActiveTab] = React.useState(initialTab);
@@ -24,7 +24,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
         }
     };
 
-    // 탭별 필터링 데이터 (이제는 학생 간 소통만 표시)
+    // 탭별 필터링 데이터. 댓글 탭에는 친구 댓글과 선생님 댓글이 함께 들어간다.
     const filteredFeedbacks = feedbacks.filter(f => {
         if (activeTab === 1) return f.type === 'reaction';
         if (activeTab === 2) return f.type === 'comment';
@@ -93,7 +93,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                         {[
                             { id: 0, label: '전체', emoji: '🌈' },
                             { id: 1, label: '친구들 반응', emoji: '❤️' },
-                            { id: 2, label: '친구들 댓글', emoji: '💬' }
+                            { id: 2, label: '댓글', emoji: '💬' }
                         ].map(tab => (
                             <button
                                 key={tab.id}

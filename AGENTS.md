@@ -139,7 +139,7 @@
   교사의 명시적 내보내기 동작에서만 검색 불가 공개 권한으로 만들고, 문서 삽입 직후 파일 삭제와 실패 시 공개
   권한 삭제까지 시도한다. 사진·서명 URL·Google 토큰은 로그나 DB에 남기지 않는다.
 - `tests/writingOfficeImages.test.mjs`에서 실제 XLSX 이미지와 Google Docs 요청 순서·임시 파일 정리를 검증한다.
-  외부 Google API origin을 추가했다면 Caddy와 Vercel CSP 및 `test:security:static`도 함께 갱신한다. 상세 계약은
+  외부 Google API origin을 추가했다면 운영 Caddy CSP와 `test:security:static`도 함께 갱신한다. 상세 계약은
   `src/modules/writing/export/README.md`를 읽는다.
 
 ## DB 마이그레이션 (2026-08-04 도구화)

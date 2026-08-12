@@ -1,5 +1,15 @@
-.student-todo-card { margin-bottom: var(--ui-space-6); }
-.student-todo-loading { min-height: 88px; margin-bottom: var(--ui-space-6); }
+.student-todo-card { display: flex; min-width: 0; flex-direction: column; }
+.student-todo-loading {
+    display: grid;
+    min-height: 116px;
+    flex: 1;
+    place-items: center;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    color: var(--ui-ink-muted);
+    font-size: .8rem;
+    font-weight: 800;
+}
 .student-todo-card__header {
     display: flex;
     align-items: center;
@@ -21,12 +31,11 @@
     font-size: .68rem;
     font-weight: 900;
 }
-.student-todo-card__rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.student-todo-card__rows > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+.student-todo-card__rows { display: grid; flex: 1; grid-template-columns: 1fr; gap: 8px; }
 .student-todo-row {
     display: grid;
     min-width: 0;
-    min-height: 76px;
+    min-height: 62px;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 11px;
@@ -73,7 +82,8 @@
 }
 .student-todo-done {
     display: flex;
-    min-height: 66px;
+    min-height: 116px;
+    flex: 1;
     align-items: center;
     gap: 12px;
     padding: 11px 16px;
@@ -90,10 +100,6 @@
 
 @media (hover: hover) {
     .student-todo-row:hover { border-top-color: var(--ui-border-strong); border-right-color: var(--ui-border-strong); border-bottom-color: var(--ui-border-strong); box-shadow: var(--ui-shadow-xs); }
-}
-@media (max-width: 680px) {
-    .student-todo-card__rows { grid-template-columns: 1fr; }
-    .student-todo-card__rows > :last-child:nth-child(odd) { grid-column: auto; }
 }
 @media (max-width: 390px) {
     .student-todo-row { grid-template-columns: 36px minmax(0, 1fr) auto; gap: 8px; padding: 9px; }

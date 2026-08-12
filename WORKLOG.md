@@ -21,6 +21,46 @@
 
 ---
 
+## 2026-08-12 — Vercel 호스팅 설정 제거·맥미니 자동 배포 재검증 (Codex)
+- **한 일**: 앱 운영 경로를 `main` 푸시 → GitHub Actions `Deploy` → 맥미니 self-hosted 러너 → Docker 이미지
+  빌드·`agit-app` 컨테이너 교체 → `127.0.0.1:8300` HTTP 200 확인으로 다시 확정했다. 루트 `vercel.json`을
+  삭제하고 보안 헤더와 외부 origin 허용 기준을 `Caddyfile.container` 한 곳으로 모았다. 현재 운영 문서와
+  이관 계획도 맥미니 단일 호스팅 기준으로 갱신했으며, 과거 이관 당시 사실을 적은 기록은 감사 이력으로 남겼다.
+- **변경**: Vercel CSP를 함께 읽던 정적 보안 검사를 Caddy 단일 검사로 바꾸고, `tests/deploymentArchitecture.test.mjs`와
+  `test:deployment`를 추가해 `main` 트리거·self-hosted 러너·Docker 빌드/교체·로컬 HTTP 검증·Vercel 설정 부재를
+  고정했다. Docker 이미지 빌드 게이트에도 이 검사를 연결했다. `.agent/`·`.gemini/`의 Vercel 출처 React 성능
+  참고자료는 서비스 호스팅 코드나 런타임 의존성이 아니므로 유지했다. DB·마이그레이션·맥미니 인프라 변경은 없다.
+- **결과/검증**: `test:deployment` 3건, `test:security:static` 17건, `test:architecture` 50건, ESLint,
+  프로덕션 빌드, `git diff --check`가 모두 통과했다. GitHub의 최신 `Deploy` 실행 `31601370416`도 `main`
+  커밋 `86bce14`를 실제 `macmini-agit` self-hosted 러너에서 Checkout→이미지 빌드→컨테이너 재시작→Verify까지
+  성공한 것을 확인했다.
+- **남은 것 / 다음**: 기능 브랜치/초안 PR 푸시는 운영 배포를 시작하지 않으므로 PR #2를 `main`에 병합한 뒤 새
+  `Deploy` 성공과 운영 반영을 확인한다. 저장소 밖 GitHub–Vercel 연동은 아직 PR에 `Vercel`·`Vercel Preview Comments`
+  검사를 붙이고 있다. 이는 코드 삭제로 없어지지 않으므로 Vercel 프로젝트 또는 GitHub 앱 설정에서 별도로 연결을
+  해제해야 한다.
+
+## 2026-08-12 — 학생 홈 알림 책임 분리·단일 이벤트 원장 구현 (Codex)
+- **한 일**: 학생 알림을 `내 글 소식 / 지금 할 일 / 활동 알림` 세 책임으로 다시 나눴다. `내 글 소식`은 친구
+  반응과 친구·선생님 댓글만 유지하고, `지금 할 일`은 시작 전 과제·작성 중 과제·다시 쓸 글 개수만 표시한다.
+  학생 홈 상단은 두 패널을 1:1로 고정하고 모바일에서만 세로로 쌓았다. 우측 활동 알림은 빈 상태도 고정 표시하며,
+  다시쓰기 요청·글 승인+포인트 지급·승인 취소+포인트 회수·교사 포인트 조정의 최신 미확인 내역과 개수를 보여준다.
+  알림을 열기만 해서는 읽음 처리하지 않고 확인/이동 버튼을 눌러야 저장하며, 다시쓰기는 편집기, 승인·회수는 나의
+  아지트 글 상세로 연결했다.
+- **변경**: 커밋 `7089421`, 브랜치 `agent/student-notification-architecture`, 초안 PR #2. `student_notification_events` 단일 원장, 내부 `notification_emit_v1`, 본인 목록/읽음 RPC, 홈 bootstrap
+  요약을 마이그레이션 `20261023_student_activity_notifications.sql`로 추가했다. 기존 과제 상태·포인트 원장을 같은
+  트랜잭션에서 알림으로 투영하고 다시쓰기 단건/일괄 직접 테이블 수정은 권한 검증 RPC로 교체했다. 프런트는
+  `src/modules/notifications/`의 API·표시 레지스트리·공용 패널로 모듈화했으며, 새 기능은 매니페스트 알림 정의와 기능
+  RPC의 내부 발행 호출만 덧붙일 수 있다. 로그인은 캐시를 건너뛰어 즉시 확인하고, 다른 화면에서 홈 복귀는 60초
+  stale 기준, 상시 동기화는 기존 4~6분 무작위 분산을 유지한다. 과거 이벤트는 오래된 미확인 알림 폭주를 막기 위해
+  소급 생성하지 않는다.
+- **결과/검증**: `npm run lint` 0경고·0오류, `npm run build` 성공, 알림 전용 7건과 전체 아키텍처 50건 통과.
+  `npm run test:security` 전체 통과(정적 보안 17건, 기존 역할 경계, 운영 보안)했고, 새 SQL·스모크는 실제
+  `agit-db` 스키마에서 실행 후 전체 ROLLBACK 검증했다. 이어서 운영 `agit-db`에 마이그레이션을 적용하고 적용 후
+  동일 스모크를 다시 ROLLBACK 실행했으며 `migrate:status` 124/124·대기 0을 확인했다. React 화면 변경은 React best-practices 체크리스트로
+  중복 홈 요청·효과 기반 파생 상태·접근성(공용 닫기 버튼, ESC, 포커스)을 함께 점검했다.
+- **남은 것 / 다음**: 초안 PR #2를 검토·병합해 앱을 배포한 뒤 학생/교사 실계정으로 네 이벤트와 PC·모바일
+  배치·읽음 유지·상세 이동을 확인한다.
+
 ## 2026-08-12 — 리얼타임 구독 잔존 여부·폴링 갱신 범위 확인 (Claude)
 - **한 일**: "리얼타임 구독이 지금도 남아있나?"라는 질문에 코드 기준으로 답하기 위해 `src/` 전체에서
   `.channel(`·`postgres_changes`·`RealtimeChannel`·`broadcastChannel`·`presence` 패턴을 검색해 실제

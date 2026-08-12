@@ -143,7 +143,7 @@ const ShelfBook = ({ post, section, onOpen }) => {
 const MyAgitPanel = ({
     isOpen, onClose, studentSession, points = 0,
     enabledModules = [],
-    moduleRuntimeById = {}, onOpenModule
+    moduleRuntimeById = {}, onOpenModule, initialPost = null
 }) => {
     const classId = studentSession?.class_id || studentSession?.classId;
     const studentId = studentSession?.id;
@@ -157,6 +157,7 @@ const MyAgitPanel = ({
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailError, setDetailError] = useState('');
     const selectedSummaryRef = useRef(null);
+    const initialPostOpenedRef = useRef(null);
 
     const load = useCallback(async () => {
         if (!classId || !studentId) return;
@@ -284,6 +285,15 @@ const MyAgitPanel = ({
         window.addEventListener('popstate', closeOnBack);
         return () => window.removeEventListener('popstate', closeOnBack);
     }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen || !initialPost?.id || initialPostOpenedRef.current === initialPost.id) return undefined;
+        initialPostOpenedRef.current = initialPost.id;
+        const timerId = window.setTimeout(() => {
+            void openShelfPost(initialPost);
+        }, 0);
+        return () => window.clearTimeout(timerId);
+    }, [initialPost, isOpen, openShelfPost]);
 
     const shelfSections = useMemo(() => SHELF_SECTIONS.map((section) => ({
         ...section,

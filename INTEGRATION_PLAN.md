@@ -2,6 +2,8 @@
 
 > 이 문서는 2026-06 Claude 세션에서 분석·합의된 내용의 전체 기록이다.
 > 새 세션에서 작업을 이어갈 때 이 문서를 먼저 읽으면 배경 설명 없이 바로 시작할 수 있다.
+> **2026-08-12 현재** Stage 1 컷오버는 끝났고 앱은 맥미니 Docker+Caddy에서만 운영한다.
+> 아래 Vercel 언급은 이관 전 상태와 당시 롤백 계획을 설명하는 과거 기록이며 현재 운영 절차가 아니다.
 
 ## 1. 목표
 
@@ -9,7 +11,7 @@
 - 호스팅을 **맥미니 Docker**로, DB를 **로컬 Supabase 하나**로 통합 (비용 0원, 자가 유지보수)
 - 여름방학을 "업데이트 기간"으로 공지하고 작업, 테스트 후 URL(DNS) 전환
 
-## 2. 두 앱의 현재 상태
+## 2. 두 앱의 이관 전 상태 (2026-06 기준)
 
 ### 끄적끄적 아지트 (vibe_agit — 이 레포)
 - Vite + React SPA, **Vercel 호스팅**, **Supabase Cloud** (`public` 스키마)
@@ -104,14 +106,13 @@
 ### Phase 2 — 호스팅 구성 (1~2일)
 - [x] 아지트 Dockerfile 작성 (2026-07-24) — `Dockerfile`(Vite 빌드 → Caddy 서빙, build-arg로 Supabase URL/키 주입) + `Caddyfile.container`(SPA 폴백·보안헤더 5종·zstd/gzip 압축·해시자산 immutable 캐시). **end-to-end 검증 완료**: 컨테이너 프론트→새 스택 익명로그인 200·bind_student_auth RPC 200
 - [ ] Caddy 라우팅: `/` → 아지트, `/lab/*` → writing-helper 컨테이너, `api.도메인` → Kong
-- [ ] Caddy에서 `vercel.json`의 SPA 폴백 + 보안 헤더 5종 재현 (4절 참조)
-- [ ] Caddy 압축(brotli/gzip) + 해시 자산 `Cache-Control: immutable` + HTTP/2 — **Vercel이 자동으로 해주던 것들.
-      빠뜨리면 이관 후 체감 속도가 오히려 나빠짐** (상세: ROADMAP.md Stage 1.5)
+- [x] Caddy에 SPA 폴백과 보안 헤더를 적용하고 현재 운영 설정의 단일 기준으로 확정
+- [x] Caddy 압축(zstd/gzip) + 해시 자산 `Cache-Control: immutable` + HTTP/2 적용·실응답 검증
 - [ ] writing-helper `basePath: '/lab'` 설정 + 내부 링크·리다이렉트 전수 점검
 - [ ] **⚠️ basePath 변경 시 기존 단축링크·QR 깨짐 주의**: 연구소의 `/s/...` 단축링크와 배포된 QR코드가
   기존 `helper.도메인` 경로 기준. 기존 `helper.도메인/*` → 새 `/lab/*` 301 리다이렉트를 Caddy에 유지할 것
-- [ ] 기존 webhook 자동 배포를 vibe_agit 레포에도 확장
-- [ ] **테스트 서브도메인으로 병행 운영** (본 도메인은 컷오버까지 Vercel 유지)
+- [x] vibe_agit에 GitHub Actions self-hosted 러너 자동 배포 구축 (`main` 푸시 → Docker 빌드·교체·HTTP 검증)
+- [x] **테스트 서브도메인으로 병행 운영 후 본 도메인 컷오버 완료**
 
 ### Phase 3 — SSO 통합 (3~5일, 개발량 최대)
 - [ ] 세션 저장 방식 정렬: 아지트 supabase-js에 **쿠키 storage adapter** 적용 권장 (Next.js SSR까지 세션 인식)
@@ -124,8 +125,9 @@
 - [ ] 실데이터 리허설: 교사 로그인 → 미션 → `/lab` 이동 → 학생 코드 로그인 → 글쓰기 전 흐름
 - [ ] **안드로이드 크롬 태블릿 실기기 테스트** (테스트 서브도메인으로)
 - [ ] 컷오버: 점검 공지(1~2시간) → 최종 `pg_dump` → 복원(테스트 기간 클라우드 신규 데이터 반영) → DNS 전환
-- [ ] 롤백 절차 = DNS 되돌리기 (Vercel 살아있음)
-- [ ] 1~2주 모니터링 후 Vercel/Supabase Cloud 정리 (Vercel 계정은 비상용으로 유지 가능)
+- [x] 컷오버 당시 DNS 원복 경로를 확보하고 전환 완료
+- [x] 안정화 모니터링 후 앱 호스팅을 맥미니 Docker+Caddy로 단일화하고 Vercel 저장소 설정 제거
+- [ ] Supabase Cloud 잔여 자원 정리는 앱 호스팅과 분리해 백업·복구 기준에 따라 확인
 
 ### Phase 5 — 운영·백업 체계 (1~2일)
 - [ ] **야간 자동 백업**: launchd/cron → `pg_dump`(public + writing_helper + auth) → 압축 → **rclone crypt 암호화** → Google Drive 업로드

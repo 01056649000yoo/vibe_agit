@@ -2,13 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { STUDENT_HOME_INVALIDATE_EVENT, studentHomeApi } from './studentHomeApi';
 
 const FOCUS_STALE_MS = 60000;
-const MAX_FOCUS_JITTER_MS = 5000;
 
 const useStudentHomeBootstrap = (studentSession) => {
     const studentId = studentSession?.id || null;
     const [state, setState] = useState({ studentId: null, data: null, loading: Boolean(studentId), error: null });
     const loadedAtRef = useRef(0);
-    const focusTimerRef = useRef(null);
 
     const refresh = useCallback(async ({ force = false } = {}) => {
         if (!studentId) return null;
@@ -25,32 +23,24 @@ const useStudentHomeBootstrap = (studentSession) => {
         }
     }, [studentId]);
 
+    const refreshIfStale = useCallback(async ({ maxAgeMs = FOCUS_STALE_MS } = {}) => {
+        if (!studentId || Date.now() - loadedAtRef.current < maxAgeMs) return null;
+        return refresh({ force: true });
+    }, [refresh, studentId]);
+
     useEffect(() => {
         if (!studentId) {
             setState({ studentId: null, data: null, loading: false, error: null });
             return undefined;
         }
-        void refresh();
+        // 로그인 직후에는 같은 학생의 이전 세션 캐시를 쓰지 않고 서버의 미확인 알림을 바로 확인한다.
+        void refresh({ force: true });
 
-        const refreshIfStale = () => {
-            if (document.visibilityState !== 'visible') return;
-            if (Date.now() - loadedAtRef.current < FOCUS_STALE_MS) return;
-            if (focusTimerRef.current) window.clearTimeout(focusTimerRef.current);
-            focusTimerRef.current = window.setTimeout(() => {
-                focusTimerRef.current = null;
-                void refresh({ force: true });
-            }, Math.floor(Math.random() * MAX_FOCUS_JITTER_MS));
-        };
-        window.addEventListener('focus', refreshIfStale);
-        document.addEventListener('visibilitychange', refreshIfStale);
         const handleInvalidation = (event) => {
             if (event.detail?.studentId === studentId) void refresh({ force: true });
         };
         window.addEventListener(STUDENT_HOME_INVALIDATE_EVENT, handleInvalidation);
         return () => {
-            if (focusTimerRef.current) window.clearTimeout(focusTimerRef.current);
-            window.removeEventListener('focus', refreshIfStale);
-            document.removeEventListener('visibilitychange', refreshIfStale);
             window.removeEventListener(STUDENT_HOME_INVALIDATE_EVENT, handleInvalidation);
         };
     }, [refresh, studentId]);
@@ -60,7 +50,8 @@ const useStudentHomeBootstrap = (studentSession) => {
         data: loaded ? state.data : null,
         loading: Boolean(studentId) && (!loaded || state.loading),
         error: loaded ? state.error : null,
-        refresh
+        refresh,
+        refreshIfStale
     };
 };
 
