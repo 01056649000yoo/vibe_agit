@@ -6,6 +6,7 @@ import {
     toWritingExportExcelRows
 } from '../modules/writing/export/writingExportProfiles';
 import { exportObjectsToExcel, exportObjectsToExcelWithImages } from '../lib/excelExport';
+import { WRITING_EXPORT_MAX_ENTRIES } from '../modules/writing/export/writingExportLimits.js';
 
 const GOOGLE_DOCS_API_ROOT = 'https://docs.googleapis.com/v1';
 
@@ -573,7 +574,7 @@ export const useDataExport = (classId) => {
                 items: data,
                 title: fileName,
                 contentType,
-                reportMode: pdfOptions.reportMode,
+                renderMode: pdfOptions.renderMode,
             });
         } catch (error) {
             console.error('Writing PDF export failed:', error);
@@ -603,6 +604,10 @@ export const useDataExport = (classId) => {
             const { loadWritingExportImageAttachments, loadWritingExportImageBlobs } = await import('../modules/writing/export/writingImageExport.js');
             const imageAttachments = await loadWritingExportImageAttachments(data);
             if (imageAttachments.some((images) => images.length > 0)) {
+                if (data.length > WRITING_EXPORT_MAX_ENTRIES) {
+                    alert(`사진이 포함된 글은 한 번에 ${WRITING_EXPORT_MAX_ENTRIES}편까지 내보낼 수 있습니다. 미션을 나누어 다시 시도해 주세요.`);
+                    return;
+                }
                 const imageBlobs = await loadWritingExportImageBlobs(imageAttachments);
                 await exportObjectsToExcelWithImages(rows, imageBlobs, fileName, { sheetName: 'Data' });
             } else {

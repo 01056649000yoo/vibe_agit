@@ -21,6 +21,48 @@
 
 ---
 
+## 2026-08-12 — 리얼타임 구독 잔존 여부·폴링 갱신 범위 확인 (Claude)
+- **한 일**: "리얼타임 구독이 지금도 남아있나?"라는 질문에 코드 기준으로 답하기 위해 `src/` 전체에서
+  `.channel(`·`postgres_changes`·`RealtimeChannel`·`broadcastChannel`·`presence` 패턴을 검색해 실제
+  구독이 0개임을 확인했다(2026-08-08 GPT/Codex가 마지막 남은 학생 상시 알림 채널까지 제거해 폴링으로
+  대체 완료). 이어서 "그럼 폴링으로 학생 대시보드에서 뭐가 갱신되나?"에 답하기 위해 배경 동기화 경로
+  (`App.jsx`의 `scheduleVerification`/`queueFocusSync` → `useStudentHomeBootstrap` →
+  `get_student_home_bootstrap_v1`)를 추적했다.
+- **변경**: 코드 변경 없음(조사·설명만). 결과를 기록으로 남긴다.
+- **결과**: 4~6분 배경 동기화 + 화면 복귀 시 자동 갱신되는 건 포인트 총합, 수호룡 상태(종류·꾸미기·배경·
+  마지막 먹이 시각), 작가·독자 칭호 등급, 할 일 카드(안 한 과제 수·반려 수·새 피드백 유무만), 새 미션·
+  오늘 독서록/일기 배지, 독서마라톤 내 진행 요약, 학급 설정(켜진 모듈)이다. 반대로 그 화면을 직접 열어야만
+  보이는 건 선생님 의견·친구 댓글의 실제 내용(유무만 폴링됨), 독서마라톤 순위표, 과제 목록·글쓰기·독서록·
+  일기·친구 아지트의 상세 내용 — 이건 각자 화면을 열 때 전용 RPC로 따로 조회된다("홈은 요약만, 상세는
+  열 때만"이라는 기존 설계 원칙 그대로).
+  부수 발견: 독서마라톤 순위표를 펼쳐서 보고 있는 도중에도 배경 폴링이 오면 `fullLoaded` 상태가 매번
+  초기화된다(`ReadingMarathonDashboardCard.jsx` — bootstrap 응답에 `leaderboard` 키가 없어서 폴링마다
+  "다 불러왔다" 플래그가 꺼짐). 실사용에 티가 나는 정도인지는 미확인이라 수정하지 않고 아래 밀린 작업에
+  남겨둔다.
+- **남은 것 / 다음**: `ROADMAP.md` 밀린 작업에 순위표 재조회 건 추가함. 실사용에서 깜빡임·불필요한 재조회가
+  보이면 그때 고친다.
+
+## 2026-08-12 — 장르형 PDF 선택지를 매니페스트 데이터로 일반화 (Claude)
+- **한 일**: 앞으로 보고서 외 다른 장르형 글쓰기가 추가될 예정이라, "PDF 내보내기 때 장르가 형식 선택지를 가질 수 있다"는 것 자체를 공용 계약으로 만들었다. 지금까지는 보고서의 "질문 포함 지도형/질문 없는 완성본" 두 선택지가 `ExportSelectModal.jsx`·`ArchiveManager.jsx`·`writingPdfExport.js` 세 공용 파일에 장르 이름으로 하드코딩돼 있었다(직전 리뷰에서 발견했지만 장르가 하나뿐이라 보류했던 항목) — 두 번째 장르가 실제로 예정되면서 지금 일반화하는 게 맞다고 판단했다.
+- **변경**:
+  - 장르 매니페스트의 `pdfExport`에 선택적 `renderModes: [{ value, label, description }]` 필드를 추가했다(`report/manifest.js`). `reportPdfExport.js`의 `renderEntry`는 `reportMode` 대신 공용 이름 `renderMode`를 받는다.
+  - `registry.js`에 `getPdfRenderModes(mission)`(미션 하나가 대상일 때)·`getAnyRegisteredPdfRenderModes()`(여러 장르가 섞일 수 있는 학생별 전체 내보내기일 때) 두 헬퍼를 추가했다. 화면은 이제 `report` 이름을 전혀 모른다.
+  - `ExportSelectModal.jsx`는 `showReportPdfOptions` 불리언 대신 `pdfRenderModes` 배열을 받아 선택지를 `.map()`으로 그린다. `writingPdfExport.js`는 `REPORT_PDF_MODE_*` 상수 재수출과 기본값 클램프를 없애고 `renderMode`를 장르 렌더러에 그대로 전달만 한다. `.pdf-entry--report` 색상 CSS는 보고서 장르 자신의 스타일(`REPORT_PDF_STYLES`)로 옮겼다.
+  - **버그 발견 겸 수정**: `get_teacher_archived_missions_page` RPC가 `input_template`을 안 돌려주고 있어서(`genre` 표시 문자열만 반환), 보관함 화면은 실제로는 `mission.genre === '보고하는 글'` 문자열 비교에만 의존하고 있었다 — 매니페스트 기반 일반화를 하려면 기술 식별자가 필요해 마이그레이션 `20261022_archived_missions_input_template.sql`로 `mission.input_template`을 SELECT 목록에 추가했다(`migrate:check` 롤백 검증 후 적용, smoke test 포함).
+  - `src/modules/writing/export/README.md`의 "장르형 글쓰기 PDF 추가 규칙"에 `renderModes` 계약을 문서화해, 다음 장르가 선택지가 필요할 때 이 필드만 선언하면 공용 화면을 다시 안 고쳐도 되게 했다.
+- **결과/검증**: `npm run lint`(0), `npm run build`(성공), `npm run migrate:status`(123/123, 대기 0), lint/build 포함 관련 스위트(`test:report-writing` 9, `test:writing-export` 16, `test:architecture` 42, `test:security` 전체) 포함 전체 test:* 스위트 합계 200건대 전체 통과.
+- **남은 것 / 다음**: 다음 장르가 실제로 PDF 선택지가 필요하면 그 장르 매니페스트의 `pdfExport.renderModes`만 채우면 된다(공용 파일 수정 불필요) — README의 예시 블록을 그대로 따르면 됨.
+
+## 2026-08-12 — 보고서 사진 내보내기 3축 점검·수정 (Claude)
+- **한 일**: 38개 커밋 동기화분(보고서 PDF/이미지 내보내기, 교사 학생 아지트 뷰어, 랜딩 재설계, 맞춤법 500개 등)을 지침 준수·DB 부하·오류 세 축으로 점검하고, 발견된 실질적 위험만 수정했다. `code-review` 스킬로 전체 범위를 다시 훑었고, 완료 판정 함수·포인트 엔진·`class_id` 직접 스코핑·Realtime 재도입 금지 등 핵심 불변식은 새 코드에서 모두 지켜지고 있음을 확인했다.
+- **변경**:
+  - `useDataExport.js`의 Excel 내보내기(`exportToExcel`)에 사진 포함 시 `WRITING_PDF_MAX_ENTRIES`(100편) 상한을 추가했다. PDF 경로는 이미 상한이 있었는데 Excel/보고서 사진 경로만 무제한이라, 미션을 대량 일괄 내보내면 교사 브라우저가 멈출 수 있었다.
+  - `reportExportImages.js`의 서명 URL 요청을 50개씩 순차 대기하던 방식에서 동시성 4의 워커 풀 방식으로 바꿨다(사진이 많을수록 왕복 시간이 배로 늘던 문제).
+  - `writingPdfExport.js`의 `getStructuredContent`가 camelCase `structuredContent` 키를 못 읽던 누락을 고쳐, 같은 형태를 이미 읽는 `writingImageExport.js`와 맞췄다(드리프트로 인한 잠재 오류 예방).
+  - 사진 포함 Excel 상한을 공유하면서 PDF 출력 모듈을 정적 import해 지연 청크가 합쳐지던 빌드 경고를 발견해, 상한을 가벼운 `writingExportLimits.js` 계약으로 분리하고 내보내기 코드는 다시 사용자 동작 때만 로드되게 유지했다.
+- **결과/검증**: `npm run lint`(0), `npm run build`(성공), 관련 스위트(`test:report-writing` 9, `test:writing-export` 16, `test:architecture` 42, `test:security:static` 16) 포함 15개 스위트 총 165건 전체 통과.
+- **남은 것 / 다음**: 리뷰에서 함께 발견된 "장르 이름이 공용 파일 3곳(`writingPdfExport.js`·`ExportSelectModal.jsx`·`ArchiveManager.jsx`)에 하드코딩된 문제"와 헬퍼 3중 중복(`canvasToBlob`·`fitImageInside`/`fitExportImageSize`)은 의도적으로 남겨뒀다 — 현재 장르가 보고서 하나뿐이라 지금 일반화하면 과설계이고, 기존 테스트(`reportWriting.test.mjs`)가 현재 구조를 그대로 가정하고 있어 손대려면 테스트도 같이 바꿔야 한다. 두 번째 장르가 PDF 렌더 모드를 필요로 할 때 다시 검토한다.
+
 ## 2026-08-12 — 첫 로그인 드래곤 아지트 한 줄 표시 (Codex)
 - **한 일**: 세 번째 성장 카드에서 `드래곤 아지트`가 두 줄로 갈라지지 않고 한 줄로 읽히도록 조정했다.
 - **변경**: 성장 카드의 핵심 명사에 줄바꿈 방지를 적용하고, 글자가 카드 폭을 넘지 않도록 드래곤 카드에만 PC·모바일 전용 글자 크기와 자간을 적용했다. 카드 구조와 상세 모달 동작은 유지했다.

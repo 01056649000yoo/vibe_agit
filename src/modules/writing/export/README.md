@@ -72,14 +72,21 @@
    - `renderEntry(entry, context)`: 제목·지은이와 장르 구조를 A4 HTML로 반환
    - `styles`: 해당 장르에서만 필요한 인쇄 CSS 문자열
    - 사진 같은 지연 자산이 있으면 `collectImagePaths(entry)`와 `loadImageUrls(entries)`도 함께 제공
-3. 공용 `writingPdfExport.js`에 장르별 `if/switch`를 추가하지 않는다. 공용부는 `input_template` 또는
+3. 이 장르의 PDF를 교사가 형식 중 하나로 고르게 하려면(예: 보고서의 질문 포함형/완성본) `pdfExport`에
+   `renderModes: [{ value, label, description }, ...]`를 선언한다. `renderEntry(entry, { imageUrls, renderMode })`의
+   `renderMode`로 선택된 `value`를 받아 그 장르 안에서만 분기한다. 이 필드가 있으면 `ExportSelectModal`이 선택
+   UI를 자동으로 만들고, `registry.js`의 `getPdfRenderModes(mission)`(미션 하나가 대상일 때)과
+   `getAnyRegisteredPdfRenderModes()`(여러 장르가 섞일 수 있는 화면일 때)가 필요한 화면에 목록을 전달한다.
+   공용 화면(`ExportSelectModal.jsx`, `ArchiveManager.jsx` 등)에 장르 이름이나 선택지 문구를 하드코딩하지
+   않는다. 선택지가 필요 없다면 이 필드를 생략한다.
+4. 공용 `writingPdfExport.js`에 장르별 `if/switch`를 추가하지 않는다. 공용부는 `input_template` 또는
    `structured_content.template`로 매니페스트를 찾아 렌더러를 호출한다.
-4. 구조화 데이터가 없는 과거 글도 평문에서 장르 구조를 복원하는 호환 경로를 둔다. 시는 빈 줄을 연 경계로 본다.
-5. 글자는 12pt 아래로 줄이지 않고, 제목·지은이·본문의 시각 계층과 장르 단위를 유지한다. 긴 글은 억지로 축소하지
+5. 구조화 데이터가 없는 과거 글도 평문에서 장르 구조를 복원하는 호환 경로를 둔다. 시는 빈 줄을 연 경계로 본다.
+6. 글자는 12pt 아래로 줄이지 않고, 제목·지은이·본문의 시각 계층과 장르 단위를 유지한다. 긴 글은 억지로 축소하지
    않고 다음 페이지로 넘기며 한 연·한 사진 칸처럼 의미가 이어지는 단위는 가능한 한 페이지 사이에서 나누지 않는다.
-6. `tests/genreWritingPdf.test.mjs`에 장르 매니페스트 계약, 구조화 데이터, 과거 글 호환, HTML 순서·글자 크기
+7. `tests/genreWritingPdf.test.mjs`에 장르 매니페스트 계약, 구조화 데이터, 과거 글 호환, HTML 순서·글자 크기
    회귀 검사를 추가한다. 이 파일은 `npm run test:architecture`에 포함되어 있어 전용 PDF 누락 시 빌드가 실패한다.
-7. 완료 전 Chrome 인쇄 엔진 또는 Poppler로 실제 A4 PDF를 만들고 다시 렌더링해 페이지 수, 줄바꿈, 잘림·겹침,
+8. 완료 전 Chrome 인쇄 엔진 또는 Poppler로 실제 A4 PDF를 만들고 다시 렌더링해 페이지 수, 줄바꿈, 잘림·겹침,
    한글 표시와 12pt 이상 글자를 눈으로 확인한다.
 
 예시:
@@ -92,6 +99,8 @@ export const exampleMissionType = {
     pdfExport: {
         id: 'example',
         load: () => import('./examplePdfExport.js').then((module) => module.examplePdfExport),
+        // 형식 선택지가 필요할 때만 추가한다. 없으면 이 필드를 생략한다.
+        // renderModes: [{ value: 'short', label: '짧은 형식', description: '...' }, { value: 'long', label: '자세한 형식', description: '...' }],
     },
 };
 

@@ -4,6 +4,7 @@ import {
     REPORT_TEMPLATE_ID,
     validateReportSubmission,
 } from './reportContent.js';
+import { REPORT_PDF_MODE_FINAL, REPORT_PDF_MODE_GUIDED } from './reportPdfModes.js';
 
 export const reportMissionType = {
     id: REPORT_TEMPLATE_ID,
@@ -16,6 +17,18 @@ export const reportMissionType = {
     pdfExport: {
         id: REPORT_TEMPLATE_ID,
         load: () => import('./reportPdfExport.js').then((module) => module.reportPdfExport),
+        renderModes: [
+            {
+                value: REPORT_PDF_MODE_GUIDED,
+                label: '질문 포함 지도형',
+                description: '교사의 질문과 학생 답변을 함께 정리합니다.',
+            },
+            {
+                value: REPORT_PDF_MODE_FINAL,
+                label: '질문 없는 완성본',
+                description: '교사 질문을 빼고 사진과 학생 글만 보여줍니다.',
+            },
+        ],
     },
     imageExport: {
         id: REPORT_TEMPLATE_ID,

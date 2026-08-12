@@ -9,10 +9,12 @@ import {
     buildWritingPdfHtml,
     collectWritingPdfImagePaths,
     normalizeWritingPdfEntry,
-    REPORT_PDF_MODE_FINAL,
-    REPORT_PDF_MODE_GUIDED,
     WRITING_PDF_MAX_ENTRIES
 } from '../src/modules/writing/export/writingPdfExport.js';
+import {
+    REPORT_PDF_MODE_FINAL,
+    REPORT_PDF_MODE_GUIDED,
+} from '../src/modules/writing/mission-types/report/reportPdfModes.js';
 
 const READING_LOG = {
     student_code: '7',
@@ -104,7 +106,7 @@ test('질문 포함 보고서 PDF는 질문을 한 줄형 안내 바에 두고 �
         items: [REPORT_ITEM],
         title: '보고서 모음',
         imageUrls,
-        reportMode: REPORT_PDF_MODE_GUIDED,
+        renderMode: REPORT_PDF_MODE_GUIDED,
     });
 
     assert.deepEqual(await collectWritingPdfImagePaths([REPORT_ITEM]), [path]);
@@ -141,7 +143,7 @@ test('질문 없는 완성 보고서 PDF는 사진과 학생 글만 정돈해 �
         items: [REPORT_ITEM],
         title: '완성 보고서 모음',
         imageUrls: new Map([[path, 'https://example.test/final-photo.webp']]),
-        reportMode: REPORT_PDF_MODE_FINAL,
+        renderMode: REPORT_PDF_MODE_FINAL,
     });
 
     assert.match(html, /pdf-entry--report-final/);

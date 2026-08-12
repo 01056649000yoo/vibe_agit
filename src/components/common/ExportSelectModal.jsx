@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Button from './Button';
 import Card from './Card';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * @param {string} title 내보낼 대상의 이름 (예: 홍길동, 나의 꿈 미션)
  * @param {function} onConfirm (format, options) => void 내보내기 실행 콜백
  * @param {boolean} isGapiLoaded 구글 API 로드 여부 (비활성화 처리용)
- * @param {boolean} showReportPdfOptions 보고서 전용 PDF 양식 선택 표시 여부
+ * @param {Array<{value:string,label:string,description:string}>} pdfRenderModes 장르가 선언한 PDF 양식 선택지(없으면 선택지 없이 기본 양식만 사용)
  */
 const ExportSelectModal = ({
     isOpen,
@@ -19,15 +19,20 @@ const ExportSelectModal = ({
     onConfirm,
     isGapiLoaded,
     isBulk,
-    showReportPdfOptions = false,
+    pdfRenderModes = [],
 }) => {
     const [format, setFormat] = useState('excel'); // 'excel' | 'pdf' | 'googleDoc'
     const [usePageBreak, setUsePageBreak] = useState(true);
     const [groupBy, setGroupBy] = useState('mission'); // 'mission' | 'student'
-    const [reportPdfMode, setReportPdfMode] = useState('guided');
+    const [renderMode, setRenderMode] = useState(pdfRenderModes[0]?.value);
+
+    useEffect(() => {
+        if (isOpen) setRenderMode(pdfRenderModes[0]?.value);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
 
     const handleConfirm = () => {
-        onConfirm(format, { usePageBreak, groupBy, reportPdfMode });
+        onConfirm(format, { usePageBreak, groupBy, renderMode });
         onClose();
     };
 
@@ -49,7 +54,7 @@ const ExportSelectModal = ({
                         exit={{ scale: 0.9, opacity: 0 }}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <Card style={{ width: `min(${showReportPdfOptions ? '440px' : '360px'}, calc(100vw - 32px))`, maxHeight: '90vh', overflowY: 'auto', padding: '24px', borderRadius: '24px', textAlign: 'center' }}>
+                        <Card style={{ width: `min(${pdfRenderModes.length > 0 ? '440px' : '360px'}, calc(100vw - 32px))`, maxHeight: '90vh', overflowY: 'auto', padding: '24px', borderRadius: '24px', textAlign: 'center' }}>
                             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📤</div>
                             <h3 id="export-select-title" style={{ margin: '0 0 8px 0', color: '#2C3E50', fontWeight: '900' }}>데이터 내보내기</h3>
                             <p style={{ color: '#7F8C8D', fontSize: '0.9rem', marginBottom: '24px' }}>
@@ -111,60 +116,43 @@ const ExportSelectModal = ({
                                     </div>
                                 </button>
 
-                                {format === 'pdf' && showReportPdfOptions && (
+                                {format === 'pdf' && pdfRenderModes.length > 0 && (
                                     <fieldset style={{
                                         margin: '-2px 0 2px', padding: '14px', border: '1px solid #DDD6FE',
                                         borderRadius: '14px', background: '#FAF8FF', textAlign: 'left'
                                     }}>
                                         <legend style={{ padding: '0 6px', color: '#5B21B6', fontSize: '0.85rem', fontWeight: 800 }}>
-                                            보고서 PDF 양식
+                                            PDF 양식
                                         </legend>
                                         <div style={{ display: 'grid', gap: '8px' }}>
-                                            <label style={{
-                                                display: 'grid', gridTemplateColumns: '20px minmax(0, 1fr)', gap: '10px',
-                                                padding: '10px', border: '1px solid', borderRadius: '12px', cursor: 'pointer',
-                                                borderColor: reportPdfMode === 'guided' ? '#8B5CF6' : '#E5E7EB',
-                                                background: reportPdfMode === 'guided' ? '#F5F3FF' : 'white'
-                                            }}>
-                                                <input
-                                                    type="radio"
-                                                    name="reportPdfMode"
-                                                    value="guided"
-                                                    checked={reportPdfMode === 'guided'}
-                                                    onChange={(event) => setReportPdfMode(event.target.value)}
-                                                    style={{ marginTop: '3px', accentColor: '#7C3AED' }}
-                                                />
-                                                <span>
-                                                    <strong style={{ display: 'block', color: '#4C1D95', fontSize: '0.9rem' }}>질문 포함 지도형</strong>
-                                                    <span style={{ display: 'block', marginTop: '2px', color: '#6B7280', fontSize: '0.78rem' }}>
-                                                        교사의 질문과 학생 답변을 함께 정리합니다.
+                                            {pdfRenderModes.map((mode) => (
+                                                <label key={mode.value} style={{
+                                                    display: 'grid', gridTemplateColumns: '20px minmax(0, 1fr)', gap: '10px',
+                                                    padding: '10px', border: '1px solid', borderRadius: '12px', cursor: 'pointer',
+                                                    borderColor: renderMode === mode.value ? '#8B5CF6' : '#E5E7EB',
+                                                    background: renderMode === mode.value ? '#F5F3FF' : 'white'
+                                                }}>
+                                                    <input
+                                                        type="radio"
+                                                        name="pdfRenderMode"
+                                                        value={mode.value}
+                                                        checked={renderMode === mode.value}
+                                                        onChange={(event) => setRenderMode(event.target.value)}
+                                                        style={{ marginTop: '3px', accentColor: '#7C3AED' }}
+                                                    />
+                                                    <span>
+                                                        <strong style={{ display: 'block', color: '#4C1D95', fontSize: '0.9rem' }}>{mode.label}</strong>
+                                                        {mode.description && (
+                                                            <span style={{ display: 'block', marginTop: '2px', color: '#6B7280', fontSize: '0.78rem' }}>
+                                                                {mode.description}
+                                                            </span>
+                                                        )}
                                                     </span>
-                                                </span>
-                                            </label>
-                                            <label style={{
-                                                display: 'grid', gridTemplateColumns: '20px minmax(0, 1fr)', gap: '10px',
-                                                padding: '10px', border: '1px solid', borderRadius: '12px', cursor: 'pointer',
-                                                borderColor: reportPdfMode === 'final' ? '#8B5CF6' : '#E5E7EB',
-                                                background: reportPdfMode === 'final' ? '#F5F3FF' : 'white'
-                                            }}>
-                                                <input
-                                                    type="radio"
-                                                    name="reportPdfMode"
-                                                    value="final"
-                                                    checked={reportPdfMode === 'final'}
-                                                    onChange={(event) => setReportPdfMode(event.target.value)}
-                                                    style={{ marginTop: '3px', accentColor: '#7C3AED' }}
-                                                />
-                                                <span>
-                                                    <strong style={{ display: 'block', color: '#4C1D95', fontSize: '0.9rem' }}>질문 없는 완성본</strong>
-                                                    <span style={{ display: 'block', marginTop: '2px', color: '#6B7280', fontSize: '0.78rem' }}>
-                                                        교사 질문을 빼고 사진과 학생 글만 보여줍니다.
-                                                    </span>
-                                                </span>
-                                            </label>
+                                                </label>
+                                            ))}
                                         </div>
                                         <p style={{ margin: '8px 2px 0', color: '#7C3AED', fontSize: '0.74rem' }}>
-                                            보고하는 글에만 적용되며 일반 글은 기존 양식으로 나옵니다.
+                                            이 양식은 해당하는 종류의 글에만 적용되며 다른 글은 기존 양식으로 나옵니다.
                                         </p>
                                     </fieldset>
                                 )}

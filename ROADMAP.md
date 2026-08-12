@@ -168,6 +168,10 @@ Stage 3c 잔여 정리, 순서 미정. 결정 기록 최신 항목을 먼저 확
   내 서재·발자국 탭 흐름 정리. 친구 아지트는 이름·칭호 탐색·최신 글·친구 책장의 탐색 흐름과 카드 밀도 정리.
 - [ ] **Postgres 에러 130건 로그 확인** (오래전부터 대기): Logs → Postgres. timeout/connection이면 이관으로
   해소, RPC exception이면 코드 수정.
+- [ ] **독서마라톤 순위표 폴링 재조회 확인** (2026-08-12 발견): 순위표를 펼친 채로 4~6분 배경 동기화가
+  오면 `fullLoaded`가 초기화된다(`ReadingMarathonDashboardCard.jsx`, bootstrap 응답에 `leaderboard`
+  키가 없어서). 실사용에서 깜빡임·불필요한 재조회가 눈에 띄면 홈 bootstrap에 순위표 캐시 여부를 같이
+  실어 보내는 식으로 고친다.
 
 ### 실기기 확인 대기
 

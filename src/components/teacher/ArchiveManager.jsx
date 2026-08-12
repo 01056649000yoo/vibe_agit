@@ -8,7 +8,7 @@ import ExportSelectModal from '../common/ExportSelectModal';
 import ModalCloseButton from '../common/ModalCloseButton';
 import { dataCache } from '../../lib/cache';
 import TeacherGuideButton from './TeacherGuideButton';
-import { isReportPdfMission } from '../../modules/writing/mission-types/report/reportPdfModes';
+import { getPdfRenderModes } from '../../modules/writing/mission-types/registry';
 
 const ARCHIVE_PAGE_SIZE = 50;
 
@@ -41,7 +41,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
             type: 'mission',
             id: mission.id,
             title: mission.title,
-            showReportPdfOptions: isReportPdfMission(mission),
+            pdfRenderModes: getPdfRenderModes(mission),
         });
         setExportModalOpen(true);
     };
@@ -56,11 +56,16 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
 
         const selectedTitles = selectedMissions.map(m => m.title);
 
+        // 선택된 미션 중 PDF 선택지를 선언한 첫 장르의 목록을 쓴다.
+        const pdfRenderModes = selectedMissions
+            .map(getPdfRenderModes)
+            .find((modes) => modes.length > 0) || [];
+
         setExportTarget({
             type: 'bulk_missions',
             ids: selectedMissionIds, // 이미 클릭 순서대로 저장되어 있음
             title: selectedTitles.join(', '),
-            showReportPdfOptions: selectedMissions.some(isReportPdfMission),
+            pdfRenderModes,
         });
         setExportModalOpen(true);
     };
@@ -122,7 +127,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
         if (format === 'excel') {
             exportToExcel(data, fileName);
         } else if (format === 'pdf') {
-            await exportToPdf(data, fileName, 'assignment', { reportMode: options.reportPdfMode });
+            await exportToPdf(data, fileName, 'assignment', { renderMode: options.renderMode });
         } else if (format === 'googleDoc') {
             const groupBy = options.groupBy || 'mission';
 
@@ -714,7 +719,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                 onConfirm={handleExportConfirm}
                 isGapiLoaded={isGapiLoaded}
                 isBulk={exportTarget?.type === 'bulk_missions'}
-                showReportPdfOptions={Boolean(exportTarget?.showReportPdfOptions)}
+                pdfRenderModes={exportTarget?.pdfRenderModes || []}
             />
         </div>
     );

@@ -1,13 +1,9 @@
 import { getGenreMissionType } from '../mission-types/registry.js';
-import {
-    REPORT_PDF_MODE_FINAL,
-    REPORT_PDF_MODE_GUIDED,
-} from '../mission-types/report/reportPdfModes.js';
 import { getWritingExportProfile } from './writingExportProfiles.js';
 import { escapePdfHtml, renderPdfDocumentHeader } from './pdfRenderContract.js';
+import { WRITING_EXPORT_MAX_ENTRIES } from './writingExportLimits.js';
 
-export const WRITING_PDF_MAX_ENTRIES = 100;
-export { REPORT_PDF_MODE_FINAL, REPORT_PDF_MODE_GUIDED };
+export const WRITING_PDF_MAX_ENTRIES = WRITING_EXPORT_MAX_ENTRIES;
 
 const cleanFileTitle = (value) => String(value || '글 모음')
     .replace(/[\\/:*?"<>|]/g, ' ')
@@ -15,7 +11,9 @@ const cleanFileTitle = (value) => String(value || '글 모음')
     .trim()
     .slice(0, 80) || '글 모음';
 
-const getStructuredContent = (item) => item?._structuredContent ?? item?.structured_content ?? null;
+const getStructuredContent = (item) => (
+    item?._structuredContent ?? item?.structured_content ?? item?.structuredContent ?? null
+);
 const getInputTemplate = (item) => item?._inputTemplate ?? item?.input_template ?? '';
 const resolveInputTemplate = (item, structuredContent) => {
     const explicitTemplate = getInputTemplate(item);
@@ -105,13 +103,10 @@ export const buildWritingPdfHtml = async ({
     title,
     contentType = 'assignment',
     imageUrls = new Map(),
-    reportMode = REPORT_PDF_MODE_GUIDED,
+    renderMode,
 }) => {
     const entries = (items || []).map((item) => normalizeWritingPdfEntry(item, contentType));
     const safeTitle = cleanFileTitle(title);
-    const safeReportMode = reportMode === REPORT_PDF_MODE_FINAL
-        ? REPORT_PDF_MODE_FINAL
-        : REPORT_PDF_MODE_GUIDED;
     const resolvePdfExport = createPdfExportResolver();
     const entryPdfExports = await Promise.all(entries.map(resolvePdfExport));
     const genrePdfExports = [...new Set(entryPdfExports.filter(Boolean))];
@@ -119,7 +114,7 @@ export const buildWritingPdfHtml = async ({
     const body = entries.map((entry, index) => {
         const pdfExport = Reflect.get(entryPdfExports, index);
         return pdfExport?.renderEntry
-            ? pdfExport.renderEntry(entry, { imageUrls, reportMode: safeReportMode })
+            ? pdfExport.renderEntry(entry, { imageUrls, renderMode })
             : renderNormalEntry(entry);
     }).join('');
 
@@ -154,7 +149,6 @@ export const buildWritingPdfHtml = async ({
             font-weight: 800;
             letter-spacing: .04em;
         }
-        .pdf-entry--report .pdf-entry__kicker { color: #0F766E; }
         .pdf-entry h1 {
             margin: 0;
             color: #172033;
@@ -169,7 +163,6 @@ export const buildWritingPdfHtml = async ({
         }
         .pdf-entry__group { margin-top: 1mm; color: #64748B; }
         .pdf-entry__rule { height: 1.2mm; margin: 2mm 0 7mm; border-radius: 999px; background: #6D4AFF; }
-        .pdf-entry--report .pdf-entry__rule { background: #14B8A6; }
         .pdf-entry__content {
             min-height: 190mm;
             color: #1F2937;
@@ -274,13 +267,13 @@ export const exportWritingEntriesToPdf = async ({
     items,
     title,
     contentType = 'assignment',
-    reportMode = REPORT_PDF_MODE_GUIDED,
+    renderMode,
 }) => {
     if (!Array.isArray(items) || items.length === 0) throw new Error('PDF로 내보낼 글이 없습니다.');
     if (items.length > WRITING_PDF_MAX_ENTRIES) {
         throw new Error(`PDF는 한 번에 ${WRITING_PDF_MAX_ENTRIES}편까지 내보낼 수 있습니다.`);
     }
     const imageUrls = await loadWritingPdfImageUrls(items, contentType);
-    const html = await buildWritingPdfHtml({ items, title, contentType, imageUrls, reportMode });
+    const html = await buildWritingPdfHtml({ items, title, contentType, imageUrls, renderMode });
     await printWritingHtml(html);
 };

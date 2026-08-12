@@ -1,0 +1,1 @@
+export const WRITING_EXPORT_MAX_ENTRIES = 100;

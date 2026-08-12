@@ -82,6 +82,8 @@ const renderFinalReportEntry = (entry, imageUrls) => {
 };
 
 const REPORT_PDF_STYLES = `
+        .pdf-entry--report .pdf-entry__kicker { color: #0F766E; }
+        .pdf-entry--report .pdf-entry__rule { background: #14B8A6; }
         .report-sheet { display: block; }
         .report-sheet__section {
             display: grid;
@@ -250,8 +252,8 @@ const REPORT_PDF_STYLES = `
 
 export const reportPdfExport = {
     id: 'report',
-    renderEntry: (entry, { imageUrls = new Map(), reportMode = REPORT_PDF_MODE_GUIDED } = {}) => (
-        reportMode === REPORT_PDF_MODE_FINAL
+    renderEntry: (entry, { imageUrls = new Map(), renderMode = REPORT_PDF_MODE_GUIDED } = {}) => (
+        renderMode === REPORT_PDF_MODE_FINAL
             ? renderFinalReportEntry(entry, imageUrls)
             : renderGuidedReportEntry(entry, imageUrls)
     ),

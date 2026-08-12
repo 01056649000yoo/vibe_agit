@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import ExportSelectModal from '../common/ExportSelectModal';
 import { useStudentManager } from '../../hooks/useStudentManager';
+import { getAnyRegisteredPdfRenderModes } from '../../modules/writing/mission-types/registry';
 import './StudentManager.css';
 
 // 분리된 서브 컴포넌트들
@@ -187,7 +188,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenSt
                 onConfirm={handleExportConfirm}
                 title={exportTarget?.title ? `${exportTarget.title} 학생` : '데이터 내보내기'}
                 isGapiLoaded={isGapiLoaded}
-                showReportPdfOptions
+                pdfRenderModes={getAnyRegisteredPdfRenderModes()}
             />
         </div>
     );

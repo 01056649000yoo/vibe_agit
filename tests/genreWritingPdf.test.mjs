@@ -1,12 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { getGenreMissionTypes } from '../src/modules/writing/mission-types/registry.js';
+import { getGenreMissionTypes, getPdfRenderModes } from '../src/modules/writing/mission-types/registry.js';
 import {
     buildWritingPdfHtml,
     normalizeWritingPdfEntry,
 } from '../src/modules/writing/export/writingPdfExport.js';
-import { isReportPdfMission } from '../src/modules/writing/mission-types/report/reportPdfModes.js';
 
 const POEM_ITEM = {
     작성자: '김하늘',
@@ -53,10 +52,13 @@ test('공용 PDF 출력기는 장르 이름을 하드코딩하지 않고 매니�
     assert.doesNotMatch(source, /entry\.inputTemplate === ['"](?:poem|report)['"]/);
 });
 
-test('시 과제는 보고서 양식 선택 대상이 아니며 보고서만 두 양식을 고른다', () => {
-    assert.equal(isReportPdfMission({ input_template: 'poem', genre: '시' }), false);
-    assert.equal(isReportPdfMission({ input_template: 'report', genre: '보고하는 글' }), true);
-    assert.equal(isReportPdfMission({ genre: '보고하는 글' }), true);
+test('시 과제는 PDF 양식 선택지가 없고 보고서만 매니페스트가 선언한 두 양식을 고른다', () => {
+    assert.deepEqual(getPdfRenderModes({ input_template: 'poem' }), []);
+    const reportModes = getPdfRenderModes({ input_template: 'report' });
+    assert.equal(reportModes.length, 2);
+    assert.deepEqual(reportModes.map((mode) => mode.value), ['guided', 'final']);
+    // 미션 타입 필드가 없으면(예: 이전 RPC 응답) 선택지를 요구하지 않고 빈 배열로 안전하게 빠진다.
+    assert.deepEqual(getPdfRenderModes({}), []);
 });
 
 test('시 PDF는 제목·지은이와 연 단위 시구를 시 형식으로 정렬한다', async () => {

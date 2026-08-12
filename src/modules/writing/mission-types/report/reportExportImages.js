@@ -1,6 +1,7 @@
 import { normalizeReportSections } from './reportContent.js';
 
 const REPORT_IMAGE_URL_BATCH_SIZE = 50;
+const REPORT_IMAGE_URL_CONCURRENCY = 4;
 
 const getStructuredContent = (entry) => (
     entry?.structuredContent ?? entry?._structuredContent ?? entry?.structured_content ?? null
@@ -28,12 +29,24 @@ export const loadReportImageUrls = async (entries) => {
     const paths = [...new Set((entries || []).flatMap(collectReportImagePaths))];
     if (paths.length === 0) return new Map();
     const { getReportImageUrls } = await import('./reportImageApi.js');
-    const urls = new Map();
+    const batches = [];
     for (let index = 0; index < paths.length; index += REPORT_IMAGE_URL_BATCH_SIZE) {
-        const batch = paths.slice(index, index + REPORT_IMAGE_URL_BATCH_SIZE);
-        const batchUrls = await getReportImageUrls(batch);
-        batchUrls.forEach((url, path) => urls.set(path, url));
+        batches.push(paths.slice(index, index + REPORT_IMAGE_URL_BATCH_SIZE));
     }
+    const urls = new Map();
+    let nextBatch = 0;
+    const fetchNextBatch = async () => {
+        while (nextBatch < batches.length) {
+            const batch = Reflect.get(batches, nextBatch);
+            nextBatch += 1;
+            const batchUrls = await getReportImageUrls(batch);
+            batchUrls.forEach((url, path) => urls.set(path, url));
+        }
+    };
+    await Promise.all(Array.from(
+        { length: Math.min(REPORT_IMAGE_URL_CONCURRENCY, batches.length) },
+        fetchNextBatch,
+    ));
     const missing = paths.filter((path) => !urls.has(path));
     if (missing.length > 0) throw new Error(`보고서 사진 ${missing.length}장을 불러오지 못했습니다.`);
     return urls;

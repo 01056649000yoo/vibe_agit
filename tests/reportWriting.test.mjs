@@ -14,6 +14,7 @@ const [
     reportDocumentSource,
     writingPdfSource,
     reportPdfSource,
+    reportManifestSource,
     studentWritingSource,
     missionSubmitSource,
     reportWritingCss,
@@ -22,11 +23,13 @@ const [
     studentManagerSource,
     studentManagerHookSource,
     dataExportSource,
+    registrySource,
 ] = await Promise.all([
     readFile('src/modules/writing/mission-types/report/ReportEditor.jsx', 'utf8'),
     readFile('src/modules/writing/mission-types/report/ReportDocument.jsx', 'utf8'),
     readFile('src/modules/writing/export/writingPdfExport.js', 'utf8'),
     readFile('src/modules/writing/mission-types/report/reportPdfExport.js', 'utf8'),
+    readFile('src/modules/writing/mission-types/report/manifest.js', 'utf8'),
     readFile('src/components/student/StudentWriting.jsx', 'utf8'),
     readFile('src/hooks/useMissionSubmit.js', 'utf8'),
     readFile('src/modules/writing/mission-types/report/reportWriting.css', 'utf8'),
@@ -35,6 +38,7 @@ const [
     readFile('src/components/teacher/StudentManager.jsx', 'utf8'),
     readFile('src/hooks/useStudentManager.js', 'utf8'),
     readFile('src/hooks/useDataExport.js', 'utf8'),
+    readFile('src/modules/writing/mission-types/registry.js', 'utf8'),
 ]);
 
 test('첫 사진 저장은 생성된 초안 글 ID를 다음 저장까지 유지한다', () => {
@@ -66,18 +70,29 @@ test('보고서 한 칸은 사진과 관찰 결과 글쓰기 창 하나만 보�
 });
 
 test('보고서 PDF는 질문 포함 지도형과 질문 없는 완성본을 선택해 내보낸다', () => {
-    assert.match(exportSelectSource, /질문 포함 지도형/);
-    assert.match(exportSelectSource, /질문 없는 완성본/);
-    assert.match(exportSelectSource, /reportPdfMode/);
-    assert.match(archiveManagerSource, /showReportPdfOptions: isReportPdfMission\(mission\)/);
-    assert.match(archiveManagerSource, /showReportPdfOptions: selectedMissions\.some\(isReportPdfMission\)/);
-    assert.match(archiveManagerSource, /showReportPdfOptions=\{Boolean\(exportTarget\?\.showReportPdfOptions\)\}/);
-    assert.match(studentManagerSource, /showReportPdfOptions/);
-    assert.match(archiveManagerSource, /reportMode: options\.reportPdfMode/);
-    assert.match(studentManagerHookSource, /reportMode: options\.reportPdfMode/);
-    assert.match(dataExportSource, /reportMode/);
-    assert.match(writingPdfSource, /REPORT_PDF_MODE_GUIDED/);
-    assert.match(writingPdfSource, /REPORT_PDF_MODE_FINAL/);
+    // 선택지 문구는 장르 매니페스트가 소유한다(pdfExport.renderModes) — 공용 렌더러가 아니다.
+    assert.match(reportManifestSource, /renderModes:/);
+    assert.match(reportManifestSource, /질문 포함 지도형/);
+    assert.match(reportManifestSource, /질문 없는 완성본/);
+    assert.match(reportPdfSource, /renderMode === REPORT_PDF_MODE_FINAL/);
+    // 공용 내보내기 모달은 장르 이름을 하드코딩하지 않고 매니페스트가 선언한 선택지 목록(pdfRenderModes)을 그린다.
+    assert.doesNotMatch(exportSelectSource, /보고서|report/i);
+    assert.match(exportSelectSource, /pdfRenderModes\.map\(/);
+    assert.match(exportSelectSource, /renderMode/);
+    // 화면은 registry.js의 매니페스트 조회 헬퍼만 쓰고 report 모듈을 직접 import하지 않는다.
+    assert.doesNotMatch(archiveManagerSource, /mission-types\/report/);
+    assert.match(registrySource, /export const getPdfRenderModes/);
+    assert.match(registrySource, /export const getAnyRegisteredPdfRenderModes/);
+    assert.match(archiveManagerSource, /pdfRenderModes: getPdfRenderModes\(mission\)/);
+    assert.match(archiveManagerSource, /selectedMissions\s*\.map\(getPdfRenderModes\)/);
+    assert.match(archiveManagerSource, /pdfRenderModes=\{exportTarget\?\.pdfRenderModes \|\| \[\]\}/);
+    assert.match(studentManagerSource, /getAnyRegisteredPdfRenderModes/);
+    assert.match(archiveManagerSource, /renderMode: options\.renderMode/);
+    assert.match(studentManagerHookSource, /renderMode: options\.renderMode/);
+    assert.match(dataExportSource, /renderMode: pdfOptions\.renderMode/);
+    // 공용 PDF 출력기는 어떤 장르 상수도 알지 못한 채 renderMode를 그대로 전달만 한다.
+    assert.doesNotMatch(writingPdfSource, /REPORT_PDF_MODE/);
+    assert.match(writingPdfSource, /renderMode/);
 });
 
 test('보고서 기본 틀은 학생이 바로 쓸 수 있는 세 칸으로 열린다', () => {

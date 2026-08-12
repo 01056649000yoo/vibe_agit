@@ -16,6 +16,9 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# 개인 도구 권한 설정 (사람마다 다를 수 있어 공유 저장소에는 안 올림)
+.claude/settings.local.json
 .DS_Store
 *.suo
 *.ntvs*
