@@ -67,16 +67,14 @@ test('기능 소개 모달은 키보드 닫기·초점 순환·배경 스크롤 
   assert.match(modal, /dialogRef\.current\.querySelectorAll\(focusableSelector\)/);
 });
 
-test('첫 화면 하단에서 학교 도입 안내·개인정보 처리방침·이용약관을 바로 연다', async () => {
+test('첫 화면 하단에는 학교·학급 도입 안내 링크만 간결하게 남긴다', async () => {
   const [landing, styles] = await Promise.all([
     read('src/components/layout/LandingPage.jsx'),
     read('src/components/layout/LandingPage.css'),
   ]);
 
-  assert.match(landing, /href="\/learning-support-software">학교 도입 안내/);
-  assert.match(landing, /href="\/privacy">개인정보 처리방침/);
-  assert.match(landing, /href="\/terms">이용약관/);
-  assert.match(styles, /\.landing-support-footer nav\s*\{[\s\S]*display: grid[\s\S]*grid-template-columns:[\s\S]*1\.18fr[\s\S]*0\.82fr/);
-  assert.match(styles, /\.landing-support-footer a\s*\{[\s\S]*font-size: 0\.84rem[\s\S]*letter-spacing: -0\.012em/);
-  assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.landing-support-footer a\s*\{[\s\S]*font-size: clamp\(0\.66rem, 2\.95vw, 0\.72rem\)/);
+  assert.match(landing, /href="\/learning-support-software">학교·학급 도입 안내/);
+  assert.doesNotMatch(landing, /href="\/privacy"|href="\/terms"/);
+  assert.match(styles, /\.landing-support-footer nav\s*\{[\s\S]*display: flex[\s\S]*justify-content: center/);
+  assert.match(styles, /\.landing-support-footer a\s*\{[\s\S]*font-size: 0\.82rem[\s\S]*letter-spacing: -0\.01em/);
 });
