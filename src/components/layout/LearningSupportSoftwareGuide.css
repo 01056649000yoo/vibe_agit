@@ -1,0 +1,411 @@
+.learning-support-guide {
+  color: #332d27;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.learning-support-guide__intro {
+  padding: clamp(24px, 5vw, 48px);
+  border: 1px solid #f1d7b5;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(128, 214, 197, 0.2), transparent 34%),
+    linear-gradient(135deg, #fff9ef 0%, #fffdf8 70%);
+}
+
+.learning-support-guide__eyebrow {
+  display: inline-flex;
+  margin-bottom: 12px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: #e8f7f3;
+  color: #157263;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.learning-support-guide__intro h2 {
+  margin: 0 0 20px;
+  color: #2f2922;
+  font-size: clamp(1.55rem, 4vw, 2.35rem);
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+}
+
+.learning-support-guide__intro p {
+  margin: 0;
+  color: #665d54;
+  font-size: 0.98rem;
+  line-height: 1.85;
+  word-break: keep-all;
+}
+
+.learning-support-guide__intro p + p {
+  margin-top: 10px;
+}
+
+.learning-support-guide__section {
+  margin-top: 48px;
+}
+
+.learning-support-guide__section-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.learning-support-guide__section-heading > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 15px;
+  background: #fff0cf;
+  color: #9a6818;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.learning-support-guide__section-heading p,
+.learning-support-guide__section-heading h3 {
+  margin: 0;
+}
+
+.learning-support-guide__section-heading p {
+  color: #19806f;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.learning-support-guide__section-heading h3 {
+  margin-top: 2px;
+  color: #332d27;
+  font-size: clamp(1.2rem, 3vw, 1.55rem);
+  letter-spacing: -0.025em;
+}
+
+.learning-support-guide__summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #e9e2da;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.learning-support-guide__summary > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.42fr) 1fr;
+  min-width: 0;
+  border-bottom: 1px solid #eee7df;
+}
+
+.learning-support-guide__summary > div:nth-child(odd):not(.learning-support-guide__summary-wide) {
+  border-right: 1px solid #eee7df;
+}
+
+.learning-support-guide__summary-wide {
+  grid-column: 1 / -1;
+}
+
+.learning-support-guide__summary > div:last-child {
+  border-bottom: 0;
+}
+
+.learning-support-guide__summary dt,
+.learning-support-guide__summary dd {
+  margin: 0;
+  padding: 15px 17px;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.learning-support-guide__summary dt {
+  display: flex;
+  align-items: center;
+  background: #faf7f3;
+  color: #62594f;
+  font-weight: 800;
+}
+
+.learning-support-guide__summary dd {
+  color: #332d27;
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+.learning-support-guide a {
+  color: #147667;
+  font-weight: 800;
+  text-underline-offset: 3px;
+}
+
+.learning-support-guide__table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e9e2da;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.learning-support-guide__table-wrap:focus-visible {
+  outline: 3px solid rgba(31, 131, 117, 0.28);
+  outline-offset: 3px;
+}
+
+.learning-support-guide table {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.learning-support-guide caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.learning-support-guide th,
+.learning-support-guide td {
+  padding: 14px 13px;
+  border-right: 1px solid #eee7df;
+  border-bottom: 1px solid #eee7df;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.learning-support-guide th:last-child,
+.learning-support-guide td:last-child {
+  border-right: 0;
+}
+
+.learning-support-guide tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.learning-support-guide thead th {
+  background: #f2f9f7;
+  color: #315a53;
+  font-weight: 900;
+  text-align: center;
+}
+
+.learning-support-guide tbody th {
+  width: 17%;
+  background: #fcfaf7;
+  color: #514940;
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.learning-support-guide tbody td:nth-of-type(1) {
+  width: 38%;
+}
+
+.learning-support-guide tbody td:last-child {
+  width: 19%;
+}
+
+.learning-support-guide__status {
+  width: 7%;
+  color: #aaa198;
+  font-size: 1rem;
+  font-weight: 900;
+  text-align: center !important;
+}
+
+.learning-support-guide__status-met {
+  color: #168070;
+}
+
+.learning-support-guide__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.learning-support-guide__privacy-link {
+  margin: 12px 2px 0;
+  color: #71675e;
+  font-size: 0.84rem;
+}
+
+.learning-support-guide__download-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: clamp(20px, 4vw, 30px);
+  border: 1px solid #f0d49c;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #fff7e6 0%, #fffdf8 68%);
+}
+
+.learning-support-guide__download-copy {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
+}
+
+.learning-support-guide__file-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 66px;
+  height: 66px;
+  flex: 0 0 66px;
+  border-radius: 17px;
+  background: #f1ca70;
+  color: #60430d;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.learning-support-guide__download-copy strong {
+  display: block;
+  margin-top: 2px;
+  color: #3e3428;
+  font-size: 1.03rem;
+}
+
+.learning-support-guide__download-copy p {
+  margin: 7px 0 0;
+  color: #6d6255;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.learning-support-guide__download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 210px;
+  padding: 14px 20px;
+  border-radius: 13px;
+  background: #187b6b;
+  color: #fff !important;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(24, 123, 107, 0.2);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.learning-support-guide__download-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 11px 24px rgba(24, 123, 107, 0.25);
+}
+
+.learning-support-guide__download-button:focus-visible {
+  outline: 3px solid rgba(31, 131, 117, 0.3);
+  outline-offset: 3px;
+}
+
+.learning-support-guide__notice {
+  margin: 14px 2px 0;
+  color: #756c63;
+  font-size: 0.8rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 760px) {
+  .learning-support-guide__intro {
+    padding: 24px 20px;
+  }
+
+  .learning-support-guide__intro p {
+    font-size: 0.91rem;
+    word-break: normal;
+  }
+
+  .learning-support-guide__section {
+    margin-top: 38px;
+  }
+
+  .learning-support-guide__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-support-guide__summary > div,
+  .learning-support-guide__summary > div:nth-child(odd):not(.learning-support-guide__summary-wide) {
+    grid-template-columns: 112px 1fr;
+    border-right: 0;
+    border-bottom: 1px solid #eee7df;
+  }
+
+  .learning-support-guide__summary-wide {
+    grid-column: auto;
+  }
+
+  .learning-support-guide__summary dt,
+  .learning-support-guide__summary dd {
+    padding: 13px 12px;
+    font-size: 0.82rem;
+  }
+
+  .learning-support-guide__download-card,
+  .learning-support-guide__download-copy {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .learning-support-guide__file-mark {
+    width: 58px;
+    height: 58px;
+    flex-basis: 58px;
+  }
+
+  .learning-support-guide__download-button {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media print {
+  .learning-support-guide__intro,
+  .learning-support-guide__summary,
+  .learning-support-guide__table-wrap,
+  .learning-support-guide__download-card {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+
+  .learning-support-guide__table-wrap {
+    overflow: visible;
+  }
+
+  .learning-support-guide table {
+    min-width: 0;
+    font-size: 8pt;
+  }
+
+  .learning-support-guide__download-button {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learning-support-guide__download-button {
+    transition: none;
+  }
+}

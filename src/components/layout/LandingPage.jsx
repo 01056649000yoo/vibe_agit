@@ -133,6 +133,13 @@ const LandingPage = ({ onStudentLoginClick }) => {
             ))}
           </div>
         </section>
+
+        <footer className="landing-support-footer">
+          <a href="/learning-support-software">
+            학교 도입 검토·학습지원소프트웨어 선정기준 안내
+            <span aria-hidden="true">→</span>
+          </a>
+        </footer>
       </main>
     </section>
   );

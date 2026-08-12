@@ -8,6 +8,7 @@ import Loading from './components/common/Loading'
 import ErrorBoundary from './components/common/ErrorBoundary'
 import PrivacyPolicy from './components/layout/PrivacyPolicy'
 import TermsOfService from './components/layout/TermsOfService'
+import LearningSupportSoftwareGuide from './components/layout/LearningSupportSoftwareGuide'
 import { useAuthStore } from './store/useAuthStore';
 import { useAppStore } from './store/useAppStore';
 import { getEnabledModules, getModule, resolveEnabledModuleIds } from './modules/registry';
@@ -239,7 +240,7 @@ function App() {
         {loading ? (
           <Loading />
         ) : directPath ? (
-          /* [0순위] 직접 주소 접근 시 (약관/개인정보) */
+          /* [0순위] 직접 주소 접근 시 (약관/개인정보/학습지원소프트웨어 안내) */
           <div style={{
             padding: '60px 20px',
             maxWidth: '1200px',
@@ -249,7 +250,7 @@ function App() {
           }}>
             <div style={{
               background: 'white',
-              padding: '40px',
+              padding: directPath === 'learning-support-software' ? 'clamp(20px, 4vw, 40px)' : '40px',
               borderRadius: '24px',
               boxShadow: '0 10px 40px rgba(0,0,0,0.05)',
               border: '1px solid #f0f0f0'
@@ -261,11 +262,23 @@ function App() {
                 borderBottom: '2px solid #F1F3F5',
                 paddingBottom: '20px'
               }}>
-                {directPath === 'terms' ? '서비스 이용약관 📜' : '개인정보 처리방침 🛡️'}
+                {directPath === 'terms'
+                  ? '서비스 이용약관 📜'
+                  : directPath === 'learning-support-software'
+                    ? '학습지원소프트웨어 선정기준 안내 🏫'
+                    : '개인정보 처리방침 🛡️'}
               </h1>
 
-              <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '10px' }}>
-                {directPath === 'terms' ? <TermsOfService /> : <PrivacyPolicy />}
+              <div style={{
+                maxHeight: directPath === 'learning-support-software' ? 'none' : '60vh',
+                overflowY: directPath === 'learning-support-software' ? 'visible' : 'auto',
+                paddingRight: directPath === 'learning-support-software' ? 0 : '10px'
+              }}>
+                {directPath === 'terms'
+                  ? <TermsOfService />
+                  : directPath === 'learning-support-software'
+                    ? <LearningSupportSoftwareGuide />
+                    : <PrivacyPolicy />}
               </div>
 
               <div style={{ marginTop: '50px', display: 'flex', justifyContent: 'center' }}>

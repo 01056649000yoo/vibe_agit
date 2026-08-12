@@ -10,6 +10,7 @@ export const useAppStore = create((set) => ({
         const path = window.location.pathname;
         if (path === '/terms') return 'terms';
         if (path === '/privacy') return 'privacy';
+        if (path === '/learning-support-software') return 'learning-support-software';
         return null;
     })(),
     
@@ -26,6 +27,8 @@ export const useAppStore = create((set) => ({
             document.title = '이용약관 | 끄적끄적 아지트';
         } else if (path === 'privacy') {
             document.title = '개인정보 처리방침 | 끄적끄적 아지트';
+        } else if (path === 'learning-support-software') {
+            document.title = '학습지원소프트웨어 선정기준 안내 | 끄적끄적 아지트';
         } else {
             document.title = '아지트 (agit) - 기록하는 즐거움';
         }
