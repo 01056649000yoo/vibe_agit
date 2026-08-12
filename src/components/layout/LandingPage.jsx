@@ -1,37 +1,12 @@
-import React, { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import LandingFeatureModal, { landingExperiences } from './LandingFeatureModal';
 import './LandingPage.css';
-
-const capabilities = [
-  {
-    icon: '✍️',
-    title: '생각을 글로 써요',
-    description: '선생님 과제부터 독서록과 일기까지, 여러 가지 글을 한곳에서 써요.',
-    tone: 'writing',
-  },
-  {
-    icon: '🧑‍🏫',
-    title: '글쓰기를 지도해요',
-    description: '선생님은 과제를 만들고 학생 글을 확인해, 의견과 평가로 성장 과정을 지도해요.',
-    tone: 'teaching',
-  },
-  {
-    icon: '🌱',
-    title: '함께 고치며 자라요',
-    description: '선생님의 의견과 친구의 따뜻한 댓글을 보고 내 글을 더 좋게 다듬어요.',
-    tone: 'growth',
-  },
-  {
-    icon: '🐲',
-    title: '재미있게 이어가요',
-    description: '글쓰기 포인트로 수호룡을 키우고, 독서마라톤과 어휘 활동에 도전해요.',
-    tone: 'play',
-  },
-];
 
 const LandingPage = ({ onStudentLoginClick }) => {
   const [teacherLoginPending, setTeacherLoginPending] = useState(false);
   const [teacherLoginError, setTeacherLoginError] = useState('');
+  const [activeExperienceId, setActiveExperienceId] = useState(null);
 
   const handleTeacherLogin = async () => {
     if (teacherLoginPending) return;
@@ -49,6 +24,8 @@ const LandingPage = ({ onStudentLoginClick }) => {
       setTeacherLoginPending(false);
     }
   };
+
+  const closeExperienceModal = useCallback(() => setActiveExperienceId(null), []);
 
   return (
     <section className="landing-shell">
@@ -75,10 +52,16 @@ const LandingPage = ({ onStudentLoginClick }) => {
           />
         </section>
 
+        <section className="landing-promise" aria-labelledby="landing-promise-title">
+          <h1 id="landing-promise-title">
+            쓰고, 읽고, 키우며 <span>함께 자라는 우리 반 아지트</span>
+          </h1>
+        </section>
+
         <section className="landing-entry" aria-label="로그인 선택">
-          <div className="landing-section-heading">
-            <p>학생은 선생님께 받은 코드로, 선생님은 Google 계정으로 들어가요.</p>
-          </div>
+          <p className="landing-entry-guide">
+            학생은 선생님께 받은 코드로, 선생님은 Google 계정으로 들어가요.
+          </p>
 
           <div className="landing-entry-grid">
             <button
@@ -115,32 +98,42 @@ const LandingPage = ({ onStudentLoginClick }) => {
           </p>
         </section>
 
-        <section className="landing-capabilities" aria-labelledby="landing-capabilities-title">
-          <div className="landing-section-heading landing-section-heading-centered">
-            <h2 id="landing-capabilities-title">학생과 선생님이 함께 만드는 글쓰기</h2>
-          </div>
-
-          <div className="capability-grid">
-            {capabilities.map((capability) => (
-              <article
-                className={`capability-card capability-card-${capability.tone}`}
-                key={capability.title}
+        <section className="landing-experiences" aria-labelledby="landing-experiences-title">
+          <h2 id="landing-experiences-title">아지트에서 만나는 세 가지 성장</h2>
+          <div className="landing-experience-grid">
+            {landingExperiences.map((experience) => (
+              <button
+                className={`landing-experience-button landing-experience-button--${experience.tone}`}
+                type="button"
+                key={experience.id}
+                onClick={() => setActiveExperienceId(experience.id)}
+                aria-haspopup="dialog"
+                aria-expanded={activeExperienceId === experience.id}
               >
-                <span className="capability-icon" aria-hidden="true">{capability.icon}</span>
-                <strong>{capability.title}</strong>
-                <p>{capability.description}</p>
-              </article>
+                <span className="landing-experience-icon" aria-hidden="true">{experience.icon}</span>
+                <strong>{experience.title}</strong>
+                <span className="landing-experience-more" aria-hidden="true">＋</span>
+              </button>
             ))}
           </div>
         </section>
 
         <footer className="landing-support-footer">
-          <a href="/learning-support-software">
-            학교 도입 검토·학습지원소프트웨어 선정기준 안내
-            <span aria-hidden="true">→</span>
-          </a>
+          <nav aria-label="서비스 안내">
+            <a href="/learning-support-software">학교 도입 안내</a>
+            <span aria-hidden="true">·</span>
+            <a href="/privacy">개인정보 처리방침</a>
+            <span aria-hidden="true">·</span>
+            <a href="/terms">이용약관</a>
+          </nav>
         </footer>
       </main>
+
+      <LandingFeatureModal
+        activeExperienceId={activeExperienceId}
+        onSelect={setActiveExperienceId}
+        onClose={closeExperienceModal}
+      />
     </section>
   );
 };
