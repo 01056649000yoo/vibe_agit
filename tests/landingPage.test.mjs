@@ -34,8 +34,10 @@ test('첫 화면은 높이를 줄이고 세 경험을 스크롤 없는 3분할 �
   assert.match(styles, /\.landing-experiences-heading span\s*\{[\s\S]*font-size: 0\.82rem/);
   assert.match(styles, /\.landing-experience-button\s*\{[\s\S]*min-height: 78px[\s\S]*border-right:/);
   assert.match(styles, /\.landing-experience-icon\s*\{[\s\S]*width: 42px[\s\S]*font-size: 1\.2rem/);
-  assert.match(styles, /\.landing-experience-copy strong\s*\{[\s\S]*font-size: 0\.96rem/);
+  assert.match(styles, /\.landing-experience-copy strong\s*\{[\s\S]*font-size: 0\.96rem[\s\S]*white-space: nowrap/);
+  assert.match(styles, /\.landing-experience-button--dragon \.landing-experience-copy strong\s*\{[\s\S]*font-size: 0\.88rem[\s\S]*letter-spacing: -0\.04em/);
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.landing-experience-button\s*\{[\s\S]*min-height: 72px/);
+  assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.landing-experience-button--dragon \.landing-experience-copy strong\s*\{[\s\S]*font-size: clamp\(0\.67rem, 3vw, 0\.73rem\)/);
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.landing-experiences-heading\s*\{[\s\S]*flex-direction: column/);
   assert.match(landing, /landing-experience-copy[\s\S]*experience\.shortLead[\s\S]*experience\.shortNoun/);
   assert.match(modal, /shortLead: '쓰고 다듬는'[\s\S]*shortNoun: '글'/);
