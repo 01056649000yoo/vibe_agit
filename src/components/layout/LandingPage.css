@@ -219,15 +219,15 @@
   color: #7a7066;
   background: none;
   -webkit-text-fill-color: currentColor;
-  font-size: 0.88rem;
+  font-size: 1.02rem;
   font-weight: 900;
   letter-spacing: -0.015em;
 }
 
 .landing-experiences-heading span {
   color: #a0968d;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .landing-experiences-heading span::before {
@@ -619,20 +619,21 @@
   }
 
   .landing-experiences-heading {
-    gap: 5px;
+    flex-direction: column;
+    gap: 2px;
     margin-bottom: 7px;
   }
 
   .landing-experiences-heading h2 {
-    font-size: 0.75rem;
+    font-size: 0.86rem;
   }
 
   .landing-experiences-heading span {
-    font-size: 0.64rem;
+    font-size: 0.72rem;
   }
 
   .landing-experiences-heading span::before {
-    margin-right: 5px;
+    display: none;
   }
 
   .landing-experience-button {
