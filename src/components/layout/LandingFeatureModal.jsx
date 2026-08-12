@@ -35,9 +35,9 @@ export const landingExperiences = [
     id: 'dragon',
     icon: '🐲',
     tone: 'dragon',
-    title: '활동으로 키우는 수호룡',
-    shortLead: '활동으로 키우는',
-    shortNoun: '수호룡',
+    title: '키우고 꾸미는 드래곤 아지트',
+    shortLead: '키우고 꾸미는',
+    shortNoun: '드래곤 아지트',
     summary: '글쓰기와 학급 활동이 포인트와 성장으로 이어져, 배움의 과정을 즐겁게 계속할 수 있어요.',
     details: [
       { title: '활동이 포인트로', description: '글쓰기와 독서, 선생님이 정한 학급 활동에 참여하며 포인트를 모아요.' },

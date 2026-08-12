@@ -50,7 +50,9 @@ test('세 가지 키워드는 아지트 정체성과 상세 경험을 담은 하
   assert.deepEqual(experienceIds, ['writing', 'reading', 'dragon']);
   assert.match(modal, /쓰고 다듬는 글/);
   assert.match(modal, /읽고 채우는 책장/);
-  assert.match(modal, /활동으로 키우는 수호룡/);
+  assert.match(modal, /키우고 꾸미는 드래곤 아지트/);
+  assert.match(modal, /shortLead: '키우고 꾸미는'[\s\S]*shortNoun: '드래곤 아지트'/);
+  assert.doesNotMatch(modal, /활동으로 키우는 수호룡/);
   assert.equal(detailTitles.length, 9);
   assert.match(modal, /role="tablist"/);
   assert.match(modal, /role="dialog"[\s\S]*aria-modal="true"/);
