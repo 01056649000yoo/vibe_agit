@@ -5,12 +5,13 @@ const TodoRow = ({ icon, label, count, actionLabel, onClick, tone }) => (
     <button
         type="button"
         onClick={onClick}
+        disabled={count === 0}
+        aria-label={`${label} ${count}개${count > 0 ? `, ${actionLabel}` : ''}`}
         className="student-todo-row"
         style={{ '--todo-bg': tone.bg, '--todo-text': tone.text, '--todo-chip': tone.chip }}
     >
         <span className="student-todo-row__icon" aria-hidden="true">{icon}</span>
-        <span className="student-todo-row__label">{label} <strong>{count}개</strong></span>
-        <span className="student-todo-row__action">{actionLabel}</span>
+        <span className="student-todo-row__label"><span>{label}</span><strong>{count}개</strong></span>
     </button>
 );
 
@@ -28,35 +29,6 @@ const StudentTodoCard = ({
     onNavigate,
     onGoRewrite
 }) => {
-    const rows = [];
-    if (unstartedCount > 0) {
-        rows.push(
-            <TodoRow
-                key="unstarted" icon="✏️" label="시작 전 과제" count={unstartedCount}
-                actionLabel="쓰러 가기" tone={TONES.unstarted}
-                onClick={() => onNavigate('mission_list')}
-            />
-        );
-    }
-    if (draftCount > 0) {
-        rows.push(
-            <TodoRow
-                key="draft" icon="📝" label="작성 중인 과제" count={draftCount}
-                actionLabel="이어 쓰기" tone={TONES.draft}
-                onClick={() => onNavigate('mission_list')}
-            />
-        );
-    }
-    if (returnedCount > 0) {
-        rows.push(
-            <TodoRow
-                key="rewrite" icon="♻️" label="다시 쓸 글" count={returnedCount}
-                actionLabel="고치러 가기" tone={TONES.rewrite}
-                onClick={onGoRewrite}
-            />
-        );
-    }
-
     const total = unstartedCount + draftCount + returnedCount;
 
     return (
@@ -73,13 +45,24 @@ const StudentTodoCard = ({
 
             {loading ? (
                 <div className="student-todo-loading">할 일을 확인하고 있어요…</div>
-            ) : rows.length === 0 ? (
-                <div className="student-todo-done">
-                    <span aria-hidden="true">🎉</span>
-                    <div><strong>할 일을 모두 끝냈어요!</strong><small>읽고 싶은 책 이야기를 독서록에 남겨 볼까요?</small></div>
-                </div>
             ) : (
-                <div className="student-todo-card__rows">{rows}</div>
+                <div className="student-todo-card__rows">
+                    <TodoRow
+                        icon="✏️" label="시작 전 과제" count={unstartedCount}
+                        actionLabel="쓰러 가기" tone={TONES.unstarted}
+                        onClick={() => onNavigate('mission_list')}
+                    />
+                    <TodoRow
+                        icon="📝" label="작성 중인 과제" count={draftCount}
+                        actionLabel="이어 쓰기" tone={TONES.draft}
+                        onClick={() => onNavigate('mission_list')}
+                    />
+                    <TodoRow
+                        icon="♻️" label="다시 쓸 글" count={returnedCount}
+                        actionLabel="고치러 가기" tone={TONES.rewrite}
+                        onClick={onGoRewrite}
+                    />
+                </div>
             )}
         </motion.section>
     );

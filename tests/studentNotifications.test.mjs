@@ -28,6 +28,21 @@ test('내 글 소식과 지금 할 일과 활동 알림의 책임이 겹치지 �
     assert.doesNotMatch(dashboard, /TeacherNotifyBanner|useStudentSyncNotifications/);
 });
 
+test('지금 할 일과 활동 알림은 같은 컴팩트 높이에서 핵심 내용만 표시한다', async () => {
+    const [todo, todoCss, notificationCss] = await Promise.all([
+        read('src/components/student/StudentTodoCard.jsx'),
+        read('src/components/student/StudentTodoCard.css'),
+        read('src/modules/notifications/ActivityNotificationPanel.css')
+    ]);
+
+    assert.match(todo, /disabled=\{count === 0\}/);
+    assert.match(todo, /student-todo-card__rows/);
+    assert.doesNotMatch(todo, /student-todo-row__action|student-todo-done/);
+    assert.match(todoCss, /grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+    assert.match(todoCss, /\.student-todo-row \{[\s\S]*?min-height: 78px/);
+    assert.match(notificationCss, /\.activity-notification-panel__body \{[\s\S]*?min-height: 78px/);
+});
+
 test('활동 알림은 단일 원장·중복 방지·학생 범위 RPC 계약을 갖는다', async () => {
     const migration = await read('supabase/migrations/20261023_student_activity_notifications.sql');
 
