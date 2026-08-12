@@ -80,7 +80,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 222, 184, 0.85);
   border-radius: 22px;
-  aspect-ratio: 1723 / 520;
+  aspect-ratio: 1723 / 600;
   background: #fff5e9;
 }
 
@@ -603,7 +603,7 @@
 
   .landing-hero {
     border-radius: 17px;
-    aspect-ratio: 1723 / 500;
+    aspect-ratio: 1723 / 560;
   }
 
   .landing-promise {

@@ -25,7 +25,8 @@ test('첫 화면은 높이를 줄이고 세 경험을 스크롤 없는 3분할 �
     read('src/components/layout/LandingFeatureModal.jsx'),
   ]);
 
-  assert.match(styles, /\.landing-hero\s*\{[\s\S]*aspect-ratio: 1723 \/ 520/);
+  assert.match(styles, /\.landing-hero\s*\{[\s\S]*aspect-ratio: 1723 \/ 600/);
+  assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.landing-hero\s*\{[\s\S]*aspect-ratio: 1723 \/ 560/);
   assert.match(styles, /\.entry-card\s*\{[\s\S]*min-height: 78px/);
   assert.match(styles, /\.landing-experience-grid\s*\{[\s\S]*grid-template-columns: repeat\(3,[\s\S]*gap: 0[\s\S]*overflow: hidden/);
   assert.match(styles, /\.landing-experience-button\s*\{[\s\S]*min-height: 62px[\s\S]*border-right:/);
