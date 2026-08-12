@@ -30,6 +30,9 @@
  *   모듈은 별도 메뉴 폭을 만들지 않고 짧은 label/description만 제공한다.
  * @property {string}   [studentRoute] 학생 화면 내부 라우트 이름
  * @property {string[]} [writingMissionTypes] 이 모듈이 처리하는 글쓰기 입력 미션 유형
+ * @property {{group: 'self', label: string, icon: string, description: string, emptyMessage: string, order: number}} [communityFeed]
+ *   친구 아지트의 `자율 글` 필터 등록 정보. `writingPolicy.type`을 조회 유형 ID로 사용하며,
+ *   새 자율 글 모듈은 화면을 고치지 않고 이 계약만 선언한다.
  * @property {Array<{eventType: string, icon: string, tone: string, title: string, message: string|Function, action: 'confirm'|'rewrite'|'post'|'custom', actionLabel: string, handleAction?: Function}>} [notifications]
  *   기능 RPC가 발행하는 학생 활동 알림의 표시 계약. 공용 알림 셸은 이 목록을 자동으로 합친다.
  * @property {boolean}  [defaultEnabled]  학급 설정이 없을 때 기본 노출 여부 (기본 false)
@@ -91,6 +94,15 @@ export function validateManifest(m) {
         problems.push(`notifications.${index}.handleAction 없음`);
       }
     });
+  }
+  if (m.communityFeed) {
+    if (m.communityFeed.group !== 'self') problems.push('communityFeed.group은 self여야 함');
+    if (!m.writingPolicy?.type) problems.push('communityFeed에는 writingPolicy.type이 필요함');
+    if (!m.communityFeed.label) problems.push('communityFeed.label 없음');
+    if (!m.communityFeed.icon) problems.push('communityFeed.icon 없음');
+    if (!m.communityFeed.description) problems.push('communityFeed.description 없음');
+    if (!m.communityFeed.emptyMessage) problems.push('communityFeed.emptyMessage 없음');
+    if (!Number.isInteger(m.communityFeed.order)) problems.push('communityFeed.order는 정수여야 함');
   }
   if (m.management?.legacy !== true && m.teacherEntry && m.audience === 'student') {
     problems.push('teacherEntry가 있지만 audience가 student임');

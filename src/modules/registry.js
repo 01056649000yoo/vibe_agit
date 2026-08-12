@@ -104,3 +104,18 @@ export function getEnabledModules(enabledIds, audience) {
 export function getModule(id) {
   return manifests.find((m) => m.id === id) ?? null;
 }
+
+/** 친구 아지트의 자율 글 필터. 모듈 매니페스트 선언만 화면 계약으로 정규화한다. */
+export function getCommunityFeedSelfTypes() {
+  return manifests
+    .filter((manifest) => manifest.communityFeed?.group === 'self' && manifest.writingPolicy?.type)
+    .map((manifest) => ({
+      id: manifest.writingPolicy.type,
+      label: manifest.communityFeed.label,
+      icon: manifest.communityFeed.icon,
+      description: manifest.communityFeed.description,
+      emptyMessage: manifest.communityFeed.emptyMessage,
+      order: manifest.communityFeed.order,
+    }))
+    .sort((left, right) => left.order - right.order || left.id.localeCompare(right.id));
+}

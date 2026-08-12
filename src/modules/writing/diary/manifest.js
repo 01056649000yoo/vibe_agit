@@ -17,6 +17,14 @@ export const diaryManifest = {
     core: true,
     performance: { home: 'summary', load: 'on-open', writes: 'rpc', realtime: 'core-only', maxInitialRows: 50 },
     studentRoute: 'diaries',
+    communityFeed: {
+        group: 'self',
+        label: '일기',
+        icon: '📔',
+        description: '친구에게 공개한 우리 반 일기',
+        emptyMessage: '아직 친구에게 공개된 일기가 없어요.',
+        order: 20,
+    },
     writingPolicy: {
         type: 'diary',
         completionFlow: 'student_complete',

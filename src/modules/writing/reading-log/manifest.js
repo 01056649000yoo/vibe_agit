@@ -21,6 +21,14 @@ export const readingLogManifest = {
     core: true,
     performance: { home: 'summary', load: 'on-open', writes: 'rpc', realtime: 'core-only', maxInitialRows: 50 },
     studentRoute: 'reading_logs',
+    communityFeed: {
+        group: 'self',
+        label: '독서록',
+        icon: '📚',
+        description: '친구들이 공개한 독서록',
+        emptyMessage: '아직 친구에게 공개된 독서록이 없어요.',
+        order: 10,
+    },
     writingPolicy: {
         type: 'reading_log',
         completionFlow: 'student_complete',

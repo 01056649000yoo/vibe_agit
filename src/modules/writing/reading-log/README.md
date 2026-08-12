@@ -2,7 +2,8 @@
 
 학생 자율 글쓰기의 첫 번째 유형이다. 책 선택·초안·하루 완료 제한·보상·책장을 이 폴더가 소유한다.
 
-- 유형 등록: `manifest.js`와 `src/modules/writing/selfWritingTypes.js`
+- 유형 등록: `manifest.js`와 `src/modules/writing/selfWritingTypes.js`. 친구 아지트 자율 글 필터는 매니페스트의
+  `communityFeed` 선언으로 자동 등록한다.
 - 학생 화면: `ReadingLogPage.jsx`
 - 교사 확인: `teacher/TeacherReadingLogManager.jsx`
 - 초안 판정: `draftRules.js`

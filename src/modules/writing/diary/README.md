@@ -2,7 +2,8 @@
 
 학생 자율 글쓰기의 두 번째 유형이다. 하루 한 편, 기본 비공개, 분량·보상 정책과 교사 확인 화면을 이 폴더가 소유한다.
 
-- 유형 등록: `manifest.js`와 `src/modules/writing/selfWritingTypes.js`
+- 유형 등록: `manifest.js`와 `src/modules/writing/selfWritingTypes.js`. 친구 아지트 자율 글 필터는 매니페스트의
+  `communityFeed` 선언으로 자동 등록한다.
 - 학생 화면: `DiaryPage.jsx`
 - 교사 확인: `teacher/TeacherDiaryManager.jsx`
 

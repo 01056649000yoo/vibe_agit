@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -16,7 +16,8 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261020_writing_pdf_export.sql', 'utf8'),
     readFile('src/modules/writing/export/googleDocImageExport.js', 'utf8'),
     readFile('supabase/migrations/20261023_student_activity_notifications.sql', 'utf8'),
-    readFile('supabase/migrations/20261024_writing_reaction_profiles.sql', 'utf8')
+    readFile('supabase/migrations/20261024_writing_reaction_profiles.sql', 'utf8'),
+    readFile('supabase/migrations/20261025_class_public_writing_feed.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -120,4 +121,13 @@ test('학생 반응은 장르별 허용값을 검사하는 RPC로만 쓴다', ()
     assert.match(reactionMigration, /REVOKE ALL ON TABLE public\.writing_reaction_profile_types FROM PUBLIC, anon, authenticated/);
     assert.match(reactionMigration, /REVOKE ALL ON FUNCTION public\.toggle_my_post_reaction_v1\(UUID, TEXT\) FROM PUBLIC, anon/);
     assert.doesNotMatch(reactionMigration, /auth\.jwt|app_metadata/);
+});
+
+test('친구 공개 글 피드는 실제 학생 학급과 공개 상태를 서버에서 고정한다', () => {
+    assert.match(friendFeedMigration, /public\.auth_user_role\(\) <> 'STUDENT'/);
+    assert.match(friendFeedMigration, /post\.class_id = v_class_id/);
+    assert.match(friendFeedMigration, /post\.is_submitted IS TRUE[\s\S]*post\.visibility = 'class'/);
+    assert.match(friendFeedMigration, /CASE WHEN post\.show_original IS TRUE THEN post\.original_title ELSE NULL END/);
+    assert.match(friendFeedMigration, /REVOKE ALL ON FUNCTION public\.get_class_public_writing_feed_v1[\s\S]*PUBLIC, anon/);
+    assert.doesNotMatch(friendFeedMigration, /auth\.jwt|app_metadata/);
 });

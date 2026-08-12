@@ -6,6 +6,7 @@ import { useFriendsHideout } from './useFriendsHideout';
 import { getSelfWritingType } from '../../writing/selfWritingTypes';
 import { getMissionReactionOptions } from '../../writing/mission-types/registry';
 import { getReactionOption } from '../../writing/reactions/registry';
+import { getCommunityFeedSelfTypes } from '../../registry';
 import PostDetailModal from '../../../components/student/PostDetailModal';
 import FriendHideoutPreviewCard from './profile/FriendHideoutPreviewCard';
 
@@ -38,20 +39,38 @@ const MAIN_TABS = [
     }
 ];
 
-const FEED_TABS = [
+const FEED_GROUP_TABS = [
+    {
+        id: 'all',
+        icon: '📰',
+        title: '전체 새 글',
+        description: '우리 반 공개 글을 한 번에',
+        accent: '#00838F'
+    },
     {
         id: 'assignment',
         icon: '✍️',
-        title: '선생님 과제 최신글',
-        description: '우리 반이 제출한 과제 글'
+        title: '선생님 과제',
+        description: '우리 반이 제출한 과제 글',
+        accent: '#3949AB'
     },
     {
-        id: 'reading_log',
-        icon: '📚',
-        title: '독서록 최신글',
-        description: '친구들이 공개한 독서록'
+        id: 'self',
+        icon: '🌱',
+        title: '자율 글',
+        description: '독서록·일기와 앞으로의 자율 글',
+        accent: '#558B2F'
     }
 ];
+
+const SELF_FEED_TYPES = getCommunityFeedSelfTypes();
+
+const isMeetingPost = (post) => {
+    const mission = Array.isArray(post?.writing_missions)
+        ? post.writing_missions[0]
+        : post?.writing_missions;
+    return mission?.mission_type === 'meeting' || mission?.input_template === 'meeting';
+};
 
 // 개별 포스트 카드 컴포넌트 분리 및 memo 적용
 const PostCard = memo(({ post, isLast, lastElementRef, onClick, isMeeting, studentId, onMeetingPick }) => {
@@ -165,8 +184,9 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
     const observer = useRef();
 
     const {
-        missions, selectedMission, feedKind, posts, classmates, loading, loadingMore, hasMore, loadMore,
-        viewingPost, setViewingPost, handleMissionChange, handleFeedKindChange, handleMeetingPick,
+        missions, selectedMission, feedGroup, selfFeedType, posts, classmates, loading, loadingMore,
+        feedError, hasMore, loadMore, viewingPost, setViewingPost, handleMissionChange,
+        handleFeedGroupChange, handleSelfFeedTypeChange, retryFeed, handleMeetingPick,
         resolvedClassId
     } = useFriendsHideout(studentSession, params);
     const isMeetingMission =
@@ -175,6 +195,21 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
         ? (viewingPost.mission_id ? (viewingPost.writing_missions || selectedMission) : null)
         : selectedMission;
     const viewingReactionOptions = getMissionReactionOptions(viewingMission);
+    const activeSelfFeed = SELF_FEED_TYPES.find((type) => type.id === selfFeedType) || null;
+    const loadingMessage = selectedMission
+        ? '선택한 과제 글을 불러오는 중... ✨'
+        : feedGroup === 'all'
+            ? '우리 반 전체 새 글을 불러오는 중... 📰'
+            : feedGroup === 'self'
+                ? `${activeSelfFeed?.label || '자율 글'}을 불러오는 중... ${activeSelfFeed?.icon || '🌱'}`
+                : '우리 반 과제 글을 불러오는 중... ✨';
+    const emptyMessage = selectedMission
+        ? '아직 이 과제에 제출된 글이 없어요.'
+        : feedGroup === 'all'
+            ? '아직 친구에게 공개된 새 글이 없어요.'
+            : feedGroup === 'self'
+                ? activeSelfFeed?.emptyMessage || '아직 친구에게 공개된 자율 글이 없어요.'
+                : '아직 공개된 과제 글이 없어요.';
 
     const lastElementRef = useCallback(node => {
         if (loading || loadingMore) return;
@@ -264,7 +299,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                         <div style={{ marginBottom: '18px' }}>
                             <span style={{ color: '#5C6BC0', fontSize: '0.75rem', fontWeight: '950' }}>우리 반 새 글 탐색</span>
                             <h3 style={{ margin: '5px 0 3px', color: '#263238', fontSize: '1.25rem' }}>📰 최신 글 찾아보기</h3>
-                            <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>선생님 과제와 독서록을 나누어 각각 최신순으로 읽어요.</p>
+                            <p style={{ margin: 0, color: '#78909C', fontSize: '0.85rem' }}>전체 공개 글을 보고, 선생님 과제와 자율 글로 나누어 찾아봐요.</p>
                         </div>
                     </div>
                 ) : (
@@ -278,30 +313,30 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                 {activeMainTab === 'posts' ? (
                     <>
                         <div role="tablist" aria-label="최신 글 종류" style={{
-                            display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: '8px',
-                            marginBottom: feedKind === 'assignment' ? '14px' : '22px', padding: '6px',
+                            display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: '8px',
+                            marginBottom: feedGroup === 'all' ? '22px' : '14px', padding: '6px',
                             borderRadius: '18px', background: '#E8EDF3'
                         }}>
-                            {FEED_TABS.map((tab) => {
-                                const active = feedKind === tab.id;
+                            {FEED_GROUP_TABS.map((tab) => {
+                                const active = feedGroup === tab.id;
                                 return (
                                     <button
                                         key={tab.id}
                                         type="button"
                                         role="tab"
                                         aria-selected={active}
-                                        onClick={() => handleFeedKindChange(tab.id)}
+                                        onClick={() => handleFeedGroupChange(tab.id)}
                                         style={{
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px',
                                             minHeight: '62px', padding: '9px 10px', borderRadius: '13px', cursor: 'pointer',
-                                            border: active ? `1px solid ${tab.id === 'reading_log' ? '#7CB342' : '#5C6BC0'}` : '1px solid transparent',
+                                            border: active ? `1px solid ${tab.accent}` : '1px solid transparent',
                                             background: active ? '#FFFFFF' : 'transparent',
                                             boxShadow: active ? '0 4px 12px rgba(63,81,181,.12)' : 'none'
                                         }}
                                     >
                                         <span aria-hidden="true" style={{ fontSize: '1.2rem' }}>{tab.icon}</span>
                                         <span style={{ minWidth: 0, textAlign: 'left' }}>
-                                            <strong style={{ display: 'block', color: active ? (tab.id === 'reading_log' ? '#558B2F' : '#3949AB') : '#607D8B', fontSize: '.82rem' }}>{tab.title}</strong>
+                                            <strong style={{ display: 'block', color: active ? tab.accent : '#607D8B', fontSize: '.82rem' }}>{tab.title}</strong>
                                             {!isMobile && <small style={{ display: 'block', marginTop: '2px', color: '#90A4AE', fontSize: '.64rem' }}>{tab.description}</small>}
                                         </span>
                                     </button>
@@ -309,7 +344,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                             })}
                         </div>
 
-                        {feedKind === 'assignment' && (
+                        {feedGroup === 'assignment' && (
                             <div style={TAB_CONTAINER_STYLE} aria-label="선생님 과제별 필터">
                                 <button
                                     type="button"
@@ -327,6 +362,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                 {missions.map(m => (
                                     <button
                                         key={m.id}
+                                        type="button"
                                         onClick={() => handleMissionChange(m)}
                                         style={{
                                             padding: '10px 20px', borderRadius: '16px', border: 'none',
@@ -347,9 +383,47 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                             </div>
                         )}
 
-                        {feedKind === 'reading_log' && (
+                        {feedGroup === 'self' && (
+                            <div style={TAB_CONTAINER_STYLE} role="tablist" aria-label="자율 글 종류">
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={!selfFeedType}
+                                    onClick={() => handleSelfFeedTypeChange(null)}
+                                    style={{
+                                        padding: '10px 18px', borderRadius: '16px', border: 'none',
+                                        background: !selfFeedType ? '#558B2F' : 'white',
+                                        color: !selfFeedType ? 'white' : '#607D8B', fontWeight: 'bold',
+                                        whiteSpace: 'nowrap', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                                    }}
+                                >
+                                    🌱 모든 자율 글
+                                </button>
+                                {SELF_FEED_TYPES.map((type) => (
+                                    <button
+                                        key={type.id}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={selfFeedType === type.id}
+                                        onClick={() => handleSelfFeedTypeChange(type.id)}
+                                        style={{
+                                            padding: '10px 18px', borderRadius: '16px', border: 'none',
+                                            background: selfFeedType === type.id ? '#558B2F' : 'white',
+                                            color: selfFeedType === type.id ? 'white' : '#607D8B', fontWeight: 'bold',
+                                            whiteSpace: 'nowrap', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                                        }}
+                                    >
+                                        {type.icon} {type.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {feedGroup === 'self' && (
                             <div style={{ margin: '-8px 0 20px', padding: '12px 16px', border: '1px solid #DCEDC8', borderRadius: '16px', background: '#F7FBEF', color: '#558B2F', fontSize: '.8rem', fontWeight: 800 }}>
-                                📚 친구들이 공개한 독서록을 가장 최근 글부터 보여줘요.
+                                {activeSelfFeed
+                                    ? `${activeSelfFeed.icon} ${activeSelfFeed.description}. 가장 최근 글부터 보여줘요.`
+                                    : '🌱 친구들이 공개한 독서록·일기와 앞으로 추가될 자율 글을 함께 보여줘요.'}
                             </div>
                         )}
 
@@ -368,18 +442,21 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
 
                         <div style={GRID_STYLE}>
                             {loading ? (
-                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px' }}>
-                                    {feedKind === 'reading_log' ? '우리 반 독서록을 불러오는 중... 📚' : '우리 반 과제 글을 불러오는 중... ✨'}
+                                <div role="status" aria-live="polite" style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px' }}>
+                                    {loadingMessage}
+                                </div>
+                            ) : feedError ? (
+                                <div role="alert" style={{ gridColumn: '1/-1', textAlign: 'center', padding: '44px', background: '#FFF5F5', border: '1px solid #FFCDD2', borderRadius: '24px', color: '#C62828' }}>
+                                    <p style={{ margin: '0 0 14px', fontWeight: 800 }}>{feedError}</p>
+                                    <button type="button" onClick={retryFeed} style={{ padding: '9px 16px', border: 'none', borderRadius: '12px', background: '#C62828', color: 'white', fontWeight: 900, cursor: 'pointer' }}>
+                                        다시 불러오기
+                                    </button>
                                 </div>
                             ) : posts.length === 0 ? (
                                 <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px', background: 'white', borderRadius: '24px' }}>
                                     <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🌵</div>
                                     <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>
-                                        {selectedMission
-                                            ? '아직 이 과제에 제출된 글이 없어요.'
-                                            : feedKind === 'reading_log'
-                                                ? '아직 친구에게 공개된 독서록이 없어요.'
-                                                : '아직 공개된 과제 글이 없어요.'}
+                                        {emptyMessage}
                                     </p>
                                 </div>
                             ) : (
@@ -391,7 +468,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                             isLast={index === posts.length - 1}
                                             lastElementRef={lastElementRef}
                                             onClick={setViewingPost}
-                                            isMeeting={isMeetingMission}
+                                            isMeeting={isMeetingPost(post)}
                                             studentId={studentSession.id}
                                             onMeetingPick={handleMeetingPick}
                                         />

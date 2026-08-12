@@ -7,31 +7,32 @@ const getClassmatesCacheKey = (classId, studentId) => `classmates_${classId}_${s
 
 // 화면에 다시 들어올 때 너무 잦게 다시 부르지 않도록 두는 최소 간격.
 const HIDEOUT_REFRESH_COOLDOWN_MS = 5000;
+const PAGE_SIZE = 10;
 
 export const useFriendsHideout = (studentSession, params) => {
     // 공방에서 바꾼 장착 상태가 친구 화면에 오래 남지 않게 짧게 유지한다.
     const CLASSMATES_CACHE_MS = 30000;
     const [missions, setMissions] = useState([]);
     const [selectedMission, setSelectedMission] = useState(null);
-    const [feedKind, setFeedKind] = useState('assignment');
+    const [feedGroup, setFeedGroup] = useState('all');
+    const [selfFeedType, setSelfFeedType] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [feedError, setFeedError] = useState('');
     const [viewingPost, setViewingPost] = useState(null);
     const [classmates, setClassmates] = useState([]);
     const [resolvedClassId, setResolvedClassId] = useState(studentSession.classId || studentSession.class_id || null);
-    const pageRef = useRef(0);
+    const cursorRef = useRef(null);
     const [hasMore, setHasMore] = useState(true);
 
     // [Realtime] 구독 콜백이 최신 값을 읽되, deps로 인한 재구독은 피하기 위한 ref
     const selectedMissionIdRef = useRef(null);
-    const feedKindRef = useRef('assignment');
+    const feedSelectionRef = useRef({ group: 'all', selfType: null, missionId: null });
     const normalizePostsRef = useRef(null);
     const hydratePostsRef = useRef(null);
     const lastHideoutRefreshAtRef = useRef(0);
     const postsRequestIdRef = useRef(0);
-
-    const PAGE_SIZE = 10;
 
     const normalizePostsWithAuthors = useCallback(async (rawPosts = [], classIdOverride = null) => {
         if (!Array.isArray(rawPosts) || rawPosts.length === 0) {
@@ -267,117 +268,67 @@ export const useFriendsHideout = (studentSession, params) => {
         }
     }, [resolveClassId, studentSession.id]);
 
-    const fetchPosts = useCallback(async (missionId, isAppend = false) => {
+    const fetchFeed = useCallback(async (selection = feedSelectionRef.current, isAppend = false) => {
         const requestId = ++postsRequestIdRef.current;
+        const group = ['all', 'assignment', 'self'].includes(selection?.group) ? selection.group : 'all';
+        const selfType = group === 'self' ? (selection?.selfType || null) : null;
+        const missionId = group === 'assignment' ? (selection?.missionId || null) : null;
         if (!isAppend) {
             setLoading(true);
-            pageRef.current = 0;
+            setFeedError('');
+            cursorRef.current = null;
         } else {
             setLoadingMore(true);
         }
 
-        const currentOffset = isAppend ? (pageRef.current + 1) * PAGE_SIZE : 0;
-
         try {
-            const classId = await resolveClassId();
-            if (!classId || !missionId) {
-                setPosts([]);
-                return;
-            }
-            const { data, error } = await supabase
-                .from('student_posts')
-                .select('id, title, content, student_id, mission_id, created_at, updated_at, char_count, is_confirmed, writing_context, self_writing_type, visibility, structured_content, show_original, original_title, original_content')
-                .eq('class_id', classId)
-                .eq('mission_id', missionId)
-                .eq('is_submitted', true)
-                .eq('visibility', 'class')
-                .order('created_at', { ascending: false })
-                .range(currentOffset, currentOffset + PAGE_SIZE - 1);
+            const cursor = isAppend ? cursorRef.current : null;
+            const { data, error } = await supabase.rpc('get_class_public_writing_feed_v1', {
+                p_group: group,
+                p_self_type: selfType,
+                p_mission_id: missionId,
+                p_limit: PAGE_SIZE,
+                p_cursor_at: cursor?.at || null,
+                p_cursor_id: cursor?.id || null,
+            });
 
             if (error) throw error;
-            const hydrator = hydratePostsRef.current;
-            const normalizedPosts = hydrator ? await hydrator(data || [], classId) : (data || []);
             if (requestId !== postsRequestIdRef.current) return;
+            const nextItems = Array.isArray(data?.items) ? data.items : [];
 
             if (isAppend) {
-                setPosts(prev => [...prev, ...normalizedPosts]);
-                pageRef.current += 1;
+                setPosts((current) => [...current, ...nextItems]);
             } else {
-                setPosts(normalizedPosts);
+                setPosts(nextItems);
             }
-
-            setHasMore(data?.length === PAGE_SIZE);
+            const nextCursor = data?.has_more && data?.next_cursor_at && data?.next_cursor_id
+                ? { at: data.next_cursor_at, id: data.next_cursor_id }
+                : null;
+            cursorRef.current = nextCursor;
+            setHasMore(Boolean(nextCursor));
         } catch (err) {
-            console.error('친구 글 로드 실패:', err.message);
+            console.error('우리 반 공개 글 피드 로드 실패:', err.message);
+            if (requestId === postsRequestIdRef.current) {
+                if (isAppend) {
+                    setHasMore(false);
+                } else {
+                    setFeedError('우리 반 공개 글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+                    setPosts([]);
+                    setHasMore(false);
+                }
+            }
         } finally {
             if (requestId === postsRequestIdRef.current) {
                 setLoading(false);
                 setLoadingMore(false);
             }
         }
-    }, [resolveClassId]);
-
-    const fetchRecentPosts = useCallback(async (kind = 'assignment', isAppend = false) => {
-        const requestId = ++postsRequestIdRef.current;
-        const normalizedKind = kind === 'reading_log' ? 'reading_log' : 'assignment';
-        if (!isAppend) {
-            setLoading(true);
-            pageRef.current = 0;
-        } else {
-            setLoadingMore(true);
-        }
-
-        const currentOffset = isAppend ? (pageRef.current + 1) * PAGE_SIZE : 0;
-        try {
-            const classId = await resolveClassId();
-            if (!classId) {
-                setPosts([]);
-                return;
-            }
-            let query = supabase
-                .from('student_posts')
-                .select('id, title, content, student_id, mission_id, created_at, updated_at, char_count, is_confirmed, writing_context, self_writing_type, visibility, structured_content, show_original, original_title, original_content')
-                .eq('class_id', classId)
-                .eq('is_submitted', true)
-                .eq('visibility', 'class');
-
-            query = normalizedKind === 'reading_log'
-                ? query
-                    .eq('writing_context', 'self')
-                    .eq('self_writing_type', 'reading_log')
-                : query.not('mission_id', 'is', null);
-
-            const { data, error } = await query
-                .order('created_at', { ascending: false })
-                .range(currentOffset, currentOffset + PAGE_SIZE - 1);
-
-            if (error) throw error;
-            const hydrator = hydratePostsRef.current;
-            const normalizedPosts = hydrator ? await hydrator(data || [], classId) : (data || []);
-            if (requestId !== postsRequestIdRef.current) return;
-
-            if (isAppend) {
-                setPosts((current) => [...current, ...normalizedPosts]);
-                pageRef.current += 1;
-            } else {
-                setPosts(normalizedPosts);
-            }
-            setHasMore(data?.length === PAGE_SIZE);
-        } catch (err) {
-            console.error(`${normalizedKind === 'reading_log' ? '독서록' : '과제'} 최신 글 로드 실패:`, err.message);
-        } finally {
-            if (requestId === postsRequestIdRef.current) {
-                setLoading(false);
-                setLoadingMore(false);
-            }
-        }
-    }, [resolveClassId]);
+    }, []);
 
     const loadMore = useCallback(() => {
-        if (loadingMore || !hasMore) return;
-        if (selectedMission) fetchPosts(selectedMission.id, true);
-        else fetchRecentPosts(feedKindRef.current, true);
-    }, [loadingMore, hasMore, selectedMission, fetchPosts, fetchRecentPosts]);
+        if (loadingMore || loading || !hasMore) return;
+        fetchFeed(feedSelectionRef.current, true);
+    }, [loadingMore, loading, hasMore, fetchFeed]);
 
     const fetchMissions = useCallback(async (forceRefresh = false) => {
         setLoading(true);
@@ -415,29 +366,32 @@ export const useFriendsHideout = (studentSession, params) => {
                     data.find(m => m.id === params?.missionId);
 
                 if (nextMission) {
-                    feedKindRef.current = 'assignment';
-                    setFeedKind('assignment');
+                    const nextSelection = { group: 'assignment', selfType: null, missionId: nextMission.id };
+                    feedSelectionRef.current = nextSelection;
+                    setFeedGroup('assignment');
+                    setSelfFeedType(null);
                     selectedMissionIdRef.current = nextMission.id;
                     setSelectedMission(nextMission);
-                    await fetchPosts(nextMission.id);
+                    await fetchFeed(nextSelection);
                 } else {
                     selectedMissionIdRef.current = null;
                     setSelectedMission(null);
-                    await fetchRecentPosts(feedKindRef.current);
+                    await fetchFeed(feedSelectionRef.current);
                 }
             } else {
                 setSelectedMission(null);
-                await fetchRecentPosts(feedKindRef.current);
+                await fetchFeed(feedSelectionRef.current);
             }
         } catch (err) {
             console.error('미션 로드 실패:', err.message);
+            setFeedError('우리 반 공개 글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
         } finally {
             setLoading(false);
         }
-    }, [resolveClassId, fetchPosts, fetchRecentPosts, params?.missionId]);
+    }, [resolveClassId, fetchFeed, params?.missionId]);
 
     const handleMeetingPick = useCallback(async (postId) => {
-        if (!postId || !studentSession.id || !selectedMission?.id) return false;
+        if (!postId || !studentSession.id) return false;
 
         try {
             const classId = await resolveClassId();
@@ -462,7 +416,7 @@ export const useFriendsHideout = (studentSession, params) => {
             console.error('회의 안건 선택 실패:', err.message);
             return false;
         }
-    }, [resolveClassId, selectedMission?.id, studentSession.id]);
+    }, [resolveClassId, studentSession.id]);
 
     const handleInitialPost = useCallback(async (postId) => {
         try {
@@ -583,39 +537,61 @@ export const useFriendsHideout = (studentSession, params) => {
         // selectedMission.id / normalizePostsWithAuthors 변경 시 재등록하지 않도록 ref 사용.
     }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, fetchMissions, fetchClassmates]);
 
-    const handleMissionChange = (mission) => {
-        feedKindRef.current = 'assignment';
-        setFeedKind('assignment');
+    const handleMissionChange = useCallback((mission) => {
+        const nextSelection = { group: 'assignment', selfType: null, missionId: mission?.id || null };
+        feedSelectionRef.current = nextSelection;
+        setFeedGroup('assignment');
+        setSelfFeedType(null);
         selectedMissionIdRef.current = mission?.id || null;
         setSelectedMission(mission || null);
-        if (mission?.id) fetchPosts(mission.id);
-        else fetchRecentPosts('assignment');
-    };
+        fetchFeed(nextSelection);
+    }, [fetchFeed]);
 
-    const handleFeedKindChange = (kind) => {
-        const normalizedKind = kind === 'reading_log' ? 'reading_log' : 'assignment';
-        feedKindRef.current = normalizedKind;
-        setFeedKind(normalizedKind);
+    const handleFeedGroupChange = useCallback((group) => {
+        const normalizedGroup = ['all', 'assignment', 'self'].includes(group) ? group : 'all';
+        const nextSelection = { group: normalizedGroup, selfType: null, missionId: null };
+        feedSelectionRef.current = nextSelection;
+        setFeedGroup(normalizedGroup);
+        setSelfFeedType(null);
         selectedMissionIdRef.current = null;
         setSelectedMission(null);
-        fetchRecentPosts(normalizedKind);
-    };
+        fetchFeed(nextSelection);
+    }, [fetchFeed]);
+
+    const handleSelfFeedTypeChange = useCallback((type) => {
+        const normalizedType = type || null;
+        const nextSelection = { group: 'self', selfType: normalizedType, missionId: null };
+        feedSelectionRef.current = nextSelection;
+        setFeedGroup('self');
+        setSelfFeedType(normalizedType);
+        selectedMissionIdRef.current = null;
+        setSelectedMission(null);
+        fetchFeed(nextSelection);
+    }, [fetchFeed]);
+
+    const retryFeed = useCallback(() => {
+        fetchFeed(feedSelectionRef.current);
+    }, [fetchFeed]);
 
     return {
         missions,
         selectedMission,
-        feedKind,
+        feedGroup,
+        selfFeedType,
         posts,
         classmates,
         resolvedClassId,   // 친구 서재 등 학급 범위 조회에 쓴다
         loading,
         loadingMore,
+        feedError,
         hasMore,
         loadMore,
         viewingPost,
         setViewingPost,
         handleMissionChange,
-        handleFeedKindChange,
+        handleFeedGroupChange,
+        handleSelfFeedTypeChange,
+        retryFeed,
         handleMeetingPick
     };
 };
