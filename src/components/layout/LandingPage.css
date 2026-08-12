@@ -41,41 +41,6 @@
   box-shadow: 0 24px 58px rgba(139, 104, 65, 0.13);
 }
 
-.landing-brand-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 4px 10px;
-}
-
-.landing-brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
-  border-radius: 13px;
-  background: #fff0cf;
-  font-size: 1.2rem;
-}
-
-.landing-brand-row div {
-  display: grid;
-  gap: 1px;
-}
-
-.landing-brand-row strong {
-  color: #2f2922;
-  font-size: 1rem;
-  font-weight: 900;
-}
-
-.landing-brand-row div span {
-  color: #776b60;
-  font-size: 0.76rem;
-}
-
 .landing-hero {
   overflow: hidden;
   border: 1px solid rgba(255, 222, 184, 0.85);
@@ -585,20 +550,6 @@
   .landing-card {
     padding: 10px;
     border-radius: 23px;
-  }
-
-  .landing-brand-row {
-    padding: 1px 2px 7px;
-  }
-
-  .landing-brand-row div span {
-    display: none;
-  }
-
-  .landing-brand-mark {
-    width: 37px;
-    height: 37px;
-    flex-basis: 37px;
   }
 
   .landing-hero {

@@ -33,14 +33,6 @@ const LandingPage = ({ onStudentLoginClick }) => {
       <div className="landing-halo landing-halo-right" aria-hidden="true" />
 
       <main className="landing-card">
-        <header className="landing-brand-row">
-          <span className="landing-brand-mark" aria-hidden="true">✏️</span>
-          <div>
-            <strong>끄적끄적 아지트</strong>
-            <span>글쓰기로 생각이 자라는 우리 반 공간</span>
-          </div>
-        </header>
-
         <section className="landing-hero" aria-label="끄적끄적 아지트 소개">
           <img
             className="landing-hero-image"
