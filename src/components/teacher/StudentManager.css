@@ -70,11 +70,11 @@
     }
 }
 
-/* 작업 7종은 화면 폭과 무관하게 같은 행을 유지한다. */
+/* 작업 8종은 화면 폭과 무관하게 같은 행을 유지한다. */
 .student-action-grid {
     container: student-actions / inline-size;
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(8, minmax(0, 1fr));
     align-items: center;
     gap: clamp(2px, 0.35vw, 5px);
     width: 100%;

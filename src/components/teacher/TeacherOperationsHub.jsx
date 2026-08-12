@@ -3,6 +3,7 @@ import React, { lazy, Suspense } from 'react';
 const RecentActivity = lazy(() => import('./RecentActivity'));
 const ClassAnalysis = lazy(() => import('./ClassAnalysis'));
 const TeacherCommentManager = lazy(() => import('./TeacherCommentManager'));
+const TeacherStudentAgitViewer = lazy(() => import('./TeacherStudentAgitViewer'));
 
 const PanelLoading = ({ children }) => (
     <div role="status" style={{ minHeight: '180px', display: 'grid', placeItems: 'center', color: '#64748B', fontWeight: '700' }}>{children}</div>
@@ -17,8 +18,16 @@ const cardStyle = (isMobile) => ({
     boxShadow: '0 3px 12px rgba(15, 23, 42, 0.04)'
 });
 
-/** 학급 전체 흐름만 담당한다. 학생 개인 정보·코드·포인트 관리는 학생 탭에 둔다. */
-const TeacherOperationsHub = ({ activeClass, isMobile, section, setSelectedActivityPost, onNavigate }) => {
+/** 학급 운영 흐름과 학생 아지트 읽기 전용 보기를 담당한다. 개인 정보·코드·포인트 변경은 학생 탭에 둔다. */
+const TeacherOperationsHub = ({
+    activeClass,
+    isMobile,
+    section,
+    setSelectedActivityPost,
+    onNavigate,
+    navigationTarget,
+    onNavigationHandled
+}) => {
     const classId = activeClass?.id;
     if (!classId) return null;
 
@@ -27,6 +36,21 @@ const TeacherOperationsHub = ({ activeClass, isMobile, section, setSelectedActiv
             <section role="tabpanel" aria-label="학생 댓글 관리" style={cardStyle(isMobile)}>
                 <Suspense fallback={<PanelLoading>학생 댓글을 모으는 중... 🗨️</PanelLoading>}>
                     <TeacherCommentManager activeClass={activeClass} />
+                </Suspense>
+            </section>
+        );
+    }
+
+    if (section === 'student-agits') {
+        return (
+            <section role="tabpanel" aria-label="학생 아지트 보기" style={cardStyle(isMobile)}>
+                <Suspense fallback={<PanelLoading>학생 아지트를 준비하는 중... 🏡</PanelLoading>}>
+                    <TeacherStudentAgitViewer
+                        activeClass={activeClass}
+                        isMobile={isMobile}
+                        navigationTarget={navigationTarget}
+                        onNavigationHandled={onNavigationHandled}
+                    />
                 </Suspense>
             </section>
         );

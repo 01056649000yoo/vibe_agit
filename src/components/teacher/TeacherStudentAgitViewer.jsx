@@ -1,0 +1,365 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Button from '../common/Button';
+import TeacherGuideButton from './TeacherGuideButton';
+import { classKey, dataCache } from '../../lib/cache';
+import { supabase } from '../../lib/supabaseClient';
+import DragonHideoutScene from '../../modules/game/dragon/DragonHideoutScene';
+import {
+    getDragonGrowthFromWriterLevel,
+    getDragonStage,
+    getReaderDragonEffect
+} from '../../modules/game/dragon/presentation';
+import { getReaderLevel, getWriterLevel } from '../../constants/writerLevels';
+import {
+    FREE_WRITING_TYPE,
+    SELF_WRITING_TYPES,
+    getSelfWritingType
+} from '../../modules/writing/selfWritingTypes';
+import './TeacherStudentAgitViewer.css';
+
+const OVERVIEW_TTL_MS = 60000;
+const SHELF_TTL_MS = 30000;
+const SHELF_LIMIT = 60;
+
+const SHELF_SECTIONS = [
+    {
+        id: 'assignment', label: '과제 책장', icon: '📝', alwaysVisible: true,
+        match: (post) => post.writing_context !== 'self'
+    },
+    {
+        id: 'reading', label: SELF_WRITING_TYPES.reading_log.shelfTabLabel, icon: SELF_WRITING_TYPES.reading_log.icon, alwaysVisible: true,
+        match: (post) => getSelfWritingType(post)?.id === 'reading_log'
+    },
+    {
+        id: 'diary', label: SELF_WRITING_TYPES.diary.shelfTabLabel, icon: SELF_WRITING_TYPES.diary.icon, alwaysVisible: true,
+        match: (post) => getSelfWritingType(post)?.id === 'diary'
+    },
+    {
+        id: 'free', label: FREE_WRITING_TYPE.shelfTabLabel, icon: FREE_WRITING_TYPE.icon, alwaysVisible: false,
+        match: (post) => getSelfWritingType(post)?.id === 'free'
+    }
+];
+
+const formatNumber = (value) => Number(value || 0).toLocaleString('ko-KR');
+
+const normalizeStudent = (raw, pointMap) => {
+    const petData = raw?.pet_data || {};
+    const writer = getWriterLevel(
+        raw?.writer_total_chars,
+        raw?.writer_completed_posts,
+        raw?.writer_level_override
+    );
+    const reader = getReaderLevel(raw?.reader_score, raw?.reader_level_override);
+
+    return {
+        ...raw,
+        id: raw?.student_id,
+        petData,
+        writer,
+        reader,
+        dragon: getDragonStage(writer.level, petData.species),
+        growth: getDragonGrowthFromWriterLevel(writer),
+        readerEffect: getReaderDragonEffect(reader.level),
+        totalPoints: Number(pointMap.get(raw?.student_id) || 0),
+        writerPosts: Number(raw?.writer_completed_posts || 0),
+        writerChars: Number(raw?.writer_total_chars || 0),
+        careerPosts: Number(raw?.career_posts || 0),
+        careerChars: Number(raw?.career_chars || 0),
+        readerScore: Number(raw?.reader_score || 0)
+    };
+};
+
+const TeacherStudentAgitViewer = ({
+    activeClass,
+    isMobile,
+    navigationTarget,
+    onNavigationHandled
+}) => {
+    const classId = activeClass?.id;
+    const [students, setStudents] = useState([]);
+    const [selectedStudentId, setSelectedStudentId] = useState('');
+    const [search, setSearch] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [shelf, setShelf] = useState([]);
+    const [shelfLoading, setShelfLoading] = useState(false);
+    const [shelfError, setShelfError] = useState('');
+    const [activeShelfId, setActiveShelfId] = useState('assignment');
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const overviewKey = useMemo(
+        () => classKey(classId, 'teacher-student-agit-overview'),
+        [classId]
+    );
+
+    const loadStudents = useCallback(async (forceRefresh = false) => {
+        if (!classId) return;
+        if (forceRefresh) dataCache.invalidate(overviewKey);
+
+        setLoading(true);
+        setErrorMessage('');
+        try {
+            const payload = await dataCache.get(overviewKey, async () => {
+                const [dragonResult, pointResult] = await Promise.all([
+                    supabase.rpc('get_teacher_dragon_growth_dashboard', { p_class_id: classId }),
+                    supabase
+                        .from('students')
+                        .select('id, total_points')
+                        .eq('class_id', classId)
+                        .is('deleted_at', null)
+                        .order('name')
+                        .limit(100)
+                ]);
+
+                if (dragonResult.error) throw dragonResult.error;
+                if (pointResult.error) throw pointResult.error;
+                return {
+                    dragonDashboard: dragonResult.data || {},
+                    points: pointResult.data || []
+                };
+            }, OVERVIEW_TTL_MS);
+
+            const pointMap = new Map(payload.points.map((student) => [student.id, student.total_points]));
+            const normalized = (payload.dragonDashboard.students || [])
+                .slice(0, 100)
+                .map((student) => normalizeStudent(student, pointMap));
+
+            setStudents(normalized);
+            setSelectedStudentId((current) => (
+                normalized.some((student) => student.id === current)
+                    ? current
+                    : (normalized[0]?.id || '')
+            ));
+        } catch (error) {
+            console.error('학생 아지트 목록 조회 실패:', error.message);
+            setStudents([]);
+            setErrorMessage('학생 아지트를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        } finally {
+            setLoading(false);
+        }
+    }, [classId, overviewKey]);
+
+    useEffect(() => {
+        const timerId = window.setTimeout(() => loadStudents(), 0);
+        return () => window.clearTimeout(timerId);
+    }, [loadStudents]);
+
+    useEffect(() => {
+        if (navigationTarget?.kind !== 'student-agit' || !navigationTarget.studentId) return;
+        setSelectedStudentId(navigationTarget.studentId);
+        if (navigationTarget.requestId) onNavigationHandled?.(navigationTarget.requestId);
+    }, [navigationTarget, onNavigationHandled]);
+
+    useEffect(() => {
+        if (!classId || !selectedStudentId) {
+            setShelf([]);
+            return undefined;
+        }
+
+        let active = true;
+        const shelfKey = classKey(classId, 'teacher-student-agit-shelf', { student: selectedStudentId });
+        const timerId = window.setTimeout(async () => {
+            setShelfLoading(true);
+            setShelfError('');
+            try {
+                const rows = await dataCache.get(shelfKey, async () => {
+                    const { data, error } = await supabase
+                        .from('student_posts')
+                        .select('id, title, writing_context, self_writing_type, char_count, visibility, created_at, updated_at')
+                        .eq('class_id', classId)
+                        .eq('student_id', selectedStudentId)
+                        .eq('is_submitted', true)
+                        .order('created_at', { ascending: false })
+                        .limit(SHELF_LIMIT);
+                    if (error) throw error;
+                    return data || [];
+                }, SHELF_TTL_MS);
+
+                if (active) setShelf(rows);
+            } catch (error) {
+                console.error('학생 아지트 책장 조회 실패:', error.message);
+                if (active) {
+                    setShelf([]);
+                    setShelfError('이 학생의 책장을 불러오지 못했습니다.');
+                }
+            } finally {
+                if (active) setShelfLoading(false);
+            }
+        }, 0);
+
+        return () => {
+            active = false;
+            window.clearTimeout(timerId);
+        };
+    }, [classId, selectedStudentId, refreshKey]);
+
+    const selectedStudent = useMemo(
+        () => students.find((student) => student.id === selectedStudentId) || null,
+        [selectedStudentId, students]
+    );
+    const filteredStudents = useMemo(() => {
+        const query = search.trim().toLocaleLowerCase('ko-KR');
+        return students.filter((student) => !query || student.name.toLocaleLowerCase('ko-KR').includes(query));
+    }, [search, students]);
+    const shelfSections = useMemo(() => SHELF_SECTIONS.map((section) => ({
+        ...section,
+        posts: shelf.filter(section.match)
+    })).filter((section) => section.alwaysVisible || section.posts.length > 0), [shelf]);
+    const activeShelf = shelfSections.find((section) => section.id === activeShelfId) || shelfSections[0];
+
+    const refresh = () => {
+        if (classId && selectedStudentId) {
+            dataCache.invalidate(classKey(classId, 'teacher-student-agit-shelf', { student: selectedStudentId }));
+        }
+        setRefreshKey((current) => current + 1);
+        loadStudents(true);
+    };
+
+    if (!classId) return null;
+
+    return (
+        <div className={`teacher-student-agit${isMobile ? ' is-mobile' : ''}`}>
+            <header className="teacher-student-agit__header">
+                <div>
+                    <span>CLASS HIDEOUTS</span>
+                    <h2>🏡 학생 아지트 보기</h2>
+                    <p>학생이 꾸민 공간과 성장·책장을 읽기 전용으로 확인합니다.</p>
+                </div>
+                <div className="teacher-student-agit__header-actions">
+                    <TeacherGuideButton tabId="student-agits" variant="help" />
+                    <Button type="button" variant="ghost" size="sm" onClick={refresh} disabled={loading}>새로고침</Button>
+                </div>
+            </header>
+
+            {loading ? (
+                <div className="teacher-student-agit__state" role="status">학생 아지트를 모으는 중입니다… 🏡</div>
+            ) : errorMessage ? (
+                <div className="teacher-student-agit__state is-error">
+                    <strong>{errorMessage}</strong>
+                    <Button type="button" variant="outline" onClick={() => loadStudents(true)}>다시 시도</Button>
+                </div>
+            ) : students.length === 0 ? (
+                <div className="teacher-student-agit__state">등록된 학생이 없습니다.</div>
+            ) : (
+                <div className="teacher-student-agit__layout">
+                    <aside className="teacher-student-agit__roster" aria-label="학생 아지트 목록">
+                        <div className="teacher-student-agit__roster-heading">
+                            <div><strong>우리 반 아지트</strong><span>{students.length}명</span></div>
+                            <input
+                                value={search}
+                                onChange={(event) => setSearch(event.target.value)}
+                                placeholder="학생 이름 찾기"
+                                aria-label="학생 아지트 이름 검색"
+                            />
+                        </div>
+                        <div className="teacher-student-agit__student-list">
+                            {filteredStudents.map((student) => (
+                                <button
+                                    key={student.id}
+                                    type="button"
+                                    className={selectedStudentId === student.id ? 'is-selected' : ''}
+                                    onClick={() => setSelectedStudentId(student.id)}
+                                >
+                                    <span className="teacher-student-agit__student-icon" aria-hidden="true">🏡</span>
+                                    <span>
+                                        <strong>{student.name}</strong>
+                                        <small>{student.writer.emoji} {student.writer.name} · {formatNumber(student.totalPoints)}P</small>
+                                    </span>
+                                    <i aria-hidden="true">›</i>
+                                </button>
+                            ))}
+                            {filteredStudents.length === 0 && <p>조건에 맞는 학생이 없습니다.</p>}
+                        </div>
+                    </aside>
+
+                    {selectedStudent && (
+                        <main className="teacher-student-agit__preview" aria-label={`${selectedStudent.name} 학생 아지트`}>
+                            <div className="teacher-student-agit__preview-heading">
+                                <div>
+                                    <span>교사 읽기 전용</span>
+                                    <h3>{selectedStudent.name}의 아지트</h3>
+                                </div>
+                                <small>학생의 글·포인트·꾸미기는 이 화면에서 바뀌지 않습니다.</small>
+                            </div>
+
+                            <section className="teacher-student-agit__growth" aria-label={`${selectedStudent.name} 성장 상태`}>
+                                <div className="teacher-student-agit__growth-top">
+                                    <div><small>나의 성장 상태</small><strong>{selectedStudent.name}의 칭호</strong></div>
+                                    <div className="teacher-student-agit__points"><span>★</span><div><small>보유 포인트</small><strong>{formatNumber(selectedStudent.totalPoints)}P</strong></div></div>
+                                </div>
+                                <div className="teacher-student-agit__badges">
+                                    <div><span>{selectedStudent.writer.emoji}</span><small>작가 칭호</small><strong>Lv.{selectedStudent.writer.level} {selectedStudent.writer.name}</strong></div>
+                                    <div><span>{selectedStudent.reader.emoji}</span><small>독자 칭호</small><strong>R{selectedStudent.reader.level} {selectedStudent.reader.name}</strong></div>
+                                </div>
+                            </section>
+
+                            <section className="teacher-student-agit__room" aria-label="학생이 꾸민 수호룡 방">
+                                <div className="teacher-student-agit__section-heading">
+                                    <div><small>DRAGON HIDEOUT</small><h4>작가 수호룡과 아지트 꾸미기</h4></div>
+                                    <span>{selectedStudent.petData.name || '작가 수호룡'} · {selectedStudent.readerEffect.name}</span>
+                                </div>
+                                <DragonHideoutScene
+                                    petData={selectedStudent.petData}
+                                    dragon={selectedStudent.dragon}
+                                    readerLevel={selectedStudent.reader.level}
+                                    ownerName={selectedStudent.name}
+                                    eager
+                                />
+                                <div className="teacher-student-agit__stats">
+                                    <div><small>이번 학기 완성 글</small><strong>{formatNumber(selectedStudent.writerPosts)}편</strong></div>
+                                    <div><small>이번 학기 글자</small><strong>{formatNumber(selectedStudent.writerChars)}자</strong></div>
+                                    <div><small>전체 보관 기록</small><strong>{formatNumber(selectedStudent.careerPosts)}편</strong></div>
+                                    <div><small>독자 활동</small><strong>{formatNumber(selectedStudent.readerScore)}점</strong></div>
+                                </div>
+                            </section>
+
+                            <section className="teacher-student-agit__shelf" aria-label={`${selectedStudent.name}의 서재`}>
+                                <div className="teacher-student-agit__section-heading">
+                                    <div><small>WRITING SHELF</small><h4>📖 내 서재</h4></div>
+                                    <span>최근 완성 글 {shelf.length}편{ shelf.length === SHELF_LIMIT ? '까지' : ''}</span>
+                                </div>
+                                <div className="teacher-student-agit__shelf-tabs" role="tablist" aria-label="학생 책장 종류">
+                                    {shelfSections.map((section) => (
+                                        <button
+                                            key={section.id}
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={activeShelf?.id === section.id}
+                                            className={activeShelf?.id === section.id ? 'is-active' : ''}
+                                            onClick={() => setActiveShelfId(section.id)}
+                                        >
+                                            {section.icon} {section.label} <strong>{section.posts.length}</strong>
+                                        </button>
+                                    ))}
+                                </div>
+                                {shelfLoading ? (
+                                    <div className="teacher-student-agit__shelf-state">책장을 정리하는 중…</div>
+                                ) : shelfError ? (
+                                    <div className="teacher-student-agit__shelf-state is-error">{shelfError}</div>
+                                ) : activeShelf?.posts.length ? (
+                                    <div className="teacher-student-agit__books" role="list">
+                                        {activeShelf.posts.map((post, index) => (
+                                            <article
+                                                key={post.id}
+                                                role="listitem"
+                                                className={`teacher-student-agit__book is-variant-${index % 4}`}
+                                                title={`${post.title || '제목 없는 글'} · ${formatNumber(post.char_count)}자`}
+                                            >
+                                                <span>{post.title || '제목 없는 글'}</span>
+                                                {post.visibility !== 'class' && <i aria-label="친구에게 비공개">🔒</i>}
+                                            </article>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="teacher-student-agit__shelf-state">이 책장에는 완성한 글이 없습니다.</div>
+                                )}
+                            </section>
+                        </main>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default TeacherStudentAgitViewer;

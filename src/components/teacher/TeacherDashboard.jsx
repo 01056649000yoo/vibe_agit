@@ -375,7 +375,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 onNavigationHandled={handleWorkspaceNavigationHandled}
                                 bootstrapProfile={teacherBootstrap?.profile || profile}
                             />
-                        ) : visibleTab === 'operations' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (
+                        ) : visibleTab === 'operations' || visibleTab === 'student-agits' || visibleTab === 'recent-activity' || visibleTab === 'comments' ? (
                             <TeacherOperationsHub
                                 key={`${activeClass.id}-${visibleTab}`}
                                 activeClass={activeClass}
@@ -383,12 +383,15 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                                 section={visibleTab}
                                 setSelectedActivityPost={setSelectedActivityPost}
                                 onNavigate={handleWorkspaceNavigate}
+                                navigationTarget={workspaceTarget}
+                                onNavigationHandled={handleWorkspaceNavigationHandled}
                             />
                         ) : visibleTab === 'students' ? (
                             <TeacherStudentHub
                                 key={activeClass.id}
                                 activeClass={activeClass}
                                 isMobile={isMobile}
+                                onNavigate={handleWorkspaceNavigate}
                             />
                         ) : visibleTab === 'evaluation' ? (
                             <TeacherEvaluationTab activeClass={activeClass} isMobile={isMobile} />

@@ -15,7 +15,7 @@ import RecordAssistant from './RecordAssistant';
  * 역할: 선생님 - 학급 내 학생 명단 관리 (슬림 2열 그리드 버전)
  * 비즈니스 로직과 UI를 분리하여 가독성과 유지보수성을 향상시켰습니다. ✨
  */
-const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
+const StudentManager = ({ classId, activeClass, isDashboardMode = true, onOpenStudentAgit }) => {
     // [rerender-lazy-state-init] window.innerWidth 접근은 lazy initializer로 래핑
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
 
@@ -132,6 +132,7 @@ const StudentManager = ({ classId, activeClass, isDashboardMode = true }) => {
                     setIsDeleteModalOpen={setIsDeleteModalOpen}
                     onOpenRecordAssistant={(s) => setRecordStudent(s)}
                     onOpenPointModal={handleOpenPointModal}
+                    onOpenStudentAgit={onOpenStudentAgit}
                 />
             )}
 

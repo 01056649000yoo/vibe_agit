@@ -6,6 +6,7 @@ const DESKTOP_GRID_COLUMNS = '42px minmax(82px, 0.75fr) minmax(104px, 124px) min
 const getActionColors = (tone) => {
     if (tone === 'point') return { background: '#FFF8E1', border: '#FFECB3', color: '#B45309' };
     if (tone === 'info') return { background: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' };
+    if (tone === 'agit') return { background: '#FFF7ED', border: '#FED7AA', color: '#9A5B13' };
     if (tone === 'record') return { background: '#F0FDF4', border: '#BBF7D0', color: '#15803D' };
     if (tone === 'danger') return { background: '#FFF1F2', border: '#FECDD3', color: '#DC2626' };
     return { background: '#F8FAFC', border: '#E2E8F0', color: '#475569' };
@@ -23,7 +24,7 @@ const actionButtonToneStyle = (tone = 'neutral') => {
 const StudentManagementList = ({
     displayStudents, isMobile, setSelectedStudentForCode, setIsCodeZoomModalOpen,
     openHistoryModal, handleExportClick, copyCode, copiedId,
-    setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant, onOpenPointModal
+    setDeleteTarget, setIsDeleteModalOpen, onOpenRecordAssistant, onOpenPointModal, onOpenStudentAgit
 }) => {
     return (
         <div
@@ -49,6 +50,7 @@ const StudentManagementList = ({
                     { id: 'point', icon: '⚡', label: '포인트 조정', action: () => onOpenPointModal(s), tone: 'point' },
                     { id: 'zoom', icon: '🔍', label: '코드 크게', action: () => { setSelectedStudentForCode(s); setIsCodeZoomModalOpen(true); }, tone: 'info' },
                     { id: 'history', icon: '📜', label: '포인트 기록', action: () => openHistoryModal(s) },
+                    { id: 'agit', icon: '🏡', label: '아지트 보기', action: () => onOpenStudentAgit?.(s), tone: 'agit' },
                     { id: 'export', icon: '📤', label: '내보내기', action: () => handleExportClick(s) },
                     { id: 'record', icon: '✏️', label: '기록 도우미', action: () => onOpenRecordAssistant(s), tone: 'record' },
                     { id: 'delete', icon: '🗑️', label: '삭제', action: () => { setDeleteTarget(s); setIsDeleteModalOpen(true); }, tone: 'danger' }

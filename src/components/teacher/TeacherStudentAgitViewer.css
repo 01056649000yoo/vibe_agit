@@ -1,0 +1,566 @@
+.teacher-student-agit {
+    min-width: 0;
+    color: #2f241e;
+}
+
+.teacher-student-agit__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.teacher-student-agit__header > div:first-child > span,
+.teacher-student-agit__section-heading small {
+    color: #a16207;
+    font-size: .65rem;
+    font-weight: 950;
+    letter-spacing: .12em;
+}
+
+.teacher-student-agit__header h2,
+.teacher-student-agit__header p,
+.teacher-student-agit__preview-heading h3,
+.teacher-student-agit__section-heading h4 {
+    margin: 0;
+}
+
+.teacher-student-agit__header h2 {
+    margin-top: 3px;
+    color: #3e2e23;
+    font-size: 1.35rem;
+}
+
+.teacher-student-agit__header p {
+    margin-top: 5px;
+    color: #78695e;
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.teacher-student-agit__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.teacher-student-agit__layout {
+    display: grid;
+    grid-template-columns: minmax(210px, 270px) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+}
+
+.teacher-student-agit__roster,
+.teacher-student-agit__preview {
+    border: 1px solid #e7ddd2;
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(77, 54, 36, .06);
+}
+
+.teacher-student-agit__roster {
+    position: sticky;
+    top: 0;
+    overflow: hidden;
+}
+
+.teacher-student-agit__roster-heading {
+    padding: 14px;
+    border-bottom: 1px solid #eee5dc;
+    background: linear-gradient(145deg, #fffaf0, #fff);
+}
+
+.teacher-student-agit__roster-heading > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.teacher-student-agit__roster-heading strong {
+    color: #4b382c;
+    font-size: .92rem;
+}
+
+.teacher-student-agit__roster-heading span {
+    color: #a16207;
+    font-size: .72rem;
+    font-weight: 900;
+}
+
+.teacher-student-agit__roster-heading input {
+    width: 100%;
+    margin-top: 10px;
+    padding: 9px 11px;
+    border: 1px solid #ddd2c7;
+    border-radius: 11px;
+    outline: none;
+    box-sizing: border-box;
+    background: #fff;
+    color: #3e2e23;
+    font: inherit;
+    font-size: .78rem;
+}
+
+.teacher-student-agit__roster-heading input:focus {
+    border-color: #d69e4d;
+    box-shadow: 0 0 0 3px rgba(214, 158, 77, .16);
+}
+
+.teacher-student-agit__student-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: min(70vh, 760px);
+    padding: 8px;
+    overflow-y: auto;
+}
+
+.teacher-student-agit__student-list button {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 14px;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px;
+    border: 1px solid transparent;
+    border-radius: 13px;
+    background: transparent;
+    color: #4b382c;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.teacher-student-agit__student-list button:hover {
+    background: #fff8e7;
+}
+
+.teacher-student-agit__student-list button.is-selected {
+    border-color: #edc984;
+    background: linear-gradient(145deg, #fff4d7, #fffaf0);
+    box-shadow: inset 3px 0 0 #d49633;
+}
+
+.teacher-student-agit__student-icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #f7ead4;
+}
+
+.teacher-student-agit__student-list strong,
+.teacher-student-agit__student-list small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.teacher-student-agit__student-list strong {
+    font-size: .83rem;
+}
+
+.teacher-student-agit__student-list small {
+    margin-top: 2px;
+    color: #8d7b6c;
+    font-size: .64rem;
+    font-weight: 750;
+}
+
+.teacher-student-agit__student-list i {
+    color: #b08b65;
+    font-style: normal;
+    font-weight: 950;
+}
+
+.teacher-student-agit__student-list > p {
+    padding: 20px 8px;
+    color: #94a3b8;
+    font-size: .75rem;
+    text-align: center;
+}
+
+.teacher-student-agit__preview {
+    padding: clamp(14px, 2vw, 22px);
+    background: linear-gradient(180deg, #fffdf8, #fffaf0);
+}
+
+.teacher-student-agit__preview-heading,
+.teacher-student-agit__section-heading,
+.teacher-student-agit__growth-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.teacher-student-agit__preview-heading > div > span {
+    display: inline-flex;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-size: .62rem;
+    font-weight: 950;
+}
+
+.teacher-student-agit__preview-heading h3 {
+    margin-top: 5px;
+    color: #3e2e23;
+    font-size: 1.32rem;
+}
+
+.teacher-student-agit__preview-heading > small {
+    max-width: 260px;
+    color: #8d7b6c;
+    font-size: .68rem;
+    font-weight: 750;
+    line-height: 1.45;
+    text-align: right;
+}
+
+.teacher-student-agit__growth {
+    position: relative;
+    margin-top: 14px;
+    padding: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 226, 168, .38);
+    border-radius: 22px;
+    background: radial-gradient(circle at 8% 0%, rgba(255, 210, 109, .28), transparent 34%), radial-gradient(circle at 100% 100%, rgba(90, 164, 235, .22), transparent 38%), linear-gradient(145deg, #3b2924 0%, #503a32 48%, #263e56 100%);
+    box-shadow: 0 14px 30px rgba(62, 46, 35, .16);
+    color: #fff;
+}
+
+.teacher-student-agit__growth-top > div:first-child small,
+.teacher-student-agit__growth-top > div:first-child strong {
+    display: block;
+}
+
+.teacher-student-agit__growth-top > div:first-child small {
+    color: #ffd987;
+    font-size: .64rem;
+    font-weight: 950;
+}
+
+.teacher-student-agit__growth-top > div:first-child strong {
+    margin-top: 4px;
+    font-size: 1.08rem;
+}
+
+.teacher-student-agit__points {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px 7px 8px;
+    border: 1px solid rgba(255, 224, 143, .42);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, .12);
+}
+
+.teacher-student-agit__points > span {
+    display: grid;
+    place-items: center;
+    width: 29px;
+    height: 29px;
+    border: 2px solid #fff1b6;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #ffe991, #f2ad27);
+    color: #9b5b00;
+    font-weight: 950;
+}
+
+.teacher-student-agit__points small,
+.teacher-student-agit__points strong {
+    display: block;
+    text-align: right;
+}
+
+.teacher-student-agit__points small {
+    color: rgba(255, 255, 255, .65);
+    font-size: .54rem;
+    font-weight: 850;
+}
+
+.teacher-student-agit__points strong {
+    margin-top: 2px;
+    color: #ffe38a;
+    font-size: 1rem;
+}
+
+.teacher-student-agit__badges {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 13px;
+}
+
+.teacher-student-agit__badges > div {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 9px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, .13);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, .09);
+}
+
+.teacher-student-agit__badges > div > span {
+    grid-row: 1 / 3;
+    align-self: center;
+    font-size: 1.35rem;
+}
+
+.teacher-student-agit__badges small {
+    color: rgba(255, 255, 255, .62);
+    font-size: .58rem;
+    font-weight: 800;
+}
+
+.teacher-student-agit__badges strong {
+    margin-top: 2px;
+    overflow: hidden;
+    font-size: .76rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.teacher-student-agit__room,
+.teacher-student-agit__shelf {
+    margin-top: 14px;
+    padding: 15px;
+    border: 1px solid #e5d8ca;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .86);
+}
+
+.teacher-student-agit__section-heading {
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.teacher-student-agit__section-heading h4 {
+    margin-top: 2px;
+    color: #4b382c;
+    font-size: .95rem;
+}
+
+.teacher-student-agit__section-heading > span {
+    color: #8d7b6c;
+    font-size: .66rem;
+    font-weight: 800;
+    text-align: right;
+}
+
+.teacher-student-agit__room .dragon-hideout-scene {
+    min-height: clamp(230px, 34vw, 390px);
+    border-radius: 18px;
+}
+
+.teacher-student-agit__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 10px;
+}
+
+.teacher-student-agit__stats > div {
+    padding: 9px;
+    border: 1px solid #eadfd3;
+    border-radius: 12px;
+    background: #fffaf2;
+    text-align: center;
+}
+
+.teacher-student-agit__stats small,
+.teacher-student-agit__stats strong {
+    display: block;
+}
+
+.teacher-student-agit__stats small {
+    color: #8d7b6c;
+    font-size: .57rem;
+    font-weight: 800;
+}
+
+.teacher-student-agit__stats strong {
+    margin-top: 3px;
+    color: #4b382c;
+    font-size: .83rem;
+}
+
+.teacher-student-agit__shelf-tabs {
+    display: flex;
+    gap: 6px;
+    padding-bottom: 10px;
+    overflow-x: auto;
+}
+
+.teacher-student-agit__shelf-tabs button {
+    flex: 0 0 auto;
+    padding: 7px 9px;
+    border: 1px solid #e4d6c7;
+    border-radius: 10px;
+    background: #fff;
+    color: #725d4f;
+    font: inherit;
+    font-size: .67rem;
+    font-weight: 850;
+    cursor: pointer;
+}
+
+.teacher-student-agit__shelf-tabs button.is-active {
+    border-color: #d19a4b;
+    background: #fff3d8;
+    color: #8b5608;
+}
+
+.teacher-student-agit__shelf-tabs strong {
+    margin-left: 3px;
+}
+
+.teacher-student-agit__books {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+    min-height: 166px;
+    padding: 14px 12px 8px;
+    overflow-x: auto;
+    border: 1px solid #a77b53;
+    border-radius: 12px 12px 4px 4px;
+    background: linear-gradient(180deg, #7a4c2d 0 7px, #b8875c 7px 12px, #5f381f 12px 100%);
+    box-shadow: inset 0 -10px 0 #4b2a18;
+}
+
+.teacher-student-agit__book {
+    position: relative;
+    flex: 0 0 43px;
+    width: 43px;
+    height: 142px;
+    padding: 8px 5px 22px;
+    overflow: hidden;
+    border: 1px solid #193b60;
+    border-radius: 5px 5px 2px 2px;
+    box-sizing: border-box;
+    background: linear-gradient(90deg, #193b60, #477db6 13%, #28527d 74%, #193b60);
+    box-shadow: inset 2px 0 rgba(255, 255, 255, .14), 3px 3px 5px rgba(36, 19, 9, .35);
+    color: #fffdf5;
+}
+
+.teacher-student-agit__book.is-variant-1 {
+    height: 151px;
+    border-color: #295237;
+    background: linear-gradient(90deg, #295237, #6b9a70 13%, #3f704a 74%, #295237);
+}
+
+.teacher-student-agit__book.is-variant-2 {
+    height: 146px;
+    border-color: #343c7a;
+    background: linear-gradient(90deg, #343c7a, #7c86d6 13%, #4f5aa8 74%, #343c7a);
+}
+
+.teacher-student-agit__book.is-variant-3 {
+    height: 156px;
+    border-color: #793538;
+    background: linear-gradient(90deg, #793538, #d17a67 13%, #a24e48 74%, #793538);
+}
+
+.teacher-student-agit__book > span {
+    display: block;
+    max-height: 100%;
+    overflow: hidden;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-size: .66rem;
+    font-weight: 900;
+    line-height: 1.15;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
+}
+
+.teacher-student-agit__book > i {
+    position: absolute;
+    right: 0;
+    bottom: 4px;
+    left: 0;
+    font-size: .58rem;
+    font-style: normal;
+    text-align: center;
+}
+
+.teacher-student-agit__state,
+.teacher-student-agit__shelf-state {
+    display: grid;
+    place-items: center;
+    gap: 12px;
+    min-height: 200px;
+    padding: 24px;
+    color: #7c6f66;
+    font-size: .82rem;
+    font-weight: 800;
+    text-align: center;
+}
+
+.teacher-student-agit__shelf-state {
+    min-height: 130px;
+    border: 1px dashed #dfd0c0;
+    border-radius: 13px;
+    background: #fffaf3;
+}
+
+.teacher-student-agit__state.is-error,
+.teacher-student-agit__shelf-state.is-error {
+    color: #b42318;
+}
+
+@media (max-width: 900px) {
+    .teacher-student-agit__layout {
+        grid-template-columns: 1fr;
+    }
+
+    .teacher-student-agit__roster {
+        position: static;
+    }
+
+    .teacher-student-agit__student-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-height: 250px;
+    }
+}
+
+@media (max-width: 560px) {
+    .teacher-student-agit__header,
+    .teacher-student-agit__preview-heading,
+    .teacher-student-agit__section-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .teacher-student-agit__header-actions {
+        justify-content: space-between;
+    }
+
+    .teacher-student-agit__preview-heading > small,
+    .teacher-student-agit__section-heading > span {
+        max-width: none;
+        text-align: left;
+    }
+
+    .teacher-student-agit__student-list {
+        grid-template-columns: 1fr;
+    }
+
+    .teacher-student-agit__badges,
+    .teacher-student-agit__stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .teacher-student-agit__room .dragon-hideout-scene {
+        min-height: 230px;
+    }
+}

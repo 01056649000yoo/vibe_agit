@@ -12,14 +12,23 @@ const cardStyle = (isMobile) => ({
     border: '1px solid #E2E8F0', boxShadow: '0 3px 12px rgba(15, 23, 42, 0.04)'
 });
 
-const TeacherStudentHub = ({ activeClass, isMobile }) => {
+const TeacherStudentHub = ({ activeClass, isMobile, onNavigate }) => {
     const classId = activeClass?.id;
     if (!classId) return null;
 
     return (
         <section role="tabpanel" aria-label="학생 명단 관리" style={cardStyle(isMobile)}>
             <Suspense fallback={<PanelLoading>학생 명단을 준비하는 중...</PanelLoading>}>
-                <StudentManager activeClass={activeClass} classId={classId} isDashboardMode={false} />
+                <StudentManager
+                    activeClass={activeClass}
+                    classId={classId}
+                    isDashboardMode={false}
+                    onOpenStudentAgit={(student) => onNavigate?.({
+                        tab: 'student-agits',
+                        kind: 'student-agit',
+                        studentId: student.id
+                    })}
+                />
             </Suspense>
         </section>
     );
