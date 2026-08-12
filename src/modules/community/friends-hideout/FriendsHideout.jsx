@@ -184,10 +184,11 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
     const observer = useRef();
 
     const {
-        missions, selectedMission, feedGroup, selfFeedType, posts, classmates, loading, loadingMore,
+        missions, missionsLoading, missionsError, selectedMission, feedGroup, selfFeedType,
+        posts, classmates, classmatesLoading, classmatesError, loading, loadingMore,
         feedError, hasMore, loadMore, viewingPost, setViewingPost, handleMissionChange,
         handleFeedGroupChange, handleSelfFeedTypeChange, retryFeed, handleMeetingPick,
-        resolvedClassId
+        loadClassmates, retryMissions, resolvedClassId
     } = useFriendsHideout(studentSession, params);
     const isMeetingMission =
         selectedMission?.mission_type === 'meeting' || selectedMission?.input_template === 'meeting';
@@ -235,9 +236,16 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
         }
     }, [params, onBack, viewingFriendHideout, setViewingPost, selectedMission, handleMissionChange]);
 
-    const handleOpenFriendPost = useCallback((post) => {
+    const handleOpenPost = useCallback((post) => {
         setViewingPost(post);
     }, [setViewingPost]);
+
+    const handleMainTabChange = useCallback((tabId) => {
+        setActiveMainTab(tabId);
+        if (tabId === 'hideouts') {
+            void loadClassmates();
+        }
+    }, [loadClassmates]);
 
     return (
         <>
@@ -275,7 +283,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                 type="button"
                                 role="tab"
                                 aria-selected={selected}
-                                onClick={() => setActiveMainTab(tab.id)}
+                                onClick={() => handleMainTabChange(tab.id)}
                                 style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                     minHeight: '58px', padding: '9px 10px', borderRadius: '13px', cursor: 'pointer',
@@ -345,9 +353,11 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                         </div>
 
                         {feedGroup === 'assignment' && (
-                            <div style={TAB_CONTAINER_STYLE} aria-label="선생님 과제별 필터">
+                            <div style={TAB_CONTAINER_STYLE} role="tablist" aria-label="선생님 과제별 필터">
                                 <button
                                     type="button"
+                                    role="tab"
+                                    aria-selected={!selectedMission}
                                     onClick={() => handleMissionChange(null)}
                                     style={{
                                         padding: '10px 20px', borderRadius: '16px', border: 'none',
@@ -363,6 +373,8 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                     <button
                                         key={m.id}
                                         type="button"
+                                        role="tab"
+                                        aria-selected={selectedMission?.id === m.id}
                                         onClick={() => handleMissionChange(m)}
                                         style={{
                                             padding: '10px 20px', borderRadius: '16px', border: 'none',
@@ -380,6 +392,20 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                         {m.mission_type === 'meeting' || m.input_template === 'meeting' ? '🏛️ ' : ''}{m.title}
                                     </button>
                                 ))}
+                                {missionsLoading && (
+                                    <span role="status" aria-live="polite" style={{ alignSelf: 'center', color: '#5C6BC0', fontSize: '.82rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                                        과제 목록 불러오는 중...
+                                    </span>
+                                )}
+                                {!missionsLoading && missionsError && (
+                                    <button
+                                        type="button"
+                                        onClick={() => retryMissions()}
+                                        style={{ padding: '9px 14px', borderRadius: '14px', border: '1px solid #FFCDD2', background: '#FFF5F5', color: '#C62828', fontWeight: 900, whiteSpace: 'nowrap', cursor: 'pointer' }}
+                                    >
+                                        과제 목록 다시 불러오기
+                                    </button>
+                                )}
                             </div>
                         )}
 
@@ -467,7 +493,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                                             post={post}
                                             isLast={index === posts.length - 1}
                                             lastElementRef={lastElementRef}
-                                            onClick={setViewingPost}
+                                            onClick={handleOpenPost}
                                             isMeeting={isMeetingPost(post)}
                                             studentId={studentSession.id}
                                             onMeetingPick={handleMeetingPick}
@@ -489,7 +515,18 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                     </>
                 ) : (
                     <div style={GRID_STYLE}>
-                        {classmates.length === 0 ? (
+                        {classmatesLoading ? (
+                            <div role="status" aria-live="polite" style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px', color: '#8E24AA', fontWeight: 800 }}>
+                                반 친구 목록을 불러오는 중... 🏠
+                            </div>
+                        ) : classmatesError ? (
+                            <div role="alert" style={{ gridColumn: '1/-1', textAlign: 'center', padding: '44px', background: '#FFF5F5', border: '1px solid #FFCDD2', borderRadius: '24px', color: '#C62828' }}>
+                                <p style={{ margin: '0 0 14px', fontWeight: 800 }}>{classmatesError}</p>
+                                <button type="button" onClick={() => loadClassmates()} style={{ padding: '9px 16px', border: 'none', borderRadius: '12px', background: '#C62828', color: 'white', fontWeight: 900, cursor: 'pointer' }}>
+                                    다시 불러오기
+                                </button>
+                            </div>
+                        ) : classmates.length === 0 ? (
                             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px', background: 'white', borderRadius: '24px' }}>
                                 <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🥚</div>
                                 <p style={{ color: '#95A5A6', fontWeight: 'bold' }}>아직 다른 친구들을 찾지 못했어요.</p>
@@ -533,7 +570,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                             viewerId={studentSession.id}
                             classId={resolvedClassId}
                             onClose={() => setViewingFriendHideout(null)}
-                            onOpenPost={handleOpenFriendPost}
+                            onOpenPost={handleOpenPost}
                         />
                     </Suspense>
                 )}

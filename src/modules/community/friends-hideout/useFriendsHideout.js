@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 
-import { dataCache } from '../../../lib/cache';
-
-const getClassmatesCacheKey = (classId, studentId) => `classmates_${classId}_${studentId}`;
+import { classKey, dataCache } from '../../../lib/cache';
 
 // 화면에 다시 들어올 때 너무 잦게 다시 부르지 않도록 두는 최소 간격.
 const HIDEOUT_REFRESH_COOLDOWN_MS = 5000;
@@ -12,9 +10,12 @@ const PAGE_SIZE = 10;
 export const useFriendsHideout = (studentSession, params) => {
     // 공방에서 바꾼 장착 상태가 친구 화면에 오래 남지 않게 짧게 유지한다.
     const CLASSMATES_CACHE_MS = 30000;
+    const initialMissionId = params?.missionId || null;
     const [missions, setMissions] = useState([]);
     const [selectedMission, setSelectedMission] = useState(null);
-    const [feedGroup, setFeedGroup] = useState('all');
+    const [missionsLoading, setMissionsLoading] = useState(false);
+    const [missionsError, setMissionsError] = useState('');
+    const [feedGroup, setFeedGroup] = useState(initialMissionId ? 'assignment' : 'all');
     const [selfFeedType, setSelfFeedType] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -22,17 +23,28 @@ export const useFriendsHideout = (studentSession, params) => {
     const [feedError, setFeedError] = useState('');
     const [viewingPost, setViewingPost] = useState(null);
     const [classmates, setClassmates] = useState([]);
+    const [classmatesLoading, setClassmatesLoading] = useState(false);
+    const [classmatesError, setClassmatesError] = useState('');
     const [resolvedClassId, setResolvedClassId] = useState(studentSession.classId || studentSession.class_id || null);
     const cursorRef = useRef(null);
     const [hasMore, setHasMore] = useState(true);
 
     // [Realtime] 구독 콜백이 최신 값을 읽되, deps로 인한 재구독은 피하기 위한 ref
-    const selectedMissionIdRef = useRef(null);
-    const feedSelectionRef = useRef({ group: 'all', selfType: null, missionId: null });
+    const selectedMissionIdRef = useRef(initialMissionId);
+    const feedSelectionRef = useRef({
+        group: initialMissionId ? 'assignment' : 'all',
+        selfType: null,
+        missionId: initialMissionId
+    });
     const normalizePostsRef = useRef(null);
     const hydratePostsRef = useRef(null);
     const lastHideoutRefreshAtRef = useRef(0);
     const postsRequestIdRef = useRef(0);
+    const pendingFeedRequestsRef = useRef(new Map());
+    const missionsLoadedRef = useRef(false);
+    const missionsRef = useRef([]);
+    const classmatesLoadedRef = useRef(false);
+    const classmatesRef = useRef([]);
 
     const normalizePostsWithAuthors = useCallback(async (rawPosts = [], classIdOverride = null) => {
         if (!Array.isArray(rawPosts) || rawPosts.length === 0) {
@@ -214,22 +226,35 @@ export const useFriendsHideout = (studentSession, params) => {
         }
     }, [studentSession.classId, studentSession.class_id, studentSession?.id]);
 
-    const fetchClassmates = useCallback(async () => {
+    const fetchClassmates = useCallback(async (forceRefresh = false) => {
+        if (classmatesLoadedRef.current && !forceRefresh) {
+            return classmatesRef.current;
+        }
+
+        setClassmatesLoading(true);
+        setClassmatesError('');
         try {
             const classId = await resolveClassId();
             if (!classId) {
                 setClassmates([]);
-                return;
+                classmatesRef.current = [];
+                classmatesLoadedRef.current = true;
+                return [];
             }
             const currentStudentId = studentSession.id;
             if (!currentStudentId) {
                 setClassmates([]);
-                return;
+                classmatesRef.current = [];
+                classmatesLoadedRef.current = true;
+                return [];
             }
 
             const excludeCurrentStudent = (rows = []) =>
                 rows.filter((student) => student?.id !== currentStudentId);
-            const cacheKey = getClassmatesCacheKey(classId, currentStudentId);
+            const cacheKey = classKey(classId, 'friends-hideout-directory', { studentId: currentStudentId });
+            if (forceRefresh) {
+                dataCache.invalidate(cacheKey);
+            }
             const data = await dataCache.get(cacheKey, async () => {
                 const { data: directoryData, error: directoryError } = await supabase
                     .rpc('get_student_hideout_directory');
@@ -262,9 +287,18 @@ export const useFriendsHideout = (studentSession, params) => {
                 return excludeCurrentStudent(data || []);
             }, CLASSMATES_CACHE_MS);
 
-            setClassmates(excludeCurrentStudent(data || []));
+            const nextClassmates = excludeCurrentStudent(data || []);
+            classmatesRef.current = nextClassmates;
+            classmatesLoadedRef.current = true;
+            setClassmates(nextClassmates);
+            return nextClassmates;
         } catch (err) {
             console.error('반 친구 목록 로드 실패:', err.message);
+            classmatesLoadedRef.current = false;
+            setClassmatesError('반 친구 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+            return [];
+        } finally {
+            setClassmatesLoading(false);
         }
     }, [resolveClassId, studentSession.id]);
 
@@ -273,6 +307,8 @@ export const useFriendsHideout = (studentSession, params) => {
         const group = ['all', 'assignment', 'self'].includes(selection?.group) ? selection.group : 'all';
         const selfType = group === 'self' ? (selection?.selfType || null) : null;
         const missionId = group === 'assignment' ? (selection?.missionId || null) : null;
+        const cursor = isAppend ? cursorRef.current : null;
+        const requestKey = [group, selfType || '', missionId || '', cursor?.at || '', cursor?.id || ''].join('|');
         if (!isAppend) {
             setLoading(true);
             setFeedError('');
@@ -282,15 +318,29 @@ export const useFriendsHideout = (studentSession, params) => {
         }
 
         try {
-            const cursor = isAppend ? cursorRef.current : null;
-            const { data, error } = await supabase.rpc('get_class_public_writing_feed_v1', {
-                p_group: group,
-                p_self_type: selfType,
-                p_mission_id: missionId,
-                p_limit: PAGE_SIZE,
-                p_cursor_at: cursor?.at || null,
-                p_cursor_id: cursor?.id || null,
-            });
+            let requestPromise = pendingFeedRequestsRef.current.get(requestKey);
+            if (!requestPromise) {
+                requestPromise = supabase.rpc('get_class_public_writing_feed_v1', {
+                    p_group: group,
+                    p_self_type: selfType,
+                    p_mission_id: missionId,
+                    p_limit: PAGE_SIZE,
+                    p_cursor_at: cursor?.at || null,
+                    p_cursor_id: cursor?.id || null,
+                }).then(
+                    (result) => {
+                        pendingFeedRequestsRef.current.delete(requestKey);
+                        return result;
+                    },
+                    (error) => {
+                        pendingFeedRequestsRef.current.delete(requestKey);
+                        throw error;
+                    }
+                );
+                pendingFeedRequestsRef.current.set(requestKey, requestPromise);
+            }
+
+            const { data, error } = await requestPromise;
 
             if (error) throw error;
             if (requestId !== postsRequestIdRef.current) return;
@@ -331,16 +381,22 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [loadingMore, loading, hasMore, fetchFeed]);
 
     const fetchMissions = useCallback(async (forceRefresh = false) => {
-        setLoading(true);
+        if (missionsLoadedRef.current && !forceRefresh) {
+            return missionsRef.current;
+        }
+
+        setMissionsLoading(true);
+        setMissionsError('');
         try {
             const classId = await resolveClassId();
             if (!classId) {
                 setMissions([]);
                 setSelectedMission(null);
-                setPosts([]);
-                return;
+                missionsRef.current = [];
+                missionsLoadedRef.current = true;
+                return [];
             }
-            const cacheKey = `missions_${classId}`;
+            const cacheKey = classKey(classId, 'friends-hideout-missions');
 
             if (forceRefresh) {
                 dataCache.invalidate(cacheKey);
@@ -359,36 +415,25 @@ export const useFriendsHideout = (studentSession, params) => {
                 return missionRows || [];
             });
 
+            missionsRef.current = data;
+            missionsLoadedRef.current = true;
             setMissions(data);
-            if (data?.length > 0) {
-                let nextMission =
-                    data.find(m => m.id === selectedMissionIdRef.current) ||
-                    data.find(m => m.id === params?.missionId);
 
-                if (nextMission) {
-                    const nextSelection = { group: 'assignment', selfType: null, missionId: nextMission.id };
-                    feedSelectionRef.current = nextSelection;
-                    setFeedGroup('assignment');
-                    setSelfFeedType(null);
-                    selectedMissionIdRef.current = nextMission.id;
-                    setSelectedMission(nextMission);
-                    await fetchFeed(nextSelection);
-                } else {
-                    selectedMissionIdRef.current = null;
-                    setSelectedMission(null);
-                    await fetchFeed(feedSelectionRef.current);
-                }
-            } else {
-                setSelectedMission(null);
-                await fetchFeed(feedSelectionRef.current);
-            }
+            const currentMissionId = selectedMissionIdRef.current;
+            const nextMission = currentMissionId
+                ? data.find((mission) => mission.id === currentMissionId) || null
+                : null;
+            setSelectedMission(nextMission);
+            return data;
         } catch (err) {
             console.error('미션 로드 실패:', err.message);
-            setFeedError('우리 반 공개 글을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+            missionsLoadedRef.current = false;
+            setMissionsError('과제 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+            return [];
         } finally {
-            setLoading(false);
+            setMissionsLoading(false);
         }
-    }, [resolveClassId, fetchFeed, params?.missionId]);
+    }, [resolveClassId]);
 
     const handleMeetingPick = useCallback(async (postId) => {
         if (!postId || !studentSession.id) return false;
@@ -483,10 +528,6 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [classmates]);
 
     useEffect(() => {
-        selectedMissionIdRef.current = selectedMission?.id || null;
-    }, [selectedMission?.id]);
-
-    useEffect(() => {
         normalizePostsRef.current = normalizePostsWithAuthors;
     }, [normalizePostsWithAuthors]);
 
@@ -495,12 +536,16 @@ export const useFriendsHideout = (studentSession, params) => {
     }, [hydratePostRelations]);
 
     useEffect(() => {
-        fetchMissions(true);
-        fetchClassmates();
-        if (params?.initialPostId) {
-            handleInitialPost(params.initialPostId);
+        // 기본 진입은 공개 글 RPC 한 번만 사용한다. 과제·친구 명단은 해당 탭을 열 때 지연 조회한다.
+        lastHideoutRefreshAtRef.current = Date.now();
+        void fetchFeed(feedSelectionRef.current);
+        if (initialMissionId) {
+            void fetchMissions();
         }
-    }, [fetchMissions, fetchClassmates, handleInitialPost, params?.initialPostId]);
+        if (params?.initialPostId) {
+            void handleInitialPost(params.initialPostId);
+        }
+    }, [fetchFeed, fetchMissions, handleInitialPost, initialMissionId, params?.initialPostId]);
 
     useEffect(() => {
         const classId = resolvedClassId || studentSession.classId || studentSession.class_id;
@@ -520,8 +565,9 @@ export const useFriendsHideout = (studentSession, params) => {
         const refreshIfStale = () => {
             if (Date.now() - lastHideoutRefreshAtRef.current < HIDEOUT_REFRESH_COOLDOWN_MS) return;
             lastHideoutRefreshAtRef.current = Date.now();
-            fetchMissions(true);
-            fetchClassmates();
+            void fetchFeed(feedSelectionRef.current);
+            if (missionsLoadedRef.current) void fetchMissions(true);
+            if (classmatesLoadedRef.current) void fetchClassmates(true);
         };
         const handleFocus = () => refreshIfStale();
         const handleVisibilityChange = () => {
@@ -535,7 +581,7 @@ export const useFriendsHideout = (studentSession, params) => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
         // selectedMission.id / normalizePostsWithAuthors 변경 시 재등록하지 않도록 ref 사용.
-    }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, fetchMissions, fetchClassmates]);
+    }, [resolvedClassId, studentSession.class_id, studentSession.classId, studentSession.id, fetchFeed, fetchMissions, fetchClassmates]);
 
     const handleMissionChange = useCallback((mission) => {
         const nextSelection = { group: 'assignment', selfType: null, missionId: mission?.id || null };
@@ -555,8 +601,11 @@ export const useFriendsHideout = (studentSession, params) => {
         setSelfFeedType(null);
         selectedMissionIdRef.current = null;
         setSelectedMission(null);
-        fetchFeed(nextSelection);
-    }, [fetchFeed]);
+        void fetchFeed(nextSelection);
+        if (normalizedGroup === 'assignment') {
+            void fetchMissions();
+        }
+    }, [fetchFeed, fetchMissions]);
 
     const handleSelfFeedTypeChange = useCallback((type) => {
         const normalizedType = type || null;
@@ -575,11 +624,15 @@ export const useFriendsHideout = (studentSession, params) => {
 
     return {
         missions,
+        missionsLoading,
+        missionsError,
         selectedMission,
         feedGroup,
         selfFeedType,
         posts,
         classmates,
+        classmatesLoading,
+        classmatesError,
         resolvedClassId,   // 친구 서재 등 학급 범위 조회에 쓴다
         loading,
         loadingMore,
@@ -591,6 +644,8 @@ export const useFriendsHideout = (studentSession, params) => {
         handleMissionChange,
         handleFeedGroupChange,
         handleSelfFeedTypeChange,
+        loadClassmates: fetchClassmates,
+        retryMissions: fetchMissions,
         retryFeed,
         handleMeetingPick
     };

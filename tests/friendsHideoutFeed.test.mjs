@@ -45,6 +45,26 @@ test('친구 공개 글 목록은 직접 테이블 조합 없이 단일 커서 R
     assert.doesNotMatch(fetchSection, /\.from\(|Promise\.all|\.range\(/);
     assert.match(source, /postsRequestIdRef/);
     assert.match(source, /feedSelectionRef/);
+    assert.match(source, /pendingFeedRequestsRef/);
+});
+
+test('친구 아지트 기본 진입은 피드 한 번만 읽고 과제·친구 명단은 탭을 열 때 지연 조회한다', async () => {
+    const [hook, screen] = await Promise.all([
+        read('src/modules/community/friends-hideout/useFriendsHideout.js'),
+        read('src/modules/community/friends-hideout/FriendsHideout.jsx'),
+    ]);
+    const initialStart = hook.indexOf('// 기본 진입은 공개 글 RPC 한 번만 사용한다.');
+    const initialEnd = hook.indexOf('}, [fetchFeed', initialStart);
+    const initialSection = hook.slice(initialStart, initialEnd);
+
+    assert.ok(initialStart >= 0 && initialEnd > initialStart);
+    assert.match(initialSection, /lastHideoutRefreshAtRef\.current = Date\.now\(\)/);
+    assert.match(initialSection, /void fetchFeed\(feedSelectionRef\.current\)/);
+    assert.match(initialSection, /if \(initialMissionId\)[\s\S]*void fetchMissions\(\)/);
+    assert.doesNotMatch(initialSection, /fetchClassmates/);
+    assert.match(hook, /normalizedGroup === 'assignment'[\s\S]*void fetchMissions\(\)/);
+    assert.match(screen, /tabId === 'hideouts'[\s\S]*void loadClassmates\(\)/);
+    assert.match(screen, /onClick=\{\(\) => handleMainTabChange\(tab\.id\)\}/);
 });
 
 test('공개 글 RPC는 학생의 실제 학급·공개 상태·목록 상한·안정 커서를 검증한다', async () => {
