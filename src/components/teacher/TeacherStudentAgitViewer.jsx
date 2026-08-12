@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../common/Button';
+import ModalPortal from '../common/ModalPortal';
 import TeacherGuideButton from './TeacherGuideButton';
 import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
@@ -16,6 +17,8 @@ import {
     getSelfWritingType
 } from '../../modules/writing/selfWritingTypes';
 import './TeacherStudentAgitViewer.css';
+
+const TeacherStudentAgitPostDetail = lazy(() => import('./TeacherStudentAgitPostDetail'));
 
 const OVERVIEW_TTL_MS = 60000;
 const SHELF_TTL_MS = 30000;
@@ -86,6 +89,11 @@ const TeacherStudentAgitViewer = ({
     const [shelfError, setShelfError] = useState('');
     const [activeShelfId, setActiveShelfId] = useState('assignment');
     const [refreshKey, setRefreshKey] = useState(0);
+    const [selectedShelfSummary, setSelectedShelfSummary] = useState(null);
+    const [selectedShelfPost, setSelectedShelfPost] = useState(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState('');
+    const detailRequestRef = useRef(0);
 
     const overviewKey = useMemo(
         () => classKey(classId, 'teacher-student-agit-overview'),
@@ -206,6 +214,57 @@ const TeacherStudentAgitViewer = ({
         posts: shelf.filter(section.match)
     })).filter((section) => section.alwaysVisible || section.posts.length > 0), [shelf]);
     const activeShelf = shelfSections.find((section) => section.id === activeShelfId) || shelfSections[0];
+
+    const closeShelfPost = useCallback(() => {
+        detailRequestRef.current += 1;
+        setSelectedShelfSummary(null);
+        setSelectedShelfPost(null);
+        setDetailError('');
+        setDetailLoading(false);
+    }, []);
+
+    const openShelfPost = useCallback(async (summary, forceRefresh = false) => {
+        if (!classId || !selectedStudentId || !summary?.id) return;
+
+        const requestId = detailRequestRef.current + 1;
+        detailRequestRef.current = requestId;
+        const detailKey = classKey(classId, 'teacher-student-agit-shelf-detail', {
+            student: selectedStudentId,
+            post: summary.id
+        });
+        if (forceRefresh) dataCache.invalidate(detailKey);
+
+        setSelectedShelfSummary(summary);
+        setSelectedShelfPost(null);
+        setDetailError('');
+        setDetailLoading(true);
+
+        try {
+            const detail = await dataCache.get(detailKey, async () => {
+                const { data, error } = await supabase
+                    .from('student_posts')
+                    .select('id, title, content, mission_id, writing_context, self_writing_type, char_count, visibility, created_at, updated_at, structured_content, original_title, original_content, is_confirmed')
+                    .eq('class_id', classId)
+                    .eq('student_id', selectedStudentId)
+                    .eq('id', summary.id)
+                    .eq('is_submitted', true)
+                    .limit(1)
+                    .maybeSingle();
+                if (error) throw error;
+                if (!data) throw new Error('글을 찾지 못했습니다.');
+                return data;
+            }, SHELF_TTL_MS);
+
+            if (detailRequestRef.current === requestId) setSelectedShelfPost(detail);
+        } catch (error) {
+            console.error('학생 아지트 글 상세 조회 실패:', error.message);
+            if (detailRequestRef.current === requestId) {
+                setDetailError('이 글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            }
+        } finally {
+            if (detailRequestRef.current === requestId) setDetailLoading(false);
+        }
+    }, [classId, selectedStudentId]);
 
     const refresh = () => {
         if (classId && selectedStudentId) {
@@ -342,17 +401,19 @@ const TeacherStudentAgitViewer = ({
                                 ) : shelfError ? (
                                     <div className="teacher-student-agit__shelf-state is-error">{shelfError}</div>
                                 ) : activeShelf?.posts.length ? (
-                                    <div className="teacher-student-agit__books" role="list">
+                                    <div className="teacher-student-agit__books" aria-label={`${activeShelf.label} 글 목록`}>
                                         {activeShelf.posts.map((post, index) => (
-                                            <article
+                                            <button
                                                 key={post.id}
-                                                role="listitem"
+                                                type="button"
                                                 className={`teacher-student-agit__book is-variant-${index % 4}`}
                                                 title={`${post.title || '제목 없는 글'} · ${formatNumber(post.char_count)}자`}
+                                                aria-label={`${post.title || '제목 없는 글'} 읽기`}
+                                                onClick={() => openShelfPost(post)}
                                             >
                                                 <span>{post.title || '제목 없는 글'}</span>
                                                 {post.visibility !== 'class' && <i aria-label="친구에게 비공개">🔒</i>}
-                                            </article>
+                                            </button>
                                         ))}
                                     </div>
                                 ) : (
@@ -362,6 +423,27 @@ const TeacherStudentAgitViewer = ({
                         </main>
                     )}
                 </div>
+            )}
+
+            {selectedShelfSummary && (
+                <Suspense fallback={(
+                    <ModalPortal>
+                        <div style={{ position: 'fixed', zIndex: 3400, inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(255,253,248,.96)', color: '#78695e', fontWeight: 900 }} role="status">
+                            글 읽기 화면을 준비하는 중… 📖
+                        </div>
+                    </ModalPortal>
+                )}>
+                    <TeacherStudentAgitPostDetail
+                        key={selectedShelfSummary.id}
+                        studentName={selectedStudent?.name}
+                        summary={selectedShelfSummary}
+                        post={selectedShelfPost}
+                        loading={detailLoading}
+                        errorMessage={detailError}
+                        onClose={closeShelfPost}
+                        onRetry={() => openShelfPost(selectedShelfSummary, true)}
+                    />
+                </Suspense>
             )}
         </div>
     );

@@ -26,9 +26,10 @@ test('학급 운영에 학생 아지트 탭이 있고 학생 명단 버튼이 �
 });
 
 test('교사 학생 아지트는 담당 학급을 직접 제한하고 읽기 전용 상한을 지킨다', async () => {
-    const [viewer, viewerStyles, migration] = await Promise.all([
+    const [viewer, viewerStyles, postDetail, migration] = await Promise.all([
         read('src/components/teacher/TeacherStudentAgitViewer.jsx'),
         read('src/components/teacher/TeacherStudentAgitViewer.css'),
+        read('src/components/teacher/TeacherStudentAgitPostDetail.jsx'),
         read('supabase/migrations/20260921_dragon_semester_farewell.sql')
     ]);
 
@@ -42,7 +43,14 @@ test('교사 학생 아지트는 담당 학급을 직접 제한하고 읽기 전
     assert.match(viewerStyles, /\.teacher-student-agit__overview\s*\{[\s\S]*grid-template-columns:/);
     assert.match(viewerStyles, /\.teacher-student-agit__room \.dragon-hideout-scene\s*\{[\s\S]*width: min\(100%, 260px\)/);
     assert.doesNotMatch(viewerStyles, /\.teacher-student-agit__room \.dragon-hideout-scene\s*\{[\s\S]{0,180}min-height: clamp/);
+    assert.match(viewer, /teacher-student-agit-shelf-detail/);
+    assert.match(viewer, /\.eq\('class_id', classId\)[\s\S]*\.eq\('student_id', selectedStudentId\)[\s\S]*\.eq\('id', summary\.id\)[\s\S]*\.eq\('is_submitted', true\)[\s\S]*\.limit\(1\)[\s\S]*\.maybeSingle\(\)/);
+    assert.match(viewer, /onClick=\{\(\) => openShelfPost\(post\)\}/);
+    assert.match(postDetail, /교사 읽기 전용/);
+    assert.match(postDetail, /<ReportDocument/);
+    assert.match(postDetail, /normalizeBookCoverUrl/);
     assert.doesNotMatch(viewer, /\.(?:insert|update|delete|upsert)\(/);
+    assert.doesNotMatch(postDetail, /\.(?:insert|update|delete|upsert)\(/);
     assert.doesNotMatch(viewer, /setInterval\s*\(|postgres_changes|\.channel\(/);
 
     const rpc = migration.slice(

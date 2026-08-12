@@ -479,6 +479,22 @@
     background: linear-gradient(90deg, #193b60, #477db6 13%, #28527d 74%, #193b60);
     box-shadow: inset 2px 0 rgba(255, 255, 255, .14), 3px 3px 5px rgba(36, 19, 9, .35);
     color: #fffdf5;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform .15s ease, filter .15s ease;
+}
+
+.teacher-student-agit__book:hover,
+.teacher-student-agit__book:focus-visible {
+    z-index: 1;
+    outline: none;
+    transform: translateY(-5px);
+    filter: brightness(1.08);
+}
+
+.teacher-student-agit__book:focus-visible {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px #d49633, 3px 3px 5px rgba(36, 19, 9, .35);
 }
 
 .teacher-student-agit__book.is-variant-1 {
