@@ -21,6 +21,24 @@
 
 ---
 
+## 2026-08-12 — Vercel 호스팅 설정 제거·맥미니 자동 배포 재검증 (Codex)
+- **한 일**: 앱 운영 경로를 `main` 푸시 → GitHub Actions `Deploy` → 맥미니 self-hosted 러너 → Docker 이미지
+  빌드·`agit-app` 컨테이너 교체 → `127.0.0.1:8300` HTTP 200 확인으로 다시 확정했다. 루트 `vercel.json`을
+  삭제하고 보안 헤더와 외부 origin 허용 기준을 `Caddyfile.container` 한 곳으로 모았다. 현재 운영 문서와
+  이관 계획도 맥미니 단일 호스팅 기준으로 갱신했으며, 과거 이관 당시 사실을 적은 기록은 감사 이력으로 남겼다.
+- **변경**: Vercel CSP를 함께 읽던 정적 보안 검사를 Caddy 단일 검사로 바꾸고, `tests/deploymentArchitecture.test.mjs`와
+  `test:deployment`를 추가해 `main` 트리거·self-hosted 러너·Docker 빌드/교체·로컬 HTTP 검증·Vercel 설정 부재를
+  고정했다. Docker 이미지 빌드 게이트에도 이 검사를 연결했다. `.agent/`·`.gemini/`의 Vercel 출처 React 성능
+  참고자료는 서비스 호스팅 코드나 런타임 의존성이 아니므로 유지했다. DB·마이그레이션·맥미니 인프라 변경은 없다.
+- **결과/검증**: `test:deployment` 3건, `test:security:static` 17건, `test:architecture` 50건, ESLint,
+  프로덕션 빌드, `git diff --check`가 모두 통과했다. GitHub의 최신 `Deploy` 실행 `31601370416`도 `main`
+  커밋 `86bce14`를 실제 `macmini-agit` self-hosted 러너에서 Checkout→이미지 빌드→컨테이너 재시작→Verify까지
+  성공한 것을 확인했다.
+- **남은 것 / 다음**: 기능 브랜치/초안 PR 푸시는 운영 배포를 시작하지 않으므로 PR #2를 `main`에 병합한 뒤 새
+  `Deploy` 성공과 운영 반영을 확인한다. 저장소 밖 GitHub–Vercel 연동은 아직 PR에 `Vercel`·`Vercel Preview Comments`
+  검사를 붙이고 있다. 이는 코드 삭제로 없어지지 않으므로 Vercel 프로젝트 또는 GitHub 앱 설정에서 별도로 연결을
+  해제해야 한다.
+
 ## 2026-08-12 — 학생 홈 알림 책임 분리·단일 이벤트 원장 구현 (Codex)
 - **한 일**: 학생 알림을 `내 글 소식 / 지금 할 일 / 활동 알림` 세 책임으로 다시 나눴다. `내 글 소식`은 친구
   반응과 친구·선생님 댓글만 유지하고, `지금 할 일`은 시작 전 과제·작성 중 과제·다시 쓸 글 개수만 표시한다.

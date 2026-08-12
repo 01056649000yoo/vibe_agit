@@ -84,6 +84,8 @@ helper.끄적끄적아지트.site
 - 앱 저장소: 이 디렉터리
 - 통합 Supabase: `~/agit-supabase/` (git 밖)
 - 앱 시크릿: `~/agit-supabase/secrets.agit.env` (값을 문서·코드·로그에 기록하지 않음)
+- 자동 배포: `main` 푸시 → GitHub Actions `Deploy` → 맥미니 self-hosted 러너 → `agit-app:prod` Docker 이미지
+  빌드·컨테이너 교체 → `127.0.0.1:8300` HTTP 200 확인. 기능 브랜치나 초안 PR 푸시는 운영 배포를 시작하지 않는다.
 - 글쓰기 도우미·클래스룸툴: 현재 별도 Docker 앱. 아지트 코드로 합치지 않았으며 추후 모듈 경계를 먼저 설계한다.
 - 연구소: 코드를 아지트에 복사하지 않고 같은 인증과 표준 결과물 RPC로 연결한다.
 
@@ -108,7 +110,7 @@ sudo caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 
 - Umami 완전 폐기 확정 후에만 Caddy `umami.` 블록, 가비아 DNS, 보존 볼륨·이미지·설정을 제거한다.
 - 안정화가 끝난 뒤 롤백용 `agit-app:pre-cache-fix-20260724` 이미지와 중지 컨테이너를 정리한다.
-- Vercel/Cloud는 실사용 1~2주 무사고 확인 전까지 해지하지 않는다.
+- 앱 호스팅은 맥미니 Docker와 Caddy만 사용하며 Vercel 설정을 운영·롤백 경로로 유지하지 않는다.
 - 구 연구소 스택에도 `realtime-dev.supabase-realtime` 컨테이너가 있다. 통합 스택 컨테이너를 같은 이름으로 바꾸지 않는다.
   통합 스택 내부 네트워크 별칭은 의도된 충돌 회피책이다.
 

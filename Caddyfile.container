@@ -13,7 +13,7 @@
 	@html path /index.html /
 	header @html Cache-Control "no-cache"
 
-	# vercel.json 보안 헤더 5종 재현
+	# 맥미니 운영 정적 앱의 보안 헤더
 	header {
 		X-Frame-Options "DENY"
 		X-Content-Type-Options "nosniff"

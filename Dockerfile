@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npm run test:architecture && npm run test:security:static
+RUN npm run test:architecture && npm run test:security:static && npm run test:deployment
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_ANON_KEY
 ARG VITE_GOOGLE_CLIENT_ID

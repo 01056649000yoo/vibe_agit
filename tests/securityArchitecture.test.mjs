@@ -2,13 +2,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, vercel, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
     readFile('src/store/useAuthStore.js', 'utf8'),
     readFile('Caddyfile.container', 'utf8'),
-    readFile('vercel.json', 'utf8'),
     readFile('supabase/migrations/20261014_security_boundary_hardening.sql', 'utf8'),
     readFile('supabase/migrations/20261018_report_writing_images.sql', 'utf8'),
     readFile('supabase/migrations/20261019_report_image_storage_optimization.sql', 'utf8'),
@@ -57,9 +56,7 @@ test('정적 앱 응답에 CSP와 Permissions-Policy가 있다', () => {
         'private report image signed URLs must be allowed by img-src'
     );
     assert.match(caddy, /img-src[^;]*https:\/\/search1\.kakaocdn\.net/);
-    assert.match(vercel, /img-src[^;]*https:\/\/search1\.kakaocdn\.net/);
     assert.match(caddy, /connect-src[^;]*https:\/\/www\.googleapis\.com/);
-    assert.match(vercel, /connect-src[^;]*https:\/\/www\.googleapis\.com/);
 });
 
 test('Google Docs용 사진은 발견 불가 임시 공유 후 파일 또는 공개 권한을 제거한다', () => {
