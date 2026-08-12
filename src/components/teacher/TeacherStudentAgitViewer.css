@@ -226,8 +226,7 @@
 
 .teacher-student-agit__growth {
     position: relative;
-    margin-top: 14px;
-    padding: 16px;
+    padding: 14px;
     overflow: hidden;
     border: 1px solid rgba(255, 226, 168, .38);
     border-radius: 22px;
@@ -296,7 +295,7 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
-    margin-top: 13px;
+    margin-top: 10px;
 }
 
 .teacher-student-agit__badges > div {
@@ -304,7 +303,7 @@
     grid-template-columns: 32px minmax(0, 1fr);
     grid-template-rows: auto auto;
     column-gap: 9px;
-    padding: 10px;
+    padding: 9px;
     border: 1px solid rgba(255, 255, 255, .13);
     border-radius: 15px;
     background: rgba(255, 255, 255, .09);
@@ -330,18 +329,43 @@
     white-space: nowrap;
 }
 
+.teacher-student-agit__overview {
+    display: grid;
+    grid-template-columns: minmax(230px, 292px) minmax(250px, 1fr);
+    align-items: stretch;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.teacher-student-agit__overview-details {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-width: 0;
+    gap: 10px;
+}
+
 .teacher-student-agit__room,
 .teacher-student-agit__shelf {
-    margin-top: 14px;
-    padding: 15px;
+    padding: 13px;
     border: 1px solid #e5d8ca;
     border-radius: 20px;
     background: rgba(255, 255, 255, .86);
 }
 
+.teacher-student-agit__room {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.teacher-student-agit__shelf {
+    margin-top: 12px;
+}
+
 .teacher-student-agit__section-heading {
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 9px;
 }
 
 .teacher-student-agit__section-heading h4 {
@@ -358,19 +382,24 @@
 }
 
 .teacher-student-agit__room .dragon-hideout-scene {
-    min-height: clamp(230px, 34vw, 390px);
-    border-radius: 18px;
+    width: min(100%, 260px);
+    min-height: 0;
+    margin: auto;
+    border-radius: 16px;
 }
 
 .teacher-student-agit__stats {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: stretch;
     gap: 7px;
-    margin-top: 10px;
 }
 
 .teacher-student-agit__stats > div {
-    padding: 9px;
+    display: grid;
+    min-height: 58px;
+    padding: 8px;
+    align-content: center;
     border: 1px solid #eadfd3;
     border-radius: 12px;
     background: #fffaf2;
@@ -428,8 +457,8 @@
     display: flex;
     align-items: flex-end;
     gap: 5px;
-    min-height: 166px;
-    padding: 14px 12px 8px;
+    min-height: 124px;
+    padding: 10px 10px 7px;
     overflow-x: auto;
     border: 1px solid #a77b53;
     border-radius: 12px 12px 4px 4px;
@@ -439,9 +468,9 @@
 
 .teacher-student-agit__book {
     position: relative;
-    flex: 0 0 43px;
-    width: 43px;
-    height: 142px;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 103px;
     padding: 8px 5px 22px;
     overflow: hidden;
     border: 1px solid #193b60;
@@ -453,19 +482,19 @@
 }
 
 .teacher-student-agit__book.is-variant-1 {
-    height: 151px;
+    height: 111px;
     border-color: #295237;
     background: linear-gradient(90deg, #295237, #6b9a70 13%, #3f704a 74%, #295237);
 }
 
 .teacher-student-agit__book.is-variant-2 {
-    height: 146px;
+    height: 107px;
     border-color: #343c7a;
     background: linear-gradient(90deg, #343c7a, #7c86d6 13%, #4f5aa8 74%, #343c7a);
 }
 
 .teacher-student-agit__book.is-variant-3 {
-    height: 156px;
+    height: 115px;
     border-color: #793538;
     background: linear-gradient(90deg, #793538, #d17a67 13%, #a24e48 74%, #793538);
 }
@@ -506,7 +535,7 @@
 }
 
 .teacher-student-agit__shelf-state {
-    min-height: 130px;
+    min-height: 92px;
     border: 1px dashed #dfd0c0;
     border-radius: 13px;
     background: #fffaf3;
@@ -527,9 +556,24 @@
     }
 
     .teacher-student-agit__student-list {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        max-height: 250px;
+        flex-direction: row;
+        max-height: none;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .teacher-student-agit__student-list button {
+        flex: 0 0 min(220px, 70vw);
+    }
+}
+
+@media (max-width: 680px) {
+    .teacher-student-agit__overview {
+        grid-template-columns: 1fr;
+    }
+
+    .teacher-student-agit__room .dragon-hideout-scene {
+        width: min(100%, 240px);
     }
 }
 
@@ -551,16 +595,7 @@
         text-align: left;
     }
 
-    .teacher-student-agit__student-list {
-        grid-template-columns: 1fr;
-    }
-
-    .teacher-student-agit__badges,
-    .teacher-student-agit__stats {
+    .teacher-student-agit__badges {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .teacher-student-agit__room .dragon-hideout-scene {
-        min-height: 230px;
     }
 }

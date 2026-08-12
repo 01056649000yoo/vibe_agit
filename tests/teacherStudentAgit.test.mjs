@@ -26,8 +26,9 @@ test('학급 운영에 학생 아지트 탭이 있고 학생 명단 버튼이 �
 });
 
 test('교사 학생 아지트는 담당 학급을 직접 제한하고 읽기 전용 상한을 지킨다', async () => {
-    const [viewer, migration] = await Promise.all([
+    const [viewer, viewerStyles, migration] = await Promise.all([
         read('src/components/teacher/TeacherStudentAgitViewer.jsx'),
+        read('src/components/teacher/TeacherStudentAgitViewer.css'),
         read('supabase/migrations/20260921_dragon_semester_farewell.sql')
     ]);
 
@@ -36,7 +37,11 @@ test('교사 학생 아지트는 담당 학급을 직접 제한하고 읽기 전
     assert.match(viewer, /\.from\('student_posts'\)[\s\S]*\.eq\('class_id', classId\)[\s\S]*\.eq\('student_id', selectedStudentId\)[\s\S]*\.limit\(SHELF_LIMIT\)/);
     assert.match(viewer, /const SHELF_LIMIT = 60/);
     assert.match(viewer, /classKey\(classId, 'teacher-student-agit-shelf'/);
-    assert.match(viewer, /<DragonHideoutScene/);
+    assert.match(viewer, /className="teacher-student-agit__overview"/);
+    assert.match(viewer, /<DragonHideoutScene[\s\S]*compact[\s\S]*eager/);
+    assert.match(viewerStyles, /\.teacher-student-agit__overview\s*\{[\s\S]*grid-template-columns:/);
+    assert.match(viewerStyles, /\.teacher-student-agit__room \.dragon-hideout-scene\s*\{[\s\S]*width: min\(100%, 260px\)/);
+    assert.doesNotMatch(viewerStyles, /\.teacher-student-agit__room \.dragon-hideout-scene\s*\{[\s\S]{0,180}min-height: clamp/);
     assert.doesNotMatch(viewer, /\.(?:insert|update|delete|upsert)\(/);
     assert.doesNotMatch(viewer, /setInterval\s*\(|postgres_changes|\.channel\(/);
 

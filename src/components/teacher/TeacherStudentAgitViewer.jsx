@@ -282,36 +282,41 @@ const TeacherStudentAgitViewer = ({
                                 <small>학생의 글·포인트·꾸미기는 이 화면에서 바뀌지 않습니다.</small>
                             </div>
 
-                            <section className="teacher-student-agit__growth" aria-label={`${selectedStudent.name} 성장 상태`}>
-                                <div className="teacher-student-agit__growth-top">
-                                    <div><small>나의 성장 상태</small><strong>{selectedStudent.name}의 칭호</strong></div>
-                                    <div className="teacher-student-agit__points"><span>★</span><div><small>보유 포인트</small><strong>{formatNumber(selectedStudent.totalPoints)}P</strong></div></div>
-                                </div>
-                                <div className="teacher-student-agit__badges">
-                                    <div><span>{selectedStudent.writer.emoji}</span><small>작가 칭호</small><strong>Lv.{selectedStudent.writer.level} {selectedStudent.writer.name}</strong></div>
-                                    <div><span>{selectedStudent.reader.emoji}</span><small>독자 칭호</small><strong>R{selectedStudent.reader.level} {selectedStudent.reader.name}</strong></div>
-                                </div>
-                            </section>
+                            <div className="teacher-student-agit__overview">
+                                <section className="teacher-student-agit__room" aria-label="학생이 꾸민 수호룡 방">
+                                    <div className="teacher-student-agit__section-heading">
+                                        <div><small>DRAGON HIDEOUT</small><h4>수호룡 아지트</h4></div>
+                                        <span>{selectedStudent.petData.name || '작가 수호룡'} · {selectedStudent.readerEffect.name}</span>
+                                    </div>
+                                    <DragonHideoutScene
+                                        petData={selectedStudent.petData}
+                                        dragon={selectedStudent.dragon}
+                                        readerLevel={selectedStudent.reader.level}
+                                        ownerName={selectedStudent.name}
+                                        compact
+                                        eager
+                                    />
+                                </section>
 
-                            <section className="teacher-student-agit__room" aria-label="학생이 꾸민 수호룡 방">
-                                <div className="teacher-student-agit__section-heading">
-                                    <div><small>DRAGON HIDEOUT</small><h4>작가 수호룡과 아지트 꾸미기</h4></div>
-                                    <span>{selectedStudent.petData.name || '작가 수호룡'} · {selectedStudent.readerEffect.name}</span>
+                                <div className="teacher-student-agit__overview-details">
+                                    <section className="teacher-student-agit__growth" aria-label={`${selectedStudent.name} 성장 상태`}>
+                                        <div className="teacher-student-agit__growth-top">
+                                            <div><small>성장 상태</small><strong>{selectedStudent.name}의 칭호</strong></div>
+                                            <div className="teacher-student-agit__points"><span>★</span><div><small>보유 포인트</small><strong>{formatNumber(selectedStudent.totalPoints)}P</strong></div></div>
+                                        </div>
+                                        <div className="teacher-student-agit__badges">
+                                            <div><span>{selectedStudent.writer.emoji}</span><small>작가 칭호</small><strong>Lv.{selectedStudent.writer.level} {selectedStudent.writer.name}</strong></div>
+                                            <div><span>{selectedStudent.reader.emoji}</span><small>독자 칭호</small><strong>R{selectedStudent.reader.level} {selectedStudent.reader.name}</strong></div>
+                                        </div>
+                                    </section>
+                                    <section className="teacher-student-agit__stats" aria-label={`${selectedStudent.name} 활동 요약`}>
+                                        <div><small>이번 학기 완성 글</small><strong>{formatNumber(selectedStudent.writerPosts)}편</strong></div>
+                                        <div><small>이번 학기 글자</small><strong>{formatNumber(selectedStudent.writerChars)}자</strong></div>
+                                        <div><small>전체 보관 기록</small><strong>{formatNumber(selectedStudent.careerPosts)}편</strong></div>
+                                        <div><small>독자 활동</small><strong>{formatNumber(selectedStudent.readerScore)}점</strong></div>
+                                    </section>
                                 </div>
-                                <DragonHideoutScene
-                                    petData={selectedStudent.petData}
-                                    dragon={selectedStudent.dragon}
-                                    readerLevel={selectedStudent.reader.level}
-                                    ownerName={selectedStudent.name}
-                                    eager
-                                />
-                                <div className="teacher-student-agit__stats">
-                                    <div><small>이번 학기 완성 글</small><strong>{formatNumber(selectedStudent.writerPosts)}편</strong></div>
-                                    <div><small>이번 학기 글자</small><strong>{formatNumber(selectedStudent.writerChars)}자</strong></div>
-                                    <div><small>전체 보관 기록</small><strong>{formatNumber(selectedStudent.careerPosts)}편</strong></div>
-                                    <div><small>독자 활동</small><strong>{formatNumber(selectedStudent.readerScore)}점</strong></div>
-                                </div>
-                            </section>
+                            </div>
 
                             <section className="teacher-student-agit__shelf" aria-label={`${selectedStudent.name}의 서재`}>
                                 <div className="teacher-student-agit__section-heading">
