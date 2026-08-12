@@ -8,6 +8,8 @@ export const landingExperiences = [
     icon: '✍️',
     tone: 'writing',
     title: '쓰고 다듬는 글',
+    shortLead: '쓰고 다듬는',
+    shortNoun: '글',
     summary: '과제로 시작한 글도 내 생각에서 시작한 글도, 의견을 주고받으며 한 편의 완성 글로 다듬어요.',
     details: [
       { title: '다양하게 쓰기', description: '과제 글, 자유 글, 일기, 시와 보고하는 글을 알맞은 형식으로 써요.' },
@@ -20,6 +22,8 @@ export const landingExperiences = [
     icon: '📚',
     tone: 'reading',
     title: '읽고 채우는 책장',
+    shortLead: '읽고 채우는',
+    shortNoun: '책장',
     summary: '읽은 책을 기록하고 책장을 한 권씩 채우며, 나만의 독서 여정을 꾸준히 이어가요.',
     details: [
       { title: '책 찾고 기록하기', description: '읽은 책을 검색해 고르고, 기억에 남은 생각을 독서록으로 써요.' },
@@ -32,6 +36,8 @@ export const landingExperiences = [
     icon: '🐲',
     tone: 'dragon',
     title: '활동으로 키우는 수호룡',
+    shortLead: '활동으로 키우는',
+    shortNoun: '수호룡',
     summary: '글쓰기와 학급 활동이 포인트와 성장으로 이어져, 배움의 과정을 즐겁게 계속할 수 있어요.',
     details: [
       { title: '활동이 포인트로', description: '글쓰기와 독서, 선생님이 정한 학급 활동에 참여하며 포인트를 모아요.' },

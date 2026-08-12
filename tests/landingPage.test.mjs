@@ -18,6 +18,22 @@ test('첫 로그인 화면은 핵심 문장과 두 로그인, 세 가지 아지�
   assert.doesNotMatch(landing, /capability-grid|생각을 글로 써요|글쓰기를 지도해요|함께 고치며 자라요|재미있게 이어가요/);
 });
 
+test('첫 화면은 높이를 줄이고 세 경험을 스크롤 없는 3분할 선택 바로 보여준다', async () => {
+  const [landing, styles, modal] = await Promise.all([
+    read('src/components/layout/LandingPage.jsx'),
+    read('src/components/layout/LandingPage.css'),
+    read('src/components/layout/LandingFeatureModal.jsx'),
+  ]);
+
+  assert.match(styles, /\.landing-hero\s*\{[\s\S]*aspect-ratio: 1723 \/ 520/);
+  assert.match(styles, /\.entry-card\s*\{[\s\S]*min-height: 78px/);
+  assert.match(styles, /\.landing-experience-grid\s*\{[\s\S]*grid-template-columns: repeat\(3,[\s\S]*gap: 0[\s\S]*overflow: hidden/);
+  assert.match(styles, /\.landing-experience-button\s*\{[\s\S]*min-height: 62px[\s\S]*border-right:/);
+  assert.match(landing, /landing-experience-copy[\s\S]*experience\.shortLead[\s\S]*experience\.shortNoun/);
+  assert.match(modal, /shortLead: '쓰고 다듬는'[\s\S]*shortNoun: '글'/);
+  assert.doesNotMatch(landing, />＋</);
+});
+
 test('세 가지 키워드는 아지트 정체성과 상세 경험을 담은 하나의 모달로 연결된다', async () => {
   const modal = await read('src/components/layout/LandingFeatureModal.jsx');
   const experienceIds = [...modal.matchAll(/id: '(writing|reading|dragon)'/g)].map((match) => match[1]);

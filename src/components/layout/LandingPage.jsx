@@ -99,7 +99,10 @@ const LandingPage = ({ onStudentLoginClick }) => {
         </section>
 
         <section className="landing-experiences" aria-labelledby="landing-experiences-title">
-          <h2 id="landing-experiences-title">아지트에서 만나는 세 가지 성장</h2>
+          <div className="landing-experiences-heading">
+            <h2 id="landing-experiences-title">아지트에서 만나는 세 가지 성장</h2>
+            <span>눌러서 자세히 보기</span>
+          </div>
           <div className="landing-experience-grid">
             {landingExperiences.map((experience) => (
               <button
@@ -109,10 +112,14 @@ const LandingPage = ({ onStudentLoginClick }) => {
                 onClick={() => setActiveExperienceId(experience.id)}
                 aria-haspopup="dialog"
                 aria-expanded={activeExperienceId === experience.id}
+                aria-label={`${experience.title} 자세히 보기`}
               >
                 <span className="landing-experience-icon" aria-hidden="true">{experience.icon}</span>
-                <strong>{experience.title}</strong>
-                <span className="landing-experience-more" aria-hidden="true">＋</span>
+                <span className="landing-experience-copy" aria-hidden="true">
+                  <small>{experience.shortLead}</small>
+                  <strong>{experience.shortNoun}</strong>
+                </span>
+                <span className="landing-experience-more" aria-hidden="true">→</span>
               </button>
             ))}
           </div>

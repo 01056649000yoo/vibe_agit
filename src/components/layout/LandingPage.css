@@ -2,7 +2,7 @@
   position: relative;
   width: min(700px, 100%);
   margin: 0 auto;
-  padding: 8px 16px 36px;
+  padding: 6px 16px 22px;
   overflow: hidden;
   isolation: isolate;
 }
@@ -34,7 +34,7 @@
 .landing-card {
   width: min(100%, 620px);
   margin: 0 auto;
-  padding: 18px;
+  padding: 16px;
   border: 1px solid rgba(240, 220, 194, 0.9);
   border-radius: 30px;
   background: rgba(255, 253, 249, 0.96);
@@ -45,7 +45,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 4px 13px;
+  padding: 0 4px 10px;
 }
 
 .landing-brand-mark {
@@ -80,7 +80,7 @@
   overflow: hidden;
   border: 1px solid rgba(255, 222, 184, 0.85);
   border-radius: 22px;
-  aspect-ratio: 1723 / 600;
+  aspect-ratio: 1723 / 520;
   background: #fff5e9;
 }
 
@@ -95,7 +95,7 @@
 }
 
 .landing-promise {
-  padding: 17px 10px 0;
+  padding: 12px 10px 0;
   text-align: center;
 }
 
@@ -116,11 +116,11 @@
 }
 
 .landing-entry {
-  padding: 14px 10px 0;
+  padding: 10px 10px 0;
 }
 
 .landing-entry-guide {
-  margin: 0 0 11px;
+  margin: 0 0 8px;
   color: #766b61;
   font-size: 0.8rem;
   line-height: 1.55;
@@ -134,8 +134,8 @@
 }
 
 .entry-card {
-  min-height: 88px;
-  padding: 14px;
+  min-height: 78px;
+  padding: 12px 13px;
   border: 1px solid transparent;
   border-radius: 19px;
   display: flex;
@@ -189,10 +189,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 13px;
   background: rgba(255, 255, 255, 0.62);
   font-size: 1.35rem;
 }
@@ -230,7 +230,7 @@
 
 .landing-login-error {
   min-height: 1.25em;
-  margin: 5px 2px 0;
+  margin: 3px 2px 0;
   color: #c23f34;
   font-size: 0.76rem;
   font-weight: 700;
@@ -238,94 +238,140 @@
 }
 
 .landing-experiences {
-  padding: 8px 10px 0;
+  padding: 5px 10px 0;
 }
 
-.landing-experiences h2 {
-  margin: 0 0 9px;
+.landing-experiences-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.landing-experiences-heading h2 {
+  margin: 0;
   color: #7a7066;
   background: none;
   -webkit-text-fill-color: currentColor;
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: -0.015em;
-  text-align: center;
+}
+
+.landing-experiences-heading span {
+  color: #a0968d;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.landing-experiences-heading span::before {
+  margin-right: 8px;
+  color: #d0c7be;
+  content: '·';
 }
 
 .landing-experience-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #ded5cc;
+  border-radius: 16px;
+  background: #fff;
 }
 
 .landing-experience-button {
-  position: relative;
   min-width: 0;
-  min-height: 70px;
-  padding: 10px 25px 10px 9px;
-  border: 1px solid;
-  border-radius: 16px;
+  min-height: 62px;
+  padding: 8px 10px;
+  border: 0;
+  border-right: 1px solid rgba(103, 89, 75, 0.12);
+  border-radius: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   color: #453d35;
   text-align: left;
   box-shadow: none;
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.landing-experience-button:last-child {
+  border-right: 0;
 }
 
 .landing-experience-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(93, 77, 60, 0.1);
+  color: #176d60;
 }
 
 .landing-experience-button--writing {
-  border-color: #f0d0aa;
-  background: #fff5e9;
+  background: #fff8ef;
+}
+
+.landing-experience-button--writing:hover {
+  background: #fff1dd;
 }
 
 .landing-experience-button--reading {
-  border-color: #b8dfd7;
-  background: #effaf7;
+  background: #f3fbf8;
+}
+
+.landing-experience-button--reading:hover {
+  background: #e5f7f2;
 }
 
 .landing-experience-button--dragon {
-  border-color: #d7ceed;
-  background: #f6f2fd;
+  background: #f8f5fd;
+}
+
+.landing-experience-button--dragon:hover {
+  background: #eee8fa;
 }
 
 .landing-experience-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
-  border-radius: 10px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 11px;
   background: rgba(255, 255, 255, 0.78);
   font-size: 1rem;
 }
 
-.landing-experience-button strong {
+.landing-experience-copy {
+  display: grid;
+  flex: 1;
+  gap: 1px;
   min-width: 0;
-  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.landing-experience-copy small {
+  color: #756b62;
+  font-size: 0.66rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.landing-experience-copy strong {
+  color: #3e3730;
+  font-size: 0.82rem;
   font-weight: 900;
-  line-height: 1.35;
-  word-break: keep-all;
 }
 
 .landing-experience-more {
-  position: absolute;
-  top: 50%;
-  right: 9px;
   color: #8b8177;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 900;
-  transform: translateY(-50%);
 }
 
 .landing-support-footer {
-  padding: 18px 8px 2px;
+  margin: 12px 8px 0;
+  padding: 10px 0 1px;
+  border-top: 1px solid #eee7df;
   text-align: center;
 }
 
@@ -533,7 +579,7 @@
 
 @media (max-width: 720px) {
   .landing-shell {
-    padding: 6px 7px 24px;
+    padding: 4px 7px 12px;
   }
 
   .landing-card {
@@ -542,7 +588,7 @@
   }
 
   .landing-brand-row {
-    padding: 1px 2px 9px;
+    padding: 1px 2px 7px;
   }
 
   .landing-brand-row div span {
@@ -557,11 +603,11 @@
 
   .landing-hero {
     border-radius: 17px;
-    aspect-ratio: 1723 / 560;
+    aspect-ratio: 1723 / 500;
   }
 
   .landing-promise {
-    padding: 13px 7px 0;
+    padding: 10px 7px 0;
   }
 
   .landing-promise h1 {
@@ -573,11 +619,11 @@
   }
 
   .landing-entry {
-    padding: 11px 4px 0;
+    padding: 8px 4px 0;
   }
 
   .landing-entry-guide {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-size: 0.72rem;
   }
 
@@ -586,8 +632,8 @@
   }
 
   .entry-card {
-    min-height: 82px;
-    padding: 10px;
+    min-height: 74px;
+    padding: 9px;
     border-radius: 16px;
     gap: 7px;
   }
@@ -618,37 +664,51 @@
   }
 
   .landing-experiences {
-    padding: 6px 4px 0;
+    padding: 4px 4px 0;
   }
 
-  .landing-experiences h2 {
-    margin-bottom: 7px;
+  .landing-experiences-heading {
+    gap: 5px;
+    margin-bottom: 5px;
+  }
+
+  .landing-experiences-heading h2 {
     font-size: 0.69rem;
   }
 
-  .landing-experience-grid {
-    gap: 5px;
+  .landing-experiences-heading span {
+    font-size: 0.61rem;
+  }
+
+  .landing-experiences-heading span::before {
+    margin-right: 5px;
   }
 
   .landing-experience-button {
-    min-height: 76px;
-    padding: 8px 6px;
-    border-radius: 13px;
+    min-height: 64px;
+    padding: 7px 4px;
     flex-direction: column;
     justify-content: center;
-    gap: 5px;
+    gap: 3px;
     text-align: center;
   }
 
   .landing-experience-icon {
-    width: 29px;
-    height: 29px;
-    flex-basis: 29px;
-    font-size: 0.92rem;
+    width: 27px;
+    height: 27px;
+    flex-basis: 27px;
+    border-radius: 9px;
+    font-size: 0.86rem;
   }
 
-  .landing-experience-button strong {
-    font-size: 0.68rem;
+  .landing-experience-copy {
+    flex: 0 0 auto;
+  }
+
+  .landing-experience-copy small,
+  .landing-experience-copy strong {
+    display: block;
+    font-size: 0.64rem;
   }
 
   .landing-experience-more {
@@ -656,7 +716,8 @@
   }
 
   .landing-support-footer {
-    padding: 14px 3px 1px;
+    margin: 9px 3px 0;
+    padding: 8px 0 1px;
   }
 
   .landing-support-footer a {
