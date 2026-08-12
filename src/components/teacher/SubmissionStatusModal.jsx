@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalCloseButton from '../common/ModalCloseButton';
 import PromptRuleButton from './PromptRuleButton';
+import { getMissionReactionOptions } from '../../modules/writing/mission-types/registry';
+import { fetchTeacherMissionEngagement } from '../../modules/writing/reactions/reactionApi';
 
 const SubmissionStatusModal = ({
     selectedMission, setSelectedMission, posts, loadingPosts,
@@ -88,19 +90,45 @@ const SubmissionStatusModal = ({
 
     const [isCollectViewOpen, setIsCollectViewOpen] = React.useState(false);
     const [isReactionViewOpen, setIsReactionViewOpen] = React.useState(false);
+    const [reactionPosts, setReactionPosts] = React.useState([]);
+    const [loadingReactions, setLoadingReactions] = React.useState(false);
+    const [reactionError, setReactionError] = React.useState('');
+    const reactionRequestRef = React.useRef(0);
 
     // [성능 최적화] 지연 렌더링을 위한 표시 개수 상태
     const [mainDisplayLimit, setMainDisplayLimit] = React.useState(20);
     const [collectDisplayLimit, setCollectDisplayLimit] = React.useState(10);
     const [reactionDisplayLimit, setReactionDisplayLimit] = React.useState(12);
 
-    const reactionIcons = [
-        { type: 'heart', label: '좋아요', emoji: '❤️' },
-        { type: 'laugh', label: '재밌어요', emoji: '😂' },
-        { type: 'wow', label: '멋져요', emoji: '👏' },
-        { type: 'bulb', label: '배워요', emoji: '💡' },
-        { type: 'star', label: '최고야', emoji: '✨' }
-    ];
+    const reactionIcons = getMissionReactionOptions(selectedMission);
+
+    const openReactionView = async () => {
+        const missionId = selectedMission?.id;
+        if (!missionId) return;
+
+        const requestId = ++reactionRequestRef.current;
+        setReactionDisplayLimit(12);
+        setReactionPosts([]);
+        setReactionError('');
+        setLoadingReactions(true);
+        setIsReactionViewOpen(true);
+        try {
+            const items = await fetchTeacherMissionEngagement(missionId);
+            if (reactionRequestRef.current === requestId) setReactionPosts(items);
+        } catch (error) {
+            console.error('학생 반응 모아보기 실패:', error.message);
+            if (reactionRequestRef.current === requestId) {
+                setReactionError('학생 반응과 댓글을 불러오지 못했습니다.');
+            }
+        } finally {
+            if (reactionRequestRef.current === requestId) setLoadingReactions(false);
+        }
+    };
+
+    const closeReactionView = () => {
+        reactionRequestRef.current += 1;
+        setIsReactionViewOpen(false);
+    };
 
     return (
         <AnimatePresence>
@@ -163,7 +191,7 @@ const SubmissionStatusModal = ({
                                         </Button>
 
                                         <Button
-                                            onClick={() => setIsReactionViewOpen(true)}
+                                            onClick={openReactionView}
                                             style={{
                                                 flex: '1 1 48%',
                                                 backgroundColor: '#FFFBEB',
@@ -480,12 +508,22 @@ const SubmissionStatusModal = ({
                                 <header style={{ padding: '20px 40px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📊 학생 반응 및 댓글 모아보기</h3>
-                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>한 화면에 {reactionDisplayLimit}개씩 표시됩니다. (총 {posts.length}건)</p>
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>한 화면에 {reactionDisplayLimit}개씩 표시됩니다. (총 {reactionPosts.length}건)</p>
                                     </div>
-                                    <ModalCloseButton onClick={() => setIsReactionViewOpen(false)} label="학생 반응 및 댓글 모아보기 닫기" />
+                                    <ModalCloseButton onClick={closeReactionView} label="학생 반응 및 댓글 모아보기 닫기" />
                                 </header>
                                 <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '40px', background: '#FAFAFA' }}>
-                                    <div style={{
+                                    {loadingReactions ? (
+                                        <div role="status" style={{ padding: '60px 20px', textAlign: 'center', color: '#7F8C8D', fontWeight: 800 }}>
+                                            학생 반응과 댓글을 모으는 중... ✨
+                                        </div>
+                                    ) : reactionError ? (
+                                        <div role="alert" style={{ padding: '60px 20px', textAlign: 'center', color: '#C62828', fontWeight: 800 }}>
+                                            <p>{reactionError}</p>
+                                            <Button onClick={openReactionView}>다시 불러오기</Button>
+                                        </div>
+                                    ) : (
+                                    <><div style={{
                                         display: 'grid',
                                         gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(360px, 1fr))',
                                         gap: '24px',
@@ -494,10 +532,10 @@ const SubmissionStatusModal = ({
                                         maxWidth: '1200px',
                                         boxSizing: 'border-box'
                                     }}>
-                                        {posts.slice(0, reactionDisplayLimit).map((post, idx) => (
+                                        {reactionPosts.slice(0, reactionDisplayLimit).map((post, idx) => (
                                             <div key={post.id} style={{ background: 'white', borderRadius: '20px', padding: '20px', border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column' }}>
                                                 <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F8F9FA', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: 'column', gap: '4px', width: '100%', overflow: 'hidden' }}>
-                                                    <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1rem' }}>{idx + 1}. {post.students?.name}</span>
+                                                    <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1rem' }}>{idx + 1}. {post.student_name}</span>
                                                     <span style={{
                                                         fontSize: '0.8rem', color: '#7F8C8D', fontWeight: 'bold',
                                                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
@@ -510,7 +548,7 @@ const SubmissionStatusModal = ({
                                                         <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#3498DB', marginBottom: '8px' }}>🌈 받은 반응</div>
                                                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                                             {reactionIcons.map(icon => {
-                                                                const count = post.post_reactions?.filter(r => r.reaction_type === icon.type).length || 0;
+                                                                const count = post.reactions?.filter(r => r.reaction_type === icon.type).length || 0;
                                                                 if (count === 0) return null;
                                                                 return (
                                                                     <div key={icon.type} style={{
@@ -522,7 +560,7 @@ const SubmissionStatusModal = ({
                                                                     </div>
                                                                 );
                                                             })}
-                                                            {(!post.post_reactions || post.post_reactions.length === 0) && (
+                                                            {(!post.reactions || post.reactions.length === 0) && (
                                                                 <div style={{ fontSize: '0.8rem', color: '#B2BEC3' }}>반응 대기 중... 🐣</div>
                                                             )}
                                                         </div>
@@ -531,8 +569,8 @@ const SubmissionStatusModal = ({
                                                     <div style={{ flex: 1 }}>
                                                         <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#E67E22', marginBottom: '8px' }}>💬 작성된 댓글</div>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                            {post.post_comments && post.post_comments.length > 0 ? (
-                                                                post.post_comments.slice(0, 3).map(comment => {
+                                                            {post.comments && post.comments.length > 0 ? (
+                                                                post.comments.map(comment => {
                                                                     const isTeacher = !!comment.teacher_id;
                                                                     return (
                                                                         <div key={comment.id} style={{
@@ -542,7 +580,7 @@ const SubmissionStatusModal = ({
                                                                             border: isTeacher ? '1px solid #BFDBFE' : '1px solid #FFEDD5'
                                                                         }}>
                                                                             <div style={{ fontWeight: 'bold', color: isTeacher ? '#1E40AF' : '#C2410C', fontSize: '0.75rem', marginBottom: '2px' }}>
-                                                                                {isTeacher ? '🍎 선생님' : (comment.students?.name || '친구')}
+                                                                                {isTeacher ? '🍎 선생님' : (comment.student_name || '친구')}
                                                                             </div>
                                                                             <div style={{ color: isTeacher ? '#1E3A8A' : '#431407', fontSize: '0.85rem', lineHeight: '1.4' }}>{comment.content}</div>
                                                                         </div>
@@ -551,8 +589,8 @@ const SubmissionStatusModal = ({
                                                             ) : (
                                                                 <div style={{ fontSize: '0.8rem', color: '#B2BEC3', fontStyle: 'italic' }}>댓글을 기다리고 있어요 🐣</div>
                                                             )}
-                                                            {post.post_comments?.length > 3 && (
-                                                                <div style={{ fontSize: '0.7rem', color: '#ADB5BD', textAlign: 'center' }}>외 {post.post_comments.length - 3}개의 댓글 더 있음</div>
+                                                            {post.comment_count > post.comments.length && (
+                                                                <div style={{ fontSize: '0.7rem', color: '#ADB5BD', textAlign: 'center' }}>외 {post.comment_count - post.comments.length}개의 댓글 더 있음</div>
                                                             )}
                                                         </div>
                                                     </div>
@@ -560,10 +598,12 @@ const SubmissionStatusModal = ({
                                             </div>
                                         ))}
                                     </div>
-                                    {reactionDisplayLimit < posts.length && (
+                                    {reactionDisplayLimit < reactionPosts.length && (
                                         <div style={{ textAlign: 'center', padding: '40px 0' }}>
                                             <Button onClick={() => setReactionDisplayLimit(prev => prev + 12)}>반응 더 보기 🔽</Button>
                                         </div>
+                                    )}
+                                    </>
                                     )}
                                 </div>
                             </motion.div>

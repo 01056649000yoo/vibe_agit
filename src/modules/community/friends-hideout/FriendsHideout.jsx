@@ -4,25 +4,14 @@ import Button from '../../../components/common/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFriendsHideout } from './useFriendsHideout';
 import { getSelfWritingType } from '../../writing/selfWritingTypes';
+import { getMissionReactionOptions } from '../../writing/mission-types/registry';
+import { getReactionOption } from '../../writing/reactions/registry';
 import PostDetailModal from '../../../components/student/PostDetailModal';
 import FriendHideoutPreviewCard from './profile/FriendHideoutPreviewCard';
 
 const FriendProfileShell = lazy(() => import('./profile/FriendProfileShell'));
 
-// 상수 및 아이콘 설정 (Optimization 5: 외부 상수화)
-const REACTION_ICONS = [
-    { type: 'heart', label: '좋아요', emoji: '❤️' },
-    { type: 'laugh', label: '재밌어요', emoji: '😂' },
-    { type: 'wow', label: '멋져요', emoji: '👏' },
-    { type: 'bulb', label: '배워요', emoji: '💡' },
-    { type: 'star', label: '최고야', emoji: '✨' }
-];
-
-const MEETING_REACTION_ICONS = [
-    { type: 'agree', label: '마음에 들어요', emoji: '💜' },
-    { type: 'supplement', label: '더 이야기해요', emoji: '🔧' },
-    { type: 'disagree', label: '다른 생각이에요', emoji: '💭' }
-];
+const MEETING_PRIMARY_REACTION = getReactionOption('agree');
 
 const ACCESSORIES = [
     { id: 'crown', emoji: '👑', pos: { top: '-25%', left: '25%', fontSize: '2.5rem' } },
@@ -156,9 +145,9 @@ const PostCard = memo(({ post, isLast, lastElementRef, onClick, isMeeting, stude
                         display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '7px'
                     }}
                     aria-pressed={isMyPick}
-                    aria-label={`${post.title} 안건 마음에 들어요`}
+                    aria-label={`${post.title} 안건 ${MEETING_PRIMARY_REACTION.label}`}
                 >
-                    <span>{isMyPick ? '💜 선택했어요' : '🤍 마음에 들어요'}</span>
+                    <span>{isMyPick ? `${MEETING_PRIMARY_REACTION.emoji} 선택했어요` : `🤍 ${MEETING_PRIMARY_REACTION.label}`}</span>
                     <span>{agreeReactions.length}</span>
                 </button>
             )}
@@ -185,8 +174,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
     const viewingMission = viewingPost
         ? (viewingPost.mission_id ? (viewingPost.writing_missions || selectedMission) : null)
         : selectedMission;
-    const viewingIsMeeting =
-        viewingMission?.mission_type === 'meeting' || viewingMission?.input_template === 'meeting';
+    const viewingReactionOptions = getMissionReactionOptions(viewingMission);
 
     const lastElementRef = useCallback(node => {
         if (loading || loadingMore) return;
@@ -450,7 +438,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                         mission={viewingMission}
                         studentSession={studentSession}
                         onClose={handleCloseModal}
-                        reactionIcons={viewingIsMeeting ? MEETING_REACTION_ICONS : REACTION_ICONS}
+                        reactionIcons={viewingReactionOptions}
                         isMobile={isMobile}
                         ACCESSORIES={ACCESSORIES}
                         classmates={classmates}

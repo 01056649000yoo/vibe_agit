@@ -142,6 +142,16 @@
   외부 Google API origin을 추가했다면 운영 Caddy CSP와 `test:security:static`도 함께 갱신한다. 상세 계약은
   `src/modules/writing/export/README.md`를 읽는다.
 
+### 글 반응 모듈
+- 반응 아이콘·문구·유형은 `src/modules/writing/reactions/registry.js`의 프로필에만 등록한다. 학생·친구·알림·교사
+  화면에 반응 배열이나 장르별 조건문을 하드코딩하지 않는다.
+- 모든 장르 매니페스트는 `reactionProfile`을 명시한다. 전용 반응이 없는 장르는 `standard`, 전용 반응이 있는
+  장르는 장르 ID와 같은 프로필을 사용한다. 새 장르 때문에 반응 프로필 DB 조회·폴링·Realtime을 추가하지 않는다.
+- 학생 한 명은 글 한 편에 반응 하나만 선택한다. 쓰기는 `toggle_my_post_reaction_v1` RPC 한 번만 사용하고,
+  서버가 실제 글의 학급·공개 상태·`input_template`과 허용 반응을 다시 검증한다. `post_reactions` 직접 쓰기는 금지한다.
+- 교사 반응 모아보기는 창을 열 때 전용 RPC 한 번으로 최대 100편을 읽는다. 과제 목록이나 학생 홈에 반응·댓글
+  본문을 상시 싣지 않는다. 상세 계약은 `src/modules/writing/reactions/README.md`를 읽는다.
+
 ## DB 마이그레이션 (2026-08-04 도구화)
 - **적용 여부는 추측하지 말고 물어본다**: `npm run migrate:status` — 아직 적용 안 된 파일만 보여준다(DB를 건드리지 않음).
 - **적용**: `npm run migrate` — 안 된 것만 파일명 순서대로 적용하고 `public.applied_migrations` 에 기록한다.

@@ -9,6 +9,7 @@ export const meetingMissionType = {
     supportsEvaluation: true,
     studentRoute: 'writing',
     postStatus: '제안중',
+    reactionProfile: 'meeting',
     studentLabels: {
         editorHeading: '🏛️ 나의 안건 제안',
         titlePlaceholder: '안건 제목을 적어주세요...',
@@ -22,11 +23,6 @@ export const meetingMissionType = {
         titleRequiredMessage: '친구들이 이해할 수 있도록 안건 제목을 적어주세요! 🏛️',
         submitConfirmMessage: '이 안건을 제출할까요? 제출 후에는 바로 수정할 수 없어요.'
     },
-    reactionIcons: [
-        { type: 'agree', label: '마음에 들어요', emoji: '💜' },
-        { type: 'supplement', label: '더 이야기해요', emoji: '🔧' },
-        { type: 'disagree', label: '다른 생각이에요', emoji: '💭' }
-    ],
     ownPostReactionsReadOnly: true,
     getSubmitSuccessMessage: ({ extensionResult }) => {
         if (extensionResult?.success && extensionResult.points_awarded > 0) {

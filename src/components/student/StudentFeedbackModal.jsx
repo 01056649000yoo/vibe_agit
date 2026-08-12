@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalPortal from '../common/ModalPortal';
 import ModalCloseButton from '../common/ModalCloseButton';
+import { getReactionOption } from '../../modules/writing/reactions/registry';
 
 /**
  * 역할: 학생 - 내 글 소식(알림) 모달 🔔
@@ -159,6 +160,7 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                     const borderColor = '#F1F1F1';
                                     const hoverBg = '#F0F7FF';
                                     const hoverBorder = '#D0E1F9';
+                                    const reactionOption = getReactionOption(f.reaction_type);
 
                                     return (
                                         <div
@@ -184,15 +186,10 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
                                                 <span style={{ fontSize: '1.2rem' }}>
-                                                    {f.type === 'reaction' ? (
-                                                        f.reaction_type === 'heart' ? '❤️' :
-                                                            f.reaction_type === 'laugh' ? '😂' :
-                                                                f.reaction_type === 'wow' ? '👏' :
-                                                                    f.reaction_type === 'bulb' ? '💡' : '✨'
-                                                    ) : '💬'}
+                                                    {f.type === 'reaction' ? reactionOption.emoji : '💬'}
                                                 </span>
                                                 <span style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem' }}>
-                                                    {f.type === 'reaction' ? `${f.students?.name} 친구가 리액션을 남겼어요!` :
+                                                    {f.type === 'reaction' ? `${f.students?.name} 친구가 '${reactionOption.label}' 반응을 남겼어요!` :
                                                         f.type === 'comment' ? (
                                                             f.teacher_id
                                                                 ? '🍎 선생님이 댓글을 남겼어요!'

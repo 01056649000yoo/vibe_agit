@@ -98,7 +98,7 @@ const MyPostEngagementPanel = ({ postId, className = '' }) => {
             <div className="post-engagement__comments">
                 <strong>
                     🗨️ 친구 댓글 {comments.length > 0 && <span>{comments.length}</span>}
-                    {data.reaction_count > 0 && <em>❤️ {data.reaction_count}</em>}
+                    {data.reaction_count > 0 && <em>✨ {data.reaction_count}</em>}
                 </strong>
                 {comments.length === 0 ? (
                     <p className="post-engagement__empty">

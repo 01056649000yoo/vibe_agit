@@ -1,15 +1,11 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { classKey, dataCache } from '../../../../../lib/cache';
 import { supabase } from '../../../../../lib/supabaseClient';
+import { getReactionOption } from '../../../../writing/reactions/registry';
 
 const RELATIONSHIP_CACHE_MS = 120000;
 const POST_LIMIT = 160;
 const INTERACTION_LIMIT = 120;
-
-const REACTION_EMOJI = {
-    heart: '❤️', laugh: '😂', wow: '👏', bulb: '💡', star: '✨',
-    agree: '💜', supplement: '🔧', disagree: '💭'
-};
 
 const formatDate = (value) => {
     if (!value) return '';
@@ -146,14 +142,15 @@ const FriendRelationshipCard = ({ friendId, friendName, viewerId, classId }) => 
                     </div>
                     <div style={{ display: 'grid', gap: '7px' }}>
                         {events.slice(0, 5).map((event) => {
+                            const reactionOption = getReactionOption(event.reaction_type);
                             const action = event.type === 'comment'
                                 ? '댓글을 남겼어요 💬'
-                                : `${REACTION_EMOJI[event.reaction_type] || '💛'} 마음을 남겼어요`;
+                                : `${reactionOption.emoji} ${reactionOption.label} 마음을 남겼어요`;
                             const subject = event.fromViewer ? '내가' : friendName;
                             const owner = event.fromViewer ? `${friendName}의` : '내';
                             return (
                                 <div key={`${event.type}:${event.id}`} style={{ display: 'flex', alignItems: 'center', gap: '9px', padding: '10px 11px', borderRadius: '14px', background: '#FFFFFF' }}>
-                                    <span aria-hidden="true" style={{ fontSize: '1.2rem' }}>{event.type === 'comment' ? '💬' : (REACTION_EMOJI[event.reaction_type] || '💛')}</span>
+                                    <span aria-hidden="true" style={{ fontSize: '1.2rem' }}>{event.type === 'comment' ? '💬' : reactionOption.emoji}</span>
                                     <span style={{ flex: 1, minWidth: 0, color: '#455A3E', fontSize: '.75rem', fontWeight: 800, lineHeight: 1.45 }}>
                                         {subject} {owner} 「{event.post?.title || '제목 없는 글'}」에 {action}
                                     </span>

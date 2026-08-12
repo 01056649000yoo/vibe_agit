@@ -6,8 +6,10 @@ import Button from '../../../components/common/Button';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import RubricSettings, { createDefaultEvaluationRubric } from '../evaluation/RubricSettings';
 import { pointApi } from '../../points/pointApi';
+import { getReactionOptions } from '../reactions/registry';
 
 const MissionStudentPreview = React.lazy(() => import('../../../components/teacher/MissionStudentPreview'));
+const MEETING_REACTION_OPTIONS = getReactionOptions('meeting');
 
 // 상태 뱃지 색상
 const STATUS_COLORS = {
@@ -1112,17 +1114,13 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                 display: 'flex', gap: '10px', marginBottom: '20px',
                                 flexWrap: 'wrap'
                             }}>
-                                {[
-                                    { type: 'agree', label: '👍 찬성', bg: '#E8F5E9', color: '#4CAF50' },
-                                    { type: 'disagree', label: '👎 반대', bg: '#FFEBEE', color: '#F44336' },
-                                    { type: 'supplement', label: '🔧 보완', bg: '#FFF3E0', color: '#FF9800' },
-                                ].map(v => (
-                                    <span key={v.type} style={{
+                                {MEETING_REACTION_OPTIONS.map((reaction) => (
+                                    <span key={reaction.type} style={{
                                         padding: '8px 16px', borderRadius: '10px',
-                                        background: v.bg, fontSize: isMobile ? '0.85rem' : '1rem',
-                                        fontWeight: '800', color: v.color
+                                        background: '#F5F3FF', fontSize: isMobile ? '0.85rem' : '1rem',
+                                        fontWeight: '800', color: '#6D28D9'
                                     }}>
-                                        {v.label} {getVoteCount(detailModal, v.type)}
+                                        {reaction.emoji} {reaction.label} {getVoteCount(detailModal, reaction.type)}
                                     </span>
                                 ))}
                                 <span style={{

@@ -1,6 +1,7 @@
 import { poemMissionType } from './poem/manifest.js';
 import { reportMissionType } from './report/manifest.js';
 import { meetingMissionType } from '../idea-market/missionTypeManifest.js';
+import { getReactionProfile } from '../reactions/registry.js';
 
 const genreMissionTypes = [
     poemMissionType,
@@ -19,6 +20,15 @@ export const resolveGenreMissionTypeId = (mission) => {
     if (getGenreMissionType(mission?.input_template)) return mission.input_template;
     return null;
 };
+
+export const getMissionReactionProfile = (mission) => {
+    const missionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
+    return getReactionProfile(missionType?.reactionProfile);
+};
+
+export const getMissionReactionOptions = (mission) => (
+    getMissionReactionProfile(mission).options
+);
 
 // 이 미션의 장르가 PDF 내보내기 때 선택지(예: 보고서의 질문 포함형/완성본)를 선언했다면 그 목록을 준다.
 // 없으면 빈 배열이다. 화면은 장르 이름을 하드코딩하지 않고 이 함수만 통해 선택지 유무를 판정한다.

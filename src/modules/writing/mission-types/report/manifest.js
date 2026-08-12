@@ -13,6 +13,7 @@ export const reportMissionType = {
     description: '글과 사진을 칸별로 정리하고 순서를 바꾸어 보고서를 만듭니다.',
     teacherEntry: () => import('./ReportMissionForm'),
     studentEditorEntry: () => import('./ReportEditor'),
+    reactionProfile: 'report',
     usesStructuredContent: true,
     pdfExport: {
         id: REPORT_TEMPLATE_ID,

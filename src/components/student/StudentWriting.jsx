@@ -27,6 +27,7 @@ import {
 import SpellingUnderlineTextarea from '../../modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea';
 import WritingPolicyProgress from '../../modules/writing/policy/WritingPolicyProgress';
 import { writingPolicyFromMission } from '../../modules/writing/policy/writingPolicy';
+import { getReactionOptions } from '../../modules/writing/reactions/registry';
 import ReactionNamesTooltip from './ReactionNamesTooltip';
 
 const ReportDocument = lazy(() => import('../../modules/writing/mission-types/report/ReportDocument'));
@@ -36,14 +37,6 @@ const GENRE_EDITORS = new Map(
         .filter((missionType) => missionType.studentEditorEntry)
         .map((missionType) => [missionType.id, lazy(missionType.studentEditorEntry)])
 );
-
-const REACTION_ICONS = [
-    { type: 'heart', label: '좋아요', emoji: '❤️' },
-    { type: 'laugh', label: '재밌어요', emoji: '😂' },
-    { type: 'wow', label: '멋져요', emoji: '👏' },
-    { type: 'bulb', label: '배워요', emoji: '💡' },
-    { type: 'star', label: '최고야', emoji: '✨' }
-];
 
 const PREVIEW_MODAL_STYLES = {
     overlay: {
@@ -164,7 +157,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const genreMissionType = getGenreMissionType(mission?.input_template);
     const GenreEditor = GENRE_EDITORS.get(mission?.input_template) || null;
     const studentLabels = genreMissionType?.studentLabels || {};
-    const activeReactionIcons = genreMissionType?.reactionIcons || REACTION_ICONS;
+    const activeReactionIcons = getReactionOptions(genreMissionType?.reactionProfile);
     const ownPostReactionsReadOnly = genreMissionType?.ownPostReactionsReadOnly === true;
     const isReportWriting = structuredContent?.template === 'report'
         || mission?.input_template === 'report';

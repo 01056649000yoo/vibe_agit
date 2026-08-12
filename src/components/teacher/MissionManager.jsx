@@ -40,7 +40,7 @@ const MissionManager = ({
         missions, submissionCounts, isFormOpen, setIsFormOpen, loading,
         selectedMission, setSelectedMission, posts, selectedPost, setSelectedPost,
         loadingPosts, isGenerating, showCompleteToast,
-        tempFeedback, setTempFeedback, postReactions, postComments, totalStudentCount,
+        tempFeedback, setTempFeedback, postComments, totalStudentCount,
         archiveModal, setArchiveModal, progress, isEditing, formData, setFormData,
         editingMissionId,
         handleEditClick, handleCancelEdit, handleSubmit, fetchPostsForMission,
@@ -77,14 +77,6 @@ const MissionManager = ({
         { label: '💡 생각을 주장하는 글', genres: ['논설문', '독후감(서평)'] },
         { label: '🌈 상상을 담은 글', genres: ['동시', '동화(소설)'] },
         { label: '✨ 기타 활동', genres: ['기타'] }
-    ];
-
-    const reactionIcons = [
-        { type: 'heart', label: '좋아요', emoji: '❤️' },
-        { type: 'laugh', label: '재밌어요', emoji: '😂' },
-        { type: 'wow', label: '멋져요', emoji: '👏' },
-        { type: 'bulb', label: '배워요', emoji: '💡' },
-        { type: 'star', label: '최고야', emoji: '✨' }
     ];
 
     const activeGenreMission = getGenreMissionType(activeGenreMissionId);
@@ -331,9 +323,7 @@ const MissionManager = ({
                 setTempFeedback={setTempFeedback}
                 isGenerating={isGenerating}
                 showCompleteToast={showCompleteToast}
-                postReactions={postReactions}
                 postComments={postComments}
-                reactionIcons={reactionIcons}
                 isMobile={isMobile}
                 onUpdate={() => fetchPostsForMission(selectedMission)}
                 isEvaluationMode={isEvaluationMode}
