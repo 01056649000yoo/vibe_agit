@@ -119,7 +119,7 @@ const LandingPage = ({ onStudentLoginClick }) => {
 
         <footer className="landing-support-footer">
           <nav aria-label="서비스 안내">
-            <a href="/learning-support-software">학교·학급 도입 안내</a>
+            <a href="/learning-support-software">학습지원소프트웨어 선정기준 안내</a>
           </nav>
         </footer>
       </main>
