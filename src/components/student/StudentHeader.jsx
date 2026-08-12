@@ -6,14 +6,20 @@ import './StudentHeader.css';
 const HeaderAction = ({ icon, label, onClick, hasNotice = false }) => (
     <motion.button
         type="button"
-        className="student-home-toolbar__action"
+        className={`student-home-toolbar__action${hasNotice ? ' has-notice' : ''}`}
+        aria-label={hasNotice ? `${label}, 새 소식 있음` : label}
         whileHover={{ y: -1 }}
         whileTap={{ scale: .97 }}
         onClick={onClick}
     >
-        <span aria-hidden="true">{icon}</span>
+        <span className="student-home-toolbar__action-icon" aria-hidden="true">{icon}</span>
         <strong>{label}</strong>
-        {hasNotice && <i aria-label="새 소식 있음" />}
+        {hasNotice && (
+            <span className="student-home-toolbar__notice" aria-hidden="true">
+                <span className="student-home-toolbar__notice-full">새 소식</span>
+                <span className="student-home-toolbar__notice-compact">새</span>
+            </span>
+        )}
     </motion.button>
 );
 

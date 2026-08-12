@@ -43,6 +43,22 @@ test('지금 할 일과 활동 알림은 같은 컴팩트 높이에서 핵심 �
     assert.match(notificationCss, /\.activity-notification-panel__body \{[\s\S]*?min-height: 78px/);
 });
 
+test('내 글 소식은 빨간 점 대신 문자 배지와 버튼 전체 강조로 새 소식을 알린다', async () => {
+    const [header, headerCss] = await Promise.all([
+        read('src/components/student/StudentHeader.jsx'),
+        read('src/components/student/StudentHeader.css')
+    ]);
+
+    assert.match(header, /hasNotice \? ' has-notice' : ''/);
+    assert.match(header, /aria-label=\{hasNotice \? `\$\{label\}, 새 소식 있음` : label\}/);
+    assert.match(header, /student-home-toolbar__notice-full">새 소식/);
+    assert.match(header, /student-home-toolbar__notice-compact">새/);
+    assert.doesNotMatch(header, /<i aria-label="새 소식 있음"/);
+    assert.match(headerCss, /\.student-home-toolbar__action\.has-notice \{[\s\S]*?background: #FFF2EE/);
+    assert.match(headerCss, /animation: student-home-news-arrival \.72s ease-out 2/);
+    assert.match(headerCss, /prefers-reduced-motion: reduce[\s\S]*?animation: none/);
+});
+
 test('활동 알림은 단일 원장·중복 방지·학생 범위 RPC 계약을 갖는다', async () => {
     const migration = await read('supabase/migrations/20261023_student_activity_notifications.sql');
 
