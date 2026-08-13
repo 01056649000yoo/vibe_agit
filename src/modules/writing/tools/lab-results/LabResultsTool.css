@@ -99,6 +99,16 @@
 .lab-results-card + .lab-results-card { margin-top: 13px; }
 .lab-results-card-heading { align-items: flex-start; justify-content: space-between; gap: 12px; }
 .lab-results-card-heading span { color: #1e6f9f; font-size: 0.75rem; font-weight: 900; }
+.lab-results-linked-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #ede9fe;
+    color: #6d28d9;
+    font-size: 0.67rem;
+    font-style: normal;
+}
 .lab-results-card-heading h3 { margin: 3px 0 0; font-size: 1.05rem; }
 .lab-results-card-heading p { margin: 5px 0 0; color: #698078; font-size: 0.83rem; }
 .lab-results-card-heading time { flex: 0 0 auto; color: #82958f; font-size: 0.72rem; }
@@ -130,6 +140,11 @@
 }
 .lab-results-chunks button { flex: 0 0 auto; padding: 8px 10px; font-size: 0.78rem; }
 .lab-results-use-all { width: 100%; margin-top: 12px; padding: 10px 14px; background: #e8f7f1; }
+.lab-results-use-all.is-selected {
+    border-color: #c4b5fd;
+    background: #f5f3ff;
+    color: #6d28d9;
+}
 .lab-results-more { display: block; margin-right: auto; margin-left: auto; }
 
 @media (min-width: 768px) {

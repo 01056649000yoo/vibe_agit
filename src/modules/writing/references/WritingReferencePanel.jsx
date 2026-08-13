@@ -5,11 +5,11 @@ import './WritingReferencePanel.css';
 /**
  * 글쓰기 입력창을 가리지 않고 옆에 펼쳐 두는 공통 참고함 셸.
  *
- * 이 컴포넌트는 데이터 조회나 본문 변경을 하지 않는다. 선생님 질문, 연구소 결과처럼
- * 각 출처가 이미 준비한 문자열 섹션만 받아 표시하므로 새 출처를 붙여도 글쓰기 저장
- * 흐름과 분리된다.
+ * 이 컴포넌트는 데이터 조회나 본문 변경을 하지 않는다. 선생님 질문은 문자열 섹션으로,
+ * 지연 조회가 필요한 연구소 자료는 renderSources 슬롯으로 받아 새 출처를 붙여도 글쓰기
+ * 저장 흐름과 분리한다.
  */
-const WritingReferencePanel = ({ sections = [], children }) => {
+const WritingReferencePanel = ({ sections = [], renderSources, children }) => {
     const [isOpen, setIsOpen] = useState(false);
     const panelId = useId();
     const triggerRef = useRef(null);
@@ -72,7 +72,7 @@ const WritingReferencePanel = ({ sections = [], children }) => {
                     </header>
 
                     <div className="writing-reference-panel__body">
-                        {visibleSections.length === 0 ? (
+                        {visibleSections.length === 0 && !renderSources ? (
                             <div className="writing-reference-empty">
                                 <span aria-hidden="true">🗂️</span>
                                 <strong>현재 글에 연결된 참고 자료가 없어요.</strong>
@@ -101,6 +101,7 @@ const WritingReferencePanel = ({ sections = [], children }) => {
                                 </ol>
                             </section>
                         ))}
+                        {renderSources?.({ isOpen })}
                     </div>
                 </aside>
 

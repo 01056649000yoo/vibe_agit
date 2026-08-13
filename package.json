@@ -31,7 +31,7 @@
     "test:security:static": "node --test tests/securityArchitecture.test.mjs tests/vibeAiEdgeFunction.test.mjs tests/labSsoIntegration.test.mjs",
     "test:deployment": "node --test tests/deploymentArchitecture.test.mjs",
     "test:security:ops": "node scripts/check-operational-security.mjs",
-    "test:security": "npm run test:security:static && npm run migrate:check && npm run smoke:security-boundary && npm run test:security:ops",
+    "test:security": "npm run test:security:static && npm run migrate:check && npm run smoke:security-boundary && npm run smoke:writing-references && npm run test:security:ops",
     "test:storage": "node --test tests/browserStorage.test.mjs",
     "test:points": "node --test tests/pointModule.test.mjs",
     "test:notifications": "node --test tests/studentNotifications.test.mjs",
@@ -41,7 +41,8 @@
     "migrate:status": "node scripts/migrate.mjs --status",
     "migrate:check": "node scripts/check-migrations.mjs",
     "smoke:student-scaling": "node scripts/run-rollback-smoke.mjs tests/sql/20261006_student_scaling_harness.smoke.sql",
-    "smoke:security-boundary": "node scripts/run-rollback-smoke.mjs tests/sql/20261014_security_boundary_hardening.smoke.sql"
+    "smoke:security-boundary": "node scripts/run-rollback-smoke.mjs tests/sql/20261014_security_boundary_hardening.smoke.sql",
+    "smoke:writing-references": "node scripts/run-rollback-smoke.mjs tests/sql/20261104_writing_reference_sources.smoke.sql"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

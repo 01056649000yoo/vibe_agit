@@ -13,6 +13,7 @@ const [
     portableResultsMigration,
     myResultsMigration,
     myActivitiesMigration,
+    writingReferencesMigration,
     labResultsApi,
     labResultsManifest,
     labResultsTool,
@@ -23,6 +24,9 @@ const [
     labActivitiesPage,
     moduleRegistry,
     dashboardMenu,
+    labReferenceSource,
+    labReferenceApi,
+    missionLabSourcesModal,
     packageJson
 ] = await Promise.all([
     readFile('src/lib/supabaseClient.js', 'utf8'),
@@ -35,6 +39,7 @@ const [
     readFile('supabase/migrations/20261101_lab_portable_results.sql', 'utf8'),
     readFile('supabase/migrations/20261102_my_lab_results.sql', 'utf8'),
     readFile('supabase/migrations/20261103_my_lab_activities.sql', 'utf8'),
+    readFile('supabase/migrations/20261104_writing_reference_sources.sql', 'utf8'),
     readFile('src/modules/writing/tools/lab-results/api.js', 'utf8'),
     readFile('src/modules/writing/tools/lab-results/manifest.js', 'utf8'),
     readFile('src/modules/writing/tools/lab-results/LabResultsTool.jsx', 'utf8'),
@@ -45,6 +50,9 @@ const [
     readFile('src/modules/writing/lab-activities/LabActivitiesPage.jsx', 'utf8'),
     readFile('src/modules/registry.js', 'utf8'),
     readFile('src/components/student/DashboardMenu.jsx', 'utf8'),
+    readFile('src/modules/writing/references/LabReferenceSource.jsx', 'utf8'),
+    readFile('src/modules/writing/references/labReferenceApi.js', 'utf8'),
+    readFile('src/components/teacher/MissionLabSourcesModal.jsx', 'utf8'),
     readFile('package.json', 'utf8')
 ]);
 
@@ -115,6 +123,28 @@ test('글쓰기 연구소 결과 도구는 열 때만 본인 RPC를 호출하고
     assert.match(labResultsTool, /onClick=\{\(\) => void handleUseText/);
     assert.match(writingToolHost, /lazy\(manifest\.studentEntry\)/);
     assert.match(writingToolHost, /onInsertText=\{onInsertText\}/);
+});
+
+test('과제 참고함은 교사가 연결한 개요·좋은 질문 결과를 본인 범위에서 우선 읽는다', () => {
+    assert.match(writingReferencesMigration, /CREATE TABLE IF NOT EXISTS public\.writing_mission_lab_sources/);
+    assert.match(writingReferencesMigration, /UNIQUE \(mission_id, result_kind\)/);
+    assert.match(writingReferencesMigration, /REVOKE ALL ON TABLE public\.writing_mission_lab_sources FROM PUBLIC, anon, authenticated/);
+    assert.match(writingReferencesMigration, /v_student_id UUID := public\.auth_student_id\(\)/);
+    assert.match(writingReferencesMigration, /portable\.agit_student_id = v_student_id/);
+    assert.match(writingReferencesMigration, /portable\.class_id = v_class_id/);
+    assert.match(writingReferencesMigration, /portable\.result_kind IN \('outline', 'selected_questions'\)/);
+    assert.match(writingReferencesMigration, /ORDER BY \(source\.room_id IS NOT NULL\) DESC/);
+    assert.match(writingReferencesMigration, /LEAST\(GREATEST\(COALESCE\(p_limit, 20\), 1\), 20\)/);
+    assert.doesNotMatch(writingReferencesMigration, /auth\.jwt|app_metadata/);
+
+    assert.match(labResultsApi, /get_my_writing_references_v1/);
+    assert.match(labReferenceSource, /listForWritingReference/);
+    assert.match(labReferenceSource, /providedResults=\{results\}/);
+    assert.match(labReferenceApi, /get_teacher_mission_lab_sources_v1/);
+    assert.match(labReferenceApi, /set_teacher_mission_lab_source_v1/);
+    assert.match(missionLabSourcesModal, /연구소 자료 연결/);
+    assert.match(missionLabSourcesModal, /글 개요짜기/);
+    assert.match(missionLabSourcesModal, /좋은 질문 고르기/);
 });
 
 test('학생 연구소 메뉴는 홈 추가 조회 없이 열 때만 우리 반 활성 활동을 읽는다', () => {

@@ -9,9 +9,10 @@ import {
     setWritingToolEnabled
 } from '../src/modules/writing/editor-settings/settings.js';
 
-const [referencePanel, referencePanelCss, studentWriting, writingWorkspace] = await Promise.all([
+const [referencePanel, referencePanelCss, labReferenceSource, studentWriting, writingWorkspace] = await Promise.all([
     readFile('src/modules/writing/references/WritingReferencePanel.jsx', 'utf8'),
     readFile('src/modules/writing/references/WritingReferencePanel.css', 'utf8'),
+    readFile('src/modules/writing/references/LabReferenceSource.jsx', 'utf8'),
     readFile('src/components/student/StudentWriting.jsx', 'utf8'),
     readFile('src/components/writing/WritingWorkspace.jsx', 'utf8')
 ]);
@@ -67,10 +68,15 @@ test('글쓰기 참고함 옆 안내칸은 가로·세로 배치와 긴 글 추�
     assert.match(referencePanelCss, /\.writing-reference-position-note/);
 });
 
-test('학생 글쓰기 참고함은 기존 선생님 안내와 핵심질문만 재사용한다', () => {
-    assert.match(studentWriting, /<WritingReferencePanel key=\{missionId\} sections=\{writingReferenceSections\}>/);
+test('학생 글쓰기 참고함은 선생님 안내·핵심질문과 지연 연구소 출처를 함께 쓴다', () => {
+    assert.match(studentWriting, /<WritingReferencePanel[\s\S]*sections=\{writingReferenceSections\}/);
     assert.match(studentWriting, /id: 'teacher-guide'/);
     assert.match(studentWriting, /id: 'teacher-questions'/);
     assert.match(studentWriting, /supportingText: Reflect\.get\(studentAnswers, index\)/);
-    assert.doesNotMatch(studentWriting, /WritingReferencePanel[\s\S]{0,200}labResultsApi/);
+    assert.match(studentWriting, /<LabReferenceSource missionId=\{missionId\} isActive=\{isOpen\}/);
+    assert.match(referencePanel, /renderSources\?\.\(\{ isOpen \}\)/);
+    assert.match(labReferenceSource, /listForWritingReference\(\{ missionId, limit: 20 \}\)/);
+    assert.match(labReferenceSource, /item\.isLinked/);
+    assert.match(labReferenceSource, /글 개요짜기와 좋은 질문 고르기 결과/);
+    assert.doesNotMatch(labReferenceSource, /setInterval|\.channel\(|postgres_changes/);
 });

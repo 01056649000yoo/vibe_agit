@@ -279,6 +279,203 @@
     line-height: 1.55;
 }
 
+.writing-reference-lab-source {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--ui-border);
+}
+
+.writing-reference-lab-source__intro {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.writing-reference-lab-source__intro > span {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 11px;
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.writing-reference-lab-source__intro small,
+.writing-reference-lab-source__intro strong {
+    display: block;
+}
+
+.writing-reference-lab-source__intro small,
+.writing-reference-lab-result__heading span {
+    color: #6d28d9;
+    font-size: .68rem;
+    font-weight: 900;
+}
+
+.writing-reference-lab-source__intro strong {
+    margin-top: 2px;
+    color: var(--ui-ink);
+    font-size: .96rem;
+}
+
+.writing-reference-lab-source__intro p,
+.writing-reference-source-state p {
+    margin: 5px 0 0;
+    color: var(--ui-ink-muted);
+    font-size: .72rem;
+    line-height: 1.5;
+}
+
+.writing-reference-source-state {
+    margin-top: 12px;
+    padding: 14px 12px;
+    border: 1px dashed #d8d2f0;
+    border-radius: var(--ui-radius-sm);
+    background: #faf9ff;
+    color: var(--ui-ink-muted);
+    font-size: .78rem;
+    text-align: center;
+}
+
+.writing-reference-source-state strong {
+    display: block;
+    color: var(--ui-ink-strong);
+    font-size: .8rem;
+}
+
+.writing-reference-source-state.is-error {
+    border-color: #fecaca;
+    background: #fff7f7;
+}
+
+.writing-reference-source-state button,
+.writing-reference-source-picker,
+.writing-reference-lab-result__heading button {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 12px;
+    font-weight: 850;
+}
+
+.writing-reference-source-state button {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: 1px solid #fecaca;
+    background: white;
+    color: #b42318;
+}
+
+.writing-reference-source-picker {
+    width: 100%;
+    margin-top: 12px;
+    padding: 9px 12px;
+    border: 1px solid #c4b5fd;
+    background: #f5f3ff;
+    color: #6d28d9;
+}
+
+.writing-reference-lab-result {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--ui-border);
+}
+
+.writing-reference-lab-result__heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.writing-reference-lab-result__heading > div {
+    min-width: 0;
+}
+
+.writing-reference-lab-result__heading button {
+    min-height: 36px;
+    flex: 0 0 auto;
+    padding: 7px 9px;
+    border: 1px solid var(--ui-border);
+    background: white;
+    color: var(--ui-ink-muted);
+    font-size: .7rem;
+}
+
+.writing-reference-outline {
+    display: grid;
+    gap: 9px;
+    margin-top: 12px;
+}
+
+.writing-reference-outline > div {
+    padding: 11px;
+    border: 1px solid #fde68a;
+    border-radius: var(--ui-radius-sm);
+    background: #fffbeb;
+}
+
+.writing-reference-outline > div > strong {
+    display: block;
+    color: #a16207;
+    font-size: .72rem;
+}
+
+.writing-reference-outline ul {
+    display: grid;
+    gap: 8px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.writing-reference-outline li span {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--ui-ink-muted);
+    font-size: .67rem;
+    font-weight: 850;
+}
+
+.writing-reference-outline li p {
+    margin: 0;
+    color: var(--ui-ink-strong);
+    font-size: .82rem;
+    font-weight: 720;
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
+.writing-reference-question-results {
+    counter-reset: reference-question;
+}
+
+.writing-reference-question-results > li {
+    position: relative;
+    padding-left: 38px;
+    counter-increment: reference-question;
+}
+
+.writing-reference-question-results > li::before {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: grid;
+    width: 19px;
+    height: 19px;
+    place-items: center;
+    border-radius: 999px;
+    background: #ede9fe;
+    color: #6d28d9;
+    content: counter(reference-question);
+    font-size: .65rem;
+    font-weight: 900;
+}
+
 @media (max-width: 1180px) {
     .writing-reference-shell.is-open .writing-reference-layout {
         grid-template-columns: minmax(0, 1fr);

@@ -144,6 +144,22 @@ test('연구소 결과는 학생이 도구를 열 때만 최대 20개를 읽고 
     }
 });
 
+test('글쓰기 참고함 연구소 자료는 패널을 열 때 단일 RPC로 최대 20개만 읽는다', async () => {
+    const studentWriting = await read('src/components/student/StudentWriting.jsx');
+    const source = await read('src/modules/writing/references/LabReferenceSource.jsx');
+    const api = await read('src/modules/writing/tools/lab-results/api.js');
+    const migration = await read('supabase/migrations/20261104_writing_reference_sources.sql');
+
+    assert.match(studentWriting, /<LabReferenceSource missionId=\{missionId\} isActive=\{isOpen\}/);
+    assert.match(source, /if \(!isActive \|\| loaded \|\| loading \|\| error\) return/);
+    assert.match(source, /listForWritingReference\(\{ missionId, limit: 20 \}\)/);
+    assert.match(api, /supabase\.rpc\('get_my_writing_references_v1'/);
+    assert.match(migration, /LIMIT v_limit/);
+    for (const content of [source, api]) {
+        assert.doesNotMatch(content, /setInterval\s*\(|\.channel\(|postgres_changes/);
+    }
+});
+
 test('연구소 활동 목록은 학생이 메뉴를 열 때 단일 RPC로 최대 20개를 읽는다', async () => {
     const dashboard = await read('src/components/student/DashboardMenu.jsx');
     const manifest = await read('src/modules/writing/lab-activities/manifest.js');

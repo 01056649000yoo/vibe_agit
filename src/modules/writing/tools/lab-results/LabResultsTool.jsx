@@ -45,9 +45,18 @@ const copyText = async (text) => {
     textarea.remove();
 };
 
-const LabResultsTool = ({ onClose, onInsertText }) => {
-    const [results, setResults] = useState([]);
-    const [loading, setLoading] = useState(true);
+const LabResultsTool = ({
+    onClose,
+    onInsertText,
+    onToggleReference,
+    selectedResultIds = [],
+    providedResults = null,
+    resultKinds = null
+}) => {
+    const usesProvidedResults = Array.isArray(providedResults);
+    const isReferenceSelection = typeof onToggleReference === 'function';
+    const [results, setResults] = useState(() => usesProvidedResults ? providedResults : []);
+    const [loading, setLoading] = useState(!usesProvidedResults);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState('');
     const [hasMore, setHasMore] = useState(false);
@@ -59,7 +68,7 @@ const LabResultsTool = ({ onClose, onInsertText }) => {
         append ? setLoadingMore(true) : setLoading(true);
         setError('');
         try {
-            const page = await labResultsApi.list({ limit: 20, before });
+            const page = await labResultsApi.list({ limit: 20, before, resultKinds });
             setResults((current) => append ? [...current, ...page.items] : page.items);
             setHasMore(page.hasMore);
             setCursor(page.nextCursor);
@@ -69,11 +78,20 @@ const LabResultsTool = ({ onClose, onInsertText }) => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, []);
+    }, [resultKinds]);
 
     useEffect(() => {
+        if (usesProvidedResults) return;
         void loadResults();
-    }, [loadResults]);
+    }, [loadResults, usesProvidedResults]);
+
+    useEffect(() => {
+        if (!usesProvidedResults) return;
+        setResults(providedResults);
+        setLoading(false);
+        setHasMore(false);
+        setCursor(null);
+    }, [providedResults, usesProvidedResults]);
 
     useEffect(() => {
         const previousOverflow = document.body.style.overflow;
@@ -127,7 +145,9 @@ const LabResultsTool = ({ onClose, onInsertText }) => {
                     </header>
 
                     <p className="lab-results-guide">
-                        내가 완성한 결과만 보여요. 버튼을 눌러 넣기 전에는 현재 글이 바뀌지 않습니다.
+                        {isReferenceSelection
+                            ? '내가 완성한 개요와 고른 질문만 보여요. 참고함에 둘 자료를 골라도 현재 글은 바뀌지 않습니다.'
+                            : '내가 완성한 결과만 보여요. 버튼을 눌러 넣기 전에는 현재 글이 바뀌지 않습니다.'}
                     </p>
 
                     <div className="lab-results-body">
@@ -149,7 +169,10 @@ const LabResultsTool = ({ onClose, onInsertText }) => {
                             <article key={result.id} className="lab-results-card">
                                 <div className="lab-results-card-heading">
                                     <div>
-                                        <span>{Reflect.get(RESULT_LABELS, result.resultKind) || '연구소 활동'}</span>
+                                        <span>
+                                            {Reflect.get(RESULT_LABELS, result.resultKind) || '연구소 활동'}
+                                            {result.isLinked && <em className="lab-results-linked-badge">이 과제와 연결됨</em>}
+                                        </span>
                                         <h3>{result.title}</h3>
                                         {result.topic && <p>{result.topic}</p>}
                                     </div>
@@ -166,18 +189,31 @@ const LabResultsTool = ({ onClose, onInsertText }) => {
                                                 {chunk.label && <span>{chunk.label}</span>}
                                                 {chunk.text}
                                             </p>
-                                            <button type="button" onClick={() => void handleUseText(`${result.id}:${chunk.id}`, chunk.text)}>
-                                                {onInsertText ? <Plus size={16} /> : <Copy size={16} />}
-                                                {onInsertText ? '이 내용 넣기' : (copiedId === `${result.id}:${chunk.id}` ? '복사됨' : '복사')}
-                                            </button>
+                                            {!isReferenceSelection && (
+                                                <button type="button" onClick={() => void handleUseText(`${result.id}:${chunk.id}`, chunk.text)}>
+                                                    {onInsertText ? <Plus size={16} /> : <Copy size={16} />}
+                                                    {onInsertText ? '이 내용 넣기' : (copiedId === `${result.id}:${chunk.id}` ? '복사됨' : '복사')}
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
 
-                                <button type="button" className="lab-results-use-all" onClick={() => void handleUseText(result.id, result.text)}>
-                                    {onInsertText ? <Plus size={17} /> : <Copy size={17} />}
-                                    {onInsertText ? '전체 내용을 본문에 넣기' : (copiedId === result.id ? '전체 내용 복사됨' : '전체 내용 복사')}
-                                </button>
+                                {isReferenceSelection ? (
+                                    <button
+                                        type="button"
+                                        className={`lab-results-use-all ${selectedResultIds.includes(result.id) ? 'is-selected' : ''}`}
+                                        onClick={() => onToggleReference(result)}
+                                    >
+                                        <Plus size={17} />
+                                        {selectedResultIds.includes(result.id) ? '참고함에서 빼기' : '참고함에 두기'}
+                                    </button>
+                                ) : (
+                                    <button type="button" className="lab-results-use-all" onClick={() => void handleUseText(result.id, result.text)}>
+                                        {onInsertText ? <Plus size={17} /> : <Copy size={17} />}
+                                        {onInsertText ? '전체 내용을 본문에 넣기' : (copiedId === result.id ? '전체 내용 복사됨' : '전체 내용 복사')}
+                                    </button>
+                                )}
                             </article>
                         ))}
 

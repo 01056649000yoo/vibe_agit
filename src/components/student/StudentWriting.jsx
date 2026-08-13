@@ -11,6 +11,7 @@ import { countContentChars } from '../../lib/textMetrics';
 import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
 import WritingToolHost from '../../modules/writing/tools/WritingToolHost';
 import WritingReferencePanel from '../../modules/writing/references/WritingReferencePanel';
+import LabReferenceSource from '../../modules/writing/references/LabReferenceSource';
 import {
     buildDraftKey,
     readLocalDraft,
@@ -717,7 +718,13 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     onInsertText={GenreEditor ? undefined : insertToBody}
                 />
 
-                <WritingReferencePanel key={missionId} sections={writingReferenceSections}>
+                <WritingReferencePanel
+                    key={missionId}
+                    sections={writingReferenceSections}
+                    renderSources={({ isOpen }) => (
+                        <LabReferenceSource missionId={missionId} isActive={isOpen} />
+                    )}
+                >
                     <div style={{ position: 'relative' }}>
                         {showOriginal && (
                             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.98)', zIndex: 10, display: 'flex', flexDirection: 'column', padding: '0' }}>

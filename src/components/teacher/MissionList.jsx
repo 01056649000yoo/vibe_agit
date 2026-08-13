@@ -26,7 +26,8 @@ const VIEWER_BUTTON_STYLE = {
 const MissionItem = memo(({
     mission, isMobile, completedCount, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission,
-    showEvaluationReport, handleEvaluationMode, onReviewMission, isHighlighted, cardLayout
+    showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
+    isHighlighted, cardLayout
 }) => {
     const genreMissionType = getGenreMissionType(resolveGenreMissionTypeId(mission));
     const isMeetingMission = genreMissionType?.id === 'meeting';
@@ -47,6 +48,12 @@ const MissionItem = memo(({
                     {genreMissionType ? `${genreMissionType.icon} ${genreMissionType.name}` : mission.genre}
                 </span>
                 <div style={{ display: 'flex', gap: '4px' }}>
+                    <button onClick={(e) => {
+                        e.stopPropagation();
+                        onConnectLabSources(mission);
+                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7C3AED', fontSize: '1rem', padding: '4px' }} title="연구소 자료 연결" aria-label={`${mission.title} 연구소 자료 연결`}>
+                        🧪
+                    </button>
                     <button onClick={(e) => {
                         e.stopPropagation();
                         handleEditClick(mission);
@@ -134,7 +141,8 @@ const MissionItem = memo(({
 const MissionList = ({
     missions, loading, submissionCounts, totalStudentCount,
     handleEditClick, setArchiveModal, handleDeleteMission, fetchPostsForMission, fetchMissions,
-    isMobile, showEvaluationReport, handleEvaluationMode, onReviewMission, highlightedMissionId, cardLayout
+    isMobile, showEvaluationReport, handleEvaluationMode, onReviewMission, onConnectLabSources,
+    highlightedMissionId, cardLayout
 }) => {
     const [activeFilter, setActiveFilter] = useState('all');
 
@@ -216,6 +224,7 @@ const MissionList = ({
                             showEvaluationReport={showEvaluationReport}
                             handleEvaluationMode={handleEvaluationMode}
                             onReviewMission={onReviewMission}
+                            onConnectLabSources={onConnectLabSources}
                             isHighlighted={mission.id === highlightedMissionId}
                             cardLayout={cardLayout}
                         />

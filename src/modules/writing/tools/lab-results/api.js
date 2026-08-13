@@ -16,7 +16,7 @@ const normalizeChunk = (chunk) => {
     };
 };
 
-const normalizeResult = (row) => {
+export const normalizeLabResult = (row) => {
     const chunks = Array.isArray(row?.chunks)
         ? row.chunks.map(normalizeChunk).filter(Boolean).slice(0, 100)
         : [];
@@ -25,6 +25,7 @@ const normalizeResult = (row) => {
     return {
         id: row.id,
         sessionId: row.session_id,
+        roomId: row.room_id,
         activityType: row.activity_type,
         activityVersion: row.activity_version,
         schemaVersion: row.schema_version,
@@ -33,25 +34,28 @@ const normalizeResult = (row) => {
         topic: String(row.topic || '').trim(),
         chunks,
         completedAt: row.completed_at,
-        hasMore: row.has_more === true
+        hasMore: row.has_more === true,
+        isLinked: row.is_linked === true
     };
 };
 
 export const labResultsApi = {
-    async list({ limit = 20, before = null } = {}) {
+    async list({ limit = 20, before = null, resultKinds = null } = {}) {
         if (!supabase) throw new Error('연구소 결과 연결을 준비하고 있습니다.');
 
         const params = {
             p_limit: Math.min(Math.max(Number(limit) || 20, 1), 50),
             p_before_completed_at: before?.completedAt || null,
             p_before_id: before?.id || null,
-            p_result_kinds: null
+            p_result_kinds: Array.isArray(resultKinds) && resultKinds.length > 0
+                ? resultKinds
+                : null
         };
         const { data, error } = await supabase.rpc('get_my_lab_results_v1', params);
         if (error) throw error;
 
         const items = (Array.isArray(data) ? data : [])
-            .map(normalizeResult)
+            .map(normalizeLabResult)
             .filter(Boolean);
         const last = items.at(-1);
         return {
@@ -59,5 +63,20 @@ export const labResultsApi = {
             hasMore: items[0]?.hasMore === true,
             nextCursor: last ? { id: last.id, completedAt: last.completedAt } : null
         };
+    },
+
+    async listForWritingReference({ missionId, limit = 20 } = {}) {
+        if (!supabase) throw new Error('연구소 결과 연결을 준비하고 있습니다.');
+        if (!missionId) throw new Error('글쓰기 미션 정보가 필요합니다.');
+
+        const { data, error } = await supabase.rpc('get_my_writing_references_v1', {
+            p_mission_id: missionId,
+            p_limit: Math.min(Math.max(Number(limit) || 20, 1), 20)
+        });
+        if (error) throw error;
+
+        return (Array.isArray(data) ? data : [])
+            .map(normalizeLabResult)
+            .filter(Boolean);
     }
 };

@@ -34,6 +34,7 @@
 npm run test:security:static   # 코드 계약
 npm run migrate:check         # 미적용 SQL + SQL 권한 스모크, 전부 ROLLBACK
 npm run smoke:security-boundary # 적용된 핵심 역할 조합도 매번 ROLLBACK 재검사
+npm run smoke:writing-references # 과제↔연구소 연결의 교사·학생·다른 학급 경계를 ROLLBACK 재검사
 npm run test:security:ops      # 맥미니 포트·권한·Edge 함수 허용 목록
 npm audit --omit=dev           # 운영 의존성
 ```

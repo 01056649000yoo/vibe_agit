@@ -21,6 +21,8 @@ const GENRE_MISSION_BUILDERS = new Map(
         .map((missionType) => [missionType.id, lazy(missionType.teacherEntry)])
 );
 
+const MissionLabSourcesModal = lazy(() => import('./MissionLabSourcesModal'));
+
 /**
  * 역할: 선생님 - 글쓰기 미션 등록 및 관리 (정교한 글쓰기 미션 마스터 시스템) ✨
  */
@@ -34,6 +36,7 @@ const MissionManager = ({
     const [editingGenreMission, setEditingGenreMission] = useState(null);
     const [activeGenreMode, setActiveGenreMode] = useState('create');
     const [highlightedMissionId, setHighlightedMissionId] = useState(null);
+    const [labSourceMission, setLabSourceMission] = useState(null);
     const handledNavigationRef = useRef(null);
 
     const {
@@ -288,9 +291,19 @@ const MissionManager = ({
                 showEvaluationReport={(m) => setReportMission(m)}
                 handleEvaluationMode={handleEvaluationMode}
                 onReviewMission={handleReviewMission}
+                onConnectLabSources={setLabSourceMission}
                 highlightedMissionId={highlightedMissionId}
                 cardLayout={cardLayout}
             />
+
+            {labSourceMission && (
+                <Suspense fallback={null}>
+                    <MissionLabSourcesModal
+                        mission={labSourceMission}
+                        onClose={() => setLabSourceMission(null)}
+                    />
+                </Suspense>
+            )}
 
             {/* 학생 제출 현황 모달 */}
             <SubmissionStatusModal
