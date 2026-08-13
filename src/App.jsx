@@ -88,6 +88,25 @@ function App() {
   const skipHistoryPushRef = useRef(false);
   const lastStudentPageRef = useRef(null);
   const previousStudentHomePageRef = useRef(null);
+  const studentDeepLinkHandledRef = useRef(false);
+
+  // 연구소에서 돌아온 학생을 글쓰기 연구소 목록으로 바로 연결한다.
+  // 허용한 단일 화면만 처리하고 URL의 신호는 한 번 사용한 뒤 제거한다.
+  useEffect(() => {
+    if (!studentSession || studentDeepLinkHandledRef.current) return;
+    studentDeepLinkHandledRef.current = true;
+
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('studentPage') !== 'lab_activities') return;
+
+    setInternalPage('lab_activities');
+    url.searchParams.delete('studentPage');
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${url.pathname}${url.search}${url.hash}`
+    );
+  }, [setInternalPage, studentSession]);
 
   useEffect(() => {
     if (!studentSession) { lastStudentPageRef.current = null; return; }

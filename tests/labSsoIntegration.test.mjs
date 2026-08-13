@@ -163,6 +163,9 @@ test('학생 연구소 메뉴는 홈 추가 조회 없이 열 때만 우리 반 
     assert.match(dashboardMenu, /module\.studentDashboard[\s\S]*onNavigate\(module\.studentRoute\)/);
     assert.match(app, /lazy\(getModule\('lab-activities'\)\.studentEntry\)/);
     assert.match(app, /studentPageName === 'lab_activities'/);
+    assert.match(app, /url\.searchParams\.get\('studentPage'\) !== 'lab_activities'/);
+    assert.match(app, /setInternalPage\('lab_activities'\)/);
+    assert.match(app, /url\.searchParams\.delete\('studentPage'\)/);
 
     assert.match(labActivitiesApi, /supabase\.rpc\('get_my_lab_activities_v1'/);
     assert.doesNotMatch(labActivitiesApi, /\.from\(|setInterval|\.channel\(/);
