@@ -10,6 +10,7 @@ import useMediaQuery from '../../hooks/useMediaQuery';
 import { countContentChars } from '../../lib/textMetrics';
 import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing/mission-types/registry';
 import WritingToolHost from '../../modules/writing/tools/WritingToolHost';
+import WritingReferencePanel from '../../modules/writing/references/WritingReferencePanel';
 import {
     buildDraftKey,
     readLocalDraft,
@@ -547,6 +548,29 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     if (!mission) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 미션을 찾을 수 없습니다.</p><Button onClick={onBack}>돌아가기</Button></Card>;
 
     const hasQuestions = mission?.guide_questions?.length > 0;
+    const writingReferenceSections = [
+        ...(mission.guide?.trim() ? [{
+            id: 'teacher-guide',
+            eyebrow: '선생님 안내',
+            title: '이번 글에서 기억할 점',
+            items: [{
+                id: 'teacher-guide-main',
+                text: mission.guide.trim()
+            }]
+        }] : []),
+        ...(hasQuestions ? [{
+            id: 'teacher-questions',
+            eyebrow: '선생님 질문',
+            title: '생각을 여는 핵심 질문',
+            description: '답을 고치려면 위의 생각 일깨우기에서 수정하세요.',
+            items: mission.guide_questions.map((question, index) => ({
+                id: `teacher-question-${index + 1}`,
+                label: `질문 ${index + 1}`,
+                text: question,
+                supportingText: Reflect.get(studentAnswers, index)?.trim() || ''
+            }))
+        }] : [])
+    ];
 
     return (
         <WritingWorkspace tone="assignment">
@@ -693,68 +717,70 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     onInsertText={GenreEditor ? undefined : insertToBody}
                 />
 
-                <div style={{ position: 'relative' }}>
-                    {showOriginal && (
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.98)', zIndex: 10, display: 'flex', flexDirection: 'column', padding: '0' }}>
-                            <div style={{
-                                width: '100%',
-                                padding: '16px 0',
-                                fontSize: isMobile ? '1.5rem' : '2rem',
-                                fontWeight: '900',
-                                borderBottom: '2px solid #FBC02D',
-                                marginBottom: '24px',
-                                color: '#2C3E50',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                lineHeight: '1.4'
-                            }}>
-                                {originalTitle || '제목 없음'}
-                                <span style={{ fontSize: '0.9rem', color: '#E67E22', background: '#FFF3E0', padding: '4px 12px', borderRadius: '10px', fontWeight: '900' }}>나의 처음 글</span>
+                <WritingReferencePanel key={missionId} sections={writingReferenceSections}>
+                    <div style={{ position: 'relative' }}>
+                        {showOriginal && (
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.98)', zIndex: 10, display: 'flex', flexDirection: 'column', padding: '0' }}>
+                                <div style={{
+                                    width: '100%',
+                                    padding: '16px 0',
+                                    fontSize: isMobile ? '1.5rem' : '2rem',
+                                    fontWeight: '900',
+                                    borderBottom: '2px solid #FBC02D',
+                                    marginBottom: '24px',
+                                    color: '#2C3E50',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    lineHeight: '1.4'
+                                }}>
+                                    {originalTitle || '제목 없음'}
+                                    <span style={{ fontSize: '0.9rem', color: '#E67E22', background: '#FFF3E0', padding: '4px 12px', borderRadius: '10px', fontWeight: '900' }}>나의 처음 글</span>
+                                </div>
+                                <div style={{
+                                    fontSize: isMobile ? '1.1rem' : '1.25rem',
+                                    lineHeight: '1.8',
+                                    color: '#7F8C8D',
+                                    whiteSpace: 'pre-wrap',
+                                    flex: 1,
+                                    overflowY: 'auto',
+                                    padding: '10px 0'
+                                }}>{originalContent || '기록된 내용이 없습니다.'}</div>
                             </div>
-                            <div style={{
-                                fontSize: isMobile ? '1.1rem' : '1.25rem',
-                                lineHeight: '1.8',
-                                color: '#7F8C8D',
-                                whiteSpace: 'pre-wrap',
-                                flex: 1,
-                                overflowY: 'auto',
-                                padding: '10px 0'
-                            }}>{originalContent || '기록된 내용이 없습니다.'}</div>
-                        </div>
-                    )}
-                    {GenreEditor ? (
-                        <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#64748B' }}>장르 글쓰기 틀을 준비하는 중...</div>}>
-                            <GenreEditor
+                        )}
+                        {GenreEditor ? (
+                            <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', color: '#64748B' }}>장르 글쓰기 틀을 준비하는 중...</div>}>
+                                <GenreEditor
+                                    title={title}
+                                    setTitle={setTitle}
+                                    content={content}
+                                    setContent={setContent}
+                                    structuredContent={structuredContent}
+                                    setStructuredContent={setStructuredContent}
+                                    studentName={studentSession?.name}
+                                    config={mission.template_config || {}}
+                                    disabled={submitting || isLocked}
+                                    isMobile={isMobile}
+                                    postId={postId}
+                                    ensureDraftPost={ensureGenreDraftPost}
+                                    onPersistDraft={persistGenreDraft}
+                                />
+                            </Suspense>
+                        ) : (
+                            <WritingEditorFields
+                                ref={editorRef}
                                 title={title}
-                                setTitle={setTitle}
+                                onTitleChange={setTitle}
                                 content={content}
-                                setContent={setContent}
-                                structuredContent={structuredContent}
-                                setStructuredContent={setStructuredContent}
-                                studentName={studentSession?.name}
-                                config={mission.template_config || {}}
+                                onContentChange={setContent}
+                                titlePlaceholder={studentLabels.titlePlaceholder || '글의 제목을 적어주세요...'}
+                                contentPlaceholder={studentLabels.contentPlaceholder || '여기에 자유롭게 이야기를 시작해보세요...'}
                                 disabled={submitting || isLocked}
                                 isMobile={isMobile}
-                                postId={postId}
-                                ensureDraftPost={ensureGenreDraftPost}
-                                onPersistDraft={persistGenreDraft}
                             />
-                        </Suspense>
-                    ) : (
-                        <WritingEditorFields
-                            ref={editorRef}
-                            title={title}
-                            onTitleChange={setTitle}
-                            content={content}
-                            onContentChange={setContent}
-                            titlePlaceholder={studentLabels.titlePlaceholder || '글의 제목을 적어주세요...'}
-                            contentPlaceholder={studentLabels.contentPlaceholder || '여기에 자유롭게 이야기를 시작해보세요...'}
-                            disabled={submitting || isLocked}
-                            isMobile={isMobile}
-                        />
-                    )}
-                </div>
+                        )}
+                    </div>
+                </WritingReferencePanel>
             </section>
 
             {/* [신규] 내 글에 달린 소식 (반응 및 댓글) */}
