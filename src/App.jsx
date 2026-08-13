@@ -30,6 +30,7 @@ const MissionList = lazy(() => import('./components/student/MissionList'))
 const FriendsHideout = lazy(getModule('friends-hideout').studentEntry)
 const ReadingLogPage = lazy(getModule('reading-log').studentEntry)
 const DiaryPage = lazy(getModule('diary').studentEntry)
+const LabActivitiesPage = lazy(getModule('lab-activities').studentEntry)
 const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNav'))
 
 /**
@@ -427,6 +428,14 @@ function App() {
                   studentSession={studentSession}
                   params={internalPage.params}
                   onBack={() => setInternalPage(internalPage.params?.returnTo || 'main')}
+                />
+              )}
+              {studentPageName === 'lab_activities' && (
+                <LabActivitiesPage
+                  studentSession={studentSession}
+                  params={internalPage.params}
+                  onBack={() => setInternalPage('main')}
+                  onNavigate={setInternalPage}
                 />
               )}
   

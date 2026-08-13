@@ -12,11 +12,17 @@ const [
     shortLinksMigration,
     portableResultsMigration,
     myResultsMigration,
+    myActivitiesMigration,
     labResultsApi,
     labResultsManifest,
     labResultsTool,
     writingToolRegistry,
     writingToolHost,
+    labActivitiesApi,
+    labActivitiesManifest,
+    labActivitiesPage,
+    moduleRegistry,
+    dashboardMenu,
     packageJson
 ] = await Promise.all([
     readFile('src/lib/supabaseClient.js', 'utf8'),
@@ -28,11 +34,17 @@ const [
     readFile('supabase/migrations/20261031_lab_short_links_permissions.sql', 'utf8'),
     readFile('supabase/migrations/20261101_lab_portable_results.sql', 'utf8'),
     readFile('supabase/migrations/20261102_my_lab_results.sql', 'utf8'),
+    readFile('supabase/migrations/20261103_my_lab_activities.sql', 'utf8'),
     readFile('src/modules/writing/tools/lab-results/api.js', 'utf8'),
     readFile('src/modules/writing/tools/lab-results/manifest.js', 'utf8'),
     readFile('src/modules/writing/tools/lab-results/LabResultsTool.jsx', 'utf8'),
     readFile('src/modules/writing/tools/registry.js', 'utf8'),
     readFile('src/modules/writing/tools/WritingToolHost.jsx', 'utf8'),
+    readFile('src/modules/writing/lab-activities/api.js', 'utf8'),
+    readFile('src/modules/writing/lab-activities/manifest.js', 'utf8'),
+    readFile('src/modules/writing/lab-activities/LabActivitiesPage.jsx', 'utf8'),
+    readFile('src/modules/registry.js', 'utf8'),
+    readFile('src/components/student/DashboardMenu.jsx', 'utf8'),
     readFile('package.json', 'utf8')
 ]);
 
@@ -103,4 +115,28 @@ test('글쓰기 연구소 결과 도구는 열 때만 본인 RPC를 호출하고
     assert.match(labResultsTool, /onClick=\{\(\) => void handleUseText/);
     assert.match(writingToolHost, /lazy\(manifest\.studentEntry\)/);
     assert.match(writingToolHost, /onInsertText=\{onInsertText\}/);
+});
+
+test('학생 연구소 메뉴는 홈 추가 조회 없이 열 때만 우리 반 활성 활동을 읽는다', () => {
+    assert.match(myActivitiesMigration, /v_student_id UUID := public\.auth_student_id\(\)/);
+    assert.match(myActivitiesMigration, /room\.agit_class_id = v_class_id/);
+    assert.match(myActivitiesMigration, /room\.is_active IS TRUE/);
+    assert.match(myActivitiesMigration, /room\.expires_at IS NULL OR room\.expires_at > NOW\(\)/);
+    assert.match(myActivitiesMigration, /LIMIT v_limit \+ 1/);
+    assert.match(myActivitiesMigration, /REVOKE ALL ON FUNCTION public\.get_my_lab_activities_v1[\s\S]*FROM PUBLIC, anon/);
+    assert.doesNotMatch(myActivitiesMigration, /auth\.jwt|app_metadata/);
+
+    assert.match(moduleRegistry, /labActivitiesManifest/);
+    assert.match(labActivitiesManifest, /core: true/);
+    assert.match(labActivitiesManifest, /studentRoute: 'lab_activities'/);
+    assert.match(labActivitiesManifest, /performance: \{ home: 'none', load: 'on-open', writes: 'none', realtime: 'none', maxInitialRows: 20 \}/);
+    assert.match(dashboardMenu, /module\.studentDashboard[\s\S]*onNavigate\(module\.studentRoute\)/);
+    assert.match(app, /lazy\(getModule\('lab-activities'\)\.studentEntry\)/);
+    assert.match(app, /studentPageName === 'lab_activities'/);
+
+    assert.match(labActivitiesApi, /supabase\.rpc\('get_my_lab_activities_v1'/);
+    assert.doesNotMatch(labActivitiesApi, /\.from\(|setInterval|\.channel\(/);
+    assert.match(labActivitiesPage, /limit: 20/);
+    assert.match(labActivitiesPage, /window\.location\.assign\(`\/lab\/room\/\$\{/);
+    assert.doesNotMatch(labActivitiesPage, /setInterval|\.channel\(|postgres_changes/);
 });

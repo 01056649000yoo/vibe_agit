@@ -109,6 +109,7 @@
 .student-home-menu-card.tone-brown { --menu-soft: #faf5f1; --menu-accent: #795548; }
 .student-home-menu-card.tone-orange { --menu-soft: #fff7ed; --menu-accent: #c2410c; }
 .student-home-menu-card.tone-rose { --menu-soft: #fff1f2; --menu-accent: #be123c; }
+.student-home-menu-card.tone-violet { --menu-soft: #f5f3ff; --menu-accent: #6d28d9; }
 
 @media (hover: hover) {
     .student-home-menu-card:hover { border-color: var(--ui-border-strong); box-shadow: var(--ui-shadow-sm); }

@@ -298,6 +298,7 @@ const StudentDashboard = ({
                     playgroundCount={playgroundItems.length}
                     studentSession={studentSession}
                     homeBootstrap={homeBootstrap}
+                    enabledModules={enabledModules}
                 />
 
                 <AgitPlayground

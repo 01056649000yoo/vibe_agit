@@ -30,7 +30,8 @@ const DashboardMenu = ({
     onOpenPlayground,
     playgroundCount = 0,
     studentSession,
-    homeBootstrap
+    homeBootstrap,
+    enabledModules = []
 }) => {
     const hasNewMission = Boolean(homeBootstrap?.home?.has_new_mission);
     const readingDailyStatus = useReadingLogDailyStatus(studentSession?.id, {
@@ -61,6 +62,9 @@ const DashboardMenu = ({
     const diaryBadge = diaryDailyStatus.loading
         ? null
         : diaryDailyStatus.hasTodayDiary ? '오늘 작성 완료' : '오늘 아직 안 썼어요';
+    const moduleCards = enabledModules
+        .filter((module) => module.studentDashboard && module.studentRoute && module.studentEntry)
+        .sort((left, right) => left.studentDashboard.order - right.studentDashboard.order);
 
     return (
         <section className="student-home-menu" aria-labelledby="student-home-menu-title">
@@ -78,6 +82,16 @@ const DashboardMenu = ({
                     tone="amber"
                     onClick={() => onNavigate('mission_list')}
                 />
+                {moduleCards.map((module) => (
+                    <MenuCard
+                        key={module.id}
+                        icon={module.icon}
+                        title={module.studentDashboard.title || module.name}
+                        description={module.studentDashboard.description || module.description}
+                        tone={module.studentDashboard.tone}
+                        onClick={() => onNavigate(module.studentRoute)}
+                    />
+                ))}
                 <MenuCard
                     icon="📚"
                     title="독서록"

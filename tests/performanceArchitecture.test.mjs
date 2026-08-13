@@ -144,6 +144,25 @@ test('연구소 결과는 학생이 도구를 열 때만 최대 20개를 읽고 
     }
 });
 
+test('연구소 활동 목록은 학생이 메뉴를 열 때 단일 RPC로 최대 20개를 읽는다', async () => {
+    const dashboard = await read('src/components/student/DashboardMenu.jsx');
+    const manifest = await read('src/modules/writing/lab-activities/manifest.js');
+    const api = await read('src/modules/writing/lab-activities/api.js');
+    const page = await read('src/modules/writing/lab-activities/LabActivitiesPage.jsx');
+
+    assert.match(dashboard, /module\.studentDashboard/);
+    assert.doesNotMatch(dashboard, /supabase\.(?:from|rpc)/);
+    assert.match(manifest, /home: 'none'/);
+    assert.match(manifest, /load: 'on-open'/);
+    assert.match(manifest, /realtime: 'none'/);
+    assert.match(manifest, /maxInitialRows: 20/);
+    assert.match(api, /get_my_lab_activities_v1/);
+    assert.match(page, /limit: 20/);
+    for (const source of [api, page]) {
+        assert.doesNotMatch(source, /setInterval\s*\(|\.channel\(|postgres_changes/);
+    }
+});
+
 test('핵심 통합 RPC 실패 시 과거 다중 조회로 조용히 돌아가지 않는다', async () => {
     for (const file of [
         'src/store/useAuthStore.js',

@@ -29,6 +29,8 @@
  *   메뉴 슬롯 크기는 공통 설정 호스트가 데스크톱 270px·항목 좌우 15px·최소 높이 68px로 보장하므로
  *   모듈은 별도 메뉴 폭을 만들지 않고 짧은 label/description만 제공한다.
  * @property {string}   [studentRoute] 학생 화면 내부 라우트 이름
+ * @property {{title?: string, description?: string, tone: string, order: number}} [studentDashboard]
+ *   학생 홈 주요 메뉴에 표시할 모듈 카드. 학생 화면 진입점과 studentRoute가 모두 있어야 한다.
  * @property {string[]} [writingMissionTypes] 이 모듈이 처리하는 글쓰기 입력 미션 유형
  * @property {{group: 'self', label: string, icon: string, description: string, emptyMessage: string, order: number}} [communityFeed]
  *   친구 아지트의 `자율 글` 필터 등록 정보. `writingPolicy.type`을 조회 유형 ID로 사용하며,
@@ -108,6 +110,12 @@ export function validateManifest(m) {
     if (!m.communityFeed.description) problems.push('communityFeed.description 없음');
     if (!m.communityFeed.emptyMessage) problems.push('communityFeed.emptyMessage 없음');
     if (!Number.isInteger(m.communityFeed.order)) problems.push('communityFeed.order는 정수여야 함');
+  }
+  if (m.studentDashboard) {
+    if (typeof m.studentEntry !== 'function') problems.push('studentDashboard에는 studentEntry가 필요함');
+    if (!m.studentRoute) problems.push('studentDashboard에는 studentRoute가 필요함');
+    if (!m.studentDashboard.tone) problems.push('studentDashboard.tone 없음');
+    if (!Number.isInteger(m.studentDashboard.order)) problems.push('studentDashboard.order는 정수여야 함');
   }
   if (m.management?.legacy !== true && m.teacherEntry && m.audience === 'student') {
     problems.push('teacherEntry가 있지만 audience가 student임');
