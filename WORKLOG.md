@@ -21,6 +21,21 @@
 
 ---
 
+## 2026-08-13 — 교사 수업 도구 쌤링크 CSP 차단 수정 (Codex)
+- **한 일**: 교사 대시보드 `수업 도구 → 쌤링크`의 iframe이 계속 로딩되지 않던 문제를 수정했다. 운영 아지트
+  응답의 CSP `frame-src`에 기존 Google 로그인과 함께 쌤링크의 정확한 ASCII origin
+  `https://xn--9y2br3k43n.kr`만 추가했다. 쌤링크는 현재 `200 OK`이고 자체 `frame-ancestors`에서 아지트 운영
+  origin을 허용하므로, 양쪽 정책이 서로 일치한다.
+- **변경**: `Caddyfile.container`의 자식 프레임 허용 목록과 `tests/securityArchitecture.test.mjs`를 수정했다.
+  회귀 검사는 `frame-src`가 Google 로그인·쌤링크 두 출처와 정확히 일치하는지 확인한다. 아지트 자체의
+  `frame-ancestors 'none'`, `X-Frame-Options: DENY`, 다른 CSP 지시어와 앱·DB·RPC·컨테이너는 변경하지 않았다.
+- **결과/검증**: 정적 보안 20건, 배포 계약 3건, ESLint 0경고·0오류, 프로덕션 빌드,
+  `npm audit --omit=dev` 취약점 0건과
+  `git diff --check`를 확인한다. 전체 `npm run test:security`는 정적 검사 통과 후 Windows 로컬에 Docker CLI가
+  없어 `migrate:check`에서 중단됐으며 이번 작업에는 마이그레이션이 없다.
+- **남은 것 / 다음**: `main` 배포 후 운영 응답의 `frame-src`에 쌤링크 origin이 포함되는지 확인하고, 교사
+  실계정에서 임베드 로딩·새로고침·새 창 열기를 최종 확인한다.
+
 ## 2026-08-13 — 공통 학습 카드 엔진·학기형 말 카드 리그 계획 저장 (Codex)
 - **한 일**: 현재 어휘 1,573개와 맞춤법 500개를 재사용해 학생별 `익힘/연습 중/자주 헷갈림/복습 예정`을
   누적하고 약점이 다음 문제와 다음 로그인에 반복되는 공통 학습 카드 엔진 방향을 `ROADMAP.md`에 저장했다.

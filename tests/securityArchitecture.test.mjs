@@ -53,6 +53,12 @@ test('정적 앱 응답에 CSP와 Permissions-Policy가 있다', () => {
     assert.match(caddy, /Content-Security-Policy/);
     assert.match(caddy, /Permissions-Policy/);
     assert.match(caddy, /frame-ancestors 'none'/);
+    const frameSources = caddy.match(/frame-src ([^;"]+)/)?.[1];
+    assert.equal(
+        frameSources,
+        'https://accounts.google.com https://xn--9y2br3k43n.kr',
+        'frame-src must allow only Google sign-in and the Samlink embed origin'
+    );
     assert.match(
         caddy,
         /img-src[^;]*https:\/\/api\.xn--vz0ba242ncqcba79xhwx\.site/,
