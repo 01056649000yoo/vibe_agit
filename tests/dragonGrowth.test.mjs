@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
     DRAGON_SPECIES,
     HIDEOUT_BACKGROUNDS,
@@ -96,6 +97,22 @@ test('작가 3단계부터 종류를 한 번만 다시 고를 수 있다', () =>
     assert.equal(canReselectDragonSpecies({ species: 'star' }, 3), true);
     assert.equal(canReselectDragonSpecies({ species: 'star', speciesReselectedAt: 'done' }, 10), false);
     assert.equal(canReselectDragonSpecies({}, 10), false);
+});
+
+test('교사 단계 미리보기는 공용 4종·10단계·7효과를 조합하고 학생 기록을 쓰지 않는다', async () => {
+    const [managerSource, previewSource] = await Promise.all([
+        readFile('src/modules/game/dragon/TeacherManager.jsx', 'utf8'),
+        readFile('src/modules/game/dragon/TeacherStagePreview.jsx', 'utf8')
+    ]);
+
+    assert.match(managerSource, /\['preview', '단계 미리보기'\]/);
+    assert.match(previewSource, /DRAGON_SPECIES\.map/);
+    assert.match(previewSource, /WRITER_LEVELS\.map/);
+    assert.match(previewSource, /READER_LEVELS\.map/);
+    assert.match(previewSource, /getDragonStage\(writerLevel, speciesId\)/);
+    assert.match(previewSource, /getReaderDragonEffect\(readerLevel\)/);
+    assert.match(previewSource, /lazy\(\(\) => import\('\.\/DragonGrowthCelebrationModal'\)\)/);
+    assert.doesNotMatch(previewSource, /supabase|\.rpc\(|\.from\(/);
 });
 
 test('작가 3단계를 처음 넘어선 성장 확인 뒤에만 재선택 화면을 자동으로 연다', () => {
