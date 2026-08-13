@@ -20,6 +20,10 @@ test('러너는 검증된 Docker 이미지를 agit-app으로 교체하고 로컬
     assert.match(workflow, /docker build[\s\S]*-t agit-app:prod \./);
     assert.match(workflow, /docker run -d --name agit-app --restart unless-stopped -p 127\.0\.0\.1:8300:80 agit-app:prod/);
     assert.match(workflow, /curl[\s\S]*http:\/\/127\.0\.0\.1:8300\//);
+    assert.match(workflow, /docker compose up -d --no-deps --force-recreate functions/);
+    assert.match(workflow, /docker inspect -f '\{\{\.State\.Status\}\}' agit-edge-functions/);
+    assert.match(workflow, /http:\/\/127\.0\.0\.1:8100\/functions\/v1\/vibe-ai/);
+    assert.match(workflow, /\[ "\$edge_code" = "400" \]/);
     assert.match(dockerfile, /npm run test:architecture && npm run test:security:static && npm run test:deployment/);
     assert.match(dockerfile, /FROM caddy:2-alpine AS runner/);
     assert.match(caddy, /try_files \{path\} \/index\.html/);

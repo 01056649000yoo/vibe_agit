@@ -49,13 +49,21 @@ jobs:
           fi
           install -m 0644 supabase/functions/vibe-ai/index.ts "$target"
           cd "$HOME/agit-supabase"
-          docker compose up -d --force-recreate functions
+          docker compose up -d --no-deps --force-recreate functions
 
       - name: Verify
         run: |
           sleep 4
           docker ps --filter name=agit-app --format "{{.Status}}"
           docker ps --filter name=agit-edge-functions --format "{{.Status}}"
+          edge_status=$(docker inspect -f '{{.State.Status}}' agit-edge-functions)
+          echo "edge status: $edge_status"
+          [ "$edge_status" = "running" ] || exit 1
           code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8300/ --max-time 10)
           echo "app HTTP: $code"
           [ "$code" = "200" ] || exit 1
+          edge_code=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST http://127.0.0.1:8100/functions/v1/vibe-ai \
+            -H 'Content-Type: application/json' -d '{}' --max-time 10)
+          echo "edge HTTP: $edge_code"
+          [ "$edge_code" = "400" ] || exit 1
