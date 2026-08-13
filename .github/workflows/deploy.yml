@@ -40,10 +40,22 @@ jobs:
           docker rm -f agit-app 2>/dev/null || true
           docker run -d --name agit-app --restart unless-stopped -p 127.0.0.1:8300:80 agit-app:prod
 
+      - name: Sync AI edge function
+        run: |
+          target="$HOME/agit-supabase/volumes/functions/vibe-ai/index.ts"
+          if cmp -s supabase/functions/vibe-ai/index.ts "$target"; then
+            echo "vibe-ai already current"
+            exit 0
+          fi
+          install -m 0644 supabase/functions/vibe-ai/index.ts "$target"
+          cd "$HOME/agit-supabase"
+          docker compose up -d --force-recreate functions
+
       - name: Verify
         run: |
           sleep 4
           docker ps --filter name=agit-app --format "{{.Status}}"
+          docker ps --filter name=agit-edge-functions --format "{{.Status}}"
           code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8300/ --max-time 10)
           echo "app HTTP: $code"
           [ "$code" = "200" ] || exit 1

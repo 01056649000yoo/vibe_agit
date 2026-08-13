@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -18,7 +18,8 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261023_student_activity_notifications.sql', 'utf8'),
     readFile('supabase/migrations/20261024_writing_reaction_profiles.sql', 'utf8'),
     readFile('supabase/migrations/20261025_class_public_writing_feed.sql', 'utf8'),
-    readFile('supabase/migrations/20261026_student_point_history.sql', 'utf8')
+    readFile('supabase/migrations/20261026_student_point_history.sql', 'utf8'),
+    readFile('supabase/migrations/20261027_lab_ai_bridge.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -35,6 +36,21 @@ test('AI 비용 호출 전 DB 속도 제한과 원자적 댓글 선점을 거친
     assert.ok(vibeAi.indexOf("rpc('consume_ai_request_v1'") < fetchIndex);
     assert.match(vibeAi, /\.eq\('ai_review_token', reviewToken\)/);
     assert.match(migration, /pg_advisory_xact_lock/);
+});
+
+test('연구소 AI 브리지는 연구소 세션·서버 전용 매핑·실제 승인 상태를 확인한다', () => {
+    const resolveIndex = vibeAi.indexOf("rpc('resolve_lab_ai_teacher_v1'");
+    const rateIndex = vibeAi.indexOf("rpc('consume_ai_request_v1'");
+    const fetchIndex = vibeAi.indexOf("fetch('https://api.openai.com");
+    assert.ok(resolveIndex > -1 && resolveIndex < rateIndex && rateIndex < fetchIndex);
+    assert.match(vibeAi, /X-Lab-Auth/);
+    assert.match(vibeAi, /\/auth\/v1\/user/);
+    assert.match(vibeAi, /if \(!labUserResponse\.ok\)/);
+    assert.match(labBridgeMigration, /auth\.role\(\) <> 'service_role'/);
+    assert.match(labBridgeMigration, /v_profile\.role = 'ADMIN'/);
+    assert.match(labBridgeMigration, /v_profile\.role = 'TEACHER'/);
+    assert.match(labBridgeMigration, /REVOKE ALL ON FUNCTION public\.resolve_lab_ai_teacher_v1\(UUID\)/);
+    assert.doesNotMatch(labBridgeMigration, /auth\.jwt|app_metadata/);
 });
 
 test('피드백은 서버 소유권 확인과 HTML 이스케이프를 사용한다', () => {

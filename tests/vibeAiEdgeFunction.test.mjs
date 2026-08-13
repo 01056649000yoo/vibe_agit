@@ -7,6 +7,7 @@ const interactionSource = await readFile('src/hooks/usePostInteractions.js', 'ut
 const safetySource = await readFile('src/utils/aiSafety.js', 'utf8');
 const openaiClientSource = await readFile('src/lib/openai.js', 'utf8');
 const interactionMigration = await readFile('supabase/migrations/20261010_friend_interaction_writes.sql', 'utf8');
+const labBridgeMigration = await readFile('supabase/migrations/20261027_lab_ai_bridge.sql', 'utf8');
 
 test('vibe-ai는 클라이언트 API 키·모드·모델 오버라이드를 받지 않는다', () => {
     assert.doesNotMatch(edgeSource, /overrideApiKey|overrideApiMode/);
@@ -54,4 +55,19 @@ test('댓글 수정은 먼저 pending으로 되돌리고 같은 댓글 ID로 다
 test('댓글 판정만 100토큰·온도 0이며 일반 AI는 1000토큰을 유지한다', () => {
     assert.match(edgeSource, /max_tokens:\s*isStudentRequest \? 100 : 1000/);
     assert.match(edgeSource, /isStudentRequest \? \{ temperature: 0 \}/);
+});
+
+test('연구소 AI는 실제 연구소 로그인과 승인 교사 매핑을 모두 확인한다', () => {
+    assert.match(edgeSource, /type === 'LAB_GENERAL'/);
+    assert.match(edgeSource, /X-Lab-Auth/);
+    assert.match(edgeSource, /X-Lab-Anon-Key/);
+    assert.match(edgeSource, /\/auth\/v1\/user/);
+    assert.match(edgeSource, /if \(!labUserResponse\.ok\)/);
+    assert.match(edgeSource, /resolve_lab_ai_teacher_v1/);
+    assert.match(edgeSource, /p_actor_id: targetTeacherId/);
+    assert.match(labBridgeMigration, /ALTER TABLE public\.lab_ai_teacher_links ENABLE ROW LEVEL SECURITY/);
+    assert.match(labBridgeMigration, /REVOKE ALL ON TABLE public\.lab_ai_teacher_links FROM PUBLIC, anon, authenticated/);
+    assert.match(labBridgeMigration, /v_profile\.is_approved IS TRUE/);
+    assert.match(labBridgeMigration, /v_profile\.approval_revoked_at IS NULL/);
+    assert.doesNotMatch(edgeSource, /Access-Control-Allow-Headers[^\n]*x-lab-auth/i);
 });

@@ -38,6 +38,10 @@ const jsonResponse = (body: unknown, status: number, headers: Record<string, str
     { status, headers: { ...headers, 'Content-Type': 'application/json' } }
 )
 
+const isUuid = (value: string) => (
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+)
+
 Deno.serve(async (req) => {
     const origin = req.headers.get('Origin')
     const headers = corsHeaders(origin)
@@ -65,50 +69,80 @@ Deno.serve(async (req) => {
     let reviewToken: string | null = null
 
     try {
-        if (!authHeader) throw new HttpError(401, '로그인이 필요합니다.')
         const payload = await req.json().catch(() => { throw new HttpError(400, '요청 형식이 올바르지 않습니다.') })
         const { prompt, content, studentId, type, commentId } = payload ?? {}
-        const allowedTypes = new Set(['SAFETY_CHECK', 'AI_FEEDBACK', 'GENERAL', 'CONNECTION_TEST', 'DIAG', 'SPELLING_DRAFT'])
+        const allowedTypes = new Set([
+            'SAFETY_CHECK', 'AI_FEEDBACK', 'GENERAL', 'CONNECTION_TEST', 'DIAG', 'SPELLING_DRAFT', 'LAB_GENERAL'
+        ])
         if (!allowedTypes.has(type)) throw new HttpError(400, '허용되지 않은 AI 요청입니다.')
-
-        const { data: userData, error: userError } = await supabaseClient.auth.getUser()
-        const user = userData?.user
-        if (userError || !user) throw new HttpError(401, '로그인 정보를 확인할 수 없습니다.')
 
         let isStudentRequest = false
         let targetTeacherId: string | null = null
+        const isLabRequest = type === 'LAB_GENERAL'
 
-        if (user.is_anonymous) {
-            if (type !== 'SAFETY_CHECK' || typeof studentId !== 'string') {
-                throw new HttpError(403, '학생 계정은 댓글 안전 확인만 사용할 수 있습니다.')
+        if (isLabRequest) {
+            const labAuth = req.headers.get('X-Lab-Auth') ?? ''
+            const labAnonKey = req.headers.get('X-Lab-Anon-Key') ?? ''
+            const labSupabaseUrl = (Deno.env.get('LAB_SUPABASE_URL')
+                ?? 'https://supabase.xn--9y2br3k43n.kr').replace(/\/$/, '')
+            if (!labAuth.startsWith('Bearer ') || !labAnonKey) {
+                throw new HttpError(403, '연구소 로그인 정보를 확인할 수 없습니다.')
             }
-            const { data: student, error: studentError } = await supabaseAdmin
-                .from('students')
-                .select('id, classes:class_id(teacher_id)')
-                .eq('id', studentId)
-                .eq('auth_id', user.id)
-                .is('deleted_at', null)
-                .maybeSingle()
-            if (studentError || !student) throw new HttpError(403, '학생 계정 연결을 확인할 수 없습니다.')
-            isStudentRequest = true
-            targetTeacherId = Array.isArray(student.classes)
-                ? student.classes[0]?.teacher_id ?? null
-                : student.classes?.teacher_id ?? null
+
+            const labUserResponse = await fetch(`${labSupabaseUrl}/auth/v1/user`, {
+                method: 'GET',
+                headers: { Authorization: labAuth, apikey: labAnonKey },
+                signal: AbortSignal.timeout(10_000)
+            })
+            if (!labUserResponse.ok) throw new HttpError(403, '연구소 로그인 정보를 확인할 수 없습니다.')
+            const labUser = await labUserResponse.json().catch(() => null)
+            if (!isUuid(labUser?.id ?? '')) throw new HttpError(403, '연구소 사용자 정보를 확인할 수 없습니다.')
+
+            const { data: resolved, error: resolveError } = await supabaseAdmin.rpc('resolve_lab_ai_teacher_v1', {
+                p_lab_user_id: labUser.id
+            })
+            if (resolveError || resolved?.allowed !== true || !isUuid(resolved?.agit_user_id ?? '')) {
+                throw new HttpError(403, '승인된 연구소 교사만 AI 기능을 사용할 수 있습니다.')
+            }
+            targetTeacherId = resolved.agit_user_id
         } else {
-            if (type === 'SAFETY_CHECK') throw new HttpError(403, '댓글 안전 확인은 학생 댓글에만 사용합니다.')
-            const { data: profile, error: profileError } = await supabaseAdmin
-                .from('profiles')
-                .select('role, is_approved, approval_revoked_at')
-                .eq('id', user.id)
-                .maybeSingle()
-            const isAdmin = profile?.role === 'ADMIN'
-            const isApprovedTeacher = profile?.role === 'TEACHER'
-                && profile.is_approved === true
-                && profile.approval_revoked_at == null
-            if (profileError || (!isAdmin && !isApprovedTeacher)) {
-                throw new HttpError(403, '승인된 교사만 AI 기능을 사용할 수 있습니다.')
+            if (!authHeader) throw new HttpError(401, '로그인이 필요합니다.')
+            const { data: userData, error: userError } = await supabaseClient.auth.getUser()
+            const user = userData?.user
+            if (userError || !user) throw new HttpError(401, '로그인 정보를 확인할 수 없습니다.')
+
+            if (user.is_anonymous) {
+                if (type !== 'SAFETY_CHECK' || typeof studentId !== 'string') {
+                    throw new HttpError(403, '학생 계정은 댓글 안전 확인만 사용할 수 있습니다.')
+                }
+                const { data: student, error: studentError } = await supabaseAdmin
+                    .from('students')
+                    .select('id, classes:class_id(teacher_id)')
+                    .eq('id', studentId)
+                    .eq('auth_id', user.id)
+                    .is('deleted_at', null)
+                    .maybeSingle()
+                if (studentError || !student) throw new HttpError(403, '학생 계정 연결을 확인할 수 없습니다.')
+                isStudentRequest = true
+                targetTeacherId = Array.isArray(student.classes)
+                    ? student.classes[0]?.teacher_id ?? null
+                    : student.classes?.teacher_id ?? null
+            } else {
+                if (type === 'SAFETY_CHECK') throw new HttpError(403, '댓글 안전 확인은 학생 댓글에만 사용합니다.')
+                const { data: profile, error: profileError } = await supabaseAdmin
+                    .from('profiles')
+                    .select('role, is_approved, approval_revoked_at')
+                    .eq('id', user.id)
+                    .maybeSingle()
+                const isAdmin = profile?.role === 'ADMIN'
+                const isApprovedTeacher = profile?.role === 'TEACHER'
+                    && profile.is_approved === true
+                    && profile.approval_revoked_at == null
+                if (profileError || (!isAdmin && !isApprovedTeacher)) {
+                    throw new HttpError(403, '승인된 교사만 AI 기능을 사용할 수 있습니다.')
+                }
+                targetTeacherId = user.id
             }
-            targetTeacherId = user.id
         }
 
         let finalPrompt = typeof prompt === 'string' ? prompt : (typeof content === 'string' ? content : '')
@@ -138,8 +172,9 @@ Deno.serve(async (req) => {
             reviewToken = claim.review_token
             finalPrompt = claim.content
         } else if (type !== 'DIAG') {
+            if (!targetTeacherId) throw new HttpError(403, 'AI 사용 권한을 확인할 수 없습니다.')
             const { data: rate, error: rateError } = await supabaseAdmin.rpc('consume_ai_request_v1', {
-                p_actor_id: user.id,
+                p_actor_id: targetTeacherId,
                 p_scope: 'teacher_ai'
             })
             if (rateError) throw rateError
