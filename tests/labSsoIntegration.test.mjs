@@ -9,6 +9,14 @@ const [
     teacherNav,
     teacherDashboard,
     migration,
+    shortLinksMigration,
+    portableResultsMigration,
+    myResultsMigration,
+    labResultsApi,
+    labResultsManifest,
+    labResultsTool,
+    writingToolRegistry,
+    writingToolHost,
     packageJson
 ] = await Promise.all([
     readFile('src/lib/supabaseClient.js', 'utf8'),
@@ -17,6 +25,14 @@ const [
     readFile('src/constants/teacherNav.js', 'utf8'),
     readFile('src/components/teacher/TeacherDashboard.jsx', 'utf8'),
     readFile('supabase/migrations/20261029_lab_teacher_sso.sql', 'utf8'),
+    readFile('supabase/migrations/20261031_lab_short_links_permissions.sql', 'utf8'),
+    readFile('supabase/migrations/20261101_lab_portable_results.sql', 'utf8'),
+    readFile('supabase/migrations/20261102_my_lab_results.sql', 'utf8'),
+    readFile('src/modules/writing/tools/lab-results/api.js', 'utf8'),
+    readFile('src/modules/writing/tools/lab-results/manifest.js', 'utf8'),
+    readFile('src/modules/writing/tools/lab-results/LabResultsTool.jsx', 'utf8'),
+    readFile('src/modules/writing/tools/registry.js', 'utf8'),
+    readFile('src/modules/writing/tools/WritingToolHost.jsx', 'utf8'),
     readFile('package.json', 'utf8')
 ]);
 
@@ -58,4 +74,33 @@ test('연구소 교사 준비 RPC는 실제 승인 상태를 확인하고 기존
     assert.match(migration, /lab_user_id = p_lab_user_id OR agit_user_id = p_lab_user_id/);
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.ensure_lab_teacher_profile_v1\(\)[\s\S]*FROM PUBLIC, anon/);
     assert.doesNotMatch(migration, /auth\.jwt|app_metadata/);
+});
+
+test('연구소 단축주소는 서버만 조회·생성하고 브라우저 직접 접근을 막는다', () => {
+    assert.match(shortLinksMigration, /REVOKE ALL ON TABLE writing_helper\.short_links FROM PUBLIC, anon, authenticated/);
+    assert.match(shortLinksMigration, /GRANT SELECT, INSERT ON TABLE writing_helper\.short_links TO service_role/);
+    assert.doesNotMatch(shortLinksMigration, /GRANT[^;]*TO (?:anon|authenticated)/);
+});
+
+test('연구소 표준 결과 원장은 서버만 쓰고 학생은 본인 RPC로만 읽는다', () => {
+    assert.match(portableResultsMigration, /CREATE TABLE IF NOT EXISTS writing_helper\.portable_results/);
+    assert.match(portableResultsMigration, /REVOKE ALL ON TABLE writing_helper\.portable_results FROM PUBLIC, anon, authenticated/);
+    assert.match(portableResultsMigration, /GRANT EXECUTE ON FUNCTION writing_helper\.upsert_portable_result_v1[\s\S]*TO service_role/);
+    assert.match(myResultsMigration, /v_student_id UUID := public\.auth_student_id\(\)/);
+    assert.match(myResultsMigration, /portable\.agit_student_id = v_student_id/);
+    assert.match(myResultsMigration, /LIMIT v_limit \+ 1/);
+    assert.match(myResultsMigration, /LEAST\(GREATEST\(coalesce\(p_limit, 20\), 1\), 50\)/);
+    assert.match(myResultsMigration, /REVOKE ALL ON FUNCTION public\.get_my_lab_results_v1[\s\S]*FROM PUBLIC, anon/);
+    assert.doesNotMatch(myResultsMigration, /auth\.jwt|app_metadata/);
+});
+
+test('글쓰기 연구소 결과 도구는 열 때만 본인 RPC를 호출하고 직접 선택한 내용만 넣는다', () => {
+    assert.match(writingToolRegistry, /labResultsToolManifest/);
+    assert.match(labResultsManifest, /performance: \{ home: 'none', load: 'on-open', writes: 'none', realtime: 'none', maxInitialRows: 20 \}/);
+    assert.match(labResultsApi, /supabase\.rpc\('get_my_lab_results_v1'/);
+    assert.match(labResultsApi, /Math\.min\(Math\.max\(Number\(limit\) \|\| 20, 1\), 50\)/);
+    assert.doesNotMatch(labResultsApi, /\.from\(|setInterval|\.channel\(/);
+    assert.match(labResultsTool, /onClick=\{\(\) => void handleUseText/);
+    assert.match(writingToolHost, /lazy\(manifest\.studentEntry\)/);
+    assert.match(writingToolHost, /onInsertText=\{onInsertText\}/);
 });

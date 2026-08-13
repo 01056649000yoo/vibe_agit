@@ -1,7 +1,9 @@
 import { spellingLookupToolManifest } from './spelling-lookup/manifest';
+import { labResultsToolManifest } from './lab-results/manifest';
 
 const writingToolManifests = [
-    spellingLookupToolManifest
+    spellingLookupToolManifest,
+    labResultsToolManifest
 ];
 
 export const getWritingToolManifests = () => [...writingToolManifests]

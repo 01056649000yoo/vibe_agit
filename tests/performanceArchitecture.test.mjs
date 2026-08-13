@@ -126,6 +126,24 @@ test('학생 글쓰기 화면은 과제와 기존 글을 작업공간 RPC 한 �
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_student_assignment_workspace_v1/);
 });
 
+test('연구소 결과는 학생이 도구를 열 때만 최대 20개를 읽고 홈·폴링·Realtime을 쓰지 않는다', async () => {
+    const host = await read('src/modules/writing/tools/WritingToolHost.jsx');
+    const manifest = await read('src/modules/writing/tools/lab-results/manifest.js');
+    const api = await read('src/modules/writing/tools/lab-results/api.js');
+    const tool = await read('src/modules/writing/tools/lab-results/LabResultsTool.jsx');
+
+    assert.match(host, /lazy\(manifest\.studentEntry\)/);
+    assert.match(manifest, /home: 'none'/);
+    assert.match(manifest, /load: 'on-open'/);
+    assert.match(manifest, /realtime: 'none'/);
+    assert.match(manifest, /maxInitialRows: 20/);
+    assert.match(api, /get_my_lab_results_v1/);
+    assert.match(tool, /limit: 20/);
+    for (const source of [api, tool]) {
+        assert.doesNotMatch(source, /setInterval\s*\(|\.channel\(|postgres_changes/);
+    }
+});
+
 test('핵심 통합 RPC 실패 시 과거 다중 조회로 조용히 돌아가지 않는다', async () => {
     for (const file of [
         'src/store/useAuthStore.js',

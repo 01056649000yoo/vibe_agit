@@ -1,4 +1,5 @@
 export const SPELLING_LOOKUP_TOOL_ID = 'spelling-lookup';
+export const LAB_RESULTS_TOOL_ID = 'lab-results';
 
 export const DEFAULT_WRITING_EDITOR_SETTINGS = Object.freeze({
     enabled_tools: Object.freeze([SPELLING_LOOKUP_TOOL_ID])

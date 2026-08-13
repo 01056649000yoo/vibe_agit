@@ -688,7 +688,10 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                     )}
                 />
 
-                <WritingToolHost disabled={submitting || isLocked} />
+                <WritingToolHost
+                    disabled={submitting || isLocked}
+                    onInsertText={GenreEditor ? undefined : insertToBody}
+                />
 
                 <div style={{ position: 'relative' }}>
                     {showOriginal && (

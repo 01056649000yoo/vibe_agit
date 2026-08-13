@@ -14,6 +14,7 @@ import {
     normalizeWritingEditorSettings,
     setWritingToolEnabled
 } from './settings';
+import { getWritingToolManifests } from '../tools/registry';
 import './teacherWritingEditorManager.css';
 
 const PREVIEW_WIDTHS = Object.freeze({
@@ -21,11 +22,18 @@ const PREVIEW_WIDTHS = Object.freeze({
     tablet: { label: '태블릿', width: 820 },
     mobile: { label: '휴대폰', width: 390 }
 });
+const WRITING_TOOL_OPTIONS = Object.freeze(getWritingToolManifests().map((tool) => ({
+    id: tool.id,
+    label: tool.label,
+    description: tool.teacherDescription || tool.description,
+    icon: tool.triggerEmoji || '🧰'
+})));
 
 // 관리 화면에서는 실제 학생 입력기·맞춤법 RPC를 실행하지 않는다. 설정의 모양만
 // 확인할 수 있는 정적 샘플이라 탭 진입과 미리보기 전환이 가볍다.
 const StudentWritingPreview = ({ settings, compact }) => {
     const searchEnabled = isWritingToolEnabled(settings, SPELLING_LOOKUP_TOOL_ID);
+    const enabledTools = WRITING_TOOL_OPTIONS.filter((tool) => isWritingToolEnabled(settings, tool.id));
     return (
         <div className="writing-editor-preview-interaction-guard">
                 <WritingWorkspace tone="assignment" className="writing-editor-preview-workspace">
@@ -47,9 +55,9 @@ const StudentWritingPreview = ({ settings, compact }) => {
                             title="본격 글쓰기"
                             description="제목과 내용을 차근차근 적어보세요."
                         />
-                        {searchEnabled && (
-                            <div className="writing-editor-preview-tool">🔎 맞춤법 찾아보기</div>
-                        )}
+                        {enabledTools.map((tool) => (
+                            <div key={tool.id} className="writing-editor-preview-tool">{tool.icon} {tool.label}</div>
+                        ))}
                         <div className={`writing-editor-preview-fields ${compact ? 'is-compact' : ''}`}>
                             <div>
                                 <small>글 제목</small>
@@ -109,7 +117,6 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
         return () => window.clearTimeout(timerId);
     }, [loadSettings]);
 
-    const searchEnabled = isWritingToolEnabled(draftSettings, SPELLING_LOOKUP_TOOL_ID);
     const hasChanges = useMemo(
         () => JSON.stringify(savedSettings) !== JSON.stringify(draftSettings),
         [draftSettings, savedSettings]
@@ -161,32 +168,33 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
                 </div>
 
                 <div className="writing-editor-manager__feature-list">
-                    <article>
-                        <div className="writing-editor-manager__feature-copy">
-                            <span aria-hidden="true">🔎</span>
-                            <div>
-                                <strong>맞춤법 찾아보기</strong>
-                                <small>학생이 궁금한 표현을 직접 찾고, 확인할 표현의 밑줄과 도움말을 봅니다.</small>
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            role="switch"
-                            aria-checked={searchEnabled}
-                            disabled={loading}
-                            className={`writing-editor-manager__switch ${searchEnabled ? 'is-on' : ''}`}
-                            onClick={() => setDraftSettings((current) => (
-                                setWritingToolEnabled(
-                                    current,
-                                    SPELLING_LOOKUP_TOOL_ID,
-                                    !isWritingToolEnabled(current, SPELLING_LOOKUP_TOOL_ID)
-                                )
-                            ))}
-                        >
-                            <span />
-                            {searchEnabled ? 'ON' : 'OFF'}
-                        </button>
-                    </article>
+                    {WRITING_TOOL_OPTIONS.map((tool) => {
+                        const enabled = isWritingToolEnabled(draftSettings, tool.id);
+                        return (
+                            <article key={tool.id}>
+                                <div className="writing-editor-manager__feature-copy">
+                                    <span aria-hidden="true">{tool.icon}</span>
+                                    <div>
+                                        <strong>{tool.label}</strong>
+                                        <small>{tool.description}</small>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={enabled}
+                                    disabled={loading}
+                                    className={`writing-editor-manager__switch ${enabled ? 'is-on' : ''}`}
+                                    onClick={() => setDraftSettings((current) => (
+                                        setWritingToolEnabled(current, tool.id, !isWritingToolEnabled(current, tool.id))
+                                    ))}
+                                >
+                                    <span />
+                                    {enabled ? 'ON' : 'OFF'}
+                                </button>
+                            </article>
+                        );
+                    })}
                 </div>
 
                 <div className="writing-editor-manager__save-row">

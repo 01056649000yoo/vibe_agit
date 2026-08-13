@@ -42,7 +42,7 @@ class WritingToolErrorBoundary extends React.Component {
     }
 }
 
-const WritingToolHost = ({ disabled = false }) => {
+const WritingToolHost = ({ disabled = false, onInsertText }) => {
     const { isToolEnabled } = useWritingEditorSettings();
     // 열어 달라는 요청이 온 도구만 담는다. { [도구id]: { query, correction, at } }
     const [openRequests, setOpenRequests] = useState({});
@@ -100,7 +100,7 @@ const WritingToolHost = ({ disabled = false }) => {
             aria-label="글쓰기 도움 도구"
             className="writing-tool-host"
         >
-            {enabledTools.map(({ id, label, triggerLabel, triggerHelp, Component }) => {
+            {enabledTools.map(({ id, label, triggerLabel, triggerHelp, triggerEmoji, Component }) => {
                 const request = Reflect.get(openRequests, id);
                 return (
                     <WritingToolErrorBoundary key={id} toolLabel={label}>
@@ -112,7 +112,9 @@ const WritingToolHost = ({ disabled = false }) => {
                                 disabled={disabled}
                                 aria-haspopup="dialog"
                             >
-                                <Search size={19} aria-hidden="true" />
+                                {triggerEmoji
+                                    ? <span aria-hidden="true">{triggerEmoji}</span>
+                                    : <Search size={19} aria-hidden="true" />}
                                 <span>{triggerLabel || label}</span>
                             </button>
                             {triggerHelp && <span className="spelling-lookup-trigger-help">{triggerHelp}</span>}
@@ -125,6 +127,7 @@ const WritingToolHost = ({ disabled = false }) => {
                                     initialQuery={request.query}
                                     correction={request.correction}
                                     onClose={Reflect.get(closeHandlers, id)}
+                                    onInsertText={onInsertText}
                                 />
                             </Suspense>
                         )}
