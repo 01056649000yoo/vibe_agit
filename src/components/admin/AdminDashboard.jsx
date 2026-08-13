@@ -8,6 +8,7 @@ import AdminUsagePanel from './AdminUsagePanel';
 import AdminStudentActivityPanel from './AdminStudentActivityPanel';
 import AdminDormantPanel from './AdminDormantPanel';
 import AdminCleanupPanel from './AdminCleanupPanel';
+import AdminLabManagementPanel from './AdminLabManagementPanel';
 import useAdminUsage from '../../hooks/useAdminUsage';
 
 const TEACHER_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5분 — 교사 목록은 실시간 갱신 불필요
@@ -174,7 +175,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const pendingList = pendingGroup === 'revoked' ? revokedTeachers : newSignups;
 
     // States for UI
-    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'feedback' | 'announcements' | 'settings'
+    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'lab' | 'feedback' | 'announcements' | 'settings'
     const [currentTab, setCurrentTab] = useState('active');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -467,6 +468,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             { id: 'students', label: '🧑‍🎓 학생 활동' },
                             { id: 'dormant', label: `😴 장기 미접속 (${usage.dormantTeachers.length})` },
                             { id: 'cleanup', label: `🧹 정리 대상 (${usage.cleanupCandidates.length})` },
+                            { id: 'lab', label: '🧪 글쓰기 연구소' },
                             {
                                 id: 'feedback',
                                 label: (
@@ -799,6 +801,10 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                 fetchTeachers({ showLoading: false });
                             }}
                         />
+                    )}
+
+                    {currentTab === 'lab' && (
+                        <AdminLabManagementPanel />
                     )}
 
                     {!loading && currentTab === 'settings' && (

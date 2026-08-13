@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -19,7 +19,8 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261024_writing_reaction_profiles.sql', 'utf8'),
     readFile('supabase/migrations/20261025_class_public_writing_feed.sql', 'utf8'),
     readFile('supabase/migrations/20261026_student_point_history.sql', 'utf8'),
-    readFile('supabase/migrations/20261027_lab_ai_bridge.sql', 'utf8')
+    readFile('supabase/migrations/20261027_lab_ai_bridge.sql', 'utf8'),
+    readFile('supabase/migrations/20261028_admin_lab_management.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -51,6 +52,21 @@ test('연구소 AI 브리지는 연구소 세션·서버 전용 매핑·실제 �
     assert.match(labBridgeMigration, /v_profile\.role = 'TEACHER'/);
     assert.match(labBridgeMigration, /REVOKE ALL ON FUNCTION public\.resolve_lab_ai_teacher_v1\(UUID\)/);
     assert.doesNotMatch(labBridgeMigration, /auth\.jwt|app_metadata/);
+});
+
+test('연구소 관리는 아지트 ADMIN 전용 RPC로 통합하고 내부 매핑 ID를 숨긴다', () => {
+    assert.match(adminLabMigration, /public\.auth_user_role\(\) <> 'ADMIN'/);
+    assert.match(adminLabMigration, /auth\.uid\(\) IS NULL/);
+    assert.match(adminLabMigration, /admin_get_lab_service_summary_v1/);
+    assert.match(adminLabMigration, /admin_set_lab_teacher_access_v1/);
+    assert.match(adminLabMigration, /UPDATE public\.lab_ai_teacher_links/);
+    assert.match(adminLabMigration, /lab_profile\.user_id = link\.agit_user_id/);
+    assert.match(adminLabMigration, /class\.teacher_id = link\.agit_user_id/);
+    assert.match(adminLabMigration, /room\.teacher_id = link\.agit_user_id/);
+    assert.match(adminLabMigration, /REVOKE ALL ON FUNCTION public\.admin_get_lab_service_summary_v1\(\)[\s\S]*FROM PUBLIC, anon/);
+    assert.match(adminLabMigration, /REVOKE ALL ON FUNCTION public\.admin_set_lab_teacher_access_v1\(UUID, BOOLEAN\)[\s\S]*FROM PUBLIC, anon/);
+    assert.doesNotMatch(adminLabMigration, /jsonb_build_object\([\s\S]{0,100}'lab_user_id'/);
+    assert.doesNotMatch(adminLabMigration, /auth\.jwt|app_metadata/);
 });
 
 test('피드백은 서버 소유권 확인과 HTML 이스케이프를 사용한다', () => {
