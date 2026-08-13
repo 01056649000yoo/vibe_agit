@@ -85,6 +85,17 @@
   이 설정을 지우거나 우회하면 컨테이너를 재기동할 때 `secrets.agit.env` 연결이 빠져 함수 시크릿이
   통째로 누락될 수 있다 — 실제로 `ADMIN_MODE_PASSWORD`가 이렇게 빠진 적이 있다.
 
+### 교사 연구소 SSO는 같은 도메인의 루트 쿠키로 연결한다
+- 아지트 브라우저와 통합 연구소 `/lab`은 `sb-agit-auth-token`, `Path=/`, `SameSite=Lax`인 host-only 쿠키를
+  함께 사용한다. 토큰을 URL·쿼리·localStorage 사이에서 전달하지 않는다.
+- 아지트의 과거 localStorage 세션은 첫 부팅 때 새 쿠키 저장 성공을 확인한 뒤에만 지운다. 통합 연구소 SSR은
+  내부 Kong URL을 쓰더라도 명시적인 같은 쿠키 이름으로 세션을 읽는다.
+- SSO는 새 통합 DB를 보는 `/lab` 빌드에서만 켠다. 롤백용 `helper.` 빌드는 구 Auth와 기존 기본 쿠키를 계속
+  사용하므로 병행 기간의 기존 로그인과 자료가 끊기지 않는다.
+- 연구소 서버 액션은 `auth.uid()`만으로 허용하지 않고 `auth_user_role()`의 실제 DB 연결·승인 결과를 매번
+  확인한다. 승인 교사의 `writing_helper.teacher_profiles`는 첫 진입에만 멱등 준비하며 기존 이름·학급·방·결과는
+  덮어쓰지 않는다.
+
 ### 아지트 Storage는 macOS bind mount가 아니라 named volume을 쓴다
 - `agit-storage`와 `agit-imgproxy`는 외부 Docker named volume **`agit-storage-data`**를 함께 사용한다.
   Storage는 읽기/쓰기, imgproxy는 읽기 전용으로 마운트한다.
