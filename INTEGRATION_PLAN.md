@@ -2,7 +2,7 @@
 
 > 이 문서는 2026-06 Claude 세션에서 분석·합의된 내용의 전체 기록이다.
 > 새 세션에서 작업을 이어갈 때 이 문서를 먼저 읽으면 배경 설명 없이 바로 시작할 수 있다.
-> **2026-08-12 현재** Stage 1 컷오버는 끝났고 앱은 맥미니 Docker+Caddy에서만 운영한다.
+> **2026-08-13 현재** Stage 1 컷오버는 끝났고 앱은 맥미니 Docker+Caddy에서만 운영한다.
 > 아래 Vercel 언급은 이관 전 상태와 당시 롤백 계획을 설명하는 과거 기록이며 현재 운영 절차가 아니다.
 
 ## 1. 목표
@@ -43,6 +43,23 @@
 - 실행 순서는 **연구소 기준 정합화 → 새 DB·`/lab` 병행 컨테이너 → 교사 쿠키 SSO → 학생 실제 DB 연결 자동
   입장 → 표준 결과 RPC → Stage 4b 불러오기 UI**다. 기존 `helper.` 서비스는 컷오버 전까지 롤백 경로로 유지하고,
   전환 뒤에는 기존 QR·단축링크를 `https://끄적끄적아지트.site/lab/*`로 영구 리다이렉트한다.
+
+## 1.6 2026-08-13 `/lab` 병행 검증 결과
+
+- 연구소에 빌드 시 고정되는 `NEXT_PUBLIC_BASE_PATH=/lab` 계약과 경로 보조 함수를 추가했다. 서버 액션·인증
+  콜백·확인 링크·QR·단축링크가 `/lab`을 보존하며, Next.js 프록시의 basePath 자동 보존으로 생긴
+  `/lab/lab/login` 이중 경로는 실행 검증에서 찾아 바로 수정했다.
+- `docker-compose.lab.yml`은 별도 `writing-helper-lab` 프로젝트와 `127.0.0.1:3001`만 사용하고
+  `agit_default` 네트워크에서 통합 Kong·아지트 AI 함수로 연결한다. 기존 3000번 `writing-helper-app`과 구 DB는
+  롤백용으로 그대로 유지한다. 연구소 `main` 푸시는 이후 두 이미지를 각각 빌드·기동·HTTP 검증한다.
+- 통합 환경의 별도 회원가입은 화면과 서버 액션에서 모두 차단했다. 통합 Supabase Auth 허용 목록에는
+  `https://끄적끄적아지트.site/lab/**`를 추가하고 Compose로 Auth만 재생성했으며 기존 아지트 응답은 유지됐다.
+- 공개 도메인 `/lab/login`·정적 자산·보호 화면 리다이렉트와 기존 아지트 `/`·`helper.` 로그인이 모두 정상이다.
+  유승현 자료는 학급 2·방 27·세션 179, 최원진 자료는 학급 1·방 10·세션 86으로 구·신 DB가 동일하다.
+- 호스트 Caddy는 검증된 후보 설정으로 무중단 reload해 현재 `/lab` 분기가 동작한다. 다만
+  `/etc/caddy/Caddyfile`은 root 소유라 현재 세션에서 영구 파일을 덮지 못했다. 같은 내용의 검증된
+  `~/agit-supabase/Caddyfile.proposed`를 `sudo cp`한 뒤 `/etc/caddy/Caddyfile` 기준으로 다시 reload해야
+  재부팅 후에도 유지된다.
 
 ## 2. 두 앱의 이관 전 상태 (2026-06 기준)
 
@@ -138,10 +155,10 @@
 
 ### Phase 2 — 호스팅 구성 (1~2일)
 - [x] 아지트 Dockerfile 작성 (2026-07-24) — `Dockerfile`(Vite 빌드 → Caddy 서빙, build-arg로 Supabase URL/키 주입) + `Caddyfile.container`(SPA 폴백·보안헤더 5종·zstd/gzip 압축·해시자산 immutable 캐시). **end-to-end 검증 완료**: 컨테이너 프론트→새 스택 익명로그인 200·bind_student_auth RPC 200
-- [ ] Caddy 라우팅: `/` → 아지트, `/lab/*` → writing-helper 컨테이너, `api.도메인` → Kong
+- [~] Caddy 라우팅: `/` → 아지트, `/lab/*` → writing-helper 컨테이너, `api.도메인` → Kong — 런타임 적용·실응답 검증 완료, root 소유 `/etc/caddy/Caddyfile` 영구 반영만 남음
 - [x] Caddy에 SPA 폴백과 보안 헤더를 적용하고 현재 운영 설정의 단일 기준으로 확정
 - [x] Caddy 압축(zstd/gzip) + 해시 자산 `Cache-Control: immutable` + HTTP/2 적용·실응답 검증
-- [ ] writing-helper `basePath: '/lab'` 설정 + 내부 링크·리다이렉트 전수 점검
+- [x] writing-helper `basePath: '/lab'` 설정 + 내부 링크·리다이렉트 전수 점검, 루트형 기존 빌드 호환과 `/lab` 실행 응답 검증
 - [ ] **⚠️ basePath 변경 시 기존 단축링크·QR 깨짐 주의**: 연구소의 `/s/...` 단축링크와 배포된 QR코드가
   기존 `helper.도메인` 경로 기준. 기존 `helper.도메인/*` → 새 `/lab/*` 301 리다이렉트를 Caddy에 유지할 것
 - [x] vibe_agit에 GitHub Actions self-hosted 러너 자동 배포 구축 (`main` 푸시 → Docker 빌드·교체·HTTP 검증)
