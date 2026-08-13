@@ -244,7 +244,8 @@
   gap: 8px;
   margin: 12px 0 16px;
 }
-.ui-preview__teacher-nav button {
+.ui-preview__teacher-nav button,
+.ui-preview__teacher-nav a {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -256,6 +257,7 @@
   font-weight: 700;
   color: #495057;
   cursor: pointer;
+  text-decoration: none;
 }
 .ui-preview__teacher-nav button.is-active {
   border-color: #4C6EF5;

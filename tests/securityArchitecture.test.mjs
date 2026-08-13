@@ -46,7 +46,7 @@ test('연구소 AI 브리지는 연구소 세션·서버 전용 매핑·실제 �
     assert.ok(resolveIndex > -1 && resolveIndex < rateIndex && rateIndex < fetchIndex);
     assert.match(vibeAi, /X-Lab-Auth/);
     assert.match(vibeAi, /\/auth\/v1\/user/);
-    assert.match(vibeAi, /if \(!labUserResponse\.ok\)/);
+    assert.match(vibeAi, /if \(!labUserResponse\.ok\) continue/);
     assert.match(labBridgeMigration, /auth\.role\(\) <> 'service_role'/);
     assert.match(labBridgeMigration, /v_profile\.role = 'ADMIN'/);
     assert.match(labBridgeMigration, /v_profile\.role = 'TEACHER'/);

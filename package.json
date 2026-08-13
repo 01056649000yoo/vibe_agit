@@ -24,7 +24,8 @@
     "test:landing": "node --test tests/landingPage.test.mjs",
     "test:learning-support": "node --test tests/learningSupportSoftwareGuide.test.mjs",
     "test:vibe-ai": "node --test tests/vibeAiEdgeFunction.test.mjs",
-    "test:security:static": "node --test tests/securityArchitecture.test.mjs tests/vibeAiEdgeFunction.test.mjs",
+    "test:lab-sso": "node --test tests/labSsoIntegration.test.mjs",
+    "test:security:static": "node --test tests/securityArchitecture.test.mjs tests/vibeAiEdgeFunction.test.mjs tests/labSsoIntegration.test.mjs",
     "test:deployment": "node --test tests/deploymentArchitecture.test.mjs",
     "test:security:ops": "node scripts/check-operational-security.mjs",
     "test:security": "npm run test:security:static && npm run migrate:check && npm run smoke:security-boundary && npm run test:security:ops",
@@ -40,6 +41,7 @@
     "smoke:security-boundary": "node scripts/run-rollback-smoke.mjs tests/sql/20261014_security_boundary_hardening.smoke.sql"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.112.2",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.26.2",

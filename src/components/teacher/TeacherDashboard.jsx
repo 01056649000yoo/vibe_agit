@@ -232,26 +232,44 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
             <nav className="teacher-dashboard__nav" style={{
                 display: 'flex', background: 'white', borderBottom: '1px solid #E9ECEF',
                 flexShrink: 0, zIndex: 99, width: '100%', boxSizing: 'border-box', overflowX: 'auto'
-            }} role="tablist" aria-label="교사 업무 메뉴">
-                {TEACHER_NAV_GROUPS.map((group) => (
-                    <button
-                        key={group.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={activeNavGroup.id === group.id}
-                        onClick={() => handleTabChange(group.defaultTab)}
-                        style={{
+            }} aria-label="교사 업무 메뉴">
+                {TEACHER_NAV_GROUPS.map((group) => {
+                    const isActive = activeNavGroup.id === group.id;
+                    const itemStyle = {
                             padding: isMobile ? '10px 12px' : '12px 22px', border: 'none',
-                            background: activeNavGroup.id === group.id ? '#EFF6FF' : 'transparent',
-                            borderBottom: activeNavGroup.id === group.id ? '3px solid #3498DB' : '3px solid transparent',
-                            color: activeNavGroup.id === group.id ? '#2563EB' : '#64748B',
+                            background: isActive ? '#EFF6FF' : 'transparent',
+                            borderBottom: isActive ? '3px solid #3498DB' : '3px solid transparent',
+                            color: isActive ? '#2563EB' : '#64748B',
                             fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s',
-                            fontSize: isMobile ? '0.82rem' : '0.95rem', whiteSpace: 'nowrap'
-                        }}
-                    >
-                        <span aria-hidden="true">{group.icon}</span> {group.label}
-                    </button>
-                ))}
+                            fontSize: isMobile ? '0.82rem' : '0.95rem', whiteSpace: 'nowrap',
+                            display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none'
+                    };
+
+                    if (group.launchHref) {
+                        return (
+                            <a
+                                key={group.id}
+                                href={group.launchHref}
+                                aria-label={`${group.label}로 이동`}
+                                style={itemStyle}
+                            >
+                                <span aria-hidden="true">{group.icon}</span> {group.label}
+                            </a>
+                        );
+                    }
+
+                    return (
+                        <button
+                            key={group.id}
+                            type="button"
+                            aria-pressed={isActive}
+                            onClick={() => handleTabChange(group.defaultTab)}
+                            style={itemStyle}
+                        >
+                            <span aria-hidden="true">{group.icon}</span> {group.label}
+                        </button>
+                    );
+                })}
                 {showsWritingLayoutControls && (
                     <div role="group" aria-label="글쓰기 카드 배열 설정" style={{
                         display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto', paddingLeft: '18px',

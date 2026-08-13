@@ -83,19 +83,29 @@ Deno.serve(async (req) => {
         if (isLabRequest) {
             const labAuth = req.headers.get('X-Lab-Auth') ?? ''
             const labAnonKey = req.headers.get('X-Lab-Anon-Key') ?? ''
-            const labSupabaseUrl = (Deno.env.get('LAB_SUPABASE_URL')
+            const legacyLabSupabaseUrl = (Deno.env.get('LAB_SUPABASE_URL')
                 ?? 'https://supabase.xn--9y2br3k43n.kr').replace(/\/$/, '')
             if (!labAuth.startsWith('Bearer ') || !labAnonKey) {
                 throw new HttpError(403, '연구소 로그인 정보를 확인할 수 없습니다.')
             }
 
-            const labUserResponse = await fetch(`${labSupabaseUrl}/auth/v1/user`, {
-                method: 'GET',
-                headers: { Authorization: labAuth, apikey: labAnonKey },
-                signal: AbortSignal.timeout(10_000)
-            })
-            if (!labUserResponse.ok) throw new HttpError(403, '연구소 로그인 정보를 확인할 수 없습니다.')
-            const labUser = await labUserResponse.json().catch(() => null)
+            // 통합 /lab은 아지트 Auth, 롤백용 helper는 구 연구소 Auth가 발급한 토큰을 쓴다.
+            // 전달된 anon key와 토큰을 각 Auth 서버가 직접 검증하며, 먼저 성공한 사용자만 사용한다.
+            const labAuthUrls = [...new Set([
+                supabaseUrl.replace(/\/$/, ''),
+                legacyLabSupabaseUrl
+            ].filter(Boolean))]
+            let labUser: { id?: string } | null = null
+            for (const labAuthUrl of labAuthUrls) {
+                const labUserResponse = await fetch(`${labAuthUrl}/auth/v1/user`, {
+                    method: 'GET',
+                    headers: { Authorization: labAuth, apikey: labAnonKey },
+                    signal: AbortSignal.timeout(10_000)
+                })
+                if (!labUserResponse.ok) continue
+                labUser = await labUserResponse.json().catch(() => null)
+                if (isUuid(labUser?.id ?? '')) break
+            }
             if (!isUuid(labUser?.id ?? '')) throw new HttpError(403, '연구소 사용자 정보를 확인할 수 없습니다.')
 
             const { data: resolved, error: resolveError } = await supabaseAdmin.rpc('resolve_lab_ai_teacher_v1', {

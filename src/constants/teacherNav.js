@@ -19,6 +19,13 @@ export const TEACHER_NAV_GROUPS = [
         ]
     },
     {
+        id: 'writing-lab',
+        label: '글쓰기 연구소',
+        icon: '🧪',
+        launchHref: '/lab/dashboard',
+        tabs: []
+    },
+    {
         id: 'operations',
         label: '학급 운영',
         icon: '📊',

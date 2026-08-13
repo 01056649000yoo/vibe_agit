@@ -224,18 +224,23 @@ function UiPreview() {
         </p>
 
         <nav className="ui-preview__teacher-nav" aria-label="업무 영역">
-          {TEACHER_NAV_GROUPS.map((group) => (
-            <button
-              type="button"
-              key={group.id}
-              className={activeNav === group.id ? 'is-active' : ''}
-              aria-pressed={activeNav === group.id}
-              onClick={() => setActiveNav(group.id)}
-            >
+          {TEACHER_NAV_GROUPS.map((group) => group.launchHref ? (
+            <a key={group.id} href={group.launchHref}>
               <span aria-hidden="true">{group.icon}</span>
-              {group.label}
-            </button>
-          ))}
+              {group.label} ↗
+            </a>
+          ) : (
+              <button
+                type="button"
+                key={group.id}
+                className={activeNav === group.id ? 'is-active' : ''}
+                aria-pressed={activeNav === group.id}
+                onClick={() => setActiveNav(group.id)}
+              >
+                <span aria-hidden="true">{group.icon}</span>
+                {group.label}
+              </button>
+            ))}
         </nav>
 
         {(() => {

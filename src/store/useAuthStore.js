@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '../lib/supabaseClient';
+import { migrateLegacyAuthSession, SHARED_AUTH_COOKIE_NAME, supabase } from '../lib/supabaseClient';
 import { useAppStore } from './useAppStore';
 
 const PROFILE_FETCH_DEDUPE_MS = 15000;
@@ -13,7 +13,11 @@ const lastLoginTouchCache = new Map();
 const hasStoredSession = (() => {
     try {
         const keys = Object.keys(localStorage);
+        const hasSharedCookie = document.cookie
+            .split(';')
+            .some(cookie => cookie.trim().startsWith(SHARED_AUTH_COOKIE_NAME));
         return keys.some(k => k.startsWith('sb-') && k.endsWith('-auth-token')) ||
+               hasSharedCookie ||
                localStorage.getItem('student_session') !== null;
     } catch { return false; }
 })();
@@ -132,6 +136,7 @@ export const useAuthStore = create((set, get) => ({
         }
 
         try {
+            await migrateLegacyAuthSession();
             const { data: { session } } = await supabase.auth.getSession();
             console.log(`🔐 [AuthStore] 세션 획득 완료 (${(performance.now() - start).toFixed(0)}ms)`);
 

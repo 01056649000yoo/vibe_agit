@@ -130,9 +130,13 @@ function App() {
   }, [isAdminMode]);
 
   useEffect(() => {
-    checkSessions();
+    let authSubscription = null;
+    let cancelled = false;
 
-    if (supabase) {
+    const initializeAuth = async () => {
+      await checkSessions();
+      if (!supabase || cancelled) return;
+
       const { data } = supabase.auth.onAuthStateChange((_event, session) => {
         if (session) {
           const isAnonymous = session.user?.is_anonymous === true;
@@ -147,10 +151,14 @@ function App() {
           useAuthStore.getState().setTeacherBootstrap(null);
         }
       });
-      return () => {
-        data.subscription.unsubscribe();
-      }
-    }
+      authSubscription = data.subscription;
+    };
+
+    void initializeAuth();
+    return () => {
+      cancelled = true;
+      authSubscription?.unsubscribe();
+    };
   }, [checkSessions])
 
   useEffect(() => {

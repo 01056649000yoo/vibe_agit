@@ -62,7 +62,9 @@ test('연구소 AI는 실제 연구소 로그인과 승인 교사 매핑을 모�
     assert.match(edgeSource, /X-Lab-Auth/);
     assert.match(edgeSource, /X-Lab-Anon-Key/);
     assert.match(edgeSource, /\/auth\/v1\/user/);
-    assert.match(edgeSource, /if \(!labUserResponse\.ok\)/);
+    assert.match(edgeSource, /if \(!labUserResponse\.ok\) continue/);
+    assert.match(edgeSource, /supabaseUrl\.replace/);
+    assert.match(edgeSource, /legacyLabSupabaseUrl/);
     assert.match(edgeSource, /resolve_lab_ai_teacher_v1/);
     assert.match(edgeSource, /p_actor_id: targetTeacherId/);
     assert.match(labBridgeMigration, /ALTER TABLE public\.lab_ai_teacher_links ENABLE ROW LEVEL SECURITY/);
