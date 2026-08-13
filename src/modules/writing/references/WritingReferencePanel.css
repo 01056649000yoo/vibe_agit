@@ -14,15 +14,6 @@
     background: color-mix(in srgb, var(--writing-workspace-soft) 42%, white);
 }
 
-.writing-reference-toolbar p {
-    margin: 0;
-    color: var(--ui-ink-muted);
-    font-size: .8rem;
-    font-weight: 700;
-    line-height: 1.5;
-    text-align: right;
-}
-
 .writing-reference-trigger {
     display: inline-flex;
     min-height: 46px;
@@ -36,6 +27,41 @@
     background: var(--ui-surface);
     color: var(--writing-workspace-accent-strong);
     font-weight: 900;
+}
+
+.writing-reference-position-note {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 9px;
+    color: var(--ui-ink-muted);
+    text-align: right;
+}
+
+.writing-reference-position-note > svg {
+    flex: 0 0 auto;
+    color: var(--writing-workspace-accent-strong);
+}
+
+.writing-reference-position-note > span,
+.writing-reference-position-note strong,
+.writing-reference-position-note small {
+    display: block;
+}
+
+.writing-reference-position-note strong {
+    color: var(--ui-ink-strong);
+    font-size: .78rem;
+    font-weight: 900;
+}
+
+.writing-reference-position-note small {
+    margin-top: 2px;
+    color: var(--ui-ink-muted);
+    font-size: .72rem;
+    font-weight: 700;
+    line-height: 1.45;
 }
 
 .writing-reference-trigger small {
@@ -81,7 +107,9 @@
     position: sticky;
     top: 18px;
     display: flex;
+    height: max-content;
     max-height: min(72vh, 720px);
+    align-self: start;
     grid-area: panel;
     flex-direction: column;
     overflow: hidden;
@@ -271,7 +299,9 @@
         flex-direction: column;
     }
 
-    .writing-reference-toolbar p {
+    .writing-reference-position-note {
+        align-items: flex-start;
+        justify-content: flex-start;
         text-align: left;
     }
 

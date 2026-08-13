@@ -14,7 +14,10 @@ export const WritingWorkspace = ({ children, tone = 'assignment', className = ''
             padding: 'clamp(20px, 3vw, 32px)',
             border: '1px solid var(--writing-workspace-border)',
             background: 'var(--writing-workspace-background)',
-            boxShadow: 'var(--ui-shadow-md)'
+            boxShadow: 'var(--ui-shadow-md)',
+            // 공통 Card의 overflow:hidden은 우측 참고함의 sticky 이동 범위를 막는다.
+            // 글쓰기 작업공간만 visible로 풀어 긴 본문을 따라오게 한다.
+            overflow: 'visible'
         }}
     >
         {children}
@@ -85,4 +88,3 @@ export const WritingNotice = ({ tone = 'info', icon, title, children, compact = 
         </div>
     </div>
 );
-

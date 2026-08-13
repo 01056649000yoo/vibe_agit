@@ -9,10 +9,11 @@ import {
     setWritingToolEnabled
 } from '../src/modules/writing/editor-settings/settings.js';
 
-const [referencePanel, referencePanelCss, studentWriting] = await Promise.all([
+const [referencePanel, referencePanelCss, studentWriting, writingWorkspace] = await Promise.all([
     readFile('src/modules/writing/references/WritingReferencePanel.jsx', 'utf8'),
     readFile('src/modules/writing/references/WritingReferencePanel.css', 'utf8'),
-    readFile('src/components/student/StudentWriting.jsx', 'utf8')
+    readFile('src/components/student/StudentWriting.jsx', 'utf8'),
+    readFile('src/components/writing/WritingWorkspace.jsx', 'utf8')
 ]);
 
 test('기존 학급과 잘못된 설정은 맞춤법 찾아보기를 기본으로 켠다', () => {
@@ -54,7 +55,16 @@ test('글쓰기 참고함은 입력창을 유지한 채 열고 닫는 공통 인
     assert.doesNotMatch(referencePanel, /ModalPortal|position:\s*['"]fixed|supabase|\.rpc\(|setInterval|\.channel\(/);
     assert.match(referencePanelCss, /grid-template-areas: 'main panel'/);
     assert.match(referencePanelCss, /position: sticky/);
+    assert.match(referencePanelCss, /align-self: start/);
+    assert.match(writingWorkspace, /overflow: 'visible'/);
     assert.match(referencePanelCss, /@media \(max-width: 1180px\)[\s\S]*'panel'[\s\S]*'main'/);
+});
+
+test('글쓰기 참고함 옆 안내칸은 가로·세로 배치와 긴 글 추적 동작을 설명한다', () => {
+    assert.match(referencePanel, /className="writing-reference-position-note"/);
+    assert.match(referencePanel, /가로 화면에서는 오른쪽에서 글을 따라오고/);
+    assert.match(referencePanel, /세로 화면에서는 입력창 위에 보여요/);
+    assert.match(referencePanelCss, /\.writing-reference-position-note/);
 });
 
 test('학생 글쓰기 참고함은 기존 선생님 안내와 핵심질문만 재사용한다', () => {

@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react';
-import { BookOpenText, ChevronDown, ChevronUp } from 'lucide-react';
+import { BookOpenText, ChevronDown, ChevronUp, PanelsTopLeft } from 'lucide-react';
 import './WritingReferencePanel.css';
 
 /**
@@ -42,7 +42,13 @@ const WritingReferencePanel = ({ sections = [], children }) => {
                         ? <ChevronUp size={18} aria-hidden="true" />
                         : <ChevronDown size={18} aria-hidden="true" />}
                 </button>
-                <p>필요할 때 펼쳐 두고 글을 이어 쓸 수 있어요.</p>
+                <div className="writing-reference-position-note">
+                    <PanelsTopLeft size={19} aria-hidden="true" />
+                    <span>
+                        <strong>화면에 맞춰 자리가 달라져요</strong>
+                        <small>가로 화면에서는 오른쪽에서 글을 따라오고, 세로 화면에서는 입력창 위에 보여요.</small>
+                    </span>
+                </div>
             </div>
 
             <div className="writing-reference-layout">
