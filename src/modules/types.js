@@ -17,8 +17,8 @@
  * @property {() => Promise<any>} [settingsEntry] 교사 통합 설정의 모듈별 관리 컴포넌트
  * @property {Record<string, Array<Object>>} [dashboardCards]
  *   교사 대시보드 확장 카드. 키는 대시보드 id이며 공통 카드 호스트가 기본·전체화면·모달 노출을 담당한다.
- * @property {{name?: string, description?: string, background?: string, borderColor?: string, order?: number, entryMode?: 'standard'|'legacy'}} [playground]
- *   학생 놀이터 카드와 진입 방식. standard 모듈은 studentEntry가 공통 호스트 props를 받는다.
+ * @property {{name?: string, description?: string, background?: string, borderColor?: string, economy: 'earn'|'spend', pointLabel: string, ctaLabel: string, order?: number, entryMode?: 'standard'|'legacy'}} [playground]
+ *   학생 놀이터 카드의 포인트 분류·문구와 진입 방식. standard 모듈은 studentEntry가 공통 호스트 props를 받는다.
  * @property {{order?: number}} [myAgit] 나의 아지트에서 확장 카드를 표시할 순서
  * @property {{title?: string, subtitle?: string, order?: number, activeColor?: string, headerBackground?: string, borderColor?: string, titleColor?: string, subtitleColor?: string, legacy?: boolean}} [management]
  *   교사 아지트 놀이터 관리 카드 표시 정보. teacherEntry가 있으면 공통 관리 셸에서 지연 로딩한다.
@@ -74,6 +74,11 @@ export function validateManifest(m) {
     }
   }
   if (m.myAgit && typeof m.myAgitEntry !== 'function') problems.push('myAgit 설정은 있지만 myAgitEntry가 없음');
+  if (m.playground) {
+    if (!['earn', 'spend'].includes(m.playground.economy)) problems.push('playground.economy 유효하지 않음');
+    if (!m.playground.pointLabel) problems.push('playground.pointLabel 없음');
+    if (!m.playground.ctaLabel) problems.push('playground.ctaLabel 없음');
+  }
   if (m.settings && typeof m.settingsEntry !== 'function') problems.push('settings 설정은 있지만 settingsEntry가 없음');
   if (m.dashboardCards && (typeof m.dashboardCards !== 'object' || Array.isArray(m.dashboardCards))) {
     problems.push('dashboardCards가 객체가 아님');

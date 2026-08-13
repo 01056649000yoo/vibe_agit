@@ -24,9 +24,12 @@ export const vocabTowerManifest = {
   teacherEntry: () => import('./TeacherManager'),
   playground: {
     name: '어휘의 탑',
-    description: '방을 통과하고 능력을 골라 낱말 익히기',
+    description: '낱말 문제에 도전하고 포인트 모으기',
     background: 'linear-gradient(135deg, #E3F2FD 0%, #F1F8FF 100%)',
     borderColor: '#BBDEFB',
+    economy: 'earn',
+    pointLabel: '포인트 얻기',
+    ctaLabel: '도전하기',
     order: 20,
     entryMode: 'standard'
   },

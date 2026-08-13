@@ -210,6 +210,9 @@ const StudentDashboard = ({
         description: module.playground?.description || module.description,
         background: module.playground?.background,
         borderColor: module.playground?.borderColor,
+        economy: module.playground?.economy,
+        pointLabel: module.playground?.pointLabel,
+        ctaLabel: module.playground?.ctaLabel,
         badge: module.id === 'dragon' ? `${dragonInfo.name} · LV.${displayPetData.level}` : null,
         onOpen: () => openGameModule(module)
     }));
@@ -249,7 +252,7 @@ const StudentDashboard = ({
                             setIsMyAgitOpen(true);
                         }}
                         onOpenDragon={() => setIsDragonModalOpen(true)}
-                        onOpenFootprint={() => setIsFootprintOpen(true)}
+                        onOpenPoints={() => setIsPlaygroundOpen(true)}
                     />
 
                     <Suspense fallback={null}>
@@ -300,6 +303,7 @@ const StudentDashboard = ({
                 <AgitPlayground
                     isOpen={isPlaygroundOpen}
                     onClose={() => setIsPlaygroundOpen(false)}
+                    points={points}
                     items={playgroundItems}
                 />
 

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -17,7 +17,8 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('src/modules/writing/export/googleDocImageExport.js', 'utf8'),
     readFile('supabase/migrations/20261023_student_activity_notifications.sql', 'utf8'),
     readFile('supabase/migrations/20261024_writing_reaction_profiles.sql', 'utf8'),
-    readFile('supabase/migrations/20261025_class_public_writing_feed.sql', 'utf8')
+    readFile('supabase/migrations/20261025_class_public_writing_feed.sql', 'utf8'),
+    readFile('supabase/migrations/20261026_student_point_history.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -130,4 +131,13 @@ test('친구 공개 글 피드는 실제 학생 학급과 공개 상태를 서�
     assert.match(friendFeedMigration, /CASE WHEN post\.show_original IS TRUE THEN post\.original_title ELSE NULL END/);
     assert.match(friendFeedMigration, /REVOKE ALL ON FUNCTION public\.get_class_public_writing_feed_v1[\s\S]*PUBLIC, anon/);
     assert.doesNotMatch(friendFeedMigration, /auth\.jwt|app_metadata/);
+});
+
+test('학생 포인트 내역은 실제 학생 연결로 본인 원장만 제한 조회한다', () => {
+    assert.match(pointHistoryMigration, /public\.auth_user_role\(\) <> 'STUDENT'/);
+    assert.match(pointHistoryMigration, /student\.auth_id = auth\.uid\(\)/);
+    assert.match(pointHistoryMigration, /point_log\.class_id = v_class_id[\s\S]*point_log\.student_id = v_student_id/);
+    assert.match(pointHistoryMigration, /LEAST\(GREATEST\(COALESCE\(p_limit, 20\), 1\), 50\)/);
+    assert.match(pointHistoryMigration, /REVOKE ALL ON FUNCTION public\.get_my_point_history_v1\(INTEGER\) FROM PUBLIC, anon/);
+    assert.doesNotMatch(pointHistoryMigration, /auth\.jwt|app_metadata/);
 });

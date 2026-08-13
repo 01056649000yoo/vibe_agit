@@ -24,9 +24,12 @@ export const dragonManifest = {
   },
   playground: {
     name: '나의 작가 수호룡',
-    description: '나의 글과 함께 자라는 아지트 친구',
+    description: '포인트로 수호룡의 아지트와 소품 꾸미기',
     background: 'linear-gradient(135deg, #FFF9C4 0%, #FFFDE7 100%)',
     borderColor: '#FFE082',
+    economy: 'spend',
+    pointLabel: '포인트 쓰기',
+    ctaLabel: '수호룡 만나기',
     order: 10,
     entryMode: 'legacy'
   },

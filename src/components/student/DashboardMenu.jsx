@@ -110,15 +110,15 @@ const DashboardMenu = ({
                     tone="brown"
                     onClick={onOpenMyAgit}
                 />
-                {playgroundCount > 0 && (
-                    <MenuCard
-                        icon="🎡"
-                        title="아지트 놀이터"
-                        description={`포인트로 즐기는 놀거리 ${playgroundCount}개`}
-                        tone="orange"
-                        onClick={onOpenPlayground}
-                    />
-                )}
+                <MenuCard
+                    icon="🎡"
+                    title="아지트 놀이터"
+                    description={playgroundCount > 0
+                        ? `포인트 모으기·쓰기 · 놀거리 ${playgroundCount}개`
+                        : '내 포인트와 새로운 놀거리 확인하기'}
+                    tone="orange"
+                    onClick={onOpenPlayground}
+                />
             </div>
         </section>
     );

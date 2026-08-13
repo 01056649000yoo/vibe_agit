@@ -41,10 +41,37 @@ test('공용 포인트 API는 현재 기능별 RPC만 노출한다', async () =>
         'teacher_manage_points_bulk',
         'get_teacher_point_manager_snapshot',
         'get_teacher_student_point_history',
+        'get_my_point_history_v1',
         'set_meeting_idea_status'
     ]) {
         assert.ok(source.includes(rpc), `${rpc} 호출이 공용 API에 없습니다.`);
     }
+});
+
+test('학생 놀이터는 포인트 지갑과 모으기·쓰기 모듈 계약을 사용한다', async () => {
+    const playground = await read('src/components/student/AgitPlayground.jsx');
+    const dashboard = await read('src/components/student/StudentDashboard.jsx');
+    const migration = await read('supabase/migrations/20261026_student_point_history.sql');
+
+    assert.match(playground, /pointApi\.getMyHistory\(\{ limit: 20 \}\)/);
+    assert.match(playground, /포인트 모으기/);
+    assert.match(playground, /포인트 쓰기/);
+    assert.doesNotMatch(playground, /supabase\.(?:from|rpc)\(/);
+    assert.match(dashboard, /points=\{points\}[\s\S]*items=\{playgroundItems\}/);
+
+    const dragonManifest = await read('src/modules/game/dragon/manifest.js');
+    const vocabManifest = await read('src/modules/game/vocab-tower/manifest.js');
+    assert.match(dragonManifest, /economy: 'spend'/);
+    assert.match(vocabManifest, /economy: 'earn'/);
+    for (const manifest of [dragonManifest, vocabManifest]) {
+        assert.match(manifest, /pointLabel:/);
+        assert.match(manifest, /ctaLabel:/);
+    }
+
+    assert.match(migration, /idx_point_logs_class_student_created/);
+    assert.match(migration, /point_log\.class_id = v_class_id[\s\S]*point_log\.student_id = v_student_id/);
+    assert.match(migration, /LIMIT v_limit \+ 1/);
+    assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_my_point_history_v1\(INTEGER\) FROM PUBLIC, anon/);
 });
 
 test('DB 공용 엔진은 event_key 중복 방지와 클라이언트 권한 차단을 갖는다', async () => {

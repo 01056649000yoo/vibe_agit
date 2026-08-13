@@ -37,7 +37,7 @@ const StudentHomeGrowthPanel = ({
     dragonInfo,
     onOpenMyAgit,
     onOpenDragon,
-    onOpenFootprint
+    onOpenPoints
 }) => {
     return (
         <section className={`student-home-growth ${dragonEnabled ? 'has-dragon' : ''}`} aria-label="나의 성장 상태">
@@ -47,10 +47,10 @@ const StudentHomeGrowthPanel = ({
                 <p className="student-home-growth__message">할 일을 살펴보고 오늘의 글쓰기를 시작해 볼까요?</p>
 
                 <div className="student-home-growth__status-grid">
-                    <button type="button" className="student-home-point-summary" onClick={onOpenFootprint}>
+                    <button type="button" className="student-home-point-summary" onClick={onOpenPoints}>
                         <span aria-hidden="true">⭐</span>
                         <span><small>보유 포인트</small><strong>{formatPoints(points)}P</strong></span>
-                        <em>발자국 보기</em>
+                        <em>놀이터 가기</em>
                     </button>
                     <TitleSummary kind="writer" level={writerLevel} loading={titleLoading} onClick={onOpenMyAgit} />
                     <TitleSummary kind="reader" level={readerLevel} loading={titleLoading} onClick={onOpenMyAgit} />

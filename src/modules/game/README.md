@@ -15,7 +15,7 @@
 `manifest.js`를 `src/modules/registry.js`에 한 줄 등록하면 다음 위치에 자동으로 연결된다.
 
 - 교사 `아지트 놀이터`: 왼쪽 콘텐츠 메뉴, 전체 활성 현황, 학생 화면 미리보기, ON/OFF, 선택 콘텐츠 세부 관리
-- 학생 `아지트 놀이터`: 아이콘·이름·설명 카드, 학생 진입 화면 지연 로딩
+- 학생 `아지트 놀이터`: 포인트 잔액·최근 내역, 모으기/쓰기 분류 카드, 학생 진입 화면 지연 로딩
 
 교사 화면은 처음에 전체 현황만 보여주고, 왼쪽 메뉴에서 콘텐츠를 선택했을 때 해당 `teacherEntry`만 지연 로딩한다.
 따라서 콘텐츠가 늘어나도 모든 관리 화면을 동시에 조회하거나 렌더링하지 않는다.
@@ -38,6 +38,9 @@ export const sampleGameManifest = {
     order: 30,
     background: 'linear-gradient(135deg, #F3E8FF, #FAF5FF)',
     borderColor: '#D8B4FE',
+    economy: 'spend', // 포인트를 주로 얻으면 earn, 주로 사용하면 spend
+    pointLabel: '포인트 쓰기',
+    ctaLabel: '둘러보기',
     entryMode: 'standard'
   },
   myAgit: {
@@ -83,6 +86,7 @@ export const sampleGameManifest = {
 - OFF는 노출만 중단하며 기존 게임 데이터는 삭제하지 않는다.
 - 단순 설정은 모듈 소유 설정 저장소, 랭킹·시즌·진행 기록은 모듈 전용 테이블/RPC가 담당한다.
 - 포인트 지급·차감은 클라이언트 직접 갱신 대신 권한을 검증하는 RPC를 사용한다.
+- `playground.economy`는 학생 허브의 카드 분류일 뿐 실제 지급·차감 금액의 근거로 사용하지 않는다.
 - 교사·학생 진입 컴포넌트는 열릴 때만 자기 데이터를 조회한다. 다른 모듈의 장애나 로딩을 막지 않는다.
 
 드래곤과 어휘의 탑은 게임별 `teacherEntry`·`studentEntry`를 통해 레지스트리에서 지연 로딩한다.

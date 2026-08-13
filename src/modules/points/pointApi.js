@@ -63,6 +63,10 @@ export const pointApi = Object.freeze({
         });
     },
 
+    getMyHistory({ limit = 20 } = {}) {
+        return callPointRpc('get_my_point_history_v1', { p_limit: limit });
+    },
+
     setMeetingIdeaStatus(postId, status) {
         return callPointRpc('set_meeting_idea_status', {
             p_post_id: postId,
