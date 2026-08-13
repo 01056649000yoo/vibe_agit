@@ -139,6 +139,14 @@ const RULES = [
 ];
 
 /**
+ * 연구소처럼 별도 배포되는 학생 글쓰기 화면도 같은 빠른 규칙을 내려받아 쓸 수 있게 하는
+ * 직렬화 전용 계약이다. 실제 검사는 아래의 결합 정규식을 그대로 사용한다.
+ */
+export const SPELLING_QUICK_DETECTION_RULES = Object.freeze(
+    RULES.map((rule) => Object.freeze({ ...rule }))
+);
+
+/**
  * 규칙 하나에 괄호 하나씩을 붙여 통째로 이어 붙인다.
  * 규칙 수가 늘어도 글을 **한 번만** 훑으므로, 규칙 개수는 속도에 거의 영향을 주지 않는다.
  */

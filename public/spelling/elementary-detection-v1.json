@@ -1,0 +1,7492 @@
+{
+  "version": 1,
+  "quickRules": [
+    {
+      "id": "doeyo",
+      "entryId": "dwae-doe",
+      "label": "되요 / 돼요",
+      "wrong": "되요",
+      "right": "돼요",
+      "lookup": "되다",
+      "source": "되요"
+    },
+    {
+      "id": "dwaet",
+      "entryId": "dwae-doe",
+      "label": "됬 / 됐",
+      "wrong": "됬",
+      "right": "됐",
+      "lookup": "되다",
+      "source": "됬"
+    },
+    {
+      "id": "seumnida",
+      "entryId": "seumnida",
+      "label": "슴니다 / 습니다",
+      "wrong": "슴니다",
+      "right": "습니다",
+      "lookup": "습니다",
+      "source": "슴니다"
+    },
+    {
+      "id": "eupnida",
+      "entryId": "eupnida",
+      "label": "읍니다 / 습니다",
+      "wrong": "읍니다",
+      "right": "습니다",
+      "lookup": "습니다",
+      "source": "읍니다"
+    },
+    {
+      "id": "ipnida",
+      "entryId": "ipnida",
+      "label": "임니다 / 입니다",
+      "wrong": "임니다",
+      "right": "입니다",
+      "lookup": "입니다",
+      "source": "임니다"
+    },
+    {
+      "id": "anieyo",
+      "entryId": "anieyo",
+      "label": "아니예요 / 아니에요",
+      "wrong": "아니예요",
+      "right": "아니에요",
+      "lookup": "아니다",
+      "source": "아니예요"
+    },
+    {
+      "id": "bwaeyo",
+      "entryId": "bwaeyo",
+      "label": "뵈요 / 봬요",
+      "wrong": "뵈요",
+      "right": "봬요",
+      "lookup": "뵈다",
+      "source": "뵈요"
+    },
+    {
+      "id": "kke",
+      "entryId": "kke",
+      "label": "-께 / -게",
+      "wrong": "-께",
+      "right": "-게",
+      "lookup": "게",
+      "source": "(?:할|갈|볼|올|줄|놀|울|들|앉을|만들|드릴|보낼|기다릴|먹을|잡을|읽을|있을|없을|쓸|칠|잘|열)께"
+    },
+    {
+      "id": "kkeo",
+      "entryId": "kkeo",
+      "label": "-꺼 / -거",
+      "wrong": "-꺼",
+      "right": "-거",
+      "lookup": "거",
+      "source": "(?:할|갈|볼|올|줄|될|놀|만들|먹을|있을|없을|잡을|읽을|쓸|열)꺼"
+    },
+    {
+      "id": "wenji",
+      "entryId": "wen-waen",
+      "label": "웬지 / 왠지",
+      "wrong": "웬지",
+      "right": "왠지",
+      "lookup": "왠지",
+      "source": "웬지"
+    },
+    {
+      "id": "waen",
+      "entryId": "wen-waen",
+      "label": "왠 / 웬",
+      "wrong": "왠",
+      "right": "웬",
+      "lookup": "웬",
+      "source": "왠(?!지)"
+    },
+    {
+      "id": "eottheohae",
+      "entryId": "eotteoke-eotteokhae",
+      "label": "어떻해 / 어떡해",
+      "wrong": "어떻해",
+      "right": "어떡해",
+      "lookup": "어떡하다",
+      "source": "어떻해"
+    },
+    {
+      "id": "eotteokge",
+      "entryId": "eotteoke-eotteokhae",
+      "label": "어떡게 / 어떻게",
+      "wrong": "어떡게",
+      "right": "어떻게",
+      "lookup": "어떻다",
+      "source": "어떡게"
+    },
+    {
+      "id": "myeochil",
+      "entryId": "myeochil",
+      "label": "몇일 / 며칠",
+      "wrong": "몇일",
+      "right": "며칠",
+      "lookup": "며칠",
+      "source": "몇일"
+    },
+    {
+      "id": "geumse",
+      "entryId": "geumse",
+      "label": "금새 / 금세",
+      "wrong": "금새",
+      "right": "금세",
+      "lookup": "금세",
+      "source": "금새"
+    },
+    {
+      "id": "oraenman",
+      "entryId": "oraenman",
+      "label": "오랫만 / 오랜만",
+      "wrong": "오랫만",
+      "right": "오랜만",
+      "lookup": "오랜만",
+      "source": "오랫만"
+    },
+    {
+      "id": "yeokhal",
+      "entryId": "yeokhal",
+      "label": "역활 / 역할",
+      "wrong": "역활",
+      "right": "역할",
+      "lookup": "역할",
+      "source": "역활"
+    },
+    {
+      "id": "seollem",
+      "entryId": "seollem",
+      "label": "설레임 / 설렘",
+      "wrong": "설레임",
+      "right": "설렘",
+      "lookup": "설렘",
+      "source": "설레임"
+    },
+    {
+      "id": "dodeche",
+      "entryId": "dodeche",
+      "label": "도데체 / 도대체",
+      "wrong": "도데체",
+      "right": "도대체",
+      "lookup": "도대체",
+      "source": "도데체"
+    },
+    {
+      "id": "eouieopda",
+      "entryId": "eouieopda",
+      "label": "어의없 / 어이없",
+      "wrong": "어의없",
+      "right": "어이없",
+      "lookup": "어이없다",
+      "source": "어의없"
+    },
+    {
+      "id": "nunssal",
+      "entryId": "nunssal",
+      "label": "눈쌀 / 눈살",
+      "wrong": "눈쌀",
+      "right": "눈살",
+      "lookup": "눈살",
+      "source": "눈쌀"
+    },
+    {
+      "id": "neokduri",
+      "entryId": "neokduri",
+      "label": "넉두리 / 넋두리",
+      "wrong": "넉두리",
+      "right": "넋두리",
+      "lookup": "넋두리",
+      "source": "넉두리"
+    },
+    {
+      "id": "seolgeoji",
+      "entryId": "seolgeoji",
+      "label": "설겆이 / 설거지",
+      "wrong": "설겆이",
+      "right": "설거지",
+      "lookup": "설거지",
+      "source": "설겆이"
+    },
+    {
+      "id": "jjigae",
+      "entryId": "jjigae",
+      "label": "찌게 / 찌개",
+      "wrong": "찌게",
+      "right": "찌개",
+      "lookup": "찌개",
+      "source": "(?:김치|된장|부대|순두부|청국장|비지|고추장|참치|동태|생선)찌게"
+    },
+    {
+      "id": "yukgyejang",
+      "entryId": "yukgyejang",
+      "label": "육계장 / 육개장",
+      "wrong": "육계장",
+      "right": "육개장",
+      "lookup": "육개장",
+      "source": "육계장"
+    },
+    {
+      "id": "tteokbokki",
+      "entryId": "tteokbokki",
+      "label": "떡볶기 / 떡볶이",
+      "wrong": "떡볶기",
+      "right": "떡볶이",
+      "lookup": "떡볶이",
+      "source": "떡볶기"
+    },
+    {
+      "id": "gopppaegi",
+      "entryId": "gopppaegi",
+      "label": "곱배기 / 곱빼기",
+      "wrong": "곱배기",
+      "right": "곱빼기",
+      "lookup": "곱빼기",
+      "source": "곱배기"
+    },
+    {
+      "id": "muripsseu",
+      "entryId": "muripsseu",
+      "label": "무릎쓰 / 무릅쓰",
+      "wrong": "무릎쓰",
+      "right": "무릅쓰",
+      "lookup": "무릅쓰다",
+      "source": "무릎쓰"
+    },
+    {
+      "id": "gapjjagi",
+      "entryId": "gapjjagi",
+      "label": "갑짜기 / 갑자기",
+      "wrong": "갑짜기",
+      "right": "갑자기",
+      "lookup": "갑자기",
+      "source": "갑짜기"
+    },
+    {
+      "id": "eojjapi",
+      "entryId": "eojjapi",
+      "label": "어짜피 / 어차피",
+      "wrong": "어짜피",
+      "right": "어차피",
+      "lookup": "어차피",
+      "source": "어짜피"
+    },
+    {
+      "id": "hamateomyeon",
+      "entryId": "hamateomyeon",
+      "label": "하마트면 / 하마터면",
+      "wrong": "하마트면",
+      "right": "하마터면",
+      "lookup": "하마터면",
+      "source": "하마트면"
+    },
+    {
+      "id": "amutteun",
+      "entryId": "amutteun",
+      "label": "아뭏든 / 아무튼",
+      "wrong": "아뭏든",
+      "right": "아무튼",
+      "lookup": "아무튼",
+      "source": "아뭏든"
+    },
+    {
+      "id": "changpi",
+      "entryId": "changpi",
+      "label": "챙피 / 창피",
+      "wrong": "챙피",
+      "right": "창피",
+      "lookup": "창피",
+      "source": "챙피"
+    },
+    {
+      "id": "machumbeop",
+      "entryId": "machumbeop",
+      "label": "마춤법 / 맞춤법",
+      "wrong": "마춤법",
+      "right": "맞춤법",
+      "lookup": "맞춤법",
+      "source": "마춤법"
+    },
+    {
+      "id": "samgaha",
+      "entryId": "samgaha",
+      "label": "삼가하 / 삼가",
+      "wrong": "삼가하",
+      "right": "삼가",
+      "lookup": "삼가다",
+      "source": "삼가하"
+    },
+    {
+      "id": "seoseumchi",
+      "entryId": "seoseumchi",
+      "label": "서슴치 / 서슴지",
+      "wrong": "서슴치",
+      "right": "서슴지",
+      "lookup": "서슴지",
+      "source": "서슴치"
+    },
+    {
+      "id": "tongteoreo",
+      "entryId": "tongteoreo",
+      "label": "통털어 / 통틀어",
+      "wrong": "통털어",
+      "right": "통틀어",
+      "lookup": "통틀다",
+      "source": "통털어"
+    },
+    {
+      "id": "jjajipgi",
+      "entryId": "jjajipgi",
+      "label": "짜집기 / 짜깁기",
+      "wrong": "짜집기",
+      "right": "짜깁기",
+      "lookup": "짜깁기",
+      "source": "짜집기"
+    },
+    {
+      "id": "ttellaeya",
+      "entryId": "ttellaeya",
+      "label": "뗄래야 / 떼려야",
+      "wrong": "뗄래야",
+      "right": "떼려야",
+      "lookup": "떼려야",
+      "source": "뗄래야"
+    },
+    {
+      "id": "gaegujangi",
+      "entryId": "gaegujangi",
+      "label": "개구장이 / 개구쟁이",
+      "wrong": "개구장이",
+      "right": "개구쟁이",
+      "lookup": "개구쟁이",
+      "source": "개구장이"
+    },
+    {
+      "id": "meotjangi",
+      "entryId": "meotjangi",
+      "label": "멋장이 / 멋쟁이",
+      "wrong": "멋장이",
+      "right": "멋쟁이",
+      "lookup": "멋쟁이",
+      "source": "멋장이"
+    },
+    {
+      "id": "deunggyogil",
+      "entryId": "deunggyogil",
+      "label": "등교길 / 등굣길",
+      "wrong": "등교길",
+      "right": "등굣길",
+      "lookup": "등굣길",
+      "source": "등교길"
+    },
+    {
+      "id": "hagyogil",
+      "entryId": "hagyogil",
+      "label": "하교길 / 하굣길",
+      "wrong": "하교길",
+      "right": "하굣길",
+      "lookup": "하굣길",
+      "source": "하교길"
+    },
+    {
+      "id": "namuip",
+      "entryId": "namuip",
+      "label": "나무잎 / 나뭇잎",
+      "wrong": "나무잎",
+      "right": "나뭇잎",
+      "lookup": "나뭇잎",
+      "source": "나무잎"
+    },
+    {
+      "id": "kkotip",
+      "entryId": "kkotip",
+      "label": "꽃입 / 꽃잎",
+      "wrong": "꽃입",
+      "right": "꽃잎",
+      "lookup": "꽃잎",
+      "source": "꽃입(?!니)"
+    },
+    {
+      "id": "kkaekkeusi",
+      "entryId": "kkaekkeusi",
+      "label": "깨끗히 / 깨끗이",
+      "wrong": "깨끗히",
+      "right": "깨끗이",
+      "lookup": "깨끗이",
+      "source": "깨끗히"
+    },
+    {
+      "id": "gomgomi",
+      "entryId": "gomgomi",
+      "label": "곰곰히 / 곰곰이",
+      "wrong": "곰곰히",
+      "right": "곰곰이",
+      "lookup": "곰곰이",
+      "source": "곰곰히"
+    },
+    {
+      "id": "ilili",
+      "entryId": "ilili",
+      "label": "일일히 / 일일이",
+      "wrong": "일일히",
+      "right": "일일이",
+      "lookup": "일일이",
+      "source": "일일히"
+    },
+    {
+      "id": "teumteumi",
+      "entryId": "teumteumi",
+      "label": "틈틈히 / 틈틈이",
+      "wrong": "틈틈히",
+      "right": "틈틈이",
+      "lookup": "틈틈이",
+      "source": "틈틈히"
+    },
+    {
+      "id": "beonbeoni",
+      "entryId": "beonbeoni",
+      "label": "번번히 / 번번이",
+      "wrong": "번번히",
+      "right": "번번이",
+      "lookup": "번번이",
+      "source": "번번히"
+    },
+    {
+      "id": "satsati",
+      "entryId": "satsati",
+      "label": "샅샅히 / 샅샅이",
+      "wrong": "샅샅히",
+      "right": "샅샅이",
+      "lookup": "샅샅이",
+      "source": "샅샅히"
+    },
+    {
+      "id": "natnati",
+      "entryId": "natnati",
+      "label": "낱낱히 / 낱낱이",
+      "wrong": "낱낱히",
+      "right": "낱낱이",
+      "lookup": "낱낱이",
+      "source": "낱낱히"
+    },
+    {
+      "id": "nanali",
+      "entryId": "nanali",
+      "label": "나날히 / 나날이",
+      "wrong": "나날히",
+      "right": "나날이",
+      "lookup": "나날이",
+      "source": "나날히"
+    },
+    {
+      "id": "gyeopgyeobi",
+      "entryId": "gyeopgyeobi",
+      "label": "겹겹히 / 겹겹이",
+      "wrong": "겹겹히",
+      "right": "겹겹이",
+      "lookup": "겹겹이",
+      "source": "겹겹히"
+    },
+    {
+      "id": "jjamjjami",
+      "entryId": "jjamjjami",
+      "label": "짬짬히 / 짬짬이",
+      "wrong": "짬짬히",
+      "right": "짬짬이",
+      "lookup": "짬짬이",
+      "source": "짬짬히"
+    },
+    {
+      "id": "hal-su",
+      "entryId": "hal-su-itda",
+      "label": "~수 있다 / ~ 수 있다",
+      "wrong": "~수 있다",
+      "right": "~ 수 있다",
+      "lookup": "수",
+      "source": "(?:할|갈|볼|올|줄|될|들|쓸|쉴|잘|클|놀|울|알|만들|먹을|있을|없을|잡을|읽을|걸을|찾을|배울|그릴|마실|앉을)수(?=\\s*(?:있|없|밖에))"
+    },
+    {
+      "id": "geot-gatda",
+      "entryId": "geot-gatda",
+      "label": "것같다 / 것 같다",
+      "wrong": "것같다",
+      "right": "것 같다",
+      "lookup": "같다",
+      "source": "(?:것|거)같"
+    }
+  ],
+  "elementaryRules": [
+    {
+      "id": "elementary-dwae-doe",
+      "entryId": "dwae-doe",
+      "label": "돼요 / 되요",
+      "patterns": [
+        {
+          "text": "되요",
+          "target": "되요",
+          "right": "돼요",
+          "lookup": "돼요"
+        }
+      ]
+    },
+    {
+      "id": "elementary-an-anh",
+      "entryId": "an-anh",
+      "label": "안 / 않",
+      "patterns": [
+        {
+          "text": "학교에 않 간",
+          "target": "않",
+          "right": "안",
+          "lookup": "안"
+        },
+        {
+          "text": "하지 안",
+          "target": "안",
+          "right": "않",
+          "lookup": "않"
+        }
+      ]
+    },
+    {
+      "id": "elementary-wen-waen",
+      "entryId": "wen-waen",
+      "label": "웬 / 왠",
+      "patterns": [
+        {
+          "text": "왠 사람이",
+          "target": "왠",
+          "right": "웬",
+          "lookup": "웬"
+        },
+        {
+          "text": "웬지",
+          "target": "웬지",
+          "right": "왠지",
+          "lookup": "왠지"
+        },
+        {
+          "text": "왠일",
+          "target": "왠일",
+          "right": "웬일",
+          "lookup": "웬일"
+        },
+        {
+          "text": "왠만",
+          "target": "왠만",
+          "right": "웬만",
+          "lookup": "웬만"
+        }
+      ]
+    },
+    {
+      "id": "elementary-eotteoke-eotteokhae",
+      "entryId": "eotteoke-eotteokhae",
+      "label": "어떻게 / 어떡해",
+      "patterns": [
+        {
+          "text": "어떻해",
+          "target": "어떻해",
+          "right": "어떡해",
+          "lookup": "어떡해"
+        },
+        {
+          "text": "어떡게",
+          "target": "어떡게",
+          "right": "어떻게",
+          "lookup": "어떻게"
+        }
+      ]
+    },
+    {
+      "id": "elementary-myeochil",
+      "entryId": "myeochil",
+      "label": "며칠 / 몇일",
+      "patterns": [
+        {
+          "text": "몇일",
+          "target": "몇일",
+          "right": "며칠",
+          "lookup": "며칠"
+        }
+      ]
+    },
+    {
+      "id": "elementary-geumse",
+      "entryId": "geumse",
+      "label": "금세 / 금새",
+      "patterns": [
+        {
+          "text": "금새",
+          "target": "금새",
+          "right": "금세",
+          "lookup": "금세"
+        }
+      ]
+    },
+    {
+      "id": "elementary-oraenman",
+      "entryId": "oraenman",
+      "label": "오랜만 / 오랫만",
+      "patterns": [
+        {
+          "text": "오랫만",
+          "target": "오랫만",
+          "right": "오랜만",
+          "lookup": "오랜만"
+        }
+      ]
+    },
+    {
+      "id": "elementary-yeokhal",
+      "entryId": "yeokhal",
+      "label": "역할 / 역활",
+      "patterns": [
+        {
+          "text": "역활",
+          "target": "역활",
+          "right": "역할",
+          "lookup": "역할"
+        }
+      ]
+    },
+    {
+      "id": "elementary-seollem",
+      "entryId": "seollem",
+      "label": "설렘 / 설레임",
+      "patterns": [
+        {
+          "text": "설레임",
+          "target": "설레임",
+          "right": "설렘",
+          "lookup": "설렘"
+        }
+      ]
+    },
+    {
+      "id": "elementary-bwaeyo",
+      "entryId": "bwaeyo",
+      "label": "봬요 / 뵈요",
+      "patterns": [
+        {
+          "text": "뵈요",
+          "target": "뵈요",
+          "right": "봬요",
+          "lookup": "봬요"
+        }
+      ]
+    },
+    {
+      "id": "elementary-anieyo",
+      "entryId": "anieyo",
+      "label": "아니에요 / 아니예요",
+      "patterns": [
+        {
+          "text": "아니예요",
+          "target": "아니예요",
+          "right": "아니에요",
+          "lookup": "아니에요"
+        }
+      ]
+    },
+    {
+      "id": "elementary-hal-su-itda",
+      "entryId": "hal-su-itda",
+      "label": "할 수 있다 / 할수있다",
+      "patterns": [
+        {
+          "text": "할수있다",
+          "target": "할수있다",
+          "right": "할 수 있다",
+          "lookup": "할 수 있다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-geot-gatda",
+      "entryId": "geot-gatda",
+      "label": "것 같다 / 것같다",
+      "patterns": [
+        {
+          "text": "것같다",
+          "target": "것같다",
+          "right": "것 같다",
+          "lookup": "것 같다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-natda-nata",
+      "entryId": "natda-nata",
+      "label": "낫다 / 낳다",
+      "patterns": [
+        {
+          "text": "감기가 낳았다",
+          "target": "낳았다",
+          "right": "나았다",
+          "lookup": "나았다"
+        },
+        {
+          "text": "새끼를 나았다",
+          "target": "나았다",
+          "right": "낳았다",
+          "lookup": "낳았다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-machida-matchuda",
+      "entryId": "machida-matchuda",
+      "label": "맞히다 / 맞추다",
+      "patterns": [
+        {
+          "text": "정답을 맞췄다",
+          "target": "맞췄다",
+          "right": "맞혔다",
+          "lookup": "맞혔다"
+        },
+        {
+          "text": "시간에 맞혔다",
+          "target": "맞혔다",
+          "right": "맞췄다",
+          "lookup": "맞췄다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gareuchida-garikida",
+      "entryId": "gareuchida-garikida",
+      "label": "가르치다 / 가리키다",
+      "patterns": [
+        {
+          "text": "수학을 가리켜",
+          "target": "가리켜",
+          "right": "가르쳐",
+          "lookup": "가르쳐"
+        },
+        {
+          "text": "하늘을 가르쳤다",
+          "target": "가르쳤다",
+          "right": "가리켰다",
+          "lookup": "가리켰다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-kkaekkeusi",
+      "entryId": "kkaekkeusi",
+      "label": "깨끗이 / 깨끗히",
+      "patterns": [
+        {
+          "text": "깨끗히",
+          "target": "깨끗히",
+          "right": "깨끗이",
+          "lookup": "깨끗이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gomgomi",
+      "entryId": "gomgomi",
+      "label": "곰곰이 / 곰곰히",
+      "patterns": [
+        {
+          "text": "곰곰히",
+          "target": "곰곰히",
+          "right": "곰곰이",
+          "lookup": "곰곰이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-bandeusi-bandeusi",
+      "entryId": "bandeusi-bandeusi",
+      "label": "반드시 / 반듯이",
+      "patterns": [
+        {
+          "text": "약속은 반듯이",
+          "target": "반듯이",
+          "right": "반드시",
+          "lookup": "반드시"
+        },
+        {
+          "text": "약속을 반듯이 지켜",
+          "target": "반듯이",
+          "right": "반드시",
+          "lookup": "반드시"
+        },
+        {
+          "text": "규칙을 반듯이 지켜",
+          "target": "반듯이",
+          "right": "반드시",
+          "lookup": "반드시"
+        },
+        {
+          "text": "숙제는 반듯이 해야",
+          "target": "반듯이",
+          "right": "반드시",
+          "lookup": "반드시"
+        },
+        {
+          "text": "반듯이 기억하",
+          "target": "반듯이",
+          "right": "반드시",
+          "lookup": "반드시"
+        },
+        {
+          "text": "반듯이 확인하",
+          "target": "반듯이",
+          "right": "반드시",
+          "lookup": "반드시"
+        },
+        {
+          "text": "반듯이 참석하",
+          "target": "반듯이",
+          "right": "반드시",
+          "lookup": "반드시"
+        },
+        {
+          "text": "반듯이 제출하",
+          "target": "반듯이",
+          "right": "반드시",
+          "lookup": "반드시"
+        }
+      ]
+    },
+    {
+      "id": "elementary-han-beon",
+      "entryId": "han-beon",
+      "label": "한 번 / 한번",
+      "patterns": [
+        {
+          "text": "한번만",
+          "target": "한번",
+          "right": "한 번",
+          "lookup": "한 번"
+        }
+      ]
+    },
+    {
+      "id": "elementary-de-dae",
+      "entryId": "de-dae",
+      "label": "데 / 대",
+      "patterns": [
+        {
+          "text": "전학을 간데",
+          "target": "데",
+          "right": "대",
+          "lookup": "대"
+        },
+        {
+          "text": "맛있데",
+          "target": "데",
+          "right": "대",
+          "lookup": "대"
+        },
+        {
+          "text": "가 봤는대",
+          "target": "대",
+          "right": "데",
+          "lookup": "데"
+        },
+        {
+          "text": "숙제하는 대",
+          "target": "대",
+          "right": "데",
+          "lookup": "데"
+        }
+      ]
+    },
+    {
+      "id": "elementary-ittaga",
+      "entryId": "ittaga",
+      "label": "이따가 / 있다가",
+      "patterns": [
+        {
+          "text": "교실에 이따가 집에",
+          "target": "이따가",
+          "right": "있다가",
+          "lookup": "있다가"
+        }
+      ]
+    },
+    {
+      "id": "elementary-roseo-rosseo",
+      "entryId": "roseo-rosseo",
+      "label": "로서 / 로써",
+      "patterns": [
+        {
+          "text": "학생으로써",
+          "target": "으로써",
+          "right": "으로서",
+          "lookup": "으로서"
+        },
+        {
+          "text": "연필로서",
+          "target": "로서",
+          "right": "로써",
+          "lookup": "로써"
+        }
+      ]
+    },
+    {
+      "id": "elementary-neurida-neurida",
+      "entryId": "neurida-neurida",
+      "label": "늘리다 / 늘이다",
+      "patterns": [
+        {
+          "text": "수를 늘이다",
+          "target": "늘이다",
+          "right": "늘리다",
+          "lookup": "늘리다"
+        },
+        {
+          "text": "고무줄을 늘리",
+          "target": "늘리",
+          "right": "늘이",
+          "lookup": "늘이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-dodaeche",
+      "entryId": "dodaeche",
+      "label": "도대체 / 도데체",
+      "patterns": [
+        {
+          "text": "도데체",
+          "target": "도데체",
+          "right": "도대체",
+          "lookup": "도대체"
+        }
+      ]
+    },
+    {
+      "id": "elementary-eoieopda",
+      "entryId": "eoieopda",
+      "label": "어이없다 / 어의없다",
+      "patterns": [
+        {
+          "text": "어의없다",
+          "target": "어의없다",
+          "right": "어이없다",
+          "lookup": "어이없다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-nunsal",
+      "entryId": "nunsal",
+      "label": "눈살 / 눈쌀",
+      "patterns": [
+        {
+          "text": "눈쌀",
+          "target": "눈쌀",
+          "right": "눈살",
+          "lookup": "눈살"
+        }
+      ]
+    },
+    {
+      "id": "elementary-neokduri",
+      "entryId": "neokduri",
+      "label": "넋두리 / 넉두리",
+      "patterns": [
+        {
+          "text": "넉두리",
+          "target": "넉두리",
+          "right": "넋두리",
+          "lookup": "넋두리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-seolgeoji",
+      "entryId": "seolgeoji",
+      "label": "설거지 / 설겆이",
+      "patterns": [
+        {
+          "text": "설겆이",
+          "target": "설겆이",
+          "right": "설거지",
+          "lookup": "설거지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jjigae",
+      "entryId": "jjigae",
+      "label": "찌개 / 찌게",
+      "patterns": [
+        {
+          "text": "김치찌게",
+          "target": "찌게",
+          "right": "찌개",
+          "lookup": "찌개"
+        },
+        {
+          "text": "된장찌게",
+          "target": "찌게",
+          "right": "찌개",
+          "lookup": "찌개"
+        }
+      ]
+    },
+    {
+      "id": "elementary-yukgaejang",
+      "entryId": "yukgaejang",
+      "label": "육개장 / 육계장",
+      "patterns": [
+        {
+          "text": "육계장",
+          "target": "육계장",
+          "right": "육개장",
+          "lookup": "육개장"
+        }
+      ]
+    },
+    {
+      "id": "elementary-tteokbokki",
+      "entryId": "tteokbokki",
+      "label": "떡볶이 / 떡볶기",
+      "patterns": [
+        {
+          "text": "떡볶기",
+          "target": "떡볶기",
+          "right": "떡볶이",
+          "lookup": "떡볶이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gopppaegi",
+      "entryId": "gopppaegi",
+      "label": "곱빼기 / 곱배기",
+      "patterns": [
+        {
+          "text": "곱배기",
+          "target": "곱배기",
+          "right": "곱빼기",
+          "lookup": "곱빼기"
+        }
+      ]
+    },
+    {
+      "id": "elementary-mureupsseuda",
+      "entryId": "mureupsseuda",
+      "label": "무릅쓰다 / 무릎쓰다",
+      "patterns": [
+        {
+          "text": "무릎쓰다",
+          "target": "무릎쓰다",
+          "right": "무릅쓰다",
+          "lookup": "무릅쓰다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gapjagi",
+      "entryId": "gapjagi",
+      "label": "갑자기 / 갑짜기",
+      "patterns": [
+        {
+          "text": "갑짜기",
+          "target": "갑짜기",
+          "right": "갑자기",
+          "lookup": "갑자기"
+        }
+      ]
+    },
+    {
+      "id": "elementary-eochapi",
+      "entryId": "eochapi",
+      "label": "어차피 / 어짜피",
+      "patterns": [
+        {
+          "text": "어짜피",
+          "target": "어짜피",
+          "right": "어차피",
+          "lookup": "어차피"
+        }
+      ]
+    },
+    {
+      "id": "elementary-hamateomyeon",
+      "entryId": "hamateomyeon",
+      "label": "하마터면 / 하마트면",
+      "patterns": [
+        {
+          "text": "하마트면",
+          "target": "하마트면",
+          "right": "하마터면",
+          "lookup": "하마터면"
+        }
+      ]
+    },
+    {
+      "id": "elementary-amuteun",
+      "entryId": "amuteun",
+      "label": "아무튼 / 아뭏든",
+      "patterns": [
+        {
+          "text": "아뭏든",
+          "target": "아뭏든",
+          "right": "아무튼",
+          "lookup": "아무튼"
+        }
+      ]
+    },
+    {
+      "id": "elementary-changpi",
+      "entryId": "changpi",
+      "label": "창피 / 챙피",
+      "patterns": [
+        {
+          "text": "챙피",
+          "target": "챙피",
+          "right": "창피",
+          "lookup": "창피"
+        }
+      ]
+    },
+    {
+      "id": "elementary-matchumbeop",
+      "entryId": "matchumbeop",
+      "label": "맞춤법 / 마춤법",
+      "patterns": [
+        {
+          "text": "마춤법",
+          "target": "마춤법",
+          "right": "맞춤법",
+          "lookup": "맞춤법"
+        }
+      ]
+    },
+    {
+      "id": "elementary-samgada",
+      "entryId": "samgada",
+      "label": "삼가다 / 삼가하다",
+      "patterns": [
+        {
+          "text": "삼가하다",
+          "target": "삼가하다",
+          "right": "삼가다",
+          "lookup": "삼가다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-seoseumji",
+      "entryId": "seoseumji",
+      "label": "서슴지 / 서슴치",
+      "patterns": [
+        {
+          "text": "서슴치",
+          "target": "서슴치",
+          "right": "서슴지",
+          "lookup": "서슴지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-tongteureo",
+      "entryId": "tongteureo",
+      "label": "통틀어 / 통털어",
+      "patterns": [
+        {
+          "text": "통털어",
+          "target": "통털어",
+          "right": "통틀어",
+          "lookup": "통틀어"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jjagipgi",
+      "entryId": "jjagipgi",
+      "label": "짜깁기 / 짜집기",
+      "patterns": [
+        {
+          "text": "짜집기",
+          "target": "짜집기",
+          "right": "짜깁기",
+          "lookup": "짜깁기"
+        }
+      ]
+    },
+    {
+      "id": "elementary-tteryeoya",
+      "entryId": "tteryeoya",
+      "label": "떼려야 / 뗄래야",
+      "patterns": [
+        {
+          "text": "뗄래야",
+          "target": "뗄래야",
+          "right": "떼려야",
+          "lookup": "떼려야"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gaegujaengi",
+      "entryId": "gaegujaengi",
+      "label": "개구쟁이 / 개구장이",
+      "patterns": [
+        {
+          "text": "개구장이",
+          "target": "개구장이",
+          "right": "개구쟁이",
+          "lookup": "개구쟁이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-meotjaengi",
+      "entryId": "meotjaengi",
+      "label": "멋쟁이 / 멋장이",
+      "patterns": [
+        {
+          "text": "멋장이",
+          "target": "멋장이",
+          "right": "멋쟁이",
+          "lookup": "멋쟁이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-deunggyotgil",
+      "entryId": "deunggyotgil",
+      "label": "등굣길 / 등교길",
+      "patterns": [
+        {
+          "text": "등교길",
+          "target": "등교길",
+          "right": "등굣길",
+          "lookup": "등굣길"
+        }
+      ]
+    },
+    {
+      "id": "elementary-hagyotgil",
+      "entryId": "hagyotgil",
+      "label": "하굣길 / 하교길",
+      "patterns": [
+        {
+          "text": "하교길",
+          "target": "하교길",
+          "right": "하굣길",
+          "lookup": "하굣길"
+        }
+      ]
+    },
+    {
+      "id": "elementary-namunnip",
+      "entryId": "namunnip",
+      "label": "나뭇잎 / 나무잎",
+      "patterns": [
+        {
+          "text": "나무잎",
+          "target": "나무잎",
+          "right": "나뭇잎",
+          "lookup": "나뭇잎"
+        }
+      ]
+    },
+    {
+      "id": "elementary-konmul",
+      "entryId": "konmul",
+      "label": "콧물 / 코물",
+      "patterns": [
+        {
+          "text": "코물",
+          "target": "코물",
+          "right": "콧물",
+          "lookup": "콧물"
+        }
+      ]
+    },
+    {
+      "id": "elementary-itmom",
+      "entryId": "itmom",
+      "label": "잇몸 / 이몸",
+      "patterns": [
+        {
+          "text": "이몸",
+          "target": "이몸",
+          "right": "잇몸",
+          "lookup": "잇몸"
+        }
+      ]
+    },
+    {
+      "id": "elementary-haetbyeot",
+      "entryId": "haetbyeot",
+      "label": "햇볕 / 해볕",
+      "patterns": [
+        {
+          "text": "해볕",
+          "target": "해볕",
+          "right": "햇볕",
+          "lookup": "햇볕"
+        }
+      ]
+    },
+    {
+      "id": "elementary-araenni",
+      "entryId": "araenni",
+      "label": "아랫니 / 아래니",
+      "patterns": [
+        {
+          "text": "아래니",
+          "target": "아래니",
+          "right": "아랫니",
+          "lookup": "아랫니"
+        }
+      ]
+    },
+    {
+      "id": "elementary-daega",
+      "entryId": "daega",
+      "label": "대가 / 댓가",
+      "patterns": [
+        {
+          "text": "댓가",
+          "target": "댓가",
+          "right": "대가",
+          "lookup": "대가"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jeonsetjip",
+      "entryId": "jeonsetjip",
+      "label": "전셋집 / 전세집",
+      "patterns": [
+        {
+          "text": "전세집",
+          "target": "전세집",
+          "right": "전셋집",
+          "lookup": "전셋집"
+        }
+      ]
+    },
+    {
+      "id": "elementary-chatjan",
+      "entryId": "chatjan",
+      "label": "찻잔 / 차잔",
+      "patterns": [
+        {
+          "text": "차잔",
+          "target": "차잔",
+          "right": "찻잔",
+          "lookup": "찻잔"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gichatgil",
+      "entryId": "gichatgil",
+      "label": "기찻길 / 기차길",
+      "patterns": [
+        {
+          "text": "기차길",
+          "target": "기차길",
+          "right": "기찻길",
+          "lookup": "기찻길"
+        }
+      ]
+    },
+    {
+      "id": "elementary-badatga",
+      "entryId": "badatga",
+      "label": "바닷가 / 바다가",
+      "patterns": [
+        {
+          "text": "바다가에서",
+          "target": "바다가",
+          "right": "바닷가",
+          "lookup": "바닷가"
+        },
+        {
+          "text": "바다가에 파도",
+          "target": "바다가",
+          "right": "바닷가",
+          "lookup": "바닷가"
+        }
+      ]
+    },
+    {
+      "id": "elementary-naetga",
+      "entryId": "naetga",
+      "label": "냇가 / 내가",
+      "patterns": [
+        {
+          "text": "내가에서",
+          "target": "내가",
+          "right": "냇가",
+          "lookup": "냇가"
+        },
+        {
+          "text": "뒤 내가에 물",
+          "target": "내가",
+          "right": "냇가",
+          "lookup": "냇가"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gwitsongmal",
+      "entryId": "gwitsongmal",
+      "label": "귓속말 / 귀속말",
+      "patterns": [
+        {
+          "text": "귀속말",
+          "target": "귀속말",
+          "right": "귓속말",
+          "lookup": "귓속말"
+        }
+      ]
+    },
+    {
+      "id": "elementary-meoritsok",
+      "entryId": "meoritsok",
+      "label": "머릿속 / 머리속",
+      "patterns": [
+        {
+          "text": "머리속",
+          "target": "머리속",
+          "right": "머릿속",
+          "lookup": "머릿속"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jangmatbi",
+      "entryId": "jangmatbi",
+      "label": "장맛비 / 장마비",
+      "patterns": [
+        {
+          "text": "장마비",
+          "target": "장마비",
+          "right": "장맛비",
+          "lookup": "장맛비"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jondaenmal",
+      "entryId": "jondaenmal",
+      "label": "존댓말 / 존대말",
+      "patterns": [
+        {
+          "text": "존대말",
+          "target": "존대말",
+          "right": "존댓말",
+          "lookup": "존댓말"
+        }
+      ]
+    },
+    {
+      "id": "elementary-hyugesil",
+      "entryId": "hyugesil",
+      "label": "휴게실 / 휴계실",
+      "patterns": [
+        {
+          "text": "휴계실",
+          "target": "휴계실",
+          "right": "휴게실",
+          "lookup": "휴게실"
+        }
+      ]
+    },
+    {
+      "id": "elementary-huihanhada",
+      "entryId": "huihanhada",
+      "label": "희한하다 / 희안하다",
+      "patterns": [
+        {
+          "text": "희안하다",
+          "target": "희안하다",
+          "right": "희한하다",
+          "lookup": "희한하다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-daegae",
+      "entryId": "daegae",
+      "label": "대개 / 대게",
+      "patterns": [
+        {
+          "text": "대게 일찍",
+          "target": "대게",
+          "right": "대개",
+          "lookup": "대개"
+        },
+        {
+          "text": "대게 아홉",
+          "target": "대게",
+          "right": "대개",
+          "lookup": "대개"
+        }
+      ]
+    },
+    {
+      "id": "elementary-yosae",
+      "entryId": "yosae",
+      "label": "요새 / 요세",
+      "patterns": [
+        {
+          "text": "요세 날씨",
+          "target": "요세",
+          "right": "요새",
+          "lookup": "요새"
+        },
+        {
+          "text": "나는 요세",
+          "target": "요세",
+          "right": "요새",
+          "lookup": "요새"
+        }
+      ]
+    },
+    {
+      "id": "elementary-eotgeuje",
+      "entryId": "eotgeuje",
+      "label": "엊그제 / 엇그제",
+      "patterns": [
+        {
+          "text": "엇그제",
+          "target": "엇그제",
+          "right": "엊그제",
+          "lookup": "엊그제"
+        }
+      ]
+    },
+    {
+      "id": "elementary-myeotmyeot",
+      "entryId": "myeotmyeot",
+      "label": "몇몇 / 몆몆",
+      "patterns": [
+        {
+          "text": "몆몆",
+          "target": "몆몆",
+          "right": "몇몇",
+          "lookup": "몇몇"
+        }
+      ]
+    },
+    {
+      "id": "elementary-iljjigi",
+      "entryId": "iljjigi",
+      "label": "일찍이 / 일찌기",
+      "patterns": [
+        {
+          "text": "일찌기",
+          "target": "일찌기",
+          "right": "일찍이",
+          "lookup": "일찍이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-ilili",
+      "entryId": "ilili",
+      "label": "일일이 / 일일히",
+      "patterns": [
+        {
+          "text": "일일히",
+          "target": "일일히",
+          "right": "일일이",
+          "lookup": "일일이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-teumteumi",
+      "entryId": "teumteumi",
+      "label": "틈틈이 / 틈틈히",
+      "patterns": [
+        {
+          "text": "틈틈히",
+          "target": "틈틈히",
+          "right": "틈틈이",
+          "lookup": "틈틈이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-beonbeoni",
+      "entryId": "beonbeoni",
+      "label": "번번이 / 번번히",
+      "patterns": [
+        {
+          "text": "번번히",
+          "target": "번번히",
+          "right": "번번이",
+          "lookup": "번번이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-satsati",
+      "entryId": "satsati",
+      "label": "샅샅이 / 샅샅히",
+      "patterns": [
+        {
+          "text": "샅샅히",
+          "target": "샅샅히",
+          "right": "샅샅이",
+          "lookup": "샅샅이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-natnati",
+      "entryId": "natnati",
+      "label": "낱낱이 / 낱낱히",
+      "patterns": [
+        {
+          "text": "낱낱히",
+          "target": "낱낱히",
+          "right": "낱낱이",
+          "lookup": "낱낱이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-nanari",
+      "entryId": "nanari",
+      "label": "나날이 / 나날히",
+      "patterns": [
+        {
+          "text": "나날히",
+          "target": "나날히",
+          "right": "나날이",
+          "lookup": "나날이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gyeopgyeobi",
+      "entryId": "gyeopgyeobi",
+      "label": "겹겹이 / 겹겹히",
+      "patterns": [
+        {
+          "text": "겹겹히",
+          "target": "겹겹히",
+          "right": "겹겹이",
+          "lookup": "겹겹이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jjamjjami",
+      "entryId": "jjamjjami",
+      "label": "짬짬이 / 짬짬히",
+      "patterns": [
+        {
+          "text": "짬짬히",
+          "target": "짬짬히",
+          "right": "짬짬이",
+          "lookup": "짬짬이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gipsugi",
+      "entryId": "gipsugi",
+      "label": "깊숙이 / 깊숙히",
+      "patterns": [
+        {
+          "text": "깊숙히",
+          "target": "깊숙히",
+          "right": "깊숙이",
+          "lookup": "깊숙이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-neujimagi",
+      "entryId": "neujimagi",
+      "label": "느지막이 / 느즈막히",
+      "patterns": [
+        {
+          "text": "느즈막히",
+          "target": "느즈막히",
+          "right": "느지막이",
+          "lookup": "느지막이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gakkai",
+      "entryId": "gakkai",
+      "label": "가까이 / 가까히",
+      "patterns": [
+        {
+          "text": "가까히",
+          "target": "가까히",
+          "right": "가까이",
+          "lookup": "가까이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-soljiki",
+      "entryId": "soljiki",
+      "label": "솔직히 / 솔직이",
+      "patterns": [
+        {
+          "text": "솔직이",
+          "target": "솔직이",
+          "right": "솔직히",
+          "lookup": "솔직히"
+        }
+      ]
+    },
+    {
+      "id": "elementary-kkomkkomhi",
+      "entryId": "kkomkkomhi",
+      "label": "꼼꼼히 / 꼼꼼이",
+      "patterns": [
+        {
+          "text": "꼼꼼이",
+          "target": "꼼꼼이",
+          "right": "꼼꼼히",
+          "lookup": "꼼꼼히"
+        }
+      ]
+    },
+    {
+      "id": "elementary-dwaetda",
+      "entryId": "dwaetda",
+      "label": "됐다 / 됬다",
+      "patterns": [
+        {
+          "text": "됬다",
+          "target": "됬다",
+          "right": "됐다",
+          "lookup": "됐다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-watda",
+      "entryId": "watda",
+      "label": "왔다 / 왓다",
+      "patterns": [
+        {
+          "text": "왓다",
+          "target": "왓다",
+          "right": "왔다",
+          "lookup": "왔다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gatda",
+      "entryId": "gatda",
+      "label": "갔다 / 갓다",
+      "patterns": [
+        {
+          "text": "갓다",
+          "target": "갓다",
+          "right": "갔다",
+          "lookup": "갔다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-haetda",
+      "entryId": "haetda",
+      "label": "했다 / 햇다",
+      "patterns": [
+        {
+          "text": "햇다",
+          "target": "햇다",
+          "right": "했다",
+          "lookup": "했다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-bwatda",
+      "entryId": "bwatda",
+      "label": "봤다 / 봣다",
+      "patterns": [
+        {
+          "text": "봣다",
+          "target": "봣다",
+          "right": "봤다",
+          "lookup": "봤다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jwotda",
+      "entryId": "jwotda",
+      "label": "줬다 / 줫다",
+      "patterns": [
+        {
+          "text": "줫다",
+          "target": "줫다",
+          "right": "줬다",
+          "lookup": "줬다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-doelge",
+      "entryId": "doelge",
+      "label": "될게 / 됄게",
+      "patterns": [
+        {
+          "text": "됄게",
+          "target": "됄게",
+          "right": "될게",
+          "lookup": "될게"
+        }
+      ]
+    },
+    {
+      "id": "elementary-halge",
+      "entryId": "halge",
+      "label": "할게 / 할께",
+      "patterns": [
+        {
+          "text": "할께",
+          "target": "할께",
+          "right": "할게",
+          "lookup": "할게"
+        }
+      ]
+    },
+    {
+      "id": "elementary-boepgetseumnida",
+      "entryId": "boepgetseumnida",
+      "label": "뵙겠습니다 / 봽겠습니다",
+      "patterns": [
+        {
+          "text": "봽겠습니다",
+          "target": "봽겠습니다",
+          "right": "뵙겠습니다",
+          "lookup": "뵙겠습니다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-bwoetda",
+      "entryId": "bwoetda",
+      "label": "뵀다 / 봽다",
+      "patterns": [
+        {
+          "text": "봽다",
+          "target": "봽다",
+          "right": "뵀다",
+          "lookup": "뵀다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-damgatda",
+      "entryId": "damgatda",
+      "label": "담갔다 / 담궜다",
+      "patterns": [
+        {
+          "text": "담궜다",
+          "target": "담궜다",
+          "right": "담갔다",
+          "lookup": "담갔다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jamgatda",
+      "entryId": "jamgatda",
+      "label": "잠갔다 / 잠궜다",
+      "patterns": [
+        {
+          "text": "잠궜다",
+          "target": "잠궜다",
+          "right": "잠갔다",
+          "lookup": "잠갔다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-chireotda",
+      "entryId": "chireotda",
+      "label": "치렀다 / 치뤘다",
+      "patterns": [
+        {
+          "text": "치뤘다",
+          "target": "치뤘다",
+          "right": "치렀다",
+          "lookup": "치렀다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-deulleotda",
+      "entryId": "deulleotda",
+      "label": "들렀다 / 들렸다",
+      "patterns": [
+        {
+          "text": "문구점에 들렸다",
+          "target": "들렸다",
+          "right": "들렀다",
+          "lookup": "들렀다"
+        },
+        {
+          "text": "소리가 들렀다",
+          "target": "들렀다",
+          "right": "들렸다",
+          "lookup": "들렸다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-geondeurida",
+      "entryId": "geondeurida",
+      "label": "건드리다 / 건들이다",
+      "patterns": [
+        {
+          "text": "건들이다",
+          "target": "건들이다",
+          "right": "건드리다",
+          "lookup": "건드리다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-guburida",
+      "entryId": "guburida",
+      "label": "구부리다 / 구푸리다",
+      "patterns": [
+        {
+          "text": "구푸리다",
+          "target": "구푸리다",
+          "right": "구부리다",
+          "lookup": "구부리다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-ureoreoboda",
+      "entryId": "ureoreoboda",
+      "label": "우러러보다 / 우려러보다",
+      "patterns": [
+        {
+          "text": "우려러보다",
+          "target": "우려러보다",
+          "right": "우러러보다",
+          "lookup": "우러러보다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-chireuda",
+      "entryId": "chireuda",
+      "label": "치르다 / 치루다",
+      "patterns": [
+        {
+          "text": "치루다",
+          "target": "치루다",
+          "right": "치르다",
+          "lookup": "치르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-deurikyeoda",
+      "entryId": "deurikyeoda",
+      "label": "들이켜다 / 들이키다",
+      "patterns": [
+        {
+          "text": "들이키다",
+          "target": "들이키다",
+          "right": "들이켜다",
+          "lookup": "들이켜다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-dwicheojida",
+      "entryId": "dwicheojida",
+      "label": "뒤처지다 / 뒤쳐지다",
+      "patterns": [
+        {
+          "text": "뒤쳐지다",
+          "target": "뒤쳐지다",
+          "right": "뒤처지다",
+          "lookup": "뒤처지다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-dwichidakkkeori",
+      "entryId": "dwichidakkkeori",
+      "label": "뒤치다꺼리 / 뒤치닥거리",
+      "patterns": [
+        {
+          "text": "뒤치닥거리",
+          "target": "뒤치닥거리",
+          "right": "뒤치다꺼리",
+          "lookup": "뒤치다꺼리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-neolbeureojida",
+      "entryId": "neolbeureojida",
+      "label": "널브러지다 / 널부러지다",
+      "patterns": [
+        {
+          "text": "널부러지다",
+          "target": "널부러지다",
+          "right": "널브러지다",
+          "lookup": "널브러지다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-eopjireuda",
+      "entryId": "eopjireuda",
+      "label": "엎지르다 / 업지르다",
+      "patterns": [
+        {
+          "text": "업지르다",
+          "target": "업지르다",
+          "right": "엎지르다",
+          "lookup": "엎지르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-buditchida",
+      "entryId": "buditchida",
+      "label": "부딪치다 / 부딪히다",
+      "patterns": [
+        {
+          "text": "친구와 부딪혔다",
+          "target": "부딪혔다",
+          "right": "부딪쳤다",
+          "lookup": "부딪쳤다"
+        },
+        {
+          "text": "바람에 벽에 부딪쳤다",
+          "target": "부딪쳤다",
+          "right": "부딪혔다",
+          "lookup": "부딪혔다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-dathida",
+      "entryId": "dathida",
+      "label": "닫히다 / 닫치다",
+      "patterns": [
+        {
+          "text": "닫치다",
+          "target": "닫치다",
+          "right": "닫히다",
+          "lookup": "닫히다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gudi",
+      "entryId": "gudi",
+      "label": "굳이 / 구지",
+      "patterns": [
+        {
+          "text": "구지",
+          "target": "구지",
+          "right": "굳이",
+          "lookup": "굳이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-kkeutnae",
+      "entryId": "kkeutnae",
+      "label": "끝내 / 끈내",
+      "patterns": [
+        {
+          "text": "끈내",
+          "target": "끈내",
+          "right": "끝내",
+          "lookup": "끝내"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jjotgida",
+      "entryId": "jjotgida",
+      "label": "쫓기다 / 쫒기다",
+      "patterns": [
+        {
+          "text": "쫒기다",
+          "target": "쫒기다",
+          "right": "쫓기다",
+          "lookup": "쫓기다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-geonneotda",
+      "entryId": "geonneotda",
+      "label": "건넜다 / 건넛다",
+      "patterns": [
+        {
+          "text": "건넛다",
+          "target": "건넛다",
+          "right": "건넜다",
+          "lookup": "건넜다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-seolletda",
+      "entryId": "seolletda",
+      "label": "설렜다 / 설레였다",
+      "patterns": [
+        {
+          "text": "설레였다",
+          "target": "설레였다",
+          "right": "설렜다",
+          "lookup": "설렜다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gyeoljae-gyeolje",
+      "entryId": "gyeoljae-gyeolje",
+      "label": "결재 / 결제",
+      "patterns": [
+        {
+          "text": "카드로 결재",
+          "target": "결재",
+          "right": "결제",
+          "lookup": "결제"
+        },
+        {
+          "text": "문서를 결제",
+          "target": "결제",
+          "right": "결재",
+          "lookup": "결재"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gaebal-gyebal",
+      "entryId": "gaebal-gyebal",
+      "label": "개발 / 계발",
+      "patterns": [
+        {
+          "text": "학습 도구를 계발",
+          "target": "계발",
+          "right": "개발",
+          "lookup": "개발"
+        },
+        {
+          "text": "재능을 개발",
+          "target": "개발",
+          "right": "계발",
+          "lookup": "계발"
+        }
+      ]
+    },
+    {
+      "id": "elementary-itda-ilda",
+      "entryId": "itda-ilda",
+      "label": "잊다 / 잃다",
+      "patterns": [
+        {
+          "text": "물건을 잊어버",
+          "target": "잊어버",
+          "right": "잃어버",
+          "lookup": "잃어버"
+        },
+        {
+          "text": "약속을 잃어버",
+          "target": "잃어버",
+          "right": "잊어버",
+          "lookup": "잊어버"
+        }
+      ]
+    },
+    {
+      "id": "elementary-itda-issda",
+      "entryId": "itda-issda",
+      "label": "잇다 / 있다",
+      "patterns": [
+        {
+          "text": "두 점을 있",
+          "target": "있",
+          "right": "잇",
+          "lookup": "잇"
+        },
+        {
+          "text": "연필이 잇어요",
+          "target": "잇어요",
+          "right": "있어요",
+          "lookup": "있어요"
+        }
+      ]
+    },
+    {
+      "id": "elementary-matda-majda",
+      "entryId": "matda-majda",
+      "label": "맡다 / 맞다",
+      "patterns": [
+        {
+          "text": "발표를 맞았",
+          "target": "맞았",
+          "right": "맡았",
+          "lookup": "맡았"
+        },
+        {
+          "text": "답이 맡았",
+          "target": "맡았",
+          "right": "맞았",
+          "lookup": "맞았"
+        }
+      ]
+    },
+    {
+      "id": "elementary-butida-buchida",
+      "entryId": "butida-buchida",
+      "label": "붙이다 / 부치다",
+      "patterns": [
+        {
+          "text": "사진을 부쳤다",
+          "target": "부쳤다",
+          "right": "붙였다",
+          "lookup": "붙였다"
+        },
+        {
+          "text": "편지를 붙였다",
+          "target": "붙였다",
+          "right": "부쳤다",
+          "lookup": "부쳤다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-ttida-ttuida",
+      "entryId": "ttida-ttuida",
+      "label": "띠다 / 띄다",
+      "patterns": [
+        {
+          "text": "눈에 띠",
+          "target": "띠",
+          "right": "띄",
+          "lookup": "띄"
+        },
+        {
+          "text": "빛을 띄",
+          "target": "띄",
+          "right": "띠",
+          "lookup": "띠"
+        }
+      ]
+    },
+    {
+      "id": "elementary-barada-baraeda",
+      "entryId": "barada-baraeda",
+      "label": "바라다 / 바래다",
+      "patterns": [
+        {
+          "text": "건강하기를 바래",
+          "target": "바래",
+          "right": "바라",
+          "lookup": "바라"
+        },
+        {
+          "text": "사진 색이 바랐다",
+          "target": "바랐다",
+          "right": "바랬다",
+          "lookup": "바랬다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-beorida-beollida",
+      "entryId": "beorida-beollida",
+      "label": "벌이다 / 벌리다",
+      "patterns": [
+        {
+          "text": "잔치를 벌렸다",
+          "target": "벌렸다",
+          "right": "벌였다",
+          "lookup": "벌였다"
+        },
+        {
+          "text": "두 팔을 벌였다",
+          "target": "벌였다",
+          "right": "벌렸다",
+          "lookup": "벌렸다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-sagida-sakhida",
+      "entryId": "sagida-sakhida",
+      "label": "삭이다 / 삭히다",
+      "patterns": [
+        {
+          "text": "화를 삭혔다",
+          "target": "삭혔다",
+          "right": "삭였다",
+          "lookup": "삭였다"
+        },
+        {
+          "text": "김치를 삭였다",
+          "target": "삭였다",
+          "right": "삭혔다",
+          "lookup": "삭혔다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-sseogida-sseokhida",
+      "entryId": "sseogida-sseokhida",
+      "label": "썩이다 / 썩히다",
+      "patterns": [
+        {
+          "text": "속을 썩혔다",
+          "target": "썩혔다",
+          "right": "썩였다",
+          "lookup": "썩였다"
+        },
+        {
+          "text": "음식을 썩였다",
+          "target": "썩였다",
+          "right": "썩혔다",
+          "lookup": "썩혔다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jeorida-jeolida",
+      "entryId": "jeorida-jeolida",
+      "label": "저리다 / 절이다",
+      "patterns": [
+        {
+          "text": "다리가 절였다",
+          "target": "절였다",
+          "right": "저렸다",
+          "lookup": "저렸다"
+        },
+        {
+          "text": "배추를 저렸다",
+          "target": "저렸다",
+          "right": "절였다",
+          "lookup": "절였다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jorida-jolida",
+      "entryId": "jorida-jolida",
+      "label": "조리다 / 졸이다",
+      "patterns": [
+        {
+          "text": "감자를 졸였다",
+          "target": "졸였다",
+          "right": "조렸다",
+          "lookup": "조렸다"
+        },
+        {
+          "text": "마음을 조렸다",
+          "target": "조렸다",
+          "right": "졸였다",
+          "lookup": "졸였다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-dareuda-teullida",
+      "entryId": "dareuda-teullida",
+      "label": "다르다 / 틀리다",
+      "patterns": [
+        {
+          "text": "서로 같지 않아 틀리",
+          "target": "틀리",
+          "right": "다르",
+          "lookup": "다르"
+        },
+        {
+          "text": "계산한 답이 달라서 오답",
+          "target": "달라",
+          "right": "틀려",
+          "lookup": "틀려"
+        }
+      ]
+    },
+    {
+      "id": "elementary-deon-deun",
+      "entryId": "deon-deun",
+      "label": "-던 / -든",
+      "patterns": [
+        {
+          "text": "사과던 배던",
+          "target": "던",
+          "right": "든",
+          "lookup": "든"
+        },
+        {
+          "text": "어제 먹었든",
+          "target": "든",
+          "right": "던",
+          "lookup": "던"
+        },
+        {
+          "text": "어디에 가던 연락",
+          "target": "던",
+          "right": "든",
+          "lookup": "든"
+        }
+      ]
+    },
+    {
+      "id": "elementary-eyo-yeyo",
+      "entryId": "eyo-yeyo",
+      "label": "에요 / 예요",
+      "patterns": [
+        {
+          "text": "제 책에요",
+          "target": "에요",
+          "right": "이에요",
+          "lookup": "이에요"
+        },
+        {
+          "text": "민수에요",
+          "target": "에요",
+          "right": "예요",
+          "lookup": "예요"
+        },
+        {
+          "text": "선생님이예요",
+          "target": "이예요",
+          "right": "이에요",
+          "lookup": "이에요"
+        },
+        {
+          "text": "거에요",
+          "target": "거에요",
+          "right": "거예요",
+          "lookup": "거예요"
+        }
+      ]
+    },
+    {
+      "id": "elementary-geochida-geothida",
+      "entryId": "geochida-geothida",
+      "label": "거치다 / 걷히다",
+      "patterns": [
+        {
+          "text": "안개가 거치",
+          "target": "거치",
+          "right": "걷히",
+          "lookup": "걷히"
+        },
+        {
+          "text": "단계를 걷히",
+          "target": "걷히",
+          "right": "거치",
+          "lookup": "거치"
+        }
+      ]
+    },
+    {
+      "id": "elementary-geotjapda-geopjapda",
+      "entryId": "geotjapda-geopjapda",
+      "label": "걷잡다 / 겉잡다",
+      "patterns": [
+        {
+          "text": "불길이 겉잡",
+          "target": "겉잡",
+          "right": "걷잡",
+          "lookup": "걷잡"
+        },
+        {
+          "text": "겉으로 걷잡",
+          "target": "걷잡",
+          "right": "겉잡",
+          "lookup": "겉잡"
+        }
+      ]
+    },
+    {
+      "id": "elementary-maeda-meda",
+      "entryId": "maeda-meda",
+      "label": "매다 / 메다",
+      "patterns": [
+        {
+          "text": "가방을 맸다",
+          "target": "맸다",
+          "right": "멨다",
+          "lookup": "멨다"
+        },
+        {
+          "text": "신발 끈을 멨다",
+          "target": "멨다",
+          "right": "맸다",
+          "lookup": "맸다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-beda-baeda",
+      "entryId": "beda-baeda",
+      "label": "베다 / 배다",
+      "patterns": [
+        {
+          "text": "손가락을 배었다",
+          "target": "배었다",
+          "right": "베었다",
+          "lookup": "베었다"
+        },
+        {
+          "text": "냄새가 베었다",
+          "target": "베었다",
+          "right": "배었다",
+          "lookup": "배었다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-saeda-seda",
+      "entryId": "saeda-seda",
+      "label": "새다 / 세다",
+      "patterns": [
+        {
+          "text": "수도관에서 물이 세",
+          "target": "세",
+          "right": "새",
+          "lookup": "새"
+        },
+        {
+          "text": "구슬의 수를 새",
+          "target": "새",
+          "right": "세",
+          "lookup": "세"
+        }
+      ]
+    },
+    {
+      "id": "elementary-anchida-anjhida",
+      "entryId": "anchida-anjhida",
+      "label": "안치다 / 앉히다",
+      "patterns": [
+        {
+          "text": "솥에 밥을 앉",
+          "target": "앉",
+          "right": "안치",
+          "lookup": "안치"
+        },
+        {
+          "text": "동생을 의자에 안쳤",
+          "target": "안쳤",
+          "right": "앉혔",
+          "lookup": "앉혔"
+        }
+      ]
+    },
+    {
+      "id": "elementary-deulleuda-deullida",
+      "entryId": "deulleuda-deullida",
+      "label": "들르다 / 들리다",
+      "patterns": [
+        {
+          "text": "문구점에 들렸다",
+          "target": "들렸다",
+          "right": "들렀다",
+          "lookup": "들렀다"
+        },
+        {
+          "text": "노랫소리가 들렀다",
+          "target": "들렀다",
+          "right": "들렸다",
+          "lookup": "들렸다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-neomeo-neomeo",
+      "entryId": "neomeo-neomeo",
+      "label": "너머 / 넘어",
+      "patterns": [
+        {
+          "text": "산 넘어에",
+          "target": "넘어",
+          "right": "너머",
+          "lookup": "너머"
+        },
+        {
+          "text": "담장 너머갔",
+          "target": "너머",
+          "right": "넘어",
+          "lookup": "넘어"
+        }
+      ]
+    },
+    {
+      "id": "elementary-bit-bit",
+      "entryId": "bit-bit",
+      "label": "빛 / 빚",
+      "patterns": [
+        {
+          "text": "햇빚",
+          "target": "빚",
+          "right": "빛",
+          "lookup": "빛"
+        },
+        {
+          "text": "빌린 돈은 빛",
+          "target": "빛",
+          "right": "빚",
+          "lookup": "빚"
+        }
+      ]
+    },
+    {
+      "id": "elementary-nat-nat",
+      "entryId": "nat-nat",
+      "label": "낮 / 낯",
+      "patterns": [
+        {
+          "text": "처음 보는 낮",
+          "target": "낮",
+          "right": "낯",
+          "lookup": "낯"
+        },
+        {
+          "text": "낯에는 햇빛",
+          "target": "낯",
+          "right": "낮",
+          "lookup": "낮"
+        }
+      ]
+    },
+    {
+      "id": "elementary-datda-data",
+      "entryId": "datda-data",
+      "label": "닫다 / 닿다",
+      "patterns": [
+        {
+          "text": "문을 닿았",
+          "target": "닿았",
+          "right": "닫았",
+          "lookup": "닫았"
+        },
+        {
+          "text": "손이 선반에 닫",
+          "target": "닫",
+          "right": "닿",
+          "lookup": "닿"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gatda-gatda",
+      "entryId": "gatda-gatda",
+      "label": "갖다 / 같다",
+      "patterns": [
+        {
+          "text": "책임을 같",
+          "target": "같",
+          "right": "갖",
+          "lookup": "갖"
+        },
+        {
+          "text": "크기가 갖",
+          "target": "갖",
+          "right": "같",
+          "lookup": "같"
+        }
+      ]
+    },
+    {
+      "id": "elementary-batchida-bachida",
+      "entryId": "batchida-bachida",
+      "label": "받치다 / 바치다",
+      "patterns": [
+        {
+          "text": "몸을 받친",
+          "target": "받친",
+          "right": "바친",
+          "lookup": "바친"
+        },
+        {
+          "text": "다리에 종이를 바쳤",
+          "target": "바쳤",
+          "right": "받쳤",
+          "lookup": "받쳤"
+        }
+      ]
+    },
+    {
+      "id": "elementary-geonneoda-geonneda",
+      "entryId": "geonneoda-geonneda",
+      "label": "건너다 / 건네다",
+      "patterns": [
+        {
+          "text": "길을 건넸",
+          "target": "건넸",
+          "right": "건넜",
+          "lookup": "건넜"
+        },
+        {
+          "text": "쪽지를 건넜",
+          "target": "건넜",
+          "right": "건넸",
+          "lookup": "건넸"
+        }
+      ]
+    },
+    {
+      "id": "elementary-an-hada",
+      "entryId": "an-hada",
+      "label": "안 하다 / 안하다",
+      "patterns": [
+        {
+          "text": "안하다",
+          "target": "안하다",
+          "right": "안 하다",
+          "lookup": "안 하다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-mot-hada",
+      "entryId": "mot-hada",
+      "label": "못 하다 / 못하다",
+      "patterns": [
+        {
+          "text": "비가 와서 축구를 못했",
+          "target": "못했",
+          "right": "못 했",
+          "lookup": "못 했"
+        }
+      ]
+    },
+    {
+      "id": "elementary-du-beon",
+      "entryId": "du-beon",
+      "label": "두 번 / 두번",
+      "patterns": [
+        {
+          "text": "두번",
+          "target": "두번",
+          "right": "두 번",
+          "lookup": "두 번"
+        }
+      ]
+    },
+    {
+      "id": "elementary-myeot-beon",
+      "entryId": "myeot-beon",
+      "label": "몇 번 / 몇번",
+      "patterns": [
+        {
+          "text": "몇번",
+          "target": "몇번",
+          "right": "몇 번",
+          "lookup": "몇 번"
+        }
+      ]
+    },
+    {
+      "id": "elementary-hal-ttae",
+      "entryId": "hal-ttae",
+      "label": "할 때 / 할때",
+      "patterns": [
+        {
+          "text": "할때",
+          "target": "할때",
+          "right": "할 때",
+          "lookup": "할 때"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gal-ttae",
+      "entryId": "gal-ttae",
+      "label": "갈 때 / 갈때",
+      "patterns": [
+        {
+          "text": "갈때",
+          "target": "갈때",
+          "right": "갈 때",
+          "lookup": "갈 때"
+        }
+      ]
+    },
+    {
+      "id": "elementary-ji-anhda",
+      "entryId": "ji-anhda",
+      "label": "지 않다 / 지않다",
+      "patterns": [
+        {
+          "text": "지않다",
+          "target": "지않다",
+          "right": "지 않다",
+          "lookup": "지 않다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-su-bakke",
+      "entryId": "su-bakke",
+      "label": "수밖에 / 수 밖에",
+      "patterns": [
+        {
+          "text": "수 밖에",
+          "target": "수 밖에",
+          "right": "수밖에",
+          "lookup": "수밖에"
+        }
+      ]
+    },
+    {
+      "id": "elementary-geot-ppunida",
+      "entryId": "geot-ppunida",
+      "label": "것뿐이다 / 것 뿐이다",
+      "patterns": [
+        {
+          "text": "것 뿐이다",
+          "target": "것 뿐이다",
+          "right": "것뿐이다",
+          "lookup": "것뿐이다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-hal-ppun",
+      "entryId": "hal-ppun",
+      "label": "할 뿐 / 할뿐",
+      "patterns": [
+        {
+          "text": "할뿐",
+          "target": "할뿐",
+          "right": "할 뿐",
+          "lookup": "할 뿐"
+        }
+      ]
+    },
+    {
+      "id": "elementary-aneun-mankeum",
+      "entryId": "aneun-mankeum",
+      "label": "아는 만큼 / 아는만큼",
+      "patterns": [
+        {
+          "text": "아는만큼",
+          "target": "아는만큼",
+          "right": "아는 만큼",
+          "lookup": "아는 만큼"
+        }
+      ]
+    },
+    {
+      "id": "elementary-meogeul-mankeum",
+      "entryId": "meogeul-mankeum",
+      "label": "먹을 만큼 / 먹을만큼",
+      "patterns": [
+        {
+          "text": "먹을만큼",
+          "target": "먹을만큼",
+          "right": "먹을 만큼",
+          "lookup": "먹을 만큼"
+        }
+      ]
+    },
+    {
+      "id": "elementary-aneun-cheokhada",
+      "entryId": "aneun-cheokhada",
+      "label": "아는 척하다 / 아는척하다",
+      "patterns": [
+        {
+          "text": "아는척하다",
+          "target": "아는척하다",
+          "right": "아는 척하다",
+          "lookup": "아는 척하다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-bon-chehada",
+      "entryId": "bon-chehada",
+      "label": "본 체하다 / 본체하다",
+      "patterns": [
+        {
+          "text": "본체하다",
+          "target": "본체하다",
+          "right": "본 체하다",
+          "lookup": "본 체하다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-gal-ri",
+      "entryId": "gal-ri",
+      "label": "갈 리가 / 갈리가",
+      "patterns": [
+        {
+          "text": "갈리가",
+          "target": "갈리가",
+          "right": "갈 리가",
+          "lookup": "갈 리가"
+        }
+      ]
+    },
+    {
+      "id": "elementary-hal-jul",
+      "entryId": "hal-jul",
+      "label": "할 줄 / 할줄",
+      "patterns": [
+        {
+          "text": "할줄",
+          "target": "할줄",
+          "right": "할 줄",
+          "lookup": "할 줄"
+        }
+      ]
+    },
+    {
+      "id": "elementary-on-ji",
+      "entryId": "on-ji",
+      "label": "온 지 / 온지",
+      "patterns": [
+        {
+          "text": "온지",
+          "target": "온지",
+          "right": "온 지",
+          "lookup": "온 지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-mannan-ji",
+      "entryId": "mannan-ji",
+      "label": "만난 지 / 만난지",
+      "patterns": [
+        {
+          "text": "만난지",
+          "target": "만난지",
+          "right": "만난 지",
+          "lookup": "만난 지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-se-sal",
+      "entryId": "se-sal",
+      "label": "세 살 / 세살",
+      "patterns": [
+        {
+          "text": "세살",
+          "target": "세살",
+          "right": "세 살",
+          "lookup": "세 살"
+        }
+      ]
+    },
+    {
+      "id": "elementary-yeol-sal",
+      "entryId": "yeol-sal",
+      "label": "열 살 / 열살",
+      "patterns": [
+        {
+          "text": "열살",
+          "target": "열살",
+          "right": "열 살",
+          "lookup": "열 살"
+        }
+      ]
+    },
+    {
+      "id": "elementary-han-myeong",
+      "entryId": "han-myeong",
+      "label": "한 명 / 한명",
+      "patterns": [
+        {
+          "text": "한명",
+          "target": "한명",
+          "right": "한 명",
+          "lookup": "한 명"
+        }
+      ]
+    },
+    {
+      "id": "elementary-du-mari",
+      "entryId": "du-mari",
+      "label": "두 마리 / 두마리",
+      "patterns": [
+        {
+          "text": "두마리",
+          "target": "두마리",
+          "right": "두 마리",
+          "lookup": "두 마리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-cheot-beonjjae",
+      "entryId": "cheot-beonjjae",
+      "label": "첫 번째 / 첫번째",
+      "patterns": [
+        {
+          "text": "첫번째",
+          "target": "첫번째",
+          "right": "첫 번째",
+          "lookup": "첫 번째"
+        }
+      ]
+    },
+    {
+      "id": "elementary-du-beonjjae",
+      "entryId": "du-beonjjae",
+      "label": "두 번째 / 두번째",
+      "patterns": [
+        {
+          "text": "두번째",
+          "target": "두번째",
+          "right": "두 번째",
+          "lookup": "두 번째"
+        }
+      ]
+    },
+    {
+      "id": "elementary-i-saram",
+      "entryId": "i-saram",
+      "label": "이 사람 / 이사람",
+      "patterns": [
+        {
+          "text": "이사람",
+          "target": "이사람",
+          "right": "이 사람",
+          "lookup": "이 사람"
+        }
+      ]
+    },
+    {
+      "id": "elementary-geu-saram",
+      "entryId": "geu-saram",
+      "label": "그 사람 / 그사람",
+      "patterns": [
+        {
+          "text": "그사람",
+          "target": "그사람",
+          "right": "그 사람",
+          "lookup": "그 사람"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jeo-saram",
+      "entryId": "jeo-saram",
+      "label": "저 사람 / 저사람",
+      "patterns": [
+        {
+          "text": "저사람",
+          "target": "저사람",
+          "right": "저 사람",
+          "lookup": "저 사람"
+        }
+      ]
+    },
+    {
+      "id": "elementary-eoneu-nal",
+      "entryId": "eoneu-nal",
+      "label": "어느 날 / 어느날",
+      "patterns": [
+        {
+          "text": "어느날",
+          "target": "어느날",
+          "right": "어느 날",
+          "lookup": "어느 날"
+        }
+      ]
+    },
+    {
+      "id": "elementary-eoneu-ttae",
+      "entryId": "eoneu-ttae",
+      "label": "어느 때 / 어느때",
+      "patterns": [
+        {
+          "text": "어느때",
+          "target": "어느때",
+          "right": "어느 때",
+          "lookup": "어느 때"
+        }
+      ]
+    },
+    {
+      "id": "elementary-eolma-dongan",
+      "entryId": "eolma-dongan",
+      "label": "얼마 동안 / 얼마동안",
+      "patterns": [
+        {
+          "text": "얼마동안",
+          "target": "얼마동안",
+          "right": "얼마 동안",
+          "lookup": "얼마 동안"
+        }
+      ]
+    },
+    {
+      "id": "elementary-haru-jongil",
+      "entryId": "haru-jongil",
+      "label": "하루 종일 / 하루종일",
+      "patterns": [
+        {
+          "text": "하루종일",
+          "target": "하루종일",
+          "right": "하루 종일",
+          "lookup": "하루 종일"
+        }
+      ]
+    },
+    {
+      "id": "elementary-achimmada",
+      "entryId": "achimmada",
+      "label": "아침마다 / 아침 마다",
+      "patterns": [
+        {
+          "text": "아침 마다",
+          "target": "아침 마다",
+          "right": "아침마다",
+          "lookup": "아침마다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-nalmada",
+      "entryId": "nalmada",
+      "label": "날마다 / 날 마다",
+      "patterns": [
+        {
+          "text": "날 마다",
+          "target": "날 마다",
+          "right": "날마다",
+          "lookup": "날마다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-neobakke",
+      "entryId": "neobakke",
+      "label": "너밖에 / 너 밖에",
+      "patterns": [
+        {
+          "text": "너 밖에",
+          "target": "너 밖에",
+          "right": "너밖에",
+          "lookup": "너밖에"
+        }
+      ]
+    },
+    {
+      "id": "elementary-nacheoreom",
+      "entryId": "nacheoreom",
+      "label": "나처럼 / 나 처럼",
+      "patterns": [
+        {
+          "text": "나 처럼",
+          "target": "나 처럼",
+          "right": "나처럼",
+          "lookup": "나처럼"
+        }
+      ]
+    },
+    {
+      "id": "elementary-chinguwa",
+      "entryId": "chinguwa",
+      "label": "친구와 / 친구 와",
+      "patterns": [
+        {
+          "text": "친구 와",
+          "target": "친구 와",
+          "right": "친구와",
+          "lookup": "친구와"
+        }
+      ]
+    },
+    {
+      "id": "elementary-hakgyokkaji",
+      "entryId": "hakgyokkaji",
+      "label": "학교까지 / 학교 까지",
+      "patterns": [
+        {
+          "text": "학교 까지",
+          "target": "학교 까지",
+          "right": "학교까지",
+          "lookup": "학교까지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-jibeseobuteo",
+      "entryId": "jibeseobuteo",
+      "label": "집에서부터 / 집에서 부터",
+      "patterns": [
+        {
+          "text": "집에서 부터",
+          "target": "집에서 부터",
+          "right": "집에서부터",
+          "lookup": "집에서부터"
+        }
+      ]
+    },
+    {
+      "id": "elementary-hal-ge",
+      "entryId": "hal-ge",
+      "label": "할 게 / 할게",
+      "patterns": [
+        {
+          "text": "할게 많이",
+          "target": "할게",
+          "right": "할 게",
+          "lookup": "할 게"
+        },
+        {
+          "text": "청소는 내가 할 게.",
+          "target": "할 게",
+          "right": "할게",
+          "lookup": "할게"
+        }
+      ]
+    },
+    {
+      "id": "elementary-hal-geol",
+      "entryId": "hal-geol",
+      "label": "할 걸 / 할걸",
+      "patterns": [
+        {
+          "text": "할걸 먼저",
+          "target": "할걸",
+          "right": "할 걸",
+          "lookup": "할 걸"
+        },
+        {
+          "text": "갈 걸 그랬다",
+          "target": "갈 걸",
+          "right": "갈걸",
+          "lookup": "갈걸"
+        }
+      ]
+    },
+    {
+      "id": "elementary-cake",
+      "entryId": "cake",
+      "label": "케이크 / 케익",
+      "patterns": [
+        {
+          "text": "케익",
+          "target": "케익",
+          "right": "케이크",
+          "lookup": "케이크"
+        }
+      ]
+    },
+    {
+      "id": "elementary-chocolate",
+      "entryId": "chocolate",
+      "label": "초콜릿 / 초코렛",
+      "patterns": [
+        {
+          "text": "초코렛",
+          "target": "초코렛",
+          "right": "초콜릿",
+          "lookup": "초콜릿"
+        }
+      ]
+    },
+    {
+      "id": "elementary-juice",
+      "entryId": "juice",
+      "label": "주스 / 쥬스",
+      "patterns": [
+        {
+          "text": "쥬스",
+          "target": "쥬스",
+          "right": "주스",
+          "lookup": "주스"
+        }
+      ]
+    },
+    {
+      "id": "elementary-television",
+      "entryId": "television",
+      "label": "텔레비전 / 텔레비젼",
+      "patterns": [
+        {
+          "text": "텔레비젼",
+          "target": "텔레비젼",
+          "right": "텔레비전",
+          "lookup": "텔레비전"
+        }
+      ]
+    },
+    {
+      "id": "elementary-message",
+      "entryId": "message",
+      "label": "메시지 / 메세지",
+      "patterns": [
+        {
+          "text": "메세지",
+          "target": "메세지",
+          "right": "메시지",
+          "lookup": "메시지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-accessory",
+      "entryId": "accessory",
+      "label": "액세서리 / 악세사리",
+      "patterns": [
+        {
+          "text": "악세사리",
+          "target": "악세사리",
+          "right": "액세서리",
+          "lookup": "액세서리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-badminton",
+      "entryId": "badminton",
+      "label": "배드민턴 / 베드민턴",
+      "patterns": [
+        {
+          "text": "베드민턴",
+          "target": "베드민턴",
+          "right": "배드민턴",
+          "lookup": "배드민턴"
+        }
+      ]
+    },
+    {
+      "id": "elementary-remote-control",
+      "entryId": "remote-control",
+      "label": "리모컨 / 리모콘",
+      "patterns": [
+        {
+          "text": "리모콘",
+          "target": "리모콘",
+          "right": "리모컨",
+          "lookup": "리모컨"
+        }
+      ]
+    },
+    {
+      "id": "elementary-content",
+      "entryId": "content",
+      "label": "콘텐츠 / 컨텐츠",
+      "patterns": [
+        {
+          "text": "컨텐츠",
+          "target": "컨텐츠",
+          "right": "콘텐츠",
+          "lookup": "콘텐츠"
+        }
+      ]
+    },
+    {
+      "id": "elementary-robot",
+      "entryId": "robot",
+      "label": "로봇 / 로보트",
+      "patterns": [
+        {
+          "text": "로보트",
+          "target": "로보트",
+          "right": "로봇",
+          "lookup": "로봇"
+        }
+      ]
+    },
+    {
+      "id": "elementary-placard",
+      "entryId": "placard",
+      "label": "플래카드 / 프랑카드",
+      "patterns": [
+        {
+          "text": "프랑카드",
+          "target": "프랑카드",
+          "right": "플래카드",
+          "lookup": "플래카드"
+        }
+      ]
+    },
+    {
+      "id": "elementary-cardigan",
+      "entryId": "cardigan",
+      "label": "카디건 / 가디건",
+      "patterns": [
+        {
+          "text": "가디건",
+          "target": "가디건",
+          "right": "카디건",
+          "lookup": "카디건"
+        }
+      ]
+    },
+    {
+      "id": "elementary-buffet",
+      "entryId": "buffet",
+      "label": "뷔페 / 부페",
+      "patterns": [
+        {
+          "text": "부페",
+          "target": "부페",
+          "right": "뷔페",
+          "lookup": "뷔페"
+        }
+      ]
+    },
+    {
+      "id": "elementary-navigation",
+      "entryId": "navigation",
+      "label": "내비게이션 / 네비게이션",
+      "patterns": [
+        {
+          "text": "네비게이션",
+          "target": "네비게이션",
+          "right": "내비게이션",
+          "lookup": "내비게이션"
+        }
+      ]
+    },
+    {
+      "id": "elementary-stainless",
+      "entryId": "stainless",
+      "label": "스테인리스 / 스텐레스",
+      "patterns": [
+        {
+          "text": "스텐레스",
+          "target": "스텐레스",
+          "right": "스테인리스",
+          "lookup": "스테인리스"
+        }
+      ]
+    },
+    {
+      "id": "elementary-fighting",
+      "entryId": "fighting",
+      "label": "파이팅 / 화이팅",
+      "patterns": [
+        {
+          "text": "화이팅",
+          "target": "화이팅",
+          "right": "파이팅",
+          "lookup": "파이팅"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gwaenchanhda",
+      "entryId": "expansion-gwaenchanhda",
+      "label": "괜찮다 / 괜찬다",
+      "patterns": [
+        {
+          "text": "괜찬다",
+          "target": "괜찬다",
+          "right": "괜찮다",
+          "lookup": "괜찮다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-geokkuro",
+      "entryId": "expansion-geokkuro",
+      "label": "거꾸로 / 꺼꾸로",
+      "patterns": [
+        {
+          "text": "꺼꾸로",
+          "target": "꺼꾸로",
+          "right": "거꾸로",
+          "lookup": "거꾸로"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gwittim",
+      "entryId": "expansion-gwittim",
+      "label": "귀띔 / 귀뜸",
+      "patterns": [
+        {
+          "text": "귀뜸",
+          "target": "귀뜸",
+          "right": "귀띔",
+          "lookup": "귀띔"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-kkaedareum",
+      "entryId": "expansion-kkaedareum",
+      "label": "깨달음 / 깨닳음",
+      "patterns": [
+        {
+          "text": "깨닳음",
+          "target": "깨닳음",
+          "right": "깨달음",
+          "lookup": "깨달음"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-kkeunapul",
+      "entryId": "expansion-kkeunapul",
+      "label": "끄나풀 / 끈나풀",
+      "patterns": [
+        {
+          "text": "끈나풀",
+          "target": "끈나풀",
+          "right": "끄나풀",
+          "lookup": "끄나풀"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-dangchoe",
+      "entryId": "expansion-dangchoe",
+      "label": "당최 / 당췌",
+      "patterns": [
+        {
+          "text": "당췌",
+          "target": "당췌",
+          "right": "당최",
+          "lookup": "당최"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-dwikkumchi",
+      "entryId": "expansion-dwikkumchi",
+      "label": "뒤꿈치 / 뒷꿈치",
+      "patterns": [
+        {
+          "text": "뒷꿈치",
+          "target": "뒷꿈치",
+          "right": "뒤꿈치",
+          "lookup": "뒤꿈치"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ttakttaguri",
+      "entryId": "expansion-ttakttaguri",
+      "label": "딱따구리 / 딱다구리",
+      "patterns": [
+        {
+          "text": "딱다구리",
+          "target": "딱다구리",
+          "right": "딱따구리",
+          "lookup": "딱따구리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-mandeum",
+      "entryId": "expansion-mandeum",
+      "label": "만듦 / 만듬",
+      "patterns": [
+        {
+          "text": "만듬",
+          "target": "만듬",
+          "right": "만듦",
+          "lookup": "만듦"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-myeoneuri",
+      "entryId": "expansion-myeoneuri",
+      "label": "며느리 / 며누리",
+      "patterns": [
+        {
+          "text": "며누리",
+          "target": "며누리",
+          "right": "며느리",
+          "lookup": "며느리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-munmae",
+      "entryId": "expansion-munmae",
+      "label": "뭇매 / 묻매",
+      "patterns": [
+        {
+          "text": "묻매",
+          "target": "묻매",
+          "right": "뭇매",
+          "lookup": "뭇매"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-baljaguk",
+      "entryId": "expansion-baljaguk",
+      "label": "발자국 / 발자욱",
+      "patterns": [
+        {
+          "text": "발자욱",
+          "target": "발자욱",
+          "right": "발자국",
+          "lookup": "발자국"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-biroso",
+      "entryId": "expansion-biroso",
+      "label": "비로소 / 비로서",
+      "patterns": [
+        {
+          "text": "비로서",
+          "target": "비로서",
+          "right": "비로소",
+          "lookup": "비로소"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-saenggakgeondae",
+      "entryId": "expansion-saenggakgeondae",
+      "label": "생각건대 / 생각컨대",
+      "patterns": [
+        {
+          "text": "생각컨대",
+          "target": "생각컨대",
+          "right": "생각건대",
+          "lookup": "생각건대"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-seopseopji",
+      "entryId": "expansion-seopseopji",
+      "label": "섭섭지 / 섭섭치",
+      "patterns": [
+        {
+          "text": "섭섭치",
+          "target": "섭섭치",
+          "right": "섭섭지",
+          "lookup": "섭섭지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-sokkumnori",
+      "entryId": "expansion-sokkumnori",
+      "label": "소꿉놀이 / 소꼽놀이",
+      "patterns": [
+        {
+          "text": "소꼽놀이",
+          "target": "소꼽놀이",
+          "right": "소꿉놀이",
+          "lookup": "소꿉놀이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-seungnak",
+      "entryId": "expansion-seungnak",
+      "label": "승낙 / 승락",
+      "patterns": [
+        {
+          "text": "승락",
+          "target": "승락",
+          "right": "승낙",
+          "lookup": "승낙"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ssakduk",
+      "entryId": "expansion-ssakduk",
+      "label": "싹둑 / 싹뚝",
+      "patterns": [
+        {
+          "text": "싹뚝",
+          "target": "싹뚝",
+          "right": "싹둑",
+          "lookup": "싹둑"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-sseurebatgi",
+      "entryId": "expansion-sseurebatgi",
+      "label": "쓰레받기 / 쓰레받이",
+      "patterns": [
+        {
+          "text": "쓰레받이",
+          "target": "쓰레받이",
+          "right": "쓰레받기",
+          "lookup": "쓰레받기"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-adeungbadeung",
+      "entryId": "expansion-adeungbadeung",
+      "label": "아등바등 / 아둥바둥",
+      "patterns": [
+        {
+          "text": "아둥바둥",
+          "target": "아둥바둥",
+          "right": "아등바등",
+          "lookup": "아등바등"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ajirangi",
+      "entryId": "expansion-ajirangi",
+      "label": "아지랑이 / 아지랭이",
+      "patterns": [
+        {
+          "text": "아지랭이",
+          "target": "아지랭이",
+          "right": "아지랑이",
+          "lookup": "아지랑이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-aetdoeda",
+      "entryId": "expansion-aetdoeda",
+      "label": "앳되다 / 애띠다",
+      "patterns": [
+        {
+          "text": "애띠다",
+          "target": "애띠다",
+          "right": "앳되다",
+          "lookup": "앳되다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ojirap",
+      "entryId": "expansion-ojirap",
+      "label": "오지랖 / 오지랍",
+      "patterns": [
+        {
+          "text": "오지랍",
+          "target": "오지랍",
+          "right": "오지랖",
+          "lookup": "오지랖"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ure",
+      "entryId": "expansion-ure",
+      "label": "우레 / 우뢰",
+      "patterns": [
+        {
+          "text": "우뢰",
+          "target": "우뢰",
+          "right": "우레",
+          "lookup": "우레"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-umkeum",
+      "entryId": "expansion-umkeum",
+      "label": "움큼 / 웅큼",
+      "patterns": [
+        {
+          "text": "웅큼",
+          "target": "웅큼",
+          "right": "움큼",
+          "lookup": "움큼"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-euseudaeda",
+      "entryId": "expansion-euseudaeda",
+      "label": "으스대다 / 으시대다",
+      "patterns": [
+        {
+          "text": "으시대다",
+          "target": "으시대다",
+          "right": "으스대다",
+          "lookup": "으스대다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-euseuseu",
+      "entryId": "expansion-euseuseu",
+      "label": "으스스 / 으시시",
+      "patterns": [
+        {
+          "text": "으시시",
+          "target": "으시시",
+          "right": "으스스",
+          "lookup": "으스스"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jaturi",
+      "entryId": "expansion-jaturi",
+      "label": "자투리 / 짜투리",
+      "patterns": [
+        {
+          "text": "짜투리",
+          "target": "짜투리",
+          "right": "자투리",
+          "lookup": "자투리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jukkumi",
+      "entryId": "expansion-jukkumi",
+      "label": "주꾸미 / 쭈꾸미",
+      "patterns": [
+        {
+          "text": "쭈꾸미",
+          "target": "쭈꾸미",
+          "right": "주꾸미",
+          "lookup": "주꾸미"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jitgutta",
+      "entryId": "expansion-jitgutta",
+      "label": "짓궂다 / 짓굳다",
+      "patterns": [
+        {
+          "text": "짓굳다",
+          "target": "짓굳다",
+          "right": "짓궂다",
+          "lookup": "짓궂다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jjipurida",
+      "entryId": "expansion-jjipurida",
+      "label": "찌푸리다 / 찌뿌리다",
+      "patterns": [
+        {
+          "text": "찌뿌리다",
+          "target": "찌뿌리다",
+          "right": "찌푸리다",
+          "lookup": "찌푸리다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-choseungdal",
+      "entryId": "expansion-choseungdal",
+      "label": "초승달 / 초생달",
+      "patterns": [
+        {
+          "text": "초생달",
+          "target": "초생달",
+          "right": "초승달",
+          "lookup": "초승달"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-chuseureuda",
+      "entryId": "expansion-chuseureuda",
+      "label": "추스르다 / 추스리다",
+      "patterns": [
+        {
+          "text": "추스리다",
+          "target": "추스리다",
+          "right": "추스르다",
+          "lookup": "추스르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-pyonmal",
+      "entryId": "expansion-pyonmal",
+      "label": "푯말 / 표말",
+      "patterns": [
+        {
+          "text": "표말",
+          "target": "표말",
+          "right": "푯말",
+          "lookup": "푯말"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-haenim",
+      "entryId": "expansion-haenim",
+      "label": "해님 / 햇님",
+      "patterns": [
+        {
+          "text": "햇님",
+          "target": "햇님",
+          "right": "해님",
+          "lookup": "해님"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-huyujeung",
+      "entryId": "expansion-huyujeung",
+      "label": "후유증 / 후유쯩",
+      "patterns": [
+        {
+          "text": "후유쯩",
+          "target": "후유쯩",
+          "right": "후유증",
+          "lookup": "후유증"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-heunkoehi",
+      "entryId": "expansion-heunkoehi",
+      "label": "흔쾌히 / 흔쾌이",
+      "patterns": [
+        {
+          "text": "흔쾌이",
+          "target": "흔쾌이",
+          "right": "흔쾌히",
+          "lookup": "흔쾌히"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gyeolttannada",
+      "entryId": "expansion-gyeolttannada",
+      "label": "결딴나다 / 결단나다",
+      "patterns": [
+        {
+          "text": "결단나다",
+          "target": "결단나다",
+          "right": "결딴나다",
+          "lookup": "결딴나다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gurenarut",
+      "entryId": "expansion-gurenarut",
+      "label": "구레나룻 / 구렛나루",
+      "patterns": [
+        {
+          "text": "구렛나루",
+          "target": "구렛나루",
+          "right": "구레나룻",
+          "lookup": "구레나룻"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-nungop",
+      "entryId": "expansion-nungop",
+      "label": "눈곱 / 눈꼽",
+      "patterns": [
+        {
+          "text": "눈꼽",
+          "target": "눈꼽",
+          "right": "눈곱",
+          "lookup": "눈곱"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-dakkdalhada",
+      "entryId": "expansion-dakkdalhada",
+      "label": "닦달하다 / 닥달하다",
+      "patterns": [
+        {
+          "text": "닥달하다",
+          "target": "닥달하다",
+          "right": "닦달하다",
+          "lookup": "닦달하다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-dolmengi",
+      "entryId": "expansion-dolmengi",
+      "label": "돌멩이 / 돌맹이",
+      "patterns": [
+        {
+          "text": "돌맹이",
+          "target": "돌맹이",
+          "right": "돌멩이",
+          "lookup": "돌멩이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-deuridakchida",
+      "entryId": "expansion-deuridakchida",
+      "label": "들이닥치다 / 들이닦치다",
+      "patterns": [
+        {
+          "text": "들이닦치다",
+          "target": "들이닦치다",
+          "right": "들이닥치다",
+          "lookup": "들이닥치다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-meotjjeokda",
+      "entryId": "expansion-meotjjeokda",
+      "label": "멋쩍다 / 멋적다",
+      "patterns": [
+        {
+          "text": "멋적다",
+          "target": "멋적다",
+          "right": "멋쩍다",
+          "lookup": "멋쩍다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-mopsi",
+      "entryId": "expansion-mopsi",
+      "label": "몹시 / 몹씨",
+      "patterns": [
+        {
+          "text": "몹씨",
+          "target": "몹씨",
+          "right": "몹시",
+          "lookup": "몹시"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-midaji",
+      "entryId": "expansion-midaji",
+      "label": "미닫이 / 미다지",
+      "patterns": [
+        {
+          "text": "미다지",
+          "target": "미다지",
+          "right": "미닫이",
+          "lookup": "미닫이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-mitdong",
+      "entryId": "expansion-mitdong",
+      "label": "밑동 / 밑둥",
+      "patterns": [
+        {
+          "text": "밑둥",
+          "target": "밑둥",
+          "right": "밑동",
+          "lookup": "밑동"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-banjitgori",
+      "entryId": "expansion-banjitgori",
+      "label": "반짇고리 / 반짓고리",
+      "patterns": [
+        {
+          "text": "반짓고리",
+          "target": "반짓고리",
+          "right": "반짇고리",
+          "lookup": "반짇고리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-horuragi",
+      "entryId": "expansion-horuragi",
+      "label": "호루라기 / 호르라기",
+      "patterns": [
+        {
+          "text": "호르라기",
+          "target": "호르라기",
+          "right": "호루라기",
+          "lookup": "호루라기"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-seomtteuk",
+      "entryId": "expansion-seomtteuk",
+      "label": "섬뜩 / 섬뜻",
+      "patterns": [
+        {
+          "text": "섬뜻",
+          "target": "섬뜻",
+          "right": "섬뜩",
+          "lookup": "섬뜩"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-sidapjanhda",
+      "entryId": "expansion-sidapjanhda",
+      "label": "시답잖다 / 시덥잖다",
+      "patterns": [
+        {
+          "text": "시덥잖다",
+          "target": "시덥잖다",
+          "right": "시답잖다",
+          "lookup": "시답잖다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-sillangi",
+      "entryId": "expansion-sillangi",
+      "label": "실랑이 / 실갱이",
+      "patterns": [
+        {
+          "text": "실갱이",
+          "target": "실갱이",
+          "right": "실랑이",
+          "lookup": "실랑이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-saengttungmatda",
+      "entryId": "expansion-saengttungmatda",
+      "label": "생뚱맞다 / 쌩뚱맞다",
+      "patterns": [
+        {
+          "text": "쌩뚱맞다",
+          "target": "쌩뚱맞다",
+          "right": "생뚱맞다",
+          "lookup": "생뚱맞다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-eonggeopgyeol",
+      "entryId": "expansion-eonggeopgyeol",
+      "label": "엉겁결 / 엉겹결",
+      "patterns": [
+        {
+          "text": "엉겹결",
+          "target": "엉겹결",
+          "right": "엉겁결",
+          "lookup": "엉겁결"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-udukeoni",
+      "entryId": "expansion-udukeoni",
+      "label": "우두커니 / 우두머니",
+      "patterns": [
+        {
+          "text": "우두머니",
+          "target": "우두머니",
+          "right": "우두커니",
+          "lookup": "우두커니"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jageumachi",
+      "entryId": "expansion-jageumachi",
+      "label": "자그마치 / 자그만치",
+      "patterns": [
+        {
+          "text": "자그만치",
+          "target": "자그만치",
+          "right": "자그마치",
+          "lookup": "자그마치"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jaetteori",
+      "entryId": "expansion-jaetteori",
+      "label": "재떨이 / 재털이",
+      "patterns": [
+        {
+          "text": "재털이",
+          "target": "재털이",
+          "right": "재떨이",
+          "lookup": "재떨이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jeolchejeolmyeong",
+      "entryId": "expansion-jeolchejeolmyeong",
+      "label": "절체절명 / 절대절명",
+      "patterns": [
+        {
+          "text": "절대절명",
+          "target": "절대절명",
+          "right": "절체절명",
+          "lookup": "절체절명"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jokjipge",
+      "entryId": "expansion-jokjipge",
+      "label": "족집게 / 쪽집게",
+      "patterns": [
+        {
+          "text": "쪽집게",
+          "target": "쪽집게",
+          "right": "족집게",
+          "lookup": "족집게"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-pokbal",
+      "entryId": "expansion-pokbal",
+      "label": "폭발 / 폭팔",
+      "patterns": [
+        {
+          "text": "폭팔",
+          "target": "폭팔",
+          "right": "폭발",
+          "lookup": "폭발"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-haelssukhada",
+      "entryId": "expansion-haelssukhada",
+      "label": "핼쑥하다 / 핼쓱하다",
+      "patterns": [
+        {
+          "text": "핼쓱하다",
+          "target": "핼쓱하다",
+          "right": "핼쑥하다",
+          "lookup": "핼쑥하다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-naburaengi",
+      "entryId": "expansion-naburaengi",
+      "label": "나부랭이 / 나부랑이",
+      "patterns": [
+        {
+          "text": "나부랑이",
+          "target": "나부랑이",
+          "right": "나부랭이",
+          "lookup": "나부랭이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-nangtteoreoji",
+      "entryId": "expansion-nangtteoreoji",
+      "label": "낭떠러지 / 낭떨어지",
+      "patterns": [
+        {
+          "text": "낭떨어지",
+          "target": "낭떨어지",
+          "right": "낭떠러지",
+          "lookup": "낭떠러지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-neoljikhada",
+      "entryId": "expansion-neoljikhada",
+      "label": "널찍하다 / 널직하다",
+      "patterns": [
+        {
+          "text": "널직하다",
+          "target": "널직하다",
+          "right": "널찍하다",
+          "lookup": "널찍하다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-neulgeumak",
+      "entryId": "expansion-neulgeumak",
+      "label": "늘그막 / 늙으막",
+      "patterns": [
+        {
+          "text": "늙으막",
+          "target": "늙으막",
+          "right": "늘그막",
+          "lookup": "늘그막"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-daemullim",
+      "entryId": "expansion-daemullim",
+      "label": "대물림 / 되물림",
+      "patterns": [
+        {
+          "text": "되물림",
+          "target": "되물림",
+          "right": "대물림",
+          "lookup": "대물림"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-deoburukhada",
+      "entryId": "expansion-deoburukhada",
+      "label": "더부룩하다 / 더부럭하다",
+      "patterns": [
+        {
+          "text": "더부럭하다",
+          "target": "더부럭하다",
+          "right": "더부룩하다",
+          "lookup": "더부룩하다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-deomteogi",
+      "entryId": "expansion-deomteogi",
+      "label": "덤터기 / 덤테기",
+      "patterns": [
+        {
+          "text": "덤테기",
+          "target": "덤테기",
+          "right": "덤터기",
+          "lookup": "덤터기"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-donggodongnak",
+      "entryId": "expansion-donggodongnak",
+      "label": "동고동락 / 동거동락",
+      "patterns": [
+        {
+          "text": "동거동락",
+          "target": "동거동락",
+          "right": "동고동락",
+          "lookup": "동고동락"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-dwitongsu",
+      "entryId": "expansion-dwitongsu",
+      "label": "뒤통수 / 뒷통수",
+      "patterns": [
+        {
+          "text": "뒷통수",
+          "target": "뒷통수",
+          "right": "뒤통수",
+          "lookup": "뒤통수"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-golchitgeori",
+      "entryId": "expansion-golchitgeori",
+      "label": "골칫거리 / 골치거리",
+      "patterns": [
+        {
+          "text": "골치거리",
+          "target": "골치거리",
+          "right": "골칫거리",
+          "lookup": "골칫거리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gwigatgil",
+      "entryId": "expansion-gwigatgil",
+      "label": "귀갓길 / 귀가길",
+      "patterns": [
+        {
+          "text": "귀가길",
+          "target": "귀가길",
+          "right": "귀갓길",
+          "lookup": "귀갓길"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-kkaennip",
+      "entryId": "expansion-kkaennip",
+      "label": "깻잎 / 깨잎",
+      "patterns": [
+        {
+          "text": "깨잎",
+          "target": "깨잎",
+          "right": "깻잎",
+          "lookup": "깻잎"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-narutbae",
+      "entryId": "expansion-narutbae",
+      "label": "나룻배 / 나루배",
+      "patterns": [
+        {
+          "text": "나루배",
+          "target": "나루배",
+          "right": "나룻배",
+          "lookup": "나룻배"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-naitgap",
+      "entryId": "expansion-naitgap",
+      "label": "나잇값 / 나이값",
+      "patterns": [
+        {
+          "text": "나이값",
+          "target": "나이값",
+          "right": "나잇값",
+          "lookup": "나잇값"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-noraenmal",
+      "entryId": "expansion-noraenmal",
+      "label": "노랫말 / 노래말",
+      "patterns": [
+        {
+          "text": "노래말",
+          "target": "노래말",
+          "right": "노랫말",
+          "lookup": "노랫말"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-dwinnil",
+      "entryId": "expansion-dwinnil",
+      "label": "뒷일 / 뒤일",
+      "patterns": [
+        {
+          "text": "뒤일",
+          "target": "뒤일",
+          "right": "뒷일",
+          "lookup": "뒷일"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-deungdaetbul",
+      "entryId": "expansion-deungdaetbul",
+      "label": "등댓불 / 등대불",
+      "patterns": [
+        {
+          "text": "등대불",
+          "target": "등대불",
+          "right": "등댓불",
+          "lookup": "등댓불"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-mandutguk",
+      "entryId": "expansion-mandutguk",
+      "label": "만둣국 / 만두국",
+      "patterns": [
+        {
+          "text": "만두국",
+          "target": "만두국",
+          "right": "만둣국",
+          "lookup": "만둣국"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-meoritgyeol",
+      "entryId": "expansion-meoritgyeol",
+      "label": "머릿결 / 머리결",
+      "patterns": [
+        {
+          "text": "머리결",
+          "target": "머리결",
+          "right": "머릿결",
+          "lookup": "머릿결"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-seonjitguk",
+      "entryId": "expansion-seonjitguk",
+      "label": "선짓국 / 선지국",
+      "patterns": [
+        {
+          "text": "선지국",
+          "target": "선지국",
+          "right": "선짓국",
+          "lookup": "선짓국"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-sundaetguk",
+      "entryId": "expansion-sundaetguk",
+      "label": "순댓국 / 순대국",
+      "patterns": [
+        {
+          "text": "순대국",
+          "target": "순대국",
+          "right": "순댓국",
+          "lookup": "순댓국"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-araenmaeul",
+      "entryId": "expansion-araenmaeul",
+      "label": "아랫마을 / 아래마을",
+      "patterns": [
+        {
+          "text": "아래마을",
+          "target": "아래마을",
+          "right": "아랫마을",
+          "lookup": "아랫마을"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-yesannil",
+      "entryId": "expansion-yesannil",
+      "label": "예삿일 / 예사일",
+      "patterns": [
+        {
+          "text": "예사일",
+          "target": "예사일",
+          "right": "예삿일",
+          "lookup": "예삿일"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jangmitbit",
+      "entryId": "expansion-jangmitbit",
+      "label": "장밋빛 / 장미빛",
+      "patterns": [
+        {
+          "text": "장미빛",
+          "target": "장미빛",
+          "right": "장밋빛",
+          "lookup": "장밋빛"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jaetbit",
+      "entryId": "expansion-jaetbit",
+      "label": "잿빛 / 재빛",
+      "patterns": [
+        {
+          "text": "재빛",
+          "target": "재빛",
+          "right": "잿빛",
+          "lookup": "잿빛"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jeongitjul",
+      "entryId": "expansion-jeongitjul",
+      "label": "전깃줄 / 전기줄",
+      "patterns": [
+        {
+          "text": "전기줄",
+          "target": "전기줄",
+          "right": "전깃줄",
+          "lookup": "전깃줄"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jogaetsal",
+      "entryId": "expansion-jogaetsal",
+      "label": "조갯살 / 조개살",
+      "patterns": [
+        {
+          "text": "조개살",
+          "target": "조개살",
+          "right": "조갯살",
+          "lookup": "조갯살"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-chotbul",
+      "entryId": "expansion-chotbul",
+      "label": "촛불 / 초불",
+      "patterns": [
+        {
+          "text": "초불",
+          "target": "초불",
+          "right": "촛불",
+          "lookup": "촛불"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-kotdeung",
+      "entryId": "expansion-kotdeung",
+      "label": "콧등 / 코등",
+      "patterns": [
+        {
+          "text": "코등",
+          "target": "코등",
+          "right": "콧등",
+          "lookup": "콧등"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-pitjul",
+      "entryId": "expansion-pitjul",
+      "label": "핏줄 / 피줄",
+      "patterns": [
+        {
+          "text": "피줄",
+          "target": "피줄",
+          "right": "핏줄",
+          "lookup": "핏줄"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jeonsetdon",
+      "entryId": "expansion-jeonsetdon",
+      "label": "전셋돈 / 전세돈",
+      "patterns": [
+        {
+          "text": "전세돈",
+          "target": "전세돈",
+          "right": "전셋돈",
+          "lookup": "전셋돈"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-hunnal",
+      "entryId": "expansion-hunnal",
+      "label": "훗날 / 후날",
+      "patterns": [
+        {
+          "text": "후날",
+          "target": "후날",
+          "right": "훗날",
+          "lookup": "훗날"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-namutgaji",
+      "entryId": "expansion-namutgaji",
+      "label": "나뭇가지 / 나무가지",
+      "patterns": [
+        {
+          "text": "나무가지",
+          "target": "나무가지",
+          "right": "나뭇가지",
+          "lookup": "나뭇가지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-meoritgireum",
+      "entryId": "expansion-meoritgireum",
+      "label": "머릿기름 / 머리기름",
+      "patterns": [
+        {
+          "text": "머리기름",
+          "target": "머리기름",
+          "right": "머릿기름",
+          "lookup": "머릿기름"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-araetjip",
+      "entryId": "expansion-araetjip",
+      "label": "아랫집 / 아래집",
+      "patterns": [
+        {
+          "text": "아래집",
+          "target": "아래집",
+          "right": "아랫집",
+          "lookup": "아랫집"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-yangchitmul",
+      "entryId": "expansion-yangchitmul",
+      "label": "양칫물 / 양치물",
+      "patterns": [
+        {
+          "text": "양치물",
+          "target": "양치물",
+          "right": "양칫물",
+          "lookup": "양칫물"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-begaennit",
+      "entryId": "expansion-begaennit",
+      "label": "베갯잇 / 베개잇",
+      "patterns": [
+        {
+          "text": "베개잇",
+          "target": "베개잇",
+          "right": "베갯잇",
+          "lookup": "베갯잇"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-araetbang",
+      "entryId": "expansion-araetbang",
+      "label": "아랫방 / 아래방",
+      "patterns": [
+        {
+          "text": "아래방",
+          "target": "아래방",
+          "right": "아랫방",
+          "lookup": "아랫방"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-dwinmal",
+      "entryId": "expansion-dwinmal",
+      "label": "뒷말 / 뒤말",
+      "patterns": [
+        {
+          "text": "뒤말",
+          "target": "뒤말",
+          "right": "뒷말",
+          "lookup": "뒷말"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gatchuda",
+      "entryId": "expansion-gatchuda",
+      "label": "갖추다 / 가추다",
+      "patterns": [
+        {
+          "text": "가추다",
+          "target": "가추다",
+          "right": "갖추다",
+          "lookup": "갖추다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-kkeokda",
+      "entryId": "expansion-kkeokda",
+      "label": "꺾다 / 꺽다",
+      "patterns": [
+        {
+          "text": "꺽다",
+          "target": "꺽다",
+          "right": "꺾다",
+          "lookup": "꺾다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-geodeobutida",
+      "entryId": "expansion-geodeobutida",
+      "label": "걷어붙이다 / 걷어부치다",
+      "patterns": [
+        {
+          "text": "걷어부치다",
+          "target": "걷어부치다",
+          "right": "걷어붙이다",
+          "lookup": "걷어붙이다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gyeotdeurida",
+      "entryId": "expansion-gyeotdeurida",
+      "label": "곁들이다 / 곁드리다",
+      "patterns": [
+        {
+          "text": "곁드리다",
+          "target": "곁드리다",
+          "right": "곁들이다",
+          "lookup": "곁들이다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-natchuda",
+      "entryId": "expansion-natchuda",
+      "label": "낮추다 / 낮히다",
+      "patterns": [
+        {
+          "text": "낮히다",
+          "target": "낮히다",
+          "right": "낮추다",
+          "lookup": "낮추다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-nopida",
+      "entryId": "expansion-nopida",
+      "label": "높이다 / 높히다",
+      "patterns": [
+        {
+          "text": "높히다",
+          "target": "높히다",
+          "right": "높이다",
+          "lookup": "높이다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-deopida",
+      "entryId": "expansion-deopida",
+      "label": "덮이다 / 덮히다",
+      "patterns": [
+        {
+          "text": "덮히다",
+          "target": "덮히다",
+          "right": "덮이다",
+          "lookup": "덮이다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-doenoeda",
+      "entryId": "expansion-doenoeda",
+      "label": "되뇌다 / 되내다",
+      "patterns": [
+        {
+          "text": "되내다",
+          "target": "되내다",
+          "right": "되뇌다",
+          "lookup": "되뇌다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-matdaktteurida",
+      "entryId": "expansion-matdaktteurida",
+      "label": "맞닥뜨리다 / 맞닥트리다",
+      "patterns": [
+        {
+          "text": "맞닥트리다",
+          "target": "맞닥트리다",
+          "right": "맞닥뜨리다",
+          "lookup": "맞닥뜨리다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-meomureuda",
+      "entryId": "expansion-meomureuda",
+      "label": "머무르다 / 머물르다",
+      "patterns": [
+        {
+          "text": "머물르다",
+          "target": "머물르다",
+          "right": "머무르다",
+          "lookup": "머무르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-mireobutida",
+      "entryId": "expansion-mireobutida",
+      "label": "밀어붙이다 / 밀어부치다",
+      "patterns": [
+        {
+          "text": "밀어부치다",
+          "target": "밀어부치다",
+          "right": "밀어붙이다",
+          "lookup": "밀어붙이다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-muthida",
+      "entryId": "expansion-muthida",
+      "label": "묻히다 / 뭍히다",
+      "patterns": [
+        {
+          "text": "뭍히다",
+          "target": "뭍히다",
+          "right": "묻히다",
+          "lookup": "묻히다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-bepulda",
+      "entryId": "expansion-bepulda",
+      "label": "베풀다 / 배풀다",
+      "patterns": [
+        {
+          "text": "배풀다",
+          "target": "배풀다",
+          "right": "베풀다",
+          "lookup": "베풀다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-sagwieotda",
+      "entryId": "expansion-sagwieotda",
+      "label": "사귀었다 / 사궜다",
+      "patterns": [
+        {
+          "text": "사궜다",
+          "target": "사궜다",
+          "right": "사귀었다",
+          "lookup": "사귀었다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-umcheurida",
+      "entryId": "expansion-umcheurida",
+      "label": "움츠리다 / 움추리다",
+      "patterns": [
+        {
+          "text": "움추리다",
+          "target": "움추리다",
+          "right": "움츠리다",
+          "lookup": "움츠리다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ireukida",
+      "entryId": "expansion-ireukida",
+      "label": "일으키다 / 이르키다",
+      "patterns": [
+        {
+          "text": "이르키다",
+          "target": "이르키다",
+          "right": "일으키다",
+          "lookup": "일으키다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jieotda",
+      "entryId": "expansion-jieotda",
+      "label": "지었다 / 짓었다",
+      "patterns": [
+        {
+          "text": "짓었다",
+          "target": "짓었다",
+          "right": "지었다",
+          "lookup": "지었다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-dwideopida",
+      "entryId": "expansion-dwideopida",
+      "label": "뒤덮이다 / 뒤덮히다",
+      "patterns": [
+        {
+          "text": "뒤덮히다",
+          "target": "뒤덮히다",
+          "right": "뒤덮이다",
+          "lookup": "뒤덮이다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-hearida",
+      "entryId": "expansion-hearida",
+      "label": "헤아리다 / 해아리다",
+      "patterns": [
+        {
+          "text": "해아리다",
+          "target": "해아리다",
+          "right": "헤아리다",
+          "lookup": "헤아리다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-geoseureuda",
+      "entryId": "expansion-geoseureuda",
+      "label": "거스르다 / 거슬르다",
+      "patterns": [
+        {
+          "text": "거슬르다",
+          "target": "거슬르다",
+          "right": "거스르다",
+          "lookup": "거스르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ttareuda",
+      "entryId": "expansion-ttareuda",
+      "label": "따르다 / 딸르다",
+      "patterns": [
+        {
+          "text": "딸르다",
+          "target": "딸르다",
+          "right": "따르다",
+          "lookup": "따르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-bureuda",
+      "entryId": "expansion-bureuda",
+      "label": "부르다 / 불르다",
+      "patterns": [
+        {
+          "text": "불르다",
+          "target": "불르다",
+          "right": "부르다",
+          "lookup": "부르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-goreuda",
+      "entryId": "expansion-goreuda",
+      "label": "고르다 / 골르다",
+      "patterns": [
+        {
+          "text": "골르다",
+          "target": "골르다",
+          "right": "고르다",
+          "lookup": "고르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-nureuda",
+      "entryId": "expansion-nureuda",
+      "label": "누르다 / 눌르다",
+      "patterns": [
+        {
+          "text": "눌르다",
+          "target": "눌르다",
+          "right": "누르다",
+          "lookup": "누르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gireuda",
+      "entryId": "expansion-gireuda",
+      "label": "기르다 / 길르다",
+      "patterns": [
+        {
+          "text": "길르다",
+          "target": "길르다",
+          "right": "기르다",
+          "lookup": "기르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jareuda",
+      "entryId": "expansion-jareuda",
+      "label": "자르다 / 잘르다",
+      "patterns": [
+        {
+          "text": "잘르다",
+          "target": "잘르다",
+          "right": "자르다",
+          "lookup": "자르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-garaanjda",
+      "entryId": "expansion-garaanjda",
+      "label": "가라앉다 / 가라안다",
+      "patterns": [
+        {
+          "text": "가라안다",
+          "target": "가라안다",
+          "right": "가라앉다",
+          "lookup": "가라앉다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ppareuda",
+      "entryId": "expansion-ppareuda",
+      "label": "빠르다 / 빨르다",
+      "patterns": [
+        {
+          "text": "빨르다",
+          "target": "빨르다",
+          "right": "빠르다",
+          "lookup": "빠르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-geeureuda",
+      "entryId": "expansion-geeureuda",
+      "label": "게으르다 / 게을르다",
+      "patterns": [
+        {
+          "text": "게을르다",
+          "target": "게을르다",
+          "right": "게으르다",
+          "lookup": "게으르다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-bullida",
+      "entryId": "expansion-bullida",
+      "label": "불리다 / 불리우다",
+      "patterns": [
+        {
+          "text": "불리우다",
+          "target": "불리우다",
+          "right": "불리다",
+          "lookup": "불리다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ibeon-ju",
+      "entryId": "expansion-ibeon-ju",
+      "label": "이번 주 / 이번주",
+      "patterns": [
+        {
+          "text": "이번주",
+          "target": "이번주",
+          "right": "이번 주",
+          "lookup": "이번 주"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-daeum-ju",
+      "entryId": "expansion-daeum-ju",
+      "label": "다음 주 / 다음주",
+      "patterns": [
+        {
+          "text": "다음주",
+          "target": "다음주",
+          "right": "다음 주",
+          "lookup": "다음 주"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-myeot-nyeon",
+      "entryId": "expansion-myeot-nyeon",
+      "label": "몇 년 / 몇년",
+      "patterns": [
+        {
+          "text": "몇년",
+          "target": "몇년",
+          "right": "몇 년",
+          "lookup": "몇 년"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-yeoreo-hae",
+      "entryId": "expansion-yeoreo-hae",
+      "label": "여러 해 / 여러해",
+      "patterns": [
+        {
+          "text": "여러해",
+          "target": "여러해",
+          "right": "여러 해",
+          "lookup": "여러 해"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-deo-isang",
+      "entryId": "expansion-deo-isang",
+      "label": "더 이상 / 더이상",
+      "patterns": [
+        {
+          "text": "더이상",
+          "target": "더이상",
+          "right": "더 이상",
+          "lookup": "더 이상"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-maen-meonjeo",
+      "entryId": "expansion-maen-meonjeo",
+      "label": "맨 먼저 / 맨먼저",
+      "patterns": [
+        {
+          "text": "맨먼저",
+          "target": "맨먼저",
+          "right": "맨 먼저",
+          "lookup": "맨 먼저"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gajang-meonjeo",
+      "entryId": "expansion-gajang-meonjeo",
+      "label": "가장 먼저 / 가장먼저",
+      "patterns": [
+        {
+          "text": "가장먼저",
+          "target": "가장먼저",
+          "right": "가장 먼저",
+          "lookup": "가장 먼저"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-hal-gyehoek",
+      "entryId": "expansion-hal-gyehoek",
+      "label": "할 계획 / 할계획",
+      "patterns": [
+        {
+          "text": "할계획",
+          "target": "할계획",
+          "right": "할 계획",
+          "lookup": "할 계획"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gal-yejeong",
+      "entryId": "expansion-gal-yejeong",
+      "label": "갈 예정 / 갈예정",
+      "patterns": [
+        {
+          "text": "갈예정",
+          "target": "갈예정",
+          "right": "갈 예정",
+          "lookup": "갈 예정"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-hal-piryo",
+      "entryId": "expansion-hal-piryo",
+      "label": "할 필요 / 할필요",
+      "patterns": [
+        {
+          "text": "할필요",
+          "target": "할필요",
+          "right": "할 필요",
+          "lookup": "할 필요"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-hagi-wihae",
+      "entryId": "expansion-hagi-wihae",
+      "label": "하기 위해 / 하기위해",
+      "patterns": [
+        {
+          "text": "하기위해",
+          "target": "하기위해",
+          "right": "하기 위해",
+          "lookup": "하기 위해"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-haneun-jung",
+      "entryId": "expansion-haneun-jung",
+      "label": "하는 중 / 하는중",
+      "patterns": [
+        {
+          "text": "하는중",
+          "target": "하는중",
+          "right": "하는 중",
+          "lookup": "하는 중"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-sueop-jung",
+      "entryId": "expansion-sueop-jung",
+      "label": "수업 중 / 수업중",
+      "patterns": [
+        {
+          "text": "수업중",
+          "target": "수업중",
+          "right": "수업 중",
+          "lookup": "수업 중"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gongbu-jung",
+      "entryId": "expansion-gongbu-jung",
+      "label": "공부 중 / 공부중",
+      "patterns": [
+        {
+          "text": "공부중",
+          "target": "공부중",
+          "right": "공부 중",
+          "lookup": "공부 중"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-sayong-jung",
+      "entryId": "expansion-sayong-jung",
+      "label": "사용 중 / 사용중",
+      "patterns": [
+        {
+          "text": "사용중",
+          "target": "사용중",
+          "right": "사용 중",
+          "lookup": "사용 중"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-hoeui-jung",
+      "entryId": "expansion-hoeui-jung",
+      "label": "회의 중 / 회의중",
+      "patterns": [
+        {
+          "text": "회의중",
+          "target": "회의중",
+          "right": "회의 중",
+          "lookup": "회의 중"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-nae-geot",
+      "entryId": "expansion-nae-geot",
+      "label": "내 것 / 내것",
+      "patterns": [
+        {
+          "text": "내것",
+          "target": "내것",
+          "right": "내 것",
+          "lookup": "내 것"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ne-geot",
+      "entryId": "expansion-ne-geot",
+      "label": "네 것 / 네것",
+      "patterns": [
+        {
+          "text": "네것",
+          "target": "네것",
+          "right": "네 것",
+          "lookup": "네 것"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-je-geot",
+      "entryId": "expansion-je-geot",
+      "label": "제 것 / 제것",
+      "patterns": [
+        {
+          "text": "제것",
+          "target": "제것",
+          "right": "제 것",
+          "lookup": "제 것"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-hal-geosinga",
+      "entryId": "expansion-hal-geosinga",
+      "label": "할 것인가 / 할것인가",
+      "patterns": [
+        {
+          "text": "할것인가",
+          "target": "할것인가",
+          "right": "할 것인가",
+          "lookup": "할 것인가"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-bon-jeogi-itda",
+      "entryId": "expansion-bon-jeogi-itda",
+      "label": "본 적이 있다 / 본적이 있다",
+      "patterns": [
+        {
+          "text": "본적이 있다",
+          "target": "본적이 있다",
+          "right": "본 적이 있다",
+          "lookup": "본 적이 있다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-gan-jeogi-itda",
+      "entryId": "expansion-gan-jeogi-itda",
+      "label": "간 적이 있다 / 간적이 있다",
+      "patterns": [
+        {
+          "text": "간적이 있다",
+          "target": "간적이 있다",
+          "right": "간 적이 있다",
+          "lookup": "간 적이 있다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-sseun-jeogi-eopda",
+      "entryId": "expansion-sseun-jeogi-eopda",
+      "label": "쓴 적이 없다 / 쓴적이 없다",
+      "patterns": [
+        {
+          "text": "쓴적이 없다",
+          "target": "쓴적이 없다",
+          "right": "쓴 적이 없다",
+          "lookup": "쓴 적이 없다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-eoneusae",
+      "entryId": "expansion-eoneusae",
+      "label": "어느새 / 어느 새",
+      "patterns": [
+        {
+          "text": "어느 새",
+          "target": "어느 새",
+          "right": "어느새",
+          "lookup": "어느새"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-eoneudeot",
+      "entryId": "expansion-eoneudeot",
+      "label": "어느덧 / 어느 덧",
+      "patterns": [
+        {
+          "text": "어느 덧",
+          "target": "어느 덧",
+          "right": "어느덧",
+          "lookup": "어느덧"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-hankkeobeone",
+      "entryId": "expansion-hankkeobeone",
+      "label": "한꺼번에 / 한 꺼번에",
+      "patterns": [
+        {
+          "text": "한 꺼번에",
+          "target": "한 꺼번에",
+          "right": "한꺼번에",
+          "lookup": "한꺼번에"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-onjongil",
+      "entryId": "expansion-onjongil",
+      "label": "온종일 / 온 종일",
+      "patterns": [
+        {
+          "text": "온 종일",
+          "target": "온 종일",
+          "right": "온종일",
+          "lookup": "온종일"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-myeochiljjae",
+      "entryId": "expansion-myeochiljjae",
+      "label": "며칠째 / 며칠 째",
+      "patterns": [
+        {
+          "text": "며칠 째",
+          "target": "며칠 째",
+          "right": "며칠째",
+          "lookup": "며칠째"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-cheonnal",
+      "entryId": "expansion-cheonnal",
+      "label": "첫날 / 첫 날",
+      "patterns": [
+        {
+          "text": "첫 날",
+          "target": "첫 날",
+          "right": "첫날",
+          "lookup": "첫날"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-hangaunde",
+      "entryId": "expansion-hangaunde",
+      "label": "한가운데 / 한 가운데",
+      "patterns": [
+        {
+          "text": "한 가운데",
+          "target": "한 가운데",
+          "right": "한가운데",
+          "lookup": "한가운데"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-jettae",
+      "entryId": "expansion-jettae",
+      "label": "제때 / 제 때",
+      "patterns": [
+        {
+          "text": "제 때",
+          "target": "제 때",
+          "right": "제때",
+          "lookup": "제때"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-ittae",
+      "entryId": "expansion-ittae",
+      "label": "이때 / 이 때",
+      "patterns": [
+        {
+          "text": "이 때",
+          "target": "이 때",
+          "right": "이때",
+          "lookup": "이때"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-geuttae",
+      "entryId": "expansion-geuttae",
+      "label": "그때 / 그 때",
+      "patterns": [
+        {
+          "text": "그 때",
+          "target": "그 때",
+          "right": "그때",
+          "lookup": "그때"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-geudongan",
+      "entryId": "expansion-geudongan",
+      "label": "그동안 / 그 동안",
+      "patterns": [
+        {
+          "text": "그 동안",
+          "target": "그 동안",
+          "right": "그동안",
+          "lookup": "그동안"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-handongan",
+      "entryId": "expansion-handongan",
+      "label": "한동안 / 한 동안",
+      "patterns": [
+        {
+          "text": "한 동안",
+          "target": "한 동안",
+          "right": "한동안",
+          "lookup": "한동안"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-hanbamjung",
+      "entryId": "expansion-hanbamjung",
+      "label": "한밤중 / 한 밤중",
+      "patterns": [
+        {
+          "text": "한 밤중",
+          "target": "한 밤중",
+          "right": "한밤중",
+          "lookup": "한밤중"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-galsurok",
+      "entryId": "expansion-galsurok",
+      "label": "갈수록 / 갈 수록",
+      "patterns": [
+        {
+          "text": "갈 수록",
+          "target": "갈 수록",
+          "right": "갈수록",
+          "lookup": "갈수록"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-halsurok",
+      "entryId": "expansion-halsurok",
+      "label": "할수록 / 할 수록",
+      "patterns": [
+        {
+          "text": "할 수록",
+          "target": "할 수록",
+          "right": "할수록",
+          "lookup": "할수록"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-doelsurok",
+      "entryId": "expansion-doelsurok",
+      "label": "될수록 / 될 수록",
+      "patterns": [
+        {
+          "text": "될 수록",
+          "target": "될 수록",
+          "right": "될수록",
+          "lookup": "될수록"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-myeochilgan",
+      "entryId": "expansion-myeochilgan",
+      "label": "며칠간 / 며칠 간",
+      "patterns": [
+        {
+          "text": "며칠 간",
+          "target": "며칠 간",
+          "right": "며칠간",
+          "lookup": "며칠간"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-baeteori",
+      "entryId": "expansion-baeteori",
+      "label": "배터리 / 밧데리",
+      "patterns": [
+        {
+          "text": "밧데리",
+          "target": "밧데리",
+          "right": "배터리",
+          "lookup": "배터리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-peuraipaen",
+      "entryId": "expansion-peuraipaen",
+      "label": "프라이팬 / 후라이팬",
+      "patterns": [
+        {
+          "text": "후라이팬",
+          "target": "후라이팬",
+          "right": "프라이팬",
+          "lookup": "프라이팬"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-rideosip",
+      "entryId": "expansion-rideosip",
+      "label": "리더십 / 리더쉽",
+      "patterns": [
+        {
+          "text": "리더쉽",
+          "target": "리더쉽",
+          "right": "리더십",
+          "lookup": "리더십"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-saibeo",
+      "entryId": "expansion-saibeo",
+      "label": "사이버 / 싸이버",
+      "patterns": [
+        {
+          "text": "싸이버",
+          "target": "싸이버",
+          "right": "사이버",
+          "lookup": "사이버"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-saiteu",
+      "entryId": "expansion-saiteu",
+      "label": "사이트 / 싸이트",
+      "patterns": [
+        {
+          "text": "싸이트",
+          "target": "싸이트",
+          "right": "사이트",
+          "lookup": "사이트"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-sainpen",
+      "entryId": "expansion-sainpen",
+      "label": "사인펜 / 싸인펜",
+      "patterns": [
+        {
+          "text": "싸인펜",
+          "target": "싸인펜",
+          "right": "사인펜",
+          "lookup": "사인펜"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-paemilli",
+      "entryId": "expansion-paemilli",
+      "label": "패밀리 / 훼밀리",
+      "patterns": [
+        {
+          "text": "훼밀리",
+          "target": "훼밀리",
+          "right": "패밀리",
+          "lookup": "패밀리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-beurochi",
+      "entryId": "expansion-beurochi",
+      "label": "브로치 / 브로찌",
+      "patterns": [
+        {
+          "text": "브로찌",
+          "target": "브로찌",
+          "right": "브로치",
+          "lookup": "브로치"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-benchi",
+      "entryId": "expansion-benchi",
+      "label": "벤치 / 벤취",
+      "patterns": [
+        {
+          "text": "벤취",
+          "target": "벤취",
+          "right": "벤치",
+          "lookup": "벤치"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-rejeo",
+      "entryId": "expansion-rejeo",
+      "label": "레저 / 레져",
+      "patterns": [
+        {
+          "text": "레져",
+          "target": "레져",
+          "right": "레저",
+          "lookup": "레저"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-chateu",
+      "entryId": "expansion-chateu",
+      "label": "차트 / 챠트",
+      "patterns": [
+        {
+          "text": "챠트",
+          "target": "챠트",
+          "right": "차트",
+          "lookup": "차트"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-neteuwokeu",
+      "entryId": "expansion-neteuwokeu",
+      "label": "네트워크 / 네트웍",
+      "patterns": [
+        {
+          "text": "네트웍",
+          "target": "네트웍",
+          "right": "네트워크",
+          "lookup": "네트워크"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-teipeu",
+      "entryId": "expansion-teipeu",
+      "label": "테이프 / 테잎",
+      "patterns": [
+        {
+          "text": "테잎",
+          "target": "테잎",
+          "right": "테이프",
+          "lookup": "테이프"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-keoteun",
+      "entryId": "expansion-keoteun",
+      "label": "커튼 / 커텐",
+      "patterns": [
+        {
+          "text": "커텐",
+          "target": "커텐",
+          "right": "커튼",
+          "lookup": "커튼"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-daineomaiteu",
+      "entryId": "expansion-daineomaiteu",
+      "label": "다이너마이트 / 다이나마이트",
+      "patterns": [
+        {
+          "text": "다이나마이트",
+          "target": "다이나마이트",
+          "right": "다이너마이트",
+          "lookup": "다이너마이트"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-deiteo",
+      "entryId": "expansion-deiteo",
+      "label": "데이터 / 데이타",
+      "patterns": [
+        {
+          "text": "데이타",
+          "target": "데이타",
+          "right": "데이터",
+          "lookup": "데이터"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-dijiteol",
+      "entryId": "expansion-dijiteol",
+      "label": "디지털 / 디지탈",
+      "patterns": [
+        {
+          "text": "디지탈",
+          "target": "디지탈",
+          "right": "디지털",
+          "lookup": "디지털"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-royeolti",
+      "entryId": "expansion-royeolti",
+      "label": "로열티 / 로얄티",
+      "patterns": [
+        {
+          "text": "로얄티",
+          "target": "로얄티",
+          "right": "로열티",
+          "lookup": "로열티"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-roteori",
+      "entryId": "expansion-roteori",
+      "label": "로터리 / 로타리",
+      "patterns": [
+        {
+          "text": "로타리",
+          "target": "로타리",
+          "right": "로터리",
+          "lookup": "로터리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-senteo",
+      "entryId": "expansion-senteo",
+      "label": "센터 / 센타",
+      "patterns": [
+        {
+          "text": "센타",
+          "target": "센타",
+          "right": "센터",
+          "lookup": "센터"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-orijineol",
+      "entryId": "expansion-orijineol",
+      "label": "오리지널 / 오리지날",
+      "patterns": [
+        {
+          "text": "오리지날",
+          "target": "오리지날",
+          "right": "오리지널",
+          "lookup": "오리지널"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-baelleonseu",
+      "entryId": "expansion-baelleonseu",
+      "label": "밸런스 / 발란스",
+      "patterns": [
+        {
+          "text": "발란스",
+          "target": "발란스",
+          "right": "밸런스",
+          "lookup": "밸런스"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-syaesi",
+      "entryId": "expansion-syaesi",
+      "label": "섀시 / 샷시",
+      "patterns": [
+        {
+          "text": "샷시",
+          "target": "샷시",
+          "right": "섀시",
+          "lookup": "섀시"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-konsepteu",
+      "entryId": "expansion-konsepteu",
+      "label": "콘셉트 / 컨셉트",
+      "patterns": [
+        {
+          "text": "컨셉트",
+          "target": "컨셉트",
+          "right": "콘셉트",
+          "lookup": "콘셉트"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-tekeunolloji",
+      "entryId": "expansion-tekeunolloji",
+      "label": "테크놀로지 / 테크놀러지",
+      "patterns": [
+        {
+          "text": "테크놀러지",
+          "target": "테크놀러지",
+          "right": "테크놀로지",
+          "lookup": "테크놀로지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-baeteon",
+      "entryId": "expansion-baeteon",
+      "label": "배턴 / 바톤",
+      "patterns": [
+        {
+          "text": "바톤",
+          "target": "바톤",
+          "right": "배턴",
+          "lookup": "배턴"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-direkteori",
+      "entryId": "expansion-direkteori",
+      "label": "디렉터리 / 디렉토리",
+      "patterns": [
+        {
+          "text": "디렉토리",
+          "target": "디렉토리",
+          "right": "디렉터리",
+          "lookup": "디렉터리"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-seupeonji",
+      "entryId": "expansion-seupeonji",
+      "label": "스펀지 / 스폰지",
+      "patterns": [
+        {
+          "text": "스폰지",
+          "target": "스폰지",
+          "right": "스펀지",
+          "lookup": "스펀지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-eeokeon",
+      "entryId": "expansion-eeokeon",
+      "label": "에어컨 / 에어콘",
+      "patterns": [
+        {
+          "text": "에어콘",
+          "target": "에어콘",
+          "right": "에어컨",
+          "lookup": "에어컨"
+        }
+      ]
+    },
+    {
+      "id": "elementary-expansion-paempeullit",
+      "entryId": "expansion-paempeullit",
+      "label": "팸플릿 / 팜플렛",
+      "patterns": [
+        {
+          "text": "팜플렛",
+          "target": "팜플렛",
+          "right": "팸플릿",
+          "lookup": "팸플릿"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-001",
+      "entryId": "practice-spelling-quiz-001",
+      "label": "되 / 돼",
+      "patterns": [
+        {
+          "text": "이제 집에 가도 되",
+          "target": "되",
+          "targetOffset": 9,
+          "right": "돼",
+          "lookup": "돼"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-002",
+      "entryId": "practice-spelling-quiz-002",
+      "label": "될 / 됄",
+      "patterns": [
+        {
+          "text": "나는 훌륭한 사람이 됄 거야",
+          "target": "됄",
+          "targetOffset": 11,
+          "right": "될",
+          "lookup": "될"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-003",
+      "entryId": "practice-spelling-quiz-003",
+      "label": "안되 / 안 돼",
+      "patterns": [
+        {
+          "text": "그렇게 하면 안되",
+          "target": "안되",
+          "targetOffset": 7,
+          "right": "안 돼",
+          "lookup": "안 돼"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-004",
+      "entryId": "practice-spelling-quiz-004",
+      "label": "됬어 / 됐어",
+      "patterns": [
+        {
+          "text": "준비가 다 됬어",
+          "target": "됬어",
+          "targetOffset": 6,
+          "right": "됐어",
+          "lookup": "됐어"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-005",
+      "entryId": "practice-spelling-quiz-005",
+      "label": "된데 / 된대",
+      "patterns": [
+        {
+          "text": "다 하면 게임을 해도 된데",
+          "target": "된데",
+          "targetOffset": 12,
+          "right": "된대",
+          "lookup": "된대"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-006",
+      "entryId": "practice-spelling-quiz-006",
+      "label": "안 / 않",
+      "patterns": [
+        {
+          "text": "오늘은 학교에 않 간다",
+          "target": "않",
+          "targetOffset": 8,
+          "right": "안",
+          "lookup": "안"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-007",
+      "entryId": "practice-spelling-quiz-007",
+      "label": "안았다 / 않았다",
+      "patterns": [
+        {
+          "text": "숙제를 하지 안았다",
+          "target": "안았다",
+          "targetOffset": 7,
+          "right": "않았다",
+          "lookup": "않았다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-008",
+      "entryId": "practice-spelling-quiz-008",
+      "label": "안고 / 않고",
+      "patterns": [
+        {
+          "text": "밥을 먹지 안고 나왔다",
+          "target": "안고",
+          "targetOffset": 6,
+          "right": "않고",
+          "lookup": "않고"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-009",
+      "entryId": "practice-spelling-quiz-009",
+      "label": "안는다 / 않는다",
+      "patterns": [
+        {
+          "text": "매운 음식을 잘 먹지 안는다",
+          "target": "안는다",
+          "targetOffset": 12,
+          "right": "않는다",
+          "lookup": "않는다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-010",
+      "entryId": "practice-spelling-quiz-010",
+      "label": "안 했다 / 않았다",
+      "patterns": [
+        {
+          "text": "오늘은 숙제를 않았다",
+          "target": "않았다",
+          "targetOffset": 8,
+          "right": "안 했다",
+          "lookup": "안 했다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-011",
+      "entryId": "practice-spelling-quiz-011",
+      "label": "왠 / 웬",
+      "patterns": [
+        {
+          "text": "왠 사람이 우리 ",
+          "target": "왠",
+          "targetOffset": 0,
+          "right": "웬",
+          "lookup": "웬"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-012",
+      "entryId": "practice-spelling-quiz-012",
+      "label": "왠지 / 웬지",
+      "patterns": [
+        {
+          "text": "오늘은 웬지 기분이 좋다",
+          "target": "웬지",
+          "targetOffset": 4,
+          "right": "왠지",
+          "lookup": "왠지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-013",
+      "entryId": "practice-spelling-quiz-013",
+      "label": "왠일 / 웬일",
+      "patterns": [
+        {
+          "text": "이게 왠일이야",
+          "target": "왠일",
+          "targetOffset": 3,
+          "right": "웬일",
+          "lookup": "웬일"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-014",
+      "entryId": "practice-spelling-quiz-014",
+      "label": "왠만하면 / 웬만하면",
+      "patterns": [
+        {
+          "text": "왠만하면 친구와 사이좋",
+          "target": "왠만하면",
+          "targetOffset": 0,
+          "right": "웬만하면",
+          "lookup": "웬만하면"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-015",
+      "entryId": "practice-spelling-quiz-015",
+      "label": "몇일 / 며칠",
+      "patterns": [
+        {
+          "text": "방학까지 몇일 남았니",
+          "target": "몇일",
+          "targetOffset": 5,
+          "right": "며칠",
+          "lookup": "며칠"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-016",
+      "entryId": "practice-spelling-quiz-016",
+      "label": "몇 일 / 며칠",
+      "patterns": [
+        {
+          "text": "너 생일이 몇 월 몇 일이야",
+          "target": "몇 일",
+          "targetOffset": 10,
+          "right": "며칠",
+          "lookup": "며칠"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-017",
+      "entryId": "practice-spelling-quiz-017",
+      "label": "오랫만에 / 오랜만에",
+      "patterns": [
+        {
+          "text": "친구를 오랫만에 만났다",
+          "target": "오랫만에",
+          "targetOffset": 4,
+          "right": "오랜만에",
+          "lookup": "오랜만에"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-018",
+      "entryId": "practice-spelling-quiz-018",
+      "label": "오랜동안 / 오랫동안",
+      "patterns": [
+        {
+          "text": "우리는 오랜동안 이야기를 나눴",
+          "target": "오랜동안",
+          "targetOffset": 4,
+          "right": "오랫동안",
+          "lookup": "오랫동안"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-019",
+      "entryId": "practice-spelling-quiz-019",
+      "label": "금새 / 금세",
+      "patterns": [
+        {
+          "text": "아이스크림이 금새 녹았다",
+          "target": "금새",
+          "targetOffset": 7,
+          "right": "금세",
+          "lookup": "금세"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-020",
+      "entryId": "practice-spelling-quiz-020",
+      "label": "금새 / 금세",
+      "patterns": [
+        {
+          "text": "숙제를 끝냈다니 정말 금새 했구나",
+          "target": "금새",
+          "targetOffset": 12,
+          "right": "금세",
+          "lookup": "금세"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-021",
+      "entryId": "practice-spelling-quiz-021",
+      "label": "설겆이 / 설거지",
+      "patterns": [
+        {
+          "text": "저녁을 먹고 설겆이를 했다",
+          "target": "설겆이",
+          "targetOffset": 7,
+          "right": "설거지",
+          "lookup": "설거지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-022",
+      "entryId": "practice-spelling-quiz-022",
+      "label": "깨끗히 / 깨끗이",
+      "patterns": [
+        {
+          "text": "교실을 깨끗히 청소했다",
+          "target": "깨끗히",
+          "targetOffset": 4,
+          "right": "깨끗이",
+          "lookup": "깨끗이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-023",
+      "entryId": "practice-spelling-quiz-023",
+      "label": "꼼꼼이 / 꼼꼼히",
+      "patterns": [
+        {
+          "text": "시험지를 꼼꼼이 살펴보았다",
+          "target": "꼼꼼이",
+          "targetOffset": 5,
+          "right": "꼼꼼히",
+          "lookup": "꼼꼼히"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-024",
+      "entryId": "practice-spelling-quiz-024",
+      "label": "가만이 / 가만히",
+      "patterns": [
+        {
+          "text": "의자에 가만이 앉아 있었다",
+          "target": "가만이",
+          "targetOffset": 4,
+          "right": "가만히",
+          "lookup": "가만히"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-025",
+      "entryId": "practice-spelling-quiz-025",
+      "label": "곰곰히 / 곰곰이",
+      "patterns": [
+        {
+          "text": "문제를 곰곰히 생각했다",
+          "target": "곰곰히",
+          "targetOffset": 4,
+          "right": "곰곰이",
+          "lookup": "곰곰이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-026",
+      "entryId": "practice-spelling-quiz-026",
+      "label": "틈틈히 / 틈틈이",
+      "patterns": [
+        {
+          "text": "시간이 날 때마다 틈틈히 책을 읽었다",
+          "target": "틈틈히",
+          "targetOffset": 10,
+          "right": "틈틈이",
+          "lookup": "틈틈이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-027",
+      "entryId": "practice-spelling-quiz-027",
+      "label": "일일히 / 일일이",
+      "patterns": [
+        {
+          "text": "선생님께서 숙제를 일일히 확인하셨다",
+          "target": "일일히",
+          "targetOffset": 10,
+          "right": "일일이",
+          "lookup": "일일이"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-028",
+      "entryId": "practice-spelling-quiz-028",
+      "label": "솔직이 / 솔직히",
+      "patterns": [
+        {
+          "text": "내 생각을 솔직이 말했다",
+          "target": "솔직이",
+          "targetOffset": 6,
+          "right": "솔직히",
+          "lookup": "솔직히"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-029",
+      "entryId": "practice-spelling-quiz-029",
+      "label": "자세이 / 자세히",
+      "patterns": [
+        {
+          "text": "친구의 말을 자세이 들어 보았다",
+          "target": "자세이",
+          "targetOffset": 7,
+          "right": "자세히",
+          "lookup": "자세히"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-030",
+      "entryId": "practice-spelling-quiz-030",
+      "label": "천천이 / 천천히",
+      "patterns": [
+        {
+          "text": "발표를 천천이 시작했다",
+          "target": "천천이",
+          "targetOffset": 4,
+          "right": "천천히",
+          "lookup": "천천히"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-031",
+      "entryId": "practice-spelling-quiz-031",
+      "label": "낳았다 / 나았다",
+      "patterns": [
+        {
+          "text": "감기가 어제보다 낳았다",
+          "target": "낳았다",
+          "targetOffset": 9,
+          "right": "나았다",
+          "lookup": "나았다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-032",
+      "entryId": "practice-spelling-quiz-032",
+      "label": "낳을 / 나을",
+      "patterns": [
+        {
+          "text": " 먹으면 감기가 빨리 낳을 거야",
+          "target": "낳을",
+          "targetOffset": 12,
+          "right": "나을",
+          "lookup": "나을"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-033",
+      "entryId": "practice-spelling-quiz-033",
+      "label": "나았다 / 낳았다",
+      "patterns": [
+        {
+          "text": "강아지가 새끼를 나았다",
+          "target": "나았다",
+          "targetOffset": 9,
+          "right": "낳았다",
+          "lookup": "낳았다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-034",
+      "entryId": "practice-spelling-quiz-034",
+      "label": "낫다 / 낮다",
+      "patterns": [
+        {
+          "text": " 저 의자보다 높이가 낫다",
+          "target": "낫다",
+          "targetOffset": 12,
+          "right": "낮다",
+          "lookup": "낮다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-035",
+      "entryId": "practice-spelling-quiz-035",
+      "label": "낫다 / 낮다",
+      "patterns": [
+        {
+          "text": "나는 이 방법이 더 낮다고 생각한다",
+          "target": "낮다",
+          "targetOffset": 11,
+          "right": "낫다",
+          "lookup": "낫다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-036",
+      "entryId": "practice-spelling-quiz-036",
+      "label": "맞췄다 / 맞혔다",
+      "patterns": [
+        {
+          "text": "퀴즈의 정답을 맞췄다",
+          "target": "맞췄다",
+          "targetOffset": 8,
+          "right": "맞혔다",
+          "lookup": "맞혔다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-037",
+      "entryId": "practice-spelling-quiz-037",
+      "label": "맞혀 / 맞춰",
+      "patterns": [
+        {
+          "text": "친구와 서로 답을 맞혀 보았다",
+          "target": "맞혀",
+          "targetOffset": 10,
+          "right": "맞춰",
+          "lookup": "맞춰"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-038",
+      "entryId": "practice-spelling-quiz-038",
+      "label": "맞혔다 / 맞췄다",
+      "patterns": [
+        {
+          "text": "시계를 정확한 시간에 맞혔다",
+          "target": "맞혔다",
+          "targetOffset": 12,
+          "right": "맞췄다",
+          "lookup": "맞췄다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-039",
+      "entryId": "practice-spelling-quiz-039",
+      "label": "가리켜 / 가르쳐",
+      "patterns": [
+        {
+          "text": "선생님께서 수학을 가리켜 주셨다",
+          "target": "가리켜",
+          "targetOffset": 10,
+          "right": "가르쳐",
+          "lookup": "가르쳐"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-040",
+      "entryId": "practice-spelling-quiz-040",
+      "label": "가르쳤다 / 가리켰다",
+      "patterns": [
+        {
+          "text": "가 손가락으로 하늘을 가르쳤다",
+          "target": "가르쳤다",
+          "targetOffset": 12,
+          "right": "가리켰다",
+          "lookup": "가리켰다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-041",
+      "entryId": "practice-spelling-quiz-041",
+      "label": "잊어버렸다 / 잃어버렸다",
+      "patterns": [
+        {
+          "text": "운동장에서 지갑을 잊어버렸다",
+          "target": "잊어버렸다",
+          "targetOffset": 10,
+          "right": "잃어버렸다",
+          "lookup": "잃어버렸다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-042",
+      "entryId": "practice-spelling-quiz-042",
+      "label": "잃어버렸다 / 잊어버렸다",
+      "patterns": [
+        {
+          "text": "친구와의 약속을 잃어버렸다",
+          "target": "잃어버렸다",
+          "targetOffset": 9,
+          "right": "잊어버렸다",
+          "lookup": "잊어버렸다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-043",
+      "entryId": "practice-spelling-quiz-043",
+      "label": "부쳤다 / 붙였다",
+      "patterns": [
+        {
+          "text": "벽에 사진을 부쳤다",
+          "target": "부쳤다",
+          "targetOffset": 7,
+          "right": "붙였다",
+          "lookup": "붙였다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-044",
+      "entryId": "practice-spelling-quiz-044",
+      "label": "붙였다 / 부쳤다",
+      "patterns": [
+        {
+          "text": "할머니께 편지를 붙였다",
+          "target": "붙였다",
+          "targetOffset": 9,
+          "right": "부쳤다",
+          "lookup": "부쳤다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-045",
+      "entryId": "practice-spelling-quiz-045",
+      "label": "붙였다 / 부쳤다",
+      "patterns": [
+        {
+          "text": "소포를 우체국에서 붙였다",
+          "target": "붙였다",
+          "targetOffset": 10,
+          "right": "부쳤다",
+          "lookup": "부쳤다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-046",
+      "entryId": "practice-spelling-quiz-046",
+      "label": "부쳤다 / 붙였다",
+      "patterns": [
+        {
+          "text": "이름표를 가슴에 부쳤다",
+          "target": "부쳤다",
+          "targetOffset": 9,
+          "right": "붙였다",
+          "lookup": "붙였다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-047",
+      "entryId": "practice-spelling-quiz-047",
+      "label": "맸다 / 멨다",
+      "patterns": [
+        {
+          "text": "가방을 어깨에 맸다",
+          "target": "맸다",
+          "targetOffset": 8,
+          "right": "멨다",
+          "lookup": "멨다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-048",
+      "entryId": "practice-spelling-quiz-048",
+      "label": "멨다 / 맸다",
+      "patterns": [
+        {
+          "text": "신발 끈을 단단히 멨다",
+          "target": "멨다",
+          "targetOffset": 10,
+          "right": "맸다",
+          "lookup": "맸다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-049",
+      "entryId": "practice-spelling-quiz-049",
+      "label": "메었다 / 매었다",
+      "patterns": [
+        {
+          "text": "안전띠를 메었다",
+          "target": "메었다",
+          "targetOffset": 5,
+          "right": "매었다",
+          "lookup": "매었다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-050",
+      "entryId": "practice-spelling-quiz-050",
+      "label": "맸다 / 멨다",
+      "patterns": [
+        {
+          "text": "무거운 배낭을 등에 맸다",
+          "target": "맸다",
+          "targetOffset": 11,
+          "right": "멨다",
+          "lookup": "멨다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-051",
+      "entryId": "practice-spelling-quiz-051",
+      "label": "배었다 / 베었다",
+      "patterns": [
+        {
+          "text": "종이에 손가락을 배었다",
+          "target": "배었다",
+          "targetOffset": 9,
+          "right": "베었다",
+          "lookup": "베었다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-052",
+      "entryId": "practice-spelling-quiz-052",
+      "label": "베었다 / 배었다",
+      "patterns": [
+        {
+          "text": "옷에 음식 냄새가 베었다",
+          "target": "베었다",
+          "targetOffset": 10,
+          "right": "배었다",
+          "lookup": "배었다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-053",
+      "entryId": "practice-spelling-quiz-053",
+      "label": "베었다 / 배었다",
+      "patterns": [
+        {
+          "text": "땀이 옷에 베었다",
+          "target": "베었다",
+          "targetOffset": 6,
+          "right": "배었다",
+          "lookup": "배었다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-054",
+      "entryId": "practice-spelling-quiz-054",
+      "label": "들렸다 / 들렀다",
+      "patterns": [
+        {
+          "text": " 가는 길에 문구점에 들렸다",
+          "target": "들렸다",
+          "targetOffset": 12,
+          "right": "들렀다",
+          "lookup": "들렀다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-055",
+      "entryId": "practice-spelling-quiz-055",
+      "label": "들렀다 / 들렸다",
+      "patterns": [
+        {
+          "text": "어디선가 노랫소리가 들렀다",
+          "target": "들렀다",
+          "targetOffset": 11,
+          "right": "들렸다",
+          "lookup": "들렸다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-056",
+      "entryId": "practice-spelling-quiz-056",
+      "label": "치뤘다 / 치렀다",
+      "patterns": [
+        {
+          "text": "오늘 학교에서 시험을 치뤘다",
+          "target": "치뤘다",
+          "targetOffset": 12,
+          "right": "치렀다",
+          "lookup": "치렀다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-057",
+      "entryId": "practice-spelling-quiz-057",
+      "label": "담궜다 / 담갔다",
+      "patterns": [
+        {
+          "text": "어머니께서 김치를 담궜다",
+          "target": "담궜다",
+          "targetOffset": 10,
+          "right": "담갔다",
+          "lookup": "담갔다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-058",
+      "entryId": "practice-spelling-quiz-058",
+      "label": "잠궜다 / 잠갔다",
+      "patterns": [
+        {
+          "text": "외출하기 전에 문을 잠궜다",
+          "target": "잠궜다",
+          "targetOffset": 11,
+          "right": "잠갔다",
+          "lookup": "잠갔다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-059",
+      "entryId": "practice-spelling-quiz-059",
+      "label": "건들지 / 건드리지",
+      "patterns": [
+        {
+          "text": "전시된 물건을 함부로 건들지 마세요",
+          "target": "건들지",
+          "targetOffset": 12,
+          "right": "건드리지",
+          "lookup": "건드리지"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-060",
+      "entryId": "practice-spelling-quiz-060",
+      "label": "바램 / 바람",
+      "patterns": [
+        {
+          "text": "내 바램은 가족이 행복",
+          "target": "바램",
+          "targetOffset": 2,
+          "right": "바람",
+          "lookup": "바람"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-061",
+      "entryId": "practice-spelling-quiz-061",
+      "label": "바래 / 바라",
+      "patterns": [
+        {
+          "text": "네가 건강하기를 바래",
+          "target": "바래",
+          "targetOffset": 9,
+          "right": "바라",
+          "lookup": "바라"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-062",
+      "entryId": "practice-spelling-quiz-062",
+      "label": "바랬다 / 바랐다",
+      "patterns": [
+        {
+          "text": "오래된 사진의 색이 바랐다",
+          "target": "바랐다",
+          "targetOffset": 11,
+          "right": "바랬다",
+          "lookup": "바랬다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-063",
+      "entryId": "practice-spelling-quiz-063",
+      "label": "어의가 / 어이가",
+      "patterns": [
+        {
+          "text": "너무 황당해서 어의가 없었다",
+          "target": "어의가",
+          "targetOffset": 8,
+          "right": "어이가",
+          "lookup": "어이가"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-064",
+      "entryId": "practice-spelling-quiz-064",
+      "label": "희안한 / 희한한",
+      "patterns": [
+        {
+          "text": "정말 희안한 일이 생겼다",
+          "target": "희안한",
+          "targetOffset": 3,
+          "right": "희한한",
+          "lookup": "희한한"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-065",
+      "entryId": "practice-spelling-quiz-065",
+      "label": "역활 / 역할",
+      "patterns": [
+        {
+          "text": "모둠에서 각자의 역활을 정했다",
+          "target": "역활",
+          "targetOffset": 9,
+          "right": "역할",
+          "lookup": "역할"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-066",
+      "entryId": "practice-spelling-quiz-066",
+      "label": "통채로 / 통째로",
+      "patterns": [
+        {
+          "text": "수박을 통채로 가져왔다",
+          "target": "통채로",
+          "targetOffset": 4,
+          "right": "통째로",
+          "lookup": "통째로"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-067",
+      "entryId": "practice-spelling-quiz-067",
+      "label": "데 / 대",
+      "patterns": [
+        {
+          "text": "친구가 내일 전학을 간데",
+          "target": "데",
+          "targetOffset": 12,
+          "right": "대",
+          "lookup": "대"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-068",
+      "entryId": "practice-spelling-quiz-068",
+      "label": "데 / 대",
+      "patterns": [
+        {
+          "text": "동생이 이 과자가 맛있데",
+          "target": "데",
+          "targetOffset": 12,
+          "right": "대",
+          "lookup": "대"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-069",
+      "entryId": "practice-spelling-quiz-069",
+      "label": "데 / 대",
+      "patterns": [
+        {
+          "text": "내가 어제 가 봤는대 정말 재미있었",
+          "target": "대",
+          "targetOffset": 10,
+          "right": "데",
+          "lookup": "데"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-070",
+      "entryId": "practice-spelling-quiz-070",
+      "label": "대 / 데",
+      "patterns": [
+        {
+          "text": "숙제하는 대 한 시간이 걸",
+          "target": "대",
+          "targetOffset": 5,
+          "right": "데",
+          "lookup": "데"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-071",
+      "entryId": "practice-spelling-quiz-071",
+      "label": "든·든 / 던·던",
+      "patterns": [
+        {
+          "text": "사과던 배던 하나 골라라",
+          "target": "사과던 배던 하나 골라라",
+          "targetOffset": 0,
+          "right": "든, 든",
+          "lookup": "든, 든"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-072",
+      "entryId": "practice-spelling-quiz-072",
+      "label": "든 / 던",
+      "patterns": [
+        {
+          "text": "내가 어제 먹었든 빵이다",
+          "target": "든",
+          "targetOffset": 8,
+          "right": "던",
+          "lookup": "던"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-073",
+      "entryId": "practice-spelling-quiz-073",
+      "label": "든 / 던",
+      "patterns": [
+        {
+          "text": "어디에 가던 연락해 줘",
+          "target": "던",
+          "targetOffset": 5,
+          "right": "든",
+          "lookup": "든"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-074",
+      "entryId": "practice-spelling-quiz-074",
+      "label": "든 / 던",
+      "patterns": [
+        {
+          "text": "예전에 자주 놀든 놀이터다",
+          "target": "든",
+          "targetOffset": 8,
+          "right": "던",
+          "lookup": "던"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-075",
+      "entryId": "practice-spelling-quiz-075",
+      "label": "채 / 체",
+      "patterns": [
+        {
+          "text": "모르는 채하고 지나갔다",
+          "target": "채",
+          "targetOffset": 4,
+          "right": "체",
+          "lookup": "체"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-076",
+      "entryId": "practice-spelling-quiz-076",
+      "label": "체 / 채",
+      "patterns": [
+        {
+          "text": "신발을 신은 체 방에 들어왔다",
+          "target": "체",
+          "targetOffset": 7,
+          "right": "채",
+          "lookup": "채"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-077",
+      "entryId": "practice-spelling-quiz-077",
+      "label": "채 / 체",
+      "patterns": [
+        {
+          "text": "자는 채 눈을 감고 있",
+          "target": "채",
+          "targetOffset": 3,
+          "right": "체",
+          "lookup": "체"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-078",
+      "entryId": "practice-spelling-quiz-078",
+      "label": "체 / 채",
+      "patterns": [
+        {
+          "text": "가방을 멘 체 의자에 앉았다",
+          "target": "체",
+          "targetOffset": 6,
+          "right": "채",
+          "lookup": "채"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-079",
+      "entryId": "practice-spelling-quiz-079",
+      "label": "에요 / 이에요",
+      "patterns": [
+        {
+          "text": "이것은 제 책에요",
+          "target": "에요",
+          "targetOffset": 7,
+          "right": "이에요",
+          "lookup": "이에요"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-080",
+      "entryId": "practice-spelling-quiz-080",
+      "label": "에요 / 예요",
+      "patterns": [
+        {
+          "text": "저는 민수에요",
+          "target": "에요",
+          "targetOffset": 5,
+          "right": "예요",
+          "lookup": "예요"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-081",
+      "entryId": "practice-spelling-quiz-081",
+      "label": "이예요 / 이에요",
+      "patterns": [
+        {
+          "text": "저 사람은 우리 선생님이예요",
+          "target": "이예요",
+          "targetOffset": 12,
+          "right": "이에요",
+          "lookup": "이에요"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-082",
+      "entryId": "practice-spelling-quiz-082",
+      "label": "거에요 / 거예요",
+      "patterns": [
+        {
+          "text": "내일 비가 올 거에요",
+          "target": "거에요",
+          "targetOffset": 8,
+          "right": "거예요",
+          "lookup": "거예요"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-083",
+      "entryId": "practice-spelling-quiz-083",
+      "label": "할께 / 할게",
+      "patterns": [
+        {
+          "text": "내가 청소를 할께",
+          "target": "할께",
+          "targetOffset": 7,
+          "right": "할게",
+          "lookup": "할게"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-084",
+      "entryId": "practice-spelling-quiz-084",
+      "label": "할께 / 할게",
+      "patterns": [
+        {
+          "text": "조금 있다가 전화할께",
+          "target": "할께",
+          "targetOffset": 9,
+          "right": "할게",
+          "lookup": "할게"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-085",
+      "entryId": "practice-spelling-quiz-085",
+      "label": "갈께 / 갈게",
+      "patterns": [
+        {
+          "text": "나도 같이 갈께",
+          "target": "갈께",
+          "targetOffset": 6,
+          "right": "갈게",
+          "lookup": "갈게"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-086",
+      "entryId": "practice-spelling-quiz-086",
+      "label": "갈껄 / 갈걸",
+      "patterns": [
+        {
+          "text": "그때 같이 갈껄 그랬다",
+          "target": "갈껄",
+          "targetOffset": 6,
+          "right": "갈걸",
+          "lookup": "갈걸"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-087",
+      "entryId": "practice-spelling-quiz-087",
+      "label": "볼껄 / 볼걸",
+      "patterns": [
+        {
+          "text": "나도 한 번 해 볼껄",
+          "target": "볼껄",
+          "targetOffset": 9,
+          "right": "볼걸",
+          "lookup": "볼걸"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-088",
+      "entryId": "practice-spelling-quiz-088",
+      "label": "할수 있다 / 할 수 있다",
+      "patterns": [
+        {
+          "text": "나는 혼자서도 할수 있다",
+          "target": "할수 있다",
+          "targetOffset": 8,
+          "right": "할 수 있다",
+          "lookup": "할 수 있다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-089",
+      "entryId": "practice-spelling-quiz-089",
+      "label": "갈것이다 / 갈 것이다",
+      "patterns": [
+        {
+          "text": "내일 도서관에 갈것이다",
+          "target": "갈것이다",
+          "targetOffset": 8,
+          "right": "갈 것이다",
+          "lookup": "갈 것이다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-090",
+      "entryId": "practice-spelling-quiz-090",
+      "label": "한개 / 한 개",
+      "patterns": [
+        {
+          "text": "사과를 한개 먹었다",
+          "target": "한개",
+          "targetOffset": 4,
+          "right": "한 개",
+          "lookup": "한 개"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-091",
+      "entryId": "practice-spelling-quiz-091",
+      "label": "세명 / 세 명",
+      "patterns": [
+        {
+          "text": "운동장에 학생 세명이 있다",
+          "target": "세명",
+          "targetOffset": 8,
+          "right": "세 명",
+          "lookup": "세 명"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-092",
+      "entryId": "practice-spelling-quiz-092",
+      "label": "두잔 / 두 잔",
+      "patterns": [
+        {
+          "text": "물을 두잔 마셨다",
+          "target": "두잔",
+          "targetOffset": 3,
+          "right": "두 잔",
+          "lookup": "두 잔"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-093",
+      "entryId": "practice-spelling-quiz-093",
+      "label": "한번 / 한 번",
+      "patterns": [
+        {
+          "text": "나도 한번 해 보고 싶다",
+          "target": "한번",
+          "targetOffset": 3,
+          "right": "한 번",
+          "lookup": "한 번"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-094",
+      "entryId": "practice-spelling-quiz-094",
+      "label": "후에 / 후 에",
+      "patterns": [
+        {
+          "text": "밥을 먹은 후 에 운동했다",
+          "target": "후 에",
+          "targetOffset": 6,
+          "right": "후에",
+          "lookup": "후에"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-095",
+      "entryId": "practice-spelling-quiz-095",
+      "label": "것같다 / 것 같다",
+      "patterns": [
+        {
+          "text": "곧 비가 올 것같다",
+          "target": "것같다",
+          "targetOffset": 7,
+          "right": "것 같다",
+          "lookup": "것 같다"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-096",
+      "entryId": "practice-spelling-quiz-096",
+      "label": "한후 / 한 후",
+      "patterns": [
+        {
+          "text": "숙제를 다 한후 놀았다",
+          "target": "한후",
+          "targetOffset": 6,
+          "right": "한 후",
+          "lookup": "한 후"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-097",
+      "entryId": "practice-spelling-quiz-097",
+      "label": "갈때 / 갈 때",
+      "patterns": [
+        {
+          "text": "집에 갈때 비가 왔다",
+          "target": "갈때",
+          "targetOffset": 3,
+          "right": "갈 때",
+          "lookup": "갈 때"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-098",
+      "entryId": "practice-spelling-quiz-098",
+      "label": "먹은뒤 / 먹은 뒤",
+      "patterns": [
+        {
+          "text": "밥을 먹은뒤 이를 닦았다",
+          "target": "먹은뒤",
+          "targetOffset": 3,
+          "right": "먹은 뒤",
+          "lookup": "먹은 뒤"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-099",
+      "entryId": "practice-spelling-quiz-099",
+      "label": "대로 / 데로",
+      "patterns": [
+        {
+          "text": "아는 데로 설명해 봐",
+          "target": "데로",
+          "targetOffset": 3,
+          "right": "대로",
+          "lookup": "대로"
+        }
+      ]
+    },
+    {
+      "id": "elementary-practice-spelling-quiz-100",
+      "entryId": "practice-spelling-quiz-100",
+      "label": "데로 / 대로",
+      "patterns": [
+        {
+          "text": "선생님 말씀데로 따라 했다",
+          "target": "데로",
+          "targetOffset": 6,
+          "right": "대로",
+          "lookup": "대로"
+        }
+      ]
+    }
+  ]
+}
