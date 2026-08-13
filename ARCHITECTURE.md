@@ -95,6 +95,11 @@
 - 연구소 서버 액션은 `auth.uid()`만으로 허용하지 않고 `auth_user_role()`의 실제 DB 연결·승인 결과를 매번
   확인한다. 승인 교사의 `writing_helper.teacher_profiles`는 첫 진입에만 멱등 준비하며 기존 이름·학급·방·결과는
   덮어쓰지 않는다.
+- 통합 `/lab`의 학급·학생 원장은 `public.classes`·`public.students`뿐이다. 연구소가 명단을 복제하거나 별도
+  학급을 만들지 않으며, 아지트에서 바꾼 현재 활성 명단을 화면 진입 때 직접 읽는다. 신규 활동은
+  `writing_helper.rooms.agit_class_id`, 학생 결과는 `student_sessions.agit_student_id`로 연결한다. 번호·이름은
+  활동 당시 표시를 보존하는 스냅샷이고, 구 `writing_helper.classes`·`class_students`는 과거 자료와 롤백용
+  `helper.` 호환을 위해서만 남긴다.
 
 ### 아지트 Storage는 macOS bind mount가 아니라 named volume을 쓴다
 - `agit-storage`와 `agit-imgproxy`는 외부 Docker named volume **`agit-storage-data`**를 함께 사용한다.
