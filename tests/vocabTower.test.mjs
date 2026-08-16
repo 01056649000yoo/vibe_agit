@@ -17,7 +17,7 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
@@ -30,7 +30,8 @@ const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEnt
     readFile('supabase/migrations/20261109_vocab_tower_v2_item_learning.sql', 'utf8'),
     readFile('supabase/migrations/20261110_vocab_tower_v2_default_content.sql', 'utf8'),
     readFile('supabase/migrations/20261111_vocab_tower_v2_direct_input.sql', 'utf8'),
-    readFile('supabase/migrations/20261112_vocab_tower_v2_progress_rewards.sql', 'utf8')
+    readFile('supabase/migrations/20261112_vocab_tower_v2_progress_rewards.sql', 'utf8'),
+    readFile('supabase/migrations/20261113_vocab_tower_v2_retry_practice.sql', 'utf8')
 ]);
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
@@ -262,4 +263,34 @@ test('교사 설정은 층당 총액을 네 구간으로 나눈다고 설명한�
     assert.match(teacherManager, /층당 진도 보상 총액/);
     assert.match(teacherManager, /25·50·75·100%/);
     assert.doesNotMatch(teacherManager, /최초 완벽 연습 보상/);
+});
+
+test('같은 연습에서 틀린 낱말은 3문항 뒤 다른 형태로 한 번 더 나온다', () => {
+    assert.match(v2RetryMigration, /is_retry BOOLEAN NOT NULL DEFAULT FALSE/);
+    // 바로 다음 문제로 내면 정답을 외워 누르므로 3문항 이상 지난 뒤에 낸다.
+    assert.match(v2RetryMigration, /asked\.sequence_number <= v_sequence - 3/);
+    assert.match(v2RetryMigration, /answer\.is_correct IS FALSE/);
+    // 같은 낱말을 세 번 이상 내지 않도록 이미 다시 낸 낱말은 제외한다.
+    assert.match(v2RetryMigration, /repeated\.sequence_number > asked\.sequence_number/);
+    assert.match(v2RetryMigration, /'weak', 'review', 'new', 'mastered', 'retry'/);
+});
+
+test('보충 수련은 방금 틀린 형태를 피하고 입력형으로 올리지 않는다', () => {
+    assert.match(v2RetryMigration, /CONTINUE WHEN v_candidate = v_retry_source_type;/);
+    assert.match(v2RetryMigration, /FOREACH v_candidate IN ARRAY ARRAY\['meaningChoice', 'clozeChoice', 'usageDistinction'\]/);
+    assert.match(v2RetryMigration, /v_is_input := NOT v_is_retry AND v_learning_state IN \('familiar', 'mastered'\)/);
+});
+
+test('학생 화면은 보충 수련 문항임을 알려준다', () => {
+    const retryQuestion = mapV2Question({
+        question_key: 'q3', room_type: 'sentence', question_type: 'clozeChoice',
+        prompt: '빈칸에 알맞은 낱말은?', options: ['관찰', '감각'],
+        word: { word: '관찰', definition: '자세히 살펴봄', example: '식물을 관찰했다.', level: 1, category: '공부' },
+        sequence_number: 4, target_question_count: 12, deck_number: 5,
+        is_retry: true, practice_focus: 'retry'
+    });
+    assert.equal(retryQuestion.isRetry, true);
+    assert.match(vocabularyGame, /아까 틀린 낱말이에요/);
+    assert.match(vocabularyGame, /보충 수련/);
+    assert.match(vocabularyStyles, /\.vocab-question-card__retry/);
 });

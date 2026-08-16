@@ -488,12 +488,19 @@ const VocabularyTowerGame = ({
                         <div className="vocab-question-card__heading">
                             <span>{currentQuiz.room.icon}</span>
                             <div><strong>{currentQuiz.room.name}</strong><small>{currentQuiz.room.guide}</small></div>
-                            <em>{isV2 && currentQuiz.practiceFocus === 'weak'
-                                ? '복습 우선'
-                                : isV2 && currentQuiz.practiceFocus === 'review'
-                                    ? '다시 확인'
-                                    : `난이도 ${currentQuiz.word.level}`}</em>
+                            <em>{isV2 && currentQuiz.isRetry
+                                ? '보충 수련'
+                                : isV2 && currentQuiz.practiceFocus === 'weak'
+                                    ? '복습 우선'
+                                    : isV2 && currentQuiz.practiceFocus === 'review'
+                                        ? '다시 확인'
+                                        : `난이도 ${currentQuiz.word.level}`}</em>
                         </div>
+                        {currentQuiz.isRetry && (
+                            <p className="vocab-question-card__retry">
+                                🔁 아까 틀린 낱말이에요. 이번에는 다른 방식으로 물어볼게요.
+                            </p>
+                        )}
                         <p className="vocab-question-card__prompt">{currentQuiz.prompt}</p>
                         {activeBoon?.id === 'hint' && <p className="vocab-question-card__hint">💡 핵심 낱말 첫 글자: <strong>{(currentQuiz.correctAnswer || currentQuiz.word.word).slice(0, 1)}</strong></p>}
                         {currentQuiz.isInput ? (

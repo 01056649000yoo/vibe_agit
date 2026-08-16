@@ -128,6 +128,7 @@ export const mapV2Question = (data) => {
         explanation: null,
         word: data.word,
         isReview: Boolean(data.is_review),
+        isRetry: Boolean(data.is_retry),
         practiceFocus: data.practice_focus || 'new'
     };
 };
