@@ -111,6 +111,7 @@ export const mapV2Question = (data) => {
         correctAnswer: null,
         explanation: null,
         word: data.word,
-        isReview: Boolean(data.is_review)
+        isReview: Boolean(data.is_review),
+        practiceFocus: data.practice_focus || 'new'
     };
 };

@@ -16,14 +16,15 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, teacherManager, v2PracticeMigration, v2RewardMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, teacherManager, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
     readFile('src/components/student/StudentDashboard.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8'),
     readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8'),
-    readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8')
+    readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8'),
+    readFile('supabase/migrations/20261109_vocab_tower_v2_item_learning.sql', 'utf8')
 ]);
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
@@ -72,6 +73,7 @@ test('V2 서버 문항은 정답 없이 기존 게임 카드 형태로 변환된
     assert.equal(quiz.room.name, '뜻의 방');
     assert.equal(quiz.correctAnswer, null);
     assert.deepEqual(quiz.options, ['자세히 살펴봄', '힘을 합침']);
+    assert.equal(quiz.practiceFocus, 'new');
 });
 
 test('V2 학생 화면은 10개 덱 지도에서 12문항 개인 연습을 시작한다', () => {
@@ -110,4 +112,16 @@ test('V2 개인 연습은 덱별 최초 12\/12에 교사 설정 포인트를 한
     assert.match(teacherManager, /vocab_tower_v2_perfect_reward_points/);
     assert.match(v2DeckMap, /첫 12\/12 달성/);
     assert.match(vocabularyGame, /perfect_reward_earned/);
+});
+
+test('V2는 낱말별 상태를 기록하고 약점·새 낱말·복습을 적응 출제한다', () => {
+    assert.match(v2ItemLearningMigration, /CREATE TABLE IF NOT EXISTS public\.vocab_tower_v2_item_progress/);
+    assert.match(v2ItemLearningMigration, /learning_state IN \('learning', 'familiar', 'needs_review', 'mastered'\)/);
+    assert.match(v2ItemLearningMigration, /cardinality\(v_correct_types\) >= 2 AND v_streak >= 2/);
+    assert.match(v2ItemLearningMigration, /v_target_focus := CASE MOD\(v_sequence - 1, 12\)/);
+    assert.match(v2ItemLearningMigration, /'practice_focus', v_existing\.selection_focus/);
+    assert.match(v2ItemLearningMigration, /'mastered_count', v_mastered_count/);
+    assert.match(v2DeckMap, /익힌 낱말/);
+    assert.match(v2DeckMap, /복습.*새 낱말/);
+    assert.match(vocabularyGame, /복습할 낱말/);
 });

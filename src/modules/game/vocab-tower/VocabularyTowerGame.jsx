@@ -393,7 +393,8 @@ const VocabularyTowerGame = ({
                         <div className="vocab-summary-card__stats vocab-summary-card__stats--practice">
                             <div><span>풀은 문항</span><strong>{summary.answer_count}/{summary.target_question_count}</strong></div>
                             <div><span>정답</span><strong>{summary.correct_count}개</strong></div>
-                            <div><span>정답률</span><strong>{summary.accuracy}%</strong></div>
+                            <div><span>새로 만남</span><strong>{summary.new_words_seen || 0}개</strong></div>
+                            <div><span>덱 익힘</span><strong>{summary.mastered_count || 0}/{summary.item_count || 0}</strong></div>
                         </div>
                         <div className="vocab-summary-card__reward">
                             <span>{summary.perfect_reward_earned ? '최초 완벽 연습 보상' : '이번 연습 보상'}</span>
@@ -404,7 +405,9 @@ const VocabularyTowerGame = ({
                                     ? '이 층의 완벽 연습 보상은 이미 받았어요.'
                                     : `12/12를 처음 달성하면 ${summary.perfect_reward_points || 0}P를 받아요.`}</small>
                         </div>
-                        <p>연습 결과와 최고 정답률은 층별로 계속 쌓여요.</p>
+                        <p>{Number(summary.needs_review_count || 0) > 0
+                            ? `복습할 낱말 ${summary.needs_review_count}개를 다음 연습에서 먼저 만나요.`
+                            : '연습 결과와 낱말별 익힘 상태는 층별로 계속 쌓여요.'}</p>
                         <button type="button" className="vocab-journey__primary" onClick={loadStatus}>덱 지도로 돌아가기</button>
                         <button type="button" className="vocab-summary-card__back" onClick={onBack}>놀이터로 나가기</button>
                     </main>
@@ -477,7 +480,11 @@ const VocabularyTowerGame = ({
                         <div className="vocab-question-card__heading">
                             <span>{currentQuiz.room.icon}</span>
                             <div><strong>{currentQuiz.room.name}</strong><small>{currentQuiz.room.guide}</small></div>
-                            <em>난이도 {currentQuiz.word.level}</em>
+                            <em>{isV2 && currentQuiz.practiceFocus === 'weak'
+                                ? '복습 우선'
+                                : isV2 && currentQuiz.practiceFocus === 'review'
+                                    ? '다시 확인'
+                                    : `난이도 ${currentQuiz.word.level}`}</em>
                         </div>
                         <p className="vocab-question-card__prompt">{currentQuiz.prompt}</p>
                         {activeBoon?.id === 'hint' && <p className="vocab-question-card__hint">💡 핵심 낱말 첫 글자: <strong>{(currentQuiz.correctAnswer || currentQuiz.word.word).slice(0, 1)}</strong></p>}
