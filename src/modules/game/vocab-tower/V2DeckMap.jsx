@@ -7,6 +7,7 @@ const V2DeckMap = ({
     submitting,
     notice,
     onStart,
+    onOpenCardBox,
     onBack
 }) => {
     const activeDeckNumber = Number(activeRun?.deck_number || 0);
@@ -148,15 +149,28 @@ const V2DeckMap = ({
                                             </div>
                                         </div>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => onStart(deckNumber)}
-                                        disabled={submitting || hasOtherActive}
-                                    >
-                                        {hasOtherActive
-                                            ? `${activeDeckNumber}층 연습을 먼저 완료하세요`
-                                            : isActive ? '연습 이어하기' : isConquered ? '정복한 층 다시 탐험' : hasPractice ? '이 층 다시 연습' : '이 층 탐험 시작'}
-                                    </button>
+                                    <div className="vocab-deck-card__actions">
+                                        <button
+                                            type="button"
+                                            onClick={() => onStart(deckNumber)}
+                                            disabled={submitting || hasOtherActive}
+                                        >
+                                            {hasOtherActive
+                                                ? `${activeDeckNumber}층 연습을 먼저 완료하세요`
+                                                : isActive ? '연습 이어하기' : isConquered ? '정복한 층 다시 탐험' : hasPractice ? '이 층 다시 연습' : '이 층 탐험 시작'}
+                                        </button>
+                                        {/* 만난 낱말이 있어야 볼 것이 있다. 아직 없으면 버튼을 만들지 않는다. */}
+                                        {seenCount > 0 && (
+                                            <button
+                                                type="button"
+                                                className="is-quiet"
+                                                onClick={() => onOpenCardBox(deckNumber)}
+                                                disabled={submitting}
+                                            >
+                                                낱말 카드함 {seenCount}개
+                                            </button>
+                                        )}
+                                    </div>
                                 </article>
                             </div>
                         );

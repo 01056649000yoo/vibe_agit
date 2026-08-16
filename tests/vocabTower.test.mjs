@@ -17,7 +17,7 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides, cardBox, cardBoxMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
@@ -37,7 +37,9 @@ const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEnt
     readFile('src/components/student/AgitPlayground.jsx', 'utf8'),
     readFile('src/components/student/AgitPlayground.css', 'utf8'),
     readFile('src/modules/game/vocab-tower/manifest.js', 'utf8'),
-    readFile('src/constants/teacherGuides.js', 'utf8')
+    readFile('src/constants/teacherGuides.js', 'utf8'),
+    readFile('src/modules/game/vocab-tower/V2CardBox.jsx', 'utf8'),
+    readFile('supabase/migrations/20261114_vocab_tower_v2_card_box.sql', 'utf8')
 ]);
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
@@ -343,4 +345,34 @@ test('게임 실행 화면 안에는 안내 창을 띄우지 않는다', () => {
     assert.doesNotMatch(vocabularyStyles, /vocab-deck-map__guide/);
     assert.match(studentDashboard, /zIndex: 20000/);
     assert.match(studentDashboard, /공용 `Modal`\(9999\) 보다 높다/);
+});
+
+test('낱말 카드함은 아직 만나지 않은 낱말을 노출하지 않는다', () => {
+    // 카드함으로 앞으로 나올 낱말·뜻을 미리 보면 직접 입력형의 정답 감추기가 무의미해진다.
+    assert.match(cardBoxMigration, /FROM public\.vocab_tower_v2_item_progress progress\s*\n\s*JOIN public\.vocab_tower_v2_review_items item/);
+    assert.match(cardBoxMigration, /'unseen_count', GREATEST\(v_item_count - v_seen_count, 0\)/);
+    assert.match(cardBoxMigration, /progress\.student_id = v_student_id/);
+    assert.match(cardBoxMigration, /REVOKE ALL ON FUNCTION public\.get_my_vocab_tower_v2_card_box_v1\(SMALLINT\) FROM PUBLIC, anon/);
+    assert.match(cardBoxMigration, /LIMIT 100/);
+});
+
+test('카드함은 낱말마다 익힘 근거와 다음 복습 시점을 보여 준다', () => {
+    assert.match(cardBoxMigration, /'card_state', CASE/);
+    assert.match(cardBoxMigration, /progress\.wrong_count >= 2 THEN 'confusing'/);
+    assert.match(cardBoxMigration, /next_review_at <= NOW\(\) THEN 'review_due'/);
+    assert.match(cardBoxMigration, /'correct_type_count', cardinality\(progress\.correct_question_types\)/);
+    assert.match(cardBox, /자주 헷갈려요/);
+    assert.match(cardBox, /복습할 때가 됐어요/);
+    assert.match(cardBox, /다른 형태로 한 번 더 맞히면 익힘이에요/);
+    assert.match(cardBox, /번 만나서 \$\{correct\}번 맞고 \$\{wrong\}번 틀렸어요/);
+});
+
+test('카드함은 모달이 아니라 게임 화면 단계로 연다', () => {
+    // 게임 실행 화면은 zIndex 20000 이고 공용 Modal 은 9999라 그 안에서 창을 띄우면 뒤에 숨는다.
+    assert.doesNotMatch(cardBox, /ModalPortal|<Modal/);
+    assert.match(vocabularyGame, /phase === 'card-box'/);
+    assert.match(vocabularyGame, /get_my_vocab_tower_v2_card_box_v1/);
+    assert.match(v2DeckMap, /onOpenCardBox\(deckNumber\)/);
+    // 만난 낱말이 없으면 볼 것이 없으므로 버튼을 만들지 않는다.
+    assert.match(v2DeckMap, /seenCount > 0 && \(/);
 });

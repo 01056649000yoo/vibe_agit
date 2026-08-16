@@ -101,8 +101,46 @@
 .vocab-deck-card__reward.is-pending { border-color: #f1d58b; background: #fff8df; color: #805a0c; }
 .vocab-deck-card__reward.is-complete { border-color: #91d2ac; background: #e7f8ee; color: #206c45; }
 .vocab-deck-card__reward.is-off { border-color: #dde3eb; background: #f4f6f8; color: #68758a; }
-.vocab-deck-card > button { grid-column: 1/-1; width: 100%; min-height: 42px; padding: 9px 12px; border: 0; border-radius: 12px; background: #3156b8; color: white; font: inherit; font-size: .75rem; font-weight: 900; cursor: pointer; }
-.vocab-deck-card > button:disabled { background: #b7bfcc; cursor: default; }
+.vocab-deck-card__actions { grid-column: 1/-1; display: grid; gap: 6px; }
+.vocab-deck-card__actions button { width: 100%; min-height: 42px; padding: 9px 12px; border: 0; border-radius: 12px; background: #3156b8; color: white; font: inherit; font-size: .75rem; font-weight: 900; cursor: pointer; }
+.vocab-deck-card__actions button:disabled { background: #b7bfcc; cursor: default; }
+/* 카드함은 보조 동작이라 연습 시작 버튼보다 약하게 둔다. */
+.vocab-deck-card__actions button.is-quiet { min-height: 36px; border: 1px solid #c8d3e8; background: #f4f7fd; color: #3f5480; }
+.vocab-deck-card__actions button.is-quiet:disabled { border-color: #dde3ec; background: #f1f3f7; color: #a7b0bf; }
+
+/* 낱말 카드함 — 낱말마다 기록과 다음 복습 시점을 보여 주는 화면 단계. */
+.vocab-journey--card-box { display: grid; place-items: start center; }
+.vocab-card-box { position: relative; width: min(760px,100%); padding: 34px; border: 1px solid rgba(255,255,255,.8); border-radius: 30px; background: rgba(255,255,255,.95); box-shadow: 0 20px 60px rgba(40,63,120,.16); text-align: center; }
+.vocab-card-box h1 { margin: 5px 0 10px; color: #263f8f; font-size: clamp(1.7rem,5vw,2.5rem); }
+.vocab-card-box__summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin: 20px 0; }
+.vocab-card-box__summary > div { padding: 13px; border-radius: 15px; background: #f1f5f9; }
+.vocab-card-box__summary span, .vocab-card-box__summary strong { display: block; }
+.vocab-card-box__summary span { color: #718096; font-size: .68rem; font-weight: 850; }
+.vocab-card-box__summary strong { margin-top: 4px; color: #293f83; }
+.vocab-card-box__empty { display: grid; gap: 7px; padding: 40px 20px; border: 1px dashed #cbd5e1; border-radius: 18px; color: #64748b; }
+.vocab-card-box__empty > span { font-size: 2.4rem; }
+.vocab-card-box__empty strong { color: #334155; }
+.vocab-card-box__empty p { margin: 0; font-size: .78rem; }
+.vocab-card-box__list { display: grid; gap: 11px; margin: 0 0 18px; padding: 0; list-style: none; text-align: left; }
+.vocab-word-card { padding: 14px 16px; border: 2px solid #e4e9f3; border-left-width: 6px; border-radius: 16px; background: #fbfcff; }
+.vocab-word-card.is-confusing { border-left-color: #e36e70; }
+.vocab-word-card.is-review { border-left-color: #eda13f; }
+.vocab-word-card.is-due { border-left-color: #5b93d6; }
+.vocab-word-card.is-learning { border-left-color: #9aa6bb; }
+.vocab-word-card.is-almost { border-left-color: #6fbf95; }
+.vocab-word-card.is-mastered { border-left-color: #2f9c63; background: #f5fbf7; }
+.vocab-word-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.vocab-word-card__head strong { color: #1f2d4d; font-size: 1.05rem; font-weight: 950; }
+.vocab-word-card__head em { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; background: #eef2f8; color: #4b5a75; font-size: .66rem; font-style: normal; font-weight: 900; white-space: nowrap; }
+.vocab-word-card__definition { margin: 7px 0 0; color: #46536b; font-size: .82rem; font-weight: 700; line-height: 1.55; }
+.vocab-word-card__example { margin: 4px 0 0; color: #7b8798; font-size: .74rem; line-height: 1.5; }
+.vocab-word-card__evidence { display: grid; gap: 2px; margin: 9px 0 0; padding-left: 17px; }
+.vocab-word-card__evidence li { color: #5b6880; font-size: .73rem; line-height: 1.5; }
+.vocab-word-card__review { margin: 8px 0 0; color: #3f5480; font-size: .72rem; font-weight: 800; }
+@media (max-width: 640px) {
+    .vocab-card-box { padding: 20px; border-radius: 22px; }
+    .vocab-card-box__summary { grid-template-columns: 1fr; }
+}
 .vocab-deck-card.is-active > button { background: #c17a13; }
 .vocab-deck-map__active-note { margin: 14px 0 0; color: #8a5d14; font-size: .78rem; font-weight: 850; }
 .vocab-intro-card, .vocab-summary-card { position: relative; width: min(760px,100%); padding: 34px; border: 1px solid rgba(255,255,255,.8); border-radius: 34px; background: rgba(255,255,255,.94); box-shadow: 0 24px 70px rgba(40,63,120,.18); text-align: center; }

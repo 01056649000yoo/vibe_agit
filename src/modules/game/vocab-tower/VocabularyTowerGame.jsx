@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '../../../lib/supabaseClient';
 import useVocabularyTower from './useVocabularyTower';
 import V2DeckMap from './V2DeckMap';
+import V2CardBox from './V2CardBox';
 import { mapV2Question, ROOM_INFO } from './vocabTowerEngine';
 import './vocabularyTowerGame.css';
 
@@ -70,6 +71,7 @@ const VocabularyTowerGame = ({
     const [notice, setNotice] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [typedAnswer, setTypedAnswer] = useState('');
+    const [cardBox, setCardBox] = useState(null);
     const [returnPhase, setReturnPhase] = useState('playing');
     const finishingRef = useRef(false);
 
@@ -190,6 +192,23 @@ const VocabularyTowerGame = ({
         setPhase('playing');
         return true;
     }, [activeBoon, createQuiz, isV2, run.runId, setServerQuiz]);
+
+    const openCardBox = async (deckNumber) => {
+        if (submitting) return;
+        setSubmitting(true);
+        setNotice('');
+        const { data, error } = await supabase.rpc('get_my_vocab_tower_v2_card_box_v1', {
+            p_deck_number: deckNumber
+        });
+        setSubmitting(false);
+        if (error || !data?.success) {
+            console.error('낱말 카드함 조회 실패:', error || data);
+            setNotice(data?.error || '낱말 카드함을 불러오지 못했어요.');
+            return;
+        }
+        setCardBox(data);
+        setPhase('card-box');
+    };
 
     const handleStart = async (deckNumber = null) => {
         if (submitting) return;
@@ -350,7 +369,18 @@ const VocabularyTowerGame = ({
                 submitting={submitting}
                 notice={notice}
                 onStart={handleStart}
+                onOpenCardBox={openCardBox}
                 onBack={onBack}
+            />
+        );
+    }
+
+    if (phase === 'card-box' && cardBox) {
+        return (
+            <V2CardBox
+                cardBox={cardBox}
+                notice={notice}
+                onBack={() => { setCardBox(null); setNotice(''); setPhase('deck-map'); }}
             />
         );
     }
