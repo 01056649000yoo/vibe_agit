@@ -213,6 +213,7 @@ const StudentDashboard = ({
         economy: module.playground?.economy,
         pointLabel: module.playground?.pointLabel,
         ctaLabel: module.playground?.ctaLabel,
+        guide: module.playground?.guide,
         badge: module.id === 'dragon' ? `${dragonInfo.name} · LV.${displayPetData.level}` : null,
         onOpen: () => openGameModule(module)
     }));

@@ -17,7 +17,7 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, studentGuide, teacherGuides] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
@@ -32,7 +32,11 @@ const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEnt
     readFile('supabase/migrations/20261111_vocab_tower_v2_direct_input.sql', 'utf8'),
     readFile('supabase/migrations/20261112_vocab_tower_v2_progress_rewards.sql', 'utf8'),
     readFile('supabase/migrations/20261113_vocab_tower_v2_retry_practice.sql', 'utf8'),
-    readFile('src/modules/game/vocab-tower/StudentTowerGuide.jsx', 'utf8'),
+    readFile('src/modules/game/vocab-tower/towerGuide.js', 'utf8'),
+    readFile('src/components/student/StudentModuleGuide.jsx', 'utf8'),
+    readFile('src/components/student/AgitPlayground.jsx', 'utf8'),
+    readFile('src/components/student/AgitPlayground.css', 'utf8'),
+    readFile('src/modules/game/vocab-tower/manifest.js', 'utf8'),
     readFile('src/constants/teacherGuides.js', 'utf8')
 ]);
 
@@ -308,15 +312,33 @@ test('교사 도움말은 포인트 지급 기준을 오해하지 않도록 설�
     assert.match(teacherManager, /TeacherGuideButton tabId="vocab-tower" variant="help"/);
 });
 
-test('학생 도움말은 지도에서 열 수 있고 포인트·익힘 규칙을 쉬운 말로 알려준다', () => {
-    assert.match(v2DeckMap, /StudentTowerGuide/);
-    assert.match(studentGuide, /ModalPortal/);
-    assert.match(studentGuide, /한 판을 다 맞혀야 주는 게 아니에요/);
-    assert.match(studentGuide, /서로 다른 두 가지 문제를 연달아 맞혀야 익힘이에요/);
-    assert.match(studentGuide, /직접 쓰다가 틀려도 점수가 깎이지 않아요/);
-    assert.match(studentGuide, /서너 문제 뒤에 다시 나와요/);
-    assert.match(studentGuide, /별은 포인트와는 상관없는 기록이에요/);
-    // 공용 정보 아이콘을 쓰고 별도 아이콘을 만들지 않는다.
-    assert.match(studentGuide, /GuideInfoButton/);
-    assert.match(vocabularyStyles, /\.vocab-guide__section/);
+test('학생 도움말은 포인트·익힘 규칙을 쉬운 말로 알려준다', () => {
+    assert.match(towerGuide, /한 판을 다 맞혀야 주는 게 아니에요/);
+    assert.match(towerGuide, /서로 다른 두 가지 문제를 연달아 맞혀야 익힘이에요/);
+    assert.match(towerGuide, /직접 쓰다가 틀려도 점수가 깎이지 않아요/);
+    assert.match(towerGuide, /서너 문제 뒤에 다시 나와요/);
+    assert.match(towerGuide, /별은 포인트와는 상관없는 기록이에요/);
+    // 공용 정보 아이콘·모달을 쓰고 별도 아이콘을 만들지 않는다.
+    assert.match(studentModuleGuide, /GuideInfoButton/);
+    assert.match(studentModuleGuide, /ModalPortal/);
+});
+
+test('학생은 놀이터 카드에서 바로 어휘의 탑 도움말을 연다', () => {
+    // 안내 내용은 모듈이 갖고 셸은 슬롯으로만 받는다.
+    assert.match(vocabManifest, /guide: VOCAB_TOWER_STUDENT_GUIDE/);
+    assert.match(studentDashboard, /guide: module\.playground\?\.guide/);
+    assert.match(agitPlayground, /item\.guide &&/);
+    assert.match(agitPlayground, /StudentModuleGuide guide=\{item\.guide\}/);
+    // 카드 전체가 버튼이므로 안내 버튼을 그 안에 넣으면 안 된다.
+    assert.match(agitPlayground, /agit-playground-card-shell/);
+    assert.doesNotMatch(agitPlayground, /className="agit-playground-card"[\s\S]{0,400}StudentModuleGuide[\s\S]{0,80}<\/button>/);
+    assert.match(agitPlaygroundStyles, /\.agit-playground-card__guide \{ justify-self: end; \}/);
+});
+
+test('지도 도움말은 아래로 스크롤해도 계속 보인다', () => {
+    assert.match(v2DeckMap, /vocab-deck-map__guide-bar/);
+    assert.match(v2DeckMap, /StudentModuleGuide guide=\{VOCAB_TOWER_STUDENT_GUIDE\}/);
+    // 지도는 10층(위)→1층(아래) 순서라 첫 진입 시 아래로 스크롤된다. 절대 위치면 보이지 않는다.
+    assert.match(vocabularyStyles, /\.vocab-deck-map__guide-bar \{ position: sticky;/);
+    assert.doesNotMatch(vocabularyStyles, /\.vocab-deck-map__guide \{ position: absolute;/);
 });

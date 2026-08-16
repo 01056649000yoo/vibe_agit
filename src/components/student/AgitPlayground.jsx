@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { pointApi } from '../../modules/points/pointApi';
 import ModalPortal from '../common/ModalPortal';
 import ModalCloseButton from '../common/ModalCloseButton';
+import StudentModuleGuide from './StudentModuleGuide';
 import './AgitPlayground.css';
 
 /**
@@ -71,29 +72,40 @@ const groupHistory = (logs) => logs.reduce((groups, log) => {
     return groups;
 }, []);
 
+/**
+ * 카드 전체가 콘텐츠를 여는 버튼이므로, 안내 버튼은 그 **안에 넣을 수 없다**(버튼 중첩 금지).
+ * 바깥 상자를 두고 여는 버튼과 안내 버튼을 형제로 둔다.
+ */
 const PlaygroundCard = ({ item, onOpen }) => (
-    <button
-        type="button"
-        className="agit-playground-card"
-        onClick={() => onOpen(item)}
+    <div
+        className="agit-playground-card-shell"
         style={{
             '--playground-card-soft': item.background || 'var(--ui-primary-soft)',
             '--playground-card-border': item.borderColor || 'var(--ui-primary-border)'
         }}
     >
-        <span className="agit-playground-card__icon" aria-hidden="true">{item.icon}</span>
-        <span className="agit-playground-card__body">
-            <span className="agit-playground-card__meta">
-                <strong>{item.name}</strong>
-                <em>{item.pointLabel}</em>
+        <button
+            type="button"
+            className="agit-playground-card"
+            onClick={() => onOpen(item)}
+        >
+            <span className="agit-playground-card__icon" aria-hidden="true">{item.icon}</span>
+            <span className="agit-playground-card__body">
+                <span className="agit-playground-card__meta">
+                    <strong>{item.name}</strong>
+                    <em>{item.pointLabel}</em>
+                </span>
+                <small>{item.badge || item.description}</small>
             </span>
-            <small>{item.badge || item.description}</small>
-        </span>
-        <span className="agit-playground-card__cta">
-            {item.ctaLabel}
-            <span aria-hidden="true">›</span>
-        </span>
-    </button>
+            <span className="agit-playground-card__cta">
+                {item.ctaLabel}
+                <span aria-hidden="true">›</span>
+            </span>
+        </button>
+        {item.guide && (
+            <StudentModuleGuide guide={item.guide} className="agit-playground-card__guide" />
+        )}
+    </div>
 );
 
 const PointHistory = ({ state, onRetry }) => {

@@ -9,6 +9,8 @@
  * 학생 노출 여부의 기준은 enabled_modules이며, 기존 vocab_tower_enabled는 미설정 학급의
  * 초기값 및 구버전 롤백 호환용으로만 읽고 모듈 토글 저장 시 함께 동기화한다.
  */
+import { VOCAB_TOWER_STUDENT_GUIDE } from './towerGuide';
+
 export const vocabTowerManifest = {
   id: 'vocab-tower',
   name: '어휘의 탑',
@@ -31,7 +33,9 @@ export const vocabTowerManifest = {
     pointLabel: '포인트 얻기',
     ctaLabel: '도전하기',
     order: 20,
-    entryMode: 'standard'
+    entryMode: 'standard',
+    // 놀이터 카드에서 바로 열 수 있는 학생 안내. 다른 게임 모듈도 같은 자리에 두면 버튼이 붙는다.
+    guide: VOCAB_TOWER_STUDENT_GUIDE
   },
   management: {
     title: '어휘의 탑 관리',

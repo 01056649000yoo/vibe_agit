@@ -263,6 +263,10 @@
     flex-direction: column;
     gap: 10px;
 }
+/* 카드는 세로로 쌓이므로 안내 버튼은 겹치지 않게 카드 바로 아래 오른쪽에 둔다.
+   카드 위에 겹치면 콘텐츠 이름·포인트 배지와 부딪히고, 손가락으로 누를 때 카드가 같이 눌리기 쉽다. */
+.agit-playground-card-shell { display: grid; min-width: 0; gap: 6px; justify-items: stretch; }
+.agit-playground-card__guide { justify-self: end; }
 .agit-playground-card {
     display: grid;
     min-width: 0;
