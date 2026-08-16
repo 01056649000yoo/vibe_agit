@@ -7,7 +7,7 @@
 - 설정: `classes.vocab_tower_*`
 - 진행 기록: `vocab_tower_runs`, `vocab_tower_answers`, V2 덱별 `vocab_tower_v2_deck_progress`
 - 보존 기록: `vocab_tower_rankings`, `vocab_tower_history`(현재 교사 화면에서는 사용하지 않음)
-- 출제 기준: V1 `vocab_tower_words`, V2 잠긴 `vocab_tower_v2_review_*` 덱
+- 출제 기준: 잠긴 `vocab_tower_v2_review_*` 현재 덱(표준), V1 `vocab_tower_words`는 비상 롤백용 보존
 - 보상 기록: `game_point_grants`의 게임 공용 하루 80P·주 250P 상한
 - 학생 RPC: `get_my_vocab_tower_status`, `start_my_vocab_tower_run`,
   `submit_my_vocab_tower_answer`, `finish_my_vocab_tower_run`
@@ -45,9 +45,9 @@ V2 문항은 현재 운영 `vocab_tower_words`와 분리해 준비한다. `vocab
 `1차 검수`로 되돌린다. 다섯 문항의 질문·보기·
 단일 정답·직접 입력 허용 정답을 서버가 확인한 뒤에만 `교사 확인`, 이어서 `잠금 완료`로 바꿀 수 있다.
 
-잠금은 검수 산출물을 고정할 뿐 학생 출제를 자동으로 켜지 않는다. 학급의
-`classes.vocab_tower_content_version` 기본값은 `v1`이고, 교사가 관리 화면에서 `v2`를 명시 저장해야만
-시험 경로가 열린다. 전환은 선택 학년의 잠긴 덱 10개를 검사하고 진행 중인 탐험을 종료한다.
+잠긴 검수 덱은 현재 학생 출제의 표준 자료다. 학급의 `classes.vocab_tower_content_version` 기본값은 `v2`이며,
+교사 화면에서 출제 버전을 따로 고르지 않는다. 출제 학년을 저장하면 해당 학년의 잠긴 현재 덱 10개를 검사한 뒤
+자동으로 연결한다. V1 정적 자료와 전환 RPC는 운영 중 비상 롤백을 위해 서버에만 보존한다.
 
 V2 학생 화면은 잠긴 덱 10개를 지도로 보여주고, 학생이 고른 한 덱에서 뜻·빈칸·쓰임 구별 선택형
 12문항을 시간·횟수 제한 없이 연습한다. 서버가 실행별 문항 스냅샷을 만들며 제출 전에는 정답을 반환하지 않고,

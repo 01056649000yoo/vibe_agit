@@ -16,15 +16,17 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, teacherManager, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
     readFile('src/components/student/StudentDashboard.jsx', 'utf8'),
+    readFile('src/modules/game/vocab-tower/StudentEntry.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8'),
     readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8'),
     readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8'),
-    readFile('supabase/migrations/20261109_vocab_tower_v2_item_learning.sql', 'utf8')
+    readFile('supabase/migrations/20261109_vocab_tower_v2_item_learning.sql', 'utf8'),
+    readFile('supabase/migrations/20261110_vocab_tower_v2_default_content.sql', 'utf8')
 ]);
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
@@ -138,4 +140,15 @@ test('V2 덱 카드는 학습량과 포인트 목표 완료를 한 카드에서 
     assert.match(v2DeckMap, /포인트 목표 완료/);
     assert.match(v2DeckMap, /포인트를 이미 받았어요/);
     assert.match(v2DeckMap, /aria-label=\{`\$\{deckNumber\}층/);
+});
+
+test('교사 화면은 V1 선택을 없애고 현재 잠긴 덱을 기본 출제자료로 자동 연결한다', () => {
+    assert.doesNotMatch(teacherManager, /V1 기존 출제/);
+    assert.doesNotMatch(teacherManager, /option value="v1"/);
+    assert.match(teacherManager, /현재 덱 10개/);
+    assert.match(teacherManager, /자동 설정/);
+    assert.match(teacherManager, /p_content_version: 'v2'/);
+    assert.match(studentEntry, /contentVersion: 'v2'/);
+    assert.match(v2DefaultMigration, /ALTER COLUMN vocab_tower_content_version SET DEFAULT 'v2'/);
+    assert.match(v2DefaultMigration, /vocab_tower_content_version = 'v2'/);
 });

@@ -7,7 +7,7 @@ const DEFAULT_SETTINGS = {
     dailyLimit: 3,
     timeLimit: 40,
     rewardPoints: 50,
-    contentVersion: 'v1',
+    contentVersion: 'v2',
     resetDate: null,
     rankingResetDate: null
 };
