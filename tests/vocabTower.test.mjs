@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
     buildRoomQuiz,
     getRoomType,
@@ -14,6 +15,12 @@ const vocabulary = [
     { word: '추론', category: '공부', level: 3, definition: '근거로 답을 생각함', example: '단서를 보고 범인을 추론했다.' },
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
+
+const [v2DeckMap, vocabularyGame, v2PracticeMigration] = await Promise.all([
+    readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
+    readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
+    readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8')
+]);
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
     assert.equal(getRoomType(2, 0), 'meaning');
@@ -61,4 +68,22 @@ test('V2 서버 문항은 정답 없이 기존 게임 카드 형태로 변환된
     assert.equal(quiz.room.name, '뜻의 방');
     assert.equal(quiz.correctAnswer, null);
     assert.deepEqual(quiz.options, ['자세히 살펴봄', '힘을 합침']);
+});
+
+test('V2 학생 화면은 10개 덱 지도에서 12문항 개인 연습을 시작한다', () => {
+    assert.match(v2DeckMap, /어휘의 탑 지도/);
+    assert.match(v2DeckMap, /decks\.map/);
+    assert.match(v2DeckMap, /한 번의 연습[\s\S]*12문항/);
+    assert.match(vocabularyGame, /get_my_vocab_tower_v2_overview_v1/);
+    assert.match(vocabularyGame, /start_my_vocab_tower_v2_practice_v1/);
+    assert.match(vocabularyGame, /finish_my_vocab_tower_v2_practice_v1/);
+});
+
+test('V2 개인 연습은 덱별 결과를 저장하고 즉시 포인트를 주지 않는다', () => {
+    assert.match(v2PracticeMigration, /CREATE TABLE IF NOT EXISTS public\.vocab_tower_v2_deck_progress/);
+    assert.match(v2PracticeMigration, /target_question_count[\s\S]*DEFAULT 30/);
+    assert.match(v2PracticeMigration, /'practice_question_count', 12/);
+    assert.match(v2PracticeMigration, /reward_cap, content_version, v2_deck_number, target_question_count/);
+    assert.match(v2PracticeMigration, /0, 'v2', p_deck_number, 12/);
+    assert.match(v2PracticeMigration, /'reward_points', 0/);
 });

@@ -143,7 +143,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 <div className="vocab-teacher__section-heading">
                     <div>
                         <span className="vocab-teacher__eyebrow">현재 학생 게임 구조</span>
-                        <h3 id="vocab-journey-title">틀린 낱말을 다시 만나는 10층 탐험</h3>
+                        <h3 id="vocab-journey-title">{config.contentVersion === 'v2' ? '10개 층 덱을 고르는 개인 어휘 연습' : '틀린 낱말을 다시 만나는 10층 탐험'}</h3>
                     </div>
                     <span className="vocab-teacher__version">현재 운영 중</span>
                 </div>
@@ -151,16 +151,18 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     <div><span>📖</span><strong>뜻의 방</strong><small>뜻에 맞는 낱말</small></div>
                     <div><span>✍️</span><strong>문장의 방</strong><small>빈칸에 맞는 낱말</small></div>
                     <div><span>🔎</span><strong>구별의 방</strong><small>문맥에 맞는 낱말</small></div>
-                    <div><span>🐉</span><strong>복습 보스</strong><small>5·10층에서 오답 복습</small></div>
+                    <div><span>{config.contentVersion === 'v2' ? '📊' : '🐉'}</span><strong>{config.contentVersion === 'v2' ? '12문항 결과' : '복습 보스'}</strong><small>{config.contentVersion === 'v2' ? '층별 최고 정답률 기록' : '5·10층에서 오답 복습'}</small></div>
                 </div>
-                <p className="vocab-teacher__journey-note">한 층은 문제 3개이며, 층을 통과할 때 다음 층에서 쓸 능력을 하나 고릅니다. 최고 층 경쟁 랭킹은 더 이상 교사 화면에서 사용하지 않습니다.</p>
+                <p className="vocab-teacher__journey-note">{config.contentVersion === 'v2'
+                    ? '학생이 10개 층 중 하나를 골라 검수 낱말 12문항을 시간 제한 없이 연습합니다. 개인 연습은 포인트를 바로 주지 않고 층별 정답률을 기록합니다.'
+                    : '한 층은 문제 3개이며, 층을 통과할 때 다음 층에서 쓸 능력을 하나 고릅니다. 최고 층 경쟁 랭킹은 더 이상 교사 화면에서 사용하지 않습니다.'}</p>
             </section>
 
             <div className="vocab-teacher__summary">
                 <div><span>출제 범위</span><strong>{config.grade}학년 어휘</strong></div>
-                <div><span>하루 탐험</span><strong>최대 {config.dailyLimit}회</strong></div>
-                <div><span>층별 시간</span><strong>{config.timeLimit}초</strong></div>
-                <div><span>한 번의 보상</span><strong>최대 {config.rewardPoints}P</strong></div>
+                <div><span>{config.contentVersion === 'v2' ? '개인 연습' : '하루 탐험'}</span><strong>{config.contentVersion === 'v2' ? '횟수 제한 없음' : `최대 ${config.dailyLimit}회`}</strong></div>
+                <div><span>{config.contentVersion === 'v2' ? '연습 시간' : '층별 시간'}</span><strong>{config.contentVersion === 'v2' ? '제한 없음' : `${config.timeLimit}초`}</strong></div>
+                <div><span>{config.contentVersion === 'v2' ? '개인 연습 보상' : '한 번의 보상'}</span><strong>{config.contentVersion === 'v2' ? '0P' : `최대 ${config.rewardPoints}P`}</strong></div>
                 <div><span>출제 자료</span><strong>{config.contentVersion.toUpperCase()}</strong></div>
             </div>
 
@@ -168,8 +170,8 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 <div className="vocab-teacher__section-heading">
                     <div>
                         <span className="vocab-teacher__eyebrow">학급별 설정</span>
-                        <h3 id="vocab-settings-title">탐험 난이도와 보상</h3>
-                        <p>저장한 값은 이미 진행 중인 판이 아니라 다음에 새로 시작하는 탐험부터 적용됩니다.</p>
+                        <h3 id="vocab-settings-title">{config.contentVersion === 'v2' ? '개인 연습 출제 범위' : '탐험 난이도와 보상'}</h3>
+                        <p>{config.contentVersion === 'v2' ? 'V2에서는 시간·횟수·즉시 포인트 제한을 사용하지 않습니다.' : '저장한 값은 이미 진행 중인 판이 아니라 다음에 새로 시작하는 탐험부터 적용됩니다.'}</p>
                     </div>
                 </div>
 
@@ -189,38 +191,40 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                             {[3, 4, 5, 6].map((grade) => <option key={grade} value={grade}>{grade}학년</option>)}
                         </select>
                     </label>
-                    <label>
+                    {config.contentVersion === 'v1' && <label>
                         <span>🎯 하루 탐험 횟수</span>
                         <small>한 학생이 하루에 새로 시작할 수 있는 횟수입니다.</small>
                         <input type="number" min="1" max="5" value={config.dailyLimit} onChange={(event) => updateConfig('dailyLimit', event.target.value)} />
-                    </label>
-                    <label>
+                    </label>}
+                    {config.contentVersion === 'v1' && <label>
                         <span>⏱️ 층별 제한 시간</span>
                         <small>한 층의 문제 3개를 모두 푸는 시간입니다.</small>
                         <input type="number" min="30" max="120" step="10" value={config.timeLimit} onChange={(event) => updateConfig('timeLimit', event.target.value)} />
-                    </label>
-                    <label>
+                    </label>}
+                    {config.contentVersion === 'v1' && <label>
                         <span>🎁 한 번의 최대 보상</span>
                         <small>정답 수와 복습 성공을 계산한 뒤 적용되는 상한입니다.</small>
                         <input type="number" min="0" max="50" step="5" value={config.rewardPoints} onChange={(event) => updateConfig('rewardPoints', event.target.value)} />
-                    </label>
+                    </label>}
                 </div>
 
-                <div className="vocab-teacher__reward-rule">
+                {config.contentVersion === 'v2' && <p className="vocab-teacher__journey-note">V2 개인 연습은 이 보상 상한을 사용하지 않습니다. 후속 덱 마스터 도전이 추가되면 성취 조건을 서버가 검증한 후에만 포인트를 지급할 예정입니다.</p>}
+
+                {config.contentVersion === 'v1' && <div className="vocab-teacher__reward-rule">
                     <strong>포인트 계산 방식</strong>
                     <span>정답 1개 2P</span>
                     <span>보스에서 오답 복습 성공 +3P</span>
                     <span>정답률 60% 이상이면 5층·정상 보너스</span>
                     <small>모든 학습 게임을 합쳐 하루 80P·주 250P까지만 받을 수 있습니다.</small>
-                </div>
+                </div>}
 
                 <div className="vocab-teacher__footer-actions">
                     <Button type="button" onClick={handleSave} loading={saving} loadingText="저장 중...">
                         설정 저장
                     </Button>
-                    <Button type="button" variant="outline" onClick={handleResetToday} loading={resetting} loadingText="초기화 중...">
+                    {config.contentVersion === 'v1' && <Button type="button" variant="outline" onClick={handleResetToday} loading={resetting} loadingText="초기화 중...">
                         오늘 탐험 기회 초기화
-                    </Button>
+                    </Button>}
                 </div>
             </section>
 

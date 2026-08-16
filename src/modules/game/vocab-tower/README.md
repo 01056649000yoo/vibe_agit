@@ -5,7 +5,7 @@
 
 - 노출: `classes.enabled_modules`의 `vocab-tower`
 - 설정: `classes.vocab_tower_*`
-- 진행 기록: `vocab_tower_runs`, `vocab_tower_answers`
+- 진행 기록: `vocab_tower_runs`, `vocab_tower_answers`, V2 덱별 `vocab_tower_v2_deck_progress`
 - 보존 기록: `vocab_tower_rankings`, `vocab_tower_history`(현재 교사 화면에서는 사용하지 않음)
 - 출제 기준: V1 `vocab_tower_words`, V2 잠긴 `vocab_tower_v2_review_*` 덱
 - 보상 기록: `game_point_grants`의 게임 공용 하루 80P·주 250P 상한
@@ -13,6 +13,9 @@
   `submit_my_vocab_tower_answer`, `finish_my_vocab_tower_run`
 - V2 학생 RPC: `start_my_vocab_tower_v2_run`, `get_next_my_vocab_tower_question_v2`,
   `submit_my_vocab_tower_v2_answer`(종료·보상은 기존 `finish_my_vocab_tower_run` 공유)
+- V2 덱 연습 RPC: `get_my_vocab_tower_v2_overview_v1`, `start_my_vocab_tower_v2_practice_v1`,
+  `get_next_my_vocab_tower_v2_practice_question_v1`, `submit_my_vocab_tower_v2_practice_answer_v1`,
+  `finish_my_vocab_tower_v2_practice_v1`
 - 조회는 항상 모듈을 연 학급의 `class_id`로 직접 제한하고 반환 상한을 둔다.
 
 한 층은 뜻·문장·구별의 방 세 개로 구성하며 5층·10층 마지막 방은 복습 보스가 된다. 층을 통과하면
@@ -46,9 +49,11 @@ V2 문항은 현재 운영 `vocab_tower_words`와 분리해 준비한다. `vocab
 `classes.vocab_tower_content_version` 기본값은 `v1`이고, 교사가 관리 화면에서 `v2`를 명시 저장해야만
 시험 경로가 열린다. 전환은 선택 학년의 잠긴 덱 10개를 검사하고 진행 중인 탐험을 종료한다.
 
-V2 시험 경로에서는 서버가 실행별 문항 스냅샷을 만들고, 제출 전에는 정답을 반환하지 않는다.
-학생 답안은 스냅샷의 서버 정답으로 채점하며 같은 문항 재제출은 멱등하게 처리한다. 현재 어댑터는
-뜻·빈칸·쓰임 구별 선택형을 기존 10층 탐험에 연결한 시험 단계이며, 주관식·개인 적응 복습·공통 학습 카드 상태는 후속이다.
+V2 학생 화면은 잠긴 덱 10개를 지도로 보여주고, 학생이 고른 한 덱에서 뜻·빈칸·쓰임 구별 선택형
+12문항을 시간·횟수 제한 없이 연습한다. 서버가 실행별 문항 스냅샷을 만들며 제출 전에는 정답을 반환하지 않고,
+같은 문항 재제출은 멱등하게 처리한다. 완료 결과와 최고 정답률은 학생·학급·학년·덱별로 저장한다.
+반복 연습 자체에는 포인트를 주지 않으며, 후속 덱 마스터에서 서버가 숙달 조건을 검증한 상태 변화에만 보상을
+연결한다. 주관식·개인 적응 복습·카드별 숙련 상태·덱 마스터/정상 도전은 후속이다.
 
 첫 덱의 직접 편집 재생성 원본은
 `docs/vocab-tower/data/grade3-deck01-human-review.json`이다. 전체 40개 덱의 관리자용 생성 산출물은

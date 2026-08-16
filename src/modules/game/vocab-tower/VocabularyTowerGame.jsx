@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '../../../lib/supabaseClient';
 import useVocabularyTower from './useVocabularyTower';
+import V2DeckMap from './V2DeckMap';
 import { mapV2Question, ROOM_INFO } from './vocabTowerEngine';
 import './vocabularyTowerGame.css';
 
@@ -21,7 +22,9 @@ const initialRun = {
     reviewCorrectCount: 0,
     currentFloor: 1,
     currentCombo: 0,
-    maxCombo: 0
+    maxCombo: 0,
+    deckNumber: null,
+    targetQuestionCount: 30
 };
 
 const fromServerRun = (data, current = initialRun) => ({
@@ -32,7 +35,9 @@ const fromServerRun = (data, current = initialRun) => ({
     reviewCorrectCount: Number(data?.review_correct_count ?? current.reviewCorrectCount),
     currentFloor: Number(data?.current_floor ?? current.currentFloor),
     currentCombo: Number(data?.current_combo ?? current.currentCombo),
-    maxCombo: Number(data?.max_combo ?? current.maxCombo)
+    maxCombo: Number(data?.max_combo ?? current.maxCombo),
+    deckNumber: data?.deck_number == null ? current.deckNumber : Number(data.deck_number),
+    targetQuestionCount: Number(data?.target_question_count ?? current.targetQuestionCount)
 });
 
 const pickBoonChoices = () => [...BOONS]
@@ -51,6 +56,8 @@ const VocabularyTowerGame = ({
     const [selectedGrade, setSelectedGrade] = useState(Number(forcedGrade || studentSession?.grade || 3));
     const [phase, setPhase] = useState('loading');
     const [status, setStatus] = useState(null);
+    const [v2Decks, setV2Decks] = useState([]);
+    const [selectedDeck, setSelectedDeck] = useState(null);
     const [run, setRun] = useState(initialRun);
     const [floorTimeLimit, setFloorTimeLimit] = useState(Number(timeLimit || 40));
     const [timeLeft, setTimeLeft] = useState(Number(timeLimit || 40));
@@ -78,18 +85,33 @@ const VocabularyTowerGame = ({
 
     const loadStatus = useCallback(async () => {
         setNotice('');
-        const { data, error } = await supabase.rpc('get_my_vocab_tower_status');
+        const { data, error } = await supabase.rpc(isV2
+            ? 'get_my_vocab_tower_v2_overview_v1'
+            : 'get_my_vocab_tower_status');
         if (error) {
             console.error('어휘의 탑 상태 조회 실패:', error);
             setNotice('오늘의 도전 정보를 불러오지 못했어요.');
             setPhase('error');
             return;
         }
+        if (isV2 && !data?.success) {
+            setNotice(data?.error || 'V2 덱 지도를 불러오지 못했어요.');
+            setPhase('error');
+            return;
+        }
+        if (isV2) {
+            setSelectedGrade(Number(data.grade || 3));
+            setV2Decks(Array.isArray(data.decks) ? data.decks : []);
+            setStatus({ active_run: data.active_run });
+            setSelectedDeck(data.active_run?.deck_number ? Number(data.active_run.deck_number) : null);
+            setPhase('deck-map');
+            return;
+        }
         setStatus(data);
         setFloorTimeLimit(Number(data?.floor_time_limit || timeLimit || 40));
         setTimeLeft(Number(data?.floor_time_limit || timeLimit || 40));
         setPhase('intro');
-    }, [timeLimit]);
+    }, [isV2, timeLimit]);
 
     useEffect(() => {
         if (wordsLoading || wordsError) return undefined;
@@ -98,20 +120,22 @@ const VocabularyTowerGame = ({
     }, [loadStatus, wordsError, wordsLoading]);
 
     useEffect(() => {
-        if (phase !== 'playing' || submitting) return undefined;
+        if (isV2 || phase !== 'playing' || submitting) return undefined;
         if (timeLeft <= 0) return undefined;
         const timerId = window.setInterval(() => setTimeLeft((current) => Math.max(0, current - 1)), 1000);
         return () => window.clearInterval(timerId);
-    }, [phase, submitting, timeLeft]);
+    }, [isV2, phase, submitting, timeLeft]);
 
     const finishRun = useCallback(async (reason, runIdOverride = null) => {
         const targetRunId = runIdOverride || run.runId;
         if (!targetRunId || finishingRef.current) return;
         finishingRef.current = true;
         setSubmitting(true);
-        const { data, error } = await supabase.rpc('finish_my_vocab_tower_run', {
+        const { data, error } = await supabase.rpc(isV2
+            ? 'finish_my_vocab_tower_v2_practice_v1'
+            : 'finish_my_vocab_tower_run', {
             p_run_id: targetRunId,
-            p_reason: reason
+            p_reason: isV2 && reason === 'time_up' ? 'exited' : reason
         });
         setSubmitting(false);
         finishingRef.current = false;
@@ -122,21 +146,20 @@ const VocabularyTowerGame = ({
         }
         setSummary(data);
         setPhase('summary');
-    }, [run.runId]);
+    }, [isV2, run.runId]);
 
     useEffect(() => {
-        if (phase !== 'playing' || timeLeft !== 0) return undefined;
+        if (isV2 || phase !== 'playing' || timeLeft !== 0) return undefined;
         const timerId = window.setTimeout(() => void finishRun('time_up'), 0);
         return () => window.clearTimeout(timerId);
-    }, [finishRun, phase, timeLeft]);
+    }, [finishRun, isV2, phase, timeLeft]);
 
     const prepareQuiz = useCallback(async (floor, roomIndex, boon = activeBoon, runIdOverride = null) => {
         let quiz;
         if (isV2) {
             setSubmitting(true);
-            const { data, error } = await supabase.rpc('get_next_my_vocab_tower_question_v2', {
-                p_run_id: runIdOverride || run.runId,
-                p_reduce_options: boon?.id === 'eliminate'
+            const { data, error } = await supabase.rpc('get_next_my_vocab_tower_v2_practice_question_v1', {
+                p_run_id: runIdOverride || run.runId
             });
             setSubmitting(false);
             if (error) {
@@ -163,13 +186,16 @@ const VocabularyTowerGame = ({
         return true;
     }, [activeBoon, createQuiz, isV2, run.runId, setServerQuiz]);
 
-    const handleStart = async () => {
+    const handleStart = async (deckNumber = null) => {
         if (submitting) return;
         setSubmitting(true);
         setNotice('');
+        const targetDeckNumber = isV2
+            ? Number(deckNumber || selectedDeck || status?.active_run?.deck_number || 1)
+            : null;
         const { data, error } = await supabase.rpc(isV2
-            ? 'start_my_vocab_tower_v2_run'
-            : 'start_my_vocab_tower_run');
+            ? 'start_my_vocab_tower_v2_practice_v1'
+            : 'start_my_vocab_tower_run', isV2 ? { p_deck_number: targetDeckNumber } : undefined);
         setSubmitting(false);
         if (error || !data?.success) {
             console.error('어휘의 탑 시작 실패:', error || data?.error);
@@ -180,6 +206,7 @@ const VocabularyTowerGame = ({
         const nextRun = fromServerRun(data);
         const nextGrade = Number(data.grade || selectedGrade);
         const nextTimeLimit = Number(data.floor_time_limit || floorTimeLimit);
+        if (isV2) setSelectedDeck(Number(data.deck_number || targetDeckNumber));
         setSelectedGrade(nextGrade);
         setFloorTimeLimit(nextTimeLimit);
         setTimeLeft(nextTimeLimit);
@@ -188,7 +215,7 @@ const VocabularyTowerGame = ({
         setActiveBoon(null);
         resetJourney(data.review_words || []);
 
-        if (nextRun.answerCount >= 30) {
+        if (nextRun.answerCount >= nextRun.targetQuestionCount) {
             setRun(nextRun);
             window.setTimeout(() => void finishRun('completed', nextRun.runId), 0);
             return;
@@ -201,7 +228,7 @@ const VocabularyTowerGame = ({
         setSubmitting(true);
         setNotice('');
         const usedHint = activeBoon?.id === 'hint';
-        const rpcName = isV2 ? 'submit_my_vocab_tower_v2_answer' : 'submit_my_vocab_tower_answer';
+        const rpcName = isV2 ? 'submit_my_vocab_tower_v2_practice_answer_v1' : 'submit_my_vocab_tower_answer';
         const params = isV2 ? {
             p_run_id: run.runId,
             p_question_key: currentQuiz.questionKey,
@@ -252,6 +279,10 @@ const VocabularyTowerGame = ({
             void finishRun('completed');
             return;
         }
+        if (isV2) {
+            void prepareQuiz(selectedDeck, Number(pendingServerResult.answer_count) % 3, null);
+            return;
+        }
         if (pendingServerResult.floor_cleared) {
             setBoonChoices(pickBoonChoices());
             setPhase('reward');
@@ -298,6 +329,20 @@ const VocabularyTowerGame = ({
         );
     }
 
+    if (phase === 'deck-map' && isV2) {
+        return (
+            <V2DeckMap
+                grade={selectedGrade}
+                decks={v2Decks}
+                activeRun={status?.active_run}
+                submitting={submitting}
+                notice={notice}
+                onStart={handleStart}
+                onBack={onBack}
+            />
+        );
+    }
+
     if (phase === 'intro') {
         const hasActiveRun = Boolean(status?.active_run);
         const remaining = Number(status?.remaining_attempts ?? dailyLimit);
@@ -334,6 +379,25 @@ const VocabularyTowerGame = ({
     }
 
     if (phase === 'summary' && summary) {
+        if (isV2) {
+            return (
+                <div className="vocab-journey vocab-journey--summary">
+                    <main className="vocab-summary-card">
+                        <span className="vocab-summary-card__icon">📚</span>
+                        <p className="vocab-intro-card__eyebrow">{summary.deck_number}층 개인 연습 결과</p>
+                        <h1>{summary.practice_completed ? '12문항 연습을 마쳤어요!' : '오늘 배운 곳까지 저장했어요'}</h1>
+                        <div className="vocab-summary-card__stats vocab-summary-card__stats--practice">
+                            <div><span>풀은 문항</span><strong>{summary.answer_count}/{summary.target_question_count}</strong></div>
+                            <div><span>정답</span><strong>{summary.correct_count}개</strong></div>
+                            <div><span>정답률</span><strong>{summary.accuracy}%</strong></div>
+                        </div>
+                        <p>개인 연습은 층별 익힘 기록을 만드는 과정이에요. 포인트는 후속 덱 마스터 조건을 통과할 때 지급할 예정입니다.</p>
+                        <button type="button" className="vocab-journey__primary" onClick={loadStatus}>덱 지도로 돌아가기</button>
+                        <button type="button" className="vocab-summary-card__back" onClick={onBack}>놀이터로 나가기</button>
+                    </main>
+                </div>
+            );
+        }
         return (
             <div className="vocab-journey vocab-journey--summary">
                 <main className="vocab-summary-card">
@@ -358,33 +422,41 @@ const VocabularyTowerGame = ({
     }
 
     return (
-        <div className={`vocab-journey vocab-journey--floor-${run.currentFloor}`}>
+        <div className={`vocab-journey vocab-journey--floor-${isV2 ? selectedDeck : run.currentFloor}`}>
             <header className="vocab-journey__header">
                 <button type="button" onClick={() => { setReturnPhase(phase); setPhase('confirm'); }}>← 나가기</button>
-                <div><span>{run.currentFloor}층</span><strong>{currentQuiz?.room?.name || '층 보상 선택'}</strong></div>
-                <div className={`vocab-journey__timer${timeLeft <= 10 ? ' is-low' : ''}`}>⏱ {timeLeft}초</div>
+                <div><span>{isV2 ? `${selectedDeck}층 개인 연습` : `${run.currentFloor}층`}</span><strong>{currentQuiz?.room?.name || '층 보상 선택'}</strong></div>
+                {isV2
+                    ? <div className="vocab-journey__timer">{run.answerCount}/{run.targetQuestionCount}</div>
+                    : <div className={`vocab-journey__timer${timeLeft <= 10 ? ' is-low' : ''}`}>⏱ {timeLeft}초</div>}
             </header>
 
-            <div className="vocab-journey__floor-map" aria-label={`현재 ${run.currentFloor}층`}>
-                {Array.from({ length: 10 }, (_, index) => index + 1).map((floor) => (
-                    <span key={floor} className={floor < run.currentFloor ? 'is-passed' : floor === run.currentFloor ? 'is-current' : ''}>{floor}</span>
-                ))}
-            </div>
+            {isV2 ? (
+                <div className="vocab-practice-progress" aria-label={`12문항 중 ${run.answerCount}문항 완료`}>
+                    <span style={{ width: `${Math.min(100, run.answerCount / run.targetQuestionCount * 100)}%` }} />
+                </div>
+            ) : (
+                <div className="vocab-journey__floor-map" aria-label={`현재 ${run.currentFloor}층`}>
+                    {Array.from({ length: 10 }, (_, index) => index + 1).map((floor) => (
+                        <span key={floor} className={floor < run.currentFloor ? 'is-passed' : floor === run.currentFloor ? 'is-current' : ''}>{floor}</span>
+                    ))}
+                </div>
+            )}
 
             <div className="vocab-journey__status-row">
                 <div><span>학습 경험치</span><strong>{learningExp} EXP</strong></div>
                 <div><span>연속 정답</span><strong>{run.currentCombo}개</strong></div>
-                <div><span>복습할 낱말</span><strong>{reviewWords.length}개</strong></div>
-                {activeBoon && <div className="is-boon"><span>층 능력</span><strong>{activeBoon.icon} {activeBoon.name}</strong></div>}
+                <div><span>{isV2 ? '남은 문항' : '복습할 낱말'}</span><strong>{isV2 ? Math.max(0, run.targetQuestionCount - run.answerCount) : reviewWords.length}개</strong></div>
+                {!isV2 && activeBoon && <div className="is-boon"><span>층 능력</span><strong>{activeBoon.icon} {activeBoon.name}</strong></div>}
             </div>
 
-            <div className="vocab-journey__rooms" aria-label="현재 층의 방 진행">
+            {!isV2 && <div className="vocab-journey__rooms" aria-label="현재 층의 방 진행">
                 {floorProgress.map((room) => (
                     <div key={room.id} className={room.completed ? 'is-completed' : room.current ? 'is-current' : ''}>
                         <span>{room.completed ? '✓' : room.icon}</span><strong>{room.name}</strong>
                     </div>
                 ))}
-            </div>
+            </div>}
 
             <main className="vocab-journey__main">
                 {(phase === 'playing' || phase === 'answer') && currentQuiz && (
@@ -424,7 +496,7 @@ const VocabularyTowerGame = ({
                                     <strong>{lastResult.isCorrect ? lastResult.learnedFromReview ? '🎉 헷갈렸던 낱말을 익혔어요!' : '정답이에요!' : `정답은 ‘${currentQuiz.correctAnswer}’이에요.`}</strong>
                                     <span>학습 경험치 +{lastResult.earnedExp}</span>
                                     {!lastResult.isCorrect && <p>{currentQuiz.explanation || currentQuiz.word.definition}<br /><small>예: {currentQuiz.word.example}</small></p>}
-                                    <button type="button" onClick={handleNext} disabled={submitting}>{pendingServerResult?.completed ? '정상 기록 확인하기' : pendingServerResult?.floor_cleared ? '층 보상 고르기' : '다음 방으로'}</button>
+                                    <button type="button" onClick={handleNext} disabled={submitting}>{pendingServerResult?.completed ? isV2 ? '연습 결과 확인하기' : '정상 기록 확인하기' : pendingServerResult?.floor_cleared ? '층 보상 고르기' : '다음 문제로'}</button>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -453,7 +525,7 @@ const VocabularyTowerGame = ({
                         <div className="vocab-journey__dialog">
                             <span className="vocab-journey__dialog-icon">🚪</span>
                             <h2>탐험을 마칠까요?</h2>
-                            <p>지금까지 푼 문제와 배운 낱말은 서버에 저장되어 있어요. 지금까지 얻은 보상도 계산해드려요.</p>
+                            <p>{isV2 ? '지금까지 푼 문제를 이 층의 개인 연습 기록으로 저장할게요.' : '지금까지 푼 문제와 배운 낱말은 서버에 저장되어 있어요. 지금까지 얻은 보상도 계산해드려요.'}</p>
                             <div className="vocab-journey__dialog-actions">
                                 <button type="button" onClick={() => setPhase(returnPhase)}>계속 탐험하기</button>
                                 <button type="button" className="is-quiet" onClick={() => finishRun('exited')} disabled={submitting}>탐험 마치기</button>

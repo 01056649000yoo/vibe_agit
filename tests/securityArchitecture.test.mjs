@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration, vocabPracticeMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -22,7 +22,8 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261027_lab_ai_bridge.sql', 'utf8'),
     readFile('supabase/migrations/20261028_admin_lab_management.sql', 'utf8'),
     readFile('supabase/migrations/20261105_vocab_tower_v2_review_workspace.sql', 'utf8'),
-    readFile('supabase/migrations/20261106_vocab_tower_v2_pilot.sql', 'utf8')
+    readFile('supabase/migrations/20261106_vocab_tower_v2_pilot.sql', 'utf8'),
+    readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -214,4 +215,16 @@ test('어휘 V2 시험 출제는 잠긴 덱과 서버 정답 스냅샷으로 채
     const issueFunction = vocabPilotMigration.match(/CREATE OR REPLACE FUNCTION public\.get_next_my_vocab_tower_question_v2[\s\S]*?\n\$\$;/)?.[0] || '';
     assert.doesNotMatch(issueFunction, /'correct_answer'/);
     assert.doesNotMatch(vocabPilotMigration, /auth\.jwt|app_metadata/);
+});
+
+test('어휘 V2 덱별 개인 연습은 본인 학급 범위 RPC로만 기록한다', () => {
+    assert.match(vocabPracticeMigration, /ALTER TABLE public\.vocab_tower_v2_deck_progress ENABLE ROW LEVEL SECURITY/);
+    assert.match(vocabPracticeMigration, /REVOKE ALL ON TABLE public\.vocab_tower_v2_deck_progress FROM PUBLIC, anon, authenticated/);
+    assert.match(vocabPracticeMigration, /public\.auth_user_role\(\) <> 'STUDENT'/);
+    assert.match(vocabPracticeMigration, /run\.student_id = v_student_id[\s\S]*run\.class_id = v_class_id/);
+    assert.match(vocabPracticeMigration, /deck\.review_status = 'locked'/);
+    assert.match(vocabPracticeMigration, /question\.correct_answer/);
+    const issueFunction = vocabPracticeMigration.match(/CREATE OR REPLACE FUNCTION public\.get_next_my_vocab_tower_v2_practice_question_v1[\s\S]*?\n\$\$;/)?.[0] || '';
+    assert.doesNotMatch(issueFunction, /'correct_answer'/);
+    assert.doesNotMatch(vocabPracticeMigration, /auth\.jwt|app_metadata/);
 });
