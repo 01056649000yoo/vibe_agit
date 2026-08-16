@@ -26,13 +26,14 @@
   문제를 수정했다. 어휘의 탑 루트를 모바일 브라우저의 실제 가시 높이(`100dvh`)로 제한하고 자체 세로 스크롤,
   터치 관성 스크롤과 세로 오버스크롤 경계를 적용했다. 공통 학생 게임 전체 화면도 `100vh` 대신 `100dvh`를
   사용하도록 맞췄다.
-- **변경**: `src/modules/game/vocab-tower/vocabularyTowerGame.css`, `src/components/student/StudentDashboard.jsx`,
-  `tests/vocabTower.test.mjs`. DB·게임 데이터 변경 없음.
+- **변경**: 커밋 `5a78052`. `src/modules/game/vocab-tower/vocabularyTowerGame.css`,
+  `src/components/student/StudentDashboard.jsx`, `tests/vocabTower.test.mjs`. DB·게임 데이터 변경 없음.
 - **결과/검증**: 어휘의 탑 회귀 22개, 아키텍처 66개, ESLint 0경고·0오류와 Vite 프로덕션 빌드가 통과했다.
   높이·세로 스크롤·iOS 터치 스크롤 계약을 회귀 검사에 추가했다. 로컬 `agent-browser` 실행 파일은 없어 자동
-  브라우저 실기기 검사는 수행하지 못했다.
-- **남은 것 / 다음**: 운영 배포 뒤 학생 PC·태블릿·모바일에서 10개 덱 지도의 마지막 덱과 연습 결과 화면 하단
-  버튼까지 스크롤되는지 확인한다.
+  브라우저 실기기 검사는 수행하지 못했다. Deploy `31950089701`이 24초에 성공했고 새 `agit-app` 실행,
+  컨테이너 HTTP 200과 운영 `StudentEntry` CSS의 `100dvh`·`overflow-y:auto` 반영을 확인했다.
+- **남은 것 / 다음**: 학생 PC·태블릿·모바일에서 10개 덱 지도의 마지막 덱과 연습 결과 화면 하단 버튼까지
+  실제 손가락/휠로 스크롤되는지 확인한다.
 
 ## 2026-08-16 — V2 덱별 최초 완벽 연습 보상·교사 설정 (Codex)
 - **한 일**: 학생이 한 덱의 12문항을 모두 맞힌 최초 1회에만 학급 설정 포인트를 지급하도록 V2 개인 연습을
