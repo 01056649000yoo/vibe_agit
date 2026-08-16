@@ -105,7 +105,7 @@ const VocabularyTowerGame = ({
             setV2Decks(Array.isArray(data.decks) ? data.decks : []);
             setStatus({
                 active_run: data.active_run,
-                perfectRewardPoints: Number(data.perfect_reward_points || 0)
+                deckRewardPoints: Number(data.deck_reward_points || 0)
             });
             setSelectedDeck(data.active_run?.deck_number ? Number(data.active_run.deck_number) : null);
             setPhase('deck-map');
@@ -347,7 +347,6 @@ const VocabularyTowerGame = ({
                 grade={selectedGrade}
                 decks={v2Decks}
                 activeRun={status?.active_run}
-                perfectRewardPoints={status?.perfectRewardPoints || 0}
                 submitting={submitting}
                 notice={notice}
                 onStart={handleStart}
@@ -406,13 +405,13 @@ const VocabularyTowerGame = ({
                             <div><span>덱 익힘</span><strong>{summary.mastered_count || 0}/{summary.item_count || 0}</strong></div>
                         </div>
                         <div className="vocab-summary-card__reward">
-                            <span>{summary.perfect_reward_earned ? '최초 완벽 연습 보상' : '이번 연습 보상'}</span>
+                            <span>{Number(summary.reward_points || 0) > 0 ? '이번에 넘은 진도 보상' : '진도 보상'}</span>
                             <strong>+{summary.reward_points || 0}P</strong>
-                            <small>{summary.perfect_reward_earned
-                                ? `${summary.deck_number}층에서 처음 12/12를 달성했어요!`
-                                : summary.perfect_reward_already_earned
-                                    ? '이 층의 완벽 연습 보상은 이미 받았어요.'
-                                    : `12/12를 처음 달성하면 ${summary.perfect_reward_points || 0}P를 받아요.`}</small>
+                            <small>{Number(summary.reward_points || 0) > 0
+                                ? `${(summary.awarded_milestones || []).map((milestone) => `${milestone.percent}%`).join('·')} 목표를 넘었어요!`
+                                : summary.next_milestone_percent
+                                    ? `${summary.next_milestone_percent}% 목표까지 ${summary.next_milestone_remaining}개 더 익히면 +${summary.next_milestone_points}P`
+                                    : `${summary.deck_number}층 포인트를 모두 모았어요.`}</small>
                         </div>
                         <p>{Number(summary.needs_review_count || 0) > 0
                             ? `복습할 낱말 ${summary.needs_review_count}개를 다음 연습에서 먼저 만나요.`

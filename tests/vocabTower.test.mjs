@@ -17,7 +17,7 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
@@ -29,7 +29,8 @@ const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEnt
     readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8'),
     readFile('supabase/migrations/20261109_vocab_tower_v2_item_learning.sql', 'utf8'),
     readFile('supabase/migrations/20261110_vocab_tower_v2_default_content.sql', 'utf8'),
-    readFile('supabase/migrations/20261111_vocab_tower_v2_direct_input.sql', 'utf8')
+    readFile('supabase/migrations/20261111_vocab_tower_v2_direct_input.sql', 'utf8'),
+    readFile('supabase/migrations/20261112_vocab_tower_v2_progress_rewards.sql', 'utf8')
 ]);
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
@@ -84,7 +85,7 @@ test('V2 서버 문항은 정답 없이 기존 게임 카드 형태로 변환된
 test('V2 학생 화면은 10개 덱 지도에서 12문항 개인 연습을 시작한다', () => {
     assert.match(v2DeckMap, /어휘의 탑 지도/);
     assert.match(v2DeckMap, /explorationDecks\.map/);
-    assert.match(v2DeckMap, /한 번의 연습에서 12문항을 모두 맞히면/);
+    assert.match(v2DeckMap, /층마다 12개 낱말에 도전해요/);
     assert.match(vocabularyGame, /get_my_vocab_tower_v2_overview_v1/);
     assert.match(vocabularyGame, /start_my_vocab_tower_v2_practice_v1/);
     assert.match(vocabularyGame, /finish_my_vocab_tower_v2_practice_v1/);
@@ -107,17 +108,13 @@ test('V2 개인 연습은 덱별 결과를 저장하고 시작 자체에는 포�
     assert.match(v2PracticeMigration, /'reward_points', 0/);
 });
 
-test('V2 개인 연습은 덱별 최초 12\/12에 교사 설정 포인트를 한 번만 지급한다', () => {
+test('층당 보상 총액은 교사 설정값을 그대로 쓰고 포인트 지급은 서버가 계산한다', () => {
     assert.match(v2RewardMigration, /vocab_tower_v2_perfect_reward_points INTEGER NOT NULL DEFAULT 100/);
-    assert.match(v2RewardMigration, /v_run\.correct_count = v_run\.target_question_count/);
     assert.match(v2RewardMigration, /public\.point_engine_apply\(/);
-    assert.match(v2RewardMigration, /'vocab-v2-perfect:%s:%s:%s'/);
-    assert.match(v2RewardMigration, /'perfect_reward_already_earned'/);
-    assert.match(teacherManager, /최초 완벽 연습 보상/);
     assert.match(teacherManager, /vocab_tower_v2_perfect_reward_points/);
-    assert.match(v2DeckMap, /포인트 목표 완료/);
-    assert.match(v2DeckMap, /포인트를 이미 받았어요/);
-    assert.match(vocabularyGame, /perfect_reward_earned/);
+    // 지급 기준은 2026-08-17에 완벽 연습에서 익힘 진도로 옮겼다.
+    assert.match(v2ProgressRewardMigration, /public\.point_engine_apply\(/);
+    assert.match(v2ProgressRewardMigration, /LEAST\(500, GREATEST\(0, COALESCE\(class\.vocab_tower_v2_perfect_reward_points, 100\)\)\)/);
 });
 
 test('V2는 낱말별 상태를 기록하고 약점·새 낱말·복습을 적응 출제한다', () => {
@@ -135,13 +132,13 @@ test('V2는 낱말별 상태를 기록하고 약점·새 낱말·복습을 적�
     assert.match(vocabularyGame, /복습할 낱말/);
 });
 
-test('V2 덱 카드는 학습량과 포인트 목표 완료를 한 카드에서 설명한다', () => {
+test('V2 덱 카드는 학습량과 진도 보상 상태를 한 카드에서 설명한다', () => {
     assert.match(v2DeckMap, /한 번 이상 학습한 낱말/);
     assert.match(v2DeckMap, /12문항 완료/);
     assert.match(v2DeckMap, /최고 정답률/);
-    assert.match(v2DeckMap, /포인트 목표 도전 중/);
-    assert.match(v2DeckMap, /포인트 목표 완료/);
-    assert.match(v2DeckMap, /포인트를 이미 받았어요/);
+    assert.match(v2DeckMap, /포인트 목표 없음/);
+    assert.match(v2DeckMap, /이 층 포인트 모두 받음/);
+    assert.match(v2DeckMap, /포인트 \$\{earnedPoints\}\/\$\{deckPoints\}P/);
     assert.match(v2DeckMap, /aria-label=\{`\$\{deckNumber\}층/);
 });
 
@@ -228,4 +225,41 @@ test('학생 화면은 보기 대신 직접 쓰는 칸을 보여준다', () => {
     assert.match(vocabularyGame, /낱말을 직접 써 보세요/);
     assert.match(vocabularyGame, /setNotice\('낱말을 입력한 뒤 확인을 눌러주세요\.'\)/);
     assert.match(vocabularyStyles, /\.vocab-question-card__input input\.is-correct/);
+});
+
+test('층 포인트는 완벽 연습이 아니라 익힘 진도 네 구간으로 나눠 지급한다', () => {
+    assert.match(v2ProgressRewardMigration, /CREATE OR REPLACE FUNCTION public\.vocab_tower_v2_progress_milestones_v1/);
+    // 뒤 구간을 크게 두되 반올림 오차 없이 층 예산과 정확히 같아야 한다.
+    assert.match(v2ProgressRewardMigration, /ROUND\(total \* 0\.20\)::INTEGER AS first_points/);
+    assert.match(v2ProgressRewardMigration, /\(total - first_points - second_points - third_points\)/);
+    assert.match(v2ProgressRewardMigration, /'vocab-v2-progress:%s:%s:%s:%s'/);
+    // 넘어선 구간은 한 번에 모두 지급하되 이미 받은 구간은 event_key로 막는다.
+    assert.match(v2ProgressRewardMigration, /CONTINUE WHEN v_mastered_count < v_milestone\.mastered_threshold;/);
+    // 완벽 연습은 포인트와 분리해 지도 위 명예 표시로만 남긴다.
+    assert.doesNotMatch(v2ProgressRewardMigration, /IF v_perfect AND v_perfect_reward_points > 0 THEN/);
+    assert.match(v2ProgressRewardMigration, /'perfect_practice', v_perfect/);
+});
+
+test('이미 완벽 보상을 받은 층은 진도 보상을 다시 주지 않는다', () => {
+    assert.match(v2ProgressRewardMigration, /v_legacy_perfect_earned/);
+    assert.match(v2ProgressRewardMigration, /CONTINUE WHEN v_legacy_perfect_earned;/);
+});
+
+test('지도와 결과 화면은 다음 보상까지 남은 낱말 수를 알려준다', () => {
+    assert.match(v2ProgressRewardMigration, /'next_milestone_threshold'/);
+    assert.match(v2ProgressRewardMigration, /'next_milestone_remaining'/);
+    assert.match(v2ProgressRewardMigration, /'earned_reward_points'/);
+    assert.match(v2ProgressRewardMigration, /'reward_completed', reward_stats\.next_percent IS NULL/);
+    assert.match(v2DeckMap, /% 목표까지 \$\{nextMilestoneRemaining\}개 더 익히면 \+\$\{nextMilestonePoints\}P/);
+    assert.match(v2DeckMap, /모은 포인트/);
+    assert.match(vocabularyGame, /이번에 넘은 진도 보상/);
+    assert.match(vocabularyStyles, /\.vocab-deck-card__reward-track/);
+    // 완벽 연습 문구는 학생 화면에서 사라져야 한다.
+    assert.doesNotMatch(v2DeckMap, /12문항을 모두 맞히면/);
+});
+
+test('교사 설정은 층당 총액을 네 구간으로 나눈다고 설명한다', () => {
+    assert.match(teacherManager, /층당 진도 보상 총액/);
+    assert.match(teacherManager, /25·50·75·100%/);
+    assert.doesNotMatch(teacherManager, /최초 완벽 연습 보상/);
 });

@@ -94,6 +94,10 @@
 .vocab-deck-card__reward strong, .vocab-deck-card__reward small { display: block; }
 .vocab-deck-card__reward strong { font-size: .7rem; }
 .vocab-deck-card__reward small { margin-top: 2px; color: #69758a; font-size: .61rem; line-height: 1.4; }
+/* 층당 총액 중 지금까지 받은 비율. 한 번 찬 칸은 이후 연습에서 다시 줄어들지 않는다. */
+.vocab-deck-card__reward-track { display: block; margin-top: 5px; height: 5px; border-radius: 999px; background: #e6ebf5; overflow: hidden; }
+.vocab-deck-card__reward-track > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg,#f3b64b,#e59a20); transition: width .35s ease; }
+.vocab-deck-card__reward.is-complete .vocab-deck-card__reward-track > span { background: linear-gradient(90deg,#5cbf8a,#2f9c63); }
 .vocab-deck-card__reward.is-pending { border-color: #f1d58b; background: #fff8df; color: #805a0c; }
 .vocab-deck-card__reward.is-complete { border-color: #91d2ac; background: #e7f8ee; color: #206c45; }
 .vocab-deck-card__reward.is-off { border-color: #dde3eb; background: #f4f6f8; color: #68758a; }

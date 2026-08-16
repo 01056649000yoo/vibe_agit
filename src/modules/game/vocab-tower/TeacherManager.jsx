@@ -105,7 +105,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     <div>
                         <span className="vocab-teacher__eyebrow">현재 운영 요약</span>
                         <h3 id="vocab-journey-title">10개 층 덱을 고르는 개인 어휘 연습</h3>
-                        <p>학생은 원하는 층에서 12문항을 연습하고, 첫 12/12 달성 시 {config.perfectRewardPoints}P를 받습니다.</p>
+                        <p>학생은 원하는 층에서 12문항을 연습하고, 그 층 낱말을 익힌 진도가 25·50·75·100%를 넘을 때마다 층당 {config.perfectRewardPoints}P를 나눠 받습니다.</p>
                     </div>
                     <span className="vocab-teacher__version">현재 운영 중</span>
                 </div>
@@ -120,7 +120,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     <div><span>기본 자료</span><strong>현재 덱 10개</strong></div>
                     <div><span>연습 횟수</span><strong>제한 없음</strong></div>
                     <div><span>연습 시간</span><strong>제한 없음</strong></div>
-                    <div><span>완벽 보상</span><strong>{config.perfectRewardPoints}P</strong></div>
+                    <div><span>층당 보상</span><strong>{config.perfectRewardPoints}P</strong></div>
                 </div>
             </section>
 
@@ -151,14 +151,14 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                             </select>
                         </label>
                         <label>
-                            <span>🏆 최초 완벽 연습 보상</span>
+                            <span>🏆 층당 진도 보상 총액</span>
                             <input type="number" min="0" max="500" step="10" value={config.perfectRewardPoints} onChange={(event) => updateConfig('perfectRewardPoints', event.target.value)} />
                         </label>
                     </div>
                 </div>
 
                 <div className="vocab-teacher__footer-actions">
-                    <p>같은 층의 포인트는 한 번만 지급됩니다. 0P로 저장하면 보상을 끕니다.</p>
+                    <p>층당 총액을 25·50·75·100% 네 구간에 20·20·30·30%로 나눠 지급하며, 같은 구간은 한 번만 지급됩니다. 0P로 저장하면 보상을 끕니다.</p>
                     <Button type="button" onClick={handleSave} loading={saving} loadingText="저장 중...">
                         설정 저장
                     </Button>

@@ -4,7 +4,6 @@ const V2DeckMap = ({
     grade,
     decks,
     activeRun,
-    perfectRewardPoints,
     submitting,
     notice,
     onStart,
@@ -14,7 +13,8 @@ const V2DeckMap = ({
     const totalItems = decks.reduce((sum, deck) => sum + Number(deck.item_count || 0), 0);
     const totalSeen = decks.reduce((sum, deck) => sum + Number(deck.seen_count || 0), 0);
     const totalMastered = decks.reduce((sum, deck) => sum + Number(deck.mastered_count || 0), 0);
-    const rewardedDecks = decks.filter((deck) => Boolean(deck.perfect_reward_earned)).length;
+    const earnedRewardPoints = decks.reduce((sum, deck) => sum + Number(deck.earned_reward_points || 0), 0);
+    const totalRewardPoints = decks.reduce((sum, deck) => sum + Number(deck.deck_reward_points || 0), 0);
     const conqueredDecks = decks.filter((deck) => Number(deck.best_accuracy || 0) >= 100).length;
     const deckCount = decks.length || 10;
     const ascendingDecks = [...decks].sort((a, b) => Number(a.deck_number) - Number(b.deck_number));
@@ -47,7 +47,7 @@ const V2DeckMap = ({
                     <div className="is-conquest"><span>100%로 정복한 층</span><strong>{conqueredDecks}/{deckCount}</strong></div>
                     <div><span>한 번 이상 학습한 낱말</span><strong>{totalSeen}/{totalItems}</strong></div>
                     <div><span>완전히 익힌 낱말</span><strong>{totalMastered}/{totalItems}</strong></div>
-                    <div><span>포인트 받은 층</span><strong>{rewardedDecks}/{deckCount}층</strong></div>
+                    <div><span>모은 포인트</span><strong>{earnedRewardPoints}/{totalRewardPoints}P</strong></div>
                 </div>
 
                 <div className="vocab-tower-route" aria-label="어휘의 탑 탐험 경로">
@@ -67,7 +67,12 @@ const V2DeckMap = ({
                         const practiceRuns = Number(deck.practice_runs || 0);
                         const completedRuns = Number(deck.completed_runs || 0);
                         const bestAccuracy = Number(deck.best_accuracy || 0);
-                        const perfectRewardEarned = Boolean(deck.perfect_reward_earned);
+                        const rewardCompleted = Boolean(deck.reward_completed);
+                        const earnedPoints = Number(deck.earned_reward_points || 0);
+                        const deckPoints = Number(deck.deck_reward_points || 0);
+                        const nextMilestonePercent = Number(deck.next_milestone_percent || 0);
+                        const nextMilestonePoints = Number(deck.next_milestone_points || 0);
+                        const nextMilestoneRemaining = Number(deck.next_milestone_remaining || 0);
                         const itemCount = Number(deck.item_count || 0);
                         const masteredCount = Number(deck.mastered_count || 0);
                         const needsReviewCount = Number(deck.needs_review_count || 0);
@@ -83,14 +88,17 @@ const V2DeckMap = ({
                         const cardStatus = isActive
                             ? `연습 진행 중 ${activeRun.answer_count}/${activeRun.target_question_count}`
                             : isConquered ? '정복 완료' : hasPractice ? `학습 ${seenCount}/${itemCount}` : '미탐험';
-                        const rewardTitle = perfectRewardEarned
-                            ? '포인트 목표 완료'
-                            : perfectRewardPoints > 0 ? '포인트 목표 도전 중' : '포인트 목표 없음';
-                        const rewardDescription = perfectRewardEarned
-                            ? '포인트를 이미 받았어요.'
-                            : perfectRewardPoints > 0
-                                ? `한 번의 연습에서 12문항을 모두 맞히면 +${perfectRewardPoints}P`
-                                : '포인트 없이 낱말 학습 기록만 쌓여요.';
+                        // 포인트는 익힌 낱말 수가 25·50·75·100% 구간을 넘을 때마다 나눠 받는다.
+                        const rewardTitle = deckPoints <= 0
+                            ? '포인트 목표 없음'
+                            : rewardCompleted
+                                ? `이 층 포인트 모두 받음 ${earnedPoints}P`
+                                : `포인트 ${earnedPoints}/${deckPoints}P`;
+                        const rewardDescription = deckPoints <= 0
+                            ? '포인트 없이 낱말 학습 기록만 쌓여요.'
+                            : rewardCompleted
+                                ? '이 층 낱말을 모두 익혀 포인트를 다 모았어요.'
+                                : `${nextMilestonePercent}% 목표까지 ${nextMilestoneRemaining}개 더 익히면 +${nextMilestonePoints}P`;
                         return (
                             <div
                                 key={deck.deck_id || deckNumber}
@@ -101,7 +109,7 @@ const V2DeckMap = ({
                                     {isConquered ? '★' : isActive ? '●' : deckNumber}
                                 </span>
                                 <article
-                                    className={`vocab-deck-card${isActive ? ' is-active' : hasPractice ? ' is-practiced' : ''}${perfectRewardEarned ? ' is-reward-complete' : ''}${isConquered ? ' is-conquered' : ''}`}
+                                    className={`vocab-deck-card${isActive ? ' is-active' : hasPractice ? ' is-practiced' : ''}${rewardCompleted ? ' is-reward-complete' : ''}${isConquered ? ' is-conquered' : ''}`}
                                     aria-current={isActive ? 'step' : undefined}
                                     aria-label={`${deckNumber}층, ${isConquered ? '정복 완료, ' : ''}전체 ${itemCount}개, 학습 ${seenCount}개, 연습 중 ${learningCount}개, 다시 볼 낱말 ${needsReviewCount}개, 완전히 익힘 ${masteredCount}개, ${rewardTitle}`}
                                 >
@@ -127,9 +135,17 @@ const V2DeckMap = ({
                                             <div className="is-mastered"><span>완전히 익힘</span><strong>{masteredCount}</strong></div>
                                         </div>
                                         <p className="vocab-deck-card__record">12문항 완료 {completedRuns}회{completedRuns > 0 ? ` · 최고 정답률 ${bestAccuracy}%` : ''}</p>
-                                        <div className={`vocab-deck-card__reward${perfectRewardEarned ? ' is-complete' : perfectRewardPoints > 0 ? ' is-pending' : ' is-off'}`}>
-                                            <span aria-hidden="true">{perfectRewardEarned ? '✅' : perfectRewardPoints > 0 ? '🎁' : '📘'}</span>
-                                            <div><strong>{rewardTitle}</strong><small>{rewardDescription}</small></div>
+                                        <div className={`vocab-deck-card__reward${rewardCompleted ? ' is-complete' : deckPoints > 0 ? ' is-pending' : ' is-off'}`}>
+                                            <span aria-hidden="true">{rewardCompleted ? '✅' : deckPoints > 0 ? '🎁' : '📘'}</span>
+                                            <div>
+                                                <strong>{rewardTitle}</strong>
+                                                <small>{rewardDescription}</small>
+                                                {deckPoints > 0 && (
+                                                    <span className="vocab-deck-card__reward-track" aria-hidden="true">
+                                                        <span style={{ width: `${Math.min(100, Math.round(earnedPoints / deckPoints * 100))}%` }} />
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                     <button
