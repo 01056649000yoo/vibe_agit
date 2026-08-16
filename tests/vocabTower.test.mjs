@@ -356,6 +356,27 @@ test('낱말 카드함은 아직 만나지 않은 낱말을 노출하지 않는�
     assert.match(cardBoxMigration, /LIMIT 100/);
 });
 
+test('카드함은 상태별로 접고 다 익힌 낱말은 칩으로 압축한다', () => {
+    // 한 층 40개를 같은 크기로 늘어놓으면 훑기 어렵다. 지금 봐야 할 묶음만 펼쳐 둔다.
+    assert.match(cardBox, /id: 'confusing'[\s\S]*?open: true/);
+    assert.match(cardBox, /id: 'mastered'[\s\S]*?open: false, chips: true/);
+    assert.match(cardBox, /closedSections/);
+    assert.match(cardBox, /aria-expanded=\{!isClosed\}/);
+    assert.match(cardBox, /vocab-word-chip/);
+    assert.match(vocabularyStyles, /\.vocab-card-group__chips/);
+});
+
+test('카드함은 뜻을 가려 두고 떠올린 뒤 확인하게 한다', () => {
+    // 읽기만 하면 남지 않는다. 스스로 꺼내 본 뒤 확인할 때 기억에 남는다.
+    assert.match(cardBox, /뜻을 떠올려 보세요 · 눌러서 확인/);
+    assert.match(cardBox, /뜻 다시 가리기/);
+    assert.match(cardBox, /뜻 모두 보기/);
+    assert.match(cardBox, /toggleReveal/);
+    // 뜻은 가리되 익힘 근거는 항상 보여야 다음에 뭘 할지 안다.
+    assert.match(cardBox, /isOpen \? \(/);
+    assert.match(vocabularyStyles, /\.vocab-word-card__reveal/);
+});
+
 test('카드함은 낱말마다 익힘 근거와 다음 복습 시점을 보여 준다', () => {
     assert.match(cardBoxMigration, /'card_state', CASE/);
     assert.match(cardBoxMigration, /progress\.wrong_count >= 2 THEN 'confusing'/);
