@@ -106,9 +106,6 @@
 .vocab-deck-card.is-active > button { background: #c17a13; }
 .vocab-deck-map__active-note { margin: 14px 0 0; color: #8a5d14; font-size: .78rem; font-weight: 850; }
 .vocab-intro-card, .vocab-summary-card { position: relative; width: min(760px,100%); padding: 34px; border: 1px solid rgba(255,255,255,.8); border-radius: 34px; background: rgba(255,255,255,.94); box-shadow: 0 24px 70px rgba(40,63,120,.18); text-align: center; }
-/* 지도 안내 버튼 — 지도는 10층(위)부터 1층(아래) 순서라 첫 진입 시 아래로 스크롤된다.
-   그래서 절대 위치로 두면 위로 한참 올라가야 보인다. 스크롤을 따라오도록 고정한다. */
-.vocab-deck-map__guide-bar { position: sticky; top: 2px; z-index: 5; display: flex; justify-content: flex-end; }
 .vocab-journey__back { position: absolute; top: 20px; left: 20px; padding: 9px 12px; border: 0; border-radius: 12px; background: #eef2f7; color: #526173; font-weight: 900; cursor: pointer; }
 .vocab-intro-card__tower { margin-top: 8px; font-size: 5.3rem; filter: drop-shadow(0 10px 10px rgba(49,86,184,.18)); }
 .vocab-intro-card__eyebrow { margin: 8px 0; color: #6d4fc2; font-size: .78rem; font-weight: 950; letter-spacing: .04em; }
@@ -239,7 +236,6 @@
   .vocab-deck-card { grid-template-columns: 52px minmax(0,1fr); padding: 13px; }
   .vocab-deck-card__floor { width: 52px; }
   .vocab-journey__back { position: static; display: block; margin-bottom: 5px; }
-  .vocab-deck-map__guide-bar { top: 0; }
   .vocab-intro-card__rooms { grid-template-columns: 1fr; }
   .vocab-intro-card__rooms article { grid-template-columns: auto 1fr; text-align: left; }
   .vocab-intro-card__rooms article > span { grid-row: span 2; }

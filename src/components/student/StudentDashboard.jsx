@@ -431,6 +431,10 @@ const StudentDashboard = ({
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        // ⚠️ zIndex 20000 은 공용 `Modal`(9999) 보다 높다. 그래서 게임 화면 **안에서**
+                        // `Modal`/`ModalPortal` 을 열면 창이 이 화면 뒤에 숨고, 몸통 스크롤만 잠긴 채
+                        // 학생이 닫지도 못한다(2026-08-17 어휘의 탑 지도 도움말에서 실제로 발생).
+                        // 게임 화면 안에 창을 띄워야 하면 이 값을 먼저 정리하고 붙인다.
                         style={{
                             position: 'fixed', inset: 0, width: '100vw', height: '100dvh',
                             background: 'white', zIndex: 20000, overflowX: 'hidden', overflowY: 'auto',

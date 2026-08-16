@@ -1,6 +1,4 @@
 import React from 'react';
-import StudentModuleGuide from '../../../components/student/StudentModuleGuide';
-import { VOCAB_TOWER_STUDENT_GUIDE } from './towerGuide';
 
 const V2DeckMap = ({
     grade,
@@ -41,9 +39,6 @@ const V2DeckMap = ({
         <div className="vocab-journey vocab-journey--deck-map">
             <main className="vocab-deck-map">
                 <button type="button" className="vocab-journey__back" onClick={onBack}>← 놀이터</button>
-                <div className="vocab-deck-map__guide-bar">
-                    <StudentModuleGuide guide={VOCAB_TOWER_STUDENT_GUIDE} />
-                </div>
                 <p className="vocab-intro-card__eyebrow">{grade}학년 개인 어휘 수련</p>
                 <h1>어휘의 탑 지도</h1>
                 <p className="vocab-intro-card__lead">탑의 길을 따라 오르며 층마다 12개 낱말에 도전해요. 어느 층이든 골라 탐험할 수 있어요.</p>

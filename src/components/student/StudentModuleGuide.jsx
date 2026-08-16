@@ -10,9 +10,12 @@ import './StudentModuleGuide.css';
  * 안내 **내용은 각 모듈이 소유**하고(`manifest.playground.guide` 또는 모듈 폴더의 자료),
  * 이 컴포넌트는 그 자료를 받아 그리기만 한다. 셸에 모듈별 문구를 넣지 않기 위해서다.
  *
- * 창은 반드시 `ModalPortal` 로 띄운다. 이 버튼이 놓이는 자리(놀이터 카드, 어휘의 탑 지도)가
- * 모두 자기만의 쌓임 맥락을 만들어, 그 안에서 그리면 창이 바깥 요소에 덮인다
- * (`TeacherGuideButton` 에서 겪은 것과 같은 문제).
+ * 창은 반드시 `ModalPortal` 로 띄운다. 이 버튼이 놓이는 자리가 자기만의 쌓임 맥락을 만들어,
+ * 그 안에서 그리면 창이 바깥 요소에 덮인다(`TeacherGuideButton` 에서 겪은 것과 같은 문제).
+ *
+ * **놀이터 카드처럼 z-index 가 공용 `Modal`(9999) 보다 낮은 자리에만 둔다.**
+ * 게임 모듈 실행 화면(`StudentDashboard` 의 zIndex 20000)에 두면 창이 그 뒤에 숨고
+ * 몸통 스크롤만 잠겨 학생이 닫지도 못한다(2026-08-17 어휘의 탑 지도에서 실제로 발생해 제거).
  */
 const StudentModuleGuide = ({ guide, className = '', variant = 'help' }) => {
     const [isOpen, setIsOpen] = useState(false);

@@ -335,10 +335,12 @@ test('학생은 놀이터 카드에서 바로 어휘의 탑 도움말을 연다'
     assert.match(agitPlaygroundStyles, /\.agit-playground-card__guide \{ justify-self: end; \}/);
 });
 
-test('지도 도움말은 아래로 스크롤해도 계속 보인다', () => {
-    assert.match(v2DeckMap, /vocab-deck-map__guide-bar/);
-    assert.match(v2DeckMap, /StudentModuleGuide guide=\{VOCAB_TOWER_STUDENT_GUIDE\}/);
-    // 지도는 10층(위)→1층(아래) 순서라 첫 진입 시 아래로 스크롤된다. 절대 위치면 보이지 않는다.
-    assert.match(vocabularyStyles, /\.vocab-deck-map__guide-bar \{ position: sticky;/);
-    assert.doesNotMatch(vocabularyStyles, /\.vocab-deck-map__guide \{ position: absolute;/);
+test('게임 실행 화면 안에는 안내 창을 띄우지 않는다', () => {
+    // 게임 화면은 zIndex 20000 이고 공용 Modal 은 9999 라, 그 안에서 창을 열면 뒤에 숨고
+    // 몸통 스크롤만 잠겨 학생이 닫지도 못한다(2026-08-17 지도 도움말에서 실제로 발생해 제거).
+    assert.doesNotMatch(v2DeckMap, /StudentModuleGuide/);
+    assert.doesNotMatch(v2DeckMap, /vocab-deck-map__guide/);
+    assert.doesNotMatch(vocabularyStyles, /vocab-deck-map__guide/);
+    assert.match(studentDashboard, /zIndex: 20000/);
+    assert.match(studentDashboard, /공용 `Modal`\(9999\) 보다 높다/);
 });
