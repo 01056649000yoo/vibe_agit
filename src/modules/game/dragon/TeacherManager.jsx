@@ -433,7 +433,7 @@ const DragonTeacherManager = ({ activeClass }) => {
                 <div className="dragon-season-hero__copy">
                     <span className="dragon-teacher-eyebrow">GUARDIAN SEASON {season.number || 1}</span>
                     <h2>{season.name || '현재 시즌'}</h2>
-                    <p>한 학기 동안 한 수호룡을 키우고, 학기말에는 작별 편지와 최종 모습을 기록합니다. 새 학기는 알부터 다시 시작하지만 글·포인트·꾸미기 자산은 그대로 남습니다.</p>
+                    <p>학기 동안 글과 함께 성장하고, 시즌을 마치면 작별 편지와 최종 모습을 보관합니다.</p>
                     <div className="dragon-season-hero__meta">
                         <span>시작 {formatDate(season.started_at)}</span>
                         <span>{getSeasonDays(season.started_at)}일째</span>

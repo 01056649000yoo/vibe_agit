@@ -115,6 +115,22 @@ test('교사 단계 미리보기는 공용 4종·10단계·7효과를 조합하�
     assert.doesNotMatch(previewSource, /supabase|\.rpc\(|\.from\(/);
 });
 
+test('교사 놀이터와 수호룡 현황은 핵심 정보를 먼저 보이도록 세로 공간을 압축한다', async () => {
+    const [shellSource, managerSource, managerStyles] = await Promise.all([
+        readFile('src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'utf8'),
+        readFile('src/modules/game/dragon/TeacherManager.jsx', 'utf8'),
+        readFile('src/modules/game/dragon/TeacherManager.css', 'utf8')
+    ]);
+
+    assert.match(shellSource, /학생 화면 미리보기 · 필요할 때 펼치기/);
+    assert.match(shellSource, /<details/);
+    assert.match(shellSource, /compact/);
+    assert.match(managerSource, /학기 동안 글과 함께 성장하고/);
+    assert.match(managerStyles, /\.dragon-season-hero\s*\{[\s\S]*?padding:\s*15px;/);
+    assert.match(managerStyles, /\.dragon-teacher-tabs\s*\{[\s\S]*?margin:\s*9px 0;/);
+    assert.match(managerStyles, /\.dragon-teacher-summary\s*\{[\s\S]*?padding:\s*9px;/);
+});
+
 test('작가 3단계를 처음 넘어선 성장 확인 뒤에만 재선택 화면을 자동으로 연다', () => {
     const selectedPet = { species: 'star' };
     assert.equal(shouldOpenDragonSpeciesReselectionAfterGrowth({ fromLevel: 2, toLevel: 3 }, selectedPet), true);

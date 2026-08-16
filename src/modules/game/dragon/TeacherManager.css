@@ -16,16 +16,16 @@
 .dragon-season-hero {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(250px, .75fr);
-    gap: 22px;
+    grid-template-columns: minmax(0, 1.55fr) minmax(250px, .85fr);
+    gap: 12px;
     overflow: hidden;
-    padding: 26px;
+    padding: 15px;
     border: 1px solid #e3caa9;
-    border-radius: 24px;
+    border-radius: 17px;
     background:
         radial-gradient(circle at 11% 12%, rgba(255, 216, 142, .64), transparent 26%),
         linear-gradient(135deg, #fff9ed 0%, #f6ead9 60%, #e8d2b7 100%);
-    box-shadow: 0 14px 34px rgba(86, 57, 32, .09);
+    box-shadow: 0 8px 22px rgba(86, 57, 32, .07);
 }
 
 .dragon-season-hero::after {
@@ -41,66 +41,67 @@
 
 .dragon-season-hero__copy,
 .dragon-season-hero__action { position: relative; z-index: 1; }
-.dragon-season-hero h2 { margin: 5px 0 6px; font-size: clamp(1.55rem, 3vw, 2.15rem); }
-.dragon-season-hero__copy > p { max-width: 690px; margin: 0; color: #6d5b4b; font-size: .85rem; font-weight: 750; line-height: 1.7; }
-.dragon-season-hero__meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 17px; }
-.dragon-season-hero__meta span { padding: 6px 9px; border: 1px solid rgba(151, 102, 59, .18); border-radius: 99px; background: rgba(255,255,255,.62); color: #79563a; font-size: .69rem; font-weight: 900; }
+.dragon-season-hero h2 { margin: 3px 0 4px; font-size: clamp(1.2rem, 2.1vw, 1.55rem); }
+.dragon-season-hero__copy > p { max-width: 690px; margin: 0; color: #6d5b4b; font-size: .7rem; font-weight: 750; line-height: 1.45; }
+.dragon-season-hero__meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.dragon-season-hero__meta span { padding: 4px 7px; border: 1px solid rgba(151, 102, 59, .18); border-radius: 99px; background: rgba(255,255,255,.62); color: #79563a; font-size: .59rem; font-weight: 900; }
 
 .dragon-season-hero__action {
     align-self: stretch;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 8px;
-    padding: 17px;
+    gap: 5px;
+    padding: 10px;
     border: 1px solid rgba(132, 87, 48, .17);
-    border-radius: 18px;
+    border-radius: 13px;
     background: rgba(255,255,255,.73);
     box-shadow: inset 0 1px 0 white;
 }
-.dragon-season-hero__action label { color: #705844; font-size: .72rem; font-weight: 900; }
-.dragon-season-hero__action input { min-height: 42px; padding: 8px 11px; border: 1px solid #d6c1ad; border-radius: 11px; background: white; color: #40352d; font: inherit; font-size: .83rem; font-weight: 800; }
-.dragon-season-hero__action small { color: #7b6b5f; font-size: .66rem; font-weight: 750; text-align: center; }
-.dragon-season-hero__farewell-progress { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 11px; border-radius: 12px; background: #f5eadb; color: #765236; }
-.dragon-season-hero__farewell-progress strong { font-size: 1.05rem; }
-.dragon-season-hero__farewell-progress span { font-size: .68rem; font-weight: 850; }
+.dragon-season-hero__action label { color: #705844; font-size: .61rem; font-weight: 900; }
+.dragon-season-hero__action input { min-height: 33px; padding: 5px 8px; border: 1px solid #d6c1ad; border-radius: 8px; background: white; color: #40352d; font: inherit; font-size: .72rem; font-weight: 800; }
+.dragon-season-hero__action button { min-height: 34px; }
+.dragon-season-hero__action small { color: #7b6b5f; font-size: .56rem; font-weight: 750; line-height: 1.3; text-align: center; }
+.dragon-season-hero__farewell-progress { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 7px 9px; border-radius: 9px; background: #f5eadb; color: #765236; }
+.dragon-season-hero__farewell-progress strong { font-size: .9rem; }
+.dragon-season-hero__farewell-progress span { font-size: .59rem; font-weight: 850; }
 
-.dragon-teacher-tabs { display: flex; gap: 6px; margin: 20px 0; padding: 5px; overflow-x: auto; border: 1px solid #e7e1dc; border-radius: 15px; background: #f7f5f3; }
-.dragon-teacher-tabs button { min-height: 40px; padding: 8px 15px; border: 0; border-radius: 11px; background: transparent; color: #776b62; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 900; white-space: nowrap; }
+.dragon-teacher-tabs { display: flex; gap: 5px; margin: 9px 0; padding: 4px; overflow-x: auto; border: 1px solid #e7e1dc; border-radius: 12px; background: #f7f5f3; }
+.dragon-teacher-tabs button { min-height: 33px; padding: 6px 11px; border: 0; border-radius: 8px; background: transparent; color: #776b62; cursor: pointer; font: inherit; font-size: .68rem; font-weight: 900; white-space: nowrap; }
 .dragon-teacher-tabs button.is-active { background: white; color: #a44f21; box-shadow: 0 4px 12px rgba(47, 36, 27, .09); }
 
-.dragon-teacher-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.dragon-teacher-summary { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 15px; border: 1px solid; border-radius: 17px; }
-.dragon-teacher-summary__icon { display: grid; flex: 0 0 auto; place-items: center; width: 40px; height: 40px; border-radius: 13px; background: rgba(255,255,255,.7); font-size: 1.1rem; font-weight: 950; }
+.dragon-teacher-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.dragon-teacher-summary { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 9px; border: 1px solid; border-radius: 12px; }
+.dragon-teacher-summary__icon { display: grid; flex: 0 0 auto; place-items: center; width: 31px; height: 31px; border-radius: 9px; background: rgba(255,255,255,.7); font-size: .88rem; font-weight: 950; }
 .dragon-teacher-summary__label, .dragon-teacher-summary small { display: block; }
-.dragon-teacher-summary__label { color: #766a61; font-size: .66rem; font-weight: 900; }
-.dragon-teacher-summary strong { display: block; margin: 2px 0; font-size: 1.15rem; font-weight: 950; white-space: nowrap; }
-.dragon-teacher-summary small { color: #867a71; font-size: .62rem; font-weight: 750; }
+.dragon-teacher-summary__label { color: #766a61; font-size: .57rem; font-weight: 900; }
+.dragon-teacher-summary strong { display: block; margin: 1px 0; font-size: .89rem; font-weight: 950; white-space: nowrap; }
+.dragon-teacher-summary small { color: #867a71; font-size: .54rem; font-weight: 750; }
 .dragon-teacher-summary--amber { border-color: #f0d59d; background: #fff8e9; }
 .dragon-teacher-summary--green { border-color: #cbe1cd; background: #f1f8f1; }
 .dragon-teacher-summary--blue { border-color: #cbddeb; background: #f2f8fc; }
 .dragon-teacher-summary--violet { border-color: #dcd2ee; background: #f8f4fc; }
 
-.dragon-teacher-overview__grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .75fr); gap: 12px; margin-top: 12px; }
-.dragon-teacher-panel { padding: 20px; border: 1px solid var(--dragon-line); border-radius: 19px; background: #fff; }
-.dragon-teacher-panel__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.dragon-teacher-panel__heading h3 { margin: 3px 0 0; font-size: .98rem; }
-.dragon-teacher-panel__hint { color: #8a7d73; font-size: .65rem; font-weight: 800; }
+.dragon-teacher-overview__grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(250px, .75fr); gap: 7px; margin-top: 7px; }
+.dragon-teacher-panel { padding: 11px; border: 1px solid var(--dragon-line); border-radius: 13px; background: #fff; }
+.dragon-teacher-panel__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 9px; margin-bottom: 7px; }
+.dragon-teacher-panel__heading h3 { margin: 2px 0 0; font-size: .82rem; }
+.dragon-teacher-panel__hint { color: #8a7d73; font-size: .55rem; font-weight: 800; }
 
-.dragon-level-chart { display: grid; gap: 7px; }
+.dragon-level-chart { display: grid; gap: 3px; }
 .dragon-level-chart__row { display: grid; grid-template-columns: 38px minmax(50px, 1fr) 34px 95px; align-items: center; gap: 8px; min-width: 0; }
 .dragon-level-chart__level { color: #8c684c; font-size: .66rem; font-weight: 950; }
-.dragon-level-chart__track { height: 9px; overflow: hidden; border-radius: 99px; background: #eee8e3; }
+.dragon-level-chart__track { height: 6px; overflow: hidden; border-radius: 99px; background: #eee8e3; }
 .dragon-level-chart__track span { display: block; min-width: 2px; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #e7a74f, #cc673a); }
 .dragon-level-chart__row strong { color: #564a41; font-size: .7rem; text-align: right; }
 .dragon-level-chart__row small { overflow: hidden; color: #8c8178; font-size: .62rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 
-.dragon-teacher-watchlist__items { display: grid; gap: 8px; }
-.dragon-teacher-watchlist__items button { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 3px 10px; padding: 12px; border: 1px solid #e9dfd5; border-radius: 13px; background: #fbf9f6; color: inherit; cursor: pointer; font: inherit; text-align: left; }
+.dragon-teacher-watchlist__items { display: grid; gap: 5px; }
+.dragon-teacher-watchlist__items button { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 8px; padding: 7px 8px; border: 1px solid #e9dfd5; border-radius: 9px; background: #fbf9f6; color: inherit; cursor: pointer; font: inherit; text-align: left; }
 .dragon-teacher-watchlist__items button > span { font-size: .72rem; font-weight: 900; }
-.dragon-teacher-watchlist__items button > strong { grid-row: span 2; align-self: center; color: #bb582d; font-size: 1.05rem; }
+.dragon-teacher-watchlist__items button > strong { grid-row: span 2; align-self: center; color: #bb582d; font-size: .86rem; }
 .dragon-teacher-watchlist__items button > small { color: #8b7f76; font-size: .6rem; font-weight: 750; }
-.dragon-teacher-watchlist > p { margin: 13px 0 0; padding: 11px; border-radius: 12px; background: #f1f5ec; color: #66735d; font-size: .65rem; font-weight: 800; line-height: 1.55; }
+.dragon-teacher-watchlist > p { margin: 6px 0 0; padding: 7px 8px; border-radius: 8px; background: #f1f5ec; color: #66735d; font-size: .56rem; font-weight: 800; line-height: 1.4; }
 
 .dragon-teacher-students__toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
 .dragon-teacher-students__toolbar h3 { margin: 3px 0 0; font-size: 1.05rem; }

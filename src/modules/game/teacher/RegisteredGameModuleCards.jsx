@@ -46,18 +46,18 @@ class ModuleErrorBoundary extends React.Component {
     }
 }
 
-const StudentDashboardPreview = ({ enabledModules, selectedId, disabledPreviewModule = null }) => {
+const StudentDashboardPreview = ({ enabledModules, selectedId, disabledPreviewModule = null, compact = false }) => {
     const previewModules = enabledModules.length > 0 ? enabledModules : (disabledPreviewModule ? [disabledPreviewModule] : []);
 
     return (
     <div style={{
-        border: '1px solid #FDE68A', borderRadius: '24px', padding: '20px',
+        border: '1px solid #FDE68A', borderRadius: compact ? '16px' : '24px', padding: compact ? '11px' : '20px',
         background: 'linear-gradient(180deg, #FFFDF5 0%, #FFF8E1 100%)'
     }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: compact ? '8px' : '16px' }}>
             <div>
-                <div style={{ color: '#92400E', fontWeight: '950' }}>학생 대시보드 미리보기</div>
-                <div style={{ color: '#A16207', fontSize: '0.78rem', marginTop: '3px' }}>학생의 ‘아지트 놀이터’에 보이는 콘텐츠입니다.</div>
+                <div style={{ color: '#92400E', fontWeight: '950', fontSize: compact ? '0.8rem' : '1rem' }}>학생 대시보드 미리보기</div>
+                {compact ? null : <div style={{ color: '#A16207', fontSize: '0.78rem', marginTop: '3px' }}>학생의 ‘아지트 놀이터’에 보이는 콘텐츠입니다.</div>}
             </div>
             <span style={{ background: 'white', color: '#B45309', padding: '5px 9px', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '900' }}>
                 {enabledModules.length}개 노출
@@ -70,18 +70,18 @@ const StudentDashboardPreview = ({ enabledModules, selectedId, disabledPreviewMo
                     const isDisabledPreview = enabledModules.length === 0 && disabledPreviewModule?.id === module.id;
                     return (
                     <div key={module.id} style={{
-                        minHeight: '112px', padding: '14px', borderRadius: '18px',
+                        minHeight: compact ? '72px' : '112px', padding: compact ? '10px' : '14px', borderRadius: compact ? '13px' : '18px',
                         background: module.playground?.background || 'white',
                         border: `2px solid ${module.id === selectedId ? '#6366F1' : (module.playground?.borderColor || '#E2E8F0')}`,
                         boxShadow: module.id === selectedId ? '0 0 0 3px rgba(99,102,241,.10)' : 'none',
                         opacity: isDisabledPreview ? 0.58 : 1, position: 'relative'
                     }}>
                         {isDisabledPreview && <span style={{ position: 'absolute', top: '10px', right: '10px', padding: '4px 7px', borderRadius: '999px', background: '#475569', color: 'white', fontSize: '0.62rem', fontWeight: '900' }}>현재 OFF</span>}
-                        <div style={{ fontSize: '1.8rem' }}>{module.icon || '🎮'}</div>
-                        <div style={{ marginTop: '8px', color: '#334155', fontWeight: '950', fontSize: '0.9rem' }}>
+                        <div style={{ fontSize: compact ? '1.3rem' : '1.8rem' }}>{module.icon || '🎮'}</div>
+                        <div style={{ marginTop: compact ? '4px' : '8px', color: '#334155', fontWeight: '950', fontSize: compact ? '0.78rem' : '0.9rem' }}>
                             {module.playground?.name || module.name}
                         </div>
-                        <div style={{ marginTop: '3px', color: '#64748B', fontSize: '0.7rem', lineHeight: 1.4 }}>
+                        <div style={{ marginTop: '3px', color: '#64748B', fontSize: compact ? '0.62rem' : '0.7rem', lineHeight: 1.35 }}>
                             {module.playground?.description || module.description}
                         </div>
                     </div>
@@ -211,9 +211,9 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile }) => {
     };
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '250px minmax(0, 1fr)', gap: '20px', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '220px minmax(0, 1fr)', gap: '14px', alignItems: 'start' }}>
             <aside style={{
-                position: isMobile ? 'static' : 'sticky', top: '18px', padding: '12px', borderRadius: '22px',
+                position: isMobile ? 'static' : 'sticky', top: '12px', padding: '9px', borderRadius: '18px',
                 background: '#F1F5F9', border: '1px solid #E2E8F0', display: 'flex',
                 flexDirection: isMobile ? 'row' : 'column', gap: '7px', overflowX: isMobile ? 'auto' : 'visible'
             }}>
@@ -234,7 +234,7 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile }) => {
                 })}
             </aside>
 
-            <section style={{ minWidth: 0, padding: isMobile ? '18px' : '26px', border: '1px solid #E2E8F0', borderRadius: '24px', background: 'white', boxShadow: '0 12px 36px rgba(15,23,42,.04)' }}>
+            <section style={{ minWidth: 0, padding: isMobile ? '14px' : '18px', border: '1px solid #E2E8F0', borderRadius: '20px', background: 'white', boxShadow: '0 10px 28px rgba(15,23,42,.04)' }}>
                 {loading ? (
                     <div style={{ padding: '70px 20px', textAlign: 'center', color: '#94A3B8', fontWeight: '900' }}>콘텐츠 설정을 불러오는 중입니다...</div>
                 ) : loadError ? (
@@ -244,14 +244,14 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile }) => {
                     </div>
                 ) : selected ? (
                     <>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', paddingBottom: '20px', marginBottom: '20px', borderBottom: '1px solid #E2E8F0', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '2.3rem' }}>{selected.module.icon || '🎮'}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '11px', paddingBottom: '12px', marginBottom: '10px', borderBottom: '1px solid #E2E8F0', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '1.8rem' }}>{selected.module.icon || '🎮'}</span>
                             <div style={{ flex: 1, minWidth: '160px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                                    <h2 style={{ margin: 0, color: '#1E293B', fontSize: '1.35rem' }}>{selected.module.name}</h2>
+                                    <h2 style={{ margin: 0, color: '#1E293B', fontSize: '1.15rem' }}>{selected.module.name}</h2>
                                     <TeacherGuideButton tabId={selected.module.id} />
                                 </div>
-                                <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.82rem' }}>{selected.module.description}</p>
+                                <p style={{ margin: '3px 0 0', color: '#64748B', fontSize: '0.74rem' }}>{selected.module.description}</p>
                             </div>
                             <FeatureAvailabilitySwitch
                                 checked={enabledIds.includes(selected.module.id)}
@@ -265,12 +265,20 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile }) => {
                                 ariaLabel={`학생 ${selected.module.name} 사용`}
                             />
                         </div>
-                        <StudentDashboardPreview
-                            enabledModules={enabledIds.includes(selected.module.id) ? [selected.module] : []}
-                            selectedId={selected.module.id}
-                            disabledPreviewModule={enabledIds.includes(selected.module.id) ? null : selected.module}
-                        />
-                        <div style={{ marginTop: '22px' }}>
+                        <details style={{ marginBottom: '11px', border: '1px solid #FDE68A', borderRadius: '13px', background: '#FFFDF5' }}>
+                            <summary style={{ padding: '9px 11px', color: '#92400E', cursor: 'pointer', fontSize: '0.72rem', fontWeight: '900' }}>
+                                학생 화면 미리보기 · 필요할 때 펼치기
+                            </summary>
+                            <div style={{ padding: '0 9px 9px' }}>
+                                <StudentDashboardPreview
+                                    compact
+                                    enabledModules={enabledIds.includes(selected.module.id) ? [selected.module] : []}
+                                    selectedId={selected.module.id}
+                                    disabledPreviewModule={enabledIds.includes(selected.module.id) ? null : selected.module}
+                                />
+                            </div>
+                        </details>
+                        <div>
                             <ModuleErrorBoundary key={selected.module.id} moduleName={selected.module.name}>
                                 <Suspense fallback={<div style={{ padding: '50px', textAlign: 'center', color: '#94A3B8' }}>{selected.module.icon} 세부 설정을 불러오는 중입니다...</div>}>
                                     <selected.TeacherEntry activeClass={activeClass} isMobile={isMobile} module={selected.module} />
@@ -293,8 +301,8 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile }) => {
 };
 
 const navStyle = (active, isMobile) => ({
-    width: isMobile ? 'auto' : '100%', minWidth: isMobile ? '170px' : 0, padding: '12px 13px',
-    border: active ? '1px solid #C7D2FE' : '1px solid transparent', borderRadius: '14px',
+    width: isMobile ? 'auto' : '100%', minWidth: isMobile ? '155px' : 0, padding: '9px 10px',
+    border: active ? '1px solid #C7D2FE' : '1px solid transparent', borderRadius: '12px',
     background: active ? 'white' : 'transparent', color: active ? '#4338CA' : '#475569',
     display: 'flex', alignItems: 'center', gap: '9px', cursor: 'pointer',
     boxShadow: active ? '0 6px 18px rgba(15,23,42,.06)' : 'none'

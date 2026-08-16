@@ -1,46 +1,48 @@
-.vocab-teacher { display: flex; flex-direction: column; gap: 18px; color: #1f2937; }
-.vocab-teacher__journey, .vocab-teacher__panel { padding: 20px; border: 1px solid #e2e8f0; border-radius: 18px; background: #fff; }
-.vocab-teacher__journey { border-color: #bbf7d0; background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%); }
-.vocab-teacher__section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.vocab-teacher { display: flex; flex-direction: column; gap: 10px; color: #1f2937; }
+.vocab-teacher__overview, .vocab-teacher__panel { padding: 13px 14px; border: 1px solid #e2e8f0; border-radius: 15px; background: #fff; }
+.vocab-teacher__overview { border-color: #bbf7d0; background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 100%); }
+.vocab-teacher__section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
 .vocab-teacher__section-heading h3, .vocab-teacher__section-heading p { margin: 0; }
-.vocab-teacher__section-heading h3 { margin-top: 3px; color: #14532d; font-size: 1.05rem; }
-.vocab-teacher__section-heading p { margin-top: 6px; color: #64748b; font-size: .8rem; line-height: 1.55; }
-.vocab-teacher__eyebrow { color: #15803d; font-size: .72rem; font-weight: 900; }
-.vocab-teacher__version { flex: 0 0 auto; padding: 6px 10px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: .72rem; font-weight: 900; }
-.vocab-teacher__journey-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.vocab-teacher__journey-flow > div { display: grid; gap: 3px; min-width: 0; padding: 13px; border: 1px solid #d1fae5; border-radius: 13px; background: rgba(255, 255, 255, .86); }
-.vocab-teacher__journey-flow span { font-size: 1.2rem; }
-.vocab-teacher__journey-flow strong { color: #166534; font-size: .86rem; }
-.vocab-teacher__journey-flow small { color: #64748b; font-size: .7rem; line-height: 1.35; }
-.vocab-teacher__journey-note { margin: 13px 0 0; color: #475569; font-size: .79rem; line-height: 1.55; }
-.vocab-teacher__summary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
-.vocab-teacher__summary > div { padding: 14px; border: 1px solid #bfdbfe; border-radius: 14px; background: #eff6ff; }
+.vocab-teacher__section-heading h3 { margin-top: 2px; color: #14532d; font-size: .95rem; }
+.vocab-teacher__section-heading p { margin-top: 3px; color: #64748b; font-size: .7rem; line-height: 1.4; }
+.vocab-teacher__eyebrow { color: #15803d; font-size: .62rem; font-weight: 900; }
+.vocab-teacher__version { flex: 0 0 auto; padding: 4px 8px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: .64rem; font-weight: 900; }
+.vocab-teacher__journey-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.vocab-teacher__journey-flow > div { display: grid; grid-template-columns: auto 1fr; gap: 0 6px; align-items: center; min-width: 0; padding: 7px 8px; border: 1px solid #d1fae5; border-radius: 10px; background: rgba(255, 255, 255, .86); }
+.vocab-teacher__journey-flow span { grid-row: span 2; font-size: 1rem; }
+.vocab-teacher__journey-flow strong { color: #166534; font-size: .7rem; }
+.vocab-teacher__journey-flow small { overflow: hidden; color: #64748b; font-size: .58rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.vocab-teacher__summary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 7px; }
+.vocab-teacher__summary > div { padding: 7px 8px; border: 1px solid #bfdbfe; border-radius: 9px; background: #eff6ff; }
 .vocab-teacher__summary span, .vocab-teacher__summary strong { display: block; }
-.vocab-teacher__summary span { color: #2563eb; font-size: .73rem; font-weight: 800; }
-.vocab-teacher__summary strong { margin-top: 5px; color: #1e3a8a; font-size: 1rem; }
+.vocab-teacher__summary span { color: #2563eb; font-size: .59rem; font-weight: 800; }
+.vocab-teacher__summary strong { margin-top: 2px; color: #1e3a8a; font-size: .78rem; }
+.vocab-teacher__controls { display: grid; grid-template-columns: minmax(230px, .9fr) minmax(0, 1.5fr); gap: 9px; }
 .vocab-teacher__settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.vocab-teacher__settings-grid label { display: grid; grid-template-rows: auto auto 1fr; gap: 6px; padding: 14px; border-radius: 12px; background: #f8fafc; font-weight: 800; }
-.vocab-teacher__settings-grid label > small { min-height: 2.5em; color: #64748b; font-size: .72rem; font-weight: 600; line-height: 1.4; }
-.vocab-teacher__settings-grid select, .vocab-teacher__settings-grid input { align-self: end; width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 9px; background: white; font: inherit; }
-.vocab-teacher__source-card { display: grid; grid-template-columns: auto 1fr auto; gap: 11px; align-items: center; margin-bottom: 12px; padding: 14px; border: 1px solid #86efac; border-radius: 13px; background: #f0fdf4; }
-.vocab-teacher__source-card > span { font-size: 1.35rem; }
+.vocab-teacher__settings-grid label { display: grid; gap: 5px; padding: 9px 10px; border-radius: 10px; background: #f8fafc; font-size: .72rem; font-weight: 800; }
+.vocab-teacher__settings-grid select, .vocab-teacher__settings-grid input { width: 100%; min-height: 34px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; font: inherit; font-size: .76rem; }
+.vocab-teacher__source-card { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 9px 10px; border: 1px solid #86efac; border-radius: 10px; background: #f0fdf4; }
+.vocab-teacher__source-card > span { font-size: 1.15rem; }
 .vocab-teacher__source-card strong, .vocab-teacher__source-card small { display: block; }
-.vocab-teacher__source-card strong { color: #166534; font-size: .86rem; }
-.vocab-teacher__source-card small { margin-top: 3px; color: #64748b; font-size: .72rem; line-height: 1.45; }
-.vocab-teacher__source-card em { padding: 5px 8px; border-radius: 999px; background: #dcfce7; color: #15803d; font-size: .68rem; font-style: normal; font-weight: 900; white-space: nowrap; }
+.vocab-teacher__source-card strong { color: #166534; font-size: .74rem; }
+.vocab-teacher__source-card small { margin-top: 2px; color: #64748b; font-size: .61rem; line-height: 1.35; }
+.vocab-teacher__source-card em { padding: 4px 7px; border-radius: 999px; background: #dcfce7; color: #15803d; font-size: .6rem; font-style: normal; font-weight: 900; white-space: nowrap; }
 .vocab-teacher__reward-rule { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; padding: 13px; border-radius: 12px; background: #fff7ed; color: #9a3412; }
 .vocab-teacher__reward-rule strong { width: 100%; font-size: .82rem; }
 .vocab-teacher__reward-rule span { padding: 5px 8px; border-radius: 8px; background: #ffedd5; font-size: .74rem; font-weight: 800; }
 .vocab-teacher__reward-rule small { width: 100%; color: #7c2d12; font-size: .72rem; line-height: 1.45; }
-.vocab-teacher__footer-actions { display: flex; gap: 10px; margin-top: 16px; }
-.vocab-teacher__footer-actions > button { flex: 1; }
+.vocab-teacher__footer-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 9px; }
+.vocab-teacher__footer-actions p { margin: 0; color: #64748b; font-size: .64rem; line-height: 1.35; }
+.vocab-teacher__footer-actions > button { flex: 0 0 auto; min-width: 150px; }
 .vocab-teacher__archive-note { margin: 0; padding: 11px 14px; border-radius: 10px; background: #f8fafc; color: #64748b; font-size: .75rem; line-height: 1.5; }
 .vocab-teacher-empty { padding: 42px 16px; text-align: center; color: #64748b; }
 .vocab-teacher-empty--error { color: #b91c1c; }
 @media (max-width: 720px) {
-  .vocab-teacher__journey, .vocab-teacher__panel { padding: 14px; }
+  .vocab-teacher__overview, .vocab-teacher__panel { padding: 12px; }
+  .vocab-teacher__controls { grid-template-columns: 1fr; }
   .vocab-teacher__journey-flow, .vocab-teacher__summary, .vocab-teacher__settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .vocab-teacher__footer-actions { flex-direction: column; }
+  .vocab-teacher__footer-actions > button { width: 100%; }
 }
 @media (max-width: 420px) {
   .vocab-teacher__journey-flow { grid-template-columns: 1fr; }

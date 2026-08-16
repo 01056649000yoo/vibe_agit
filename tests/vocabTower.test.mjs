@@ -16,13 +16,14 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
     readFile('src/components/student/StudentDashboard.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/StudentEntry.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8'),
+    readFile('src/modules/game/vocab-tower/teacherManager.css', 'utf8'),
     readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8'),
     readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8'),
     readFile('supabase/migrations/20261109_vocab_tower_v2_item_learning.sql', 'utf8'),
@@ -151,4 +152,13 @@ test('교사 화면은 V1 선택을 없애고 현재 잠긴 덱을 기본 출제
     assert.match(studentEntry, /contentVersion: 'v2'/);
     assert.match(v2DefaultMigration, /ALTER COLUMN vocab_tower_content_version SET DEFAULT 'v2'/);
     assert.match(v2DefaultMigration, /vocab_tower_content_version = 'v2'/);
+});
+
+test('교사 어휘 설정은 운영 요약과 핵심 입력을 한 화면에 밀도 있게 배치한다', () => {
+    assert.match(teacherManager, /vocab-teacher__overview/);
+    assert.match(teacherManager, /vocab-teacher__controls/);
+    assert.match(teacherManager, /현재 운영 요약/);
+    assert.match(teacherManagerStyles, /\.vocab-teacher\s*\{[\s\S]*?gap:\s*10px;/);
+    assert.match(teacherManagerStyles, /\.vocab-teacher__overview, \.vocab-teacher__panel\s*\{[\s\S]*?padding:\s*13px 14px;/);
+    assert.match(teacherManagerStyles, /\.vocab-teacher__summary\s*\{[\s\S]*?margin-top:\s*7px;/);
 });
