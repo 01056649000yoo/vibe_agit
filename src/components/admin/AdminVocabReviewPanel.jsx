@@ -306,6 +306,11 @@ const AdminVocabReviewPanel = () => {
                 {deck && <span className={`admin-vocab-review__status is-${statusInfo.tone}`}>{statusInfo.label}</span>}
             </header>
 
+            <p className="admin-vocab-review__notice">
+                40개를 처음부터 다시 작성할 필요는 없습니다. 자동·Codex 1차 검수 뒤 <strong>‘수정’ 표시 항목과 쓰임 구별 문항을 우선 확인</strong>하고,
+                나머지는 표본 확인 후 덱 단위로 잠급니다. 표본에서 문제가 나오면 그 덱만 전체 검수합니다.
+            </p>
+
             <div className="admin-vocab-review__toolbar">
                 <label>
                     <span>학년</span>

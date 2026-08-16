@@ -7,10 +7,11 @@ import {
     validateReviewItem
 } from '../src/modules/game/vocab-tower/reviewModel.js';
 
-const [artifactText, dashboardSource, panelSource, apiSource] = await Promise.all([
+const [artifactText, dashboardSource, panelSource, panelCss, apiSource] = await Promise.all([
     readFile('docs/vocab-tower/data/grade3-deck01-review.json', 'utf8'),
     readFile('src/components/admin/AdminDashboard.jsx', 'utf8'),
     readFile('src/components/admin/AdminVocabReviewPanel.jsx', 'utf8'),
+    readFile('src/components/admin/adminVocabReview.css', 'utf8'),
     readFile('src/modules/game/vocab-tower/reviewApi.js', 'utf8')
 ]);
 
@@ -73,6 +74,10 @@ test('관리자 화면은 검수 API만 사용하고 운영 게임에는 직접 
     assert.match(dashboardSource, /어휘 V2 검수/);
     assert.match(panelSource, /grade3-deck01-review\.json/);
     assert.match(panelSource, /학생 게임에는 연결되지 않습니다/);
+    assert.match(panelSource, /표본 확인/);
+    assert.match(panelCss, /grid-template-rows: auto auto minmax\(0, 1fr\)/);
+    assert.match(panelCss, /height: min\(720px, calc\(100vh - 40px\)\)/);
+    assert.match(panelCss, /admin-vocab-review__word-buttons \{[^}]*min-height: 0;[^}]*overflow-y: auto/);
     assert.match(apiSource, /admin_get_vocab_tower_v2_review_deck_v1/);
     assert.match(apiSource, /admin_seed_vocab_tower_v2_review_deck_v1/);
     assert.match(apiSource, /admin_save_vocab_tower_v2_review_item_v1/);
