@@ -67,3 +67,14 @@ jobs:
             -H 'Content-Type: application/json' -d '{}' --max-time 10)
           echo "edge HTTP: $edge_code"
           [ "$edge_code" = "400" ] || exit 1
+
+      # 도커 VM 디스크는 31.3GB뿐이라 누적된 빌드 캐시가 채우면 Kong 건강검진과 Storage 업로드가 함께 죽는다.
+      # 전부 비우면 다음 배포가 콜드 빌드가 되므로 상한만 두고 오래된 캐시부터 버린다.
+      # 배포 실패로 디스크가 찬 경우에도 다음 시도가 살아나도록 always로 돌리고, 정리 실패가 배포를 붉게 만들지 않게 한다.
+      - name: Trim docker build cache
+        if: always()
+        continue-on-error: true
+        run: |
+          docker system df
+          docker builder prune -f --max-used-space 6GB
+          docker system df

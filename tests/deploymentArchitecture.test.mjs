@@ -32,6 +32,15 @@ test('러너는 검증된 Docker 이미지를 agit-app으로 교체하고 로컬
     assert.match(caddy, /try_files \{path\} \/index\.html/);
 });
 
+test('러너는 배포 뒤 빌드 캐시를 상한 안으로만 정리한다', () => {
+    assert.match(workflow, /name: Trim docker build cache\n\s*if: always\(\)\n\s*continue-on-error: true/);
+    assert.match(workflow, /docker builder prune -f --max-used-space 6GB/);
+    // 전체 삭제는 다음 배포를 콜드 빌드로 만들고, system prune은 다른 프로젝트의 볼륨·네트워크까지 지운다.
+    assert.doesNotMatch(workflow, /docker builder prune -a/);
+    assert.doesNotMatch(workflow, /docker system prune/);
+    assert.doesNotMatch(workflow, /docker image prune -a/);
+});
+
 test('저장소 배포 경로에는 Vercel 호스팅 설정이 없다', async () => {
     await assert.rejects(access('vercel.json'), { code: 'ENOENT' });
     assert.doesNotMatch(workflow, /vercel/i);
