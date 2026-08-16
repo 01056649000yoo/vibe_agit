@@ -49,3 +49,7 @@
   .vocab-teacher__source-card { grid-template-columns: auto 1fr; }
   .vocab-teacher__source-card em { grid-column: 2; justify-self: start; }
 }
+
+/* 설정 제목과 도움말 버튼을 한 줄에 둔다. 제목이 길어지면 버튼이 아래로 내려간다. */
+.vocab-teacher__heading-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.vocab-teacher__heading-row h3 { margin: 0; }

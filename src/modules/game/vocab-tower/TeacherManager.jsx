@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Button from '../../../components/common/Button';
 import { supabase } from '../../../lib/supabaseClient';
 import './teacherManager.css';
+import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 
 const DEFAULT_CONFIG = {
     grade: 3,
@@ -128,7 +129,10 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 <div className="vocab-teacher__section-heading">
                     <div>
                         <span className="vocab-teacher__eyebrow">학급별 설정</span>
-                        <h3 id="vocab-settings-title">개인 연습 설정</h3>
+                        <div className="vocab-teacher__heading-row">
+                            <h3 id="vocab-settings-title">개인 연습 설정</h3>
+                            <TeacherGuideButton tabId="vocab-tower" variant="help" />
+                        </div>
                         <p>현재 학년의 검수·잠금이 완료된 덱 10개를 자동으로 사용하며, 별도로 출제자료를 선택할 필요가 없습니다.</p>
                     </div>
                 </div>
