@@ -21,6 +21,24 @@
 
 ---
 
+## 2026-08-16 — 도커 VM 디스크 포화 해소·활성 컨텍스트 갱신 (Claude)
+- **한 일**: 작업내역 점검 중 도커 VM 디스크(31.3GB)가 잔여 0바이트로 포화된 것을 발견해 해소했다.
+  원인은 반복 배포로 누적된 빌드 캐시 16.01GB(재사용분 0%)였다. `agit-kong` 건강검진이
+  `Cannot mkdir /tmp/...: No space left on device`로 1,555회 연속 실패 중이었고, `agit-storage-data`
+  볼륨도 증가 여지가 없어 학생 보고서 사진 업로드가 실패할 수 있는 상태였다. 함께 5일 묵은
+  `SESSION_CONTEXT.md`의 `현재 위치`·`다음 세션 첫 순서`를 현재 상태로 갱신했다.
+- **변경**: git 밖 인프라 — 맥미니에서 `docker builder prune -a -f`로 빌드 캐시 16.01GB 회수.
+  이미지·컨테이너·볼륨은 건드리지 않았다. 문서는 `SESSION_CONTEXT.md`만 수정했고 앱 코드·DB·RPC 변경은 없다.
+- **결과/검증**: 도커 VM 디스크 사용률 100%(잔여 0) → 52%(잔여 14.3GB), 빌드 캐시 0B.
+  `agit-kong`이 `healthy`·연속 실패 0으로 회복했고 `Kong is healthy at /usr/local/kong`을 확인했다.
+  12개 운영 컨테이너 모두 정상이며 `agit-app` HTTP 응답을 확인했다. 점검 겸 어휘 회귀 14개 통과와
+  운영 `agit-db` 마이그레이션 142개 적용을 재확인해 직전 기록과 일치함을 확인했다.
+  `agit-db` 데이터는 호스트 바인드 마운트(잔여 65.7GB)라 이번 포화의 영향을 받지 않았다.
+- **남은 것 / 다음**: 병합 완료된 `agent/student-notification-architecture`(PR #2 MERGED)와
+  `agent/teacher-dragon-stage-preview`(main 대비 0 커밋) 원격·로컬 브랜치 삭제는 권한 정책으로 실행하지 못했다.
+  사용자가 `git push origin --delete` 및 `git branch -D`로 정리한다. 빌드 캐시는 배포마다 다시 쌓이므로
+  주기적으로 `docker system df`를 확인하고, 반복되면 러너에 정기 정리를 넣을지 결정한다.
+
 ## 2026-08-16 — 학생 어휘의 탑 탐험 지도 UI (Codex)
 - **한 일**: 학생의 10개 덱 2열 카드 목록을 정상→10층→1층→입구가 이어지는 지그재그 탑 탐험 지도로
   재구성했다. 현재 연습 층은 움직이는 지도 표식, 학습한 층은 초록 경로, 한 연습에서 최고 정답률 100%를
