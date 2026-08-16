@@ -23,7 +23,7 @@
     "test:friends-feed": "node --test tests/friendsHideoutFeed.test.mjs",
     "test:report-writing": "node --test tests/reportWriting.test.mjs",
     "test:dragon": "node --test tests/dragonGrowth.test.mjs",
-    "test:vocab-tower": "node --test tests/vocabTower.test.mjs tests/vocabTowerWordAudit.test.mjs",
+    "test:vocab-tower": "node --test tests/vocabTower.test.mjs tests/vocabTowerWordAudit.test.mjs tests/vocabTowerReviewWorkspace.test.mjs",
     "test:reading-log": "node --test tests/readingLogDraftRules.test.mjs tests/readingMarathon.test.mjs tests/googleBooksPageCount.test.mjs tests/readingBookCover.test.mjs",
     "test:teacher-agit": "node --test tests/teacherStudentAgit.test.mjs",
     "test:landing": "node --test tests/landingPage.test.mjs",

@@ -1,0 +1,70 @@
+.admin-vocab-review { display: grid; gap: 18px; color: #1f2937; }
+.admin-vocab-review__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 22px; border: 1px solid #bbf7d0; border-radius: 18px; background: linear-gradient(135deg, #f0fdf4, #f8fafc); }
+.admin-vocab-review__header h2, .admin-vocab-review__header p { margin: 0; }
+.admin-vocab-review__header h2 { margin-top: 4px; color: #14532d; font-size: 1.35rem; }
+.admin-vocab-review__header p { margin-top: 8px; color: #64748b; font-size: .84rem; line-height: 1.55; }
+.admin-vocab-review__eyebrow { color: #15803d; font-size: .74rem; font-weight: 900; }
+.admin-vocab-review__status { flex: 0 0 auto; padding: 7px 11px; border-radius: 999px; font-size: .75rem; font-weight: 900; }
+.admin-vocab-review__status.is-draft { background: #fef3c7; color: #92400e; }
+.admin-vocab-review__status.is-confirmed { background: #dbeafe; color: #1e40af; }
+.admin-vocab-review__status.is-locked { background: #dcfce7; color: #166534; }
+.admin-vocab-review__toolbar { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; padding: 14px; border: 1px solid #e2e8f0; border-radius: 14px; background: white; }
+.admin-vocab-review__toolbar label { display: grid; gap: 5px; color: #475569; font-size: .74rem; font-weight: 800; }
+.admin-vocab-review__toolbar select, .admin-vocab-review__list input, .admin-vocab-review__editor input, .admin-vocab-review__editor select, .admin-vocab-review__editor textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 9px; background: white; color: #1f2937; font: inherit; }
+.admin-vocab-review__toolbar select { min-width: 105px; padding: 9px 10px; }
+.admin-vocab-review__status-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.admin-vocab-review__notice, .admin-vocab-review__error { margin: 0; padding: 11px 14px; border-radius: 10px; font-size: .8rem; line-height: 1.5; }
+.admin-vocab-review__notice { background: #eff6ff; color: #1e40af; }
+.admin-vocab-review__error { background: #fef2f2; color: #b91c1c; }
+.admin-vocab-review__empty { padding: 48px 20px; border: 1px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; color: #64748b; text-align: center; }
+.admin-vocab-review__workspace { display: grid; grid-template-columns: minmax(190px, 240px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.admin-vocab-review__list { position: sticky; top: 16px; display: grid; gap: 10px; max-height: calc(100vh - 40px); padding: 14px; border: 1px solid #e2e8f0; border-radius: 16px; background: white; overflow: hidden; }
+.admin-vocab-review__list-heading { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.admin-vocab-review__list-heading strong { color: #14532d; }
+.admin-vocab-review__list-heading span { color: #64748b; font-size: .7rem; }
+.admin-vocab-review__list > input { padding: 9px 10px; }
+.admin-vocab-review__word-buttons { display: grid; gap: 6px; overflow-y: auto; }
+.admin-vocab-review__word-buttons button { display: grid; gap: 2px; padding: 10px 11px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; color: #334155; text-align: left; cursor: pointer; }
+.admin-vocab-review__word-buttons button.is-active { border-color: #22c55e; background: #f0fdf4; color: #14532d; }
+.admin-vocab-review__word-buttons span { font-weight: 900; }
+.admin-vocab-review__word-buttons small { color: #64748b; font-size: .68rem; }
+.admin-vocab-review__editor { display: grid; gap: 16px; min-width: 0; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px; background: white; }
+.admin-vocab-review__editor-heading { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.admin-vocab-review__editor-heading h3, .admin-vocab-review__editor-heading span { margin: 0; }
+.admin-vocab-review__editor-heading h3 { margin-top: 3px; color: #14532d; font-size: 1.35rem; }
+.admin-vocab-review__editor-heading span { color: #64748b; font-size: .72rem; }
+.admin-vocab-review__metadata { display: grid; grid-template-columns: 1fr 110px 110px; gap: 10px; }
+.admin-vocab-review__metadata label, .admin-vocab-review__editor > label, .admin-vocab-review__question > label { display: grid; gap: 6px; color: #475569; font-size: .76rem; font-weight: 800; }
+.admin-vocab-review__editor input, .admin-vocab-review__editor select, .admin-vocab-review__editor textarea { box-sizing: border-box; padding: 10px; line-height: 1.45; resize: vertical; }
+.admin-vocab-review__editor input:disabled, .admin-vocab-review__editor select:disabled, .admin-vocab-review__editor textarea:disabled { background: #f8fafc; color: #64748b; }
+.admin-vocab-review__diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.admin-vocab-review__diff-grid > div, .admin-vocab-review__diff-grid > label { min-width: 0; padding: 12px; border-radius: 12px; background: #f8fafc; }
+.admin-vocab-review__diff-grid strong, .admin-vocab-review__diff-grid label > span { color: #475569; font-size: .74rem; }
+.admin-vocab-review__diff-grid p { margin: 7px 0 0; color: #64748b; font-size: .8rem; line-height: 1.55; white-space: pre-wrap; }
+.admin-vocab-review__answers small { color: #94a3b8; font-weight: 600; }
+.admin-vocab-review__questions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.admin-vocab-review__question { display: grid; gap: 10px; min-width: 0; padding: 14px; border: 1px solid #dbeafe; border-radius: 13px; background: #f8fbff; }
+.admin-vocab-review__question-heading { display: flex; justify-content: space-between; gap: 8px; }
+.admin-vocab-review__question-heading strong { color: #1e3a8a; font-size: .84rem; }
+.admin-vocab-review__question-heading span { color: #64748b; font-size: .68rem; }
+.admin-vocab-review__options { display: grid; gap: 7px; }
+.admin-vocab-review__options label { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: center; padding: 7px; border: 1px solid #e2e8f0; border-radius: 9px; background: white; }
+.admin-vocab-review__options label.is-correct { border-color: #86efac; background: #f0fdf4; }
+.admin-vocab-review__options input { width: auto; }
+.admin-vocab-review__question--input { background: #faf5ff; border-color: #e9d5ff; }
+.admin-vocab-review__question--input .admin-vocab-review__question-heading strong { color: #6b21a8; }
+.admin-vocab-review__editor-actions { display: flex; justify-content: flex-end; align-items: center; min-height: 42px; padding-top: 4px; border-top: 1px solid #e2e8f0; }
+.admin-vocab-review__editor-actions p { margin: 0; color: #64748b; font-size: .78rem; }
+@media (max-width: 900px) {
+  .admin-vocab-review__workspace { grid-template-columns: 1fr; }
+  .admin-vocab-review__list { position: static; max-height: none; }
+  .admin-vocab-review__word-buttons { grid-template-columns: repeat(4, minmax(0, 1fr)); max-height: 260px; }
+}
+@media (max-width: 680px) {
+  .admin-vocab-review__header { flex-direction: column; }
+  .admin-vocab-review__status-actions { width: 100%; margin-left: 0; }
+  .admin-vocab-review__status-actions > button { flex: 1; }
+  .admin-vocab-review__metadata, .admin-vocab-review__diff-grid, .admin-vocab-review__questions { grid-template-columns: 1fr; }
+  .admin-vocab-review__word-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-vocab-review__editor { padding: 14px; }
+}

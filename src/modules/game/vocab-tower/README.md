@@ -23,3 +23,24 @@
 
 교사 화면은 최고 층 경쟁 대신 현재 탐험 구조와 학급별 설정을 설명한다. 설정 저장은 진행 중인 판을 바꾸지 않고
 새 탐험부터 적용하며, 오늘 기회 초기화는 별도 확인 동작으로 분리한다. 기존 랭킹·시즌 데이터는 삭제하지 않는다.
+
+## V2 문항 검수 작업공간
+
+V2 문항은 현재 운영 `vocab_tower_words`와 분리해 준비한다. `vocab_tower_v2_review_decks`와
+`vocab_tower_v2_review_items`는 브라우저 직접 권한이 없으며, 실제 `profiles.role='ADMIN'`인 사용자만 아래 RPC로
+조회·초기화·수정·상태 변경할 수 있다.
+
+- `admin_get_vocab_tower_v2_review_deck_v1`
+- `admin_seed_vocab_tower_v2_review_deck_v1`
+- `admin_save_vocab_tower_v2_review_item_v1`
+- `admin_set_vocab_tower_v2_review_status_v1`
+
+관리자 `어휘 V2 검수` 화면은 자동 초안과 검수 뜻·예문을 나란히 보여주고, 품사·뜻 번호·난이도·허용 정답과
+다섯 문항을 편집한다. 원래 덱 순서는 `item_order`로 보존한다. 항목 저장은 낙관적 버전을 확인하고 덱을
+`1차 검수`로 되돌린다. 다섯 문항의 질문·보기·
+단일 정답·직접 입력 허용 정답을 서버가 확인한 뒤에만 `교사 확인`, 이어서 `잠금 완료`로 바꿀 수 있다.
+
+잠금은 검수 산출물을 고정할 뿐 학생 출제를 켜지 않는다. V2 게임 어댑터가 별도 구현되기 전에는 이 표를 학생 홈·
+현재 출제 RPC·운영 단어표에 연결하지 않는다. 첫 덱의 재생성 원본은
+`docs/vocab-tower/data/grade3-deck01-human-review.json`, 관리자 화면에 넣는 생성 산출물은
+`docs/vocab-tower/data/grade3-deck01-review.json`이다.

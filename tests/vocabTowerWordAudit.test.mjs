@@ -97,6 +97,8 @@ test('3학년 첫 덱 직접 검수는 40개 품사·뜻 번호·정답·구별 
         assert.equal(item.reviewStatus, 'reviewed');
         assert.equal(item.partOfSpeech, '명사');
         assert.equal(item.meaningNumber, 1);
+        assert.ok(item.sourceDefinition);
+        assert.ok(item.sourceExample);
         assert.ok(item.questions.definitionInput.acceptedAnswers.includes(item.word));
         assert.equal(item.questions.usageDistinction.status, 'reviewed');
         assert.equal(item.questions.usageDistinction.options.filter((option) => option.isCorrect).length, 1);

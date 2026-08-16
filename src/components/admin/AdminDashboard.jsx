@@ -11,6 +11,8 @@ import AdminCleanupPanel from './AdminCleanupPanel';
 import AdminLabManagementPanel from './AdminLabManagementPanel';
 import useAdminUsage from '../../hooks/useAdminUsage';
 
+const AdminVocabReviewPanel = React.lazy(() => import('./AdminVocabReviewPanel'));
+
 const TEACHER_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5분 — 교사 목록은 실시간 갱신 불필요
 
 // --- Components ---
@@ -175,7 +177,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const pendingList = pendingGroup === 'revoked' ? revokedTeachers : newSignups;
 
     // States for UI
-    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'lab' | 'feedback' | 'announcements' | 'settings'
+    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'lab' | 'vocab' | 'feedback' | 'announcements' | 'settings'
     const [currentTab, setCurrentTab] = useState('active');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -469,6 +471,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             { id: 'dormant', label: `😴 장기 미접속 (${usage.dormantTeachers.length})` },
                             { id: 'cleanup', label: `🧹 정리 대상 (${usage.cleanupCandidates.length})` },
                             { id: 'lab', label: '🧪 글쓰기 연구소' },
+                            { id: 'vocab', label: '🏰 어휘 V2 검수' },
                             {
                                 id: 'feedback',
                                 label: (
@@ -805,6 +808,12 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
                     {currentTab === 'lab' && (
                         <AdminLabManagementPanel />
+                    )}
+
+                    {currentTab === 'vocab' && (
+                        <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>어휘 검수 화면을 불러오는 중입니다...</div>}>
+                            <AdminVocabReviewPanel />
+                        </React.Suspense>
                     )}
 
                     {!loading && currentTab === 'settings' && (

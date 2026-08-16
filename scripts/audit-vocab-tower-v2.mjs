@@ -424,6 +424,8 @@ export const buildReviewDraft = (
             meaningNumber: review?.meaningNumber || null,
             category: target.category,
             level: target.level,
+            sourceDefinition: original.definition,
+            sourceExample: original.example,
             definition: target.definition,
             example: target.example,
             flags: target.flags,

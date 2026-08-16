@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -20,7 +20,8 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261025_class_public_writing_feed.sql', 'utf8'),
     readFile('supabase/migrations/20261026_student_point_history.sql', 'utf8'),
     readFile('supabase/migrations/20261027_lab_ai_bridge.sql', 'utf8'),
-    readFile('supabase/migrations/20261028_admin_lab_management.sql', 'utf8')
+    readFile('supabase/migrations/20261028_admin_lab_management.sql', 'utf8'),
+    readFile('supabase/migrations/20261105_vocab_tower_v2_review_workspace.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -178,4 +179,23 @@ test('학생 포인트 내역은 실제 학생 연결로 본인 원장만 제한
     assert.match(pointHistoryMigration, /LEAST\(GREATEST\(COALESCE\(p_limit, 20\), 1\), 50\)/);
     assert.match(pointHistoryMigration, /REVOKE ALL ON FUNCTION public\.get_my_point_history_v1\(INTEGER\) FROM PUBLIC, anon/);
     assert.doesNotMatch(pointHistoryMigration, /auth\.jwt|app_metadata/);
+});
+
+test('어휘 V2 검수 자료는 ADMIN 전용 RPC와 잠금 경계 안에 둔다', () => {
+    assert.match(vocabReviewMigration, /ALTER TABLE public\.vocab_tower_v2_review_decks ENABLE ROW LEVEL SECURITY/);
+    assert.match(vocabReviewMigration, /ALTER TABLE public\.vocab_tower_v2_review_items ENABLE ROW LEVEL SECURITY/);
+    assert.match(vocabReviewMigration, /REVOKE ALL ON TABLE public\.vocab_tower_v2_review_decks FROM PUBLIC, anon, authenticated/);
+    assert.match(vocabReviewMigration, /profile\.id = v_user_id[\s\S]*profile\.role = 'ADMIN'/);
+    assert.match(vocabReviewMigration, /v_item_count NOT BETWEEN 1 AND 50/);
+    assert.match(vocabReviewMigration, /char_length\(p_questions::TEXT\) > 20000/);
+    assert.match(vocabReviewMigration, /pg_advisory_xact_lock/);
+    assert.match(vocabReviewMigration, /item\.version = p_expected_version/);
+    assert.match(vocabReviewMigration, /locked vocabulary deck cannot be edited/);
+    assert.match(vocabReviewMigration, /validate_vocab_tower_v2_review_questions_v1/);
+    assert.match(vocabReviewMigration, /REVOKE ALL ON FUNCTION public\.validate_vocab_tower_v2_review_questions_v1\(JSONB, TEXT\)[\s\S]*authenticated, service_role/);
+    assert.match(vocabReviewMigration, /REVOKE ALL ON FUNCTION public\.admin_get_vocab_tower_v2_review_deck_v1[\s\S]*FROM PUBLIC, anon/);
+    assert.match(vocabReviewMigration, /REVOKE ALL ON FUNCTION public\.admin_seed_vocab_tower_v2_review_deck_v1[\s\S]*FROM PUBLIC, anon/);
+    assert.match(vocabReviewMigration, /REVOKE ALL ON FUNCTION public\.admin_save_vocab_tower_v2_review_item_v1[\s\S]*FROM PUBLIC, anon/);
+    assert.match(vocabReviewMigration, /REVOKE ALL ON FUNCTION public\.admin_set_vocab_tower_v2_review_status_v1[\s\S]*FROM PUBLIC, anon/);
+    assert.doesNotMatch(vocabReviewMigration, /auth\.jwt|app_metadata/);
 });
