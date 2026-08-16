@@ -21,6 +21,20 @@
 
 ---
 
+## 2026-08-17 — 독서록/일기 포인트 알림 연결 (Antigravity/Codex)
+- **한 일**: 활동 알림 이벤트 트리거가 `writing_reward`를 다루는 분기를 점검했고, 자율 글(`student_posts.writing_context = 'self'`)에서
+  발생한 포인트 지급이 활동 알림 `points.adjusted`로 수집되지 않는 원인을 확인해 고쳤습니다.
+- **변경**: 새 마이그레이션 `20261115_self_writing_reward_activity_notifications.sql`을 추가해 `emit_point_notification_v1()`를
+  업데이트했습니다. 자율 글 포인트 보상은 `포인트 내역이 생겼어요` 알림(event_key `point-log:*`)으로 노출되고,
+  과제 글 `assignment_recovery` 보상 흐름은 기존 `writing.approval_recovered` 분기를 유지했습니다.
+  `npm run migrate:check`로 롤백 검증 후 `npm run migrate`로 운영 `agit-db`에 적용 완료(147/147 상태).
+- **변경(2)**: 독서록/일기 저장 완료 시 `studentHomeApi.invalidate()`를 호출해 홈 알림 캐시를 즉시 무효화하도록
+  학생 화면(`ReadingLogPage`, `DiaryPage`)을 보강하고, `tests/studentNotifications.test.mjs`에 회귀 검증 테스트를 추가했습니다.
+- **결과/검증**: `npm run lint` 통과(0 경고·0 오류), `npm run test:notifications` 및 `npm run test:architecture` 통과(71/71),
+  `npm run migrate:check` 통과 및 `npm run migrate` 147/147 완료, `npm run build` 성공.
+- **남은 것 / 다음**: 실기기에서 학생 계정으로 독서록/일기 작성 완료 직후 활동 알림 패널에 포인트 획득 알림이 즉시 나타나는지 최종 확인.
+
+
 ## 2026-08-17 — 어휘 V2 낱말 카드함 화면 추가 (Claude)
 - **한 일**: 층 카드에는 상태별 개수만 보여 학생이 "왜 아직 익힘이 아닌지", "언제 다시 만나는지"를 알 수
   없었다. 층마다 `낱말 카드함`을 열어 자신이 만난 낱말의 기록을 낱말 단위로 확인하게 했다. 카드마다 뜻·예문과
