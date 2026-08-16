@@ -26,6 +26,7 @@ import MyPostEngagementPanel from '../engagement/MyPostEngagementPanel';
 import useDiaryDailyStatus from './useDiaryDailyStatus';
 import './diary.css';
 import StudentBackButton from '../../../components/student/StudentBackButton';
+import { studentHomeApi } from '../../home/studentHomeApi';
 
 const DIARY_POLICY_DEFAULTS = Object.freeze({
     is_enabled: true,
@@ -270,6 +271,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
         alert(form.visibility === 'class'
             ? `일기를 친구 공개로 저장했어요! 📔${rewardMessage}`
             : `일기를 나만 보기로 저장했어요. 선생님은 확인할 수 있어요. 🔒${rewardMessage}`);
+        if (studentSession?.id) studentHomeApi.invalidate(studentSession.id);
         onDone();
     };
 

@@ -30,6 +30,7 @@ import MyPostEngagementPanel from '../engagement/MyPostEngagementPanel';
 import useReadingLogDailyStatus from './useReadingLogDailyStatus';
 import './ReadingLogShelf.css';
 import StudentBackButton from '../../../components/student/StudentBackButton';
+import { studentHomeApi } from '../../home/studentHomeApi';
 
 const EMPTY_FORM = {
     title: '',
@@ -451,6 +452,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
         alert(draftCleared
             ? savedMessage
             : `${savedMessage}\n서버 임시본 정리가 늦어지고 있지만 저장한 글이 우선이라 옛 내용으로 덮이지 않아요.`);
+        if (studentSession?.id) studentHomeApi.invalidate(studentSession.id);
         onDone();
     };
 

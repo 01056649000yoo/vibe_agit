@@ -170,3 +170,19 @@ test('로그인과 홈 복귀는 공용 bootstrap의 최신성 규칙을 따른�
     assert.match(app, /previousStudentHomePageRef/);
     assert.match(app, /studentPageName === 'main'[\s\S]*refreshStudentHomeIfStale/);
 });
+
+test('독서록과 일기는 글 완료 시 홈 알림 캐시를 무효화하고 자율 글 포인트 알림을 발행한다', async () => {
+    const [diary, readingLog, migration] = await Promise.all([
+        read('src/modules/writing/diary/DiaryPage.jsx'),
+        read('src/modules/writing/reading-log/ReadingLogPage.jsx'),
+        read('supabase/migrations/20261115_self_writing_reward_activity_notifications.sql')
+    ]);
+
+    assert.match(diary, /studentHomeApi\.invalidate\(studentSession\.id\)/);
+    assert.match(readingLog, /studentHomeApi\.invalidate\(studentSession\.id\)/);
+    assert.match(migration, /NEW\.activity_type = 'writing_reward'/);
+    assert.match(migration, /post\.writing_context = 'self'/);
+    assert.match(migration, /points\.adjusted/);
+    assert.match(migration, /format\('point-log:%s', NEW\.id\)/);
+});
+
