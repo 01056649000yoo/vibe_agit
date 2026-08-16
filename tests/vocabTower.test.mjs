@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import {
     buildRoomQuiz,
     getRoomType,
+    isInputQuestion,
     mapV2Question,
     replaceWordWithBlank
 } from '../src/modules/game/vocab-tower/vocabTowerEngine.js';
@@ -16,7 +17,7 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
@@ -27,7 +28,8 @@ const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEnt
     readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8'),
     readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8'),
     readFile('supabase/migrations/20261109_vocab_tower_v2_item_learning.sql', 'utf8'),
-    readFile('supabase/migrations/20261110_vocab_tower_v2_default_content.sql', 'utf8')
+    readFile('supabase/migrations/20261110_vocab_tower_v2_default_content.sql', 'utf8'),
+    readFile('supabase/migrations/20261111_vocab_tower_v2_direct_input.sql', 'utf8')
 ]);
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
@@ -175,4 +177,55 @@ test('교사 어휘 설정은 운영 요약과 핵심 입력을 한 화면에 �
     assert.match(teacherManagerStyles, /\.vocab-teacher\s*\{[\s\S]*?gap:\s*10px;/);
     assert.match(teacherManagerStyles, /\.vocab-teacher__overview, \.vocab-teacher__panel\s*\{[\s\S]*?padding:\s*13px 14px;/);
     assert.match(teacherManagerStyles, /\.vocab-teacher__summary\s*\{[\s\S]*?margin-top:\s*7px;/);
+});
+
+test('직접 입력형은 한 유형을 이미 성공한 낱말에서만 열린다', () => {
+    assert.match(v2DirectInputMigration, /v_is_input := v_learning_state IN \('familiar', 'mastered'\)/);
+    assert.match(v2DirectInputMigration, /'definitionInput'[\s\S]*'clozeInput'/);
+    // 허용 정답이 없거나 검수 전이면 선택형으로 되돌려 학생이 막히지 않게 한다.
+    assert.match(v2DirectInputMigration, /v_is_input := FALSE;/);
+    assert.match(v2DirectInputMigration, /question_type = ANY \(ARRAY\[\s*'meaningChoice', 'clozeChoice', 'usageDistinction', 'definitionInput', 'clozeInput'/);
+});
+
+test('직접 입력형 채점은 공백·문장부호만 무시하고 낱말은 그대로 본다', () => {
+    assert.match(v2DirectInputMigration, /CREATE OR REPLACE FUNCTION public\.normalize_vocab_tower_v2_answer/);
+    assert.match(v2DirectInputMigration, /regexp_replace\(lower\(btrim\(COALESCE\(p_answer, ''\)\)\), '\[\[:space:\]\[:punct:\]\]', '', 'g'\)/);
+    assert.match(v2DirectInputMigration, /FROM jsonb_array_elements_text\(v_question\.accepted_answers\) accepted/);
+    // 선택형은 기존 정확 일치 채점을 그대로 유지한다.
+    assert.match(v2DirectInputMigration, /v_is_correct := p_selected_answer = v_question\.correct_answer;/);
+});
+
+test('직접 입력형 문항은 정답 낱말과 예문을 학생 화면에 내려보내지 않는다', () => {
+    assert.match(v2DirectInputMigration, /CREATE OR REPLACE FUNCTION public\.build_vocab_tower_v2_question_payload_v1/);
+    assert.match(v2DirectInputMigration, /'word', CASE WHEN p_question\.question_type IN \('definitionInput', 'clozeInput'\)\s*\n\s*THEN '' ELSE p_question\.word END/);
+    assert.match(v2DirectInputMigration, /'example', CASE WHEN p_question\.question_type IN \('definitionInput', 'clozeInput'\)\s*\n\s*THEN '' ELSE p_question\.example END/);
+    assert.match(v2DirectInputMigration, /'definition', CASE WHEN p_question\.question_type = 'clozeInput'/);
+    // 가린 정보는 채점 응답으로 되돌려줘야 해설을 만들 수 있다.
+    assert.match(v2DirectInputMigration, /'word', v_question\.word, 'example', v_question\.example,\s*\n\s*'definition', v_question\.definition,/);
+    assert.match(vocabularyGame, /word: data\.word \|\| currentQuiz\.word\.word/);
+});
+
+test('학생 화면은 보기 대신 직접 쓰는 칸을 보여준다', () => {
+    assert.equal(isInputQuestion('definitionInput'), true);
+    assert.equal(isInputQuestion('clozeInput'), true);
+    assert.equal(isInputQuestion('meaningChoice'), false);
+    const inputQuestion = mapV2Question({
+        question_key: 'q1', room_type: 'meaning', question_type: 'definitionInput',
+        prompt: '이 뜻에 맞는 낱말을 직접 쓰세요.', options: [],
+        word: { word: '', definition: '자세히 살펴봄', example: '', level: 1, category: '공부' },
+        sequence_number: 1, target_question_count: 12, deck_number: 8
+    });
+    assert.equal(inputQuestion.isInput, true);
+    assert.match(inputQuestion.room.guide, /직접 써요/);
+    const choiceQuestion = mapV2Question({
+        question_key: 'q2', room_type: 'meaning', question_type: 'meaningChoice',
+        prompt: '뜻에 맞는 낱말은?', options: ['관찰', '감각'],
+        word: { word: '관찰', definition: '자세히 살펴봄', example: '식물을 관찰했다.', level: 1, category: '공부' },
+        sequence_number: 2, target_question_count: 12, deck_number: 8
+    });
+    assert.equal(choiceQuestion.isInput, false);
+    assert.match(vocabularyGame, /currentQuiz\.isInput \? \(/);
+    assert.match(vocabularyGame, /낱말을 직접 써 보세요/);
+    assert.match(vocabularyGame, /setNotice\('낱말을 입력한 뒤 확인을 눌러주세요\.'\)/);
+    assert.match(vocabularyStyles, /\.vocab-question-card__input input\.is-correct/);
 });

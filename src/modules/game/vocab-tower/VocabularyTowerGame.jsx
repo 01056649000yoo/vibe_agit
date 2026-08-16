@@ -69,6 +69,7 @@ const VocabularyTowerGame = ({
     const [summary, setSummary] = useState(null);
     const [notice, setNotice] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [typedAnswer, setTypedAnswer] = useState('');
     const [returnPhase, setReturnPhase] = useState('playing');
     const finishingRef = useRef(false);
 
@@ -185,6 +186,7 @@ const VocabularyTowerGame = ({
         }
         setLastResult(null);
         setPendingServerResult(null);
+        setTypedAnswer('');
         setPhase('playing');
         return true;
     }, [activeBoon, createQuiz, isV2, run.runId, setServerQuiz]);
@@ -254,10 +256,17 @@ const VocabularyTowerGame = ({
         }
 
         const isCorrect = Boolean(data.is_correct);
+        // 직접 입력형은 정답이 새지 않도록 낱말·뜻·예문을 가린 채 내려오므로 채점 응답으로 되채운다.
         const answeredQuiz = isV2 ? {
             ...currentQuiz,
             correctAnswer: data.correct_answer,
-            explanation: data.explanation
+            explanation: data.explanation,
+            word: {
+                ...currentQuiz.word,
+                word: data.word || currentQuiz.word.word,
+                definition: data.definition || currentQuiz.word.definition,
+                example: data.example || currentQuiz.word.example
+            }
         } : currentQuiz;
         if (isV2) setServerQuiz(answeredQuiz);
         const { learnedFromReview } = recordAnswer({ quiz: answeredQuiz, isCorrect });
@@ -488,6 +497,38 @@ const VocabularyTowerGame = ({
                         </div>
                         <p className="vocab-question-card__prompt">{currentQuiz.prompt}</p>
                         {activeBoon?.id === 'hint' && <p className="vocab-question-card__hint">💡 핵심 낱말 첫 글자: <strong>{(currentQuiz.correctAnswer || currentQuiz.word.word).slice(0, 1)}</strong></p>}
+                        {currentQuiz.isInput ? (
+                            <form
+                                className="vocab-question-card__input"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    const answer = typedAnswer.trim();
+                                    if (!answer) {
+                                        setNotice('낱말을 입력한 뒤 확인을 눌러주세요.');
+                                        return;
+                                    }
+                                    void handleAnswer(answer);
+                                }}
+                            >
+                                <label htmlFor="vocab-typed-answer">낱말을 직접 써 보세요</label>
+                                <input
+                                    id="vocab-typed-answer"
+                                    type="text"
+                                    value={phase === 'answer' ? (lastResult?.selectedAnswer ?? typedAnswer) : typedAnswer}
+                                    onChange={(event) => setTypedAnswer(event.target.value)}
+                                    disabled={phase !== 'playing' || submitting}
+                                    className={phase === 'answer' ? (lastResult?.isCorrect ? 'is-correct' : 'is-wrong') : ''}
+                                    maxLength={50}
+                                    autoComplete="off"
+                                    autoCapitalize="off"
+                                    spellCheck={false}
+                                    placeholder="예: 관찰"
+                                />
+                                <button type="submit" disabled={phase !== 'playing' || submitting || !typedAnswer.trim()}>
+                                    확인
+                                </button>
+                            </form>
+                        ) : (
                         <div className="vocab-question-card__options">
                             {currentQuiz.options.map((option) => {
                                 const isSelected = lastResult?.selectedAnswer === option;
@@ -509,6 +550,7 @@ const VocabularyTowerGame = ({
                                 );
                             })}
                         </div>
+                        )}
                         {notice && <p className="vocab-journey__notice" role="alert">{notice}</p>}
                         <AnimatePresence>
                             {phase === 'answer' && lastResult && (

@@ -94,14 +94,30 @@ export const buildRoomQuiz = ({
     };
 };
 
+// 직접 입력형은 보기가 없고 학생이 낱말을 직접 쓴다. 채점은 서버의 허용 정답 목록이 맡는다.
+const INPUT_QUESTION_TYPES = Object.freeze(['definitionInput', 'clozeInput']);
+
+export const isInputQuestion = (questionType) => INPUT_QUESTION_TYPES.includes(questionType);
+
+const INPUT_ROOM_GUIDE = Object.freeze({
+    definitionInput: '뜻을 읽고 알맞은 낱말을 직접 써요.',
+    clozeInput: '문장의 빈칸에 들어갈 낱말을 직접 써요.'
+});
+
 export const mapV2Question = (data) => {
     const roomType = data?.room_type;
-    const room = Reflect.get(ROOM_INFO, roomType);
-    if (!data?.question_key || !room || !Array.isArray(data?.options) || !data?.word) return null;
+    const baseRoom = Reflect.get(ROOM_INFO, roomType);
+    if (!data?.question_key || !baseRoom || !Array.isArray(data?.options) || !data?.word) return null;
+    const isInput = isInputQuestion(data.question_type);
+    // 보기가 없는 문항은 방 안내 문구도 "고르기"가 아니라 "직접 쓰기"로 바꿔 준다.
+    const room = isInput
+        ? { ...baseRoom, guide: Reflect.get(INPUT_ROOM_GUIDE, data.question_type) || baseRoom.guide }
+        : baseRoom;
     return {
         questionKey: data.question_key,
         roomType,
         room,
+        isInput,
         questionType: data.question_type,
         sequenceNumber: Number(data.sequence_number || 0),
         targetQuestionCount: Number(data.target_question_count || 0),
