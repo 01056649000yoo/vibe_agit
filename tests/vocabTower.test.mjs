@@ -356,24 +356,28 @@ test('낱말 카드함은 아직 만나지 않은 낱말을 노출하지 않는�
     assert.match(cardBoxMigration, /LIMIT 100/);
 });
 
-test('카드함은 상태별로 접고 다 익힌 낱말은 칩으로 압축한다', () => {
-    // 한 층 40개를 같은 크기로 늘어놓으면 훑기 어렵다. 지금 봐야 할 묶음만 펼쳐 둔다.
-    assert.match(cardBox, /id: 'confusing'[\s\S]*?open: true/);
-    assert.match(cardBox, /id: 'mastered'[\s\S]*?open: false, chips: true/);
-    assert.match(cardBox, /closedSections/);
-    assert.match(cardBox, /aria-expanded=\{!isClosed\}/);
-    assert.match(cardBox, /vocab-word-chip/);
+test('카드함 묶음은 모두 접힌 채로 시작한다', () => {
+    // 먼저 어디에 몇 개가 있는지 보고 필요한 묶음만 연다.
+    assert.match(cardBox, /useState\(\(\) => new Set\(\)\)/);
+    assert.match(cardBox, /const isOpen = openSections\.has\(section\.id\)/);
+    assert.match(cardBox, /aria-expanded=\{isOpen\}/);
+    // 열려 있는 상태를 기본값으로 되돌리지 않는다.
+    assert.doesNotMatch(cardBox, /open: true/);
+    assert.match(cardBox, /id: 'mastered'[\s\S]*?chips: true/);
     assert.match(vocabularyStyles, /\.vocab-card-group__chips/);
 });
 
-test('카드함은 뜻을 가려 두고 떠올린 뒤 확인하게 한다', () => {
-    // 읽기만 하면 남지 않는다. 스스로 꺼내 본 뒤 확인할 때 기억에 남는다.
+test('카드함은 뜻 가리기와 낱말 가리기 두 방향을 고르게 한다', () => {
+    assert.match(cardBox, /id: 'meaning', label: '뜻 가리기'/);
+    assert.match(cardBox, /id: 'word', label: '낱말 가리기'/);
+    assert.match(cardBox, /낱말을 떠올려 보세요 · 눌러서 확인/);
     assert.match(cardBox, /뜻을 떠올려 보세요 · 눌러서 확인/);
-    assert.match(cardBox, /뜻 다시 가리기/);
-    assert.match(cardBox, /뜻 모두 보기/);
-    assert.match(cardBox, /toggleReveal/);
-    // 뜻은 가리되 익힘 근거는 항상 보여야 다음에 뭘 할지 안다.
-    assert.match(cardBox, /isOpen \? \(/);
+    // 낱말을 가릴 때 예문에 정답이 그대로 남으면 답이 새므로 빈칸으로 바꾼다.
+    assert.match(cardBox, /const blankOutWord = \(example, word\)/);
+    assert.match(cardBox, /replaceAll\(word, '＿＿＿＿'\)/);
+    // 방향을 바꾸면 이미 연 답을 닫는다.
+    assert.match(cardBox, /setRevealed\(new Set\(\)\);/);
+    assert.match(vocabularyStyles, /\.vocab-card-box__modes/);
     assert.match(vocabularyStyles, /\.vocab-word-card__reveal/);
 });
 

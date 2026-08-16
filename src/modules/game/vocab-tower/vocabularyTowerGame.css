@@ -121,7 +121,15 @@
 .vocab-card-box__empty > span { font-size: 2.4rem; }
 .vocab-card-box__empty strong { color: #334155; }
 .vocab-card-box__empty p { margin: 0; font-size: .78rem; }
-/* 뜻 전체 보기/가리기 */
+/* 가리는 방향 선택 — 뜻 가리기(낱말→뜻) / 낱말 가리기(뜻→낱말) */
+.vocab-card-box__modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.vocab-card-box__modes button { display: grid; gap: 2px; padding: 10px 12px; border: 2px solid #dde4ef; border-radius: 14px; background: white; font: inherit; cursor: pointer; text-align: center; }
+.vocab-card-box__modes button strong { color: #3f5480; font-size: .8rem; font-weight: 950; }
+.vocab-card-box__modes button small { color: #8794aa; font-size: .66rem; font-weight: 700; }
+.vocab-card-box__modes button.is-active { border-color: #5b74c9; background: #eef3fd; }
+.vocab-card-box__modes button.is-active strong { color: #2c3f77; }
+
+/* 답 전체 보기/가리기 */
 .vocab-card-box__tools { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 .vocab-card-box__tools button { padding: 7px 13px; border: 1px solid #c8d3e8; border-radius: 999px; background: #f4f7fd; color: #3f5480; font: inherit; font-size: .7rem; font-weight: 900; cursor: pointer; }
 
@@ -153,6 +161,9 @@
 .vocab-word-card.is-almost { border-left-color: #6fbf95; }
 .vocab-word-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .vocab-word-card__head strong { color: #1f2d4d; font-size: 1.05rem; font-weight: 950; }
+.vocab-word-card__prompt { margin: 0; color: #1f2d4d; font-size: .92rem; font-weight: 900; line-height: 1.5; }
+.vocab-word-chip.is-reverse { max-width: 100%; }
+.vocab-word-chip.is-reverse strong { font-size: .72rem; font-weight: 800; white-space: normal; }
 
 /* 뜻은 가려 두고 학생이 먼저 떠올린 뒤 확인하게 한다. */
 .vocab-word-card__reveal { width: 100%; margin-top: 8px; padding: 10px; border: 1px dashed #b8c4da; border-radius: 11px; background: #f7f9fd; color: #5a6a86; font: inherit; font-size: .74rem; font-weight: 900; cursor: pointer; }
