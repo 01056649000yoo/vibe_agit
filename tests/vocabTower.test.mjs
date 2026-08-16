@@ -16,9 +16,11 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, teacherManager, v2PracticeMigration, v2RewardMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, teacherManager, v2PracticeMigration, v2RewardMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
+    readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
+    readFile('src/components/student/StudentDashboard.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8'),
     readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8'),
     readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8')
@@ -79,6 +81,14 @@ test('V2 학생 화면은 10개 덱 지도에서 12문항 개인 연습을 시�
     assert.match(vocabularyGame, /get_my_vocab_tower_v2_overview_v1/);
     assert.match(vocabularyGame, /start_my_vocab_tower_v2_practice_v1/);
     assert.match(vocabularyGame, /finish_my_vocab_tower_v2_practice_v1/);
+});
+
+test('어휘의 탑 전체 화면은 모바일 가시 높이 안에서 세로 스크롤할 수 있다', () => {
+    assert.match(vocabularyStyles, /\.vocab-journey\s*\{[\s\S]*?height:\s*100dvh;/);
+    assert.match(vocabularyStyles, /\.vocab-journey\s*\{[\s\S]*?overflow-y:\s*auto;/);
+    assert.match(vocabularyStyles, /\.vocab-journey\s*\{[\s\S]*?-webkit-overflow-scrolling:\s*touch;/);
+    assert.match(studentDashboard, /height:\s*'100dvh'/);
+    assert.match(studentDashboard, /overflowY:\s*'auto'/);
 });
 
 test('V2 개인 연습은 덱별 결과를 저장하고 시작 자체에는 포인트를 주지 않는다', () => {

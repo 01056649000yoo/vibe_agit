@@ -431,8 +431,9 @@ const StudentDashboard = ({
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                         style={{
-                            position: 'fixed', inset: 0, width: '100vw', height: '100vh',
-                            background: 'white', zIndex: 20000, overflow: 'auto'
+                            position: 'fixed', inset: 0, width: '100vw', height: '100dvh',
+                            background: 'white', zIndex: 20000, overflowX: 'hidden', overflowY: 'auto',
+                            WebkitOverflowScrolling: 'touch'
                         }}
                     >
                         <StudentGameModuleHost
