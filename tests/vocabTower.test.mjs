@@ -79,7 +79,7 @@ test('V2 서버 문항은 정답 없이 기존 게임 카드 형태로 변환된
 test('V2 학생 화면은 10개 덱 지도에서 12문항 개인 연습을 시작한다', () => {
     assert.match(v2DeckMap, /어휘의 탑 지도/);
     assert.match(v2DeckMap, /decks\.map/);
-    assert.match(v2DeckMap, /한 번의 연습[\s\S]*12문항/);
+    assert.match(v2DeckMap, /한 번의 연습에서 12문항을 모두 맞히면/);
     assert.match(vocabularyGame, /get_my_vocab_tower_v2_overview_v1/);
     assert.match(vocabularyGame, /start_my_vocab_tower_v2_practice_v1/);
     assert.match(vocabularyGame, /finish_my_vocab_tower_v2_practice_v1/);
@@ -110,7 +110,8 @@ test('V2 개인 연습은 덱별 최초 12\/12에 교사 설정 포인트를 한
     assert.match(v2RewardMigration, /'perfect_reward_already_earned'/);
     assert.match(teacherManager, /최초 완벽 연습 보상/);
     assert.match(teacherManager, /vocab_tower_v2_perfect_reward_points/);
-    assert.match(v2DeckMap, /첫 12\/12 달성/);
+    assert.match(v2DeckMap, /포인트 목표 완료/);
+    assert.match(v2DeckMap, /포인트를 이미 받았어요/);
     assert.match(vocabularyGame, /perfect_reward_earned/);
 });
 
@@ -121,7 +122,20 @@ test('V2는 낱말별 상태를 기록하고 약점·새 낱말·복습을 적�
     assert.match(v2ItemLearningMigration, /v_target_focus := CASE MOD\(v_sequence - 1, 12\)/);
     assert.match(v2ItemLearningMigration, /'practice_focus', v_existing\.selection_focus/);
     assert.match(v2ItemLearningMigration, /'mastered_count', v_mastered_count/);
-    assert.match(v2DeckMap, /익힌 낱말/);
-    assert.match(v2DeckMap, /복습.*새 낱말/);
+    assert.match(v2DeckMap, /처음 볼 낱말/);
+    assert.match(v2DeckMap, /연습 중/);
+    assert.match(v2DeckMap, /다시 볼 낱말/);
+    assert.match(v2DeckMap, /완전히 익힘/);
+    assert.match(v2DeckMap, /deck\.learning_count[\s\S]*deck\.familiar_count/);
     assert.match(vocabularyGame, /복습할 낱말/);
+});
+
+test('V2 덱 카드는 학습량과 포인트 목표 완료를 한 카드에서 설명한다', () => {
+    assert.match(v2DeckMap, /한 번 이상 학습한 낱말/);
+    assert.match(v2DeckMap, /12문항 완료/);
+    assert.match(v2DeckMap, /최고 정답률/);
+    assert.match(v2DeckMap, /포인트 목표 도전 중/);
+    assert.match(v2DeckMap, /포인트 목표 완료/);
+    assert.match(v2DeckMap, /포인트를 이미 받았어요/);
+    assert.match(v2DeckMap, /aria-label=\{`\$\{deckNumber\}층/);
 });
