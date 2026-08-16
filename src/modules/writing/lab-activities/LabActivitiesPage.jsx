@@ -3,6 +3,7 @@ import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
 import { labActivitiesApi } from './api';
 import './LabActivitiesPage.css';
+import StudentBackButton from '../../../components/student/StudentBackButton';
 
 const ACTIVITY_META = Object.freeze({
     outline_builder: { icon: '🧩', label: '글 개요 짜기', tone: 'amber' },
@@ -82,9 +83,7 @@ const LabActivitiesPage = ({ onBack }) => {
             }}
         >
             <header className="lab-activities-page__header">
-                <Button variant="ghost" size="sm" onClick={onBack} disabled={loading}>
-                    뒤로 가기
-                </Button>
+                <StudentBackButton onClick={onBack} disabled={loading} />
                 <div>
                     <span className="lab-activities-page__eyebrow">우리 반 활동</span>
                     <h1>글쓰기 연구소</h1>

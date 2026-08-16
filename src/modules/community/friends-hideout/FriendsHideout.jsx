@@ -9,6 +9,7 @@ import { getReactionOption } from '../../writing/reactions/registry';
 import { getCommunityFeedSelfTypes } from '../../registry';
 import PostDetailModal from '../../../components/student/PostDetailModal';
 import FriendHideoutPreviewCard from './profile/FriendHideoutPreviewCard';
+import StudentBackButton from '../../../components/student/StudentBackButton';
 
 const FriendProfileShell = lazy(() => import('./profile/FriendProfileShell'));
 
@@ -261,7 +262,7 @@ const FriendsHideout = ({ studentSession, onBack, params }) => {
                 boxSizing: 'border-box'
             } : CONTAINER_STYLE}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '22px' }}>
-                    <Button variant="ghost" size="sm" onClick={onBack}>⬅️ 돌아가기</Button>
+                    <StudentBackButton onClick={onBack} />
                     <div>
                         <h2 style={{ margin: 0, color: '#2C3E50', fontWeight: '950', fontSize: isMobile ? '1.5rem' : '1.8rem' }}>🌈 우리 반 글과 아지트</h2>
                         <p style={{ margin: '7px 0 0', color: '#78909C', fontSize: '0.9rem', fontWeight: '700' }}>

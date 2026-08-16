@@ -546,7 +546,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             </div>
         </Card>
     );
-    if (!mission) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 미션을 찾을 수 없습니다.</p><Button onClick={onBack}>돌아가기</Button></Card>;
+    if (!mission) return <Card><p style={{ textAlign: 'center', padding: '40px' }}>글쓰기 미션을 찾을 수 없습니다.</p><Button onClick={onBack}>과제 목록으로</Button></Card>;
 
     const hasQuestions = mission?.guide_questions?.length > 0;
     const writingReferenceSections = [

@@ -5,6 +5,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { isPendingRewrite } from '../../lib/writingStatus';
 import { getGenreMissionType } from '../../modules/writing/mission-types/registry';
+import StudentBackButton from './StudentBackButton';
 
 const MISSION_LIST_LIMIT = 100;
 // AGENTS.md 학생 폴링 하한(60초)과 다른 화면 재조회 간격에 맞춘다.
@@ -108,10 +109,8 @@ const MissionList = ({ studentSession, onBack, onNavigate }) => {
             background: '#FFFDF7',
             border: '2px solid #FFE082'
         }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px' }}>
-                <Button variant="ghost" size="sm" onClick={onBack} style={{ marginRight: '16px' }} disabled={loading}>
-                    뒤로 가기
-                </Button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
+                <StudentBackButton onClick={onBack} disabled={loading} />
                 <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#5D4037', fontWeight: '900' }}>오늘은 어떤 글을 써볼까?</h2>
             </div>
 

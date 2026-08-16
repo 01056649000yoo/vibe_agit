@@ -25,6 +25,7 @@ import {
 import MyPostEngagementPanel from '../engagement/MyPostEngagementPanel';
 import useDiaryDailyStatus from './useDiaryDailyStatus';
 import './diary.css';
+import StudentBackButton from '../../../components/student/StudentBackButton';
 
 const DIARY_POLICY_DEFAULTS = Object.freeze({
     is_enabled: true,
@@ -512,7 +513,7 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
         <div className="diary-page">
             <header className="diary-page-header">
                 <div>
-                    <Button variant="ghost" size="sm" onClick={onBack}>⬅️ 홈으로</Button>
+                    <StudentBackButton onClick={onBack} />
                     <h1>📔 나의 일기</h1>
                     <p>하루에 한 편, 오늘의 나를 남겨요.</p>
                 </div>

@@ -29,6 +29,7 @@ import { applyBookSelection, autoTitleFor, hasCustomTitle, readingDraftHasConten
 import MyPostEngagementPanel from '../engagement/MyPostEngagementPanel';
 import useReadingLogDailyStatus from './useReadingLogDailyStatus';
 import './ReadingLogShelf.css';
+import StudentBackButton from '../../../components/student/StudentBackButton';
 
 const EMPTY_FORM = {
     title: '',
@@ -845,7 +846,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
         <div className="reading-log-page">
             <div className="reading-log-list-header">
                 <div>
-                    <Button variant="ghost" size="sm" onClick={onBack}>⬅️ 홈으로</Button>
+                    <StudentBackButton onClick={onBack} />
                     <h1>📚 나의 책장</h1>
                     <p>읽고 있는 책과 다 읽은 책, 내가 쓴 독서록을 한곳에서 관리해요.</p>
                 </div>
