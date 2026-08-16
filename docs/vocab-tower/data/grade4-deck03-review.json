@@ -1,0 +1,4140 @@
+{
+  "schemaVersion": 1,
+  "status": "assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery",
+  "reviewMode": "assisted",
+  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "grade": 4,
+  "deckId": "grade4-deck03",
+  "deckNumber": 3,
+  "itemCount": 40,
+  "reviewedOn": "2026-08-16",
+  "reviewSummary": {
+    "partOfSpeechFilled": 40,
+    "meaningNumbersAssigned": 40,
+    "definitionsChanged": 0,
+    "examplesChanged": 1,
+    "acceptedAnswersChanged": 0,
+    "usageDistinctionsAuthored": 40,
+    "priorityItems": 2,
+    "sampleItems": 38,
+    "correctedItems": 1,
+    "autoDraftCorrectionRate": 0.025
+  },
+  "requiredEnrichment": [],
+  "items": [
+    {
+      "itemKey": "vocab:g4:공손",
+      "word": "공손",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "감정과 태도",
+      "level": 1,
+      "sourceDefinition": "말이나 행동이 아주 예의 바르고 겸손한 상태를 말해요.",
+      "sourceExample": "어른을 뵈면 항상 밝은 얼굴로 공손하게 인사를 드려야 해.",
+      "definition": "말이나 행동이 아주 예의 바르고 겸손한 상태를 말해요.",
+      "example": "어른을 뵈면 항상 밝은 얼굴로 공손하게 인사를 드려야 해.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘공손’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "말이나 행동이 아주 예의 바르고 겸손한 상태를 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "상대방의 기분이나 생각이 나와 같다고 느끼는 마음이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 목표를 이루기 위해 마음과 힘을 다하는 것을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "어른을 뵈면 항상 밝은 얼굴로 ＿＿＿＿하게 인사를 드려야 해.",
+          "options": [
+            {
+              "value": "감동",
+              "isCorrect": false
+            },
+            {
+              "value": "공감",
+              "isCorrect": false
+            },
+            {
+              "value": "공손",
+              "isCorrect": true
+            },
+            {
+              "value": "노력",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "말이나 행동이 아주 예의 바르고 겸손한 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "공손"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "어른을 뵈면 항상 밝은 얼굴로 ＿＿＿＿하게 인사를 드려야 해.",
+          "acceptedAnswers": [
+            "공손"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘공손’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "어른을 뵈면 항상 밝은 얼굴로 공손하게 인사를 드려야 해.",
+              "isCorrect": true
+            },
+            {
+              "value": "4분의 4나 4분의 5처럼 머리가 몸통보다 큰 분수가 공손예요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘가분수’의 쓰임이에요. ‘공손’은 말이나 행동이 아주 예의 바르고 겸손한 상태를 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:가분수"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:구매",
+      "word": "구매",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "경제와 생활",
+      "level": 1,
+      "sourceDefinition": "물건을 돈을 내고 사는 것을 말해요.",
+      "sourceExample": "어머니와 함께 시장에 가서 저녁 반찬 거리를 구매했어요.",
+      "definition": "물건을 돈을 내고 사는 것을 말해요.",
+      "example": "어머니와 함께 시장에 가서 저녁 반찬 거리를 구매했어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘구매’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "어느 한 지역에서만 특별히 많이 나거나 유명한 물건이나 농작물이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "물건을 돈을 내고 사는 것을 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "원료를 가공하여 우리가 사용하는 물건을 만드는 산업을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 물건을 사거나 일을 하는 데 들어가는 돈을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "어머니와 함께 시장에 가서 저녁 반찬 거리를 ＿＿＿＿했어요.",
+          "options": [
+            {
+              "value": "특산물",
+              "isCorrect": false
+            },
+            {
+              "value": "공업",
+              "isCorrect": false
+            },
+            {
+              "value": "비용",
+              "isCorrect": false
+            },
+            {
+              "value": "구매",
+              "isCorrect": true
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "물건을 돈을 내고 사는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "구매"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "어머니와 함께 시장에 가서 저녁 반찬 거리를 ＿＿＿＿했어요.",
+          "acceptedAnswers": [
+            "구매"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘구매’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "안경처럼 생긴 기계를 쓰고 구매 속에서 공룡을 만났어요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어머니와 함께 시장에 가서 저녁 반찬 거리를 구매했어요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘가상 현실’의 쓰임이에요. ‘구매’는 물건을 돈을 내고 사는 것을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:가상 현실"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:기포",
+      "word": "기포",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "자연과 환경",
+      "level": 1,
+      "sourceDefinition": "액체 속에 들어 있는 공기 방울을 말해요.",
+      "sourceExample": "사이다를 컵에 부으면 보글보글 기포가 올라오는 것을 볼 수 있어요.",
+      "definition": "액체 속에 들어 있는 공기 방울을 말해요.",
+      "example": "사이다를 컵에 부으면 보글보글 기포가 올라오는 것을 볼 수 있어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘기포’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "공기의 따뜻하고 차가운 정도를 숫자로 나타낸 온도예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "사물의 모양, 성질, 상태 등이 이전과 다르게 바뀌는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "액체 속에 들어 있는 공기 방울을 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "수치나 위치가 위로 올라가는 것을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "사이다를 컵에 부으면 보글보글 ＿＿＿＿가 올라오는 것을 볼 수 있어요.",
+          "options": [
+            {
+              "value": "기포",
+              "isCorrect": true
+            },
+            {
+              "value": "기온",
+              "isCorrect": false
+            },
+            {
+              "value": "변화",
+              "isCorrect": false
+            },
+            {
+              "value": "상승",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "액체 속에 들어 있는 공기 방울을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "기포"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "사이다를 컵에 부으면 보글보글 ＿＿＿＿가 올라오는 것을 볼 수 있어요.",
+          "acceptedAnswers": [
+            "기포"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘기포’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "사이다를 컵에 부으면 보글보글 기포가 올라오는 것을 볼 수 있어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "위인전을 읽으며 훌륭한 사람들의 기포를 배울 수 있어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘가치관’의 쓰임이에요. ‘기포’는 액체 속에 들어 있는 공기 방울을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:가치관"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:도형",
+      "word": "도형",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "모양과 도형",
+      "level": 1,
+      "sourceDefinition": "점, 선, 면으로 이루어진 여러 가지 모양을 말해요.",
+      "sourceExample": "삼각형과 원은 수학 시간에 배우는 아주 친숙한 도형이에요.",
+      "definition": "점, 선, 면으로 이루어진 여러 가지 모양을 말해요.",
+      "example": "삼각형과 원은 수학 시간에 배우는 아주 친숙한 도형이에요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘도형’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "곧지 않고 부드럽게 굽은 선을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "겉으로 드러나는 사물의 생김새나 형태를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "네 개의 선분으로 둘러싸인 평면도형이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "점, 선, 면으로 이루어진 여러 가지 모양을 말해요.",
+              "isCorrect": true
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "삼각형과 원은 수학 시간에 배우는 아주 친숙한 ＿＿＿＿이에요.",
+          "options": [
+            {
+              "value": "곡선",
+              "isCorrect": false
+            },
+            {
+              "value": "도형",
+              "isCorrect": true
+            },
+            {
+              "value": "모양",
+              "isCorrect": false
+            },
+            {
+              "value": "사각형",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "점, 선, 면으로 이루어진 여러 가지 모양을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "도형"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "삼각형과 원은 수학 시간에 배우는 아주 친숙한 ＿＿＿＿이에요.",
+          "acceptedAnswers": [
+            "도형"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘도형’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "점심시간에 축구와 피구 중 무엇을 할지 정하다가 친구와 도형이 생겼어요.",
+              "isCorrect": false
+            },
+            {
+              "value": "삼각형과 원은 수학 시간에 배우는 아주 친숙한 도형이에요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘도형’은 점, 선, 면으로 이루어진 여러 가지 모양을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:갈등"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:문제",
+      "word": "문제",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "생각과 공부",
+      "level": 1,
+      "sourceDefinition": "해결해야 할 질문이나 상황, 혹은 수학에서 풀어야 할 식이에요.",
+      "sourceExample": "수학 익힘책에 있는 문제를 꼼꼼하게 읽고 풀어 보았어요.",
+      "definition": "해결해야 할 질문이나 상황, 혹은 수학에서 풀어야 할 식이에요.",
+      "example": "수학 익힘책에 있는 문제를 꼼꼼하게 읽고 풀어 보았어요.",
+      "flags": [
+        "duplicate_review_required"
+      ],
+      "duplicateReview": {
+        "grade": 4,
+        "word": "문제",
+        "classification": "definition_variant",
+        "variants": [
+          {
+            "sourceIndex": 71,
+            "category": "생각과 공부",
+            "level": 1,
+            "definition": "해결해야 할 질문이나 상황, 혹은 곤란한 일을 말해요.",
+            "example": "수학 문제를 꼼꼼히 읽어서 정답을 찾아냈어."
+          },
+          {
+            "sourceIndex": 213,
+            "category": "생각과 공부",
+            "level": 1,
+            "definition": "해결해야 할 질문이나 상황, 혹은 수학에서 풀어야 할 식이에요.",
+            "example": "수학 익힘책에 있는 문제를 꼼꼼하게 읽고 풀어 보았어요."
+          }
+        ]
+      },
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "priority",
+      "reviewReasons": [
+        "duplicate_review_required",
+        "duplicate_review_required"
+      ],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘문제’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "해결해야 할 질문이나 상황, 혹은 수학에서 풀어야 할 식이에요.",
+              "isCorrect": true
+            },
+            {
+              "value": "나중에 확인할 수 있도록 글이나 숫자로 남겨 놓는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "틀림없거나 아주 뚜렷해서 헷갈리지 않는 상태를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "숫자와 모양에 대해 배우고 계산하는 공부를 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "수학 익힘책에 있는 ＿＿＿＿를 꼼꼼하게 읽고 풀어 보았어요.",
+          "options": [
+            {
+              "value": "기록",
+              "isCorrect": false
+            },
+            {
+              "value": "분명",
+              "isCorrect": false
+            },
+            {
+              "value": "문제",
+              "isCorrect": true
+            },
+            {
+              "value": "수학",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "해결해야 할 질문이나 상황, 혹은 수학에서 풀어야 할 식이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "문제"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "수학 익힘책에 있는 ＿＿＿＿를 꼼꼼하게 읽고 풀어 보았어요.",
+          "acceptedAnswers": [
+            "문제"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘문제’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "수학 익힘책에 있는 문제를 꼼꼼하게 읽고 풀어 보았어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "점심시간에 축구와 피구 중 무엇을 할지 정하다가 친구와 문제가 생겼어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘갈등’의 쓰임이에요. ‘문제’는 해결해야 할 질문이나 상황, 혹은 수학에서 풀어야 할 식이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "priority",
+          "reviewReasons": [
+            "duplicate_review_required",
+            "duplicate_review_required"
+          ],
+          "sourceItemKey": "vocab:g4:갈등"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:비교",
+      "word": "비교",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "비교와 분류",
+      "level": 1,
+      "sourceDefinition": "둘 이상의 대상을 놓고 무엇이 같고 다른지 살펴보는 거예요.",
+      "sourceExample": "사과와 배의 무게를 비교해서 어떤 것이 더 무거운지 찾아봤어요.",
+      "definition": "둘 이상의 대상을 놓고 무엇이 같고 다른지 살펴보는 거예요.",
+      "example": "사과와 배의 무게를 비교해서 어떤 것이 더 무거운지 찾아봤어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘비교’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "둘 이상의 사물이 서로 똑같이 가지고 있는 성질이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "둘 이상의 대상을 놓고 무엇이 같고 다른지 살펴보는 거예요.",
+              "isCorrect": true
+            },
+            {
+              "value": "성질이나 모양에 따라 차이가 나는 것을 갈라내는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "전체 중에서 일부분이나 일정한 몫을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "사과와 배의 무게를 ＿＿＿＿해서 어떤 것이 더 무거운지 찾아봤어요.",
+          "options": [
+            {
+              "value": "공통점",
+              "isCorrect": false
+            },
+            {
+              "value": "구별",
+              "isCorrect": false
+            },
+            {
+              "value": "일부",
+              "isCorrect": false
+            },
+            {
+              "value": "비교",
+              "isCorrect": true
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "둘 이상의 대상을 놓고 무엇이 같고 다른지 살펴보는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "비교"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "사과와 배의 무게를 ＿＿＿＿해서 어떤 것이 더 무거운지 찾아봤어요.",
+          "acceptedAnswers": [
+            "비교"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘비교’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "어제 읽은 동화책의 마지막 장면이 너무 슬퍼서 큰 비교를 받았어.",
+              "isCorrect": false
+            },
+            {
+              "value": "사과와 배의 무게를 비교해서 어떤 것이 더 무거운지 찾아봤어요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘감동’의 쓰임이에요. ‘비교’는 둘 이상의 대상을 놓고 무엇이 같고 다른지 살펴보는 거예요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:감동"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:식",
+      "word": "식",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "숫자와 연산",
+      "level": 1,
+      "sourceDefinition": "수나 기호를 사용해서 수학적인 관계를 나타낸 문장이에요.",
+      "sourceExample": "문장으로 된 문제를 읽고 덧셈 식으로 바꾸어 써 보았어요.",
+      "definition": "수나 기호를 사용해서 수학적인 관계를 나타낸 문장이에요.",
+      "example": "문장으로 된 문제를 읽고 덧셈 식으로 바꾸어 써 보았어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘식’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "수를 더하거나 빼거나 곱하거나 나눠서 답을 구하는 과정이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "돈의 액수나 값을 나타내는 숫자를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "수나 기호를 사용해서 수학적인 관계를 나타낸 문장이에요.",
+              "isCorrect": true
+            },
+            {
+              "value": "물건의 개수나 양, 순서를 나타내는 숫자를 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "문장으로 된 문제를 읽고 덧셈 ＿＿＿＿으로 바꾸어 써 보았어요.",
+          "options": [
+            {
+              "value": "식",
+              "isCorrect": true
+            },
+            {
+              "value": "계산",
+              "isCorrect": false
+            },
+            {
+              "value": "금액",
+              "isCorrect": false
+            },
+            {
+              "value": "수",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "수나 기호를 사용해서 수학적인 관계를 나타낸 문장이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "식"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "문장으로 된 문제를 읽고 덧셈 ＿＿＿＿으로 바꾸어 써 보았어요.",
+          "acceptedAnswers": [
+            "식"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘식’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "문장으로 된 문제를 읽고 덧셈 식으로 바꾸어 써 보았어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "공기 펌프를 이용해 용기 속의 공기를 빼내어 식 상태를 만들었어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘감압’의 쓰임이에요. ‘식’은 수나 기호를 사용해서 수학적인 관계를 나타낸 문장이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:감압"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:의견",
+      "word": "의견",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "사회와 소통",
+      "level": 1,
+      "sourceDefinition": "어떤 일에 대해 가지고 있는 나만의 생각이나 판단이에요.",
+      "sourceExample": "학급 회의 시간에 내 의견을 친구들 앞에서 당당하게 발표했어요.",
+      "definition": "어떤 일에 대해 가지고 있는 나만의 생각이나 판단이에요.",
+      "example": "학급 회의 시간에 내 의견을 친구들 앞에서 당당하게 발표했어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘의견’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "사람이나 물건을 실어 나르는 자전거, 버스, 지하철 같은 도구들이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "모임을 대신해서 나선 사람이나 그 모임의 특징을 잘 보여주는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "두 사람 이상이 서로의 생각이나 느낌을 주고받는 말이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 일에 대해 가지고 있는 나만의 생각이나 판단이에요.",
+              "isCorrect": true
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "학급 회의 시간에 내 ＿＿＿＿을 친구들 앞에서 당당하게 발표했어요.",
+          "options": [
+            {
+              "value": "교통수단",
+              "isCorrect": false
+            },
+            {
+              "value": "의견",
+              "isCorrect": true
+            },
+            {
+              "value": "대표",
+              "isCorrect": false
+            },
+            {
+              "value": "대화",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "어떤 일에 대해 가지고 있는 나만의 생각이나 판단이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "의견"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "학급 회의 시간에 내 ＿＿＿＿을 친구들 앞에서 당당하게 발표했어요.",
+          "acceptedAnswers": [
+            "의견"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘의견’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "의견을 예방하기 위해 외출 후에는 손을 깨끗이 씻어야 해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "학급 회의 시간에 내 의견을 친구들 앞에서 당당하게 발표했어요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘감염병’의 쓰임이에요. ‘의견’은 어떤 일에 대해 가지고 있는 나만의 생각이나 판단이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:감염병"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:이동",
+      "word": "이동",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "활동과 순서",
+      "level": 1,
+      "sourceDefinition": "한 곳에서 다른 곳으로 옮겨 가는 것을 말해요.",
+      "sourceExample": "체육 수업을 하기 위해 운동장으로 반 친구들과 함께 이동했어요.",
+      "definition": "한 곳에서 다른 곳으로 옮겨 가는 것을 말해요.",
+      "example": "체육 수업을 하기 위해 운동장으로 반 친구들과 함께 이동했어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘이동’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "한 곳에서 다른 곳으로 옮겨 가는 것을 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "어떤 일을 하고 난 뒤에 마지막으로 나타난 상태나 답을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 일이 벌어진 형편이나 상황을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "자신이 실제로 해 보거나 겪어 본 일을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "체육 수업을 하기 위해 운동장으로 반 친구들과 함께 ＿＿＿＿했어요.",
+          "options": [
+            {
+              "value": "결과",
+              "isCorrect": false
+            },
+            {
+              "value": "경우",
+              "isCorrect": false
+            },
+            {
+              "value": "이동",
+              "isCorrect": true
+            },
+            {
+              "value": "경험",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "한 곳에서 다른 곳으로 옮겨 가는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "이동"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "체육 수업을 하기 위해 운동장으로 반 친구들과 함께 ＿＿＿＿했어요.",
+          "acceptedAnswers": [
+            "이동"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘이동’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "체육 수업을 하기 위해 운동장으로 반 친구들과 함께 이동했어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "이동을 예방하기 위해 외출 후에는 손을 깨끗이 씻어야 해요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘감염병’의 쓰임이에요. ‘이동’은 한 곳에서 다른 곳으로 옮겨 가는 것을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:감염병"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:하천",
+      "word": "하천",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "지리",
+      "level": 1,
+      "sourceDefinition": "땅 위를 흐르는 큰 물줄기로, '강'과 비슷한 말이에요.",
+      "sourceExample": "우리 마을 앞 하천에는 예쁜 물고기들이 많이 살고 있어요.",
+      "definition": "땅 위를 흐르는 큰 물줄기로, '강'과 비슷한 말이에요.",
+      "example": "우리 마을 앞 하천에는 예쁜 물고기들이 많이 살고 있어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘하천’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "사람이 많이 살고 건물과 차가 많은 복잡하고 활기찬 지역을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "땅 위를 흐르는 큰 물줄기로, '강'과 비슷한 말이에요.",
+              "isCorrect": true
+            },
+            {
+              "value": "어떤 곳을 향해 나아가는 쪽을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "공원이나 건물 안의 위치를 쉽게 알 수 있게 그려 놓은 그림이에요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "우리 마을 앞 ＿＿＿＿에는 예쁜 물고기들이 많이 살고 있어요.",
+          "options": [
+            {
+              "value": "도시",
+              "isCorrect": false
+            },
+            {
+              "value": "방향",
+              "isCorrect": false
+            },
+            {
+              "value": "안내도",
+              "isCorrect": false
+            },
+            {
+              "value": "하천",
+              "isCorrect": true
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "땅 위를 흐르는 큰 물줄기로, '강'과 비슷한 말이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "하천"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "우리 마을 앞 ＿＿＿＿에는 예쁜 물고기들이 많이 살고 있어요.",
+          "acceptedAnswers": [
+            "하천"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘하천’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "올해는 여름철 하천이 예년보다 훨씬 많아 비가 자주 왔어요.",
+              "isCorrect": false
+            },
+            {
+              "value": "우리 마을 앞 하천에는 예쁜 물고기들이 많이 살고 있어요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘강수량’의 쓰임이에요. ‘하천’은 땅 위를 흐르는 큰 물줄기로, '강'과 비슷한 말이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:강수량"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:환경",
+      "word": "환경",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "자연과 환경",
+      "level": 1,
+      "sourceDefinition": "우리를 둘러싸고 있는 자연이나 우리가 생활하는 주변 조건을 말해요.",
+      "sourceExample": "깨끗한 환경을 만들기 위해 쓰레기를 함부로 버리지 않기로 했어요.",
+      "definition": "우리를 둘러싸고 있는 자연이나 우리가 생활하는 주변 조건을 말해요.",
+      "example": "깨끗한 환경을 만들기 위해 쓰레기를 함부로 버리지 않기로 했어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘환경’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "공기의 따뜻하고 차가운 정도를 숫자로 나타낸 온도예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "액체 속에 들어 있는 공기 방울을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "우리를 둘러싸고 있는 자연이나 우리가 생활하는 주변 조건을 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "사물의 모양, 성질, 상태 등이 이전과 다르게 바뀌는 것을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "깨끗한 ＿＿＿＿을 만들기 위해 쓰레기를 함부로 버리지 않기로 했어요.",
+          "options": [
+            {
+              "value": "환경",
+              "isCorrect": true
+            },
+            {
+              "value": "기온",
+              "isCorrect": false
+            },
+            {
+              "value": "기포",
+              "isCorrect": false
+            },
+            {
+              "value": "변화",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "우리를 둘러싸고 있는 자연이나 우리가 생활하는 주변 조건을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "환경"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "깨끗한 ＿＿＿＿을 만들기 위해 쓰레기를 함부로 버리지 않기로 했어요.",
+          "acceptedAnswers": [
+            "환경"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘환경’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "깨끗한 환경을 만들기 위해 쓰레기를 함부로 버리지 않기로 했어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "교장 선생님의 환경 선언과 함께 우리 학교 운동회가 시작되었어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘개회’의 쓰임이에요. ‘환경’은 우리를 둘러싸고 있는 자연이나 우리가 생활하는 주변 조건을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:개회"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:공공 기관",
+      "word": "공공 기관",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "사회와 소통",
+      "level": 2,
+      "sourceDefinition": "우리 모두의 이익과 편리한 생활을 위해 국가나 지방 자치 단체가 운영하는 곳이에요.",
+      "sourceExample": "시청, 경찰서, 소방서는 우리 생활을 도와주는 소중한 공공 기관이에요.",
+      "definition": "우리 모두의 이익과 편리한 생활을 위해 국가나 지방 자치 단체가 운영하는 곳이에요.",
+      "example": "시청, 경찰서, 소방서는 우리 생활을 도와주는 소중한 공공 기관이에요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘공공 기관’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "서로의 생각이 달라서 마음이 복잡하거나 다투는 상태를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "더 좋은 방향으로 바꾸기 위해 의견이나 제안을 내놓는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "상대방의 말을 정성껏 귀 기울여 듣는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "우리 모두의 이익과 편리한 생활을 위해 국가나 지방 자치 단체가 운영하는 곳이에요.",
+              "isCorrect": true
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "시청, 경찰서, 소방서는 우리 생활을 도와주는 소중한 ＿＿＿＿이에요.",
+          "options": [
+            {
+              "value": "갈등",
+              "isCorrect": false
+            },
+            {
+              "value": "공공 기관",
+              "isCorrect": true
+            },
+            {
+              "value": "건의",
+              "isCorrect": false
+            },
+            {
+              "value": "경청",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "우리 모두의 이익과 편리한 생활을 위해 국가나 지방 자치 단체가 운영하는 곳이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "공공 기관"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "시청, 경찰서, 소방서는 우리 생활을 도와주는 소중한 ＿＿＿＿이에요.",
+          "acceptedAnswers": [
+            "공공 기관"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘공공 기관’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "글쓰기 숙제를 다 한 뒤에 빠진 글자가 없는지 다시 한번 공공 기관했어.",
+              "isCorrect": false
+            },
+            {
+              "value": "시청, 경찰서, 소방서는 우리 생활을 도와주는 소중한 공공 기관이에요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘검토’의 쓰임이에요. ‘공공 기관’은 우리 모두의 이익과 편리한 생활을 위해 국가나 지방 자치 단체가 운영하는 곳이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:검토"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:나선",
+      "word": "나선",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "물질의 성질",
+      "level": 2,
+      "sourceDefinition": "소라 껍데기나 나사못처럼 소용돌이 모양으로 뱅뱅 돌아가는 선을 말해요.",
+      "sourceExample": "초점 조절 나사를 나선 방향으로 돌려 현미경의 초점을 맞췄어요.",
+      "definition": "소라 껍데기나 나사못처럼 소용돌이 모양으로 뱅뱅 돌아가는 선을 말해요.",
+      "example": "초점 조절 나사를 나선 방향으로 돌려 현미경의 초점을 맞췄어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘나선’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "소라 껍데기나 나사못처럼 소용돌이 모양으로 뱅뱅 돌아가는 선을 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "물질이 고체, 액체, 기체 중 어떤 모습으로 있는지를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "공기나 액체를 안으로 밀어 넣는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "물질을 누르는 힘인 압력을 낮추는 것을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "초점 조절 나사를 ＿＿＿＿ 방향으로 돌려 현미경의 초점을 맞췄어요.",
+          "options": [
+            {
+              "value": "상태",
+              "isCorrect": false
+            },
+            {
+              "value": "주입",
+              "isCorrect": false
+            },
+            {
+              "value": "나선",
+              "isCorrect": true
+            },
+            {
+              "value": "감압",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "소라 껍데기나 나사못처럼 소용돌이 모양으로 뱅뱅 돌아가는 선을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "나선"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "초점 조절 나사를 ＿＿＿＿ 방향으로 돌려 현미경의 초점을 맞췄어요.",
+          "acceptedAnswers": [
+            "나선"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘나선’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "초점 조절 나사를 나선 방향으로 돌려 현미경의 초점을 맞췄어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "글쓰기 숙제를 다 한 뒤에 빠진 글자가 없는지 다시 한번 나선했어.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘검토’의 쓰임이에요. ‘나선’은 소라 껍데기나 나사못처럼 소용돌이 모양으로 뱅뱅 돌아가는 선을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:검토"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:대사",
+      "word": "대사",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "말과 글",
+      "level": 2,
+      "sourceDefinition": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+      "sourceExample": "주인공 역할을 맡은 친구가 감정을 담아 멋진 대사를 했어.",
+      "definition": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+      "example": "주인공 역할을 맡은 친구가 감정을 담아 멋진 대사를 했어.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘대사’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "예술 작품을 보거나 듣고 그 느낌을 마음속으로 즐기는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "글을 눈으로만 읽지 않고 소리를 내어 크게 읽는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "이야기가 일어나는 시간이나 장소, 혹은 환경을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "주인공 역할을 맡은 친구가 감정을 담아 멋진 ＿＿＿＿를 했어.",
+          "options": [
+            {
+              "value": "감상",
+              "isCorrect": false
+            },
+            {
+              "value": "낭독",
+              "isCorrect": false
+            },
+            {
+              "value": "배경",
+              "isCorrect": false
+            },
+            {
+              "value": "대사",
+              "isCorrect": true
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "대사"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "주인공 역할을 맡은 친구가 감정을 담아 멋진 ＿＿＿＿를 했어.",
+          "acceptedAnswers": [
+            "대사"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘대사’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "덧셈을 열심히 한 대사, 정확한 정답을 찾아낼 수 있었어요.",
+              "isCorrect": false
+            },
+            {
+              "value": "주인공 역할을 맡은 친구가 감정을 담아 멋진 대사를 했어.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘결과’의 쓰임이에요. ‘대사’는 연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:결과"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:북극성",
+      "word": "북극성",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "지구와 우주",
+      "level": 2,
+      "sourceDefinition": "항상 북쪽 하늘에서 위치가 변하지 않고 빛나는 기준이 되는 별이에요.",
+      "sourceExample": "밤하늘에서 북극성을 찾으면 어느 쪽이 북쪽인지 쉽게 알 수 있어요.",
+      "definition": "항상 북쪽 하늘에서 위치가 변하지 않고 빛나는 기준이 되는 별이에요.",
+      "example": "밤하늘에서 북극성을 찾으면 어느 쪽이 북쪽인지 쉽게 알 수 있어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘북극성’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "도구를 사용해서 자연 현상이나 별의 움직임을 자세히 살펴보는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "지구의 가장 북쪽 끝(북극)과 남쪽 끝(남극) 지역을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "항상 북쪽 하늘에서 위치가 변하지 않고 빛나는 기준이 되는 별이에요.",
+              "isCorrect": true
+            },
+            {
+              "value": "액체나 기체가 좁은 구멍을 통해 힘차게 뿜어져 나오는 것을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "밤하늘에서 ＿＿＿＿을 찾으면 어느 쪽이 북쪽인지 쉽게 알 수 있어요.",
+          "options": [
+            {
+              "value": "북극성",
+              "isCorrect": true
+            },
+            {
+              "value": "관측",
+              "isCorrect": false
+            },
+            {
+              "value": "극지방",
+              "isCorrect": false
+            },
+            {
+              "value": "분출",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "항상 북쪽 하늘에서 위치가 변하지 않고 빛나는 기준이 되는 별이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "북극성"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "밤하늘에서 ＿＿＿＿을 찾으면 어느 쪽이 북쪽인지 쉽게 알 수 있어요.",
+          "acceptedAnswers": [
+            "북극성"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘북극성’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "밤하늘에서 북극성을 찾으면 어느 쪽이 북쪽인지 쉽게 알 수 있어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "덧셈을 열심히 한 북극성, 정확한 정답을 찾아낼 수 있었어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘결과’의 쓰임이에요. ‘북극성’은 항상 북쪽 하늘에서 위치가 변하지 않고 빛나는 기준이 되는 별이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:결과"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:분류",
+      "word": "분류",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "생각과 공부",
+      "level": 2,
+      "sourceDefinition": "일정한 기준에 따라 비슷한 것끼리 무리를 나누는 것을 말해요.",
+      "sourceExample": "동물들을 사는 곳에 따라 땅 위, 물속, 하늘로 분류해 보았어요.",
+      "definition": "일정한 기준에 따라 비슷한 것끼리 무리를 나누는 것을 말해요.",
+      "example": "동물들을 사는 곳에 따라 땅 위, 물속, 하늘로 분류해 보았어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘분류’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "어떤 사물이나 현상의 본질적인 특징을 나타내는 핵심 생각을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 의견이나 주장을 뒷받침하는 확실한 이유나 바탕을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "잘못된 부분을 바로잡거나 고치는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "일정한 기준에 따라 비슷한 것끼리 무리를 나누는 것을 말해요.",
+              "isCorrect": true
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "동물들을 사는 곳에 따라 땅 위, 물속, 하늘로 ＿＿＿＿해 보았어요.",
+          "options": [
+            {
+              "value": "개념",
+              "isCorrect": false
+            },
+            {
+              "value": "분류",
+              "isCorrect": true
+            },
+            {
+              "value": "근거",
+              "isCorrect": false
+            },
+            {
+              "value": "수정",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "일정한 기준에 따라 비슷한 것끼리 무리를 나누는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "분류"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "동물들을 사는 곳에 따라 땅 위, 물속, 하늘로 ＿＿＿＿해 보았어요.",
+          "acceptedAnswers": [
+            "분류"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘분류’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "우리가 마트에서 간식을 사는 것도 중요한 분류 중 하나예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "동물들을 사는 곳에 따라 땅 위, 물속, 하늘로 분류해 보았어요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘경제활동’의 쓰임이에요. ‘분류’는 일정한 기준에 따라 비슷한 것끼리 무리를 나누는 것을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:경제활동"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:생활방식",
+      "word": "생활방식",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "사회와 소통",
+      "level": 2,
+      "sourceDefinition": "사람들이 살아가는 일정한 습관이나 모습, 형태를 말해요.",
+      "sourceExample": "옛날 사람들과 오늘날 우리들의 생활방식은 아주 많이 달라요.",
+      "definition": "사람들이 살아가는 일정한 습관이나 모습, 형태를 말해요.",
+      "example": "옛날 사람들과 오늘날 우리들의 생활방식은 아주 많이 달라요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘생활방식’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "사람들이 살아가는 일정한 습관이나 모습, 형태를 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "서로의 생각이 달라서 마음이 복잡하거나 다투는 상태를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "더 좋은 방향으로 바꾸기 위해 의견이나 제안을 내놓는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "상대방의 말을 정성껏 귀 기울여 듣는 것을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "옛날 사람들과 오늘날 우리들의 ＿＿＿＿은 아주 많이 달라요.",
+          "options": [
+            {
+              "value": "갈등",
+              "isCorrect": false
+            },
+            {
+              "value": "건의",
+              "isCorrect": false
+            },
+            {
+              "value": "생활방식",
+              "isCorrect": true
+            },
+            {
+              "value": "경청",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "사람들이 살아가는 일정한 습관이나 모습, 형태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "생활방식"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "옛날 사람들과 오늘날 우리들의 ＿＿＿＿은 아주 많이 달라요.",
+          "acceptedAnswers": [
+            "생활방식"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘생활방식’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "옛날 사람들과 오늘날 우리들의 생활방식은 아주 많이 달라요.",
+              "isCorrect": true
+            },
+            {
+              "value": "여름방학 때 시골 할머니 댁에 가서 농사일을 도왔던 생활방식이 있어.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘경험’의 쓰임이에요. ‘생활방식’은 사람들이 살아가는 일정한 습관이나 모습, 형태를 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:경험"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:수량",
+      "word": "수량",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "숫자와 연산",
+      "level": 2,
+      "sourceDefinition": "수와 양을 함께 이르는 말로, 얼마나 많은지를 나타내요.",
+      "sourceExample": "마트에서 산 사과의 수량이 주문한 것과 맞는지 확인했어요.",
+      "definition": "수와 양을 함께 이르는 말로, 얼마나 많은지를 나타내요.",
+      "example": "마트에서 산 사과의 수량이 주문한 것과 맞는지 확인했어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘수량’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "양쪽의 값이 서로 같다는 것을 나타내는 기호(=)예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "수와 양을 함께 이르는 말로, 얼마나 많은지를 나타내요.",
+              "isCorrect": true
+            },
+            {
+              "value": "1,000이 10개 모인 수로, 0이 네 개 붙는 큰 수예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "분수에서 가로선 아래에 있는 숫자로, 전체를 몇으로 나누었는지 나타내요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "마트에서 산 사과의 ＿＿＿＿이 주문한 것과 맞는지 확인했어요.",
+          "options": [
+            {
+              "value": "등호",
+              "isCorrect": false
+            },
+            {
+              "value": "만",
+              "isCorrect": false
+            },
+            {
+              "value": "분모",
+              "isCorrect": false
+            },
+            {
+              "value": "수량",
+              "isCorrect": true
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "수와 양을 함께 이르는 말로, 얼마나 많은지를 나타내요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "수량"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "마트에서 산 사과의 ＿＿＿＿이 주문한 것과 맞는지 확인했어요.",
+          "acceptedAnswers": [
+            "수량"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘수량’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "여름방학 때 시골 할머니 댁에 가서 농사일을 도왔던 수량이 있어.",
+              "isCorrect": false
+            },
+            {
+              "value": "마트에서 산 사과의 수량이 주문한 것과 맞는지 확인했어요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘경험’의 쓰임이에요. ‘수량’은 수와 양을 함께 이르는 말로, 얼마나 많은지를 나타내요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:경험"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:실천",
+      "word": "실천",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "감정과 태도",
+      "level": 2,
+      "sourceDefinition": "생각한 것이나 계획한 일을 실제로 행동에 옮기는 거예요.",
+      "sourceExample": "일찍 일어나기로 한 계획을 오늘 아침에 바로 실천했어요.",
+      "definition": "생각한 것이나 계획한 일을 실제로 행동에 옮기는 거예요.",
+      "example": "일찍 일어나기로 한 계획을 오늘 아침에 바로 실천했어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘실천’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "어떤 것을 보고 마음속에 강하게 남은 느낌이나 기억이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "무엇이 중요하고 옳은지 판단하는 자기만의 생각을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "생각한 것이나 계획한 일을 실제로 행동에 옮기는 거예요.",
+              "isCorrect": true
+            },
+            {
+              "value": "좋은 글이나 영화를 보고 마음이 크게 움직여 깊이 느끼는 거예요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "일찍 일어나기로 한 계획을 오늘 아침에 바로 ＿＿＿＿했어요.",
+          "options": [
+            {
+              "value": "실천",
+              "isCorrect": true
+            },
+            {
+              "value": "인상",
+              "isCorrect": false
+            },
+            {
+              "value": "가치관",
+              "isCorrect": false
+            },
+            {
+              "value": "감동",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "생각한 것이나 계획한 일을 실제로 행동에 옮기는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "실천"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "일찍 일어나기로 한 계획을 오늘 아침에 바로 ＿＿＿＿했어요.",
+          "acceptedAnswers": [
+            "실천"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘실천’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "일찍 일어나기로 한 계획을 오늘 아침에 바로 실천했어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "가게에서 물건을 사고 얼마를 내야 하는지 머릿속으로 실천해 봤어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘계산’의 쓰임이에요. ‘실천’은 생각한 것이나 계획한 일을 실제로 행동에 옮기는 거예요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:계산"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:운반",
+      "word": "운반",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "자연과 환경",
+      "level": 2,
+      "sourceDefinition": "강물이 흐르면서 깎인 흙이나 모래를 아래쪽으로 옮기는 작용이에요.",
+      "sourceExample": "강물의 운반 작용 덕분에 하류에 고운 모래가 쌓이게 돼요.",
+      "definition": "강물이 흐르면서 깎인 흙이나 모래를 아래쪽으로 옮기는 작용이에요.",
+      "example": "강물의 운반 작용 덕분에 하류에 고운 모래가 쌓이게 돼요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘운반’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "일정한 기간 동안 비, 눈, 우박 등이 땅에 내려 쌓인 양을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "땅이나 바닥이 수평이 아니고 비스듬히 기울어진 정도를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "날씨가 어떨지 미리 조사해서 사람들에게 알려주는 국가 기관이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "강물이 흐르면서 깎인 흙이나 모래를 아래쪽으로 옮기는 작용이에요.",
+              "isCorrect": true
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "강물의 ＿＿＿＿ 작용 덕분에 하류에 고운 모래가 쌓이게 돼요.",
+          "options": [
+            {
+              "value": "강수량",
+              "isCorrect": false
+            },
+            {
+              "value": "운반",
+              "isCorrect": true
+            },
+            {
+              "value": "경사",
+              "isCorrect": false
+            },
+            {
+              "value": "기상청",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "강물이 흐르면서 깎인 흙이나 모래를 아래쪽으로 옮기는 작용이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "운반"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "강물의 ＿＿＿＿ 작용 덕분에 하류에 고운 모래가 쌓이게 돼요.",
+          "acceptedAnswers": [
+            "운반"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘운반’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "현장 체험 학습 장소를 정할 때는 거리와 비용을 모두 운반해야 해.",
+              "isCorrect": false
+            },
+            {
+              "value": "강물의 운반 작용 덕분에 하류에 고운 모래가 쌓이게 돼요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘운반’은 강물이 흐르면서 깎인 흙이나 모래를 아래쪽으로 옮기는 작용이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:고려"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:작동",
+      "word": "작동",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "과학과 기술",
+      "level": 2,
+      "sourceDefinition": "기계나 장치가 힘을 받아 움직이거나 일을 하는 거예요.",
+      "sourceExample": "스위치를 누르자 전구에 불이 들어오며 실험 장치가 작동했어요.",
+      "definition": "기계나 장치가 힘을 받아 움직이거나 일을 하는 거예요.",
+      "example": "스위치를 누르자 전구에 불이 들어오며 실험 장치가 작동했어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘작동’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "기계나 장치가 힘을 받아 움직이거나 일을 하는 거예요.",
+              "isCorrect": true
+            },
+            {
+              "value": "컴퓨터를 이용해서 진짜 세상처럼 만든 가짜 세상을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 물건을 만들기 전에 계획을 세우고 그림으로 그려보는 과정이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "컴퓨터가 사람처럼 스스로 생각하고 공부할 수 있도록 만든 기술이에요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "스위치를 누르자 전구에 불이 들어오며 실험 장치가 ＿＿＿＿했어요.",
+          "options": [
+            {
+              "value": "가상 현실",
+              "isCorrect": false
+            },
+            {
+              "value": "설계",
+              "isCorrect": false
+            },
+            {
+              "value": "작동",
+              "isCorrect": true
+            },
+            {
+              "value": "인공지능",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "기계나 장치가 힘을 받아 움직이거나 일을 하는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "작동"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "스위치를 누르자 전구에 불이 들어오며 실험 장치가 ＿＿＿＿했어요.",
+          "acceptedAnswers": [
+            "작동"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘작동’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "스위치를 누르자 전구에 불이 들어오며 실험 장치가 작동했어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "현장 체험 학습 장소를 정할 때는 거리와 비용을 모두 작동해야 해.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘고려’의 쓰임이에요. ‘작동’은 기계나 장치가 힘을 받아 움직이거나 일을 하는 거예요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:고려"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:저자",
+      "word": "저자",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "말과 글",
+      "level": 2,
+      "sourceDefinition": "책이나 글을 직접 쓴 사람을 말해요. '작가'와 비슷한 말이에요.",
+      "sourceExample": "책 표지에는 저자의 이름과 제목이 함께 적혀 있어.",
+      "definition": "책이나 글을 직접 쓴 사람을 말해요. '작가'와 비슷한 말이에요.",
+      "example": "책 표지에는 저자의 이름과 제목이 함께 적혀 있어.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘저자’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "예술 작품을 보거나 듣고 그 느낌을 마음속으로 즐기는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "책이나 글을 직접 쓴 사람을 말해요. '작가'와 비슷한 말이에요.",
+              "isCorrect": true
+            },
+            {
+              "value": "글을 눈으로만 읽지 않고 소리를 내어 크게 읽는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "연극이나 영화에서 배우들이 서로 주고받는 말을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "책 표지에는 ＿＿＿＿의 이름과 제목이 함께 적혀 있어.",
+          "options": [
+            {
+              "value": "감상",
+              "isCorrect": false
+            },
+            {
+              "value": "낭독",
+              "isCorrect": false
+            },
+            {
+              "value": "대사",
+              "isCorrect": false
+            },
+            {
+              "value": "저자",
+              "isCorrect": true
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "책이나 글을 직접 쓴 사람을 말해요. '작가'와 비슷한 말이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "저자"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "책 표지에는 ＿＿＿＿의 이름과 제목이 함께 적혀 있어.",
+          "acceptedAnswers": [
+            "저자"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘저자’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "컴퍼스의 침을 종이에 단단히 저자해야 예쁜 원을 그릴 수 있어요.",
+              "isCorrect": false
+            },
+            {
+              "value": "책 표지에는 저자의 이름과 제목이 함께 적혀 있어.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘고정’의 쓰임이에요. ‘저자’는 책이나 글을 직접 쓴 사람을 말해요. '작가'와 비슷한 말이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:고정"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:전통문화",
+      "word": "전통문화",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "우리 역사",
+      "level": 2,
+      "sourceDefinition": "옛날부터 오늘날까지 전해 내려오는 우리 고유의 생활 방식이나 예술이에요.",
+      "sourceExample": "한복이나 윷놀이는 우리가 소중히 지켜야 할 전통문화예요.",
+      "definition": "옛날부터 오늘날까지 전해 내려오는 우리 고유의 생활 방식이나 예술이에요.",
+      "example": "한복이나 윷놀이는 우리가 소중히 지켜야 할 전통문화예요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘전통문화’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "훌륭한 사람이나 특별한 사건을 잊지 않기 위해 세운 건물을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "옛날부터 조상님들이 남겨주신 소중한 건물, 예술품, 풍습을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "옛날부터 오늘날까지 전해 내려오는 우리 고유의 생활 방식이나 예술이에요.",
+              "isCorrect": true
+            },
+            {
+              "value": "역사적으로 구분되는 어떤 일정한 기간을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "한복이나 윷놀이는 우리가 소중히 지켜야 할 ＿＿＿＿예요.",
+          "options": [
+            {
+              "value": "전통문화",
+              "isCorrect": true
+            },
+            {
+              "value": "기념관",
+              "isCorrect": false
+            },
+            {
+              "value": "문화유산",
+              "isCorrect": false
+            },
+            {
+              "value": "시대",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "옛날부터 오늘날까지 전해 내려오는 우리 고유의 생활 방식이나 예술이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "전통문화"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "한복이나 윷놀이는 우리가 소중히 지켜야 할 ＿＿＿＿예요.",
+          "acceptedAnswers": [
+            "전통문화"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘전통문화’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "한복이나 윷놀이는 우리가 소중히 지켜야 할 전통문화예요.",
+              "isCorrect": true
+            },
+            {
+              "value": "컴퍼스의 침을 종이에 단단히 전통문화해야 예쁜 원을 그릴 수 있어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘고정’의 쓰임이에요. ‘전통문화’는 옛날부터 오늘날까지 전해 내려오는 우리 고유의 생활 방식이나 예술이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:고정"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:절차",
+      "word": "절차",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "활동과 순서",
+      "level": 2,
+      "sourceDefinition": "어떤 일을 하는 데 거쳐야 하는 순서나 단계를 말해요.",
+      "sourceExample": "도서관에서 책을 빌릴 때는 정해진 절차에 따라 회원증을 보여줘야 해요.",
+      "definition": "어떤 일을 하는 데 거쳐야 하는 순서나 단계를 말해요.",
+      "example": "도서관에서 책을 빌릴 때는 정해진 절차에 따라 회원증을 보여줘야 해요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘절차’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "한곳에 딱 붙어서 움직이지 않게 하는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "일이 되어 가는 순서나 단계를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 일을 하려고 하는 이유나 꼭 이루고 싶은 목표를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 일을 하는 데 거쳐야 하는 순서나 단계를 말해요.",
+              "isCorrect": true
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "도서관에서 책을 빌릴 때는 정해진 ＿＿＿＿에 따라 회원증을 보여줘야 해요.",
+          "options": [
+            {
+              "value": "고정",
+              "isCorrect": false
+            },
+            {
+              "value": "절차",
+              "isCorrect": true
+            },
+            {
+              "value": "과정",
+              "isCorrect": false
+            },
+            {
+              "value": "목적",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "어떤 일을 하는 데 거쳐야 하는 순서나 단계를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "절차"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "도서관에서 책을 빌릴 때는 정해진 ＿＿＿＿에 따라 회원증을 보여줘야 해요.",
+          "acceptedAnswers": [
+            "절차"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘절차’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "시청, 경찰서, 소방서는 우리 생활을 도와주는 소중한 절차가에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "도서관에서 책을 빌릴 때는 정해진 절차에 따라 회원증을 보여줘야 해요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘공공 기관’의 쓰임이에요. ‘절차’는 어떤 일을 하는 데 거쳐야 하는 순서나 단계를 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:공공 기관"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:정삼각형",
+      "word": "정삼각형",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "모양과 도형",
+      "level": 2,
+      "sourceDefinition": "세 변의 길이가 모두 똑같은 삼각형을 말해요.",
+      "sourceExample": "정삼각형은 세 각의 크기도 모두 60도로 똑같아요.",
+      "definition": "세 변의 길이가 모두 똑같은 삼각형을 말해요.",
+      "example": "정삼각형은 세 각의 크기도 모두 60도로 똑같아요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘정삼각형’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "세 변의 길이가 모두 똑같은 삼각형을 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "두 직선이 만나서 벌어진 정도를 숫자로 나타낸 것이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "아무것도 없이 비어 있는 곳이나 물체가 차지하고 있는 자리를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "여러 개의 선분으로 둘러싸인 평면도형을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "＿＿＿＿은 세 각의 크기도 모두 60도로 똑같아요.",
+          "options": [
+            {
+              "value": "각도",
+              "isCorrect": false
+            },
+            {
+              "value": "공간",
+              "isCorrect": false
+            },
+            {
+              "value": "정삼각형",
+              "isCorrect": true
+            },
+            {
+              "value": "다각형",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "세 변의 길이가 모두 똑같은 삼각형을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "정삼각형"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "＿＿＿＿은 세 각의 크기도 모두 60도로 똑같아요.",
+          "acceptedAnswers": [
+            "정삼각형"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘정삼각형’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "정삼각형은 세 각의 크기도 모두 60도로 똑같아요.",
+              "isCorrect": true
+            },
+            {
+              "value": "시청, 경찰서, 소방서는 우리 생활을 도와주는 소중한 정삼각형이에요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘공공 기관’의 쓰임이에요. ‘정삼각형’은 세 변의 길이가 모두 똑같은 삼각형을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:공공 기관"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:지역사회",
+      "word": "지역사회",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "사회와 소통",
+      "level": 2,
+      "sourceDefinition": "일정한 지역에 모여서 서로 돕고 살아가는 사람들의 모임을 말해요.",
+      "sourceExample": "지역사회의 발전을 위해 우리 모두가 관심을 가지고 활동해야 해요.",
+      "definition": "일정한 지역에 모여서 서로 돕고 살아가는 사람들의 모임을 말해요.",
+      "example": "지역사회의 발전을 위해 우리 모두가 관심을 가지고 활동해야 해요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘지역사회’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "서로의 생각이 달라서 마음이 복잡하거나 다투는 상태를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "일정한 지역에 모여서 서로 돕고 살아가는 사람들의 모임을 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "더 좋은 방향으로 바꾸기 위해 의견이나 제안을 내놓는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "상대방의 말을 정성껏 귀 기울여 듣는 것을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "＿＿＿＿의 발전을 위해 우리 모두가 관심을 가지고 활동해야 해요.",
+          "options": [
+            {
+              "value": "갈등",
+              "isCorrect": false
+            },
+            {
+              "value": "건의",
+              "isCorrect": false
+            },
+            {
+              "value": "경청",
+              "isCorrect": false
+            },
+            {
+              "value": "지역사회",
+              "isCorrect": true
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "일정한 지역에 모여서 서로 돕고 살아가는 사람들의 모임을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "지역사회"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "＿＿＿＿의 발전을 위해 우리 모두가 관심을 가지고 활동해야 해요.",
+          "acceptedAnswers": [
+            "지역사회"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘지역사회’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "공장에서 자동차나 텔레비전을 만드는 일은 대표적인 지역사회 활동이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "지역사회의 발전을 위해 우리 모두가 관심을 가지고 활동해야 해요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘공업’의 쓰임이에요. ‘지역사회’는 일정한 지역에 모여서 서로 돕고 살아가는 사람들의 모임을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:공업"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:특별자치시",
+      "word": "특별자치시",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "지리",
+      "level": 2,
+      "sourceDefinition": "정부 청사가 많이 모여 있는 '세종'과 같이 특별한 권한을 가진 도시예요.",
+      "sourceExample": "세종특별자치시에는 나라의 살림을 맡아보는 기관들이 많이 있어요.",
+      "definition": "정부 청사가 많이 모여 있는 '세종'과 같이 특별한 권한을 가진 도시예요.",
+      "example": "세종특별자치시에는 나라의 살림을 맡아보는 기관들이 많이 있어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘특별자치시’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "지도에서 학교, 우체국 같은 장소를 간단한 모양으로 나타낸 약속이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "버스나 지하철이 다니는 길을 선으로 그려 놓은 그림이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "정부 청사가 많이 모여 있는 '세종'과 같이 특별한 권한을 가진 도시예요.",
+              "isCorrect": true
+            },
+            {
+              "value": "평평한 땅이나 바닥의 넓이를 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "세종＿＿＿＿에는 나라의 살림을 맡아보는 기관들이 많이 있어요.",
+          "options": [
+            {
+              "value": "특별자치시",
+              "isCorrect": true
+            },
+            {
+              "value": "기호",
+              "isCorrect": false
+            },
+            {
+              "value": "노선도",
+              "isCorrect": false
+            },
+            {
+              "value": "면적",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "정부 청사가 많이 모여 있는 '세종'과 같이 특별한 권한을 가진 도시예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "특별자치시"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "세종＿＿＿＿에는 나라의 살림을 맡아보는 기관들이 많이 있어요.",
+          "acceptedAnswers": [
+            "특별자치시"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘특별자치시’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "세종특별자치시에는 나라의 살림을 맡아보는 기관들이 많이 있어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "친구가 슬플 때 그 마음을 특별자치시해 주면 큰 힘이 된단다.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘공감’의 쓰임이에요. ‘특별자치시’는 정부 청사가 많이 모여 있는 '세종'과 같이 특별한 권한을 가진 도시예요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:공감"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:파악",
+      "word": "파악",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "생각과 공부",
+      "level": 2,
+      "sourceDefinition": "어떤 내용이나 상황을 확실하게 이해하여 아는 것을 말해요.",
+      "sourceExample": "글을 읽을 때 글쓴이가 왜 이 글을 썼는지 의도를 파악해야 해요.",
+      "definition": "어떤 내용이나 상황을 확실하게 이해하여 아는 것을 말해요.",
+      "example": "글을 읽을 때 글쓴이가 왜 이 글을 썼는지 의도를 파악해야 해요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘파악’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "어떤 사물이나 현상의 본질적인 특징을 나타내는 핵심 생각을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 의견이나 주장을 뒷받침하는 확실한 이유나 바탕을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "일정한 기준에 따라 비슷한 것끼리 무리를 나누는 것을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 내용이나 상황을 확실하게 이해하여 아는 것을 말해요.",
+              "isCorrect": true
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "글을 읽을 때 글쓴이가 왜 이 글을 썼는지 의도를 ＿＿＿＿해야 해요.",
+          "options": [
+            {
+              "value": "개념",
+              "isCorrect": false
+            },
+            {
+              "value": "파악",
+              "isCorrect": true
+            },
+            {
+              "value": "근거",
+              "isCorrect": false
+            },
+            {
+              "value": "분류",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "어떤 내용이나 상황을 확실하게 이해하여 아는 것을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "파악"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "글을 읽을 때 글쓴이가 왜 이 글을 썼는지 의도를 ＿＿＿＿해야 해요.",
+          "acceptedAnswers": [
+            "파악"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘파악’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "학교 홈페이지에는 우리 학교의 파악인 소식들만 올라와.",
+              "isCorrect": false
+            },
+            {
+              "value": "글을 읽을 때 글쓴이가 왜 이 글을 썼는지 의도를 파악해야 해요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘공식적’의 쓰임이에요. ‘파악’은 어떤 내용이나 상황을 확실하게 이해하여 아는 것을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:공식적"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:화강암",
+      "word": "화강암",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "지구와 우주",
+      "level": 2,
+      "sourceDefinition": "땅속 깊은 곳에서 마그마가 천천히 식어 만들어진 암석으로, 알갱이가 크고 단단해요.",
+      "sourceExample": "화강암은 무늬가 아름답고 튼튼해서 건물 벽이나 계단을 만드는 데 쓰여요.",
+      "definition": "땅속 깊은 곳에서 마그마가 천천히 식어 만들어진 암석으로, 알갱이가 크고 단단해요.",
+      "example": "화강암은 무늬가 아름답고 튼튼해서 건물 벽이나 계단을 만드는 데 쓰여요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘화강암’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "땅속 깊은 곳에서 마그마가 천천히 식어 만들어진 암석으로, 알갱이가 크고 단단해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "도구를 사용해서 자연 현상이나 별의 움직임을 자세히 살펴보는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "지구의 가장 북쪽 끝(북극)과 남쪽 끝(남극) 지역을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "항상 북쪽 하늘에서 위치가 변하지 않고 빛나는 기준이 되는 별이에요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "＿＿＿＿은 무늬가 아름답고 튼튼해서 건물 벽이나 계단을 만드는 데 쓰여요.",
+          "options": [
+            {
+              "value": "관측",
+              "isCorrect": false
+            },
+            {
+              "value": "극지방",
+              "isCorrect": false
+            },
+            {
+              "value": "화강암",
+              "isCorrect": true
+            },
+            {
+              "value": "북극성",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "땅속 깊은 곳에서 마그마가 천천히 식어 만들어진 암석으로, 알갱이가 크고 단단해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "화강암"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "＿＿＿＿은 무늬가 아름답고 튼튼해서 건물 벽이나 계단을 만드는 데 쓰여요.",
+          "acceptedAnswers": [
+            "화강암"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘화강암’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "화강암은 무늬가 아름답고 튼튼해서 건물 벽이나 계단을 만드는 데 쓰여요.",
+              "isCorrect": true
+            },
+            {
+              "value": "우리 반은 즐겁게 공부하고 서로 아껴주는 소중한 학급 화강암예요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘공동체’의 쓰임이에요. ‘화강암’은 땅속 깊은 곳에서 마그마가 천천히 식어 만들어진 암석으로, 알갱이가 크고 단단해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:공동체"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:경제활동",
+      "word": "경제활동",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "경제와 생활",
+      "level": 3,
+      "sourceDefinition": "사람들이 사는데 필요한 물건을 만들거나 사고파는 모든 활동을 말해요.",
+      "sourceExample": "우리가 마트에서 간식을 사는 것도 중요한 경제활동 중 하나예요.",
+      "definition": "사람들이 사는데 필요한 물건을 만들거나 사고파는 모든 활동을 말해요.",
+      "example": "우리가 마트에서 간식을 사는 것도 중요한 경제활동 중 하나예요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘경제활동’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "서로 다른 지역이나 사람들이 필요한 것을 주고받으며 돕는 관계예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "사람들이 사는데 필요한 물건을 만들거나 사고파는 모든 활동을 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "가진 돈으로 가장 큰 만족을 얻을 수 있게 꼼꼼히 따져보고 결정하는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "사람들의 욕심에 비해 자원의 양이 턱없이 부족한 상태를 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "우리가 마트에서 간식을 사는 것도 중요한 ＿＿＿＿ 중 하나예요.",
+          "options": [
+            {
+              "value": "상호의존",
+              "isCorrect": false
+            },
+            {
+              "value": "합리적 선택",
+              "isCorrect": false
+            },
+            {
+              "value": "희소성",
+              "isCorrect": false
+            },
+            {
+              "value": "경제활동",
+              "isCorrect": true
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "사람들이 사는데 필요한 물건을 만들거나 사고파는 모든 활동을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "경제활동"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "우리가 마트에서 간식을 사는 것도 중요한 ＿＿＿＿ 중 하나예요.",
+          "acceptedAnswers": [
+            "경제활동"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘경제활동’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "학교 홈페이지에는 우리 학교의 경제활동인 소식들만 올라와.",
+              "isCorrect": false
+            },
+            {
+              "value": "우리가 마트에서 간식을 사는 것도 중요한 경제활동 중 하나예요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘공식적’의 쓰임이에요. ‘경제활동’은 사람들이 사는데 필요한 물건을 만들거나 사고파는 모든 활동을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:공식적"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:민주주의",
+      "word": "민주주의",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "사회와 소통",
+      "level": 3,
+      "sourceDefinition": "모든 사람이 주인으로서 자유롭게 의견을 내고 함께 결정하는 정치 방식을 말해요.",
+      "sourceExample": "우리는 학급 회의를 통해 민주주의가 무엇인지 직접 체험하며 배워요.",
+      "definition": "모든 사람이 주인으로서 자유롭게 의견을 내고 함께 결정하는 정치 방식을 말해요.",
+      "example": "우리는 학급 회의를 통해 민주주의가 무엇인지 직접 체험하며 배워요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘민주주의’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "같은 목적을 가지고 서로 도우며 함께 살아가는 사람들의 모임을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "개인적인 자리가 아니라 나라나 학교 같은 기관에서 정식으로 하는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "모든 사람이 주인으로서 자유롭게 의견을 내고 함께 결정하는 정치 방식을 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "중요한 일을 결정하기 전에 전문가나 주민들의 의견을 직접 듣는 모임이에요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "우리는 학급 회의를 통해 ＿＿＿＿가 무엇인지 직접 체험하며 배워요.",
+          "options": [
+            {
+              "value": "민주주의",
+              "isCorrect": true
+            },
+            {
+              "value": "공동체",
+              "isCorrect": false
+            },
+            {
+              "value": "공식적",
+              "isCorrect": false
+            },
+            {
+              "value": "공청회",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "모든 사람이 주인으로서 자유롭게 의견을 내고 함께 결정하는 정치 방식을 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "민주주의"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "우리는 학급 회의를 통해 ＿＿＿＿가 무엇인지 직접 체험하며 배워요.",
+          "acceptedAnswers": [
+            "민주주의"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘민주주의’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "우리는 학급 회의를 통해 민주주의가 무엇인지 직접 체험하며 배워요.",
+              "isCorrect": true
+            },
+            {
+              "value": "이 책은 우리가 이번 과학 시간에 배우는 내용과 민주주의가 있어.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘관련’의 쓰임이에요. ‘민주주의’는 모든 사람이 주인으로서 자유롭게 의견을 내고 함께 결정하는 정치 방식을 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:관련"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:분해자",
+      "word": "분해자",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "동식물과 생물",
+      "level": 3,
+      "sourceDefinition": "죽은 생물을 썩혀서 자연으로 돌려보내는 버섯, 곰팡이, 세균 같은 생물이에요.",
+      "sourceExample": "분해자가 없다면 숲속은 죽은 나무와 동물 사체로 가득 찰 거예요.",
+      "definition": "죽은 생물을 썩혀서 자연으로 돌려보내는 버섯, 곰팡이, 세균 같은 생물이에요.",
+      "example": "분해자가 없다면 숲속은 죽은 나무와 동물 사체로 가득 찰 거예요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘분해자’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "버섯이나 곰팡이처럼 광합성을 하지 않고 다른 생물에서 양분을 얻어 사는 생물 무리예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "버섯이나 곰팡이의 몸을 이루는 가느다란 실 모양의 구조를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "버섯이나 세균이 죽은 생물을 썩혀서 다시 자연으로 돌려보내는 활동이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "죽은 생물을 썩혀서 자연으로 돌려보내는 버섯, 곰팡이, 세균 같은 생물이에요.",
+              "isCorrect": true
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "＿＿＿＿가 없다면 숲속은 죽은 나무와 동물 사체로 가득 찰 거예요.",
+          "options": [
+            {
+              "value": "균류",
+              "isCorrect": false
+            },
+            {
+              "value": "분해자",
+              "isCorrect": true
+            },
+            {
+              "value": "균사",
+              "isCorrect": false
+            },
+            {
+              "value": "분해",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "죽은 생물을 썩혀서 자연으로 돌려보내는 버섯, 곰팡이, 세균 같은 생물이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "분해자"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "＿＿＿＿가 없다면 숲속은 죽은 나무와 동물 사체로 가득 찰 거예요.",
+          "acceptedAnswers": [
+            "분해자"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘분해자’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "전교 회장 후보로 나온 친구가 '깨끗한 화장실 만들기'라는 분해자를 내세웠어요.",
+              "isCorrect": false
+            },
+            {
+              "value": "분해자가 없다면 숲속은 죽은 나무와 동물 사체로 가득 찰 거예요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘공약’의 쓰임이에요. ‘분해자’는 죽은 생물을 썩혀서 자연으로 돌려보내는 버섯, 곰팡이, 세균 같은 생물이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:공약"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:수직",
+      "word": "수직",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "모양과 도형",
+      "level": 3,
+      "sourceDefinition": "두 직선이 만나서 직각(90도)을 이루는 상태를 말해요.",
+      "sourceExample": "벽과 바닥은 서로 수직으로 만나서 반듯하게 서 있어요.",
+      "definition": "두 직선이 만나서 직각(90도)을 이루는 상태를 말해요.",
+      "example": "벽과 바닥은 서로 수직으로 만나서 반듯하게 서 있어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘수직’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "두 직선이 만나서 직각(90도)을 이루는 상태를 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "다각형에서 서로 이웃하지 않는 두 꼭짓점을 이은 선이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "직각(90도)보다 크고 180도보다는 작은 각을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "세 각 중에서 한 각이 둔각(90도보다 큰 각)인 삼각형이에요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "벽과 바닥은 서로 ＿＿＿＿으로 만나서 반듯하게 서 있어요.",
+          "options": [
+            {
+              "value": "대각선",
+              "isCorrect": false
+            },
+            {
+              "value": "둔각",
+              "isCorrect": false
+            },
+            {
+              "value": "수직",
+              "isCorrect": true
+            },
+            {
+              "value": "둔각삼각형",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "두 직선이 만나서 직각(90도)을 이루는 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "수직"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "벽과 바닥은 서로 ＿＿＿＿으로 만나서 반듯하게 서 있어요.",
+          "acceptedAnswers": [
+            "수직"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘수직’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "벽과 바닥은 서로 수직으로 만나서 반듯하게 서 있어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "친구가 낚시로 잡은 물고기가 고래만 하다고 수직해서 말했어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘과장’의 쓰임이에요. ‘수직’은 두 직선이 만나서 직각(90도)을 이루는 상태를 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:과장"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:예년",
+      "word": "예년",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "자연과 환경",
+      "level": 3,
+      "sourceDefinition": "보통의 다른 해들을 말하며, 날씨를 비교할 때 기준이 돼요.",
+      "sourceExample": "올겨울은 예년보다 훨씬 따뜻해서 눈이 많이 오지 않았어요.",
+      "definition": "보통의 다른 해들을 말하며, 날씨를 비교할 때 기준이 돼요.",
+      "example": "올겨울은 예년보다 훨씬 따뜻해서 눈이 많이 오지 않았어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘예년’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "사물의 크기나 범위, 또는 지진의 에너지가 얼마나 큰지를 나타내는 숫자예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "보통의 다른 해들을 말하며, 날씨를 비교할 때 기준이 돼요.",
+              "isCorrect": true
+            },
+            {
+              "value": "자연이나 환경을 파괴되지 않게 보호하고 잘 간직하는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "수증기가 차가운 물체에 닿아 다시 액체인 물방울로 변하는 현상이에요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "올겨울은 ＿＿＿＿보다 훨씬 따뜻해서 눈이 많이 오지 않았어요.",
+          "options": [
+            {
+              "value": "규모",
+              "isCorrect": false
+            },
+            {
+              "value": "보전",
+              "isCorrect": false
+            },
+            {
+              "value": "응결",
+              "isCorrect": false
+            },
+            {
+              "value": "예년",
+              "isCorrect": true
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "보통의 다른 해들을 말하며, 날씨를 비교할 때 기준이 돼요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "예년"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "올겨울은 ＿＿＿＿보다 훨씬 따뜻해서 눈이 많이 오지 않았어요.",
+          "acceptedAnswers": [
+            "예년"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘예년’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "친구가 낚시로 잡은 물고기가 고래만 하다고 예년해서 말했어요.",
+              "isCorrect": false
+            },
+            {
+              "value": "올겨울은 예년보다 훨씬 따뜻해서 눈이 많이 오지 않았어요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘과장’의 쓰임이에요. ‘예년’은 보통의 다른 해들을 말하며, 날씨를 비교할 때 기준이 돼요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:과장"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:유무",
+      "word": "유무",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "비교와 분류",
+      "level": 3,
+      "sourceDefinition": "어떤 것이 있고 없는 상태를 말해요.",
+      "sourceExample": "물체의 그림자를 관찰하며 빛의 유무에 따라 어떻게 변하는지 알아봤어요.",
+      "definition": "어떤 것이 있고 없는 상태를 말해요.",
+      "example": "물체의 그림자를 관찰하며 빛의 유무에 따라 어떻게 변하는지 알아봤어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘유무’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "어떤 하나를 이루고 있는 낱낱의 부분이나 재료들을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "그 도형이나 숫자가 가지고 있는 특별한 특징을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 것이 있고 없는 상태를 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "자료를 분류할 때 작게 나눈 하나하나의 제목을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "물체의 그림자를 관찰하며 빛의 ＿＿＿＿에 따라 어떻게 변하는지 알아봤어요.",
+          "options": [
+            {
+              "value": "유무",
+              "isCorrect": true
+            },
+            {
+              "value": "구성 요소",
+              "isCorrect": false
+            },
+            {
+              "value": "성질",
+              "isCorrect": false
+            },
+            {
+              "value": "항목",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "어떤 것이 있고 없는 상태를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "유무"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "물체의 그림자를 관찰하며 빛의 ＿＿＿＿에 따라 어떻게 변하는지 알아봤어요.",
+          "acceptedAnswers": [
+            "유무"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘유무’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "물체의 그림자를 관찰하며 빛의 유무에 따라 어떻게 변하는지 알아봤어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "친구가 낚시로 잡은 물고기가 고래만 하다고 유무해서 말했어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘과장’의 쓰임이에요. ‘유무’는 어떤 것이 있고 없는 상태를 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:과장"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:진분수",
+      "word": "진분수",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "숫자와 연산",
+      "level": 3,
+      "sourceDefinition": "분자가 분모보다 더 작은 진짜 분수를 말해요.",
+      "sourceExample": "3분의 1이나 4분의 3처럼 아래보다 위가 작은 분수가 진분수예요.",
+      "definition": "분자가 분모보다 더 작은 진짜 분수를 말해요.",
+      "example": "3분의 1이나 4분의 3처럼 아래보다 위가 작은 분수가 진분수예요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘진분수’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "분자가 분모와 같거나 분모보다 더 큰 분수를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "분자가 1인 분수를 말해요. 분수를 세는 기준이 돼요.",
+              "isCorrect": false
+            },
+            {
+              "value": "자연수와 진분수가 함께 섞여 있는 분수를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "분자가 분모보다 더 작은 진짜 분수를 말해요.",
+              "isCorrect": true
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "3분의 1이나 4분의 3처럼 아래보다 위가 작은 분수가 ＿＿＿＿예요.",
+          "options": [
+            {
+              "value": "가분수",
+              "isCorrect": false
+            },
+            {
+              "value": "진분수",
+              "isCorrect": true
+            },
+            {
+              "value": "단위분수",
+              "isCorrect": false
+            },
+            {
+              "value": "대분수",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "분자가 분모보다 더 작은 진짜 분수를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "진분수"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "3분의 1이나 4분의 3처럼 아래보다 위가 작은 분수가 ＿＿＿＿예요.",
+          "acceptedAnswers": [
+            "진분수"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘진분수’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "나와 내 짝꿍은 서로 간식을 나눠 먹는 아주 사이좋은 진분수예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "3분의 1이나 4분의 3처럼 아래보다 위가 작은 분수가 진분수예요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘관계’의 쓰임이에요. ‘진분수’는 분자가 분모보다 더 작은 진짜 분수를 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:관계"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:채택",
+      "word": "채택",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "사회와 소통",
+      "level": 3,
+      "sourceDefinition": "여러 의견 중에서 하나를 골라 실제로 쓰기로 결정하는 거예요.",
+      "sourceExample": "내가 낸 아이디어가 우리 모둠의 최종 계획으로 채택되었어요.",
+      "definition": "여러 의견 중에서 하나를 골라 실제로 쓰기로 결정하는 거예요.",
+      "example": "내가 낸 아이디어가 우리 모둠의 최종 계획으로 채택되었어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘채택’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "여러 의견 중에서 하나를 골라 실제로 쓰기로 결정하는 거예요.",
+              "isCorrect": true
+            },
+            {
+              "value": "같은 목적을 가지고 서로 도우며 함께 살아가는 사람들의 모임을 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "개인적인 자리가 아니라 나라나 학교 같은 기관에서 정식으로 하는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "중요한 일을 결정하기 전에 전문가나 주민들의 의견을 직접 듣는 모임이에요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "내가 낸 아이디어가 우리 모둠의 최종 계획으로 ＿＿＿＿되었어요.",
+          "options": [
+            {
+              "value": "공동체",
+              "isCorrect": false
+            },
+            {
+              "value": "공식적",
+              "isCorrect": false
+            },
+            {
+              "value": "채택",
+              "isCorrect": true
+            },
+            {
+              "value": "공청회",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "여러 의견 중에서 하나를 골라 실제로 쓰기로 결정하는 거예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "채택"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "내가 낸 아이디어가 우리 모둠의 최종 계획으로 ＿＿＿＿되었어요.",
+          "acceptedAnswers": [
+            "채택"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘채택’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "내가 낸 아이디어가 우리 모둠의 최종 계획으로 채택되었어요.",
+              "isCorrect": true
+            },
+            {
+              "value": "인공위성이 지구 주위의 채택을 따라 빙글빙글 돌고 있어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘궤도’의 쓰임이에요. ‘채택’은 여러 의견 중에서 하나를 골라 실제로 쓰기로 결정하는 거예요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:궤도"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:초점조절나사",
+      "word": "초점조절나사",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "과학 기구",
+      "level": 3,
+      "sourceDefinition": "현미경의 렌즈를 위아래로 움직여서 물체가 선명하게 보이도록 맞추는 나사예요.",
+      "sourceExample": "초점 조절 나사를 천천히 돌리니 흐릿하던 물체가 아주 또렷하게 보였어요.",
+      "definition": "현미경의 렌즈를 위아래로 움직여서 물체가 선명하게 보이도록 맞추는 나사예요.",
+      "example": "초점조절나사를 천천히 돌리니 흐릿하던 물체가 아주 또렷하게 보였어요.",
+      "flags": [
+        "example_missing_word"
+      ],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": true,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "priority",
+      "reviewReasons": [
+        "example_missing_word"
+      ],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘초점조절나사’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "현미경에서 관찰하려는 물체(표본)와 가까운 쪽에 있는 렌즈를 말해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "현미경의 렌즈를 위아래로 움직여서 물체가 선명하게 보이도록 맞추는 나사예요.",
+              "isCorrect": true
+            },
+            {
+              "value": "돋보기나 현미경이 물체의 크기를 원래보다 몇 배나 더 크게 보여주는지 나타내는 수치예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "현미경으로 관찰할 물체(표본)를 올려놓는 평평한 판을 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "＿＿＿＿를 천천히 돌리니 흐릿하던 물체가 아주 또렷하게 보였어요.",
+          "options": [
+            {
+              "value": "대물",
+              "isCorrect": false
+            },
+            {
+              "value": "배율",
+              "isCorrect": false
+            },
+            {
+              "value": "재물대",
+              "isCorrect": false
+            },
+            {
+              "value": "초점조절나사",
+              "isCorrect": true
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "현미경의 렌즈를 위아래로 움직여서 물체가 선명하게 보이도록 맞추는 나사예요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "초점조절나사"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "＿＿＿＿를 천천히 돌리니 흐릿하던 물체가 아주 또렷하게 보였어요.",
+          "acceptedAnswers": [
+            "초점조절나사"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘초점조절나사’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "나와 내 짝꿍은 서로 간식을 나눠 먹는 아주 사이좋은 초점조절나사예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "초점조절나사를 천천히 돌리니 흐릿하던 물체가 아주 또렷하게 보였어요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘관계’의 쓰임이에요. ‘초점조절나사’는 현미경의 렌즈를 위아래로 움직여서 물체가 선명하게 보이도록 맞추는 나사예요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "priority",
+          "reviewReasons": [
+            "example_missing_word"
+          ],
+          "sourceItemKey": "vocab:g4:관계"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:출처",
+      "word": "출처",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "생각과 공부",
+      "level": 3,
+      "sourceDefinition": "어떤 정보나 사진을 어디서 가져왔는지 그 근거를 말해요.",
+      "sourceExample": "발표 자료를 만들 때는 사진의 출처를 반드시 적어야 해.",
+      "definition": "어떤 정보나 사진을 어디서 가져왔는지 그 근거를 말해요.",
+      "example": "발표 자료를 만들 때는 사진의 출처를 반드시 적어야 해.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘출처’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "어떤 일을 결정하기 전에 틀린 곳이나 문제는 없는지 자세히 살피는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 일을 결정할 때 여러 가지 상황을 넣어서 신중하게 생각하는 거예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "어떤 정보나 사진을 어디서 가져왔는지 그 근거를 말해요.",
+              "isCorrect": true
+            },
+            {
+              "value": "어떤 일을 하게 된 직접적인 원인이나 마음의 계기를 말해요.",
+              "isCorrect": false
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "발표 자료를 만들 때는 사진의 ＿＿＿＿를 반드시 적어야 해.",
+          "options": [
+            {
+              "value": "출처",
+              "isCorrect": true
+            },
+            {
+              "value": "검토",
+              "isCorrect": false
+            },
+            {
+              "value": "고려",
+              "isCorrect": false
+            },
+            {
+              "value": "동기",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "어떤 정보나 사진을 어디서 가져왔는지 그 근거를 말해요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "출처"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "발표 자료를 만들 때는 사진의 ＿＿＿＿를 반드시 적어야 해.",
+          "acceptedAnswers": [
+            "출처"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘출처’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "발표 자료를 만들 때는 사진의 출처를 반드시 적어야 해.",
+              "isCorrect": true
+            },
+            {
+              "value": "우리 고장과 옆 동네는 서로 특산물을 주고받으며 출처를 하고 있어요.",
+              "isCorrect": false
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘교류’의 쓰임이에요. ‘출처’는 어떤 정보나 사진을 어디서 가져왔는지 그 근거를 말해요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:교류"
+        }
+      }
+    },
+    {
+      "itemKey": "vocab:g4:행정구역",
+      "word": "행정구역",
+      "partOfSpeech": "명사",
+      "meaningNumber": 1,
+      "category": "지리",
+      "level": 3,
+      "sourceDefinition": "나라를 효율적으로 관리하기 위해 나눈 도, 시, 군 같은 구역이에요.",
+      "sourceExample": "우리나라의 행정구역은 크게 특별시, 광역시, 도로 나뉘어 있어요.",
+      "definition": "나라를 효율적으로 관리하기 위해 나눈 도, 시, 군 같은 구역이에요.",
+      "example": "우리나라의 행정구역은 크게 특별시, 광역시, 도로 나뉘어 있어요.",
+      "flags": [],
+      "duplicateReview": null,
+      "reviewStatus": "reviewed",
+      "reviewChanges": {
+        "definition": false,
+        "example": false,
+        "acceptedAnswers": false
+      },
+      "reviewOrigin": "assisted_codex_candidate",
+      "reviewPriority": "sample",
+      "reviewReasons": [],
+      "questions": {
+        "meaningChoice": {
+          "status": "reviewed",
+          "prompt": "‘행정구역’의 뜻으로 알맞은 것을 고르세요.",
+          "options": [
+            {
+              "value": "지도에서 높이가 같은 곳을 연결해 땅의 높낮이를 보여주는 선이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "지도에 쓰인 기호가 무엇을 뜻하는지 표로 정리해 놓은 설명판이에요.",
+              "isCorrect": false
+            },
+            {
+              "value": "실제 땅의 거리를 지도 위에 일정한 비율로 줄여서 나타낸 정도예요.",
+              "isCorrect": false
+            },
+            {
+              "value": "나라를 효율적으로 관리하기 위해 나눈 도, 시, 군 같은 구역이에요.",
+              "isCorrect": true
+            }
+          ]
+        },
+        "clozeChoice": {
+          "status": "reviewed",
+          "prompt": "우리나라의 ＿＿＿＿은 크게 특별시, 광역시, 도로 나뉘어 있어요.",
+          "options": [
+            {
+              "value": "등고선",
+              "isCorrect": false
+            },
+            {
+              "value": "행정구역",
+              "isCorrect": true
+            },
+            {
+              "value": "범례",
+              "isCorrect": false
+            },
+            {
+              "value": "축척",
+              "isCorrect": false
+            }
+          ]
+        },
+        "definitionInput": {
+          "status": "reviewed",
+          "prompt": "나라를 효율적으로 관리하기 위해 나눈 도, 시, 군 같은 구역이에요.\n이 뜻에 맞는 낱말을 직접 쓰세요.",
+          "acceptedAnswers": [
+            "행정구역"
+          ]
+        },
+        "clozeInput": {
+          "status": "reviewed",
+          "prompt": "우리나라의 ＿＿＿＿은 크게 특별시, 광역시, 도로 나뉘어 있어요.",
+          "acceptedAnswers": [
+            "행정구역"
+          ]
+        },
+        "usageDistinction": {
+          "status": "reviewed",
+          "prompt": "다음 중 ‘행정구역’의 쓰임이 알맞은 문장을 고르세요.",
+          "options": [
+            {
+              "value": "친구가 실수로 내 물건을 건드려도 화내지 않고 이해해 주는 행정구역이 필요해요.",
+              "isCorrect": false
+            },
+            {
+              "value": "우리나라의 행정구역은 크게 특별시, 광역시, 도로 나뉘어 있어요.",
+              "isCorrect": true
+            }
+          ],
+          "explanation": "이 문장은 원래 ‘관용’의 쓰임이에요. ‘행정구역’은 나라를 효율적으로 관리하기 위해 나눈 도, 시, 군 같은 구역이에요.",
+          "reviewOrigin": "assisted_codex_candidate",
+          "reviewPriority": "sample",
+          "reviewReasons": [],
+          "sourceItemKey": "vocab:g4:관용"
+        }
+      }
+    }
+  ]
+}

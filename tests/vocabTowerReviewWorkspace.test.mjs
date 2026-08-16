@@ -7,8 +7,9 @@ import {
     validateReviewItem
 } from '../src/modules/game/vocab-tower/reviewModel.js';
 
-const [artifactText, dashboardSource, panelSource, panelCss, apiSource] = await Promise.all([
+const [artifactText, assistedArtifactText, dashboardSource, panelSource, panelCss, apiSource] = await Promise.all([
     readFile('docs/vocab-tower/data/grade3-deck01-review.json', 'utf8'),
+    readFile('docs/vocab-tower/data/grade4-deck01-review.json', 'utf8'),
     readFile('src/components/admin/AdminDashboard.jsx', 'utf8'),
     readFile('src/components/admin/AdminVocabReviewPanel.jsx', 'utf8'),
     readFile('src/components/admin/adminVocabReview.css', 'utf8'),
@@ -16,6 +17,7 @@ const [artifactText, dashboardSource, panelSource, panelCss, apiSource] = await 
 ]);
 
 const artifact = JSON.parse(artifactText);
+const assistedArtifact = JSON.parse(assistedArtifactText);
 
 test('확인한 첫 덱 산출물을 DB 검수 행과 시드 입력으로 손실 없이 바꾼다', () => {
     const workspace = artifactToWorkspace(artifact);
@@ -34,6 +36,14 @@ test('확인한 첫 덱 산출물을 DB 검수 행과 시드 입력으로 손실
         assert.equal(seedItem.sourceExample, item.source_example);
         assert.deepEqual(seedItem.acceptedAnswers, item.accepted_answers);
     });
+});
+
+test('나머지 덱 보조 검수 산출물은 교사 확인 전 1차 검수 상태로 연다', () => {
+    const workspace = artifactToWorkspace(assistedArtifact);
+    assert.equal(workspace.deck.review_status, 'editorial_review');
+    assert.equal(workspace.deck.review_mode, 'assisted');
+    assert.equal(workspace.items.length, assistedArtifact.itemCount);
+    workspace.items.forEach((item) => assert.equal(validateReviewItem(item), null));
 });
 
 test('검수 모델은 빈 보기·복수 정답·표제어가 빠진 직접 입력 정답을 막는다', () => {
@@ -72,8 +82,10 @@ test('검수 모델은 빈 보기·복수 정답·표제어가 빠진 직접 입
 test('관리자 화면은 검수 API만 사용하고 운영 게임에는 직접 연결하지 않는다', () => {
     assert.match(dashboardSource, /React\.lazy\(\(\) => import\('\.\/AdminVocabReviewPanel'\)\)/);
     assert.match(dashboardSource, /어휘 V2 검수/);
-    assert.match(panelSource, /grade3-deck01-review\.json/);
+    assert.match(panelSource, /import\.meta\.glob/);
+    assert.match(panelSource, /grade\[3-6\]-deck\[0-9\]\[0-9\]-review\.json/);
     assert.match(panelSource, /학생 게임에는 연결되지 않습니다/);
+    assert.match(panelSource, /우선 확인/);
     assert.match(panelSource, /표본 확인/);
     assert.match(panelCss, /grid-template-rows: auto auto minmax\(0, 1fr\)/);
     assert.match(panelCss, /height: min\(720px, calc\(100vh - 40px\)\)/);

@@ -6,11 +6,16 @@ const GRADES = Object.freeze([3, 4, 5, 6]);
 const DECK_COUNT = 10;
 const DEFAULT_REVIEW_GRADE = 3;
 const DEFAULT_REVIEW_DECK = 1;
+const ASSISTED_REVIEW_DATE = '2026-08-16';
 
 const sourceUrl = (grade) => new URL(`../public/data/grade${grade}_vocab.json`, import.meta.url);
 const reportUrl = new URL('../docs/vocab-tower/V2_WORD_AUDIT.md', import.meta.url);
 const deckPlanUrl = new URL('../docs/vocab-tower/data/v2-deck-plan.json', import.meta.url);
-const reviewDraftUrl = new URL('../docs/vocab-tower/data/grade3-deck01-review.json', import.meta.url);
+const reviewDraftUrl = (grade, deckNumber) => new URL(
+    `../docs/vocab-tower/data/grade${grade}-deck${String(deckNumber).padStart(2, '0')}-review.json`,
+    import.meta.url
+);
+const reviewManifestUrl = new URL('../docs/vocab-tower/data/v2-review-manifest.json', import.meta.url);
 const humanReviewUrl = new URL('../docs/vocab-tower/data/grade3-deck01-human-review.json', import.meta.url);
 
 const normalizeText = (value) => String(value ?? '').trim();
@@ -286,9 +291,119 @@ const buildQuestionDrafts = (target, gradeItems) => {
     };
 };
 
+const PART_OF_SPEECH_OVERRIDES = Object.freeze({
+    '분분하다': '형용사',
+    '진술하다': '동사',
+    '파다하다': '형용사'
+});
+
+const ASSISTED_EXAMPLE_OVERRIDES = Object.freeze({
+    '초점조절나사': '초점조절나사를 천천히 돌리니 흐릿하던 물체가 아주 또렷하게 보였어요.',
+    '분분하다': '새 급식 메뉴에 대한 의견이 분분하다 보니 투표로 정하기로 했어요.',
+    '진술하다': '목격자는 사고 당시의 상황을 진술하다가 중요한 장면을 떠올렸어요.',
+    '파다하다': '우승 소문이 전교에 파다하다 보니 모르는 학생이 없었어요.'
+});
+
+const inferPartOfSpeech = (word) => PART_OF_SPEECH_OVERRIDES[word] || '명사';
+
+const hasFinalConsonant = (word) => {
+    const codePoint = [...word].at(-1)?.codePointAt(0) || 0;
+    return codePoint >= 0xAC00 && codePoint <= 0xD7A3 && (codePoint - 0xAC00) % 28 !== 0;
+};
+
+const particleFor = (word, pair) => {
+    const [withFinal, withoutFinal] = pair;
+    return hasFinalConsonant(word) ? withFinal : withoutFinal;
+};
+
+const replaceWordPreservingParticle = (sentence, sourceWord, targetWord) => {
+    const particlePairs = [
+        ['은', '는'],
+        ['이', '가'],
+        ['을', '를'],
+        ['과', '와']
+    ];
+    for (const pair of particlePairs) {
+        for (const sourceParticle of pair) {
+            const source = `${sourceWord}${sourceParticle}`;
+            if (sentence.includes(source)) {
+                return sentence.replace(source, `${targetWord}${particleFor(targetWord, pair)}`);
+            }
+        }
+    }
+    return sentence.replace(sourceWord, targetWord);
+};
+
+const assistedUsageCandidate = (target, gradeItems, itemIndex) => {
+    const candidates = gradeItems
+        .filter((item) => (
+            item.itemKey !== target.itemKey
+            && item.category !== target.category
+            && item.example.includes(item.word)
+            && !item.example.includes(target.word)
+        ))
+        .sort((left, right) => left.word.localeCompare(right.word, 'ko'));
+    const candidate = candidates[itemIndex % candidates.length];
+    if (!candidate) throw new Error(`구별 문항 후보를 만들 수 없습니다: ${target.itemKey}`);
+    const incorrectUsage = replaceWordPreservingParticle(candidate.example, candidate.word, target.word);
+    if (!incorrectUsage.includes(target.word) || incorrectUsage === target.example) {
+        throw new Error(`구별 문항 문장을 만들 수 없습니다: ${target.itemKey}`);
+    }
+    const topicParticle = particleFor(target.word, ['은', '는']);
+    return {
+        incorrectUsage,
+        distinctionExplanation: `이 문장은 원래 ‘${candidate.word}’의 쓰임이에요. ‘${target.word}’${topicParticle} ${target.definition}`,
+        sourceItemKey: candidate.itemKey
+    };
+};
+
+export const buildAssistedReview = (audit, deckPlan, grade, deckNumber) => {
+    const gradePlan = deckPlan.grades.find((entry) => entry.grade === grade);
+    const deck = gradePlan?.decks.find((entry) => entry.deckNumber === deckNumber);
+    if (!deck) throw new Error(`보조 검수 덱을 찾을 수 없습니다: ${grade}학년 ${deckNumber}번 덱`);
+    const gradeItems = audit.canonicalRows.filter((item) => item.grade === grade);
+    return {
+        schemaVersion: 1,
+        status: 'assisted_review_complete_pending_teacher_spot_check',
+        grade,
+        deckId: deck.deckId,
+        reviewedOn: ASSISTED_REVIEW_DATE,
+        reviewScope: '자동 구조 검사와 Codex 보조 규칙으로 만든 전체 1차 검수 후보이며, 위험 항목 우선·나머지 표본 확인 뒤 잠급니다.',
+        items: deck.items.map((deckItem, itemIndex) => {
+            const target = findItem(audit, deckItem.itemKey);
+            const usage = assistedUsageCandidate(target, gradeItems, itemIndex);
+            const example = ASSISTED_EXAMPLE_OVERRIDES[target.word] || target.example;
+            const reviewReasons = [
+                ...target.flags,
+                ...(target.duplicateClassification && target.duplicateClassification !== 'exact_duplicate'
+                    ? ['duplicate_review_required']
+                    : []),
+                ...(inferPartOfSpeech(target.word) !== '명사' ? ['part_of_speech_review'] : [])
+            ];
+            return {
+                itemKey: target.itemKey,
+                partOfSpeech: inferPartOfSpeech(target.word),
+                meaningNumber: 1,
+                definition: target.definition,
+                example,
+                acceptedAnswers: [target.word],
+                incorrectUsage: usage.incorrectUsage,
+                distinctionExplanation: usage.distinctionExplanation,
+                reviewOrigin: 'assisted_codex_candidate',
+                reviewPriority: reviewReasons.length > 0 ? 'priority' : 'sample',
+                reviewReasons,
+                usageSourceItemKey: usage.sourceItemKey
+            };
+        })
+    };
+};
+
 const validateHumanReview = (humanReview, deck, grade) => {
     if (!humanReview) return new Map();
-    if (humanReview.status !== 'manual_review_complete_pending_teacher_spot_check') {
+    if (![
+        'manual_review_complete_pending_teacher_spot_check',
+        'assisted_review_complete_pending_teacher_spot_check'
+    ].includes(humanReview.status)) {
         throw new Error('직접 검수 자료가 교사 표본 확인 대기 상태가 아닙니다.');
     }
     if (humanReview.grade !== grade || humanReview.deckId !== deck.deckId) {
@@ -369,7 +484,11 @@ const markQuestionsReviewed = (questions, review, itemIndex) => {
             status: 'reviewed',
             prompt: `다음 중 ‘${review.word}’의 쓰임이 알맞은 문장을 고르세요.`,
             options: usageOptions,
-            explanation: review.distinctionExplanation
+            explanation: review.distinctionExplanation,
+            reviewOrigin: review.reviewOrigin || 'manual_codex_review',
+            reviewPriority: review.reviewPriority || 'sample',
+            reviewReasons: review.reviewReasons || [],
+            sourceItemKey: review.usageSourceItemKey || null
         }
     };
 };
@@ -416,6 +535,12 @@ export const buildReviewDraft = (
             acceptedAnswers: !sameStringArray(baseAnswers, review.acceptedAnswers)
         } : null;
         if (changes) reviewChanges.push(changes);
+        const reviewReasons = review?.reviewReasons || [
+            ...target.flags,
+            ...(duplicate && duplicate.classification !== 'exact_duplicate' ? ['duplicate_review_required'] : []),
+            ...(changes && Object.values(changes).some(Boolean) ? ['edited_source'] : [])
+        ];
+        const reviewPriority = review?.reviewPriority || (reviewReasons.length > 0 ? 'priority' : 'sample');
         const questions = buildQuestionDrafts(target, gradeItems);
         return {
             itemKey: target.itemKey,
@@ -432,16 +557,28 @@ export const buildReviewDraft = (
             duplicateReview: duplicate || null,
             reviewStatus: reviewed ? 'reviewed' : target.reviewStatus,
             reviewChanges: changes,
-            questions: reviewed ? markQuestionsReviewed(questions, { ...review, word: target.word }, itemIndex) : questions
+            reviewOrigin: review?.reviewOrigin || (reviewed ? 'manual_codex_review' : 'automatic_draft'),
+            reviewPriority: reviewed ? reviewPriority : 'priority',
+            reviewReasons,
+            questions: reviewed ? markQuestionsReviewed(questions, {
+                ...review,
+                word: target.word,
+                reviewPriority,
+                reviewReasons
+            }, itemIndex) : questions
         };
     });
     const correctedItems = reviewChanges.filter((changes) => Object.values(changes).some(Boolean)).length;
+    const assisted = humanReview?.status === 'assisted_review_complete_pending_teacher_spot_check';
 
     return {
         schemaVersion: 1,
         status: reviewed
-            ? 'manual_review_complete_pending_teacher_spot_check_not_for_student_delivery'
+            ? assisted
+                ? 'assisted_review_complete_pending_teacher_spot_check_not_for_student_delivery'
+                : 'manual_review_complete_pending_teacher_spot_check_not_for_student_delivery'
             : 'draft_not_for_student_delivery',
+        reviewMode: assisted ? 'assisted' : reviewed ? 'manual' : 'draft',
         sourceFingerprint: audit.sourceFingerprint,
         grade,
         deckId: deck.deckId,
@@ -455,6 +592,8 @@ export const buildReviewDraft = (
             examplesChanged: reviewChanges.filter((changes) => changes.example).length,
             acceptedAnswersChanged: reviewChanges.filter((changes) => changes.acceptedAnswers).length,
             usageDistinctionsAuthored: items.filter((item) => item.questions.usageDistinction.status === 'reviewed').length,
+            priorityItems: items.filter((item) => item.reviewPriority === 'priority').length,
+            sampleItems: items.filter((item) => item.reviewPriority === 'sample').length,
             correctedItems,
             autoDraftCorrectionRate: correctedItems / deck.itemCount
         } : null,
@@ -602,8 +741,9 @@ export const buildMarkdownReport = (audit, deckPlan, reviewDraft) => {
         '## 생성 파일',
         '',
         '- `docs/vocab-tower/data/v2-deck-plan.json`: 학년별 10개 덱 배정 초안',
+        '- `docs/vocab-tower/data/v2-review-manifest.json`: 40개 덱 검수 후보 요약·파일 목록',
         '- `docs/vocab-tower/data/grade3-deck01-human-review.json`: 항목별 1차 편집 검수 원본(교사 표본 확인 전)',
-        '- `docs/vocab-tower/data/grade3-deck01-review.json`: 자동 초안과 사람 검수를 합친 재생성 산출물',
+        '- `docs/vocab-tower/data/grade*-deck??-review.json`: 첫 직접 검수와 나머지 보조 검수를 합친 덱별 재생성 산출물',
         '',
         '재생성: `npm run vocab:audit` · 원본과 동기화 확인: `npm run vocab:audit:check`',
         ''
@@ -625,23 +765,57 @@ export const createAuditArtifacts = async () => {
     ]);
     const audit = auditVocabularySources(sources);
     const deckPlan = buildDeckPlan(audit);
-    const reviewDraft = buildReviewDraft(audit, deckPlan, DEFAULT_REVIEW_GRADE, DEFAULT_REVIEW_DECK, humanReview);
+    const reviewDrafts = GRADES.flatMap((grade) => (
+        Array.from({ length: DECK_COUNT }, (_, index) => {
+            const deckNumber = index + 1;
+            const review = grade === DEFAULT_REVIEW_GRADE && deckNumber === DEFAULT_REVIEW_DECK
+                ? humanReview
+                : buildAssistedReview(audit, deckPlan, grade, deckNumber);
+            return buildReviewDraft(audit, deckPlan, grade, deckNumber, review);
+        })
+    ));
+    const reviewDraft = reviewDrafts.find((draft) => (
+        draft.grade === DEFAULT_REVIEW_GRADE && draft.deckNumber === DEFAULT_REVIEW_DECK
+    ));
+    if (!reviewDraft) throw new Error('첫 검수 덱 산출물을 만들지 못했습니다.');
+    const reviewManifest = {
+        schemaVersion: 1,
+        status: 'review_workspace_candidates_not_for_student_delivery',
+        sourceFingerprint: audit.sourceFingerprint,
+        deckCount: reviewDrafts.length,
+        itemCount: reviewDrafts.reduce((sum, draft) => sum + draft.itemCount, 0),
+        priorityItemCount: reviewDrafts.reduce((sum, draft) => sum + draft.reviewSummary.priorityItems, 0),
+        sampleItemCount: reviewDrafts.reduce((sum, draft) => sum + draft.reviewSummary.sampleItems, 0),
+        decks: reviewDrafts.map((draft) => ({
+            grade: draft.grade,
+            deckId: draft.deckId,
+            deckNumber: draft.deckNumber,
+            itemCount: draft.itemCount,
+            reviewMode: draft.reviewMode,
+            priorityItems: draft.reviewSummary.priorityItems,
+            sampleItems: draft.reviewSummary.sampleItems,
+            artifact: `grade${draft.grade}-deck${String(draft.deckNumber).padStart(2, '0')}-review.json`
+        }))
+    };
     const report = buildMarkdownReport(audit, deckPlan, reviewDraft);
     return {
         audit,
         deckPlan,
         reviewDraft,
+        reviewDrafts,
+        reviewManifest,
         files: [
             [reportUrl, report],
             [deckPlanUrl, jsonText(deckPlan)],
-            [reviewDraftUrl, jsonText(reviewDraft)]
+            [reviewManifestUrl, jsonText(reviewManifest)],
+            ...reviewDrafts.map((draft) => [reviewDraftUrl(draft.grade, draft.deckNumber), jsonText(draft)])
         ]
     };
 };
 
 const run = async () => {
     const checkOnly = process.argv.includes('--check');
-    const { audit, deckPlan, reviewDraft, files } = await createAuditArtifacts();
+    const { audit, deckPlan, reviewManifest, files } = await createAuditArtifacts();
     if (checkOnly) {
         const mismatched = [];
         for (const [url, expected] of files) {
@@ -651,13 +825,13 @@ const run = async () => {
         if (mismatched.length > 0) {
             throw new Error(`어휘 V2 진단 자료가 원본과 다릅니다. npm run vocab:audit를 실행하세요: ${mismatched.join(', ')}`);
         }
-        console.log(`어휘 V2 진단 확인: 원본 ${audit.sourceRows.length}행 · 운영 기준 ${audit.canonicalRows.length}개 · 덱 ${deckPlan.grades.length * DECK_COUNT}개 · 첫 검수 ${reviewDraft.itemCount}개`);
+        console.log(`어휘 V2 진단 확인: 원본 ${audit.sourceRows.length}행 · 운영 기준 ${audit.canonicalRows.length}개 · 검수 후보 ${reviewManifest.deckCount}덱 ${reviewManifest.itemCount}개`);
         return;
     }
 
     await mkdir(new URL('../docs/vocab-tower/data/', import.meta.url), { recursive: true });
     await Promise.all(files.map(([url, contents]) => writeFile(url, contents, 'utf8')));
-    console.log(`어휘 V2 진단 생성: 원본 ${audit.sourceRows.length}행 · 운영 기준 ${audit.canonicalRows.length}개 · 중복 검토 ${audit.duplicateGroups.length}그룹 · 첫 검수 ${reviewDraft.itemCount}개`);
+    console.log(`어휘 V2 진단 생성: 원본 ${audit.sourceRows.length}행 · 운영 기준 ${audit.canonicalRows.length}개 · 중복 검토 ${audit.duplicateGroups.length}그룹 · 검수 후보 ${reviewManifest.deckCount}덱 ${reviewManifest.itemCount}개`);
 };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

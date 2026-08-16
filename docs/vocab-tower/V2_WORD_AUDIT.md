@@ -92,8 +92,9 @@
 ## 생성 파일
 
 - `docs/vocab-tower/data/v2-deck-plan.json`: 학년별 10개 덱 배정 초안
+- `docs/vocab-tower/data/v2-review-manifest.json`: 40개 덱 검수 후보 요약·파일 목록
 - `docs/vocab-tower/data/grade3-deck01-human-review.json`: 항목별 1차 편집 검수 원본(교사 표본 확인 전)
-- `docs/vocab-tower/data/grade3-deck01-review.json`: 자동 초안과 사람 검수를 합친 재생성 산출물
+- `docs/vocab-tower/data/grade*-deck??-review.json`: 첫 직접 검수와 나머지 보조 검수를 합친 덱별 재생성 산출물
 
 재생성: `npm run vocab:audit` · 원본과 동기화 확인: `npm run vocab:audit:check`
 

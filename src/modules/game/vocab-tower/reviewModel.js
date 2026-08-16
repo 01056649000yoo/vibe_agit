@@ -48,7 +48,8 @@ export const artifactToWorkspace = (artifact) => ({
         deck_id: artifact.deckId,
         grade: artifact.grade,
         deck_number: artifact.deckNumber,
-        review_status: 'teacher_confirmed',
+        review_status: artifact.reviewMode === 'assisted' ? 'editorial_review' : 'teacher_confirmed',
+        review_mode: artifact.reviewMode,
         source_fingerprint: artifact.sourceFingerprint,
         version: 0,
         is_local_seed: true

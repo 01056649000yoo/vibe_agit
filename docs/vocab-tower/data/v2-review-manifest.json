@@ -1,0 +1,411 @@
+{
+  "schemaVersion": 1,
+  "status": "review_workspace_candidates_not_for_student_delivery",
+  "sourceFingerprint": "3ea5051014d57bc2b5885d5dd47917b24f5969ccdecc36be9a64ea978fdbb0de",
+  "deckCount": 40,
+  "itemCount": 1573,
+  "priorityItemCount": 46,
+  "sampleItemCount": 1527,
+  "decks": [
+    {
+      "grade": 3,
+      "deckId": "grade3-deck01",
+      "deckNumber": 1,
+      "itemCount": 40,
+      "reviewMode": "manual",
+      "priorityItems": 18,
+      "sampleItems": 22,
+      "artifact": "grade3-deck01-review.json"
+    },
+    {
+      "grade": 3,
+      "deckId": "grade3-deck02",
+      "deckNumber": 2,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade3-deck02-review.json"
+    },
+    {
+      "grade": 3,
+      "deckId": "grade3-deck03",
+      "deckNumber": 3,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade3-deck03-review.json"
+    },
+    {
+      "grade": 3,
+      "deckId": "grade3-deck04",
+      "deckNumber": 4,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade3-deck04-review.json"
+    },
+    {
+      "grade": 3,
+      "deckId": "grade3-deck05",
+      "deckNumber": 5,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 39,
+      "artifact": "grade3-deck05-review.json"
+    },
+    {
+      "grade": 3,
+      "deckId": "grade3-deck06",
+      "deckNumber": 6,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade3-deck06-review.json"
+    },
+    {
+      "grade": 3,
+      "deckId": "grade3-deck07",
+      "deckNumber": 7,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade3-deck07-review.json"
+    },
+    {
+      "grade": 3,
+      "deckId": "grade3-deck08",
+      "deckNumber": 8,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade3-deck08-review.json"
+    },
+    {
+      "grade": 3,
+      "deckId": "grade3-deck09",
+      "deckNumber": 9,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade3-deck09-review.json"
+    },
+    {
+      "grade": 3,
+      "deckId": "grade3-deck10",
+      "deckNumber": 10,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade3-deck10-review.json"
+    },
+    {
+      "grade": 4,
+      "deckId": "grade4-deck01",
+      "deckNumber": 1,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade4-deck01-review.json"
+    },
+    {
+      "grade": 4,
+      "deckId": "grade4-deck02",
+      "deckNumber": 2,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 2,
+      "sampleItems": 38,
+      "artifact": "grade4-deck02-review.json"
+    },
+    {
+      "grade": 4,
+      "deckId": "grade4-deck03",
+      "deckNumber": 3,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 2,
+      "sampleItems": 38,
+      "artifact": "grade4-deck03-review.json"
+    },
+    {
+      "grade": 4,
+      "deckId": "grade4-deck04",
+      "deckNumber": 4,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 4,
+      "sampleItems": 36,
+      "artifact": "grade4-deck04-review.json"
+    },
+    {
+      "grade": 4,
+      "deckId": "grade4-deck05",
+      "deckNumber": 5,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 39,
+      "artifact": "grade4-deck05-review.json"
+    },
+    {
+      "grade": 4,
+      "deckId": "grade4-deck06",
+      "deckNumber": 6,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 38,
+      "artifact": "grade4-deck06-review.json"
+    },
+    {
+      "grade": 4,
+      "deckId": "grade4-deck07",
+      "deckNumber": 7,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 39,
+      "artifact": "grade4-deck07-review.json"
+    },
+    {
+      "grade": 4,
+      "deckId": "grade4-deck08",
+      "deckNumber": 8,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 39,
+      "artifact": "grade4-deck08-review.json"
+    },
+    {
+      "grade": 4,
+      "deckId": "grade4-deck09",
+      "deckNumber": 9,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 38,
+      "artifact": "grade4-deck09-review.json"
+    },
+    {
+      "grade": 4,
+      "deckId": "grade4-deck10",
+      "deckNumber": 10,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 39,
+      "artifact": "grade4-deck10-review.json"
+    },
+    {
+      "grade": 5,
+      "deckId": "grade5-deck01",
+      "deckNumber": 1,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 39,
+      "artifact": "grade5-deck01-review.json"
+    },
+    {
+      "grade": 5,
+      "deckId": "grade5-deck02",
+      "deckNumber": 2,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 39,
+      "artifact": "grade5-deck02-review.json"
+    },
+    {
+      "grade": 5,
+      "deckId": "grade5-deck03",
+      "deckNumber": 3,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade5-deck03-review.json"
+    },
+    {
+      "grade": 5,
+      "deckId": "grade5-deck04",
+      "deckNumber": 4,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade5-deck04-review.json"
+    },
+    {
+      "grade": 5,
+      "deckId": "grade5-deck05",
+      "deckNumber": 5,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 39,
+      "artifact": "grade5-deck05-review.json"
+    },
+    {
+      "grade": 5,
+      "deckId": "grade5-deck06",
+      "deckNumber": 6,
+      "itemCount": 40,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 40,
+      "artifact": "grade5-deck06-review.json"
+    },
+    {
+      "grade": 5,
+      "deckId": "grade5-deck07",
+      "deckNumber": 7,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 38,
+      "artifact": "grade5-deck07-review.json"
+    },
+    {
+      "grade": 5,
+      "deckId": "grade5-deck08",
+      "deckNumber": 8,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 38,
+      "artifact": "grade5-deck08-review.json"
+    },
+    {
+      "grade": 5,
+      "deckId": "grade5-deck09",
+      "deckNumber": 9,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 39,
+      "artifact": "grade5-deck09-review.json"
+    },
+    {
+      "grade": 5,
+      "deckId": "grade5-deck10",
+      "deckNumber": 10,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 38,
+      "artifact": "grade5-deck10-review.json"
+    },
+    {
+      "grade": 6,
+      "deckId": "grade6-deck01",
+      "deckNumber": 1,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 2,
+      "sampleItems": 37,
+      "artifact": "grade6-deck01-review.json"
+    },
+    {
+      "grade": 6,
+      "deckId": "grade6-deck02",
+      "deckNumber": 2,
+      "itemCount": 39,
+      "reviewMode": "assisted",
+      "priorityItems": 2,
+      "sampleItems": 37,
+      "artifact": "grade6-deck02-review.json"
+    },
+    {
+      "grade": 6,
+      "deckId": "grade6-deck03",
+      "deckNumber": 3,
+      "itemCount": 38,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 37,
+      "artifact": "grade6-deck03-review.json"
+    },
+    {
+      "grade": 6,
+      "deckId": "grade6-deck04",
+      "deckNumber": 4,
+      "itemCount": 38,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 37,
+      "artifact": "grade6-deck04-review.json"
+    },
+    {
+      "grade": 6,
+      "deckId": "grade6-deck05",
+      "deckNumber": 5,
+      "itemCount": 38,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 38,
+      "artifact": "grade6-deck05-review.json"
+    },
+    {
+      "grade": 6,
+      "deckId": "grade6-deck06",
+      "deckNumber": 6,
+      "itemCount": 38,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 38,
+      "artifact": "grade6-deck06-review.json"
+    },
+    {
+      "grade": 6,
+      "deckId": "grade6-deck07",
+      "deckNumber": 7,
+      "itemCount": 38,
+      "reviewMode": "assisted",
+      "priorityItems": 0,
+      "sampleItems": 38,
+      "artifact": "grade6-deck07-review.json"
+    },
+    {
+      "grade": 6,
+      "deckId": "grade6-deck08",
+      "deckNumber": 8,
+      "itemCount": 38,
+      "reviewMode": "assisted",
+      "priorityItems": 2,
+      "sampleItems": 36,
+      "artifact": "grade6-deck08-review.json"
+    },
+    {
+      "grade": 6,
+      "deckId": "grade6-deck09",
+      "deckNumber": 9,
+      "itemCount": 38,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 37,
+      "artifact": "grade6-deck09-review.json"
+    },
+    {
+      "grade": 6,
+      "deckId": "grade6-deck10",
+      "deckNumber": 10,
+      "itemCount": 38,
+      "reviewMode": "assisted",
+      "priorityItems": 1,
+      "sampleItems": 37,
+      "artifact": "grade6-deck10-review.json"
+    }
+  ]
+}

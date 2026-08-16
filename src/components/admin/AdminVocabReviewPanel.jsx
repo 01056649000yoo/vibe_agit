@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../common/Button';
-import reviewArtifact from '../../../docs/vocab-tower/data/grade3-deck01-review.json';
 import {
     getVocabReviewDeck,
     saveVocabReviewItem,
@@ -16,6 +15,17 @@ import {
     validateReviewItem
 } from '../../modules/game/vocab-tower/reviewModel';
 import './adminVocabReview.css';
+
+const REVIEW_ARTIFACT_LOADERS = new Map(Object.entries(import.meta.glob(
+    '../../../docs/vocab-tower/data/grade[3-6]-deck[0-9][0-9]-review.json',
+    { import: 'default' }
+)));
+
+const loadReviewArtifact = async (grade, deckNumber) => {
+    const deckId = `grade${grade}-deck${String(deckNumber).padStart(2, '0')}`;
+    const path = `../../../docs/vocab-tower/data/${deckId}-review.json`;
+    return REVIEW_ARTIFACT_LOADERS.get(path)?.() || null;
+};
 
 const getQuestion = (questions, questionKey) => {
     switch (questionKey) {
@@ -148,9 +158,16 @@ const AdminVocabReviewPanel = () => {
         setNotice('');
         try {
             const workspace = await getVocabReviewDeck({ grade, deckNumber });
-            if (!workspace?.deck && grade === 3 && deckNumber === 1) {
-                applyWorkspace(artifactToWorkspace(reviewArtifact));
-                setNotice('확인한 첫 덱을 DB 작업공간에 준비하기 전 상태입니다. 내용을 한 번 더 보고 저장할 수 있습니다.');
+            if (!workspace?.deck) {
+                const artifact = await loadReviewArtifact(grade, deckNumber);
+                if (artifact) {
+                    applyWorkspace(artifactToWorkspace(artifact));
+                    setNotice(artifact.reviewMode === 'assisted'
+                        ? '자동 검사와 Codex 1차 검수 후보입니다. 우선 확인 항목과 표본을 살핀 뒤 작업공간에 저장하세요.'
+                        : '직접 검수한 첫 덱을 DB 작업공간에 준비하기 전 상태입니다. 내용을 한 번 더 보고 저장할 수 있습니다.');
+                } else {
+                    applyWorkspace(workspace);
+                }
             } else {
                 applyWorkspace(workspace);
             }
@@ -219,7 +236,7 @@ const AdminVocabReviewPanel = () => {
             setErrorMessage(`${invalidItem.word}: ${validateReviewItem(invalidItem)}`);
             return;
         }
-        if (!window.confirm('확인한 3학년 첫 덱 40개를 DB 검수 작업공간에 저장할까요? 학생 게임에는 연결되지 않습니다.')) return;
+        if (!window.confirm(`${deck.grade}학년 ${deck.deck_number}번 덱 ${items.length}개를 DB 검수 작업공간에 저장할까요? 학생 게임에는 연결되지 않습니다.`)) return;
         setWorking(true);
         setErrorMessage('');
         try {
@@ -231,10 +248,12 @@ const AdminVocabReviewPanel = () => {
                     sourceFingerprint: deck.source_fingerprint
                 },
                 items: items.map(rowToSeedItem),
-                initialStatus: 'teacher_confirmed'
+                initialStatus: deck.review_status
             });
             applyWorkspace(workspace);
-            setNotice('첫 덱을 교사 확인 상태로 저장했습니다. 내용을 수정하면 자동으로 1차 검수 상태로 돌아갑니다.');
+            setNotice(deck.review_status === 'teacher_confirmed'
+                ? '덱을 교사 확인 상태로 저장했습니다. 내용을 수정하면 자동으로 1차 검수 상태로 돌아갑니다.'
+                : '덱을 1차 검수 상태로 저장했습니다. 표본 확인 뒤 교사 확인 완료와 잠그기를 진행하세요.');
         } catch (error) {
             console.error('어휘 V2 검수 덱 준비 실패:', error?.message);
             setErrorMessage(error?.message || '검수 작업공간을 준비하지 못했습니다.');
@@ -328,7 +347,7 @@ const AdminVocabReviewPanel = () => {
                 <div className="admin-vocab-review__status-actions">
                     {isLocalSeed && (
                         <Button type="button" onClick={handleSeed} loading={working} loadingText="작업공간 준비 중...">
-                            확인한 첫 덱 저장
+                            이 덱 작업공간에 저장
                         </Button>
                     )}
                     {!isLocalSeed && deck?.review_status === 'editorial_review' && (
@@ -354,7 +373,7 @@ const AdminVocabReviewPanel = () => {
             ) : !deck ? (
                 <div className="admin-vocab-review__empty">
                     <strong>아직 준비된 검수 덱이 없습니다.</strong>
-                    <p>현재는 확인을 마친 3학년 1번 덱부터 작업공간을 만들 수 있습니다.</p>
+                    <p>검수 산출물을 다시 생성한 뒤 불러와 주세요.</p>
                 </div>
             ) : (
                 <div className="admin-vocab-review__workspace">
@@ -372,6 +391,7 @@ const AdminVocabReviewPanel = () => {
                         <div className="admin-vocab-review__word-buttons">
                             {visibleItems.map((item) => {
                                 const changed = item.definition !== item.source_definition || item.example !== item.source_example;
+                                const reviewPriority = item.questions?.usageDistinction?.reviewPriority;
                                 return (
                                     <button
                                         type="button"
@@ -380,7 +400,7 @@ const AdminVocabReviewPanel = () => {
                                         onClick={() => setSelectedKey(item.item_key)}
                                     >
                                         <span>{item.word}</span>
-                                        <small>{changed ? '수정' : '유지'} · {item.category}</small>
+                                        <small>{reviewPriority === 'priority' ? '우선 확인' : '표본'} · {changed ? '수정' : '유지'} · {item.category}</small>
                                     </button>
                                 );
                             })}
@@ -466,7 +486,7 @@ const AdminVocabReviewPanel = () => {
 
                             <div className="admin-vocab-review__editor-actions">
                                 {isLocalSeed ? (
-                                    <p>준비 전 변경은 위의 <strong>확인한 첫 덱 저장</strong>을 눌러 한 번에 보관합니다.</p>
+                                    <p>준비 전 변경은 위의 <strong>이 덱 작업공간에 저장</strong>을 눌러 한 번에 보관합니다.</p>
                                 ) : isLocked ? (
                                     <p>잠긴 덱입니다. 수정하려면 먼저 잠금을 풀어주세요.</p>
                                 ) : (

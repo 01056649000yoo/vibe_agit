@@ -130,3 +130,31 @@ test('생성 파일은 같은 원본에서 항상 같은 결과를 만든다', a
     assert.equal(JSON.stringify(first.reviewDraft), JSON.stringify(second.reviewDraft));
     assert.deepEqual(first.files.map(([, contents]) => contents), second.files.map(([, contents]) => contents));
 });
+
+test('40개 덱 1,573개 보조 검수 후보를 빠짐없이 만들고 학생 출제와 분리한다', async () => {
+    const { reviewDrafts, reviewManifest, files } = await createAuditArtifacts();
+    assert.equal(reviewDrafts.length, 40);
+    assert.equal(reviewManifest.deckCount, 40);
+    assert.equal(reviewManifest.itemCount, 1573);
+    assert.equal(reviewManifest.priorityItemCount + reviewManifest.sampleItemCount, 1573);
+    assert.equal(reviewDrafts.filter((draft) => draft.reviewMode === 'manual').length, 1);
+    assert.equal(reviewDrafts.filter((draft) => draft.reviewMode === 'assisted').length, 39);
+    assert.equal(files.length, 43);
+
+    reviewDrafts.forEach((draft) => {
+        assert.match(draft.status, /not_for_student_delivery$/);
+        assert.equal(draft.items.length, draft.itemCount);
+        draft.items.forEach((item) => {
+            assert.ok(item.partOfSpeech);
+            assert.equal(item.meaningNumber, 1);
+            assert.ok(item.example.includes(item.word));
+            assert.ok(['priority', 'sample'].includes(item.reviewPriority));
+            assert.equal(item.questions.usageDistinction.options.length, 2);
+            assert.equal(
+                item.questions.usageDistinction.options.filter((option) => option.isCorrect).length,
+                1
+            );
+            Object.values(item.questions).forEach((question) => assert.equal(question.status, 'reviewed'));
+        });
+    });
+});

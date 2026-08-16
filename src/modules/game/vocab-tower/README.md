@@ -41,6 +41,8 @@ V2 문항은 현재 운영 `vocab_tower_words`와 분리해 준비한다. `vocab
 단일 정답·직접 입력 허용 정답을 서버가 확인한 뒤에만 `교사 확인`, 이어서 `잠금 완료`로 바꿀 수 있다.
 
 잠금은 검수 산출물을 고정할 뿐 학생 출제를 켜지 않는다. V2 게임 어댑터가 별도 구현되기 전에는 이 표를 학생 홈·
-현재 출제 RPC·운영 단어표에 연결하지 않는다. 첫 덱의 재생성 원본은
-`docs/vocab-tower/data/grade3-deck01-human-review.json`, 관리자 화면에 넣는 생성 산출물은
-`docs/vocab-tower/data/grade3-deck01-review.json`이다.
+현재 출제 RPC·운영 단어표에 연결하지 않는다. 첫 덱의 직접 편집 재생성 원본은
+`docs/vocab-tower/data/grade3-deck01-human-review.json`이다. 전체 40개 덱의 관리자용 생성 산출물은
+`docs/vocab-tower/data/grade*-deck??-review.json`, 요약은 `v2-review-manifest.json`이며 화면은 선택한 덱 파일만
+지연 로딩한다. 첫 직접 검수 덱은 `교사 확인`, 나머지 보조 검수 후보는 `1차 검수`로 시작한다. 자동 신호 항목을
+우선 확인하고 나머지를 표본 검사한 뒤에만 교사 확인·잠금을 진행한다.
