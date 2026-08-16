@@ -5,7 +5,10 @@
   "deckCount": 40,
   "itemCount": 1573,
   "priorityItemCount": 46,
+  "pendingPriorityItemCount": 28,
   "sampleItemCount": 1527,
+  "teacherConfirmedDeckCount": 20,
+  "editorialReviewDeckCount": 20,
   "decks": [
     {
       "grade": 3,

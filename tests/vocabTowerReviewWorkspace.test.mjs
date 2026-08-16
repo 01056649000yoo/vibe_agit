@@ -7,13 +7,24 @@ import {
     validateReviewItem
 } from '../src/modules/game/vocab-tower/reviewModel.js';
 
-const [artifactText, assistedArtifactText, dashboardSource, panelSource, panelCss, apiSource] = await Promise.all([
+const [
+    artifactText,
+    assistedArtifactText,
+    dashboardSource,
+    panelSource,
+    panelCss,
+    apiSource,
+    seedScriptSource,
+    packageText
+] = await Promise.all([
     readFile('docs/vocab-tower/data/grade3-deck01-review.json', 'utf8'),
-    readFile('docs/vocab-tower/data/grade4-deck01-review.json', 'utf8'),
+    readFile('docs/vocab-tower/data/grade4-deck02-review.json', 'utf8'),
     readFile('src/components/admin/AdminDashboard.jsx', 'utf8'),
     readFile('src/components/admin/AdminVocabReviewPanel.jsx', 'utf8'),
     readFile('src/components/admin/adminVocabReview.css', 'utf8'),
-    readFile('src/modules/game/vocab-tower/reviewApi.js', 'utf8')
+    readFile('src/modules/game/vocab-tower/reviewApi.js', 'utf8'),
+    readFile('scripts/seed-vocab-tower-v2-review.mjs', 'utf8'),
+    readFile('package.json', 'utf8')
 ]);
 
 const artifact = JSON.parse(artifactText);
@@ -44,6 +55,12 @@ test('나머지 덱 보조 검수 산출물은 교사 확인 전 1차 검수 상
     assert.equal(workspace.deck.review_mode, 'assisted');
     assert.equal(workspace.items.length, assistedArtifact.itemCount);
     workspace.items.forEach((item) => assert.equal(validateReviewItem(item), null));
+});
+
+test('자동 신호가 없는 보조 검수 덱은 바로 교사 확인 상태로 연다', async () => {
+    const clearArtifact = JSON.parse(await readFile('docs/vocab-tower/data/grade3-deck02-review.json', 'utf8'));
+    assert.equal(clearArtifact.reviewSummary.priorityItems, 0);
+    assert.equal(artifactToWorkspace(clearArtifact).deck.review_status, 'teacher_confirmed');
 });
 
 test('검수 모델은 빈 보기·복수 정답·표제어가 빠진 직접 입력 정답을 막는다', () => {
@@ -86,6 +103,8 @@ test('관리자 화면은 검수 API만 사용하고 운영 게임에는 직접 
     assert.match(panelSource, /grade\[3-6\]-deck\[0-9\]\[0-9\]-review\.json/);
     assert.match(panelSource, /학생 게임에는 연결되지 않습니다/);
     assert.match(panelSource, /우선 확인/);
+    assert.match(panelSource, /확인 필요만/);
+    assert.match(panelSource, /reviewFilter === 'priority'/);
     assert.match(panelSource, /표본 확인/);
     assert.match(panelCss, /grid-template-rows: auto auto minmax\(0, 1fr\)/);
     assert.match(panelCss, /height: min\(720px, calc\(100vh - 40px\)\)/);
@@ -95,4 +114,21 @@ test('관리자 화면은 검수 API만 사용하고 운영 게임에는 직접 
     assert.match(apiSource, /admin_save_vocab_tower_v2_review_item_v1/);
     assert.match(apiSource, /admin_set_vocab_tower_v2_review_status_v1/);
     assert.doesNotMatch(apiSource, /\.from\(/);
+});
+
+test('전체 덱 반영 도구는 agit-db에서 기본 롤백하고 명시 적용만 커밋한다', () => {
+    const packageJson = JSON.parse(packageText);
+    assert.match(seedScriptSource, /AGIT_DB_CONTAINER \|\| 'agit-db'/);
+    assert.match(seedScriptSource, /process\.argv\.includes\('--apply'\)/);
+    assert.match(seedScriptSource, /applyChanges \? 'COMMIT;' : 'ROLLBACK;'/);
+    assert.match(seedScriptSource, /existing vocabulary review deck item count changed/);
+    assert.doesNotMatch(seedScriptSource, /DELETE FROM public\.vocab_tower_v2_review/);
+    assert.equal(
+        packageJson.scripts['vocab:review:seed:check'],
+        'node scripts/seed-vocab-tower-v2-review.mjs'
+    );
+    assert.equal(
+        packageJson.scripts['vocab:review:seed'],
+        'node scripts/seed-vocab-tower-v2-review.mjs --apply'
+    );
 });

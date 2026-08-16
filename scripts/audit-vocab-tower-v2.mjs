@@ -785,7 +785,16 @@ export const createAuditArtifacts = async () => {
         deckCount: reviewDrafts.length,
         itemCount: reviewDrafts.reduce((sum, draft) => sum + draft.itemCount, 0),
         priorityItemCount: reviewDrafts.reduce((sum, draft) => sum + draft.reviewSummary.priorityItems, 0),
+        pendingPriorityItemCount: reviewDrafts
+            .filter((draft) => draft.reviewMode === 'assisted')
+            .reduce((sum, draft) => sum + draft.reviewSummary.priorityItems, 0),
         sampleItemCount: reviewDrafts.reduce((sum, draft) => sum + draft.reviewSummary.sampleItems, 0),
+        teacherConfirmedDeckCount: reviewDrafts.filter((draft) => (
+            draft.reviewMode === 'manual' || draft.reviewSummary.priorityItems === 0
+        )).length,
+        editorialReviewDeckCount: reviewDrafts.filter((draft) => (
+            draft.reviewMode === 'assisted' && draft.reviewSummary.priorityItems > 0
+        )).length,
         decks: reviewDrafts.map((draft) => ({
             grade: draft.grade,
             deckId: draft.deckId,

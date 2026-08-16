@@ -16,6 +16,8 @@
     "spelling:benchmark": "node scripts/benchmark-spelling.mjs",
     "vocab:audit": "node scripts/audit-vocab-tower-v2.mjs",
     "vocab:audit:check": "node scripts/audit-vocab-tower-v2.mjs --check",
+    "vocab:review:seed:check": "node scripts/seed-vocab-tower-v2-review.mjs",
+    "vocab:review:seed": "node scripts/seed-vocab-tower-v2-review.mjs --apply",
     "test:writing-policy": "node --test tests/writingPolicy.test.mjs",
     "test:writing-export": "node --test tests/writingExportProfiles.test.mjs tests/genreWritingPdf.test.mjs tests/writingOfficeImages.test.mjs",
     "test:writing-editor": "node --test tests/writingEditorSettings.test.mjs",

@@ -136,6 +136,7 @@ const AdminVocabReviewPanel = () => {
     const [items, setItems] = useState([]);
     const [selectedKey, setSelectedKey] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [reviewFilter, setReviewFilter] = useState('priority');
     const [loading, setLoading] = useState(true);
     const [working, setWorking] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -145,6 +146,7 @@ const AdminVocabReviewPanel = () => {
         const nextItems = Array.isArray(workspace?.items) ? workspace.items : [];
         setDeck(workspace?.deck || null);
         setItems(nextItems);
+        setReviewFilter(workspace?.deck?.review_status === 'editorial_review' ? 'priority' : 'all');
         setSelectedKey((current) => (
             nextItems.some((item) => item.item_key === current)
                 ? current
@@ -189,14 +191,24 @@ const AdminVocabReviewPanel = () => {
         () => items.find((item) => item.item_key === selectedKey) || null,
         [items, selectedKey]
     );
+    const priorityItemCount = useMemo(() => items.filter((item) => (
+        item.questions?.usageDistinction?.reviewPriority === 'priority'
+    )).length, [items]);
     const visibleItems = useMemo(() => {
         const query = searchTerm.trim().toLocaleLowerCase('ko-KR');
-        if (!query) return items;
-        return items.filter((item) => (
-            item.word.toLocaleLowerCase('ko-KR').includes(query)
-            || item.category.toLocaleLowerCase('ko-KR').includes(query)
-        ));
-    }, [items, searchTerm]);
+        return items.filter((item) => {
+            if (reviewFilter === 'priority'
+                && item.questions?.usageDistinction?.reviewPriority !== 'priority') return false;
+            if (!query) return true;
+            return item.word.toLocaleLowerCase('ko-KR').includes(query)
+                || item.category.toLocaleLowerCase('ko-KR').includes(query);
+        });
+    }, [items, reviewFilter, searchTerm]);
+    useEffect(() => {
+        if (visibleItems.length > 0 && !visibleItems.some((item) => item.item_key === selectedKey)) {
+            setSelectedKey(visibleItems[0].item_key);
+        }
+    }, [selectedKey, visibleItems]);
     const statusInfo = getReviewStatusInfo(deck?.review_status);
     const isLocalSeed = deck?.is_local_seed === true;
     const isLocked = deck?.review_status === 'locked';
@@ -382,13 +394,26 @@ const AdminVocabReviewPanel = () => {
                             <strong>{items.length}개 낱말</strong>
                             <span>버전 {deck.version || '준비 전'}</span>
                         </div>
-                        <input
-                            type="search"
-                            value={searchTerm}
-                            placeholder="낱말·분류 검색"
-                            onChange={(event) => setSearchTerm(event.target.value)}
-                        />
+                        <div className="admin-vocab-review__filters">
+                            <select
+                                value={reviewFilter}
+                                aria-label="검수 낱말 표시 범위"
+                                onChange={(event) => setReviewFilter(event.target.value)}
+                            >
+                                <option value="priority">확인 필요만 ({priorityItemCount})</option>
+                                <option value="all">전체 ({items.length})</option>
+                            </select>
+                            <input
+                                type="search"
+                                value={searchTerm}
+                                placeholder="낱말·분류 검색"
+                                onChange={(event) => setSearchTerm(event.target.value)}
+                            />
+                        </div>
                         <div className="admin-vocab-review__word-buttons">
+                            {visibleItems.length === 0 && (
+                                <p className="admin-vocab-review__no-priority">이 덱에는 확인이 필요한 항목이 없습니다.</p>
+                            )}
                             {visibleItems.map((item) => {
                                 const changed = item.definition !== item.source_definition || item.example !== item.source_example;
                                 const reviewPriority = item.questions?.usageDistinction?.reviewPriority;

@@ -10,7 +10,7 @@
 .admin-vocab-review__status.is-locked { background: #dcfce7; color: #166534; }
 .admin-vocab-review__toolbar { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; padding: 14px; border: 1px solid #e2e8f0; border-radius: 14px; background: white; }
 .admin-vocab-review__toolbar label { display: grid; gap: 5px; color: #475569; font-size: .74rem; font-weight: 800; }
-.admin-vocab-review__toolbar select, .admin-vocab-review__list input, .admin-vocab-review__editor input, .admin-vocab-review__editor select, .admin-vocab-review__editor textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 9px; background: white; color: #1f2937; font: inherit; }
+.admin-vocab-review__toolbar select, .admin-vocab-review__list input, .admin-vocab-review__list select, .admin-vocab-review__editor input, .admin-vocab-review__editor select, .admin-vocab-review__editor textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 9px; background: white; color: #1f2937; font: inherit; }
 .admin-vocab-review__toolbar select { min-width: 105px; padding: 9px 10px; }
 .admin-vocab-review__status-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 .admin-vocab-review__notice, .admin-vocab-review__error { margin: 0; padding: 11px 14px; border-radius: 10px; font-size: .8rem; line-height: 1.5; }
@@ -22,8 +22,10 @@
 .admin-vocab-review__list-heading { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
 .admin-vocab-review__list-heading strong { color: #14532d; }
 .admin-vocab-review__list-heading span { color: #64748b; font-size: .7rem; }
-.admin-vocab-review__list > input { padding: 9px 10px; }
+.admin-vocab-review__filters { display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; }
+.admin-vocab-review__filters input, .admin-vocab-review__filters select { box-sizing: border-box; padding: 9px 10px; }
 .admin-vocab-review__word-buttons { display: grid; min-height: 0; gap: 6px; overflow-y: auto; overscroll-behavior: contain; }
+.admin-vocab-review__no-priority { margin: 0; padding: 16px 8px; color: #64748b; font-size: .75rem; line-height: 1.5; text-align: center; }
 .admin-vocab-review__word-buttons button { display: grid; gap: 2px; padding: 10px 11px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; color: #334155; text-align: left; cursor: pointer; }
 .admin-vocab-review__word-buttons button.is-active { border-color: #22c55e; background: #f0fdf4; color: #14532d; }
 .admin-vocab-review__word-buttons span { font-weight: 900; }

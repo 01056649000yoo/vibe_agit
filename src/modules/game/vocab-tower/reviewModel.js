@@ -43,20 +43,25 @@ export const artifactItemToRow = (item, itemIndex) => ({
     is_local_seed: true
 });
 
-export const artifactToWorkspace = (artifact) => ({
-    deck: {
-        deck_id: artifact.deckId,
-        grade: artifact.grade,
-        deck_number: artifact.deckNumber,
-        review_status: artifact.reviewMode === 'assisted' ? 'editorial_review' : 'teacher_confirmed',
-        review_mode: artifact.reviewMode,
-        source_fingerprint: artifact.sourceFingerprint,
-        version: 0,
-        is_local_seed: true
-    },
-    items: artifact.items.map(artifactItemToRow),
-    can_edit: true
-});
+export const artifactToWorkspace = (artifact) => {
+    const hasPriorityItems = artifact.items.some((item) => item.reviewPriority === 'priority');
+    return {
+        deck: {
+            deck_id: artifact.deckId,
+            grade: artifact.grade,
+            deck_number: artifact.deckNumber,
+            review_status: artifact.reviewMode === 'assisted' && hasPriorityItems
+                ? 'editorial_review'
+                : 'teacher_confirmed',
+            review_mode: artifact.reviewMode,
+            source_fingerprint: artifact.sourceFingerprint,
+            version: 0,
+            is_local_seed: true
+        },
+        items: artifact.items.map(artifactItemToRow),
+        can_edit: true
+    };
+};
 
 export const rowToSeedItem = (item) => ({
     itemKey: item.item_key,
