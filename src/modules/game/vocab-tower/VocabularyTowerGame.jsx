@@ -102,7 +102,10 @@ const VocabularyTowerGame = ({
         if (isV2) {
             setSelectedGrade(Number(data.grade || 3));
             setV2Decks(Array.isArray(data.decks) ? data.decks : []);
-            setStatus({ active_run: data.active_run });
+            setStatus({
+                active_run: data.active_run,
+                perfectRewardPoints: Number(data.perfect_reward_points || 0)
+            });
             setSelectedDeck(data.active_run?.deck_number ? Number(data.active_run.deck_number) : null);
             setPhase('deck-map');
             return;
@@ -335,6 +338,7 @@ const VocabularyTowerGame = ({
                 grade={selectedGrade}
                 decks={v2Decks}
                 activeRun={status?.active_run}
+                perfectRewardPoints={status?.perfectRewardPoints || 0}
                 submitting={submitting}
                 notice={notice}
                 onStart={handleStart}
@@ -391,7 +395,16 @@ const VocabularyTowerGame = ({
                             <div><span>정답</span><strong>{summary.correct_count}개</strong></div>
                             <div><span>정답률</span><strong>{summary.accuracy}%</strong></div>
                         </div>
-                        <p>개인 연습은 층별 익힘 기록을 만드는 과정이에요. 포인트는 후속 덱 마스터 조건을 통과할 때 지급할 예정입니다.</p>
+                        <div className="vocab-summary-card__reward">
+                            <span>{summary.perfect_reward_earned ? '최초 완벽 연습 보상' : '이번 연습 보상'}</span>
+                            <strong>+{summary.reward_points || 0}P</strong>
+                            <small>{summary.perfect_reward_earned
+                                ? `${summary.deck_number}층에서 처음 12/12를 달성했어요!`
+                                : summary.perfect_reward_already_earned
+                                    ? '이 층의 완벽 연습 보상은 이미 받았어요.'
+                                    : `12/12를 처음 달성하면 ${summary.perfect_reward_points || 0}P를 받아요.`}</small>
+                        </div>
+                        <p>연습 결과와 최고 정답률은 층별로 계속 쌓여요.</p>
                         <button type="button" className="vocab-journey__primary" onClick={loadStatus}>덱 지도로 돌아가기</button>
                         <button type="button" className="vocab-summary-card__back" onClick={onBack}>놀이터로 나가기</button>
                     </main>

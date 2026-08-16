@@ -8,6 +8,7 @@ const DEFAULT_CONFIG = {
     dailyLimit: 3,
     timeLimit: 40,
     rewardPoints: 50,
+    perfectRewardPoints: 100,
     contentVersion: 'v1'
 };
 
@@ -29,7 +30,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
 
         const { data, error } = await supabase
             .from('classes')
-            .select('vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_content_version')
+            .select('vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_v2_perfect_reward_points, vocab_tower_content_version')
             .eq('id', classId)
             .maybeSingle();
 
@@ -43,6 +44,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 dailyLimit: data.vocab_tower_daily_limit ?? DEFAULT_CONFIG.dailyLimit,
                 timeLimit: data.vocab_tower_time_limit ?? DEFAULT_CONFIG.timeLimit,
                 rewardPoints: data.vocab_tower_reward_points ?? DEFAULT_CONFIG.rewardPoints,
+                perfectRewardPoints: data.vocab_tower_v2_perfect_reward_points ?? DEFAULT_CONFIG.perfectRewardPoints,
                 contentVersion
             });
             setSavedContentVersion(contentVersion);
@@ -70,6 +72,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
             dailyLimit: clamp(config.dailyLimit, 1, 5),
             timeLimit: clamp(config.timeLimit, 30, 120),
             rewardPoints: clamp(config.rewardPoints, 0, 50),
+            perfectRewardPoints: clamp(config.perfectRewardPoints, 0, 500),
             contentVersion: nextContentVersion
         };
         setSaving(true);
@@ -79,7 +82,8 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 vocab_tower_grade: nextConfig.grade,
                 vocab_tower_daily_limit: nextConfig.dailyLimit,
                 vocab_tower_time_limit: nextConfig.timeLimit,
-                vocab_tower_reward_points: nextConfig.rewardPoints
+                vocab_tower_reward_points: nextConfig.rewardPoints,
+                vocab_tower_v2_perfect_reward_points: nextConfig.perfectRewardPoints
             })
             .eq('id', classId);
         if (error) {
@@ -154,7 +158,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     <div><span>{config.contentVersion === 'v2' ? '📊' : '🐉'}</span><strong>{config.contentVersion === 'v2' ? '12문항 결과' : '복습 보스'}</strong><small>{config.contentVersion === 'v2' ? '층별 최고 정답률 기록' : '5·10층에서 오답 복습'}</small></div>
                 </div>
                 <p className="vocab-teacher__journey-note">{config.contentVersion === 'v2'
-                    ? '학생이 10개 층 중 하나를 골라 검수 낱말 12문항을 시간 제한 없이 연습합니다. 개인 연습은 포인트를 바로 주지 않고 층별 정답률을 기록합니다.'
+                    ? `학생이 10개 층 중 하나를 골라 검수 낱말 12문항을 시간 제한 없이 연습합니다. 각 층에서 처음 12/12를 달성하면 ${config.perfectRewardPoints}P를 받습니다.`
                     : '한 층은 문제 3개이며, 층을 통과할 때 다음 층에서 쓸 능력을 하나 고릅니다. 최고 층 경쟁 랭킹은 더 이상 교사 화면에서 사용하지 않습니다.'}</p>
             </section>
 
@@ -162,7 +166,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 <div><span>출제 범위</span><strong>{config.grade}학년 어휘</strong></div>
                 <div><span>{config.contentVersion === 'v2' ? '개인 연습' : '하루 탐험'}</span><strong>{config.contentVersion === 'v2' ? '횟수 제한 없음' : `최대 ${config.dailyLimit}회`}</strong></div>
                 <div><span>{config.contentVersion === 'v2' ? '연습 시간' : '층별 시간'}</span><strong>{config.contentVersion === 'v2' ? '제한 없음' : `${config.timeLimit}초`}</strong></div>
-                <div><span>{config.contentVersion === 'v2' ? '개인 연습 보상' : '한 번의 보상'}</span><strong>{config.contentVersion === 'v2' ? '0P' : `최대 ${config.rewardPoints}P`}</strong></div>
+                <div><span>{config.contentVersion === 'v2' ? '완벽 연습 보상' : '한 번의 보상'}</span><strong>{config.contentVersion === 'v2' ? `${config.perfectRewardPoints}P` : `최대 ${config.rewardPoints}P`}</strong></div>
                 <div><span>출제 자료</span><strong>{config.contentVersion.toUpperCase()}</strong></div>
             </div>
 
@@ -171,7 +175,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     <div>
                         <span className="vocab-teacher__eyebrow">학급별 설정</span>
                         <h3 id="vocab-settings-title">{config.contentVersion === 'v2' ? '개인 연습 출제 범위' : '탐험 난이도와 보상'}</h3>
-                        <p>{config.contentVersion === 'v2' ? 'V2에서는 시간·횟수·즉시 포인트 제한을 사용하지 않습니다.' : '저장한 값은 이미 진행 중인 판이 아니라 다음에 새로 시작하는 탐험부터 적용됩니다.'}</p>
+                        <p>{config.contentVersion === 'v2' ? 'V2에서는 시간·횟수 제한 없이 연습하고, 덱별 최초 12/12에만 설정한 포인트를 지급합니다.' : '저장한 값은 이미 진행 중인 판이 아니라 다음에 새로 시작하는 탐험부터 적용됩니다.'}</p>
                     </div>
                 </div>
 
@@ -206,9 +210,14 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                         <small>정답 수와 복습 성공을 계산한 뒤 적용되는 상한입니다.</small>
                         <input type="number" min="0" max="50" step="5" value={config.rewardPoints} onChange={(event) => updateConfig('rewardPoints', event.target.value)} />
                     </label>}
+                    {config.contentVersion === 'v2' && <label>
+                        <span>🏆 최초 완벽 연습 보상</span>
+                        <small>학생이 한 층에서 처음 12/12를 달성할 때 한 번만 받습니다.</small>
+                        <input type="number" min="0" max="500" step="10" value={config.perfectRewardPoints} onChange={(event) => updateConfig('perfectRewardPoints', event.target.value)} />
+                    </label>}
                 </div>
 
-                {config.contentVersion === 'v2' && <p className="vocab-teacher__journey-note">V2 개인 연습은 이 보상 상한을 사용하지 않습니다. 후속 덱 마스터 도전이 추가되면 성취 조건을 서버가 검증한 후에만 포인트를 지급할 예정입니다.</p>}
+                {config.contentVersion === 'v2' && <p className="vocab-teacher__journey-note">같은 층을 다시 12/12로 마쳐도 포인트는 중복 지급되지 않습니다. 0P로 저장하면 완벽 연습 보상을 끌 수 있습니다.</p>}
 
                 {config.contentVersion === 'v1' && <div className="vocab-teacher__reward-rule">
                     <strong>포인트 계산 방식</strong>

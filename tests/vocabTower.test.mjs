@@ -16,10 +16,12 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, v2PracticeMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, teacherManager, v2PracticeMigration, v2RewardMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
-    readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8')
+    readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8'),
+    readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8'),
+    readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8')
 ]);
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
@@ -79,11 +81,23 @@ test('V2 학생 화면은 10개 덱 지도에서 12문항 개인 연습을 시�
     assert.match(vocabularyGame, /finish_my_vocab_tower_v2_practice_v1/);
 });
 
-test('V2 개인 연습은 덱별 결과를 저장하고 즉시 포인트를 주지 않는다', () => {
+test('V2 개인 연습은 덱별 결과를 저장하고 시작 자체에는 포인트를 주지 않는다', () => {
     assert.match(v2PracticeMigration, /CREATE TABLE IF NOT EXISTS public\.vocab_tower_v2_deck_progress/);
     assert.match(v2PracticeMigration, /target_question_count[\s\S]*DEFAULT 30/);
     assert.match(v2PracticeMigration, /'practice_question_count', 12/);
     assert.match(v2PracticeMigration, /reward_cap, content_version, v2_deck_number, target_question_count/);
     assert.match(v2PracticeMigration, /0, 'v2', p_deck_number, 12/);
     assert.match(v2PracticeMigration, /'reward_points', 0/);
+});
+
+test('V2 개인 연습은 덱별 최초 12\/12에 교사 설정 포인트를 한 번만 지급한다', () => {
+    assert.match(v2RewardMigration, /vocab_tower_v2_perfect_reward_points INTEGER NOT NULL DEFAULT 100/);
+    assert.match(v2RewardMigration, /v_run\.correct_count = v_run\.target_question_count/);
+    assert.match(v2RewardMigration, /public\.point_engine_apply\(/);
+    assert.match(v2RewardMigration, /'vocab-v2-perfect:%s:%s:%s'/);
+    assert.match(v2RewardMigration, /'perfect_reward_already_earned'/);
+    assert.match(teacherManager, /최초 완벽 연습 보상/);
+    assert.match(teacherManager, /vocab_tower_v2_perfect_reward_points/);
+    assert.match(v2DeckMap, /첫 12\/12 달성/);
+    assert.match(vocabularyGame, /perfect_reward_earned/);
 });
