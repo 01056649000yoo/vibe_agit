@@ -81,7 +81,7 @@ test('V2 서버 문항은 정답 없이 기존 게임 카드 형태로 변환된
 
 test('V2 학생 화면은 10개 덱 지도에서 12문항 개인 연습을 시작한다', () => {
     assert.match(v2DeckMap, /어휘의 탑 지도/);
-    assert.match(v2DeckMap, /decks\.map/);
+    assert.match(v2DeckMap, /explorationDecks\.map/);
     assert.match(v2DeckMap, /한 번의 연습에서 12문항을 모두 맞히면/);
     assert.match(vocabularyGame, /get_my_vocab_tower_v2_overview_v1/);
     assert.match(vocabularyGame, /start_my_vocab_tower_v2_practice_v1/);
@@ -141,6 +141,20 @@ test('V2 덱 카드는 학습량과 포인트 목표 완료를 한 카드에서 
     assert.match(v2DeckMap, /포인트 목표 완료/);
     assert.match(v2DeckMap, /포인트를 이미 받았어요/);
     assert.match(v2DeckMap, /aria-label=\{`\$\{deckNumber\}층/);
+});
+
+test('V2 덱 지도는 정상부터 입구까지 이어지는 탐험 경로와 정복 상태를 보여준다', () => {
+    assert.match(v2DeckMap, /어휘의 정상/);
+    assert.match(v2DeckMap, /탑 입구/);
+    assert.match(v2DeckMap, /vocab-tower-route__stop/);
+    assert.match(v2DeckMap, /bestAccuracy >= 100/);
+    assert.match(v2DeckMap, /정복 완료/);
+    assert.match(v2DeckMap, /aria-current=\{isActive \? 'step'/);
+    assert.match(v2DeckMap, /scrollIntoView\(\{ block: 'center' \}\)/);
+    assert.match(vocabularyStyles, /\.vocab-tower-route::before/);
+    assert.match(vocabularyStyles, /\.vocab-tower-route__stop\.is-left/);
+    assert.match(vocabularyStyles, /\.vocab-tower-route__stop\.is-right/);
+    assert.match(vocabularyStyles, /\.vocab-deck-card\.is-conquered/);
 });
 
 test('교사 화면은 V1 선택을 없애고 현재 잠긴 덱을 기본 출제자료로 자동 연결한다', () => {

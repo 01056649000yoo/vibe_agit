@@ -17,23 +17,54 @@
 .vocab-journey--center { display: grid; place-items: center; text-align: center; font-weight: 900; }
 .vocab-journey__loader { font-size: 5rem; animation: vocab-tower-float 1.7s ease-in-out infinite; }
 .vocab-journey--intro, .vocab-journey--summary { display: grid; place-items: center; }
-.vocab-journey--deck-map { display: grid; place-items: center; }
+.vocab-journey--deck-map { display: grid; place-items: start center; }
 .vocab-deck-map { position: relative; width: min(980px,100%); padding: 34px; border: 1px solid rgba(255,255,255,.8); border-radius: 34px; background: rgba(255,255,255,.94); box-shadow: 0 24px 70px rgba(40,63,120,.18); text-align: center; }
 .vocab-deck-map h1 { margin: 5px 0 10px; color: #263f8f; font-size: clamp(2rem,6vw,3.1rem); }
 .vocab-deck-map__summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; margin: 20px 0; }
 .vocab-deck-map__summary > div { padding: 13px; border-radius: 15px; background: #f1f5f9; }
+.vocab-deck-map__summary > div.is-conquest { background: #fff4cf; box-shadow: inset 0 0 0 1px #f0d27a; }
 .vocab-deck-map__summary span, .vocab-deck-map__summary strong { display: block; }
 .vocab-deck-map__summary span { color: #718096; font-size: .68rem; font-weight: 850; }
 .vocab-deck-map__summary strong { margin-top: 4px; color: #293f83; }
-.vocab-deck-map__grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; text-align: left; }
+.vocab-tower-route { position: relative; display: grid; gap: 17px; padding: 22px 22px 26px; overflow: hidden; border: 1px solid #c9dbf2; border-radius: 28px; background: radial-gradient(circle at 12% 8%,rgba(255,255,255,.85) 0 5%,transparent 5.5%),radial-gradient(circle at 89% 19%,rgba(255,255,255,.68) 0 7%,transparent 7.5%),linear-gradient(180deg,#dff1ff 0%,#eef5ff 45%,#f5efd7 78%,#dce9c8 100%); text-align: left; isolation: isolate; }
+.vocab-tower-route::before { content: ''; position: absolute; z-index: -1; top: 106px; bottom: 70px; left: 50%; width: 14px; border: 3px solid rgba(128,103,71,.34); border-top: 0; border-bottom: 0; background: repeating-linear-gradient(180deg,#c7b38e 0 16px,#e8d9bc 16px 29px); transform: translateX(-50%); }
+.vocab-tower-route__summit { position: relative; z-index: 2; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; width: min(520px,72%); margin: 0 auto 4px; padding: 14px 16px; border: 2px solid #93a8d4; border-radius: 21px 21px 13px 13px; background: rgba(255,255,255,.94); box-shadow: 0 10px 24px rgba(49,75,128,.15); text-align: left; }
+.vocab-tower-route__summit::after { content: ''; position: absolute; bottom: -13px; left: 50%; width: 28px; height: 14px; background: #fff; clip-path: polygon(0 0,100% 0,50% 100%); transform: translateX(-50%); }
+.vocab-tower-route__summit.is-conquered { border-color: #e2ad31; background: linear-gradient(135deg,#fffdf1,#fff1b7); box-shadow: 0 10px 28px rgba(174,116,13,.22); }
+.vocab-tower-route__summit-icon { display: grid; place-items: center; width: 52px; aspect-ratio: 1; border-radius: 16px; background: #edf2ff; font-size: 1.8rem; }
+.vocab-tower-route__summit.is-conquered .vocab-tower-route__summit-icon { background: #ffe89a; }
+.vocab-tower-route__summit strong, .vocab-tower-route__summit small { display: block; }
+.vocab-tower-route__summit strong { color: #293f83; font-size: .95rem; }
+.vocab-tower-route__summit small { margin-top: 3px; color: #67758b; font-size: .68rem; line-height: 1.4; }
+.vocab-tower-route__summit em { padding: 6px 9px; border-radius: 999px; background: #e8edfa; color: #405a99; font-size: .7rem; font-style: normal; font-weight: 950; white-space: nowrap; }
+.vocab-tower-route__summit.is-conquered em { background: #f5cd5d; color: #704d08; }
+.vocab-tower-route__stop { position: relative; z-index: 1; display: flex; width: 100%; min-height: 228px; align-items: center; }
+.vocab-tower-route__stop.is-left { justify-content: flex-start; }
+.vocab-tower-route__stop.is-right { justify-content: flex-end; }
+.vocab-tower-route__stop::after { content: ''; position: absolute; z-index: -1; top: 50%; width: calc(50% - 38px); border-top: 5px dotted rgba(128,103,71,.42); }
+.vocab-tower-route__stop.is-left::after { left: 38px; }
+.vocab-tower-route__stop.is-right::after { right: 38px; }
+.vocab-tower-route__marker { position: absolute; z-index: 3; top: 50%; left: 50%; display: grid; place-items: center; width: 42px; aspect-ratio: 1; border: 4px solid #fff; border-radius: 50%; background: #738198; color: white; box-shadow: 0 4px 12px rgba(50,62,84,.24); font-size: .75rem; font-weight: 950; transform: translate(-50%,-50%); }
+.vocab-tower-route__stop.is-explored .vocab-tower-route__marker { background: #4f9b70; }
+.vocab-tower-route__stop.is-conquered .vocab-tower-route__marker { background: #e5a923; color: #fff8df; font-size: 1rem; }
+.vocab-tower-route__stop.is-active .vocab-tower-route__marker { background: #d17f14; box-shadow: 0 0 0 8px rgba(245,189,77,.28),0 6px 15px rgba(153,94,17,.28); animation: vocab-map-marker-pulse 1.8s ease-in-out infinite; }
+.vocab-tower-route__entrance { position: relative; z-index: 2; display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; width: min(350px,64%); margin: 3px auto 0; padding: 12px 14px; border: 2px solid #89a168; border-radius: 12px 12px 21px 21px; background: rgba(249,252,239,.96); box-shadow: 0 8px 20px rgba(65,91,45,.14); text-align: left; }
+.vocab-tower-route__entrance > span { display: grid; place-items: center; width: 44px; aspect-ratio: 1; border-radius: 13px; background: #e6efd8; font-size: 1.5rem; }
+.vocab-tower-route__entrance strong, .vocab-tower-route__entrance small { display: block; }
+.vocab-tower-route__entrance strong { color: #466130; font-size: .86rem; }
+.vocab-tower-route__entrance small { margin-top: 2px; color: #718065; font-size: .65rem; }
 .vocab-deck-card { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 12px; align-items: start; padding: 16px; border: 2px solid #e4e9f3; border-radius: 20px; background: #fbfcff; }
+.vocab-tower-route__stop > .vocab-deck-card { width: calc(50% - 54px); box-shadow: 0 9px 22px rgba(55,72,107,.12); }
 .vocab-deck-card.is-practiced { border-color: #9dd8b8; background: #f2fbf6; }
 .vocab-deck-card.is-reward-complete { border-color: #e6b43f; background: #fffdf2; box-shadow: 0 8px 22px rgba(177,119,15,.12); }
+.vocab-deck-card.is-conquered { border-color: #e0aa2d; background: linear-gradient(145deg,#fffef5,#fff6d4); box-shadow: 0 10px 25px rgba(177,119,15,.17); }
 .vocab-deck-card.is-active { border-color: #f0b743; background: #fff8df; box-shadow: 0 7px 18px rgba(187,126,20,.14); }
-.vocab-deck-card__floor { display: grid; place-items: center; width: 58px; aspect-ratio: 1; border-radius: 17px; background: #e9efff; color: #3156b8; }
+.vocab-deck-card__floor { position: relative; display: grid; place-items: center; width: 58px; aspect-ratio: 1; border-radius: 17px; background: #e9efff; color: #3156b8; }
 .vocab-deck-card.is-practiced .vocab-deck-card__floor { background: #dff5e8; color: #237148; }
 .vocab-deck-card.is-reward-complete .vocab-deck-card__floor { background: #fff0b8; color: #7a5208; }
+.vocab-deck-card.is-conquered .vocab-deck-card__floor { background: #ffe796; color: #704b07; }
 .vocab-deck-card.is-active .vocab-deck-card__floor { background: #f8d77f; color: #704a05; }
+.vocab-deck-card__floor i { position: absolute; top: -16px; right: -8px; font-size: 1.15rem; font-style: normal; filter: drop-shadow(0 3px 3px rgba(111,71,7,.18)); transform: rotate(5deg); }
 .vocab-deck-card__floor span { font-size: 1.25rem; font-weight: 950; line-height: 1; }
 .vocab-deck-card__floor small { font-size: .62rem; font-weight: 900; }
 .vocab-deck-card__copy { display: grid; gap: 9px; min-width: 0; }
@@ -41,6 +72,7 @@
 .vocab-deck-card__heading > strong { color: #243b78; font-size: .9rem; }
 .vocab-deck-card__heading > span { padding: 4px 7px; border-radius: 999px; background: #eef2f7; color: #68758a; font-size: .61rem; font-weight: 900; }
 .vocab-deck-card__heading > span.is-started { background: #dcf5e7; color: #27714c; }
+.vocab-deck-card__heading > span.is-conquered { background: #ffe799; color: #76500a; }
 .vocab-deck-card__heading > span.is-active { background: #f9dc8d; color: #75500b; }
 .vocab-deck-card__progress { display: grid; gap: 5px; }
 .vocab-deck-card__progress > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -164,13 +196,24 @@
 
 @keyframes vocab-tower-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes vocab-timer-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes vocab-map-marker-pulse { 0%,100% { box-shadow: 0 0 0 6px rgba(245,189,77,.2),0 6px 15px rgba(153,94,17,.28); } 50% { box-shadow: 0 0 0 11px rgba(245,189,77,.08),0 7px 18px rgba(153,94,17,.32); } }
 
 @media (max-width: 680px) {
   .vocab-journey { padding: 10px; }
   .vocab-intro-card, .vocab-summary-card { padding: 25px 16px; border-radius: 25px; }
   .vocab-deck-map { padding: 25px 14px; border-radius: 25px; }
   .vocab-deck-map__summary { grid-template-columns: 1fr 1fr; }
-  .vocab-deck-map__grid { grid-template-columns: 1fr; }
+  .vocab-tower-route { gap: 14px; padding: 18px 12px 22px; }
+  .vocab-tower-route::before { top: 105px; bottom: 66px; left: 29px; width: 11px; }
+  .vocab-tower-route__summit { width: 100%; grid-template-columns: auto 1fr; padding: 12px; }
+  .vocab-tower-route__summit em { grid-column: 2; justify-self: start; margin-top: -6px; }
+  .vocab-tower-route__summit::after { left: 16px; }
+  .vocab-tower-route__stop { min-height: 224px; padding-left: 46px; }
+  .vocab-tower-route__stop.is-left, .vocab-tower-route__stop.is-right { justify-content: flex-start; }
+  .vocab-tower-route__stop::after, .vocab-tower-route__stop.is-left::after, .vocab-tower-route__stop.is-right::after { top: 50%; right: auto; left: 29px; width: 24px; }
+  .vocab-tower-route__marker { left: 29px; width: 37px; border-width: 3px; }
+  .vocab-tower-route__stop > .vocab-deck-card { width: 100%; }
+  .vocab-tower-route__entrance { width: calc(100% - 46px); margin-right: 0; }
   .vocab-deck-card { grid-template-columns: 52px minmax(0,1fr); padding: 13px; }
   .vocab-deck-card__floor { width: 52px; }
   .vocab-journey__back { position: static; display: block; margin-bottom: 5px; }
