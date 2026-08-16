@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildRoomQuiz } from './vocabTowerEngine';
 
-const useVocabularyTower = (selectedGrade) => {
+const useVocabularyTower = (selectedGrade, loadStaticVocabulary = true) => {
     const [vocabulary, setVocabulary] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
@@ -10,6 +10,15 @@ const useVocabularyTower = (selectedGrade) => {
     const usedWordsRef = useRef(new Set());
 
     useEffect(() => {
+        if (!loadStaticVocabulary) {
+            setVocabulary([]);
+            setCurrentQuiz(null);
+            setReviewWords([]);
+            setError('');
+            setIsLoading(false);
+            usedWordsRef.current = new Set();
+            return undefined;
+        }
         const controller = new AbortController();
         const loadVocabulary = async () => {
             if (selectedGrade < 3 || selectedGrade > 6) {
@@ -39,7 +48,7 @@ const useVocabularyTower = (selectedGrade) => {
         };
         loadVocabulary();
         return () => controller.abort();
-    }, [selectedGrade]);
+    }, [loadStaticVocabulary, selectedGrade]);
 
     const createQuiz = useCallback(({ floor, roomIndex, reduceOptions = false }) => {
         const quiz = buildRoomQuiz({
@@ -74,6 +83,10 @@ const useVocabularyTower = (selectedGrade) => {
         setReviewWords(Array.isArray(initialReviewWords) ? initialReviewWords : []);
     }, []);
 
+    const setServerQuiz = useCallback((quiz) => {
+        setCurrentQuiz(quiz);
+    }, []);
+
     return {
         vocabulary,
         currentQuiz,
@@ -82,7 +95,8 @@ const useVocabularyTower = (selectedGrade) => {
         error,
         createQuiz,
         recordAnswer,
-        resetJourney
+        resetJourney,
+        setServerQuiz
     };
 };
 

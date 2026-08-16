@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
     buildRoomQuiz,
     getRoomType,
+    mapV2Question,
     replaceWordWithBlank
 } from '../src/modules/game/vocab-tower/vocabTowerEngine.js';
 
@@ -45,4 +46,19 @@ test('선택 지우개 능력은 보기를 4개에서 3개로 줄인다', () => 
     const reduced = buildRoomQuiz({ vocabulary, floor: 1, roomIndex: 0, reduceOptions: true, random: () => 0 });
     assert.equal(regular.options.length, 4);
     assert.equal(reduced.options.length, 3);
+});
+
+test('V2 서버 문항은 정답 없이 기존 게임 카드 형태로 변환된다', () => {
+    const quiz = mapV2Question({
+        question_key: '44c45aa4-b659-4bfc-9035-59640613f11f',
+        room_type: 'meaning',
+        question_type: 'meaningChoice',
+        prompt: '‘관찰’의 뜻은?',
+        options: ['자세히 살펴봄', '힘을 합침'],
+        word: { word: '관찰', definition: '자세히 살펴봄', example: '식물을 관찰했다.', level: 1, category: '공부' },
+        is_review: false
+    });
+    assert.equal(quiz.room.name, '뜻의 방');
+    assert.equal(quiz.correctAnswer, null);
+    assert.deepEqual(quiz.options, ['자세히 살펴봄', '힘을 합침']);
 });

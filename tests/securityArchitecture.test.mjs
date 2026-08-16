@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -21,7 +21,8 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261026_student_point_history.sql', 'utf8'),
     readFile('supabase/migrations/20261027_lab_ai_bridge.sql', 'utf8'),
     readFile('supabase/migrations/20261028_admin_lab_management.sql', 'utf8'),
-    readFile('supabase/migrations/20261105_vocab_tower_v2_review_workspace.sql', 'utf8')
+    readFile('supabase/migrations/20261105_vocab_tower_v2_review_workspace.sql', 'utf8'),
+    readFile('supabase/migrations/20261106_vocab_tower_v2_pilot.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -198,4 +199,19 @@ test('어휘 V2 검수 자료는 ADMIN 전용 RPC와 잠금 경계 안에 둔다
     assert.match(vocabReviewMigration, /REVOKE ALL ON FUNCTION public\.admin_save_vocab_tower_v2_review_item_v1[\s\S]*FROM PUBLIC, anon/);
     assert.match(vocabReviewMigration, /REVOKE ALL ON FUNCTION public\.admin_set_vocab_tower_v2_review_status_v1[\s\S]*FROM PUBLIC, anon/);
     assert.doesNotMatch(vocabReviewMigration, /auth\.jwt|app_metadata/);
+});
+
+test('어휘 V2 시험 출제는 잠긴 덱과 서버 정답 스냅샷으로 채점한다', () => {
+    assert.match(vocabPilotMigration, /REVOKE ALL ON TABLE public\.vocab_tower_v2_run_questions FROM PUBLIC, anon, authenticated/);
+    assert.match(vocabPilotMigration, /public\.auth_user_role\(\) <> 'STUDENT'/);
+    assert.match(vocabPilotMigration, /run\.student_id = v_student_id[\s\S]*run\.class_id = v_class_id/);
+    assert.match(vocabPilotMigration, /deck\.review_status = 'locked'/);
+    assert.match(vocabPilotMigration, /question\.correct_answer/);
+    assert.match(vocabPilotMigration, /p_selected_answer = v_question\.correct_answer/);
+    assert.match(vocabPilotMigration, /class\.teacher_id = v_user_id OR public\.auth_user_role\(\) = 'ADMIN'/);
+    assert.match(vocabPilotMigration, /BEFORE UPDATE OF vocab_tower_content_version ON public\.classes/);
+    assert.match(vocabPilotMigration, /OLD\.teacher_id <> v_user_id AND public\.auth_user_role\(\) <> 'ADMIN'/);
+    const issueFunction = vocabPilotMigration.match(/CREATE OR REPLACE FUNCTION public\.get_next_my_vocab_tower_question_v2[\s\S]*?\n\$\$;/)?.[0] || '';
+    assert.doesNotMatch(issueFunction, /'correct_answer'/);
+    assert.doesNotMatch(vocabPilotMigration, /auth\.jwt|app_metadata/);
 });

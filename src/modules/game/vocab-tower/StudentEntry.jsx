@@ -7,6 +7,7 @@ const DEFAULT_SETTINGS = {
     dailyLimit: 3,
     timeLimit: 40,
     rewardPoints: 50,
+    contentVersion: 'v1',
     resetDate: null,
     rankingResetDate: null
 };
@@ -28,7 +29,7 @@ const VocabularyTowerStudentEntry = ({ studentSession, onBack }) => {
         setErrorMessage('');
         const { data, error } = await supabase
             .from('classes')
-            .select('vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_reset_date, vocab_tower_ranking_reset_date')
+            .select('vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_content_version, vocab_tower_reset_date, vocab_tower_ranking_reset_date')
             .eq('id', classId)
             .maybeSingle();
 
@@ -41,6 +42,7 @@ const VocabularyTowerStudentEntry = ({ studentSession, onBack }) => {
                 dailyLimit: data.vocab_tower_daily_limit ?? DEFAULT_SETTINGS.dailyLimit,
                 timeLimit: data.vocab_tower_time_limit ?? DEFAULT_SETTINGS.timeLimit,
                 rewardPoints: data.vocab_tower_reward_points ?? DEFAULT_SETTINGS.rewardPoints,
+                contentVersion: data.vocab_tower_content_version || DEFAULT_SETTINGS.contentVersion,
                 resetDate: data.vocab_tower_reset_date || null,
                 rankingResetDate: data.vocab_tower_ranking_reset_date || null
             });
@@ -83,6 +85,7 @@ const VocabularyTowerStudentEntry = ({ studentSession, onBack }) => {
             dailyLimit={settings.dailyLimit}
             timeLimit={settings.timeLimit}
             rewardPoints={settings.rewardPoints}
+            contentVersion={settings.contentVersion}
         />
     );
 };

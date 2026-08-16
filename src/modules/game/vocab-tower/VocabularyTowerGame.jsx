@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '../../../lib/supabaseClient';
 import useVocabularyTower from './useVocabularyTower';
-import { ROOM_INFO } from './vocabTowerEngine';
+import { mapV2Question, ROOM_INFO } from './vocabTowerEngine';
 import './vocabularyTowerGame.css';
 
 const BOONS = Object.freeze([
@@ -44,8 +44,10 @@ const VocabularyTowerGame = ({
     onBack,
     forcedGrade,
     dailyLimit = 3,
-    timeLimit = 40
+    timeLimit = 40,
+    contentVersion = 'v1'
 }) => {
+    const isV2 = contentVersion === 'v2';
     const [selectedGrade, setSelectedGrade] = useState(Number(forcedGrade || studentSession?.grade || 3));
     const [phase, setPhase] = useState('loading');
     const [status, setStatus] = useState(null);
@@ -70,8 +72,9 @@ const VocabularyTowerGame = ({
         error: wordsError,
         createQuiz,
         recordAnswer,
-        resetJourney
-    } = useVocabularyTower(selectedGrade);
+        resetJourney,
+        setServerQuiz
+    } = useVocabularyTower(selectedGrade, !isV2);
 
     const loadStatus = useCallback(async () => {
         setNotice('');
@@ -127,12 +130,29 @@ const VocabularyTowerGame = ({
         return () => window.clearTimeout(timerId);
     }, [finishRun, phase, timeLeft]);
 
-    const prepareQuiz = useCallback((floor, roomIndex, boon = activeBoon) => {
-        const quiz = createQuiz({
-            floor,
-            roomIndex,
-            reduceOptions: boon?.id === 'eliminate'
-        });
+    const prepareQuiz = useCallback(async (floor, roomIndex, boon = activeBoon, runIdOverride = null) => {
+        let quiz;
+        if (isV2) {
+            setSubmitting(true);
+            const { data, error } = await supabase.rpc('get_next_my_vocab_tower_question_v2', {
+                p_run_id: runIdOverride || run.runId,
+                p_reduce_options: boon?.id === 'eliminate'
+            });
+            setSubmitting(false);
+            if (error) {
+                console.error('V2 문항 발급 실패:', error);
+                setNotice(error.message || '다음 문제를 준비하지 못했어요.');
+                return false;
+            }
+            quiz = mapV2Question(data);
+            setServerQuiz(quiz);
+        } else {
+            quiz = createQuiz({
+                floor,
+                roomIndex,
+                reduceOptions: boon?.id === 'eliminate'
+            });
+        }
         if (!quiz) {
             setNotice('다음 문제를 준비하지 못했어요. 다시 시도해주세요.');
             return false;
@@ -141,13 +161,15 @@ const VocabularyTowerGame = ({
         setPendingServerResult(null);
         setPhase('playing');
         return true;
-    }, [activeBoon, createQuiz]);
+    }, [activeBoon, createQuiz, isV2, run.runId, setServerQuiz]);
 
     const handleStart = async () => {
         if (submitting) return;
         setSubmitting(true);
         setNotice('');
-        const { data, error } = await supabase.rpc('start_my_vocab_tower_run');
+        const { data, error } = await supabase.rpc(isV2
+            ? 'start_my_vocab_tower_v2_run'
+            : 'start_my_vocab_tower_run');
         setSubmitting(false);
         if (error || !data?.success) {
             console.error('어휘의 탑 시작 실패:', error || data?.error);
@@ -171,7 +193,7 @@ const VocabularyTowerGame = ({
             window.setTimeout(() => void finishRun('completed', nextRun.runId), 0);
             return;
         }
-        window.setTimeout(() => prepareQuiz(nextRun.currentFloor, nextRun.answerCount % 3, null), 0);
+        window.setTimeout(() => void prepareQuiz(nextRun.currentFloor, nextRun.answerCount % 3, null, nextRun.runId), 0);
     };
 
     const handleAnswer = async (answer) => {
@@ -179,14 +201,21 @@ const VocabularyTowerGame = ({
         setSubmitting(true);
         setNotice('');
         const usedHint = activeBoon?.id === 'hint';
-        const { data, error } = await supabase.rpc('submit_my_vocab_tower_answer', {
+        const rpcName = isV2 ? 'submit_my_vocab_tower_v2_answer' : 'submit_my_vocab_tower_answer';
+        const params = isV2 ? {
+            p_run_id: run.runId,
+            p_question_key: currentQuiz.questionKey,
+            p_selected_answer: answer,
+            p_used_hint: usedHint
+        } : {
             p_run_id: run.runId,
             p_question_key: currentQuiz.questionKey,
             p_room_type: currentQuiz.roomType,
             p_word: currentQuiz.correctAnswer,
             p_selected_answer: answer,
             p_used_hint: usedHint
-        });
+        };
+        const { data, error } = await supabase.rpc(rpcName, params);
         setSubmitting(false);
         if (error || !data?.success) {
             console.error('어휘의 탑 정답 저장 실패:', error || data);
@@ -195,7 +224,13 @@ const VocabularyTowerGame = ({
         }
 
         const isCorrect = Boolean(data.is_correct);
-        const { learnedFromReview } = recordAnswer({ quiz: currentQuiz, isCorrect });
+        const answeredQuiz = isV2 ? {
+            ...currentQuiz,
+            correctAnswer: data.correct_answer,
+            explanation: data.explanation
+        } : currentQuiz;
+        if (isV2) setServerQuiz(answeredQuiz);
+        const { learnedFromReview } = recordAnswer({ quiz: answeredQuiz, isCorrect });
         const earnedExp = isCorrect
             ? 20 + (activeBoon?.id === 'focus' ? 5 : 0) + (currentQuiz.roomType === 'boss' ? 5 : 0)
             : activeBoon?.id === 'shield' ? 8 : 4;
@@ -222,14 +257,14 @@ const VocabularyTowerGame = ({
             setPhase('reward');
             return;
         }
-        prepareQuiz(Number(pendingServerResult.current_floor), Number(pendingServerResult.answer_count) % 3);
+        void prepareQuiz(Number(pendingServerResult.current_floor), Number(pendingServerResult.answer_count) % 3);
     };
 
     const chooseBoon = (boon) => {
         setActiveBoon(boon);
         const nextTime = floorTimeLimit + (boon.id === 'time' ? 20 : 0);
         setTimeLeft(nextTime);
-        prepareQuiz(run.currentFloor, run.answerCount % 3, boon);
+        void prepareQuiz(run.currentFloor, run.answerCount % 3, boon);
     };
 
     const floorProgress = useMemo(() => {
@@ -360,7 +395,7 @@ const VocabularyTowerGame = ({
                             <em>난이도 {currentQuiz.word.level}</em>
                         </div>
                         <p className="vocab-question-card__prompt">{currentQuiz.prompt}</p>
-                        {activeBoon?.id === 'hint' && <p className="vocab-question-card__hint">💡 첫 글자: <strong>{currentQuiz.correctAnswer.slice(0, 1)}</strong></p>}
+                        {activeBoon?.id === 'hint' && <p className="vocab-question-card__hint">💡 핵심 낱말 첫 글자: <strong>{(currentQuiz.correctAnswer || currentQuiz.word.word).slice(0, 1)}</strong></p>}
                         <div className="vocab-question-card__options">
                             {currentQuiz.options.map((option) => {
                                 const isSelected = lastResult?.selectedAnswer === option;
@@ -388,7 +423,7 @@ const VocabularyTowerGame = ({
                                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`vocab-answer-note${lastResult.isCorrect ? ' is-correct' : ' is-wrong'}`}>
                                     <strong>{lastResult.isCorrect ? lastResult.learnedFromReview ? '🎉 헷갈렸던 낱말을 익혔어요!' : '정답이에요!' : `정답은 ‘${currentQuiz.correctAnswer}’이에요.`}</strong>
                                     <span>학습 경험치 +{lastResult.earnedExp}</span>
-                                    {!lastResult.isCorrect && <p>{currentQuiz.word.definition}<br /><small>예: {currentQuiz.word.example}</small></p>}
+                                    {!lastResult.isCorrect && <p>{currentQuiz.explanation || currentQuiz.word.definition}<br /><small>예: {currentQuiz.word.example}</small></p>}
                                     <button type="button" onClick={handleNext} disabled={submitting}>{pendingServerResult?.completed ? '정상 기록 확인하기' : pendingServerResult?.floor_cleared ? '층 보상 고르기' : '다음 방으로'}</button>
                                 </motion.div>
                             )}

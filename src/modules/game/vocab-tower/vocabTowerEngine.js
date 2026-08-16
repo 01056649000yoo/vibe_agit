@@ -93,3 +93,21 @@ export const buildRoomQuiz = ({
         isReview: roomType === 'boss' && reviewWords.includes(target.word)
     };
 };
+
+export const mapV2Question = (data) => {
+    const roomType = data?.room_type;
+    const room = Reflect.get(ROOM_INFO, roomType);
+    if (!data?.question_key || !room || !Array.isArray(data?.options) || !data?.word) return null;
+    return {
+        questionKey: data.question_key,
+        roomType,
+        room,
+        questionType: data.question_type,
+        prompt: data.prompt,
+        options: data.options,
+        correctAnswer: null,
+        explanation: null,
+        word: data.word,
+        isReview: Boolean(data.is_review)
+    };
+};

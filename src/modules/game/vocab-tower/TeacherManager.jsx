@@ -7,7 +7,8 @@ const DEFAULT_CONFIG = {
     grade: 3,
     dailyLimit: 3,
     timeLimit: 40,
-    rewardPoints: 50
+    rewardPoints: 50,
+    contentVersion: 'v1'
 };
 
 const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, Number(value)));
@@ -19,6 +20,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
     const [saving, setSaving] = useState(false);
     const [resetting, setResetting] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [savedContentVersion, setSavedContentVersion] = useState('v1');
 
     const loadConfig = useCallback(async () => {
         if (!classId) return;
@@ -27,7 +29,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
 
         const { data, error } = await supabase
             .from('classes')
-            .select('vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points')
+            .select('vocab_tower_grade, vocab_tower_daily_limit, vocab_tower_time_limit, vocab_tower_reward_points, vocab_tower_content_version')
             .eq('id', classId)
             .maybeSingle();
 
@@ -35,12 +37,15 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
             console.error('어휘의 탑 설정 로드 실패:', error?.message);
             setErrorMessage('어휘의 탑 설정을 불러오지 못했습니다.');
         } else {
+            const contentVersion = data.vocab_tower_content_version || DEFAULT_CONFIG.contentVersion;
             setConfig({
                 grade: data.vocab_tower_grade || DEFAULT_CONFIG.grade,
                 dailyLimit: data.vocab_tower_daily_limit ?? DEFAULT_CONFIG.dailyLimit,
                 timeLimit: data.vocab_tower_time_limit ?? DEFAULT_CONFIG.timeLimit,
-                rewardPoints: data.vocab_tower_reward_points ?? DEFAULT_CONFIG.rewardPoints
+                rewardPoints: data.vocab_tower_reward_points ?? DEFAULT_CONFIG.rewardPoints,
+                contentVersion
             });
+            setSavedContentVersion(contentVersion);
         }
         setLoading(false);
     }, [classId]);
@@ -56,11 +61,16 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
 
     const handleSave = async () => {
         if (!classId || saving) return;
+        const nextContentVersion = config.contentVersion === 'v2' ? 'v2' : 'v1';
+        if (nextContentVersion !== savedContentVersion && !window.confirm(
+            `출제 버전을 ${nextContentVersion.toUpperCase()}로 바꾸면 진행 중인 학생 탐험은 종료됩니다. 계속할까요?`
+        )) return;
         const nextConfig = {
             grade: clamp(config.grade, 3, 6),
             dailyLimit: clamp(config.dailyLimit, 1, 5),
             timeLimit: clamp(config.timeLimit, 30, 120),
-            rewardPoints: clamp(config.rewardPoints, 0, 50)
+            rewardPoints: clamp(config.rewardPoints, 0, 50),
+            contentVersion: nextContentVersion
         };
         setSaving(true);
         const { error } = await supabase
@@ -72,15 +82,29 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 vocab_tower_reward_points: nextConfig.rewardPoints
             })
             .eq('id', classId);
-        setSaving(false);
-
         if (error) {
+            setSaving(false);
             console.error('어휘의 탑 설정 저장 실패:', error.message);
             window.alert('설정 저장에 실패했습니다.');
             return;
         }
+
+        const { data: versionResult, error: versionError } = await supabase.rpc(
+            'set_teacher_vocab_tower_content_version_v2',
+            { p_class_id: classId, p_content_version: nextContentVersion }
+        );
+        setSaving(false);
+        if (versionError) {
+            console.error('어휘의 탑 출제 버전 저장 실패:', versionError.message);
+            window.alert(versionError.message || '출제 버전을 저장하지 못했습니다.');
+            void loadConfig();
+            return;
+        }
         setConfig(nextConfig);
-        window.alert('설정을 저장했습니다. 새로 시작하는 탐험부터 적용됩니다.');
+        setSavedContentVersion(nextContentVersion);
+        window.alert(versionResult?.changed
+            ? `설정을 저장하고 ${nextContentVersion.toUpperCase()} 출제로 전환했습니다.`
+            : '설정을 저장했습니다. 새로 시작하는 탐험부터 적용됩니다.');
     };
 
     const handleResetToday = async () => {
@@ -137,6 +161,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 <div><span>하루 탐험</span><strong>최대 {config.dailyLimit}회</strong></div>
                 <div><span>층별 시간</span><strong>{config.timeLimit}초</strong></div>
                 <div><span>한 번의 보상</span><strong>최대 {config.rewardPoints}P</strong></div>
+                <div><span>출제 자료</span><strong>{config.contentVersion.toUpperCase()}</strong></div>
             </div>
 
             <section className="vocab-teacher__panel" aria-labelledby="vocab-settings-title">
@@ -149,6 +174,14 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 </div>
 
                 <div className="vocab-teacher__settings-grid">
+                    <label>
+                        <span>🧪 출제 자료</span>
+                        <small>V2는 관리자 검수를 잠근 10개 덱을 서버에서 출제·채점합니다.</small>
+                        <select value={config.contentVersion} onChange={(event) => setConfig((current) => ({ ...current, contentVersion: event.target.value }))}>
+                            <option value="v1">V1 기존 출제 (기본)</option>
+                            <option value="v2">V2 검수 덱 (시험 운영)</option>
+                        </select>
+                    </label>
                     <label>
                         <span>📚 출제 학년</span>
                         <small>학생에게 보여줄 어휘 자료를 고릅니다.</small>
