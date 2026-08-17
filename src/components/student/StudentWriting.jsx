@@ -156,6 +156,11 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     const isMobile = useMediaQuery('(max-width: 768px)');
     const [autoSaveAt, setAutoSaveAt] = useState(null);
     const [autoSaveError, setAutoSaveError] = useState('');
+    // 학생이 임시 저장을 직접 눌렀을 때만 잠깐 띄우는 확인 표시. 자동 저장과 구분해서
+    // "내가 누른 것이 됐다"를 알려 준다(예전에는 alert 였는데 태블릿에서 키보드를 닫고
+    // 반복되면 브라우저가 조용히 막았다).
+    const [manualSavedAt, setManualSavedAt] = useState(null);
+    const manualSavedTimerRef = useRef(null);
     const genreMissionType = getGenreMissionType(mission?.input_template);
     const GenreEditor = GENRE_EDITORS.get(mission?.input_template) || null;
     const studentLabels = genreMissionType?.studentLabels || {};
@@ -474,10 +479,21 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             } else {
                 setAutoSaveError('');
             }
+            // 화면 안에서 잠깐 알린다. 키보드를 닫지 않아 학생이 바로 이어 쓸 수 있다.
+            setManualSavedAt(new Date());
+            if (manualSavedTimerRef.current) window.clearTimeout(manualSavedTimerRef.current);
+            manualSavedTimerRef.current = window.setTimeout(() => {
+                manualSavedTimerRef.current = null;
+                setManualSavedAt(null);
+            }, 4000);
         } catch (err) {
             console.error('수동 저장 실패:', err);
         }
     };
+
+    useEffect(() => () => {
+        if (manualSavedTimerRef.current) window.clearTimeout(manualSavedTimerRef.current);
+    }, []);
 
     const ensureGenreDraftPost = async () => {
         if (postId) return postId;
@@ -930,12 +946,18 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
             />
             <div className="writing-metrics">
                 <div className="writing-metric">
-                    <span>자동 저장</span>
+                    <span>{manualSavedAt && !autoSaveError ? '임시 저장 완료' : '자동 저장'}</span>
                     <strong className={autoSaveError ? 'is-pending' : ''}>
-                        {autoSaveError || (autoSaveAt ? autoSaveAt.toLocaleTimeString() : '-')}
+                        {autoSaveError || (manualSavedAt
+                            ? `저장했어요 ✓ ${manualSavedAt.toLocaleTimeString()}`
+                            : (autoSaveAt ? autoSaveAt.toLocaleTimeString() : '-'))}
                     </strong>
                         {!autoSaveError && (
-                        <small>이 기기에 먼저 저장돼요</small>
+                        <small>
+                            {manualSavedAt
+                                ? '다른 기기에서도 이어 쓸 수 있어요'
+                                : '이 기기에 먼저 저장돼요'}
+                        </small>
                         )}
                 </div>
             </div>

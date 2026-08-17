@@ -250,3 +250,36 @@ test('등록된 콘텐츠는 성능 계약을 빠짐없이 선언한다', async 
             `${manifestPath}에 신규 콘텐츠 성능 계약이 없습니다.`);
     }
 });
+
+test('임시 저장 성공은 대화상자가 아니라 화면 안에서 알린다', async () => {
+    const [hook, writing, diary, readingLog] = await Promise.all([
+        read('src/hooks/useMissionSubmit.js'),
+        read('src/components/student/StudentWriting.jsx'),
+        read('src/modules/writing/diary/DiaryPage.jsx'),
+        read('src/modules/writing/reading-log/ReadingLogPage.jsx')
+    ]);
+
+    // 2026-08-17 학생 태블릿 제보: 임시 저장을 눌러도 알림이 안 뜨고 화면이 위로 튀었다.
+    // alert 가 입력 포커스를 빼앗아 키보드를 닫고, 저장을 반복하면 브라우저가
+    // "추가 대화상자 표시 안 함"을 물어 학생이 체크하는 순간 조용히 무시되기 때문이다.
+    // 저장 자체는 성공하고 있었다(RPC 200). 성공 알림만 화면 안 표시로 옮겼다.
+    for (const [name, source] of [
+        ['과제 글쓰기', hook],
+        ['일기', diary],
+        ['독서록', readingLog]
+    ]) {
+        assert.ok(!/alert\([^)]*임시\s?저장했어요/.test(source)
+            && !/alert\([^)]*안전하게 임시 저장/.test(source),
+            `${name} 저장 성공을 alert 로 알리면 안 됩니다.`);
+    }
+
+    // 실패는 놓치면 글을 잃을 수 있어 대화상자를 유지한다.
+    assert.match(hook, /alert\('저장 중 오류가 발생했습니다\.'\)/);
+    assert.match(diary, /alert\('이 기기에는 남겼지만 서버 임시 저장에 실패했어요/);
+    assert.match(readingLog, /alert\('이 기기에는 남겼지만 서버 임시 저장에 실패했어요/);
+
+    // 과제 화면은 저장 시각을 화면 안에 잠깐 띄우고, 타이머를 정리한다.
+    assert.match(writing, /setManualSavedAt\(new Date\(\)\)/);
+    assert.match(writing, /저장했어요 ✓/);
+    assert.match(writing, /clearTimeout\(manualSavedTimerRef\.current\)/);
+});

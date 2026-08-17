@@ -329,8 +329,9 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
             alert('이 기기에는 남겼지만 서버 임시 저장에 실패했어요. 잠시 후 다시 눌러 주세요.');
             return;
         }
+        // 성공은 대화상자로 알리지 않는다(일기와 같은 이유). 아래 WritingNotice 가 이미 같은 문구를
+        // 띄우고, 태블릿에서 alert 는 키보드를 닫아 화면이 튀며 반복되면 브라우저가 조용히 막는다.
         setServerDraftAt(data?.updated_at ? new Date(data.updated_at) : new Date());
-        alert('임시 저장했어요. 다른 기기에서도 이어 쓸 수 있어요. 💾\n아직 선생님과 친구에게는 보이지 않아요.');
     };
 
     const clearDraft = useCallback(async () => {

@@ -209,7 +209,10 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
             if (error) throw error;
             if (Number(saved?.version) !== 1) throw new Error('지원하지 않는 임시저장 응답입니다.');
             setPostId(saved.post_id);
-            if (showMsg) alert('안전하게 임시 저장되었습니다! 💾');
+            // 성공은 대화상자로 알리지 않는다. 호출부가 화면 안에 저장 시각을 띄운다.
+            // 태블릿에서 alert 는 입력 포커스를 빼앗아 키보드를 닫고 화면이 튀게 만들며,
+            // 저장을 반복하면 브라우저가 "추가 대화상자 표시 안 함"을 물어 학생이 체크하는 순간
+            // 그 뒤로는 조용히 무시된다(2026-08-17 학생 태블릿 제보).
             return saved.post_id;
         } catch (err) {
             console.error('임시 저장 실패:', err.message);

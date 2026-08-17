@@ -211,8 +211,11 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
             alert('이 기기에는 남겼지만 서버 임시 저장에 실패했어요. 잠시 후 다시 눌러 주세요.');
             return;
         }
+        // 성공은 대화상자로 알리지 않는다. 바로 아래 WritingNotice 가 같은 문구를 이미 띄우고,
+        // 태블릿에서 alert 는 키보드를 닫아 화면이 튀게 만든다. 게다가 저장을 반복하면 브라우저가
+        // "추가 대화상자 표시 안 함"을 물어보고, 학생이 체크하면 그 뒤로는 조용히 무시된다.
+        // 실패 알림은 놓치면 글을 잃을 수 있어 그대로 둔다.
         setServerDraftAt(data.updated_at ? new Date(data.updated_at) : new Date());
-        alert('임시 저장했어요. 다른 기기에서도 이어 쓸 수 있어요. 💾\n아직 선생님과 친구에게는 보이지 않아요.');
     };
 
     const handleCancel = () => {
