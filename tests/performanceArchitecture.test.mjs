@@ -283,3 +283,31 @@ test('임시 저장 성공은 대화상자가 아니라 화면 안에서 알린�
     assert.match(writing, /저장했어요 ✓/);
     assert.match(writing, /clearTimeout\(manualSavedTimerRef\.current\)/);
 });
+
+test('부팅 중에는 홈과 같은 자리의 뼈대를 먼저 보여 준다', async () => {
+    const [app, skeleton, css, authStore] = await Promise.all([
+        read('src/App.jsx'),
+        read('src/components/common/BootSkeleton.jsx'),
+        read('src/components/common/BootSkeleton.css'),
+        read('src/store/useAuthStore.js')
+    ]);
+
+    // /lab(연구소)은 서버가 완성된 HTML을 보내 바로 그려지는데 /(아지트)는 빈 껍데기를 받아
+    // JS 실행 → 세션 확인 → 홈 데이터를 기다린다. 그래서 연구소에서 돌아올 때만
+    // "처음 로딩"으로 되돌아간 것처럼 보였다(2026-08-17 제보).
+    assert.match(app, /BOOT_SKELETON_KIND \? <BootSkeleton kind=\{BOOT_SKELETON_KIND\} \/> : <Loading \/>/);
+    // 첫 렌더 전에 한 번만 정해야 화면이 도중에 흔들리지 않는다.
+    assert.match(app, /const BOOT_SKELETON_KIND = getBootSkeletonKind\(\);/);
+
+    // 로그아웃 상태에 학생 홈 틀이 잘못 뜨면 안 되므로 저장된 세션으로 동기 판정한다.
+    assert.match(authStore, /export const getBootSkeletonKind/);
+    assert.match(authStore, /student_session'\) !== null\) return 'student'/);
+    assert.match(authStore, /return hasTeacherToken \? 'teacher' : null/);
+
+    // 실제 홈과 같은 2열 배치를 학생에게만 보여 준다(교사 홈에는 그 자리가 없다).
+    assert.match(skeleton, /kind === 'student' && \(/);
+    assert.match(css, /\.boot-skeleton__grid \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+    assert.match(css, /max-width: 1024px[\s\S]*?\.boot-skeleton__grid \{ grid-template-columns: 1fr; \}/);
+    // 움직임 최소화 설정에서는 반짝임을 끈다.
+    assert.match(css, /prefers-reduced-motion: reduce[\s\S]*?animation: none/);
+});

@@ -5,11 +5,12 @@ import './App.css'
 // 레이아웃 및 공통 컴포넌트
 import Layout from './components/layout/Layout'
 import Loading from './components/common/Loading'
+import BootSkeleton from './components/common/BootSkeleton'
 import ErrorBoundary from './components/common/ErrorBoundary'
 import PrivacyPolicy from './components/layout/PrivacyPolicy'
 import TermsOfService from './components/layout/TermsOfService'
 import LearningSupportSoftwareGuide from './components/layout/LearningSupportSoftwareGuide'
-import { useAuthStore } from './store/useAuthStore';
+import { getBootSkeletonKind, useAuthStore } from './store/useAuthStore';
 import { useAppStore } from './store/useAppStore';
 import { getEnabledModules, getModule, resolveEnabledModuleIds } from './modules/registry';
 import useStudentHomeBootstrap from './modules/home/useStudentHomeBootstrap';
@@ -42,10 +43,14 @@ const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNa
  *  - isStudentLoginMode: 학생 로그인 화면 표시 여부
  *  - currentClassId: 선생님이 선택한 현재 학급 ID
  */
+// 부팅 뼈대 종류는 첫 렌더 전에 한 번만 정한다. 저장된 세션을 보는 동기 판정이라
+// 서버를 기다리지 않고, 도중에 바뀌어 화면이 흔들릴 일도 없다.
+const BOOT_SKELETON_KIND = getBootSkeletonKind();
+
 function App() {
-  const { 
+  const {
     session, profile, teacherBootstrap, studentSession, loading, profileLoading,
-    checkSessions, fetchProfile, verifyStudentSession, logout: handleLogout, studentLogout: handleStudentLogout 
+    checkSessions, fetchProfile, verifyStudentSession, logout: handleLogout, studentLogout: handleStudentLogout
   } = useAuthStore();
 
   const [activeClass, setActiveClass] = useState(null)
@@ -280,7 +285,10 @@ function App() {
       <ErrorBoundary>
         <Suspense fallback={<Loading />}>
         {loading ? (
-          <Loading />
+          /* 세션 종류를 알면 실제 홈과 같은 자리에 틀을 먼저 그린다. 연구소에서 돌아올 때
+             화면이 처음부터 다시 시작하는 것처럼 보이던 문제(2026-08-17)를 줄인다.
+             종류를 모르면(첫 방문·로그아웃) 기존 안내 문구를 그대로 쓴다. */
+          BOOT_SKELETON_KIND ? <BootSkeleton kind={BOOT_SKELETON_KIND} /> : <Loading />
         ) : directPath ? (
           /* [0순위] 직접 주소 접근 시 (약관/개인정보/학습지원소프트웨어 안내) */
           <div style={{

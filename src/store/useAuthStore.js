@@ -22,6 +22,20 @@ const hasStoredSession = (() => {
     } catch { return false; }
 })();
 
+// 부팅 순간 어떤 뼈대를 보여 줄지 **동기적으로** 고른다. 저장된 세션 종류를 보고 고르므로
+// 로그아웃 상태에 학생 홈 틀이 잘못 뜨지 않는다. 판정이 안 되면 null 을 주고 호출부가
+// 기존 로딩 문구를 그대로 쓴다. 실제 권한은 서버가 다시 확인하므로 이 값은 표시용일 뿐이다.
+export const getBootSkeletonKind = () => {
+    try {
+        if (localStorage.getItem('student_session') !== null) return 'student';
+        const hasTeacherToken = Object.keys(localStorage)
+            .some((key) => key.startsWith('sb-') && key.endsWith('-auth-token'));
+        return hasTeacherToken ? 'teacher' : null;
+    } catch {
+        return null;
+    }
+};
+
 const buildStudentSession = (student) => ({
     id: student.id,
     name: student.name,
