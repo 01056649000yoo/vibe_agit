@@ -21,6 +21,47 @@
 
 ---
 
+## 2026-08-17 — 옛 연구소 주소 정리와 `/lab` 라우팅 영구 반영 (Claude, git 밖 인프라)
+- **배경**: 통합했는데 연구소 외부 주소(`helper.끄적끄적아지트.site`)가 여전히 살아 있다는 지적.
+- **확인한 것 — 계획과 달랐다**: `INTEGRATION_PLAN.md` 130·163행은 `helper.도메인/*` → `/lab/*`
+  **301 리다이렉트 유지**(배포된 QR·단축링크 보존)였는데, 실제 Caddy는 `reverse_proxy 127.0.0.1:3000`으로
+  **옛 독립 앱을 그대로 서비스**하고 있었다. 연구소가 두 벌 돌고 있었고 백엔드가 서로 달랐다.
+  | | 옛 주소 `helper.` | 통합본 `/lab` |
+  |---|---|---|
+  | 컨테이너 | `writing-helper-app` (`0.0.0.0:3000`) | `writing-helper-lab-app` (`127.0.0.1:3001`) |
+  | 백엔드 | `supabase.끄적끄적.kr` → **`supabase-db`**(옛 공용 스택) | `api.끄적끄적아지트.site` → **`agit-db`** |
+  즉 옛 주소로 들어오면 통합 운영 DB가 아니라 **옛 DB에 글이 쌓이는** 상태였다.
+- **더 큰 문제를 함께 발견**: `/lab` 분기가 **실행 중 메모리에만 있고 디스크 `/etc/caddy/Caddyfile`에는
+  아예 없었다.** `INTEGRATION_PLAN.md` 158행의 "root 소유 Caddyfile 영구 반영만 남음"이 2026-07-24부터
+  3주 넘게 방치된 것이다. **Caddy가 재시작되면 통합 연구소가 사라지고 옛 `helper.`만 살아남는** 구조였다.
+- **실사용 확인**: Caddy 접속 로그 전체(4/24~)를 훑어 `helper.` 호스트 요청이 **2026-07-05가 마지막**이고
+  컷오버(7/24) 이후 **0건**임을 확인했다. 그래서 지금 피해가 발생 중이지는 않았다.
+- **변경(git 밖)**:
+  1. `helper.도메인` 블록을 `redir https://끄적끄적아지트.site/lab{uri} permanent`로 교체.
+  2. 루트 블록에 `handle /lab* { reverse_proxy 127.0.0.1:3001 }`를 넣어 **디스크 설정에 영구 반영**할
+     내용을 만들었다.
+  3. `caddy validate` 통과 후 `caddy adapt`로 JSON을 만들어 **호스트 8개가 그대로인지 대조**하고
+     관리 API(`POST 127.0.0.1:2019/load`)로 **무중단 적용**했다.
+  4. 옛 컨테이너 `writing-helper-app`을 중지해 `0.0.0.0:3000` 노출을 닫았다.
+  - 원본은 `~/agit-supabase/Caddyfile.backup-20260817-180146`, 적용본은
+    `~/agit-supabase/Caddyfile.proposed-20260817`에 보관했다.
+- **결과/검증**: `helper./` → 301 → `/lab/`, `helper./teacher/abc` → 301 → `/lab/teacher/abc`로 **경로가
+  보존**된다. 리다이렉트를 따라가면 최종 `200 /lab/login`. 아지트 본체 `/` 200, `survival` 200으로 다른
+  사이트 영향 없음. (`umami`는 502지만 백엔드 3100이 원래 꺼져 있던 **기존 장애**로, 이번 변경과 무관하다.)
+- **남은 것 / 다음**: ① **디스크 반영이 아직 안 됐다.** `sudo` 비밀번호가 필요해 런타임에만 적용된 상태다.
+  아래를 실행해야 재시작에도 살아남는다. 하지 않으면 Caddy 재시작 시 **다시 옛 앱으로 연결되고 `/lab`이
+  사라진다**.
+  ```
+  sudo cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak-20260817
+  sudo cp ~/agit-supabase/Caddyfile.proposed-20260817 /etc/caddy/Caddyfile
+  caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+  ```
+  ② 옛 컨테이너는 `writing-helper` 저장소의 CI compose가 정의한다
+  (`~/actions-runner/_work/writing-helper/.../docker-compose.yml`). **그 저장소를 다음에 배포하면 다시
+  뜬다.** 완전히 없애려면 그 저장소의 compose에서 빼야 하며, 이번 범위 밖이라 손대지 않았다.
+  ③ `supabase-kong`이 `0.0.0.0:8000`으로 열려 있다(통합 스택 `agit-kong`은 `127.0.0.1:8100`). 다만
+  샘링크·수업도구가 함께 쓰는 공용 스택이라 별도 판단이 필요하다.
+
 ## 2026-08-17 — GitHub Actions 러너 4개 복구와 자동 재기동 설정 (Claude, git 밖 인프라)
 - **배경**: 배포가 `queued`에서 안 움직여 확인해 보니 vibe_agit 러너가 스스로 종료돼 있었다.
   원인을 파고들다 **러너 4개 중 3개가 이미 죽어 있는 것**을 발견했다(URL은 7/29부터 약 3주간).

@@ -43,6 +43,9 @@
   일부러 멈출 때는 `launchctl bootout`을 쓴다 — `stop`만으로는 다시 뜬다.
 - 다음 큰 제품 순서는 어휘 V2 후속(보충 수련·직접 입력형·낱말 카드함·덱 마스터), `나의 아지트 디자인 3차`,
   Stage 2 연구소 연동·서바이벌 흡수 중 미정이다.
+- ⚠️ Caddy `/lab` 분기와 `helper.` 301 리다이렉트는 **런타임에만 적용**돼 있다(2026-08-17, sudo 필요).
+  `sudo cp ~/agit-supabase/Caddyfile.proposed-20260817 /etc/caddy/Caddyfile`을 해야 재시작에도 살아남는다.
+  안 하면 재시작 시 옛 연구소 앱으로 되돌아가고 `/lab`이 사라진다.
 - 실기기 인수 검사는 [MANUAL_ACCEPTANCE_CHECKLIST.md](MANUAL_ACCEPTANCE_CHECKLIST.md)에 계속 기록한다.
 
 ## 다음 세션 첫 순서
