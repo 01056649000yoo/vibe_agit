@@ -1,6 +1,6 @@
 import { getAllModules } from '../registry';
 import { pointNotificationDefinitions } from '../points/notifications';
-import { writingNotificationDefinitions } from '../writing/notifications';
+import { feedbackNotificationDefinitions, writingNotificationDefinitions } from '../writing/notifications';
 
 const fallbackDefinition = Object.freeze({
     eventType: 'unknown',
@@ -14,6 +14,7 @@ const fallbackDefinition = Object.freeze({
 
 const definitions = [
     ...writingNotificationDefinitions,
+    ...feedbackNotificationDefinitions,
     ...pointNotificationDefinitions,
     ...getAllModules().flatMap((module) => module.notifications || [])
 ];

@@ -22,7 +22,6 @@ test('내 글 소식과 지금 할 일과 활동 알림의 책임이 겹치지 �
     assert.match(header, /hasActivity/);
     assert.match(feedback, /친구들 반응/);
     assert.match(feedback, /label: '댓글'/);
-    assert.match(feedback, /f\.teacher_id/);
     assert.match(dashboard, /student-home-action-grid/);
     assert.match(dashboard, /ActivityNotificationPanel/);
     assert.doesNotMatch(dashboard, /TeacherNotifyBanner|useStudentSyncNotifications/);
@@ -59,22 +58,79 @@ test('내 글 소식은 빨간 점 대신 문자 배지와 버튼 전체 강조�
     assert.match(headerCss, /prefers-reduced-motion: reduce[\s\S]*?animation: none/);
 });
 
-test('내 글 소식은 새 항목이 있는 개별 탭을 모두 보면 자동 읽음 처리하고 닫을 때 목록을 정리한다', async () => {
+test('내 글 소식은 알림별 확인과 모두 확인으로 정리한다', async () => {
     const [modal, hook, dashboard] = await Promise.all([
         read('src/components/student/StudentFeedbackModal.jsx'),
         read('src/hooks/useStudentDashboard.js'),
         read('src/components/student/StudentDashboard.jsx')
     ]);
 
-    assert.match(modal, /requiredTabs\.every\(tabId => visitedTabs\.has\(tabId\)\)/);
-    assert.match(modal, /if \(tabId === 1 \|\| tabId === 2\)/);
-    assert.match(modal, /const saved = await onMarkRead\(\)/);
-    assert.match(modal, /모두 확인했어요\. 창을 닫으면 목록이 정리돼요/);
-    assert.doesNotMatch(modal, /소식을 모두 비울까요|🗑️.*비우기/);
-    assert.match(hook, /feedbackReadRef\.current = true/);
-    assert.match(hook, /if \(feedbackReadRef\.current\) setFeedbacks\(\[\]\)/);
+    // 탭을 모두 방문해야 읽음 처리되던 조건은 없앴다. 전체 탭에서 소식을 다 보고 닫은
+    // 학생에게 배지가 그대로 남아 "눌러도 안 사라진다"가 됐기 때문이다.
+    assert.doesNotMatch(modal, /requiredTabs|visitedTabs/);
+    assert.match(modal, /const saved = await onMarkRead\(item\.id\)/);
+    assert.match(modal, /const saved = await onMarkAllRead\(\)/);
+    assert.match(modal, /✓ 확인/);
+    assert.match(modal, /모두 확인/);
+    // 확인 버튼은 카드 전체의 글 이동으로 새면 안 된다.
+    assert.match(modal, /event\.stopPropagation\(\)/);
+    assert.match(hook, /notificationApi\.markRead\(\[notificationId\]\)/);
+    assert.match(hook, /notificationApi\.markAllRead\(\{ moduleIds: FEEDBACK_MODULE_IDS \}\)/);
     assert.match(dashboard, /onClose=\{handleCloseFeedback\}/);
     assert.match(dashboard, /onMarkRead=\{handleMarkFeedbackRead\}/);
+    assert.match(dashboard, /onMarkAllRead=\{handleMarkAllFeedbackRead\}/);
+});
+
+test('읽음 처리는 홈 캐시를 비워 배지가 되살아나지 않게 한다', async () => {
+    const [hook, dashboard, homeApi] = await Promise.all([
+        read('src/hooks/useStudentDashboard.js'),
+        read('src/components/student/StudentDashboard.jsx'),
+        read('src/modules/home/studentHomeApi.js')
+    ]);
+
+    assert.match(homeApi, /invalidate\(studentId, \{ notify = true \} = \{\}\)/);
+    // 확인할 때마다 홈 RPC를 다시 부르면 스무 번 확인에 스무 번 왕복이 생긴다.
+    assert.match(hook, /invalidateHomeCache\(\{ notify: false \}\)/);
+    // 창을 닫을 때 한 번은 반드시 서버 값을 다시 받아야 앱이 든 옛 값이 갱신된다.
+    assert.match(hook, /feedbackDirtyRef\.current = false;\s*\n\s*invalidateHomeCache\(\{ notify: true \}\)/);
+    // 활동 알림도 같은 병을 앓고 있었다. 이쪽은 한두 건이라 확인 즉시 받는다.
+    assert.match(dashboard, /onSummaryChange=\{\(summary\) => \{[\s\S]*?studentHomeApi\.invalidate\(studentSession\.id\)/);
+});
+
+test('내 글 소식은 활동 알림과 같은 원장을 갈래로 나눠 쓴다', async () => {
+    const [migration, api, hook, registry] = await Promise.all([
+        read('supabase/migrations/20261116_feedback_notifications_ledger.sql'),
+        read('src/modules/notifications/notificationApi.js'),
+        read('src/hooks/useStudentDashboard.js'),
+        read('src/modules/notifications/registry.js')
+    ]);
+
+    assert.match(migration, /feedback\.reaction_received/);
+    assert.match(migration, /feedback\.comment_received/);
+    // 반응은 껐다 켤 수 있고 댓글은 승인이 풀릴 수 있다. 원본이 사라지면 알림도 거둔다.
+    assert.match(migration, /AFTER INSERT OR DELETE ON public\.post_reactions/);
+    assert.match(migration, /AFTER INSERT OR DELETE OR UPDATE OF status ON public\.post_comments/);
+    assert.match(migration, /NEW\.status IS DISTINCT FROM 'approved'[\s\S]*?DELETE FROM public\.student_notification_events/);
+    // 갈래가 섞이면 승인·반려가 반응 스무 개에 묻힌다.
+    assert.match(migration, /p_module_ids TEXT\[\] DEFAULT NULL/);
+    assert.match(migration, /'feedback_notifications'/);
+    assert.match(migration, /event\.module_id <> 'feedback'/);
+    assert.match(api, /FEEDBACK_MODULE_IDS/);
+    assert.match(api, /mark_my_activity_notifications_read_all_v1/);
+    assert.match(hook, /moduleIds: FEEDBACK_MODULE_IDS/);
+    assert.match(registry, /feedbackNotificationDefinitions/);
+    // 과거 소식을 소급 생성하면 학생 한 명에게 수십 건이 한꺼번에 쏟아진다.
+    assert.doesNotMatch(migration, /INSERT INTO public\.student_notification_events[\s\S]*?FROM public\.post_reactions/);
+});
+
+test('내 글 소식은 더 이상 last_feedback_check 시각으로 읽음을 가르지 않는다', async () => {
+    const hook = await read('src/hooks/useStudentDashboard.js');
+
+    assert.doesNotMatch(hook, /mark_feedback_as_read/);
+    assert.doesNotMatch(hook, /lastCheckRef|lastCheckLoadedRef|ensureLastCheckLoaded/);
+    assert.doesNotMatch(hook, /1970-01-01/);
+    // 배지와 목록이 서로 다른 기준으로 세면 다시 어긋난다. 세는 곳은 홈 RPC 하나다.
+    assert.doesNotMatch(hook, /from\('post_reactions'\)|from\('post_comments'\)/);
 });
 
 test('활동 알림은 단일 원장·중복 방지·학생 범위 RPC 계약을 갖는다', async () => {

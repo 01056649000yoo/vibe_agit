@@ -3,74 +3,79 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../common/Button';
 import ModalPortal from '../common/ModalPortal';
 import ModalCloseButton from '../common/ModalCloseButton';
-import { getReactionOption } from '../../modules/writing/reactions/registry';
+import { resolveActivityNotification } from '../../modules/notifications/registry';
 
 /**
  * 역할: 학생 - 내 글 소식(알림) 모달 🔔
  * 친구들의 반응과 친구·선생님 댓글을 한눈에 확인하고 바로 이동합니다.
+ *
+ * 2026-08-17부터 알림 원장(student_notification_events)을 읽는다. 예전에는 읽음 상태를
+ * last_feedback_check 시각 하나로만 갈라서 "탭을 모두 방문하면 전부 읽음"으로 처리했는데,
+ * 전체 탭에서 소식을 다 보고 닫은 학생에게는 배지가 그대로 남아 "눌러도 안 사라진다"가 됐다.
+ * 이제 항목마다 `확인`을 눌러 하나씩 정리하고, 한 번에 끝내려면 `모두 확인`을 쓴다.
  */
-const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate, initialTab = 0, onMarkRead }) => {
+// eventType 이 null 인 탭은 거르지 않고 전부 보여 준다.
+const TABS = Object.freeze([
+    { id: 0, label: '전체', emoji: '🌈', eventType: null },
+    { id: 1, label: '친구들 반응', emoji: '❤️', eventType: 'feedback.reaction_received' },
+    { id: 2, label: '댓글', emoji: '💬', eventType: 'feedback.comment_received' }
+]);
+
+const StudentFeedbackModal = ({
+    isOpen,
+    onClose,
+    feedbacks,
+    loading,
+    onNavigate,
+    initialTab = 0,
+    onMarkRead,
+    onMarkAllRead
+}) => {
     const [activeTab, setActiveTab] = React.useState(initialTab);
-    const [visitedTabs, setVisitedTabs] = React.useState(() => new Set());
-    const [readStatus, setReadStatus] = React.useState('idle');
-    const readRequestRef = React.useRef(0);
+    const [pendingId, setPendingId] = React.useState(null);
+    const [bulkStatus, setBulkStatus] = React.useState('idle');
+    const [error, setError] = React.useState('');
 
-    const requiredTabs = React.useMemo(() => {
-        const tabs = [];
-        if (feedbacks.some(item => item.type === 'reaction')) tabs.push(1);
-        if (feedbacks.some(item => item.type === 'comment')) tabs.push(2);
-        return tabs;
-    }, [feedbacks]);
-
-    // 창을 새로 열 때만 탭 확인 상태를 초기화한다. 전체 탭은 개별 탭 확인으로 세지 않는다.
     React.useEffect(() => {
-        readRequestRef.current += 1;
         if (!isOpen) return;
         setActiveTab(initialTab);
-        setVisitedTabs(new Set(initialTab === 1 || initialTab === 2 ? [initialTab] : []));
-        setReadStatus('idle');
+        setBulkStatus('idle');
+        setPendingId(null);
+        setError('');
     }, [initialTab, isOpen]);
 
-    React.useEffect(() => {
-        if (!isOpen || loading || readStatus !== 'idle' || requiredTabs.length === 0) return undefined;
-        if (!requiredTabs.every(tabId => visitedTabs.has(tabId))) return undefined;
+    const filteredFeedbacks = React.useMemo(() => {
+        const wanted = TABS.find((tab) => tab.id === activeTab)?.eventType || null;
+        if (!wanted) return feedbacks;
+        return feedbacks.filter((item) => item.event_type === wanted);
+    }, [activeTab, feedbacks]);
 
-        const requestId = ++readRequestRef.current;
-        setReadStatus('saving');
-        const markRead = async () => {
-            const saved = await onMarkRead();
-            if (readRequestRef.current === requestId) setReadStatus(saved ? 'done' : 'error');
-        };
-        markRead();
-        return undefined;
-    }, [isOpen, loading, onMarkRead, readStatus, requiredTabs, visitedTabs]);
-
-    const handleTabChange = (tabId) => {
-        setActiveTab(tabId);
-        if (tabId === 1 || tabId === 2) {
-            setVisitedTabs(current => {
-                if (current.has(tabId)) return current;
-                const next = new Set(current);
-                next.add(tabId);
-                return next;
-            });
-        }
+    const handleConfirm = async (event, item) => {
+        // 카드 전체가 글로 이동하는 버튼이라 확인 클릭이 이동으로 새지 않게 막는다.
+        event.stopPropagation();
+        if (pendingId) return;
+        setPendingId(item.id);
+        setError('');
+        const saved = await onMarkRead(item.id);
+        setPendingId(null);
+        if (!saved) setError('확인 처리를 저장하지 못했어요. 다시 눌러 주세요.');
     };
 
-    const handleNotificationClick = (item) => {
-        // 소셜 알림(리액션/댓글) 클릭 시 해당 글 보기
-        if (item.type === 'reaction' || item.type === 'comment') {
-            onNavigate('friends_hideout', { initialPostId: item.post_id || item.student_posts?.id });
-            onClose();
-        }
+    const handleConfirmAll = async () => {
+        if (bulkStatus === 'saving') return;
+        setBulkStatus('saving');
+        setError('');
+        const saved = await onMarkAllRead();
+        setBulkStatus(saved ? 'idle' : 'idle');
+        if (!saved) setError('모두 확인을 저장하지 못했어요. 다시 눌러 주세요.');
     };
 
-    // 탭별 필터링 데이터. 댓글 탭에는 친구 댓글과 선생님 댓글이 함께 들어간다.
-    const filteredFeedbacks = feedbacks.filter(f => {
-        if (activeTab === 1) return f.type === 'reaction';
-        if (activeTab === 2) return f.type === 'comment';
-        return true;
-    });
+    const handleGoToPost = (item) => {
+        const postId = item.payload?.post_id || item.entity_id;
+        if (!postId) return;
+        onNavigate('friends_hideout', { initialPostId: postId });
+        onClose();
+    };
 
     if (!isOpen) return null;
 
@@ -107,14 +112,11 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
 
                     {/* 탭 메뉴 */}
                     <div style={{ display: 'flex', padding: '0 24px', gap: '10px', marginBottom: '10px' }}>
-                        {[
-                            { id: 0, label: '전체', emoji: '🌈' },
-                            { id: 1, label: '친구들 반응', emoji: '❤️' },
-                            { id: 2, label: '댓글', emoji: '💬' }
-                        ].map(tab => (
+                        {TABS.map(tab => (
                             <button
                                 key={tab.id}
-                                onClick={() => handleTabChange(tab.id)}
+                                type="button"
+                                onClick={() => setActiveTab(tab.id)}
                                 style={{
                                     padding: '8px 16px',
                                     borderRadius: '15px',
@@ -135,13 +137,21 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                         ))}
                     </div>
 
-                    {readStatus !== 'idle' && (
-                        <div aria-live="polite" style={{ minHeight: '24px', padding: '0 28px 6px', color: readStatus === 'error' ? '#C62828' : '#607D8B', fontSize: '0.75rem', fontWeight: 800 }}>
-                            {readStatus === 'saving' && '확인한 소식을 정리하고 있어요…'}
-                            {readStatus === 'done' && '모두 확인했어요. 창을 닫으면 목록이 정리돼요.'}
-                            {readStatus === 'error' && (
-                                <Button size="sm" variant="ghost" onClick={() => setReadStatus('idle')}>읽음 처리 다시 시도</Button>
-                            )}
+                    {/* 하루에 스무 건까지 올 수 있어 한 건씩만 처리하게 두면 지금보다 나빠진다. */}
+                    {!loading && feedbacks.length > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 28px 8px', gap: '12px' }}>
+                            <span style={{ color: '#607D8B', fontSize: '0.78rem', fontWeight: 800 }}>
+                                확인하지 않은 소식 {feedbacks.length}개
+                            </span>
+                            <Button size="sm" variant="ghost" onClick={handleConfirmAll} disabled={bulkStatus === 'saving'}>
+                                {bulkStatus === 'saving' ? '정리하는 중…' : '모두 확인'}
+                            </Button>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div role="alert" style={{ padding: '0 28px 6px', color: '#C62828', fontSize: '0.75rem', fontWeight: 800 }}>
+                            {error}
                         </div>
                     )}
 
@@ -155,68 +165,75 @@ const StudentFeedbackModal = ({ isOpen, onClose, feedbacks, loading, onNavigate,
                             </div>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                {filteredFeedbacks.map((f, idx) => {
-                                    const bgColor = '#F8F9FA';
-                                    const borderColor = '#F1F1F1';
-                                    const hoverBg = '#F0F7FF';
-                                    const hoverBorder = '#D0E1F9';
-                                    const reactionOption = getReactionOption(f.reaction_type);
+                                {filteredFeedbacks.map((item) => {
+                                    const presentation = resolveActivityNotification(item);
+                                    const isPending = pendingId === item.id;
 
                                     return (
                                         <div
-                                            key={f.id ? `feedback-${f.id}` : `idx-${idx}`}
+                                            key={item.id}
+                                            role="button"
+                                            tabIndex={0}
+                                            onClick={() => handleGoToPost(item)}
+                                            onKeyDown={(event) => {
+                                                if (event.key === 'Enter' || event.key === ' ') {
+                                                    event.preventDefault();
+                                                    handleGoToPost(item);
+                                                }
+                                            }}
                                             style={{
                                                 padding: '16px',
-                                                background: bgColor,
+                                                background: '#F8F9FA',
                                                 borderRadius: '20px',
-                                                border: `1px solid ${borderColor}`,
+                                                border: '1px solid #F1F1F1',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.2s',
                                                 position: 'relative'
                                             }}
-                                            onClick={() => handleNotificationClick(f)}
                                             onMouseEnter={e => {
-                                                e.currentTarget.style.background = hoverBg;
-                                                e.currentTarget.style.borderColor = hoverBorder;
+                                                e.currentTarget.style.background = '#F0F7FF';
+                                                e.currentTarget.style.borderColor = '#D0E1F9';
                                             }}
                                             onMouseLeave={e => {
-                                                e.currentTarget.style.background = bgColor;
-                                                e.currentTarget.style.borderColor = borderColor;
+                                                e.currentTarget.style.background = '#F8F9FA';
+                                                e.currentTarget.style.borderColor = '#F1F1F1';
                                             }}
                                         >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                                                <span style={{ fontSize: '1.2rem' }}>
-                                                    {f.type === 'reaction' ? reactionOption.emoji : '💬'}
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                                                <span style={{ fontSize: '1.2rem', lineHeight: 1.4 }} aria-hidden="true">
+                                                    {presentation.icon}
                                                 </span>
-                                                <span style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem' }}>
-                                                    {f.type === 'reaction' ? `${f.students?.name} 친구가 '${reactionOption.label}' 반응을 남겼어요!` :
-                                                        f.type === 'comment' ? (
-                                                            f.teacher_id
-                                                                ? '🍎 선생님이 댓글을 남겼어요!'
-                                                                : `${f.students?.name} 친구가 댓글을 남겼어요!`
-                                                        ) :
-                                                            '새로운 소식이 도착했어요!'}
-                                                </span>
-                                            </div>
-
-                                            <div style={{ fontSize: '0.85rem', color: '#9E9E9E', marginBottom: '4px' }}>
-                                                글 제목: "{f.student_posts?.title || f.title || '제목 없음'}"
-                                            </div>
-
-                                            <div style={{
-                                                fontSize: '0.9rem',
-                                                color: '#795548',
-                                                background: 'white',
-                                                padding: '8px 12px', borderRadius: '12px', marginTop: '6px',
-                                                border: '1px solid rgba(0,0,0,0.05)',
-                                                whiteSpace: 'pre-wrap',
-                                                lineHeight: '1.6'
-                                            }}>
-                                                {f.content}
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ fontWeight: 'bold', color: '#5D4037', fontSize: '0.95rem', marginBottom: '4px' }}>
+                                                        {presentation.title}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.88rem', color: '#795548', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                                                        {presentation.message}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={(event) => handleConfirm(event, item)}
+                                                    disabled={isPending}
+                                                    aria-label="이 소식 확인"
+                                                    style={{
+                                                        flexShrink: 0,
+                                                        padding: '6px 12px',
+                                                        borderRadius: '12px',
+                                                        border: '1px solid #C8E6C9',
+                                                        background: isPending ? '#ECEFF1' : '#E8F5E9',
+                                                        color: isPending ? '#90A4AE' : '#2E7D32',
+                                                        fontWeight: 900,
+                                                        fontSize: '0.78rem',
+                                                        cursor: isPending ? 'default' : 'pointer'
+                                                    }}
+                                                >
+                                                    {isPending ? '…' : '✓ 확인'}
+                                                </button>
                                             </div>
 
                                             <div style={{ fontSize: '0.75rem', color: '#BDBDBD', marginTop: '10px', textAlign: 'right' }}>
-                                                {new Date(f.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                {new Date(item.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </div>
                                         </div>
                                     );

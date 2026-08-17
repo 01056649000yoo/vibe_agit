@@ -36,10 +36,11 @@ test('등록된 모든 장르 매니페스트가 반응 프로필을 명시한�
 });
 
 test('학생·친구·알림·교사 화면은 공용 반응 레지스트리를 사용한다', async () => {
-    const [studentWriting, friendsHideout, feedbackModal, teacherModal, relationshipCard, ideaMarket] = await Promise.all([
+    const [studentWriting, friendsHideout, feedbackNotifications, teacherModal, relationshipCard, ideaMarket] = await Promise.all([
         readFile('src/components/student/StudentWriting.jsx', 'utf8'),
         readFile('src/modules/community/friends-hideout/FriendsHideout.jsx', 'utf8'),
-        readFile('src/components/student/StudentFeedbackModal.jsx', 'utf8'),
+        // 내 글 소식의 반응 표시는 알림 원장 전환(20261116)으로 모듈 알림 정의로 옮겼다.
+        readFile('src/modules/writing/notifications.js', 'utf8'),
         readFile('src/components/teacher/SubmissionStatusModal.jsx', 'utf8'),
         readFile('src/modules/community/friends-hideout/profile/cards/FriendRelationshipCard.jsx', 'utf8'),
         readFile('src/modules/writing/idea-market/IdeaMarketManager.jsx', 'utf8'),
@@ -47,7 +48,7 @@ test('학생·친구·알림·교사 화면은 공용 반응 레지스트리를 
 
     assert.match(studentWriting, /getReactionOptions\(genreMissionType\?\.reactionProfile\)/);
     assert.match(friendsHideout, /getMissionReactionOptions\(viewingMission\)/);
-    assert.match(feedbackModal, /getReactionOption\(f\.reaction_type\)/);
+    assert.match(feedbackNotifications, /getReactionOption\(payload\.reaction_type\)/);
     assert.match(teacherModal, /getMissionReactionOptions\(selectedMission\)/);
     assert.match(teacherModal, /fetchTeacherMissionEngagement\(missionId\)/);
     assert.match(relationshipCard, /getReactionOption\(event\.reaction_type\)/);

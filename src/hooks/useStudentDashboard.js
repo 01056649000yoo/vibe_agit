@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { studentHomeApi } from '../modules/home/studentHomeApi';
+import { FEEDBACK_MODULE_IDS, notificationApi } from '../modules/notifications/notificationApi';
 
 const ACTIVE_MISSION_LIMIT = 500;
 
@@ -8,6 +10,7 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
     const RETURNED_COUNT_CACHE_MS = 30000;
     const [points, setPoints] = useState(0);
     const [hasActivity, setHasActivity] = useState(false);
+    const [feedbackUnreadCount, setFeedbackUnreadCount] = useState(0);
     const [showFeedback, setShowFeedback] = useState(false);
     const [feedbacks, setFeedbacks] = useState([]);
     const [loadingFeedback, setLoadingFeedback] = useState(false);
@@ -16,42 +19,37 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
     const [petData, setPetData] = useState(null); // [추가] 초기 펫 데이터 상태
     const [isLoading, setIsLoading] = useState(true);
 
-    const lastCheckRef = useRef('1970-01-01T00:00:00.000Z');
-    // 기준선(last_feedback_check)을 **실제로 읽었는지** 표시한다.
-    // 못 읽었는데 1970년 기본값으로 조회하면 지난 소식이 전부 다시 뜬다.
-    // 스냅샷 RPC 는 students.auth_id = auth.uid() 로 학생을 찾는데, 학생 로그인은
-    // 기기마다 새 익명 세션을 만들어 auth_id 를 덮어쓴다 → 바인딩 직후나 다른 기기에서
-    // 이 조회가 실패할 수 있다. 실패하면 학생 id 로 직접 읽는 폴백을 탄다.
-    const lastCheckLoadedRef = useRef(false);
-    // 소식 조회는 학급으로 먼저 좁힌다. student_posts 를 거쳐서만 거르면
-    // 학급 인덱스를 못 써 전 학급 반응·댓글을 훑는다 (WORKLOG '학급 글 조회 기준' ①).
-    // 다만 세션에 학급이 아직 없을 수 있어(아래 폴백 조회 참고) **있을 때만** 건다 —
-    // null 로 걸면 소식이 통째로 안 보인다.
+    // 내 글 소식은 2026-08-17부터 student_notification_events 원장을 읽는다. 예전에는
+    // students.last_feedback_check 시각 하나로 갈랐는데, 선 하나로는 "1번은 읽고 2번은
+    // 안 읽음"을 표현할 수 없어 알림별 확인이 불가능했다. 원장은 행마다 read_at을 갖는다.
     const sessionClassId = studentSession?.classId || studentSession?.class_id || null;
-    const scopeToClass = useCallback(
-        (query) => (sessionClassId ? query.eq('class_id', sessionClassId) : query),
-        [sessionClassId]
-    );
     const returnedCountCacheRef = useRef({ value: 0, fetchedAt: 0 });
-    const feedbackReadRef = useRef(false);
 
     const applyBootstrap = useCallback((payload) => {
         if (!payload?.student) return null;
         const student = payload.student;
         setPoints(Number(student.total_points || 0));
         if (student.pet_data) setPetData(student.pet_data);
-        if (student.last_feedback_check) {
-            lastCheckRef.current = student.last_feedback_check;
-            lastCheckLoadedRef.current = true;
-        }
         const home = payload.home || {};
-        setHasActivity(Boolean(home.has_activity));
+        const feedbackUnread = Number(payload.feedback_notifications?.unread_count || 0);
+        setFeedbackUnreadCount(feedbackUnread);
+        setHasActivity(feedbackUnread > 0 || Boolean(home.has_activity));
         const nextReturned = Number(home.returned_count || 0);
         returnedCountCacheRef.current = { value: nextReturned, fetchedAt: Date.now() };
         setReturnedCount(nextReturned);
         setIsLoading(false);
         return student;
     }, []);
+
+    // 읽음 처리 뒤 홈 캐시를 반드시 지운다. 캐시(60초)에 옛 개수가 남아 있으면 학생이
+    // 다른 메뉴에 갔다 오는 순간 대시보드가 새로 만들어지면서 그 값을 다시 적용해
+    // 방금 지운 배지가 되살아난다. 화면 상태만 바꾸면 안 되는 이유다.
+    // 확인할 때마다 홈 RPC를 다시 부르면 왕복이 스무 번 생기므로, 확인 중에는 캐시만
+    // 버려 두고(notify: false) 창을 닫을 때 한 번만 다시 부른다.
+    const feedbackDirtyRef = useRef(false);
+    const invalidateHomeCache = useCallback(({ notify = true } = {}) => {
+        if (studentSession?.id) studentHomeApi.invalidate(studentSession.id, { notify });
+    }, [studentSession?.id]);
 
     const fetchActiveMissionIds = useCallback(async () => {
         if (!sessionClassId) return [];
@@ -90,10 +88,6 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
                 if (currentStudent.pet_data) {
                     setPetData(currentStudent.pet_data);
                 }
-                if (currentStudent.last_feedback_check) {
-                    lastCheckRef.current = currentStudent.last_feedback_check;
-                    lastCheckLoadedRef.current = true;
-                }
                 return currentStudent;
             }
         } catch (err) {
@@ -101,66 +95,20 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
         }
         return null;
     }, [applyBootstrap, refreshBootstrap, studentSession?.id]);
-    // 스냅샷이 기준선을 못 준 경우의 폴백. 학생 id 로 직접 읽는다.
-    const ensureLastCheckLoaded = useCallback(async () => {
-        if (lastCheckLoadedRef.current || !studentSession?.id) return;
-        const { data, error } = await supabase
-            .from('students')
-            .select('last_feedback_check')
-            .eq('id', studentSession.id)
-            .maybeSingle();
-        if (error) {
-            console.error('소식 기준 시각 로드 실패:', error.message);
-            return;
-        }
-        if (data) {
-            lastCheckRef.current = data.last_feedback_check || '1970-01-01T00:00:00.000Z';
-            lastCheckLoadedRef.current = true;
-        }
-    }, [studentSession?.id]);
 
+    // 미확인 개수는 원장을 읽는 홈 RPC 한 곳에서만 나온다. 예전에는 여기서 반응·댓글
+    // 두 표를 직접 조인해 다시 셌는데, 서버와 기준이 갈라지면 배지와 목록이 어긋났다.
     const checkActivity = useCallback(async () => {
+        if (!studentSession?.id || !refreshBootstrap) return false;
         try {
-            if (!studentSession?.id) return;
-            if (refreshBootstrap) {
-                const payload = await refreshBootstrap({ force: true });
-                applyBootstrap(payload);
-                return Boolean(payload?.home?.has_activity);
-            }
-
-            const lastCheckTime = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
-
-            const [reactionsResult, commentsResult] = await Promise.all([
-                scopeToClass(supabase
-                    .from('post_reactions')
-                    .select('id, student_posts!inner(student_id)'))
-                    .eq('student_posts.student_id', studentSession.id)
-                    .neq('student_id', studentSession.id)
-                    .gt('created_at', lastCheckTime)
-                    .limit(1),
-                scopeToClass(supabase
-                    .from('post_comments')
-                    .select('id, student_id, teacher_id, student_posts!inner(student_id)'))
-                    .eq('student_posts.student_id', studentSession.id)
-                    .gt('created_at', lastCheckTime)
-                    .order('created_at', { ascending: false })
-                    .limit(20)
-            ]);
-
-            if (reactionsResult.error) console.error("Reactions Check Error:", reactionsResult.error);
-            if (commentsResult.error) console.error("Comments Check Error:", commentsResult.error);
-
-            const hasNewReaction = (reactionsResult.data?.length || 0) > 0;
-            const hasNewComment = (commentsResult.data || []).some(comment =>
-                comment.teacher_id != null ||
-                (comment.student_id != null && comment.student_id !== studentSession.id)
-            );
-
-            setHasActivity(hasNewReaction || hasNewComment);
+            const payload = await refreshBootstrap({ force: true });
+            applyBootstrap(payload);
+            return Number(payload?.feedback_notifications?.unread_count || 0) > 0;
         } catch (err) {
             console.error('활동 확인 실패:', err.message);
+            return false;
         }
-    }, [applyBootstrap, refreshBootstrap, studentSession?.id, scopeToClass]);
+    }, [applyBootstrap, refreshBootstrap, studentSession?.id]);
 
     const fetchReturnedCount = useCallback(async (forceRefresh = false) => {
         if (!studentSession?.id || !sessionClassId) return 0;
@@ -209,31 +157,52 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
         }
     }, [applyBootstrap, fetchActiveMissionIds, refreshBootstrap, sessionClassId, studentSession?.id]);
 
-    const handleMarkFeedbackRead = useCallback(async () => {
+    // 알림 한 건만 확인한다. 원본 반응·댓글은 글에 그대로 남고 알림만 정리된다.
+    const handleMarkFeedbackRead = useCallback(async (notificationId) => {
+        if (!notificationId) return false;
         try {
-            // 원본 반응·댓글은 남기고, 새 소식 조회 기준 시각만 서버에서 갱신한다.
-            const { error } = await supabase.rpc('mark_feedback_as_read', {
-                p_student_id: studentSession.id
+            await notificationApi.markRead([notificationId]);
+            setFeedbacks((current) => current.filter((item) => item.id !== notificationId));
+            setFeedbackUnreadCount((current) => {
+                const next = Math.max(0, current - 1);
+                setHasActivity(next > 0);
+                return next;
             });
-
-            if (error) throw error;
-
-            lastCheckRef.current = new Date().toISOString();
-            lastCheckLoadedRef.current = true;
-            feedbackReadRef.current = true;
-            setHasActivity(false);
+            feedbackDirtyRef.current = true;
+            invalidateHomeCache({ notify: false });
             return true;
         } catch (err) {
-            console.error('알림 확인 시간 저장 실패:', err);
+            console.error('소식 확인 처리 실패:', err.message);
             return false;
         }
-    }, [studentSession?.id]);
+    }, [invalidateHomeCache]);
 
+    // 목록에 보이는 50건이 아니라 서버가 가진 내 글 소식 전체를 확인 처리한다.
+    const handleMarkAllFeedbackRead = useCallback(async () => {
+        try {
+            await notificationApi.markAllRead({ moduleIds: FEEDBACK_MODULE_IDS });
+            setFeedbacks([]);
+            setFeedbackUnreadCount(0);
+            setHasActivity(false);
+            feedbackDirtyRef.current = true;
+            invalidateHomeCache({ notify: false });
+            return true;
+        } catch (err) {
+            console.error('소식 모두 확인 처리 실패:', err.message);
+            return false;
+        }
+    }, [invalidateHomeCache]);
+
+    // 창을 닫을 때 한 번만 서버 값을 다시 받는다. 이걸 빼면 앱이 들고 있는 옛 홈 데이터가
+    // 그대로 남아, 다른 메뉴에 갔다 돌아오는 순간 대시보드가 새로 만들어지며 지운 배지가
+    // 되살아난다(홈 복귀 새로고침은 60초가 지나야 돌기 때문에 그 안에 돌아오면 어긋난다).
     const handleCloseFeedback = useCallback(() => {
         setShowFeedback(false);
-        // 자동 읽음 처리된 목록은 현재 창에서만 유지하고 닫을 때 정리한다.
-        if (feedbackReadRef.current) setFeedbacks([]);
-    }, []);
+        if (feedbackDirtyRef.current) {
+            feedbackDirtyRef.current = false;
+            invalidateHomeCache({ notify: true });
+        }
+    }, [invalidateHomeCache]);
 
     const handleDirectRewriteGo = async () => {
         try {
@@ -279,70 +248,30 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
         }
     };
 
-    const fetchFeedbacks = async () => {
+    // 미확인 알림만 원장에서 읽는다. 확인한 것은 서버가 이미 걸러 주므로 클라이언트가
+    // 다시 거를 필요가 없고, 부분 인덱스 덕에 지난 이력이 쌓여도 비용이 늘지 않는다.
+    const fetchFeedbacks = useCallback(async () => {
         setLoadingFeedback(true);
         try {
-            const lastCheck = lastCheckRef.current || '1970-01-01T00:00:00.000Z';
-
-            const [reactionsResult, commentsResult] = await Promise.all([
-                // 반응
-                scopeToClass(supabase
-                    .from('post_reactions')
-                    .select('*, students:student_id(name), student_posts!inner(title, id, student_id)'))
-                    .eq('student_posts.student_id', studentSession.id)
-                    .neq('student_id', studentSession.id)
-                    .gt('created_at', lastCheck)
-                    .order('created_at', { ascending: false })
-                    .limit(50),
-                scopeToClass(supabase
-                    .from('post_comments')
-                    .select('*, students:student_id(name), student_posts!inner(title, id, student_id)'))
-                    .eq('student_posts.student_id', studentSession.id)
-                    .gt('created_at', lastCheck)
-                    .order('created_at', { ascending: false })
-                    .limit(50)
-            ]);
-
-            const normalizeEmbeddedStudent = (studentValue) => {
-                if (Array.isArray(studentValue)) return studentValue[0] || null;
-                return studentValue || null;
-            };
-
-            const reactions = (reactionsResult.data || []).map(r => ({
-                ...r,
-                type: 'reaction',
-                students: normalizeEmbeddedStudent(r.students)
-            }));
-            const comments = (commentsResult.data || [])
-                .filter(comment =>
-                    comment.teacher_id != null ||
-                    (comment.student_id != null && comment.student_id !== studentSession.id)
-                )
-                .map(c => ({
-                    ...c,
-                    type: 'comment',
-                    students: normalizeEmbeddedStudent(c.students)
-                }));
-
-            const combined = [...reactions, ...comments].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-            setFeedbacks(combined);
+            const result = await notificationApi.listUnread({
+                limit: 50,
+                moduleIds: FEEDBACK_MODULE_IDS
+            });
+            setFeedbacks(result.items || []);
         } catch (err) {
-            console.error('피드백 로드 실패:', err.message);
+            console.error('소식 로드 실패:', err.message);
+            setFeedbacks([]);
         } finally {
             setLoadingFeedback(false);
         }
-    };
+    }, []);
 
-    const openFeedback = async (tabIndex = 0) => {
-        feedbackReadRef.current = false;
+    const openFeedback = useCallback(async (tabIndex = 0) => {
         setFeedbackInitialTab(tabIndex);
         setLoadingFeedback(true);
         setShowFeedback(true);
-        // 기준선을 못 읽은 채 조회하면 1970년 기준이 되어 지난 소식이 전부 뜬다.
-        await ensureLastCheckLoaded();
         await fetchFeedbacks();
-    };
+    }, [fetchFeedbacks]);
 
     useEffect(() => {
         if (studentSession?.id) {
@@ -355,9 +284,7 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
                 // 블로킹 없이 각 요청을 개별 비동기 실행하도록 뜯어 고쳐 체감 로딩 시간(TTI) 제로화
                 setIsLoading(false); // 즉시 렌더링을 허용 (데이터는 각자 도착하는 대로 채워짐)
 
-                // fetchMyPoints에서 lastCheckRef를 세팅한 이후에 활동 내역을 체크해야 함 (알림 메시지 버그 방지)
-                fetchMyPoints().then(async () => {
-                    await ensureLastCheckLoaded();
+                fetchMyPoints().then(() => {
                     checkActivity();
                     fetchReturnedCount(true);
                 });
@@ -365,13 +292,14 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
             };
             loadData();
         }
-    }, [applyBootstrap, bootstrap, bootstrapLoading, studentSession?.id, fetchMyPoints, checkActivity, fetchReturnedCount, ensureLastCheckLoaded]);
+    }, [applyBootstrap, bootstrap, bootstrapLoading, studentSession?.id, fetchMyPoints, checkActivity, fetchReturnedCount]);
 
     return {
-        points, setPoints, hasActivity, showFeedback, feedbacks,
+        points, setPoints, hasActivity, feedbackUnreadCount, showFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
         returnedCount, isLoading, initialPetData: petData,
-        handleMarkFeedbackRead, handleCloseFeedback, handleDirectRewriteGo, openFeedback,
+        handleMarkFeedbackRead, handleMarkAllFeedbackRead, handleCloseFeedback,
+        handleDirectRewriteGo, openFeedback,
         fetchMyPoints, checkActivity, fetchReturnedCount // 새로운 훅에 넘기기 위한 내보내기
     };
 };

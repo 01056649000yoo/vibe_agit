@@ -14,6 +14,7 @@ import { useStudentDashboard } from '../../hooks/useStudentDashboard';
 import StudentGameModuleHost from '../../modules/game/StudentGameModuleHost';
 import useMyTitleStatus from '../../modules/writing/title-status/useMyTitleStatus';
 import ActivityNotificationPanel from '../../modules/notifications/ActivityNotificationPanel';
+import { studentHomeApi } from '../../modules/home/studentHomeApi';
 
 // 분리된 UI 컴포넌트들
 import StudentHeader from './StudentHeader';
@@ -76,7 +77,8 @@ const StudentDashboard = ({
         points, setPoints, hasActivity, showFeedback, feedbacks,
         loadingFeedback, feedbackInitialTab,
         returnedCount, initialPetData,
-        handleMarkFeedbackRead, handleCloseFeedback, handleDirectRewriteGo, openFeedback
+        handleMarkFeedbackRead, handleMarkAllFeedbackRead, handleCloseFeedback,
+        handleDirectRewriteGo, openFeedback
     } = useStudentDashboard(studentSession, onNavigate, {
         bootstrap: homeBootstrap,
         bootstrapLoading: homeBootstrapLoading,
@@ -275,10 +277,18 @@ const StudentDashboard = ({
                     <ActivityNotificationPanel
                         summary={activitySummary}
                         loading={homeBootstrapLoading}
-                        onSummaryChange={(summary) => setActivityOverride({
-                            bootstrapGeneratedAt: homeBootstrap?.generated_at,
-                            summary
-                        })}
+                        onSummaryChange={(summary) => {
+                            setActivityOverride({
+                                bootstrapGeneratedAt: homeBootstrap?.generated_at,
+                                summary
+                            });
+                            // activityOverride는 대시보드가 사라지면 함께 날아간다. 서버 값을
+                            // 다시 받아 두지 않으면 다른 메뉴에 갔다 오는 순간 옛 개수가 다시
+                            // 적용돼 방금 확인한 알림이 되살아난다(내 글 소식과 같은 문제).
+                            // 여기는 승인·포인트라 보통 한두 건이므로 확인할 때마다 바로 받는다.
+                            // 하루 스무 건까지 오는 내 글 소식은 창을 닫을 때 한 번만 받는다.
+                            if (studentSession?.id) studentHomeApi.invalidate(studentSession.id);
+                        }}
                         onNavigate={onNavigate}
                         onOpenPost={(post) => {
                             setMyAgitInitialPost(post);
@@ -353,6 +363,7 @@ const StudentDashboard = ({
                     onNavigate={onNavigate}
                     initialTab={feedbackInitialTab}
                     onMarkRead={handleMarkFeedbackRead}
+                    onMarkAllRead={handleMarkAllFeedbackRead}
                 />
 
                 {/* 드래곤 아지트 모달 (모듈: game/dragon) — 열릴 때만 로드 */}
