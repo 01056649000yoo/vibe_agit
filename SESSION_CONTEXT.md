@@ -38,16 +38,16 @@
   `alert`은 키보드를 닫아 화면이 튀고, 반복되면 브라우저가 조용히 막는다. **실패 알림만 대화상자로 남긴다.**
 - 운영 `agit-db`는 마이그레이션 150개 적용·대기 0이고, 보고서 사진은 `agit-storage-data` named volume에
   저장된다. DB와 Storage를 건드릴 때는 최신 운영 상태를 다시 조회한다.
-- 배포용 셀프호스티드 러너가 2026-08-17 07:49에 스스로 종료돼 배포가 큐에 멈춘 적이 있다. 원인은 못 찾았고
-  `launchctl kickstart -k gui/$(id -u)/actions.runner.01056649000yoo-vibe_agit.macmini-agit`로 되살렸다.
+- 러너 4개(`vibe_agit`·`writing-helper`·`classroom-tools`·`URL`) plist에 `KeepAlive`를 넣어 죽으면 스스로
+  되살아난다(2026-08-17. 그전까지 3개가 조용히 죽어 있었다. GitHub 기본 템플릿에 KeepAlive가 없다).
+  일부러 멈출 때는 `launchctl bootout`을 쓴다 — `stop`만으로는 다시 뜬다.
 - 다음 큰 제품 순서는 어휘 V2 후속(보충 수련·직접 입력형·낱말 카드함·덱 마스터), `나의 아지트 디자인 3차`,
   Stage 2 연구소 연동·서바이벌 흡수 중 미정이다.
 - 실기기 인수 검사는 [MANUAL_ACCEPTANCE_CHECKLIST.md](MANUAL_ACCEPTANCE_CHECKLIST.md)에 계속 기록한다.
 
 ## 다음 세션 첫 순서
 
-1. `git log`·브랜치·작업 트리와 마지막 GitHub Actions 배포 성공 여부를 다시 확인한다. 배포가 `queued`에서
-   안 움직이면 러너가 죽은 것이니 위 `현재 위치` 마지막 줄의 `launchctl kickstart`로 되살린다.
+1. `git log`·브랜치·작업 트리와 마지막 GitHub Actions 배포 성공 여부를 다시 확인한다.
 2. 학생 태블릿에서 과제 임시 저장을 눌러 키보드가 닫히지 않고 `저장했어요 ✓`가 뜨는지, 사진이 있는 보고서
    초안과 다시쓰기 저장이 정상인지 확인한다(임시저장이 RPC로 바뀌어 경로가 통째로 달라졌다).
 3. 학생 실계정 PC·태블릿·모바일에서 어휘의 탑 탐험 지도의 첫 진입 위치 이동, 지그재그 경로 밀도,
