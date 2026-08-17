@@ -32,8 +32,9 @@
   읽음 처리 뒤에는 반드시 `studentHomeApi.invalidate()`로 홈 캐시를 비워야 배지가 되살아나지 않는다.
 - 2026-08-17 기본 로직 점검에서 **학생이 자기 글의 포인트 지급액을 고칠 수 있는 취약점**을 찾아 막았다
   (`20261117_guard_student_post_server_columns.sql`). 포인트로 이어지는 값은 서버만 쓴다. 가드는
-  SECURITY INVOKER여야 하고(DEFINER면 무력화), 과제 글쓰기 임시저장의 RPC 이관이 남았다.
-- 운영 `agit-db`는 마이그레이션 149개 적용·대기 0이고, 보고서 사진은 `agit-storage-data` named volume에
+  SECURITY INVOKER여야 하고(DEFINER면 무력화), 과제 임시저장도 `save_my_assignment_draft_v1` RPC로
+  옮겨 학생 화면이 보상·상태 값을 아예 보내지 않는다. 학생 쓰기는 전부 전용 RPC를 쓴다.
+- 운영 `agit-db`는 마이그레이션 150개 적용·대기 0이고, 보고서 사진은 `agit-storage-data` named volume에
   저장된다. DB와 Storage를 건드릴 때는 최신 운영 상태를 다시 조회한다.
 - 다음 큰 제품 순서는 어휘 V2 후속(보충 수련·직접 입력형·낱말 카드함·덱 마스터), `나의 아지트 디자인 3차`,
   Stage 2 연구소 연동·서바이벌 흡수 중 미정이다.
