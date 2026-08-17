@@ -41,8 +41,10 @@
 - 러너 4개(`vibe_agit`·`writing-helper`·`classroom-tools`·`URL`) plist에 `KeepAlive`를 넣어 죽으면 스스로
   되살아난다(2026-08-17. 그전까지 3개가 조용히 죽어 있었다. GitHub 기본 템플릿에 KeepAlive가 없다).
   일부러 멈출 때는 `launchctl bootout`을 쓴다 — `stop`만으로는 다시 뜬다.
-- 다음 큰 제품 순서는 미정이다. 후보: **서바이벌 문제팩 → 어휘의 탑 덱**(속담 85개부터, ROADMAP 2e-1),
-  자리배치 → 수업 도구(2e-2), 어휘 V2 덱 마스터, `나의 아지트 디자인 3차`.
+- 2026-08-17에 **공통 학습 엔진을 분리**했다(`learning_item_progress`·`learning_engine_*`). 어휘의 탑이
+  첫 콘텐츠이고 읽기·쓰기 모두 엔진을 쓴다. 묶음은 `collection_key`(어휘 `g3:d1`)로 두고 엔진은 해석하지 않는다.
+  **다음은 덱 마스터를 엔진 위에 콘텐츠 중립으로 구현**하고, 그 뒤 속담 85개를 두 번째 콘텐츠로 붙여 검증한다.
+- 그 밖의 후보: 자리배치 → 수업 도구(ROADMAP 2e-2), `나의 아지트 디자인 3차`.
   서바이벌 13종 전체 흡수 계획은 2026-08-17에 폐기했다(전제가 실제와 달랐다 — ROADMAP 2e 머리말).
 - ⚠️ Caddy `/lab` 분기와 `helper.` 301 리다이렉트는 **런타임에만 적용**돼 있다(2026-08-17, sudo 필요).
   `sudo cp ~/agit-supabase/Caddyfile.proposed-20260817 /etc/caddy/Caddyfile`을 해야 재시작에도 살아남는다.
