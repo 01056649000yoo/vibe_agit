@@ -46,6 +46,9 @@
 - ⚠️ Caddy `/lab` 분기와 `helper.` 301 리다이렉트는 **런타임에만 적용**돼 있다(2026-08-17, sudo 필요).
   `sudo cp ~/agit-supabase/Caddyfile.proposed-20260817 /etc/caddy/Caddyfile`을 해야 재시작에도 살아남는다.
   안 하면 재시작 시 옛 연구소 앱으로 되돌아가고 `/lab`이 사라진다.
+- 옛 연구소 독립 실행판은 컨테이너·CI 배포 단계까지 제거했다(2026-08-17). `helper.` 주소는 `/lab` 301.
+  공용 `supabase-kong`은 샘링크·자비스가 쓰므로 **유지**하되 `127.0.0.1`로 조였고, 샘링크는
+  `kong:8000`(도커 네트워크)으로 직접 붙는다. 두 kong 모두 이제 로컬 바인딩이다.
 - 실기기 인수 검사는 [MANUAL_ACCEPTANCE_CHECKLIST.md](MANUAL_ACCEPTANCE_CHECKLIST.md)에 계속 기록한다.
 
 ## 다음 세션 첫 순서
