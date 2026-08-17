@@ -332,3 +332,153 @@
   .vocab-journey *, .vocab-journey *::before, .vocab-journey *::after { animation: none !important; transition: none !important; }
 }
 
+
+/* ── 덱마스터 (공식 도전) ──────────────────────────────────────────────
+   연습 화면과 색·간격을 맞춰 별도 사이트처럼 보이지 않게 한다. 다만 시험이라는 것이
+   드러나도록 상단에 진행과 남은 시간을 크게 둔다. */
+.vocab-deck-master {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: clamp(16px, 4vw, 28px);
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+.vocab-deck-master__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.vocab-deck-master__head strong { font-size: 1.05rem; font-weight: 900; color: #2C3E50; }
+.vocab-deck-master__head small { display: block; color: #7F8C8D; font-weight: 800; font-size: .82rem; }
+.vocab-deck-master__timer {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #2C3E50;
+    background: #F1F4F8;
+    border-radius: 14px;
+    padding: 6px 14px;
+    min-width: 74px;
+    text-align: center;
+}
+/* 10초 아래에서만 색이 바뀐다. 처음부터 빨가면 계속 쫓기는 느낌이라 생각할 여유가 사라진다. */
+.vocab-deck-master__timer.is-urgent { color: #C0392B; background: #FDECEA; }
+
+.vocab-deck-master__bar { height: 8px; border-radius: 999px; background: #ECF0F3; overflow: hidden; }
+.vocab-deck-master__bar span { display: block; height: 100%; background: #3498DB; transition: width .25s ease; }
+
+.vocab-deck-master__prompt {
+    margin: 0;
+    font-size: clamp(1.05rem, 2.6vw, 1.35rem);
+    font-weight: 800;
+    line-height: 1.65;
+    color: #2C3E50;
+    background: #fff;
+    border: 1px solid #ECF0F3;
+    border-radius: 18px;
+    padding: clamp(16px, 3vw, 24px);
+    white-space: pre-wrap;
+}
+
+.vocab-deck-master__options { display: grid; gap: 10px; }
+.vocab-deck-master__options button {
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid #DCE3EA;
+    background: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #2C3E50;
+    cursor: pointer;
+    text-align: left;
+}
+.vocab-deck-master__options button:hover:not(:disabled) { background: #F0F7FF; border-color: #BBD7F5; }
+
+.vocab-deck-master__input { display: flex; gap: 8px; }
+.vocab-deck-master__input input {
+    flex: 1;
+    min-width: 0;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid #DCE3EA;
+    font-size: 1rem;
+    font-weight: 800;
+}
+.vocab-deck-master__input button {
+    padding: 14px 20px;
+    border-radius: 16px;
+    border: none;
+    background: #3498DB;
+    color: #fff;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.vocab-deck-master__notice { margin: 0; color: #C0392B; font-weight: 800; font-size: .86rem; }
+.vocab-deck-master__foot { display: flex; justify-content: space-between; gap: 10px; }
+.vocab-deck-master__foot button {
+    background: none;
+    border: none;
+    color: #7F8C8D;
+    font-weight: 800;
+    font-size: .84rem;
+    cursor: pointer;
+    padding: 6px;
+}
+
+/* 결과 화면 */
+.vocab-deck-master__verdict { text-align: center; padding: 8px 0 4px; }
+.vocab-deck-master__verdict span { font-size: 3rem; display: block; }
+.vocab-deck-master__verdict h1 { margin: 6px 0 4px; font-size: 1.5rem; font-weight: 900; color: #2C3E50; }
+.vocab-deck-master__verdict p { margin: 0; font-weight: 800; color: #34495E; }
+.vocab-deck-master__verdict small { display: block; margin-top: 8px; color: #7F8C8D; font-weight: 700; }
+.vocab-deck-master__verdict.is-passed h1 { color: #B7791F; }
+
+.vocab-deck-master__summit {
+    text-align: center;
+    background: linear-gradient(135deg, #FFF7E0, #FFEFC2);
+    border: 1px solid #F0D89B;
+    border-radius: 20px;
+    padding: 18px;
+}
+.vocab-deck-master__summit span { font-size: 2.2rem; display: block; }
+.vocab-deck-master__summit strong { display: block; font-size: 1.1rem; font-weight: 900; color: #8A6212; margin: 4px 0; }
+.vocab-deck-master__summit small { color: #A07C25; font-weight: 700; }
+
+.vocab-deck-master__wrong {
+    background: #fff;
+    border: 1px solid #ECF0F3;
+    border-radius: 20px;
+    padding: 18px;
+}
+.vocab-deck-master__wrong h2 { margin: 0 0 10px; font-size: 1rem; font-weight: 900; color: #2C3E50; }
+.vocab-deck-master__wrong ul { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.vocab-deck-master__wrong li { background: #F8F9FA; border-radius: 12px; padding: 10px 12px; }
+.vocab-deck-master__wrong li strong { display: block; font-weight: 900; color: #5D4037; }
+.vocab-deck-master__wrong li span { font-size: .86rem; color: #7F8C8D; }
+.vocab-deck-master__wrong > button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 14px;
+    border: none;
+    background: #3498DB;
+    color: #fff;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+/* 지도 카드의 도전 버튼 */
+.vocab-deck-card__master {
+    background: linear-gradient(135deg, #FFF3D0, #FFE9AE) !important;
+    border: 1px solid #F0D89B !important;
+    color: #8A6212 !important;
+    font-weight: 900 !important;
+}
+
+@media (max-width: 640px) {
+    .vocab-deck-master__input { flex-direction: column; }
+    .vocab-deck-master__timer { font-size: 1.1rem; min-width: 64px; }
+}

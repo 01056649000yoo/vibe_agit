@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/supabaseClient';
 import useVocabularyTower from './useVocabularyTower';
 import V2DeckMap from './V2DeckMap';
 import V2CardBox from './V2CardBox';
+import V2DeckMaster, { V2DeckMasterSummary } from './V2DeckMaster';
 import { mapV2Question, ROOM_INFO } from './vocabTowerEngine';
 import './vocabularyTowerGame.css';
 
@@ -72,6 +73,10 @@ const VocabularyTowerGame = ({
     const [submitting, setSubmitting] = useState(false);
     const [typedAnswer, setTypedAnswer] = useState('');
     const [cardBox, setCardBox] = useState(null);
+    // 덱마스터는 층을 다 익힌 학생만 치는 공식 도전이라 연습과 상태를 섞지 않는다.
+    const [masterSession, setMasterSession] = useState(null);
+    const [masterQuestion, setMasterQuestion] = useState(null);
+    const [masterResult, setMasterResult] = useState(null);
     const [returnPhase, setReturnPhase] = useState('playing');
     const finishingRef = useRef(false);
 
@@ -370,7 +375,112 @@ const VocabularyTowerGame = ({
                 notice={notice}
                 onStart={handleStart}
                 onOpenCardBox={openCardBox}
+                onOpenDeckMaster={openDeckMaster}
                 onBack={onBack}
+            />
+        );
+    }
+
+    const loadMasterQuestion = async (attemptId) => {
+        const { data, error } = await supabase.rpc('get_my_vocab_tower_master_question_v1', {
+            p_attempt_id: attemptId
+        });
+        if (error) {
+            console.error('덱마스터 문항 조회 실패:', error.message);
+            setNotice('문제를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+            return null;
+        }
+        if (data?.finished) return null;
+        setMasterQuestion(data);
+        return data;
+    };
+
+    const openDeckMaster = async (deckNumber) => {
+        if (submitting) return;
+        setSubmitting(true);
+        setNotice('');
+        const { data, error } = await supabase.rpc('start_my_vocab_tower_master_v1', {
+            p_deck_number: deckNumber
+        });
+        if (error || !data?.success) {
+            setSubmitting(false);
+            console.error('덱마스터 시작 실패:', error || data);
+            // 자격 미달은 오류가 아니라 안내다. 무엇이 모자란지 그대로 알려 준다.
+            const missing = data?.eligibility?.missing_mastered;
+            setNotice(missing
+                ? `아직 덱마스터에 도전할 수 없어요. ${missing}개를 더 익혀야 해요.`
+                : (data?.error || '덱마스터를 시작하지 못했어요.'));
+            return;
+        }
+        setMasterSession(data);
+        setMasterResult(null);
+        await loadMasterQuestion(data.attempt_id);
+        setSubmitting(false);
+        setPhase('master');
+    };
+
+    const submitMasterAnswer = async (questionId, answer) => {
+        if (submitting || !masterSession) return;
+        setSubmitting(true);
+        const { error } = await supabase.rpc('submit_my_vocab_tower_master_answer_v1', {
+            p_question_id: questionId,
+            p_answer: answer ?? ''
+        });
+        if (error) {
+            setSubmitting(false);
+            console.error('덱마스터 답안 제출 실패:', error.message);
+            setNotice('답을 보내지 못했어요. 다시 눌러 주세요.');
+            return;
+        }
+        const next = await loadMasterQuestion(masterSession.attempt_id);
+        setSubmitting(false);
+        // 남은 문항이 없으면 서버가 채점하고 결과를 준다.
+        if (!next) await finishDeckMaster(true);
+    };
+
+    const finishDeckMaster = async (completed) => {
+        if (!masterSession) return;
+        setSubmitting(true);
+        const { data, error } = await supabase.rpc('finish_my_vocab_tower_master_v1', {
+            p_attempt_id: masterSession.attempt_id,
+            p_completed: completed
+        });
+        setSubmitting(false);
+        if (error) {
+            console.error('덱마스터 종료 실패:', error.message);
+            setNotice('결과를 저장하지 못했어요.');
+            return;
+        }
+        setMasterQuestion(null);
+        setMasterResult({
+            ...data,
+            pass_correct: masterSession.pass_correct,
+            pass_input: masterSession.pass_input
+        });
+        setPhase('master-summary');
+    };
+
+    if (phase === 'master' && masterSession && masterQuestion) {
+        return (
+            <V2DeckMaster
+                key={masterQuestion.question_id}
+                session={masterSession}
+                question={masterQuestion}
+                submitting={submitting}
+                notice={notice}
+                onSubmitAnswer={submitMasterAnswer}
+                onFinish={finishDeckMaster}
+                onExit={() => { setMasterSession(null); setMasterQuestion(null); setNotice(''); setPhase('deck-map'); }}
+            />
+        );
+    }
+
+    if (phase === 'master-summary' && masterResult) {
+        return (
+            <V2DeckMasterSummary
+                result={masterResult}
+                onOpenCardBox={() => { void openCardBox(masterSession?.deck_number); }}
+                onBack={() => { setMasterSession(null); setMasterResult(null); setNotice(''); setPhase('deck-map'); }}
             />
         );
     }

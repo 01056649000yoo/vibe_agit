@@ -8,6 +8,7 @@ const V2DeckMap = ({
     notice,
     onStart,
     onOpenCardBox,
+    onOpenDeckMaster,
     onBack
 }) => {
     const activeDeckNumber = Number(activeRun?.deck_number || 0);
@@ -159,6 +160,18 @@ const V2DeckMap = ({
                                                 ? `${activeDeckNumber}층 연습을 먼저 완료하세요`
                                                 : isActive ? '연습 이어하기' : isConquered ? '정복한 층 다시 탐험' : hasPractice ? '이 층 다시 연습' : '이 층 탐험 시작'}
                                         </button>
+                                        {/* 층을 다 익힌 학생에게만 공식 도전을 연다. 자격은 서버가 다시 확인한다. */}
+                                        {deck.mastered_count >= Math.ceil((deck.item_count || 0) * 0.8)
+                                          && (deck.item_count || 0) > 0 && (
+                                            <button
+                                                type="button"
+                                                className="vocab-deck-card__master"
+                                                onClick={() => onOpenDeckMaster(deckNumber)}
+                                                disabled={submitting || hasOtherActive}
+                                            >
+                                                🏆 덱마스터 도전
+                                            </button>
+                                        )}
                                         {/* 만난 낱말이 있어야 볼 것이 있다. 아직 없으면 버튼을 만들지 않는다. */}
                                         {seenCount > 0 && (
                                             <button
