@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration, vocabPracticeMigration, vocabPerfectRewardMigration, vocabItemLearningMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration, vocabPracticeMigration, vocabPerfectRewardMigration, vocabItemLearningMigration, postColumnGuardMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -25,7 +25,8 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261106_vocab_tower_v2_pilot.sql', 'utf8'),
     readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8'),
     readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8'),
-    readFile('supabase/migrations/20261109_vocab_tower_v2_item_learning.sql', 'utf8')
+    readFile('supabase/migrations/20261109_vocab_tower_v2_item_learning.sql', 'utf8'),
+    readFile('supabase/migrations/20261117_guard_student_post_server_columns.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
@@ -252,4 +253,45 @@ test('어휘 V2 낱말 상태는 직접 접근을 막고 답안 트랜잭션에�
     const issueFunction = vocabItemLearningMigration.match(/CREATE OR REPLACE FUNCTION public\.get_next_my_vocab_tower_v2_practice_question_v1[\s\S]*?\n\$\$;/)?.[0] || '';
     assert.doesNotMatch(issueFunction, /'correct_answer'/);
     assert.doesNotMatch(vocabItemLearningMigration, /auth\.jwt|app_metadata/);
+});
+
+test('학생은 자기 글의 보상·승인 상태를 직접 고칠 수 없다', () => {
+    // 2026-08-17 실제 재현: 학생이 PostgREST 로 awarded_base_reward 를 50000 으로 바꾼 뒤
+    // 교사가 평소대로 승인하니 50,020점이 지급됐다(총점 600 → 50,620).
+    // 원인은 Post_Update_V19 가 본인 글의 모든 컬럼을 열어 준 것이고,
+    // approve_assignment_post 가 글 행의 awarded_* 를 먼저 신뢰하는 것이다.
+    assert.match(postColumnGuardMigration, /BEFORE INSERT OR UPDATE ON public\.student_posts/);
+    assert.match(postColumnGuardMigration, /trg_guard_student_post_server_columns/);
+
+    // 신뢰 경로(SECURITY DEFINER RPC)와 직접 테이블 쓰기는 current_user 로 가른다.
+    assert.match(postColumnGuardMigration, /current_user <> 'authenticated'/);
+    assert.match(postColumnGuardMigration, /auth_user_role\(\) IS DISTINCT FROM 'STUDENT'/);
+
+    const guardFunction = postColumnGuardMigration.match(
+        /CREATE OR REPLACE FUNCTION public\.guard_student_post_server_columns[\s\S]*?\n\$\$;/)?.[0] || '';
+    assert.ok(guardFunction, '가드 함수 정의를 찾지 못했습니다.');
+
+    // ⚠️ SECURITY DEFINER 로 만들면 함수 안의 current_user 가 항상 정의자(supabase_admin)가 되어
+    // 직접 쓰기와 신뢰 RPC 를 구분하지 못하고 가드가 통째로 무력화된다. 선언부만 검사한다
+    // (본문 주석에는 신뢰 경로를 설명하느라 같은 낱말이 나온다).
+    const guardHeader = guardFunction.slice(0, guardFunction.indexOf('AS $$'));
+    assert.doesNotMatch(guardHeader, /SECURITY DEFINER/);
+
+    // 서버가 정하는 값은 학생 쓰기에서 이전 값으로 되돌린다.
+    for (const [column, initial] of [
+        ['awarded_base_reward', 'NULL'],
+        ['awarded_bonus_reward', 'NULL'],
+        ['awarded_bonus_threshold', 'NULL'],
+        ['is_submitted', 'false'],
+        ['is_returned', 'false'],
+        ['is_confirmed', 'false']
+    ]) {
+        assert.ok(guardFunction.includes(`NEW.${column} := OLD.${column};`),
+            `${column} 이 학생 쓰기에서 이전 값으로 보호되지 않습니다.`);
+        assert.ok(guardFunction.includes(`NEW.${column} := ${initial};`),
+            `${column} 이 새 초안에서 ${initial} 로 초기화되지 않습니다.`);
+    }
+
+    // 보너스 조건이 글자 수를 보므로 클라이언트 값을 믿지 않고 제출 RPC 와 같은 함수로 다시 센다.
+    assert.match(guardFunction, /NEW\.char_count := public\.writing_content_char_count\(/);
 });
