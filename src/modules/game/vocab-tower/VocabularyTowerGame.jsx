@@ -345,42 +345,6 @@ const VocabularyTowerGame = ({
         }));
     }, [run.answerCount, run.currentFloor]);
 
-    if (wordsLoading || phase === 'loading') {
-        return <div className="vocab-journey vocab-journey--center"><div className="vocab-journey__loader">🏰</div><p>탑의 방을 준비하고 있어요...</p></div>;
-    }
-
-    if (wordsError || phase === 'error') {
-        return (
-            <div className="vocab-journey vocab-journey--center">
-                <div className="vocab-journey__dialog">
-                    <span className="vocab-journey__dialog-icon">😢</span>
-                    <h2>탑 문이 열리지 않아요</h2>
-                    <p>{wordsError || notice}</p>
-                    <div className="vocab-journey__dialog-actions">
-                        <button type="button" onClick={loadStatus}>다시 시도</button>
-                        <button type="button" className="is-quiet" onClick={onBack}>놀이터로 돌아가기</button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (phase === 'deck-map' && isV2) {
-        return (
-            <V2DeckMap
-                grade={selectedGrade}
-                decks={v2Decks}
-                activeRun={status?.active_run}
-                submitting={submitting}
-                notice={notice}
-                onStart={handleStart}
-                onOpenCardBox={openCardBox}
-                onOpenDeckMaster={openDeckMaster}
-                onBack={onBack}
-            />
-        );
-    }
-
     const loadMasterQuestion = async (attemptId) => {
         const { data, error } = await supabase.rpc('get_my_vocab_tower_master_question_v1', {
             p_attempt_id: attemptId
@@ -459,6 +423,42 @@ const VocabularyTowerGame = ({
         });
         setPhase('master-summary');
     };
+
+    if (wordsLoading || phase === 'loading') {
+        return <div className="vocab-journey vocab-journey--center"><div className="vocab-journey__loader">🏰</div><p>탑의 방을 준비하고 있어요...</p></div>;
+    }
+
+    if (wordsError || phase === 'error') {
+        return (
+            <div className="vocab-journey vocab-journey--center">
+                <div className="vocab-journey__dialog">
+                    <span className="vocab-journey__dialog-icon">😢</span>
+                    <h2>탑 문이 열리지 않아요</h2>
+                    <p>{wordsError || notice}</p>
+                    <div className="vocab-journey__dialog-actions">
+                        <button type="button" onClick={loadStatus}>다시 시도</button>
+                        <button type="button" className="is-quiet" onClick={onBack}>놀이터로 돌아가기</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (phase === 'deck-map' && isV2) {
+        return (
+            <V2DeckMap
+                grade={selectedGrade}
+                decks={v2Decks}
+                activeRun={status?.active_run}
+                submitting={submitting}
+                notice={notice}
+                onStart={handleStart}
+                onOpenCardBox={openCardBox}
+                onOpenDeckMaster={openDeckMaster}
+                onBack={onBack}
+            />
+        );
+    }
 
     if (phase === 'master' && masterSession && masterQuestion) {
         return (
