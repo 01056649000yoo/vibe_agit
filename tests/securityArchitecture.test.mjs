@@ -295,3 +295,37 @@ test('학생은 자기 글의 보상·승인 상태를 직접 고칠 수 없다'
     // 보너스 조건이 글자 수를 보므로 클라이언트 값을 믿지 않고 제출 RPC 와 같은 함수로 다시 센다.
     assert.match(guardFunction, /NEW\.char_count := public\.writing_content_char_count\(/);
 });
+
+test('과제 임시저장은 전용 RPC로만 하고 서버 값을 실어 보내지 않는다', async () => {
+    const [hook, draftMigration] = await Promise.all([
+        readFile('src/hooks/useMissionSubmit.js', 'utf8'),
+        readFile('supabase/migrations/20261118_assignment_draft_save_rpc.sql', 'utf8')
+    ]);
+
+    // 예전에는 student_posts 에 직접 upsert 하면서 보상 금액·글자 수·제출 상태를 클라이언트가
+    // 실어 보냈고, 그게 2026-08-17 포인트 조작 취약점의 뿌리였다.
+    assert.match(hook, /supabase\.rpc\('save_my_assignment_draft_v1'/);
+    assert.doesNotMatch(hook, /\.from\('student_posts'\)[\s\S]{0,200}\.upsert\(/);
+    for (const field of [
+        'awarded_base_reward', 'awarded_bonus_reward', 'awarded_bonus_threshold', 'char_count'
+    ]) {
+        assert.ok(!hook.includes(`${field}:`), `임시저장이 ${field} 를 서버로 보내면 안 됩니다.`);
+    }
+
+    // 서버는 학생 값만 받고 상태·보상은 손대지 않는다.
+    assert.match(draftMigration, /auth_user_role\(\) <> 'STUDENT'/);
+    assert.match(draftMigration, /mission\.class_id = v_student\.class_id/);
+    assert.match(draftMigration, /is_archived IS TRUE/);
+    assert.match(draftMigration, /is_confirmed IS TRUE[\s\S]{0,120}이미 제출된 글은 수정할 수 없습니다/);
+    assert.match(draftMigration, /v_char_count := public\.writing_content_char_count\(/);
+    const updateBlock = draftMigration.match(/UPDATE public\.student_posts SET[\s\S]*?WHERE id = v_existing\.id/)?.[0] || '';
+    assert.ok(updateBlock, '기존 초안 갱신 블록을 찾지 못했습니다.');
+    for (const column of [
+        'awarded_base_reward', 'awarded_bonus_reward', 'awarded_bonus_threshold',
+        'is_submitted', 'is_returned', 'is_confirmed'
+    ]) {
+        assert.ok(!updateBlock.includes(column),
+            `임시저장이 ${column} 을 건드립니다. 상태·보상은 제출·승인 RPC 만 씁니다.`);
+    }
+    assert.match(draftMigration, /REVOKE ALL ON FUNCTION public\.save_my_assignment_draft_v1[\s\S]*?FROM PUBLIC, anon/);
+});

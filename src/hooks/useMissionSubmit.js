@@ -170,7 +170,9 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
     }, [missionId, requestedPostId]);
 
     // 임시 저장 처리
-    const handleSave = async (showMsg = true, draftOverride = null, targetPostId = null) => {
+    // 저장 대상 글은 서버가 (학생, 과제)로 찾는다. 예전에는 호출부가 post id를 넘겨 줬지만
+    // 그 조합이 곧 고유 키라 필요 없다.
+    const handleSave = async (showMsg = true, draftOverride = null) => {
         // [보안 강화] Supabase 세션에서만 studentId 가져오기 - localStorage 폴백 제거
         const currentStudentId = studentId;
         if (!currentStudentId) {
@@ -191,39 +193,24 @@ export const useMissionSubmit = (studentSession, missionId, params, onBack, onNa
 
         try {
             const draft = draftOverride || { title, content, studentAnswers, structuredContent };
-            const missionType = getGenreMissionType(mission?.input_template);
-            const knownPostId = targetPostId || postId;
-            const { data: savedPost, error } = await supabase
-                .from('student_posts')
-                .upsert({
-                    ...(knownPostId ? { id: knownPostId } : {}),
-                    student_id: currentStudentId,
-                    mission_id: missionId,
-                    title: draft.title.trim(),
-                    content: draft.content,
-                    char_count: countContentChars(draft.content),
-                    paragraph_count: getParagraphCount(draft.content, draft.structuredContent),
-                    awarded_base_reward: mission?.base_reward ?? null,
-                    awarded_bonus_reward: mission?.bonus_reward ?? null,
-                    awarded_bonus_threshold: mission?.bonus_threshold ?? null,
-                    is_submitted: isSubmitted, // [수정] 기존 제출 상태 유지 (false로 고정되어 버그 발생하던 부분 해결)
-                    is_returned: isReturned,
-                    is_teacher_edited: false,
-                    teacher_edited_title: null,
-                    teacher_edited_content: null,
-                    teacher_edited_at: null,
-                    teacher_edited_by: null,
-                    student_answers: draft.studentAnswers, // [신규] 답변 저장
-                    structured_content: draft.structuredContent,
-                    ...(missionType?.postStatus ? { status: missionType.postStatus } : {})
-                }, { onConflict: 'student_id,mission_id' })
-                .select('id')
-                .single();
+            // 임시저장은 전용 RPC 한 번으로 끝낸다(성능 계약의 "행동당 쓰기 RPC 1회").
+            // 예전에는 여기서 student_posts 에 직접 upsert 하면서 보상 금액·글자 수·제출 상태까지
+            // 클라이언트가 실어 보냈고, 그게 2026-08-17 포인트 조작 취약점의 뿌리였다.
+            // 이제 서버가 학생 값만 받아 나머지는 직접 계산한다. 글의 상태를 바꾸는 것은
+            // 제출·승인 RPC 뿐이므로 여기서 is_submitted 같은 값을 넘기지 않는다.
+            const { data: saved, error } = await supabase.rpc('save_my_assignment_draft_v1', {
+                p_mission_id: missionId,
+                p_title: draft.title,
+                p_content: draft.content,
+                p_student_answers: draft.studentAnswers || [],
+                p_structured_content: draft.structuredContent
+            });
 
             if (error) throw error;
-            setPostId(savedPost.id);
+            if (Number(saved?.version) !== 1) throw new Error('지원하지 않는 임시저장 응답입니다.');
+            setPostId(saved.post_id);
             if (showMsg) alert('안전하게 임시 저장되었습니다! 💾');
-            return savedPost.id;
+            return saved.post_id;
         } catch (err) {
             console.error('임시 저장 실패:', err.message);
             if (showMsg) alert('저장 중 오류가 발생했습니다.');

@@ -71,10 +71,12 @@ const ReportEditor = ({
         return nextDraft;
     };
 
-    const persistSections = async (nextSections, targetPostId = null) => {
+    // 저장 대상 글은 서버가 (학생, 과제)로 찾으므로 post id를 따로 넘기지 않는다.
+    // 사진 업로드 전에 부르는 ensureDraftPost 가 만들어 둔 그 글이 그대로 갱신된다.
+    const persistSections = async (nextSections) => {
         const nextDraft = commitSections(nextSections);
         if (!onPersistDraft) return true;
-        return onPersistDraft(nextDraft, targetPostId);
+        return onPersistDraft(nextDraft);
     };
 
     const updateSection = (sectionId, patch) => {
@@ -151,7 +153,7 @@ const ReportEditor = ({
                     }
                     : item
             ));
-            const saved = await persistSections(next, draftPostId);
+            const saved = await persistSections(next);
             if (!saved) throw new Error('사진이 들어간 보고서 초안을 저장하지 못했습니다.');
             if (section.image?.path) await removeReportImage(section.image.path);
             setPhotoStatus('사진을 가볍게 줄여 저장했어요.');
