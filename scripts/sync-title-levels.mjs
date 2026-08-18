@@ -72,6 +72,26 @@ const TARGETS = [
     { name: 'dragon_reader_level', body: buildReaderBody(), label: '독자' }
 ];
 
+/**
+ * 기준 숫자를 **따로 베껴 쓴 함수**가 있는지 본다.
+ * 2026-08-18에 `buy_my_dragon_decor`·`acknowledge_my_dragon_growth` 가 같은 숫자를 들고 있는 것을
+ * 뒤늦게 찾았다. 그대로 뒀으면 기준을 바꿔도 이 둘만 옛 기준으로 판정해,
+ * 화면에는 `대문호`인데 소품은 안 열리는 어긋남이 생겼을 것이다.
+ */
+const findInlinedCopies = () => {
+    const marks = WRITER_LEVELS.filter((l) => l.criterion === 'chars' && l.from > 0).map((l) => l.from);
+    const probe = marks.slice(-3).map((n) => `prosrc LIKE '%${n}%'`).join(' OR ');
+    try {
+        const out = execFileSync(DOCKER, [
+            'exec', CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-tA',
+            '-c', `SELECT proname FROM pg_proc WHERE (${probe}) AND proname <> 'dragon_writer_level'`
+        ], { encoding: 'utf8' });
+        return out.split('\n').map((v) => v.trim()).filter(Boolean);
+    } catch {
+        return null;
+    }
+};
+
 const mode = process.argv.includes('--write') ? 'write' : 'check';
 
 if (mode === 'check') {
@@ -94,6 +114,18 @@ if (mode === 'check') {
             console.error('\n  → node scripts/sync-title-levels.mjs --write 로 마이그레이션을 만들고 적용하세요.\n');
         }
     }
+    const copies = findInlinedCopies();
+    if (copies === null) {
+        console.log('· 인라인 복사본 검사: DB 를 읽지 못해 건너뜁니다.');
+    } else if (copies.length > 0) {
+        failed = true;
+        console.error(`\n✗ 기준 숫자를 따로 들고 있는 함수가 있습니다: ${copies.join(', ')}`);
+        console.error('  → 그 함수가 public.dragon_writer_level(...) 을 부르도록 고치세요.');
+        console.error('     두면 기준을 바꿔도 그 함수만 옛 기준으로 판정합니다.\n');
+    } else {
+        console.log('✓ 기준 숫자를 따로 들고 있는 함수 없음');
+    }
+
     process.exit(failed ? 1 : 0);
 }
 
