@@ -34,6 +34,8 @@ const V2DeckMap = ({
     const hasAnyActive = activeDeckNumber > 0;
     const summitRetry = summit?.retry || null;
     const summitRetryBlocked = Boolean(summitRetry?.blocked);
+    // 정상 관문의 오답은 여러 층에 흩어진다. 어느 층에 가야 하는지 서버가 세어 준다.
+    const summitRetryDecks = Array.isArray(summitRetry?.by_deck) ? summitRetry.by_deck : [];
     const summitEligible = Boolean(summit?.eligible) && !summitRetryBlocked;
     const summitPassed = Number(summit?.passed_count || 0);
     const summitRequired = Number(summit?.required_count || deckCount);
@@ -133,8 +135,18 @@ const V2DeckMap = ({
                                         {summitRetry.remaining_count > 0 && ` (앞으로 ${summitRetry.remaining_count}개)`}
                                     </li>
                                 </ul>
+                                {summitRetryDecks.length > 0 && (
+                                    <p className="vocab-summit-retry-decks">
+                                        <b>어느 층에 있냐면</b>
+                                        {summitRetryDecks.map((entry) => (
+                                            <span key={entry.deck_number}>
+                                                {entry.deck_number}층 {entry.count}개
+                                            </span>
+                                        ))}
+                                    </p>
+                                )}
                                 <small>
-                                    정상 시험의 낱말은 열 층에 흩어져 있어요. 지도에서 그 층을 연습하면 먼저 나와요.
+                                    그 층을 연습하면 이 낱말들이 먼저 나와요.
                                 </small>
                             </div>
                         )}

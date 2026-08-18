@@ -557,3 +557,17 @@
     font-weight: 800;
     line-height: 1.5;
 }
+
+/* 정상 관문 보충 — 어느 층에 가야 하는지. 층 번호가 한눈에 세어져야 한다. */
+.vocab-summit-retry-decks { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 7px 0 0; }
+.vocab-summit-retry-decks b { margin-right: 3px; color: #2f4a8f; font-size: .68rem; }
+.vocab-summit-retry-decks span {
+    padding: 3px 9px;
+    border: 1px solid #c9d7f2;
+    border-radius: 999px;
+    background: #fff;
+    color: #2f4a8f;
+    font-size: .68rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
