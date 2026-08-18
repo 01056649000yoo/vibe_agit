@@ -2,24 +2,80 @@
     --lab-activities-page-padding: 30px;
 }
 
-/* 뒤로가기가 카드 밖으로 나가 제목과 새로 고침 두 칸만 남는다. */
+/* 머리말: 아이콘 원판 · 제목 · 새로 고침, 그 아래 요약 띠.
+   나의 아지트 휘장 카드와 같은 짜임이라 화면을 옮겨도 결이 이어진다. */
 .lab-activities-page__header {
+    position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+        "crest heading refresh"
+        "stats stats   stats";
     align-items: center;
-    gap: 18px;
+    gap: 0 16px;
     margin-bottom: 24px;
     padding: 22px;
+    overflow: hidden;
     border: 1px solid #ddd6fe;
     border-radius: var(--ui-radius-xl);
     background: linear-gradient(135deg, #faf5ff 0%, #eef2ff 100%);
 }
 
+/* 오른쪽 위에 옅은 원을 하나 깔아 밋밋한 면을 덜어 낸다. */
+.lab-activities-page__header::after {
+    content: '';
+    position: absolute;
+    right: -46px;
+    top: -62px;
+    width: 168px;
+    height: 168px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(167, 139, 250, .18), transparent 68%);
+    pointer-events: none;
+}
+
+.lab-activities-page__crest {
+    grid-area: crest;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    aspect-ratio: 1;
+    border-radius: 18px;
+    background: linear-gradient(140deg, #ffffff 0%, #ede9fe 100%);
+    box-shadow: inset 0 0 0 1px #ddd6fe, 0 6px 14px rgba(109, 40, 217, .12);
+    font-size: 1.7rem;
+    line-height: 1;
+}
+
+.lab-activities-page__heading { grid-area: heading; min-width: 0; }
+
+/* 활동 수 요약 — 목록을 이미 받아 왔으므로 따로 조회하지 않는다. */
+.lab-activities-page__stats {
+    grid-area: stats;
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(109, 40, 217, .22);
+}
+.lab-activities-page__stats > div {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .72);
+}
+.lab-activities-page__stats span,
+.lab-activities-page__stats strong { display: block; }
+.lab-activities-page__stats span { color: #7c6bb0; font-size: .66rem; font-weight: 900; }
+.lab-activities-page__stats strong { margin-top: 2px; color: #4c1d95; font-size: 1.05rem; font-weight: 950; }
+
 /* 카드 밖으로 나온 뒤로가기와 카드 사이 간격. */
 .lab-activities-page__back { margin-bottom: 14px; }
 
 .lab-activities-page__header h1 {
-    margin: 3px 0 0;
+    position: relative;
+    margin: 2px 0 0;
     color: var(--ui-ink-strong);
     font-size: clamp(1.55rem, 4vw, 2rem);
     font-weight: 950;
@@ -34,10 +90,11 @@
 }
 
 .lab-activities-page__eyebrow {
+    position: relative;
     color: #6d28d9;
     font-size: .72rem;
     font-weight: 950;
-    letter-spacing: .08em;
+    letter-spacing: .06em;
 }
 
 .lab-activities-page__refresh,
@@ -53,7 +110,16 @@
     cursor: pointer;
 }
 
-.lab-activities-page__refresh { padding: 9px 12px; }
+.lab-activities-page__refresh {
+    grid-area: refresh;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 9px 13px;
+    box-shadow: 0 2px 6px rgba(109, 40, 217, .08);
+}
+.lab-activities-page__refresh > span { font-size: .9rem; line-height: 1; }
 .lab-activities-page__refresh:disabled,
 .lab-activities-page__more:disabled { cursor: default; opacity: .55; }
 
@@ -191,13 +257,20 @@
         --lab-activities-page-padding: 16px 16px 110px;
     }
 
+    /* 좁은 화면에서는 새로 고침을 아이콘·제목 아래 줄로 내린다. */
     .lab-activities-page__header {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 12px;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+            "crest heading"
+            "refresh refresh"
+            "stats stats";
+        gap: 0 12px;
         padding: 17px;
     }
 
-    .lab-activities-page__refresh { justify-self: start; }
+    .lab-activities-page__crest { width: 48px; border-radius: 15px; font-size: 1.45rem; }
+    .lab-activities-page__refresh { justify-self: start; margin-top: 13px; }
+    .lab-activities-page__stats { margin-top: 14px; }
 
     .lab-activity-card {
         grid-template-columns: 46px minmax(0, 1fr);

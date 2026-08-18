@@ -65,6 +65,11 @@ const LabActivitiesPage = ({ onBack }) => {
         void loadActivities();
     }, [loadActivities]);
 
+    // 머리말에 보여 줄 요약. 목록을 이미 받아 왔으므로 따로 조회하지 않는다(성능 계약).
+    // 더 불러오기 전이면 화면에 있는 것만 세므로 `hasMore` 일 때는 `+` 를 붙여 정확히 말한다.
+    const openCount = items.filter((item) => item.status !== 'done').length;
+    const doneCount = items.filter((item) => item.status === 'done').length;
+
     const openActivity = (activityId) => {
         window.location.assign(`/lab/room/${encodeURIComponent(activityId)}`);
     };
@@ -87,8 +92,9 @@ const LabActivitiesPage = ({ onBack }) => {
             <StudentBackButton onClick={onBack} disabled={loading} className="lab-activities-page__back" />
 
             <header className="lab-activities-page__header">
-                <div>
-                    <span className="lab-activities-page__eyebrow">우리 반 활동</span>
+                <span className="lab-activities-page__crest" aria-hidden="true">🔬</span>
+                <div className="lab-activities-page__heading">
+                    <span className="lab-activities-page__eyebrow">우리 반 글쓰기 활동</span>
                     <h1>글쓰기 연구소</h1>
                 </div>
                 <button
@@ -97,8 +103,23 @@ const LabActivitiesPage = ({ onBack }) => {
                     onClick={() => void loadActivities()}
                     disabled={loading}
                 >
+                    <span aria-hidden="true">⟳</span>
                     새로 고침
                 </button>
+
+                {/* 활동이 있을 때만 요약 띠를 보여 준다. 빈 화면에 0만 세 개 뜨면 초라하다. */}
+                {!loading && !error && items.length > 0 && (
+                    <div className="lab-activities-page__stats">
+                        <div>
+                            <span>참여할 활동</span>
+                            <strong>{openCount}{hasMore ? '+' : ''}</strong>
+                        </div>
+                        <div>
+                            <span>끝낸 활동</span>
+                            <strong>{doneCount}{hasMore ? '+' : ''}</strong>
+                        </div>
+                    </div>
+                )}
             </header>
 
             {loading ? (

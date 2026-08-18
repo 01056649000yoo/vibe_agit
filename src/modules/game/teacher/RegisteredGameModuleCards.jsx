@@ -249,7 +249,9 @@ const RegisteredGameModuleCards = ({ activeClass, isMobile }) => {
                             <div style={{ flex: 1, minWidth: '160px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                                     <h2 style={{ margin: 0, color: '#1E293B', fontSize: '1.15rem' }}>{selected.module.name}</h2>
-                                    <TeacherGuideButton tabId={selected.module.id} />
+                                    {/* 교사 화면의 도움말은 전부 `💡 도움말` 알약으로 통일한다.
+                                        여기만 ⓘ 아이콘이라 작가 수호룡·어휘의 탑에서 모양이 달랐다. */}
+                                    <TeacherGuideButton tabId={selected.module.id} variant="help" />
                                 </div>
                                 <p style={{ margin: '3px 0 0', color: '#64748B', fontSize: '0.74rem' }}>{selected.module.description}</p>
                             </div>
