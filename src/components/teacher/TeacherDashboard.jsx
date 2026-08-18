@@ -246,10 +246,15 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     };
 
                     if (group.launchHref) {
+                        // 지금 보고 있는 학급을 함께 넘긴다. 연구소가 그 학급으로 바로 들어가
+                        // 학급을 두 번 고르지 않게 한다(연구소는 아지트와 같은 학급 id 를 쓴다).
+                        const launchHref = activeClass?.id
+                            ? `${group.launchHref}?class_id=${encodeURIComponent(activeClass.id)}`
+                            : group.launchHref;
                         return (
                             <a
                                 key={group.id}
-                                href={group.launchHref}
+                                href={launchHref}
                                 aria-label={`${group.label}로 이동`}
                                 style={itemStyle}
                             >
