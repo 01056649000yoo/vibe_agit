@@ -34,6 +34,10 @@ const MasteryBadges = ({ contents = [], loading = false, emptyText = '아직 도
                 const levelCount = Number(item.summit_level_count || 1);
                 const level = Number(item.summit_level || 0);
                 const complete = summit && level >= levelCount;
+                // 어느 묶음(층)을 통과했는지. 서버가 묶음 키 끝 숫자를 번호로 보내 준다.
+                // 번호가 없는 콘텐츠는 빈 배열이 오고, 그때는 칸에 번호를 쓰지 않는다.
+                const passedOrdinals = Array.isArray(item.passed_ordinals) ? item.passed_ordinals : [];
+                const hasOrdinals = passedOrdinals.length > 0 || (hasProgress && passed === 0);
                 // 아직 못 오른 단계는 빈 별로 남긴다. **정상은 통과 전에도 늘 보인다** —
                 // 있는 줄 몰라서 향하지 못하는 것이 가장 아깝다(지도의 잠긴 도전 버튼과 같은 원칙).
                 const stars = '⭐'.repeat(level) + '☆'.repeat(Math.max(levelCount - level, 0));
@@ -59,37 +63,52 @@ const MasteryBadges = ({ contents = [], loading = false, emptyText = '아직 도
 
                         <div className="mastery-badges__head">
                             <span className="mastery-badges__eyebrow">{item.display_name}</span>
-                            <strong className="mastery-badges__title">
-                                {summit ? item.master_title : item.summit_label}
-                            </strong>
-                            {/* 별이 이 카드에서 한눈에 읽혀야 하는 값이다 — 어디까지 올랐는지가 곧 성취다. */}
-                            <span
-                                className="mastery-badges__stars"
-                                aria-label={levelCount > 1 ? `${levelCount}단계 중 ${level}단계` : undefined}
-                            >
-                                {stars}
+                            {/* 별은 제목 **옆**에 둔다. 아래에 깔면 제목에 딸린 장식처럼 보여
+                                몇 단계까지 올랐는지가 눈에 안 들어온다. */}
+                            <span className="mastery-badges__titleline">
+                                <strong className="mastery-badges__title">
+                                    {summit ? item.master_title : item.summit_label}
+                                </strong>
+                                <span
+                                    className="mastery-badges__stars"
+                                    aria-label={levelCount > 1 ? `${levelCount}단계 중 ${level}단계` : undefined}
+                                >
+                                    {stars}
+                                </span>
                             </span>
                         </div>
 
                         {/* 상태 안내는 오른쪽에 둔다. 아래에 깔면 카드 오른쪽이 통째로 비어 허전하다. */}
                         <span className="mastery-badges__note">{note}</span>
 
-                        {/* 관문 진행 띠. 정상으로 가는 길이라 정상 아래에 둔다. */}
+                        {/* 관문 진행 띠. 정상으로 가는 길이라 정상 아래에 둔다.
+                            칸마다 번호를 적어 **몇 층을 통과했는지** 바로 읽히게 한다 —
+                            동그라미를 앞에서부터 채우면 3·5·7층을 통과해도 1·2·3층처럼 보인다. */}
                         <div className="mastery-badges__foot">
-                            <span className="mastery-badges__foot-label">{item.collection_label}</span>
+                            <div className="mastery-badges__foot-top">
+                                <span className="mastery-badges__foot-label">{item.collection_label}</span>
+                                <span className="mastery-badges__foot-count">
+                                    {hasProgress ? `${passed} / ${total}` : cleared ? '모두 완료' : '도전 중'}
+                                </span>
+                            </div>
                             {hasProgress && total > 0 && (
-                                <span
-                                    className="mastery-badges__pips"
+                                <div
+                                    className="mastery-badges__floors"
                                     aria-label={`${item.collection_label} ${passed}/${total}`}
                                 >
-                                    {Array.from({ length: total }, (_, index) => (
-                                        <span key={index} className={index < passed ? 'is-on' : ''} />
-                                    ))}
-                                </span>
+                                    {Array.from({ length: total }, (_, index) => {
+                                        const floor = index + 1;
+                                        const done = hasOrdinals
+                                            ? passedOrdinals.includes(floor)
+                                            : index < passed;
+                                        return (
+                                            <span key={floor} className={done ? 'is-on' : ''}>
+                                                {hasOrdinals ? floor : ''}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
                             )}
-                            <span className="mastery-badges__foot-count">
-                                {hasProgress ? `${passed} / ${total}` : cleared ? '모두 완료' : '도전 중'}
-                            </span>
                         </div>
                     </article>
                 );

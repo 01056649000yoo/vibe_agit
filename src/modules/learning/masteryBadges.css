@@ -49,9 +49,21 @@
 .mastery-badges__head { grid-area: head; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .mastery-badges__eyebrow { font-size: .62rem; font-weight: 900; letter-spacing: .04em; color: #A08D78; }
 /* 정상 이름이 카드에서 가장 큰 글자다 — 덱마스터의 하위 항목으로 읽히면 안 된다. */
+/* 제목과 별을 한 줄에 둔다. 별이 아래로 내려가면 제목의 장식처럼 보인다. */
+.mastery-badges__titleline { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; min-width: 0; }
 .mastery-badges__title { font-size: 1.06rem; font-weight: 950; line-height: 1.2; color: #8B7A66; }
 /* 별은 이 카드에서 가장 빨리 읽혀야 하는 값이다. 작게 두면 몇 단계인지 세어야 한다. */
-.mastery-badges__stars { margin-top: 3px; font-size: 1.12rem; line-height: 1.15; letter-spacing: 3px; opacity: .4; }
+.mastery-badges__stars {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(105, 61, 32, .06);
+    font-size: 1.2rem;
+    line-height: 1.1;
+    letter-spacing: 3px;
+    opacity: .4;
+}
 
 .mastery-badges__note {
     grid-area: note;
@@ -72,31 +84,53 @@
 }
 
 /* ── 관문 진행 띠 ── 정상으로 가는 길이라 정상 아래에 둔다. */
+/* 이름·개수 줄과 층 띠를 위아래로 쌓는다.
+   flex 로 두면 층 띠가 내용 폭만큼만 늘어나 카드 오른쪽이 비어 버린다. */
 .mastery-badges__foot {
     grid-area: foot;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: block;
     margin-top: 11px;
     padding-top: 9px;
     border-top: 1px dashed rgba(105, 61, 32, .18);
 }
 /* 친구 아지트에서도 이 띠로 진도를 읽는다. 작으면 몇 칸이 켜졌는지 안 보인다. */
+.mastery-badges__foot-top { display: flex; align-items: baseline; gap: 8px; }
 .mastery-badges__foot-label { font-size: .74rem; font-weight: 900; color: #8A7460; white-space: nowrap; }
 .mastery-badges__foot-count { margin-left: auto; font-size: .82rem; font-weight: 950; color: #7A5F44; white-space: nowrap; }
-.mastery-badges__pips { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; }
-.mastery-badges__pips span {
-    width: 12px; height: 12px; border-radius: 50%;
-    background: rgba(105, 61, 32, .15);
-    box-shadow: inset 0 0 0 1px rgba(105, 61, 32, .1);
+
+/* 층 띠 — 칸이 가로를 꽉 채우고 칸마다 번호가 들어간다.
+   `1fr` 열을 묶음 수만큼 두어 10층이든 12층이든 폭에 맞게 나뉜다. */
+.mastery-badges__floors {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 4px;
+    margin-top: 8px;
 }
-.mastery-badges__pips span.is-on { background: #E2A33C; box-shadow: inset 0 0 0 1px rgba(150, 100, 20, .3); }
+.mastery-badges__floors span {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    height: 26px;
+    border-radius: 7px;
+    background: rgba(105, 61, 32, .09);
+    box-shadow: inset 0 0 0 1px rgba(105, 61, 32, .08);
+    color: #A2907B;
+    font-size: .7rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+.mastery-badges__floors span.is-on {
+    background: linear-gradient(180deg, #F3C465 0%, #E2A33C 100%);
+    box-shadow: inset 0 0 0 1px rgba(150, 100, 20, .35), 0 1px 3px rgba(190, 140, 35, .3);
+    color: #5A3F0C;
+}
 
 /* ── 열렸지만 아직 안 오름 ── 할 수 있는 일이라 흐리게 두지 않는다. */
 .mastery-badges__card.is-open { border-color: #D8C39A; background: linear-gradient(135deg, #FFFDF6, #FCF4E4); }
 .mastery-badges__card.is-open .mastery-badges__crest { background: #FFF6E2; box-shadow: inset 0 0 0 2px rgba(226, 163, 60, .55); }
 .mastery-badges__card.is-open .mastery-badges__crest-icon { filter: grayscale(.3); }
-.mastery-badges__card.is-open .mastery-badges__stars { opacity: .75; }
+.mastery-badges__card.is-open .mastery-badges__stars { opacity: .8; background: rgba(226, 163, 60, .12); }
 .mastery-badges__card.is-open .mastery-badges__note { border-color: #A8CBA8; background: #EFF8EE; color: #2F6B3D; }
 
 /* ── 정상에 오름 ── 완성이 드물어야 값이 있으므로 금색은 여기서부터다. */
@@ -115,7 +149,11 @@
 .mastery-badges__card.is-summit .mastery-badges__title,
 .mastery-badges__card.is-complete .mastery-badges__title { color: #6B4E1E; }
 .mastery-badges__card.is-summit .mastery-badges__stars,
-.mastery-badges__card.is-complete .mastery-badges__stars { opacity: 1; }
+.mastery-badges__card.is-complete .mastery-badges__stars {
+    opacity: 1;
+    background: rgba(255, 255, 255, .8);
+    box-shadow: inset 0 0 0 1px rgba(200, 150, 45, .32);
+}
 .mastery-badges__card.is-summit .mastery-badges__note,
 .mastery-badges__card.is-complete .mastery-badges__note {
     border-color: rgba(200, 150, 45, .38);
@@ -162,6 +200,11 @@
     .mastery-badges__crest { width: 48px; }
     .mastery-badges__crest-icon { font-size: 1.4rem; }
     .mastery-badges__title { font-size: .98rem; }
-    .mastery-badges__stars { font-size: 1.02rem; }
-    .mastery-badges__pips span { width: 10px; height: 10px; }
+    .mastery-badges__stars { font-size: 1.08rem; padding: 2px 8px; }
+    /* 좁은 화면에서 열 칸을 가로로 밀어 넣으면 번호가 안 보인다. 두 줄로 나눈다. */
+    .mastery-badges__floors {
+        grid-auto-flow: row;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+    .mastery-badges__floors span { height: 24px; }
 }
