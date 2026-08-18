@@ -258,6 +258,7 @@ const MissionManager = ({
 
             {/* 미션 등록/수정 폼 */}
             <MissionForm
+                classId={activeClass?.id}
                 isFormOpen={isFormOpen}
                 isEditing={isEditing}
                 editingMissionId={editingMissionId}

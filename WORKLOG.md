@@ -21,6 +21,27 @@
 
 ---
 
+## 2026-08-19 — 연구소 4대 활동 데이터 파이프라인 연계: 한줄모아 참고자료 & 좋은 질문 미션 생성 연동 (Gemini)
+- **배경**: 글쓰기연구소의 4대 활동(글 개요짜기, 질문 만들기, 좋은 질문 고르기, 한줄모아)이 아지트와 유기적으로 연결되도록 파이프라인 완성.
+  ① '좋은 질문 고르기'에서 뽑힌 질문들을 교사가 아지트 글 미션을 등록할 때 질문으로 바로 불러와 활용.
+  ② 학생이 '한줄모아'에서 작성한 핵심 낱말 문장을 아지트 글쓰기 시 참고함에 `one_line` 참고자료로 연동.
+- **DB 마이그레이션 (`20261105_lab_one_line_and_question_voting_mission_source.sql`)**:
+  - `writing_mission_lab_sources` 테이블 제약조건에 `one_line` 추가.
+  - `get_teacher_mission_lab_sources_v1`, `set_teacher_mission_lab_source_v1`, `get_my_writing_references_v1`에 `one_line_share`/`one_line` 지원 반영.
+  - 신규 RPC `get_teacher_question_voting_rooms_v1`, `get_teacher_question_voting_ranking_v1` 추가 (학급별 좋은 질문 고르기 활동 목록 및 득표순 질문 조회).
+- **아지트 프론트엔드 연동**:
+  - `labReferenceApi.js`: `one_line` 매핑 및 `listQuestionVotingRooms`, `getQuestionVotingRanking` 메서드 추가.
+  - `MissionLabQuestionsModal.jsx` (신규): 미션 작성 폼에서 우리 반의 '좋은 질문 고르기' 활동 및 득표순 질문 목록을 조회해 미션 질문으로 바로 삽입하는 모달 구축.
+  - `MissionForm.jsx` / `MissionManager.jsx`: 미션 질문 설계 마법사 및 카드에 "🗳️ 연구소 좋은 질문 불러오기" 버튼 연동.
+  - `LabReferenceSource.jsx` / `MissionLabSourcesModal.jsx`: 학생 글쓰기 참고함에 `one_line`(한줄모아) 렌더링 및 교사 참고자료 연결 지원.
+- **연구소(`writing-helper`) 정리**:
+  - `tests/unified-roster.test.mjs` 회귀 테스트 갱신 (명단/기한 제거 및 아지트 일원화에 맞게 38/38 pass).
+  - `OutlineBuilderDetail.tsx`의 "글 종류 기본 틀" 안내 정돈.
+- **결과/검증**:
+  - `npm run migrate:check` 롤백 검증 및 `npm run migrate` 적용 완료 (168/168).
+  - `npm run lint` (0건), `npm run test:architecture` (77/77 통과), `npm run build` (통과).
+  - `writing-helper` 테스트 38/38 통과, TypeScript 오류 0건, ESLint 통과.
+
 ## 2026-08-19 — 활동 세션 화면을 좌우로 나누고 활동 내용 화면을 모듈로 뺀다 (Claude)
 - **배경**: 사용자 지적. 활동 세션을 열면 머리말이 화면 위쪽을 통째로 차지했다 —
   활동 종류·학년 칩, **이미 없앤 기한 배지**, 매번 똑같은 `학생 대시보드에서 바로 참여해요` 안내.

@@ -12,6 +12,10 @@ const RESULT_META = Object.freeze({
     selected_questions: {
         eyebrow: '좋은 질문 고르기',
         title: '내가 고른 좋은 질문'
+    },
+    one_line: {
+        eyebrow: '한줄모아',
+        title: '내가 쓴 한 줄 문장'
     }
 });
 
@@ -56,6 +60,25 @@ const LabReferenceResult = ({ result, onRemove }) => {
                         </div>
                     ))}
                 </div>
+            ) : result.resultKind === 'one_line' ? (
+                <div className="writing-reference-oneline-box" style={{
+                    background: '#FFF5F5',
+                    border: '1px solid #FFE4E6',
+                    borderRadius: '12px',
+                    padding: '14px 16px',
+                    color: '#9F1239'
+                }}>
+                    {result.chunks.map((chunk) => (
+                        <p key={`${result.id}:${chunk.id}`} style={{
+                            margin: 0,
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            lineHeight: '1.6'
+                        }}>
+                            💬 &ldquo;{chunk.text}&rdquo;
+                        </p>
+                    ))}
+                </div>
             ) : (
                 <ol className="writing-reference-list writing-reference-question-results">
                     {result.chunks.map((chunk) => (
@@ -90,8 +113,8 @@ const LabReferenceSource = ({ missionId, isActive }) => {
                     && !current.some((selected) => selected.resultKind === item.resultKind)
                 ));
                 return [...current, ...linkedResults]
-                    .sort((a, b) => ['outline', 'selected_questions'].indexOf(a.resultKind)
-                        - ['outline', 'selected_questions'].indexOf(b.resultKind));
+                    .sort((a, b) => ['outline', 'selected_questions', 'one_line'].indexOf(a.resultKind)
+                        - ['outline', 'selected_questions', 'one_line'].indexOf(b.resultKind));
             });
             setLoaded(true);
         } catch {

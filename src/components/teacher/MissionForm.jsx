@@ -7,22 +7,42 @@ import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { readLocalStorageJson } from '../../lib/browserStorage';
 import RubricSettings from '../../modules/writing/evaluation/RubricSettings';
+import MissionLabQuestionsModal from './MissionLabQuestionsModal';
 
 const MissionStudentPreview = React.lazy(() => import('./MissionStudentPreview'));
 
 const MissionForm = ({
-    isFormOpen, isEditing, editingMissionId, formData, setFormData,
+    classId, isFormOpen, isEditing, editingMissionId, formData, setFormData,
     genreCategories, handleSubmit, handleCancelEdit, isMobile,
     handleGenerateQuestions, isGeneratingQuestions,
     handleSaveDefaultRubric, handleSaveDefaultSettings,
     frequentTags, saveFrequentTag, removeFrequentTag
 }) => {
     const [isQuestionModalOpen, setIsQuestionModalOpen] = React.useState(false);
+    const [isLabQuestionsModalOpen, setIsLabQuestionsModalOpen] = React.useState(false);
     const [tagInput, setTagInput] = React.useState('');
     const [isLoadingEditMission, setIsLoadingEditMission] = React.useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
     const closePreview = React.useCallback(() => setIsPreviewOpen(false), []);
     const useAIQuestions = (formData.guide_questions?.length > 0) || formData.use_ai_questions;
+
+    const handleImportLabQuestions = React.useCallback((newQuestions) => {
+        if (!Array.isArray(newQuestions) || newQuestions.length === 0) return;
+        setFormData((prev) => {
+            const existing = (prev.guide_questions || []).filter(Boolean);
+            const combined = [...existing];
+            for (const q of newQuestions) {
+                if (!combined.includes(q)) {
+                    combined.push(q);
+                }
+            }
+            return {
+                ...prev,
+                guide_questions: combined,
+                use_ai_questions: true
+            };
+        });
+    }, [setFormData]);
 
     const toggleAIQuestions = () => {
         if (useAIQuestions) {
@@ -334,24 +354,41 @@ const MissionForm = ({
                                             </div>
                                         </div>
                                     </div>
-                                    {useAIQuestions && (
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                         <Button
                                             type="button"
                                             size="sm"
-                                            onClick={() => setIsQuestionModalOpen(true)}
+                                            onClick={() => setIsLabQuestionsModalOpen(true)}
                                             style={{
-                                                background: 'linear-gradient(135deg, #36D1DC 0%, #5B86E0 100%)',
+                                                background: '#FDF2F8',
+                                                color: '#DB2777',
+                                                border: '1px solid #FBCFE8',
                                                 borderRadius: '14px',
-                                                color: 'white',
                                                 fontWeight: 'bold',
-                                                padding: '8px 16px',
-                                                border: 'none',
-                                                boxShadow: '0 4px 15px rgba(91, 134, 224, 0.3)'
+                                                padding: '8px 14px'
                                             }}
                                         >
-                                            🪄 질문 수정/설계하기
+                                            🗳️ 연구소 질문 불러오기
                                         </Button>
-                                    )}
+                                        {useAIQuestions && (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                onClick={() => setIsQuestionModalOpen(true)}
+                                                style={{
+                                                    background: 'linear-gradient(135deg, #36D1DC 0%, #5B86E0 100%)',
+                                                    borderRadius: '14px',
+                                                    color: 'white',
+                                                    fontWeight: 'bold',
+                                                    padding: '8px 16px',
+                                                    border: 'none',
+                                                    boxShadow: '0 4px 15px rgba(91, 134, 224, 0.3)'
+                                                }}
+                                            >
+                                                🪄 질문 수정/설계하기
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {typeof document !== 'undefined' && isQuestionModalOpen && createPortal(
@@ -452,23 +489,46 @@ const MissionForm = ({
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <Button
-                                                    onClick={() => handleGenerateQuestions(formData.question_count || 3)}
-                                                    disabled={isGeneratingQuestions}
-                                                    style={{
-                                                        background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
-                                                        color: 'white',
-                                                        fontWeight: '900',
-                                                        border: 'none',
-                                                        padding: '16px 32px',
-                                                        borderRadius: '18px',
-                                                        fontSize: '1rem',
-                                                        boxShadow: '0 10px 20px -5px rgba(99, 102, 241, 0.4)',
-                                                        width: isMobile ? '100%' : 'auto'
-                                                    }}
-                                                >
-                                                    {isGeneratingQuestions ? '🧠 인공지능이 설계 중...' : '✨ AI가 질문 추천하기'}
-                                                </Button>
+                                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
+                                                    <Button
+                                                        type="button"
+                                                        onClick={() => setIsLabQuestionsModalOpen(true)}
+                                                        style={{
+                                                            background: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)',
+                                                            color: 'white',
+                                                            fontWeight: '900',
+                                                            border: 'none',
+                                                            padding: '16px 24px',
+                                                            borderRadius: '18px',
+                                                            fontSize: '1rem',
+                                                            boxShadow: '0 10px 20px -5px rgba(219, 39, 119, 0.4)',
+                                                            flex: isMobile ? 1 : 'none',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '6px'
+                                                        }}
+                                                    >
+                                                        🗳️ 연구소 좋은 질문 불러오기
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        onClick={() => handleGenerateQuestions(formData.question_count || 3)}
+                                                        disabled={isGeneratingQuestions}
+                                                        style={{
+                                                            background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
+                                                            color: 'white',
+                                                            fontWeight: '900',
+                                                            border: 'none',
+                                                            padding: '16px 28px',
+                                                            borderRadius: '18px',
+                                                            fontSize: '1rem',
+                                                            boxShadow: '0 10px 20px -5px rgba(99, 102, 241, 0.4)',
+                                                            flex: isMobile ? 1 : 'none'
+                                                        }}
+                                                    >
+                                                        {isGeneratingQuestions ? '🧠 인공지능이 설계 중...' : '✨ AI가 질문 추천하기'}
+                                                    </Button>
+                                                </div>
                                             </div>
 
                                             {/* 질문 리스트 영역 */}
@@ -639,6 +699,14 @@ const MissionForm = ({
                                         </motion.div>
                                     </div>,
                                     document.body
+                                )}
+
+                                {isLabQuestionsModalOpen && (
+                                    <MissionLabQuestionsModal
+                                        classId={classId}
+                                        onSelectQuestions={handleImportLabQuestions}
+                                        onClose={() => setIsLabQuestionsModalOpen(false)}
+                                    />
                                 )}
 
                                 {/* [통합] 미션 세부 설정 (분량, 댓글, 포인트) */}

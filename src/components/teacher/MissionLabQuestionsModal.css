@@ -1,0 +1,309 @@
+.mission-lab-questions-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.mission-lab-questions-modal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 680px;
+    max-height: min(780px, 90vh);
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.mission-lab-questions-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.mission-lab-questions-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.mission-lab-questions-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: #fdf2f8;
+    color: #db2777;
+    flex-shrink: 0;
+}
+
+.mission-lab-questions-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1e293b;
+    letter-spacing: -0.02em;
+}
+
+.mission-lab-questions-subtitle {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.mission-lab-questions-error {
+    margin: 16px 28px 0;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.mission-lab-questions-body {
+    flex: 1;
+    padding: 20px 28px;
+    overflow-y: auto;
+}
+
+.mission-lab-questions-loading,
+.mission-lab-questions-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 48px 16px;
+    text-align: center;
+    color: #64748b;
+}
+
+.mission-lab-questions-empty svg {
+    color: #cbd5e1;
+    margin-bottom: 8px;
+}
+
+.mission-lab-questions-empty p {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+.mission-lab-questions-empty span {
+    font-size: 0.82rem;
+    color: #94a3b8;
+}
+
+.mission-lab-questions-room-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mission-lab-questions-room-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mission-lab-questions-room-card:hover {
+    background: #ffffff;
+    border-color: #ec4899;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.12);
+    transform: translateY(-1px);
+}
+
+.mission-lab-questions-room-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #fdf2f8;
+    color: #db2777;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.mission-lab-questions-room-info h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.mission-lab-questions-room-info p {
+    margin: 4px 0 0;
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+.mission-lab-questions-room-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+}
+
+.mission-lab-questions-detail-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.mission-lab-questions-back-btn,
+.mission-lab-questions-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.mission-lab-questions-back-btn:hover,
+.mission-lab-questions-select-all:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.mission-lab-questions-ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mission-lab-question-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mission-lab-question-item:hover {
+    border-color: #cbd5e1;
+    background: #ffffff;
+}
+
+.mission-lab-question-item--selected {
+    background: #fdf2f8;
+    border-color: #f472b6;
+    box-shadow: 0 2px 8px rgba(244, 114, 182, 0.15);
+}
+
+.mission-lab-question-rank {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 44px;
+}
+
+.mission-lab-question-rank-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.mission-lab-question-item--selected .mission-lab-question-rank-badge {
+    background: #db2777;
+    color: white;
+}
+
+.mission-lab-question-votes {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #db2777;
+}
+
+.mission-lab-question-text {
+    flex: 1;
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.5;
+}
+
+.mission-lab-question-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mission-lab-question-unchecked-box {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+}
+
+.mission-lab-question-checked-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: #db2777;
+    color: white;
+}
+
+.mission-lab-questions-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 28px;
+    border-top: 1px solid #f1f5f9;
+    background: #f8fafc;
+}

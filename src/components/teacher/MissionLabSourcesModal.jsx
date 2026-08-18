@@ -13,6 +13,10 @@ const SOURCE_META = Object.freeze({
     selected_questions: {
         title: '좋은 질문 고르기',
         description: '학생이 활동에서 직접 고른 질문을 참고함에 먼저 보여줘요.'
+    },
+    one_line: {
+        title: '한줄모아',
+        description: '학생이 핵심 낱말로 작성한 한 줄 문장을 참고함에 먼저 보여줘요.'
     }
 });
 
