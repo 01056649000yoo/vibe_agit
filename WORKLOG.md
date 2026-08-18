@@ -24,6 +24,7 @@
 ## 2026-08-19 — 글쓰기연구소 학생 완성 보기 모달화 (Gemini)
 - **배경**: 교사가 실시간 활동 세션에서 완료된 학생의 결과를 확인할 때 페이지 이동(`/result/[sessionId]`)으로 화면이 전환되어 불편했던 동선 개선.
 - **수정**:
+  - `writing-helper/src/app/dashboard/class/[id]/delete-room-button.tsx` & `closed-rooms-tabs.tsx`: 종료된 활동 카드의 과도한 투명도를 걷어내고, 호버 시에만 보이던 삭제 버튼을 상시 또렷한 `🗑️ 삭제` 빨간 배지로 표시하여 가시성 및 모바일 접근성 개선.
   - `writing-helper/src/app/dashboard/room/new/page.tsx`: 글쓰기 활동 꾸러미 4대 활동(글 개요짜기, 질문 만들기, 좋은 질문 고르기, 한줄모아) 선택 카드를 2열(2×2) 그리드로 균형 있게 정렬하고 카드 디자인을 개선.
   - `writing-helper/src/app/dashboard/room/[id]/live-student-panel.tsx`: 교사 피드백 및 결과 확인 최적화(A안)를 위해 학생 현황 순서를 `제출 완료(상단)` ➔ `작성 중(중간)` ➔ `시작 전(하단)`으로 재배치.
   - `writing-helper/src/app/dashboard/room/[id]/room-workspace.tsx` & `live-student-panel.tsx` & `parts.tsx`: 상하 여백과 카드 높이를 슬림화하여 화면을 아래로 스크롤하지 않고도 좌측 활동 내용과 우측 20명 학생의 진행/완료 상태를 한눈에 볼 수 있도록 컴팩트 레이아웃 최적화.
