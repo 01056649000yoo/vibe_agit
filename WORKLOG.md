@@ -24,6 +24,8 @@
 ## 2026-08-19 — 글쓰기연구소 학생 완성 보기 모달화 (Gemini)
 - **배경**: 교사가 실시간 활동 세션에서 완료된 학생의 결과를 확인할 때 페이지 이동(`/result/[sessionId]`)으로 화면이 전환되어 불편했던 동선 개선.
 - **수정**:
+  - `writing-helper/src/app/dashboard/settings/page.tsx`: 들쭉날쭉하고 수정이 번거로웠던 2열 그리드를 걷어내고, 깔끔한 단일 행 아코디언 카드 뷰와 개별 질문(1~5번) 인라인 입력·추가·삭제 에디터로 전면 개편.
+  - `writing-helper/src/app/dashboard/settings/ai-generation-modal.tsx`: 남아있던 "연구원 역할" 명칭과 "추천 역할 개수"를 "AI 질문 카드 묶음 생성기" 및 "생성할 질문 카드 묶음 개수"로 정리.
   - `writing-helper/src/app/dashboard/settings/page.tsx` & `room/new/page.tsx`: 기본 12개 질문 카드 세트(상상, 마음, 감각, 이유, 연결, 가치, 관점, 해결, 반전, 관찰, 비유, 시간)를 6대 핵심 질문 영역(`💡 상상·반전`, `❤️ 마음·가치`, `👁️ 감각·관찰`, `❓ 이유·해결`, `🌱 연결·비유`, `⏳ 관점·시간`)으로 100% 빈틈없이 매핑 및 직관적인 키워드 배지 UI 적용.
   - `writing-helper/src/app/dashboard/room/new/page.tsx`: 직접 만들기 가이드 기본 텍스트 정돈, 질문 카드 세트 전체 해제 시 재선택되던 버그 수정, 각 카드 세트별 `[👁️ 보기]` 모달 팝업 추가, AI 질문 추천 개수(3/5/8/10개) 선택 기능 신설.
   - `writing-helper/src/app/dashboard/settings/page.tsx`: 복잡한 연구원 역할 트리를 걷어내고, 질문의 핵심 키워드(상상/마음/감각/이유/비교/변화)별로 질문 카드를 직관적으로 확인·검색·수정할 수 있는 `질문 카드 보관함`으로 전면 개편.
