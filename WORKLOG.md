@@ -24,6 +24,7 @@
 ## 2026-08-19 — 글쓰기연구소 교사 UX/동선 전면 최적화: 결과 모달화, 질문 3단계 모드 개편, 질문 보관함 6대 영역 일원화 (Gemini)
 - **배경**: 교사가 실시간 활동 세션에서 완료된 학생의 결과를 확인할 때 페이지 이동(`/result/[sessionId]`)으로 화면이 전환되어 불편했던 동선 개선.
 - **수정**:
+  - `writing-helper/src/app/dashboard/room/new/page.tsx` & `room/[id]/activity/page.tsx`: 한줄모아 활동 설정창 및 학생 화면에서 "수업을 마무리하는 활동"이라는 표현을 완전히 걷어내고, "선생님이 제시한 핵심단어를 포함하여 문장 만들기(한 줄 이상 자유 작성 가능)"로 취지에 맞게 명확히 정돈.
   - `writing-helper/src/app/dashboard/room/new/page.tsx` & `one-line-share/definition.ts` & `dashboard-tabs.tsx`: 한줄모아 활동의 설명을 "핵심단어를 이용한 문장만들기로 수업을 마무리 하는 활동"에서 "핵심단어를 이용한 문장 만들기 활동"으로 간결하고 직관적으로 수정.
   - `writing-helper/src/app/dashboard/layout.tsx` & `dashboard-nav.tsx`: 좌측 상단 `✏️ 끄적끄적 아지트 글쓰기 연구소` 브랜드 로고 링크도 무조건 전체 목록으로 나가지 않고, 현재 보고 있던 활성 학급 화면(`/dashboard/class/[id]`)을 그대로 유지하도록 `DashboardBrandLink`로 연동.
   - `writing-helper/src/app/dashboard/dashboard-nav.tsx` & `dashboard/page.tsx`: 상단 네비게이션 `학급·활동` 메뉴 클릭 시 전체 학급 목록으로 튕겨나가지 않고, 현재 보고 있던 활성 학급(`/dashboard/class/[id]`) 화면을 계속 유지하도록 개선. 학급이 1개인 교사도 전체 목록을 불필요하게 거치지 않고 자신의 학급으로 바로 진입하도록 처리.
