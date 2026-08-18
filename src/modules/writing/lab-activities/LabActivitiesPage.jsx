@@ -82,12 +82,14 @@ const LabActivitiesPage = ({ onBack }) => {
                 overflow: 'visible'
             }}
         >
+            {/* 뒤로가기는 제목 카드 밖 맨 위에 둔다 — 일기·독서록과 같은 자리다.
+                이 화면만 카드 안 왼쪽 칸에 있어서 다른 창을 오가면 버튼이 움직여 보였다. */}
+            <StudentBackButton onClick={onBack} disabled={loading} className="lab-activities-page__back" />
+
             <header className="lab-activities-page__header">
-                <StudentBackButton onClick={onBack} disabled={loading} />
                 <div>
                     <span className="lab-activities-page__eyebrow">우리 반 활동</span>
                     <h1>글쓰기 연구소</h1>
-                    <p>번호나 이름을 다시 입력하지 않고 내 활동으로 바로 들어가요.</p>
                 </div>
                 <button
                     type="button"
