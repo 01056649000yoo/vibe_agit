@@ -571,3 +571,27 @@
     font-weight: 900;
     white-space: nowrap;
 }
+
+/* 정상 관문 도움말 — 도전 전에 규칙을 미리 본다.
+   게임 실행 화면(zIndex 20000) 안이라 모달을 쓰면 뒤에 숨는다. 조건 패널과 같이 화면 안에 편다. */
+.vocab-summit-help-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 19px;
+    height: 19px;
+    margin-right: 6px;
+    padding: 0;
+    border: 1px solid #b9c8e8;
+    border-radius: 50%;
+    background: #fff;
+    color: #4a63a8;
+    font: inherit;
+    font-size: .7rem;
+    font-weight: 900;
+    line-height: 1;
+    vertical-align: 2px;
+    cursor: pointer;
+}
+.vocab-summit-help-toggle:hover { background: #eef2fb; }
+.vocab-summit-help__warn { display: block; margin-top: 9px; color: #9a5b16; }
+.vocab-summit-help ul { margin-bottom: 0; }

@@ -85,6 +85,15 @@ const V2DeckMap = ({
                         <span className="vocab-tower-route__summit-icon" aria-hidden="true">👑</span>
                         <div>
                             <strong>
+                                <button
+                                    type="button"
+                                    className="vocab-summit-help-toggle"
+                                    onClick={() => setOpenedCondition((current) => (current === 'summit-help' ? null : 'summit-help'))}
+                                    aria-expanded={openedCondition === 'summit-help'}
+                                    aria-label="어휘 마스터 도전이 어떤 시험인지 보기"
+                                >
+                                    ?
+                                </button>
                                 {summitCompleted
                                     ? '어휘 마스터 완성!'
                                     : summitLevel > 0
@@ -125,6 +134,44 @@ const V2DeckMap = ({
                                         ? `📚 낱말 ${summitRetry.remaining_count}개 더 익히기`
                                         : '🔒 어휘 마스터 도전'}
                             </button>
+                        )}
+                        {openedCondition === 'summit-help' && (
+                            <div className="vocab-deck-card__condition vocab-summit-help" role="note">
+                                <strong>어휘 마스터는 이런 시험이에요</strong>
+                                <ul>
+                                    <li>
+                                        열 층의 <b>덱마스터를 모두 통과</b>하면 열려요.
+                                        문제는 <b>열 층 전체</b>에서 골고루 나와요.
+                                    </li>
+                                    <li>
+                                        <b>1 → 2 → 3단계</b> 순서로 올라가요. 앞 단계를 통과해야 다음이 열려요.
+                                        {summitStages.length > 0 && (
+                                            <> 단계가 오를수록 직접 쓰는 문제가 늘어나요
+                                            ({summitStages.map((stage) => `${stage.stage}단계 ${stage.input_count}개`).join(' · ')}).</>
+                                        )}
+                                    </li>
+                                    <li>
+                                        {summitQuestionCount}문항 중 {summitStages[0]?.pass_correct ?? 17}개를 맞히면 통과예요.
+                                        통과할 때마다 별이 하나씩 늘어요.
+                                    </li>
+                                </ul>
+                                <strong className="vocab-summit-help__warn">틀린 낱말은 다시 익혀야 해요</strong>
+                                <ul>
+                                    <li>
+                                        시험에서 틀린 낱말은 <b>다시 볼 낱말</b>이 돼요.{' '}
+                                        <b>통과했더라도</b> 틀린 낱말은 똑같이 돌아가요.
+                                    </li>
+                                    <li>
+                                        그 낱말을 <b>모두 다시 익혀야</b> 이 시험에 또 도전할 수 있어요.
+                                        어느 층에 있는지는 그때 알려 줄게요.
+                                    </li>
+                                    <li>
+                                        시험 도중에 나가면 <b>처음부터 다시 칠 수 있어요.</b>{' '}
+                                        대신 통과로는 치지 않고, 그때까지 푼 것도 남지 않아요.
+                                    </li>
+                                </ul>
+                                <small>한 번 받은 별은 사라지지 않아요. 마음 편히 도전해 보세요.</small>
+                            </div>
                         )}
                         {openedCondition === 'summit' && summitRetryBlocked && (
                             <div className="vocab-deck-card__condition" role="note">
