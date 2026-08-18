@@ -3,6 +3,7 @@ import { lazy } from 'react';
 const FriendDragonProfileCard = lazy(() => import('./cards/FriendDragonProfileCard'));
 const FriendWritingShelf = lazy(() => import('../FriendWritingShelf'));
 const FriendRelationshipCard = lazy(() => import('./cards/FriendRelationshipCard'));
+const FriendMasteryCard = lazy(() => import('./cards/FriendMasteryCard'));
 
 /**
  * 친구 프로필 확장 지점.
@@ -26,6 +27,14 @@ const friendProfileCardManifest = [
         status: 'active',
         component: FriendWritingShelf,
         loadingMessage: '공개 글 책장을 준비하는 중... 📚'
+    },
+    {
+        id: 'mastery',
+        title: '받은 휘장',
+        order: 15,
+        status: 'active',
+        component: FriendMasteryCard,
+        loadingMessage: '친구가 받은 휘장을 확인하는 중... 🏆'
     },
     {
         id: 'relationships',

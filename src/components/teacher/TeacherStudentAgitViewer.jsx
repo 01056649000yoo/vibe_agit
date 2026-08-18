@@ -11,6 +11,8 @@ import {
     getReaderDragonEffect
 } from '../../modules/game/dragon/presentation';
 import { getReaderLevel, getWriterLevel } from '../../constants/writerLevels';
+import MasteryBadges from '../../modules/learning/MasteryBadges';
+import useLearningMastery from '../../modules/learning/useLearningMastery';
 import {
     FREE_WRITING_TYPE,
     SELF_WRITING_TYPES,
@@ -201,6 +203,10 @@ const TeacherStudentAgitViewer = ({
         };
     }, [classId, selectedStudentId, refreshKey]);
 
+    const { contents: masteryContents, loading: masteryLoading } = useLearningMastery({
+        viewer: 'teacher', studentId: selectedStudentId || null, active: Boolean(selectedStudentId)
+    });
+
     const selectedStudent = useMemo(
         () => students.find((student) => student.id === selectedStudentId) || null,
         [selectedStudentId, students]
@@ -367,6 +373,12 @@ const TeacherStudentAgitViewer = ({
                                             <div><span>{selectedStudent.writer.emoji}</span><small>작가 칭호</small><strong>Lv.{selectedStudent.writer.level} {selectedStudent.writer.name}</strong></div>
                                             <div><span>{selectedStudent.reader.emoji}</span><small>독자 칭호</small><strong>R{selectedStudent.reader.level} {selectedStudent.reader.name}</strong></div>
                                         </div>
+                                        {/* 학습 성취 — 교사는 학생 본인과 같은 범위(진행도 포함)를 본다. */}
+                                        <MasteryBadges
+                                            contents={masteryContents}
+                                            loading={masteryLoading}
+                                            emptyText="아직 도전한 기록이 없어요."
+                                        />
                                     </section>
                                     <section className="teacher-student-agit__stats" aria-label={`${selectedStudent.name} 활동 요약`}>
                                         <div><small>이번 학기 완성 글</small><strong>{formatNumber(selectedStudent.writerPosts)}편</strong></div>

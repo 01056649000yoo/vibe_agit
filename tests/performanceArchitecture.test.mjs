@@ -311,3 +311,28 @@ test('부팅 중에는 홈과 같은 자리의 뼈대를 먼저 보여 준다', 
     // 움직임 최소화 설정에서는 반짝임을 끈다.
     assert.match(css, /prefers-reduced-motion: reduce[\s\S]*?animation: none/);
 });
+
+test('학습 성취 공개 범위는 서버가 가르고 홈에는 붙지 않는다', async () => {
+    const [hook, badges, friendCard, myAgit, migration] = await Promise.all([
+        read('src/modules/learning/useLearningMastery.js'),
+        read('src/modules/learning/MasteryBadges.jsx'),
+        read('src/modules/community/friends-hideout/profile/cards/FriendMasteryCard.jsx'),
+        read('src/components/student/MyAgitPanel.jsx'),
+        read('supabase/migrations/20261122_learning_mastery_emblems.sql')
+    ]);
+
+    // 보는 사람마다 **RPC 자체가 다르다**. 한 응답을 화면에서 걸러 쓰면 개발자 도구로 보인다.
+    assert.match(hook, /viewer === 'me'\) return 'get_my_learning_mastery_v1'/);
+    assert.match(hook, /viewer === 'classmate'\) return 'get_classmate_learning_mastery_v1'/);
+    assert.match(hook, /viewer === 'teacher'\) return 'get_student_learning_mastery_v1'/);
+    // 친구용 응답에는 진행도가 아예 없어야 한다(A안, 2026-08-17 결정).
+    assert.match(migration, /'passed_count', CASE WHEN p_include_progress THEN passed\.passed_count ELSE NULL END/);
+    assert.match(migration, /learning_engine_mastery_summary_v1\(v_friend\.id, v_friend\.class_id, FALSE\)/);
+    // 화면은 값이 없으면 진행 칸을 그리지 않는다(가리는 게 아니라 없는 것).
+    assert.match(badges, /item\.passed_count !== undefined && item\.passed_count !== null/);
+    assert.match(friendCard, /viewer: 'classmate'/);
+
+    // 홈이 아니라 나의 아지트를 **열 때만** 부른다(성능 계약: 홈 추가 조회 0회).
+    assert.match(myAgit, /useLearningMastery\(\{\s*\n?\s*viewer: 'me', active: isOpen/);
+    assert.doesNotMatch(await read('src/components/student/StudentDashboard.jsx'), /useLearningMastery/);
+});

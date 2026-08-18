@@ -1,0 +1,47 @@
+/* 학습 성취 줄. 나의 아지트·친구 아지트·교사 화면이 같은 모양을 쓴다. */
+.mastery-badges { display: grid; gap: 8px; margin-bottom: 14px; }
+
+.mastery-badges--loading,
+.mastery-badges--empty {
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .55);
+    border: 1px solid rgba(105, 61, 32, .14);
+    color: #8A6E52;
+    font-size: .78rem;
+    font-weight: 800;
+    text-align: center;
+}
+
+.mastery-badges__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .62);
+    border: 1px solid rgba(105, 61, 32, .16);
+}
+/* 정상에 오른 콘텐츠만 금색으로 구분한다. 완성이 드물어야 값이 있다. */
+.mastery-badges__row.is-summit {
+    background: linear-gradient(135deg, #FFF7E0, #FFEAB8);
+    border-color: #E9CD8B;
+}
+
+.mastery-badges__icon { font-size: 1.35rem; line-height: 1; }
+.mastery-badges__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mastery-badges__name { font-size: .82rem; font-weight: 900; color: #5D4037; }
+.mastery-badges__count { font-size: .72rem; font-weight: 800; color: #8A6E52; }
+.mastery-badges__title { font-size: .74rem; font-weight: 900; color: #8A6212; }
+
+.mastery-badges__pips { display: flex; gap: 3px; flex-wrap: wrap; max-width: 44%; justify-content: flex-end; }
+.mastery-badges__pips span {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: rgba(105, 61, 32, .18);
+}
+.mastery-badges__pips span.is-on { background: #E2A33C; }
+
+@media (max-width: 480px) {
+    .mastery-badges__pips { max-width: 38%; }
+    .mastery-badges__pips span { width: 7px; height: 7px; }
+}

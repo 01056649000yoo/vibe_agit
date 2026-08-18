@@ -6,6 +6,8 @@ import { classKey, dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 import MyAgitModuleSlotHost from '../../modules/MyAgitModuleSlotHost';
 import MyTitleStatusPanel from '../../modules/writing/title-status/MyTitleStatusPanel';
+import MasteryBadges from '../../modules/learning/MasteryBadges';
+import useLearningMastery from '../../modules/learning/useLearningMastery';
 import { FREE_WRITING_TYPE, SELF_WRITING_TYPES, getSelfWritingType } from '../../modules/writing/selfWritingTypes';
 
 const MyShelfPostDetail = lazy(() => import('./MyShelfPostDetail'));
@@ -145,6 +147,9 @@ const MyAgitPanel = ({
     enabledModules = [],
     moduleRuntimeById = {}, onOpenModule, initialPost = null
 }) => {
+    const { contents: masteryContents, loading: masteryLoading } = useLearningMastery({
+        viewer: 'me', active: isOpen
+    });
     const classId = studentSession?.class_id || studentSession?.classId;
     const studentId = studentSession?.id;
 
@@ -322,6 +327,13 @@ const MyAgitPanel = ({
                     </header>
 
                     <MyTitleStatusPanel active={isOpen} studentSession={studentSession} points={points} />
+
+                    {/* 학습 성취 — 덱마스터 진행과 정상 휘장. 나의 아지트를 열 때만 한 번 조회한다. */}
+                    <MasteryBadges
+                        contents={masteryContents}
+                        loading={masteryLoading}
+                        emptyText="어휘의 탑에서 덱마스터에 도전해 보세요."
+                    />
 
                     <MyAgitModuleSlotHost
                         enabledModules={enabledModules}
