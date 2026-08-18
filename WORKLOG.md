@@ -24,6 +24,7 @@
 ## 2026-08-19 — 글쓰기연구소 교사 UX/동선 전면 최적화: 결과 모달화, 질문 3단계 모드 개편, 질문 보관함 6대 영역 일원화 (Gemini)
 - **배경**: 교사가 실시간 활동 세션에서 완료된 학생의 결과를 확인할 때 페이지 이동(`/result/[sessionId]`)으로 화면이 전환되어 불편했던 동선 개선.
 - **수정**:
+  - `writing-helper/src/app/dashboard/layout.tsx` & `dashboard-nav.tsx`: 좌측 상단 `✏️ 끄적끄적 아지트 글쓰기 연구소` 브랜드 로고 링크도 무조건 전체 목록으로 나가지 않고, 현재 보고 있던 활성 학급 화면(`/dashboard/class/[id]`)을 그대로 유지하도록 `DashboardBrandLink`로 연동.
   - `writing-helper/src/app/dashboard/dashboard-nav.tsx` & `dashboard/page.tsx`: 상단 네비게이션 `학급·활동` 메뉴 클릭 시 전체 학급 목록으로 튕겨나가지 않고, 현재 보고 있던 활성 학급(`/dashboard/class/[id]`) 화면을 계속 유지하도록 개선. 학급이 1개인 교사도 전체 목록을 불필요하게 거치지 않고 자신의 학급으로 바로 진입하도록 처리.
   - `writing-helper/src/app/dashboard/settings/page.tsx`: 들쭉날쭉하고 수정이 번거로웠던 2열 그리드를 걷어내고, 깔끔한 단일 행 아코디언 카드 뷰와 개별 질문(1~5번) 인라인 입력·추가·삭제 에디터로 전면 개편.
   - `writing-helper/src/app/dashboard/settings/ai-generation-modal.tsx`: 남아있던 "연구원 역할" 명칭과 "추천 역할 개수"를 "AI 질문 카드 묶음 생성기" 및 "생성할 질문 카드 묶음 개수"로 정리.
