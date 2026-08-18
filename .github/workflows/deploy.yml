@@ -23,6 +23,11 @@ jobs:
       - name: Show deployed commit
         run: git rev-parse --short HEAD
 
+      # 공간이 없는 채로 빌드하면 도커 데몬이 물려 앱이 내려간 채 복구가 안 된다(2026-08-18).
+      # 옛 컨테이너를 지운 뒤 새 것을 못 띄우는 사이가 가장 위험하므로 그 앞에서 막는다.
+      - name: Preflight disk check
+        run: bash scripts/preflight-disk.sh 10
+
       - name: Build agit-app image (Supabase·Google public client config)
         run: |
           ANON=$(grep '^ANON_KEY=' "$HOME/agit-supabase/.env" | cut -d= -f2)

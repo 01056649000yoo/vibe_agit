@@ -21,6 +21,32 @@
 
 ---
 
+## 2026-08-18 — 디스크 포화 재발 방지 3중 조치 + Notion·Claude 캐시 정리 (Claude)
+- **배경**: 같은 일이 다시 일어나지 않도록 막아 달라는 요청. 로그에 경고만 남기는 것으로는 부족하다 —
+  **로그는 아무도 안 본다.**
+- **① 배포를 아예 막는다** — `scripts/preflight-disk.sh`(신규, 커밋 포함).
+  여유 10GB 미만이면 **빌드를 시작하지 않고** 무엇을 비우면 되는지 알려 준다. inode 80% 이상이면 경고한다.
+  `.github/workflows/deploy.yml` 의 체크아웃 직후 단계로 넣었고 `npm run preflight:disk` 로도 부른다.
+  **막을 지점을 빌드가 아니라 그 앞으로 잡은 이유**: 가장 위험한 순간은 옛 컨테이너를 지운 뒤
+  새 것을 못 띄우는 사이다. 빌드가 끝난 뒤에 막으면 늦다.
+- **② 매일 자동으로 비운다** — `~/scripts/sh_mirror_backup.sh`(04:00, git 밖):
+  - Node 컴파일 캐시 **>2GB**, 도커 빌드 캐시 **>3GB**, Electron 앱 캐시(Notion ServiceWorker·
+    Notion Cache·Claude Cache) **>8GB** 일 때만 비운다.
+  - **기준을 넘을 때만 비우는 이유**: 매일 지우면 캐시 이득이 사라져 늘 느려진다.
+  - 앱 캐시는 `Cookies`·`Local Storage`·`IndexedDB` 를 건드리지 않아 **로그인이 유지**된다.
+- **③ 사람이 알게 한다** — 여유 10GB 미만이거나 inode 80% 이상이면 `osascript` 로 **화면 알림**을 띄운다
+  (launchd 아래에서도 뜬다). 실제로 띄워 보고 확인했다.
+- **막혔던 것**: 도커 빌드 캐시 크기 파싱을 처음에 `$3`(값)·`$4`(단위)로 짰는데, 실제 출력은
+  `Build Cache 4.7GB` 처럼 **숫자와 단위가 붙어** 나온다. 그대로 뒀으면 4.7GB가 "4"로 읽혀
+  **정리가 영영 안 걸렸다.** 토큰에서 단위를 떼어 환산하도록 고치고 MB/GB/TB/kB/B 를 전부 검증했다.
+- **Notion·Claude 캐시 정리**(사용자 요청, git 밖): Notion 45GB → **11MB**
+  (44GB가 `Service Worker` 오프라인 캐시였다), Claude Electron 캐시 565MB.
+  `Cookies`·`Local Storage`·`Session Storage`·`IndexedDB`·`notion.db` 는 남겨 로그인이 유지된다.
+  Claude 의 `vm_bundles/claudevm.bundle/rootfs.img` **10GB는 남겼다** — 캐시가 아니라 로컬 VM 디스크
+  이미지이고 앱이 실행 중이며 지우면 다시 내려받아야 한다.
+- **결과**: 디스크 여유 **430MB → 115GB**(전체의 44%만 사용), 파일 수 1,200만 → 140만.
+  새 구간을 임시 로그로 실제 실행해 세 줄이 모두 정상 기록되는 것을 확인했다(`bash -n` 문법 검사 포함).
+
 ## 2026-08-18 — 디스크 포화의 진짜 원인: openclaw 컴파일 캐시 59GB (Claude, git 밖)
 - **정정**: 앞 항목에서 "제 빌드가 디스크를 채웠다"고 적었는데 **틀렸다.** 빌드가 만든 것은
   도커 빌드 캐시 4.7GB뿐이었다. 실제 범인은 따로 있었다.
