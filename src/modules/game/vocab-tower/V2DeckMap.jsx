@@ -32,12 +32,22 @@ const V2DeckMap = ({
         || Number(ascendingDecks.find((deck) => Number(deck.best_accuracy || 0) < 100)?.deck_number)
         || Number(explorationDecks[0]?.deck_number || 0);
     const hasAnyActive = activeDeckNumber > 0;
-    const summitAwarded = Boolean(summit?.awarded);
     const summitEligible = Boolean(summit?.eligible);
     const summitPassed = Number(summit?.passed_count || 0);
     const summitRequired = Number(summit?.required_count || deckCount);
     const summitMissing = Number(summit?.missing_count ?? Math.max(summitRequired - summitPassed, 0));
     const summitQuestionCount = Number(summitSettings?.question_count || 20);
+    // 정상은 1·2·3단계 순차 관문이다. 앞 단계를 통과해야 다음이 열린다.
+    const summitLevel = Number(summit?.level || 0);
+    const summitLevelCount = Number(summit?.level_count || 3);
+    const summitNextStage = summit?.next_stage ? Number(summit.next_stage) : null;
+    const summitStages = Array.isArray(summit?.stages) ? summit.stages : [];
+    const summitNextInputCount = Number(
+        summitStages.find((stage) => Number(stage.stage) === summitNextStage)?.input_count || 0
+    );
+    const summitStars = '⭐'.repeat(summitLevel) + '☆'.repeat(Math.max(summitLevelCount - summitLevel, 0));
+    // 마지막 단계까지 통과하면 더 칠 것이 없다.
+    const summitCompleted = summitLevel >= summitLevelCount;
     const masterRequiredPercent = Math.round(Number(masterSettings?.required_mastered_ratio || 0.8) * 100);
     const initialMapTargetRef = React.useRef(null);
     const didPositionMapRef = React.useRef(false);
@@ -67,30 +77,45 @@ const V2DeckMap = ({
                 </div>
 
                 <div className="vocab-tower-route" aria-label="어휘의 탑 탐험 경로">
-                    <div className={`vocab-tower-route__summit${summitAwarded ? ' is-conquered' : ''}${summitEligible && !summitAwarded ? ' is-open' : ''}`}>
+                    <div className={`vocab-tower-route__summit${summitCompleted ? ' is-conquered' : ''}${summitEligible && !summitCompleted ? ' is-open' : ''}`}>
                         <span className="vocab-tower-route__summit-icon" aria-hidden="true">👑</span>
                         <div>
-                            <strong>{summitAwarded ? '어휘 마스터!' : summitEligible ? '어휘의 정상이 열렸어요' : '어휘의 정상'}</strong>
+                            <strong>
+                                {summitCompleted
+                                    ? '어휘 마스터 완성!'
+                                    : summitLevel > 0
+                                        ? `어휘 마스터 ${summitLevel}단계`
+                                        : summitEligible ? '어휘의 정상이 열렸어요' : '어휘의 정상'}
+                            </strong>
                             <small>
-                                {summitAwarded
-                                    ? '탑의 정상에 올랐어요. 나의 아지트에서 휘장을 볼 수 있어요.'
-                                    : summitEligible
-                                        ? `${summitQuestionCount}문항 마지막 시험이 기다리고 있어요.`
-                                        : `덱마스터 ${summitMissing}개를 더 통과하면 정상 관문이 열려요.`}
+                                {summitCompleted
+                                    ? '세 단계를 모두 넘었어요. 나의 아지트에서 휘장을 볼 수 있어요.'
+                                    : summitLevel > 0
+                                        ? `다음은 ${summitNextStage}단계 — ${summitNextInputCount >= summitQuestionCount
+                                        ? `${summitQuestionCount}문항을 모두`
+                                        : `${summitQuestionCount}문항 중 ${summitNextInputCount}문항을`} 직접 써야 해요.`
+                                        : summitEligible
+                                            ? `1단계부터 시작해요. ${summitQuestionCount}문항 중 ${summitNextInputCount}문항이 직접 쓰기예요.`
+                                            : `덱마스터 ${summitMissing}개를 더 통과하면 정상 관문이 열려요.`}
                             </small>
                         </div>
-                        <em>덱마스터 {summitPassed}/{summitRequired}</em>
-                        {!summitAwarded && (
+                        {/* 별은 완성된 성취라 잠긴 상태에서도 몇 개까지 있는지 보여 준다 — 목표가 보여야 향해 간다. */}
+                        <em aria-label={`어휘 마스터 ${summitLevel}단계 / ${summitLevelCount}단계`}>
+                            {summitEligible || summitLevel > 0 ? summitStars : `덱마스터 ${summitPassed}/${summitRequired}`}
+                        </em>
+                        {!summitCompleted && (
                             <button
                                 type="button"
                                 className={`vocab-tower-route__summit-action${summitEligible ? '' : ' is-locked'}`}
                                 onClick={() => (summitEligible
-                                    ? onOpenSummit?.()
+                                    ? onOpenSummit?.(summitNextStage)
                                     : setOpenedCondition((current) => (current === 'summit' ? null : 'summit')))}
                                 disabled={submitting || (summitEligible && hasAnyActive)}
                                 aria-expanded={summitEligible ? undefined : openedCondition === 'summit'}
                             >
-                                {summitEligible ? '👑 어휘 마스터 도전' : '🔒 어휘 마스터 도전'}
+                                {summitEligible
+                                    ? `👑 어휘 마스터 ${summitNextStage}단계 도전`
+                                    : '🔒 어휘 마스터 도전'}
                             </button>
                         )}
                         {openedCondition === 'summit' && !summitEligible && (
@@ -99,7 +124,10 @@ const V2DeckMap = ({
                                 <ul>
                                     <li>열 개 층의 <b>덱마스터</b>를 모두 통과하기 — 지금 {summitPassed}/{summitRequired} (앞으로 {summitMissing}개)</li>
                                 </ul>
-                                <small>정상 시험은 {summitQuestionCount}문항이고 열 층 전체에서 골고루 나와요.</small>
+                                <small>
+                                    정상은 {summitLevelCount}단계예요. 단계가 오를수록 고르는 문제가 줄고 <b>직접 쓰는 문제</b>가 늘어나요
+                                    ({summitStages.map((stage) => `${stage.stage}단계 ${stage.input_count}개`).join(' · ')}).
+                                </small>
                             </div>
                         )}
                     </div>

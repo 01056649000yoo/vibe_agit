@@ -26,6 +26,13 @@ const MasteryBadges = ({ contents = [], loading = false, emptyText = '아직 도
                 const passed = hasProgress ? Number(item.passed_count) : null;
                 const cleared = Boolean(item.all_collections_cleared);
                 const summit = Boolean(item.summit_reached);
+                // 정상이 여러 단계인 콘텐츠는 별 개수로 어디까지 올랐는지 보여 준다(어휘는 3단계).
+                // 별은 완성된 성취라 친구에게도 보인다 — 서버가 진행도만 가린다.
+                const levelCount = Number(item.summit_level_count || 1);
+                const level = Number(item.summit_level || 0);
+                const stars = levelCount > 1 && summit
+                    ? '⭐'.repeat(level) + '☆'.repeat(Math.max(levelCount - level, 0))
+                    : '';
 
                 return (
                     <div key={item.content_type} className={`mastery-badges__row${summit ? ' is-summit' : ''}`}>
@@ -33,7 +40,10 @@ const MasteryBadges = ({ contents = [], loading = false, emptyText = '아직 도
                         <div className="mastery-badges__body">
                             <strong className="mastery-badges__name">{item.display_name}</strong>
                             {summit ? (
-                                <span className="mastery-badges__title">{item.master_title}</span>
+                                <span className="mastery-badges__title">
+                                    {item.master_title}
+                                    {stars && <b className="mastery-badges__stars" aria-label={`${level}단계 / ${levelCount}단계`}>{stars}</b>}
+                                </span>
                             ) : hasProgress ? (
                                 <span className="mastery-badges__count">
                                     {item.collection_label} {passed} / {total}

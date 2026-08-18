@@ -45,3 +45,6 @@
     .mastery-badges__pips { max-width: 38%; }
     .mastery-badges__pips span { width: 7px; height: 7px; }
 }
+
+/* 정상이 여러 단계인 콘텐츠의 별. 칭호 옆에 붙어 어디까지 올랐는지 한눈에 보인다. */
+.mastery-badges__stars { margin-left: 6px; font-size: .78em; letter-spacing: .5px; }

@@ -62,7 +62,11 @@ const V2DeckMaster = ({
             <header className="vocab-deck-master__head">
                 <div>
                     {/* 같은 시험 화면을 두 관문이 함께 쓴다. 이름만 서버가 알려 준 종류로 가른다. */}
-                    <strong>{session?.challenge_kind === 'summit' ? '어휘 마스터' : '덱마스터'}</strong>
+                    <strong>
+                        {session?.challenge_kind === 'summit'
+                            ? `어휘 마스터 ${session?.stage ?? 1}단계`
+                            : '덱마스터'}
+                    </strong>
                     <small>{answered + 1} / {total}</small>
                 </div>
                 <div className={`vocab-deck-master__timer${urgent ? ' is-urgent' : ''}`}
@@ -131,13 +135,21 @@ export const V2DeckMasterSummary = ({ result, onOpenCardBox, onBack }) => {
     if (!result) return null;
     const passed = Boolean(result.passed);
     const isSummit = result.challenge_kind === 'summit';
+    const stage = Number(result.stage || 1);
+    const levelCount = Number(result.level_count || 3);
+    const level = Number(result.summit?.level || 0);
+    const nextStage = result.summit?.next_stage ? Number(result.summit.next_stage) : null;
     const wrong = result.wrong_items || [];
 
     return (
         <div className="vocab-deck-master vocab-deck-master--summary">
             <div className={`vocab-deck-master__verdict${passed ? ' is-passed' : ''}`}>
                 <span aria-hidden="true">{passed ? (isSummit ? '👑' : '🏆') : '💪'}</span>
-                <h1>{passed ? (isSummit ? '어휘 마스터 통과!' : '덱마스터 통과!') : '조금만 더!'}</h1>
+                <h1>
+                    {passed
+                        ? (isSummit ? `어휘 마스터 ${stage}단계 통과!` : '덱마스터 통과!')
+                        : '조금만 더!'}
+                </h1>
                 <p>
                     {result.correct_count} / {result.question_count}문제
                     {' · '}직접 쓰기 {result.input_correct_count} / {result.input_question_count}문제
@@ -153,8 +165,14 @@ export const V2DeckMasterSummary = ({ result, onOpenCardBox, onBack }) => {
             {result.summit_reached && (
                 <div className="vocab-deck-master__summit">
                     <span aria-hidden="true">👑</span>
-                    <strong>어휘 마스터가 되었어요!</strong>
-                    <small>탑의 정상에 올랐어요. 나의 아지트에서 휘장을 확인해 보세요.</small>
+                    <strong>
+                        {'⭐'.repeat(level)}{'☆'.repeat(Math.max(levelCount - level, 0))} 어휘 마스터 {level}단계!
+                    </strong>
+                    <small>
+                        {nextStage
+                            ? `다음은 ${nextStage}단계예요. 직접 쓰는 문제가 더 늘어나요.`
+                            : '세 단계를 모두 넘었어요. 나의 아지트에서 휘장을 확인해 보세요.'}
+                    </small>
                 </div>
             )}
 

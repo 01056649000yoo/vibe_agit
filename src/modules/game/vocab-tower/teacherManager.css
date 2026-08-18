@@ -69,3 +69,21 @@
 .vocab-teacher__source-card--summit { border-color: #c4b5fd; background: #f5f3ff; }
 .vocab-teacher__source-card--summit strong { color: #5b21b6; }
 .vocab-teacher__source-card--summit em { background: #ede9fe; color: #6d28d9; }
+
+/* 정상 관문 단계 표 — 세 단계가 한눈에 비교되어야 난이도 곡선이 보인다. */
+.vocab-teacher__stage-table { display: grid; gap: 6px; margin-top: 10px; }
+.vocab-teacher__stage-head, .vocab-teacher__stage-row {
+    display: grid; grid-template-columns: minmax(96px, .6fr) 1fr 1fr; gap: 10px; align-items: center;
+}
+.vocab-teacher__stage-head span { color: #64748b; font-size: .63rem; font-weight: 800; }
+.vocab-teacher__stage-row { padding: 8px 10px; border-radius: 10px; background: #faf8ff; }
+.vocab-teacher__stage-row strong { color: #5b21b6; font-size: .74rem; }
+.vocab-teacher__stage-row label { display: block; }
+.vocab-teacher__stage-row input { width: 100%; min-height: 34px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; font: inherit; font-size: .76rem; }
+/* 열 제목이 위에 있으므로 칸마다 붙은 이름은 화면에서 숨기고 읽어 주는 기기에만 남긴다. */
+.vocab-teacher__stage-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 720px) {
+  .vocab-teacher__stage-head { display: none; }
+  .vocab-teacher__stage-row { grid-template-columns: 1fr; }
+  .vocab-teacher__stage-label { position: static; width: auto; height: auto; clip: auto; display: block; margin-bottom: 4px; color: #64748b; font-size: .63rem; font-weight: 800; }
+}

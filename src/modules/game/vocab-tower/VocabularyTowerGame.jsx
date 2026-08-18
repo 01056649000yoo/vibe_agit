@@ -388,11 +388,13 @@ const VocabularyTowerGame = ({
     };
 
     // 정상 관문(어휘 마스터)은 층이 아니라 탑 전체에 하나뿐이라 층 번호를 받지 않는다.
-    const openSummit = async () => {
+    const openSummit = async (stage) => {
         if (submitting) return;
         setSubmitting(true);
         setNotice('');
-        const { data, error } = await supabase.rpc('start_my_vocab_master_summit_v1');
+        const { data, error } = await supabase.rpc('start_my_vocab_master_summit_v1', {
+            p_stage: stage ?? null
+        });
         if (error || !data?.success) {
             setSubmitting(false);
             console.error('어휘 마스터 시작 실패:', error || data);
