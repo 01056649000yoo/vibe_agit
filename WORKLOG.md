@@ -21,6 +21,16 @@
 
 ---
 
+## 2026-08-18 — ROADMAP 코드 근거 마킹: GitHub·Vercel 연동 해제 및 Realtime 잔여 항목 정리 (Codex)
+- **한 일**: `ROADMAP.md`에서 코드로 즉시 검증 가능한 완료 항목 2건의 체크 상태를 갱신했다.
+- **변경**: `ROADMAP.md`에서 다음 항목을 `[ ]` → `[x]`로 반영했다.
+  - 저장소 밖 GitHub–Vercel 연동 해제
+  - Stage 5 `MissionList`/`useMissionSubmit`의 writing_missions Realtime 잔여
+- **결과/검증**: `rg`로 전체 소스에서 `.channel`/`postgres_changes` 패턴을 확인해 해당 구독이 삭제된 상태로 정리되었고,
+  `rg`로 `.github/workflows/deploy.yml`, `vercel.json` 부재를 확인해 Vercel 연동 제거가 코드 기준으로 성립함을 확인했다.
+- **남은 것 / 다음**: 체크되지 않은 항목은 실기기 확인/운영 연동 또는 외부 서비스 확인이 남아 있어,
+  이번 판정 범위를 벗어난 항목은 별도 실기기·운영 검증 단계로 이관.
+
 ## 2026-08-18 — 칭호 기준 인라인 복사본 제거(앞 작업의 구멍 메움) (Claude)
 - **배경**: 사용자가 "칭호가 초기화되면 소품도 해당 레벨이 되어야 자동으로 열리는 거지?" 하고 물어
   확인하다가, **앞서 한 '기준 한 곳으로 모으기'가 불완전했다는 것**을 찾았다.

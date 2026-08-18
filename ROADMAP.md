@@ -114,7 +114,7 @@
 - [x] 앱 운영 경로를 맥미니 Docker + 호스트 Caddy로 단일화하고 `vercel.json` 삭제
 - [x] 보안 헤더·외부 origin 허용 기준을 `Caddyfile.container` 한 곳으로 모으고 Vercel CSP 검증 제거
 - [x] `main` 푸시 → GitHub Actions → self-hosted 러너 → Docker 빌드·컨테이너 교체·HTTP 200 확인 계약을 자동 검사
-- [ ] 저장소 밖 GitHub–Vercel 연동을 해제해 PR에 붙는 Vercel 배포·Preview Comments 검사 제거
+- [x] 저장소 밖 GitHub–Vercel 연동을 해제해 PR에 붙는 Vercel 배포·Preview Comments 검사 제거
 - [x] PR #2를 `main`에 병합하고 GitHub Actions `Deploy` 성공과 운영 컨테이너 반영 확인
 
 ### Stage 2 연구소 통합 착수 점검
@@ -1052,8 +1052,8 @@ SSO가 되려면 둘을 한 스택·한 인증으로 통일해야 한다 (JWT �
 - [x] Realtime 구독 감축 (2026-07-30 대부분 완료): 공지 채널→조회 ✅, FriendsHideout 3중 구독 제거 + 복귀 시 갱신 ✅,
       학급 아지트 4중 구독 제거 ✅, 모듈 설정 구독 제거 ✅. 핵심 흐름(제출→확인·피드백→승인)만 남겼다.
       웹소켓 500 실측에서 접속 500·채널 1,000 전부 성공(2026-07-31)
-- [ ] Realtime 잔여: `writing_missions` 구독은 `MissionList`·`useMissionSubmit` 두 곳에 남아 있다.
-      학생이 쓰는 중 미션 변경 감지는 유지하고, 목록 구독은 제거 후보(Stage 3c 11번)다.
+- [x] Realtime 잔여: `writing_missions` 구독은 `MissionList`·`useMissionSubmit`에서 제거되어, 쓰기/목록은
+      재연결 구독 대신 재호출 기반 갱신(포커스/복귀 기준)으로 전환했다.
 - [ ] 회의 안건 결정 보상의 글자 수 조건 제거: 현재 `min_chars + bonus_threshold`를 넘어야 결정 보상이 지급된다.
       의도한 정책은 제출 보상과 별개로 최종 결정 시 글자 수와 무관하게 `bonus_reward`를 지급하는 것이므로,
       결정 로직의 조건과 회의 폼의 `보너스 추가 글자수` 입력을 함께 정리한다(최소 글자 수 목표는 유지).
