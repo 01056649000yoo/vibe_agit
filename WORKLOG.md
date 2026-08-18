@@ -39,6 +39,14 @@
     **2GB를 넘을 때만** 비운다(매일 지우면 캐시 이득이 사라져 시작이 매번 느려진다).
   - **7) 디스크 여유 경고** — 5GB 미만이면 백업 로그에 `⚠` 를 남긴다.
   - 바꾸기 전 원본은 스크래치패드에 복사해 두었다.
+- **결과**: 여유 **430MB → 69GB**, 파일 수 **1,200만 → 190만**. 앱 200·Caddy 200·API 401 정상.
+  컴파일 캐시는 13MB로 정상 재생성 중이다.
+- **덤으로 찾은 것 — 도커 재시작 뒤 조용히 빠져 있던 컨테이너 2개**:
+  `agit-templates-server-1`·`supabase-templates-server-1` 이 `restart=no` 라 안 올라왔다.
+  이들은 GoTrue 가 **비밀번호 재설정 메일 템플릿**을 가져오는 곳이다
+  (`GOTRUE_MAILER_TEMPLATES_RECOVERY=http://templates-server/recovery.html`).
+  그대로 뒀으면 재설정 메일이 조용히 깨졌다. 되살리고 정책을 `unless-stopped` 로 바꿨다.
+  **운영 컨테이너 중 `restart=no` 는 이제 없다.**
 - **손대지 않은 큰 것들**(사용자 데이터): Notion 45GB, Claude 데스크톱 11GB, OneDrive 로컬 사본.
   외장 SSD(`/Volumes/SHmaegmini`, 931GB 중 904GB 여유)는 정상 마운트 상태다.
 
