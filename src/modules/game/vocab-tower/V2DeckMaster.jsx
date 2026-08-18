@@ -160,6 +160,13 @@ export const V2DeckMasterSummary = ({ result, onOpenCardBox, onBack }) => {
                         통과하려면 전체 {result.pass_correct ?? '-'}문제, 직접 쓰기 {result.pass_input ?? '-'}문제를 맞혀야 해요.
                     </small>
                 )}
+                {/* 다음에 무엇을 해야 하는지가 결과보다 중요하다. 틀린 낱말은 다시 익혀야 재도전이 열린다. */}
+                {wrong.length > 0 && (
+                    <small className="vocab-deck-master__retry-note">
+                        틀린 낱말 {wrong.length}개는 <b>다시 볼 낱말</b>이 됐어요.
+                        모두 다시 익히면 이 시험에 또 도전할 수 있어요.
+                    </small>
+                )}
             </div>
 
             {result.summit_reached && (

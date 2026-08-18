@@ -545,3 +545,15 @@
 }
 .vocab-deck-master__summit.is-unlocked strong { color: #2A4894; }
 .vocab-deck-master__summit.is-unlocked small { color: #435C9E; }
+
+/* 결과 화면의 보충 안내 — 점수보다 "다음에 무엇을 할지"가 중요하다. */
+.vocab-deck-master__retry-note {
+    display: block;
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(49, 86, 184, .08);
+    color: #2F4A8F;
+    font-weight: 800;
+    line-height: 1.5;
+}

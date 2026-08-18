@@ -32,7 +32,9 @@ const V2DeckMap = ({
         || Number(ascendingDecks.find((deck) => Number(deck.best_accuracy || 0) < 100)?.deck_number)
         || Number(explorationDecks[0]?.deck_number || 0);
     const hasAnyActive = activeDeckNumber > 0;
-    const summitEligible = Boolean(summit?.eligible);
+    const summitRetry = summit?.retry || null;
+    const summitRetryBlocked = Boolean(summitRetry?.blocked);
+    const summitEligible = Boolean(summit?.eligible) && !summitRetryBlocked;
     const summitPassed = Number(summit?.passed_count || 0);
     const summitRequired = Number(summit?.required_count || deckCount);
     const summitMissing = Number(summit?.missing_count ?? Math.max(summitRequired - summitPassed, 0));
@@ -88,7 +90,9 @@ const V2DeckMap = ({
                                         : summitEligible ? '어휘의 정상이 열렸어요' : '어휘의 정상'}
                             </strong>
                             <small>
-                                {summitCompleted
+                                {summitRetryBlocked
+                                    ? `지난 시험에서 틀린 낱말 ${summitRetry.remaining_count}개를 다시 익히면 이어서 도전할 수 있어요.`
+                                    : summitCompleted
                                     ? '세 단계를 모두 넘었어요. 나의 아지트에서 휘장을 볼 수 있어요.'
                                     : summitLevel > 0
                                         ? `다음은 ${summitNextStage}단계 — ${summitNextInputCount >= summitQuestionCount
@@ -115,10 +119,26 @@ const V2DeckMap = ({
                             >
                                 {summitEligible
                                     ? `👑 어휘 마스터 ${summitNextStage}단계 도전`
-                                    : '🔒 어휘 마스터 도전'}
+                                    : summitRetryBlocked
+                                        ? `📚 낱말 ${summitRetry.remaining_count}개 더 익히기`
+                                        : '🔒 어휘 마스터 도전'}
                             </button>
                         )}
-                        {openedCondition === 'summit' && !summitEligible && (
+                        {openedCondition === 'summit' && summitRetryBlocked && (
+                            <div className="vocab-deck-card__condition" role="note">
+                                <strong>지난 시험에서 틀린 낱말을 다시 익혀요</strong>
+                                <ul>
+                                    <li>
+                                        <b>{summitRetry.done_count}/{summitRetry.required_count}개</b> 다시 익혔어요
+                                        {summitRetry.remaining_count > 0 && ` (앞으로 ${summitRetry.remaining_count}개)`}
+                                    </li>
+                                </ul>
+                                <small>
+                                    정상 시험의 낱말은 열 층에 흩어져 있어요. 지도에서 그 층을 연습하면 먼저 나와요.
+                                </small>
+                            </div>
+                        )}
+                        {openedCondition === 'summit' && !summitEligible && !summitRetryBlocked && (
                             <div className="vocab-deck-card__condition" role="note">
                                 <strong>이렇게 하면 열려요</strong>
                                 <ul>
@@ -157,7 +177,10 @@ const V2DeckMap = ({
                             ? Math.min(100, Math.round(seenCount / itemCount * 100))
                             : 0;
                         const isConquered = bestAccuracy >= 100;
-                        const masterEligible = Boolean(deck.master_eligible);
+                        // 지난 시험에서 틀린 낱말을 다시 익혀야 또 칠 수 있다(서버가 판단한 값을 그대로 쓴다).
+                        const masterRetry = deck.master_retry || null;
+                        const retryBlocked = Boolean(masterRetry?.blocked);
+                        const masterEligible = Boolean(deck.master_eligible) && !retryBlocked;
                         const masterPassed = Boolean(deck.master_passed);
                         const masterRequired = Number(deck.master_required_mastered || 0);
                         const masterMissing = Number(deck.master_missing_mastered || 0);
@@ -246,9 +269,11 @@ const V2DeckMap = ({
                                             disabled={submitting || (masterEligible && hasOtherActive)}
                                             aria-expanded={masterEligible ? undefined : openedCondition === deckNumber}
                                         >
-                                            {masterPassed
-                                                ? '🏆 덱마스터 다시 도전'
-                                                : masterEligible ? '🏆 덱마스터 도전' : '🔒 덱마스터 도전'}
+                                            {masterEligible
+                                                ? (masterPassed ? '🏆 덱마스터 다시 도전' : '🏆 덱마스터 도전')
+                                                : retryBlocked
+                                                    ? `📚 낱말 ${masterRetry.remaining_count}개 더 익히기`
+                                                    : '🔒 덱마스터 도전'}
                                         </button>
                                         {/* 만난 낱말이 있어야 볼 것이 있다. 아직 없으면 버튼을 만들지 않는다. */}
                                         {seenCount > 0 && (
@@ -262,7 +287,22 @@ const V2DeckMap = ({
                                             </button>
                                         )}
                                     </div>
-                                    {openedCondition === deckNumber && !masterEligible && (
+                                    {openedCondition === deckNumber && retryBlocked && (
+                                        <div className="vocab-deck-card__condition" role="note">
+                                            <strong>지난 시험에서 틀린 낱말을 다시 익혀요</strong>
+                                            <ul>
+                                                <li>
+                                                    <b>{masterRetry.done_count}/{masterRetry.required_count}개</b> 다시 익혔어요
+                                                    {masterRetry.remaining_count > 0 && ` (앞으로 ${masterRetry.remaining_count}개)`}
+                                                </li>
+                                            </ul>
+                                            <small>
+                                                틀린 낱말은 <b>다시 볼 낱말</b>이 되어 이 층을 연습하면 먼저 나와요.
+                                                서로 다른 두 가지 문제를 연달아 맞히면 다시 익힘이 돼요.
+                                            </small>
+                                        </div>
+                                    )}
+                                    {openedCondition === deckNumber && !masterEligible && !retryBlocked && (
                                         <div className="vocab-deck-card__condition" role="note">
                                             <strong>이렇게 하면 열려요</strong>
                                             <ul>
