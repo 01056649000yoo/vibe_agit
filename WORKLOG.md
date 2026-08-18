@@ -24,6 +24,8 @@
 ## 2026-08-19 — 글쓰기연구소 학생 완성 보기 모달화 (Gemini)
 - **배경**: 교사가 실시간 활동 세션에서 완료된 학생의 결과를 확인할 때 페이지 이동(`/result/[sessionId]`)으로 화면이 전환되어 불편했던 동선 개선.
 - **수정**:
+  - `writing-helper/src/app/dashboard/room/new/page.tsx`: 직접 만들기 가이드 기본 텍스트 정돈, 질문 카드 세트 전체 해제 시 재선택되던 버그 수정, 각 카드 세트별 `[👁️ 보기]` 모달 팝업 추가, AI 질문 추천 개수(3/5/8/10개) 선택 기능 신설.
+  - `writing-helper/src/app/dashboard/settings/page.tsx`: 복잡한 연구원 역할 트리를 걷어내고, 질문의 핵심 키워드(상상/마음/감각/이유/비교/변화)별로 질문 카드를 직관적으로 확인·검색·수정할 수 있는 `질문 카드 보관함`으로 전면 개편.
   - `writing-helper/src/app/dashboard/room/new/page.tsx` & `room-actions.ts`: 질문 만들기 활동 개설 UI를 3대 모드(`1. 직접 만들기`, `2. 질문 카드 활용`, `3. AI 질문 예시 제공`) 선택형으로 전면 개편. 수십 개 카드가 펼쳐지던 복잡한 화면을 걷어내고, 선택된 모드에만 필요한 미니멀 서브 패널(AI 질문 5개 즉시 추천/선별, 카드 묶음 퀵 토글)이 나타나도록 개선.
   - `writing-helper/src/app/dashboard/class/[id]/active-rooms-tabs.tsx` (신설): 진행 중인 활동 세션도 종료 세션처럼 4대 활동별로 모아보는 탭 필터 신설.
   - `writing-helper/src/app/dashboard/class/[id]/closed-rooms-tabs.tsx`: 탭 목록에서 더 이상 사용하지 않는 한자활용 문장을 제거하고 4대 활동(`전체`/`개요짜기`/`질문 만들기`/`좋은 질문 고르기`/`한 줄 모아`)으로 일원화.
