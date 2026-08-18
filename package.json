@@ -47,7 +47,9 @@
     "smoke:student-scaling": "node scripts/run-rollback-smoke.mjs tests/sql/20261006_student_scaling_harness.smoke.sql",
     "smoke:security-boundary": "node scripts/run-rollback-smoke.mjs tests/sql/20261014_security_boundary_hardening.smoke.sql",
     "smoke:writing-references": "node scripts/run-rollback-smoke.mjs tests/sql/20261104_writing_reference_sources.smoke.sql",
-    "preflight:disk": "bash scripts/preflight-disk.sh"
+    "preflight:disk": "bash scripts/preflight-disk.sh",
+    "check:title-levels": "node scripts/sync-title-levels.mjs --check",
+    "sync:title-levels": "node scripts/sync-title-levels.mjs --write"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

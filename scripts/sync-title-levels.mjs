@@ -1,0 +1,139 @@
+/**
+ * 칭호 기준을 한 곳에서만 고치게 만드는 도구.
+ *
+ * 작가·독자 칭호 기준은 원래 **두 곳**에 같은 숫자가 있었다 —
+ *   · 화면: `src/constants/writerLevels.js` (동기적으로 필요해서 상수여야 한다)
+ *   · DB : `dragon_writer_level()` / `dragon_reader_level()`
+ *          (학기 마감 때 그 시점의 칭호를 스냅샷에 **얼려 두는** 데 쓴다.
+ *           이 값은 나중에 기준을 바꿔도 지난 학기 기록이 소급해서 바뀌지 않게 하는 장치라
+ *           그냥 지울 수 없다.)
+ *
+ * 그래서 상수를 **원본**으로 두고 DB 함수를 여기서 **생성**한다. 숫자를 두 번 적는 일이 없어진다.
+ *
+ *   node scripts/sync-title-levels.mjs --check   기준이 어긋났는지 본다(어긋나면 실패)
+ *   node scripts/sync-title-levels.mjs --write   새 마이그레이션 파일을 만든다
+ *
+ * `--check` 는 배포 전 검사에 넣어 두었다. 상수만 고치고 DB 를 잊으면 학기 마감 스냅샷에
+ * 옛 기준이 찍혀 **작별 편지의 칭호가 화면과 어긋난다.** 그 조합은 눈으로 잡기 어렵다.
+ */
+import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import { WRITER_LEVELS, READER_LEVELS } from '../src/constants/writerLevels.js';
+
+const DOCKER = '/Applications/Docker.app/Contents/Resources/bin/docker';
+const CONTAINER = 'agit-db';
+
+/** 상수 배열 → `CASE ... END` 본문. 높은 단계부터 검사한다(첫 참이 답이 되도록). */
+const buildWriterBody = () => {
+    const rows = [...WRITER_LEVELS]
+        .filter((item) => item.level > 1)
+        .sort((a, b) => b.level - a.level)
+        .map((item) => (item.criterion === 'posts'
+            ? `        WHEN COALESCE(p_posts, 0) >= ${item.from} THEN ${item.level}`
+            : `        WHEN COALESCE(p_chars, 0) >= ${item.from} THEN ${item.level}`));
+    return [
+        '    SELECT CASE',
+        `        WHEN p_override BETWEEN 1 AND ${WRITER_LEVELS.length} THEN p_override`,
+        ...rows,
+        '        ELSE 1',
+        '    END;'
+    ].join('\n');
+};
+
+const buildReaderBody = () => {
+    const rows = [...READER_LEVELS]
+        .filter((item) => item.level > 1)
+        .sort((a, b) => b.level - a.level)
+        .map((item) => `        WHEN COALESCE(p_score, 0) >= ${item.from} THEN ${item.level}`);
+    return [
+        '    SELECT CASE',
+        `        WHEN p_override BETWEEN 1 AND ${READER_LEVELS.length} THEN p_override`,
+        ...rows,
+        '        ELSE 1',
+        '    END;'
+    ].join('\n');
+};
+
+const normalize = (text) => text.replace(/\s+/g, ' ').trim();
+
+const readDeployed = (name) => {
+    try {
+        return execFileSync(DOCKER, [
+            'exec', CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-tA',
+            '-c', `SELECT prosrc FROM pg_proc WHERE proname='${name}'`
+        ], { encoding: 'utf8' });
+    } catch {
+        return null;
+    }
+};
+
+const TARGETS = [
+    { name: 'dragon_writer_level', body: buildWriterBody(), label: '작가' },
+    { name: 'dragon_reader_level', body: buildReaderBody(), label: '독자' }
+];
+
+const mode = process.argv.includes('--write') ? 'write' : 'check';
+
+if (mode === 'check') {
+    let failed = false;
+    for (const target of TARGETS) {
+        const deployed = readDeployed(target.name);
+        if (deployed === null) {
+            console.log(`· ${target.label} 칭호: DB 를 읽지 못해 건너뜁니다(${target.name}).`);
+            continue;
+        }
+        if (normalize(deployed) === normalize(target.body)) {
+            console.log(`✓ ${target.label} 칭호 기준 일치 (${target.name})`);
+        } else {
+            failed = true;
+            console.error(`\n✗ ${target.label} 칭호 기준이 어긋났습니다 — ${target.name}`);
+            console.error('  상수(src/constants/writerLevels.js) 기준:');
+            console.error(target.body);
+            console.error('  DB 에 적용된 것:');
+            console.error(deployed.trimEnd());
+            console.error('\n  → node scripts/sync-title-levels.mjs --write 로 마이그레이션을 만들고 적용하세요.\n');
+        }
+    }
+    process.exit(failed ? 1 : 0);
+}
+
+// --write: 상수에서 만든 본문으로 마이그레이션 파일을 쓴다.
+const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+const file = `supabase/migrations/${stamp}_sync_title_levels.sql`;
+const sql = `-- 칭호 기준 동기화 — **손으로 고치지 마세요.**
+-- \`src/constants/writerLevels.js\` 를 고친 뒤
+-- \`node scripts/sync-title-levels.mjs --write\` 로 다시 만듭니다.
+--
+-- 화면과 DB 가 같은 기준을 봐야 하는 이유: DB 쪽은 학기 마감 때 그 시점의 칭호를
+-- 스냅샷에 얼려 두는 데 쓰인다. 어긋나면 작별 편지의 칭호가 화면과 달라진다.
+
+BEGIN;
+
+CREATE OR REPLACE FUNCTION public.dragon_writer_level(
+    p_chars BIGINT,
+    p_posts BIGINT,
+    p_override INTEGER DEFAULT NULL
+)
+RETURNS INTEGER
+LANGUAGE sql
+IMMUTABLE
+AS $$
+${buildWriterBody()}
+$$;
+
+CREATE OR REPLACE FUNCTION public.dragon_reader_level(
+    p_score BIGINT,
+    p_override INTEGER DEFAULT NULL
+)
+RETURNS INTEGER
+LANGUAGE sql
+IMMUTABLE
+AS $$
+${buildReaderBody()}
+$$;
+
+COMMIT;
+`;
+writeFileSync(file, sql);
+console.log(`마이그레이션을 만들었습니다: ${file}`);
+console.log('적용: npm run migrate');

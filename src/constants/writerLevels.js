@@ -8,6 +8,16 @@
  * 2026-07-30 한 학기 안에 상위 칭호에 너무 빨리 도달한다는 운영 피드백에 따라
  * 글자 수 문턱은 최초 확정값에서 30% 높였다. 첫 완성 경험은 늦추지 않도록 Lv2=승인 글 1편을 유지한다.
  * 등수·포인트 보상과는 연결하지 않고 자기 성장 표시로만 쓴다.
+ *
+ * ⚠️ **이 파일이 칭호 기준의 원본이다.** 숫자를 고치면 DB 도 함께 맞춰야 한다 —
+ * `dragon_writer_level()` / `dragon_reader_level()` 이 학기 마감 때 그 시점의 칭호를
+ * 스냅샷에 얼려 두는 데 쓰인다(그래야 나중에 기준을 바꿔도 지난 학기 기록이 소급해서
+ * 바뀌지 않는다). 손으로 두 번 적지 않는다:
+ *
+ *     npm run sync:title-levels   # 이 파일에서 마이그레이션을 만든다
+ *     npm run migrate             # 적용
+ *
+ * `npm run check:title-levels` 가 두 곳이 어긋났는지 보고, 배포 워크플로가 이를 먼저 실행한다.
  */
 export const WRITER_LEVELS = [
     { level: 1, name: '새싹 작가', emoji: '🌱', from: 0, criterion: 'chars' },

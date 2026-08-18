@@ -28,6 +28,11 @@ jobs:
       - name: Preflight disk check
         run: bash scripts/preflight-disk.sh 10
 
+      # 칭호 기준은 화면(상수)과 DB(학기 마감 스냅샷) 두 곳이 같아야 한다.
+      # 어긋나면 지난 학기 작별 편지의 칭호가 화면과 달라지는데 눈으로는 잡기 어렵다.
+      - name: Check title level thresholds
+        run: npm run check:title-levels
+
       - name: Build agit-app image (Supabase·Google public client config)
         run: |
           ANON=$(grep '^ANON_KEY=' "$HOME/agit-supabase/.env" | cut -d= -f2)
