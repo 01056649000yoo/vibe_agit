@@ -24,6 +24,7 @@
 ## 2026-08-19 — 글쓰기연구소 학생 완성 보기 모달화 (Gemini)
 - **배경**: 교사가 실시간 활동 세션에서 완료된 학생의 결과를 확인할 때 페이지 이동(`/result/[sessionId]`)으로 화면이 전환되어 불편했던 동선 개선.
 - **수정**:
+  - `writing-helper/src/app/dashboard/room/[id]/live-student-panel.tsx`: 학생 활동 현황의 상태 라벨을 직관적으로 개선 (`접속 중` → `작성 중`, `지금 활동 중` → `작성 중 (미제출)`, `미접속` → `시작 전`).
   - `writing-helper/src/app/dashboard/room/[id]/live-student-panel.tsx`:
     - `StudentSessionResultModal` 컴포넌트 신규 구현 (활동별 결과 렌더링 지원: 개요 처음/가운데/끝, 질문 만들기 질문 카드, 좋은 질문 선택 내역 및 득표수, 한줄모아 문장/좋아요, 한자 문장).
     - 완료 목록의 `보기 →` 클릭 시 별도 페이지 이동 대신 세션 상태 기반 팝업 모달로 띄워 바로 보고 닫을 수 있도록 전환.
