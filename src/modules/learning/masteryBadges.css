@@ -1,5 +1,6 @@
-/* 학습 성취 줄. 나의 아지트·친구 아지트·교사 화면이 같은 모양을 쓴다. */
-.mastery-badges { display: grid; gap: 8px; margin-bottom: 14px; }
+/* 학습 성취 휘장. 나의 아지트·친구 아지트·교사 화면이 같은 모양을 쓴다.
+   정상(어휘 마스터)이 카드의 주인공이고, 관문(덱마스터)은 아래 진행 띠로 받친다. */
+.mastery-badges { display: grid; gap: 10px; margin-bottom: 14px; }
 
 .mastery-badges--loading,
 .mastery-badges--empty {
@@ -13,42 +14,112 @@
     text-align: center;
 }
 
-.mastery-badges__row {
+.mastery-badges__card {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "crest head" "foot foot";
+    gap: 0 13px;
+    padding: 14px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(105, 61, 32, .15);
+    background: rgba(255, 255, 255, .66);
+    overflow: hidden;
+}
+
+/* ── 휘장 원판 ─────────────────────────────────────────────────────────────
+   상태를 색이 아니라 **재질**로 가른다: 못 받았으면 눌린 회색 판, 받으면 도드라진 금판.
+   글자를 못 읽는 아이도 멀리서 구분한다. */
+.mastery-badges__crest {
+    grid-area: crest;
+    display: grid;
+    place-items: center;
+    width: 54px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #F1EAE0;
+    box-shadow: inset 0 0 0 2px rgba(105, 61, 32, .12);
+}
+.mastery-badges__crest-icon { font-size: 1.6rem; line-height: 1; filter: grayscale(1) opacity(.5); }
+
+.mastery-badges__head { grid-area: head; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.mastery-badges__eyebrow { font-size: .62rem; font-weight: 900; letter-spacing: .04em; color: #A08D78; }
+/* 정상 이름이 카드에서 가장 큰 글자다 — 덱마스터의 하위 항목으로 읽히면 안 된다. */
+.mastery-badges__title { font-size: 1.02rem; font-weight: 950; line-height: 1.2; color: #8B7A66; }
+.mastery-badges__stars { margin-top: 2px; font-size: .84rem; line-height: 1.2; letter-spacing: 2px; opacity: .45; }
+.mastery-badges__note { margin-top: 2px; font-size: .67rem; font-style: normal; font-weight: 800; color: #9C8B76; }
+
+/* ── 관문 진행 띠 ── 정상으로 가는 길이라 정상 아래에 둔다. */
+.mastery-badges__foot {
+    grid-area: foot;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, .62);
-    border: 1px solid rgba(105, 61, 32, .16);
+    gap: 8px;
+    margin-top: 11px;
+    padding-top: 9px;
+    border-top: 1px dashed rgba(105, 61, 32, .18);
 }
-/* 정상에 오른 콘텐츠만 금색으로 구분한다. 완성이 드물어야 값이 있다. */
-.mastery-badges__row.is-summit {
-    background: linear-gradient(135deg, #FFF7E0, #FFEAB8);
-    border-color: #E9CD8B;
-}
-
-.mastery-badges__icon { font-size: 1.35rem; line-height: 1; }
-.mastery-badges__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.mastery-badges__name { font-size: .82rem; font-weight: 900; color: #5D4037; }
-.mastery-badges__count { font-size: .72rem; font-weight: 800; color: #8A6E52; }
-.mastery-badges__title { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: .74rem; font-weight: 900; color: #8A6212; }
-/* 아직 못 받은 정상은 흐리게 둔다. 보이되 이미 받은 것과 헷갈리지 않아야 한다. */
-.mastery-badges__title.is-locked { color: #A0907C; font-weight: 800; }
-.mastery-badges__note { font-size: .66rem; font-style: normal; font-weight: 800; color: #9C8B76; }
-
-.mastery-badges__pips { display: flex; gap: 3px; flex-wrap: wrap; max-width: 44%; justify-content: flex-end; }
-.mastery-badges__pips span {
-    width: 9px; height: 9px; border-radius: 50%;
-    background: rgba(105, 61, 32, .18);
-}
+.mastery-badges__foot-label { font-size: .63rem; font-weight: 900; color: #A08D78; white-space: nowrap; }
+.mastery-badges__foot-count { margin-left: auto; font-size: .68rem; font-weight: 900; color: #8A6E52; white-space: nowrap; }
+.mastery-badges__pips { display: flex; gap: 3px; flex-wrap: wrap; min-width: 0; }
+.mastery-badges__pips span { width: 9px; height: 9px; border-radius: 50%; background: rgba(105, 61, 32, .16); }
 .mastery-badges__pips span.is-on { background: #E2A33C; }
 
-@media (max-width: 480px) {
-    .mastery-badges__pips { max-width: 38%; }
+/* ── 열렸지만 아직 안 오름 ── 할 수 있는 일이라 흐리게 두지 않는다. */
+.mastery-badges__card.is-open { border-color: #D8C39A; background: linear-gradient(135deg, #FFFDF6, #FCF4E4); }
+.mastery-badges__card.is-open .mastery-badges__crest { background: #FFF6E2; box-shadow: inset 0 0 0 2px rgba(226, 163, 60, .55); }
+.mastery-badges__card.is-open .mastery-badges__crest-icon { filter: grayscale(.3); }
+.mastery-badges__card.is-open .mastery-badges__stars { opacity: .7; }
+.mastery-badges__card.is-open .mastery-badges__note { color: #2F6B3D; }
+
+/* ── 정상에 오름 ── 완성이 드물어야 값이 있으므로 금색은 여기서부터다. */
+.mastery-badges__card.is-summit,
+.mastery-badges__card.is-complete {
+    border-color: #E9C97F;
+    background: linear-gradient(135deg, #FFFBEF 0%, #FFF1CD 100%);
+}
+.mastery-badges__card.is-summit .mastery-badges__crest,
+.mastery-badges__card.is-complete .mastery-badges__crest {
+    background: radial-gradient(circle at 30% 25%, #FFF6D2, #F2C25B 72%);
+    box-shadow: inset 0 0 0 2px #E0A93F, 0 4px 12px rgba(200, 150, 40, .26);
+}
+.mastery-badges__card.is-summit .mastery-badges__crest-icon,
+.mastery-badges__card.is-complete .mastery-badges__crest-icon { filter: none; }
+.mastery-badges__card.is-summit .mastery-badges__title,
+.mastery-badges__card.is-complete .mastery-badges__title { color: #6B4E1E; }
+.mastery-badges__card.is-summit .mastery-badges__stars,
+.mastery-badges__card.is-complete .mastery-badges__stars { opacity: 1; }
+.mastery-badges__card.is-summit .mastery-badges__note,
+.mastery-badges__card.is-complete .mastery-badges__note { color: #93701F; }
+.mastery-badges__card.is-summit .mastery-badges__eyebrow,
+.mastery-badges__card.is-complete .mastery-badges__eyebrow { color: #B08C43; }
+.mastery-badges__card.is-summit .mastery-badges__foot,
+.mastery-badges__card.is-complete .mastery-badges__foot { border-top-color: rgba(190, 140, 40, .28); }
+
+/* ── 마지막 단계까지 ── 한 번 더 얹는다. 세 번 오른 것이 한 번 오른 것과 같아 보이면 안 된다. */
+.mastery-badges__card.is-complete {
+    border-color: #DFA63C;
+    background: linear-gradient(135deg, #FFF8DE 0%, #FFE9AC 55%, #F9DC92 100%);
+    box-shadow: 0 8px 20px rgba(190, 140, 35, .18);
+}
+/* 안쪽 테두리 한 겹이 액자처럼 보이게 한다(그림 없이 재질만으로). */
+.mastery-badges__card.is-complete::after {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border: 1px solid rgba(200, 150, 45, .42);
+    border-radius: 16px;
+    pointer-events: none;
+}
+.mastery-badges__card.is-complete .mastery-badges__crest {
+    box-shadow: inset 0 0 0 3px #D99B2B, 0 0 0 4px rgba(255, 214, 124, .55), 0 6px 16px rgba(185, 135, 30, .3);
+}
+.mastery-badges__card.is-complete .mastery-badges__title { color: #5E4211; }
+
+@media (max-width: 420px) {
+    .mastery-badges__card { padding: 12px 13px; gap: 0 10px; }
+    .mastery-badges__crest { width: 46px; }
+    .mastery-badges__crest-icon { font-size: 1.35rem; }
+    .mastery-badges__title { font-size: .94rem; }
     .mastery-badges__pips span { width: 7px; height: 7px; }
 }
-
-/* 정상이 여러 단계인 콘텐츠의 별. 칭호 옆에 붙어 어디까지 올랐는지 한눈에 보인다. */
-.mastery-badges__stars { font-size: .78em; letter-spacing: .5px; }
-.mastery-badges__note.is-open { color: #2F6B3D; }
