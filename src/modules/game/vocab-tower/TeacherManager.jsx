@@ -6,10 +6,35 @@ import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 
 const DEFAULT_CONFIG = {
     grade: 3,
-    perfectRewardPoints: 100
+    perfectRewardPoints: 100,
+    masterQuestionCount: 12,
+    masterInputCount: 5,
+    masterPassCorrect: 10,
+    masterPassInput: 3,
+    masterSecondsPerQuestion: 45,
+    masterRequiredMasteredPercent: 80
 };
 
+// 한 층의 낱말 수는 학년마다 38~40개로 조금씩 다르다. 교사에게 보여 줄 예시는 40낱말 기준이다.
+const SAMPLE_DECK_SIZE = 40;
+
 const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, Number(value)));
+
+// DB의 classes_vocab_master_settings_check 는 값끼리 물려 있다
+// (직접입력 ≤ 총문항, 합격 정답 ≤ 총문항, 합격 직접입력 ≤ 직접입력).
+// 저장 전에 같은 순서로 맞물리게 잘라 두어야 교사가 슬라이더를 어떻게 움직여도 DB 오류가 나지 않는다.
+const normalizeMasterSettings = (config) => {
+    const questionCount = clamp(config.masterQuestionCount, 5, 30);
+    const inputCount = clamp(config.masterInputCount, 0, questionCount);
+    return {
+        masterQuestionCount: questionCount,
+        masterInputCount: inputCount,
+        masterPassCorrect: clamp(config.masterPassCorrect, 1, questionCount),
+        masterPassInput: clamp(config.masterPassInput, 0, inputCount),
+        masterSecondsPerQuestion: clamp(config.masterSecondsPerQuestion, 10, 300),
+        masterRequiredMasteredPercent: clamp(config.masterRequiredMasteredPercent, 50, 100)
+    };
+};
 
 const VocabularyTowerTeacherManager = ({ activeClass }) => {
     const classId = activeClass?.id;
@@ -25,7 +50,16 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
 
         const { data, error } = await supabase
             .from('classes')
-            .select('vocab_tower_grade, vocab_tower_v2_perfect_reward_points')
+            .select([
+                'vocab_tower_grade',
+                'vocab_tower_v2_perfect_reward_points',
+                'vocab_master_question_count',
+                'vocab_master_input_count',
+                'vocab_master_pass_correct',
+                'vocab_master_pass_input',
+                'vocab_master_seconds_per_question',
+                'vocab_master_required_mastered_ratio'
+            ].join(', '))
             .eq('id', classId)
             .maybeSingle();
 
@@ -35,7 +69,15 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
         } else {
             setConfig({
                 grade: data.vocab_tower_grade || DEFAULT_CONFIG.grade,
-                perfectRewardPoints: data.vocab_tower_v2_perfect_reward_points ?? DEFAULT_CONFIG.perfectRewardPoints
+                perfectRewardPoints: data.vocab_tower_v2_perfect_reward_points ?? DEFAULT_CONFIG.perfectRewardPoints,
+                masterQuestionCount: data.vocab_master_question_count ?? DEFAULT_CONFIG.masterQuestionCount,
+                masterInputCount: data.vocab_master_input_count ?? DEFAULT_CONFIG.masterInputCount,
+                masterPassCorrect: data.vocab_master_pass_correct ?? DEFAULT_CONFIG.masterPassCorrect,
+                masterPassInput: data.vocab_master_pass_input ?? DEFAULT_CONFIG.masterPassInput,
+                masterSecondsPerQuestion: data.vocab_master_seconds_per_question ?? DEFAULT_CONFIG.masterSecondsPerQuestion,
+                masterRequiredMasteredPercent: Math.round(
+                    Number(data.vocab_master_required_mastered_ratio ?? 0.8) * 100
+                )
             });
         }
         setLoading(false);
@@ -52,7 +94,9 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
 
     const handleSave = async () => {
         if (!classId || saving) return;
+        const master = normalizeMasterSettings(config);
         const nextConfig = {
+            ...master,
             grade: clamp(config.grade, 3, 6),
             perfectRewardPoints: clamp(config.perfectRewardPoints, 0, 500)
         };
@@ -61,7 +105,13 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
             .from('classes')
             .update({
                 vocab_tower_grade: nextConfig.grade,
-                vocab_tower_v2_perfect_reward_points: nextConfig.perfectRewardPoints
+                vocab_tower_v2_perfect_reward_points: nextConfig.perfectRewardPoints,
+                vocab_master_question_count: nextConfig.masterQuestionCount,
+                vocab_master_input_count: nextConfig.masterInputCount,
+                vocab_master_pass_correct: nextConfig.masterPassCorrect,
+                vocab_master_pass_input: nextConfig.masterPassInput,
+                vocab_master_seconds_per_question: nextConfig.masterSecondsPerQuestion,
+                vocab_master_required_mastered_ratio: nextConfig.masterRequiredMasteredPercent / 100
             })
             .eq('id', classId);
         if (error) {
@@ -98,6 +148,11 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
             </div>
         );
     }
+
+    const master = normalizeMasterSettings(config);
+    const requiredMasteredWords = Math.ceil(SAMPLE_DECK_SIZE * master.masterRequiredMasteredPercent / 100);
+    const masterChoiceCount = master.masterQuestionCount - master.masterInputCount;
+    const masterTotalMinutes = Math.round(master.masterQuestionCount * master.masterSecondsPerQuestion / 60);
 
     return (
         <div className="vocab-teacher">
@@ -163,6 +218,75 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
 
                 <div className="vocab-teacher__footer-actions">
                     <p>층당 총액을 25·50·75·100% 네 구간에 20·20·30·30%로 나눠 지급하며, 같은 구간은 한 번만 지급됩니다. 0P로 저장하면 보상을 끕니다.</p>
+                    {/* 아래 덱마스터 섹션까지 한 번에 저장한다. 어느 쪽 버튼을 눌러도 결과는 같다. */}
+                    <Button type="button" onClick={handleSave} loading={saving} loadingText="저장 중...">
+                        설정 저장
+                    </Button>
+                </div>
+            </section>
+
+            <section className="vocab-teacher__panel" aria-labelledby="vocab-master-title">
+                <div className="vocab-teacher__section-heading">
+                    <div>
+                        <span className="vocab-teacher__eyebrow">학급별 설정</span>
+                        <div className="vocab-teacher__heading-row">
+                            <h3 id="vocab-master-title">🏆 덱마스터 도전 조건</h3>
+                        </div>
+                        <p>한 층을 충분히 익힌 학생만 치는 공식 시험입니다. 합격하면 그 층의 덱마스터가 되고, 10개 층을 모두 채우면 <strong>어휘 마스터</strong> 휘장을 받습니다.</p>
+                    </div>
+                </div>
+
+                <div className="vocab-teacher__controls vocab-teacher__controls--master">
+                    <div className="vocab-teacher__source-card vocab-teacher__source-card--master" aria-label="현재 도전 조건 요약">
+                        <span aria-hidden="true">🏆</span>
+                        <div>
+                            <strong>익힘 {master.masterRequiredMasteredPercent}% 이상이면 도전 가능 · {master.masterQuestionCount}문항 중 {master.masterPassCorrect}개 정답이면 합격</strong>
+                            <small>
+                                40낱말 층이면 {requiredMasteredWords}개를 익혀야 열립니다.
+                                시험은 선택형 {masterChoiceCount}문항 + 직접입력 {master.masterInputCount}문항이고,
+                                직접입력도 {master.masterPassInput}개 이상 맞혀야 합격입니다. 문항당 {master.masterSecondsPerQuestion}초(전체 약 {masterTotalMinutes}분).
+                            </small>
+                        </div>
+                        <em>학급 설정</em>
+                    </div>
+
+                    <div className="vocab-teacher__settings-grid">
+                        <label>
+                            <span>🎯 도전 자격 (익힘 비율)</span>
+                            <select value={config.masterRequiredMasteredPercent} onChange={(event) => updateConfig('masterRequiredMasteredPercent', event.target.value)}>
+                                {[50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100].map((percent) => (
+                                    <option key={percent} value={percent}>{percent}% (40낱말 중 {Math.ceil(SAMPLE_DECK_SIZE * percent / 100)}개)</option>
+                                ))}
+                            </select>
+                        </label>
+                        <label>
+                            <span>📝 시험 문항 수</span>
+                            <input type="number" min="5" max="30" step="1" value={config.masterQuestionCount} onChange={(event) => updateConfig('masterQuestionCount', event.target.value)} />
+                        </label>
+                        <label>
+                            <span>✍️ 그중 직접입력 문항 수</span>
+                            <input type="number" min="0" max={master.masterQuestionCount} step="1" value={config.masterInputCount} onChange={(event) => updateConfig('masterInputCount', event.target.value)} />
+                        </label>
+                        <label>
+                            <span>⏱️ 문항당 제한 시간(초)</span>
+                            <input type="number" min="10" max="300" step="5" value={config.masterSecondsPerQuestion} onChange={(event) => updateConfig('masterSecondsPerQuestion', event.target.value)} />
+                        </label>
+                        <label>
+                            <span>✅ 합격 정답 수</span>
+                            <input type="number" min="1" max={master.masterQuestionCount} step="1" value={config.masterPassCorrect} onChange={(event) => updateConfig('masterPassCorrect', event.target.value)} />
+                        </label>
+                        <label>
+                            <span>✅ 합격 직접입력 정답 수</span>
+                            <input type="number" min="0" max={master.masterInputCount} step="1" value={config.masterPassInput} onChange={(event) => updateConfig('masterPassInput', event.target.value)} />
+                        </label>
+                    </div>
+                </div>
+
+                <div className="vocab-teacher__footer-actions">
+                    <p>
+                        조건을 낮추면 더 많은 학생이 도전하고, 높이면 휘장의 무게가 올라갑니다. 도전 자격에는 <strong>그 층 낱말을 모두 한 번씩은 만나야 한다</strong>는 조건이 함께 걸려 있습니다.
+                        이미 받은 덱마스터는 조건을 바꿔도 사라지지 않습니다.
+                    </p>
                     <Button type="button" onClick={handleSave} loading={saving} loadingText="저장 중...">
                         설정 저장
                     </Button>

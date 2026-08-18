@@ -53,3 +53,15 @@
 /* 설정 제목과 도움말 버튼을 한 줄에 둔다. 제목이 길어지면 버튼이 아래로 내려간다. */
 .vocab-teacher__heading-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .vocab-teacher__heading-row h3 { margin: 0; }
+
+/* 덱마스터 도전 조건 요약 카드는 연습 설정(초록)과 구분되게 금색 계열로 둔다. */
+.vocab-teacher__source-card--master { border-color: #fcd34d; background: #fffbeb; }
+.vocab-teacher__source-card--master strong { color: #92400e; }
+.vocab-teacher__source-card--master em { background: #fef3c7; color: #b45309; }
+/* 덱마스터는 설정 항목이 6개라 요약 카드를 옆에 두면 세로로 늘어나 비어 보인다.
+   카드를 가로 배너로 올리고 설정은 아래 3열로 편다. */
+.vocab-teacher__controls--master { grid-template-columns: 1fr; }
+.vocab-teacher__controls--master .vocab-teacher__settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 900px) {
+  .vocab-teacher__controls--master .vocab-teacher__settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
