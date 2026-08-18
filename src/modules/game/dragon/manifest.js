@@ -7,6 +7,8 @@
  * 주의: 학생 아바타로 쓰이는 `pet_data` 자체는 친구목록·글 작성자 표시 등
  * 여러 곳에서 쓰이므로 코어 데이터로 남긴다. 이 모듈은 "드래곤 기르기 기능"만 담당.
  */
+import { DRAGON_STUDENT_GUIDE } from './dragonGuide';
+
 export const dragonManifest = {
   id: 'dragon',
   name: '작가 수호룡',
@@ -31,7 +33,8 @@ export const dragonManifest = {
     pointLabel: '포인트 쓰기',
     ctaLabel: '수호룡 만나기',
     order: 10,
-    entryMode: 'legacy'
+    entryMode: 'legacy',
+    guide: DRAGON_STUDENT_GUIDE
   },
   management: {
     title: '작가 수호룡 관리',

@@ -78,7 +78,8 @@ const groupHistory = (logs) => logs.reduce((groups, log) => {
  */
 const PlaygroundCard = ({ item, onOpen }) => (
     <div
-        className="agit-playground-card-shell"
+        // 도움말이 있는 카드만 오른쪽 위 자리를 비운다(`포인트 모으기` 알약과 겹치지 않게).
+        className={`agit-playground-card-shell${item.guide ? ' has-guide' : ''}`}
         style={{
             '--playground-card-soft': item.background || 'var(--ui-primary-soft)',
             '--playground-card-border': item.borderColor || 'var(--ui-primary-border)'
@@ -102,6 +103,9 @@ const PlaygroundCard = ({ item, onOpen }) => (
                 <span aria-hidden="true">›</span>
             </span>
         </button>
+        {/* 카드 자체가 <button> 이라 그 안에 버튼을 중첩할 수 없다(HTML 위반).
+            형제로 두고 카드 위 오른쪽에 겹쳐 놓아 "이 카드의 도움말"로 읽히게 한다.
+            섹션 제목 옆에 두면 `포인트 모으기` 전체 설명처럼 보인다. */}
         {item.guide && (
             <StudentModuleGuide guide={item.guide} className="agit-playground-card__guide" />
         )}

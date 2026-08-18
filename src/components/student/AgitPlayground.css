@@ -265,8 +265,24 @@
 }
 /* 카드는 세로로 쌓이므로 안내 버튼은 겹치지 않게 카드 바로 아래 오른쪽에 둔다.
    카드 위에 겹치면 콘텐츠 이름·포인트 배지와 부딪히고, 손가락으로 누를 때 카드가 같이 눌리기 쉽다. */
-.agit-playground-card-shell { display: grid; min-width: 0; gap: 6px; justify-items: stretch; }
-.agit-playground-card__guide { justify-self: end; }
+.agit-playground-card-shell { position: relative; display: grid; min-width: 0; justify-items: stretch; }
+
+/* 도움말은 카드 위 오른쪽에 겹쳐 놓는다 — 카드 밖에 두면 섹션 전체의 설명처럼 보인다.
+   카드가 <button> 이라 안에 넣을 수 없어(버튼 중첩) 겹치는 방식을 쓴다. */
+.agit-playground-card__guide {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    z-index: 2;
+    height: 26px;
+    padding: 0 9px;
+    gap: 4px;
+    border-radius: 8px;
+    background: var(--ui-surface, #fff);
+    font-size: .66rem;
+}
+/* 그 자리를 비워 `포인트 모으기` 알약과 겹치지 않게 한다. */
+.agit-playground-card-shell.has-guide .agit-playground-card__meta { padding-right: 62px; }
 .agit-playground-card {
     display: grid;
     min-width: 0;
