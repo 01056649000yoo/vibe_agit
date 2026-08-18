@@ -76,13 +76,16 @@ test('기존 로컬 세션은 새 쿠키 저장 성공 뒤에만 지운다', () 
     assert.doesNotMatch(supabaseClient, /console\.(?:log|warn|error)\([^\n]*(?:access_token|refresh_token)/);
 });
 
-test('교사 상단 메뉴는 글쓰기 바로 뒤에서 같은 탭의 /lab으로 이동한다', () => {
+test('교사 상단 메뉴는 글쓰기 바로 뒤에서 같은 탭의 /lab으로, 보던 학급을 달고 이동한다', () => {
     const writingIndex = teacherNav.indexOf("id: 'writing'");
     const labIndex = teacherNav.indexOf("id: 'writing-lab'");
     const operationsIndex = teacherNav.indexOf("id: 'operations'");
     assert.ok(writingIndex > -1 && writingIndex < labIndex && labIndex < operationsIndex);
     assert.match(teacherNav, /label: '글쓰기 연구소'[\s\S]*launchHref: '\/lab\/dashboard'/);
-    assert.match(teacherDashboard, /href=\{group\.launchHref\}/);
+    // 2026-08-19: 보고 있던 학급을 함께 넘겨 연구소에서 학급을 다시 고르지 않게 했다.
+    // 주소는 여전히 `group.launchHref` 에서 나오고 같은 탭으로 간다.
+    assert.match(teacherDashboard, /\$\{group\.launchHref\}\?class_id=\$\{encodeURIComponent\(activeClass\.id\)\}/);
+    assert.match(teacherDashboard, /href=\{launchHref\}/);
     assert.doesNotMatch(teacherDashboard, /target="_blank"/);
 });
 

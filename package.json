@@ -49,7 +49,8 @@
     "smoke:writing-references": "node scripts/run-rollback-smoke.mjs tests/sql/20261104_writing_reference_sources.smoke.sql",
     "preflight:disk": "bash scripts/preflight-disk.sh",
     "check:title-levels": "node scripts/sync-title-levels.mjs --check",
-    "sync:title-levels": "node scripts/sync-title-levels.mjs --write"
+    "sync:title-levels": "node scripts/sync-title-levels.mjs --write",
+    "deploy:local": "bash scripts/deploy-local.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
