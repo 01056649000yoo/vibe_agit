@@ -17,8 +17,12 @@
 .mastery-badges__card {
     position: relative;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-areas: "crest head" "foot foot";
+    /* 오른쪽 칸을 비워 두지 않는다 — 상태 안내가 그 자리를 채운다. */
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+        "crest head note"
+        "foot  foot foot";
+    align-items: center;
     gap: 0 13px;
     padding: 14px 16px;
     border-radius: 20px;
@@ -45,9 +49,27 @@
 .mastery-badges__head { grid-area: head; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .mastery-badges__eyebrow { font-size: .62rem; font-weight: 900; letter-spacing: .04em; color: #A08D78; }
 /* 정상 이름이 카드에서 가장 큰 글자다 — 덱마스터의 하위 항목으로 읽히면 안 된다. */
-.mastery-badges__title { font-size: 1.02rem; font-weight: 950; line-height: 1.2; color: #8B7A66; }
-.mastery-badges__stars { margin-top: 2px; font-size: .84rem; line-height: 1.2; letter-spacing: 2px; opacity: .45; }
-.mastery-badges__note { margin-top: 2px; font-size: .67rem; font-style: normal; font-weight: 800; color: #9C8B76; }
+.mastery-badges__title { font-size: 1.06rem; font-weight: 950; line-height: 1.2; color: #8B7A66; }
+/* 별은 이 카드에서 가장 빨리 읽혀야 하는 값이다. 작게 두면 몇 단계인지 세어야 한다. */
+.mastery-badges__stars { margin-top: 3px; font-size: 1.12rem; line-height: 1.15; letter-spacing: 3px; opacity: .4; }
+
+.mastery-badges__note {
+    grid-area: note;
+    justify-self: end;
+    max-width: 10.6em;
+    padding: 6px 12px;
+    /* 한국어는 글자 단위로 끊으면 "요" 한 글자가 다음 줄에 남는다. 어절 단위로 끊는다. */
+    word-break: keep-all;
+    border-radius: 999px;
+    border: 1px solid rgba(105, 61, 32, .14);
+    background: rgba(255, 255, 255, .72);
+    font-size: .67rem;
+    font-style: normal;
+    font-weight: 900;
+    line-height: 1.35;
+    text-align: center;
+    color: #9C8B76;
+}
 
 /* ── 관문 진행 띠 ── 정상으로 가는 길이라 정상 아래에 둔다. */
 .mastery-badges__foot {
@@ -59,18 +81,23 @@
     padding-top: 9px;
     border-top: 1px dashed rgba(105, 61, 32, .18);
 }
-.mastery-badges__foot-label { font-size: .63rem; font-weight: 900; color: #A08D78; white-space: nowrap; }
-.mastery-badges__foot-count { margin-left: auto; font-size: .68rem; font-weight: 900; color: #8A6E52; white-space: nowrap; }
-.mastery-badges__pips { display: flex; gap: 3px; flex-wrap: wrap; min-width: 0; }
-.mastery-badges__pips span { width: 9px; height: 9px; border-radius: 50%; background: rgba(105, 61, 32, .16); }
-.mastery-badges__pips span.is-on { background: #E2A33C; }
+/* 친구 아지트에서도 이 띠로 진도를 읽는다. 작으면 몇 칸이 켜졌는지 안 보인다. */
+.mastery-badges__foot-label { font-size: .74rem; font-weight: 900; color: #8A7460; white-space: nowrap; }
+.mastery-badges__foot-count { margin-left: auto; font-size: .82rem; font-weight: 950; color: #7A5F44; white-space: nowrap; }
+.mastery-badges__pips { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.mastery-badges__pips span {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: rgba(105, 61, 32, .15);
+    box-shadow: inset 0 0 0 1px rgba(105, 61, 32, .1);
+}
+.mastery-badges__pips span.is-on { background: #E2A33C; box-shadow: inset 0 0 0 1px rgba(150, 100, 20, .3); }
 
 /* ── 열렸지만 아직 안 오름 ── 할 수 있는 일이라 흐리게 두지 않는다. */
 .mastery-badges__card.is-open { border-color: #D8C39A; background: linear-gradient(135deg, #FFFDF6, #FCF4E4); }
 .mastery-badges__card.is-open .mastery-badges__crest { background: #FFF6E2; box-shadow: inset 0 0 0 2px rgba(226, 163, 60, .55); }
 .mastery-badges__card.is-open .mastery-badges__crest-icon { filter: grayscale(.3); }
-.mastery-badges__card.is-open .mastery-badges__stars { opacity: .7; }
-.mastery-badges__card.is-open .mastery-badges__note { color: #2F6B3D; }
+.mastery-badges__card.is-open .mastery-badges__stars { opacity: .75; }
+.mastery-badges__card.is-open .mastery-badges__note { border-color: #A8CBA8; background: #EFF8EE; color: #2F6B3D; }
 
 /* ── 정상에 오름 ── 완성이 드물어야 값이 있으므로 금색은 여기서부터다. */
 .mastery-badges__card.is-summit,
@@ -90,7 +117,11 @@
 .mastery-badges__card.is-summit .mastery-badges__stars,
 .mastery-badges__card.is-complete .mastery-badges__stars { opacity: 1; }
 .mastery-badges__card.is-summit .mastery-badges__note,
-.mastery-badges__card.is-complete .mastery-badges__note { color: #93701F; }
+.mastery-badges__card.is-complete .mastery-badges__note {
+    border-color: rgba(200, 150, 45, .38);
+    background: rgba(255, 252, 240, .85);
+    color: #8A6212;
+}
 .mastery-badges__card.is-summit .mastery-badges__eyebrow,
 .mastery-badges__card.is-complete .mastery-badges__eyebrow { color: #B08C43; }
 .mastery-badges__card.is-summit .mastery-badges__foot,
@@ -116,10 +147,21 @@
 }
 .mastery-badges__card.is-complete .mastery-badges__title { color: #5E4211; }
 
-@media (max-width: 420px) {
-    .mastery-badges__card { padding: 12px 13px; gap: 0 10px; }
-    .mastery-badges__crest { width: 46px; }
-    .mastery-badges__crest-icon { font-size: 1.35rem; }
-    .mastery-badges__title { font-size: .94rem; }
-    .mastery-badges__pips span { width: 7px; height: 7px; }
+/* 좁은 화면에서는 오른쪽 칸을 만들 자리가 없다. 안내를 아래 줄로 내리고 폭 제한을 푼다. */
+@media (max-width: 430px) {
+    .mastery-badges__card {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+            "crest head"
+            "note  note"
+            "foot  foot";
+        padding: 12px 13px;
+        gap: 0 10px;
+    }
+    .mastery-badges__note { justify-self: start; max-width: none; margin-top: 9px; }
+    .mastery-badges__crest { width: 48px; }
+    .mastery-badges__crest-icon { font-size: 1.4rem; }
+    .mastery-badges__title { font-size: .98rem; }
+    .mastery-badges__stars { font-size: 1.02rem; }
+    .mastery-badges__pips span { width: 10px; height: 10px; }
 }

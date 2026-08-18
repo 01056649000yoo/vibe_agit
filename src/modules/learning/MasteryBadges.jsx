@@ -6,8 +6,9 @@ import './masteryBadges.css';
  * 엔진이 콘텐츠 중립이라 이 화면도 그렇다. `learning_content_types`에 한 줄이 늘면(속담·맞춤법)
  * 여기 코드를 고치지 않아도 휘장이 하나 더 생긴다. 이름·그림·관문 이름은 전부 서버가 준다.
  *
- * 공개 범위는 **서버가 정한다**(A안). 친구용 RPC는 응답에 `passed_count`를 아예 넣지 않으므로
- * 이 컴포넌트는 값이 있으면 진행 띠를, 없으면 완성 여부만 그린다. 화면에서 가리는 방식이 아니다.
+ * 공개 범위는 **서버가 정한다**. 무엇이 오는지는 부르는 RPC가 결정하고 이 컴포넌트는 온 것을 그린다 —
+ * 화면에서 가리면 개발자 도구로 보이기 때문이다. 지금은 친구용 응답에도 관문 진행도가 들어온다
+ * (2026-08-18 변경). 값이 없는 응답이 와도 완성 여부만으로 그려지도록 남겨 둔다.
  *
  * 배치 순서에 뜻이 있다: 처음에는 정상이 **먼저 이름을 드러내고**(비어 있어도) 관문이 그 길로 보인다.
  * 정상 줄을 관문 아래 작게 두었더니 어휘 마스터가 덱마스터의 하위 항목처럼 읽혔다(2026-08-18).
@@ -42,7 +43,8 @@ const MasteryBadges = ({ contents = [], loading = false, emptyText = '아직 도
                 const note = complete
                     ? '정상까지 올랐어요'
                     : summit
-                        ? `${levelCount}단계 중 ${level}단계까지 올랐어요`
+                        // 몇 단계짜리인지는 별이 이미 보여 준다. 알약에는 도달한 단계만 적는다.
+                        ? `${level}단계까지 올랐어요`
                         : cleared
                             ? '정상 관문이 열렸어요'
                             : `${item.collection_label} ${total}개를 모으면 열려요`;
@@ -60,17 +62,19 @@ const MasteryBadges = ({ contents = [], loading = false, emptyText = '아직 도
                             <strong className="mastery-badges__title">
                                 {summit ? item.master_title : item.summit_label}
                             </strong>
+                            {/* 별이 이 카드에서 한눈에 읽혀야 하는 값이다 — 어디까지 올랐는지가 곧 성취다. */}
                             <span
                                 className="mastery-badges__stars"
                                 aria-label={levelCount > 1 ? `${levelCount}단계 중 ${level}단계` : undefined}
                             >
                                 {stars}
                             </span>
-                            <span className="mastery-badges__note">{note}</span>
                         </div>
 
-                        {/* 관문 진행 띠. 정상으로 가는 길이라 정상 아래에 둔다.
-                            진행 숫자는 본인·교사에게만 온다 — 친구에게는 완료 여부만 남는다. */}
+                        {/* 상태 안내는 오른쪽에 둔다. 아래에 깔면 카드 오른쪽이 통째로 비어 허전하다. */}
+                        <span className="mastery-badges__note">{note}</span>
+
+                        {/* 관문 진행 띠. 정상으로 가는 길이라 정상 아래에 둔다. */}
                         <div className="mastery-badges__foot">
                             <span className="mastery-badges__foot-label">{item.collection_label}</span>
                             {hasProgress && total > 0 && (
