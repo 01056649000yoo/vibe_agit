@@ -112,7 +112,11 @@ const VocabularyTowerGame = ({
             setV2Decks(Array.isArray(data.decks) ? data.decks : []);
             setStatus({
                 active_run: data.active_run,
-                deckRewardPoints: Number(data.deck_reward_points || 0)
+                deckRewardPoints: Number(data.deck_reward_points || 0),
+                // 자격 판단은 서버가 한다. 화면은 받은 값을 그리기만 한다.
+                summit: data.summit || null,
+                masterSettings: data.master_settings || null,
+                summitSettings: data.summit_settings || null
             });
             setSelectedDeck(data.active_run?.deck_number ? Number(data.active_run.deck_number) : null);
             setPhase('deck-map');
@@ -383,6 +387,28 @@ const VocabularyTowerGame = ({
         setPhase('master');
     };
 
+    // 정상 관문(어휘 마스터)은 층이 아니라 탑 전체에 하나뿐이라 층 번호를 받지 않는다.
+    const openSummit = async () => {
+        if (submitting) return;
+        setSubmitting(true);
+        setNotice('');
+        const { data, error } = await supabase.rpc('start_my_vocab_master_summit_v1');
+        if (error || !data?.success) {
+            setSubmitting(false);
+            console.error('어휘 마스터 시작 실패:', error || data);
+            const missing = data?.summit?.missing_count;
+            setNotice(missing
+                ? `아직 어휘 마스터에 도전할 수 없어요. 덱마스터 ${missing}개가 더 필요해요.`
+                : (data?.error || '어휘 마스터를 시작하지 못했어요.'));
+            return;
+        }
+        setMasterSession(data);
+        setMasterResult(null);
+        await loadMasterQuestion(data.attempt_id);
+        setSubmitting(false);
+        setPhase('master');
+    };
+
     const submitMasterAnswer = async (questionId, answer) => {
         if (submitting || !masterSession) return;
         setSubmitting(true);
@@ -405,10 +431,17 @@ const VocabularyTowerGame = ({
     const finishDeckMaster = async (completed) => {
         if (!masterSession) return;
         setSubmitting(true);
-        const { data, error } = await supabase.rpc('finish_my_vocab_tower_master_v1', {
-            p_attempt_id: masterSession.attempt_id,
-            p_completed: completed
-        });
+        // 두 관문은 합격선이 달라 채점 RPC 도 다르다. 이름을 변수로 만들지 않고 갈래로 쓴다.
+        const isSummit = masterSession.challenge_kind === 'summit';
+        const { data, error } = isSummit
+            ? await supabase.rpc('finish_my_vocab_master_summit_v1', {
+                p_attempt_id: masterSession.attempt_id,
+                p_completed: completed
+            })
+            : await supabase.rpc('finish_my_vocab_tower_master_v1', {
+                p_attempt_id: masterSession.attempt_id,
+                p_completed: completed
+            });
         setSubmitting(false);
         if (error) {
             console.error('덱마스터 종료 실패:', error.message);
@@ -455,6 +488,10 @@ const VocabularyTowerGame = ({
                 onStart={handleStart}
                 onOpenCardBox={openCardBox}
                 onOpenDeckMaster={openDeckMaster}
+                onOpenSummit={openSummit}
+                summit={status?.summit}
+                masterSettings={status?.masterSettings}
+                summitSettings={status?.summitSettings}
                 onBack={onBack}
             />
         );
@@ -480,7 +517,11 @@ const VocabularyTowerGame = ({
             <V2DeckMasterSummary
                 result={masterResult}
                 onOpenCardBox={() => { void openCardBox(masterSession?.deck_number); }}
-                onBack={() => { setMasterSession(null); setMasterResult(null); setNotice(''); setPhase('deck-map'); }}
+                onBack={() => {
+                    setMasterSession(null); setMasterResult(null); setNotice('');
+                    // 통과했으면 지도의 층 표시와 정상 관문 자격이 달라진다. 다시 읽는다.
+                    void loadStatus();
+                }}
             />
         );
     }

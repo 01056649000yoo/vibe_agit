@@ -12,7 +12,11 @@ const DEFAULT_CONFIG = {
     masterPassCorrect: 10,
     masterPassInput: 3,
     masterSecondsPerQuestion: 45,
-    masterRequiredMasteredPercent: 80
+    masterRequiredMasteredPercent: 80,
+    summitQuestionCount: 20,
+    summitInputCount: 8,
+    summitPassCorrect: 17,
+    summitPassInput: 6
 };
 
 // 한 층의 낱말 수는 학년마다 38~40개로 조금씩 다르다. 교사에게 보여 줄 예시는 40낱말 기준이다.
@@ -33,6 +37,18 @@ const normalizeMasterSettings = (config) => {
         masterPassInput: clamp(config.masterPassInput, 0, inputCount),
         masterSecondsPerQuestion: clamp(config.masterSecondsPerQuestion, 10, 300),
         masterRequiredMasteredPercent: clamp(config.masterRequiredMasteredPercent, 50, 100)
+    };
+};
+
+// 정상 관문도 같은 방식으로 물려 있다(classes_vocab_summit_settings_check).
+const normalizeSummitSettings = (config) => {
+    const questionCount = clamp(config.summitQuestionCount, 10, 40);
+    const inputCount = clamp(config.summitInputCount, 0, questionCount);
+    return {
+        summitQuestionCount: questionCount,
+        summitInputCount: inputCount,
+        summitPassCorrect: clamp(config.summitPassCorrect, 1, questionCount),
+        summitPassInput: clamp(config.summitPassInput, 0, inputCount)
     };
 };
 
@@ -58,7 +74,11 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 'vocab_master_pass_correct',
                 'vocab_master_pass_input',
                 'vocab_master_seconds_per_question',
-                'vocab_master_required_mastered_ratio'
+                'vocab_master_required_mastered_ratio',
+                'vocab_summit_question_count',
+                'vocab_summit_input_count',
+                'vocab_summit_pass_correct',
+                'vocab_summit_pass_input'
             ].join(', '))
             .eq('id', classId)
             .maybeSingle();
@@ -77,7 +97,11 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 masterSecondsPerQuestion: data.vocab_master_seconds_per_question ?? DEFAULT_CONFIG.masterSecondsPerQuestion,
                 masterRequiredMasteredPercent: Math.round(
                     Number(data.vocab_master_required_mastered_ratio ?? 0.8) * 100
-                )
+                ),
+                summitQuestionCount: data.vocab_summit_question_count ?? DEFAULT_CONFIG.summitQuestionCount,
+                summitInputCount: data.vocab_summit_input_count ?? DEFAULT_CONFIG.summitInputCount,
+                summitPassCorrect: data.vocab_summit_pass_correct ?? DEFAULT_CONFIG.summitPassCorrect,
+                summitPassInput: data.vocab_summit_pass_input ?? DEFAULT_CONFIG.summitPassInput
             });
         }
         setLoading(false);
@@ -95,8 +119,10 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
     const handleSave = async () => {
         if (!classId || saving) return;
         const master = normalizeMasterSettings(config);
+        const summitValues = normalizeSummitSettings(config);
         const nextConfig = {
             ...master,
+            ...summitValues,
             grade: clamp(config.grade, 3, 6),
             perfectRewardPoints: clamp(config.perfectRewardPoints, 0, 500)
         };
@@ -111,7 +137,11 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 vocab_master_pass_correct: nextConfig.masterPassCorrect,
                 vocab_master_pass_input: nextConfig.masterPassInput,
                 vocab_master_seconds_per_question: nextConfig.masterSecondsPerQuestion,
-                vocab_master_required_mastered_ratio: nextConfig.masterRequiredMasteredPercent / 100
+                vocab_master_required_mastered_ratio: nextConfig.masterRequiredMasteredPercent / 100,
+                vocab_summit_question_count: nextConfig.summitQuestionCount,
+                vocab_summit_input_count: nextConfig.summitInputCount,
+                vocab_summit_pass_correct: nextConfig.summitPassCorrect,
+                vocab_summit_pass_input: nextConfig.summitPassInput
             })
             .eq('id', classId);
         if (error) {
@@ -150,6 +180,8 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
     }
 
     const master = normalizeMasterSettings(config);
+    const summitConfig = normalizeSummitSettings(config);
+    const summitChoiceCount = summitConfig.summitQuestionCount - summitConfig.summitInputCount;
     const requiredMasteredWords = Math.ceil(SAMPLE_DECK_SIZE * master.masterRequiredMasteredPercent / 100);
     const masterChoiceCount = master.masterQuestionCount - master.masterInputCount;
     const masterTotalMinutes = Math.round(master.masterQuestionCount * master.masterSecondsPerQuestion / 60);
@@ -286,6 +318,61 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     <p>
                         조건을 낮추면 더 많은 학생이 도전하고, 높이면 휘장의 무게가 올라갑니다. 도전 자격에는 <strong>그 층 낱말을 모두 한 번씩은 만나야 한다</strong>는 조건이 함께 걸려 있습니다.
                         이미 받은 덱마스터는 조건을 바꿔도 사라지지 않습니다.
+                    </p>
+                    <Button type="button" onClick={handleSave} loading={saving} loadingText="저장 중...">
+                        설정 저장
+                    </Button>
+                </div>
+            </section>
+
+            <section className="vocab-teacher__panel" aria-labelledby="vocab-summit-title">
+                <div className="vocab-teacher__section-heading">
+                    <div>
+                        <span className="vocab-teacher__eyebrow">학급별 설정</span>
+                        <div className="vocab-teacher__heading-row">
+                            <h3 id="vocab-summit-title">👑 어휘 마스터 관문 (탑의 정상)</h3>
+                        </div>
+                        <p>10개 층의 덱마스터를 모두 통과한 학생에게 지도 꼭대기에서 열리는 마지막 시험입니다. 통과해야 <strong>어휘 마스터</strong> 휘장을 받습니다.</p>
+                    </div>
+                </div>
+
+                <div className="vocab-teacher__controls vocab-teacher__controls--master">
+                    <div className="vocab-teacher__source-card vocab-teacher__source-card--summit" aria-label="정상 관문 조건 요약">
+                        <span aria-hidden="true">👑</span>
+                        <div>
+                            <strong>덱마스터 10개를 모두 통과하면 열림 · {summitConfig.summitQuestionCount}문항 중 {summitConfig.summitPassCorrect}개 정답이면 합격</strong>
+                            <small>
+                                출제는 10개 층 전체에서 고르게 나옵니다({summitConfig.summitQuestionCount}문항이면 층마다 {Math.round(summitConfig.summitQuestionCount / 10)}문항).
+                                선택형 {summitChoiceCount}문항 + 직접입력 {summitConfig.summitInputCount}문항이고, 직접입력도 {summitConfig.summitPassInput}개 이상 맞혀야 합니다.
+                                문항당 시간은 덱마스터와 같은 {master.masterSecondsPerQuestion}초입니다.
+                            </small>
+                        </div>
+                        <em>학급 설정</em>
+                    </div>
+
+                    <div className="vocab-teacher__settings-grid">
+                        <label>
+                            <span>📝 시험 문항 수</span>
+                            <input type="number" min="10" max="40" step="1" value={config.summitQuestionCount} onChange={(event) => updateConfig('summitQuestionCount', event.target.value)} />
+                        </label>
+                        <label>
+                            <span>✍️ 그중 직접입력 문항 수</span>
+                            <input type="number" min="0" max={summitConfig.summitQuestionCount} step="1" value={config.summitInputCount} onChange={(event) => updateConfig('summitInputCount', event.target.value)} />
+                        </label>
+                        <label>
+                            <span>✅ 합격 정답 수</span>
+                            <input type="number" min="1" max={summitConfig.summitQuestionCount} step="1" value={config.summitPassCorrect} onChange={(event) => updateConfig('summitPassCorrect', event.target.value)} />
+                        </label>
+                        <label>
+                            <span>✅ 합격 직접입력 정답 수</span>
+                            <input type="number" min="0" max={summitConfig.summitInputCount} step="1" value={config.summitPassInput} onChange={(event) => updateConfig('summitPassInput', event.target.value)} />
+                        </label>
+                    </div>
+                </div>
+
+                <div className="vocab-teacher__footer-actions">
+                    <p>
+                        마지막 시험이라 덱마스터보다 조금 어렵게 두는 것을 권합니다(기본값 20문항 중 17개). 한 번 받은 어휘 마스터 휘장은 조건을 바꿔도 사라지지 않습니다.
                     </p>
                     <Button type="button" onClick={handleSave} loading={saving} loadingText="저장 중...">
                         설정 저장

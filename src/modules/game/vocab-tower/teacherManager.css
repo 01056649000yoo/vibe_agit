@@ -65,3 +65,7 @@
 @media (max-width: 900px) {
   .vocab-teacher__controls--master .vocab-teacher__settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+/* 정상 관문은 덱마스터(금색)와 구분되게 보라 계열로 둔다. */
+.vocab-teacher__source-card--summit { border-color: #c4b5fd; background: #f5f3ff; }
+.vocab-teacher__source-card--summit strong { color: #5b21b6; }
+.vocab-teacher__source-card--summit em { background: #ede9fe; color: #6d28d9; }

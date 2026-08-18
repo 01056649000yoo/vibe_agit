@@ -9,8 +9,15 @@ const V2DeckMap = ({
     onStart,
     onOpenCardBox,
     onOpenDeckMaster,
+    onOpenSummit,
+    summit,
+    masterSettings,
+    summitSettings,
     onBack
 }) => {
+    // 잠긴 도전은 버튼을 감추지 않고 늘 보여 준다. 무엇을 하면 열리는지 눌러서 확인한다.
+    // 값 하나로 층 번호 또는 'summit' 을 담는다(한 번에 하나만 펼친다).
+    const [openedCondition, setOpenedCondition] = React.useState(null);
     const activeDeckNumber = Number(activeRun?.deck_number || 0);
     const totalItems = decks.reduce((sum, deck) => sum + Number(deck.item_count || 0), 0);
     const totalSeen = decks.reduce((sum, deck) => sum + Number(deck.seen_count || 0), 0);
@@ -21,10 +28,17 @@ const V2DeckMap = ({
     const deckCount = decks.length || 10;
     const ascendingDecks = [...decks].sort((a, b) => Number(a.deck_number) - Number(b.deck_number));
     const explorationDecks = [...ascendingDecks].reverse();
-    const summitConquered = conqueredDecks === deckCount && decks.length > 0;
     const suggestedDeckNumber = activeDeckNumber
         || Number(ascendingDecks.find((deck) => Number(deck.best_accuracy || 0) < 100)?.deck_number)
         || Number(explorationDecks[0]?.deck_number || 0);
+    const hasAnyActive = activeDeckNumber > 0;
+    const summitAwarded = Boolean(summit?.awarded);
+    const summitEligible = Boolean(summit?.eligible);
+    const summitPassed = Number(summit?.passed_count || 0);
+    const summitRequired = Number(summit?.required_count || deckCount);
+    const summitMissing = Number(summit?.missing_count ?? Math.max(summitRequired - summitPassed, 0));
+    const summitQuestionCount = Number(summitSettings?.question_count || 20);
+    const masterRequiredPercent = Math.round(Number(masterSettings?.required_mastered_ratio || 0.8) * 100);
     const initialMapTargetRef = React.useRef(null);
     const didPositionMapRef = React.useRef(false);
 
@@ -53,13 +67,41 @@ const V2DeckMap = ({
                 </div>
 
                 <div className="vocab-tower-route" aria-label="어휘의 탑 탐험 경로">
-                    <div className={`vocab-tower-route__summit${summitConquered ? ' is-conquered' : ''}`}>
+                    <div className={`vocab-tower-route__summit${summitAwarded ? ' is-conquered' : ''}${summitEligible && !summitAwarded ? ' is-open' : ''}`}>
                         <span className="vocab-tower-route__summit-icon" aria-hidden="true">👑</span>
                         <div>
-                            <strong>{summitConquered ? '어휘의 정상 정복!' : '어휘의 정상'}</strong>
-                            <small>{summitConquered ? '열 개 층을 모두 완벽하게 정복했어요.' : `정상까지 ${deckCount - conqueredDecks}개 층이 남았어요.`}</small>
+                            <strong>{summitAwarded ? '어휘 마스터!' : summitEligible ? '어휘의 정상이 열렸어요' : '어휘의 정상'}</strong>
+                            <small>
+                                {summitAwarded
+                                    ? '탑의 정상에 올랐어요. 나의 아지트에서 휘장을 볼 수 있어요.'
+                                    : summitEligible
+                                        ? `${summitQuestionCount}문항 마지막 시험이 기다리고 있어요.`
+                                        : `덱마스터 ${summitMissing}개를 더 통과하면 정상 관문이 열려요.`}
+                            </small>
                         </div>
-                        <em>{conqueredDecks}/{deckCount}층</em>
+                        <em>덱마스터 {summitPassed}/{summitRequired}</em>
+                        {!summitAwarded && (
+                            <button
+                                type="button"
+                                className={`vocab-tower-route__summit-action${summitEligible ? '' : ' is-locked'}`}
+                                onClick={() => (summitEligible
+                                    ? onOpenSummit?.()
+                                    : setOpenedCondition((current) => (current === 'summit' ? null : 'summit')))}
+                                disabled={submitting || (summitEligible && hasAnyActive)}
+                                aria-expanded={summitEligible ? undefined : openedCondition === 'summit'}
+                            >
+                                {summitEligible ? '👑 어휘 마스터 도전' : '🔒 어휘 마스터 도전'}
+                            </button>
+                        )}
+                        {openedCondition === 'summit' && !summitEligible && (
+                            <div className="vocab-deck-card__condition" role="note">
+                                <strong>이렇게 하면 열려요</strong>
+                                <ul>
+                                    <li>열 개 층의 <b>덱마스터</b>를 모두 통과하기 — 지금 {summitPassed}/{summitRequired} (앞으로 {summitMissing}개)</li>
+                                </ul>
+                                <small>정상 시험은 {summitQuestionCount}문항이고 열 층 전체에서 골고루 나와요.</small>
+                            </div>
+                        )}
                     </div>
 
                     {explorationDecks.map((deck) => {
@@ -87,6 +129,10 @@ const V2DeckMap = ({
                             ? Math.min(100, Math.round(seenCount / itemCount * 100))
                             : 0;
                         const isConquered = bestAccuracy >= 100;
+                        const masterEligible = Boolean(deck.master_eligible);
+                        const masterPassed = Boolean(deck.master_passed);
+                        const masterRequired = Number(deck.master_required_mastered || 0);
+                        const masterMissing = Number(deck.master_missing_mastered || 0);
                         const cardStatus = isActive
                             ? `연습 진행 중 ${activeRun.answer_count}/${activeRun.target_question_count}`
                             : isConquered ? '정복 완료' : hasPractice ? `학습 ${seenCount}/${itemCount}` : '미탐험';
@@ -160,18 +206,22 @@ const V2DeckMap = ({
                                                 ? `${activeDeckNumber}층 연습을 먼저 완료하세요`
                                                 : isActive ? '연습 이어하기' : isConquered ? '정복한 층 다시 탐험' : hasPractice ? '이 층 다시 연습' : '이 층 탐험 시작'}
                                         </button>
-                                        {/* 층을 다 익힌 학생에게만 공식 도전을 연다. 자격은 서버가 다시 확인한다. */}
-                                        {deck.mastered_count >= Math.ceil((deck.item_count || 0) * 0.8)
-                                          && (deck.item_count || 0) > 0 && (
-                                            <button
-                                                type="button"
-                                                className="vocab-deck-card__master"
-                                                onClick={() => onOpenDeckMaster(deckNumber)}
-                                                disabled={submitting || hasOtherActive}
-                                            >
-                                                🏆 덱마스터 도전
-                                            </button>
-                                        )}
+                                        {/* 도전 버튼은 자격이 없어도 보여 준다 — 목표가 보여야 향해 간다.
+                                            잠겨 있으면 누를 때 시험이 아니라 조건이 열린다.
+                                            자격 판단은 서버가 한 값(master_eligible)을 그대로 쓴다. */}
+                                        <button
+                                            type="button"
+                                            className={`vocab-deck-card__master${masterEligible ? '' : ' is-locked'}${masterPassed ? ' is-passed' : ''}`}
+                                            onClick={() => (masterEligible
+                                                ? onOpenDeckMaster(deckNumber)
+                                                : setOpenedCondition((current) => (current === deckNumber ? null : deckNumber)))}
+                                            disabled={submitting || (masterEligible && hasOtherActive)}
+                                            aria-expanded={masterEligible ? undefined : openedCondition === deckNumber}
+                                        >
+                                            {masterPassed
+                                                ? '🏆 덱마스터 다시 도전'
+                                                : masterEligible ? '🏆 덱마스터 도전' : '🔒 덱마스터 도전'}
+                                        </button>
                                         {/* 만난 낱말이 있어야 볼 것이 있다. 아직 없으면 버튼을 만들지 않는다. */}
                                         {seenCount > 0 && (
                                             <button
@@ -184,6 +234,27 @@ const V2DeckMap = ({
                                             </button>
                                         )}
                                     </div>
+                                    {openedCondition === deckNumber && !masterEligible && (
+                                        <div className="vocab-deck-card__condition" role="note">
+                                            <strong>이렇게 하면 열려요</strong>
+                                            <ul>
+                                                <li>
+                                                    이 층 낱말을 <b>완전히 익히기</b> {masterRequiredPercent}% 이상
+                                                    {' — '}지금 {masteredCount}/{masterRequired}개
+                                                    {masterMissing > 0 ? ` (앞으로 ${masterMissing}개)` : ' ✓'}
+                                                </li>
+                                                <li>
+                                                    이 층 낱말을 <b>모두 한 번씩 만나기</b>
+                                                    {' — '}지금 {seenCount}/{itemCount}개
+                                                    {unseenCount > 0 ? ` (앞으로 ${unseenCount}개)` : ' ✓'}
+                                                </li>
+                                            </ul>
+                                            <small>
+                                                낱말은 <b>서로 다른 두 가지 문제 형태를 힌트 없이 연속으로</b> 맞혀야 완전히 익힘이 돼요.
+                                                이 층을 연습하면 채워져요.
+                                            </small>
+                                        </div>
+                                    )}
                                 </article>
                             </div>
                         );

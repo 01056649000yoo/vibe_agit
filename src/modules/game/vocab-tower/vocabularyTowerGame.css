@@ -482,3 +482,66 @@
     .vocab-deck-master__input { flex-direction: column; }
     .vocab-deck-master__timer { font-size: 1.1rem; min-width: 64px; }
 }
+
+/* ---------------------------------------------------------------------------
+   공식 도전 버튼 — 자격이 없어도 감추지 않는다
+   목표가 보여야 학생이 그쪽으로 간다. 잠긴 상태는 회색으로 낮추되 눌러서 조건을 볼 수 있게
+   `disabled` 로 만들지 않는다(disabled 는 눌러도 아무 일이 없어 "고장난 버튼"으로 읽힌다).
+   --------------------------------------------------------------------------- */
+.vocab-deck-card__master.is-locked {
+    background: #f1f4f9 !important;
+    border: 1px dashed #c2cbdb !important;
+    color: #7b879b !important;
+}
+.vocab-deck-card__master.is-passed {
+    background: linear-gradient(135deg, #FFE9AE, #F7D477) !important;
+    border-color: #E0BE63 !important;
+}
+
+/* 조건 안내 — 무엇을 하면 열리는지 숫자로 보여 준다. */
+.vocab-deck-card__condition {
+    grid-column: 1/-1;
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px solid #d7e0f0;
+    border-radius: 12px;
+    background: #f7faff;
+}
+.vocab-deck-card__condition strong { display: block; color: #2f4a8f; font-size: .74rem; font-weight: 900; }
+.vocab-deck-card__condition ul { margin: 6px 0 0; padding-left: 16px; }
+.vocab-deck-card__condition li { color: #46536a; font-size: .71rem; line-height: 1.55; }
+.vocab-deck-card__condition li b { color: #23386e; }
+.vocab-deck-card__condition small { display: block; margin-top: 6px; color: #6b7789; font-size: .65rem; line-height: 1.5; }
+
+/* 정상 관문 — 지도 꼭대기 */
+.vocab-tower-route__summit.is-open { border-color: #e2ad31; background: linear-gradient(135deg,#fffdf4,#fff6d8); }
+.vocab-tower-route__summit-action {
+    grid-column: 1/-1;
+    width: 100%;
+    min-height: 42px;
+    margin-top: 4px;
+    padding: 9px 12px;
+    border: 1px solid #F0D89B;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #FFF3D0, #FFE9AE);
+    color: #8A6212;
+    font: inherit;
+    font-size: .75rem;
+    font-weight: 900;
+    cursor: pointer;
+}
+.vocab-tower-route__summit-action.is-locked {
+    border: 1px dashed #c2cbdb;
+    background: #f1f4f9;
+    color: #7b879b;
+}
+.vocab-tower-route__summit-action:disabled { border-color: #dde3ec; background: #f1f3f7; color: #a7b0bf; cursor: default; }
+.vocab-tower-route__summit .vocab-deck-card__condition { grid-column: 1/-1; }
+
+/* 결과 화면에서 "정상이 열렸다"는 휘장 획득과 다른 소식이라 색을 나눈다. */
+.vocab-deck-master__summit.is-unlocked {
+    background: linear-gradient(135deg, #EEF4FF, #DDE8FF);
+    border-color: #B9CCF2;
+}
+.vocab-deck-master__summit.is-unlocked strong { color: #2A4894; }
+.vocab-deck-master__summit.is-unlocked small { color: #435C9E; }

@@ -61,7 +61,8 @@ const V2DeckMaster = ({
         <div className="vocab-deck-master">
             <header className="vocab-deck-master__head">
                 <div>
-                    <strong>덱마스터</strong>
+                    {/* 같은 시험 화면을 두 관문이 함께 쓴다. 이름만 서버가 알려 준 종류로 가른다. */}
+                    <strong>{session?.challenge_kind === 'summit' ? '어휘 마스터' : '덱마스터'}</strong>
                     <small>{answered + 1} / {total}</small>
                 </div>
                 <div className={`vocab-deck-master__timer${urgent ? ' is-urgent' : ''}`}
@@ -129,13 +130,14 @@ const V2DeckMaster = ({
 export const V2DeckMasterSummary = ({ result, onOpenCardBox, onBack }) => {
     if (!result) return null;
     const passed = Boolean(result.passed);
+    const isSummit = result.challenge_kind === 'summit';
     const wrong = result.wrong_items || [];
 
     return (
         <div className="vocab-deck-master vocab-deck-master--summary">
             <div className={`vocab-deck-master__verdict${passed ? ' is-passed' : ''}`}>
-                <span aria-hidden="true">{passed ? '🏆' : '💪'}</span>
-                <h1>{passed ? '덱마스터 통과!' : '조금만 더!'}</h1>
+                <span aria-hidden="true">{passed ? (isSummit ? '👑' : '🏆') : '💪'}</span>
+                <h1>{passed ? (isSummit ? '어휘 마스터 통과!' : '덱마스터 통과!') : '조금만 더!'}</h1>
                 <p>
                     {result.correct_count} / {result.question_count}문제
                     {' · '}직접 쓰기 {result.input_correct_count} / {result.input_question_count}문제
@@ -150,9 +152,18 @@ export const V2DeckMasterSummary = ({ result, onOpenCardBox, onBack }) => {
 
             {result.summit_reached && (
                 <div className="vocab-deck-master__summit">
-                    <span aria-hidden="true">🏆</span>
+                    <span aria-hidden="true">👑</span>
                     <strong>어휘 마스터가 되었어요!</strong>
-                    <small>모든 층을 정복했어요. 나의 아지트에서 휘장을 확인해 보세요.</small>
+                    <small>탑의 정상에 올랐어요. 나의 아지트에서 휘장을 확인해 보세요.</small>
+                </div>
+            )}
+
+            {/* 10층을 다 통과한 순간 — 휘장은 아직이고, 정상 관문이 열렸다는 것을 알린다. */}
+            {result.summit_unlocked && (
+                <div className="vocab-deck-master__summit is-unlocked">
+                    <span aria-hidden="true">👑</span>
+                    <strong>탑의 정상이 열렸어요!</strong>
+                    <small>열 층의 덱마스터를 모두 통과했어요. 지도 꼭대기에서 어휘 마스터에 도전해 보세요.</small>
                 </div>
             )}
 
