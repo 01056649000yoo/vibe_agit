@@ -221,14 +221,10 @@
 - **결과/검증**: `helper./` → 301 → `/lab/`, `helper./teacher/abc` → 301 → `/lab/teacher/abc`로 **경로가
   보존**된다. 리다이렉트를 따라가면 최종 `200 /lab/login`. 아지트 본체 `/` 200, `survival` 200으로 다른
   사이트 영향 없음. (`umami`는 502지만 백엔드 3100이 원래 꺼져 있던 **기존 장애**로, 이번 변경과 무관하다.)
-- **남은 것 / 다음**: ① **디스크 반영이 아직 안 됐다.** `sudo` 비밀번호가 필요해 런타임에만 적용된 상태다.
-  아래를 실행해야 재시작에도 살아남는다. 하지 않으면 Caddy 재시작 시 **다시 옛 앱으로 연결되고 `/lab`이
-  사라진다**.
-  ```
-  sudo cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak-20260817
-  sudo cp ~/agit-supabase/Caddyfile.proposed-20260817 /etc/caddy/Caddyfile
-  caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
-  ```
+- **후속(2026-08-18 확인)**: **디스크 반영이 완료됐다.** `/etc/caddy/Caddyfile`(8/18 00:04)에 `/lab` 분기와
+  `helper.` 301이 들어가 있고, 그 파일을 어댑트한 결과가 실행 중 설정과 **일치**하는 것을 확인했다.
+  이제 Caddy가 재시작돼도 살아남는다.
+- **남은 것 / 다음**:
   ② 옛 컨테이너는 `writing-helper` 저장소의 CI compose가 정의한다
   (`~/actions-runner/_work/writing-helper/.../docker-compose.yml`). **그 저장소를 다음에 배포하면 다시
   뜬다.** 완전히 없애려면 그 저장소의 compose에서 빼야 하며, 이번 범위 밖이라 손대지 않았다.
