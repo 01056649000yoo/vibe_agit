@@ -269,20 +269,27 @@
 
 /* 도움말은 카드 위 오른쪽에 겹쳐 놓는다 — 카드 밖에 두면 섹션 전체의 설명처럼 보인다.
    카드가 <button> 이라 안에 넣을 수 없어(버튼 중첩) 겹치는 방식을 쓴다. */
-.agit-playground-card__guide {
+.agit-playground-card-shell .agit-playground-card__guide {
     position: absolute;
     top: 9px;
     right: 9px;
     z-index: 2;
-    height: 26px;
-    padding: 0 9px;
+    height: 27px;
+    margin: 0;
+    padding: 0 10px;
     gap: 4px;
-    border-radius: 8px;
-    background: var(--ui-surface, #fff);
-    font-size: .66rem;
+    border: 1px solid var(--playground-card-border, #CBD5E1);
+    border-radius: 999px;
+    /* 카드 배경이 색이 있어 반투명을 쓰면 글씨가 묻힌다. 불투명 흰 바탕에 진한 글씨로 둔다. */
+    background: #fff;
+    color: #475569;
+    font-size: .68rem;
+    font-weight: 900;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .08);
 }
-/* 그 자리를 비워 `포인트 모으기` 알약과 겹치지 않게 한다. */
-.agit-playground-card-shell.has-guide .agit-playground-card__meta { padding-right: 62px; }
+.agit-playground-card-shell .agit-playground-card__guide:hover { background: #F8FAFC; color: #334155; }
+/* 도움말이 있는 카드는 이름이 버튼 밑으로 들어가지 않게 오른쪽을 비워 둔다. */
+.agit-playground-card-shell.has-guide .agit-playground-card__meta { padding-right: 74px; }
 .agit-playground-card {
     display: grid;
     min-width: 0;

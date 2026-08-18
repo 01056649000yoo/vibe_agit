@@ -1,3 +1,5 @@
+import './GuideInfoButton.css';
+
 /**
  * 설명을 여는 공용 정보 아이콘 버튼.
  *

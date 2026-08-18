@@ -162,62 +162,7 @@
 .teacher-subtab.is-active .teacher-subtab__button { color: #1D4ED8; }
 .teacher-subtab__button:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
 
-/* 설명 정보 아이콘 — 버튼 범위와 SVG의 중심을 정확히 맞춘다. */
-.guide-info-button {
-    position: relative;
-    display: inline-block;
-    width: 26px;
-    height: 26px;
-    box-sizing: border-box;
-    flex-shrink: 0;
-    margin-right: 7px;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
-    color: #94A3B8;
-    cursor: pointer;
-    transition: background var(--ui-motion-fast), color var(--ui-motion-fast);
-}
 
-.guide-info-button__icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    display: block;
-    width: 18px;
-    height: 18px;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    overflow: visible;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.7;
-    stroke-linecap: round;
-}
-
-.guide-info-button__dot { fill: currentColor; stroke: none; }
-.guide-info-button:hover { background: #E0E7FF; color: #4F46E5; }
-.guide-info-button:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
-.teacher-subtab.is-active .guide-info-button { color: #6366F1; }
-
-.guide-info-button--help {
-    display: inline-flex;
-    width: auto;
-    min-width: 0;
-    height: 32px;
-    padding: 0 11px;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    border: 1px solid #CBD5E1;
-    border-radius: 9px;
-    background: #F8FAFC;
-    color: #64748B;
-    font-size: .76rem;
-    font-weight: 800;
-    white-space: nowrap;
-}
 
 .teacher-tab-heading {
     display: flex;
@@ -234,10 +179,6 @@
     font-size: 1.25rem;
 }
 
-@media (pointer: coarse) {
-    .guide-info-button { width: 34px; height: 34px; }
-    .guide-info-button--help { width: auto; padding: 0 12px; }
-}
 
 /* 안내 창 본문 */
 .teacher-guide__summary {

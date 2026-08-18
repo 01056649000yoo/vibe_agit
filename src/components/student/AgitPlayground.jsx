@@ -92,9 +92,10 @@ const PlaygroundCard = ({ item, onOpen }) => (
         >
             <span className="agit-playground-card__icon" aria-hidden="true">{item.icon}</span>
             <span className="agit-playground-card__body">
+                {/* `포인트 모으기 / 포인트 쓰기` 알약은 뺐다 — 바로 위 섹션 제목과 같은 말이라
+                    중복이고, 그 자리를 비워야 도움말 버튼이 제대로 보인다. */}
                 <span className="agit-playground-card__meta">
                     <strong>{item.name}</strong>
-                    <em>{item.pointLabel}</em>
                 </span>
                 <small>{item.badge || item.description}</small>
             </span>
