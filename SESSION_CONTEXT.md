@@ -86,6 +86,8 @@
   생성한다 — `npm run sync:title-levels` → `npm run migrate`. `npm run check:title-levels` 가
   ①화면·DB 기준 일치 ②기준 숫자를 따로 베껴 쓴 함수가 없는지를 보고, 배포 워크플로가 먼저 실행한다.
   DB 쪽을 지울 수 없는 이유는 학기 마감 스냅샷이 **그때의 칭호를 얼려 두기** 때문이다.
+- **Realtime 구독은 이제 소스에 하나도 없다**(2026-08-18 확인 — `postgres_changes`·`.channel(` 0건).
+  갱신은 화면 복귀·포커스 때 다시 부르는 방식이다. 새 기능에 구독을 되살리지 않는다.
 - 실기기 인수 검사는 [MANUAL_ACCEPTANCE_CHECKLIST.md](MANUAL_ACCEPTANCE_CHECKLIST.md)에 계속 기록한다.
 
 ## 다음 세션 첫 순서
