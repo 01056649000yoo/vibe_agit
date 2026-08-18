@@ -32,7 +32,10 @@
 .mastery-badges__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .mastery-badges__name { font-size: .82rem; font-weight: 900; color: #5D4037; }
 .mastery-badges__count { font-size: .72rem; font-weight: 800; color: #8A6E52; }
-.mastery-badges__title { font-size: .74rem; font-weight: 900; color: #8A6212; }
+.mastery-badges__title { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: .74rem; font-weight: 900; color: #8A6212; }
+/* 아직 못 받은 정상은 흐리게 둔다. 보이되 이미 받은 것과 헷갈리지 않아야 한다. */
+.mastery-badges__title.is-locked { color: #A0907C; font-weight: 800; }
+.mastery-badges__note { font-size: .66rem; font-style: normal; font-weight: 800; color: #9C8B76; }
 
 .mastery-badges__pips { display: flex; gap: 3px; flex-wrap: wrap; max-width: 44%; justify-content: flex-end; }
 .mastery-badges__pips span {
@@ -47,4 +50,5 @@
 }
 
 /* 정상이 여러 단계인 콘텐츠의 별. 칭호 옆에 붙어 어디까지 올랐는지 한눈에 보인다. */
-.mastery-badges__stars { margin-left: 6px; font-size: .78em; letter-spacing: .5px; }
+.mastery-badges__stars { font-size: .78em; letter-spacing: .5px; }
+.mastery-badges__note.is-open { color: #2F6B3D; }

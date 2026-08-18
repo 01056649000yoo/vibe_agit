@@ -30,29 +30,39 @@ const MasteryBadges = ({ contents = [], loading = false, emptyText = '아직 도
                 // 별은 완성된 성취라 친구에게도 보인다 — 서버가 진행도만 가린다.
                 const levelCount = Number(item.summit_level_count || 1);
                 const level = Number(item.summit_level || 0);
-                const stars = levelCount > 1 && summit
-                    ? '⭐'.repeat(level) + '☆'.repeat(Math.max(levelCount - level, 0))
-                    : '';
+                // 아직 못 오른 단계는 빈 별로 남긴다. **정상 줄은 통과 전에도 늘 보인다** —
+                // 있는 줄 몰라서 향하지 못하는 것이 가장 아깝다(지도의 잠긴 도전 버튼과 같은 원칙).
+                const stars = '⭐'.repeat(level) + '☆'.repeat(Math.max(levelCount - level, 0));
+                const summitNote = summit
+                    ? (level >= levelCount
+                        ? '정상까지 올랐어요'
+                        : `${level}단계까지 올랐어요`)
+                    : cleared
+                        ? '정상 관문이 열렸어요'
+                        : `${item.collection_label} ${total}개를 모으면 열려요`;
 
                 return (
                     <div key={item.content_type} className={`mastery-badges__row${summit ? ' is-summit' : ''}`}>
                         <span className="mastery-badges__icon" aria-hidden="true">{item.emblem_icon}</span>
                         <div className="mastery-badges__body">
                             <strong className="mastery-badges__name">{item.display_name}</strong>
-                            {summit ? (
-                                <span className="mastery-badges__title">
-                                    {item.master_title}
-                                    {stars && <b className="mastery-badges__stars" aria-label={`${level}단계 / ${levelCount}단계`}>{stars}</b>}
-                                </span>
-                            ) : hasProgress ? (
-                                <span className="mastery-badges__count">
-                                    {item.collection_label} {passed} / {total}
-                                </span>
-                            ) : (
-                                <span className="mastery-badges__count">
-                                    {cleared ? `${item.collection_label} 모두 완료` : '도전 중'}
-                                </span>
-                            )}
+                            <span className="mastery-badges__count">
+                                {hasProgress
+                                    ? `${item.collection_label} ${passed} / ${total}`
+                                    : cleared ? `${item.collection_label} 모두 완료` : '도전 중'}
+                            </span>
+
+                            {/* 정상 줄. 받기 전에는 흐린 빈 별로 두되 이름과 여는 방법을 함께 적는다. */}
+                            <span className={`mastery-badges__title${summit ? '' : ' is-locked'}`}>
+                                <span aria-hidden="true">👑</span>
+                                {summit ? item.master_title : item.summit_label}
+                                <b className="mastery-badges__stars"
+                                   aria-label={levelCount > 1 ? `${level}단계 / ${levelCount}단계` : undefined}>
+                                    {stars}
+                                </b>
+                                {/* 열렸는데 아직 안 친 상태는 '할 수 있는 일'이라 흐리게 두지 않는다. */}
+                                <em className={`mastery-badges__note${!summit && cleared ? ' is-open' : ''}`}>{summitNote}</em>
+                            </span>
                         </div>
 
                         {/* 진행 칸은 본인·교사에게만 나온다. 남은 칸이 보이는 것이 계속하게 만드는 부분이다. */}
