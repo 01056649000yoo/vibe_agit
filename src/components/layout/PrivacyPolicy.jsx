@@ -59,22 +59,34 @@ const PrivacyPolicy = () => {
             <section style={{ marginBottom: '30px' }}>
                 <h4 style={{ color: '#2C3E50', marginBottom: '12px', borderLeft: '4px solid var(--primary-color)', paddingLeft: '10px' }}>제5조 (개인정보의 제3자 제공 및 처리 위탁)</h4>
                 <p>'끄적끄적 아지트'는 이용자의 개인정보를 제3자에게 제공하지 않습니다. 다만, 이용자가 사전에 동의한 경우나 법령의 규정에 의거한 경우는 예외로 합니다.</p>
+                <p><strong>서비스의 데이터베이스와 저장소는 운영자가 직접 관리하는 국내 서버에서 직접 운영(자체 호스팅)하며, 외부 클라우드 사업자에게 저장을 위탁하지 않습니다.</strong></p>
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px', fontSize: '0.9rem' }}>
                     <thead>
                         <tr style={{ backgroundColor: '#F1F3F5' }}>
                             <th style={{ border: '1px solid #dee2e6', padding: '8px' }}>수탁업체</th>
                             <th style={{ border: '1px solid #dee2e6', padding: '8px' }}>위탁 업무 내용</th>
+                            <th style={{ border: '1px solid #dee2e6', padding: '8px' }}>전송하는 정보</th>
                             <th style={{ border: '1px solid #dee2e6', padding: '8px' }}>보유 기간</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>Supabase (Google Cloud Infrastructure)</td>
-                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>서비스 데이터베이스 호스팅 및 데이터 저장, 인증 관리</td>
-                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>회원 탈퇴 및 클래스 삭제 시 즉시 파기</td>
+                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>OpenAI, L.L.C. (미국)</td>
+                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>AI 글쓰기 피드백·평어 초안·맞춤법 자료 초안 생성, 학생 댓글의 부적절 표현 확인</td>
+                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>글·댓글의 <strong>내용만</strong> 전송하며, 이름·학번·접속 코드 등 개인을 알아볼 수 있는 정보는 함께 보내지 않습니다.</td>
+                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>아지트에는 전송 내용을 따로 저장하지 않습니다. OpenAI는 API 입력·출력을 <strong>모델 학습에 사용하지 않으며</strong>, 오·남용 점검 목적으로 최대 30일 보관 후 삭제합니다.</td>
+                        </tr>
+                        <tr>
+                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>Google LLC (Google Drive)</td>
+                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>재해 대비 백업 파일의 원격 보관</td>
+                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>백업 파일은 <strong>운영자 서버에서 암호화한 뒤</strong> 전송하므로 보관처에서 내용을 열람할 수 없습니다.</td>
+                            <td style={{ border: '1px solid #dee2e6', padding: '8px' }}>30일이 지난 백업 파일은 자동으로 삭제됩니다.</td>
                         </tr>
                     </tbody>
                 </table>
+                <p style={{ marginTop: '10px', fontSize: '0.88rem', color: '#5f6b7a' }}>
+                    AI 기능은 교사가 실행하는 보조 기능이며, 결과는 교사가 확인한 뒤 사용합니다. 운영자는 서비스 전체 또는 교사별로 AI 기능 사용을 중지할 수 있습니다.
+                </p>
             </section>
 
             <section style={{ marginBottom: '30px' }}>

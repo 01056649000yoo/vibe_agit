@@ -518,7 +518,9 @@ ${postArray.map((p, idx) => {
                 if (selectedMission?.guide_questions?.length > 0 && p.student_answers?.length > 0) {
                     qaSection = "\n[핵심질문에 대한 답변]\n" + selectedMission.guide_questions.map((q, i) => `질문${i + 1}: ${q}\n답변${i + 1}: ${Reflect.get(p.student_answers, i) || '(답변 없음)'}`).join('\n');
                 }
-                return `[학생 ${idx + 1}]\nID: ${p.id}\n성함: ${p.student_name || '학생'}\n제목: ${p.title}\n내용: ${p.content}${qaSection}`;
+                // 이름은 보내지 않는다. 되돌려 붙이는 데는 ID 하나면 되고, 피드백 문구에도 이름을 쓰지 않는다.
+                // (2026-08-19 — 개인정보 처리방침에 "식별정보를 제외한 글 내용만 전송"으로 적었다.)
+                return `[학생 ${idx + 1}]\nID: ${p.id}\n제목: ${p.title}\n내용: ${p.content}${qaSection}`;
             }).join('\n\n')}`;
         } else {
             let qaSection = "";
@@ -526,7 +528,8 @@ ${postArray.map((p, idx) => {
             if (selectedMission?.guide_questions?.length > 0 && p.student_answers?.length > 0) {
                 qaSection = "\n[핵심질문에 대한 답변]\n" + selectedMission.guide_questions.map((q, i) => `질문${i + 1}: ${q}\n답변${i + 1}: ${Reflect.get(p.student_answers, i) || '(답변 없음)'}`).join('\n');
             }
-            prompt = `${basePrompt}\n\n---\n[학생 정보]\n이름: ${p.student_name || '학생'}\n글 제목: "${p.title}"\n글 내용:\n"${p.content}"${qaSection}`;
+            // 이름 없이 글만 보낸다(위와 같은 이유).
+            prompt = `${basePrompt}\n\n---\n[학생 글]\n글 제목: "${p.title}"\n글 내용:\n"${p.content}"${qaSection}`;
         }
 
         try {
