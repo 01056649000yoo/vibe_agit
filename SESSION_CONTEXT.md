@@ -42,8 +42,8 @@
   - **AI 맞춤법 검사**(새 기능, 학급 스위치 기본 꺼짐): **다시 쓰기 요청을 받은 글**에만 열리고
     **글 한 편에 한 번**이다. 횟수는 서버가 쥐고(`spell_check_used_at` + 서버 소유 열 가드),
     본문은 Edge Function 이 DB 에서 읽는다. 무의미 철자는 먼저 걸러 기회를 쓰지 않는다.
-    ⚠️ **Edge Function 은 CI 가 배포하지 않는다** — `~/agit-supabase/volumes/functions/` 에 직접 복사하고
-    `docker restart agit-edge-functions` 를 해야 한다.
+    Edge Function(`vibe-ai`)은 앱 이미지 밖(맥미니 폴더)에서 돈다. **CI 도 `npm run deploy:local` 도
+    이제 자동으로 맞춘다**(2026-08-20에 로컬 배포에도 같은 단계를 넣었다) — 손으로 복사할 일은 없다.
   - 맞춤법 데이터: 화면을 `우리 반 배움 현황 / 항목 만들기 / 등록 데이터` 세 갈래로 정리했고,
     학생 검색(`spelling_search_corpus`)과 AI가 찾은 표현(`spelling_ai_findings`)을 **학급·학생 식별자 없이**
     누적한다. 관리자 `🔤 맞춤법 승격 검토` 탭에서 **여러 학급에서 되풀이되는 것만**(기본 2학급·3회)

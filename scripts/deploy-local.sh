@@ -46,4 +46,36 @@ else
     echo "⚠ 번들이 로컬 빌드와 다릅니다 (로컬 $LOCAL / 서빙 $SERVED)" >&2
     echo "  npm run build 를 먼저 돌려 로컬 dist 를 맞춘 뒤 다시 확인하세요." >&2
 fi
+# ── AI Edge Function 동기화 ────────────────────────────────────────────────
+# `vibe-ai` 는 앱 이미지 안에 없다. `agit-edge-functions` 컨테이너가 맥미니의
+# `~/agit-supabase/volumes/functions/` 를 그대로 읽는다. 저장소 파일은 원본이고
+# 실제로 도는 것은 그 폴더의 사본이라, **복사하지 않으면 옛 코드가 계속 돈다.**
+# CI(.github/workflows/deploy.yml 의 `Sync AI edge function`)는 이미 이 일을 한다.
+# 로컬 배포에도 같은 단계를 둬서 두 경로가 어긋나지 않게 한다(2026-08-20).
+FN_SRC="supabase/functions/vibe-ai/index.ts"
+FN_DST="$HOME/agit-supabase/volumes/functions/vibe-ai/index.ts"
+if [ ! -f "$FN_DST" ]; then
+    echo "⚠ Edge Function 대상 파일이 없습니다: $FN_DST" >&2
+elif cmp -s "$FN_SRC" "$FN_DST"; then
+    echo "▶ Edge Function 그대로 (바뀐 것 없음)"
+else
+    echo "▶ Edge Function 교체"
+    # 되돌릴 지점을 남긴다. 이 폴더는 git 밖이라 사본이 유일한 복구 수단이다.
+    cp "$FN_DST" "$FN_DST.bak-$(date +%Y%m%d-%H%M%S)"
+    install -m 0644 "$FN_SRC" "$FN_DST"
+    (cd "$HOME/agit-supabase" && docker compose up -d --no-deps --force-recreate functions >/dev/null 2>&1) \
+        || docker restart agit-edge-functions >/dev/null
+
+    sleep 4
+    EDGE_STATE=$(docker inspect -f '{{.State.Status}}' agit-edge-functions 2>/dev/null || echo "없음")
+    [ "$EDGE_STATE" = "running" ] || { echo "✗ Edge Function 컨테이너가 뜨지 않았습니다($EDGE_STATE)." >&2; exit 1; }
+
+    # 빈 요청은 400 이어야 정상이다(형식 오류로 막히는 지점까지 코드가 돈다는 뜻).
+    EDGE_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+        -X POST http://127.0.0.1:8100/functions/v1/vibe-ai \
+        -H 'Content-Type: application/json' -d '{}')
+    echo "▶ Edge Function 응답 $EDGE_CODE"
+    [ "$EDGE_CODE" = "400" ] || { echo "✗ Edge Function 이 400 을 주지 않습니다." >&2; exit 1; }
+fi
+
 echo "✓ 배포 완료"
