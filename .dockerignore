@@ -7,4 +7,7 @@ e2e
 testsprite_tests
 scripts/*
 !scripts/export-spelling-detection.mjs
+# 배포 검사(deploymentArchitecture)가 이 스크립트의 내용을 확인한다.
+# 빼면 이미지 안에서 도는 검사가 파일을 못 읽어 빌드가 실패한다(2026-08-20).
+!scripts/deploy-local.sh
 *.md
