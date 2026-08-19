@@ -12,6 +12,8 @@ import AdminLabManagementPanel from './AdminLabManagementPanel';
 import useAdminUsage from '../../hooks/useAdminUsage';
 
 const AdminVocabReviewPanel = React.lazy(() => import('./AdminVocabReviewPanel'));
+// 500개 카탈로그를 함께 읽어 대조하므로 무겁다 — 탭을 고를 때만 내려받는다.
+const AdminSpellingPromotionPanel = React.lazy(() => import('./AdminSpellingPromotionPanel'));
 
 const TEACHER_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5분 — 교사 목록은 실시간 갱신 불필요
 
@@ -472,6 +474,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             { id: 'cleanup', label: `🧹 정리 대상 (${usage.cleanupCandidates.length})` },
                             { id: 'lab', label: '🧪 글쓰기 연구소' },
                             { id: 'vocab', label: '🏰 어휘 V2 검수' },
+                            { id: 'spelling', label: '🔤 맞춤법 승격 검토' },
                             {
                                 id: 'feedback',
                                 label: (
@@ -813,6 +816,12 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     {currentTab === 'vocab' && (
                         <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>어휘 검수 화면을 불러오는 중입니다...</div>}>
                             <AdminVocabReviewPanel />
+                        </React.Suspense>
+                    )}
+
+                    {currentTab === 'spelling' && (
+                        <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>맞춤법 승격 화면을 불러오는 중입니다...</div>}>
+                            <AdminSpellingPromotionPanel />
                         </React.Suspense>
                     )}
 
