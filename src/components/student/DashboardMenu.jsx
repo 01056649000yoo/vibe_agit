@@ -89,6 +89,10 @@ const DashboardMenu = ({
                         title={module.studentDashboard.title || module.name}
                         description={module.studentDashboard.description || module.description}
                         tone={module.studentDashboard.tone}
+                        isNew={Boolean(
+                            module.studentDashboard.newFlagKey
+                            && homeBootstrap?.home?.[module.studentDashboard.newFlagKey]
+                        )}
                         onClick={() => onNavigate(module.studentRoute)}
                     />
                 ))}

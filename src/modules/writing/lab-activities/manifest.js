@@ -10,10 +10,12 @@ export const labActivitiesManifest = {
     performance: { home: 'none', load: 'on-open', writes: 'none', realtime: 'none', maxInitialRows: 20 },
     studentRoute: 'lab_activities',
     studentDashboard: {
-        title: '글쓰기 연구소',
+        title: '글쓰기 연구소 (beta)',
         description: '우리 반 활동 시작·이어하기',
         tone: 'violet',
-        order: 15
+        order: 15,
+        // 홈 RPC 가 주는 값 이름. 홈은 이 키만 보고 NEW 를 붙인다(따로 조회하지 않는다).
+        newFlagKey: 'has_new_lab_activity'
     },
     studentEntry: () => import('./LabActivitiesPage')
 };

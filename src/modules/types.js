@@ -29,8 +29,10 @@
  *   메뉴 슬롯 크기는 공통 설정 호스트가 데스크톱 270px·항목 좌우 15px·최소 높이 68px로 보장하므로
  *   모듈은 별도 메뉴 폭을 만들지 않고 짧은 label/description만 제공한다.
  * @property {string}   [studentRoute] 학생 화면 내부 라우트 이름
- * @property {{title?: string, description?: string, tone: string, order: number}} [studentDashboard]
+ * @property {{title?: string, description?: string, tone: string, order: number, newFlagKey?: string}} [studentDashboard]
  *   학생 홈 주요 메뉴에 표시할 모듈 카드. 학생 화면 진입점과 studentRoute가 모두 있어야 한다.
+ *   `newFlagKey`는 홈 부트스트랩 RPC 응답 `home` 안의 불리언 키 이름이다. 이 키가 참이면 카드에
+ *   NEW 를 붙인다. 홈은 카드마다 따로 조회하지 않으므로, 새 표시가 필요하면 홈 RPC에 값을 더한다.
  * @property {string[]} [writingMissionTypes] 이 모듈이 처리하는 글쓰기 입력 미션 유형
  * @property {{group: 'self', label: string, icon: string, description: string, emptyMessage: string, order: number}} [communityFeed]
  *   친구 아지트의 `자율 글` 필터 등록 정보. `writingPolicy.type`을 조회 유형 ID로 사용하며,

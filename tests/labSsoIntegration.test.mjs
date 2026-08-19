@@ -81,7 +81,8 @@ test('교사 상단 메뉴는 글쓰기 바로 뒤에서 같은 탭의 /lab으�
     const labIndex = teacherNav.indexOf("id: 'writing-lab'");
     const operationsIndex = teacherNav.indexOf("id: 'operations'");
     assert.ok(writingIndex > -1 && writingIndex < labIndex && labIndex < operationsIndex);
-    assert.match(teacherNav, /label: '글쓰기 연구소'[\s\S]*launchHref: '\/lab\/dashboard'/);
+    // 2026-08-19: 이름 뒤에 (beta)를 붙였다 — 이름은 바뀔 수 있으므로 '글쓰기 연구소'로 시작하는지만 본다.
+    assert.match(teacherNav, /label: '글쓰기 연구소[^']*'[\s\S]*launchHref: '\/lab\/dashboard'/);
     // 2026-08-19: 보고 있던 학급을 함께 넘겨 연구소에서 학급을 다시 고르지 않게 했다.
     // 주소는 여전히 `group.launchHref` 에서 나오고 같은 탭으로 간다.
     assert.match(teacherDashboard, /\$\{group\.launchHref\}\?class_id=\$\{encodeURIComponent\(activeClass\.id\)\}/);
