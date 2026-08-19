@@ -11,10 +11,14 @@ import './writingToolTrigger.css';
  * (밑줄 칩처럼) 다른 곳에서 열어 달라는 신호가 오면 그때 본체를 받는다.
  * 그래서 글쓰기 창을 열기만 한 학생은 도구 본체를 받지 않는다.
  */
-const WRITING_TOOLS = getWritingToolManifests().map((manifest) => ({
-    ...manifest,
-    Component: lazy(manifest.studentEntry)
-}));
+// 도구 줄에는 `surface: 'toolbar'`(기본) 도구만 둔다. 참고함 안에서 사는 도구는
+// 참고함이 직접 연다 — 같은 화면에 같은 버튼이 두 개 있으면 학생이 헷갈린다.
+const WRITING_TOOLS = getWritingToolManifests()
+    .filter((manifest) => (manifest.surface ?? 'toolbar') === 'toolbar')
+    .map((manifest) => ({
+        ...manifest,
+        Component: lazy(manifest.studentEntry)
+    }));
 
 class WritingToolErrorBoundary extends React.Component {
     constructor(props) {

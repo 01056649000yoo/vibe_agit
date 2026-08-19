@@ -150,7 +150,10 @@ test('글쓰기 참고함 연구소 자료는 패널을 열 때 단일 RPC로 �
     const api = await read('src/modules/writing/tools/lab-results/api.js');
     const migration = await read('supabase/migrations/20261104_writing_reference_sources.sql');
 
-    assert.match(studentWriting, /<LabReferenceSource missionId=\{missionId\} isActive=\{isOpen\}/);
+    // 참고함이 열릴 때만 조회한다(자리는 그대로, 넘기는 값만 늘었다).
+    assert.match(studentWriting, /<LabReferenceSource\s+missionId=\{missionId\}\s+isActive=\{isOpen\}/);
+    // 교사가 `연구소 결과 불러오기`를 끄면 참고함의 연구소 자료도 함께 닫힌다.
+    assert.match(studentWriting, /labResultsEnabled\s*\n?\s*\?/);
     assert.match(source, /if \(!isActive \|\| loaded \|\| loading \|\| error\) return/);
     assert.match(source, /listForWritingReference\(\{ missionId, limit: 20 \}\)/);
     assert.match(api, /supabase\.rpc\('get_my_writing_references_v1'/);

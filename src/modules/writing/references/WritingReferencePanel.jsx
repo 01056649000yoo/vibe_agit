@@ -42,11 +42,12 @@ const WritingReferencePanel = ({ sections = [], renderSources, children }) => {
                         ? <ChevronUp size={18} aria-hidden="true" />
                         : <ChevronDown size={18} aria-hidden="true" />}
                 </button>
+                {/* 참고함이 무엇을 하는 곳인지 옆에 한 줄로 알려 준다(2026-08-19 사용자 요청). */}
                 <div className="writing-reference-position-note">
                     <PanelsTopLeft size={19} aria-hidden="true" />
                     <span>
-                        <strong>화면에 맞춰 자리가 달라져요</strong>
-                        <small>가로 화면에서는 오른쪽에서 글을 따라오고, 세로 화면에서는 입력창 위에 보여요.</small>
+                        <strong>선생님 질문과 내 연구소 자료를 펼쳐 두는 곳이에요</strong>
+                        <small>글을 쓰면서 옆에 두고 볼 수 있어요. 가로 화면에서는 오른쪽, 세로 화면에서는 입력창 위에 보여요.</small>
                     </span>
                 </div>
             </div>

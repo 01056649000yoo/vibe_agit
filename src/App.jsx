@@ -15,8 +15,9 @@ import { useAppStore } from './store/useAppStore';
 import { getEnabledModules, getModule, resolveEnabledModuleIds } from './modules/registry';
 import useStudentHomeBootstrap from './modules/home/useStudentHomeBootstrap';
 import { WritingEditorSettingsProvider } from './modules/writing/editor-settings/WritingEditorSettingsContext';
+import { DEFAULT_WRITING_EDITOR_SETTINGS } from './modules/writing/editor-settings/settings';
 
-const DEFAULT_STUDENT_EDITOR_SETTINGS = Object.freeze({ enabled_tools: ['spelling-lookup'] });
+const DEFAULT_STUDENT_EDITOR_SETTINGS = DEFAULT_WRITING_EDITOR_SETTINGS;
 
 // 지연 로딩 (Lazy Loading) 적용
 const LandingPage = lazy(() => import('./components/layout/LandingPage'))

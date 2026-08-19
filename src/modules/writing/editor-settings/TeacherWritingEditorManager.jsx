@@ -26,14 +26,22 @@ const WRITING_TOOL_OPTIONS = Object.freeze(getWritingToolManifests().map((tool) 
     id: tool.id,
     label: tool.label,
     description: tool.teacherDescription || tool.description,
-    icon: tool.triggerEmoji || '🧰'
+    icon: tool.triggerEmoji || '🧰',
+    // 'toolbar'는 글쓰기 창의 도구 줄, 'reference'는 글쓰기 참고함 안에서 열린다.
+    surface: tool.surface ?? 'toolbar'
 })));
 
 // 관리 화면에서는 실제 학생 입력기·맞춤법 RPC를 실행하지 않는다. 설정의 모양만
 // 확인할 수 있는 정적 샘플이라 탭 진입과 미리보기 전환이 가볍다.
 const StudentWritingPreview = ({ settings, compact }) => {
     const searchEnabled = isWritingToolEnabled(settings, SPELLING_LOOKUP_TOOL_ID);
-    const enabledTools = WRITING_TOOL_OPTIONS.filter((tool) => isWritingToolEnabled(settings, tool.id));
+    // 미리보기의 도구 줄에는 실제로 도구 줄에 뜨는 것만 그린다.
+    const enabledTools = WRITING_TOOL_OPTIONS.filter((tool) => (
+        tool.surface === 'toolbar' && isWritingToolEnabled(settings, tool.id)
+    ));
+    const referenceToolsEnabled = WRITING_TOOL_OPTIONS.some((tool) => (
+        tool.surface === 'reference' && isWritingToolEnabled(settings, tool.id)
+    ));
     return (
         <div className="writing-editor-preview-interaction-guard">
                 <WritingWorkspace tone="assignment" className="writing-editor-preview-workspace">
@@ -58,6 +66,9 @@ const StudentWritingPreview = ({ settings, compact }) => {
                         {enabledTools.map((tool) => (
                             <div key={tool.id} className="writing-editor-preview-tool">{tool.icon} {tool.label}</div>
                         ))}
+                        <div className="writing-editor-preview-tool">
+                            📚 글쓰기 참고함{referenceToolsEnabled ? ' · 🧪 연구소 자료' : ''}
+                        </div>
                         <div className={`writing-editor-preview-fields ${compact ? 'is-compact' : ''}`}>
                             <div>
                                 <small>글 제목</small>

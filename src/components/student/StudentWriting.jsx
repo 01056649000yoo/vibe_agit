@@ -12,6 +12,8 @@ import { getGenreMissionType, getGenreMissionTypes } from '../../modules/writing
 import WritingToolHost from '../../modules/writing/tools/WritingToolHost';
 import WritingReferencePanel from '../../modules/writing/references/WritingReferencePanel';
 import LabReferenceSource from '../../modules/writing/references/LabReferenceSource';
+import { useWritingEditorSettings } from '../../modules/writing/editor-settings/WritingEditorSettingsContext';
+import { LAB_RESULTS_TOOL_ID } from '../../modules/writing/editor-settings/settings';
 import {
     buildDraftKey,
     readLocalDraft,
@@ -103,6 +105,9 @@ const getDraftStorageKey = (studentId, missionId) => (
  * 역할: 학생 - 글쓰기 에디터 (단계별 답변 및 본문 삽입 기능 포함) ✨
  */
 const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params }) => {
+    // 교사가 `연구소 결과 불러오기`를 끄면 참고함의 연구소 자료도 함께 닫힌다(도구 버튼만 숨기면 반만 닫힌다).
+    const { isToolEnabled } = useWritingEditorSettings();
+    const labResultsEnabled = isToolEnabled(LAB_RESULTS_TOOL_ID);
     const {
         mission,
         title, setTitle,
@@ -734,9 +739,15 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 <WritingReferencePanel
                     key={missionId}
                     sections={writingReferenceSections}
-                    renderSources={({ isOpen }) => (
-                        <LabReferenceSource missionId={missionId} isActive={isOpen} />
-                    )}
+                    renderSources={labResultsEnabled
+                        ? ({ isOpen }) => (
+                            <LabReferenceSource
+                                missionId={missionId}
+                                isActive={isOpen}
+                                onInsertText={GenreEditor ? undefined : insertToBody}
+                            />
+                        )
+                        : undefined}
                 >
                     <div style={{ position: 'relative' }}>
                         {showOriginal && (

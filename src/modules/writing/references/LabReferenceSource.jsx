@@ -92,7 +92,7 @@ const LabReferenceResult = ({ result, onRemove }) => {
     );
 };
 
-const LabReferenceSource = ({ missionId, isActive }) => {
+const LabReferenceSource = ({ missionId, isActive, onInsertText }) => {
     const [results, setResults] = useState([]);
     const [selectedResults, setSelectedResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -152,7 +152,7 @@ const LabReferenceSource = ({ missionId, isActive }) => {
                 <div>
                     <small>내가 만든 글쓰기 자료</small>
                     <strong>글쓰기 연구소</strong>
-                    <p>글 개요짜기와 좋은 질문 고르기 결과를 골라 펼쳐 둘 수 있어요.</p>
+                    <p>내가 연구소에서 만든 개요·질문·한 줄 문장을 골라 옆에 펼쳐 두거나 본문에 넣을 수 있어요.</p>
                 </div>
             </div>
 
@@ -202,6 +202,7 @@ const LabReferenceSource = ({ missionId, isActive }) => {
                     <LabResultsTool
                         onClose={() => setIsPickerOpen(false)}
                         onToggleReference={toggleReference}
+                        onInsertText={onInsertText}
                         selectedResultIds={selectedResultIds}
                         providedResults={results}
                     />
