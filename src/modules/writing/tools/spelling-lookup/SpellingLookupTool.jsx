@@ -144,9 +144,19 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
         const classMatch = classEntries.find((entry) => [entry.wrong_expression, entry.correct_expression]
             .some((value) => trimmed.includes(String(value || ''))));
         const firstMatch = classMatch || localMatches[0];
+        // 기본 자료의 배움 라벨은 `learningLabel` 이다. 예전에 없는 `label` 을 읽어
+        // 교사 화면의 `자주 찾아본 표현`이 전부 `미분류`로 보였다(2026-08-19 수정).
+        const matchedLabel = classMatch?.label
+            || firstMatch?.learningLabel
+            || firstMatch?.category
+            || '미분류';
+        const matchedDisplay = classMatch
+            ? `${classMatch.wrong_expression} → ${classMatch.correct_expression}`
+            : (firstMatch ? (firstMatch.question || firstMatch.learningLabel || '') : trimmed);
         rememberSpellingSearch({
             entryKey: classMatch ? `class:${classMatch.id}` : (firstMatch?.id ? `common:${firstMatch.id}` : `unmatched:${trimmed.normalize('NFC').toLocaleLowerCase('ko-KR')}`),
-            label: classMatch?.label || firstMatch?.label || '미분류',
+            label: matchedLabel,
+            display: matchedDisplay,
             query: trimmed,
             matched: !!firstMatch
         });

@@ -81,3 +81,40 @@
     .spelling-learning-entry-expression > span { display: none; }
     .spelling-learning-source { display: none; }
 }
+
+/* 2026-08-19: 화면을 `현황 → 만들기 → 데이터` 세 갈래로 나누고, 검색 기록을 표현 중심으로 보여 준다. */
+.spelling-learning-tabs.is-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.spelling-learning-summary { display: flex; flex-wrap: wrap; gap: 8px; }
+.spelling-learning-summary span { display: flex; align-items: baseline; gap: 6px; padding: 9px 14px; border-radius: 12px; background: #f4f2ff; color: #4c1d95; font-size: .78rem; font-weight: 800; }
+.spelling-learning-summary b { font-size: 1.05rem; }
+.spelling-learning-summary span.is-warning { background: #fff7ed; color: #9a3412; }
+.spelling-learning-search-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.spelling-learning-search-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 12px 10px; border-radius: 12px; }
+.spelling-learning-search-row:nth-child(odd) { background: #f8fafc; }
+.spelling-learning-search-row.is-missing { background: #fffbeb; }
+.spelling-learning-search-rank { color: #94a3b8; font-size: .78rem; font-weight: 900; text-align: center; }
+.spelling-learning-search-body { display: grid; gap: 3px; min-width: 0; }
+.spelling-learning-search-body strong { overflow: hidden; color: #1e293b; font-size: .92rem; text-overflow: ellipsis; }
+.spelling-learning-search-body small { color: #64748b; font-size: .72rem; }
+.spelling-learning-search-count { display: grid; gap: 2px; text-align: right; }
+.spelling-learning-search-count b { color: #6d28d9; font-size: .82rem; white-space: nowrap; }
+.spelling-learning-search-count small { color: #94a3b8; font-size: .7rem; white-space: nowrap; }
+.spelling-learning-search-action button { min-height: 34px; padding: 6px 12px; font-size: .74rem; }
+.spelling-learning-search-action em { display: inline-block; font-style: normal; }
+.spelling-learning-step { display: grid; gap: 12px; padding: 16px; border: 1px solid #ede9fe; border-radius: 14px; background: #fdfcff; }
+.spelling-learning-step-title { display: flex; align-items: center; gap: 8px; margin: 0; color: #4c1d95; font-size: .84rem; font-weight: 900; }
+.spelling-learning-step-title b { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #6d28d9; color: #fff; font-size: .74rem; }
+.spelling-learning-field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.spelling-learning-hint { margin: 0; color: #94a3b8; font-size: .72rem; font-weight: 700; }
+
+@media (max-width: 900px) {
+    .spelling-learning-tabs.is-three { grid-template-columns: 1fr; }
+    .spelling-learning-field-row { grid-template-columns: 1fr; }
+    .spelling-learning-search-row { grid-template-columns: 24px minmax(0, 1fr) auto; grid-template-areas: 'rank body count' '. action action'; }
+    .spelling-learning-search-rank { grid-area: rank; }
+    .spelling-learning-search-body { grid-area: body; }
+    .spelling-learning-search-count { grid-area: count; }
+    .spelling-learning-search-action { grid-area: action; justify-self: end; }
+}
+.spelling-learning-notice { margin: 0; padding: 11px 14px; border: 1px solid #e0e7ff; border-radius: 12px; background: #f5f7ff; color: #3730a3; font-size: .78rem; line-height: 1.6; }
+.spelling-learning-notice b { color: #1e1b4b; }
