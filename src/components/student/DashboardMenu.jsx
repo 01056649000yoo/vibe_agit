@@ -1,14 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import StudentModuleGuide from './StudentModuleGuide';
-import { useWritingEditorSettings } from '../../modules/writing/editor-settings/WritingEditorSettingsContext';
-import { AI_SPELL_CHECK_TOOL_ID } from '../../modules/writing/editor-settings/settings';
-import { AI_SPELL_CHECK_STUDENT_GUIDE } from '../../modules/writing/tools/ai-spell-check/guide';
 import useReadingLogDailyStatus from '../../modules/writing/reading-log/useReadingLogDailyStatus';
 import useDiaryDailyStatus from '../../modules/writing/diary/useDiaryDailyStatus';
 import './DashboardMenu.css';
 
-const MenuCard = ({ icon, title, description, badge, isNew, tone, onClick, disabled = false, guide = null }) => (
+const MenuCard = ({ icon, title, description, badge, isNew, tone, onClick, disabled = false }) => (
     <motion.button
         type="button"
         className={`student-home-menu-card tone-${tone}`}
@@ -23,7 +19,6 @@ const MenuCard = ({ icon, title, description, badge, isNew, tone, onClick, disab
             <small>{description}</small>
             {badge && <em>{badge}</em>}
         </span>
-        {guide && <StudentModuleGuide guide={guide} className="student-home-menu-card__guide" />}
         <span className="student-home-menu-card__arrow" aria-hidden="true">›</span>
         {isNew && <span className="student-home-menu-card__new">NEW</span>}
     </motion.button>
@@ -39,9 +34,6 @@ const DashboardMenu = ({
     enabledModules = []
 }) => {
     const hasNewMission = Boolean(homeBootstrap?.home?.has_new_mission);
-    // AI 맞춤법 검사를 켠 학급의 학생만 그 안내를 본다(꺼진 학급에는 없는 기능이다).
-    const { isToolEnabled } = useWritingEditorSettings();
-    const aiSpellCheckGuide = isToolEnabled(AI_SPELL_CHECK_TOOL_ID) ? AI_SPELL_CHECK_STUDENT_GUIDE : null;
     const readingDailyStatus = useReadingLogDailyStatus(studentSession?.id, {
         enabled: !homeBootstrap,
         initialStatus: homeBootstrap?.reading_daily
@@ -88,7 +80,6 @@ const DashboardMenu = ({
                     description="선생님이 낸 글 확인하기"
                     isNew={hasNewMission}
                     tone="amber"
-                    guide={aiSpellCheckGuide}
                     onClick={() => onNavigate('mission_list')}
                 />
                 {moduleCards.map((module) => (
