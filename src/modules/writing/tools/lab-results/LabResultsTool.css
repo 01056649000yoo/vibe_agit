@@ -151,3 +151,15 @@
     .lab-results-overlay { align-items: center; padding: 24px; }
     .lab-results-panel { border-radius: 28px; }
 }
+
+/* 같은 이름의 활동을 가려 주는 한 줄(핵심 낱말 등). 2026-08-20 */
+.lab-results-card-heading p.lab-results-hint {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #EEF2FF;
+    color: #4338CA;
+    font-size: 0.78rem;
+    font-weight: 800;
+}

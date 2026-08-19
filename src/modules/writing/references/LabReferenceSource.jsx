@@ -37,6 +37,7 @@ const LabReferenceResult = ({ result, onRemove }) => {
                     <span>{meta.eyebrow}</span>
                     <h4>{meta.title}</h4>
                     <p>{result.title}{result.topic ? ` · ${result.topic}` : ''}</p>
+                    {result.hint && <p className="writing-reference-lab-result__hint">{result.hint}</p>}
                 </div>
                 <button type="button" onClick={() => onRemove(result.resultKind)}>
                     <Trash2 size={14} aria-hidden="true" />

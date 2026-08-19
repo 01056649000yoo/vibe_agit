@@ -175,6 +175,7 @@ const LabResultsTool = ({
                                         </span>
                                         <h3>{result.title}</h3>
                                         {result.topic && <p>{result.topic}</p>}
+                                        {result.hint && <p className="lab-results-hint">{result.hint}</p>}
                                     </div>
                                     <time dateTime={result.completedAt}>
                                         {new Date(result.completedAt).toLocaleDateString('ko-KR')}

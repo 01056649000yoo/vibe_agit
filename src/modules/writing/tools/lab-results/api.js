@@ -32,6 +32,8 @@ export const normalizeLabResult = (row) => {
         resultKind: row.result_kind,
         title: String(row.title || '').trim() || '글쓰기 연구소 활동',
         topic: String(row.topic || '').trim(),
+        // 같은 이름의 활동이 여러 개일 때 무엇을 한 활동인지 가려 주는 한 줄(핵심 낱말 등).
+        hint: String(row.hint || '').trim(),
         chunks,
         completedAt: row.completed_at,
         hasMore: row.has_more === true,

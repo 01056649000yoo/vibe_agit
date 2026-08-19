@@ -526,3 +526,15 @@
 .writing-reference-cta__text strong { font-size: .9rem; font-weight: 900; }
 .writing-reference-cta__text small { color: #475569; font-size: .76rem; }
 .writing-reference-cta__go { color: #2563eb; font-size: .8rem; font-weight: 900; white-space: nowrap; }
+
+/* 결과 카드에서 활동을 가려 주는 한 줄(핵심 낱말 등). 2026-08-20 */
+.writing-reference-lab-result__hint {
+    display: inline-block;
+    margin: 4px 0 0;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: .72rem;
+    font-weight: 800;
+}
