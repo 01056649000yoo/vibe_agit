@@ -1,5 +1,6 @@
 export const SPELLING_LOOKUP_TOOL_ID = 'spelling-lookup';
 export const LAB_RESULTS_TOOL_ID = 'lab-results';
+export const AI_SPELL_CHECK_TOOL_ID = 'ai-spell-check';
 
 // 연구소 결과 불러오기는 기본 켜짐이다(2026-08-19). 연구소가 기본 동선이 됐고,
 // 필요 없는 학급만 교사 설정에서 끄면 된다. DB 기본값도 같다(20261127 마이그레이션).

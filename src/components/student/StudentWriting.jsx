@@ -13,7 +13,9 @@ import WritingToolHost from '../../modules/writing/tools/WritingToolHost';
 import WritingReferencePanel from '../../modules/writing/references/WritingReferencePanel';
 import LabReferenceSource from '../../modules/writing/references/LabReferenceSource';
 import { useWritingEditorSettings } from '../../modules/writing/editor-settings/WritingEditorSettingsContext';
-import { LAB_RESULTS_TOOL_ID } from '../../modules/writing/editor-settings/settings';
+import { AI_SPELL_CHECK_TOOL_ID, LAB_RESULTS_TOOL_ID } from '../../modules/writing/editor-settings/settings';
+
+const AiSpellCheckPanel = lazy(() => import('../../modules/writing/tools/ai-spell-check/AiSpellCheckPanel'));
 import {
     buildDraftKey,
     readLocalDraft,
@@ -108,6 +110,7 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
     // 교사가 `연구소 결과 불러오기`를 끄면 참고함의 연구소 자료도 함께 닫힌다(도구 버튼만 숨기면 반만 닫힌다).
     const { isToolEnabled } = useWritingEditorSettings();
     const labResultsEnabled = isToolEnabled(LAB_RESULTS_TOOL_ID);
+    const aiSpellCheckEnabled = isToolEnabled(AI_SPELL_CHECK_TOOL_ID);
     const {
         mission,
         title, setTitle,
@@ -623,7 +626,11 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                 ) : isReturned && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ overflow: 'hidden' }}>
                         <WritingNotice tone="warning" icon="♻️" title="선생님이 다시 쓰기를 요청하셨어요">
-                            <div style={{ marginBottom: aiFeedback ? '8px' : '0' }}>내용을 보완해서 다시 한번 멋진 글을 완성해볼까요?</div>
+                            {/* 한 문단으로 이어서 끝낸다 — 줄을 나누거나 굵게 하면 조각나 보인다(2026-08-20). */}
+                            <div style={{ marginBottom: aiFeedback ? '8px' : '0' }}>
+                                내용을 보완해서 다시 한번 멋진 글을 완성해볼까요?
+                                {aiSpellCheckEnabled && ' 참고함에서 맞춤법 검사를 한번 할 수 있어요.'}
+                            </div>
                             {aiFeedback && <div style={{ background: 'rgba(255,255,255,0.7)', padding: '20px', borderRadius: '16px', fontSize: '1rem', color: '#444', whiteSpace: 'pre-wrap', lineHeight: '1.8', border: '1px solid rgba(230, 81, 0, 0.2)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.03)' }}>{aiFeedback}</div>}
                         </WritingNotice>
                     </motion.div>
@@ -748,6 +755,32 @@ const StudentWriting = ({ studentSession, missionId, onBack, onNavigate, params 
                             />
                         )
                         : undefined}
+                    extraTabs={aiSpellCheckEnabled ? [{
+                        id: 'spell-check',
+                        label: '맞춤법',
+                        icon: '🔍',
+                        // 다시 쓰기 요청을 받았을 때만 위에 눈에 띄는 줄을 띄운다(그전에는 눌러도 못 쓴다).
+                        cta: (isReturned && !isConfirmed) ? {
+                            label: 'AI 맞춤법 검사를 할 수 있어요',
+                            hint: '다시 쓰기 전에 한 번, 틀린 곳을 모아서 볼 수 있어요.'
+                        } : null,
+                        // 자료(볼 것)와 맞춤법(고칠 것)은 성격이 달라 같은 자리에서 갈래로 나눈다.
+                        render: () => (
+                            <Suspense fallback={null}>
+                                <AiSpellCheckPanel
+                                    postId={postId}
+                                    studentId={studentSession?.id}
+                                    canRun={Boolean(isReturned) && !isConfirmed && !submitting}
+                                    blockedReason={isConfirmed
+                                        ? '선생님이 이미 확인한 글이라 검사하지 않아요.'
+                                        : isSubmitted
+                                            ? '선생님이 확인하는 중이에요. 다시 쓰기 요청을 받으면 검사할 수 있어요.'
+                                            : '먼저 글을 제출하고, 선생님께 다시 쓰기 요청을 받으면 검사할 수 있어요.'}
+                                    onEnsurePost={ensureGenreDraftPost}
+                                />
+                            </Suspense>
+                        )
+                    }] : []}
                 >
                     <div style={{ position: 'relative' }}>
                         {showOriginal && (

@@ -1,9 +1,11 @@
 import { spellingLookupToolManifest } from './spelling-lookup/manifest';
 import { labResultsToolManifest } from './lab-results/manifest';
+import { aiSpellCheckToolManifest } from './ai-spell-check/manifest';
 
 const writingToolManifests = [
     spellingLookupToolManifest,
-    labResultsToolManifest
+    labResultsToolManifest,
+    aiSpellCheckToolManifest
 ];
 
 export const getWritingToolManifests = () => [...writingToolManifests]

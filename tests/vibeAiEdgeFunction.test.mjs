@@ -36,7 +36,9 @@ test('댓글 판정은 서버가 본인 pending 댓글을 읽어 상태까지 �
 test('commentId 없는 구버전 댓글 판정 경로는 더 이상 허용하지 않는다', () => {
     assert.match(edgeSource, /typeof commentId !== 'string' \|\| !commentId/);
     assert.doesNotMatch(edgeSource, /commentId != null/);
-    assert.match(edgeSource, /const maxPromptLength = isStudentRequest \? 300 : \(type === 'SPELLING_DRAFT' \? 80 : 10000\)/);
+    // 학생 입력 상한은 그대로 300자, 맞춤법 검사만 서버가 읽은 본문을 담아 6000자까지 쓴다.
+    assert.match(edgeSource, /type === 'SPELL_CHECK' \? 6000 : 300/);
+    assert.match(edgeSource, /type === 'SPELLING_DRAFT' \? 80 : 10000/);
 });
 
 test('맞춤법 초안은 승인 교사 전용 속도 제한과 짧은 입력 상한을 사용한다', () => {
@@ -52,8 +54,8 @@ test('댓글 수정은 먼저 pending으로 되돌리고 같은 댓글 ID로 다
     assert.match(interactionSource, /checkContentSafety\(newContent, \{ commentId \}\)/);
 });
 
-test('댓글 판정만 100토큰·온도 0이며 일반 AI는 1000토큰을 유지한다', () => {
-    assert.match(edgeSource, /max_tokens:\s*isStudentRequest \? 100 : 1000/);
+test('댓글 판정은 100토큰·온도 0, 맞춤법 검사는 900토큰, 일반 AI는 1000토큰이다', () => {
+    assert.match(edgeSource, /max_tokens: type === 'SPELL_CHECK' \? 900 : \(isStudentRequest \? 100 : 1000\)/);
     assert.match(edgeSource, /isStudentRequest \? \{ temperature: 0 \}/);
 });
 

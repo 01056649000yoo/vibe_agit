@@ -124,3 +124,9 @@
     .student-home-menu-card { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; }
     .student-home-menu-card__icon { width: 44px; height: 44px; border-radius: 14px; font-size: 1.4rem; }
 }
+
+/* 카드 안 도움말 버튼 — NEW 배지와 겹치지 않게 화살표 왼쪽에 둔다(2026-08-20). */
+.student-home-menu-card__guide {
+    flex-shrink: 0;
+    margin-right: 4px;
+}

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration, vocabPracticeMigration, vocabPerfectRewardMigration, vocabItemLearningMigration, postColumnGuardMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration, vocabPracticeMigration, vocabPerfectRewardMigration, vocabItemLearningMigration, postColumnGuardMigration, spellCheckMigration, findingsMigration, promotionMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -26,15 +26,51 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261107_vocab_tower_v2_deck_practice.sql', 'utf8'),
     readFile('supabase/migrations/20261108_vocab_tower_v2_perfect_practice_reward.sql', 'utf8'),
     readFile('supabase/migrations/20261109_vocab_tower_v2_item_learning.sql', 'utf8'),
-    readFile('supabase/migrations/20261117_guard_student_post_server_columns.sql', 'utf8')
+    readFile('supabase/migrations/20261117_guard_student_post_server_columns.sql', 'utf8'),
+    readFile('supabase/migrations/20261129_ai_spell_check_once_per_post.sql', 'utf8'),
+    readFile('supabase/migrations/20261131_spelling_ai_findings.sql', 'utf8'),
+    readFile('supabase/migrations/20261132_spelling_promotion_review.sql', 'utf8')
 ]);
 
-test('AI는 승인 교사를 확인하고 학생에게 댓글 판정만 허용한다', () => {
+test('AI는 승인 교사를 확인하고 학생에게는 댓글 판정·내 글 맞춤법만 허용한다', () => {
     assert.match(vibeAi, /profile\.is_approved === true/);
     assert.match(vibeAi, /profile\.approval_revoked_at == null/);
-    assert.match(vibeAi, /학생 계정은 댓글 안전 확인만 사용할 수 있습니다/);
+    // 학생이 쓸 수 있는 AI 는 이 둘뿐이다(2026-08-19에 맞춤법 검사를 더했다).
+    assert.match(vibeAi, /type !== 'SAFETY_CHECK' && type !== 'SPELL_CHECK'/);
+    assert.match(vibeAi, /학생 계정은 댓글 안전 확인과 맞춤법 검사만 사용할 수 있습니다/);
     assert.match(vibeAi, /typeof commentId !== 'string'/);
     assert.doesNotMatch(vibeAi, /commentId != null/);
+});
+
+test('학생 맞춤법 검사는 본문을 서버가 읽고 한 번만 쓰도록 선점한다', () => {
+    const fetchIndex = vibeAi.indexOf("fetch('https://api.openai.com");
+    // 본문은 클라이언트가 보내지 않는다 — 내 글인지 확인한 뒤 DB 에서 읽는다.
+    assert.match(vibeAi, /\.from\('student_posts'\)[\s\S]{0,200}\.eq\('student_id', studentId\)/);
+    // 사용 표시 선점과 분당 상한이 모두 AI 호출보다 먼저다.
+    assert.ok(vibeAi.indexOf(".is('spell_check_used_at', null)") < fetchIndex);
+    assert.ok(vibeAi.indexOf("p_scope: 'student_spell_check'") < fetchIndex);
+    // 쓰는 도중에는 못 쓴다 — 제출한 글, 아직 승인 전인 글만 검사한다.
+    // 반려하면 is_submitted 가 false 로 돌아가므로 is_returned 하나로 판정한다.
+    assert.match(vibeAi, /if \(!post\.is_returned\) \{/);
+    // 아무 글자나 적은 글에 "잘 썼어요"가 뜨지 않게 먼저 거르고, 그때는 기회를 쓰지 않는다.
+    assert.match(vibeAi, /function looksLikeGibberish/);
+    assert.ok(vibeAi.indexOf('looksLikeGibberish(body)') < vibeAi.indexOf("fetch('https://api.openai.com"));
+    assert.match(vibeAi, /notWriting: true/);
+    // 도중에 실패하면 한 번뿐인 기회를 돌려준다(AI 오류로 기회를 잃지 않게).
+    assert.match(vibeAi, /if \(spellCheckPostId\) \{[\s\S]{0,200}spell_check_used_at: null/);
+    // 찾아낸 표현은 학급·학생 이름 없이 누적한다(나중에 기본 자료를 늘리는 근거).
+    assert.match(vibeAi, /record_spelling_ai_findings_v1/);
+    assert.match(findingsMigration, /auth\.role\(\) <> 'service_role'/);
+    assert.match(findingsMigration, /char_length\(v_expression\) > 40/);
+    assert.doesNotMatch(findingsMigration, /student_id/);
+    // 승격 검토는 관리자만 본다(학생·교사 토큰으로는 후보도 결정도 못 한다).
+    assert.match(promotionMigration, /auth_user_role\(\) <> 'ADMIN'/);
+    assert.equal((promotionMigration.match(/auth_user_role\(\) <> 'ADMIN'/g) ?? []).length, 2);
+    assert.match(promotionMigration, /p_decision NOT IN \('accepted', 'rejected'\)/);
+    assert.match(vibeAi, /if \(post\.is_confirmed\) throw new HttpError/);
+    // 서버 소유 열이라 학생이 직접 지울 수 없어야 한다.
+    assert.match(spellCheckMigration, /NEW\.spell_check_used_at := OLD\.spell_check_used_at/);
+    assert.match(spellCheckMigration, /NEW\.spell_check_result := OLD\.spell_check_result/);
 });
 
 test('AI 비용 호출 전 DB 속도 제한과 원자적 댓글 선점을 거친다', () => {

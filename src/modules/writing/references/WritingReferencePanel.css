@@ -512,3 +512,17 @@
         transition: none;
     }
 }
+
+/* 2026-08-19: 참고함 안에서 성격이 다른 갈래(자료 / 맞춤법)를 나눈다. */
+.writing-reference-tabs { display: flex; gap: 6px; padding: 10px 14px 0; }
+.writing-reference-tabs button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 38px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 11px; background: #f8fafc; color: #64748b; font-size: .8rem; font-weight: 800; cursor: pointer; }
+.writing-reference-tabs button.is-active { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
+
+/* 갈래 진입점 — 참고함이 닫혀 있어도 눈에 띄게 바로 아래에 둔다(2026-08-20). */
+.writing-reference-cta { display: flex; align-items: center; gap: 12px; width: 100%; margin: 8px 0 0; padding: 12px 16px; border: 1px solid #bfdbfe; border-radius: 14px; background: #eff6ff; color: #1e3a8a; text-align: left; cursor: pointer; }
+.writing-reference-cta:hover { background: #dbeafe; }
+.writing-reference-cta__icon { font-size: 1.15rem; }
+.writing-reference-cta__text { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.writing-reference-cta__text strong { font-size: .9rem; font-weight: 900; }
+.writing-reference-cta__text small { color: #475569; font-size: .76rem; }
+.writing-reference-cta__go { color: #2563eb; font-size: .8rem; font-weight: 900; white-space: nowrap; }
