@@ -63,8 +63,9 @@
   옮겨 학생 화면이 보상·상태 값을 아예 보내지 않는다. 학생 쓰기는 전부 전용 RPC를 쓴다.
 - 2026-08-17에 임시 저장 성공 알림을 대화상자에서 화면 안 표시로 바꿨다(과제·독서록·일기). 태블릿에서
   `alert`은 키보드를 닫아 화면이 튀고, 반복되면 브라우저가 조용히 막는다. **실패 알림만 대화상자로 남긴다.**
-- 운영 `agit-db`는 마이그레이션 155개 적용·대기 0이고, 보고서 사진은 `agit-storage-data` named volume에
-  저장된다. DB와 Storage를 건드릴 때는 최신 운영 상태를 다시 조회한다.
+- 운영 `agit-db`의 마이그레이션 적용 상태는 **`npm run migrate:status`로 직접 확인한다**(맥미니에서만 된다 —
+  다른 기기에는 컨테이너가 없다). 여기에 개수를 적어 두지 않는다 — 하루에도 여러 번 늘어 곧 틀린 말이 된다.
+  보고서 사진은 `agit-storage-data` named volume에 저장된다. DB와 Storage를 건드릴 때는 최신 운영 상태를 다시 조회한다.
 - 러너 4개(`vibe_agit`·`writing-helper`·`classroom-tools`·`URL`) plist에 `KeepAlive`를 넣어 죽으면 스스로
   되살아난다(2026-08-17. 그전까지 3개가 조용히 죽어 있었다. GitHub 기본 템플릿에 KeepAlive가 없다).
   일부러 멈출 때는 `launchctl bootout`을 쓴다 — `stop`만으로는 다시 뜬다.
