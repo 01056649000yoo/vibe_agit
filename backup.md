@@ -5,14 +5,29 @@
 >
 > **비밀 값은 여기 쓰지 않는다.** 열쇠·비밀번호는 *어디에 있는지*만 적는다.
 
-**최종 설정 점검: 2026-08-11 — 아지트 Storage named volume 백업·복구 검사 추가** (DB 복구 리허설 최종 통과는 2026-07-30)
+**최종 설정 점검: 2026-08-21 — 일일 실패 감지·권한 강화·엄격 복구 리허설 적용 및 실백업 통과**
 
 ---
 
-## 1. 매월 점검 — 이것만 보면 된다
+## 1. 매일·매월 점검 — 이것만 보면 된다
+
+매일 백업은 성공·실패를 한 줄 상태 파일로 남긴다. 8개 필수 산출물, 내장 사본, 암호화 Drive,
+외장 SSD 중 하나라도 실패하면 `FAIL`과 종료코드 1을 남기고 화면 알림을 띄운다.
+
+```bash
+cat ~/backups/auto/backup-status.txt
+```
+
+| 나오는 값 | 뜻 | 할 일 |
+|---|---|---|
+| `PASS …` | 그날 3개 위치에 필수 파일 8개가 만들어짐 | 없음 |
+| `FAIL …` | 필수 파일 또는 사본 하나 이상 실패 | `~/backups/auto/sync.log`의 해당 실행 구간에서 `✗` 줄을 본다 |
+| `RUNNING …` | 현재 실행 중이거나 실행이 비정상 중단됨 | 10분 이상 그대로면 로그와 `launchctl list \| grep com.agit.backup` 확인 |
 
 매월 **1일 04:40**, `com.agit.restore-rehearsal` 이 DB 백업은 **임시 DB에 실제 복원**하고 아지트 Storage
-백업은 **임시 디렉터리에 실제로 풀어** 확인한 뒤 결과를 남긴다.
+백업은 **임시 디렉터리에 실제로 풀어** 확인한다. DB는 `pg_restore --exit-on-error`로 오류를 즉시 잡고,
+덤프 목차의 테이블·데이터 항목과 실제 복원 테이블 수, `anon/authenticated` 권한을 확인한다.
+암호화 Drive도 파일 8개의 크기가 로컬과 같은지 검사한 뒤 결과를 남긴다.
 실패하면 화면 알림도 뜬다.
 
 ```bash
@@ -129,8 +144,11 @@ psql -U supabase_admin -d 대상DB -c 'CREATE EXTENSION IF NOT EXISTS vector;'
 # 2) 롤 먼저 (권한을 얹을 대상이 있어야 한다)
 psql -U supabase_admin -d postgres -f 롤.sql
 
-# 3) 본 덤프
-pg_restore -U supabase_admin -d 대상DB --no-owner 아지트DB.dump
+# 3) 본 덤프 — 새 DB에 이미 있는 public 스키마 생성 항목 한 줄만 제외하고,
+#    나머지 오류는 하나라도 생기면 즉시 실패시킨다.
+pg_restore -l 아지트DB.dump | sed '/ SCHEMA - public /s/^/;/' > restore.list
+pg_restore -U supabase_admin -d 대상DB --no-owner --exit-on-error \
+  -L restore.list 아지트DB.dump
 
 # 3-1) 아지트 Storage 객체 파일 — 새 스택에서 storage/imgproxy를 올리기 전에 실행
 docker volume create agit-storage-data
@@ -145,7 +163,7 @@ docker run --rm --entrypoint sh \
 pg_restore -U supabase_admin -d 대상DB --no-owner --data-only 리얼타임설정.dump
 ```
 
-정상이면 오류는 `schema "public" already exists` **1건**만 난다(무해).
+위 목차 방식은 새 DB에 이미 있는 `public` 스키마 생성 항목만 제외하므로 정상 복원은 오류 없이 끝나야 한다.
 
 - 테이블·함수 소유자가 `supabase_admin` 이다. **`-U postgres` 로는 실패**한다.
 - `--no-privileges` 를 쓰지 않는다. 그러면 `anon`/`authenticated` 표 권한이 안 담겨,
@@ -185,9 +203,11 @@ pg_restore -U supabase_admin -d 대상DB --no-owner --data-only 리얼타임설�
 2. **launchd 는 로그인 셸 PATH 를 물려받지 않는다.** 명령은 절대 경로로 부른다.
 3. **`du -h` 로 백업 크기를 판단하지 마라.** 빈 파일도 블록 크기 `4.0K` 로 보인다.
 4. **백업이 있다 ≠ 복원된다.** 복원해 보기 전까지는 아무것도 증명되지 않았다.
-6. **TCC(전체 디스크 접근)로 뚫기 전에 우회로를 본다.** 쌤링크 백업이 Drive 데스크톱 앱 폴더
+5. **TCC(전체 디스크 접근)로 뚫기 전에 우회로를 본다.** 쌤링크 백업이 Drive 데스크톱 앱 폴더
    (`~/Library/CloudStorage/…`)에 `cp` 하다 launchd 에서 막혔다. `/bin/bash` 에 전체 디스크 접근
    권한을 주면 풀리지만 그 인터프리터로 도는 **모든** 스크립트가 디스크 전체를 읽게 된다.
    rclone 은 API 로 직접 올려 보호 폴더를 지나가지 않는다 → 권한 불필요 + 암호화가 덤으로 따라왔다.
-5. **살아 있는 표와 백업을 행 수로 비교하지 마라.** 백업 시각과 검사 시각 사이에 데이터는 움직인다.
-   리허설은 "운영과 똑같은가"가 아니라 "표가 빠지거나 비지 않았는가"로 판정한다.
+6. **살아 있는 표와 백업을 행 수로 비교하지 마라.** 백업 시각과 검사 시각 사이에 데이터는 움직인다.
+   리허설은 현재 운영 행 수가 아니라 `pg_restore` 성공, 덤프 목차와 복원 구조, 권한으로 판정한다.
+7. **단계별 로그만으로 전체 성공을 판정하지 마라.** 필수 산출물이나 사본 하나가 실패해도 마지막 명령이
+   성공하면 셸 스크립트 종료코드는 0이 될 수 있다. 공용 실패 플래그·상태 파일·종료코드를 함께 남긴다.
