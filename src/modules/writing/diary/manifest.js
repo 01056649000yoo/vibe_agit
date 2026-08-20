@@ -10,7 +10,7 @@
 export const diaryManifest = {
     id: 'diary',
     name: '나의 일기',
-    description: '오늘 있었던 일과 내 마음을 하루에 한 편 기록하기',
+    description: '기록할 날짜를 고르고 그날 있었던 일과 내 마음을 한 편씩 남기기',
     icon: '📔',
     part: 'writing',
     audience: 'student',

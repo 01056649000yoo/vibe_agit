@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
@@ -77,16 +77,25 @@ const diaryDraftHasContent = (candidate) => Boolean(
 
 const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) => {
     const studentClassId = studentSession?.classId || studentSession?.class_id || null;
+    const today = todayInKorea();
     const [form, setForm] = useState(EMPTY_FORM);
     const [initialForm, setInitialForm] = useState(EMPTY_FORM);
+    const [selectedDiaryDate, setSelectedDiaryDate] = useState(diaryDate || today);
+    const [initialDiaryDate, setInitialDiaryDate] = useState(diaryDate || today);
     const [loading, setLoading] = useState(Boolean(postId));
     const [saving, setSaving] = useState(false);
     const [locked, setLocked] = useState(false);
     const [writingPolicy, setWritingPolicy] = useState(DIARY_POLICY_DEFAULTS);
     const [policyLoading, setPolicyLoading] = useState(Boolean(studentClassId));
     const isMobile = useMediaQuery('(max-width: 768px)');
-    const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
+    const formRef = useRef(form);
+    const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm)
+        || selectedDiaryDate !== initialDiaryDate;
     const writingMetrics = useMemo(() => measureWritingContent(form.content), [form.content]);
+
+    useEffect(() => {
+        formRef.current = form;
+    }, [form]);
 
     useEffect(() => {
         if (!studentClassId) return undefined;
@@ -141,28 +150,33 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
                 content: data.content || '',
                 visibility: data.visibility === 'class' ? 'class' : 'private'
             };
+            const loadedDiaryDate = data.structured_content?.diaryDate || diaryDate || today;
             setForm(loadedForm);
             setInitialForm(loadedForm);
+            setSelectedDiaryDate(loadedDiaryDate);
+            setInitialDiaryDate(loadedDiaryDate);
             setLocked(reviewResult.data?.review_status === 'checked');
             setLoading(false);
         };
         loadPost();
         return () => { active = false; };
-    }, [onCancel, postId, studentClassId, studentSession.id]);
+    }, [diaryDate, onCancel, postId, studentClassId, studentSession.id, today]);
 
     const [serverDraftAt, setServerDraftAt] = useState(null);
     const [savingDraft, setSavingDraft] = useState(false);
 
     // 초안은 날짜별로 나눈다. 그러지 않으면 어제 쓰다 만 내용이 오늘 일기에 되살아난다.
-    const draftKey = buildDraftKey('diary_draft', studentSession?.id, postId || diaryDate);
+    const draftKey = buildDraftKey('diary_draft', studentSession?.id, postId || selectedDiaryDate);
     const draftHasContent = useCallback((candidate) => diaryDraftHasContent(candidate), []);
     const restoreDraft = useCallback((stored) => {
-        setForm((current) => ({ ...current, ...stored }));
+        // 날짜만 바꿀 때 다른 날짜의 임시본이 지금 쓰던 내용을 덮지 않게 한다.
+        setForm((current) => diaryDraftHasContent(current) ? current : ({ ...current, ...stored }));
     }, []);
     const {
         savedAt: draftSavedAt,
         error: draftError,
-        clear: clearLocalDraft
+        clear: clearLocalDraft,
+        saveNow: saveLocalDraftNow
     } = useLocalWritingDraft(
         draftKey,
         form,
@@ -174,12 +188,12 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
      * 그러지 않으면 방금 이 기기에서 쓴 내용이 옛 임시본에 지워진다(독서록과 같은 규칙).
      */
     useEffect(() => {
-        if (loading || locked || !studentSession?.id) return undefined;
+        if (loading || locked || !studentSession?.id || diaryDraftHasContent(formRef.current)) return undefined;
         let active = true;
         const load = async () => {
             const { data, error } = await supabase.rpc('get_my_self_writing_draft', {
                 p_writing_type: 'diary',
-                p_source_key: diaryDate
+                p_source_key: selectedDiaryDate
             });
             if (!active || error || !data) {
                 if (error) console.error('일기 서버 임시본 불러오기 실패:', error.message);
@@ -201,7 +215,20 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
         load();
         return () => { active = false; };
         // 처음 열릴 때 한 번만 가져온다. 이후에는 이 기기의 내용이 기준이다.
-    }, [diaryDate, draftKey, loading, locked, studentSession?.id]);
+    }, [draftKey, loading, locked, selectedDiaryDate, studentSession?.id]);
+
+    const handleDiaryDateChange = (event) => {
+        const nextDate = event.target.value;
+        if (!nextDate || nextDate === selectedDiaryDate) return;
+        if (nextDate > today) {
+            alert('아직 오지 않은 날의 일기는 쓸 수 없어요.');
+            return;
+        }
+        // 날짜를 바꾸기 직전 내용은 원래 날짜 임시본에도 남겨 실수로 잃지 않게 한다.
+        if (diaryDraftHasContent(form)) saveLocalDraftNow();
+        setSelectedDiaryDate(nextDate);
+        setServerDraftAt(null);
+    };
 
     const handleSaveDraft = async () => {
         if (locked) {
@@ -215,7 +242,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
         setSavingDraft(true);
         const { data, error } = await supabase.rpc('upsert_my_self_writing_draft', {
             p_writing_type: 'diary',
-            p_source_key: diaryDate,
+            p_source_key: selectedDiaryDate,
             p_post_id: postId || null,
             p_title: form.title,
             p_content: form.content,
@@ -261,7 +288,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
         setSaving(true);
         const { data, error } = await supabase.rpc('upsert_my_diary', {
             p_post_id: postId || null,
-            p_diary_date: diaryDate,
+            p_diary_date: selectedDiaryDate,
             p_title: form.title,
             p_content: form.content,
             p_visibility: form.visibility
@@ -270,7 +297,9 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
 
         if (error || !data?.success) {
             console.error('일기 저장 실패:', error?.message || data?.error);
-            alert(error?.message || '일기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+            alert(error?.code === '23505'
+                ? '선택한 날짜에는 이미 일기가 있어요. 그 일기를 목록에서 열어 주세요.'
+                : (error?.message || '일기를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.'));
             return;
         }
 
@@ -278,7 +307,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
         // 남기면 다음에 들어올 때 저장된 글 위로 옛 임시본이 되살아난다.
         const { error: draftError } = await supabase.rpc('delete_my_self_writing_draft', {
             p_writing_type: 'diary',
-            p_source_key: diaryDate
+            p_source_key: selectedDiaryDate
         });
         if (draftError) console.error('일기 서버 임시본 정리 실패:', draftError.message);
         setServerDraftAt(null);
@@ -301,23 +330,34 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
                 onBack={handleCancel}
                 disabled={saving}
                 eyebrow="📔 나의 일기"
-                title={locked ? '확인 완료 일기' : postId ? '일기 다듬기' : '오늘의 일기 쓰기'}
+                title={locked ? '확인 완료 일기' : postId ? '일기 다듬기' : '나의 일기 쓰기'}
                 description={locked
                     ? '선생님 확인이 끝난 기록이라 내용이 그대로 보관돼요.'
-                    : '오늘 있었던 일과 그때 든 마음을 나만의 말로 남겨요.'}
+                    : '기록할 날짜를 고르고 그날 있었던 일과 마음을 나만의 말로 남겨요.'}
             />
-            <WritingWorkspacePath steps={['날짜 확인', '오늘 쓰기', '완료·공개']} />
+            <WritingWorkspacePath steps={['날짜 고르기', '이야기 쓰기', '완료·공개']} />
 
-            <div className="diary-date-badge" aria-label={`${formatDiaryDate(diaryDate)} 일기`}>
+            <label className="diary-date-picker">
                 <span aria-hidden="true">🗓️</span>
-                <strong>{formatDiaryDate(diaryDate)}</strong>
-            </div>
+                <span className="diary-date-picker__text">
+                    <strong>일기 날짜</strong>
+                    <small>{locked ? formatDiaryDate(selectedDiaryDate) : '오늘 날짜가 기본이에요. 지나간 날짜로 바꿀 수 있어요.'}</small>
+                </span>
+                <input
+                    type="date"
+                    value={selectedDiaryDate}
+                    max={today}
+                    onChange={handleDiaryDateChange}
+                    disabled={saving || locked}
+                    aria-label="일기 날짜 선택"
+                />
+            </label>
 
             <section className="writing-editor-surface">
                 <WritingSectionHeader
                     icon="💭"
-                    title="오늘의 이야기"
-                    description="무슨 일이 있었는지, 그때 어떤 마음이었는지 자유롭게 적어봐요."
+                    title={selectedDiaryDate === today ? '오늘의 이야기' : '그날의 이야기'}
+                    description="그날 무슨 일이 있었는지, 어떤 마음이었는지 자유롭게 적어봐요."
                 />
                 <WritingToolHost disabled={saving || locked} />
                 <WritingEditorFields
@@ -325,8 +365,8 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
                     onTitleChange={(value) => setForm((current) => ({ ...current, title: value }))}
                     content={form.content}
                     onContentChange={(value) => setForm((current) => ({ ...current, content: value }))}
-                    titlePlaceholder="오늘 일기의 제목을 적어주세요..."
-                    contentPlaceholder={'오늘 있었던 일, 기억에 남는 장면, 그때 든 마음을 자유롭게 적어보세요...'}
+                    titlePlaceholder="일기의 제목을 적어주세요..."
+                    contentPlaceholder={'그날 있었던 일, 기억에 남는 장면, 그때 든 마음을 자유롭게 적어보세요...'}
                     disabled={saving || locked}
                     isMobile={isMobile}
                 />
@@ -553,7 +593,7 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                 <div>
                     <StudentBackButton onClick={onBack} />
                     <h1>📔 나의 일기</h1>
-                    <p>하루에 한 편, 오늘의 나를 남겨요.</p>
+                    <p>날짜마다 한 편, 그날의 나를 남겨요.</p>
                 </div>
             </header>
 

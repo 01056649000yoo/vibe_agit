@@ -12,6 +12,7 @@ const lookupManifest = await readFile('src/modules/writing/tools/spelling-lookup
 const underlineTextarea = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea.jsx', 'utf8');
 const underlineInput = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineInput.jsx', 'utf8');
 const teacherEntry = await readFile('src/modules/writing/spelling-learning/TeacherEntry.jsx', 'utf8');
+const teacherGuides = await readFile('src/constants/teacherGuides.js', 'utf8');
 const { classifySpellingSearchQuery } = await import(
     '../src/modules/writing/spelling-learning/searchCandidate.js'
 );
@@ -309,4 +310,13 @@ test('교사 화면은 반복된 미등록 표현만 추천하고 나머지는 �
     assert.match(teacherEntry, /기존 자료로 해결/);
     assert.match(teacherEntry, /문장 검색 제외/);
     assert.doesNotMatch(teacherEntry, /workspace\.top_searches/);
+});
+
+test('맞춤법 배움 데이터 도움말은 최신 후보 선별과 개인정보 보호 기준을 설명한다', () => {
+    assert.match(teacherGuides, /최근 30일의 추천 후보/);
+    assert.match(teacherGuides, /학생 2명 이상.*3회 이상/);
+    assert.match(teacherGuides, /2~15자의 한글 표현, 최대 2어절/);
+    assert.match(teacherGuides, /문장을 통째로 검색해도 그 문장은 저장하거나 교사에게 보여 주지 않습니다/);
+    assert.match(teacherGuides, /학생이 수첩을 닫을 때 한 번에 반영/);
+    assert.match(teacherGuides, /최대 30개/);
 });

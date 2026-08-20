@@ -74,7 +74,7 @@
 /* 행동 버튼은 카드 아래에 붙여 카드 높이가 달라도 나란히 보이게 한다. */
 .diary-card__actions { display: flex; margin-top: auto; padding-top: 8px; gap: 6px; }
 
-.diary-date-badge {
+.diary-date-picker {
     display: flex;
     align-items: center;
     padding: 10px 14px;
@@ -83,7 +83,31 @@
     background: #EEF2FF;
     color: #3730A3;
     gap: 8px;
-    font-weight: 900;
+}
+.diary-date-picker > span:first-child { font-size: 1.25rem; }
+.diary-date-picker__text {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+}
+.diary-date-picker__text strong { color: #3730A3; font-size: .9rem; font-weight: 900; }
+.diary-date-picker__text small { color: #6366F1; font-size: .74rem; }
+.diary-date-picker input {
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 1px solid #A5B4FC;
+    border-radius: var(--ui-radius-sm, 10px);
+    background: var(--ui-surface, #FFFFFF);
+    color: var(--ui-ink-strong);
+    font: inherit;
+    font-weight: 800;
+}
+.diary-date-picker input:disabled {
+    border-color: #C7D2FE;
+    background: #E0E7FF;
+    color: #64748B;
 }
 
 .diary-visibility {
@@ -150,6 +174,9 @@
 
 @media (max-width: 520px) {
     .diary-grid { grid-template-columns: 1fr; }
+    .diary-date-picker { align-items: stretch; flex-wrap: wrap; }
+    .diary-date-picker__text { flex-basis: calc(100% - 36px); }
+    .diary-date-picker input { width: 100%; }
     .diary-visibility { align-items: stretch; flex-direction: column; }
     .diary-visibility__toggle { width: 100%; }
     .diary-editor-actions { flex-direction: column-reverse; }

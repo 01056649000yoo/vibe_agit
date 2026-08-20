@@ -26,6 +26,23 @@ test('확인 완료 독서록과 일기는 학생 수정·삭제를 서버와 �
     }
 });
 
+test('학생 일기는 오늘 날짜를 기본으로 두고 확인 전에는 과거 날짜로 바꿀 수 있다', async () => {
+    const [diaryPage, diaryMigration] = await Promise.all([
+        read('src/modules/writing/diary/DiaryPage.jsx'),
+        read('supabase/migrations/20261139_self_writing_teacher_approval_rewards.sql')
+    ]);
+
+    assert.match(diaryPage, /useState\(diaryDate \|\| today\)/);
+    assert.match(diaryPage, /type="date"/);
+    assert.match(diaryPage, /value=\{selectedDiaryDate\}/);
+    assert.match(diaryPage, /max=\{today\}/);
+    assert.match(diaryPage, /disabled=\{saving \|\| locked\}/);
+    assert.match(diaryPage, /p_diary_date: selectedDiaryDate/);
+    assert.match(diaryPage, /data\.structured_content\?\.diaryDate/);
+    assert.match(diaryPage, /error\?\.code === '23505'/);
+    assert.match(diaryMigration, /IF v_diary_date > v_today THEN/);
+});
+
 test('교사 독서록 전체 기록은 확인 완료된 학급 글을 RPC 한 번으로 내보낸다', async () => {
     const [migration, manager, exportHook] = await Promise.all([
         read('supabase/migrations/20261142_lock_checked_self_writing_and_export.sql'),
