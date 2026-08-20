@@ -4,6 +4,7 @@ import test from 'node:test';
 
 const migration = await readFile('supabase/migrations/20261017_spelling_learning_module.sql', 'utf8');
 const candidateMigration = await readFile('supabase/migrations/20261144_spelling_search_candidate_filtering.sql', 'utf8');
+const hardeningMigration = await readFile('supabase/migrations/20261145_spelling_search_legacy_hardening.sql', 'utf8');
 const manifest = await readFile('src/modules/writing/spelling-learning/manifest.js', 'utf8');
 const learningApi = await readFile('src/modules/writing/spelling-learning/api.js', 'utf8');
 const searchSession = await readFile('src/modules/writing/spelling-learning/searchSession.js', 'utf8');
@@ -297,6 +298,15 @@ test('문장과 사전 검색은 원문 없이 집계하고 짧은 후보만 서
     assert.match(candidateMigration, /char_length\(v_expression\) NOT BETWEEN 2 AND 15/);
     assert.match(candidateMigration, /array_length\(regexp_split_to_array\(v_expression/);
     assert.match(candidateMigration, /v_expression := NULL/);
+});
+
+test('구버전 검색 기록은 학생에게 닫고 누적·관리자 후보에 같은 안전 필터를 적용한다', () => {
+    assert.match(hardeningMigration, /REVOKE EXECUTE ON FUNCTION public\.record_spelling_search_batch_v1\(JSONB\) FROM authenticated/);
+    assert.match(hardeningMigration, /DELETE FROM public\.spelling_search_corpus_classes/);
+    assert.match(hardeningMigration, /DELETE FROM public\.spelling_search_corpus corpus/);
+    assert.match(hardeningMigration, /CREATE OR REPLACE FUNCTION public\.get_spelling_promotion_candidates_v1/);
+    assert.match(hardeningMigration, /char_length\(corpus\.expression\) BETWEEN 2 AND 15/);
+    assert.match(hardeningMigration, /corpus\.expression ~ '\^\[가-힣ㄱ-ㅎㅏ-ㅣ\]\+\( \[가-힣ㄱ-ㅎㅏ-ㅣ\]\+\)\?\$'/);
 });
 
 test('교사 화면은 반복된 미등록 표현만 추천하고 나머지는 숫자로 요약한다', () => {

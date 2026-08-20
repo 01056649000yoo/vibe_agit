@@ -14,7 +14,12 @@ import {
 import useMediaQuery from '../../../hooks/useMediaQuery';
 import { supabase } from '../../../lib/supabaseClient';
 import WritingToolHost from '../tools/WritingToolHost';
-import { buildDraftKey, readLocalDraft, useLocalWritingDraft } from '../drafts/localWritingDraft';
+import {
+    buildDraftKey,
+    readLocalDraft,
+    removeLocalDraft,
+    useLocalWritingDraft
+} from '../drafts/localWritingDraft';
 import WritingPolicyProgress from '../policy/WritingPolicyProgress';
 import {
     evaluateWritingPolicy,
@@ -89,6 +94,8 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
     const [policyLoading, setPolicyLoading] = useState(Boolean(studentClassId));
     const isMobile = useMediaQuery('(max-width: 768px)');
     const formRef = useRef(form);
+    // 날짜를 바꿔 가며 쓴 뒤 저장하면 이전 날짜 임시본이 다시 살아나지 않도록 모두 기억한다.
+    const previousDiaryDatesRef = useRef(new Set());
     const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm)
         || selectedDiaryDate !== initialDiaryDate;
     const writingMetrics = useMemo(() => measureWritingContent(form.content), [form.content]);
@@ -226,6 +233,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
         }
         // 날짜를 바꾸기 직전 내용은 원래 날짜 임시본에도 남겨 실수로 잃지 않게 한다.
         if (diaryDraftHasContent(form)) saveLocalDraftNow();
+        previousDiaryDatesRef.current.add(selectedDiaryDate);
         setSelectedDiaryDate(nextDate);
         setServerDraftAt(null);
     };
@@ -304,12 +312,23 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
         }
 
         clearLocalDraft();
-        // 남기면 다음에 들어올 때 저장된 글 위로 옛 임시본이 되살아난다.
-        const { error: draftError } = await supabase.rpc('delete_my_self_writing_draft', {
+        const draftDatesToClear = [...new Set([
+            selectedDiaryDate,
+            ...previousDiaryDatesRef.current
+        ])];
+        for (const draftDate of draftDatesToClear) {
+            removeLocalDraft(buildDraftKey(
+                'diary_draft', studentSession?.id, postId || draftDate
+            ));
+        }
+
+        // 날짜를 바꾸기 전 다른 기기에 저장했던 임시본도 RPC 한 번으로 함께 지운다.
+        const { error: draftCleanupError } = await supabase.rpc('delete_my_self_writing_drafts', {
             p_writing_type: 'diary',
-            p_source_key: selectedDiaryDate
+            p_source_keys: draftDatesToClear.slice(0, 50)
         });
-        if (draftError) console.error('일기 서버 임시본 정리 실패:', draftError.message);
+        if (draftCleanupError) console.error('일기 서버 임시본 정리 실패:', draftCleanupError.message);
+        previousDiaryDatesRef.current.clear();
         setServerDraftAt(null);
 
         const rewardMessage = '\n선생님이 확인하면 포인트가 지급돼요. 🪙';

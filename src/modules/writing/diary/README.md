@@ -4,6 +4,8 @@
 
 새 일기의 날짜는 한국 시간 기준 오늘이 기본값이지만 학생이 오늘을 포함한 지난 날짜로 바꿀 수 있다. 같은 날짜에는 한 편만
 저장하며 미래 날짜는 화면과 `upsert_my_diary` RPC 양쪽에서 막는다. 교사 확인 완료 뒤에는 날짜도 내용과 함께 잠근다.
+날짜를 바꿔 쓴 글을 완료하면 거쳐 간 날짜의 로컬·서버 임시본을 함께 정리한다. 서버 정리는
+`delete_my_self_writing_drafts` 한 번으로 묶어 날짜 수만큼 DB를 반복 호출하지 않는다.
 
 - 유형 등록: `manifest.js`와 `src/modules/writing/selfWritingTypes.js`. 친구 아지트 자율 글 필터는 매니페스트의
   `communityFeed` 선언으로 자동 등록한다.

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration, vocabPracticeMigration, vocabPerfectRewardMigration, vocabItemLearningMigration, postColumnGuardMigration, spellCheckMigration, findingsMigration, promotionMigration] = await Promise.all([
+const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigration, reportStorageMigration, reportUpsertMigration, reportImageApi, writingPdfMigration, googleDocImageExport, notificationMigration, reactionMigration, friendFeedMigration, pointHistoryMigration, labBridgeMigration, adminLabMigration, vocabReviewMigration, vocabPilotMigration, vocabPracticeMigration, vocabPerfectRewardMigration, vocabItemLearningMigration, postColumnGuardMigration, spellCheckMigration, findingsMigration, promotionMigration, spellingSearchHardeningMigration, draftBulkCleanupMigration] = await Promise.all([
     readFile('supabase/functions/vibe-ai/index.ts', 'utf8'),
     readFile('supabase/functions/send-feedback/index.ts', 'utf8'),
     readFile('src/components/student/StudentLogin.jsx', 'utf8'),
@@ -29,7 +29,9 @@ const [vibeAi, feedback, studentLogin, authStore, caddy, migration, reportMigrat
     readFile('supabase/migrations/20261117_guard_student_post_server_columns.sql', 'utf8'),
     readFile('supabase/migrations/20261129_ai_spell_check_once_per_post.sql', 'utf8'),
     readFile('supabase/migrations/20261131_spelling_ai_findings.sql', 'utf8'),
-    readFile('supabase/migrations/20261132_spelling_promotion_review.sql', 'utf8')
+    readFile('supabase/migrations/20261132_spelling_promotion_review.sql', 'utf8'),
+    readFile('supabase/migrations/20261145_spelling_search_legacy_hardening.sql', 'utf8'),
+    readFile('supabase/migrations/20261146_self_writing_draft_bulk_cleanup.sql', 'utf8')
 ]);
 
 test('AI는 승인 교사를 확인하고 학생에게는 댓글 판정·내 글 맞춤법만 허용한다', () => {
@@ -71,6 +73,15 @@ test('학생 맞춤법 검사는 본문을 서버가 읽고 한 번만 쓰도록
     // 서버 소유 열이라 학생이 직접 지울 수 없어야 한다.
     assert.match(spellCheckMigration, /NEW\.spell_check_used_at := OLD\.spell_check_used_at/);
     assert.match(spellCheckMigration, /NEW\.spell_check_result := OLD\.spell_check_result/);
+});
+
+test('맞춤법 구버전 기록과 일기 임시본 정리는 학생 권한 경계를 지킨다', () => {
+    assert.match(spellingSearchHardeningMigration, /REVOKE EXECUTE ON FUNCTION public\.record_spelling_search_batch_v1\(JSONB\) FROM authenticated/);
+    assert.match(spellingSearchHardeningMigration, /char_length\(corpus\.expression\) BETWEEN 2 AND 15/);
+    assert.match(draftBulkCleanupMigration, /public\.auth_user_role\(\) <> 'STUDENT'/);
+    assert.match(draftBulkCleanupMigration, /draft\.student_id = v_student_id/);
+    assert.match(draftBulkCleanupMigration, /array_length\(p_source_keys, 1\).*BETWEEN 1 AND 50/);
+    assert.match(draftBulkCleanupMigration, /REVOKE ALL ON FUNCTION public\.delete_my_self_writing_drafts\(TEXT, TEXT\[\]\) FROM PUBLIC, anon/);
 });
 
 test('AI 비용 호출 전 DB 속도 제한과 원자적 댓글 선점을 거친다', () => {

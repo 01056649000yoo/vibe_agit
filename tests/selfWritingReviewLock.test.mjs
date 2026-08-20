@@ -43,6 +43,23 @@ test('학생 일기는 오늘 날짜를 기본으로 두고 확인 전에는 과
     assert.match(diaryMigration, /IF v_diary_date > v_today THEN/);
 });
 
+test('일기 날짜를 바꿔 저장하면 이전 날짜의 로컬·서버 임시본도 함께 정리한다', async () => {
+    const [diaryPage, cleanupMigration] = await Promise.all([
+        read('src/modules/writing/diary/DiaryPage.jsx'),
+        read('supabase/migrations/20261146_self_writing_draft_bulk_cleanup.sql')
+    ]);
+
+    assert.match(diaryPage, /previousDiaryDatesRef\.current\.add\(selectedDiaryDate\)/);
+    assert.match(diaryPage, /draftDatesToClear = \[\.\.\.new Set/);
+    assert.match(diaryPage, /removeLocalDraft\(buildDraftKey/);
+    assert.match(diaryPage, /delete_my_self_writing_drafts/);
+    assert.match(diaryPage, /p_source_keys: draftDatesToClear\.slice\(0, 50\)/);
+    assert.match(diaryPage, /previousDiaryDatesRef\.current\.clear\(\)/);
+    assert.match(cleanupMigration, /draft\.student_id = v_student_id/);
+    assert.match(cleanupMigration, /array_length\(p_source_keys, 1\).*BETWEEN 1 AND 50/);
+    assert.match(cleanupMigration, /draft\.source_key = ANY\(p_source_keys\)/);
+});
+
 test('교사 독서록 전체 기록은 확인 완료된 학급 글을 RPC 한 번으로 내보낸다', async () => {
     const [migration, manager, exportHook] = await Promise.all([
         read('supabase/migrations/20261142_lock_checked_self_writing_and_export.sql'),
