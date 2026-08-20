@@ -14,11 +14,18 @@ import TeacherGuideButton from './TeacherGuideButton';
 import RubricSettings, { createDefaultEvaluationRubric } from '../../modules/writing/evaluation/RubricSettings';
 import MissionEvaluationEntry from '../../modules/writing/evaluation/MissionEvaluationEntry';
 import {
+    resolveActivityReportHistory,
+    serializeActivityReportHistory
+} from '../../modules/writing/evaluation/activityReportHistory';
+import {
     formatKoreanGradeBand,
     getCurriculumGradeBand,
     getRecommendedStandardCodesForMission,
     resolveKoreanStandards
 } from '../../modules/writing/evaluation/koreanAchievementStandards';
+
+const MISSION_LIST_LIMIT = 100;
+const GENERATION_HISTORY_LIMIT = 100;
 
 /**
  * 역할: 선생님 - 글쓰기 평가 덧붙임 문장 작성 및 내보내기 📊
@@ -70,7 +77,8 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
                 .select('id, title, genre, mission_type, input_template, tags, is_archived, evaluation_rubric')
                 .eq('class_id', activeClass.id)
                 // .or('is_archived.eq.false,is_archived.is.null') // 보관함 미션도 선택 가능하도록 필터 제거
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(MISSION_LIST_LIMIT);
 
             if (error) throw error;
             setMissions(data || []);
@@ -94,19 +102,12 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
         const fetchTeacherAndHistory = async () => {
             if (!activeClass?.id) return;
 
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error || !user) return;
 
-            const { data: teacherData } = await supabase
-                .from('teachers')
-                .select('id')
-                .eq('id', user.id)
-                .single();
-
-            if (teacherData) {
-                setTeacherId(teacherData.id);
-                await loadGenerationHistory(activeClass.id);
-            }
+            // 교사 기본키는 인증 사용자 ID와 같고, 담당 학급 권한은 RLS가 다시 확인한다.
+            setTeacherId(user.id);
+            await loadGenerationHistory(activeClass.id);
         };
         fetchTeacherAndHistory();
     }, [activeClass?.id]);
@@ -120,7 +121,8 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
             .eq('class_id', classId)
             .eq('record_type', 'ai_comment')
             .is('student_id', null)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(GENERATION_HISTORY_LIMIT);
 
         if (!error && data) {
             setGenerationHistory(data);
@@ -283,12 +285,12 @@ const ActivityReport = ({ activeClass, isMobile, promptTemplate }) => {
 
                 // [추가] 불러오기 예약된 이력이 있다면 덮어쓰기 (Ref 사용으로 재렌더링 방지)
                 if (pendingHistoryRef.current) {
-                    const parsedResults = parseHistoryContent(pendingHistoryRef.current.content);
-                    Object.keys(parsedResults).forEach(name => {
-                        const student = classStudents.find(s => s.name === name);
-                        if (student) {
-                            Reflect.set(savedResults, student.id, Reflect.get(parsedResults, name));
-                        }
+                    const resolvedResults = resolveActivityReportHistory(
+                        pendingHistoryRef.current.content,
+                        classStudents
+                    );
+                    resolvedResults.forEach((synthesis, studentId) => {
+                        Reflect.set(savedResults, studentId, synthesis);
                     });
 
                     // 불러온 이력을 로컬 스토리지에도 즉시 저장
@@ -455,9 +457,6 @@ ${activitiesInfo}`;
         if (!validateGenerationReadiness(studentData.student.id)) return;
         setIsGenerating(prev => ({ ...prev, [studentData.student.id]: true }));
         try {
-            await supabase.auth.getUser();
-            // [보안] gemini_api_key 조회 제거 — Edge Function이 서버에서 키를 관리하므로 클라이언트 불필요
-
             const prompt = getWritingAppendPrompt(studentData.posts);
             const review = await callAI({ prompt, type: 'AI_FEEDBACK' });
 
@@ -497,13 +496,13 @@ ${activitiesInfo}`;
         setBatchLoading(true);
         setBatchProgress({ current: 0, total: studentPosts.length });
 
-        // [수정] 최신 상태를 추적하기 위한 로컬 변수 (클로저 문제 해결)
-        let updatedPosts = [...studentPosts];
+        const updatedPosts = [...studentPosts];
+        const generatedThisRun = [];
+        const failedStudentIds = [];
+        let historySaveFailed = false;
+        let fatalError = null;
 
         try {
-            await supabase.auth.getUser();
-            // [보안] gemini_api_key 조회 제거 — Edge Function이 서버에서 키를 관리
-
             for (let i = 0; i < studentPosts.length; i++) {
                 const data = Reflect.get(studentPosts, i);
 
@@ -515,83 +514,78 @@ ${activitiesInfo}`;
                     const prompt = getWritingAppendPrompt(data.posts);
                     const review = await callAI({ prompt, type: 'AI_FEEDBACK' });
                     if (review) {
+                        const updatedStudent = { ...Reflect.get(updatedPosts, i), ai_synthesis: review };
                         setStudentPosts(prev => prev.map((s, idx) =>
                             idx === i ? { ...s, ai_synthesis: review } : s
                         ));
-                        // 로컬 변수 업데이트
-                        updatedPosts.splice(i, 1, { ...Reflect.get(updatedPosts, i), ai_synthesis: review });
+                        updatedPosts.splice(i, 1, updatedStudent);
+                        generatedThisRun.push(updatedStudent);
 
                         saveToPersistence(data.student.id, review);
+                    } else {
+                        failedStudentIds.push(data.student.id);
                     }
-                    // ✅ 진행 상태 업데이트 추가
-                    setBatchProgress(prev => ({ ...prev, current: i + 1 }));
-                    // ✅ AI API 과부하 방지를 위한 짧은 휴식 추가
-                    await new Promise(r => setTimeout(r, 800));
                 } catch (err) {
-                    console.error(`학생 ${data.student.name} 처리 중 오류:`, err);
+                    failedStudentIds.push(data.student.id);
+                    console.error('학생 평어 일괄 생성 중 한 건 실패:', err.message);
+                } finally {
+                    setBatchProgress(prev => ({ ...prev, current: i + 1 }));
+                }
+            }
+
+            if (generatedThisRun.length > 0) {
+                try {
+                    await saveGenerationHistory(generatedThisRun, { includeCombined: true });
+                } catch {
+                    historySaveFailed = true;
                 }
             }
         } catch (err) {
             console.error('일괄 처리 초기화 오류:', err);
-            alert('일괄 처리를 시작하는 도중 오류가 발생했습니다.');
+            fatalError = err;
         } finally {
             setBatchLoading(false);
+        }
 
-            // ✅ 최신 데이터를 인자로 전달하여 저장
-            setTimeout(async () => {
-                await saveGenerationHistory(updatedPosts);
-            }, 1000);
-
+        if (fatalError) {
+            alert('일괄 처리를 계속하지 못했습니다. 생성된 내용은 화면과 이 단말에 보존했습니다.');
+        } else if (failedStudentIds.length > 0 || historySaveFailed) {
+            const saveMessage = historySaveFailed ? ' 서버 이력 저장도 완료하지 못했습니다.' : '';
+            alert(`${generatedThisRun.length}명 작성 완료, ${failedStudentIds.length}명 실패했습니다.${saveMessage} 실패한 학생만 다시 시도해 주세요.`);
+        } else {
             alert(isRegen ? '덧붙임 문장 일괄 재작성이 완료되었습니다! ✨' : '덧붙임 문장 일괄 작성이 완료되었습니다! ✨');
         }
     };
 
-    // 저장된 텍스트에서 학생별 분석 결과 파싱
-    const parseHistoryContent = (content) => {
-        const results = Object.create(null);
-        const sections = content.split('\n\n---\n\n');
-        sections.forEach(section => {
-            const match = section.match(/^\[(.*?)\]\n([\s\S]*)$/);
-            if (match) {
-                const [_, name, synthesis] = match;
-                Reflect.set(results, name, synthesis);
-            }
-        });
-        return results;
-    };
-
     // 생성 이력 저장 (targets 인자가 있으면 해당 리스트만, 없으면 전체 studentPosts 중 생성된 것만 저장)
-    const saveGenerationHistory = async (targets = null) => {
-        if (!teacherId || selectedMissionIds.length === 0) return;
+    const saveGenerationHistory = async (
+        targets = null,
+        { includeCombined = !targets || targets.length > 1 } = {}
+    ) => {
+        if (!teacherId || selectedMissionIds.length === 0) {
+            throw new Error('생성 이력을 저장할 교사 또는 미션 정보가 없습니다.');
+        }
 
         try {
-            // ✅ 저장할 대상 결정 (전체 일괄 저장 또는 특정 학생 단일 저장)
             const currentResults = (targets || studentPosts).filter(s => s.ai_synthesis);
 
             if (currentResults.length === 0) {
-                console.log('저장할 분석 결과가 없습니다.');
-                return;
+                return false;
             }
 
-            // 1. 학급 전체 이력용 (일괄 저장 시에만 의미가 큼)
-            if (!targets || targets.length > 1) {
-                const combinedContent = currentResults
-                    .map(s => `[${s.student.name}]\n${s.ai_synthesis}`)
-                    .join('\n\n---\n\n');
-
-                await supabase
-                    .from('student_records')
-                    .insert({
-                        class_id: activeClass.id,
-                        teacher_id: teacherId,
-                        record_type: 'ai_comment',
-                        content: combinedContent,
-                        mission_ids: selectedMissionIds,
-                        activity_count: currentResults.length
-                    });
+            // 전체 이력과 학생 누적 기록을 한 INSERT 문으로 저장해 일부만 남는 상태를 막는다.
+            const records = [];
+            if (includeCombined) {
+                records.push({
+                    class_id: activeClass.id,
+                    teacher_id: teacherId,
+                    record_type: 'ai_comment',
+                    content: serializeActivityReportHistory(currentResults),
+                    mission_ids: selectedMissionIds,
+                    activity_count: currentResults.length
+                });
             }
 
-            // 2. ✅ 개별 학생별 기록 저장 (학생 명단 > 누적 기록에서 조회하기 위함)
             const individualRecords = currentResults.map(s => ({
                 student_id: s.student.id,
                 class_id: activeClass.id,
@@ -602,16 +596,17 @@ ${activitiesInfo}`;
                 activity_count: s.posts.length
             }));
 
-            const { error: indError } = await supabase
+            const { error } = await supabase
                 .from('student_records')
-                .insert(individualRecords);
+                .insert([...records, ...individualRecords]);
 
-            if (indError) throw indError;
+            if (error) throw error;
 
-            // 히스트로리 목록 갱신 (전체 이력 탭용)
-            await loadGenerationHistory(activeClass.id);
+            if (includeCombined) await loadGenerationHistory(activeClass.id);
+            return true;
         } catch (err) {
-            console.error('생성 이력 저장 실패:', err);
+            console.error('생성 이력 저장 실패:', err.message);
+            throw err;
         }
     };
 
@@ -800,12 +795,15 @@ ${activitiesInfo}`;
                                                     const targetMissionIds = record.mission_ids || [];
                                                     setSelectedMissionIds(targetMissionIds);
                                                     pendingHistoryRef.current = record;
-                                                    const parsedResults = parseHistoryContent(record.content);
+                                                    const resolvedResults = resolveActivityReportHistory(
+                                                        record.content,
+                                                        studentPosts.map((item) => item.student)
+                                                    );
                                                     setStudentPosts(prev => {
                                                         if (prev.length === 0) return prev;
                                                         return prev.map(s => ({
                                                             ...s,
-                                                            ai_synthesis: parsedResults[s.student.name] || s.ai_synthesis
+                                                            ai_synthesis: resolvedResults.get(s.student.id) || s.ai_synthesis
                                                         }));
                                                     });
                                                     alert(`${new Date(record.created_at).toLocaleString()}에 생성된 기록을 불러왔습니다.`);

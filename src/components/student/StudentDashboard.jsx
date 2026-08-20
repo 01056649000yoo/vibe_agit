@@ -250,6 +250,8 @@ const StudentDashboard = ({
                         dragonEnabled={isOn('dragon')}
                         petData={displayPetData}
                         dragonInfo={dragonInfo}
+                        marathonMedal={homeBootstrap?.reading_marathon?.latest_medal}
+                        marathonMedalCount={Number(homeBootstrap?.reading_marathon?.medal_count) || 0}
                         onOpenMyAgit={() => {
                             setMyAgitInitialPost(null);
                             setIsMyAgitOpen(true);
@@ -329,6 +331,7 @@ const StudentDashboard = ({
                             }}
                             studentSession={studentSession}
                             initialPost={myAgitInitialPost}
+                            closeOnInitialPostClose={Boolean(myAgitInitialPost)}
                             points={points}
                             enabledModules={enabledModules}
                             moduleRuntimeById={{

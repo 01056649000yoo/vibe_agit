@@ -8,6 +8,8 @@
     "prebuild": "node scripts/export-spelling-detection.mjs --check",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "npm run test:all",
+    "test:all": "node --test tests/*.test.mjs",
     "preview": "vite preview",
     "badges:optimize": "node scripts/optimize-title-badges.mjs",
     "spelling:check": "node scripts/check-spelling-rules.mjs",

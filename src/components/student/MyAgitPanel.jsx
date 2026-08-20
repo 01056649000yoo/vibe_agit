@@ -144,7 +144,7 @@ const ShelfBook = ({ post, section, onOpen }) => {
 
 const MyAgitPanel = ({
     isOpen, onClose, studentSession, points = 0,
-    enabledModules = [],
+    enabledModules = [], closeOnInitialPostClose = false,
     moduleRuntimeById = {}, onOpenModule, initialPost = null
 }) => {
     const { contents: masteryContents, loading: masteryLoading } = useLearningMastery({
@@ -267,7 +267,9 @@ const MyAgitPanel = ({
         return () => window.clearTimeout(timerId);
     }, [isOpen, load]);
 
-    // 화면을 덮는 판이라 뒤로가기로 닫히게 한다.
+    // 화면을 덮는 판이라 뒤로가기로 닫히게 한다. 다만 활동 알림에서 특정 글로
+    // 바로 들어온 경우에는 `아지트 → 글` 두 겹으로 느껴지지 않도록 아지트 기록을
+    // 따로 쌓지 않는다. 글 상세 기록 하나만 빠지면 곧바로 학생 홈으로 돌아간다.
     // onClose 는 부모에서 인라인 화살표로 넘어와 **매 렌더 새 함수**다.
     // 이걸 의존성에 두면 부모가 리렌더될 때마다 effect 가 다시 돌아 pushState 가 쌓이고,
     // 뒤로가기를 여러 번 눌러야 닫히게 된다. ref 에 담아 두고 isOpen 에만 반응시킨다.
@@ -276,20 +278,23 @@ const MyAgitPanel = ({
 
     useEffect(() => {
         if (!isOpen) return undefined;
-        window.history.pushState({ studentPage: 'main', overlay: 'my-agit' }, '');
+        if (!closeOnInitialPostClose) {
+            window.history.pushState({ studentPage: 'main', overlay: 'my-agit' }, '');
+        }
         const closeOnBack = () => {
             if (selectedSummaryRef.current) {
                 selectedSummaryRef.current = null;
                 setSelectedSummary(null);
                 setSelectedPost(null);
                 setDetailError('');
+                if (closeOnInitialPostClose) onCloseRef.current?.();
                 return;
             }
             onCloseRef.current?.();
         };
         window.addEventListener('popstate', closeOnBack);
         return () => window.removeEventListener('popstate', closeOnBack);
-    }, [isOpen]);
+    }, [closeOnInitialPostClose, isOpen]);
 
     useEffect(() => {
         if (!isOpen || !initialPost?.id || initialPostOpenedRef.current === initialPost.id) return undefined;
@@ -492,6 +497,7 @@ const MyAgitPanel = ({
                             post={selectedPost}
                             loading={detailLoading}
                             errorMessage={detailError}
+                            returnsToHome={closeOnInitialPostClose}
                             onClose={() => window.history.back()}
                             onRetry={() => openShelfPost(selectedSummary, true)}
                         />

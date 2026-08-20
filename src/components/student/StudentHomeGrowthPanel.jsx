@@ -35,6 +35,8 @@ const StudentHomeGrowthPanel = ({
     dragonEnabled,
     petData,
     dragonInfo,
+    marathonMedal,
+    marathonMedalCount,
     onOpenMyAgit,
     onOpenDragon,
     onOpenPoints
@@ -43,7 +45,22 @@ const StudentHomeGrowthPanel = ({
         <section className={`student-home-growth ${dragonEnabled ? 'has-dragon' : ''}`} aria-label="나의 성장 상태">
             <div className="student-home-growth__main">
                 <p className="student-home-growth__eyebrow">오늘도 한 걸음씩 자라는 중</p>
-                <h1>안녕, <strong>{studentSession?.name || '작가'}</strong>!</h1>
+                <div className="student-home-growth__greeting">
+                    <h1>안녕, <strong>{studentSession?.name || '작가'}</strong>!</h1>
+                    {marathonMedal && (
+                        <button
+                            type="button"
+                            className={`student-home-marathon-medal is-${marathonMedal.medal_kind === 'team' ? 'team' : 'individual'}`}
+                            onClick={onOpenMyAgit}
+                            aria-label={`독서마라톤 ${marathonMedal.medal_kind === 'team' ? '단체전' : '개인전'} 완주 메달 ${marathonMedalCount}개. 나의 아지트에서 보기`}
+                            title={`${marathonMedal.campaign_title} 완주 메달`}
+                        >
+                            <span aria-hidden="true">{marathonMedal.medal_kind === 'team' ? '🤝' : '🏃'}</span>
+                            <strong>완주 메달</strong>
+                            {marathonMedalCount > 1 && <em>+{marathonMedalCount - 1}</em>}
+                        </button>
+                    )}
+                </div>
                 <p className="student-home-growth__message">할 일을 살펴보고 오늘의 글쓰기를 시작해 볼까요?</p>
 
                 <div className="student-home-growth__status-grid">

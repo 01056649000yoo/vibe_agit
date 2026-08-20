@@ -11,7 +11,7 @@ const formatDate = (value) => {
 const visibilityLabel = (value) => (value === 'class' ? '친구 공개' : '친구 비공개');
 
 const reviewLabel = (value) => {
-    if (value === 'commented') return '선생님 한마디 있음';
+    if (value === 'commented') return '확인 완료';
     if (value === 'checked') return '확인 완료';
     return '미확인';
 };

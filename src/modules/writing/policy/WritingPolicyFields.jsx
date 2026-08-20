@@ -45,11 +45,11 @@ const WritingPolicyFields = ({ value, onChange, showDailyLimit = false, showBonu
             </div>
 
             <div className="writing-policy-fields__group">
-                <h4>🪙 완료 보상</h4>
+                <h4>🪙 포인트 보상</h4>
                 <div className="writing-policy-fields__grid">
                     <NumberField label="기본 포인트" value={fieldValue('base_reward')} max={10000} step={10} onChange={(next) => update('base_reward', next)} suffix="P" />
                     {showDailyLimit && (
-                        <NumberField label="하루 작성 완료" value={fieldValue('daily_reward_limit')} min={1} max={20} onChange={(next) => update('daily_reward_limit', next)} suffix="편" />
+                        <NumberField label="하루 확인 보상" value={fieldValue('daily_reward_limit')} min={1} max={20} onChange={(next) => update('daily_reward_limit', next)} suffix="편" />
                     )}
                 </div>
             </div>

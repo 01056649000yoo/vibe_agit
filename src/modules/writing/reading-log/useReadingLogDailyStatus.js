@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/supabaseClient';
 const EMPTY_STATUS = Object.freeze({
     dailyLimit: 1,
     completedToday: 0,
+    rewardedToday: 0,
     remainingToday: 1,
     canComplete: true
 });
@@ -18,6 +19,7 @@ const normalizeStatus = (data) => {
     return {
         dailyLimit,
         completedToday,
+        rewardedToday: Math.max(0, Number(data?.rewarded_today) || 0),
         remainingToday,
         canComplete: data?.can_complete ?? remainingToday > 0
     };

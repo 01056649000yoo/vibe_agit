@@ -464,6 +464,18 @@ export const useDataExport = (classId) => {
         return Array.isArray(data) ? data : [];
     }, [classId]);
 
+    /** 학급 전체의 확인 완료 독서록을 학생별 N+1 없이 한 번에 받는다. */
+    const fetchCheckedReadingLogClassExportData = useCallback(async (limit = 1000) => {
+        if (!classId) throw new Error('내보낼 학급을 확인할 수 없습니다.');
+
+        const { data, error } = await supabase.rpc('get_teacher_checked_reading_log_export_v1', {
+            p_class_id: classId,
+            p_limit: limit
+        });
+        if (error) throw error;
+        return Array.isArray(data) ? data : [];
+    }, [classId]);
+
     const exportWritingContentToGoogleDoc = useCallback(async (
         data,
         title,
@@ -622,6 +634,7 @@ export const useDataExport = (classId) => {
     return {
         fetchExportData,
         fetchWritingContentExportData,
+        fetchCheckedReadingLogClassExportData,
         exportToExcel,
         exportToPdf: exportPdf,
         exportToGoogleDoc,

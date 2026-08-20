@@ -18,6 +18,7 @@ import './engagement.css';
 const STATUS_TONE = new Map(Object.entries({
     approved: 'is-approved',
     reviewed: 'is-approved',
+    revision_requested: 'is-returned',
     returned: 'is-returned',
     submitted: 'is-submitted',
     draft: 'is-draft'
@@ -26,6 +27,7 @@ const STATUS_TONE = new Map(Object.entries({
 const STATUS_ICON = new Map(Object.entries({
     approved: '✅',
     reviewed: '✅',
+    revision_requested: '✏️',
     returned: '↩️',
     submitted: '📮',
     draft: '✍️'

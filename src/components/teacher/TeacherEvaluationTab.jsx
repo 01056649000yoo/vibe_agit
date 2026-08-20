@@ -9,6 +9,8 @@ import {
     resolveKoreanStandards
 } from '../../modules/writing/evaluation/koreanAchievementStandards';
 
+const EVALUATION_MISSION_LIMIT = 100;
+
 const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
     const [missions, setMissions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -22,7 +24,8 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
                 .from('writing_missions')
                 .select('id, genre, created_at, title, evaluation_rubric')
                 .eq('class_id', activeClass.id)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(EVALUATION_MISSION_LIMIT);
 
             if (error) throw error;
             // 루브릭을 사용하는 미션만 필터링하거나, 전체를 보여줌

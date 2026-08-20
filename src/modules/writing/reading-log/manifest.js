@@ -11,6 +11,29 @@ const readingLogOperationCard = {
     navigate: { tab: 'reading-logs', kind: 'reading-review', includeFirstItem: true }
 };
 
+const readingLogNotifications = Object.freeze([
+    {
+        eventType: 'reading-log.review_completed',
+        icon: '✅',
+        tone: 'positive',
+        title: '독서록을 확인했어요',
+        message: (payload) => `선생님이 ‘${payload.post_title || '내 독서록'}’을 확인했어요.${payload.marathon_applied ? ' 독서마라톤에도 반영됐어요.' : ''}`,
+        action: 'post',
+        actionLabel: '내 독서록 확인하기'
+    },
+    {
+        eventType: 'reading-log.revision_requested',
+        icon: '✏️',
+        tone: 'rewrite',
+        title: '독서록을 조금 더 살펴봐 주세요',
+        message: (payload) => payload.has_comment
+            ? `선생님이 ‘${payload.post_title || '내 독서록'}’에 보완할 내용을 남겼어요.`
+            : `선생님이 ‘${payload.post_title || '내 독서록'}’의 보완을 요청했어요.`,
+        action: 'post',
+        actionLabel: '선생님 의견 보기'
+    }
+]);
+
 export const readingLogManifest = {
     id: 'reading-log',
     name: '나의 독서록',
@@ -42,6 +65,9 @@ export const readingLogManifest = {
             daily_reward_limit: 1
         }
     },
+    notifications: readingLogNotifications,
+    myAgitEntry: () => import('./marathon/ReadingMarathonMedalCase'),
+    myAgit: { order: 25 },
     studentEntry: () => import('./ReadingLogPage'),
     teacherEntry: () => import('./teacher/TeacherReadingLogManager'),
     dashboardCards: {

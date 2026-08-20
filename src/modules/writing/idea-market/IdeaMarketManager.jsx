@@ -31,6 +31,7 @@ const createMeetingForm = (meeting = null) => ({
 });
 
 const MEETING_SELECT_FIELDS = 'id, title, guide, guide_questions, created_at, is_archived, mission_type, input_template, template_config, base_reward, bonus_reward, min_chars, min_paragraphs, bonus_threshold, allow_comments, tags, evaluation_rubric';
+const INITIAL_LIST_LIMIT = 100;
 
 /**
  * 🏛️ 학급 회의 안건 관리자 (교사용)
@@ -64,7 +65,8 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                 .eq('class_id', activeClass.id)
                 .eq('is_archived', false)
                 .eq('mission_type', 'meeting')
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(INITIAL_LIST_LIMIT);
 
             if (error) throw error;
             setMeetings(data || []);
@@ -95,7 +97,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                 .eq('is_submitted', true)
                 .is('students.deleted_at', null)
                 .order('created_at', { ascending: false })
-                .limit(200);
+                .limit(INITIAL_LIST_LIMIT);
 
             if (error) throw error;
             setIdeas(data || []);

@@ -38,6 +38,28 @@ export const diaryManifest = {
             daily_reward_limit: 1
         }
     },
+    notifications: [
+        {
+            eventType: 'diary.review_completed',
+            icon: '✅',
+            tone: 'positive',
+            title: '일기를 확인했어요',
+            message: (payload) => `선생님이 ‘${payload.post_title || '내 일기'}’를 확인했어요.`,
+            action: 'post',
+            actionLabel: '내 일기 확인하기'
+        },
+        {
+            eventType: 'diary.revision_requested',
+            icon: '✏️',
+            tone: 'rewrite',
+            title: '일기를 조금 더 살펴봐 주세요',
+            message: (payload) => payload.has_comment
+                ? `선생님이 ‘${payload.post_title || '내 일기'}’에 보완할 내용을 남겼어요.`
+                : `선생님이 ‘${payload.post_title || '내 일기'}’의 보완을 요청했어요.`,
+            action: 'post',
+            actionLabel: '선생님 의견 보기'
+        }
+    ],
     studentEntry: () => import('./DiaryPage'),
     teacherEntry: () => import('./teacher/TeacherDiaryManager')
 };

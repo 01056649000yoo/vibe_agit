@@ -318,8 +318,8 @@ test('학생 도움말은 포인트·익힘 규칙을 쉬운 말로 알려준다
     assert.match(towerGuide, /한 판을 다 맞혀야 주는 게 아니에요/);
     assert.match(towerGuide, /서로 다른 두 가지 문제를 연달아 맞혀야 익힘이에요/);
     assert.match(towerGuide, /직접 쓰다가 틀려도 점수가 깎이지 않아요/);
-    assert.match(towerGuide, /서너 문제 뒤에 다시 나와요/);
-    assert.match(towerGuide, /별은 포인트와는 상관없는 기록이에요/);
+    assert.match(towerGuide, /서너 문제 뒤에[^.]*다시 나와요/);
+    assert.match(towerGuide, /별은 포인트와 상관없는 기록이에요/);
     // 공용 정보 아이콘·모달을 쓰고 별도 아이콘을 만들지 않는다.
     assert.match(studentModuleGuide, /GuideInfoButton/);
     assert.match(studentModuleGuide, /ModalPortal/);
@@ -334,7 +334,7 @@ test('학생은 놀이터 카드에서 바로 어휘의 탑 도움말을 연다'
     // 카드 전체가 버튼이므로 안내 버튼을 그 안에 넣으면 안 된다.
     assert.match(agitPlayground, /agit-playground-card-shell/);
     assert.doesNotMatch(agitPlayground, /className="agit-playground-card"[\s\S]{0,400}StudentModuleGuide[\s\S]{0,80}<\/button>/);
-    assert.match(agitPlaygroundStyles, /\.agit-playground-card__guide \{ justify-self: end; \}/);
+    assert.match(agitPlaygroundStyles, /\.agit-playground-card-shell \.agit-playground-card__guide\s*\{[\s\S]*?position: absolute;[\s\S]*?right: 9px;/);
 });
 
 test('게임 실행 화면 안에는 안내 창을 띄우지 않는다', () => {

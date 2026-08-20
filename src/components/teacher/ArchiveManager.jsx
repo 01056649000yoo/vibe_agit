@@ -11,6 +11,7 @@ import TeacherGuideButton from './TeacherGuideButton';
 import { getPdfRenderModes } from '../../modules/writing/mission-types/registry';
 
 const ARCHIVE_PAGE_SIZE = 50;
+const MISSION_POST_LIMIT = 100;
 
 /**
  * 역할: 선생님 - 보관된 미션 관리 및 글 모아보기 📂
@@ -223,12 +224,12 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
         try {
             const { data: postRows, error } = await supabase
                 .from('student_posts')
-                .select('*')
+                .select('id, student_id, title, content, created_at')
                 .eq('class_id', activeClass.id)
                 .eq('mission_id', mission.id)
                 .eq('is_submitted', true)
                 .order('created_at', { ascending: true })
-                .limit(500);
+                .limit(MISSION_POST_LIMIT);
 
             if (error) throw error;
 
@@ -240,7 +241,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                     .select('id, name')
                     .eq('class_id', activeClass.id)
                     .in('id', studentIds)
-                    .limit(500);
+                    .limit(MISSION_POST_LIMIT);
                 if (studentError) throw studentError;
                 namesById = new Map((studentRows || []).map((student) => [student.id, student.name]));
             }

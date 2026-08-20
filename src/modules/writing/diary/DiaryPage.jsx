@@ -75,12 +75,13 @@ const diaryDraftHasContent = (candidate) => Boolean(
     candidate?.title?.trim() || candidate?.content?.trim()
 );
 
-const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, onCancel }) => {
+const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) => {
     const studentClassId = studentSession?.classId || studentSession?.class_id || null;
     const [form, setForm] = useState(EMPTY_FORM);
     const [initialForm, setInitialForm] = useState(EMPTY_FORM);
     const [loading, setLoading] = useState(Boolean(postId));
     const [saving, setSaving] = useState(false);
+    const [locked, setLocked] = useState(false);
     const [writingPolicy, setWritingPolicy] = useState(DIARY_POLICY_DEFAULTS);
     const [policyLoading, setPolicyLoading] = useState(Boolean(studentClassId));
     const isMobile = useMediaQuery('(max-width: 768px)');
@@ -111,20 +112,30 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
         if (!postId) return undefined;
         let active = true;
         const loadPost = async () => {
-            const { data, error } = await supabase
-                .from('student_posts')
-                .select('id, title, content, visibility, structured_content')
-                .eq('class_id', studentClassId)
-                .eq('student_id', studentSession.id)
-                .eq('id', postId)
-                .maybeSingle();
+            const [postResult, reviewResult] = await Promise.all([
+                supabase
+                    .from('student_posts')
+                    .select('id, title, content, visibility, structured_content')
+                    .eq('class_id', studentClassId)
+                    .eq('student_id', studentSession.id)
+                    .eq('id', postId)
+                    .maybeSingle(),
+                supabase
+                    .from('reading_log_teacher_reviews')
+                    .select('review_status')
+                    .eq('class_id', studentClassId)
+                    .eq('student_id', studentSession.id)
+                    .eq('post_id', postId)
+                    .maybeSingle()
+            ]);
             if (!active) return;
-            if (error || !data) {
-                console.error('일기 불러오기 실패:', error?.message);
+            if (postResult.error || !postResult.data || reviewResult.error) {
+                console.error('일기 불러오기 실패:', postResult.error?.message || reviewResult.error?.message);
                 alert('일기를 불러오지 못했어요.');
                 onCancel();
                 return;
             }
+            const data = postResult.data;
             const loadedForm = {
                 title: data.title || '',
                 content: data.content || '',
@@ -132,6 +143,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
             };
             setForm(loadedForm);
             setInitialForm(loadedForm);
+            setLocked(reviewResult.data?.review_status === 'checked');
             setLoading(false);
         };
         loadPost();
@@ -154,7 +166,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
     } = useLocalWritingDraft(
         draftKey,
         form,
-        { enabled: !loading && !saving, hasContent: draftHasContent, onRestore: restoreDraft }
+        { enabled: !loading && !saving && !locked, hasContent: draftHasContent, onRestore: restoreDraft }
     );
 
     /*
@@ -162,7 +174,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
      * 그러지 않으면 방금 이 기기에서 쓴 내용이 옛 임시본에 지워진다(독서록과 같은 규칙).
      */
     useEffect(() => {
-        if (loading || !studentSession?.id) return undefined;
+        if (loading || locked || !studentSession?.id) return undefined;
         let active = true;
         const load = async () => {
             const { data, error } = await supabase.rpc('get_my_self_writing_draft', {
@@ -189,9 +201,13 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
         load();
         return () => { active = false; };
         // 처음 열릴 때 한 번만 가져온다. 이후에는 이 기기의 내용이 기준이다.
-    }, [diaryDate, draftKey, loading, studentSession?.id]);
+    }, [diaryDate, draftKey, loading, locked, studentSession?.id]);
 
     const handleSaveDraft = async () => {
+        if (locked) {
+            alert('선생님이 확인한 일기는 수정할 수 없어요.');
+            return;
+        }
         if (!diaryDraftHasContent(form)) {
             alert('아직 적은 내용이 없어요. 한 줄이라도 적은 뒤에 임시 저장해 주세요. ✍️');
             return;
@@ -224,6 +240,10 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
     };
 
     const handleSave = async () => {
+        if (locked) {
+            alert('선생님이 확인한 일기는 수정할 수 없어요.');
+            return;
+        }
         if (!form.title.trim()) {
             alert('일기 제목을 적어주세요. ✍️');
             return;
@@ -263,14 +283,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
         if (draftError) console.error('일기 서버 임시본 정리 실패:', draftError.message);
         setServerDraftAt(null);
 
-        const awardedPoints = Number(data.points_awarded) || 0;
-        const rewardMessage = awardedPoints > 0
-            ? `\n완료 보상으로 ${awardedPoints}P를 받았어요! 🪙`
-            : data.reward_status === 'daily_limit'
-                ? '\n오늘 받을 수 있는 일기 완료 보상은 이미 받았어요.'
-                : data.reward_status === 'already_claimed'
-                    ? '\n이 날짜의 완료 보상은 예전에 받았어요.'
-                    : '';
+        const rewardMessage = '\n선생님이 확인하면 포인트가 지급돼요. 🪙';
         alert(form.visibility === 'class'
             ? `일기를 친구 공개로 저장했어요! 📔${rewardMessage}`
             : `일기를 나만 보기로 저장했어요. 선생님은 확인할 수 있어요. 🔒${rewardMessage}`);
@@ -288,8 +301,10 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
                 onBack={handleCancel}
                 disabled={saving}
                 eyebrow="📔 나의 일기"
-                title={postId ? '일기 다듬기' : '오늘의 일기 쓰기'}
-                description="오늘 있었던 일과 그때 든 마음을 나만의 말로 남겨요."
+                title={locked ? '확인 완료 일기' : postId ? '일기 다듬기' : '오늘의 일기 쓰기'}
+                description={locked
+                    ? '선생님 확인이 끝난 기록이라 내용이 그대로 보관돼요.'
+                    : '오늘 있었던 일과 그때 든 마음을 나만의 말로 남겨요.'}
             />
             <WritingWorkspacePath steps={['날짜 확인', '오늘 쓰기', '완료·공개']} />
 
@@ -304,7 +319,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
                     title="오늘의 이야기"
                     description="무슨 일이 있었는지, 그때 어떤 마음이었는지 자유롭게 적어봐요."
                 />
-                <WritingToolHost disabled={saving} />
+                <WritingToolHost disabled={saving || locked} />
                 <WritingEditorFields
                     title={form.title}
                     onTitleChange={(value) => setForm((current) => ({ ...current, title: value }))}
@@ -312,7 +327,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
                     onContentChange={(value) => setForm((current) => ({ ...current, content: value }))}
                     titlePlaceholder="오늘 일기의 제목을 적어주세요..."
                     contentPlaceholder={'오늘 있었던 일, 기억에 남는 장면, 그때 든 마음을 자유롭게 적어보세요...'}
-                    disabled={saving}
+                    disabled={saving || locked}
                     isMobile={isMobile}
                 />
 
@@ -325,10 +340,17 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
                 )}
             </section>
 
+            {locked && (
+                <WritingNotice tone="info" icon="🔒">
+                    선생님이 확인한 일기라 수정하거나 삭제할 수 없어요. 고쳐야 할 때 선생님이 보완 요청을 보내면 다시 수정할 수 있어요.
+                </WritingNotice>
+            )}
+
             <WritingPolicyProgress
                 policy={writingPolicy}
                 metrics={writingMetrics}
-                dailyRemaining={postId ? null : dailyStatus?.remainingToday ?? null}
+                rewardLabel="선생님 확인 보상"
+                rewardNote={`확인 후 지급 · 하루 최대 ${writingPolicy.daily_reward_limit}편`}
             />
             {policyLoading && (
                 <WritingNotice tone="info" icon="⏳" compact>이 학급의 완료 조건을 확인하고 있어요.</WritingNotice>
@@ -360,7 +382,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
                         ...current,
                         visibility: current.visibility === 'class' ? 'private' : 'class'
                     }))}
-                    disabled={saving}
+                    disabled={saving || locked}
                 >
                     {form.visibility === 'class' ? '🔒 다시 나만 보기로' : '📔 친구에게도 보여주기'}
                 </button>
@@ -369,6 +391,11 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
             {/* 이미 낸 일기에는 확인 상태·선생님 의견·친구 댓글을 함께 보여 준다(세 글쓰기 공용 부품). */}
             {postId && <MyPostEngagementPanel postId={postId} />}
 
+            {locked ? (
+                <div className="diary-editor-actions">
+                    <Button onClick={onCancel}>일기 목록으로</Button>
+                </div>
+            ) : (
             <div className="diary-editor-actions">
                 <Button variant="outline" onClick={handleCancel} disabled={saving || savingDraft}>취소</Button>
                 <Button variant="outline" onClick={handleSaveDraft} disabled={saving || savingDraft}>
@@ -378,6 +405,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, dailyStatus, onDone, o
                     {saving ? '저장하는 중...' : postId ? '수정 완료' : '작성 완료'}
                 </Button>
             </div>
+            )}
         </WritingWorkspace>
     );
 };
@@ -451,6 +479,10 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
     };
 
     const handleDelete = async (entry) => {
+        if (Reflect.get(reviews, entry.id)?.review_status === 'checked') {
+            alert('선생님이 확인한 일기는 삭제할 수 없어요.');
+            return;
+        }
         const label = entry.structured_content?.diaryDate
             ? formatDiaryDate(entry.structured_content.diaryDate)
             : (entry.title || '제목 없는 일기');
@@ -458,7 +490,9 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
         const { data, error } = await supabase.rpc('delete_my_diary', { p_post_id: entry.id });
         if (error || !data?.success) {
             console.error('일기 삭제 실패:', error?.message || data?.error);
-            alert('일기를 삭제하지 못했습니다.');
+            alert(error?.message?.startsWith('선생님이 확인한 글은')
+                ? error.message
+                : '일기를 삭제하지 못했습니다.');
             return;
         }
         setDiaries((current) => current.filter((item) => item.id !== entry.id));
@@ -504,7 +538,6 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                 studentSession={studentSession}
                 postId={params.postId || null}
                 diaryDate={params.diaryDate || today}
-                dailyStatus={dailyStatus}
                 onDone={() => {
                     dailyStatus.reload();
                     onNavigate('diaries', {});
@@ -530,10 +563,12 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                     <strong>{formatDiaryDate(today)}</strong>
                     <small>
                         {todayDiary
-                            ? '오늘 일기를 이미 썼어요. 다시 열어 다듬을 수 있어요.'
+                            ? Reflect.get(reviews, todayDiary.id)?.review_status === 'checked'
+                                ? '선생님 확인이 끝난 일기라 읽기만 할 수 있어요.'
+                                : '오늘 일기를 이미 썼어요. 다시 열어 다듬을 수 있어요.'
                             : dailyStatus.loading
                                 ? '오늘 작성 현황을 확인하고 있어요.'
-                                : `오늘 일기를 아직 안 썼어요. 완료하면 ${dailyStatus.remainingToday > 0 ? '포인트를 받아요' : '기록으로 남아요'}.`}
+                                : '오늘 일기를 아직 안 썼어요. 선생님이 확인하면 포인트를 받아요.'}
                     </small>
                 </div>
                 <Button
@@ -541,7 +576,11 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                         ? openEditor({ postId: todayDiary.id, diaryDate: today })
                         : openEditor({ diaryDate: today }))}
                 >
-                    {todayDiary ? '오늘 일기 다듬기' : '오늘의 일기 쓰기 ✍️'}
+                    {todayDiary
+                        ? Reflect.get(reviews, todayDiary.id)?.review_status === 'checked'
+                            ? '오늘 일기 읽어보기'
+                            : '오늘 일기 다듬기'
+                        : '오늘의 일기 쓰기 ✍️'}
                 </Button>
             </div>
 
@@ -555,7 +594,10 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                 </Card>
             ) : (
                 <div className="diary-grid">
-                    {diaries.map((entry) => (
+                    {diaries.map((entry) => {
+                        const review = Reflect.get(reviews, entry.id);
+                        const locked = review?.review_status === 'checked';
+                        return (
                         <motion.article
                             key={entry.id}
                             className="diary-card"
@@ -568,7 +610,6 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                             <h3>{entry.title || '제목 없는 일기'}</h3>
                             <p className="diary-card__meta">{entry.char_count || 0}자</p>
                             {(() => {
-                                const review = Reflect.get(reviews, entry.id);
                                 if (!review) return null;
                                 // 한마디가 있으면 눌러서 그 글만 본다. 확인만 한 경우는 표시만 남긴다.
                                 return review.teacher_comment?.trim() ? (
@@ -581,10 +622,12 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                                             title: entry.title
                                         })}
                                     >
-                                        💬 선생님 한마디 있음
+                                        {review.review_status === 'revision_requested' ? '✏️ 보완 요청 확인' : '💬 선생님 한마디 있음'}
                                     </button>
                                 ) : (
-                                    <span className="diary-card__teacher-checked">✅ 선생님 확인</span>
+                                    <span className="diary-card__teacher-checked">
+                                        {review.review_status === 'revision_requested' ? '✏️ 보완 요청' : '✅ 선생님 확인'}
+                                    </span>
                                 );
                             })()}
                             <div className="diary-card__actions">
@@ -595,19 +638,27 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                                         diaryDate: entry.structured_content?.diaryDate || today
                                     })}
                                 >
-                                    열어보기
+                                    {locked ? '확인 완료 · 읽어보기' : '열어보기'}
                                 </Button>
-                                <Button variant="ghost" size="sm" onClick={() => handleDelete(entry)}>삭제</Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDelete(entry)}
+                                    disabled={locked}
+                                    title={locked ? '선생님 확인이 끝난 일기는 삭제할 수 없어요.' : undefined}
+                                >
+                                    삭제
+                                </Button>
                             </div>
                         </motion.article>
-                    ))}
+                    );})}
                 </div>
             )}
 
             <Modal
                 isOpen={Boolean(selectedComment)}
                 onClose={() => setSelectedComment(null)}
-                title="💬 선생님 한마디"
+                title={selectedComment?.review_status === 'revision_requested' ? '✏️ 선생님 보완 요청' : '💬 선생님 한마디'}
                 maxWidth="560px"
             >
                 {selectedComment && (

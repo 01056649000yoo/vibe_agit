@@ -30,9 +30,11 @@ test('교사가 맞춤법 찾아보기를 끄고 다시 켤 수 있다', () => {
     assert.equal(isWritingToolEnabled(enabled, SPELLING_LOOKUP_TOOL_ID), true);
 });
 
-test('연구소 결과 불러오기는 기존 학급에 기본 OFF이고 교사가 켤 수 있다', () => {
-    assert.equal(isWritingToolEnabled(null, LAB_RESULTS_TOOL_ID), false);
-    const enabled = setWritingToolEnabled(null, LAB_RESULTS_TOOL_ID, true);
+test('연구소 결과 불러오기는 기본 ON이고 교사가 끄고 다시 켤 수 있다', () => {
+    assert.equal(isWritingToolEnabled(null, LAB_RESULTS_TOOL_ID), true);
+    const disabled = setWritingToolEnabled(null, LAB_RESULTS_TOOL_ID, false);
+    assert.equal(isWritingToolEnabled(disabled, LAB_RESULTS_TOOL_ID), false);
+    const enabled = setWritingToolEnabled(disabled, LAB_RESULTS_TOOL_ID, true);
     assert.equal(isWritingToolEnabled(enabled, LAB_RESULTS_TOOL_ID), true);
 });
 
@@ -63,8 +65,9 @@ test('글쓰기 참고함은 입력창을 유지한 채 열고 닫는 공통 인
 
 test('글쓰기 참고함 옆 안내칸은 가로·세로 배치와 긴 글 추적 동작을 설명한다', () => {
     assert.match(referencePanel, /className="writing-reference-position-note"/);
-    assert.match(referencePanel, /가로 화면에서는 오른쪽에서 글을 따라오고/);
-    assert.match(referencePanel, /세로 화면에서는 입력창 위에 보여요/);
+    assert.match(referencePanel, /글을 쓰면서 옆에 두고 볼 수 있어요/);
+    assert.match(referencePanel, /가로 화면에서는 오른쪽/);
+    assert.match(referencePanel, /세로 화면에서는 입력창 위/);
     assert.match(referencePanelCss, /\.writing-reference-position-note/);
 });
 
@@ -73,10 +76,13 @@ test('학생 글쓰기 참고함은 선생님 안내·핵심질문과 지연 연
     assert.match(studentWriting, /id: 'teacher-guide'/);
     assert.match(studentWriting, /id: 'teacher-questions'/);
     assert.match(studentWriting, /supportingText: Reflect\.get\(studentAnswers, index\)/);
-    assert.match(studentWriting, /<LabReferenceSource missionId=\{missionId\} isActive=\{isOpen\}/);
+    assert.match(studentWriting, /<LabReferenceSource[\s\S]*?missionId=\{missionId\}[\s\S]*?isActive=\{isOpen\}[\s\S]*?\/>/);
+    assert.match(studentWriting, /onInsertText=\{GenreEditor \? undefined : insertToBody\}/);
     assert.match(referencePanel, /renderSources\?\.\(\{ isOpen \}\)/);
     assert.match(labReferenceSource, /listForWritingReference\(\{ missionId, limit: 20 \}\)/);
     assert.match(labReferenceSource, /item\.isLinked/);
-    assert.match(labReferenceSource, /글 개요짜기와 좋은 질문 고르기 결과/);
+    assert.match(labReferenceSource, /outline:[\s\S]*?글 개요짜기/);
+    assert.match(labReferenceSource, /selected_questions:[\s\S]*?좋은 질문 고르기/);
+    assert.match(labReferenceSource, /one_line:[\s\S]*?한줄모아/);
     assert.doesNotMatch(labReferenceSource, /setInterval|\.channel\(|postgres_changes/);
 });

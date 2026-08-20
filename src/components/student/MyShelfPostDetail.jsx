@@ -5,6 +5,7 @@ import MyPostEngagementPanel from '../../modules/writing/engagement/MyPostEngage
 import ReportDocument from '../../modules/writing/mission-types/report/ReportDocument';
 import { isReportStructuredContent } from '../../modules/writing/mission-types/report/reportContent';
 import { normalizeBookCoverUrl } from '../../modules/writing/reading-log/bookCoverUrl';
+import StudentBackButton from './StudentBackButton';
 
 const formatDate = (value) => {
     if (!value) return '';
@@ -13,7 +14,9 @@ const formatDate = (value) => {
     });
 };
 
-const MyShelfPostDetail = ({ summary, post, loading, errorMessage, onClose, onRetry }) => {
+const MyShelfPostDetail = ({
+    summary, post, loading, errorMessage, onClose, onRetry, returnsToHome = false
+}) => {
     const [showOriginal, setShowOriginal] = useState(false);
 
     const selfType = getSelfWritingType(post);
@@ -49,10 +52,14 @@ const MyShelfPostDetail = ({ summary, post, loading, errorMessage, onClose, onRe
                     padding: '18px', background: 'rgba(248,251,255,.94)', backdropFilter: 'blur(10px)',
                     borderBottom: '1px solid rgba(62,46,35,.08)'
                 }}>
-                    <button type="button" onClick={onClose} style={{
-                        border: 'none', borderRadius: '12px', padding: '9px 12px', background: '#FFFFFF',
-                        color: '#546E7A', cursor: 'pointer', fontWeight: 900, boxShadow: '0 2px 8px rgba(0,0,0,.06)'
-                    }}>← 내 서재</button>
+                    {returnsToHome ? (
+                        <StudentBackButton onClick={onClose} />
+                    ) : (
+                        <button type="button" onClick={onClose} style={{
+                            border: 'none', borderRadius: '12px', padding: '9px 12px', background: '#FFFFFF',
+                            color: '#546E7A', cursor: 'pointer', fontWeight: 900, boxShadow: '0 2px 8px rgba(0,0,0,.06)'
+                        }}>← 내 서재</button>
+                    )}
                     <strong style={{ color: '#3E2E23', fontSize: '.95rem' }}>📖 내 글 보기</strong>
                     <span style={{ width: '76px' }} aria-hidden="true" />
                 </header>

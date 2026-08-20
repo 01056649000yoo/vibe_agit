@@ -10,8 +10,28 @@ const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
 
 test('학생 홈은 공용 bootstrap 외 직접 DB 조회를 만들지 않는다', async () => {
     const dashboard = await read('src/components/student/StudentDashboard.jsx');
+    const dashboardHook = await read('src/hooks/useStudentDashboard.js');
+    const homeApi = await read('src/modules/home/studentHomeApi.js');
     assert.doesNotMatch(dashboard, /supabase\.(?:from|rpc)\(/);
-    assert.match(await read('src/modules/home/studentHomeApi.js'), /get_student_home_bootstrap_v1/);
+    assert.doesNotMatch(dashboardHook, /supabase\.(?:from|rpc)\(|ACTIVE_MISSION_LIMIT|\.limit\(500\)/);
+    assert.match(homeApi, /get_student_home_bootstrap_v1/);
+    assert.match(homeApi, /get_my_latest_rewrite_v1/);
+});
+
+test('다시 쓰기 바로가기는 과제·독서록·일기를 먼저 훑지 않고 전용 RPC 한 번을 쓴다', async () => {
+    const dashboardHook = await read('src/hooks/useStudentDashboard.js');
+    const migration = await read('supabase/migrations/20261141_self_writing_revisions_in_student_todo.sql');
+    const assignmentMigration = await read('supabase/migrations/20261135_student_home_latest_returned_assignment.sql');
+
+    assert.match(dashboardHook, /studentHomeApi\.getLatestRewrite\(\)/);
+    assert.doesNotMatch(dashboardHook, /writing_missions|student_posts|setTimeout\(resolve/);
+    assert.match(dashboardHook, /data\.kind === 'reading_log'[\s\S]*onNavigate\('reading_logs'/);
+    assert.match(dashboardHook, /onNavigate\('diaries'[\s\S]*diaryDate: data\.source_key/);
+    assert.match(assignmentMigration, /idx_student_posts_class_pending_rewrite/);
+    assert.match(migration, /idx_reading_log_reviews_student_revision/);
+    assert.match(migration, /ORDER BY candidate\.requested_at DESC, candidate\.id DESC[\s\S]*LIMIT 1/);
+    assert.match(migration, /REVOKE ALL ON FUNCTION public\.get_my_latest_rewrite_v1\(\)/);
+    assert.match(migration, /get_student_home_bootstrap_core_20261137/);
 });
 
 test('학생 과제 목록과 글쓰기 화면은 Realtime 연결을 열지 않는다', async () => {
@@ -105,6 +125,20 @@ test('교사 과제 목록과 제출글에는 100개 상한이 있다', async ()
     assert.match(source, /\.limit\(100\)/, '과제별 제출글에 limit(100)이 필요합니다.');
     assert.match(migration, /v_limit INTEGER := LEAST\(GREATEST\(COALESCE\(p_limit, 100\), 1\), 100\)/,
         '교사 과제 목록 RPC에 최대 100개 상한이 필요합니다.');
+});
+
+test('교사·공지의 첫 화면 목록은 필요한 필드와 최대 100개 상한을 지킨다', async () => {
+    const archive = await read('src/components/teacher/ArchiveManager.jsx');
+    const ideaMarket = await read('src/modules/writing/idea-market/IdeaMarketManager.jsx');
+    const evaluation = await read('src/components/teacher/TeacherEvaluationTab.jsx');
+    const announcements = await read('src/hooks/useAnnouncements.js');
+
+    assert.doesNotMatch(archive, /\.from\('student_posts'\)[\s\S]{0,100}\.select\('\*'\)/);
+    assert.match(archive, /const MISSION_POST_LIMIT = 100/);
+    assert.match(ideaMarket, /const INITIAL_LIST_LIMIT = 100/);
+    assert.doesNotMatch(ideaMarket, /\.limit\(200\)/);
+    assert.match(evaluation, /const EVALUATION_MISSION_LIMIT = 100/);
+    assert.match(announcements, /const ANNOUNCEMENT_LIMIT = 20/);
 });
 
 test('학생·교사 과제 목록은 각각 전용 RPC 한 번을 우선 사용한다', async () => {

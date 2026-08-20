@@ -200,6 +200,27 @@ test('알림은 열 때가 아니라 확인 또는 이동 버튼에서만 읽음
     assert.match(api, /mark_my_activity_notifications_read_v1/);
 });
 
+test('활동 알림으로 연 글만 닫을 때 학생 홈으로 돌아가고 아지트 책장에서 연 글은 책장에 남는다', async () => {
+    const [dashboard, myAgit, postDetail] = await Promise.all([
+        read('src/components/student/StudentDashboard.jsx'),
+        read('src/components/student/MyAgitPanel.jsx'),
+        read('src/components/student/MyShelfPostDetail.jsx')
+    ]);
+
+    // 활동 알림에서만 채우는 initialPost가 진입 출처가 된다. 별도 전역 상태나 URL 분기를 만들지 않는다.
+    assert.match(dashboard, /onOpenPost=\{\(post\) => \{[\s\S]*?setMyAgitInitialPost\(post\)/);
+    assert.match(dashboard, /closeOnInitialPostClose=\{Boolean\(myAgitInitialPost\)\}/);
+    // 일반 아지트 진입은 아지트 history를 남기지만 알림 진입은 글 상세 history 하나만 남긴다.
+    assert.match(myAgit, /if \(!closeOnInitialPostClose\) \{\s*window\.history\.pushState\(\{ studentPage: 'main', overlay: 'my-agit' \}/);
+    // 같은 상세 닫기(popstate)라도 알림 진입일 때만 부모 아지트까지 닫는다.
+    assert.match(myAgit, /if \(selectedSummaryRef\.current\) \{[\s\S]*?if \(closeOnInitialPostClose\) onCloseRef\.current\?\.\(\);[\s\S]*?return;/);
+    assert.match(myAgit, /onClose=\{\(\) => window\.history\.back\(\)\}/);
+    // 실제 목적지가 홈인 알림 진입에서는 `내 서재`라고 오해시키지 않고 공용 뒤로가기 버튼을 쓴다.
+    assert.match(myAgit, /returnsToHome=\{closeOnInitialPostClose\}/);
+    assert.match(postDetail, /returnsToHome \? \([\s\S]*?<StudentBackButton onClick=\{onClose\} \/>/);
+    assert.match(postDetail, /: \([\s\S]*?← 내 서재/);
+});
+
 test('새 모듈은 매니페스트 알림 정의만 등록해 공용 표시 레지스트리에 합칠 수 있다', async () => {
     const [types, registry, readme] = await Promise.all([
         read('src/modules/types.js'),
@@ -241,4 +262,3 @@ test('독서록과 일기는 글 완료 시 홈 알림 캐시를 무효화하고
     assert.match(migration, /points\.adjusted/);
     assert.match(migration, /format\('point-log:%s', NEW\.id\)/);
 });
-

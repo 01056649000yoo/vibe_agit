@@ -35,7 +35,7 @@ test('독서록 엑셀 프로필은 책 정보·검토 정보·본문을 한 행
     assert.equal(row.작성자, '김학생');
     assert.equal(row.책제목, '용감한 아이');
     assert.equal(row.책저자, '작가 A');
-    assert.equal(row.선생님확인, '선생님 한마디 있음');
+    assert.equal(row.선생님확인, '확인 완료');
     assert.equal(row.선생님한마디, '생각이 잘 드러나요.');
     assert.equal(row.내용, READING_LOG.content);
 });
@@ -158,4 +158,3 @@ test('질문 없는 완성 보고서 PDF는 사진과 학생 글만 정돈해 �
     assert.doesNotMatch(html, /<div class="report-sheet__number">/);
     assert.doesNotMatch(html, /font-size: (?:[0-9]|1[01])pt/);
 });
-

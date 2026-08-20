@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, CheckSquare, ChevronLeft, FlaskConical, Square, Vote } from 'lucide-react';
 import ModalPortal from '../common/ModalPortal';
 import ModalCloseButton from '../common/ModalCloseButton';
@@ -14,28 +14,51 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
     const [loadingRooms, setLoadingRooms] = useState(true);
     const [loadingQuestions, setLoadingQuestions] = useState(false);
     const [error, setError] = useState('');
+    const roomsRequestIdRef = useRef(0);
+    const questionsRequestIdRef = useRef(0);
 
     const loadRooms = useCallback(async () => {
-        if (!classId) return;
+        const requestId = ++roomsRequestIdRef.current;
+        questionsRequestIdRef.current += 1;
+        setSelectedRoom(null);
+        setQuestions([]);
+        setSelectedQuestionIds(new Set());
+
+        if (!classId) {
+            setRooms([]);
+            setLoadingRooms(false);
+            setLoadingQuestions(false);
+            setError('학급 정보를 확인한 뒤 다시 시도해 주세요.');
+            return;
+        }
+
         setLoadingRooms(true);
         setError('');
         try {
             const data = await labReferenceApi.listQuestionVotingRooms(classId);
+            if (requestId !== roomsRequestIdRef.current) return;
             setRooms(data);
         } catch {
+            if (requestId !== roomsRequestIdRef.current) return;
+            setRooms([]);
             setError('좋은 질문 고르기 활동 목록을 불러오지 못했습니다.');
         } finally {
-            setLoadingRooms(false);
+            if (requestId === roomsRequestIdRef.current) {
+                setLoadingRooms(false);
+            }
         }
     }, [classId]);
 
     const loadQuestions = useCallback(async (room) => {
+        const requestId = ++questionsRequestIdRef.current;
         setSelectedRoom(room);
+        setQuestions([]);
         setLoadingQuestions(true);
         setError('');
         setSelectedQuestionIds(new Set());
         try {
             const data = await labReferenceApi.getQuestionVotingRanking(classId, room.roomId);
+            if (requestId !== questionsRequestIdRef.current) return;
             setQuestions(data);
             // 기본으로 득표수가 1표 이상인 질문들을 전부 선택 상태로 초기화
             const topIds = new Set(data.filter((q) => q.votes > 0).map((q) => q.questionId));
@@ -44,15 +67,33 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
             }
             setSelectedQuestionIds(topIds);
         } catch {
+            if (requestId !== questionsRequestIdRef.current) return;
+            setQuestions([]);
             setError('활동의 질문 목록을 불러오지 못했습니다.');
         } finally {
-            setLoadingQuestions(false);
+            if (requestId === questionsRequestIdRef.current) {
+                setLoadingQuestions(false);
+            }
         }
     }, [classId]);
+
+    const handleBackToRooms = useCallback(() => {
+        questionsRequestIdRef.current += 1;
+        setSelectedRoom(null);
+        setQuestions([]);
+        setSelectedQuestionIds(new Set());
+        setLoadingQuestions(false);
+        setError('');
+    }, []);
 
     useEffect(() => {
         void loadRooms();
     }, [loadRooms]);
+
+    useEffect(() => () => {
+        roomsRequestIdRef.current += 1;
+        questionsRequestIdRef.current += 1;
+    }, []);
 
     useEffect(() => {
         const previousOverflow = document.body.style.overflow;
@@ -182,7 +223,7 @@ const MissionLabQuestionsModal = ({ classId, onSelectQuestions, onClose }) => {
                                     <button
                                         type="button"
                                         className="mission-lab-questions-back-btn"
-                                        onClick={() => setSelectedRoom(null)}
+                                        onClick={handleBackToRooms}
                                     >
                                         <ChevronLeft size={16} aria-hidden="true" />
                                         다른 활동 고르기

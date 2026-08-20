@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import { studentHomeApi } from '../modules/home/studentHomeApi';
 import { FEEDBACK_MODULE_IDS, notificationApi } from '../modules/notifications/notificationApi';
-
-const ACTIVE_MISSION_LIMIT = 500;
 
 export const useStudentDashboard = (studentSession, onNavigate, options = {}) => {
     const { bootstrap = null, bootstrapLoading = false, refreshBootstrap = null } = options;
@@ -22,7 +19,6 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
     // 내 글 소식은 2026-08-17부터 student_notification_events 원장을 읽는다. 예전에는
     // students.last_feedback_check 시각 하나로 갈랐는데, 선 하나로는 "1번은 읽고 2번은
     // 안 읽음"을 표현할 수 없어 알림별 확인이 불가능했다. 원장은 행마다 read_at을 갖는다.
-    const sessionClassId = studentSession?.classId || studentSession?.class_id || null;
     const returnedCountCacheRef = useRef({ value: 0, fetchedAt: 0 });
 
     const applyBootstrap = useCallback((payload) => {
@@ -51,67 +47,39 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
         if (studentSession?.id) studentHomeApi.invalidate(studentSession.id, { notify });
     }, [studentSession?.id]);
 
-    const fetchActiveMissionIds = useCallback(async () => {
-        if (!sessionClassId) return [];
-
-        const { data, error } = await supabase
-            .from('writing_missions')
-            .select('id')
-            .eq('class_id', sessionClassId)
-            .eq('is_archived', false)
-            .order('created_at', { ascending: false })
-            .limit(ACTIVE_MISSION_LIMIT);
-
-        if (error) throw error;
-        return (data || []).map((mission) => mission.id);
-    }, [sessionClassId]);
-
+    const loadHomeBootstrap = useCallback(({ force = false } = {}) => {
+        if (!studentSession?.id) return Promise.resolve(null);
+        if (refreshBootstrap) return refreshBootstrap({ force });
+        return studentHomeApi.get(studentSession.id, { force });
+    }, [refreshBootstrap, studentSession?.id]);
 
     const fetchMyPoints = useCallback(async () => {
         if (!studentSession?.id) return;
         try {
-            if (refreshBootstrap) {
-                const payload = await refreshBootstrap({ force: true });
-                return applyBootstrap(payload);
-            }
-            const { data: studentSnapshot, error: snapshotError } = await supabase
-                .rpc('get_student_dashboard_snapshot');
-
-            if (snapshotError) throw snapshotError;
-
-            if (studentSnapshot?.success && studentSnapshot.student) {
-                const currentStudent = studentSnapshot.student;
-
-                if (currentStudent.total_points !== null && currentStudent.total_points !== undefined) {
-                    setPoints(currentStudent.total_points);
-                }
-                if (currentStudent.pet_data) {
-                    setPetData(currentStudent.pet_data);
-                }
-                return currentStudent;
-            }
+            const payload = await loadHomeBootstrap({ force: true });
+            return applyBootstrap(payload);
         } catch (err) {
             console.error('학생 대시보드 상태 로드 실패:', err.message);
         }
         return null;
-    }, [applyBootstrap, refreshBootstrap, studentSession?.id]);
+    }, [applyBootstrap, loadHomeBootstrap, studentSession?.id]);
 
     // 미확인 개수는 원장을 읽는 홈 RPC 한 곳에서만 나온다. 예전에는 여기서 반응·댓글
     // 두 표를 직접 조인해 다시 셌는데, 서버와 기준이 갈라지면 배지와 목록이 어긋났다.
     const checkActivity = useCallback(async () => {
-        if (!studentSession?.id || !refreshBootstrap) return false;
+        if (!studentSession?.id) return false;
         try {
-            const payload = await refreshBootstrap({ force: true });
+            const payload = await loadHomeBootstrap({ force: true });
             applyBootstrap(payload);
             return Number(payload?.feedback_notifications?.unread_count || 0) > 0;
         } catch (err) {
             console.error('활동 확인 실패:', err.message);
             return false;
         }
-    }, [applyBootstrap, refreshBootstrap, studentSession?.id]);
+    }, [applyBootstrap, loadHomeBootstrap, studentSession?.id]);
 
     const fetchReturnedCount = useCallback(async (forceRefresh = false) => {
-        if (!studentSession?.id || !sessionClassId) return 0;
+        if (!studentSession?.id) return 0;
 
         const now = Date.now();
         const cached = returnedCountCacheRef.current;
@@ -122,40 +90,14 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
         }
 
         try {
-            if (refreshBootstrap) {
-                const payload = await refreshBootstrap({ force: forceRefresh });
-                applyBootstrap(payload);
-                return Number(payload?.home?.returned_count || 0);
-            }
-            const activeMissionIds = await fetchActiveMissionIds();
-            if (activeMissionIds.length === 0) {
-                returnedCountCacheRef.current = { value: 0, fetchedAt: now };
-                setReturnedCount(0);
-                return 0;
-            }
-
-            const { count, error } = await supabase
-                .from('student_posts')
-                .select('id', { count: 'exact', head: true })
-                .eq('class_id', sessionClassId)
-                .eq('student_id', studentSession.id)
-                .in('mission_id', activeMissionIds)
-                .eq('is_returned', true)
-                .eq('is_submitted', false)
-                .eq('is_confirmed', false)
-                .is('recalled_at', null);
-
-            if (error) throw error;
-
-            const nextCount = count || 0;
-            returnedCountCacheRef.current = { value: nextCount, fetchedAt: now };
-            setReturnedCount(nextCount);
-            return nextCount;
+            const payload = await loadHomeBootstrap({ force: forceRefresh });
+            applyBootstrap(payload);
+            return Number(payload?.home?.returned_count || 0);
         } catch (err) {
             console.error('반려 글 개수 로드 실패:', err.message);
             return cached.value || 0;
         }
-    }, [applyBootstrap, fetchActiveMissionIds, refreshBootstrap, sessionClassId, studentSession?.id]);
+    }, [applyBootstrap, loadHomeBootstrap, studentSession?.id]);
 
     // 알림 한 건만 확인한다. 원본 반응·댓글은 글에 그대로 남고 알림만 정리된다.
     const handleMarkFeedbackRead = useCallback(async (notificationId) => {
@@ -206,39 +148,23 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
 
     const handleDirectRewriteGo = async () => {
         try {
-            const fetchLatestReturnedPost = async () => {
-                const activeMissionIds = await fetchActiveMissionIds();
-                if (activeMissionIds.length === 0) return null;
-
-                const { data, error } = await supabase
-                    .from('student_posts')
-                    .select('id, mission_id')
-                    .eq('class_id', sessionClassId)
-                    .eq('student_id', studentSession.id)
-                    .in('mission_id', activeMissionIds)
-                    .eq('is_returned', true)
-                    .eq('is_submitted', false)
-                    .eq('is_confirmed', false)
-                    .is('recalled_at', null)
-                    .order('updated_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-
-                if (error) throw error;
-                return data;
-            };
-
-            let data = await fetchLatestReturnedPost();
-            if (!data) {
-                await new Promise(resolve => setTimeout(resolve, 250));
-                data = await fetchLatestReturnedPost();
-            }
+            const data = await studentHomeApi.getLatestRewrite();
             if (data) {
-                onNavigate('writing', {
-                    missionId: data.mission_id,
-                    postId: data.id,
-                    mode: 'edit'
-                });
+                if (data.kind === 'assignment') {
+                    onNavigate('writing', {
+                        missionId: data.mission_id,
+                        postId: data.id,
+                        mode: 'edit'
+                    });
+                } else if (data.kind === 'reading_log') {
+                    onNavigate('reading_logs', { mode: 'editor', postId: data.id });
+                } else {
+                    onNavigate('diaries', {
+                        mode: 'editor',
+                        postId: data.id,
+                        diaryDate: data.source_key
+                    });
+                }
                 return;
             }
             openFeedback(1);
@@ -280,19 +206,13 @@ export const useStudentDashboard = (studentSession, onNavigate, options = {}) =>
                 return;
             }
             if (bootstrapLoading) return;
-            const loadData = () => {
-                // 블로킹 없이 각 요청을 개별 비동기 실행하도록 뜯어 고쳐 체감 로딩 시간(TTI) 제로화
-                setIsLoading(false); // 즉시 렌더링을 허용 (데이터는 각자 도착하는 대로 채워짐)
-
-                fetchMyPoints().then(() => {
-                    checkActivity();
-                    fetchReturnedCount(true);
-                });
-
-            };
-            loadData();
+            // 상위 bootstrap이 없는 예외 경로도 통합 홈 RPC 한 번만 사용한다.
+            setIsLoading(false);
+            loadHomeBootstrap({ force: true })
+                .then(applyBootstrap)
+                .catch((err) => console.error('학생 홈 로드 실패:', err.message));
         }
-    }, [applyBootstrap, bootstrap, bootstrapLoading, studentSession?.id, fetchMyPoints, checkActivity, fetchReturnedCount]);
+    }, [applyBootstrap, bootstrap, bootstrapLoading, loadHomeBootstrap, studentSession?.id]);
 
     return {
         points, setPoints, hasActivity, feedbackUnreadCount, showFeedback, feedbacks,

@@ -45,14 +45,10 @@ const DashboardMenu = ({
 
     const readingDescription = readingDailyStatus.loading
         ? '오늘 작성 현황을 확인하고 있어요'
-        : readingDailyStatus.canComplete
-            ? `오늘 ${readingDailyStatus.completedToday}/${readingDailyStatus.dailyLimit}편 완료`
-            : `오늘 ${readingDailyStatus.completedToday}/${readingDailyStatus.dailyLimit}편 완료 · 내일 다시 쓰기`;
+        : `오늘 ${readingDailyStatus.completedToday}편 작성 · 선생님 확인 후 포인트`;
     const readingBadge = readingDailyStatus.loading
         ? null
-        : readingDailyStatus.canComplete
-            ? `새 독서록 ${readingDailyStatus.remainingToday}편 가능`
-            : '오늘 작성 완료';
+        : '자유롭게 더 쓰기';
 
     const diaryDescription = diaryDailyStatus.loading
         ? '오늘 작성 현황을 확인하고 있어요'

@@ -27,6 +27,14 @@
     line-height: 1.25;
 }
 .student-home-growth h1 strong { color: var(--ui-primary); }
+.student-home-growth__greeting { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; }
+.student-home-marathon-medal { display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 5px; min-height: 38px; padding: 6px 10px; border: 1px solid #fbbf24; border-radius: 999px; background: linear-gradient(145deg,#fffbeb,#fef3c7); color: #92400e; font: inherit; cursor: pointer; box-shadow: 0 3px 9px rgba(146,64,14,.12); }
+.student-home-marathon-medal.is-team { border-color: #93c5fd; border-radius: 12px; background: linear-gradient(145deg,#eff6ff,#dbeafe); color: #1d4ed8; box-shadow: 0 3px 9px rgba(30,64,175,.12); }
+.student-home-marathon-medal > span { font-size: 1rem; }
+.student-home-marathon-medal > strong { font-size: .68rem; white-space: nowrap; }
+.student-home-marathon-medal > em { display: grid; min-width: 18px; height: 18px; place-items: center; border-radius: 50%; background: #fff; font-size: .58rem; font-style: normal; font-weight: 950; }
+.student-home-marathon-medal:hover { transform: translateY(-1px); }
+.student-home-marathon-medal:focus-visible { outline: none; box-shadow: var(--ui-focus-ring); }
 .student-home-growth__message {
     margin: 7px 0 18px;
     color: var(--ui-ink-muted);
@@ -180,6 +188,8 @@
 @media (max-width: 560px) {
     .student-home-growth { padding: 18px 15px; border-radius: 19px; }
     .student-home-growth__message { margin-bottom: 15px; }
+    .student-home-growth__greeting { align-items: flex-start; }
+    .student-home-marathon-medal > strong { display: none; }
     .student-home-point-summary,
     .student-home-title-summary {
         grid-template-columns: 1fr;

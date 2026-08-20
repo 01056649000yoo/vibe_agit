@@ -118,7 +118,7 @@ const bookFromDraft = (book = {}) => ({
     pageCountSource: book.pageCountSource || book.page_count_source || ''
 });
 
-const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, dailyStatus, onDone, onCancel }) => {
+const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, onDone, onCancel }) => {
     const studentClassId = studentSession?.classId || studentSession?.class_id || null;
     const createInitialForm = () => ({
         ...EMPTY_FORM,
@@ -129,6 +129,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
     const [initialForm, setInitialForm] = useState(createInitialForm);
     const [loading, setLoading] = useState(Boolean(postId));
     const [saving, setSaving] = useState(false);
+    const [locked, setLocked] = useState(false);
     const [completedPostAt, setCompletedPostAt] = useState(null);
     const [writingPolicy, setWritingPolicy] = useState(READING_LOG_POLICY_DEFAULTS);
     const [policyLoading, setPolicyLoading] = useState(Boolean(studentClassId));
@@ -165,22 +166,31 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
         let active = true;
         const loadPost = async () => {
             setLoading(true);
-            // 선생님 한마디는 공용 `MyPostEngagementPanel` 이 유형 무관 RPC 로 직접 받는다.
-            const { data, error } = await supabase
-                .from('student_posts')
-                .select('id, title, content, structured_content, visibility, updated_at')
-                .eq('id', postId)
-                .eq('student_id', studentSession.id)
-                .eq('writing_context', 'self')
-                .eq('self_writing_type', 'reading_log')
-                .maybeSingle();
+            const [postResult, reviewResult] = await Promise.all([
+                supabase
+                    .from('student_posts')
+                    .select('id, title, content, structured_content, visibility, updated_at')
+                    .eq('id', postId)
+                    .eq('student_id', studentSession.id)
+                    .eq('writing_context', 'self')
+                    .eq('self_writing_type', 'reading_log')
+                    .maybeSingle(),
+                supabase
+                    .from('reading_log_teacher_reviews')
+                    .select('review_status')
+                    .eq('post_id', postId)
+                    .eq('student_id', studentSession.id)
+                    .maybeSingle()
+            ]);
 
             if (!active) return;
-            if (error || !data) {
+            if (postResult.error || !postResult.data || reviewResult.error) {
                 alert('독서록을 불러오지 못했습니다.');
                 onCancel();
                 return;
             }
+
+            const data = postResult.data;
 
             const loadedBook = bookFromStructuredContent(data.structured_content || {});
             const loadedForm = {
@@ -196,6 +206,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
             setForm(loadedForm);
             setInitialForm(loadedForm);
             setCompletedPostAt(data.updated_at ? new Date(data.updated_at) : null);
+            setLocked(reviewResult.data?.review_status === 'checked');
             setLoading(false);
         };
 
@@ -244,7 +255,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
     } = useLocalWritingDraft(
         draftKey,
         form,
-        { enabled: !loading && !saving, hasContent: draftHasContent, onRestore: restoreDraft }
+        { enabled: !loading && !saving && !locked, hasContent: draftHasContent, onRestore: restoreDraft }
     );
 
     /*
@@ -262,7 +273,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
     // 다른 기기에서 남긴 임시본을 가져온다. 이 기기에 남은 것보다 **새 것일 때만** 덮는다.
     // 그러지 않으면 방금 이 기기에서 쓴 내용이 옛 임시본에 지워진다.
     useEffect(() => {
-        if (loading || !studentSession?.id) return undefined;
+        if (loading || locked || !studentSession?.id) return undefined;
 
         let active = true;
         const load = async () => {
@@ -303,9 +314,13 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
             active = false;
         };
         // 처음 열릴 때 한 번만 가져온다. 이후에는 이 기기의 내용이 기준이다.
-    }, [bookKey, completedPostAt, draftKey, loading, postId, studentSession?.id]);
+    }, [bookKey, completedPostAt, draftKey, loading, locked, postId, studentSession?.id]);
 
     const handleSaveDraft = async () => {
+        if (locked) {
+            alert('선생님이 확인한 독서록은 수정할 수 없어요.');
+            return;
+        }
         if (!draftHasContent(form)) {
             alert('아직 적은 내용이 없어요. 한 줄이라도 적은 뒤에 임시 저장해 주세요. ✍️');
             return;
@@ -380,6 +395,10 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
     };
 
     const handleSave = async () => {
+        if (locked) {
+            alert('선생님이 확인한 독서록은 수정할 수 없어요.');
+            return;
+        }
         if (!form.selectedBook?.title?.trim()) {
             alert('먼저 읽은 책을 찾아 선택하거나 직접 입력해 주세요. 📖');
             return;
@@ -414,13 +433,13 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
             console.error('독서록 저장 실패:', result.error.message);
             if (result.error.code === '23505') {
                 alert('이 책에는 이미 독서록이 한 편 있어요. 책장에서 기존 독서록의 수정하기를 눌러 주세요.');
-            } else if (result.error.code === 'P0001' && (
-                result.error.message?.startsWith('독서록을 작성 완료하려면')
-                || result.error.message?.startsWith('오늘 완료할 수 있는 독서록은')
-            )) {
+            } else if (result.error.code === 'P0001'
+                && result.error.message?.startsWith('독서록을 작성 완료하려면')) {
                 alert(result.error.message);
             } else {
-                alert('독서록을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+                alert(result.error.message?.startsWith('선생님이 확인한 글은')
+                    ? result.error.message
+                    : '독서록을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
             }
             return;
         }
@@ -441,12 +460,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
         // 완성본이 들어갔으니 임시본은 지운다(이 기기 + 서버 모두).
         // 남겨 두면 다음에 들어올 때 저장된 글 위에 옛 임시본이 되살아난다.
         const draftCleared = await clearDraft();
-        const awardedPoints = Number(result.data?.points_awarded) || 0;
-        const rewardMessage = awardedPoints > 0
-            ? `\n완료 보상으로 ${awardedPoints}P를 받았어요! 🪙`
-            : result.data?.reward_status === 'daily_limit'
-                ? '\n오늘 받을 수 있는 독서록 완료 보상을 모두 받았어요.'
-                : '';
+        const rewardMessage = '\n선생님이 확인하면 포인트가 지급돼요. 🪙';
         const savedMessage = form.visibility === 'class'
             ? `독서록을 친구 공개로 저장했어요! 📚${rewardMessage}`
             : `친구에게 비공개로 저장했어요. 선생님은 확인할 수 있어요. 🔒${rewardMessage}`;
@@ -467,8 +481,10 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
                 onBack={handleCancel}
                 disabled={saving}
                 eyebrow="📚 나의 독서록"
-                title={postId ? '독서록 다듬기' : '새 독서록 쓰기'}
-                description="책을 고르고 기억에 남은 장면과 내 생각을 나만의 말로 기록해요."
+                title={locked ? '확인 완료 독서록' : postId ? '독서록 다듬기' : '새 독서록 쓰기'}
+                description={locked
+                    ? '선생님 확인이 끝난 기록이라 내용이 그대로 보관돼요.'
+                    : '책을 고르고 기억에 남은 장면과 내 생각을 나만의 말로 기록해요.'}
             />
             <WritingWorkspacePath steps={['책 선택', '생각 쓰기', '완료·공개']} />
 
@@ -476,15 +492,15 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
                 <BookSearchPanel
                     selectedBook={form.selectedBook}
                     onSelectBook={handleBookSelect}
-                    disabled={saving}
+                    disabled={saving || locked}
                 />
             </div>
 
             {form.selectedBook && <>
             <div className="reading-status-picker">
                 <span>이 책은 지금</span>
-                <button type="button" className={form.readingStatus === 'reading' ? 'active' : ''} onClick={() => updateForm('readingStatus', 'reading')} disabled={saving}>📖 읽는 중</button>
-                <button type="button" className={form.readingStatus === 'completed' ? 'active' : ''} onClick={() => updateForm('readingStatus', 'completed')} disabled={saving}>✅ 다 읽음</button>
+                <button type="button" className={form.readingStatus === 'reading' ? 'active' : ''} onClick={() => updateForm('readingStatus', 'reading')} disabled={saving || locked}>📖 읽는 중</button>
+                <button type="button" className={form.readingStatus === 'completed' ? 'active' : ''} onClick={() => updateForm('readingStatus', 'completed')} disabled={saving || locked}>✅ 다 읽음</button>
             </div>
 
             <section className="writing-editor-surface">
@@ -493,7 +509,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
                     title="책에서 만난 생각"
                     description="정답을 찾기보다 기억에 남은 까닭과 내 생각을 자유롭게 적어봐요."
                 />
-                <WritingToolHost disabled={saving} />
+                <WritingToolHost disabled={saving || locked} />
                 <WritingEditorFields
                     title={form.title}
                     onTitleChange={(value) => updateForm('title', value)}
@@ -501,7 +517,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
                     onContentChange={(value) => updateForm('content', value)}
                     titlePlaceholder="독서록 제목을 적어주세요..."
                     contentPlaceholder={'책에서 기억에 남는 장면, 새롭게 알게 된 점, 내 생각을 자유롭게 적어보세요...'}
-                    disabled={saving}
+                    disabled={saving || locked}
                     isMobile={isMobile}
                 />
 
@@ -519,10 +535,17 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
                 )}
             </section>
 
+            {locked && (
+                <WritingNotice tone="info" icon="🔒">
+                    선생님이 확인한 독서록이라 수정하거나 삭제할 수 없어요. 고쳐야 할 때 선생님이 보완 요청을 보내면 다시 수정할 수 있어요.
+                </WritingNotice>
+            )}
+
             <WritingPolicyProgress
                 policy={writingPolicy}
                 metrics={writingMetrics}
-                dailyRemaining={postId ? null : dailyStatus?.remainingToday ?? null}
+                rewardLabel="선생님 확인 보상"
+                rewardNote={`확인 후 지급 · 하루 최대 ${writingPolicy.daily_reward_limit}편`}
             />
             {policyLoading && (
                 <WritingNotice tone="info" icon="⏳" compact>이 학급의 완료 조건을 확인하고 있어요.</WritingNotice>
@@ -533,7 +556,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
                     type="checkbox"
                     checked={form.visibility === 'class'}
                     onChange={(event) => updateForm('visibility', event.target.checked ? 'class' : 'private')}
-                    disabled={saving}
+                    disabled={saving || locked}
                 />
                 <span style={{ fontSize: '1.6rem' }}>{form.visibility === 'class' ? '📚' : '🔒'}</span>
                 <span>
@@ -545,6 +568,11 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
             {/* 확인 상태·선생님 의견·친구 댓글은 세 글쓰기가 같은 공용 부품을 쓴다. */}
             {postId && <MyPostEngagementPanel postId={postId} />}
 
+            {locked ? (
+                <div className="writing-action-bar writing-action-bar--reading">
+                    <Button type="button" size="lg" onClick={onCancel}>독서록 목록으로</Button>
+                </div>
+            ) : (
             <div className="writing-action-bar writing-action-bar--reading">
                 <Button type="button" variant="ghost" size="lg" onClick={handleCancel} disabled={saving || savingDraft}>취소</Button>
                 <Button type="button" variant="outline" size="lg" onClick={handleSaveDraft} disabled={saving || savingDraft}>
@@ -554,6 +582,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, d
                     {saving ? '완료하는 중...' : '독서록 작성 완료 📚'}
                 </Button>
             </div>
+            )}
             </>}
 
             <style>{`
@@ -628,13 +657,8 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     }, [onNavigate]);
 
     const openEditor = useCallback((editorParams = {}) => {
-        const isExistingPost = Boolean(editorParams.postId);
-        if (!isExistingPost && !dailyStatus.loading && !dailyStatus.error && !dailyStatus.canComplete) {
-            alert(`오늘 완료할 수 있는 독서록 ${dailyStatus.dailyLimit}편을 모두 작성했어요. 새 독서록은 내일 다시 쓸 수 있어요. 📚`);
-            return;
-        }
         onNavigate('reading_logs', { mode: 'editor', ...editorParams });
-    }, [dailyStatus.canComplete, dailyStatus.dailyLimit, dailyStatus.error, dailyStatus.loading, onNavigate]);
+    }, [onNavigate]);
 
     const handleEditorDone = () => {
         dailyStatus.refresh();
@@ -649,6 +673,13 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     // 책장 카드는 세 가지에서 나온다 — 등록된 책, 책 없이 남은 옛 글, 책 없이 저장된 초안.
     // 어느 쪽이든 카드 하나가 통째로 없어지도록 각각에 맞는 서버 RPC로 지운다.
     const handleDeleteShelf = async (shelf) => {
+        const review = shelf.mainLog
+            ? teacherReviews.find((item) => item.post_id === shelf.mainLog.id)
+            : null;
+        if (review?.review_status === 'checked') {
+            alert('선생님이 확인한 독서록은 삭제할 수 없어요.');
+            return;
+        }
         const bookTitle = shelf.book?.title || '제목 없는 책';
         const notice = shelf.mainLog
             ? `「${bookTitle}」 독서록과 등록한 책이 모두 사라져요.`
@@ -679,7 +710,9 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
             }
         } catch (error) {
             console.error('책장 카드 삭제 실패:', error.message);
-            alert('삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            alert(error.message?.startsWith('선생님이 확인한 글은')
+                ? error.message
+                : '삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.');
             return;
         }
 
@@ -816,29 +849,12 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
     ), [teacherReviews]);
 
     if (isEditing) {
-        if (!params.postId && dailyStatus.loading) {
-            return <Card><p style={{ textAlign: 'center', padding: '42px' }}>오늘 작성 가능한 독서록 편수를 확인하는 중... 📚</p></Card>;
-        }
-        if (!params.postId && !dailyStatus.error && !dailyStatus.canComplete) {
-            return (
-                <Card style={{ maxWidth: '720px', margin: '40px auto', padding: '48px 24px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '3.5rem' }}>🌙</div>
-                    <h2 style={{ color: '#33691E' }}>오늘 독서록을 모두 작성했어요</h2>
-                    <p style={{ color: '#64748B', lineHeight: 1.7 }}>
-                        오늘은 {dailyStatus.completedToday}/{dailyStatus.dailyLimit}편을 완료했어요.<br />
-                        이미 완료한 기존 독서록은 계속 다듬을 수 있고, 새 독서록은 내일 다시 쓸 수 있어요.
-                    </p>
-                    <Button onClick={openList}>내 책장으로 돌아가기</Button>
-                </Card>
-            );
-        }
         return (
             <ReadingLogEditor
                 studentSession={studentSession}
                 postId={params.postId}
                 initialBook={params.book}
                 draftBookKey={params.draftBookKey}
-                dailyStatus={dailyStatus}
                 onDone={handleEditorDone}
                 onCancel={openList}
             />
@@ -853,26 +869,24 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                     <h1>📚 나의 책장</h1>
                     <p>읽고 있는 책과 다 읽은 책, 내가 쓴 독서록을 한곳에서 관리해요.</p>
                 </div>
-                <Button onClick={() => openEditor()} disabled={!dailyStatus.loading && !dailyStatus.error && !dailyStatus.canComplete}>
-                    {!dailyStatus.loading && !dailyStatus.error && !dailyStatus.canComplete ? '오늘 작성 완료 ✅' : '새 책·독서록 추가 ✍️'}
+                <Button onClick={() => openEditor()}>
+                    새 책·독서록 추가 ✍️
                 </Button>
             </div>
 
-            <div className={`reading-log-daily-status ${dailyStatus.canComplete ? '' : 'is-complete'}`}>
-                <span aria-hidden="true">{dailyStatus.canComplete ? '✍️' : '✅'}</span>
+            <div className="reading-log-daily-status">
+                <span aria-hidden="true">🪙</span>
                 <div>
                     <strong>
                         {dailyStatus.loading
                             ? '오늘 작성 현황을 확인하고 있어요.'
-                            : `오늘 독서록 ${dailyStatus.completedToday}/${dailyStatus.dailyLimit}편 완료`}
+                            : `오늘 독서록 ${dailyStatus.completedToday}편 작성`}
                     </strong>
                     {!dailyStatus.loading && (
                         <small>
                             {dailyStatus.error
                                 ? dailyStatus.error
-                                : dailyStatus.canComplete
-                                    ? `새 독서록을 ${dailyStatus.remainingToday}편 더 작성할 수 있어요.`
-                                    : '오늘 작성 가능한 편수를 모두 채웠어요. 새 독서록은 내일 다시 쓸 수 있어요.'}
+                                : `선생님 확인 후 포인트 지급 · 하루 최대 ${dailyStatus.dailyLimit}편 보상`}
                         </small>
                     )}
                 </div>
@@ -910,8 +924,8 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                     <div style={{ fontSize: '4rem' }}>📗</div>
                     <h2 style={{ color: '#33691E' }}>내 책장의 첫 책을 골라보세요</h2>
                     <p style={{ color: '#78909C', marginBottom: '24px' }}>책을 검색하거나 직접 입력한 뒤 독서록을 남길 수 있어요.</p>
-                    <Button onClick={() => openEditor()} disabled={!dailyStatus.loading && !dailyStatus.error && !dailyStatus.canComplete}>
-                        {dailyStatus.canComplete ? '첫 책 추가하기' : '오늘 작성 완료 ✅'}
+                    <Button onClick={() => openEditor()}>
+                        첫 책 추가하기
                     </Button>
                 </Card>
             ) : filteredShelves.length === 0 ? (
@@ -927,6 +941,8 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                         const { mainLog, writingState, writingStateId } = shelf;
                         const teacherReview = mainLog ? teacherReviewByPost.get(mainLog.id) : null;
                         const hasTeacherComment = Boolean(teacherReview?.teacher_comment?.trim());
+                        const revisionRequested = teacherReview?.review_status === 'revision_requested';
+                        const locked = teacherReview?.review_status === 'checked';
                         return (
                         <motion.article
                             key={shelf.id}
@@ -958,10 +974,12 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                                                     })}
                                                     aria-label={`「${shelf.book.title || '책 제목 없음'}」 선생님 한마디 보기`}
                                                 >
-                                                    💬 선생님 한마디 있음
+                                                    {revisionRequested ? '✏️ 보완 요청 확인' : '💬 선생님 한마디 있음'}
                                                 </button>
                                             ) : teacherReview ? (
-                                                <span className="reading-teacher-reviewed">✅ 선생님 확인</span>
+                                                <span className="reading-teacher-reviewed">
+                                                    {revisionRequested ? '✏️ 보완 요청' : '✅ 선생님 확인'}
+                                                </span>
                                             ) : null}
                                         </div>
                                     )}
@@ -979,14 +997,15 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
                                             book: { ...shelf.book, readingStatus: shelf.readingStatus },
                                             draftBookKey: shelf.draft?.book_key
                                         })}
-                                    disabled={!mainLog && !dailyStatus.loading && !dailyStatus.error && !dailyStatus.canComplete}
                                 >
-                                    {writingState.actionLabel}
+                                    {locked ? '확인 완료 · 읽어보기' : writingState.actionLabel}
                                 </Button>
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleDeleteShelf(shelf)}
+                                    disabled={locked}
+                                    title={locked ? '선생님 확인이 끝난 독서록은 삭제할 수 없어요.' : undefined}
                                     aria-label={`「${shelf.book?.title || '제목 없는 책'}」 책장에서 삭제`}
                                 >
                                     삭제
@@ -1000,7 +1019,7 @@ const ReadingLogPage = ({ studentSession, params = {}, onBack, onNavigate }) => 
             <Modal
                 isOpen={Boolean(selectedTeacherComment)}
                 onClose={closeTeacherComment}
-                title="💬 선생님 한마디"
+                title={selectedTeacherComment?.review_status === 'revision_requested' ? '✏️ 선생님 보완 요청' : '💬 선생님 한마디'}
                 maxWidth="560px"
             >
                 <div className="reading-teacher-comment-modal">

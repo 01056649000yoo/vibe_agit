@@ -1,0 +1,232 @@
+.self-writing-review-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin: 12px 0 10px;
+}
+
+.self-writing-review-summary button {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 10px;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    background: #F8FAFC;
+    color: #64748B;
+    cursor: pointer;
+    gap: 7px;
+}
+
+.self-writing-review-summary button.is-active { border-color: #93C5FD; background: #EFF6FF; color: #1D4ED8; }
+.self-writing-review-summary button.unreviewed.is-active { border-color: #FCD34D; background: #FFFBEB; color: #B45309; }
+.self-writing-review-summary button.reviewed.is-active { border-color: #86EFAC; background: #F0FDF4; color: #15803D; }
+.self-writing-review-summary strong { color: inherit; font-size: 1.12rem; line-height: 1; }
+.self-writing-review-summary small { color: inherit; font-size: .75rem; font-weight: 900; }
+
+.self-writing-review-tabs {
+    display: inline-grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-self: flex-start;
+    gap: 3px;
+    margin-bottom: 8px;
+    padding: 3px;
+    border-radius: 12px;
+    background: #F1F5F9;
+}
+
+.self-writing-review-tabs button {
+    min-height: 36px;
+    padding: 7px 13px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #64748B;
+    cursor: pointer;
+    font-size: .8rem;
+    font-weight: 900;
+}
+
+.self-writing-review-tabs button.is-active { background: #FFFFFF; color: #1D4ED8; box-shadow: 0 1px 4px rgba(15,23,42,.12); }
+
+.self-writing-bulk-toolbar {
+    position: sticky;
+    top: 6px;
+    z-index: 2;
+    display: flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 7px 10px;
+    border: 1px solid #BFDBFE;
+    border-radius: 12px;
+    background: rgba(239, 246, 255, .96);
+    box-sizing: border-box;
+    gap: 12px;
+    backdrop-filter: blur(8px);
+}
+
+.self-writing-bulk-toolbar label,
+.self-writing-bulk-toolbar > div { display: flex; align-items: center; gap: 8px; }
+.self-writing-bulk-toolbar label { color: #1E3A8A; cursor: pointer; font-size: .78rem; font-weight: 900; }
+.self-writing-bulk-toolbar input,
+.self-writing-queue-card__select input { width: 17px; height: 17px; margin: 0; accent-color: #2563EB; cursor: pointer; }
+.self-writing-bulk-toolbar > div > span { color: #475569; font-size: .75rem; font-weight: 900; }
+
+.self-writing-review-queue {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.self-writing-queue-card {
+    display: grid;
+    min-width: 0;
+    min-height: 108px;
+    grid-template-columns: 54px minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid #FDE68A;
+    border-radius: 13px;
+    background: linear-gradient(145deg,#FFFBEB,#FFFFFF);
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.self-writing-queue-card:hover { border-color: #F59E0B; box-shadow: 0 5px 14px rgba(180,83,9,.08); }
+.self-writing-queue-card.is-selected { border-color: #60A5FA; box-shadow: 0 0 0 2px rgba(96,165,250,.18); }
+.self-writing-queue-card.is-record { grid-template-columns: minmax(0, 1fr); }
+.self-writing-queue-card.is-reading {
+    border-color: #BFDBFE;
+    background: linear-gradient(145deg, #EFF6FF, #FFFFFF);
+}
+.self-writing-queue-card.is-reading:hover { border-color: #60A5FA; box-shadow: 0 5px 14px rgba(37,99,235,.1); }
+.self-writing-queue-card.is-reading .self-writing-queue-card__top,
+.self-writing-queue-card.is-reading .self-writing-queue-card__action { color: #1D4ED8; }
+.self-writing-queue-card.is-diary {
+    border-color: #DDD6FE;
+    background: linear-gradient(145deg, #F5F3FF, #FFFFFF);
+}
+.self-writing-queue-card.is-diary:hover { border-color: #A78BFA; box-shadow: 0 5px 14px rgba(109,40,217,.1); }
+.self-writing-queue-card.is-diary .self-writing-queue-card__top,
+.self-writing-queue-card.is-diary .self-writing-queue-card__action { color: #6D28D9; }
+.self-writing-queue-card__select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border-right: 1px solid #FEF3C7;
+    background: rgba(255,255,255,.72);
+    color: #64748B;
+    cursor: pointer;
+    gap: 5px;
+    font-size: .65rem;
+    font-weight: 900;
+}
+.self-writing-queue-card.is-selected .self-writing-queue-card__select { background: #EFF6FF; color: #1D4ED8; }
+.self-writing-queue-card__open {
+    display: flex;
+    min-width: 0;
+    align-items: stretch;
+    flex-direction: column;
+    padding: 10px 11px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+}
+.self-writing-queue-card__top { display: flex; min-width: 0; align-items: center; justify-content: space-between; color: #92400E; gap: 6px; }
+.self-writing-queue-card__top strong { min-width: 0; overflow: hidden; font-size: .74rem; text-overflow: ellipsis; white-space: nowrap; }
+.self-writing-queue-card__top small { flex: none; color: #94A3B8; font-size: .66rem; }
+.self-writing-queue-card__title,
+.self-writing-queue-card__secondary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.self-writing-queue-card__title { margin-top: 9px; color: #1E293B; font-size: .84rem; }
+.self-writing-queue-card__secondary { margin-top: 3px; color: #64748B; font-size: .7rem; }
+.self-writing-queue-card__action { margin-top: auto; padding-top: 6px; color: #B45309; font-size: .68rem; font-weight: 900; }
+
+/* 독서록·일기 교사 화면이 함께 쓰는 학생별 4열 책장. 데이터는 학생 카드를 열 때만 지연 조회한다. */
+.self-writing-student-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+}
+.self-writing-student-card { min-width: 0; overflow: hidden; border: 1px solid #E2E8F0; border-radius: 16px; background: #FFFFFF; }
+.self-writing-student-card.is-open { border-color: #93C5FD; box-shadow: 0 6px 18px rgba(37,99,235,.1); }
+.self-writing-student-card.is-diary.is-open { border-color: #C4B5FD; box-shadow: 0 6px 18px rgba(109,40,217,.1); }
+.self-writing-student-card__main {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 13px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    gap: 9px;
+    text-align: left;
+}
+.self-writing-student-card__avatar { grid-row: 1 / span 2; display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: #EFF6FF; }
+.self-writing-student-card.is-diary .self-writing-student-card__avatar { background: #F5F3FF; }
+.self-writing-student-card__identity { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.self-writing-student-card__identity strong { overflow: hidden; color: #1E293B; text-overflow: ellipsis; white-space: nowrap; }
+.self-writing-student-card__identity small { overflow: hidden; color: #94A3B8; font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+.self-writing-student-card__main em { grid-column: 2; color: #2563EB; font-size: .68rem; font-style: normal; font-weight: 900; }
+.self-writing-student-card.is-diary .self-writing-student-card__main em { color: #6D28D9; }
+.self-writing-student-card__stats { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid #F1F5F9; background: #F8FAFC; }
+.self-writing-student-card__stats span { display: flex; align-items: center; justify-content: center; padding: 8px 3px; color: #64748B; font-size: .66rem; font-weight: 800; gap: 3px; }
+.self-writing-student-card__stats strong { color: #334155; font-size: .82rem; }
+.self-writing-student-card__stats .has-unread,
+.self-writing-student-card__stats .has-unread strong { color: #B45309; }
+.self-writing-student-card__export { width: 100%; padding: 9px 10px; border: 0; background: #FFFFFF; color: #475569; cursor: pointer; font-size: .7rem; font-weight: 900; }
+.self-writing-student-card__export:hover { background: #EFF6FF; color: #1D4ED8; }
+.self-writing-student-card.is-diary .self-writing-student-card__export:hover { background: #F5F3FF; color: #6D28D9; }
+.self-writing-student-shelf { margin-top: 14px; padding: 16px; border: 1px solid #BFDBFE; border-radius: 18px; background: #F8FBFF; }
+.self-writing-student-shelf.is-diary { border-color: #DDD6FE; background: #FAF8FF; }
+.self-writing-student-shelf > header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+.self-writing-student-shelf > header > div:first-child { min-width: 0; }
+.self-writing-student-shelf > header span { color: #2563EB; font-size: .7rem; font-weight: 900; }
+.self-writing-student-shelf.is-diary > header span { color: #6D28D9; }
+.self-writing-student-shelf > header h3 { margin: 3px 0 0; overflow: hidden; color: #1E293B; text-overflow: ellipsis; white-space: nowrap; }
+.self-writing-student-log-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.self-writing-shelf-card { display: flex; min-width: 0; min-height: 132px; flex-direction: column; align-items: flex-start; padding: 13px; border: 1px solid #DBEAFE; border-radius: 14px; background: #FFFFFF; cursor: pointer; text-align: left; }
+.self-writing-shelf-card.is-diary { border-color: #EDE9FE; }
+.self-writing-shelf-card h4 { width: 100%; margin: 10px 0 4px; overflow: hidden; color: #1E293B; text-overflow: ellipsis; white-space: nowrap; }
+.self-writing-shelf-card p { width: 100%; margin: 0; overflow: hidden; color: #64748B; font-size: .75rem; text-overflow: ellipsis; white-space: nowrap; }
+.self-writing-shelf-card small { margin-top: auto; padding-top: 10px; color: #94A3B8; }
+.self-writing-shelf-card__status { padding: 5px 8px; border-radius: 8px; background: #F1F5F9; color: #64748B; font-size: .68rem; font-weight: 900; }
+.self-writing-shelf-card__status.is-checked { background: #F0FDF4; color: #15803D; }
+.self-writing-shelf-card__status.is-revision { background: #FFFBEB; color: #B45309; }
+.self-writing-student-empty { padding: 42px 16px; color: #94A3B8; text-align: center; }
+.self-writing-quiet-students { margin-top: 12px; padding: 12px 4px; color: #64748B; font-size: .82rem; }
+.self-writing-quiet-students button { padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; font-weight: 800; }
+.self-writing-quiet-students p { margin: 8px 0 0 18px; color: #94A3B8; line-height: 1.7; }
+
+@media (min-width: 1280px) {
+    .self-writing-review-queue { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1100px) {
+    .self-writing-review-queue { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .self-writing-student-grid,
+    .self-writing-student-log-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+    .self-writing-review-queue { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .self-writing-student-grid,
+    .self-writing-student-log-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .self-writing-bulk-toolbar { position: static; align-items: stretch; flex-direction: column; }
+    .self-writing-bulk-toolbar > div { justify-content: space-between; }
+}
+
+@media (max-width: 520px) {
+    .self-writing-review-summary button { gap: 4px; padding-inline: 5px; }
+    .self-writing-review-summary button > span { display: none; }
+    .self-writing-review-tabs { width: 100%; box-sizing: border-box; }
+    .self-writing-review-tabs button { padding-inline: 5px; font-size: .73rem; }
+    .self-writing-review-queue { grid-template-columns: 1fr; }
+    .self-writing-student-grid,
+    .self-writing-student-log-grid { grid-template-columns: 1fr; }
+    .self-writing-bulk-toolbar > div { align-items: stretch; flex-direction: column; }
+    .self-writing-bulk-toolbar > div button { width: 100%; }
+}

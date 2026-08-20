@@ -6,6 +6,7 @@ const DEFAULT_STATUS = {
     today: null,
     dailyLimit: 1,
     completedToday: 0,
+    rewardedToday: 0,
     remainingToday: 1,
     canComplete: true,
     hasTodayDiary: false,
@@ -18,6 +19,7 @@ const normalizeStatus = (data) => ({
     today: data?.today || null,
     dailyLimit: Number(data?.daily_limit ?? 1),
     completedToday: Number(data?.completed_today ?? 0),
+    rewardedToday: Number(data?.rewarded_today ?? 0),
     remainingToday: Number(data?.remaining_today ?? 0),
     canComplete: Boolean(data?.can_complete),
     hasTodayDiary: Boolean(data?.has_today_diary),
@@ -26,7 +28,7 @@ const normalizeStatus = (data) => ({
 });
 
 /**
- * 오늘 일기를 더 쓸 수 있는지. 서버가 완료 원장으로 세므로 화면 숫자와 실제 허용이 어긋나지 않는다.
+ * 오늘 일기 작성 수와 교사 확인 보상 현황을 읽는다.
  * 조회에 실패하면 막지 않는다 — 잠깐의 통신 문제로 학생이 글을 못 쓰게 되면 안 된다.
  */
 const useDiaryDailyStatus = (studentId, { enabled = true, initialStatus = null } = {}) => {

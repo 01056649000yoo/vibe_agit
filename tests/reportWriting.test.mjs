@@ -41,11 +41,18 @@ const [
     readFile('src/modules/writing/mission-types/registry.js', 'utf8'),
 ]);
 
-test('첫 사진 저장은 생성된 초안 글 ID를 다음 저장까지 유지한다', () => {
-    assert.match(reportEditorSource, /persistSections\(next, draftPostId\)/);
-    assert.match(studentWritingSource, /persistGenreDraft = async \([^)]*targetPostId/);
-    assert.match(studentWritingSource, /handleSave\(false, draft, targetPostId\)/);
-    assert.match(missionSubmitSource, /targetPostId \|\| postId/);
+test('첫 사진 저장은 학생·과제 초안을 만든 뒤 같은 서버 초안에 내용을 저장한다', () => {
+    assert.match(reportEditorSource, /const draftPostId = postId \|\| await ensureDraftPost\?\.\(\)/);
+    assert.match(reportEditorSource, /uploadReportImage\(\{[\s\S]*?postId: draftPostId/);
+    assert.match(reportEditorSource, /const saved = await persistSections\(next\)/);
+    assert.match(studentWritingSource, /const persistGenreDraft = async \(\{ structuredContent: nextStructuredContent, content: nextContent \}\)/);
+    assert.match(studentWritingSource, /const savedPostId = await handleSave\(false, draft\)/);
+    assert.match(missionSubmitSource, /save_my_assignment_draft_v1/);
+    const saveDraftSection = missionSubmitSource.slice(
+        missionSubmitSource.indexOf('const handleSave'),
+        missionSubmitSource.indexOf('// 제출 전 유효성 검사')
+    );
+    assert.doesNotMatch(saveDraftSection, /p_post_id:/);
 });
 
 test('보고서 편집 사진은 왼쪽 4대3 고정 프레임에 맞춘다', () => {

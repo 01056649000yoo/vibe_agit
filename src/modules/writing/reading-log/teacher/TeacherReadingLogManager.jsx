@@ -8,13 +8,20 @@ import { supabase } from '../../../../lib/supabaseClient';
 import { classKey, classScope, dataCache } from '../../../../lib/cache';
 import WritingPolicySettings from '../../policy/WritingPolicySettings';
 import { READING_LOG_POLICY_DEFAULTS } from '../../policy/writingPolicy';
+import {
+    SelfWritingBulkToolbar,
+    getSelfWritingRecordTone,
+    SelfWritingQueueCard,
+    SelfWritingReviewSummary,
+    SelfWritingReviewViewTabs
+} from '../../review/SelfWritingReviewWorkspace';
 
 const ReadingMarathonTeacherSettings = lazy(() => import('../marathon/ReadingMarathonTeacherSettings'));
 
 const EMPTY_COUNTS = { total: 0, unreviewed: 0, reviewed: 0, students: 0 };
 
-// 목록 RPC의 상한은 100이다. 한 번에 50편씩 받고 나머지는 "더 보기"로 잇는다.
-const PAGE_SIZE = 50;
+// 첫 화면에는 한 번에 처리하기 좋은 20편만 받고 나머지는 "더 보기"로 잇는다.
+const PAGE_SIZE = 20;
 // 한 학생이 쓴 독서록은 펼칠 때 한 번에 받는다. 100편을 넘기는 경우는 없다고 본다.
 const STUDENT_LOG_LIMIT = 100;
 
@@ -32,8 +39,8 @@ const formatDate = (value) => {
 };
 
 const reviewLabel = (status) => {
-    if (status === 'commented') return '💬 한마디 있음';
-    if (status === 'checked') return '✅ 확인했어요';
+    if (status === 'revision_requested') return '✏️ 보완 요청';
+    if (status === 'commented' || status === 'checked') return '✅ 확인했어요';
     return '🕓 미확인';
 };
 
@@ -78,6 +85,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     const [exporting, setExporting] = useState(false);
     const {
         fetchWritingContentExportData,
+        fetchCheckedReadingLogClassExportData,
         exportWritingContentToExcel,
         exportWritingContentToPdf,
         exportWritingContentToGoogleDoc,
@@ -306,9 +314,20 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     const openStudentExport = (row) => {
         if (!row?.student_id || row.total_count < 1) return;
         setExportTarget({
+            scope: 'student',
             studentId: row.student_id,
             studentName: row.student_name,
             totalCount: row.total_count
+        });
+    };
+
+    const openClassExport = () => {
+        if (shownCounts.reviewed < 1) return;
+        setExportTarget({
+            scope: 'class',
+            studentId: null,
+            studentName: activeClass?.name || '우리 반',
+            totalCount: shownCounts.reviewed
         });
     };
 
@@ -323,13 +342,17 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 googleAccessToken = await authorizeGoogleExport();
             }
 
-            const data = await fetchWritingContentExportData('reading_log', exportTarget.studentId);
+            const data = exportTarget.scope === 'class'
+                ? await fetchCheckedReadingLogClassExportData(2000)
+                : await fetchWritingContentExportData('reading_log', exportTarget.studentId);
             if (data.length === 0) {
                 alert('내보낼 독서록이 없습니다.');
                 return;
             }
 
-            const fileName = `${exportTarget.studentName}_독서록_모음`;
+            const fileName = exportTarget.scope === 'class'
+                ? `${exportTarget.studentName}_확인완료_독서록_모음`
+                : `${exportTarget.studentName}_독서록_모음`;
             if (format === 'excel') {
                 await exportWritingContentToExcel(data, fileName, 'reading_log');
             } else if (format === 'pdf') {
@@ -417,16 +440,17 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         setSection(nextSection);
     };
 
-    const saveReview = async (teacherComment) => {
+    const saveReview = async (teacherComment, decision = 'accepted') => {
         if (!selected) return;
         if (!teacherComment.trim() && detail?.review?.teacher_comment) {
             const shouldClear = window.confirm('저장된 선생님 한마디를 지우고, 확인 표시만 남길까요?');
             if (!shouldClear) return;
         }
         setSaving(true);
-        const { data, error } = await supabase.rpc('save_teacher_reading_log_review', {
+        const { data, error } = await supabase.rpc('save_teacher_self_writing_review_v2', {
             p_post_id: selected.post_id,
-            p_teacher_comment: teacherComment
+            p_teacher_comment: teacherComment,
+            p_decision: decision
         });
         setSaving(false);
 
@@ -437,16 +461,19 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         }
 
         const savedReview = {
-            review_status: data?.review_status || (teacherComment.trim() ? 'commented' : 'checked'),
+            review_status: data?.review_status || 'checked',
             teacher_comment: data?.teacher_comment || '',
             reviewed_at: data?.reviewed_at || new Date().toISOString()
         };
         setDetail((current) => current ? { ...current, review: savedReview } : current);
         setSelected((current) => current ? { ...current, review_status: savedReview.review_status } : current);
         setComment(savedReview.teacher_comment);
-        setReviewNotice(teacherComment.trim()
-            ? '확인 완료! 선생님 한마디도 학생에게 저장됐습니다.'
-            : '확인 완료! 이 독서록은 확인한 기록으로 이동합니다.');
+        const awardedPoints = Number(data?.points_awarded) || 0;
+        setReviewNotice(decision === 'revision_requested'
+            ? '보완 요청을 학생 활동 알림으로 보냈습니다.'
+            : awardedPoints > 0
+                ? `확인 완료! ${awardedPoints}P를 지급하고 학생에게 알렸습니다.`
+                : '확인 완료! 학생 활동 알림도 함께 보냈습니다.');
         await refresh();
     };
 
@@ -480,8 +507,9 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
 
         setBulkSaving(true);
         setBulkNotice('');
-        const { data, error } = await supabase.rpc('save_teacher_reading_log_reviews_bulk', {
-            p_post_ids: postIds
+        const { data, error } = await supabase.rpc('save_teacher_self_writing_reviews_bulk_v1', {
+            p_post_ids: postIds,
+            p_writing_type: 'reading_log'
         });
         setBulkSaving(false);
 
@@ -491,9 +519,10 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
             return;
         }
 
-        const confirmedCount = Number(data?.confirmed_count) || postIds.length;
+        const confirmedCount = Number(data?.confirmed_count ?? postIds.length);
+        const awardedPoints = Number(data?.points_awarded || 0);
         setSelectedReviewIds(new Set());
-        setBulkNotice(`✅ 독서록 ${confirmedCount}편을 확인 완료로 표시했습니다.`);
+        setBulkNotice(`✅ 독서록 ${confirmedCount}편 확인${awardedPoints > 0 ? ` · ${awardedPoints}P 지급` : ''}`);
         await refresh();
     };
 
@@ -506,46 +535,40 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     const renderQueueCard = (item) => {
         const isSelected = selectedReviewIds.has(item.post_id);
         return (
-            <article key={item.post_id} className={`teacher-reading-queue-card ${isSelected ? 'is-selected' : ''}`}>
-                <label className="teacher-reading-queue-card__select">
-                    <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleReviewSelection(item.post_id)}
-                        disabled={bulkSaving}
-                    />
-                    <span>{isSelected ? '선택됨' : '일괄 확인 선택'}</span>
-                </label>
-                <button type="button" className="teacher-reading-queue-card__open" onClick={() => openDetail(item)}>
-                    <div className="teacher-reading-queue-card__top">
-                        <strong>👤 {item.student_name || '이름 없음'}</strong>
-                        <span>{formatDate(item.updated_at)}</span>
-                    </div>
-                    <h4>{item.title || '제목 없는 독서록'}</h4>
-                    <p>『{item.book_title || '책 정보 없음'}』</p>
-                    <span className="teacher-reading-queue-card__action">내용 확인하고 표시 남기기 ›</span>
-                </button>
-            </article>
+            <SelfWritingQueueCard
+                key={item.post_id}
+                postId={item.post_id}
+                typeLabel="독서록"
+                studentName={item.student_name || '이름 없음'}
+                dateLabel={formatDate(item.updated_at)}
+                title={item.title || '제목 없는 독서록'}
+                secondary={`『${item.book_title || '책 정보 없음'}』`}
+                selected={isSelected}
+                disabled={bulkSaving}
+                onToggle={toggleReviewSelection}
+                onOpen={() => openDetail(item)}
+            />
         );
     };
 
     const renderArchiveCard = (item) => (
-        <button key={item.post_id} type="button" className="teacher-reading-archive-card" onClick={() => openDetail(item)}>
-            <div className="teacher-reading-archive-card__top">
-                <strong>👤 {item.student_name || '이름 없음'}</strong>
-                <span className={`teacher-reading-status ${item.review_status}`}>{reviewLabel(item.review_status)}</span>
-            </div>
-            <h4>{item.title || '제목 없는 독서록'}</h4>
-            <p>『{item.book_title || '책 정보 없음'}』</p>
-            <div className="teacher-reading-archive-card__bottom">
-                <small>{formatDate(item.updated_at)}</small>
-                <span>내용 보기 ›</span>
-            </div>
-        </button>
+        <SelfWritingQueueCard
+            key={item.post_id}
+            postId={item.post_id}
+            typeLabel="독서록"
+            studentName={item.student_name || '이름 없음'}
+            dateLabel={formatDate(item.updated_at)}
+            title={item.title || '제목 없는 독서록'}
+            secondary={`『${item.book_title || '책 정보 없음'}』 · ${reviewLabel(item.review_status)}`}
+            selectable={false}
+            tone={getSelfWritingRecordTone(item.review_status, 'reading')}
+            actionLabel="독서록 보기 ›"
+            onOpen={() => openDetail(item)}
+        />
     );
 
     const renderShelfCard = (item) => (
-        <button key={item.post_id} type="button" className="teacher-reading-shelf-card" onClick={() => openDetail(item)}>
+        <button key={item.post_id} type="button" className="self-writing-shelf-card" onClick={() => openDetail(item)}>
             <span className={`teacher-reading-status ${item.review_status}`}>{reviewLabel(item.review_status)}</span>
             <h4>{item.title || '제목 없는 독서록'}</h4>
             <p>『{item.book_title || '책 정보 없음'}』</p>
@@ -574,10 +597,11 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 <div>
                     <span className="teacher-reading-kicker">자율 글쓰기 관리</span>
                     <h2>📚 학생 독서록</h2>
-                    <p>승인 절차 없이 학생이 완료하고 포인트를 받으며, 선생님은 확인 표시와 짧은 한마디만 남겨요.</p>
+                    <p>학생은 스스로 완료하고, 선생님은 확인 완료 또는 보완 요청과 짧은 한마디를 남겨요.</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <TeacherGuideButton tabId="reading-logs" variant="help" />
+                    <TeacherGuideButton tabId="reading-events" />
                     {section === 'reviews' && (
                         <Button variant="ghost" size="sm" onClick={refresh} disabled={loading}>새로고침</Button>
                     )}
@@ -635,38 +659,27 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 </div>
             ) : (<>
 
-            <div className="teacher-reading-stats">
-                <button type="button" className={viewMode === 'queue' ? 'active warning' : ''} onClick={() => setViewMode('queue')}>
-                    <strong>{shownCounts.unreviewed}</strong><span>🕓 미확인</span>
-                </button>
-                <button type="button" className={viewMode === 'archive' && reviewFilter === 'reviewed' ? 'active success' : ''} onClick={() => { setReviewFilter('reviewed'); setViewMode('archive'); }}>
-                    <strong>{shownCounts.reviewed}</strong><span>✅ 확인 완료</span>
-                </button>
-                <button type="button" className={viewMode === 'archive' && reviewFilter === 'all' ? 'active' : ''} onClick={() => { setReviewFilter('all'); setViewMode('archive'); }}>
-                    <strong>{shownCounts.total}</strong><span>전체 독서록</span>
-                </button>
-                <button type="button" className={viewMode === 'student' ? 'active' : ''} onClick={() => { setStudentFilter('all'); setViewMode('student'); }}>
-                    <strong>{shownCounts.students}</strong><span>작성 학생</span>
-                </button>
-            </div>
+            <SelfWritingReviewSummary
+                counts={shownCounts}
+                activeKey={viewMode === 'queue' ? 'unreviewed' : viewMode === 'archive' ? reviewFilter : ''}
+                onSelect={(key) => {
+                    if (key === 'unreviewed') setViewMode('queue');
+                    else { setReviewFilter(key); setViewMode('archive'); }
+                }}
+            />
 
-            <div className="teacher-reading-viewtabs" role="tablist" aria-label="목록 보는 방법">
-                <button
-                    type="button" role="tab" aria-selected={viewMode === 'queue'}
-                    className={viewMode === 'queue' ? 'active' : ''}
-                    onClick={() => setViewMode('queue')}
-                >🕓 검토 대기</button>
-                <button
-                    type="button" role="tab" aria-selected={viewMode === 'student'}
-                    className={viewMode === 'student' ? 'active' : ''}
-                    onClick={() => { setStudentFilter('all'); setViewMode('student'); }}
-                >👥 학생별 책장</button>
-                <button
-                    type="button" role="tab" aria-selected={viewMode === 'archive'}
-                    className={viewMode === 'archive' ? 'active' : ''}
-                    onClick={() => { setReviewFilter('all'); setViewMode('archive'); }}
-                >🗂️ 전체 기록</button>
-            </div>
+            <SelfWritingReviewViewTabs
+                value={viewMode === 'student' ? 'students' : viewMode}
+                studentLabel="학생별 책장"
+                onChange={(nextView) => {
+                    setStudentFilter('all');
+                    if (nextView === 'students') setViewMode('student');
+                    else {
+                        if (nextView === 'archive') setReviewFilter('all');
+                        setViewMode(nextView);
+                    }
+                }}
+            />
 
             <div className={`teacher-reading-filters ${viewMode === 'student' ? 'is-wide' : ''}`}>
                 <input
@@ -685,34 +698,32 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
             </div>
 
             <div className="teacher-reading-list-heading">
-                <h3>{viewMode === 'student' ? '학생별 현황' : filteredTitle}</h3>
-                <small>
-                    {viewMode === 'student'
-                        ? '학생 한 명당 카드 하나로 보고, 책장을 열거나 글 모음을 내보낼 수 있어요.'
-                        : viewMode === 'queue'
-                            ? '아직 확인하지 않은 글만 모았습니다. 확인하면 이 대기함에서 빠져요.'
-                            : '검색과 학생 필터로 지난 독서록을 찾아볼 수 있어요.'}
-                </small>
+                <div>
+                    <h3>{viewMode === 'student' ? '학생별 현황' : filteredTitle}</h3>
+                    <small>
+                        {viewMode === 'student'
+                            ? '학생 한 명당 카드 하나로 보고, 책장을 열거나 글 모음을 내보낼 수 있어요.'
+                            : viewMode === 'queue'
+                                ? '아직 확인하지 않은 글만 모았습니다. 확인하면 이 대기함에서 빠져요.'
+                                : '검색과 학생 필터로 지난 독서록을 찾아볼 수 있어요.'}
+                    </small>
+                </div>
+                {viewMode === 'archive' && shownCounts.reviewed > 0 && (
+                    <Button variant="outline" size="sm" onClick={openClassExport} disabled={exporting}>
+                        {exporting && exportTarget?.scope === 'class' ? '내보내는 중...' : '📤 확인 독서록 전체 내보내기'}
+                    </Button>
+                )}
             </div>
 
             {viewMode === 'queue' && !loading && items.length > 0 && (
-                <div className="teacher-reading-bulk-bar">
-                    <label>
-                        <input
-                            type="checkbox"
-                            checked={allLoadedSelected}
-                            onChange={toggleAllLoadedReviews}
-                            disabled={bulkSaving}
-                        />
-                        <span>현재 목록 전체 선택</span>
-                    </label>
-                    <div>
-                        <span>{selectedReviewIds.size > 0 ? `${selectedReviewIds.size}편 선택` : '확인할 글을 선택하세요'}</span>
-                        <Button onClick={saveBulkReviews} disabled={selectedReviewIds.size === 0 || bulkSaving}>
-                            {bulkSaving ? '일괄 확인 중...' : `선택한 독서록 확인 완료 ✓`}
-                        </Button>
-                    </div>
-                </div>
+                <SelfWritingBulkToolbar
+                    typeLabel="독서록"
+                    selectedCount={selectedReviewIds.size}
+                    allSelected={allLoadedSelected}
+                    disabled={bulkSaving}
+                    onToggleAll={toggleAllLoadedReviews}
+                    onConfirm={saveBulkReviews}
+                />
             )}
 
             {bulkNotice && <div className="teacher-reading-success-notice" role="status">{bulkNotice}</div>}
@@ -728,29 +739,29 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                     <>
                         {activeRows.length === 0 && renderEmpty()}
 
-                        <div className="teacher-reading-student-grid">
+                        <div className="self-writing-student-grid">
                             {activeRows.map((row) => (
-                            <article key={row.student_id} className={`teacher-reading-student-card ${expandedId === row.student_id ? 'is-open' : ''}`}>
+                            <article key={row.student_id} className={`self-writing-student-card ${expandedId === row.student_id ? 'is-open' : ''}`}>
                                 <button
                                     type="button"
-                                    className="teacher-reading-student-card__main"
+                                    className="self-writing-student-card__main"
                                     onClick={() => toggleStudent(row.student_id)}
                                     aria-expanded={expandedId === row.student_id}
                                 >
-                                    <span className="teacher-reading-student-card__avatar">👤</span>
-                                    <span>
+                                    <span className="self-writing-student-card__avatar">👤</span>
+                                    <span className="self-writing-student-card__identity">
                                         <strong>{row.student_name}</strong>
                                         <small>{row.last_written_at ? `최근 ${formatDate(row.last_written_at)}` : '작성 기록 없음'}</small>
                                     </span>
                                     <em>{expandedId === row.student_id ? '책장 닫기 ▴' : '책장 열기 ▾'}</em>
                                 </button>
 
-                                <div className="teacher-reading-student-card__stats">
+                                <div className="self-writing-student-card__stats">
                                     <span><strong>{row.total_count}</strong>전체</span>
                                     <span className={row.unreviewed_count > 0 ? 'has-unread' : ''}><strong>{row.unreviewed_count}</strong>미확인</span>
                                     <span><strong>{row.reviewed_count}</strong>확인</span>
                                 </div>
-                                <button type="button" className="teacher-reading-export-button" onClick={() => openStudentExport(row)}>
+                                <button type="button" className="self-writing-student-card__export" onClick={() => openStudentExport(row)}>
                                     📤 독서록 모음 내보내기
                                 </button>
                             </article>
@@ -758,7 +769,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                         </div>
 
                         {expandedId && (
-                            <section className="teacher-reading-student-shelf">
+                            <section className="self-writing-student-shelf">
                                 <header>
                                     <div>
                                         <span>학생별 책장</span>
@@ -773,7 +784,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                                 {studentLogsLoading === expandedId ? (
                                     <div className="teacher-reading-grouploading">책장을 불러오는 중... 📖</div>
                                 ) : (
-                                    <div className="teacher-reading-student-log-grid">
+                                    <div className="self-writing-student-log-grid">
                                         {(studentLogs.get(expandedId) || []).map(renderShelfCard)}
                                     </div>
                                 )}
@@ -797,7 +808,7 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 renderEmpty()
             ) : (
                 <>
-                    <div className={viewMode === 'queue' ? 'teacher-reading-queue-grid' : 'teacher-reading-archive-grid'}>
+                    <div className="self-writing-review-queue">
                         {items.map(viewMode === 'queue' ? renderQueueCard : renderArchiveCard)}
                     </div>
                     {hasMore && (
@@ -845,22 +856,23 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                                     <textarea
                                         value={comment}
                                         onChange={(event) => setComment(event.target.value.slice(0, 500))}
-                                        placeholder="학생에게 전할 짧은 한마디를 적어주세요. (선택)"
+                                        placeholder="학생에게 전할 한마디가 있으면 적어주세요. (선택)"
+                                        aria-label="학생에게 전할 선생님 한마디"
                                         rows={isMobile ? 4 : 3}
                                         disabled={saving}
                                     />
-                                    <small>{comment.length}/500 · 학생의 나의 책장에 표시됩니다.</small>
+                                    <small>{comment.length}/500 · 한마디는 선택이며 처리 결과는 학생 활동 알림으로 보냅니다.</small>
                                     <div className="teacher-reading-review-actions">
                                         <Button
-                                            variant="ghost"
-                                            style={detail.review && !comment.trim() ? { backgroundColor: '#16A34A', color: 'white' } : undefined}
-                                            onClick={() => saveReview('')}
-                                            disabled={saving || (Boolean(detail.review) && !comment.trim())}
+                                            variant="outline"
+                                            style={{ borderColor: '#F59E0B', color: '#B45309' }}
+                                            onClick={() => saveReview(comment.trim(), 'revision_requested')}
+                                            disabled={saving}
                                         >
-                                            {saving ? '저장 중...' : detail.review && !comment.trim() ? '✅ 확인 완료됨' : '확인 완료로 표시 ✓'}
+                                            보완 요청하기 ✏️
                                         </Button>
-                                        <Button onClick={() => saveReview(comment.trim())} disabled={saving || !comment.trim()}>
-                                            한마디 저장하기 💬
+                                        <Button onClick={() => saveReview(comment.trim(), 'accepted')} disabled={saving}>
+                                            {saving ? '저장 중...' : '확인 완료 ✓'}
                                         </Button>
                                     </div>
                                 </section>
@@ -874,94 +886,37 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 isOpen={Boolean(exportTarget)}
                 onClose={() => !exporting && setExportTarget(null)}
                 onConfirm={handleStudentExport}
-                title={exportTarget ? `${exportTarget.studentName} 학생 독서록 ${exportTarget.totalCount}편` : '독서록 내보내기'}
+                title={exportTarget
+                    ? exportTarget.scope === 'class'
+                        ? `${exportTarget.studentName} 확인 완료 독서록 ${exportTarget.totalCount}편`
+                        : `${exportTarget.studentName} 학생 독서록 ${exportTarget.totalCount}편`
+                    : '독서록 내보내기'}
                 isGapiLoaded={isGapiLoaded}
             />
             </>)}
 
             <style>{`
-                .teacher-reading-manager { width:100%; padding:28px; box-sizing:border-box; border:1px solid #E2E8F0; border-radius:26px; background:white; box-shadow:0 8px 26px rgba(15,23,42,.04); }
+                .teacher-reading-manager { width:100%; padding:20px; box-sizing:border-box; border:1px solid #E2E8F0; border-radius:26px; background:white; box-shadow:0 8px 26px rgba(15,23,42,.04); }
                 .teacher-reading-header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; }
                 .teacher-reading-kicker { color:#2563EB; font-size:.78rem; font-weight:900; }
-                .teacher-reading-header h2 { margin:7px 0; color:#1E293B; font-size:1.7rem; }
-                .teacher-reading-header p { margin:0; color:#64748B; }
-                .teacher-reading-sections { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; margin:24px 0 20px; padding:5px; border:1px solid #E2E8F0; border-radius:17px; background:#F1F5F9; }
-                .teacher-reading-sections button { display:flex; min-height:50px; align-items:center; justify-content:center; gap:9px; padding:10px 16px; border:0; border-radius:13px; background:transparent; color:#64748B; font-size:.9rem; font-weight:900; cursor:pointer; }
+                .teacher-reading-header h2 { margin:4px 0; color:#1E293B; font-size:1.45rem; }
+                .teacher-reading-header p { margin:0; color:#64748B; font-size:.88rem; }
+                .teacher-reading-sections { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; margin:14px 0 10px; padding:4px; border:1px solid #E2E8F0; border-radius:17px; background:#F1F5F9; }
+                .teacher-reading-sections button { display:flex; min-height:42px; align-items:center; justify-content:center; gap:9px; padding:8px 14px; border:0; border-radius:13px; background:transparent; color:#64748B; font-size:.86rem; font-weight:900; cursor:pointer; }
                 .teacher-reading-sections button span { line-height:1.35; word-break:keep-all; }
                 .teacher-reading-sections button.active { background:white; color:#1D4ED8; box-shadow:0 2px 8px rgba(15,23,42,.1); }
                 .teacher-reading-sections button strong { display:grid; min-width:22px; height:22px; place-items:center; padding:0 5px; border-radius:999px; background:#FEF3C7; color:#B45309; box-sizing:border-box; font-size:.7rem; }
                 .teacher-reading-policy-panel { min-height:360px; }
                 .teacher-reading-policy-panel .writing-policy-settings { margin:0; }
                 .teacher-reading-event-panel { min-height:360px; }
-                .teacher-reading-stats { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; margin:26px 0 18px; }
-                .teacher-reading-stats > * { display:flex; flex-direction:column; align-items:flex-start; gap:4px; padding:16px 18px; border:1px solid #E2E8F0; border-radius:16px; background:#F8FAFC; color:#64748B; text-align:left; }
-                .teacher-reading-stats button { cursor:pointer; }
-                .teacher-reading-stats button.active { border-color:#93C5FD; background:#EFF6FF; color:#1D4ED8; }
-                .teacher-reading-stats button.active.warning { border-color:#FCD34D; background:#FFFBEB; color:#B45309; }
-                .teacher-reading-stats button.active.success { border-color:#86EFAC; background:#F0FDF4; color:#15803D; }
-                .teacher-reading-stats strong { font-size:1.55rem; color:inherit; }
-                .teacher-reading-stats span { font-size:.78rem; font-weight:800; }
-                .teacher-reading-viewtabs { display:inline-grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:4px; margin-bottom:12px; padding:4px; border-radius:14px; background:#F1F5F9; }
-                .teacher-reading-viewtabs button { padding:9px 16px; border:0; border-radius:11px; background:transparent; color:#64748B; font-weight:900; font-size:.85rem; cursor:pointer; }
-                .teacher-reading-viewtabs button.active { background:white; color:#1D4ED8; box-shadow:0 1px 4px rgba(15,23,42,.12); }
-                .teacher-reading-filters { display:grid; grid-template-columns:minmax(0, 1fr) 220px; gap:10px; padding:14px; border-radius:16px; background:#F8FAFC; }
+                .teacher-reading-filters { display:grid; grid-template-columns:minmax(0, 1fr) 220px; gap:8px; padding:8px; border-radius:13px; background:#F8FAFC; }
                 .teacher-reading-filters.is-wide { grid-template-columns:minmax(0, 1fr); }
-                .teacher-reading-filters input, .teacher-reading-filters select { width:100%; padding:12px 14px; border:1px solid #CBD5E1; border-radius:12px; background:white; color:#334155; box-sizing:border-box; }
-                .teacher-reading-list-heading { display:flex; align-items:flex-end; justify-content:space-between; margin:24px 2px 10px; }
+                .teacher-reading-filters input, .teacher-reading-filters select { width:100%; padding:9px 12px; border:1px solid #CBD5E1; border-radius:10px; background:white; color:#334155; box-sizing:border-box; }
+                .teacher-reading-list-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:10px 2px 7px; }
+                .teacher-reading-list-heading > div { display:flex; min-width:0; flex-direction:column; gap:3px; }
                 .teacher-reading-list-heading h3 { margin:0; color:#334155; }
                 .teacher-reading-list-heading small { color:#94A3B8; }
-                .teacher-reading-queue-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; }
-                .teacher-reading-bulk-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:14px; padding:13px 15px; border:1px solid #BFDBFE; border-radius:15px; background:#EFF6FF; }
-                .teacher-reading-bulk-bar label { display:flex; align-items:center; gap:8px; color:#1E3A8A; font-size:.82rem; font-weight:900; cursor:pointer; }
-                .teacher-reading-bulk-bar input, .teacher-reading-queue-card__select input { width:18px; height:18px; accent-color:#2563EB; cursor:pointer; }
-                .teacher-reading-bulk-bar > div { display:flex; align-items:center; gap:12px; }
-                .teacher-reading-bulk-bar > div > span { color:#475569; font-size:.78rem; font-weight:900; }
                 .teacher-reading-success-notice { margin-bottom:14px; padding:13px 16px; border:1px solid #86EFAC; border-radius:14px; background:#F0FDF4; color:#15803D; font-weight:900; animation:readingReviewDone .28s ease-out; }
-                .teacher-reading-queue-card { display:flex; min-width:0; min-height:192px; flex-direction:column; align-items:stretch; overflow:hidden; padding:0; border:1px solid #FDE68A; border-radius:18px; background:linear-gradient(145deg,#FFFBEB,#FFFFFF); text-align:left; transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
-                .teacher-reading-queue-card:hover { border-color:#F59E0B; transform:translateY(-1px); box-shadow:0 8px 20px rgba(180,83,9,.09); }
-                .teacher-reading-queue-card.is-selected { border-color:#60A5FA; box-shadow:0 0 0 3px rgba(96,165,250,.18); }
-                .teacher-reading-queue-card__select { display:flex; align-items:center; gap:8px; padding:10px 15px; border-bottom:1px solid #FEF3C7; background:rgba(255,255,255,.74); color:#64748B; font-size:.72rem; font-weight:900; cursor:pointer; }
-                .teacher-reading-queue-card.is-selected .teacher-reading-queue-card__select { background:#EFF6FF; color:#1D4ED8; }
-                .teacher-reading-queue-card__open { display:flex; min-width:0; flex:1; flex-direction:column; align-items:stretch; padding:16px 18px 18px; border:0; background:transparent; text-align:left; cursor:pointer; }
-                .teacher-reading-queue-card__top { display:flex; align-items:center; justify-content:space-between; gap:10px; color:#92400E; font-size:.78rem; }
-                .teacher-reading-queue-card__top span { color:#94A3B8; }
-                .teacher-reading-queue-card h4 { margin:18px 0 6px; overflow:hidden; color:#1E293B; font-size:1rem; text-overflow:ellipsis; white-space:nowrap; }
-                .teacher-reading-queue-card p { margin:0; overflow:hidden; color:#64748B; font-size:.84rem; text-overflow:ellipsis; white-space:nowrap; }
-                .teacher-reading-queue-card__action { margin-top:auto; padding-top:16px; color:#B45309; font-size:.78rem; font-weight:900; }
-                .teacher-reading-student-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
-                .teacher-reading-student-card { overflow:hidden; border:1px solid #E2E8F0; border-radius:18px; background:white; }
-                .teacher-reading-student-card.is-open { border-color:#93C5FD; box-shadow:0 7px 22px rgba(37,99,235,.1); }
-                .teacher-reading-student-card__main { display:grid; grid-template-columns:auto minmax(0, 1fr); gap:10px; width:100%; padding:17px; border:0; background:transparent; text-align:left; cursor:pointer; }
-                .teacher-reading-student-card__avatar { grid-row:1 / span 2; display:grid; width:38px; height:38px; place-items:center; border-radius:13px; background:#EFF6FF; }
-                .teacher-reading-student-card__main > span:nth-child(2) { display:flex; min-width:0; flex-direction:column; gap:4px; }
-                .teacher-reading-student-card__main strong { overflow:hidden; color:#1E293B; text-overflow:ellipsis; white-space:nowrap; }
-                .teacher-reading-student-card__main small { color:#94A3B8; font-size:.72rem; }
-                .teacher-reading-student-card__main em { grid-column:2; color:#2563EB; font-size:.72rem; font-style:normal; font-weight:900; }
-                .teacher-reading-student-card__stats { display:grid; grid-template-columns:repeat(3, 1fr); border-top:1px solid #F1F5F9; border-bottom:1px solid #F1F5F9; background:#F8FAFC; }
-                .teacher-reading-student-card__stats span { display:flex; align-items:center; justify-content:center; gap:4px; padding:10px 4px; color:#64748B; font-size:.7rem; font-weight:800; }
-                .teacher-reading-student-card__stats strong { color:#334155; font-size:.9rem; }
-                .teacher-reading-student-card__stats .has-unread, .teacher-reading-student-card__stats .has-unread strong { color:#B45309; }
-                .teacher-reading-export-button { width:100%; padding:11px 14px; border:0; background:white; color:#475569; font-size:.75rem; font-weight:900; cursor:pointer; }
-                .teacher-reading-export-button:hover { background:#EFF6FF; color:#1D4ED8; }
-                .teacher-reading-student-shelf { margin-top:18px; padding:18px; border:1px solid #BFDBFE; border-radius:20px; background:#F8FBFF; }
-                .teacher-reading-student-shelf > header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-                .teacher-reading-student-shelf > header span { color:#2563EB; font-size:.72rem; font-weight:900; }
-                .teacher-reading-student-shelf > header h3 { margin:4px 0 0; color:#1E293B; }
-                .teacher-reading-student-log-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; }
-                .teacher-reading-shelf-card { display:flex; min-width:0; min-height:142px; flex-direction:column; align-items:flex-start; padding:14px; border:1px solid #DBEAFE; border-radius:15px; background:white; text-align:left; cursor:pointer; }
-                .teacher-reading-shelf-card h4 { width:100%; margin:12px 0 5px; overflow:hidden; color:#1E293B; text-overflow:ellipsis; white-space:nowrap; }
-                .teacher-reading-shelf-card p { width:100%; margin:0; overflow:hidden; color:#64748B; font-size:.78rem; text-overflow:ellipsis; white-space:nowrap; }
-                .teacher-reading-shelf-card small { margin-top:auto; padding-top:12px; color:#94A3B8; }
-                .teacher-reading-archive-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
-                .teacher-reading-archive-card { display:flex; min-width:0; min-height:156px; flex-direction:column; align-items:stretch; padding:16px; border:1px solid #E2E8F0; border-radius:17px; background:white; text-align:left; cursor:pointer; transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
-                .teacher-reading-archive-card:hover { border-color:#93C5FD; transform:translateY(-1px); box-shadow:0 8px 20px rgba(37,99,235,.08); }
-                .teacher-reading-archive-card__top { display:flex; min-width:0; align-items:center; justify-content:space-between; gap:8px; }
-                .teacher-reading-archive-card__top > strong { min-width:0; overflow:hidden; color:#334155; font-size:.8rem; text-overflow:ellipsis; white-space:nowrap; }
-                .teacher-reading-archive-card h4 { margin:17px 0 5px; overflow:hidden; color:#1E293B; font-size:.95rem; text-overflow:ellipsis; white-space:nowrap; }
-                .teacher-reading-archive-card p { margin:0; overflow:hidden; color:#64748B; font-size:.8rem; text-overflow:ellipsis; white-space:nowrap; }
-                .teacher-reading-archive-card__bottom { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top:15px; }
-                .teacher-reading-archive-card__bottom small { color:#94A3B8; }
-                .teacher-reading-archive-card__bottom span { color:#2563EB; font-size:.75rem; font-weight:900; }
                 .teacher-reading-status { justify-self:start; padding:6px 9px; border-radius:9px; background:#F1F5F9; color:#64748B; font-size:.72rem; font-weight:900; }
                 .teacher-reading-status.checked { background:#F0FDF4; color:#15803D; }
                 .teacher-reading-status.commented { background:#F5F3FF; color:#6D28D9; }
@@ -1004,28 +959,20 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 .teacher-reading-review-state { padding:7px 10px; border-radius:999px; background:#FEF3C7; color:#92400E; font-size:.8rem; font-weight:950; }
                 .teacher-reading-review-state.checked { background:#DCFCE7; color:#15803D; }
                 .teacher-reading-review-state.commented { background:#EDE9FE; color:#6D28D9; }
+                .teacher-reading-review-state.revision_requested { background:#FEF3C7; color:#B45309; }
                 .teacher-reading-review-success { margin-top:14px; padding:14px 16px; border:1px solid #86EFAC; border-radius:13px; background:#DCFCE7; color:#15803D; font-weight:950; animation:readingReviewDone .28s ease-out; }
                 @keyframes readingReviewDone { from { opacity:0; transform:translateY(5px) scale(.985); } to { opacity:1; transform:none; } }
                 .teacher-reading-review-box textarea { width:100%; margin-top:14px; padding:14px; border:1px solid #BFDBFE; border-radius:13px; box-sizing:border-box; resize:vertical; color:#334155; font:inherit; line-height:1.6; }
                 .teacher-reading-review-box > small { display:block; margin-top:6px; color:#64748B; text-align:right; }
                 .teacher-reading-review-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
                 @media (max-width: 1100px) {
-                    .teacher-reading-student-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
-                    .teacher-reading-student-log-grid { grid-template-columns:repeat(3, minmax(0, 1fr)); }
-                    .teacher-reading-archive-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
                 }
                 @media (max-width: 760px) {
                     .teacher-reading-manager { padding:18px 14px; border-radius:20px; }
                     .teacher-reading-header { flex-direction:column; }
                     .teacher-reading-sections { margin:18px 0 16px; }
                     .teacher-reading-sections button { min-height:48px; padding:9px 8px; font-size:.8rem; }
-                    .teacher-reading-stats { grid-template-columns:repeat(2, minmax(0, 1fr)); }
                     .teacher-reading-filters, .teacher-reading-filters.is-wide { grid-template-columns:1fr; }
-                    .teacher-reading-bulk-bar { align-items:stretch; flex-direction:column; }
-                    .teacher-reading-bulk-bar > div { align-items:stretch; flex-direction:column; }
-                    .teacher-reading-bulk-bar > div button { width:100%; }
-                    .teacher-reading-viewtabs { display:grid; width:100%; grid-template-columns:1fr; }
-                    .teacher-reading-queue-grid, .teacher-reading-student-grid, .teacher-reading-student-log-grid, .teacher-reading-archive-grid { grid-template-columns:1fr; }
                     .teacher-reading-list-heading { align-items:flex-start; flex-direction:column; gap:5px; }
                     .teacher-reading-grouprow { grid-template-columns:20px minmax(0, 1fr) auto; gap:8px; padding:14px 8px; }
                     .teacher-reading-grouprow small { display:none; }
