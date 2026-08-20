@@ -5,11 +5,15 @@
 >
 > **비밀 값은 여기 쓰지 않는다.** 열쇠·비밀번호는 *어디에 있는지*만 적는다.
 
-**최종 설정 점검: 2026-08-21 — 일일 실패 감지·권한 강화·엄격 복구 리허설 적용 및 실백업 통과**
+**최종 설정 점검: 2026-08-21 — 관리자 대시보드 상태 이력 연결 및 실백업·실복구 통과**
 
 ---
 
 ## 1. 매일·매월 점검 — 이것만 보면 된다
+
+관리자로 로그인한 뒤 `관리자 대시보드 → 💾 백업 상태`에서 아래 일일·월간 결과와 최근 20건을 함께 볼 수 있다.
+상태 DB에는 성공 여부·시각·파일/테이블 수만 저장하며 원문 로그·파일 경로·시크릿은 넣지 않는다.
+일일 기록이 26시간, 복구 기록이 40일 넘게 갱신되지 않으면 화면이 `확인 필요`로 바꿔 표시한다.
 
 매일 백업은 성공·실패를 한 줄 상태 파일로 남긴다. 8개 필수 산출물, 내장 사본, 암호화 Drive,
 외장 SSD 중 하나라도 실패하면 `FAIL`과 종료코드 1을 남기고 화면 알림을 띄운다.
@@ -61,6 +65,7 @@ bash ~/scripts/restore_rehearsal.sh; cat ~/backups/auto/rehearsal-status.txt
 | `com.agit.restore-rehearsal` | **매월 1일 04:40** | 위 백업을 복원해 검증 | 로그·상태 파일 | — |
 
 - 스크립트: `~/scripts/sh_mirror_backup.sh` · `~/.db-backup/backup.sh` · `~/literacy/scripts/backup-db.sh` · `~/scripts/restore_rehearsal.sh`
+- 관리자 상태 기록기: 저장소의 `scripts/record-backup-status.sh` — 호스트 스크립트가 직접 호출하며 실패해도 원래 상태 파일은 유지
 - 로그: `~/backups/auto/sync.log` · `~/.db-backup/backup.log` · `~/backups/auto/rehearsal.log`
 - 내장 산출물: `~/backups/auto/YYYYMMDD/`
 - 로컬 평문 백업 디렉터리는 `700`, 파일은 `600`으로 유지한다. 백업 스크립트가 `umask 077`로 새 산출물에도 같은 권한을 적용한다.

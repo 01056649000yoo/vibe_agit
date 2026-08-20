@@ -9,6 +9,7 @@ import AdminStudentActivityPanel from './AdminStudentActivityPanel';
 import AdminDormantPanel from './AdminDormantPanel';
 import AdminCleanupPanel from './AdminCleanupPanel';
 import AdminLabManagementPanel from './AdminLabManagementPanel';
+import AdminBackupPanel from './AdminBackupPanel';
 import useAdminUsage from '../../hooks/useAdminUsage';
 
 const AdminVocabReviewPanel = React.lazy(() => import('./AdminVocabReviewPanel'));
@@ -179,7 +180,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     const pendingList = pendingGroup === 'revoked' ? revokedTeachers : newSignups;
 
     // States for UI
-    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'lab' | 'vocab' | 'feedback' | 'announcements' | 'settings'
+    // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'lab' | 'vocab' | 'spelling' | 'backup' | 'feedback' | 'announcements' | 'settings'
     const [currentTab, setCurrentTab] = useState('active');
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -475,6 +476,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             { id: 'lab', label: '🧪 글쓰기 연구소' },
                             { id: 'vocab', label: '🏰 어휘 V2 검수' },
                             { id: 'spelling', label: '🔤 맞춤법 승격 검토' },
+                            { id: 'backup', label: '💾 백업 상태' },
                             {
                                 id: 'feedback',
                                 label: (
@@ -823,6 +825,10 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                         <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>맞춤법 승격 화면을 불러오는 중입니다...</div>}>
                             <AdminSpellingPromotionPanel />
                         </React.Suspense>
+                    )}
+
+                    {currentTab === 'backup' && (
+                        <AdminBackupPanel />
                     )}
 
                     {!loading && currentTab === 'settings' && (
