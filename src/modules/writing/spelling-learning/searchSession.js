@@ -1,22 +1,29 @@
 import { spellingLearningApi } from './api';
+import { normalizeSpellingCandidate } from './searchCandidate';
 
 const pending = new Map();
+const MAX_BATCH_ITEMS = 20;
 
 /**
  * 수첩에서 찾아본 표현을 메모리에 모은다(닫을 때 한 번에 보낸다).
  *
- * `display` 는 교사 화면에 보일 표현이다 — 찾은 항목이면 **사전 항목의 표기**(예: `며칠 / 몇일`),
- * 못 찾았으면 학생이 친 검색어다. 예전에는 찾은 항목의 표현을 아예 남기지 않아
- * 교사 화면에 `common:myeochil` 같은 내부 키와 `미분류` 만 보였다(2026-08-19 수정).
+ * 기존 자료·사전 검색·문장은 고정 요약 키로 횟수만 모은다. 교사 화면에 보낼 원문은
+ * `candidate`로 분류된 15자 이하의 짧은 미등록 한글 표현뿐이다.
  */
-export const rememberSpellingSearch = ({ entryKey, label = '미분류', display = '', query = '', matched = false }) => {
-    const safeKey = String(entryKey || '').slice(0, 80);
+export const rememberSpellingSearch = ({ kind = 'covered', entryKey = '', label = '미분류', display = '' }) => {
+    const normalizedDisplay = normalizeSpellingCandidate(display);
+    const safeKey = kind === 'candidate'
+        ? `candidate:${normalizedDisplay}`
+        : kind === 'dictionary' || kind === 'sentence'
+            ? `summary:${kind}`
+            : String(entryKey || '').slice(0, 80);
     if (!safeKey) return;
+    if (!pending.has(safeKey) && pending.size >= MAX_BATCH_ITEMS) return;
     const current = pending.get(safeKey) || {
         entry_key: safeKey,
+        kind,
         label: String(label || '미분류').slice(0, 40),
-        display: String(display || query || '').slice(0, 80),
-        query: matched ? '' : query,
+        display: kind === 'candidate' ? normalizedDisplay.slice(0, 15) : String(display || '').slice(0, 80),
         count: 0
     };
     current.count = Math.min(100, current.count + 1);

@@ -10,7 +10,7 @@ export const spellingLearningManifest = {
     settings: {
         order: 50,
         label: '맞춤법 배움 데이터',
-        description: '우리 반 맞춤법 항목과 검색 기록'
+        description: '우리 반 맞춤법 항목과 추천 후보'
     },
     performance: {
         home: 'none', load: 'on-open', writes: 'rpc', realtime: 'none', maxInitialRows: 100

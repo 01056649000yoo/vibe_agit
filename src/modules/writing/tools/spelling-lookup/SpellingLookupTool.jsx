@@ -9,6 +9,7 @@ import {
     searchElementarySpelling
 } from './elementarySpellingEntries';
 import { spellingLearningApi } from '../../spelling-learning/api';
+import { classifySpellingSearchQuery } from '../../spelling-learning/searchCandidate';
 import { flushSpellingSearches, rememberSpellingSearch } from '../../spelling-learning/searchSession';
 import './SpellingLookupTool.css';
 
@@ -26,6 +27,25 @@ const getErrorPayload = async (error) => {
     } catch {
         return null;
     }
+};
+
+const rememberUnmatchedSearch = (query, dictionaryMatched = false) => {
+    const classified = classifySpellingSearchQuery(query, { dictionaryMatched });
+    if (classified.kind === 'ignored') return;
+    rememberSpellingSearch({
+        kind: classified.kind,
+        display: classified.display,
+        label: classified.kind === 'candidate' ? '미등록 표현' : '검색 이용'
+    });
+};
+
+const hasExactDictionaryMatch = (items, query) => {
+    const normalizedQuery = query.normalize('NFC').toLocaleLowerCase('ko-KR').replace(/\s+/g, ' ').trim();
+    return items.some((item) => String(item.word || '')
+        .normalize('NFC')
+        .toLocaleLowerCase('ko-KR')
+        .replace(/\s+/g, ' ')
+        .trim() === normalizedQuery);
 };
 
 /**
@@ -150,25 +170,27 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
             || firstMatch?.learningLabel
             || firstMatch?.category
             || '미분류';
-        const matchedDisplay = classMatch
-            ? `${classMatch.wrong_expression} → ${classMatch.correct_expression}`
-            : (firstMatch ? (firstMatch.question || firstMatch.learningLabel || '') : trimmed);
-        rememberSpellingSearch({
-            entryKey: classMatch ? `class:${classMatch.id}` : (firstMatch?.id ? `common:${firstMatch.id}` : `unmatched:${trimmed.normalize('NFC').toLocaleLowerCase('ko-KR')}`),
-            label: matchedLabel,
-            display: matchedDisplay,
-            query: trimmed,
-            matched: !!firstMatch
-        });
+        if (firstMatch) {
+            rememberSpellingSearch({
+                kind: 'covered',
+                entryKey: classMatch ? `class:${classMatch.id}` : `common:${firstMatch.id}`,
+                label: matchedLabel
+            });
+        }
 
-        if (!includeOfficial) return;
+        if (!includeOfficial) {
+            if (!firstMatch) rememberUnmatchedSearch(trimmed);
+            return;
+        }
 
         setDictionarySearchedQuery(trimmed);
         if (!canSearchOfficialDictionary(trimmed)) {
+            if (!firstMatch) rememberUnmatchedSearch(trimmed);
             setDictionaryMessage('문장 전체는 수첩 규칙으로 살펴봤어요. 공식 사전에서는 궁금한 낱말이나 짧은 구만 다시 찾아보세요.');
             return;
         }
         if (!supabase) {
+            if (!firstMatch) rememberUnmatchedSearch(trimmed);
             setDictionaryMessage('공식 사전 연결을 준비하고 있어요. 아래 링크에서 직접 확인할 수 있어요.');
             return;
         }
@@ -176,6 +198,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
         const cacheKey = trimmed.toLocaleLowerCase('ko-KR');
         if (dictionarySearchCache.has(cacheKey)) {
             const cachedItems = dictionarySearchCache.get(cacheKey);
+            if (!firstMatch) rememberUnmatchedSearch(trimmed, hasExactDictionaryMatch(cachedItems, trimmed));
             setDictionaryItems(cachedItems);
             setDictionaryMessage(cachedItems.length === 0 ? '표준국어대사전에서 일치하는 낱말을 찾지 못했어요.' : '');
             return;
@@ -189,6 +212,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
 
         setDictionaryLoading(false);
         if (error) {
+            if (!firstMatch) rememberUnmatchedSearch(trimmed);
             const payload = await getErrorPayload(error);
             if (searchRequestRef.current !== requestId) return;
             setDictionaryMessage(payload?.code === 'STDICT_NOT_CONFIGURED'
@@ -198,6 +222,7 @@ const SpellingLookupTool = ({ initialQuery = '', correction = null, onClose }) =
         }
 
         const items = Array.isArray(data?.items) ? data.items : [];
+        if (!firstMatch) rememberUnmatchedSearch(trimmed, hasExactDictionaryMatch(items, trimmed));
         dictionarySearchCache.set(cacheKey, items);
         setDictionaryItems(items);
         setDictionaryMessage(items.length === 0 ? '표준국어대사전에서 일치하는 낱말을 찾지 못했어요.' : '');

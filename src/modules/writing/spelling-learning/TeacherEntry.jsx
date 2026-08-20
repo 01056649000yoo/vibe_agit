@@ -19,6 +19,11 @@ const DATA_FILTERS = [
     { id: 'class', label: '우리 반 자료' }
 ];
 const PAGE_SIZE = 20;
+const EMPTY_WORKSPACE = {
+    entries: [],
+    candidate_searches: [],
+    search_summary: { total: 0, covered: 0, dictionary: 0, filtered: 0, recommended: 0, observing: 0 }
+};
 
 const normalizeSearchValue = (value) => String(value || '')
     .normalize('NFC')
@@ -43,7 +48,7 @@ const getEntrySearchText = (entry) => normalizeSearchValue([
 
 const TeacherEntry = ({ activeClass }) => {
     const classId = activeClass?.id;
-    const [workspace, setWorkspace] = useState({ entries: [], top_searches: [] });
+    const [workspace, setWorkspace] = useState(EMPTY_WORKSPACE);
     const [draft, setDraft] = useState(EMPTY);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
@@ -58,7 +63,7 @@ const TeacherEntry = ({ activeClass }) => {
         if (!classId) return;
         try {
             const nextWorkspace = await spellingLearningApi.getTeacherWorkspace(classId);
-            setWorkspace(nextWorkspace || { entries: [], top_searches: [] });
+            setWorkspace(nextWorkspace || EMPTY_WORKSPACE);
         } catch (error) {
             setMessage(error.message || '맞춤법 데이터를 불러오지 못했습니다.');
         }
@@ -75,49 +80,11 @@ const TeacherEntry = ({ activeClass }) => {
         [workspace.entries]
     );
 
-    // 검색 기록은 내부 키(`common:myeochil`)로 저장된다. 화면에서 실제 표현으로 되돌려 보여 준다.
-    const builtInById = useMemo(
-        () => new Map(BUILT_IN_ENTRIES.map((entry) => [entry.id.replace('built-in:', ''), entry])),
-        []
-    );
-    const classById = useMemo(() => new Map(classEntries.map((entry) => [entry.id, entry])), [classEntries]);
-
-    const searchRows = useMemo(() => (workspace.top_searches || []).map((row) => {
-        const key = String(row.entry_key || '');
-        if (key.startsWith('class:')) {
-            const entry = classById.get(key.slice('class:'.length));
-            return {
-                ...row,
-                text: entry ? `${entry.wrong_expression} → ${entry.correct_expression}` : (row.display || key),
-                note: entry?.label || row.label,
-                source: 'class'
-            };
-        }
-        if (key.startsWith('common:')) {
-            const entry = builtInById.get(key.slice('common:'.length));
-            return {
-                ...row,
-                text: entry ? entry.question : (row.display || key),
-                note: entry ? `${entry.category} › ${entry.subcategory}` : row.label,
-                source: 'built-in'
-            };
-        }
-        return {
-            ...row,
-            text: row.display || key.replace(/^unmatched:/, ''),
-            note: '아직 우리 반 자료에 없는 표현이에요',
-            source: 'missing'
-        };
-    }), [builtInById, classById, workspace.top_searches]);
-
-    const searchSummary = useMemo(() => ({
-        total: searchRows.reduce((sum, row) => sum + (row.total || 0), 0),
-        expressions: searchRows.length,
-        missing: searchRows.filter((row) => row.source === 'missing').length
-    }), [searchRows]);
+    const searchRows = workspace.candidate_searches || [];
+    const searchSummary = workspace.search_summary || EMPTY_WORKSPACE.search_summary;
 
     const startFromSearch = (row) => {
-        setDraft({ ...EMPTY, wrong_expression: String(row.text || '').slice(0, 80) });
+        setDraft({ ...EMPTY, wrong_expression: String(row.expression || '').slice(0, 80) });
         setMessage('학생이 찾아본 표현을 가져왔어요. `AI로 내용 만들기`를 눌러 보세요.');
         setActiveTab('create');
     };
@@ -202,7 +169,7 @@ const TeacherEntry = ({ activeClass }) => {
         {classId && <>
             <div className="spelling-learning-tabs is-three" role="tablist" aria-label="맞춤법 배움 데이터 관리">
                 <button type="button" role="tab" aria-selected={activeTab === 'insight'} className={activeTab === 'insight' ? 'is-active' : ''} onClick={() => setActiveTab('insight')}>
-                    <strong>🔎 우리 반 배움 현황</strong><small>학생이 찾아본 표현 {searchSummary.expressions}개</small>
+                    <strong>🔎 우리 반 배움 현황</strong><small>새 자료 추천 후보 {searchSummary.recommended}개</small>
                 </button>
                 <button type="button" role="tab" aria-selected={activeTab === 'create'} className={activeTab === 'create' ? 'is-active' : ''} onClick={() => setActiveTab('create')}>
                     <strong>✨ 항목 만들기</strong><small>우리 반 맞춤법 자료 등록</small>
@@ -216,38 +183,36 @@ const TeacherEntry = ({ activeClass }) => {
                 <div className="spelling-learning-form-heading">
                     <div>
                         <span>최근 30일</span>
-                        <h3>학생이 맞춤법 수첩에서 찾아본 표현</h3>
+                        <h3>맞춤법 수첩에 넣을 추천 후보</h3>
                     </div>
                 </div>
                 <div className="spelling-learning-summary">
-                    <span><b>{searchSummary.total}</b>번 찾아봤어요</span>
-                    <span><b>{searchSummary.expressions}</b>가지 표현</span>
-                    <span className={searchSummary.missing ? 'is-warning' : ''}><b>{searchSummary.missing}</b>개는 아직 자료 없음</span>
+                    <span className={searchSummary.recommended ? 'is-warning' : ''}><b>{searchSummary.recommended}</b>개 추천 후보</span>
+                    <span><b>{searchSummary.covered}</b>번은 기존 자료로 해결</span>
+                    <span><b>{searchSummary.dictionary}</b>번은 사전에서 확인</span>
+                    <span><b>{searchSummary.filtered}</b>번은 문장 검색 제외</span>
                 </div>
 
-                {/* 학급 등록 → 학기말 공통 승격 흐름을 여기서 한 줄로 알려 준다(자세한 내용은 도움말). */}
                 <p className="spelling-learning-notice">
-                    자료가 없는 표현은 <b>우리 반 자료로 바로 등록</b>할 수 있어요. 학급 자료는 <b>학기말에 모아 검토한 뒤
-                    여러 학급에서 함께 필요한 표현만 기본 자료로 옮깁니다.</b>
+                    기존 자료·사전 검색·문장은 목록에서 빼고, <b>학생 2명 이상 또는 3회 이상 반복해서 찾아본
+                    짧은 미등록 표현만 추천합니다.</b> 한두 번 검색된 표현 {searchSummary.observing}개는 더 지켜보는 중이에요.
                 </p>
 
-                {searchRows.length === 0 && <p className="spelling-learning-empty">아직 모인 검색 기록이 없어요. 학생이 글을 쓰며 수첩에서 표현을 찾아보면 여기에 쌓입니다.</p>}
+                {searchRows.length === 0 && <p className="spelling-learning-empty">지금은 새로 만들 만한 추천 후보가 없어요. 검색 기록은 자동으로 걸러지고, 반복해서 필요한 표현이 생기면 여기에 나타납니다.</p>}
 
                 <ol className="spelling-learning-search-list">
-                    {searchRows.map((row, index) => <li key={row.entry_key} className={`spelling-learning-search-row is-${row.source}`}>
+                    {searchRows.map((row, index) => <li key={row.expression} className="spelling-learning-search-row is-candidate">
                         <span className="spelling-learning-search-rank">{index + 1}</span>
                         <span className="spelling-learning-search-body">
-                            <strong>{row.text}</strong>
-                            <small>{row.note}</small>
+                            <strong>{row.expression}</strong>
+                            <small>{row.reason}</small>
                         </span>
                         <span className="spelling-learning-search-count">
                             <b>{row.total}회</b>
                             <small>학생 {row.students}명</small>
                         </span>
                         <span className="spelling-learning-search-action">
-                            {row.source === 'missing'
-                                ? <button type="button" className="secondary" onClick={() => startFromSearch(row)}>자료 만들기</button>
-                                : <em className={`spelling-learning-source is-${row.source}`}>{row.source === 'class' ? '우리 반 자료' : '기본 자료'}</em>}
+                            <button type="button" className="secondary" onClick={() => startFromSearch(row)}>자료 만들기</button>
                         </span>
                     </li>)}
                 </ol>

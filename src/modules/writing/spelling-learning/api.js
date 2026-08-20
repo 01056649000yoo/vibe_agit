@@ -9,7 +9,7 @@ const unwrap = ({ data, error }) => {
 
 export const spellingLearningApi = {
     getTeacherWorkspace: async (classId) => unwrap(await supabase.rpc(
-        'get_spelling_learning_workspace_v1', { p_class_id: classId }
+        'get_spelling_learning_workspace_v2', { p_class_id: classId }
     )),
     getStudentEntries: async () => {
         if (!studentEntriesPromise) {
@@ -29,7 +29,7 @@ export const spellingLearningApi = {
     )),
     recordSearchBatch: async (items) => {
         if (!items.length) return null;
-        return unwrap(await supabase.rpc('record_spelling_search_batch_v1', { p_items: items.slice(0, 20) }));
+        return unwrap(await supabase.rpc('record_spelling_search_batch_v2', { p_items: items.slice(0, 20) }));
     },
     generateDraft: async (wrongExpression) => {
         const result = await supabase.functions.invoke('vibe-ai', {

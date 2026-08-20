@@ -3,12 +3,18 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const migration = await readFile('supabase/migrations/20261017_spelling_learning_module.sql', 'utf8');
+const candidateMigration = await readFile('supabase/migrations/20261144_spelling_search_candidate_filtering.sql', 'utf8');
 const manifest = await readFile('src/modules/writing/spelling-learning/manifest.js', 'utf8');
+const learningApi = await readFile('src/modules/writing/spelling-learning/api.js', 'utf8');
+const searchSession = await readFile('src/modules/writing/spelling-learning/searchSession.js', 'utf8');
 const lookup = await readFile('src/modules/writing/tools/spelling-lookup/SpellingLookupTool.jsx', 'utf8');
 const lookupManifest = await readFile('src/modules/writing/tools/spelling-lookup/manifest.js', 'utf8');
 const underlineTextarea = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineTextarea.jsx', 'utf8');
 const underlineInput = await readFile('src/modules/writing/tools/spelling-lookup/SpellingUnderlineInput.jsx', 'utf8');
 const teacherEntry = await readFile('src/modules/writing/spelling-learning/TeacherEntry.jsx', 'utf8');
+const { classifySpellingSearchQuery } = await import(
+    '../src/modules/writing/spelling-learning/searchCandidate.js'
+);
 const {
     ELEMENTARY_SPELLING_DETECTION_ENTRY_IDS,
     ELEMENTARY_SPELLING_DETECTION_RULE_COUNT,
@@ -258,9 +264,10 @@ test('퀴즈는 기본 자료 500개 전체에서 열 때마다 중복 없는 5�
 test('학생 검색은 입력 중 직접 쓰지 않고 닫을 때 배치 RPC로 모은다', () => {
     assert.match(lookup, /flushSpellingSearches/);
     assert.doesNotMatch(lookup, /setInterval|postgres_changes/);
-    assert.match(migration, /record_spelling_search_batch_v1/);
-    assert.match(migration, /jsonb_array_length\(p_items\) > 20/);
-    assert.match(migration, /ON CONFLICT\(class_id,event_date,entry_key\) DO UPDATE/);
+    assert.match(learningApi, /record_spelling_search_batch_v2/);
+    assert.match(candidateMigration, /jsonb_array_length\(p_items\) > 20/);
+    assert.match(candidateMigration, /ON CONFLICT \(class_id, event_date, entry_key\) DO UPDATE/);
+    assert.match(searchSession, /MAX_BATCH_ITEMS = 20/);
 });
 
 test('맞춤법 데이터는 학급 직접 범위와 교사·학생 실제 연결을 검증한다', () => {
@@ -268,10 +275,38 @@ test('맞춤법 데이터는 학급 직접 범위와 교사·학생 실제 연�
     assert.match(migration, /s\.auth_id=auth\.uid\(\)/);
     assert.match(migration, /idx_class_spelling_stats_class_date/);
     assert.match(migration, /REVOKE ALL ON public\.class_spelling_daily_stats/);
+    assert.match(candidateMigration, /student\.auth_id = auth\.uid\(\)/);
+    assert.match(candidateMigration, /class\.teacher_id = auth\.uid\(\)/);
+    assert.match(candidateMigration, /REVOKE ALL ON FUNCTION public\.record_spelling_search_batch_v2\(JSONB\) FROM PUBLIC, anon/);
 });
 
-test('학생 원문은 저장하지 않고 미등록 짧은 표현만 제한적으로 남긴다', () => {
-    assert.doesNotMatch(migration, /post_content|student_post_id|full_text/);
-    assert.match(migration, /v_key LIKE 'unmatched:%'/);
-    assert.match(migration, /left\(btrim\(COALESCE\(v_item->>'query',''\)\),80\)/);
+test('검색어는 기존 자료·사전·문장·추천 후보로 가볍게 분류한다', () => {
+    assert.deepEqual(classifySpellingSearchQuery('안되요'), { kind: 'candidate', display: '안되요' });
+    assert.deepEqual(classifySpellingSearchQuery('할수 있어'), { kind: 'candidate', display: '할수 있어' });
+    assert.deepEqual(classifySpellingSearchQuery('오늘 학교에서 친구와 놀았다'), { kind: 'sentence', display: '' });
+    assert.deepEqual(classifySpellingSearchQuery('짧은 문장입니다.'), { kind: 'sentence', display: '' });
+    assert.deepEqual(classifySpellingSearchQuery('ㅋㅋㅋㅋ'), { kind: 'ignored', display: '' });
+    assert.deepEqual(classifySpellingSearchQuery('강아지', { dictionaryMatched: true }), { kind: 'dictionary', display: '' });
+});
+
+test('문장과 사전 검색은 원문 없이 집계하고 짧은 후보만 서버가 보관한다', () => {
+    assert.doesNotMatch(candidateMigration, /post_content|student_post_id|full_text/);
+    assert.match(candidateMigration, /v_key := 'summary:sentence'/);
+    assert.match(candidateMigration, /v_key := 'summary:dictionary'/);
+    assert.match(candidateMigration, /char_length\(v_expression\) NOT BETWEEN 2 AND 15/);
+    assert.match(candidateMigration, /array_length\(regexp_split_to_array\(v_expression/);
+    assert.match(candidateMigration, /v_expression := NULL/);
+});
+
+test('교사 화면은 반복된 미등록 표현만 추천하고 나머지는 숫자로 요약한다', () => {
+    assert.match(learningApi, /get_spelling_learning_workspace_v2/);
+    assert.match(candidateMigration, /idx_class_spelling_student_entry_date/);
+    assert.match(candidateMigration, /candidate_students AS MATERIALIZED/);
+    assert.match(candidateMigration, /LEFT JOIN candidate_students students USING \(entry_key\)/);
+    assert.match(candidateMigration, /candidate\.students >= 2 OR candidate\.total >= 3/);
+    assert.match(candidateMigration, /LIMIT 30/);
+    assert.match(teacherEntry, /맞춤법 수첩에 넣을 추천 후보/);
+    assert.match(teacherEntry, /기존 자료로 해결/);
+    assert.match(teacherEntry, /문장 검색 제외/);
+    assert.doesNotMatch(teacherEntry, /workspace\.top_searches/);
 });
