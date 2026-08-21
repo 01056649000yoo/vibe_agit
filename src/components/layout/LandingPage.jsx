@@ -92,8 +92,8 @@ const LandingPage = ({ onStudentLoginClick }) => {
 
         <section className="landing-experiences" aria-labelledby="landing-experiences-title">
           <div className="landing-experiences-heading">
-            <h2 id="landing-experiences-title">아지트에서 만나는 세 가지 성장</h2>
-            <span>눌러서 자세히 보기</span>
+            <h2 id="landing-experiences-title">현재 아지트에서 할 수 있는 일</h2>
+            <span>세 영역을 눌러 자세히 보기</span>
           </div>
           <div className="landing-experience-grid">
             {landingExperiences.map((experience) => (

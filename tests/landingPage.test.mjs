@@ -14,6 +14,7 @@ test('첫 로그인 화면은 핵심 문장과 두 로그인, 세 가지 아지�
   assert.match(landing, /쓰고, 읽고, 키우며[\s\S]*함께 자라는 우리 반 아지트/);
   assert.match(landing, /학생으로 들어가기/);
   assert.match(landing, /선생님으로 들어가기/);
+  assert.match(landing, /현재 아지트에서 할 수 있는 일/);
   assert.match(landing, /landingExperiences\.map/);
   assert.doesNotMatch(landing, /landing-brand-row|landing-brand-mark|글쓰기로 생각이 자라는 우리 반 공간/);
   assert.doesNotMatch(landing, /capability-grid|생각을 글로 써요|글쓰기를 지도해요|함께 고치며 자라요|재미있게 이어가요/);
@@ -40,7 +41,7 @@ test('첫 화면은 높이를 줄이고 세 경험을 스크롤 없는 3분할 �
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.landing-experience-button--dragon \.landing-experience-copy strong\s*\{[\s\S]*font-size: clamp\(0\.67rem, 3vw, 0\.73rem\)/);
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.landing-experiences-heading\s*\{[\s\S]*flex-direction: column/);
   assert.match(landing, /landing-experience-copy[\s\S]*experience\.shortLead[\s\S]*experience\.shortNoun/);
-  assert.match(modal, /shortLead: '쓰고 다듬는'[\s\S]*shortNoun: '글'/);
+  assert.match(modal, /shortLead: '과제·자율 글을'[\s\S]*shortNoun: '쓰고 다듬기'/);
   assert.doesNotMatch(landing, />＋</);
 });
 
@@ -50,10 +51,13 @@ test('세 가지 키워드는 아지트 정체성과 상세 경험을 담은 하
   const detailTitles = [...modal.matchAll(/\{ title: '([^']+)', description:/g)].map((match) => match[1]);
 
   assert.deepEqual(experienceIds, ['writing', 'reading', 'dragon']);
-  assert.match(modal, /쓰고 다듬는 글/);
-  assert.match(modal, /읽고 채우는 책장/);
-  assert.match(modal, /키우고 꾸미는 드래곤 아지트/);
-  assert.match(modal, /shortLead: '키우고 꾸미는'[\s\S]*shortNoun: '드래곤 아지트'/);
+  assert.match(modal, /과제부터 자유 글까지 쓰고 다듬기/);
+  assert.match(modal, /독서록부터 친구 글까지 읽고 나누기/);
+  assert.match(modal, /포인트와 성장 기록으로 키우고 꾸미기/);
+  assert.match(modal, /글쓰기 연구소·맞춤법 도구/);
+  assert.match(modal, /개인·학급·모둠 목표/);
+  assert.match(modal, /어휘의 탑과 퀘스트·게임/);
+  assert.match(modal, /shortLead: '포인트·성장 기록으로'[\s\S]*shortNoun: '키우고 꾸미기'/);
   assert.doesNotMatch(modal, /활동으로 키우는 수호룡/);
   assert.equal(detailTitles.length, 9);
   assert.match(modal, /role="tablist"/);
