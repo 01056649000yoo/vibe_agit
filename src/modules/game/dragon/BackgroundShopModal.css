@@ -104,6 +104,9 @@
 .agit-workshop__item-preview[data-slot='pedestal'][data-visual='root'] span { background: repeating-linear-gradient(112deg,#593a25 0 16%,#96633a 17% 31%); box-shadow: -4px 4px 0 -2px #654127,5px 4px 0 -2px #754b2b; }
 .agit-workshop__item-preview[data-slot='pedestal'][data-visual='celestial'] span { border: 2px solid #d5b552; background: radial-gradient(ellipse,#36437d 0 36%,#141b42 40% 67%,#9b7a2f 70%); box-shadow: 0 0 9px rgba(122,153,255,.65); }
 .agit-workshop__item-preview[data-slot='pedestal'][data-visual='legend'] span { border: 2px solid #e1b838; background: radial-gradient(ellipse at 50% 30%,#fff2a1 0 8%,#c58d1d 10% 33%,#4c3511 38% 67%,#ad7416 70%); box-shadow: 0 0 12px rgba(242,190,45,.72),inset 0 2px rgba(255,245,181,.72); }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='sunny-garden'] span { background: radial-gradient(ellipse at 50% 22%,#fff7b0 0 12%,#a8cf68 14% 54%,#668c3e 58%); box-shadow: 0 0 9px rgba(201,226,106,.64),0 5px 5px rgba(57,83,34,.25); }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='wave-harbor'] span { border: 1px solid #77d7df; background: radial-gradient(ellipse,#eaffff 0 10%,#65d1dc 13% 47%,#277e91 53% 70%,#f1cf88 74%); box-shadow: 0 0 10px rgba(83,205,219,.62),0 5px 5px rgba(31,94,108,.25); }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='dreamlight-library'] span { border: 1px solid #d5b8ed; background: radial-gradient(ellipse,#fff0ff 0 10%,#c5a4e8 13% 49%,#8060ae 54% 70%,#dca9c9 74%); box-shadow: 0 0 10px rgba(190,145,232,.62),0 5px 5px rgba(82,57,115,.24); }
 .agit-workshop__item-preview[data-slot='nameplate'] { position: relative; width: 94px; aspect-ratio: 2.35; overflow: visible; border: 0; background: radial-gradient(ellipse,#fff 0 12%,#f1e8dc 58%,transparent 72%); }
 .agit-workshop__item-preview[data-slot='nameplate'] img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(45,31,21,.28)); }
 .agit-workshop__item-preview[data-slot='nameplate'] span { position: absolute; z-index: 1; top: var(--nameplate-copy-top,50%); left: 50%; display: block; width: var(--nameplate-copy-width,48%); overflow: hidden; color: #4b3020; font-size: var(--nameplate-thumbnail-size,.37rem); font-weight: 950; letter-spacing: -.04em; text-align: center; text-overflow: ellipsis; text-shadow: 0 1px rgba(255,255,255,.45); transform: translate(-50%,-50%); white-space: nowrap; }
@@ -127,6 +130,7 @@
 .agit-workshop__rarity { flex: 0 0 auto; background: #ece8e2; color: #6f6258; }
 .agit-workshop__collection-badge { background: #f0eee9; color: #6f645b; }
 .agit-workshop__collection-badge.is-signature { background: #292d36; color: #f2d89a; letter-spacing: .02em; }
+.agit-workshop__collection-badge.is-open { background: #e6f6ef; color: #287157; }
 .agit-workshop__item[data-rarity='starter'] .agit-workshop__rarity { background: #e8f4ea; color: #397047; }
 .agit-workshop__item[data-rarity='common'] .agit-workshop__rarity { background: #e8f0f8; color: #35638b; }
 .agit-workshop__item[data-rarity='rare'] .agit-workshop__rarity { background: #eee8fb; color: #6546a5; }

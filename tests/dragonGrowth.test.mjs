@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import {
     DRAGON_SPECIES,
     HIDEOUT_BACKGROUNDS,
@@ -199,16 +199,16 @@ test('아지트 공방은 관리 가능한 5개 고정 슬롯만 사용한다', 
         assert.equal(Reflect.get(DEFAULT_EQUIPPED_DECOR, slot.id) != null, true);
     });
     assert.equal(DRAGON_DECOR_SLOTS[0].name, '프레임');
-    assert.equal(getDragonDecorItemsForSlot('wallpaper').length, 10);
-    assert.equal(getDragonDecorItemsForSlot('pedestal').length, 10);
-    assert.equal(getDragonDecorItemsForSlot('leftProp').length, 9);
-    assert.equal(getDragonDecorItemsForSlot('rightProp').length, 9);
-    assert.equal(getDragonDecorItemsForSlot('nameplate').length, 9);
+    assert.equal(getDragonDecorItemsForSlot('wallpaper').length, 13);
+    assert.equal(getDragonDecorItemsForSlot('pedestal').length, 13);
+    assert.equal(getDragonDecorItemsForSlot('leftProp').length, 12);
+    assert.equal(getDragonDecorItemsForSlot('rightProp').length, 12);
+    assert.equal(getDragonDecorItemsForSlot('nameplate').length, 12);
 });
 
-test('일반 장식 37종은 한 학기 포인트 규모에 맞는 등급별 가격과 구매 단계를 쓴다', () => {
+test('유료 장식 52종은 성장 상품과 자유 구매 상품의 가격·단계 계약을 함께 지킨다', () => {
     const paidItems = DRAGON_DECOR_ITEMS.filter((item) => item.price > 0);
-    assert.equal(paidItems.length, 37);
+    assert.equal(paidItems.length, 52);
     assert.deepEqual(
         Object.fromEntries(['starter', 'common', 'rare', 'hero'].map((rarity) => [
             rarity,
@@ -216,16 +216,26 @@ test('일반 장식 37종은 한 학기 포인트 규모에 맞는 등급별 가
         ])),
         { starter: 8, common: 12, rare: 10, hero: 7 }
     );
-    assert.equal(paidItems.reduce((sum, item) => sum + item.price, 0), 46800);
+    assert.equal(paidItems.reduce((sum, item) => sum + item.price, 0), 61800);
     Object.values(DRAGON_DECOR_RARITIES).forEach((rarity) => {
         const items = DRAGON_DECOR_ITEMS.filter((item) => item.rarity === rarity.id);
         assert.equal(items.every((item) => item.price === rarity.price), true);
         assert.equal(items.every((item) => item.requiredWriterLevel === rarity.requiredWriterLevel), true);
     });
+    const levelFreeItems = paidItems.filter((item) => item.isLevelFree);
+    assert.equal(levelFreeItems.length, 15);
+    assert.equal(levelFreeItems.every((item) => item.requiredWriterLevel === 1 && item.requiredReaderLevel === 1), true);
+    assert.deepEqual(
+        Object.fromEntries(['sunny-garden', 'wave-harbor', 'dreamlight-library'].map((theme) => [
+            theme,
+            [...new Set(levelFreeItems.filter((item) => item.theme === theme).map((item) => item.price))]
+        ])),
+        { 'sunny-garden': [800], 'wave-harbor': [1000], 'dreamlight-library': [1200] }
+    );
 });
 
-test('5개 구매 세트와 전설 달성 세트는 모두 슬롯별 1개씩 구성된다', () => {
-    assert.equal(DRAGON_DECOR_COLLECTIONS.length, 6);
+test('8개 구매 세트와 전설 달성 세트는 모두 슬롯별 1개씩 구성된다', () => {
+    assert.equal(DRAGON_DECOR_COLLECTIONS.length, 9);
     const collectionItemIds = new Set();
 
     DRAGON_DECOR_COLLECTIONS.forEach((collection) => {
@@ -242,7 +252,12 @@ test('5개 구매 세트와 전설 달성 세트는 모두 슬롯별 1개씩 구
         });
     });
 
-    assert.equal(collectionItemIds.size, 30);
+    assert.equal(collectionItemIds.size, 45);
+    const levelFreeCollections = DRAGON_DECOR_COLLECTIONS.filter((collection) => collection.levelFree);
+    assert.equal(levelFreeCollections.length, 3);
+    assert.equal(levelFreeCollections.every((collection) => (
+        getDragonDecorCollectionItems(collection.id).every((item) => item.isLevelFree)
+    )), true);
     const legendaryItems = getDragonLegendaryRewardItems();
     assert.equal(legendaryItems.length, 5);
     assert.equal(legendaryItems.every((item) => item.acquisitionType === 'achievement'), true);
@@ -286,13 +301,13 @@ test('프레임은 모서리 테마 이름을 쓰고 좌우 소품은 최적화�
     assert.equal(getDragonDecorItemsForSlot('wallpaper').every((item) => item.name.includes('프레임')), true);
     assert.deepEqual(
         getDragonDecorItemsForSlot('pedestal').map((item) => item.preview),
-        ['stone', 'oak', 'cloud', 'root', 'ember', 'crystal', 'moonstone', 'rune', 'celestial', 'legend']
+        ['stone', 'oak', 'cloud', 'root', 'ember', 'crystal', 'moonstone', 'rune', 'celestial', 'legend', 'sunny-garden', 'wave-harbor', 'dreamlight-library']
     );
     const props = [
         ...getDragonDecorItemsForSlot('leftProp'),
         ...getDragonDecorItemsForSlot('rightProp')
     ].filter((item) => !item.isDefault);
-    assert.equal(props.length, 16);
+    assert.equal(props.length, 22);
     assert.deepEqual(props.map((item) => item.image), [
         '/assets/dragons/decor/left-dragonheart-crystals.webp',
         '/assets/dragons/decor/left-cloud-harp.webp',
@@ -302,6 +317,9 @@ test('프레임은 모서리 테마 이름을 쓰고 좌우 소품은 최적화�
         '/assets/dragons/decor/left-moonwell.webp',
         '/assets/dragons/decor/left-storm-spire.webp',
         '/assets/dragons/decor/left-royal-banner.webp',
+        '/assets/dragons/decor/left-sunny-garden-journal.webp',
+        '/assets/dragons/decor/left-wave-harbor-map.webp',
+        '/assets/dragons/decor/left-dreamlight-books.webp',
         '/assets/dragons/decor/right-hatchling-nest.webp',
         '/assets/dragons/decor/right-bond-shrine.webp',
         '/assets/dragons/decor/right-forest-spring.webp',
@@ -309,7 +327,10 @@ test('프레임은 모서리 테마 이름을 쓰고 좌우 소품은 최적화�
         '/assets/dragons/decor/right-crystal-egg.webp',
         '/assets/dragons/decor/right-celestial-orrery.webp',
         '/assets/dragons/decor/right-ember-anvil.webp',
-        '/assets/dragons/decor/right-golden-relic.webp'
+        '/assets/dragons/decor/right-golden-relic.webp',
+        '/assets/dragons/decor/right-sunny-garden-nest.webp',
+        '/assets/dragons/decor/right-wave-harbor-observatory.webp',
+        '/assets/dragons/decor/right-dreamlight-cushion.webp'
     ]);
 });
 
@@ -344,7 +365,7 @@ test('장착한 5개 슬롯은 하나의 pet_data 계약으로 복원된다', ()
     assert.equal(DRAGON_DECOR_ITEMS.every((item) => item.slot && item.id), true);
 });
 
-test('문패 9종은 단계적으로 화려해지는 개별 WebP와 전설 달성 조건을 쓴다', () => {
+test('문패 12종은 개별 WebP·자유 구매 가격·전설 달성 조건을 쓴다', async () => {
     const nameplates = getDragonDecorItemsForSlot('nameplate');
     assert.deepEqual(nameplates.map((item) => item.image), [
         '/assets/dragons/nameplates/nameplate-simple.webp',
@@ -355,13 +376,31 @@ test('문패 9종은 단계적으로 화려해지는 개별 WebP와 전설 달�
         '/assets/dragons/nameplates/nameplate-celestial.webp',
         '/assets/dragons/nameplates/nameplate-ember.webp',
         '/assets/dragons/nameplates/nameplate-storm.webp',
-        '/assets/dragons/nameplates/nameplate-legend.webp'
+        '/assets/dragons/nameplates/nameplate-legend.webp',
+        '/assets/dragons/nameplates/nameplate-sunny-garden.webp',
+        '/assets/dragons/nameplates/nameplate-wave-harbor.webp',
+        '/assets/dragons/nameplates/nameplate-dreamlight-library.webp'
     ]);
-    assert.deepEqual(nameplates.map((item) => item.price), [0, 300, 700, 700, 700, 700, 1500, 1500, 0]);
-    assert.equal(nameplates.at(-1).requiredWriterLevel, 10);
-    assert.equal(nameplates.at(-1).requiredReaderLevel, 7);
-    assert.equal(nameplates.at(-1).acquisitionType, 'achievement');
+    assert.deepEqual(nameplates.map((item) => item.price), [0, 300, 700, 700, 700, 700, 1500, 1500, 0, 800, 1000, 1200]);
+    const legendaryNameplate = nameplates.find((item) => item.id === 'nameplate-legend');
+    assert.equal(legendaryNameplate.requiredWriterLevel, 10);
+    assert.equal(legendaryNameplate.requiredReaderLevel, 7);
+    assert.equal(legendaryNameplate.acquisitionType, 'achievement');
     assert.deepEqual(Object.keys(DRAGON_NAMEPLATE_TEXT_PROFILES), nameplates.map((item) => item.preview));
+
+    assert.equal(DRAGON_DECOR_ITEMS.filter((item) => item.isLevelFree && item.image).length, 9);
+    const generatedAssetStats = await Promise.all([
+        stat('public/assets/dragons/decor/left-sunny-garden-journal.webp'),
+        stat('public/assets/dragons/decor/right-sunny-garden-nest.webp'),
+        stat('public/assets/dragons/nameplates/nameplate-sunny-garden.webp'),
+        stat('public/assets/dragons/decor/left-wave-harbor-map.webp'),
+        stat('public/assets/dragons/decor/right-wave-harbor-observatory.webp'),
+        stat('public/assets/dragons/nameplates/nameplate-wave-harbor.webp'),
+        stat('public/assets/dragons/decor/left-dreamlight-books.webp'),
+        stat('public/assets/dragons/decor/right-dreamlight-cushion.webp'),
+        stat('public/assets/dragons/nameplates/nameplate-dreamlight-library.webp')
+    ]);
+    assert.equal(generatedAssetStats.every((assetStat) => assetStat.size <= 100 * 1024), true);
 
     const shortLegend = getDragonNameplateTextLayout('legend', '나의 아지트', '황금이');
     const longLegend = getDragonNameplateTextLayout('legend', '김승현의 아지트', '황금빛 수호룡');

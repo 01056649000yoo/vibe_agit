@@ -131,6 +131,9 @@
 .dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame { --frame-core: #425c9f; --frame-edge: #b9d0f1; --frame-inlay: #779bd1; --frame-glint: rgba(235,246,255,.76); --frame-shadow: rgba(43,61,126,.31); --frame-surface: linear-gradient(125deg,#e3efff 0 12%,#6382bf 13% 42%,#f2f7ff 43% 47%,#3d5293 48% 70%,#252e60 71%); }
 .dragon-hideout-scene[data-frame='legend'] .dragon-hideout-scene__frame { --frame-core: #a8751f; --frame-edge: #fff0a5; --frame-inlay: #d3a43d; --frame-glint: rgba(255,249,201,.92); --frame-shadow: rgba(126,84,18,.34); --frame-surface: linear-gradient(135deg,#fff3ad,#d4a43c 42%,#855b14 69%,#342919); --frame-rail: max(3px,.82cqi); }
 .dragon-hideout-scene[data-frame='legend'] .dragon-hideout-scene__frame i { width: 12%; height: 17%; }
+.dragon-hideout-scene[data-frame='sunny-garden'] .dragon-hideout-scene__frame { --frame-core: #8caf54; --frame-edge: #f4e9a4; --frame-inlay: #b8d875; --frame-glint: rgba(255,252,205,.9); --frame-shadow: rgba(75,107,45,.27); --frame-surface: linear-gradient(135deg,#fff3ae,#b8d875 38%,#729c48 65%,#f4c862); }
+.dragon-hideout-scene[data-frame='wave-harbor'] .dragon-hideout-scene__frame { --frame-core: #318ca0; --frame-edge: #dffcff; --frame-inlay: #63cbd5; --frame-glint: rgba(239,255,255,.92); --frame-shadow: rgba(30,105,121,.3); --frame-surface: linear-gradient(125deg,#f1ffff 0 12%,#74d8df 13% 39%,#e7c681 40% 47%,#318ba0 48% 72%,#dffcff 73%); }
+.dragon-hideout-scene[data-frame='dreamlight-library'] .dragon-hideout-scene__frame { --frame-core: #8565ad; --frame-edge: #f2dff7; --frame-inlay: #c19ade; --frame-glint: rgba(255,237,255,.88); --frame-shadow: rgba(88,56,126,.29); --frame-surface: linear-gradient(135deg,#f8ddf1,#c4a3e1 38%,#7a5aa6 66%,#e0a9c9); }
 
 /* 받침대: 같은 타원 크기 안에서도 재질과 실루엣을 확실히 달리한다. */
 .dragon-hideout-scene__pedestal { z-index: 3; right: 20%; bottom: 17%; left: 20%; height: 18%; border-radius: 50%; background: linear-gradient(180deg,#d6d3ca 0 22%,#8b887f 24% 70%,#66645f 72%); box-shadow: 0 11px 16px rgba(32,24,20,.26), inset 0 3px 0 rgba(255,255,255,.52); }
@@ -148,6 +151,12 @@
 .dragon-hideout-scene[data-pedestal='legend'] .dragon-hideout-scene__pedestal { bottom: 16.5%; height: 22%; border: max(2px,.72cqi) solid #e0b63b; border-radius: 44% 44% 48% 48%; background: radial-gradient(ellipse at 50% 24%,#fff2a4 0 7%,#c99320 9% 34%,#503612 38% 66%,#b77b17 70%); box-shadow: 0 0 25px rgba(239,184,38,.7),0 14px 19px rgba(38,24,7,.45),inset 0 4px rgba(255,244,169,.55); }
 .dragon-hideout-scene[data-pedestal='legend'] .dragon-hideout-scene__pedestal::before { position: absolute; inset: 16% 21% 36%; border: max(1px,.4cqi) solid #f5da78; border-radius: 50% 50% 32% 32%; background: linear-gradient(145deg,#6b4816,#c79325); box-shadow: inset 0 0 9px rgba(255,230,126,.38); content: ''; }
 .dragon-hideout-scene[data-pedestal='legend'] .dragon-hideout-scene__pedestal i::after { content: '✦'; color: #fff1a1; text-shadow: 0 0 9px #f0b82b; }
+.dragon-hideout-scene[data-pedestal='sunny-garden'] .dragon-hideout-scene__pedestal { background: radial-gradient(ellipse at 50% 24%,#fff7b2 0 8%,#b3d56e 11% 46%,#6d9444 51% 72%,#dbb45e 76%); box-shadow: 0 0 20px rgba(201,226,111,.55),0 12px 18px rgba(56,80,35,.28); }
+.dragon-hideout-scene[data-pedestal='sunny-garden'] .dragon-hideout-scene__pedestal i::after { content: '❀'; color: #fff9cb; text-shadow: 0 0 7px #f0c84e; }
+.dragon-hideout-scene[data-pedestal='wave-harbor'] .dragon-hideout-scene__pedestal { border: max(2px,.55cqi) solid #e5ca88; background: radial-gradient(ellipse at 50% 25%,#eaffff 0 8%,#63d0d9 11% 45%,#277f91 50% 69%,#dbb769 73%); box-shadow: 0 0 22px rgba(74,199,214,.56),0 12px 18px rgba(27,86,100,.3); }
+.dragon-hideout-scene[data-pedestal='wave-harbor'] .dragon-hideout-scene__pedestal i::after { content: '≈'; color: #efffff; text-shadow: 0 0 7px #41bccb; }
+.dragon-hideout-scene[data-pedestal='dreamlight-library'] .dragon-hideout-scene__pedestal { border: max(2px,.55cqi) solid #ddb0cf; background: radial-gradient(ellipse at 50% 24%,#fff0ff 0 8%,#c5a3e5 11% 45%,#7959a6 50% 69%,#dca8c8 73%); box-shadow: 0 0 22px rgba(186,139,231,.56),0 12px 18px rgba(74,49,105,.29); }
+.dragon-hideout-scene[data-pedestal='dreamlight-library'] .dragon-hideout-scene__pedestal i::after { content: '✦'; color: #fff0ff; text-shadow: 0 0 8px #c78bed; }
 
 .dragon-hideout-scene__dragon { position: absolute !important; z-index: 5; top: 13%; left: 17%; width: 66% !important; height: 66% !important; }
 .dragon-hideout-scene__prop { z-index: 6; bottom: 16%; width: 28%; height: 38%; filter: drop-shadow(0 7px 6px rgba(35,25,19,.34)); pointer-events: none; }
@@ -201,6 +210,9 @@
 
 .dragon-hideout-scene[data-nameplate='legend'] .dragon-hideout-scene__nameplate { color: #5b3b13; filter: drop-shadow(0 0 13px rgba(255,208,70,.72)) drop-shadow(0 9px 7px rgba(88,55,16,.36)); }
 .dragon-hideout-scene[data-nameplate='legend'] .dragon-hideout-scene__nameplate-effect::after { top: 11%; bottom: 11%; left: -28%; width: 25%; background: linear-gradient(90deg,transparent,rgba(255,255,235,.78),transparent); transform: skewX(-24deg); animation: nameplate-sweep 3.3s ease-in-out infinite; }
+.dragon-hideout-scene[data-nameplate='sunny-garden'] .dragon-hideout-scene__nameplate { color: #4f4a20; filter: drop-shadow(0 0 8px rgba(218,207,89,.4)) drop-shadow(0 7px 6px rgba(59,73,34,.3)); }
+.dragon-hideout-scene[data-nameplate='wave-harbor'] .dragon-hideout-scene__nameplate { color: #285768; filter: drop-shadow(0 0 8px rgba(83,205,220,.45)) drop-shadow(0 7px 6px rgba(26,83,96,.3)); }
+.dragon-hideout-scene[data-nameplate='dreamlight-library'] .dragon-hideout-scene__nameplate { color: #574270; filter: drop-shadow(0 0 9px rgba(191,147,231,.48)) drop-shadow(0 7px 6px rgba(73,48,103,.28)); }
 
 @keyframes nameplate-jewel-glint { 0%,70%,100% { opacity: .2; transform: scale(.65) rotate(0); } 78% { opacity: 1; transform: scale(1.25) rotate(45deg); } }
 @keyframes nameplate-magic-pulse { 0%,100% { opacity: .9; transform: scale(.985); } 50% { opacity: 1; transform: scale(1.015); } }

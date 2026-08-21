@@ -42,7 +42,10 @@ export const DRAGON_NAMEPLATE_TEXT_PROFILES = Object.freeze({
     celestial: Object.freeze({ safeWidth: 0.61, centerY: 0.57 }),
     ember: Object.freeze({ safeWidth: 0.53, centerY: 0.51 }),
     storm: Object.freeze({ safeWidth: 0.34, centerY: 0.54 }),
-    legend: Object.freeze({ safeWidth: 0.38, centerY: 0.55 })
+    legend: Object.freeze({ safeWidth: 0.38, centerY: 0.55 }),
+    'sunny-garden': Object.freeze({ safeWidth: 0.62, centerY: 0.50 }),
+    'wave-harbor': Object.freeze({ safeWidth: 0.56, centerY: 0.50 }),
+    'dreamlight-library': Object.freeze({ safeWidth: 0.60, centerY: 0.50 })
 });
 
 const getTextWeight = (value) => Array.from(String(value || '')).reduce((total, character) => {
@@ -114,6 +117,9 @@ const DECOR_ITEMS = [
     { id: 'pedestal-rune', slot: 'pedestal', name: '고대 룬 단상', rarity: 'hero', theme: 'rune', preview: 'rune', sortOrder: 7 },
     { id: 'pedestal-celestial', slot: 'pedestal', name: '천상의 별빛 옥좌', rarity: 'hero', theme: 'celestial', preview: 'celestial', sortOrder: 8 },
     { id: 'pedestal-legend', slot: 'pedestal', name: '황금 수호왕좌', rarity: 'legendary', theme: 'legend', preview: 'legend', sortOrder: 9 },
+    { id: 'pedestal-sunny-garden', slot: 'pedestal', name: '햇살 잎새 단상', price: 800, requiredWriterLevel: 1, theme: 'sunny-garden', preview: 'sunny-garden', sortOrder: 10 },
+    { id: 'pedestal-wave-harbor', slot: 'pedestal', name: '파도 유리 받침', price: 1000, requiredWriterLevel: 1, theme: 'wave-harbor', preview: 'wave-harbor', sortOrder: 11 },
+    { id: 'pedestal-dreamlight-library', slot: 'pedestal', name: '꿈구름 책방석', price: 1200, requiredWriterLevel: 1, theme: 'dreamlight-library', preview: 'dreamlight-library', sortOrder: 12 },
 
     { id: 'left-none', slot: 'leftProp', name: '비워 두기', isDefault: true, preview: 'none', sortOrder: 0 },
     { id: 'left-plant', slot: 'leftProp', name: '용심장 수정 군락', rarity: 'starter', theme: 'crystal', preview: 'dragonheart-crystals', image: '/assets/dragons/decor/left-dragonheart-crystals.webp', sortOrder: 1 },
@@ -124,6 +130,9 @@ const DECOR_ITEMS = [
     { id: 'left-moonwell', slot: 'leftProp', name: '달빛 기억의 샘', rarity: 'rare', theme: 'moon', preview: 'moonwell', image: '/assets/dragons/decor/left-moonwell.webp', sortOrder: 6 },
     { id: 'left-storm-spire', slot: 'leftProp', name: '폭풍소환 봉화', rarity: 'hero', theme: 'storm', preview: 'storm-spire', image: '/assets/dragons/decor/left-storm-spire.webp', sortOrder: 7 },
     { id: 'left-royal-banner', slot: 'leftProp', name: '황금 수호 깃발', rarity: 'legendary', theme: 'legend', preview: 'royal-banner', image: '/assets/dragons/decor/left-royal-banner.webp', sortOrder: 8 },
+    { id: 'left-sunny-garden-journal', slot: 'leftProp', name: '이야기 씨앗 기록대', price: 800, requiredWriterLevel: 1, theme: 'sunny-garden', preview: 'sunny-garden-journal', image: '/assets/dragons/decor/left-sunny-garden-journal.webp', sortOrder: 9 },
+    { id: 'left-wave-harbor-map', slot: 'leftProp', name: '파도 항해 지도대', price: 1000, requiredWriterLevel: 1, theme: 'wave-harbor', preview: 'wave-harbor-map', image: '/assets/dragons/decor/left-wave-harbor-map.webp', sortOrder: 10 },
+    { id: 'left-dreamlight-books', slot: 'leftProp', name: '꿈빛 이야기 등불', price: 1200, requiredWriterLevel: 1, theme: 'dreamlight-library', preview: 'dreamlight-books', image: '/assets/dragons/decor/left-dreamlight-books.webp', sortOrder: 11 },
 
     { id: 'right-none', slot: 'rightProp', name: '비워 두기', isDefault: true, preview: 'none', sortOrder: 0 },
     { id: 'right-nest', slot: 'rightProp', name: '해츨링 꿈둥지', rarity: 'starter', theme: 'sky', preview: 'hatchling-dream-nest', image: '/assets/dragons/decor/right-hatchling-nest.webp', sortOrder: 1 },
@@ -134,6 +143,9 @@ const DECOR_ITEMS = [
     { id: 'right-telescope', slot: 'rightProp', name: '별자리 천구의', rarity: 'rare', theme: 'celestial', preview: 'celestial-orrery', image: '/assets/dragons/decor/right-celestial-orrery.webp', sortOrder: 6 },
     { id: 'right-ember-anvil', slot: 'rightProp', name: '용불꽃 모루', rarity: 'hero', theme: 'ember', preview: 'ember-anvil', image: '/assets/dragons/decor/right-ember-anvil.webp', sortOrder: 7 },
     { id: 'right-golden-relic', slot: 'rightProp', name: '황금 수호관 유물', rarity: 'legendary', theme: 'legend', preview: 'golden-relic', image: '/assets/dragons/decor/right-golden-relic.webp', sortOrder: 8 },
+    { id: 'right-sunny-garden-nest', slot: 'rightProp', name: '이슬잎 독서 둥지', price: 800, requiredWriterLevel: 1, theme: 'sunny-garden', preview: 'sunny-garden-nest', image: '/assets/dragons/decor/right-sunny-garden-nest.webp', sortOrder: 9 },
+    { id: 'right-wave-harbor-observatory', slot: 'rightProp', name: '진주 조개 관측대', price: 1000, requiredWriterLevel: 1, theme: 'wave-harbor', preview: 'wave-harbor-observatory', image: '/assets/dragons/decor/right-wave-harbor-observatory.webp', sortOrder: 10 },
+    { id: 'right-dreamlight-cushion', slot: 'rightProp', name: '초승달 독서 의자', price: 1200, requiredWriterLevel: 1, theme: 'dreamlight-library', preview: 'dreamlight-cushion', image: '/assets/dragons/decor/right-dreamlight-cushion.webp', sortOrder: 11 },
 
     { id: 'nameplate-simple', slot: 'nameplate', name: '어린 수호자의 문패', isDefault: true, preview: 'simple', image: '/assets/dragons/nameplates/nameplate-simple.webp', sortOrder: 0 },
     { id: 'nameplate-oak', slot: 'nameplate', name: '숲의 뿌리 문패', rarity: 'starter', theme: 'forest', preview: 'oak', image: '/assets/dragons/nameplates/nameplate-oak.webp', sortOrder: 1 },
@@ -143,14 +155,65 @@ const DECOR_ITEMS = [
     { id: 'nameplate-celestial', slot: 'nameplate', name: '별자리 천구 문패', rarity: 'common', theme: 'celestial', preview: 'celestial', image: '/assets/dragons/nameplates/nameplate-celestial.webp', sortOrder: 5 },
     { id: 'nameplate-ember', slot: 'nameplate', name: '용암 심장 문패', rarity: 'rare', theme: 'ember', preview: 'ember', image: '/assets/dragons/nameplates/nameplate-ember.webp', sortOrder: 6 },
     { id: 'nameplate-storm', slot: 'nameplate', name: '폭풍 용날개 문패', rarity: 'rare', theme: 'storm', preview: 'storm', image: '/assets/dragons/nameplates/nameplate-storm.webp', sortOrder: 7 },
-    { id: 'nameplate-legend', slot: 'nameplate', name: '전설의 황금 문패', rarity: 'legendary', theme: 'legend', preview: 'legend', image: '/assets/dragons/nameplates/nameplate-legend.webp', sortOrder: 8 }
+    { id: 'nameplate-legend', slot: 'nameplate', name: '전설의 황금 문패', rarity: 'legendary', theme: 'legend', preview: 'legend', image: '/assets/dragons/nameplates/nameplate-legend.webp', sortOrder: 8 },
+    { id: 'nameplate-sunny-garden', slot: 'nameplate', name: '햇살 정원 문패', price: 800, requiredWriterLevel: 1, theme: 'sunny-garden', preview: 'sunny-garden', image: '/assets/dragons/nameplates/nameplate-sunny-garden.webp', sortOrder: 9 },
+    { id: 'nameplate-wave-harbor', slot: 'nameplate', name: '푸른 파도 항구 문패', price: 1000, requiredWriterLevel: 1, theme: 'wave-harbor', preview: 'wave-harbor', image: '/assets/dragons/nameplates/nameplate-wave-harbor.webp', sortOrder: 10 },
+    { id: 'nameplate-dreamlight-library', slot: 'nameplate', name: '꿈빛 서재 문패', price: 1200, requiredWriterLevel: 1, theme: 'dreamlight-library', preview: 'dreamlight-library', image: '/assets/dragons/nameplates/nameplate-dreamlight-library.webp', sortOrder: 11 }
 ];
 
 /**
  * 기존 상품 ID·가격·소유권은 그대로 두고, 학생에게는 완성된 공간을 목표로 보여 준다.
- * 컬렉션에 포함되지 않은 유료 상품은 슬롯별 3개의 `시그니처 단품`으로 취급한다.
+ * 기존 성장 세트·시그니처 단품과 별도로 작가 단계 제한 없는 자유 구매 세트를 함께 제공한다.
  */
 export const DRAGON_DECOR_COLLECTIONS = Object.freeze([
+    {
+        id: 'sunny-garden',
+        name: '햇살 정원',
+        summary: '새싹과 햇살 속에서 이야기가 자라는 정원',
+        mark: 'OPEN 01',
+        accent: '#83a947',
+        levelFree: true,
+        items: {
+            wallpaper: 'sunny-garden',
+            pedestal: 'pedestal-sunny-garden',
+            leftProp: 'left-sunny-garden-journal',
+            rightProp: 'right-sunny-garden-nest',
+            nameplate: 'nameplate-sunny-garden'
+        },
+        displayNames: {}
+    },
+    {
+        id: 'wave-harbor',
+        name: '푸른 파도 항구',
+        summary: '파도 지도를 따라 새로운 이야기를 찾는 항구',
+        mark: 'OPEN 02',
+        accent: '#359eb2',
+        levelFree: true,
+        items: {
+            wallpaper: 'wave-harbor',
+            pedestal: 'pedestal-wave-harbor',
+            leftProp: 'left-wave-harbor-map',
+            rightProp: 'right-wave-harbor-observatory',
+            nameplate: 'nameplate-wave-harbor'
+        },
+        displayNames: {}
+    },
+    {
+        id: 'dreamlight-library',
+        name: '꿈빛 서재',
+        summary: '포근한 구름과 책빛이 반짝이는 상상 서재',
+        mark: 'OPEN 03',
+        accent: '#9271bd',
+        levelFree: true,
+        items: {
+            wallpaper: 'dreamlight-library',
+            pedestal: 'pedestal-dreamlight-library',
+            leftProp: 'left-dreamlight-books',
+            rightProp: 'right-dreamlight-cushion',
+            nameplate: 'nameplate-dreamlight-library'
+        },
+        displayNames: {}
+    },
     {
         id: 'forest-archive',
         name: '고목 기록실',
@@ -299,10 +362,10 @@ export const DRAGON_DECOR_ITEMS = [...FRAME_ITEMS, ...DECOR_ITEMS].map((item) =>
     const rarity = Reflect.get(DRAGON_DECOR_RARITIES, item.rarity);
     const normalizedItem = {
         ...item,
-        price: item.isDefault ? 0 : Number(rarity?.price || 0),
-        requiredWriterLevel: Number(rarity?.requiredWriterLevel || 1),
-        requiredReaderLevel: Number(rarity?.requiredReaderLevel || 1),
-        acquisitionType: rarity?.acquisitionType || 'shop'
+        price: item.isDefault ? 0 : Number(item.price ?? rarity?.price ?? 0),
+        requiredWriterLevel: Number(item.requiredWriterLevel ?? rarity?.requiredWriterLevel ?? 1),
+        requiredReaderLevel: Number(item.requiredReaderLevel ?? rarity?.requiredReaderLevel ?? 1),
+        acquisitionType: item.acquisitionType || rarity?.acquisitionType || 'shop'
     };
     if (!collection) return normalizedItem;
     return {
@@ -310,7 +373,8 @@ export const DRAGON_DECOR_ITEMS = [...FRAME_ITEMS, ...DECOR_ITEMS].map((item) =>
         catalogName: item.name,
         name: collection.displayNames[item.id] || item.name,
         collectionId: collection.id,
-        collectionName: collection.name
+        collectionName: collection.name,
+        isLevelFree: Boolean(collection.levelFree)
     };
 });
 

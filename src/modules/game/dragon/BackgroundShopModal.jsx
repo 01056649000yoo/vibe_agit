@@ -147,7 +147,7 @@ const BackgroundShopModal = ({
 
                             <div className="agit-workshop__collections" aria-label="추천 아지트 세트">
                                 <div className="agit-workshop__collections-heading">
-                                    <span>6 COLLECTIONS</span>
+                                    <span>{DRAGON_DECOR_COLLECTIONS.length} COLLECTIONS</span>
                                     <strong>완성된 아지트부터 골라 보기</strong>
                                     <small>세트를 눌러 5개 상품 조합을 한 번에 미리 보세요.</small>
                                 </div>
@@ -166,7 +166,7 @@ const BackgroundShopModal = ({
                                             >
                                                 <span>{String(index + 1).padStart(2, '0')}</span>
                                                 <strong>{collection.name}</strong>
-                                                <small>{collection.acquisitionType === 'achievement' ? '달성 선물' : `${totalPrice.toLocaleString('ko-KR')}P`}</small>
+                                                <small>{collection.acquisitionType === 'achievement' ? '달성 선물' : `${collection.levelFree ? '자유 구매 · ' : ''}${totalPrice.toLocaleString('ko-KR')}P`}</small>
                                             </button>
                                         );
                                     })}
@@ -239,6 +239,7 @@ const BackgroundShopModal = ({
                                             <div className="agit-workshop__item-copy">
                                                 <div className="agit-workshop__item-badges">
                                                     {rarity && <span className="agit-workshop__rarity">{rarity.name}</span>}
+                                                    {item.isLevelFree && <span className="agit-workshop__collection-badge is-open">자유 구매</span>}
                                                     {!item.isDefault && (
                                                         <span className={`agit-workshop__collection-badge${item.collectionId ? '' : ' is-signature'}`}>
                                                             {isReward ? '달성 선물' : item.collectionName || '시그니처'}

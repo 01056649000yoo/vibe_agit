@@ -87,7 +87,7 @@ const TeacherWorkshopPreview = () => {
                             <span>{String(index + 1).padStart(2, '0')}</span>
                             <strong>{collection.name}</strong>
                             <small>{collection.summary}</small>
-                            <em>{collection.acquisitionType === 'achievement' ? '작가 10 · 독자 7 선물' : `${totalPrice.toLocaleString('ko-KR')}P`} · 전체 미리보기</em>
+                            <em>{collection.acquisitionType === 'achievement' ? '작가 10 · 독자 7 선물' : `${collection.levelFree ? '자유 구매 · ' : ''}${totalPrice.toLocaleString('ko-KR')}P`} · 전체 미리보기</em>
                         </button>
                     );
                 })}
@@ -182,7 +182,7 @@ const TeacherWorkshopPreview = () => {
                                         {item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" draggable="false" /> : <i />}
                                     </span>
                                     <span className="dragon-workshop-preview__item-copy">
-                                        <span>{item.collectionName || rarity?.name || (item.isDefault ? '기본' : '시그니처')}</span>
+                                        <span>{item.isLevelFree ? `자유 구매 · ${item.collectionName}` : item.collectionName || rarity?.name || (item.isDefault ? '기본' : '시그니처')}</span>
                                         <strong>{item.name}</strong>
                                         <small>{formatPrice(item)}{item.acquisitionType !== 'achievement' && Number(item.requiredWriterLevel || 1) > 1 ? ` · 작가 ${item.requiredWriterLevel}단계` : ''}</small>
                                     </span>
