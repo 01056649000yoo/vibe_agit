@@ -15,7 +15,8 @@ export const useAnnouncements = (role = 'TEACHER', initialAnnouncements = null) 
             const { data, error } = await supabase
                 .from('announcements')
                 // UI에서 공지 제목, 내용, 일시, 대상 권한을 보여주기 위해 필수 필드만 선택
-                .select('id, title, content, created_at, target_role')
+                // is_popup 을 빼먹어 관리자의 '팝업' 설정이 아무 일도 하지 않았다(2026-08-21 수정).
+                .select('id, title, content, created_at, target_role, is_popup')
                 .or(`target_role.eq.${role},target_role.eq.ALL`)
                 .order('created_at', { ascending: false })
                 .limit(ANNOUNCEMENT_LIMIT);

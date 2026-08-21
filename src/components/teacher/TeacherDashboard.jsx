@@ -26,6 +26,10 @@ import TeacherProfileModal from './TeacherProfileModal';
 import ActivityDetailModal from './ActivityDetailModal';
 import FeedbackModal from './FeedbackModal';
 import TeacherAnnouncementManager from './TeacherAnnouncementManager';
+import AnnouncementSpotlight from './AnnouncementSpotlight';
+import { AnnouncementListModal, AnnouncementModal } from './AnnouncementComponents';
+import { useAnnouncements } from '../../hooks/useAnnouncements';
+import useAnnouncementSeen from './useAnnouncementSeen';
 import './TeacherDashboard.css';
 
 const DEFAULT_WRITING_CARD_LAYOUT = { columns: 4, density: 'comfortable' };
@@ -63,6 +67,14 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     // 관리자가 답장을 달면 여기에 숫자가 붙는다. 답장이 보이지 않으면 아무도 두 번 제보하지 않는다.
     const [feedbackReplyCount, setFeedbackReplyCount] = useState(0);
+
+    /*
+     * 공지는 대시보드가 한 번만 읽어 머리말 버튼과 위쪽 띠에 함께 넘긴다.
+     * 두 곳에서 각자 부르면 같은 목록을 두 번 받는다.
+     */
+    const { announcements } = useAnnouncements('TEACHER', teacherBootstrap?.announcements);
+    const announcementSeen = useAnnouncementSeen(session?.user?.id, announcements);
+    const [showAnnouncementList, setShowAnnouncementList] = useState(false);
     const [isAdminPasswordOpen, setIsAdminPasswordOpen] = useState(false);
     const [adminPassword, setAdminPassword] = useState('');
     const [adminPasswordError, setAdminPasswordError] = useState('');
@@ -234,7 +246,11 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     <Button variant="ghost" size="sm" onClick={() => setIsEditProfileOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
                         ⚙️ 정보 수정
                     </Button>
-                    <TeacherAnnouncementManager isMobile={isMobile} initialAnnouncements={teacherBootstrap?.announcements} />
+                    <TeacherAnnouncementManager
+                        isMobile={isMobile}
+                        unreadCount={announcementSeen.unreadCount}
+                        onOpenList={() => setShowAnnouncementList(true)}
+                    />
                     {/*
                       * 예전 이름은 `📢 의견 보내기` 였고 회색 설정 버튼 무리에 끼어 있었다.
                       * 건의함처럼 보여 아무도 누르지 않았다(제보 0건). 무엇을 하는 곳인지로 이름을 바꾸고
@@ -253,6 +269,16 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                     </Button>
                 </div>
             </header>
+
+            {/*
+              * 새 공지는 머리말의 작은 버튼만으로는 눈에 띄지 않았다(사용자 지적).
+              * 안 읽은 공지가 있을 때만 여기에 띠가 뜨고, 다 읽으면 사라진다.
+              */}
+            <AnnouncementSpotlight
+                unread={announcementSeen.unread}
+                onMarkSeen={announcementSeen.markSeen}
+                onViewAll={() => setShowAnnouncementList(true)}
+            />
 
             {/* 교사 업무 영역 네비게이션 */}
             <nav className="teacher-dashboard__nav" style={{
@@ -485,6 +511,31 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                 onClose={() => setIsFeedbackOpen(false)}
                 onRepliesSeen={() => setFeedbackReplyCount(0)}
             />
+
+            {/* 목록을 열면 그 안의 공지를 모두 읽은 것으로 본다. */}
+            {showAnnouncementList && (
+                <AnnouncementListModal
+                    announcements={announcements}
+                    onClose={() => {
+                        announcementSeen.markAllSeen();
+                        setShowAnnouncementList(false);
+                    }}
+                />
+            )}
+
+            {/*
+              * 관리자가 `팝업` 으로 표시한 공지는 들어올 때 한 번 뜬다.
+              * 그전에는 이 창이 만들어져 있고도 아무 데서도 쓰이지 않아 설정이 헛돌았다.
+              */}
+            <AnimatePresence>
+                {announcementSeen.popupAnnouncement && (
+                    <AnnouncementModal
+                        announcement={announcementSeen.popupAnnouncement}
+                        onClose={() => announcementSeen.markSeen([announcementSeen.popupAnnouncement.id])}
+                        onDoNotShowAgain={() => announcementSeen.hidePopup(announcementSeen.popupAnnouncement.id)}
+                    />
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {isAdminPasswordOpen && (
