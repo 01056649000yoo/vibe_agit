@@ -6,6 +6,7 @@ import { WRITER_LEVELS, getReaderLevel, getWriterLevel } from '../../../constant
 import { supabase } from '../../../lib/supabaseClient';
 import DragonAvatar from './DragonAvatar';
 import TeacherStagePreview from './TeacherStagePreview';
+import TeacherWorkshopPreview from './TeacherWorkshopPreview';
 import { DRAGON_DECOR_SLOTS, getDragonDecorItem, normalizeDragonDecor } from './decorCatalog';
 import {
     getDragonGrowthFromWriterLevel,
@@ -489,6 +490,7 @@ const DragonTeacherManager = ({ activeClass }) => {
                     ['overview', '성장 현황'],
                     ['students', `학생별 수호룡 ${students.length}`],
                     ['preview', '단계 미리보기'],
+                    ['workshop', '공방 미리보기'],
                     ['history', `지난 시즌 ${history.length}`]
                 ].map(([id, label]) => (
                     <button type="button" key={id} className={activeTab === id ? 'is-active' : ''} onClick={() => setActiveTab(id)}>{label}</button>
@@ -558,6 +560,8 @@ const DragonTeacherManager = ({ activeClass }) => {
             )}
 
             {activeTab === 'preview' && <TeacherStagePreview />}
+
+            {activeTab === 'workshop' && <TeacherWorkshopPreview />}
 
             <StudentDetailModal
                 student={selectedStudent}

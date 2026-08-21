@@ -1,0 +1,92 @@
+.dragon-workshop-preview {
+    padding: 22px;
+    border: 1px solid #d9d6e7;
+    border-radius: 22px;
+    background:
+        radial-gradient(circle at 8% 4%, rgba(199, 210, 254, .35), transparent 26%),
+        linear-gradient(145deg, #fff 0%, #f7f6fb 100%);
+}
+
+.dragon-workshop-preview__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.dragon-workshop-preview__header h3 { margin: 4px 0 5px; color: #363143; font-size: 1.18rem; }
+.dragon-workshop-preview__header p { max-width: 720px; margin: 0; color: #716b7c; font-size: .75rem; font-weight: 750; line-height: 1.6; }
+.dragon-workshop-preview__safe-badge { flex: 0 0 auto; padding: 7px 10px; border: 1px solid #c7c6dc; border-radius: 999px; background: #f3f2fa; color: #55506f; font-size: .66rem; font-weight: 950; white-space: nowrap; }
+
+.dragon-workshop-preview__summary { display: grid; grid-template-columns: 110px 110px minmax(0, 1fr); gap: 8px; margin-top: 15px; }
+.dragon-workshop-preview__summary > div { padding: 9px 11px; border: 1px solid #e1dfee; border-radius: 12px; background: rgba(255, 255, 255, .82); }
+.dragon-workshop-preview__summary small,
+.dragon-workshop-preview__summary strong { display: block; }
+.dragon-workshop-preview__summary small { color: #827c90; font-size: .56rem; font-weight: 850; }
+.dragon-workshop-preview__summary strong { margin-top: 2px; color: #433d54; font-size: .8rem; }
+.dragon-workshop-preview__summary p { align-self: center; margin: 0; color: #80798b; font-size: .61rem; font-weight: 750; line-height: 1.5; }
+
+.dragon-workshop-preview__layout { display: grid; grid-template-columns: minmax(330px, .9fr) minmax(430px, 1.1fr); gap: 18px; align-items: start; margin-top: 15px; }
+.dragon-workshop-preview__stage,
+.dragon-workshop-preview__catalog { min-width: 0; padding: 15px; border: 1px solid #dfddeb; border-radius: 19px; background: rgba(255, 255, 255, .84); box-shadow: 0 14px 34px rgba(56, 48, 83, .06); }
+.dragon-workshop-preview__stage-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 2px 11px; }
+.dragon-workshop-preview__stage-heading small,
+.dragon-workshop-preview__stage-heading strong { display: block; }
+.dragon-workshop-preview__stage-heading small { color: #77708b; font-size: .58rem; font-weight: 900; }
+.dragon-workshop-preview__stage-heading strong { margin-top: 2px; color: #3f394f; font-size: .8rem; }
+.dragon-workshop-preview__stage > .dragon-hideout-scene { width: 100%; max-width: 520px; margin: 0 auto; }
+
+.dragon-workshop-preview__equipped { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.dragon-workshop-preview__equipped button { min-width: 0; padding: 8px 5px; border: 1px solid #e5e2ed; border-radius: 10px; background: #faf9fc; color: #4e485d; cursor: pointer; font: inherit; text-align: center; }
+.dragon-workshop-preview__equipped span,
+.dragon-workshop-preview__equipped small,
+.dragon-workshop-preview__equipped strong { display: block; }
+.dragon-workshop-preview__equipped span { color: #746b91; }
+.dragon-workshop-preview__equipped small { margin-top: 2px; color: #918b9d; font-size: .5rem; font-weight: 850; }
+.dragon-workshop-preview__equipped strong { margin-top: 2px; overflow: hidden; font-size: .56rem; text-overflow: ellipsis; white-space: nowrap; }
+
+.dragon-workshop-preview__tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+.dragon-workshop-preview__tabs button { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1px 4px; align-items: center; min-width: 0; padding: 8px 6px; border: 1px solid #e2dfea; border-radius: 10px; background: #fff; color: #686174; cursor: pointer; font: inherit; font-size: .6rem; font-weight: 900; }
+.dragon-workshop-preview__tabs button > span { grid-row: span 2; }
+.dragon-workshop-preview__tabs button > small { color: #9a94a4; font-size: .48rem; }
+.dragon-workshop-preview__tabs button.is-active { border-color: #7462a8; background: #f1edfb; color: #4e3e7c; box-shadow: 0 0 0 2px rgba(116, 98, 168, .1); }
+
+.dragon-workshop-preview__catalog-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0 8px; padding: 8px 10px; border-radius: 10px; background: #f5f3f9; }
+.dragon-workshop-preview__catalog-heading strong,
+.dragon-workshop-preview__catalog-heading small { display: block; }
+.dragon-workshop-preview__catalog-heading strong { color: #484154; font-size: .7rem; }
+.dragon-workshop-preview__catalog-heading small { margin-top: 2px; color: #8d8697; font-size: .52rem; font-weight: 750; }
+.dragon-workshop-preview__catalog-heading > span { color: #6c627d; font-size: .59rem; font-weight: 900; white-space: nowrap; }
+
+.dragon-workshop-preview__items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; max-height: 530px; overflow-y: auto; padding-right: 3px; }
+.dragon-workshop-preview__items > button { display: grid; grid-template-columns: 60px minmax(0, 1fr); grid-template-rows: auto auto; gap: 2px 8px; align-items: center; min-width: 0; padding: 8px; border: 1px solid #e4e1e9; border-radius: 13px; background: #fff; color: #514b59; cursor: pointer; font: inherit; text-align: left; }
+.dragon-workshop-preview__items > button:hover { border-color: #a69abf; }
+.dragon-workshop-preview__items > button:focus-visible,
+.dragon-workshop-preview__tabs button:focus-visible,
+.dragon-workshop-preview__equipped button:focus-visible { outline: 3px solid rgba(60, 108, 184, .26); outline-offset: 2px; }
+.dragon-workshop-preview__items > button.is-selected { border-color: #7763a9; background: #f6f2ff; box-shadow: 0 0 0 2px rgba(119, 99, 169, .11); }
+
+.dragon-workshop-preview__item-art { position: relative; grid-row: span 2; display: grid; width: 58px; height: 58px; place-items: center; overflow: hidden; border: 2px solid #d7d2df; border-radius: 12px; background: linear-gradient(145deg, #f6f3ee, #e9e4de); box-shadow: inset 0 0 16px rgba(77, 60, 47, .08); }
+.dragon-workshop-preview__item-art img { width: 100%; height: 100%; object-fit: contain; }
+.dragon-workshop-preview__item-art[data-slot="wallpaper"] { border: 5px solid var(--teacher-frame-color, #8a6c54); box-shadow: inset 0 0 12px var(--teacher-frame-glow, rgba(80, 57, 37, .18)); }
+.dragon-workshop-preview__item-art[data-slot="wallpaper"] i { width: 29px; height: 29px; border: 1px solid rgba(78, 60, 48, .18); border-radius: 8px; background: #fbf7ef; }
+.dragon-workshop-preview__item-art[data-slot="pedestal"] i { width: 40px; height: 15px; border: 2px solid #887867; border-radius: 50%; background: linear-gradient(#d9d2c7, #8f8475); box-shadow: 0 7px 0 -3px #756a5e; }
+
+.dragon-workshop-preview__item-copy { min-width: 0; }
+.dragon-workshop-preview__item-copy > span { display: inline-block; padding: 2px 5px; border-radius: 999px; background: #eeeaf5; color: #685c80; font-size: .47rem; font-weight: 950; }
+.dragon-workshop-preview__item-copy strong,
+.dragon-workshop-preview__item-copy small { display: block; }
+.dragon-workshop-preview__item-copy strong { margin-top: 3px; overflow: hidden; font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }
+.dragon-workshop-preview__item-copy small { margin-top: 2px; color: #847d8d; font-size: .51rem; font-weight: 750; line-height: 1.35; }
+.dragon-workshop-preview__items > button > em { grid-column: 2; color: #7969a0; font-size: .49rem; font-style: normal; font-weight: 900; }
+.dragon-workshop-preview__items > button.is-selected > em { color: #4f3b81; }
+
+@media (max-width: 1120px) {
+    .dragon-workshop-preview__layout { grid-template-columns: 1fr; }
+    .dragon-workshop-preview__stage { width: min(620px, 100%); margin: 0 auto; box-sizing: border-box; }
+}
+
+@media (max-width: 680px) {
+    .dragon-workshop-preview { padding: 15px; }
+    .dragon-workshop-preview__header { align-items: stretch; flex-direction: column; }
+    .dragon-workshop-preview__safe-badge { align-self: flex-start; }
+    .dragon-workshop-preview__summary { grid-template-columns: 1fr 1fr; }
+    .dragon-workshop-preview__summary p { grid-column: 1 / -1; }
+    .dragon-workshop-preview__tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dragon-workshop-preview__equipped { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dragon-workshop-preview__items { grid-template-columns: 1fr; max-height: none; }
+}

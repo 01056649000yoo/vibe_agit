@@ -115,6 +115,21 @@ test('교사 단계 미리보기는 공용 4종·10단계·7효과를 조합하�
     assert.doesNotMatch(previewSource, /supabase|\.rpc\(|\.from\(/);
 });
 
+test('교사 공방 미리보기는 학생 상점의 실제 5개 슬롯과 가격을 읽기 전용으로 보여 준다', async () => {
+    const [managerSource, workshopSource] = await Promise.all([
+        readFile('src/modules/game/dragon/TeacherManager.jsx', 'utf8'),
+        readFile('src/modules/game/dragon/TeacherWorkshopPreview.jsx', 'utf8')
+    ]);
+
+    assert.match(managerSource, /\['workshop', '공방 미리보기'\]/);
+    assert.match(workshopSource, /DRAGON_DECOR_SLOTS\.map/);
+    assert.match(workshopSource, /getDragonDecorItemsForSlot/);
+    assert.match(workshopSource, /DRAGON_DECOR_RARITIES/);
+    assert.match(workshopSource, /DragonHideoutScene/);
+    assert.match(workshopSource, /Number\(item\.price/);
+    assert.doesNotMatch(workshopSource, /supabase|\.rpc\(|\.from\(|buy_my_dragon_decor|equip_my_dragon_decor/);
+});
+
 test('교사 놀이터와 수호룡 현황은 핵심 정보를 먼저 보이도록 세로 공간을 압축한다', async () => {
     const [shellSource, managerSource, managerStyles] = await Promise.all([
         readFile('src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'utf8'),
