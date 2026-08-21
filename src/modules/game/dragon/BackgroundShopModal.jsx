@@ -6,11 +6,13 @@ import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import DragonHideoutScene from './DragonHideoutScene';
 import {
     DRAGON_DECOR_COLLECTIONS,
+    DRAGON_LEGENDARY_REWARD,
     DRAGON_DECOR_RARITIES,
     DRAGON_DECOR_SLOTS,
     getDragonDecorCollectionItems,
     getDragonDecorItemsForSlot,
     getDragonNameplateTextLayout,
+    hasDragonLegendaryReward,
     normalizeDragonDecor
 } from './decorCatalog';
 import './BackgroundShopModal.css';
@@ -24,6 +26,7 @@ const BackgroundShopModal = ({
     readerLevel,
     ownerName,
     buyDecorItem,
+    claimLegendaryReward,
     equipDecorItem,
     isBusy
 }) => {
@@ -34,6 +37,11 @@ const BackgroundShopModal = ({
     const decor = useMemo(() => normalizeDragonDecor(petData), [petData]);
     const items = getDragonDecorItemsForSlot(activeSlot);
     const activeSlotInfo = DRAGON_DECOR_SLOTS.find((slot) => slot.id === activeSlot);
+    const writerLevel = Number(petData?.level || 1);
+    const currentReaderLevel = Number(typeof readerLevel === 'object' ? readerLevel?.level : readerLevel) || 1;
+    const hasLegendaryReward = hasDragonLegendaryReward(petData);
+    const canClaimLegendaryReward = writerLevel >= DRAGON_LEGENDARY_REWARD.requiredWriterLevel
+        && currentReaderLevel >= DRAGON_LEGENDARY_REWARD.requiredReaderLevel;
     const previewPetData = useMemo(() => {
         if (!previewEquipped) return petData;
         return {
@@ -59,10 +67,21 @@ const BackgroundShopModal = ({
         }
     };
 
+    const handleClaimLegendaryReward = async () => {
+        const success = await claimLegendaryReward();
+        if (success) {
+            setPreviewEquipped(null);
+            setPreviewCollectionId(null);
+            setNotice('전설의 황금 성소를 열고 5개 장식을 모두 장착했어요!');
+        }
+    };
+
     const previewCollection = (collection) => {
         setPreviewEquipped({ ...collection.items });
         setPreviewCollectionId(collection.id);
-        setNotice(`${collection.name} 전체 조합이에요. 상품은 하나씩 구입하고 장착할 수 있어요.`);
+        setNotice(collection.acquisitionType === 'achievement'
+            ? `${collection.name} 전체 조합이에요. 두 칭호를 달성하면 5종을 한 번에 선물로 받아요.`
+            : `${collection.name} 전체 조합이에요. 상품은 하나씩 구입하고 장착할 수 있어요.`);
     };
 
     const previewItem = (item) => {
@@ -105,9 +124,30 @@ const BackgroundShopModal = ({
                         </section>
 
                         <section className="agit-workshop__catalog">
+                            <div className={`agit-workshop__legend-reward${hasLegendaryReward ? ' is-owned' : canClaimLegendaryReward ? ' is-ready' : ''}`}>
+                                <div className="agit-workshop__legend-reward-mark" aria-hidden="true">✦</div>
+                                <div>
+                                    <small>WRITER 10 · READER 7</small>
+                                    <strong>{DRAGON_LEGENDARY_REWARD.name}</strong>
+                                    <p>{hasLegendaryReward
+                                        ? '달성 선물을 받았어요. 전설 장식은 슬롯별로 언제든 다시 장착할 수 있어요.'
+                                        : canClaimLegendaryReward
+                                            ? '두 칭호를 모두 달성했어요. 선물을 열면 전설 장식 5종이 바로 장착돼요.'
+                                            : `작가 ${writerLevel}/10 · 독자 ${currentReaderLevel}/7 — 두 성장을 모두 완성하면 열려요.`}</p>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    variant="primary"
+                                    disabled={isBusy || hasLegendaryReward || !canClaimLegendaryReward}
+                                    onClick={handleClaimLegendaryReward}
+                                >
+                                    {hasLegendaryReward ? '선물 받음' : canClaimLegendaryReward ? '선물 열기' : '아직 잠김'}
+                                </Button>
+                            </div>
+
                             <div className="agit-workshop__collections" aria-label="추천 아지트 세트">
                                 <div className="agit-workshop__collections-heading">
-                                    <span>5 COLLECTIONS</span>
+                                    <span>6 COLLECTIONS</span>
                                     <strong>완성된 아지트부터 골라 보기</strong>
                                     <small>세트를 눌러 5개 상품 조합을 한 번에 미리 보세요.</small>
                                 </div>
@@ -126,7 +166,7 @@ const BackgroundShopModal = ({
                                             >
                                                 <span>{String(index + 1).padStart(2, '0')}</span>
                                                 <strong>{collection.name}</strong>
-                                                <small>{totalPrice.toLocaleString('ko-KR')}P</small>
+                                                <small>{collection.acquisitionType === 'achievement' ? '달성 선물' : `${totalPrice.toLocaleString('ko-KR')}P`}</small>
                                             </button>
                                         );
                                     })}
@@ -161,7 +201,10 @@ const BackgroundShopModal = ({
                                 {items.map((item) => {
                                     const isOwned = decor.owned.has(item.id);
                                     const isEquipped = Reflect.get(decor.equipped, item.slot) === item.id;
-                                    const isLocked = Number(item.requiredWriterLevel || 1) > Number(petData?.level || 1);
+                                    const isReward = item.acquisitionType === 'achievement';
+                                    const isWriterLocked = Number(item.requiredWriterLevel || 1) > writerLevel;
+                                    const isReaderLocked = Number(item.requiredReaderLevel || 1) > currentReaderLevel;
+                                    const isLocked = isWriterLocked || isReaderLocked;
                                     const rarity = Reflect.get(DRAGON_DECOR_RARITIES, item.rarity);
                                     return (
                                         <article key={item.id} data-slot={item.slot} data-rarity={item.rarity || 'default'} className={`agit-workshop__item${isEquipped ? ' is-equipped' : ''}${previewEquipped?.[item.slot] === item.id ? ' is-previewing' : ''}`}>
@@ -196,15 +239,23 @@ const BackgroundShopModal = ({
                                             <div className="agit-workshop__item-copy">
                                                 <div className="agit-workshop__item-badges">
                                                     {rarity && <span className="agit-workshop__rarity">{rarity.name}</span>}
-                                                    {Number(item.price || 0) > 0 && (
+                                                    {!item.isDefault && (
                                                         <span className={`agit-workshop__collection-badge${item.collectionId ? '' : ' is-signature'}`}>
-                                                            {item.collectionName || '시그니처'}
+                                                            {isReward ? '달성 선물' : item.collectionName || '시그니처'}
                                                         </span>
                                                     )}
                                                 </div>
                                                 <strong>{item.name}</strong>
                                                 <small>
-                                                    {isEquipped ? '현재 장착 중' : isOwned ? '보유 중' : isLocked ? `작가 ${item.requiredWriterLevel}단계 필요` : `${Number(item.price || 0).toLocaleString()}P`}
+                                                    {isEquipped
+                                                        ? '현재 장착 중'
+                                                        : isOwned
+                                                            ? '보유 중'
+                                                            : isReward
+                                                                ? '작가 10 · 독자 7 달성 선물'
+                                                                : isLocked
+                                                                    ? `작가 ${item.requiredWriterLevel}단계 필요`
+                                                                    : `${Number(item.price || 0).toLocaleString()}P`}
                                                 </small>
                                             </div>
                                             {isOwned ? (
@@ -220,10 +271,10 @@ const BackgroundShopModal = ({
                                                 <Button
                                                     size="sm"
                                                     variant="primary"
-                                                    disabled={isBusy || isLocked || Number(points || 0) < Number(item.price || 0)}
+                                                    disabled={isBusy || isReward || isLocked || Number(points || 0) < Number(item.price || 0)}
                                                     onClick={() => handleBuy(item)}
                                                 >
-                                                    {isLocked ? '잠김' : Number(points || 0) < Number(item.price || 0) ? '포인트 부족' : '구입하기'}
+                                                    {isReward ? '선물 전용' : isLocked ? '잠김' : Number(points || 0) < Number(item.price || 0) ? '포인트 부족' : '구입하기'}
                                                 </Button>
                                             )}
                                         </article>

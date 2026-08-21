@@ -21,7 +21,7 @@
 기록을 절대 쓰지 않는다.
 
 `공방 미리보기`는 같은 교사 관리 화면에서 학생 상점의 `DRAGON_DECOR_SLOTS`와 `decorCatalog.js`를 그대로 읽어
-상품명·가격·등급·작가 단계 조건을 보여 주고, 선택한 5개 슬롯 조합을 공용 `DragonHideoutScene`에만 적용한다.
+상품명·가격·등급·작가·독자 단계 조건을 보여 주고, 선택한 5개 슬롯 조합을 공용 `DragonHideoutScene`에만 적용한다.
 구매·장착 RPC를 호출하지 않으며 교사가 고른 미리보기 조합은 학생 포인트·소유권·장착 상태에 저장하지 않는다.
 
 수호룡 시즌은 한 학기 동안 한 수호룡을 키우고 학기말에 작별하는 **학기 성장 구간**이다.
@@ -53,7 +53,7 @@ newBackground: {
     textColor: '#...',
     subColor: '#...',
     glow: 'rgba(...)',
-    price: 500,
+    rarity: 'starter',
     readerTone: 'light' // light | dark | vivid
 }
 ```
@@ -78,8 +78,13 @@ newBackground: {
 교사 레거시 화면과 예전 카드가 계속 같은 테마를 표시한다.
 
 구매·장착은 클라이언트가 가격이나 전체 `pet_data`를 보내서 덮어쓰지 않는다. `buy_my_dragon_decor`와
-`equip_my_dragon_decor`가 서버 카탈로그의 가격·슬롯·소유·작가 단계·본인 여부를 검증한다. 나의 수호룡 방과 친구
+`equip_my_dragon_decor`가 서버 카탈로그의 가격·슬롯·소유·작가·독자 단계·획득 방식·본인 여부를 검증한다. 나의 수호룡 방과 친구
 아지트는 같은 `DragonHideoutScene`을 사용하므로 장식 렌더러를 두 군데에 복사하지 않는다.
+
+가격과 구매 단계는 `DRAGON_DECOR_RARITIES` 한 곳에서 정한다. 입문은 300P/작가 1, 일반은 700P/작가 3,
+희귀는 1,500P/작가 5, 영웅은 3,000P/작가 7이다. 전설 5종은 상점 상품이 아니라 작가 10·독자 7을 모두
+달성했을 때 `claim_my_dragon_legendary_decor_reward()` 한 번으로 소유·장착하는 `전설의 황금 성소` 선물이다.
+클라이언트는 전설 아이템을 일반 구매 RPC로 보낼 수 없고 서버가 두 칭호를 다시 계산한다.
 
 ### 좌우 소품 에셋 계약
 
@@ -102,7 +107,8 @@ newBackground: {
   `scripts/process-dragon-nameplates.py`로 크기·여백·용량을 맞춘다.
 - 등급별 효과는 수집 차이가 보이되 이름을 가리지 않게 테두리에만 둔다. 수정은 맥동광, 룬은 청록 빛줄기, 별자리는
   별 반짝임, 용암은 불씨 맥동, 전설은 황금 빛 훑기를 사용한다. `prefers-reduced-motion`에서는 정지한다.
-- 기존 `nameplate-simple/oak/brass/crystal` ID와 소유권은 유지한다. 최상위 전설 문패는 작가 10단계에서 해제한다.
+- 기존 `nameplate-simple/oak/brass/crystal` ID와 소유권은 유지한다. 최상위 전설 문패는 작가 10·독자 7단계
+  달성 선물 세트에 포함한다.
 
 ## 고정 레이어 순서
 

@@ -99,7 +99,7 @@ const StudentDashboard = ({
     // 드래곤 관련 상태 및 액션
     const {
         petData, isFlashing, isBusy,
-        handleBond, buyDecorItem, equipDecorItem, selectSpecies, acknowledgeGrowth
+        handleBond, buyDecorItem, claimLegendaryReward, equipDecorItem, selectSpecies, acknowledgeGrowth
     } = useDragonPet(
         studentSession?.id,
         points,
@@ -425,6 +425,7 @@ const StudentDashboard = ({
                             readerLevel={readerLevel}
                             ownerName={studentSession?.name}
                             buyDecorItem={buyDecorItem}
+                            claimLegendaryReward={claimLegendaryReward}
                             equipDecorItem={equipDecorItem}
                             isBusy={isBusy}
                         />

@@ -17,12 +17,16 @@ import {
     DEFAULT_EQUIPPED_DECOR,
     DRAGON_DECOR_COLLECTIONS,
     DRAGON_DECOR_ITEMS,
+    DRAGON_DECOR_RARITIES,
     DRAGON_DECOR_SLOTS,
+    DRAGON_LEGENDARY_REWARD,
     DRAGON_NAMEPLATE_TEXT_PROFILES,
     getDragonDecorCollectionForItem,
     getDragonDecorCollectionItems,
     getDragonDecorItemsForSlot,
     getDragonNameplateTextLayout,
+    getDragonLegendaryRewardItems,
+    hasDragonLegendaryReward,
     normalizeDragonDecor
 } from '../src/modules/game/dragon/decorCatalog.js';
 
@@ -196,30 +200,32 @@ test('아지트 공방은 관리 가능한 5개 고정 슬롯만 사용한다', 
     });
     assert.equal(DRAGON_DECOR_SLOTS[0].name, '프레임');
     assert.equal(getDragonDecorItemsForSlot('wallpaper').length, 10);
-    assert.equal(getDragonDecorItemsForSlot('pedestal').length, 9);
+    assert.equal(getDragonDecorItemsForSlot('pedestal').length, 10);
     assert.equal(getDragonDecorItemsForSlot('leftProp').length, 9);
     assert.equal(getDragonDecorItemsForSlot('rightProp').length, 9);
     assert.equal(getDragonDecorItemsForSlot('nameplate').length, 9);
 });
 
-test('유료 장식 40종은 슬롯별 8개와 등급 피라미드로 고르게 배치된다', () => {
+test('일반 장식 37종은 한 학기 포인트 규모에 맞는 등급별 가격과 구매 단계를 쓴다', () => {
     const paidItems = DRAGON_DECOR_ITEMS.filter((item) => item.price > 0);
-    assert.equal(paidItems.length, 40);
-    DRAGON_DECOR_SLOTS.forEach((slot) => {
-        assert.equal(paidItems.filter((item) => item.slot === slot.id).length, 8);
-    });
+    assert.equal(paidItems.length, 37);
     assert.deepEqual(
-        Object.fromEntries(['starter', 'common', 'rare', 'hero', 'legendary'].map((rarity) => [
+        Object.fromEntries(['starter', 'common', 'rare', 'hero'].map((rarity) => [
             rarity,
             paidItems.filter((item) => item.rarity === rarity).length
         ])),
-        { starter: 8, common: 12, rare: 10, hero: 7, legendary: 3 }
+        { starter: 8, common: 12, rare: 10, hero: 7 }
     );
-    assert.equal(paidItems.reduce((sum, item) => sum + item.price, 0), 143600);
+    assert.equal(paidItems.reduce((sum, item) => sum + item.price, 0), 46800);
+    Object.values(DRAGON_DECOR_RARITIES).forEach((rarity) => {
+        const items = DRAGON_DECOR_ITEMS.filter((item) => item.rarity === rarity.id);
+        assert.equal(items.every((item) => item.price === rarity.price), true);
+        assert.equal(items.every((item) => item.requiredWriterLevel === rarity.requiredWriterLevel), true);
+    });
 });
 
-test('5개 완성 세트는 슬롯별 1개씩 구성되고 나머지는 슬롯별 시그니처 3개다', () => {
-    assert.equal(DRAGON_DECOR_COLLECTIONS.length, 5);
+test('5개 구매 세트와 전설 달성 세트는 모두 슬롯별 1개씩 구성된다', () => {
+    assert.equal(DRAGON_DECOR_COLLECTIONS.length, 6);
     const collectionItemIds = new Set();
 
     DRAGON_DECOR_COLLECTIONS.forEach((collection) => {
@@ -236,12 +242,14 @@ test('5개 완성 세트는 슬롯별 1개씩 구성되고 나머지는 슬롯�
         });
     });
 
-    assert.equal(collectionItemIds.size, 25);
-    DRAGON_DECOR_SLOTS.forEach((slot) => {
-        const paidItems = getDragonDecorItemsForSlot(slot.id).filter((item) => item.price > 0);
-        assert.equal(paidItems.filter((item) => item.collectionId).length, 5);
-        assert.equal(paidItems.filter((item) => !item.collectionId).length, 3);
-    });
+    assert.equal(collectionItemIds.size, 30);
+    const legendaryItems = getDragonLegendaryRewardItems();
+    assert.equal(legendaryItems.length, 5);
+    assert.equal(legendaryItems.every((item) => item.acquisitionType === 'achievement'), true);
+    assert.equal(legendaryItems.every((item) => item.requiredWriterLevel === 10 && item.requiredReaderLevel === 7), true);
+    assert.equal(hasDragonLegendaryReward({ ownedDecorItems: legendaryItems.map((item) => item.id) }), true);
+    assert.equal(hasDragonLegendaryReward({ ownedDecorItems: legendaryItems.slice(1).map((item) => item.id) }), false);
+    assert.equal(DRAGON_LEGENDARY_REWARD.name, '전설의 황금 성소');
 });
 
 test('학생 공방은 세트 전체 미리보기와 상품별 구매를 분리한다', async () => {
@@ -250,6 +258,8 @@ test('학생 공방은 세트 전체 미리보기와 상품별 구매를 분리�
     assert.match(shopSource, /setPreviewEquipped\(\{ \.\.\.collection\.items \}\)/);
     assert.match(shopSource, /상품은 하나씩 구입하고 장착할 수 있어요/);
     assert.match(shopSource, /buyDecorItem\(item\)/);
+    assert.match(shopSource, /claimLegendaryReward\(\)/);
+    assert.match(shopSource, /작가 10 · 독자 7/);
     assert.doesNotMatch(shopSource, /buyDecorCollection|buy_my_dragon_decor_collection/);
 });
 
@@ -268,7 +278,7 @@ test('프레임은 모서리 테마 이름을 쓰고 좌우 소품은 최적화�
     assert.equal(getDragonDecorItemsForSlot('wallpaper').every((item) => item.name.includes('프레임')), true);
     assert.deepEqual(
         getDragonDecorItemsForSlot('pedestal').map((item) => item.preview),
-        ['stone', 'oak', 'cloud', 'root', 'ember', 'crystal', 'moonstone', 'rune', 'celestial']
+        ['stone', 'oak', 'cloud', 'root', 'ember', 'crystal', 'moonstone', 'rune', 'celestial', 'legend']
     );
     const props = [
         ...getDragonDecorItemsForSlot('leftProp'),
@@ -326,7 +336,7 @@ test('장착한 5개 슬롯은 하나의 pet_data 계약으로 복원된다', ()
     assert.equal(DRAGON_DECOR_ITEMS.every((item) => item.slot && item.id), true);
 });
 
-test('문패 9종은 단계적으로 화려해지는 개별 WebP와 전설 잠금 조건을 쓴다', () => {
+test('문패 9종은 단계적으로 화려해지는 개별 WebP와 전설 달성 조건을 쓴다', () => {
     const nameplates = getDragonDecorItemsForSlot('nameplate');
     assert.deepEqual(nameplates.map((item) => item.image), [
         '/assets/dragons/nameplates/nameplate-simple.webp',
@@ -339,8 +349,10 @@ test('문패 9종은 단계적으로 화려해지는 개별 WebP와 전설 잠�
         '/assets/dragons/nameplates/nameplate-storm.webp',
         '/assets/dragons/nameplates/nameplate-legend.webp'
     ]);
-    assert.deepEqual(nameplates.map((item) => item.price), [0, 500, 1200, 1400, 1600, 2000, 3500, 4200, 10000]);
+    assert.deepEqual(nameplates.map((item) => item.price), [0, 300, 700, 700, 700, 700, 1500, 1500, 0]);
     assert.equal(nameplates.at(-1).requiredWriterLevel, 10);
+    assert.equal(nameplates.at(-1).requiredReaderLevel, 7);
+    assert.equal(nameplates.at(-1).acquisitionType, 'achievement');
     assert.deepEqual(Object.keys(DRAGON_NAMEPLATE_TEXT_PROFILES), nameplates.map((item) => item.preview));
 
     const shortLegend = getDragonNameplateTextLayout('legend', '나의 아지트', '황금이');

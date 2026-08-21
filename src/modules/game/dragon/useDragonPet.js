@@ -164,6 +164,25 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         }
     };
 
+    const claimLegendaryReward = async () => {
+        if (!studentId || isBusy) return false;
+        setIsBusy(true);
+        try {
+            const { data: result, error } = await supabase.rpc('claim_my_dragon_legendary_decor_reward');
+            if (error) throw error;
+            if (!result?.success) throw new Error(result?.error || '전설 세트 개봉 실패');
+
+            setPetData(normalizePetData(result.pet_data));
+            return true;
+        } catch (error) {
+            console.error('전설 아지트 세트 개봉 실패:', error.message);
+            alert(error.message || '전설 세트를 열지 못했어요. 잠시 후 다시 시도해 주세요.');
+            return false;
+        } finally {
+            setIsBusy(false);
+        }
+    };
+
     const selectSpecies = async (speciesId, { isReselection = false } = {}) => {
         if (!studentId || isBusy) return false;
         if (!DRAGON_SPECIES.some((species) => species.id === speciesId)) return false;
@@ -217,6 +236,7 @@ export const useDragonPet = (studentId, points, setPoints, initialPetData = null
         isBusy,
         handleBond,
         buyDecorItem,
+        claimLegendaryReward,
         equipDecorItem,
         selectSpecies,
         acknowledgeGrowth

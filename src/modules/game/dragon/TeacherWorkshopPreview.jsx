@@ -13,6 +13,7 @@ import { getDragonStage } from './presentation';
 import './TeacherWorkshopPreview.css';
 
 const formatPrice = (item) => {
+    if (item.acquisitionType === 'achievement') return '작가 10 · 독자 7 달성 선물';
     if (Number(item.price || 0) > 0) return `${Number(item.price).toLocaleString('ko-KR')}P`;
     if (Number(item.requiredWriterLevel || 1) > 1) return `작가 ${item.requiredWriterLevel}단계 보상`;
     return '기본 제공';
@@ -54,7 +55,7 @@ const TeacherWorkshopPreview = () => {
                 <div>
                     <span className="dragon-teacher-eyebrow">WORKSHOP CATALOG</span>
                     <h3 id="dragon-workshop-preview-title">아지트 공방 상품 미리보기</h3>
-                    <p>학생 상점에 진열되는 실제 상품과 가격을 확인하고, 5개 슬롯을 자유롭게 조합해 봅니다.</p>
+                    <p>학생 상점의 실제 가격·구매 단계와 달성 선물을 확인하고, 5개 슬롯을 자유롭게 조합해 봅니다.</p>
                 </div>
                 <span className="dragon-workshop-preview__safe-badge">교사 전용 · 구매·저장 안 됨</span>
             </header>
@@ -68,7 +69,7 @@ const TeacherWorkshopPreview = () => {
             <div className="dragon-workshop-preview__collections" aria-label="완성 아지트 세트">
                 <div>
                     <span>CURATED ROOMS</span>
-                    <strong>5개 완성 세트</strong>
+                    <strong>6개 완성 세트</strong>
                     <small>세트 전체를 먼저 보고 슬롯별 상품을 비교할 수 있습니다.</small>
                 </div>
                 {DRAGON_DECOR_COLLECTIONS.map((collection, index) => {
@@ -86,7 +87,7 @@ const TeacherWorkshopPreview = () => {
                             <span>{String(index + 1).padStart(2, '0')}</span>
                             <strong>{collection.name}</strong>
                             <small>{collection.summary}</small>
-                            <em>{totalPrice.toLocaleString('ko-KR')}P · 전체 미리보기</em>
+                            <em>{collection.acquisitionType === 'achievement' ? '작가 10 · 독자 7 선물' : `${totalPrice.toLocaleString('ko-KR')}P`} · 전체 미리보기</em>
                         </button>
                     );
                 })}
@@ -183,7 +184,7 @@ const TeacherWorkshopPreview = () => {
                                     <span className="dragon-workshop-preview__item-copy">
                                         <span>{item.collectionName || rarity?.name || (item.isDefault ? '기본' : '시그니처')}</span>
                                         <strong>{item.name}</strong>
-                                        <small>{formatPrice(item)}{Number(item.requiredWriterLevel || 1) > 1 && Number(item.price || 0) > 0 ? ` · 작가 ${item.requiredWriterLevel}단계` : ''}</small>
+                                        <small>{formatPrice(item)}{item.acquisitionType !== 'achievement' && Number(item.requiredWriterLevel || 1) > 1 ? ` · 작가 ${item.requiredWriterLevel}단계` : ''}</small>
                                     </span>
                                     <em>{isSelected ? '미리보기 중' : '적용해 보기'}</em>
                                 </button>

@@ -47,6 +47,16 @@
 .agit-workshop__preview > p { margin: 16px 2px 0; padding: 10px 12px; border: 1px solid #dce7e2; border-radius: 12px; background: #f4faf7; color: #48675a; font-size: .72rem; font-weight: 850; line-height: 1.45; text-align: center; }
 
 .agit-workshop__catalog { min-width: 0; overflow-y: auto; padding: 20px; }
+.agit-workshop__legend-reward { display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: 10px; align-items: center; margin-bottom: 14px; padding: 12px; border: 1px solid #c8b472; border-radius: 16px; background: linear-gradient(135deg,#24201c,#4b3b25 60%,#6f531e); color: #fff7d6; box-shadow: inset 0 0 0 1px rgba(255,236,163,.1); }
+.agit-workshop__legend-reward.is-ready { border-color: #f3d36d; box-shadow: 0 0 0 3px rgba(219,173,45,.16),inset 0 0 26px rgba(255,213,90,.1); }
+.agit-workshop__legend-reward.is-owned { background: linear-gradient(135deg,#3c3425,#62502d 60%,#82651f); }
+.agit-workshop__legend-reward-mark { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #e8c75f; border-radius: 50%; background: radial-gradient(circle,#fff5b8 0 9%,#d7a92e 10% 25%,#4b3610 64%); color: #fff3a5; font-size: 1.2rem; box-shadow: 0 0 18px rgba(246,202,69,.36); }
+.agit-workshop__legend-reward small,
+.agit-workshop__legend-reward strong { display: block; }
+.agit-workshop__legend-reward small { color: #e5c966; font-size: .52rem; font-weight: 950; letter-spacing: .08em; }
+.agit-workshop__legend-reward strong { margin-top: 2px; font-size: .78rem; }
+.agit-workshop__legend-reward p { margin: 3px 0 0; color: #e8ddc5; font-size: .55rem; font-weight: 750; line-height: 1.4; }
+.agit-workshop__legend-reward > button { min-width: 78px; border-color: #e2bd45; background: linear-gradient(#f2ce62,#bd851b); color: #34230a; }
 .agit-workshop__collections { margin-bottom: 14px; padding: 12px; border: 1px solid #ded8d2; border-radius: 16px; background: linear-gradient(145deg,#f8f6f2,#f1eee9); }
 .agit-workshop__collections-heading span,
 .agit-workshop__collections-heading strong,
@@ -54,7 +64,7 @@
 .agit-workshop__collections-heading span { color: #8c6d4b; font-size: .52rem; font-weight: 950; letter-spacing: .12em; }
 .agit-workshop__collections-heading strong { margin-top: 2px; color: #352f2c; font-size: .82rem; }
 .agit-workshop__collections-heading small { margin-top: 2px; color: #837a72; font-size: .58rem; font-weight: 750; }
-.agit-workshop__collection-list { display: grid; grid-template-columns: repeat(5,minmax(92px,1fr)); gap: 6px; margin-top: 9px; overflow-x: auto; padding-bottom: 2px; }
+.agit-workshop__collection-list { display: grid; grid-template-columns: repeat(6,minmax(92px,1fr)); gap: 6px; margin-top: 9px; overflow-x: auto; padding-bottom: 2px; }
 .agit-workshop__collection-list button { position: relative; min-width: 92px; overflow: hidden; padding: 9px 7px 8px; border: 1px solid #ded9d4; border-radius: 11px; background: #fff; color: #49413b; cursor: pointer; font: inherit; text-align: left; }
 .agit-workshop__collection-list button::before { position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--collection-accent); content: ''; }
 .agit-workshop__collection-list button > span,
@@ -93,6 +103,7 @@
 .agit-workshop__item-preview[data-slot='pedestal'][data-visual='ember'] span { background: linear-gradient(115deg,#27221f 0 30%,#ed6a2b 31% 38%,#292222 39% 66%,#ff9a38 67% 72%,#171515 73%); box-shadow: 0 0 9px rgba(255,98,31,.55); }
 .agit-workshop__item-preview[data-slot='pedestal'][data-visual='root'] span { background: repeating-linear-gradient(112deg,#593a25 0 16%,#96633a 17% 31%); box-shadow: -4px 4px 0 -2px #654127,5px 4px 0 -2px #754b2b; }
 .agit-workshop__item-preview[data-slot='pedestal'][data-visual='celestial'] span { border: 2px solid #d5b552; background: radial-gradient(ellipse,#36437d 0 36%,#141b42 40% 67%,#9b7a2f 70%); box-shadow: 0 0 9px rgba(122,153,255,.65); }
+.agit-workshop__item-preview[data-slot='pedestal'][data-visual='legend'] span { border: 2px solid #e1b838; background: radial-gradient(ellipse at 50% 30%,#fff2a1 0 8%,#c58d1d 10% 33%,#4c3511 38% 67%,#ad7416 70%); box-shadow: 0 0 12px rgba(242,190,45,.72),inset 0 2px rgba(255,245,181,.72); }
 .agit-workshop__item-preview[data-slot='nameplate'] { position: relative; width: 94px; aspect-ratio: 2.35; overflow: visible; border: 0; background: radial-gradient(ellipse,#fff 0 12%,#f1e8dc 58%,transparent 72%); }
 .agit-workshop__item-preview[data-slot='nameplate'] img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(45,31,21,.28)); }
 .agit-workshop__item-preview[data-slot='nameplate'] span { position: absolute; z-index: 1; top: var(--nameplate-copy-top,50%); left: 50%; display: block; width: var(--nameplate-copy-width,48%); overflow: hidden; color: #4b3020; font-size: var(--nameplate-thumbnail-size,.37rem); font-weight: 950; letter-spacing: -.04em; text-align: center; text-overflow: ellipsis; text-shadow: 0 1px rgba(255,255,255,.45); transform: translate(-50%,-50%); white-space: nowrap; }
@@ -139,6 +150,9 @@
 
 @media (max-width: 470px) {
     .agit-workshop__preview { grid-template-columns: 134px minmax(0,1fr); }
+    .agit-workshop__legend-reward { grid-template-columns: 38px minmax(0,1fr); }
+    .agit-workshop__legend-reward-mark { width: 36px; height: 36px; }
+    .agit-workshop__legend-reward > button { grid-column: 1 / -1; width: 100%; }
     .agit-workshop__tabs button { min-height: 50px; font-size: .58rem; }
     .agit-workshop__items { grid-template-columns: 1fr; }
 }
