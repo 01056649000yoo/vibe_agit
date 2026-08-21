@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../../components/common/Button';
-import CenteredDialog from '../../../../components/common/CenteredDialog';
-import FeatureAvailabilitySwitch from '../../../../components/common/FeatureAvailabilitySwitch';
 import { supabase } from '../../../../lib/supabaseClient';
 import ReadingMarathonCourse from './ReadingMarathonCourse';
 import ReadingMarathonTeamAssignmentDialog from './ReadingMarathonTeamAssignmentDialog';
@@ -51,8 +49,6 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const [snapshot, setSnapshot] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [availabilitySaving, setAvailabilitySaving] = useState(false);
-    const [pendingAvailability, setPendingAvailability] = useState(null);
     const [ending, setEnding] = useState(false);
     const [pageSavingId, setPageSavingId] = useState(null);
     const [pageValues, setPageValues] = useState({});
@@ -68,8 +64,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         medalRequirementType: 'books',
         medalRequirementValue: 1,
         teams: [],
-        endsOn: '',
-        enabled: false
+        endsOn: ''
     });
 
     const applySnapshot = useCallback((data) => {
@@ -89,8 +84,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 medalRequirementType: normalized.campaign.medal_requirement_type || 'books',
                 medalRequirementValue: Number(normalized.campaign.medal_requirement_value) || 0,
                 teams: teams.length > 0 ? teams : makeDefaultTeams(normalized.roster),
-                endsOn: normalized.campaign.ends_on || '',
-                enabled: Boolean(normalized.campaign.is_enabled)
+                endsOn: normalized.campaign.ends_on || ''
             });
         } else {
             setForm({
@@ -100,8 +94,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 medalRequirementType: 'books',
                 medalRequirementValue: 1,
                 teams: makeDefaultTeams(normalized.roster),
-                endsOn: '',
-                enabled: false
+                endsOn: ''
             });
         }
     }, [className]);
@@ -156,7 +149,6 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     );
 
     const saveCampaign = async ({ startNew = false, enabledOverride, successMessage } = {}) => {
-        if (availabilitySaving) return false;
         if (!form.title.trim()) {
             alert('독서마라톤 이름을 입력해주세요.');
             return false;
@@ -171,7 +163,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
             p_medal_requirement_value: form.competitionType === 'individual' ? 0 : Math.round(Number(form.medalRequirementValue)),
             p_teams: form.competitionType === 'group_team' ? buildMarathonTeamPayload(form.teams) : [],
             p_ends_on: form.endsOn || null,
-            p_enabled: enabledOverride ?? form.enabled,
+            p_enabled: enabledOverride ?? Boolean(snapshot?.campaign?.started_at),
             p_start_new: startNew
         });
         setSaving(false);
@@ -187,67 +179,6 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         }
         alert(successMessage || (startNew ? '새 독서마라톤을 시작했습니다! 🏃' : '독서마라톤 설정을 저장했습니다.'));
         return true;
-    };
-
-    const requestCampaignAvailabilityChange = (nextEnabled) => {
-        const currentCampaign = snapshot?.campaign;
-        if (!currentCampaign?.id || !currentCampaign.started_at || currentCampaign.status === 'completed'
-            || saving || ending || availabilitySaving) return;
-
-        setPendingAvailability(nextEnabled);
-    };
-
-    const saveCampaignAvailability = async (nextEnabled) => {
-        const currentCampaign = snapshot?.campaign;
-        if (!currentCampaign?.id || !currentCampaign.started_at || currentCampaign.status === 'completed'
-            || saving || ending || availabilitySaving) return;
-
-        const previousEnabled = Boolean(currentCampaign.is_enabled);
-        const previousStatus = currentCampaign.status;
-        setAvailabilitySaving(true);
-        setForm((current) => ({ ...current, enabled: nextEnabled }));
-        setSnapshot((current) => current?.campaign?.id === currentCampaign.id
-            ? {
-                ...current,
-                campaign: {
-                    ...current.campaign,
-                    is_enabled: nextEnabled,
-                    status: nextEnabled ? 'active' : 'paused'
-                }
-            }
-            : current);
-
-        const { data, error } = await supabase.rpc('set_teacher_reading_marathon_enabled_v1', {
-            p_class_id: classId,
-            p_enabled: nextEnabled
-        });
-        setAvailabilitySaving(false);
-
-        if (error) {
-            console.error('독서마라톤 사용 여부 저장 실패:', error.message);
-            setForm((current) => ({ ...current, enabled: previousEnabled }));
-            setSnapshot((current) => current?.campaign?.id === currentCampaign.id
-                ? {
-                    ...current,
-                    campaign: {
-                        ...current.campaign,
-                        is_enabled: previousEnabled,
-                        status: previousStatus
-                    }
-                }
-                : current);
-            alert(error.message || '독서마라톤 사용 여부를 저장하지 못했습니다.');
-            return;
-        }
-
-        applySnapshot(data);
-    };
-
-    const confirmCampaignAvailabilityChange = () => {
-        if (pendingAvailability === null) return;
-        const nextEnabled = pendingAvailability;
-        setPendingAvailability(null);
-        void saveCampaignAvailability(nextEnabled);
     };
 
     const startCampaign = async () => {
@@ -287,7 +218,6 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         }
 
         applySnapshot(data);
-        setForm((current) => ({ ...current, enabled: true }));
         setHistory([]);
         if (historyOpen) await loadHistory();
         alert(isCompletedCampaign
@@ -391,19 +321,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                     <h3 id="reading-marathon-settings-title">🏃 독서마라톤</h3>
                     <p>개인전·학급 전체전·모둠전을 열고, 확인 완료한 독서록만 거리와 메달에 반영합니다.</p>
                 </div>
-                {modeLocked ? (
-                    <FeatureAvailabilitySwitch
-                        checked={form.enabled}
-                        onChange={requestCampaignAvailabilityChange}
-                        disabled={completed || saving || ending}
-                        loading={availabilitySaving}
-                        enabledLabel="학생 독서마라톤 사용 중"
-                        disabledLabel="학생 독서마라톤 사용 안 함"
-                        enabledDescription="누르는 즉시 저장되어 학생 화면에 마라톤이 보입니다."
-                        disabledDescription="누르는 즉시 저장되어 학생 화면에서 마라톤을 숨깁니다."
-                        ariaLabel="학생 독서마라톤 사용"
-                    />
-                ) : (
+                {!modeLocked && (
                     <div className="reading-marathon-prestart-note">
                         <strong>📝 시작 전 준비 중</strong>
                         <small>모둠과 학생을 배정한 뒤 아래 시작 버튼을 눌러 학생에게 공개합니다.</small>
@@ -687,23 +605,23 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 </label>
                 <p className="reading-marathon-settings__rule">교사가 ‘확인 완료’한 독서록만 반영합니다. ‘보완 요청’은 제외됩니다. 한 페이지는 10m이며, 한 학생의 같은 책은 한 번만 인정됩니다.</p>
                 {completed ? (
-                    <Button type="button" onClick={finishCampaign} disabled={saving || availabilitySaving || ending}>
+                    <Button type="button" onClick={finishCampaign} disabled={saving || ending}>
                         {ending ? '완주 기록 보관 중...' : '완주 기록 보관하고 새 마라톤 준비하기 🏁'}
                     </Button>
                 ) : !modeLocked ? (
                     <div className="reading-marathon-start-actions">
-                        <Button type="button" variant="outline" disabled={saving || availabilitySaving} onClick={() => saveCampaign({
+                        <Button type="button" variant="outline" disabled={saving} onClick={() => saveCampaign({
                             enabledOverride: false,
                             successMessage: '모둠과 학생 배정을 초안으로 저장했습니다.'
                         })}>
                             {saving ? '저장 중...' : '초안 저장하기'}
                         </Button>
-                        <Button type="submit" disabled={saving || availabilitySaving}>
+                        <Button type="submit" disabled={saving}>
                             {saving ? '시작 중...' : '학생 배정 확인하고 시작하기 🏃'}
                         </Button>
                     </div>
                 ) : (
-                    <Button type="submit" disabled={saving || availabilitySaving}>{saving ? '저장 중...' : snapshot?.campaign ? '설정 저장하기' : '독서마라톤 만들기'}</Button>
+                    <Button type="submit" disabled={saving}>{saving ? '저장 중...' : snapshot?.campaign ? '설정 저장하기' : '독서마라톤 만들기'}</Button>
                 )}
                 {campaign?.started_at && !completed && (
                     <Button
@@ -712,7 +630,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                         className="reading-marathon-finish-button"
                         style={{ borderColor: '#fca5a5', backgroundColor: '#fff', color: '#b91c1c' }}
                         onClick={finishCampaign}
-                        disabled={saving || availabilitySaving || ending}
+                        disabled={saving || ending}
                     >
                         {ending ? '종료 처리 중...' : '현재 마라톤 중간 종료하기 ⏹'}
                     </Button>
@@ -802,26 +720,6 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 )}
             </section>
 
-            <CenteredDialog
-                isOpen={pendingAvailability !== null}
-                onClose={() => setPendingAvailability(null)}
-                eyebrow="학생 화면 공개 설정"
-                title={`독서마라톤을 ${pendingAvailability ? '활성화' : '비활성화'}하시겠습니까?`}
-                description={pendingAvailability
-                    ? '예를 누르면 바로 저장되어 학생 화면에 독서마라톤이 표시됩니다.'
-                    : '예를 누르면 바로 저장되어 학생 화면에서 독서마라톤이 숨겨집니다.'}
-                maxWidth="440px"
-            >
-                <div className="reading-marathon-availability-confirm">
-                    <p>다른 독서마라톤 설정은 바뀌지 않습니다.</p>
-                    <footer>
-                        <Button type="button" variant="outline" onClick={() => setPendingAvailability(null)}>아니오</Button>
-                        <Button type="button" onClick={confirmCampaignAvailabilityChange}>
-                            {pendingAvailability ? '예, 바로 활성화' : '예, 바로 비활성화'}
-                        </Button>
-                    </footer>
-                </div>
-            </CenteredDialog>
         </section>
     );
 };
