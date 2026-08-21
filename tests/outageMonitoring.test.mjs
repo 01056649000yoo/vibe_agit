@@ -1,21 +1,19 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-const [uptime, maintenance, guide, healthPlist, metricsPlist] = await Promise.all([
-    readFile('.github/workflows/uptime.yml', 'utf8'),
+const [maintenance, guide, healthScript, healthPlist, metricsPlist] = await Promise.all([
     readFile('ops/caddy/maintenance.html', 'utf8'),
     readFile('docs/OUTAGE_PLAN.md', 'utf8'),
+    readFile('scripts/check-service-health.sh', 'utf8'),
     readFile('ops/launchd/com.agit.service-health.plist', 'utf8'),
     readFile('ops/launchd/com.agit.system-metrics.plist', 'utf8')
 ]);
 
-test('외부 uptime 점검은 15분마다 세 번 재시도하고 수동 실행도 허용한다', () => {
-    assert.match(uptime, /cron: "\*\/15 \* \* \* \*"/);
-    assert.match(uptime, /workflow_dispatch:/);
-    assert.match(uptime, /for attempt in 1 2 3/);
-    assert.match(uptime, /--max-time 15/);
-    assert.match(uptime, /xn--vz0ba242ncqcba79xhwx\.site/);
+test('장애 안내 정책은 외부 실패 메일 없이 Caddy와 로컬 상태 기록만 사용한다', async () => {
+    await assert.rejects(access('.github/workflows/uptime.yml'), { code: 'ENOENT' });
+    assert.doesNotMatch(healthScript, /RESEND_API_KEY|api\.resend\.com|ALERT_TO|send_mail/);
+    assert.match(healthScript, /record_system_alert_v1/);
 });
 
 test('앱 장애 때 보여 줄 정적 안내와 Caddy 오류 처리 계약을 함께 보관한다', () => {

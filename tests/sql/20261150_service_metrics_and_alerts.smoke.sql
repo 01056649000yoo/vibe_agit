@@ -25,42 +25,43 @@ BEGIN
 END;
 $$;
 
-/*
- * 이 기능의 핵심: **같은 문제로 반복해서 보내지 않는다.**
- * 앱이 30분 죽어 있으면 5분마다 6번 불리는데, 메일은 처음 1통과 복구 1통뿐이어야 한다.
- */
+/* 같은 문제는 한 줄로 유지하고, 외부 알림 판단 값은 반환하지 않는다. */
 DO $$
 DECLARE
     v1 JSONB; v2 JSONB; v3 JSONB; v4 JSONB;
 BEGIN
-    -- 1) 처음 발생 → 알린다
+    -- 1) 처음 발생 → 열린 상태 한 줄
     v1 := public.record_system_alert_v1('smoke_test_alert', TRUE, '스모크');
-    IF (v1->>'should_notify')::BOOLEAN IS NOT TRUE OR v1->>'event' <> 'opened' THEN
-        RAISE EXCEPTION '처음 생긴 문제를 알리지 않습니다: %', v1;
+    IF v1 ? 'should_notify' OR v1->>'event' <> 'opened' THEN
+        RAISE EXCEPTION '처음 생긴 상태 기록이 올바르지 않습니다: %', v1;
     END IF;
 
-    -- 2) 이어지는 동안 → 조용
+    -- 2) 이어지는 동안 → 같은 줄 갱신
     v2 := public.record_system_alert_v1('smoke_test_alert', TRUE, '스모크');
-    IF (v2->>'should_notify')::BOOLEAN IS NOT FALSE THEN
-        RAISE EXCEPTION '같은 문제로 또 알립니다(메일 폭탄): %', v2;
+    IF v2 ? 'should_notify' OR v2->>'event' <> 'unchanged' THEN
+        RAISE EXCEPTION '이어지는 상태 기록이 올바르지 않습니다: %', v2;
     END IF;
 
-    -- 3) 풀리면 → 복구도 한 번 알린다
+    -- 3) 풀리면 → 기존 줄 닫기
     v3 := public.record_system_alert_v1('smoke_test_alert', FALSE, NULL);
-    IF (v3->>'should_notify')::BOOLEAN IS NOT TRUE OR v3->>'event' <> 'resolved' THEN
-        RAISE EXCEPTION '복구를 알리지 않습니다: %', v3;
+    IF v3 ? 'should_notify' OR v3->>'event' <> 'resolved' THEN
+        RAISE EXCEPTION '복구 상태 기록이 올바르지 않습니다: %', v3;
     END IF;
 
-    -- 4) 계속 정상이면 → 조용
+    -- 4) 계속 정상이면 → 변경 없음
     v4 := public.record_system_alert_v1('smoke_test_alert', FALSE, NULL);
-    IF (v4->>'should_notify')::BOOLEAN IS NOT FALSE THEN
-        RAISE EXCEPTION '정상인데 알립니다: %', v4;
+    IF v4 ? 'should_notify' OR v4->>'event' <> 'unchanged' THEN
+        RAISE EXCEPTION '정상 상태 기록이 올바르지 않습니다: %', v4;
     END IF;
 
     -- 열린 알림은 종류마다 하나뿐이어야 한다.
     IF (SELECT count(*) FROM public.system_alert_events
         WHERE alert_key = 'smoke_test_alert' AND status = 'open') > 0 THEN
         RAISE EXCEPTION '복구 뒤에도 열린 알림이 남아 있습니다.';
+    END IF;
+    IF EXISTS (SELECT 1 FROM public.system_alert_events
+        WHERE alert_key = 'smoke_test_alert' AND notified_at IS NOT NULL) THEN
+        RAISE EXCEPTION '상태 기록이 사용하지 않는 메일 발송 시각을 남겼습니다.';
     END IF;
 END;
 $$;

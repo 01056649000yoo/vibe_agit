@@ -35,37 +35,25 @@ test('접속·AI 호출은 원본 표에서 세고 하루 한 줄에 베끼지 �
     }
 });
 
-/*
- * 이 기능에서 가장 중요한 계약.
- * 5분마다 도는데 상태가 그대로면 메일을 보내지 않아야 한다. 앱이 30분 죽으면 6통이 오고,
- * 그러면 곧 메일을 안 읽게 되어 알림이 있으나 마나가 된다.
- */
-test('알림은 상태가 바뀔 때만 나가고, 그 판단은 DB 가 쥔다', async () => {
-    const [migration, script] = await Promise.all([
+test('맥미니 상태는 한 줄로 기록하되 외부 메일 판단은 하지 않는다', async () => {
+    const [baseMigration, policyMigration, script] = await Promise.all([
         read('supabase/migrations/20261150_service_metrics_and_alerts.sql'),
+        read('supabase/migrations/20261152_remove_service_email_notifications.sql'),
         read('scripts/check-service-health.sh')
     ]);
 
-    // 열린 알림은 종류마다 하나뿐 — 중복 발송의 마지막 방어선.
-    assert.match(migration, /CREATE UNIQUE INDEX IF NOT EXISTS system_alert_events_open_key_idx[\s\S]*?WHERE status = 'open'/);
-    // 새로 생길 때와 풀릴 때만 true.
-    assert.match(migration, /v_should_notify BOOLEAN := FALSE/);
-    assert.match(migration, /v_event := 'opened'/);
-    assert.match(migration, /v_event := 'resolved'/);
-
-    // 스크립트는 스스로 판단하지 않고 DB 가 준 답을 따른다.
+    // 열린 상태는 종류마다 하나뿐이고 5분 점검은 같은 줄의 시각만 갱신한다.
+    assert.match(baseMigration, /CREATE UNIQUE INDEX IF NOT EXISTS system_alert_events_open_key_idx[\s\S]*?WHERE status = 'open'/);
+    assert.match(policyMigration, /v_event TEXT := 'unchanged'/);
+    assert.match(policyMigration, /v_event := 'opened'/);
+    assert.match(policyMigration, /v_event := 'resolved'/);
     assert.match(script, /record_system_alert_v1/);
-    assert.match(script, /should_notify/);
-});
 
-test('알림 메일은 시크릿이나 원문 로그를 담지 않는다', async () => {
-    const script = await read('scripts/check-service-health.sh');
-
-    // 열쇠는 파일에서 읽고 값은 코드에 없다.
-    assert.match(script, /grep -m1 '\^RESEND_API_KEY='/);
-    assert.doesNotMatch(script, /re_[A-Za-z0-9]{10,}/, '메일 열쇠가 코드에 박혀 있다');
-    // 받는 주소는 바꿀 수 있게 환경변수로 열어 둔다.
-    assert.match(script, /ALERT_TO="\$\{ALERT_TO:-/);
+    const functionStart = policyMigration.indexOf('CREATE OR REPLACE FUNCTION public.record_system_alert_v1');
+    const functionEnd = policyMigration.indexOf('$$;', functionStart);
+    const functionBody = policyMigration.slice(functionStart, functionEnd);
+    assert.doesNotMatch(functionBody, /should_notify|notified_at/, '상태 기록 RPC에 메일 판단 흔적이 남았다');
+    assert.doesNotMatch(script, /RESEND_API_KEY|api\.resend\.com|ALERT_TO|ALERT_FROM|send_mail|should_notify/);
 });
 
 test('기록 RPC 는 화면이 아니라 호스트 스크립트만 쓴다', async () => {
