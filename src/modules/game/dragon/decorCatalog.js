@@ -32,10 +32,10 @@ export const DRAGON_NAMEPLATE_TEXT_PROFILES = Object.freeze({
     brass: Object.freeze({ safeWidth: 0.50, centerY: 0.50 }),
     crystal: Object.freeze({ safeWidth: 0.54, centerY: 0.51 }),
     rune: Object.freeze({ safeWidth: 0.58, centerY: 0.50 }),
-    celestial: Object.freeze({ safeWidth: 0.61, centerY: 0.53 }),
+    celestial: Object.freeze({ safeWidth: 0.61, centerY: 0.57 }),
     ember: Object.freeze({ safeWidth: 0.53, centerY: 0.51 }),
-    storm: Object.freeze({ safeWidth: 0.34, centerY: 0.51 }),
-    legend: Object.freeze({ safeWidth: 0.38, centerY: 0.51 })
+    storm: Object.freeze({ safeWidth: 0.34, centerY: 0.54 }),
+    legend: Object.freeze({ safeWidth: 0.38, centerY: 0.55 })
 });
 
 const getTextWeight = (value) => Array.from(String(value || '')).reduce((total, character) => {
@@ -62,7 +62,7 @@ export const getDragonNameplateTextLayout = (
         const thumbnailSize = clamp(0.29, thumbnailWidth / titleWeight / 10, 0.37);
         return {
             '--nameplate-copy-width': `${thumbnailWidth.toFixed(1)}%`,
-            '--nameplate-copy-y': `${((profile.centerY - 0.5) * 100).toFixed(1)}%`,
+            '--nameplate-copy-top': `${(profile.centerY * 100).toFixed(1)}%`,
             '--nameplate-thumbnail-size': `${thumbnailSize.toFixed(3)}rem`
         };
     }
@@ -81,7 +81,7 @@ export const getDragonNameplateTextLayout = (
     return {
         '--nameplate-height': `${height.toFixed(2)}%`,
         '--nameplate-copy-width': `${copyWidth.toFixed(2)}%`,
-        '--nameplate-copy-y': `${((profile.centerY - 0.5) * 100).toFixed(1)}%`,
+        '--nameplate-copy-top': `${(profile.centerY * 100).toFixed(1)}%`,
         '--nameplate-title-size': `${(baseTitleSize * fitScale).toFixed(2)}cqi`,
         '--nameplate-subtitle-size': `${(2.6 * Math.min(1, subtitleScale)).toFixed(2)}cqi`
     };

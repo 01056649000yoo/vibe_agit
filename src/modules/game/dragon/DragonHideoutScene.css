@@ -161,7 +161,7 @@
 .dragon-hideout-scene__nameplate-effect { position: absolute; z-index: 1; inset: 12% 8%; overflow: hidden; border-radius: 40%; pointer-events: none; }
 .dragon-hideout-scene__nameplate-effect::before,
 .dragon-hideout-scene__nameplate-effect::after { position: absolute; content: ''; pointer-events: none; }
-.dragon-hideout-scene__nameplate-copy { position: relative; z-index: 2; display: block; width: var(--nameplate-copy-width,48%); min-width: 0; transform: translateY(var(--nameplate-copy-y,2%)); }
+.dragon-hideout-scene__nameplate-copy { position: absolute; z-index: 2; top: var(--nameplate-copy-top,50%); left: 50%; display: block; width: var(--nameplate-copy-width,48%); min-width: 0; transform: translate(-50%,-50%); }
 .dragon-hideout-scene__nameplate strong,
 .dragon-hideout-scene__nameplate small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dragon-hideout-scene__nameplate strong { font-size: clamp(.42rem,var(--nameplate-title-size,3.7cqi),.84rem); font-weight: 950; letter-spacing: -.04em; text-shadow: 0 1px rgba(255,255,255,.35); }

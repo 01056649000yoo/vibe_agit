@@ -351,4 +351,7 @@ test('문패 9종은 단계적으로 화려해지는 개별 WebP와 전설 잠�
     assert.equal(Number.parseFloat(longLegend['--nameplate-title-size']) <= Number.parseFloat(shortLegend['--nameplate-title-size']), true);
     assert.equal(Number.parseFloat(longStorm['--nameplate-copy-width']) < 40, true);
     assert.equal(Number.parseFloat(shopLegend['--nameplate-copy-width']) < 40, true);
+    assert.equal(shopLegend['--nameplate-copy-top'], '55.0%');
+    assert.equal(getDragonNameplateTextLayout('celestial')['--nameplate-copy-top'], '57.0%');
+    assert.equal(getDragonNameplateTextLayout('storm')['--nameplate-copy-top'], '54.0%');
 });
