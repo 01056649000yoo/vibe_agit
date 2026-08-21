@@ -1,7 +1,7 @@
 import React from 'react';
 import DragonAvatar from './DragonAvatar';
 import { getHideoutBackground } from './presentation';
-import { getDragonDecorItem, normalizeDragonDecor } from './decorCatalog';
+import { getDragonDecorItem, getDragonNameplateTextLayout, normalizeDragonDecor } from './decorCatalog';
 import './DragonHideoutScene.css';
 
 const DecorProp = ({ itemId, side }) => {
@@ -30,6 +30,13 @@ const DragonHideoutScene = ({
     const pedestal = getDragonDecorItem(equipped.pedestal);
     const nameplate = getDragonDecorItem(equipped.nameplate);
     const roomLabel = `${ownerName || '나'}의 아지트`;
+    const dragonName = petData?.name || '작가 수호룡';
+    const nameplateTextLayout = getDragonNameplateTextLayout(
+        nameplate?.preview,
+        roomLabel,
+        dragonName,
+        { compact }
+    );
 
     return (
         <div
@@ -42,9 +49,10 @@ const DragonHideoutScene = ({
                 '--hideout-frame': frameTheme.border,
                 '--hideout-frame-glow': frameTheme.glow,
                 '--hideout-frame-ink': frameTheme.subColor,
+                ...nameplateTextLayout,
                 ...style
             }}
-            aria-label={`${roomLabel}, ${petData?.name || '작가 수호룡'}`}
+            aria-label={`${roomLabel}, ${dragonName}`}
         >
             <span className="dragon-hideout-scene__wall" aria-hidden="true" />
             <span className="dragon-hideout-scene__window" aria-hidden="true"><i /><i /></span>
@@ -75,7 +83,7 @@ const DragonHideoutScene = ({
                 <span className="dragon-hideout-scene__nameplate-effect" aria-hidden="true" />
                 <span className="dragon-hideout-scene__nameplate-copy">
                     <strong>{roomLabel}</strong>
-                    <small>{petData?.name || '작가 수호룡'}</small>
+                    <small>{dragonName}</small>
                 </span>
             </span>
         </div>

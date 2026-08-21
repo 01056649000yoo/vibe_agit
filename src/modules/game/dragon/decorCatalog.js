@@ -24,6 +24,69 @@ export const DEFAULT_EQUIPPED_DECOR = Object.freeze({
     nameplate: 'nameplate-simple'
 });
 
+// 문패 원본마다 장식이 차지하는 폭이 달라 글자를 놓을 수 있는 실제 안쪽 비율도 다르다.
+// 이 값은 학생 아지트와 공방 미리보기가 함께 사용한다.
+export const DRAGON_NAMEPLATE_TEXT_PROFILES = Object.freeze({
+    simple: Object.freeze({ safeWidth: 0.64, centerY: 0.50 }),
+    oak: Object.freeze({ safeWidth: 0.60, centerY: 0.50 }),
+    brass: Object.freeze({ safeWidth: 0.50, centerY: 0.50 }),
+    crystal: Object.freeze({ safeWidth: 0.54, centerY: 0.51 }),
+    rune: Object.freeze({ safeWidth: 0.58, centerY: 0.50 }),
+    celestial: Object.freeze({ safeWidth: 0.61, centerY: 0.53 }),
+    ember: Object.freeze({ safeWidth: 0.53, centerY: 0.51 }),
+    storm: Object.freeze({ safeWidth: 0.34, centerY: 0.51 }),
+    legend: Object.freeze({ safeWidth: 0.38, centerY: 0.51 })
+});
+
+const getTextWeight = (value) => Array.from(String(value || '')).reduce((total, character) => {
+    if (/\s/u.test(character)) return total + 0.35;
+    if (/[\u1100-\u11ff\u3130-\u318f\u3400-\u9fff\uac00-\ud7af]/u.test(character)) return total + 1;
+    if (/[A-Z]/u.test(character)) return total + 0.76;
+    return total + 0.6;
+}, 0);
+
+const clamp = (minimum, value, maximum) => Math.min(maximum, Math.max(minimum, value));
+
+export const getDragonNameplateTextLayout = (
+    preview = 'simple',
+    title = '나의 아지트',
+    subtitle = '작가 수호룡',
+    { compact = false, thumbnail = false } = {}
+) => {
+    const profile = Reflect.get(DRAGON_NAMEPLATE_TEXT_PROFILES, preview) || DRAGON_NAMEPLATE_TEXT_PROFILES.simple;
+    const titleWeight = Math.max(1, getTextWeight(title));
+    const subtitleWeight = Math.max(1, getTextWeight(subtitle));
+
+    if (thumbnail) {
+        const thumbnailWidth = profile.safeWidth * 92;
+        const thumbnailSize = clamp(0.29, thumbnailWidth / titleWeight / 10, 0.37);
+        return {
+            '--nameplate-copy-width': `${thumbnailWidth.toFixed(1)}%`,
+            '--nameplate-copy-y': `${((profile.centerY - 0.5) * 100).toFixed(1)}%`,
+            '--nameplate-thumbnail-size': `${thumbnailSize.toFixed(3)}rem`
+        };
+    }
+
+    const baseHeight = compact ? 27 : 24;
+    const maximumHeight = compact ? 38 : 31;
+    const baseTitleSize = compact ? 4.2 : 3.7;
+    const horizontalPadding = 0.9;
+    const requiredHeight = (titleWeight * baseTitleSize) / (2.5 * profile.safeWidth * horizontalPadding);
+    const height = clamp(baseHeight, requiredHeight, maximumHeight);
+    const fitScale = Math.min(1, maximumHeight / Math.max(requiredHeight, 1));
+    const containerWidth = compact ? 96 : 76;
+    const copyWidth = (2.5 * height * profile.safeWidth * horizontalPadding / containerWidth) * 100;
+    const subtitleScale = Math.min(1, (copyWidth * containerWidth / 100) / Math.max(subtitleWeight * 2.6, 1));
+
+    return {
+        '--nameplate-height': `${height.toFixed(2)}%`,
+        '--nameplate-copy-width': `${copyWidth.toFixed(2)}%`,
+        '--nameplate-copy-y': `${((profile.centerY - 0.5) * 100).toFixed(1)}%`,
+        '--nameplate-title-size': `${(baseTitleSize * fitScale).toFixed(2)}cqi`,
+        '--nameplate-subtitle-size': `${(2.6 * Math.min(1, subtitleScale)).toFixed(2)}cqi`
+    };
+};
+
 // `wallpaper`는 이미 저장된 학생 데이터와 RPC 호환을 위한 내부 키다. UI에서는 프레임으로 부른다.
 const FRAME_ITEMS = Object.values(HIDEOUT_BACKGROUNDS).map((background, index) => ({
     ...background,

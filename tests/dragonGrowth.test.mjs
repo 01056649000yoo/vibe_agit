@@ -18,9 +18,11 @@ import {
     DRAGON_DECOR_COLLECTIONS,
     DRAGON_DECOR_ITEMS,
     DRAGON_DECOR_SLOTS,
+    DRAGON_NAMEPLATE_TEXT_PROFILES,
     getDragonDecorCollectionForItem,
     getDragonDecorCollectionItems,
     getDragonDecorItemsForSlot,
+    getDragonNameplateTextLayout,
     normalizeDragonDecor
 } from '../src/modules/game/dragon/decorCatalog.js';
 
@@ -339,4 +341,14 @@ test('문패 9종은 단계적으로 화려해지는 개별 WebP와 전설 잠�
     ]);
     assert.deepEqual(nameplates.map((item) => item.price), [0, 500, 1200, 1400, 1600, 2000, 3500, 4200, 10000]);
     assert.equal(nameplates.at(-1).requiredWriterLevel, 10);
+    assert.deepEqual(Object.keys(DRAGON_NAMEPLATE_TEXT_PROFILES), nameplates.map((item) => item.preview));
+
+    const shortLegend = getDragonNameplateTextLayout('legend', '나의 아지트', '황금이');
+    const longLegend = getDragonNameplateTextLayout('legend', '김승현의 아지트', '황금빛 수호룡');
+    const longStorm = getDragonNameplateTextLayout('storm', '김승현의 아지트', '폭풍이');
+    const shopLegend = getDragonNameplateTextLayout('legend', '나의 아지트', '', { thumbnail: true });
+    assert.equal(Number.parseFloat(longLegend['--nameplate-height']) > Number.parseFloat(shortLegend['--nameplate-height']), true);
+    assert.equal(Number.parseFloat(longLegend['--nameplate-title-size']) <= Number.parseFloat(shortLegend['--nameplate-title-size']), true);
+    assert.equal(Number.parseFloat(longStorm['--nameplate-copy-width']) < 40, true);
+    assert.equal(Number.parseFloat(shopLegend['--nameplate-copy-width']) < 40, true);
 });

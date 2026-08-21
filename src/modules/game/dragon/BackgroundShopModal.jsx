@@ -10,6 +10,7 @@ import {
     DRAGON_DECOR_SLOTS,
     getDragonDecorCollectionItems,
     getDragonDecorItemsForSlot,
+    getDragonNameplateTextLayout,
     normalizeDragonDecor
 } from './decorCatalog';
 import './BackgroundShopModal.css';
@@ -172,7 +173,12 @@ const BackgroundShopModal = ({
                                                 style={item.slot === 'wallpaper' ? {
                                                     '--workshop-frame-color': item.border,
                                                     '--workshop-frame-glow': item.glow
-                                                } : undefined}
+                                                } : item.slot === 'nameplate' ? getDragonNameplateTextLayout(
+                                                    item.preview,
+                                                    '나의 아지트',
+                                                    '',
+                                                    { thumbnail: true }
+                                                ) : undefined}
                                                 onClick={() => previewItem(item)}
                                                 aria-label={`${item.name} 미리보기`}
                                             >

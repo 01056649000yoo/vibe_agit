@@ -156,16 +156,16 @@
 .dragon-hideout-scene__prop[data-visual='ancestor-runestone'] { bottom: 17%; height: 43%; }
 .dragon-hideout-scene--compact .dragon-hideout-scene__prop { bottom: 18%; width: 26%; height: 34%; filter: drop-shadow(0 3px 3px rgba(35,25,19,.28)); }
 
-.dragon-hideout-scene__nameplate { z-index: 8; right: 12%; bottom: .5%; left: 12%; display: grid; place-items: center; height: 24%; color: #4b2f1e; text-align: center; filter: drop-shadow(0 6px 5px rgba(38,28,22,.3)); pointer-events: none; }
+.dragon-hideout-scene__nameplate { z-index: 8; right: 12%; bottom: .5%; left: 12%; display: grid; place-items: center; height: var(--nameplate-height,24%); color: #4b2f1e; text-align: center; filter: drop-shadow(0 6px 5px rgba(38,28,22,.3)); pointer-events: none; }
 .dragon-hideout-scene__nameplate-art { position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; }
 .dragon-hideout-scene__nameplate-effect { position: absolute; z-index: 1; inset: 12% 8%; overflow: hidden; border-radius: 40%; pointer-events: none; }
 .dragon-hideout-scene__nameplate-effect::before,
 .dragon-hideout-scene__nameplate-effect::after { position: absolute; content: ''; pointer-events: none; }
-.dragon-hideout-scene__nameplate-copy { position: relative; z-index: 2; display: block; width: 48%; min-width: 0; transform: translateY(2%); }
+.dragon-hideout-scene__nameplate-copy { position: relative; z-index: 2; display: block; width: var(--nameplate-copy-width,48%); min-width: 0; transform: translateY(var(--nameplate-copy-y,2%)); }
 .dragon-hideout-scene__nameplate strong,
 .dragon-hideout-scene__nameplate small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dragon-hideout-scene__nameplate strong { font-size: clamp(.52rem,3.7cqi,.84rem); font-weight: 950; letter-spacing: -.02em; text-shadow: 0 1px rgba(255,255,255,.35); }
-.dragon-hideout-scene__nameplate small { margin-top: 1px; font-size: clamp(.42rem,2.6cqi,.6rem); font-weight: 850; opacity: .8; }
+.dragon-hideout-scene__nameplate strong { font-size: clamp(.42rem,var(--nameplate-title-size,3.7cqi),.84rem); font-weight: 950; letter-spacing: -.04em; text-shadow: 0 1px rgba(255,255,255,.35); }
+.dragon-hideout-scene__nameplate small { margin-top: 1px; font-size: clamp(.36rem,var(--nameplate-subtitle-size,2.6cqi),.6rem); font-weight: 850; letter-spacing: -.025em; opacity: .8; }
 
 .dragon-hideout-scene[data-nameplate='oak'] .dragon-hideout-scene__nameplate { color: #fff0c3; filter: drop-shadow(0 7px 6px rgba(53,31,17,.4)); }
 .dragon-hideout-scene[data-nameplate='oak'] .dragon-hideout-scene__nameplate strong { text-shadow: 0 1px 2px #3d2414; }
@@ -197,7 +197,6 @@
 .dragon-hideout-scene[data-nameplate='storm'] .dragon-hideout-scene__nameplate-effect::after { top: 18%; bottom: 18%; left: -25%; width: 18%; background: linear-gradient(90deg,transparent,rgba(178,222,255,.72),transparent); transform: skewX(-18deg); animation: nameplate-sweep 3.8s ease-in-out infinite; }
 
 .dragon-hideout-scene[data-nameplate='legend'] .dragon-hideout-scene__nameplate { color: #5b3b13; filter: drop-shadow(0 0 13px rgba(255,208,70,.72)) drop-shadow(0 9px 7px rgba(88,55,16,.36)); }
-.dragon-hideout-scene[data-nameplate='legend'] .dragon-hideout-scene__nameplate-copy { width: 40%; }
 .dragon-hideout-scene[data-nameplate='legend'] .dragon-hideout-scene__nameplate-effect::after { top: 11%; bottom: 11%; left: -28%; width: 25%; background: linear-gradient(90deg,transparent,rgba(255,255,235,.78),transparent); transform: skewX(-24deg); animation: nameplate-sweep 3.3s ease-in-out infinite; }
 
 @keyframes nameplate-jewel-glint { 0%,70%,100% { opacity: .2; transform: scale(.65) rotate(0); } 78% { opacity: 1; transform: scale(1.25) rotate(45deg); } }
@@ -207,9 +206,9 @@
 @keyframes nameplate-ember-pulse { 0%,100% { filter: brightness(.94) saturate(.95); } 50% { filter: brightness(1.16) saturate(1.2) drop-shadow(0 0 5px rgba(255,80,20,.55)); } }
 
 .dragon-hideout-scene--compact { border-radius: 18px; }
-.dragon-hideout-scene--compact .dragon-hideout-scene__nameplate { right: 5%; bottom: 0; left: 5%; height: 27%; filter: drop-shadow(0 3px 3px rgba(38,28,22,.28)); }
-.dragon-hideout-scene--compact .dragon-hideout-scene__nameplate strong { font-size: clamp(.46rem,4.2cqi,.62rem); }
-.dragon-hideout-scene--compact .dragon-hideout-scene__nameplate small { font-size: clamp(.38rem,3.1cqi,.5rem); }
+.dragon-hideout-scene--compact .dragon-hideout-scene__nameplate { right: 2%; bottom: 0; left: 2%; height: var(--nameplate-height,27%); filter: drop-shadow(0 3px 3px rgba(38,28,22,.28)); }
+.dragon-hideout-scene--compact .dragon-hideout-scene__nameplate strong { font-size: clamp(.32rem,var(--nameplate-title-size,4.2cqi),.62rem); }
+.dragon-hideout-scene--compact .dragon-hideout-scene__nameplate small { font-size: clamp(.3rem,var(--nameplate-subtitle-size,3.1cqi),.5rem); }
 
 @media (prefers-reduced-motion: reduce) {
     .dragon-hideout-scene * { animation: none !important; }

@@ -95,7 +95,7 @@
 .agit-workshop__item-preview[data-slot='pedestal'][data-visual='celestial'] span { border: 2px solid #d5b552; background: radial-gradient(ellipse,#36437d 0 36%,#141b42 40% 67%,#9b7a2f 70%); box-shadow: 0 0 9px rgba(122,153,255,.65); }
 .agit-workshop__item-preview[data-slot='nameplate'] { position: relative; width: 94px; aspect-ratio: 2.35; overflow: visible; border: 0; background: radial-gradient(ellipse,#fff 0 12%,#f1e8dc 58%,transparent 72%); }
 .agit-workshop__item-preview[data-slot='nameplate'] img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(45,31,21,.28)); }
-.agit-workshop__item-preview[data-slot='nameplate'] span { position: relative; z-index: 1; display: block; max-width: 48%; overflow: hidden; color: #4b3020; font-size: .37rem; font-weight: 950; text-align: center; text-overflow: ellipsis; text-shadow: 0 1px rgba(255,255,255,.45); white-space: nowrap; }
+.agit-workshop__item-preview[data-slot='nameplate'] span { position: relative; z-index: 1; display: block; width: var(--nameplate-copy-width,48%); overflow: hidden; color: #4b3020; font-size: var(--nameplate-thumbnail-size,.37rem); font-weight: 950; letter-spacing: -.04em; text-align: center; text-overflow: ellipsis; text-shadow: 0 1px rgba(255,255,255,.45); transform: translateY(var(--nameplate-copy-y,0)); white-space: nowrap; }
 .agit-workshop__item-preview[data-visual='oak'] span,
 .agit-workshop__item-preview[data-visual='brass'] span,
 .agit-workshop__item-preview[data-visual='crystal'] span,
@@ -103,7 +103,7 @@
 .agit-workshop__item-preview[data-visual='celestial'] span,
 .agit-workshop__item-preview[data-visual='ember'] span,
 .agit-workshop__item-preview[data-visual='storm'] span { color: #fff0c2; text-shadow: 0 1px 2px #241c18; }
-.agit-workshop__item-preview[data-visual='legend'] span { max-width: 38%; color: #5b3b13; }
+.agit-workshop__item-preview[data-visual='legend'] span { color: #5b3b13; }
 .agit-workshop__item-preview[data-slot='leftProp'], .agit-workshop__item-preview[data-slot='rightProp'] { background: radial-gradient(circle at 50% 38%,#fff 0 8%,#eee4d8 58%,#d8cabb); }
 .agit-workshop__item-preview[data-slot='leftProp'] img,
 .agit-workshop__item-preview[data-slot='rightProp'] img { display: block; width: 92%; height: 92%; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(46,32,23,.24)); }
