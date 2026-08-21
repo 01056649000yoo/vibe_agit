@@ -10,6 +10,7 @@ import AdminDormantPanel from './AdminDormantPanel';
 import AdminCleanupPanel from './AdminCleanupPanel';
 import AdminLabManagementPanel from './AdminLabManagementPanel';
 import AdminBackupPanel from './AdminBackupPanel';
+import AdminServicePanel from './AdminServicePanel';
 import useAdminUsage from '../../hooks/useAdminUsage';
 
 const AdminVocabReviewPanel = React.lazy(() => import('./AdminVocabReviewPanel'));
@@ -42,6 +43,7 @@ const TAB_GROUPS = [
         id: 'status',
         label: '📊 현황',
         tabs: [
+            { id: 'service', label: '서비스 현황' },
             { id: 'usage', label: '사용량' },
             { id: 'students', label: '학생 활동' }
         ]
@@ -893,6 +895,13 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             onRefresh={usage.refresh}
                         />
                     )}
+
+                    <KeepAlivePanel
+                        active={currentTab === 'service'}
+                        visited={visitedTabs.has('service')}
+                    >
+                        <AdminServicePanel />
+                    </KeepAlivePanel>
 
                     <KeepAlivePanel
                         active={currentTab === 'students'}
