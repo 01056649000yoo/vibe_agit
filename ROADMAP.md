@@ -74,7 +74,7 @@
 - [x] `20261143_reading_marathon_team_assignment_flow.sql` 운영 적용 및 앱 재배포 — DB 185/185, 로컬·Caddy TLS HTTP 200
 - [x] 독서마라톤을 `초안 저장 → 시작 → 완주/중간 종료` 수명주기로 단순화하고 진행 중 `사용함 / 안 함`
       스위치 제거. 기존 `paused` 캠페인은 기록 손실 없이 운영 상태로 복구하고 재발 방지
-      (`20261153_reading_marathon_lifecycle_only.sql`, 운영 적용·배포 대기)
+      (`20261153_reading_marathon_lifecycle_only.sql`, DB 195/195·로컬 앱/Caddy TLS HTTP 200)
 - [ ] 교사·학생 실계정으로 3개 경기 생성, 확인/보완 알림, 팀 최소 요건, 이름 옆 메달과 아지트 메달함 확인
 
 ### 코드 안정화·대량 사용자 경로 효율화 (2026-08-20)
