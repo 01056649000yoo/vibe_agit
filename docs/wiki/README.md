@@ -20,7 +20,7 @@
 | 이관·연구소 통합 | [INTEGRATION_PLAN.md](../../INTEGRATION_PLAN.md) | ARCHITECTURE |
 | 학생 홈·목록·쓰기·1,000명 성능 | [PERFORMANCE_HARNESS.md](../../PERFORMANCE_HARNESS.md) | AGENTS의 현재 확장 규칙 |
 | RLS·인증·RPC·Edge 함수·외부 API | [SECURITY_HARNESS.md](../../SECURITY_HARNESS.md) | AGENTS의 DB 마이그레이션 규칙 |
-| 장애 시 사용자에게 알리기 | [OUTAGE_PLAN.md](../OUTAGE_PLAN.md) | 아직 구현 전 — 집에서 할 일 |
+| 맥미니 내부 장애 점검 화면 | [OUTAGE_PLAN.md](../OUTAGE_PLAN.md) | 운영 Caddy·상태 기록 스크립트 |
 | 백업·복구·자동 리허설 | [backup.md](../../backup.md) | git 밖 변경도 WORKLOG에 기록 |
 | 브라우저 실기기 검증 | [MANUAL_ACCEPTANCE_CHECKLIST.md](../../MANUAL_ACCEPTANCE_CHECKLIST.md) | 관련 WORKLOG 항목 |
 

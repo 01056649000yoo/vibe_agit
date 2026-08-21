@@ -21,6 +21,26 @@
 
 ---
 
+## 2026-08-21 — Caddy 실장애 점검 화면 검증·장애 메일 제거 (Codex)
+- **한 일**: 이번 범위를 맥미니가 살아 있고 `agit-app`·배포·내부 프록시에 문제가 생긴 경우로 확정했다.
+  운영 앱을 자동 재시작 `trap` 아래 실제로 중지해 같은 주소의 호스트 Caddy가 정적 점검 화면을 내는지
+  확인했다. Cloudflare·GitHub Pages·DNS은 건드리지 않았다.
+- **변경**: `scripts/check-service-health.sh`에서 Resend 호출·수신자·메일 판단을 모두 제거하고 5분마다
+  관리자 `서비스 현황`에 상태만 기록하도록 바꿨다. `.github/workflows/uptime.yml`도 삭제해 GitHub Actions
+  실패 메일 경로를 없앴다. 후속 마이그레이션 `20261152_remove_service_email_notifications.sql`은 이미 적용된
+  `20261150`을 고치지 않고 `record_system_alert_v1`을 상태 기록 전용으로 교체했다. `RESEND_API_KEY`는
+  의견 제보 `send-feedback`도 사용하므로 운영 시크릿에 유지했다.
+- **운영 반영**: `20261152`를 실제 스키마에서 먼저 전체 롤백 검증한 뒤 운영 적용했다. DB는 **194/194,
+  대기 0**이다. 적용 뒤 권한·상태 전이 스모크를 다시 롤백 실행했고, 실제 5분 점검도 앱 200·디스크
+  116GB로 정상 종료했다.
+- **결과/검증**: 앱 중지 중 Caddy가 HTTP 502와 `잠시 점검 중이에요` 본문,
+  `Cache-Control: no-store`·`X-Frame-Options: DENY`를 반환했다. 앱 재시작 뒤 직접 주소가 HTTP 200으로
+  복구됐다. 전체 회귀 **329/329**, ESLint 0경고·0오류, 보안 정적 검사 **44/44**와 운영 권한 스모크,
+  프로덕션 빌드가 통과했다. launchd를 즉시 다시 실행해 16번째 실행·종료코드 0과 새 `상태 기록 완료`
+  로그를 확인했다.
+- **남은 것 / 다음**: 변경을 기존 PR #3에 반영한다. 맥미니 전원·인터넷·호스트 Caddy 전체 장애의
+  별도 상태 페이지는 이번 범위 밖이다.
+
 ## 2026-08-21 — Vercel GitHub 자동 배포 연결 해제 (Codex)
 - **한 일**: 맥미니 단일 운영으로 전환한 뒤에도 Vercel 프로젝트 `agit`가 GitHub 저장소
   `01056649000yoo/vibe_agit`의 PR 푸시를 감지해 실패 메일과 `Vercel`/`Vercel Preview Comments` 검사를
