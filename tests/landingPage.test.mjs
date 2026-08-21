@@ -56,8 +56,9 @@ test('세 가지 키워드는 아지트 정체성과 상세 경험을 담은 하
   assert.match(modal, /포인트와 성장 기록으로 키우고 꾸미기/);
   assert.match(modal, /과제와 연구소 활동, 질문·피드백으로 글쓰기를 지도/);
   assert.match(modal, /자유 글·일기·독서록부터 시·보고서까지/);
-  assert.match(modal, /글 개요짜기·질문 만들기·좋은 질문 고르기·한줄모아·한자 활용 문장/);
-  assert.match(modal, /결과를 글쓰기 참고함에서 불러와 이어 써요/);
+  assert.match(modal, /글 개요 짜기·질문 만들기·좋은 질문 고르기·한줄모아 활동/);
+  assert.match(modal, /그 결과를 글쓰기에서 참고해 이어 써요/);
+  assert.doesNotMatch(modal, /한자 활용 문장|한자활용 문장/);
   assert.match(modal, /개인·학급·모둠 목표/);
   assert.match(modal, /어휘의 탑과 퀘스트·게임/);
   assert.match(modal, /shortLead: '포인트·성장 기록으로'[\s\S]*shortNoun: '키우고 꾸미기'/);
