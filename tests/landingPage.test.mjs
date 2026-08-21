@@ -41,7 +41,7 @@ test('첫 화면은 높이를 줄이고 세 경험을 스크롤 없는 3분할 �
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.landing-experience-button--dragon \.landing-experience-copy strong\s*\{[\s\S]*font-size: clamp\(0\.67rem, 3vw, 0\.73rem\)/);
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.landing-experiences-heading\s*\{[\s\S]*flex-direction: column/);
   assert.match(landing, /landing-experience-copy[\s\S]*experience\.shortLead[\s\S]*experience\.shortNoun/);
-  assert.match(modal, /shortLead: '과제·자율 글을'[\s\S]*shortNoun: '쓰고 다듬기'/);
+  assert.match(modal, /shortLead: '배우고 생각하며'[\s\S]*shortNoun: '다양하게 쓰기'/);
   assert.doesNotMatch(landing, />＋</);
 });
 
@@ -51,10 +51,13 @@ test('세 가지 키워드는 아지트 정체성과 상세 경험을 담은 하
   const detailTitles = [...modal.matchAll(/\{ title: '([^']+)', description:/g)].map((match) => match[1]);
 
   assert.deepEqual(experienceIds, ['writing', 'reading', 'dragon']);
-  assert.match(modal, /과제부터 자유 글까지 쓰고 다듬기/);
+  assert.match(modal, /선생님과 함께 배우고 다양하게 쓰기/);
   assert.match(modal, /독서록부터 친구 글까지 읽고 나누기/);
   assert.match(modal, /포인트와 성장 기록으로 키우고 꾸미기/);
-  assert.match(modal, /글쓰기 연구소·맞춤법 도구/);
+  assert.match(modal, /과제와 연구소 활동, 질문·피드백으로 글쓰기를 지도/);
+  assert.match(modal, /자유 글·일기·독서록부터 시·보고서까지/);
+  assert.match(modal, /글 개요짜기·질문 만들기·좋은 질문 고르기·한줄모아·한자 활용 문장/);
+  assert.match(modal, /결과를 글쓰기 참고함에서 불러와 이어 써요/);
   assert.match(modal, /개인·학급·모둠 목표/);
   assert.match(modal, /어휘의 탑과 퀘스트·게임/);
   assert.match(modal, /shortLead: '포인트·성장 기록으로'[\s\S]*shortNoun: '키우고 꾸미기'/);
