@@ -1,6 +1,7 @@
 # 장애가 났을 때 — 사용자에게 알리는 방법
 
-> 2026-08-21 정리. 아직 **구현 안 됨** — 집에서 할 일 문서다.
+> 2026-08-21 진행. 외부 uptime 감시는 저장소에 등록했다. Caddy 대체 페이지는 별도 포트 검증까지
+> 통과했으며, root 권한으로 운영 파일을 복사하고 reload하는 마지막 단계만 남았다.
 > 오늘 만든 장애 알림(`scripts/check-service-health.sh`)은 **관리자에게** 알린다.
 > 이 문서는 **선생님·학생에게** 알리는 방법이다.
 
@@ -23,7 +24,7 @@
 
 ---
 
-## 1단계 — Caddy가 점검 페이지를 대신 보여 준다 (제일 먼저)
+## 1단계 — Caddy가 점검 페이지를 대신 보여 준다 (운영 반영 대기)
 
 앱 컨테이너가 죽어도 Caddy는 살아 있다. 뒤에 앱이 없으면 준비해 둔 안내를 내보내면 된다.
 
@@ -31,36 +32,11 @@
 
 ### ① 안내 페이지를 맥미니에 둔다
 
+원본은 저장소의 `ops/caddy/maintenance.html`이다. 운영 파일을 직접 따로 고치지 않고 원본을 복사한다.
+
 ```bash
 sudo mkdir -p /etc/caddy/static
-sudo tee /etc/caddy/static/maintenance.html > /dev/null <<'HTML'
-<!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>끄적끄적 아지트 — 점검 중</title>
-<style>
-  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-         background:#F1F5F9; font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif; padding:24px; }
-  .box { max-width:440px; background:#fff; border:1px solid #E2E8F0; border-radius:20px;
-         padding:40px 32px; text-align:center; box-shadow:0 8px 24px rgba(15,23,42,.06); }
-  h1 { margin:0 0 12px; font-size:1.4rem; color:#1E293B; }
-  p  { margin:0 0 8px; color:#475569; line-height:1.7; font-size:.95rem; word-break:keep-all; }
-  .small { margin-top:20px; color:#94A3B8; font-size:.8rem; }
-</style>
-</head>
-<body>
-  <div class="box">
-    <div style="font-size:2.6rem">🔧</div>
-    <h1>잠시 점검 중이에요</h1>
-    <p>문제를 고치고 있습니다. 조금 뒤에 다시 들어와 주세요.</p>
-    <p>쓰시던 글은 저장되어 있습니다.</p>
-    <p class="small">계속 안 되면 관리 선생님께 알려 주세요.</p>
-  </div>
-</body>
-</html>
-HTML
+sudo cp ops/caddy/maintenance.html /etc/caddy/static/maintenance.html
 ```
 
 ### ② Caddyfile 에 대체 경로를 넣는다
@@ -102,14 +78,14 @@ docker start agit-app          # 반드시 다시 켠다
 
 ---
 
-## 2단계 — 밖에서 감시하기 (10분, 아지트에 아직 없음)
+## 2단계 — 밖에서 감시하기 (구현 완료)
 
 **샘링크(`~/URL`)에는 이미 있다.** 아지트에는 없다. 그것을 그대로 가져오면 된다.
 
 GitHub 서버에서 15분마다 밖에서 찔러 보므로, **맥미니가 통째로 죽어도 살아 있다.**
 실패하면 GitHub이 저장소 주인에게 메일을 보낸다 — **추가 설정이 필요 없다.**
 
-`.github/workflows/uptime.yml` 로 만든다:
+`.github/workflows/uptime.yml`에 등록했다. 수동 실행과 15분 예약 실행을 모두 지원한다:
 
 ```yaml
 name: Uptime check
@@ -185,14 +161,15 @@ jobs:
 
 ---
 
-## 요약 — 집에서 할 순서
+## 현재 상태
 
-| 순서 | 무엇 | 시간 | 덮는 범위 |
-|---|---|---|---|
-| **1** | Caddy 점검 페이지 | 30분 | **흔한 장애 대부분** |
-| **2** | `uptime.yml` 아지트에 추가 | 10분 | 통째로 죽은 것을 **관리자가** 앎 |
-| 3 | GitHub Pages 상태 페이지 | 1시간 | 통째로 죽은 것을 **선생님들이** 앎 |
+| 무엇 | 상태 | 덮는 범위 |
+|---|---|---|
+| Caddy 점검 페이지 | 정적 파일·설정 검증 완료, 운영 복사·reload 대기 | **흔한 장애 대부분** |
+| `uptime.yml` | 저장소 등록 완료 | 통째로 죽은 것을 **관리자가** 앎 |
+| GitHub Pages 상태 페이지 | 선택 과제로 보류 | 통째로 죽은 것을 **선생님들이** 앎 |
 
 **1번의 효율이 압도적이다.** 지금까지 겪은 장애는 전부 맥미니가 살아 있는 상태였다.
 
-작업하면 이 문서의 맨 위 "아직 구현 안 됨"을 지우고 [WORKLOG.md](../WORKLOG.md)에 남긴다.
+운영 Caddy 반영 뒤에는 앱이 아닌 별도 실패 포트에서 통과한 것에 더해, 짧은 점검 시간에 실제 도메인에서도
+점검 안내가 보이는지 확인하고 [WORKLOG.md](../WORKLOG.md)에 남긴다.

@@ -60,12 +60,20 @@
 ```bash
 cd ~/vibe_agit && git pull
 
-# 1) 5분마다 점검 + 문제가 바뀔 때만 메일
-*/5 * * * * cd ~/vibe_agit && bash scripts/check-service-health.sh >> ~/logs/health.log 2>&1
+# macOS launchd 설정 설치
+cp ops/launchd/com.agit.service-health.plist ~/Library/LaunchAgents/
+cp ops/launchd/com.agit.system-metrics.plist ~/Library/LaunchAgents/
 
-# 2) 하루 한 번 지표 기록 (백업·복구 리허설 뒤인 04:50 권장)
-50 4 * * * cd ~/vibe_agit && bash scripts/record-system-metrics.sh >> ~/logs/metrics.log 2>&1
+# 5분마다 점검 + 문제가 바뀔 때만 메일
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.agit.service-health.plist
+
+# 하루 한 번 지표 기록 (백업·복구 리허설 뒤인 04:50)
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.agit.system-metrics.plist
 ```
+
+설정은 저장소의 `ops/launchd/`를 원본으로 둡니다. 운영 파일을 직접 고치지 말고 원본을 고친 뒤 다시
+복사합니다. 등록 여부는 `launchctl print gui/$(id -u)/com.agit.service-health`와
+`launchctl print gui/$(id -u)/com.agit.system-metrics`로 확인합니다.
 
 - 받는 주소는 `ALERT_TO` 로 바꿉니다(기본값은 스크립트 안에 있습니다).
 - 메일 열쇠는 `~/agit-supabase/secrets.agit.env` 의 `RESEND_API_KEY` 를 그대로 씁니다.
