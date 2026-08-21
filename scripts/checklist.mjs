@@ -135,7 +135,8 @@ if (scripts.length > 0) {
 }
 
 // --- 5) 기록 ------------------------------------------------------------------
-const toolingChanged = pick((f) => f.startsWith('scripts/') || f.startsWith('supabase/')).length > 0;
+// 문서만 바꿔도 기록은 남긴다 — git 밖 절차(맥미니 설치 등)는 WORKLOG 에만 남는다.
+const toolingChanged = pick((f) => f.startsWith('scripts/') || f.startsWith('supabase/') || (f.startsWith('docs/') && f.endsWith('.md'))).length > 0;
 const codeTouched = sourceChanged.length > 0 || pending.length > 0 || toolingChanged;
 if (codeTouched && !changed.has('WORKLOG.md')) {
     notes.push({
