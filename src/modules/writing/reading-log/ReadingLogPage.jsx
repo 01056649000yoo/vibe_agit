@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import Card from '../../../components/common/Card';
 import Button from '../../../components/common/Button';
@@ -133,6 +133,16 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
     const [completedPostAt, setCompletedPostAt] = useState(null);
     const [writingPolicy, setWritingPolicy] = useState(READING_LOG_POLICY_DEFAULTS);
     const [policyLoading, setPolicyLoading] = useState(Boolean(studentClassId));
+    /*
+     * 취소 함수를 아래 불러오기 효과의 조건에 넣으면, 부르는 쪽이 렌더마다 새 함수를 넘기는
+     * 순간 효과가 다시 돌아 **학생이 쓰던 글을 서버 내용으로 덮는다**. 일기에서 실제로 났던
+     * 사고다(2026-08-21). 지금은 `openList` 가 고정돼 있어 안전하지만, 그 한 줄에 기대지
+     * 않도록 참조로만 부른다.
+     */
+    const onCancelRef = useRef(onCancel);
+    useEffect(() => {
+        onCancelRef.current = onCancel;
+    }, [onCancel]);
     const isMobile = useMediaQuery('(max-width: 768px)');
     const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
     const writingMetrics = useMemo(() => measureWritingContent(form.content), [form.content]);
@@ -186,7 +196,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
             if (!active) return;
             if (postResult.error || !postResult.data || reviewResult.error) {
                 alert('독서록을 불러오지 못했습니다.');
-                onCancel();
+                onCancelRef.current?.();
                 return;
             }
 
@@ -214,7 +224,7 @@ const ReadingLogEditor = ({ studentSession, postId, initialBook, draftBookKey, o
         return () => {
             active = false;
         };
-    }, [onCancel, postId, studentSession.id]);
+    }, [postId, studentSession.id]);
 
     useEffect(() => {
         const warnBeforeLeaving = (event) => {

@@ -44,6 +44,23 @@ const StudentBottomNav = lazy(() => import('./components/student/StudentBottomNa
  *  - isStudentLoginMode: 학생 로그인 화면 표시 여부
  *  - currentClassId: 선생님이 선택한 현재 학급 ID
  */
+/*
+ * 학생이 지금 글을 쓰고 있는 화면인가.
+ *
+ * 이 동안에는 아래의 주기 동기화를 멈춘다. 화면을 다시 그리면 편집기가 서버 내용을 다시 받아
+ * **학생이 쓰던 글을 덮을 수 있기 때문**이다(2026-08-21 일기 사고 — 보완 요청받은 일기를
+ * 고쳐 쓰다 원래 글로 되돌아갔다). 편집기 쪽도 함께 고쳤지만, 글 쓰는 중에 화면을 흔들지
+ * 않는 것이 더 근본적인 방어다.
+ *
+ * 과제 글쓰기(`writing`)는 화면 자체가 편집기다. 독서록·일기는 목록과 편집기가 같은 화면
+ * 이름을 쓰므로 **편집기를 연 동안만** 멈춘다 — 목록만 보고 있을 때는 평소대로 갱신한다.
+ */
+const STUDENT_EDITOR_PAGES = new Set(['reading_logs', 'diaries']);
+const isStudentComposing = (page) => Boolean(page) && (
+    page.name === 'writing'
+    || (STUDENT_EDITOR_PAGES.has(page.name) && page.params?.mode === 'editor')
+);
+
 // 부팅 뼈대 종류는 첫 렌더 전에 한 번만 정한다. 저장된 세션을 보는 동기 판정이라
 // 서버를 기다리지 않고, 도중에 바뀌어 화면이 흔들릴 일도 없다.
 const BOOT_SKELETON_KIND = getBootSkeletonKind();
@@ -187,9 +204,13 @@ function App() {
     };
   }, [checkSessions])
 
+  // 판정은 효과 밖에서 한 번만 한다. 효과가 `internalPage` 전체에 기대면 params 가 바뀔 때마다
+  // 타이머와 이벤트가 통째로 다시 붙는다.
+  const studentIsComposing = isStudentComposing(internalPage);
+
   useEffect(() => {
     if (!studentSession) return undefined;
-    if (internalPage?.name === 'writing') return undefined;
+    if (studentIsComposing) return undefined;
 
     let active = true;
     let syncInFlight = false;
@@ -241,7 +262,7 @@ function App() {
       window.removeEventListener('focus', queueFocusSync);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [studentSession, verifyStudentSession, refreshStudentHome, internalPage?.name]);
+  }, [studentSession, verifyStudentSession, refreshStudentHome, internalPage?.name, studentIsComposing]);
 
   // [보안 수정] 교사 프로필 설정 - 서버 사이드 RPC 사용
   const handleTeacherStart = async () => {

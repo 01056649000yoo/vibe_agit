@@ -125,3 +125,31 @@ test('일기 편집기는 화면이 다시 그려져도 쓰던 글을 서버 내
     assert.match(diaryPage, /onCancel=\{closeEditor\}/);
     assert.doesNotMatch(diaryPage, /onCancel=\{\(\) =>/);
 });
+
+/*
+ * 위 사고의 방아쇠는 `App.jsx` 의 주기 동기화(4~6분)와 포커스 복귀 갱신이었다.
+ * 편집기 쪽을 고쳐도, 글 쓰는 중에 화면을 흔드는 구조가 남아 있으면 언제든 되살아난다.
+ */
+test('학생이 글을 쓰는 동안에는 주기 동기화가 화면을 흔들지 않는다', async () => {
+    const app = await read('src/App.jsx');
+
+    // 과제뿐 아니라 일기·독서록 편집기도 멈춘다.
+    assert.match(app, /const STUDENT_EDITOR_PAGES = new Set\(\['reading_logs', 'diaries'\]\)/);
+    assert.match(app, /page\.name === 'writing'/);
+    assert.match(app, /STUDENT_EDITOR_PAGES\.has\(page\.name\) && page\.params\?\.mode === 'editor'/);
+    assert.match(app, /if \(studentIsComposing\) return undefined;/);
+
+    // 목록에서 편집기로 옮겨 가는 것도 조건에 넣어야 한다. 화면 이름만 보면 그 전환을 놓친다.
+    const syncDeps = app.match(/\}, \[studentSession, verifyStudentSession, refreshStudentHome[^\]]*\]\);/);
+    assert.ok(syncDeps, '주기 동기화 효과의 조건 줄을 찾지 못했다');
+    assert.match(syncDeps[0], /studentIsComposing/);
+});
+
+test('독서록 편집기도 일기와 같은 방식으로 덮어쓰기를 막는다', async () => {
+    const readingPage = await read('src/modules/writing/reading-log/ReadingLogPage.jsx');
+
+    const loadDeps = readingPage.match(/\}, \[postId, studentSession\.id\]\);/);
+    assert.ok(loadDeps, '독서록 불러오기 효과의 조건 줄을 찾지 못했다');
+    assert.match(readingPage, /onCancelRef\.current\?\.\(\)/);
+    assert.doesNotMatch(readingPage, /\}, \[onCancel, postId, studentSession\.id\]\);/);
+});
