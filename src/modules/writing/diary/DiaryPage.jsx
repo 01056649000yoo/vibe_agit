@@ -96,6 +96,16 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
     const formRef = useRef(form);
     // 날짜를 바꿔 가며 쓴 뒤 저장하면 이전 날짜 임시본이 다시 살아나지 않도록 모두 기억한다.
     const previousDiaryDatesRef = useRef(new Set());
+    /*
+     * 취소 함수는 부르는 쪽에서 렌더마다 새로 만들어질 수 있다. 이것을 아래 불러오기 효과의
+     * 조건에 넣으면 화면이 다시 그려질 때마다 서버 내용을 다시 받아 **학생이 쓰던 글을 덮는다**
+     * (2026-08-21 실제 사고 — 보완 요청받은 일기를 고쳐 쓰다 원래 글로 되돌아갔다).
+     * 효과 안에서는 이 참조로만 부르고, 조건에는 넣지 않는다.
+     */
+    const onCancelRef = useRef(onCancel);
+    useEffect(() => {
+        onCancelRef.current = onCancel;
+    }, [onCancel]);
     const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm)
         || selectedDiaryDate !== initialDiaryDate;
     const writingMetrics = useMemo(() => measureWritingContent(form.content), [form.content]);
@@ -148,7 +158,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
             if (postResult.error || !postResult.data || reviewResult.error) {
                 console.error('일기 불러오기 실패:', postResult.error?.message || reviewResult.error?.message);
                 alert('일기를 불러오지 못했어요.');
-                onCancel();
+                onCancelRef.current?.();
                 return;
             }
             const data = postResult.data;
@@ -167,7 +177,7 @@ const DiaryEditor = ({ studentSession, postId, diaryDate, onDone, onCancel }) =>
         };
         loadPost();
         return () => { active = false; };
-    }, [diaryDate, onCancel, postId, studentClassId, studentSession.id, today]);
+    }, [diaryDate, postId, studentClassId, studentSession.id, today]);
 
     const [serverDraftAt, setServerDraftAt] = useState(null);
     const [savingDraft, setSavingDraft] = useState(false);
@@ -537,6 +547,20 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
         onNavigate('diaries', { mode: 'editor', ...editorParams });
     };
 
+    /*
+     * 편집기에 넘기는 함수는 반드시 고정해 둔다. 인라인으로 넘기면 렌더마다 새 함수가 되어
+     * 편집기의 불러오기 효과가 다시 돌고, 학생이 쓰던 글이 서버 내용으로 덮인다.
+     * `dailyStatus` 는 렌더마다 새 객체이므로 안에 있는 `reload` 만 떼어 쓴다.
+     */
+    const reloadDailyStatus = dailyStatus.reload;
+    const closeEditor = useCallback(() => {
+        onNavigate('diaries', {});
+    }, [onNavigate]);
+    const handleEditorDone = useCallback(() => {
+        reloadDailyStatus();
+        closeEditor();
+    }, [closeEditor, reloadDailyStatus]);
+
     const handleDelete = async (entry) => {
         if (Reflect.get(reviews, entry.id)?.review_status === 'checked') {
             alert('선생님이 확인한 일기는 삭제할 수 없어요.');
@@ -597,11 +621,8 @@ const DiaryPage = ({ studentSession, params = {}, onBack, onNavigate }) => {
                 studentSession={studentSession}
                 postId={params.postId || null}
                 diaryDate={params.diaryDate || today}
-                onDone={() => {
-                    dailyStatus.reload();
-                    onNavigate('diaries', {});
-                }}
-                onCancel={() => onNavigate('diaries', {})}
+                onDone={handleEditorDone}
+                onCancel={closeEditor}
             />
         );
     }

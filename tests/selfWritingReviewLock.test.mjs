@@ -100,3 +100,28 @@ test('독서록과 일기의 학생별 책장·전체 기록은 같은 4열 UI�
     assert.match(workspaceCss, /\.self-writing-queue-card\.is-reading/);
     assert.match(workspaceCss, /\.self-writing-queue-card\.is-diary/);
 });
+
+/*
+ * 2026-08-21 실제 사고: 보완 요청받은 일기를 고쳐 쓰는 중에 화면이 원래 글로 되돌아갔다.
+ * 편집기의 불러오기 효과 조건에 `onCancel` 이 들어 있었고, 부르는 쪽이 렌더마다 새 함수를
+ * 넘겨 효과가 다시 돌면서 학생이 쓰던 내용을 서버 내용으로 덮었다. 1.5초 뒤 자동 임시저장이
+ * 되돌아간 내용을 임시본에도 덮어써 되살릴 방법도 없었다.
+ */
+test('일기 편집기는 화면이 다시 그려져도 쓰던 글을 서버 내용으로 덮지 않는다', async () => {
+    const diaryPage = await read('src/modules/writing/diary/DiaryPage.jsx');
+
+    // 글을 다시 불러올지는 어느 글인지(postId·날짜)만 정한다. 함수는 조건이 될 수 없다.
+    const loadDeps = diaryPage.match(/\}, \[diaryDate,[^\]]*\]\);/);
+    assert.ok(loadDeps, '일기 불러오기 효과의 조건 줄을 찾지 못했다');
+    assert.doesNotMatch(loadDeps[0], /onCancel|onDone/);
+
+    // 효과 안에서는 참조로만 부른다.
+    assert.match(diaryPage, /onCancelRef\.current\?\.\(\)/);
+
+    // 편집기에 넘기는 함수는 렌더마다 새로 만들지 않는다(독서록과 같은 규칙).
+    assert.match(diaryPage, /const closeEditor = useCallback\(/);
+    assert.match(diaryPage, /const handleEditorDone = useCallback\(/);
+    assert.match(diaryPage, /onDone=\{handleEditorDone\}/);
+    assert.match(diaryPage, /onCancel=\{closeEditor\}/);
+    assert.doesNotMatch(diaryPage, /onCancel=\{\(\) =>/);
+});
