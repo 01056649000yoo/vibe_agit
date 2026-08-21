@@ -293,6 +293,20 @@ test('프레임은 모서리 테마 이름을 쓰고 좌우 소품은 최적화�
     ]);
 });
 
+test('실제 아지트와 상품 카드의 프레임은 얇은 레일과 작은 모서리 장식을 함께 쓴다', async () => {
+    const [sceneCss, shopCss] = await Promise.all([
+        readFile('src/modules/game/dragon/DragonHideoutScene.css', 'utf8'),
+        readFile('src/modules/game/dragon/BackgroundShopModal.css', 'utf8')
+    ]);
+
+    assert.match(sceneCss, /--frame-rail: max\(2px,\.62cqi\)/);
+    assert.match(sceneCss, /width: 10\.5%;\s*height: 15\.5%/);
+    assert.doesNotMatch(sceneCss, /width: 15%;\s*height: 24%/);
+    assert.match(shopCss, /inset 0 3px 0 -1px var\(--workshop-frame-color\)/);
+    assert.match(shopCss, /width: 14px;\s*height: 17px/);
+    assert.doesNotMatch(shopCss, /inset 0 0 0 4px var\(--workshop-frame-color\)/);
+});
+
 test('장착한 5개 슬롯은 하나의 pet_data 계약으로 복원된다', () => {
     const petData = {
         background: 'default',
