@@ -14,7 +14,7 @@ test('첫 로그인 화면은 핵심 문장과 두 로그인, 세 가지 아지�
   assert.match(landing, /쓰고, 읽고, 키우며[\s\S]*함께 자라는 우리 반 아지트/);
   assert.match(landing, /학생으로 들어가기/);
   assert.match(landing, /선생님으로 들어가기/);
-  assert.match(landing, /현재 아지트에서 할 수 있는 일/);
+  assert.match(landing, /아지트에서는 이렇게 활동해요/);
   assert.match(landing, /landingExperiences\.map/);
   assert.doesNotMatch(landing, /landing-brand-row|landing-brand-mark|글쓰기로 생각이 자라는 우리 반 공간/);
   assert.doesNotMatch(landing, /capability-grid|생각을 글로 써요|글쓰기를 지도해요|함께 고치며 자라요|재미있게 이어가요/);
