@@ -29,7 +29,8 @@ test('호스트 기록기는 제한된 상태와 숫자만 SQL 변수로 전달�
 });
 
 test('관리자 백업 화면은 탭을 열 때 한 번 읽고 지연 상태를 경고한다', () => {
-    assert.match(dashboard, /id: 'backup', label: '💾 백업 상태'/);
+    // 2026-08-21 탭을 묶음으로 정리하며 이모지는 묶음 이름으로 올라갔다.
+    assert.match(dashboard, /id: 'backup', label: '백업 상태'/);
     assert.match(dashboard, /currentTab === 'backup'/);
     assert.match(panel, /admin_get_backup_runs_v1/);
     assert.match(panel, /daily_stale_after_hours \|\| 26/);

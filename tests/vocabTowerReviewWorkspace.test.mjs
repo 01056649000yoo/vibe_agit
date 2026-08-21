@@ -98,7 +98,8 @@ test('검수 모델은 빈 보기·복수 정답·표제어가 빠진 직접 입
 
 test('관리자 화면은 검수 API만 사용하고 운영 게임에는 직접 연결하지 않는다', () => {
     assert.match(dashboardSource, /React\.lazy\(\(\) => import\('\.\/AdminVocabReviewPanel'\)\)/);
-    assert.match(dashboardSource, /어휘 V2 검수/);
+    // 2026-08-21 탭을 묶음으로 정리하며 이름이 '어휘 V2' 로 짧아졌다(묶음이 '📚 검수').
+    assert.match(dashboardSource, /id: 'vocab', label: '어휘 V2'/);
     assert.match(panelSource, /import\.meta\.glob/);
     assert.match(panelSource, /grade\[3-6\]-deck\[0-9\]\[0-9\]-review\.json/);
     assert.match(panelSource, /학생 게임에는 연결되지 않습니다/);

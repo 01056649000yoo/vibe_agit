@@ -18,14 +18,87 @@ const AdminSpellingPromotionPanel = React.lazy(() => import('./AdminSpellingProm
 
 const TEACHER_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5분 — 교사 목록은 실시간 갱신 불필요
 
+/*
+ * 관리자 화면을 성격별로 묶는다.
+ *
+ * 예전에는 13개가 한 줄에 평평하게 놓여 있어, 계정 관리·통계·콘텐츠 검수·서버 상태가 뒤섞여
+ * 찾는 데 시간이 걸렸다. 큰 묶음을 고르면 그 안의 화면만 아래 줄에 보인다.
+ *
+ * ⚠️ 묶음에 숨기면 처리할 일이 있는지 안 보이므로, **묶음 이름에 안쪽 배지 합계를 함께 띄운다**.
+ * 그러지 않으면 정리한다면서 오히려 놓치는 화면이 된다.
+ */
+const TAB_GROUPS = [
+    {
+        id: 'teachers',
+        label: '👩‍🏫 선생님',
+        tabs: [
+            { id: 'active', label: '활동 중' },
+            { id: 'pending', label: '승인 대기' },
+            { id: 'dormant', label: '장기 미접속' },
+            { id: 'cleanup', label: '정리 대상' }
+        ]
+    },
+    {
+        id: 'status',
+        label: '📊 현황',
+        tabs: [
+            { id: 'usage', label: '사용량' },
+            { id: 'students', label: '학생 활동' }
+        ]
+    },
+    {
+        id: 'review',
+        label: '📚 검수',
+        tabs: [
+            { id: 'vocab', label: '어휘 V2' },
+            { id: 'spelling', label: '맞춤법 승격' },
+            { id: 'lab', label: '글쓰기 연구소' }
+        ]
+    },
+    {
+        id: 'ops',
+        label: '🛠 운영',
+        tabs: [
+            { id: 'backup', label: '백업 상태' },
+            { id: 'announcements', label: '공지사항' },
+            { id: 'feedback', label: '의견 제보' },
+            { id: 'settings', label: '시스템 설정' }
+        ]
+    }
+];
+
+const findTabGroup = (tabId) => TAB_GROUPS.find((group) => group.tabs.some((tab) => tab.id === tabId)) || TAB_GROUPS[0];
+
+/*
+ * 한 번 연 화면은 감추기만 하고 살려 둔다.
+ *
+ * 지우면 다시 열 때마다 서버를 처음부터 읽는다. 검수처럼 화면을 오가며 하는 일에서는 그 기다림이
+ * 매번 반복된다. 패널 안에는 타이머도 이벤트 구독도 없으므로(2026-08-21 확인) 감춰 둔 화면이
+ * 뒤에서 무언가를 계속 하지는 않는다.
+ */
+const KeepAlivePanel = ({ active, visited, children }) => {
+    if (!visited) return null;
+    return <div style={{ display: active ? 'block' : 'none' }}>{children}</div>;
+};
+
 // --- Components ---
 
-const StatCard = ({ label, value, color, icon }) => (
-    <div style={{
-        background: 'white', borderRadius: '12px', padding: '20px',
-        border: '1px solid #E9ECEF', boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
-        display: 'flex', alignItems: 'center', gap: '16px', flex: 1
-    }}>
+/*
+ * 위쪽 요약 카드. `onOpen` 을 주면 눌러서 해당 화면으로 바로 간다.
+ * 숫자를 보고 "그래서 어디로 가야 하지" 를 다시 찾게 만들지 않기 위한 것이다.
+ */
+const StatCard = ({ label, value, color, icon, onOpen }) => (
+    <div
+        onClick={onOpen}
+        role={onOpen ? 'button' : undefined}
+        tabIndex={onOpen ? 0 : undefined}
+        onKeyDown={onOpen ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(); } } : undefined}
+        style={{
+            background: 'white', borderRadius: '12px', padding: '20px',
+            border: '1px solid #E9ECEF', boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+            display: 'flex', alignItems: 'center', gap: '16px', flex: 1,
+            cursor: onOpen ? 'pointer' : 'default'
+        }}>
         <div style={{
             width: '48px', height: '48px', borderRadius: '12px',
             background: `${color}15`, color: color,
@@ -182,6 +255,23 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
     // States for UI
     // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'lab' | 'vocab' | 'spelling' | 'backup' | 'feedback' | 'announcements' | 'settings'
     const [currentTab, setCurrentTab] = useState('active');
+    // 지금 고른 화면이 어느 묶음에 드는지는 따로 저장하지 않고 화면 id 하나에서 끌어낸다.
+    // 두 곳에 나눠 두면 통계 카드로 건너뛸 때 묶음만 남아 어긋난다.
+    const activeGroup = findTabGroup(currentTab);
+
+    // 화면 이름 옆·묶음 이름 옆에 함께 쓰는 "처리할 일" 개수.
+    const tabBadges = useMemo(() => ({
+        pending: newSignups.length,
+        dormant: usage.dormantTeachers.length,
+        cleanup: usage.cleanupCandidates.length,
+        feedback: pendingFeedbackCount
+    }), [newSignups.length, usage.dormantTeachers.length, usage.cleanupCandidates.length, pendingFeedbackCount]);
+
+    // 한 번 연 화면은 살려 둔다(위 KeepAlivePanel 주석 참고).
+    const [visitedTabs, setVisitedTabs] = useState(() => new Set(['active']));
+    useEffect(() => {
+        setVisitedTabs((current) => (current.has(currentTab) ? current : new Set(current).add(currentTab)));
+    }, [currentTab]);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 10;
@@ -433,76 +523,90 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                 </div>
             </header>
 
-            {/* Stats Row */}
+            {/* 요약 카드 — 숫자만 보여 주지 않고, 누르면 그 일을 처리하는 화면으로 바로 간다. */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
                 <StatCard
                     label="신규 승인 대기" value={`${newSignups.length}명`}
                     color="#F6AD55" icon="⏳"
+                    onOpen={() => setCurrentTab('pending')}
                 />
                 <StatCard
                     label="활동 중인 선생님" value={`${approvedTeachers.length}명`}
                     color="#48BB78" icon="✅"
+                    onOpen={() => setCurrentTab('active')}
                 />
                 <StatCard
                     label="등록 학생수"
                     value={`${usage.overview?.student_total ?? registeredStudentCount}명`}
                     color="#4299E1" icon="🧑‍🎓"
+                    onOpen={() => setCurrentTab('students')}
                 />
                 <StatCard
                     label={`장기 미접속 (${usage.dormantDays}일)`}
                     value={`${usage.dormantTeachers.length}명`}
                     color="#D69E2E" icon="😴"
+                    onOpen={() => setCurrentTab('dormant')}
                 />
                 <StatCard
                     label="정리 대상"
                     value={`${usage.cleanupCandidates.length}명`}
                     color="#E53E3E" icon="🧹"
+                    onOpen={() => setCurrentTab('cleanup')}
+                />
+                {/* 의견 제보는 예전에는 탭 이름에만 배지가 붙어, 13개를 훑어야 알 수 있었다. */}
+                <StatCard
+                    label="새 의견 제보"
+                    value={`${pendingFeedbackCount}건`}
+                    color="#805AD5" icon="📢"
+                    onOpen={() => setCurrentTab('feedback')}
                 />
             </div>
 
             {/* Main Content Area */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-                {/* Tabs & Controls */}
+                {/* 1단 — 큰 묶음. 안에 처리할 일이 있으면 합계 배지를 함께 띄운다. */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {TAB_GROUPS.map(group => {
+                        const isActive = activeGroup.id === group.id;
+                        const groupBadge = group.tabs.reduce((sum, tab) => sum + (tabBadges[tab.id] || 0), 0);
+                        return (
+                            <button
+                                key={group.id}
+                                onClick={() => setCurrentTab(group.tabs[0].id)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '7px',
+                                    border: isActive ? '1px solid #2B6CB0' : '1px solid #E2E8F0',
+                                    background: isActive ? '#EBF8FF' : 'white',
+                                    color: isActive ? '#2B6CB0' : '#4A5568',
+                                    fontWeight: isActive ? 'bold' : 'normal',
+                                    fontSize: '1rem', padding: '9px 16px',
+                                    borderRadius: '10px', cursor: 'pointer'
+                                }}
+                            >
+                                {group.label}
+                                {groupBadge > 0 && (
+                                    <span style={{
+                                        background: '#E53E3E', color: 'white', fontSize: '0.7rem',
+                                        padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold'
+                                    }}>
+                                        {groupBadge}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* 2단 — 고른 묶음 안의 화면들. 검색은 선생님 목록에서만 쓴다. */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap', borderBottom: '2px solid #E2E8F0', paddingBottom: '16px' }}>
                     <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', rowGap: '12px' }}>
-                        {[
-                            { id: 'active', label: '✅ 활동 중인 선생님' },
-                            { id: 'pending', label: `⏳ 승인 대기 (${newSignups.length})` },
-                            { id: 'usage', label: '📊 사용량' },
-                            { id: 'students', label: '🧑‍🎓 학생 활동' },
-                            { id: 'dormant', label: `😴 장기 미접속 (${usage.dormantTeachers.length})` },
-                            { id: 'cleanup', label: `🧹 정리 대상 (${usage.cleanupCandidates.length})` },
-                            { id: 'lab', label: '🧪 글쓰기 연구소' },
-                            { id: 'vocab', label: '🏰 어휘 V2 검수' },
-                            { id: 'spelling', label: '🔤 맞춤법 승격 검토' },
-                            { id: 'backup', label: '💾 백업 상태' },
-                            {
-                                id: 'feedback',
-                                label: (
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        📢 의견 및 제보
-                                        {pendingFeedbackCount > 0 && (
-                                            <span style={{
-                                                background: '#E53E3E', color: 'white', fontSize: '0.7rem',
-                                                padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold'
-                                            }}>
-                                                {pendingFeedbackCount}
-                                            </span>
-                                        )}
-                                    </span>
-                                )
-                            },
-                            {
-                                id: 'announcements',
-                                label: '📢 공지사항 관리'
-                            },
-                            { id: 'settings', label: '⚙️ 시스템 설정' }
-                        ].map(tab => (
+                        {activeGroup.tabs.map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setCurrentTab(tab.id)}
                                 style={{
+                                    display: 'flex', alignItems: 'center', gap: '6px',
                                     border: 'none', background: 'none', cursor: 'pointer',
                                     fontWeight: currentTab === tab.id ? 'bold' : 'normal',
                                     color: currentTab === tab.id ? '#2B6CB0' : '#718096',
@@ -511,13 +615,20 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                 }}
                             >
                                 {tab.label}
+                                {tabBadges[tab.id] > 0 && (
+                                    <span style={{
+                                        background: '#E53E3E', color: 'white', fontSize: '0.7rem',
+                                        padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold'
+                                    }}>
+                                        {tabBadges[tab.id]}
+                                    </span>
+                                )}
                                 {currentTab === tab.id && (
                                     <div style={{ position: 'absolute', bottom: '-18px', left: 0, right: 0, height: '3px', background: '#2B6CB0' }} />
                                 )}
                             </button>
                         ))}
                     </div>
-
                     {(currentTab === 'active' || currentTab === 'pending') && (
                         <input
                             type="text"
@@ -783,11 +894,17 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                         />
                     )}
 
-                    {currentTab === 'students' && (
+                    <KeepAlivePanel
+                        active={currentTab === 'students'}
+                        visited={visitedTabs.has('students')}
+                    >
                         <AdminStudentActivityPanel defaultActivityDays={usage.activityDays} />
-                    )}
+                    </KeepAlivePanel>
 
-                    {currentTab === 'dormant' && (
+                    <KeepAlivePanel
+                        active={currentTab === 'dormant'}
+                        visited={visitedTabs.has('dormant')}
+                    >
                         <AdminDormantPanel
                             dormantTeachers={usage.dormantTeachers}
                             dormantDays={usage.dormantDays}
@@ -798,9 +915,12 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                 fetchTeachers({ showLoading: false });
                             }}
                         />
-                    )}
+                    </KeepAlivePanel>
 
-                    {currentTab === 'cleanup' && (
+                    <KeepAlivePanel
+                        active={currentTab === 'cleanup'}
+                        visited={visitedTabs.has('cleanup')}
+                    >
                         <AdminCleanupPanel
                             cleanupCandidates={usage.cleanupCandidates}
                             loading={usage.loading}
@@ -809,27 +929,39 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                 fetchTeachers({ showLoading: false });
                             }}
                         />
-                    )}
+                    </KeepAlivePanel>
 
-                    {currentTab === 'lab' && (
+                    <KeepAlivePanel
+                        active={currentTab === 'lab'}
+                        visited={visitedTabs.has('lab')}
+                    >
                         <AdminLabManagementPanel />
-                    )}
+                    </KeepAlivePanel>
 
-                    {currentTab === 'vocab' && (
+                    <KeepAlivePanel
+                        active={currentTab === 'vocab'}
+                        visited={visitedTabs.has('vocab')}
+                    >
                         <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>어휘 검수 화면을 불러오는 중입니다...</div>}>
                             <AdminVocabReviewPanel />
                         </React.Suspense>
-                    )}
+                    </KeepAlivePanel>
 
-                    {currentTab === 'spelling' && (
+                    <KeepAlivePanel
+                        active={currentTab === 'spelling'}
+                        visited={visitedTabs.has('spelling')}
+                    >
                         <React.Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: '#718096' }}>맞춤법 승격 화면을 불러오는 중입니다...</div>}>
                             <AdminSpellingPromotionPanel />
                         </React.Suspense>
-                    )}
+                    </KeepAlivePanel>
 
-                    {currentTab === 'backup' && (
+                    <KeepAlivePanel
+                        active={currentTab === 'backup'}
+                        visited={visitedTabs.has('backup')}
+                    >
                         <AdminBackupPanel />
-                    )}
+                    </KeepAlivePanel>
 
                     {!loading && currentTab === 'settings' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -911,13 +1043,19 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                         </div>
                     )}
 
-                    {!loading && currentTab === 'feedback' && (
+                    <KeepAlivePanel
+                        active={currentTab === 'feedback'}
+                        visited={visitedTabs.has('feedback')}
+                    >
                         <AdminFeedbackList onFeedbackUpdated={fetchFeedbackCount} />
-                    )}
+                    </KeepAlivePanel>
 
-                    {!loading && currentTab === 'announcements' && (
+                    <KeepAlivePanel
+                        active={currentTab === 'announcements'}
+                        visited={visitedTabs.has('announcements')}
+                    >
                         <AdminAnnouncementManager />
-                    )}
+                    </KeepAlivePanel>
                 </div>
             </div>
         </div>
