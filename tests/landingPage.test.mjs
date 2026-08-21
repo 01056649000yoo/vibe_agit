@@ -20,6 +20,21 @@ test('첫 로그인 화면은 핵심 문장과 두 로그인, 세 가지 아지�
   assert.doesNotMatch(landing, /capability-grid|생각을 글로 써요|글쓰기를 지도해요|함께 고치며 자라요|재미있게 이어가요/);
 });
 
+test('학생 코드 로그인은 아지트 안의 방문 단계로 남아 모든 뒤로가기가 첫 화면으로 복귀한다', async () => {
+  const [app, studentLogin] = await Promise.all([
+    read('src/App.jsx'),
+    read('src/components/student/StudentLogin.jsx'),
+  ]);
+
+  assert.match(app, /const STUDENT_LOGIN_HISTORY_PAGE = 'student-login'/);
+  assert.match(app, /handleOpenStudentLogin[\s\S]*history\.pushState\(\{ publicPage: STUDENT_LOGIN_HISTORY_PAGE \}, '', '\/'\)[\s\S]*setIsStudentLoginMode\(true\)/);
+  assert.match(app, /handleStudentLoginBack[\s\S]*history\.state\?\.publicPage === STUDENT_LOGIN_HISTORY_PAGE[\s\S]*history\.back\(\)/);
+  assert.match(app, /handlePublicPop[\s\S]*addEventListener\('popstate', handlePublicPop\)[\s\S]*removeEventListener\('popstate', handlePublicPop\)/);
+  assert.match(app, /<StudentLogin[\s\S]*onBack=\{handleStudentLoginBack\}/);
+  assert.match(app, /<LandingPage onStudentLoginClick=\{handleOpenStudentLogin\}/);
+  assert.match(studentLogin, /<Button[\s\S]*type="button"[\s\S]*onClick=\{onBack\}[\s\S]*뒤로 가기/);
+});
+
 test('첫 화면은 높이를 줄이고 세 경험을 스크롤 없는 3분할 선택 바로 보여준다', async () => {
   const [landing, styles, modal] = await Promise.all([
     read('src/components/layout/LandingPage.jsx'),

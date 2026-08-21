@@ -186,6 +186,7 @@ const StudentLogin = ({ onLoginSuccess, onBack }) => {
             </Button>
 
             <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 style={{ marginTop: '24px' }}

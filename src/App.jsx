@@ -64,6 +64,7 @@ const isStudentComposing = (page) => Boolean(page) && (
 // 부팅 뼈대 종류는 첫 렌더 전에 한 번만 정한다. 저장된 세션을 보는 동기 판정이라
 // 서버를 기다리지 않고, 도중에 바뀌어 화면이 흔들릴 일도 없다.
 const BOOT_SKELETON_KIND = getBootSkeletonKind();
+const STUDENT_LOGIN_HISTORY_PAGE = 'student-login';
 
 function App() {
   const {
@@ -105,6 +106,35 @@ function App() {
     () => setInternalPage('mission_list'),
     [setInternalPage]
   );
+
+  // 코드 로그인도 브라우저 방문 기록의 한 단계로 둔다. 같은 탭에서 연구소를 보고 왔더라도
+  // 기기·브라우저 뒤로가기가 연구소까지 빠져나가지 않고 아지트 첫 화면에 먼저 머물게 한다.
+  const handleOpenStudentLogin = useCallback(() => {
+    window.history.pushState({ publicPage: STUDENT_LOGIN_HISTORY_PAGE }, '', '/');
+    setIsStudentLoginMode(true);
+  }, [setIsStudentLoginMode]);
+
+  const handleStudentLoginBack = useCallback(() => {
+    if (window.history.state?.publicPage === STUDENT_LOGIN_HISTORY_PAGE) {
+      window.history.back();
+      return;
+    }
+    setIsStudentLoginMode(false);
+  }, [setIsStudentLoginMode]);
+
+  useEffect(() => {
+    if (studentSession) return undefined;
+
+    const syncPublicPage = (state) => {
+      setIsStudentLoginMode(state?.publicPage === STUDENT_LOGIN_HISTORY_PAGE);
+    };
+    const handlePublicPop = (event) => syncPublicPage(event.state);
+
+    // 코드 로그인 화면에서 새로고침한 경우에도 같은 화면을 복원한다.
+    syncPublicPage(window.history.state);
+    window.addEventListener('popstate', handlePublicPop);
+    return () => window.removeEventListener('popstate', handlePublicPop);
+  }, [setIsStudentLoginMode, studentSession]);
 
   // 학생 화면 뒤로가기: 그동안 처리가 없어 태블릿·폰에서 뒤로가기를 누르면 앱이 닫혔다.
   // 페이지가 바뀔 때 히스토리를 쌓고, 뒤로가기가 오면 그 페이지로 되돌린다.
@@ -514,11 +544,11 @@ function App() {
                 setIsStudentLoginMode(false);
                 setInternalPage('main');
               }}
-              onBack={() => setIsStudentLoginMode(false)}
+              onBack={handleStudentLoginBack}
             />
         ) : (
           /* [4순위] 비로그인 (랜딩 페이지) */
-          <LandingPage onStudentLoginClick={() => setIsStudentLoginMode(true)} />
+          <LandingPage onStudentLoginClick={handleOpenStudentLogin} />
         )}
         </Suspense>
       </ErrorBoundary>
