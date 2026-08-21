@@ -273,6 +273,7 @@
 - [x] 보안 헤더·외부 origin 허용 기준을 `Caddyfile.container` 한 곳으로 모으고 Vercel CSP 검증 제거
 - [x] `main` 푸시 → GitHub Actions → self-hosted 러너 → Docker 빌드·컨테이너 교체·HTTP 200 확인 계약을 자동 검사
 - [x] 저장소 밖 GitHub–Vercel 연동을 해제해 PR에 붙는 Vercel 배포·Preview Comments 검사 제거
+  (2026-08-21 Vercel 프로젝트 `agit`의 Git 연결 `null` 확인)
 - [x] PR #2를 `main`에 병합하고 GitHub Actions `Deploy` 성공과 운영 컨테이너 반영 확인
 
 ### Stage 2 연구소 통합 착수 점검
