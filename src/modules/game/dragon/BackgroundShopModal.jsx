@@ -5,8 +5,10 @@ import Button from '../../../components/common/Button';
 import ModalCloseButton from '../../../components/common/ModalCloseButton';
 import DragonHideoutScene from './DragonHideoutScene';
 import {
+    DRAGON_DECOR_COLLECTIONS,
     DRAGON_DECOR_RARITIES,
     DRAGON_DECOR_SLOTS,
+    getDragonDecorCollectionItems,
     getDragonDecorItemsForSlot,
     normalizeDragonDecor
 } from './decorCatalog';
@@ -25,20 +27,20 @@ const BackgroundShopModal = ({
     isBusy
 }) => {
     const [activeSlot, setActiveSlot] = useState('wallpaper');
-    const [previewItemId, setPreviewItemId] = useState(null);
+    const [previewEquipped, setPreviewEquipped] = useState(null);
+    const [previewCollectionId, setPreviewCollectionId] = useState(null);
     const [notice, setNotice] = useState('장착한 모습은 친구 아지트에도 그대로 보여요.');
     const decor = useMemo(() => normalizeDragonDecor(petData), [petData]);
     const items = getDragonDecorItemsForSlot(activeSlot);
     const activeSlotInfo = DRAGON_DECOR_SLOTS.find((slot) => slot.id === activeSlot);
     const previewPetData = useMemo(() => {
-        const previewItem = items.find((item) => item.id === previewItemId);
-        if (!previewItem) return petData;
+        if (!previewEquipped) return petData;
         return {
             ...petData,
-            background: previewItem.slot === 'wallpaper' ? previewItem.id : petData?.background,
-            equippedDecor: { ...decor.equipped, [previewItem.slot]: previewItem.id }
+            background: previewEquipped.wallpaper,
+            equippedDecor: previewEquipped
         };
-    }, [decor.equipped, items, petData, previewItemId]);
+    }, [petData, previewEquipped]);
 
     if (!isOpen) return null;
 
@@ -49,7 +51,23 @@ const BackgroundShopModal = ({
 
     const handleEquip = async (item) => {
         const success = await equipDecorItem(item.slot, item.id);
-        if (success) setNotice(`${item.name} 장착 완료! 친구 아지트에도 이 모습이 보여요.`);
+        if (success) {
+            setPreviewEquipped(null);
+            setPreviewCollectionId(null);
+            setNotice(`${item.name} 장착 완료! 친구 아지트에도 이 모습이 보여요.`);
+        }
+    };
+
+    const previewCollection = (collection) => {
+        setPreviewEquipped({ ...collection.items });
+        setPreviewCollectionId(collection.id);
+        setNotice(`${collection.name} 전체 조합이에요. 상품은 하나씩 구입하고 장착할 수 있어요.`);
+    };
+
+    const previewItem = (item) => {
+        setPreviewEquipped((current) => ({ ...(current || decor.equipped), [item.slot]: item.id }));
+        setPreviewCollectionId(null);
+        setNotice(`${item.name} 미리보기예요. 구입하거나 장착하기 전에는 저장되지 않아요.`);
     };
 
     return (
@@ -86,6 +104,34 @@ const BackgroundShopModal = ({
                         </section>
 
                         <section className="agit-workshop__catalog">
+                            <div className="agit-workshop__collections" aria-label="추천 아지트 세트">
+                                <div className="agit-workshop__collections-heading">
+                                    <span>5 COLLECTIONS</span>
+                                    <strong>완성된 아지트부터 골라 보기</strong>
+                                    <small>세트를 눌러 5개 상품 조합을 한 번에 미리 보세요.</small>
+                                </div>
+                                <div className="agit-workshop__collection-list">
+                                    {DRAGON_DECOR_COLLECTIONS.map((collection, index) => {
+                                        const totalPrice = getDragonDecorCollectionItems(collection.id)
+                                            .reduce((sum, item) => sum + Number(item.price || 0), 0);
+                                        return (
+                                            <button
+                                                key={collection.id}
+                                                type="button"
+                                                className={previewCollectionId === collection.id ? 'is-active' : ''}
+                                                style={{ '--collection-accent': collection.accent }}
+                                                aria-pressed={previewCollectionId === collection.id}
+                                                onClick={() => previewCollection(collection)}
+                                            >
+                                                <span>{String(index + 1).padStart(2, '0')}</span>
+                                                <strong>{collection.name}</strong>
+                                                <small>{totalPrice.toLocaleString('ko-KR')}P</small>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
                             <div className="agit-workshop__tabs" role="tablist" aria-label="꾸미기 슬롯">
                                 {DRAGON_DECOR_SLOTS.map((slot) => (
                                     <button
@@ -94,10 +140,7 @@ const BackgroundShopModal = ({
                                         role="tab"
                                         aria-selected={activeSlot === slot.id}
                                         className={activeSlot === slot.id ? 'is-active' : ''}
-                                        onClick={() => {
-                                            setActiveSlot(slot.id);
-                                            setPreviewItemId(null);
-                                        }}
+                                        onClick={() => setActiveSlot(slot.id)}
                                     >
                                         <span aria-hidden="true">{slot.icon}</span>
                                         {slot.name}
@@ -120,7 +163,7 @@ const BackgroundShopModal = ({
                                     const isLocked = Number(item.requiredWriterLevel || 1) > Number(petData?.level || 1);
                                     const rarity = Reflect.get(DRAGON_DECOR_RARITIES, item.rarity);
                                     return (
-                                        <article key={item.id} data-slot={item.slot} data-rarity={item.rarity || 'default'} className={`agit-workshop__item${isEquipped ? ' is-equipped' : ''}${previewItemId === item.id ? ' is-previewing' : ''}`}>
+                                        <article key={item.id} data-slot={item.slot} data-rarity={item.rarity || 'default'} className={`agit-workshop__item${isEquipped ? ' is-equipped' : ''}${previewEquipped?.[item.slot] === item.id ? ' is-previewing' : ''}`}>
                                             <button
                                                 type="button"
                                                 className="agit-workshop__item-preview"
@@ -130,10 +173,7 @@ const BackgroundShopModal = ({
                                                     '--workshop-frame-color': item.border,
                                                     '--workshop-frame-glow': item.glow
                                                 } : undefined}
-                                                onClick={() => {
-                                                    setPreviewItemId(item.id);
-                                                    setNotice(`${item.name} 미리보기예요. 구입하거나 장착하기 전에는 저장되지 않아요.`);
-                                                }}
+                                                onClick={() => previewItem(item)}
                                                 aria-label={`${item.name} 미리보기`}
                                             >
                                                 {item.slot === 'nameplate' && (
@@ -148,7 +188,14 @@ const BackgroundShopModal = ({
                                                 {item.slot === 'pedestal' && <span />}
                                             </button>
                                             <div className="agit-workshop__item-copy">
-                                                {rarity && <span className="agit-workshop__rarity">{rarity.name}</span>}
+                                                <div className="agit-workshop__item-badges">
+                                                    {rarity && <span className="agit-workshop__rarity">{rarity.name}</span>}
+                                                    {Number(item.price || 0) > 0 && (
+                                                        <span className={`agit-workshop__collection-badge${item.collectionId ? '' : ' is-signature'}`}>
+                                                            {item.collectionName || '시그니처'}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <strong>{item.name}</strong>
                                                 <small>
                                                     {isEquipped ? '현재 장착 중' : isOwned ? '보유 중' : isLocked ? `작가 ${item.requiredWriterLevel}단계 필요` : `${Number(item.price || 0).toLocaleString()}P`}

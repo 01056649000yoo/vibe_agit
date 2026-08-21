@@ -15,8 +15,11 @@ import {
 import { getReaderLevel, getWriterLevel } from '../src/constants/writerLevels.js';
 import {
     DEFAULT_EQUIPPED_DECOR,
+    DRAGON_DECOR_COLLECTIONS,
     DRAGON_DECOR_ITEMS,
     DRAGON_DECOR_SLOTS,
+    getDragonDecorCollectionForItem,
+    getDragonDecorCollectionItems,
     getDragonDecorItemsForSlot,
     normalizeDragonDecor
 } from '../src/modules/game/dragon/decorCatalog.js';
@@ -125,6 +128,8 @@ test('교사 공방 미리보기는 학생 상점의 실제 5개 슬롯과 가�
     assert.match(workshopSource, /DRAGON_DECOR_SLOTS\.map/);
     assert.match(workshopSource, /getDragonDecorItemsForSlot/);
     assert.match(workshopSource, /DRAGON_DECOR_RARITIES/);
+    assert.match(workshopSource, /DRAGON_DECOR_COLLECTIONS\.map/);
+    assert.match(workshopSource, /previewCollection/);
     assert.match(workshopSource, /DragonHideoutScene/);
     assert.match(workshopSource, /Number\(item\.price/);
     assert.doesNotMatch(workshopSource, /supabase|\.rpc\(|\.from\(|buy_my_dragon_decor|equip_my_dragon_decor/);
@@ -209,6 +214,41 @@ test('유료 장식 40종은 슬롯별 8개와 등급 피라미드로 고르게 
         { starter: 8, common: 12, rare: 10, hero: 7, legendary: 3 }
     );
     assert.equal(paidItems.reduce((sum, item) => sum + item.price, 0), 143600);
+});
+
+test('5개 완성 세트는 슬롯별 1개씩 구성되고 나머지는 슬롯별 시그니처 3개다', () => {
+    assert.equal(DRAGON_DECOR_COLLECTIONS.length, 5);
+    const collectionItemIds = new Set();
+
+    DRAGON_DECOR_COLLECTIONS.forEach((collection) => {
+        assert.deepEqual(Object.keys(collection.items), DRAGON_DECOR_SLOTS.map((slot) => slot.id));
+        const collectionItems = getDragonDecorCollectionItems(collection.id);
+        assert.equal(collectionItems.length, 5);
+        assert.deepEqual(collectionItems.map((item) => item.slot), DRAGON_DECOR_SLOTS.map((slot) => slot.id));
+        collectionItems.forEach((item) => {
+            assert.equal(collectionItemIds.has(item.id), false);
+            assert.equal(item.collectionId, collection.id);
+            assert.equal(item.collectionName, collection.name);
+            assert.equal(getDragonDecorCollectionForItem(item.id)?.id, collection.id);
+            collectionItemIds.add(item.id);
+        });
+    });
+
+    assert.equal(collectionItemIds.size, 25);
+    DRAGON_DECOR_SLOTS.forEach((slot) => {
+        const paidItems = getDragonDecorItemsForSlot(slot.id).filter((item) => item.price > 0);
+        assert.equal(paidItems.filter((item) => item.collectionId).length, 5);
+        assert.equal(paidItems.filter((item) => !item.collectionId).length, 3);
+    });
+});
+
+test('학생 공방은 세트 전체 미리보기와 상품별 구매를 분리한다', async () => {
+    const shopSource = await readFile('src/modules/game/dragon/BackgroundShopModal.jsx', 'utf8');
+    assert.match(shopSource, /DRAGON_DECOR_COLLECTIONS\.map/);
+    assert.match(shopSource, /setPreviewEquipped\(\{ \.\.\.collection\.items \}\)/);
+    assert.match(shopSource, /상품은 하나씩 구입하고 장착할 수 있어요/);
+    assert.match(shopSource, /buyDecorItem\(item\)/);
+    assert.doesNotMatch(shopSource, /buyDecorCollection|buy_my_dragon_decor_collection/);
 });
 
 test('기존에 산 배경은 새 프레임 소유·장착 상태로 그대로 이어진다', () => {

@@ -67,78 +67,64 @@
 .dragon-hideout-scene__window i { position: absolute; top: 15%; left: 20%; width: 7%; aspect-ratio: 1; border-radius: 50%; background: #fff; box-shadow: 14px 8px 0 rgba(255,255,255,.86), 7px 24px 0 rgba(255,255,255,.72); }
 .dragon-hideout-scene__window i:last-child { top: 58%; left: 63%; opacity: .72; }
 
-/* 프레임은 중앙을 채우지 않고 얇은 선과 네 모서리에만 나타난다. */
+/* 프레임은 그림 테두리보다 건축 구조물처럼 보이도록 얇은 레일과 네 개의 재질 기둥으로 구성한다. */
 .dragon-hideout-scene__frame {
+    --frame-surface: linear-gradient(135deg,#c9a77f,#795a3e 58%,#4c3728);
+    --frame-trim: #d6bc91;
+    --frame-shadow: rgba(63,43,29,.3);
     z-index: 9;
-    inset: 2.6%;
-    border: max(2px,.8cqi) solid var(--hideout-frame);
-    border-radius: 23px;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.52), 0 0 13px var(--hideout-frame-glow);
+    inset: 2.8%;
+    border: max(1px,.35cqi) solid color-mix(in srgb,var(--frame-trim) 72%,transparent);
+    border-radius: 22px;
+    background: linear-gradient(135deg,color-mix(in srgb,var(--frame-trim) 9%,transparent),transparent 18% 82%,color-mix(in srgb,var(--frame-trim) 9%,transparent));
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.24),0 9px 24px var(--frame-shadow);
     pointer-events: none;
 }
+.dragon-hideout-scene__frame::before,
+.dragon-hideout-scene__frame::after { position: absolute; right: 25%; left: 25%; height: max(1px,.35cqi); background: linear-gradient(90deg,transparent,var(--frame-trim) 20% 80%,transparent); content: ''; opacity: .82; }
+.dragon-hideout-scene__frame::before { top: 1.5%; }
+.dragon-hideout-scene__frame::after { bottom: 1.5%; }
 .dragon-hideout-scene__frame i {
     position: absolute;
-    width: 19%;
-    aspect-ratio: 1;
-    border-color: var(--hideout-frame);
-    filter: drop-shadow(0 0 5px var(--hideout-frame-glow));
+    width: 15%;
+    height: 24%;
+    border: 1px solid color-mix(in srgb,var(--frame-trim) 76%,transparent);
+    background: var(--frame-surface);
+    box-shadow: inset 1px 1px rgba(255,255,255,.2),inset -3px -4px rgba(20,15,12,.12),0 5px 9px var(--frame-shadow);
+    clip-path: polygon(0 0,100% 0,72% 20%,72% 76%,54% 100%,0 100%);
 }
-.dragon-hideout-scene__frame i:nth-child(1) { top: -2px; left: -2px; border-top: max(5px,1.7cqi) solid; border-left: max(5px,1.7cqi) solid; border-radius: 18px 0 0; }
-.dragon-hideout-scene__frame i:nth-child(2) { top: -2px; right: -2px; border-top: max(5px,1.7cqi) solid; border-right: max(5px,1.7cqi) solid; border-radius: 0 18px 0 0; }
-.dragon-hideout-scene__frame i:nth-child(3) { right: -2px; bottom: -2px; border-right: max(5px,1.7cqi) solid; border-bottom: max(5px,1.7cqi) solid; border-radius: 0 0 18px; }
-.dragon-hideout-scene__frame i:nth-child(4) { bottom: -2px; left: -2px; border-bottom: max(5px,1.7cqi) solid; border-left: max(5px,1.7cqi) solid; border-radius: 0 0 0 18px; }
+.dragon-hideout-scene__frame i:nth-child(1) { top: -.5%; left: -.5%; border-radius: 18px 2px 7px 2px; }
+.dragon-hideout-scene__frame i:nth-child(2) { top: -.5%; right: -.5%; border-radius: 2px 18px 2px 7px; transform: scaleX(-1); }
+.dragon-hideout-scene__frame i:nth-child(3) { right: -.5%; bottom: -.5%; border-radius: 7px 2px 18px 2px; transform: scale(-1); }
+.dragon-hideout-scene__frame i:nth-child(4) { bottom: -.5%; left: -.5%; border-radius: 2px 7px 2px 18px; transform: scaleY(-1); }
 
-.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame { border-color: #6e241b; background: linear-gradient(135deg, rgba(255,94,44,.14), transparent 14% 86%, rgba(255,94,44,.14)); }
-.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame i { border: 0; background: linear-gradient(135deg,#ffb02e,#de3f25 52%,#5d1514); clip-path: polygon(0 0,100% 0,68% 25%,92% 44%,57% 51%,72% 100%,40% 70%,0 100%); }
-.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
-.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
-.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+/* 고목 기록실: 잎사귀 장식 대신 조각된 목재와 녹청 금속을 사용한다. */
+.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame { --frame-trim: #8ca078; --frame-shadow: rgba(45,68,38,.3); --frame-surface: repeating-linear-gradient(82deg,rgba(255,255,255,.08) 0 2px,transparent 2px 12px),linear-gradient(135deg,#9a7650,#5d4934 57%,#334234); }
+.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame i { border-color: #91a87a; clip-path: polygon(0 0,100% 0,73% 18%,73% 80%,55% 100%,0 100%); }
 
-.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame { border-color: #87c7e5; box-shadow: inset 0 0 0 1px rgba(255,255,255,.8), 0 0 16px rgba(99,190,232,.34); }
-.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame i { border: 0; width: 21%; border-radius: 50%; background: #f9fdff; box-shadow: 5cqi 1cqi 0 -1cqi #d8f1fb, 10cqi 5cqi 0 -2cqi #fff, 0 0 8px rgba(80,169,212,.3); }
-.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
-.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
-.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+/* 월광 수정실: 두꺼운 보석 모서리 대신 반투명 유리 기둥과 은색 레일을 사용한다. */
+.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame { --frame-trim: #c6c4ec; --frame-shadow: rgba(91,76,156,.3); --frame-surface: linear-gradient(128deg,rgba(255,255,255,.92) 0 13%,rgba(187,211,244,.72) 14% 35%,rgba(147,127,204,.88) 36% 69%,rgba(86,73,142,.9) 70%); backdrop-filter: blur(.4px); }
+.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i { clip-path: polygon(0 0,100% 0,72% 25%,78% 71%,50% 100%,0 100%); box-shadow: inset 4px 0 rgba(255,255,255,.38),0 0 12px rgba(147,132,220,.42); }
 
-.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame { border-color: #63864b; background: linear-gradient(135deg,rgba(104,151,70,.12),transparent 16% 84%,rgba(104,151,70,.12)); }
-.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame i { border: 0; background: linear-gradient(135deg,#b8d37b,#5f8f4a 52%,#355f36); clip-path: polygon(0 0,100% 0,72% 20%,95% 50%,59% 44%,50% 100%,28% 56%,0 77%); }
-.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
-.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
-.dragon-hideout-scene[data-frame='forest'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+/* 용불꽃 대장간: 불꽃 아이콘 대신 검은 강철 안에 얇은 용암 이음새를 넣는다. */
+.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame { --frame-trim: #b56b43; --frame-shadow: rgba(73,29,18,.4); --frame-surface: linear-gradient(118deg,#393638 0 28%,#b84b28 29% 33%,#222124 34% 66%,#e07b35 67% 70%,#16171a 71%); }
+.dragon-hideout-scene[data-frame='volcano'] .dragon-hideout-scene__frame i { border-color: #a05232; clip-path: polygon(0 0,100% 0,75% 18%,69% 77%,48% 100%,0 100%); box-shadow: inset 1px 1px rgba(255,195,108,.2),0 0 11px rgba(215,81,37,.36); }
 
-.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame { border-color: #aebcf0; box-shadow: inset 0 0 0 1px rgba(246,247,255,.8),0 0 17px rgba(132,151,232,.4); }
-.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame i { border: 0; width: 18%; border-radius: 50%; background: radial-gradient(circle at 62% 38%,transparent 0 38%,#e9efff 40% 62%,transparent 64%); filter: drop-shadow(0 0 7px rgba(198,211,255,.72)); }
-.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
-.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
-.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+/* 고대 룬 성소: 네온 이중 테두리를 걷고 청동 룬이 박힌 석판 기둥으로 정돈한다. */
+.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame { --frame-trim: #58b9b2; --frame-shadow: rgba(25,69,69,.36); --frame-surface: linear-gradient(135deg,#566064,#29363a 57%,#172124); }
+.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame i { border-color: #66c4bd; background: linear-gradient(45deg,transparent 44%,rgba(91,221,207,.55) 45% 48%,transparent 49% 61%,rgba(91,221,207,.36) 62% 65%,transparent 66%),var(--frame-surface); clip-path: polygon(0 0,100% 0,76% 17%,76% 76%,53% 100%,0 100%); }
 
-.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame { border-color: #9d7ddd; }
-.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i { border: 0; background: linear-gradient(135deg,#ecfbff,#a995ff 52%,#6844b4); clip-path: polygon(0 0,100% 0,75% 32%,92% 63%,52% 55%,35% 100%,20% 57%,0 74%); }
-.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
-.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
-.dragon-hideout-scene[data-frame='crystal'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
+/* 별자리 관측실: 별무늬 덩어리 대신 남청색 금속과 황동 궤도선을 쓴다. */
+.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame { --frame-trim: #c4ab65; --frame-shadow: rgba(29,35,83,.38); --frame-surface: radial-gradient(circle at 28% 23%,#fff 0 1.5%,transparent 2%),radial-gradient(circle at 61% 57%,#e9d485 0 1.6%,transparent 2.2%),linear-gradient(135deg,#3f528d,#1b2854 59%,#11162f); }
+.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame i { border-color: #bca35f; clip-path: polygon(0 0,100% 0,76% 20%,70% 75%,52% 100%,0 100%); }
+.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame::before { height: max(2px,.55cqi); background: radial-gradient(circle at 50% 50%,#fff5b5 0 6%,transparent 7%),linear-gradient(90deg,transparent,#bfa863 18% 82%,transparent); }
 
-.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame { border: max(2px,.8cqi) double #4fd3d0; box-shadow: inset 0 0 0 1px rgba(180,255,249,.5),0 0 18px rgba(66,220,215,.42); }
-.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame i { border: max(2px,.65cqi) solid #4fd3d0; width: 17%; transform: rotate(45deg) scale(.72); }
-.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame i:nth-child(2) { transform: rotate(-45deg) scale(.72); }
-.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame i:nth-child(3) { transform: rotate(45deg) scale(.72); }
-.dragon-hideout-scene[data-frame='rune'] .dragon-hideout-scene__frame i:nth-child(4) { transform: rotate(-45deg) scale(.72); }
-
-.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame { border-color: #5968ad; box-shadow: inset 0 0 0 1px #d8e3ff, 0 0 17px rgba(72,101,214,.4); }
-.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame i { border: 0; width: 14%; background: linear-gradient(135deg,#f6fbff,#70a9ff 42%,#4a4b9f); clip-path: polygon(38% 0,100% 0,62% 38%,87% 38%,21% 100%,42% 52%,0 52%); }
-.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
-.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
-.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
-
-.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame { border-color: #5867c6; background: radial-gradient(circle at 3% 3%,#fff 0 .6%,transparent .9%), radial-gradient(circle at 97% 4%,#ffeaa0 0 .7%,transparent 1%), radial-gradient(circle at 96% 96%,#fff 0 .5%,transparent .9%), radial-gradient(circle at 4% 96%,#d8e3ff 0 .7%,transparent 1%); }
-.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame i { border: 0; background: radial-gradient(circle at 38% 35%,#fff 0 3%,transparent 4%), radial-gradient(circle at 66% 62%,#ffe69c 0 4%,transparent 5%), linear-gradient(135deg,#19235b,#5964bd 58%,#261744); clip-path: polygon(0 0,100% 0,74% 27%,100% 62%,58% 57%,38% 100%,25% 57%,0 72%); }
-.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame i:nth-child(2) { transform: scaleX(-1); }
-.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame i:nth-child(3) { transform: scale(-1); }
-.dragon-hideout-scene[data-frame='galaxy'] .dragon-hideout-scene__frame i:nth-child(4) { transform: scaleY(-1); }
-
-.dragon-hideout-scene[data-frame='legend'] .dragon-hideout-scene__frame { border: max(3px,1cqi) double #d4a31d; box-shadow: inset 0 0 0 2px rgba(255,245,182,.66), 0 0 18px rgba(222,174,35,.52); }
-.dragon-hideout-scene[data-frame='legend'] .dragon-hideout-scene__frame i { border-color: #d4a31d; width: 22%; }
-.dragon-hideout-scene[data-frame='legend'] .dragon-hideout-scene__frame i::after { position: absolute; top: 18%; left: 18%; width: 34%; aspect-ratio: 1; background: linear-gradient(135deg,#fff3a6,#c78b12); clip-path: polygon(50% 0,62% 36%,100% 50%,62% 64%,50% 100%,38% 64%,0 50%,38% 36%); content: ''; }
+/* 세트 밖 시그니처 프레임도 같은 구조 언어를 사용하되 재질만 독립적으로 둔다. */
+.dragon-hideout-scene[data-frame='sky'] .dragon-hideout-scene__frame { --frame-trim: #b8dce9; --frame-shadow: rgba(64,128,154,.23); --frame-surface: linear-gradient(135deg,#fff,#d5edf4 54%,#8ebed2); }
+.dragon-hideout-scene[data-frame='moon'] .dragon-hideout-scene__frame { --frame-trim: #c8d0f1; --frame-shadow: rgba(85,96,155,.28); --frame-surface: radial-gradient(circle at 35% 32%,#f9fbff 0 12%,transparent 13%),linear-gradient(135deg,#dde4f7,#8491bf 58%,#505b86); }
+.dragon-hideout-scene[data-frame='storm'] .dragon-hideout-scene__frame { --frame-trim: #87a8da; --frame-shadow: rgba(47,68,139,.34); --frame-surface: linear-gradient(125deg,#dceaff 0 12%,#5d7dbd 13% 42%,#ecf5ff 43% 47%,#384c91 48% 70%,#222b5e 71%); }
+.dragon-hideout-scene[data-frame='legend'] .dragon-hideout-scene__frame { --frame-trim: #e2c267; --frame-shadow: rgba(145,97,21,.38); --frame-surface: linear-gradient(135deg,#fff0a4,#c99429 42%,#76500f 69%,#2c241b); border-width: max(2px,.6cqi); }
+.dragon-hideout-scene[data-frame='legend'] .dragon-hideout-scene__frame i { clip-path: polygon(0 0,100% 0,78% 21%,74% 74%,50% 100%,0 100%); }
 
 /* 받침대: 같은 타원 크기 안에서도 재질과 실루엣을 확실히 달리한다. */
 .dragon-hideout-scene__pedestal { z-index: 3; right: 20%; bottom: 17%; left: 20%; height: 18%; border-radius: 50%; background: linear-gradient(180deg,#d6d3ca 0 22%,#8b887f 24% 70%,#66645f 72%); box-shadow: 0 11px 16px rgba(32,24,20,.26), inset 0 3px 0 rgba(255,255,255,.52); }

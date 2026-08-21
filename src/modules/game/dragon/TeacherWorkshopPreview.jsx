@@ -3,8 +3,10 @@ import Button from '../../../components/common/Button';
 import DragonHideoutScene from './DragonHideoutScene';
 import {
     DEFAULT_EQUIPPED_DECOR,
+    DRAGON_DECOR_COLLECTIONS,
     DRAGON_DECOR_RARITIES,
     DRAGON_DECOR_SLOTS,
+    getDragonDecorCollectionItems,
     getDragonDecorItemsForSlot
 } from './decorCatalog';
 import { getDragonStage } from './presentation';
@@ -19,6 +21,7 @@ const formatPrice = (item) => {
 const TeacherWorkshopPreview = () => {
     const [activeSlot, setActiveSlot] = useState(DRAGON_DECOR_SLOTS[0].id);
     const [equipped, setEquipped] = useState({ ...DEFAULT_EQUIPPED_DECOR });
+    const [activeCollectionId, setActiveCollectionId] = useState(null);
     const items = useMemo(() => getDragonDecorItemsForSlot(activeSlot), [activeSlot]);
     const paidItemCount = useMemo(() => (
         DRAGON_DECOR_SLOTS.reduce((total, slot) => (
@@ -37,6 +40,12 @@ const TeacherWorkshopPreview = () => {
 
     const previewItem = (item) => {
         setEquipped((current) => ({ ...current, [item.slot]: item.id }));
+        setActiveCollectionId(null);
+    };
+
+    const previewCollection = (collection) => {
+        setEquipped({ ...collection.items });
+        setActiveCollectionId(collection.id);
     };
 
     return (
@@ -52,8 +61,35 @@ const TeacherWorkshopPreview = () => {
 
             <div className="dragon-workshop-preview__summary">
                 <div><small>유료 상품</small><strong>{paidItemCount}종</strong></div>
-                <div><small>꾸미기 슬롯</small><strong>{DRAGON_DECOR_SLOTS.length}개</strong></div>
+                <div><small>완성 세트</small><strong>{DRAGON_DECOR_COLLECTIONS.length}개</strong></div>
                 <p>상품을 누르면 왼쪽 아지트에 바로 적용됩니다. 학생의 포인트와 보유 상품에는 영향을 주지 않습니다.</p>
+            </div>
+
+            <div className="dragon-workshop-preview__collections" aria-label="완성 아지트 세트">
+                <div>
+                    <span>CURATED ROOMS</span>
+                    <strong>5개 완성 세트</strong>
+                    <small>세트 전체를 먼저 보고 슬롯별 상품을 비교할 수 있습니다.</small>
+                </div>
+                {DRAGON_DECOR_COLLECTIONS.map((collection, index) => {
+                    const totalPrice = getDragonDecorCollectionItems(collection.id)
+                        .reduce((sum, item) => sum + Number(item.price || 0), 0);
+                    return (
+                        <button
+                            type="button"
+                            key={collection.id}
+                            className={activeCollectionId === collection.id ? 'is-active' : ''}
+                            style={{ '--collection-accent': collection.accent }}
+                            aria-pressed={activeCollectionId === collection.id}
+                            onClick={() => previewCollection(collection)}
+                        >
+                            <span>{String(index + 1).padStart(2, '0')}</span>
+                            <strong>{collection.name}</strong>
+                            <small>{collection.summary}</small>
+                            <em>{totalPrice.toLocaleString('ko-KR')}P · 전체 미리보기</em>
+                        </button>
+                    );
+                })}
             </div>
 
             <div className="dragon-workshop-preview__layout">
@@ -64,7 +100,10 @@ const TeacherWorkshopPreview = () => {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => setEquipped({ ...DEFAULT_EQUIPPED_DECOR })}
+                            onClick={() => {
+                                setEquipped({ ...DEFAULT_EQUIPPED_DECOR });
+                                setActiveCollectionId(null);
+                            }}
                         >
                             기본 조합으로
                         </Button>
@@ -142,7 +181,7 @@ const TeacherWorkshopPreview = () => {
                                         {item.image ? <img src={item.image} alt="" loading="lazy" decoding="async" draggable="false" /> : <i />}
                                     </span>
                                     <span className="dragon-workshop-preview__item-copy">
-                                        <span>{rarity?.name || (item.isDefault ? '기본' : '성장 보상')}</span>
+                                        <span>{item.collectionName || rarity?.name || (item.isDefault ? '기본' : '시그니처')}</span>
                                         <strong>{item.name}</strong>
                                         <small>{formatPrice(item)}{Number(item.requiredWriterLevel || 1) > 1 && Number(item.price || 0) > 0 ? ` · 작가 ${item.requiredWriterLevel}단계` : ''}</small>
                                     </span>

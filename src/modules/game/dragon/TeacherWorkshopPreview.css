@@ -20,6 +20,26 @@
 .dragon-workshop-preview__summary strong { margin-top: 2px; color: #433d54; font-size: .8rem; }
 .dragon-workshop-preview__summary p { align-self: center; margin: 0; color: #80798b; font-size: .61rem; font-weight: 750; line-height: 1.5; }
 
+.dragon-workshop-preview__collections { display: grid; grid-template-columns: 145px repeat(5,minmax(116px,1fr)); gap: 7px; margin-top: 12px; padding: 9px; border: 1px solid #dfddea; border-radius: 15px; background: rgba(255,255,255,.72); overflow-x: auto; }
+.dragon-workshop-preview__collections > div { align-self: center; padding: 4px 7px; }
+.dragon-workshop-preview__collections > div span,
+.dragon-workshop-preview__collections > div strong,
+.dragon-workshop-preview__collections > div small { display: block; }
+.dragon-workshop-preview__collections > div span { color: #78689a; font-size: .48rem; font-weight: 950; letter-spacing: .1em; }
+.dragon-workshop-preview__collections > div strong { margin-top: 2px; color: #41394f; font-size: .7rem; }
+.dragon-workshop-preview__collections > div small { margin-top: 3px; color: #8a8393; font-size: .5rem; font-weight: 750; line-height: 1.35; }
+.dragon-workshop-preview__collections > button { position: relative; min-width: 116px; overflow: hidden; padding: 9px 9px 8px 12px; border: 1px solid #e0dde6; border-radius: 11px; background: #fff; color: #4a4451; cursor: pointer; font: inherit; text-align: left; }
+.dragon-workshop-preview__collections > button::before { position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--collection-accent); content: ''; }
+.dragon-workshop-preview__collections > button span,
+.dragon-workshop-preview__collections > button strong,
+.dragon-workshop-preview__collections > button small,
+.dragon-workshop-preview__collections > button em { display: block; }
+.dragon-workshop-preview__collections > button span { color: var(--collection-accent); font-size: .45rem; font-weight: 950; letter-spacing: .08em; }
+.dragon-workshop-preview__collections > button strong { margin-top: 2px; font-size: .6rem; }
+.dragon-workshop-preview__collections > button small { height: 2.7em; margin-top: 3px; overflow: hidden; color: #89828e; font-size: .46rem; font-weight: 720; line-height: 1.35; }
+.dragon-workshop-preview__collections > button em { margin-top: 4px; color: #736a7e; font-size: .46rem; font-style: normal; font-weight: 900; }
+.dragon-workshop-preview__collections > button.is-active { border-color: var(--collection-accent); background: color-mix(in srgb,var(--collection-accent) 8%,#fff); box-shadow: 0 0 0 2px color-mix(in srgb,var(--collection-accent) 13%,transparent); }
+
 .dragon-workshop-preview__layout { display: grid; grid-template-columns: minmax(330px, .9fr) minmax(430px, 1.1fr); gap: 18px; align-items: start; margin-top: 15px; }
 .dragon-workshop-preview__stage,
 .dragon-workshop-preview__catalog { min-width: 0; padding: 15px; border: 1px solid #dfddeb; border-radius: 19px; background: rgba(255, 255, 255, .84); box-shadow: 0 14px 34px rgba(56, 48, 83, .06); }
@@ -57,7 +77,8 @@
 .dragon-workshop-preview__items > button:hover { border-color: #a69abf; }
 .dragon-workshop-preview__items > button:focus-visible,
 .dragon-workshop-preview__tabs button:focus-visible,
-.dragon-workshop-preview__equipped button:focus-visible { outline: 3px solid rgba(60, 108, 184, .26); outline-offset: 2px; }
+.dragon-workshop-preview__equipped button:focus-visible,
+.dragon-workshop-preview__collections > button:focus-visible { outline: 3px solid rgba(60, 108, 184, .26); outline-offset: 2px; }
 .dragon-workshop-preview__items > button.is-selected { border-color: #7763a9; background: #f6f2ff; box-shadow: 0 0 0 2px rgba(119, 99, 169, .11); }
 
 .dragon-workshop-preview__item-art { position: relative; grid-row: span 2; display: grid; width: 58px; height: 58px; place-items: center; overflow: hidden; border: 2px solid #d7d2df; border-radius: 12px; background: linear-gradient(145deg, #f6f3ee, #e9e4de); box-shadow: inset 0 0 16px rgba(77, 60, 47, .08); }

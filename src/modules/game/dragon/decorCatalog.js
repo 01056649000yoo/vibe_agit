@@ -76,11 +76,157 @@ const DECOR_ITEMS = [
     { id: 'nameplate-legend', slot: 'nameplate', name: '전설의 황금 문패', price: 10000, rarity: 'legendary', theme: 'legend', preview: 'legend', image: '/assets/dragons/nameplates/nameplate-legend.webp', requiredWriterLevel: 10, sortOrder: 8 }
 ];
 
-export const DRAGON_DECOR_ITEMS = [...FRAME_ITEMS, ...DECOR_ITEMS];
+/**
+ * 기존 상품 ID·가격·소유권은 그대로 두고, 학생에게는 완성된 공간을 목표로 보여 준다.
+ * 컬렉션에 포함되지 않은 유료 상품은 슬롯별 3개의 `시그니처 단품`으로 취급한다.
+ */
+export const DRAGON_DECOR_COLLECTIONS = Object.freeze([
+    {
+        id: 'forest-archive',
+        name: '고목 기록실',
+        summary: '오래된 기록과 숲의 생명력이 머무는 서재',
+        mark: 'ARCHIVE 01',
+        accent: '#70895c',
+        items: {
+            wallpaper: 'forest',
+            pedestal: 'pedestal-root',
+            leftProp: 'left-bookshelf',
+            rightProp: 'right-forest-spring',
+            nameplate: 'nameplate-oak'
+        },
+        displayNames: {
+            forest: '고목 기록실 프레임',
+            'pedestal-root': '고목 뿌리 단상',
+            'left-bookshelf': '연대기 기록대',
+            'right-forest-spring': '숲 정령의 샘',
+            'nameplate-oak': '고목 기록실 문패'
+        }
+    },
+    {
+        id: 'moon-crystal',
+        name: '월광 수정실',
+        summary: '달빛과 수정의 잔광이 흐르는 고요한 방',
+        mark: 'LUNAR 02',
+        accent: '#8277bd',
+        items: {
+            wallpaper: 'crystal',
+            pedestal: 'pedestal-moonstone',
+            leftProp: 'left-moonwell',
+            rightProp: 'right-crystal-egg',
+            nameplate: 'nameplate-crystal'
+        },
+        displayNames: {
+            crystal: '월광 수정실 프레임',
+            'pedestal-moonstone': '달빛 월석 단상',
+            'left-moonwell': '달빛 기억의 샘',
+            'right-crystal-egg': '월광 수정알',
+            'nameplate-crystal': '월광 수정실 문패'
+        }
+    },
+    {
+        id: 'dragon-forge',
+        name: '용불꽃 대장간',
+        summary: '검은 강철과 용의 불씨가 살아 있는 제작소',
+        mark: 'FORGE 03',
+        accent: '#b15b36',
+        items: {
+            wallpaper: 'volcano',
+            pedestal: 'pedestal-ember',
+            leftProp: 'left-lantern',
+            rightProp: 'right-ember-anvil',
+            nameplate: 'nameplate-ember'
+        },
+        displayNames: {
+            volcano: '용불꽃 대장간 프레임',
+            'pedestal-ember': '불씨 대장간 단상',
+            'left-lantern': '수호불꽃 화로',
+            'right-ember-anvil': '용불꽃 모루',
+            'nameplate-ember': '용암 심장 문패'
+        }
+    },
+    {
+        id: 'ancient-rune',
+        name: '고대 룬 성소',
+        summary: '선조의 문양과 교감의 기운이 깨어나는 성소',
+        mark: 'RUNE 04',
+        accent: '#3f8f92',
+        items: {
+            wallpaper: 'rune',
+            pedestal: 'pedestal-rune',
+            leftProp: 'left-runestone',
+            rightProp: 'right-desk',
+            nameplate: 'nameplate-rune'
+        },
+        displayNames: {
+            rune: '고대 룬 성소 프레임',
+            'pedestal-rune': '고대 룬 단상',
+            'left-runestone': '선조의 룬석',
+            'right-desk': '교감의 날개석',
+            'nameplate-rune': '고대 룬 성소 문패'
+        }
+    },
+    {
+        id: 'celestial-observatory',
+        name: '별자리 관측실',
+        summary: '별의 궤도와 밤하늘을 읽는 수호룡의 관측소',
+        mark: 'ORBIT 05',
+        accent: '#5669a8',
+        items: {
+            wallpaper: 'galaxy',
+            pedestal: 'pedestal-celestial',
+            leftProp: 'left-cloud-harp',
+            rightProp: 'right-telescope',
+            nameplate: 'nameplate-celestial'
+        },
+        displayNames: {
+            galaxy: '별자리 관측실 프레임',
+            'pedestal-celestial': '천상의 별빛 옥좌',
+            'left-cloud-harp': '별바람 구름 하프',
+            'right-telescope': '별자리 천구의',
+            'nameplate-celestial': '별자리 관측실 문패'
+        }
+    }
+].map((collection) => Object.freeze({
+    ...collection,
+    items: Object.freeze({ ...collection.items }),
+    displayNames: Object.freeze({ ...collection.displayNames })
+})));
+
+const COLLECTION_BY_ID = new Map(DRAGON_DECOR_COLLECTIONS.map((collection) => [collection.id, collection]));
+const COLLECTION_BY_ITEM_ID = new Map();
+DRAGON_DECOR_COLLECTIONS.forEach((collection) => {
+    Object.values(collection.items).forEach((itemId) => {
+        COLLECTION_BY_ITEM_ID.set(itemId, collection);
+    });
+});
+
+export const DRAGON_DECOR_ITEMS = [...FRAME_ITEMS, ...DECOR_ITEMS].map((item) => {
+    const collection = COLLECTION_BY_ITEM_ID.get(item.id);
+    if (!collection) return item;
+    return {
+        ...item,
+        catalogName: item.name,
+        name: collection.displayNames[item.id] || item.name,
+        collectionId: collection.id,
+        collectionName: collection.name
+    };
+});
 
 const ITEM_BY_ID = new Map(DRAGON_DECOR_ITEMS.map((item) => [item.id, item]));
 
 export const getDragonDecorItem = (itemId) => ITEM_BY_ID.get(itemId) || null;
+
+export const getDragonDecorCollection = (collectionId) => COLLECTION_BY_ID.get(collectionId) || null;
+
+export const getDragonDecorCollectionForItem = (itemId) => COLLECTION_BY_ITEM_ID.get(itemId) || null;
+
+export const getDragonDecorCollectionItems = (collectionId) => {
+    const collection = getDragonDecorCollection(collectionId);
+    if (!collection) return [];
+    return DRAGON_DECOR_SLOTS
+        .map((slot) => getDragonDecorItem(collection.items[slot.id]))
+        .filter(Boolean);
+};
 
 export const getDragonDecorItemsForSlot = (slotId) => (
     DRAGON_DECOR_ITEMS
