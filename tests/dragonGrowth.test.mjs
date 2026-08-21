@@ -253,7 +253,10 @@ test('5개 구매 세트와 전설 달성 세트는 모두 슬롯별 1개씩 구
 });
 
 test('학생 공방은 세트 전체 미리보기와 상품별 구매를 분리한다', async () => {
-    const shopSource = await readFile('src/modules/game/dragon/BackgroundShopModal.jsx', 'utf8');
+    const [shopSource, shopCss] = await Promise.all([
+        readFile('src/modules/game/dragon/BackgroundShopModal.jsx', 'utf8'),
+        readFile('src/modules/game/dragon/BackgroundShopModal.css', 'utf8')
+    ]);
     assert.match(shopSource, /DRAGON_DECOR_COLLECTIONS\.map/);
     assert.match(shopSource, /setPreviewEquipped\(\{ \.\.\.collection\.items \}\)/);
     assert.match(shopSource, /상품은 하나씩 구입하고 장착할 수 있어요/);
@@ -261,6 +264,11 @@ test('학생 공방은 세트 전체 미리보기와 상품별 구매를 분리�
     assert.match(shopSource, /claimLegendaryReward\(\)/);
     assert.match(shopSource, /작가 10 · 독자 7/);
     assert.doesNotMatch(shopSource, /buyDecorCollection|buy_my_dragon_decor_collection/);
+    assert.match(shopCss, /grid-template-areas: 'copy preview' 'action preview'/);
+    assert.match(shopCss, /\.agit-workshop__item-preview \{ grid-area: preview; justify-self: end;/);
+    assert.match(shopCss, /\.agit-workshop__item-copy \{ grid-area: copy;/);
+    assert.match(shopCss, /\.agit-workshop__item-badges \{ display: flex; flex-wrap: wrap;/);
+    assert.doesNotMatch(shopCss, /\.agit-workshop__collection-badge \{ overflow: hidden;/);
 });
 
 test('기존에 산 배경은 새 프레임 소유·장착 상태로 그대로 이어진다', () => {

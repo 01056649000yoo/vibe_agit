@@ -84,11 +84,11 @@
 .agit-workshop__slot-heading > span { flex-shrink: 0; color: #71837b; font-size: .62rem; font-weight: 900; }
 
 .agit-workshop__items { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
-.agit-workshop__item { display: grid; grid-template-columns: 58px minmax(0,1fr); gap: 10px; align-items: center; padding: 10px; border: 1px solid #e6ded5; border-radius: 16px; background: #fff; box-shadow: 0 3px 9px rgba(51,42,35,.045); }
-.agit-workshop__item[data-slot='nameplate'] { grid-template-columns: 94px minmax(0,1fr); }
+.agit-workshop__item { display: grid; grid-template-columns: minmax(0,1fr) 58px; grid-template-areas: 'copy preview' 'action preview'; gap: 8px 10px; align-items: center; padding: 10px; border: 1px solid #e6ded5; border-radius: 16px; background: #fff; box-shadow: 0 3px 9px rgba(51,42,35,.045); }
+.agit-workshop__item[data-slot='nameplate'] { grid-template-columns: minmax(0,1fr) 94px; }
 .agit-workshop__item.is-equipped { border-color: #5d9aac; background: #f3fbfc; box-shadow: 0 0 0 2px rgba(93,154,172,.12); }
 .agit-workshop__item.is-previewing { border-color: #c59a52; box-shadow: 0 0 0 2px rgba(197,154,82,.12); }
-.agit-workshop__item-preview { grid-row: span 2; display: grid; place-items: center; width: 58px; aspect-ratio: 1; overflow: hidden; padding: 0; border: 1px solid rgba(68,52,40,.14); border-radius: 13px; background: #f2eee9; color: #695749; cursor: pointer; font: inherit; }
+.agit-workshop__item-preview { grid-area: preview; justify-self: end; display: grid; place-items: center; width: 58px; aspect-ratio: 1; overflow: hidden; padding: 0; border: 1px solid rgba(68,52,40,.14); border-radius: 13px; background: #f2eee9; color: #695749; cursor: pointer; font: inherit; }
 .agit-workshop__item-preview[data-slot='wallpaper'] { position: relative; border-color: #d9cbbd; background: linear-gradient(145deg,#f8f2ea,#e9ddcf); box-shadow: inset 0 3px 0 -1px var(--workshop-frame-color),inset 0 -3px 0 -1px var(--workshop-frame-color),inset 3px 0 0 -1px var(--workshop-frame-color),inset -3px 0 0 -1px var(--workshop-frame-color),inset 0 0 0 4px rgba(255,255,255,.46),0 3px 7px var(--workshop-frame-glow); }
 .agit-workshop__item-preview[data-slot='wallpaper']::before,
 .agit-workshop__item-preview[data-slot='wallpaper']::after { position: absolute; width: 14px; height: 17px; border: 1px solid color-mix(in srgb,var(--workshop-frame-color) 72%,#fff); background: linear-gradient(135deg,color-mix(in srgb,var(--workshop-frame-color) 38%,#fff),var(--workshop-frame-color) 56%,color-mix(in srgb,var(--workshop-frame-color) 72%,#231d18)); clip-path: polygon(0 0,100% 0,72% 25%,72% 68%,52% 100%,0 100%); box-shadow: inset 1px 1px rgba(255,255,255,.52),0 2px 4px var(--workshop-frame-glow); content: ''; }
@@ -120,21 +120,21 @@
 .agit-workshop__item-preview[data-slot='rightProp'] img { display: block; width: 92%; height: 92%; object-fit: contain; filter: drop-shadow(0 3px 2px rgba(46,32,23,.24)); }
 .agit-workshop__item-preview[data-slot='leftProp'] span,
 .agit-workshop__item-preview[data-slot='rightProp'] span { color: #918176; font-size: .55rem; font-weight: 900; }
-.agit-workshop__item-copy { min-width: 0; }
-.agit-workshop__item-badges { display: flex; align-items: center; gap: 4px; min-width: 0; margin-bottom: 3px; }
+.agit-workshop__item-copy { grid-area: copy; min-width: 0; }
+.agit-workshop__item-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-width: 0; margin-bottom: 3px; }
 .agit-workshop__rarity,
-.agit-workshop__collection-badge { display: inline-flex; min-width: 0; padding: 2px 6px; border-radius: 999px; font-size: .5rem; font-weight: 950; line-height: 1.2; }
+.agit-workshop__collection-badge { display: inline-flex; flex: 0 0 auto; padding: 2px 6px; border-radius: 999px; font-size: .5rem; font-weight: 950; line-height: 1.2; white-space: nowrap; }
 .agit-workshop__rarity { flex: 0 0 auto; background: #ece8e2; color: #6f6258; }
-.agit-workshop__collection-badge { overflow: hidden; background: #f0eee9; color: #6f645b; text-overflow: ellipsis; white-space: nowrap; }
+.agit-workshop__collection-badge { background: #f0eee9; color: #6f645b; }
 .agit-workshop__collection-badge.is-signature { background: #292d36; color: #f2d89a; letter-spacing: .02em; }
 .agit-workshop__item[data-rarity='starter'] .agit-workshop__rarity { background: #e8f4ea; color: #397047; }
 .agit-workshop__item[data-rarity='common'] .agit-workshop__rarity { background: #e8f0f8; color: #35638b; }
 .agit-workshop__item[data-rarity='rare'] .agit-workshop__rarity { background: #eee8fb; color: #6546a5; }
 .agit-workshop__item[data-rarity='hero'] .agit-workshop__rarity { background: #fff0d9; color: #9a5718; }
 .agit-workshop__item[data-rarity='legendary'] .agit-workshop__rarity { background: linear-gradient(135deg,#fff4b8,#f3c75d); color: #774b08; }
-.agit-workshop__item-copy strong { display: block; overflow: hidden; color: #473a31; font-size: .76rem; text-overflow: ellipsis; white-space: nowrap; }
+.agit-workshop__item-copy strong { display: block; color: #473a31; font-size: .76rem; line-height: 1.3; overflow-wrap: anywhere; }
 .agit-workshop__item-copy small { display: block; margin-top: 2px; color: #89786b; font-size: .6rem; font-weight: 800; }
-.agit-workshop__item > button { grid-column: 2; min-height: 34px; padding: 5px 8px; border-radius: 10px; font-size: .65rem; }
+.agit-workshop__item > button:not(.agit-workshop__item-preview) { grid-area: action; min-height: 34px; padding: 5px 8px; border-radius: 10px; font-size: .65rem; }
 
 @media (max-width: 720px) {
     .agit-workshop { place-items: end center; padding: 0; }
