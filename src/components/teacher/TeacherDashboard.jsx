@@ -61,6 +61,8 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
     const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
     const [selectedActivityPost, setSelectedActivityPost] = useState(null);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    // 관리자가 답장을 달면 여기에 숫자가 붙는다. 답장이 보이지 않으면 아무도 두 번 제보하지 않는다.
+    const [feedbackReplyCount, setFeedbackReplyCount] = useState(0);
     const [isAdminPasswordOpen, setIsAdminPasswordOpen] = useState(false);
     const [adminPassword, setAdminPassword] = useState('');
     const [adminPasswordError, setAdminPasswordError] = useState('');
@@ -85,6 +87,20 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    /*
+     * 못 본 답장 개수를 읽는다. 대시보드가 뜰 때 한 번만 부르고 주기 조회는 하지 않는다
+     * (교사 화면의 성능 계약 — 화면마다 집계 대신 미리 계산된 한 줄을 읽는다).
+     */
+    const loadFeedbackReplyCount = useCallback(async () => {
+        const { data, error } = await supabase.rpc('get_my_feedback_reply_badge_v1');
+        if (error) { console.error('답장 개수 확인 실패:', error.message); return; }
+        setFeedbackReplyCount(Number(data?.unread ?? 0));
+    }, []);
+
+    useEffect(() => {
+        void loadFeedbackReplyCount();
+    }, [loadFeedbackReplyCount]);
 
     useEffect(() => {
         window.localStorage.setItem('teacher-writing-card-layout-v1', JSON.stringify(writingCardLayout));
@@ -219,8 +235,18 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
                         ⚙️ 정보 수정
                     </Button>
                     <TeacherAnnouncementManager isMobile={isMobile} initialAnnouncements={teacherBootstrap?.announcements} />
-                    <Button variant="ghost" size="sm" onClick={() => setIsFeedbackOpen(true)} style={{ fontSize: '0.8rem', color: '#6C757D', border: '1px solid #E9ECEF', borderRadius: '8px' }}>
-                        📢 의견 보내기
+                    {/*
+                      * 예전 이름은 `📢 의견 보내기` 였고 회색 설정 버튼 무리에 끼어 있었다.
+                      * 건의함처럼 보여 아무도 누르지 않았다(제보 0건). 무엇을 하는 곳인지로 이름을 바꾸고
+                      * 색을 줘서 설정 항목과 구분한다.
+                      */}
+                    <Button variant="ghost" size="sm" onClick={() => setIsFeedbackOpen(true)} style={{ fontSize: '0.8rem', color: '#B45309', border: '1px solid #FCD34D', background: '#FFFBEB', borderRadius: '8px', fontWeight: 700 }}>
+                        🐞 오류·정정 알려주기
+                        {feedbackReplyCount > 0 && (
+                            <span style={{ marginLeft: '6px', padding: '1px 6px', borderRadius: '999px', background: '#DC2626', color: 'white', fontSize: '0.7rem', fontWeight: 900 }}>
+                                답장 {feedbackReplyCount}
+                            </span>
+                        )}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={onLogout} style={{ fontSize: '0.8rem', color: '#DC3545' }}>
                         로그아웃
@@ -457,7 +483,7 @@ const TeacherDashboard = ({ profile, teacherBootstrap, session, activeClass, set
             <FeedbackModal
                 isOpen={isFeedbackOpen}
                 onClose={() => setIsFeedbackOpen(false)}
-                userId={session.user.id}
+                onRepliesSeen={() => setFeedbackReplyCount(0)}
             />
 
             <AnimatePresence>

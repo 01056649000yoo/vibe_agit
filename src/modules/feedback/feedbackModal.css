@@ -1,0 +1,338 @@
+/*
+ * 제보 창 스타일.
+ *
+ * 이 화면은 공용 토큰(`--ui-*`)만 쓴다 — 색을 직접 박아 두면 앱 전체 색을 바꿀 때
+ * 여기만 남는다(관리자 화면이 그렇게 돼 있다).
+ */
+
+.feedback-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--ui-space-4);
+    background: rgba(15, 23, 42, .5);
+    backdrop-filter: blur(4px);
+}
+
+.feedback-modal {
+    display: flex;
+    width: 100%;
+    max-width: 620px;
+    max-height: 90vh;
+    flex-direction: column;
+    border-radius: var(--ui-radius-xl);
+    background: var(--ui-surface);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .22);
+}
+
+.feedback-modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ui-space-3);
+    padding: var(--ui-space-6) var(--ui-space-6) var(--ui-space-4);
+}
+
+.feedback-modal__header h3 {
+    margin: 0;
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-font-xl);
+    font-weight: 900;
+}
+
+.feedback-modal__header p {
+    margin: 6px 0 0;
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-font-sm);
+    line-height: var(--ui-line-body);
+}
+
+/* 보내기 / 내가 보낸 제보 */
+.feedback-modal__tabs {
+    display: flex;
+    gap: var(--ui-space-4);
+    padding: 0 var(--ui-space-6);
+    border-bottom: 1px solid var(--ui-border);
+}
+
+.feedback-modal__tab {
+    position: relative;
+    padding: 0 2px 10px;
+    border: none;
+    background: none;
+    color: var(--ui-ink-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--ui-font-sm);
+    font-weight: 800;
+}
+
+.feedback-modal__tab.is-active {
+    color: var(--ui-primary);
+}
+
+.feedback-modal__tab.is-active::after {
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: var(--ui-primary);
+    content: '';
+}
+
+.feedback-modal__badge {
+    margin-left: 5px;
+    padding: 1px 7px;
+    border-radius: var(--ui-radius-pill);
+    background: var(--ui-danger);
+    color: #fff;
+    font-size: var(--ui-font-xs);
+    font-weight: 900;
+}
+
+.feedback-modal__body {
+    overflow-y: auto;
+    padding: var(--ui-space-5) var(--ui-space-6);
+}
+
+/* --- 1단계: 무엇에 대한 말인지 고르기 --- */
+.feedback-choices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ui-space-3);
+}
+
+.feedback-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 15px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    transition: border-color var(--ui-motion-fast), background var(--ui-motion-fast);
+}
+
+.feedback-choice:hover {
+    border-color: var(--ui-primary-border);
+    background: var(--ui-primary-soft);
+}
+
+.feedback-choice__icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.feedback-choice strong {
+    display: block;
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-font-sm);
+    font-weight: 900;
+    word-break: keep-all;
+}
+
+.feedback-choice small {
+    display: block;
+    margin-top: 3px;
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-font-xs);
+    line-height: var(--ui-line-compact);
+    word-break: keep-all;
+}
+
+/* --- 2단계: 고른 종류에 맞는 칸 --- */
+.feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-4);
+}
+
+.feedback-form__picked {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-3);
+    padding: 11px 14px;
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-primary-soft);
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-font-sm);
+    font-weight: 800;
+}
+
+.feedback-form__change {
+    border: none;
+    background: none;
+    color: var(--ui-primary);
+    cursor: pointer;
+    font: inherit;
+    font-size: var(--ui-font-xs);
+    font-weight: 800;
+    text-decoration: underline;
+}
+
+.feedback-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--ui-ink);
+    font-size: var(--ui-font-sm);
+    font-weight: 800;
+}
+
+.feedback-field input,
+.feedback-field select,
+.feedback-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 13px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface);
+    color: var(--ui-ink-strong);
+    font: inherit;
+    font-size: var(--ui-font-sm);
+}
+
+.feedback-field textarea {
+    min-height: 96px;
+    resize: vertical;
+}
+
+.feedback-field input:focus,
+.feedback-field select:focus,
+.feedback-field textarea:focus {
+    border-color: var(--ui-primary-border);
+    outline: var(--ui-focus-ring);
+}
+
+.feedback-field small {
+    display: block;
+    margin-top: 5px;
+    color: var(--ui-ink-subtle);
+    font-size: var(--ui-font-xs);
+    line-height: var(--ui-line-compact);
+}
+
+.feedback-modal__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-3);
+    padding: var(--ui-space-4) var(--ui-space-6) var(--ui-space-6);
+    border-top: 1px solid var(--ui-border);
+}
+
+.feedback-modal__note {
+    color: var(--ui-ink-subtle);
+    font-size: var(--ui-font-xs);
+    line-height: var(--ui-line-compact);
+}
+
+.feedback-modal__actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 10px;
+}
+
+/* --- 내가 보낸 제보 --- */
+.feedback-history {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.feedback-history__empty {
+    padding: 40px 20px;
+    color: var(--ui-ink-subtle);
+    font-size: var(--ui-font-sm);
+    text-align: center;
+}
+
+.feedback-item {
+    padding: 15px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-lg);
+    background: var(--ui-surface);
+}
+
+.feedback-item__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-3);
+    margin-bottom: 7px;
+}
+
+.feedback-item__title {
+    min-width: 0;
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-font-sm);
+    font-weight: 900;
+    word-break: break-all;
+}
+
+.feedback-item__status {
+    flex: 0 0 auto;
+    padding: 3px 9px;
+    border-radius: var(--ui-radius-pill);
+    font-size: var(--ui-font-xs);
+    font-weight: 900;
+}
+
+.feedback-item__status.is-open { background: var(--ui-warning-soft); color: var(--ui-warning); }
+.feedback-item__status.is-progress { background: var(--ui-primary-soft); color: var(--ui-primary); }
+.feedback-item__status.is-done { background: var(--ui-success-soft); color: var(--ui-success); }
+
+.feedback-item__meta {
+    color: var(--ui-ink-subtle);
+    font-size: var(--ui-font-xs);
+}
+
+.feedback-item__body {
+    margin: 8px 0 0;
+    color: var(--ui-ink-muted);
+    font-size: var(--ui-font-xs);
+    line-height: var(--ui-line-body);
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* 답장이 이 기능의 핵심이라 눈에 띄게 둔다. */
+.feedback-item__reply {
+    margin-top: 11px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--ui-success);
+    border-radius: 0 var(--ui-radius-md) var(--ui-radius-md) 0;
+    background: var(--ui-success-soft);
+}
+
+.feedback-item__reply strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--ui-success);
+    font-size: var(--ui-font-xs);
+    font-weight: 900;
+}
+
+.feedback-item__reply p {
+    margin: 0;
+    color: var(--ui-ink-strong);
+    font-size: var(--ui-font-sm);
+    line-height: var(--ui-line-body);
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+@media (max-width: 640px) {
+    .feedback-choices { grid-template-columns: 1fr; }
+    .feedback-modal__footer { flex-direction: column; align-items: stretch; }
+    .feedback-modal__actions { justify-content: flex-end; }
+}
