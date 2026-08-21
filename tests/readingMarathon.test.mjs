@@ -187,15 +187,19 @@ test('모둠전은 초안 배정 뒤 명시적으로 시작하고 첫 기록 전
     assert.match(migration, /모든 학생을 한 모둠에 한 번씩 배정해주세요/);
 });
 
-test('독서마라톤 사용 스위치는 다른 설정 저장과 분리해 즉시 서버에 반영한다', async () => {
+test('독서마라톤 사용 스위치는 확인 후 다른 설정과 분리해 즉시 서버에 반영한다', async () => {
     const { readFile } = await import('node:fs/promises');
     const [settings, migration] = await Promise.all([
         readFile('src/modules/writing/reading-log/marathon/ReadingMarathonTeacherSettings.jsx', 'utf8'),
         readFile('supabase/migrations/20261153_reading_marathon_immediate_availability.sql', 'utf8')
     ]);
 
-    assert.match(settings, /onChange=\{toggleCampaignAvailability\}/);
+    assert.match(settings, /onChange=\{requestCampaignAvailabilityChange\}/);
     assert.match(settings, /loading=\{availabilitySaving\}/);
+    assert.match(settings, /독서마라톤을 \$\{pendingAvailability \? '활성화' : '비활성화'\}하시겠습니까/);
+    assert.match(settings, /예, 바로 활성화/);
+    assert.match(settings, /예, 바로 비활성화/);
+    assert.match(settings, /confirmCampaignAvailabilityChange/);
     assert.match(settings, /supabase\.rpc\('set_teacher_reading_marathon_enabled_v1'/);
     assert.match(settings, /누르는 즉시 저장되어 학생 화면/);
     assert.doesNotMatch(settings, /onChange=\{\(enabled\) => setForm\(\(current\) => \(\{ \.\.\.current, enabled \}\)\)\}/);

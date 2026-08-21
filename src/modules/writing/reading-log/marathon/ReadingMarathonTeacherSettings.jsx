@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Button from '../../../../components/common/Button';
+import CenteredDialog from '../../../../components/common/CenteredDialog';
 import FeatureAvailabilitySwitch from '../../../../components/common/FeatureAvailabilitySwitch';
 import { supabase } from '../../../../lib/supabaseClient';
 import ReadingMarathonCourse from './ReadingMarathonCourse';
@@ -51,6 +52,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [availabilitySaving, setAvailabilitySaving] = useState(false);
+    const [pendingAvailability, setPendingAvailability] = useState(null);
     const [ending, setEnding] = useState(false);
     const [pageSavingId, setPageSavingId] = useState(null);
     const [pageValues, setPageValues] = useState({});
@@ -187,7 +189,15 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         return true;
     };
 
-    const toggleCampaignAvailability = async (nextEnabled) => {
+    const requestCampaignAvailabilityChange = (nextEnabled) => {
+        const currentCampaign = snapshot?.campaign;
+        if (!currentCampaign?.id || !currentCampaign.started_at || currentCampaign.status === 'completed'
+            || saving || ending || availabilitySaving) return;
+
+        setPendingAvailability(nextEnabled);
+    };
+
+    const saveCampaignAvailability = async (nextEnabled) => {
         const currentCampaign = snapshot?.campaign;
         if (!currentCampaign?.id || !currentCampaign.started_at || currentCampaign.status === 'completed'
             || saving || ending || availabilitySaving) return;
@@ -231,6 +241,13 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
         }
 
         applySnapshot(data);
+    };
+
+    const confirmCampaignAvailabilityChange = () => {
+        if (pendingAvailability === null) return;
+        const nextEnabled = pendingAvailability;
+        setPendingAvailability(null);
+        void saveCampaignAvailability(nextEnabled);
     };
 
     const startCampaign = async () => {
@@ -377,7 +394,7 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                 {modeLocked ? (
                     <FeatureAvailabilitySwitch
                         checked={form.enabled}
-                        onChange={toggleCampaignAvailability}
+                        onChange={requestCampaignAvailabilityChange}
                         disabled={completed || saving || ending}
                         loading={availabilitySaving}
                         enabledLabel="학생 독서마라톤 사용 중"
@@ -784,6 +801,27 @@ const ReadingMarathonTeacherSettings = ({ classId, className }) => {
                     </div>
                 )}
             </section>
+
+            <CenteredDialog
+                isOpen={pendingAvailability !== null}
+                onClose={() => setPendingAvailability(null)}
+                eyebrow="학생 화면 공개 설정"
+                title={`독서마라톤을 ${pendingAvailability ? '활성화' : '비활성화'}하시겠습니까?`}
+                description={pendingAvailability
+                    ? '예를 누르면 바로 저장되어 학생 화면에 독서마라톤이 표시됩니다.'
+                    : '예를 누르면 바로 저장되어 학생 화면에서 독서마라톤이 숨겨집니다.'}
+                maxWidth="440px"
+            >
+                <div className="reading-marathon-availability-confirm">
+                    <p>다른 독서마라톤 설정은 바뀌지 않습니다.</p>
+                    <footer>
+                        <Button type="button" variant="outline" onClick={() => setPendingAvailability(null)}>아니오</Button>
+                        <Button type="button" onClick={confirmCampaignAvailabilityChange}>
+                            {pendingAvailability ? '예, 바로 활성화' : '예, 바로 비활성화'}
+                        </Button>
+                    </footer>
+                </div>
+            </CenteredDialog>
         </section>
     );
 };
