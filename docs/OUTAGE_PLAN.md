@@ -1,198 +1,89 @@
-# 장애가 났을 때 — 사용자에게 알리는 방법
+# 맥미니 내부 장애 때 점검 화면 보여 주기
 
-> 2026-08-21 정리. 아직 **구현 안 됨** — 집에서 할 일 문서다.
-> 오늘 만든 장애 알림(`scripts/check-service-health.sh`)은 **관리자에게** 알린다.
-> 이 문서는 **선생님·학생에게** 알리는 방법이다.
+> 2026-08-21 운영 반영·실장애 검증 완료. 앱 컨테이너가 응답하지 않으면 호스트 Caddy가
+> 같은 주소에서 정적 점검 화면을 보여 준다. 장애·복구 메일은 보내지 않는다.
 
-## 왜 필요한가
+## 이번 범위
 
-앱이 죽으면 앱 안 공지사항도 같이 죽는다. **앱 밖에서 알릴 방법**이 있어야 한다.
+| 상황 | 결과 |
+|---|---|
+| `agit-app` 중지·배포 실패·내부 프록시 오류 | Caddy가 `잠시 점검 중이에요` 화면 표시 |
+| 맥미니 전원·인터넷·호스트 Caddy 전체 장애 | 이번 범위 밖 — 브라우저 연결 오류 |
 
-## ⚠️ 먼저 알아야 할 것 — 장애는 두 종류다
+본 서비스는 계속 **맥미니 Docker + 호스트 Caddy**로 운영한다. Cloudflare나 GitHub Pages를
+본 서비스 앞에 두지 않는다.
 
-| | 얼마나 자주 | 맥미니는 | 사용자가 보는 것 |
-|---|---|---|---|
-| **앱만 죽음** (컨테이너·배포 실패·디스크) | **흔함** | 살아 있음 | 502 오류, 빈 화면 |
-| **맥미니 통째로 죽음** (정전·인터넷·기계) | 드묾 | 죽음 | 아무것도 안 뜸 |
+## 동작 구조
 
-**지금까지 겪은 장애는 전부 앞쪽이었다** — 2026-08-18 디스크 포화, 배포 실패, 컨테이너 문제.
-맥미니는 살아 있었다. 그래서 **1단계만 해도 대부분 덮인다.**
+```text
+사용자 → 호스트 Caddy → agit-app(127.0.0.1:8300)
+                └─ upstream 오류 → /etc/caddy/static/maintenance.html
+```
 
-⚠️ **오늘 만든 감시 스크립트의 한계**: 맥미니 안에서 돌기 때문에, **맥미니가 통째로 죽으면
-그 스크립트도 같이 죽어 메일이 안 간다.** 2단계가 그것을 메운다.
-
----
-
-## 1단계 — Caddy가 점검 페이지를 대신 보여 준다 (제일 먼저)
-
-앱 컨테이너가 죽어도 Caddy는 살아 있다. 뒤에 앱이 없으면 준비해 둔 안내를 내보내면 된다.
-
-**가장 큰 장점: 평소 쓰던 주소 그대로 보인다.** 선생님들이 다른 주소를 외울 필요가 없다.
-
-### ① 안내 페이지를 맥미니에 둔다
+원본 파일은 저장소의 `ops/caddy/maintenance.html`이다. 운영 파일을 직접 따로 고치지 않고
+원본을 수정·검증한 뒤 복사한다.
 
 ```bash
 sudo mkdir -p /etc/caddy/static
-sudo tee /etc/caddy/static/maintenance.html > /dev/null <<'HTML'
-<!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>끄적끄적 아지트 — 점검 중</title>
-<style>
-  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-         background:#F1F5F9; font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif; padding:24px; }
-  .box { max-width:440px; background:#fff; border:1px solid #E2E8F0; border-radius:20px;
-         padding:40px 32px; text-align:center; box-shadow:0 8px 24px rgba(15,23,42,.06); }
-  h1 { margin:0 0 12px; font-size:1.4rem; color:#1E293B; }
-  p  { margin:0 0 8px; color:#475569; line-height:1.7; font-size:.95rem; word-break:keep-all; }
-  .small { margin-top:20px; color:#94A3B8; font-size:.8rem; }
-</style>
-</head>
-<body>
-  <div class="box">
-    <div style="font-size:2.6rem">🔧</div>
-    <h1>잠시 점검 중이에요</h1>
-    <p>문제를 고치고 있습니다. 조금 뒤에 다시 들어와 주세요.</p>
-    <p>쓰시던 글은 저장되어 있습니다.</p>
-    <p class="small">계속 안 되면 관리 선생님께 알려 주세요.</p>
-  </div>
-</body>
-</html>
-HTML
+sudo install -m 0644 ops/caddy/maintenance.html /etc/caddy/static/maintenance.html
 ```
 
-### ② Caddyfile 에 대체 경로를 넣는다
+운영 `/etc/caddy/Caddyfile`의 아지트 apex 블록에는 다음 오류 처리가 들어 있다.
 
-`/etc/caddy/Caddyfile` 에서 **아지트 apex 블록**(`xn--vz0ba242ncqcba79xhwx.site`)의
-`reverse_proxy 127.0.0.1:8300` 아래에 추가한다.
-**2026-08-21 확인 기준으로 apex 블록은 44행, 그 프록시 줄은 51행이다**(그 사이에 줄이 늘었을 수 있으니
-행 번호보다 `reverse_proxy 127.0.0.1:8300` 을 찾는 편이 확실하다).
+```caddyfile
+reverse_proxy 127.0.0.1:8300
 
-```
-	reverse_proxy 127.0.0.1:8300
-
-	# 앱이 응답을 못 하면 502 대신 점검 안내를 보여 준다.
-	handle_errors {
-		rewrite * /maintenance.html
-		file_server {
-			root /etc/caddy/static
-		}
+handle_errors {
+	rewrite * /maintenance.html
+	file_server {
+		root /etc/caddy/static
 	}
+}
 ```
 
-### ③ 문법 확인 후 적용
+적용할 때는 문법을 먼저 확인하고 reload한다.
 
 ```bash
-sudo caddy validate --config /etc/caddy/Caddyfile   # 먼저 문법만 본다
-sudo caddy reload --config /etc/caddy/Caddyfile     # 끊김 없이 적용
+sudo /opt/homebrew/bin/caddy validate --config /etc/caddy/Caddyfile
+sudo /opt/homebrew/bin/caddy reload --config /etc/caddy/Caddyfile
 ```
 
-### ④ 실제로 되는지 확인 (중요)
+## 실제 장애 검증 결과
 
-**일부러 앱을 내려 보고** 점검 페이지가 뜨는지 본다. 안 해보면 정작 필요할 때 안 나온다.
+2026-08-21 `agit-app`을 중지하고 로컬 TLS 경로로 실제 운영 Caddy를 호출했다.
 
-```bash
-docker stop agit-app
-curl -sk --resolve "xn--vz0ba242ncqcba79xhwx.site:443:127.0.0.1" \
-     https://xn--vz0ba242ncqcba79xhwx.site/ | grep -o "잠시 점검 중이에요"
-docker start agit-app          # 반드시 다시 켠다
-```
+- 점검 응답: HTTP 502
+- 본문: `잠시 점검 중이에요` 확인
+- 헤더: `Cache-Control: no-store`, `X-Frame-Options: DENY` 확인
+- 앱 재시작 뒤 `127.0.0.1:8300` HTTP 200 복구 확인
 
----
+HTTP 상태는 장애임을 숨기지 않도록 502로 유지하지만, 브라우저에는 정적 점검 본문이 표시된다.
 
-## 2단계 — 밖에서 감시하기 (10분, 아지트에 아직 없음)
+## 운영 상태 기록 — 외부 발송 없음
 
-**샘링크(`~/URL`)에는 이미 있다.** 아지트에는 없다. 그것을 그대로 가져오면 된다.
+`scripts/check-service-health.sh`는 launchd에서 5분마다 실행하며 다음 상태를 관리자
+`서비스 현황`에 기록한다.
 
-GitHub 서버에서 15분마다 밖에서 찔러 보므로, **맥미니가 통째로 죽어도 살아 있다.**
-실패하면 GitHub이 저장소 주인에게 메일을 보낸다 — **추가 설정이 필요 없다.**
+- 앱 응답
+- DB 응답
+- 디스크 여유 10GB 기준
+- unhealthy·재시작 중인 컨테이너
+- 26시간 넘게 새 기록이 없는 일일 백업
 
-`.github/workflows/uptime.yml` 로 만든다:
+이 스크립트는 Resend·GitHub Actions·다른 외부 서비스로 장애 정보를 보내지 않는다. DB가 죽어
+기록할 수 없을 때는 `~/Library/Logs/agit-service-health.stderr.log`에만 남긴다.
 
-```yaml
-name: Uptime check
+`RESEND_API_KEY`는 선생님의 의견 제보를 관리자에게 전달하는 `send-feedback` 함수도 사용하므로
+운영 시크릿에서 제거하지 않는다. 장애 점검 스크립트만 이 키를 읽지 않는다.
 
-# GitHub 서버(외부 시점)에서 15분마다 가동 여부를 확인한다.
-# 맥미니 안에서 도는 check-service-health.sh 는 맥미니가 죽으면 같이 죽는다. 이것이 그것을 메운다.
-on:
-  schedule:
-    - cron: "*/15 * * * *"
-  workflow_dispatch:
+## 다시 시험할 때
 
-jobs:
-  ping:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Check 끄적끄적아지트.site
-        run: |
-          for attempt in 1 2 3; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
-                   "https://xn--vz0ba242ncqcba79xhwx.site/" || echo "000")
-            if [ "$code" = "200" ]; then
-              echo "OK (attempt $attempt)"
-              exit 0
-            fi
-            echo "attempt $attempt failed with status $code — retrying"
-            sleep 20
-          done
-          echo "끄적끄적아지트.site 응답 없음 (마지막 상태: $code)"
-          exit 1
-```
+실서비스를 잠시 내리는 작업이므로 수업 영향이 없는 시간에만 진행하고, 실패해도 자동으로 다시
+시작하도록 `trap`을 건다. 시험 뒤 반드시 다음 세 가지를 확인한다.
 
-⚠️ **재시도 3번이 중요하다.** 한 번 실패로 메일을 보내면 잠깐의 통신 문제에도 울려서 곧 안 읽게 된다.
+1. 점검 본문과 보안 헤더
+2. `agit-app` 실행 상태
+3. 앱 직접 주소와 Caddy 주소의 HTTP 200 복구
 
----
-
-## 3단계 — 밖에 상태 페이지 (선택, 나중에)
-
-맥미니가 통째로 죽으면 **선생님들도** 알아야 한다. 저장소가 공개라 GitHub Pages 가 무료다.
-
-- 주소 예: `https://01056649000yoo.github.io/agit-status/`
-- 2단계 워크플로가 상태가 **바뀔 때만** 페이지를 고쳐 올린다
-  (매번 고치면 커밋이 하루 96개씩 쌓인다 — 오늘 알림에 쓴 것과 같은 원칙)
-
-**⚠️ 이 방식의 한계**: 사용자가 **그 주소를 미리 알아야** 본다. 앱이 안 열리는데 다른 주소를
-기억해서 찾아가야 하므로, 평소에 앱 공지사항이나 학교 안내에 **한 번 심어 두어야** 쓸모가 있다.
-
-**GitHub 예약 실행의 제약**
-- 정시에 오지 않는다(5~15분 늦을 수 있다)
-- 저장소에 60일간 아무 변화가 없으면 꺼진다(매일 쓰므로 문제없음)
-
----
-
-## 사람이 하는 부분 — 자동화하지 않는다
-
-**선생님들께 알리는 것은 손으로 한다.** 판단이 필요한 일이다.
-
-| 상황 | 어떻게 |
-|---|---|
-| 잠깐 끊김(몇 분) | **아무것도 안 한다.** 알림이 잦으면 안 읽게 된다 |
-| 수업 중 장애 | 업무포털·학교 메신저로 **한 줄** |
-| 몇 시간 이상 | 상태 페이지 갱신 + 필요하면 메일 |
-| 복구됨 | 복구됐다고 한 줄 (알림만 오고 끝나면 고쳐졌는지 모른다) |
-
-### 메일 일괄 발송을 기본으로 쓰지 않는 이유
-
-로그인이 구글이라 교사 주소는 갖고 있지만, 다음 이유로 **마지막 수단**으로 둔다.
-
-1. 앱이 죽으면 **메일 보내는 스크립트도 같이 죽는다**(맥미니에 있다)
-2. 203통을 한 번에 보내면 **스팸으로 걸러진다** — 정작 중요한 메일이 안 읽힌다
-3. 로그인용으로 받은 주소다 — 서비스 장애 공지는 정당하지만 습관이 되면 경계가 흐려진다
-4. **늦다** — 수업 중에는 지금 당장 알아야 한다
-
----
-
-## 요약 — 집에서 할 순서
-
-| 순서 | 무엇 | 시간 | 덮는 범위 |
-|---|---|---|---|
-| **1** | Caddy 점검 페이지 | 30분 | **흔한 장애 대부분** |
-| **2** | `uptime.yml` 아지트에 추가 | 10분 | 통째로 죽은 것을 **관리자가** 앎 |
-| 3 | GitHub Pages 상태 페이지 | 1시간 | 통째로 죽은 것을 **선생님들이** 앎 |
-
-**1번의 효율이 압도적이다.** 지금까지 겪은 장애는 전부 맥미니가 살아 있는 상태였다.
-
-작업하면 이 문서의 맨 위 "아직 구현 안 됨"을 지우고 [WORKLOG.md](../WORKLOG.md)에 남긴다.
+맥미니 전체 장애에 별도 GitHub Pages 상태 주소를 둘지는 후속 과제로 결정한다. 별도 주소만으로는
+평소 서비스 주소가 자동 전환되지 않는다는 한계를 함께 고려한다.

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Card from '../common/Card';
 import Button from '../common/Button';
@@ -12,12 +12,11 @@ import AdminLabManagementPanel from './AdminLabManagementPanel';
 import AdminBackupPanel from './AdminBackupPanel';
 import AdminServicePanel from './AdminServicePanel';
 import useAdminUsage from '../../hooks/useAdminUsage';
+import useAdminTeacherAccountsPage from '../../hooks/useAdminTeacherAccountsPage';
 
 const AdminVocabReviewPanel = React.lazy(() => import('./AdminVocabReviewPanel'));
 // 500개 카탈로그를 함께 읽어 대조하므로 무겁다 — 탭을 고를 때만 내려받는다.
 const AdminSpellingPromotionPanel = React.lazy(() => import('./AdminSpellingPromotionPanel'));
-
-const TEACHER_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5분 — 교사 목록은 실시간 갱신 불필요
 
 /*
  * 관리자 화면을 성격별로 묶는다.
@@ -225,77 +224,54 @@ const formatLastLogin = (dateString) => {
 // --- Main Container ---
 
 const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) => {
-    const [pendingTeachers, setPendingTeachers] = useState([]);
-    const [approvedTeachers, setApprovedTeachers] = useState([]);
     const [registeredStudentCount, setRegisteredStudentCount] = useState(0);
     const [autoApproval, setAutoApproval] = useState(false);
     const [publicAiEnabled, setPublicAiEnabled] = useState(true);
     const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
+    const [pendingGroup, setPendingGroup] = useState('new'); // 'new' | 'revoked'
+    const [currentTab, setCurrentTab] = useState('active');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
+
+    const teacherStatus = currentTab === 'active'
+        ? 'APPROVED'
+        : pendingGroup === 'revoked' ? 'PENDING_REVOKED' : 'PENDING_NEW';
+    const teacherPage = useAdminTeacherAccountsPage({
+        status: teacherStatus,
+        search: searchTerm,
+        page: currentPage,
+        pageSize: ITEMS_PER_PAGE,
+        enabled: currentTab === 'active' || currentTab === 'pending'
+    });
+    const teacherPageCount = Math.max(1, Math.ceil(teacherPage.totalCount / ITEMS_PER_PAGE));
+    const approvedTeacherCount = Number(teacherPage.counts.approved || 0);
+    const newSignupCount = Number(teacherPage.counts.pending_new || 0);
+    const revokedTeacherCount = Number(teacherPage.counts.pending_revoked || 0);
 
     // 사용량·장기 미접속·정리 대상은 DB에서 한 번에 집계해서 받는다 (useAdminUsage)
     const usage = useAdminUsage();
 
-    // 교사별 학생 수는 사용량 집계 결과를 재사용 — 예전처럼 students 전 row를 끌어오지 않는다
-    const teacherUsageMap = useMemo(
-        () => new Map(usage.teachers.map(row => [row.teacher_id, row])),
-        [usage.teachers]
-    );
-
-    // 승인 대기 목록은 두 종류가 섞인다.
-    // 관리자가 정리한 계정(approval_revoked_at 기록됨)이 쌓이면 진짜 신규 가입자가 묻히므로 분리한다.
-    const newSignups = useMemo(
-        () => pendingTeachers.filter(p => !p.approval_revoked_at),
-        [pendingTeachers]
-    );
-    const revokedTeachers = useMemo(
-        () => pendingTeachers.filter(p => p.approval_revoked_at),
-        [pendingTeachers]
-    );
-    const [pendingGroup, setPendingGroup] = useState('new'); // 'new' | 'revoked'
-    const pendingList = pendingGroup === 'revoked' ? revokedTeachers : newSignups;
-
     // States for UI
     // 'active' | 'pending' | 'usage' | 'students' | 'dormant' | 'cleanup' | 'lab' | 'vocab' | 'spelling' | 'backup' | 'feedback' | 'announcements' | 'settings'
-    const [currentTab, setCurrentTab] = useState('active');
     // 지금 고른 화면이 어느 묶음에 드는지는 따로 저장하지 않고 화면 id 하나에서 끌어낸다.
     // 두 곳에 나눠 두면 통계 카드로 건너뛸 때 묶음만 남아 어긋난다.
     const activeGroup = findTabGroup(currentTab);
 
     // 화면 이름 옆·묶음 이름 옆에 함께 쓰는 "처리할 일" 개수.
     const tabBadges = useMemo(() => ({
-        pending: newSignups.length,
+        pending: newSignupCount,
         dormant: usage.dormantTeachers.length,
         cleanup: usage.cleanupCandidates.length,
         feedback: pendingFeedbackCount
-    }), [newSignups.length, usage.dormantTeachers.length, usage.cleanupCandidates.length, pendingFeedbackCount]);
+    }), [newSignupCount, usage.dormantTeachers.length, usage.cleanupCandidates.length, pendingFeedbackCount]);
 
     // 한 번 연 화면은 살려 둔다(위 KeepAlivePanel 주석 참고).
     const [visitedTabs, setVisitedTabs] = useState(() => new Set(['active']));
     useEffect(() => {
         setVisitedTabs((current) => (current.has(currentTab) ? current : new Set(current).add(currentTab)));
     }, [currentTab]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const ITEMS_PER_PAGE = 10;
-
-    const [loading, setLoading] = useState(true);
     const [settingsLoading, setSettingsLoading] = useState(false);
-    const [_error, setError] = useState(null);
-
-    const sortTeachersByRecentLogin = (list) => {
-        return [...list].sort((a, b) => {
-            const aLastLogin = a.last_login_at ? new Date(a.last_login_at).getTime() : 0;
-            const bLastLogin = b.last_login_at ? new Date(b.last_login_at).getTime() : 0;
-
-            if (aLastLogin !== bLastLogin) {
-                return bLastLogin - aLastLogin;
-            }
-
-            const aCreatedAt = a.created_at ? new Date(a.created_at).getTime() : 0;
-            const bCreatedAt = b.created_at ? new Date(b.created_at).getTime() : 0;
-            return bCreatedAt - aCreatedAt;
-        });
-    };
 
     const fetchFeedbackCount = async () => {
         try {
@@ -368,73 +344,20 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
         }
     };
 
-    const fetchTeachers = useCallback(async ({ showLoading = true } = {}) => {
-        if (showLoading) {
-            setLoading(true);
-        }
-        setError(null);
-        try {
-            const { data, error: fetchError } = await supabase
-                .from('profiles')
-                // [보안] select('*') 대신 필요한 컬럼만 명시 → personal_openai_api_key 등 민감정보 미노출
-                .select(`id, role, email, full_name, is_approved, approval_revoked_at, api_mode, created_at, last_login_at, teachers!left(name, school_name, phone)`)
-                .in('role', ['TEACHER', 'ADMIN'])
-                .order('last_login_at', { ascending: false, nullsFirst: false })
-                .order('created_at', { ascending: false });
-
-            if (fetchError) throw fetchError;
-
-            setPendingTeachers(data.filter(p => p.is_approved !== true));
-            setApprovedTeachers(sortTeachersByRecentLogin(data.filter(p => p.is_approved === true)));
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            if (showLoading) {
-                setLoading(false);
-            }
-        }
-    }, []);
-
     useEffect(() => {
-        fetchTeachers();
         fetchSettings();
         fetchFeedbackCount();
         fetchRegisteredStudentCount();
-
-        // 학생 수 집계(fetchRegisteredStudentCount)는 마운트 시 1회만 실행.
-        // 교사별 상세 집계는 useAdminUsage의 서버 RPC가 담당하며, 관리자가 새로고침을 누를 때만 다시 돈다.
-        // focus + visibilitychange가 동시 발화해도 중복 호출되지 않도록 쿨다운 적용.
-        const REFRESH_COOLDOWN_MS = 3000;
-        let lastRefreshAt = 0;
-        const refreshTeachers = () => {
-            const now = Date.now();
-            if (now - lastRefreshAt < REFRESH_COOLDOWN_MS) return;
-            lastRefreshAt = now;
-            fetchTeachers({ showLoading: false });
-        };
-
-        const intervalId = window.setInterval(refreshTeachers, TEACHER_REFRESH_INTERVAL_MS);
-        const handleFocus = () => refreshTeachers();
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                refreshTeachers();
-            }
-        };
-
-        window.addEventListener('focus', handleFocus);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-
-        return () => {
-            window.clearInterval(intervalId);
-            window.removeEventListener('focus', handleFocus);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-        };
-    }, [fetchTeachers]);
+    }, []);
 
     // 탭이나 검색어가 바뀔 때 페이지 리셋
     useEffect(() => {
         setCurrentPage(1);
     }, [currentTab, searchTerm]);
+
+    useEffect(() => {
+        if (currentPage > teacherPageCount) setCurrentPage(teacherPageCount);
+    }, [currentPage, teacherPageCount]);
 
     const handleApprove = async (teacherId, teacherName) => {
         if (_session?.user?.id === teacherId) {
@@ -449,7 +372,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             });
             if (error) throw error;
             alert(`✅ '${teacherName}' 선생님이 승인되었습니다!`);
-            fetchTeachers();
+            teacherPage.refresh();
             usage.refresh({ showLoading: false });
         } catch (err) { alert('오류: ' + err.message); }
     };
@@ -467,7 +390,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             });
             if (error) throw error;
             alert(`🚫 승인 취소 완료`);
-            fetchTeachers();
+            teacherPage.refresh();
             usage.refresh({ showLoading: false });
         } catch (err) { alert('오류: ' + err.message); }
     };
@@ -489,24 +412,9 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             if (error) throw error;
 
             alert(`🗑️ 삭제 완료`);
-            fetchTeachers();
+            teacherPage.refresh();
             usage.refresh({ showLoading: false });
         } catch (err) { alert('삭제 실패: ' + err.message); }
-    };
-
-    // --- Search & Filter Logic ---
-    const filterList = (list) => {
-        const filtered = !searchTerm ? list : list.filter(t => {
-            const info = Array.isArray(t.teachers) ? t.teachers[0] : t.teachers;
-            const text = `${t.full_name} ${info?.name} ${info?.school_name} ${t.email}`.toLowerCase();
-            return text.includes(searchTerm.toLowerCase());
-        });
-
-        if (list === approvedTeachers) {
-            return sortTeachersByRecentLogin(filtered);
-        }
-
-        return filtered;
     };
 
     return (
@@ -528,12 +436,12 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
             {/* 요약 카드 — 숫자만 보여 주지 않고, 누르면 그 일을 처리하는 화면으로 바로 간다. */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
                 <StatCard
-                    label="신규 승인 대기" value={`${newSignups.length}명`}
+                    label="신규 승인 대기" value={`${newSignupCount}명`}
                     color="#F6AD55" icon="⏳"
                     onOpen={() => setCurrentTab('pending')}
                 />
                 <StatCard
-                    label="활동 중인 선생님" value={`${approvedTeachers.length}명`}
+                    label="활동 중인 선생님" value={`${approvedTeacherCount}명`}
                     color="#48BB78" icon="✅"
                     onOpen={() => setCurrentTab('active')}
                 />
@@ -646,24 +554,30 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                 </div>
 
                 {/* Pagination Statistics */}
-                {(currentTab === 'active' || currentTab === 'pending') && !loading && (
+                {(currentTab === 'active' || currentTab === 'pending') && !teacherPage.loading && (
                     <div style={{ fontSize: '0.85rem', color: '#718096', display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                        <span>총 {filterList(currentTab === 'active' ? approvedTeachers : pendingList).length}명</span>
-                        {filterList(currentTab === 'active' ? approvedTeachers : pendingList).length > ITEMS_PER_PAGE && (
-                            <span>(페이지 {currentPage} / {Math.ceil(filterList(currentTab === 'active' ? approvedTeachers : pendingList).length / ITEMS_PER_PAGE)})</span>
+                        <span>총 {teacherPage.totalCount}명</span>
+                        {teacherPage.totalCount > ITEMS_PER_PAGE && (
+                            <span>(페이지 {currentPage} / {teacherPageCount})</span>
                         )}
                     </div>
                 )}
 
                 {/* Tab Content */}
                 <div style={{ minHeight: '400px' }}>
-                    {loading && (currentTab === 'active' || currentTab === 'pending') && (
+                    {teacherPage.loading && (currentTab === 'active' || currentTab === 'pending') && (
                         <div style={{ padding: '40px', textAlign: 'center', color: '#A0AEC0' }}>데이터 불러오는 중...</div>
                     )}
 
-                    {!loading && currentTab === 'active' && (
+                    {teacherPage.error && (currentTab === 'active' || currentTab === 'pending') && (
+                        <div style={{ padding: '16px 20px', color: '#C53030', background: '#FFF5F5', borderRadius: '10px', marginBottom: '12px' }}>
+                            ⚠️ {teacherPage.error}
+                        </div>
+                    )}
+
+                    {!teacherPage.loading && currentTab === 'active' && (
                         <div style={{ overflowX: 'auto', background: 'white', borderRadius: '12px', border: '1px solid #E9ECEF', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                            {approvedTeachers.length === 0 ? (
+                            {teacherPage.items.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '60px', color: '#A0AEC0' }}>활동 중인 선생님이 없습니다.</div>
                             ) : (
                                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem', minWidth: '800px' }}>
@@ -680,10 +594,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {(() => {
-                                            const filtered = filterList(approvedTeachers);
-                                            const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-                                            return paginated.map((profile) => {
+                                        {teacherPage.items.map((profile) => {
                                                 const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
                                                 // teachers.name을 최우선 사용, 없으면 full_name에서 이메일 형태가 아닌 경우만 사용
                                                 const rawFullName = profile.full_name || '';
@@ -714,9 +625,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                                             {profile.created_at ? new Date(profile.created_at).toLocaleDateString('ko-KR') : '-'}
                                                         </td>
                                                         <td style={{ padding: '16px', textAlign: 'center', color: '#2C5282', fontWeight: '700', whiteSpace: 'nowrap' }}>
-                                                            {teacherUsageMap.has(profile.id)
-                                                                ? `${teacherUsageMap.get(profile.id).student_count}명`
-                                                                : '-'}
+                                                            {`${profile.student_count || 0}명`}
                                                         </td>
                                                         <td style={{ padding: '16px', color: '#546E7A' }}>{profile.email}</td>
                                                         <td style={{ padding: '16px', color: '#546E7A' }}>{displayPhone}</td>
@@ -748,14 +657,13 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                                         </td>
                                                     </tr>
                                                 );
-                                            });
-                                        })()}
+                                            })}
                                     </tbody>
                                 </table>
                             )}
 
                             {/* Pagination Controls */}
-                            {!loading && filterList(approvedTeachers).length > ITEMS_PER_PAGE && (
+                            {teacherPage.totalCount > ITEMS_PER_PAGE && (
                                 <div style={{
                                     padding: '16px', borderTop: '1px solid #E9ECEF',
                                     display: 'flex', justifyContent: 'center', gap: '8px', background: '#F8F9FA'
@@ -766,7 +674,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                         onClick={() => setCurrentPage(prev => prev - 1)}
                                     >이전</Button>
 
-                                    {Array.from({ length: Math.ceil(filterList(approvedTeachers).length / ITEMS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+                                    {Array.from({ length: teacherPageCount }, (_, i) => i + 1).map(page => (
                                         <Button
                                             key={page}
                                             size="sm"
@@ -782,7 +690,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
 
                                     <Button
                                         size="sm" variant="ghost"
-                                        disabled={currentPage === Math.ceil(filterList(approvedTeachers).length / ITEMS_PER_PAGE)}
+                                        disabled={currentPage === teacherPageCount}
                                         onClick={() => setCurrentPage(prev => prev + 1)}
                                     >다음</Button>
                                 </div>
@@ -790,13 +698,13 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                         </div>
                     )}
 
-                    {!loading && currentTab === 'pending' && (
+                    {!teacherPage.loading && currentTab === 'pending' && (
                         <div>
                             {/* 신규 가입자가 정리된 계정 사이에 묻히지 않도록 분리해서 본다 */}
                             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
                                 {[
-                                    { id: 'new', label: '🆕 신규 가입 대기', count: newSignups.length, color: '#DD6B20' },
-                                    { id: 'revoked', label: '🧹 관리자 정리함', count: revokedTeachers.length, color: '#718096' }
+                                    { id: 'new', label: '🆕 신규 가입 대기', count: newSignupCount, color: '#DD6B20' },
+                                    { id: 'revoked', label: '🧹 관리자 정리함', count: revokedTeacherCount, color: '#718096' }
                                 ].map(group => {
                                     const isActive = pendingGroup === group.id;
                                     return (
@@ -827,15 +735,13 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                 </div>
                             )}
 
-                            {pendingList.length === 0 ? (
+                            {teacherPage.items.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '60px', color: '#A0AEC0' }}>
                                     {pendingGroup === 'new' ? '승인 대기 중인 요청이 없습니다. 🎉' : '정리된 계정이 없습니다.'}
                                 </div>
                             ) : (
                                 <>
-                                    {filterList(pendingList)
-                                        .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-                                        .map(profile => {
+                                    {teacherPage.items.map(profile => {
                                             const teacherInfo = Array.isArray(profile.teachers) ? profile.teachers[0] : profile.teachers;
                                             const displayName = teacherInfo?.name || profile.full_name || '이름 없음';
                                             return (
@@ -850,14 +756,14 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                         })}
 
                                     {/* Pagination for Pending */}
-                                    {filterList(pendingList).length > ITEMS_PER_PAGE && (
+                                    {teacherPage.totalCount > ITEMS_PER_PAGE && (
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px' }}>
                                             <Button
                                                 size="sm" variant="ghost"
                                                 disabled={currentPage === 1}
                                                 onClick={() => setCurrentPage(prev => prev - 1)}
                                             >이전</Button>
-                                            {Array.from({ length: Math.ceil(filterList(pendingList).length / ITEMS_PER_PAGE) }, (_, i) => i + 1).map(page => (
+                                            {Array.from({ length: teacherPageCount }, (_, i) => i + 1).map(page => (
                                                 <Button
                                                     key={page}
                                                     size="sm"
@@ -872,7 +778,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                                             ))}
                                             <Button
                                                 size="sm" variant="ghost"
-                                                disabled={currentPage === Math.ceil(filterList(pendingList).length / ITEMS_PER_PAGE)}
+                                                disabled={currentPage === teacherPageCount}
                                                 onClick={() => setCurrentPage(prev => prev + 1)}
                                             >다음</Button>
                                         </div>
@@ -921,7 +827,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             loading={usage.loading}
                             onRefresh={async (options) => {
                                 await usage.refresh(options);
-                                fetchTeachers({ showLoading: false });
                             }}
                         />
                     </KeepAlivePanel>
@@ -935,7 +840,6 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                             loading={usage.loading}
                             onRefresh={async (options) => {
                                 await usage.refresh(options);
-                                fetchTeachers({ showLoading: false });
                             }}
                         />
                     </KeepAlivePanel>
@@ -972,7 +876,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                         <AdminBackupPanel />
                     </KeepAlivePanel>
 
-                    {!loading && currentTab === 'settings' && (
+                    {currentTab === 'settings' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <Card style={{ padding: '30px', borderLeft: '5px solid #4299E1' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

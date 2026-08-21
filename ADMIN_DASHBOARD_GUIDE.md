@@ -48,10 +48,11 @@
 경향을 보는 용도입니다. 정확히 재려면 접근 로그를 켜야 하는데 디스크를 먹습니다
 (2026-08-18 에 디스크가 차서 앱이 내려간 적이 있습니다).
 
-### 장애 알림
+### 장애 상태 기록
 
-문제가 **새로 생기거나 풀릴 때만** 메일이 갑니다. 5분마다 확인하지만 상태가 그대로면
-보내지 않습니다 — 앱이 30분 죽어 있다고 6통이 오면 곧 메일을 안 읽게 되기 때문입니다.
+5분마다 앱·DB·디스크·컨테이너·백업 상태를 확인해 관리자 화면에 기록합니다.
+장애·복구 메일이나 외부 메시지는 보내지 않습니다. 앱 컨테이너가 응답하지 않을 때 사용자가 보는
+안내는 호스트 Caddy의 정적 점검 화면이 담당합니다.
 
 보는 것: 앱 응답 · DB 응답 · 디스크 여유(10GB) · 컨테이너 상태 · 백업이 26시간 넘게 안 돌았는지.
 
@@ -60,15 +61,22 @@
 ```bash
 cd ~/vibe_agit && git pull
 
-# 1) 5분마다 점검 + 문제가 바뀔 때만 메일
-*/5 * * * * cd ~/vibe_agit && bash scripts/check-service-health.sh >> ~/logs/health.log 2>&1
+# macOS launchd 설정 설치
+cp ops/launchd/com.agit.service-health.plist ~/Library/LaunchAgents/
+cp ops/launchd/com.agit.system-metrics.plist ~/Library/LaunchAgents/
 
-# 2) 하루 한 번 지표 기록 (백업·복구 리허설 뒤인 04:50 권장)
-50 4 * * * cd ~/vibe_agit && bash scripts/record-system-metrics.sh >> ~/logs/metrics.log 2>&1
+# 5분마다 점검 + 관리자 서비스 현황 기록
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.agit.service-health.plist
+
+# 하루 한 번 지표 기록 (백업·복구 리허설 뒤인 04:50)
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.agit.system-metrics.plist
 ```
 
-- 받는 주소는 `ALERT_TO` 로 바꿉니다(기본값은 스크립트 안에 있습니다).
-- 메일 열쇠는 `~/agit-supabase/secrets.agit.env` 의 `RESEND_API_KEY` 를 그대로 씁니다.
+설정은 저장소의 `ops/launchd/`를 원본으로 둡니다. 운영 파일을 직접 고치지 말고 원본을 고친 뒤 다시
+복사합니다. 등록 여부는 `launchctl print gui/$(id -u)/com.agit.service-health`와
+`launchctl print gui/$(id -u)/com.agit.system-metrics`로 확인합니다.
+
+- `RESEND_API_KEY`는 의견 제보 메일 함수가 사용하므로 운영 시크릿에 유지합니다. 장애 점검 스크립트는 읽지 않습니다.
 - 처음 하루는 트래픽이 비어 있습니다 — **어제와의 차이**로 계산하기 때문입니다.
 
 ### 제보에 답장하면 선생님 화면에 그대로 보입니다
