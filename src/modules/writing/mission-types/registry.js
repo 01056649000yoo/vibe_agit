@@ -1,3 +1,4 @@
+import { letterMissionType } from './letter/manifest.js';
 import { poemMissionType } from './poem/manifest.js';
 import { reportMissionType } from './report/manifest.js';
 import { meetingMissionType } from '../idea-market/missionTypeManifest.js';
@@ -5,6 +6,7 @@ import { getReactionProfile } from '../reactions/registry.js';
 
 const genreMissionTypes = [
     poemMissionType,
+    letterMissionType,
     reportMissionType,
     meetingMissionType,
 ];

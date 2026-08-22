@@ -43,7 +43,7 @@ test('전용 틀이 있는 종류는 그 틀로 보내고 폼 선택칸에는 �
     }
 
     const freeformIds = getFreeformGenreCategories().flatMap((category) => category.entries.map((entry) => entry.id));
-    for (const id of ['시', '관찰·조사 보고서', '안건 의견 모으기']) {
+    for (const id of ['시', '편지', '관찰·조사 보고서', '안건 의견 모으기']) {
         assert.ok(!freeformIds.includes(id), `${id}은(는) 폼 선택칸에 있으면 안 된다`);
     }
     // 첫 화면에는 전용 틀까지 모두 보인다.

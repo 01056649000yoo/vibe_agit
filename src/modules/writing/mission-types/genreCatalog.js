@@ -32,16 +32,8 @@ const GENRE_ENTRIES = Object.freeze([
     {
         id: '편지',
         category: '❤️ 마음을 표현하는 글',
-        preset: {
-            guide: '받는 사람을 정하고 첫인사, 하고 싶은 말, 끝인사 차례로 마음을 전하는 편지를 씁니다.',
-            questions: [
-                '누구에게 쓰는 편지인가요?',
-                '꼭 전하고 싶은 말은 무엇인가요?',
-                '끝인사로 어떤 말을 남기고 싶나요?',
-            ],
-            minChars: 250,
-            minParagraphs: 3,
-        },
+        missionTypeId: 'letter',
+        summary: '받는 사람·인사 칸을 나눠 쓰고 계기교육용 편지지로 인쇄하는 전용 틀로 만듭니다.',
     },
     {
         id: '설명문',
