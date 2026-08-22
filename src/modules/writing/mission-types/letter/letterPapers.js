@@ -46,6 +46,37 @@ export const LETTER_PAPERS = Object.freeze([
         }
         .pdf-entry--letter-plain .letter-sheet__row { color: #334155; }
         .pdf-entry--letter-plain .letter-sheet__blank-line { border-bottom-color: #CBD5E1; }`,
+        blankCss: `
+        .pdf-entry--letter-plain.pdf-entry--letter-blank .letter-sheet {
+            border: .45mm solid #94A3B8;
+            border-radius: 1mm;
+            background:
+                linear-gradient(135deg, transparent 0 49.7%, #F1F5F9 49.7% 50.3%, transparent 50.3%) 0 0 / 18mm 18mm,
+                #FFFFFF;
+        }
+        .pdf-entry--letter-plain.pdf-entry--letter-blank .letter-sheet__band {
+            justify-content: flex-start;
+            border: 0;
+            border-bottom: .8mm double #94A3B8;
+            background: rgba(255, 255, 255, .9);
+            color: #334155;
+            letter-spacing: .08em;
+        }
+        .pdf-entry--letter-plain.pdf-entry--letter-blank .letter-sheet__deco--tr {
+            display: block;
+            top: 10mm;
+            right: 17mm;
+            z-index: 4;
+            width: 18mm;
+            height: 13mm;
+            border: .35mm solid #94A3B8;
+            background:
+                linear-gradient(32deg, transparent 48%, #CBD5E1 49% 51%, transparent 52%),
+                linear-gradient(-32deg, transparent 48%, #CBD5E1 49% 51%, transparent 52%),
+                #FFFFFF;
+            transform: rotate(3deg);
+        }
+        .pdf-entry--letter-plain.pdf-entry--letter-blank .letter-sheet__blank-line { border-bottom-color: #CBD5E1; }`,
     },
     {
         value: 'parents',
@@ -83,6 +114,38 @@ export const LETTER_PAPERS = Object.freeze([
         }
         .pdf-entry--letter-parents .letter-sheet__row { color: #9D174D; }
         .pdf-entry--letter-parents .letter-sheet__blank-line { border-bottom-color: #F9A8D4; }`,
+        blankCss: `
+        .pdf-entry--letter-parents.pdf-entry--letter-blank .letter-sheet {
+            border: .9mm solid #F9A8D4;
+            border-radius: 9mm;
+            background:
+                radial-gradient(circle at 8mm 8mm, #FBCFE8 0 1mm, transparent 1.1mm),
+                radial-gradient(circle at calc(100% - 8mm) calc(100% - 8mm), #FBCFE8 0 1mm, transparent 1.1mm),
+                linear-gradient(145deg, #FFF9FB, #FFF1F5);
+        }
+        .pdf-entry--letter-parents.pdf-entry--letter-blank .letter-sheet__band {
+            left: 38mm;
+            right: 38mm;
+            justify-content: center;
+            border: .45mm solid #F9A8D4;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #FBCFE8, #FFF7FA 50%, #FBCFE8);
+            color: #9D174D;
+        }
+        .pdf-entry--letter-parents.pdf-entry--letter-blank .letter-sheet__deco {
+            display: block;
+            z-index: 4;
+            width: 13mm;
+            height: 13mm;
+            border: .4mm solid #F472B6;
+            border-radius: 70% 30% 68% 32%;
+            background: radial-gradient(circle at 35% 35%, #FFF7FA 0 18%, #F9A8D4 20% 62%, #F472B6 64%);
+        }
+        .pdf-entry--letter-parents.pdf-entry--letter-blank .letter-sheet__deco--tl { top: 6mm; left: 12mm; transform: rotate(-28deg); }
+        .pdf-entry--letter-parents.pdf-entry--letter-blank .letter-sheet__deco--tr { top: 6mm; right: 12mm; transform: rotate(62deg); }
+        .pdf-entry--letter-parents.pdf-entry--letter-blank .letter-sheet__deco--bl { bottom: 8mm; left: 9mm; transform: rotate(18deg) scale(.7); opacity: .65; }
+        .pdf-entry--letter-parents.pdf-entry--letter-blank .letter-sheet__deco--br { bottom: 8mm; right: 9mm; transform: rotate(108deg) scale(.7); opacity: .65; }
+        .pdf-entry--letter-parents.pdf-entry--letter-blank .letter-sheet__blank-line { border-bottom-color: #F9A8D4; }`,
     },
     {
         value: 'teacher',
@@ -118,6 +181,48 @@ export const LETTER_PAPERS = Object.freeze([
         }
         .pdf-entry--letter-teacher .letter-sheet__row { color: #166534; }
         .pdf-entry--letter-teacher .letter-sheet__blank-line { border-bottom-color: #BFDBFE; }`,
+        blankCss: `
+        .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet {
+            border: .5mm solid #86EFAC;
+            border-radius: 2mm;
+            background:
+                linear-gradient(90deg, transparent 0 24mm, rgba(252, 165, 165, .55) 24mm 24.5mm, transparent 24.5mm),
+                #FFFEF9;
+        }
+        .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__band {
+            left: 30mm;
+            right: 30mm;
+            justify-content: center;
+            border: 1.3mm solid #854D0E;
+            border-radius: 1.5mm;
+            background: linear-gradient(#166534, #14532D);
+            box-shadow: inset 0 0 0 .35mm rgba(255, 255, 255, .28), 0 1.2mm 0 #D6A56C;
+            color: #FFFFFF;
+            letter-spacing: .08em;
+        }
+        .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: -4mm;
+            border-left: .45mm solid #FCA5A5;
+            pointer-events: none;
+        }
+        .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__deco--bl,
+        .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__deco--br {
+            display: block;
+            bottom: 7mm;
+            z-index: 4;
+            width: 24mm;
+            height: 5mm;
+            border: .3mm solid #D6A56C;
+            border-radius: 1mm;
+            background: repeating-linear-gradient(90deg, #FDE68A 0 4mm, #FACC15 4mm 4.4mm);
+        }
+        .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__deco--bl { left: 8mm; transform: rotate(5deg); }
+        .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__deco--br { right: 8mm; transform: rotate(-5deg); }
+        .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__blank-line { border-bottom-color: #BFDBFE; }`,
     },
     {
         value: 'soldier',
@@ -151,6 +256,37 @@ export const LETTER_PAPERS = Object.freeze([
         .pdf-entry--letter-soldier .letter-sheet__body { padding-top: 12mm; }
         .pdf-entry--letter-soldier .letter-sheet__row { color: #1E3A8A; }
         .pdf-entry--letter-soldier .letter-sheet__blank-line { border-bottom-color: #93C5FD; }`,
+        blankCss: `
+        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet {
+            border: .45mm solid #93C5FD;
+            border-image: none;
+            background: radial-gradient(circle at 50% 52%, rgba(0, 52, 120, .045) 0 34mm, transparent 34.5mm), #FFFFFF;
+        }
+        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__band {
+            left: 34mm;
+            right: 34mm;
+            justify-content: center;
+            border: .45mm solid #93C5FD;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #FEE2E2 0 18%, #FFFFFF 18% 82%, #DBEAFE 82%);
+            color: #1E3A8A;
+            letter-spacing: .12em;
+        }
+        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco {
+            display: block;
+            z-index: 4;
+            width: 10mm;
+            height: 10mm;
+            border: 1mm solid #FFFFFF;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #C8102E 0 49%, #003478 51%);
+            box-shadow: 0 0 0 .45mm #93C5FD;
+        }
+        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco--tl { top: 10mm; left: 10mm; transform: rotate(-18deg); }
+        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco--tr,
+        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco--bl { display: none; }
+        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco--br { right: 10mm; bottom: 10mm; transform: rotate(162deg); opacity: .48; }
+        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__blank-line { border-bottom-color: #93C5FD; }`,
     },
     {
         value: 'thanks',
@@ -198,6 +334,46 @@ export const LETTER_PAPERS = Object.freeze([
         .pdf-entry--letter-thanks .letter-sheet__body { padding-top: 10mm; }
         .pdf-entry--letter-thanks .letter-sheet__row { color: #92400E; }
         .pdf-entry--letter-thanks .letter-sheet__blank-line { border-bottom-color: #FCD34D; }`,
+        blankCss: `
+        .pdf-entry--letter-thanks.pdf-entry--letter-blank .letter-sheet {
+            border: 1mm solid #D6A227;
+            border-radius: 0;
+            background:
+                linear-gradient(135deg, rgba(253, 230, 138, .18), transparent 22%),
+                linear-gradient(315deg, rgba(253, 230, 138, .18), transparent 22%),
+                #FFFDF7;
+        }
+        .pdf-entry--letter-thanks.pdf-entry--letter-blank .letter-sheet::before {
+            inset: 4mm;
+            border: .35mm double #D6A227;
+            border-radius: 0;
+        }
+        .pdf-entry--letter-thanks.pdf-entry--letter-blank .letter-sheet__band {
+            left: 32mm;
+            right: 32mm;
+            justify-content: center;
+            border: 0;
+            border-top: .35mm solid #D6A227;
+            border-bottom: .35mm solid #D6A227;
+            background: linear-gradient(90deg, transparent, #FEF3C7 24% 76%, transparent);
+            color: #78350F;
+            letter-spacing: .14em;
+        }
+        .pdf-entry--letter-thanks.pdf-entry--letter-blank .letter-sheet__deco {
+            display: block;
+            z-index: 4;
+            width: 7mm;
+            height: 7mm;
+            border: .4mm solid #D6A227;
+            background: #FFFDF7;
+            box-shadow: inset 0 0 0 1.2mm #FEF3C7;
+            transform: rotate(45deg);
+        }
+        .pdf-entry--letter-thanks.pdf-entry--letter-blank .letter-sheet__deco--tl { top: 8mm; left: 8mm; }
+        .pdf-entry--letter-thanks.pdf-entry--letter-blank .letter-sheet__deco--tr { top: 8mm; right: 8mm; }
+        .pdf-entry--letter-thanks.pdf-entry--letter-blank .letter-sheet__deco--bl { bottom: 8mm; left: 8mm; }
+        .pdf-entry--letter-thanks.pdf-entry--letter-blank .letter-sheet__deco--br { right: 8mm; bottom: 8mm; }
+        .pdf-entry--letter-thanks.pdf-entry--letter-blank .letter-sheet__blank-line { border-bottom-color: #E7C461; }`,
     },
     {
         value: 'friend',
@@ -244,6 +420,47 @@ export const LETTER_PAPERS = Object.freeze([
         }
         .pdf-entry--letter-friend .letter-sheet__row { color: #0E7490; }
         .pdf-entry--letter-friend .letter-sheet__blank-line { border-bottom-color: #7DD3FC; }`,
+        blankCss: `
+        .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet {
+            border: .7mm dashed #38BDF8;
+            border-radius: 7mm;
+            background:
+                radial-gradient(circle at 9mm 9mm, #FDE68A 0 1.1mm, transparent 1.2mm) 0 0 / 20mm 20mm,
+                radial-gradient(circle at 10mm 10mm, #BAE6FD 0 .8mm, transparent .9mm) 10mm 10mm / 20mm 20mm,
+                #F7FDFF;
+        }
+        .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet__band {
+            left: 39mm;
+            right: 39mm;
+            justify-content: center;
+            border: .55mm solid #38BDF8;
+            border-radius: 8mm;
+            background: #FFFFFF;
+            color: #0E7490;
+            box-shadow: 2mm 2mm 0 #FDE68A;
+        }
+        .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet__band::after {
+            left: 18mm;
+            bottom: -3.3mm;
+            width: 5mm;
+            height: 5mm;
+            border-color: #38BDF8;
+        }
+        .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet__deco {
+            display: block;
+            z-index: 4;
+            width: 10mm;
+            height: 8mm;
+            border: .45mm solid #38BDF8;
+            border-radius: 50%;
+            background: #FFFFFF;
+            box-shadow: 1.5mm 1.5mm 0 #FDE68A;
+        }
+        .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet__deco--tl { top: 13mm; left: 13mm; transform: rotate(-12deg); }
+        .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet__deco--tr { top: 9mm; right: 13mm; transform: rotate(10deg) scale(.75); }
+        .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet__deco--bl { bottom: 10mm; left: 10mm; transform: rotate(8deg) scale(.65); opacity: .7; }
+        .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet__deco--br { right: 10mm; bottom: 10mm; transform: rotate(-8deg) scale(.65); opacity: .7; }
+        .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet__blank-line { border-bottom-color: #7DD3FC; }`,
     },
     {
         value: 'farewell',
@@ -283,6 +500,39 @@ export const LETTER_PAPERS = Object.freeze([
         }
         .pdf-entry--letter-farewell .letter-sheet__row { color: #5B21B6; }
         .pdf-entry--letter-farewell .letter-sheet__blank-line { border-bottom-color: #C4B5FD; }`,
+        blankCss: `
+        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet {
+            border: .6mm solid #A78BFA;
+            border-radius: 4mm;
+            background:
+                radial-gradient(circle at 14mm 16mm, rgba(255,255,255,.95) 0 .7mm, transparent .8mm),
+                radial-gradient(circle at calc(100% - 18mm) 25mm, rgba(255,255,255,.9) 0 1mm, transparent 1.1mm),
+                linear-gradient(180deg, #6D5FB5 0 30mm, #F8F7FF 30.5mm 100%);
+        }
+        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__band {
+            left: 28mm;
+            right: 28mm;
+            justify-content: center;
+            border: 0;
+            background: linear-gradient(90deg, #C4B5FD, #EDE9FE 50%, #C4B5FD);
+            color: #4C1D95;
+            clip-path: polygon(0 0, 100% 0, 95% 50%, 100% 100%, 0 100%, 5% 50%);
+            letter-spacing: .08em;
+        }
+        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__deco {
+            display: block;
+            z-index: 4;
+            width: 3.2mm;
+            height: 3.2mm;
+            border-radius: 50%;
+            background: #FDE68A;
+            box-shadow: 7mm 3mm 0 -1mm #FFFFFF, 14mm -2mm 0 -.5mm #DDD6FE, 22mm 4mm 0 -1mm #FFFFFF;
+        }
+        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__deco--tl { top: 9mm; left: 13mm; }
+        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__deco--tr { top: 8mm; right: 35mm; transform: rotate(180deg); }
+        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__deco--bl { bottom: 11mm; left: 12mm; opacity: .55; transform: scale(.8); }
+        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__deco--br { right: 34mm; bottom: 12mm; opacity: .55; transform: rotate(180deg) scale(.8); }
+        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__blank-line { border-bottom-color: #C4B5FD; }`,
     },
 ]);
 
@@ -301,3 +551,6 @@ export const getLetterPaperRenderModes = () => LETTER_PAPERS.map((paper) => ({
 
 /** 편지지마다 다른 꾸미기 규칙을 한 벌로 잇는다. */
 export const getLetterPaperStyles = () => LETTER_PAPERS.map((paper) => paper.css).join('\n');
+
+/** 빈 편지지에서만 쓰는 주제별 장식. 고정 쓰기 영역 뒤에 붙여 위치 기준을 덮어쓰지 않는다. */
+export const getLetterBlankPaperStyles = () => LETTER_PAPERS.map((paper) => paper.blankCss).join('\n');

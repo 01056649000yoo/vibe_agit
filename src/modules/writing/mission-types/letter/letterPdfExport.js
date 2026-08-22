@@ -1,6 +1,11 @@
 import { escapePdfHtml } from '../../export/pdfRenderContract.js';
 import { normalizeLetterParts } from './letterContent.js';
-import { DEFAULT_LETTER_PAPER, getLetterPaper, getLetterPaperStyles } from './letterPapers.js';
+import {
+    DEFAULT_LETTER_PAPER,
+    getLetterBlankPaperStyles,
+    getLetterPaper,
+    getLetterPaperStyles,
+} from './letterPapers.js';
 
 const renderParagraphs = (value) => escapePdfHtml(value).replaceAll('\n', '<br>\n');
 
@@ -16,9 +21,19 @@ const renderLetterEntry = (entry, { renderMode = DEFAULT_LETTER_PAPER } = {}) =>
 
     const inner = isBlank
         ? `
-            <div class="letter-sheet__row letter-sheet__row--to">받는 사람 ______________________</div>
+            <div class="letter-sheet__blank-recipient">
+                <span class="letter-sheet__blank-recipient-label">받는 사람</span>
+                <span class="letter-sheet__blank-recipient-line" aria-hidden="true"></span>
+                <span class="letter-sheet__blank-recipient-suffix">에게</span>
+            </div>
             <div class="letter-sheet__blank">${renderBlankLines(15)}</div>
-            <div class="letter-sheet__row letter-sheet__row--from">______년 ____월 ____일 &nbsp; 쓴 사람 ______________________</div>`
+            <div class="letter-sheet__blank-footer">
+                <span>______년 ____월 ____일</span>
+                <span class="letter-sheet__blank-writer">
+                    <span>쓴 사람</span>
+                    <span class="letter-sheet__blank-writer-line" aria-hidden="true"></span>
+                </span>
+            </div>`
         : `
             <div class="letter-sheet__row letter-sheet__row--to">${escapePdfHtml(parts.recipient)}에게</div>
             ${parts.greeting ? `<p class="letter-sheet__part">${renderParagraphs(parts.greeting)}</p>` : ''}
@@ -27,8 +42,8 @@ const renderLetterEntry = (entry, { renderMode = DEFAULT_LETTER_PAPER } = {}) =>
             <div class="letter-sheet__row letter-sheet__row--from">${escapePdfHtml(entry.author)} 올림</div>`;
 
     return `
-        <article class="pdf-entry pdf-entry--letter pdf-entry--letter-${escapePdfHtml(paper.value)}">
-            <div class="letter-sheet">
+        <article class="pdf-entry pdf-entry--letter pdf-entry--letter-${escapePdfHtml(paper.value)}${isBlank ? ' pdf-entry--letter-blank' : ''}">
+            <div class="letter-sheet${isBlank ? ' letter-sheet--blank' : ''}">
                 <span class="letter-sheet__deco letter-sheet__deco--tl" aria-hidden="true"></span>
                 <span class="letter-sheet__deco letter-sheet__deco--tr" aria-hidden="true"></span>
                 <span class="letter-sheet__deco letter-sheet__deco--bl" aria-hidden="true"></span>
@@ -115,8 +130,97 @@ const LETTER_BASE_STYLES = `
         }
 `;
 
+/*
+ * 빈 편지지는 머리 띠 모양과 관계없이 같은 좌표에서 쓰기 시작한다.
+ * 각 편지지의 장식은 이 고정된 쓰기 영역 바깥을 꾸미며, blankCss에서만 달라진다.
+ */
+const LETTER_BLANK_BASE_STYLES = `
+        .pdf-entry--letter-blank .letter-sheet__band {
+            position: absolute;
+            z-index: 3;
+            top: var(--letter-blank-band-top, 8mm);
+            left: var(--letter-blank-band-side, 12mm);
+            right: var(--letter-blank-band-side, 12mm);
+            display: flex;
+            width: auto;
+            max-width: none;
+            height: 20mm;
+            margin: 0;
+            padding: 3mm 7mm;
+        }
+        .pdf-entry--letter-blank .letter-sheet__body {
+            position: absolute;
+            z-index: 2;
+            top: var(--letter-blank-body-top, 36mm);
+            right: var(--letter-blank-body-side, 14mm);
+            bottom: 12mm;
+            left: var(--letter-blank-body-side, 14mm);
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: none;
+        }
+        .letter-sheet__blank-recipient {
+            display: flex;
+            flex: 0 0 11mm;
+            align-items: flex-end;
+            gap: 3mm;
+            width: 100%;
+            padding: 0 2mm 2.2mm;
+            color: inherit;
+            font-size: 13pt;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .letter-sheet__blank-recipient-line {
+            flex: 0 0 92mm;
+            border-bottom: .35mm solid currentColor;
+            opacity: .58;
+        }
+        .letter-sheet__blank-recipient-suffix { font-weight: 700; }
+        .pdf-entry--letter-blank .letter-sheet__blank {
+            display: grid;
+            flex: 1;
+            grid-template-rows: repeat(15, minmax(0, 1fr));
+            min-height: 0;
+            margin: 3mm 0 6mm;
+        }
+        .pdf-entry--letter-blank .letter-sheet__blank-line {
+            height: auto;
+            min-height: 0;
+            border-bottom-width: .28mm;
+            border-bottom-style: solid;
+            opacity: .66;
+        }
+        .letter-sheet__blank-footer {
+            display: flex;
+            flex: 0 0 10mm;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8mm;
+            padding: 1mm 2mm 0;
+            color: inherit;
+            font-size: 12pt;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+        .letter-sheet__blank-writer {
+            display: flex;
+            align-items: baseline;
+            gap: 3mm;
+        }
+        .letter-sheet__blank-writer-line {
+            display: inline-block;
+            width: 48mm;
+            border-bottom: .35mm solid currentColor;
+            opacity: .58;
+        }
+`;
+
 export const letterPdfExport = {
     id: 'letter',
     renderEntry: renderLetterEntry,
-    styles: `${LETTER_BASE_STYLES}\n${getLetterPaperStyles()}`,
+    styles: `${LETTER_BASE_STYLES}\n${getLetterPaperStyles()}\n${LETTER_BLANK_BASE_STYLES}\n${getLetterBlankPaperStyles()}`,
 };

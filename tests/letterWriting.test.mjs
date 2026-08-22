@@ -9,7 +9,11 @@ import {
     normalizeLetterParts,
     validateLetterSubmission,
 } from '../src/modules/writing/mission-types/letter/letterContent.js';
-import { LETTER_PAPERS, getLetterPaper } from '../src/modules/writing/mission-types/letter/letterPapers.js';
+import {
+    LETTER_PAPERS,
+    getLetterBlankPaperStyles,
+    getLetterPaper,
+} from '../src/modules/writing/mission-types/letter/letterPapers.js';
 import { letterPdfExport } from '../src/modules/writing/mission-types/letter/letterPdfExport.js';
 
 const [letterForm, letterEditor] = await Promise.all([
@@ -77,6 +81,7 @@ test('편지지는 계기교육용으로 여러 벌이고 출력 화면에서 �
         assert.ok(paper.label.trim(), '편지지 이름이 비어 있다');
         assert.ok(paper.description.trim(), `${paper.label} 설명이 비어 있다`);
         assert.match(paper.tint, /^#[0-9A-Fa-f]{6}$/, `${paper.label} 바탕색이 색 값이 아니다`);
+        assert.ok(paper.blankCss.trim(), `${paper.label}의 빈 편지지 전용 디자인이 비어 있다`);
     }
     // 없는 값을 넘겨도 첫 편지지로 안전하게 떨어진다.
     assert.equal(getLetterPaper('없는편지지').value, LETTER_PAPERS[0].value);
@@ -104,6 +109,31 @@ test('편지지는 색만 다른 것이 아니라 모양이 서로 다르다', (
     assert.equal(new Set(shapeLabels).size, LETTER_PAPERS.length, '편지지 모양 설명이 겹친다');
     for (const paper of LETTER_PAPERS) {
         assert.ok(paper.shape?.trim(), `${paper.label}에 모양 설명이 없다`);
+    }
+
+    const blankShapes = new Set(LETTER_PAPERS.map((paper) => paper.blankCss
+        .replaceAll(`--letter-${paper.value}`, '--letter-X')
+        .replace(/#[0-9A-Fa-f]{3,8}/g, 'COLOR')
+        .replace(/\s+/g, ' ')
+        .trim()));
+    assert.equal(blankShapes.size, LETTER_PAPERS.length, '빈 편지지가 색만 다른 같은 디자인이다');
+});
+
+test('빈 편지지는 일곱 종류 모두 같은 좌표에서 쓰기 시작한다', () => {
+    assert.match(
+        letterPdfExport.styles,
+        /\.pdf-entry--letter-blank \.letter-sheet__body \{[\s\S]*?top: var\(--letter-blank-body-top, 36mm\);[\s\S]*?right: var\(--letter-blank-body-side, 14mm\);[\s\S]*?left: var\(--letter-blank-body-side, 14mm\);/,
+    );
+    assert.match(letterPdfExport.styles, /\.letter-sheet__blank-recipient \{/);
+    assert.match(letterPdfExport.styles, /\.letter-sheet__blank-footer \{/);
+
+    // 주제별 장식이 공용 쓰기 좌표를 다시 움직이면 받는 사람 위치가 또 제각각이 된다.
+    assert.doesNotMatch(getLetterBlankPaperStyles(), /letter-sheet__body\s*\{/);
+    for (const paper of LETTER_PAPERS) {
+        assert.ok(
+            paper.blankCss.includes(`pdf-entry--letter-${paper.value}.pdf-entry--letter-blank`),
+            `${paper.label} 빈 편지지 전용 선택자가 없다`,
+        );
     }
 });
 
@@ -138,6 +168,10 @@ test('편지 PDF는 고른 편지지로 그리고 빈 편지지는 줄만 뽑는
         { renderMode: 'teacher' },
     );
     assert.match(blank, /pdf-entry--letter-teacher/);
+    assert.match(blank, /pdf-entry--letter-blank/);
+    assert.match(blank, /letter-sheet--blank/);
+    assert.match(blank, /letter-sheet__blank-recipient-line/);
+    assert.match(blank, /letter-sheet__blank-footer/);
     assert.match(blank, /letter-sheet__blank-line/);
     assert.ok(!blank.includes('올림'), '빈 편지지에 이름이 찍혔다');
 
