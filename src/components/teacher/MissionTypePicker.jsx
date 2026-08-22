@@ -17,60 +17,78 @@ const entryIcon = (entry) => (
     entry.missionTypeId ? (getGenreMissionType(entry.missionTypeId)?.icon || '🧩') : '📝'
 );
 
-const MissionTypePicker = ({ isMobile, onSelectFreeform, onSelectGenre, onClose }) => (
-    <div style={{
-        marginBottom: '20px', padding: isMobile ? '16px' : '22px', borderRadius: '20px',
-        background: '#F8FAFC', border: '1px solid #E2E8F0'
-    }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
-            <div>
-                <h4 style={{ margin: 0, color: '#1E293B', fontSize: '1.05rem', fontWeight: '900' }}>어떤 글을 쓰게 할까요?</h4>
-                <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.82rem' }}>글 종류를 고르면 안내와 질문이 채워집니다. 전용 틀이 있는 종류는 그 화면으로 바로 넘어갑니다.</p>
-            </div>
-            <ModalCloseButton onClick={onClose} label="글 종류 선택 닫기" />
-        </div>
+const MissionTypePicker = ({ isMobile, onSelectFreeform, onSelectGenre, onClose }) => {
+    const choices = getGenreCategories().flatMap((category) => (
+        category.entries.map((entry) => ({ ...entry, categoryLabel: category.label }))
+    ));
 
-        {getGenreCategories().map((category) => (
-            <div key={category.label} style={{ marginBottom: '16px' }}>
-                <div style={{ color: '#64748B', fontWeight: '800', fontSize: '0.78rem', marginBottom: '8px' }}>{category.label}</div>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                    {category.entries.map((entry) => (
+    return (
+        <div style={{
+            marginBottom: '14px', padding: isMobile ? '12px' : '16px', borderRadius: '18px',
+            background: '#F8FAFC', border: '1px solid #E2E8F0'
+        }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+                <div>
+                    <h4 style={{ margin: 0, color: '#1E293B', fontSize: '1.05rem', fontWeight: '900' }}>어떤 글을 쓰게 할까요?</h4>
+                    <p style={{ margin: '3px 0 0', color: '#64748B', fontSize: '0.78rem' }}>글 종류를 고르면 알맞은 안내·질문 또는 전용 틀로 바로 이어집니다.</p>
+                </div>
+                <ModalCloseButton onClick={onClose} label="글 종류 선택 닫기" />
+            </div>
+
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: isMobile ? '7px' : '8px'
+            }}>
+                {choices.map((entry) => {
+                    const description = describeEntry(entry);
+                    return (
                         <motion.button
                             key={entry.id}
                             whileHover={{ y: -2 }}
+                            title={description}
                             onClick={() => (entry.missionTypeId
                                 ? onSelectGenre(entry.missionTypeId)
                                 : onSelectFreeform(entry.id))}
                             style={{
-                                padding: '16px', borderRadius: '16px',
+                                minWidth: 0, minHeight: isMobile ? '72px' : '76px', padding: isMobile ? '9px' : '10px 11px',
+                                borderRadius: '13px',
                                 border: entry.missionTypeId ? '1px solid #DDD6FE' : '1px solid #BFDBFE',
                                 background: entry.missionTypeId ? 'white' : '#EFF6FF',
-                                cursor: 'pointer', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'center'
+                                cursor: 'pointer', textAlign: 'left', display: 'flex', gap: '8px', alignItems: 'flex-start'
                             }}
                         >
-                            <span style={{ fontSize: '1.8rem' }}>{entryIcon(entry)}</span>
-                            <span style={{ minWidth: 0 }}>
+                            <span aria-hidden="true" style={{ flex: '0 0 auto', marginTop: '14px', fontSize: isMobile ? '1.2rem' : '1.35rem' }}>{entryIcon(entry)}</span>
+                            <span style={{ minWidth: 0, flex: 1 }}>
+                                <span style={{
+                                    display: 'block', color: '#64748B', fontSize: '0.64rem', fontWeight: '800',
+                                    lineHeight: 1.25, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                }}>{entry.categoryLabel}</span>
                                 <strong style={{
-                                    display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap',
-                                    color: entry.missionTypeId ? '#5B21B6' : '#1D4ED8', fontSize: '0.95rem'
+                                    display: 'flex', gap: '5px', alignItems: 'center', minWidth: 0,
+                                    color: entry.missionTypeId ? '#5B21B6' : '#1D4ED8', fontSize: isMobile ? '0.82rem' : '0.9rem',
+                                    lineHeight: 1.3
                                 }}>
-                                    {entry.id}
+                                    <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{entry.id}</span>
                                     {entry.missionTypeId && (
                                         <span style={{
-                                            fontSize: '0.68rem', fontWeight: '900', color: '#6D28D9',
+                                            flex: '0 0 auto', fontSize: '0.6rem', fontWeight: '900', color: '#6D28D9',
                                             background: '#F5F3FF', border: '1px solid #DDD6FE',
-                                            borderRadius: '999px', padding: '2px 8px'
-                                        }}>전용 틀</span>
+                                            borderRadius: '999px', padding: '1px 5px'
+                                        }}>전용</span>
                                     )}
                                 </strong>
-                                <span style={{ color: '#64748B', fontSize: '0.78rem', lineHeight: 1.45 }}>{describeEntry(entry)}</span>
+                                <span style={{
+                                    display: 'block', marginTop: '2px', color: '#64748B', fontSize: '0.68rem', lineHeight: 1.3,
+                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                                }}>{description}</span>
                             </span>
                         </motion.button>
-                    ))}
-                </div>
+                    );
+                })}
             </div>
-        ))}
-    </div>
-);
+        </div>
+    );
+};
 
 export default MissionTypePicker;

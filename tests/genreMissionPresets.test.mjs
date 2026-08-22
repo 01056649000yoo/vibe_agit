@@ -31,6 +31,14 @@ test('글 종류 목록은 카탈로그 한 곳에서 오고 화면에 값을 �
     }
 });
 
+test('글 종류 첫 화면은 분류별 빈 공간 없이 한 그리드에서 전체 선택지를 보여준다', () => {
+    assert.match(missionTypePicker, /getGenreCategories\(\)\.flatMap/);
+    assert.match(missionTypePicker, /repeat\(auto-fit, minmax\(180px, 1fr\)\)/);
+    assert.match(missionTypePicker, /repeat\(2, minmax\(0, 1fr\)\)/);
+    assert.match(missionTypePicker, /whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'/);
+    assert.doesNotMatch(missionTypePicker, /repeat\(2, minmax\(0, 1fr\)\)', gap: '10px'/);
+});
+
 test('전용 틀이 있는 종류는 그 틀로 보내고 폼 선택칸에는 넣지 않는다', () => {
     assert.equal(getGenreMissionTypeId('시'), 'poem');
     assert.equal(getGenreMissionTypeId('관찰·조사 보고서'), 'report');
