@@ -199,8 +199,54 @@
     font-weight: 900;
 }
 
+.teacher-guide__tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0 0 18px;
+    padding: 5px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-surface-muted);
+}
+
+.teacher-guide__tab {
+    min-width: 0;
+    min-height: 42px;
+    padding: 8px 6px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--ui-ink);
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 900;
+    line-height: 1.3;
+    cursor: pointer;
+}
+
+.teacher-guide__tab:hover { background: var(--ui-surface); }
+
+.teacher-guide__tab.is-active {
+    background: #4F46E5;
+    color: #fff;
+    box-shadow: 0 2px 7px rgba(79, 70, 229, .24);
+}
+
+.teacher-guide__tab:focus-visible {
+    outline: 3px solid rgba(99, 102, 241, .28);
+    outline-offset: 2px;
+}
+
+.teacher-guide__section-summary {
+    margin: 0 0 16px;
+    color: var(--ui-ink);
+    font-size: .92rem;
+    font-weight: 700;
+    line-height: 1.65;
+}
+
 .teacher-guide__steps,
-.teacher-guide__updates,
 .teacher-guide__notes {
     margin: 0 0 22px;
     padding-left: 22px;
@@ -210,11 +256,13 @@
 }
 
 .teacher-guide__steps li,
-.teacher-guide__updates li,
 .teacher-guide__notes li { margin-bottom: 8px; }
 .teacher-guide__notes { margin-bottom: 0; }
-.teacher-guide__updates li strong,
 .teacher-guide__notes li strong { color: #4F46E5; }
+
+@media (max-width: 560px) {
+    .teacher-guide__tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 /* 화면에 실제로 있는 버튼·메뉴 이름 */
 .teacher-guide__key {

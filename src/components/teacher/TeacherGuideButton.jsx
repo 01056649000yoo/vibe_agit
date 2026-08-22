@@ -21,10 +21,22 @@ import { TEACHER_GUIDES } from '../../constants/teacherGuides';
  */
 const TeacherGuideButton = ({ tabId, className = '', variant = 'icon' }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [activeSectionId, setActiveSectionId] = useState('');
     // 정해진 목록에서만 꺼낸다(Button.jsx 의 variant 조회와 같은 방식)
     const guide = Reflect.get(TEACHER_GUIDES, tabId);
 
     if (!guide) return null;
+
+    const sections = guide.sections || [];
+    const activeSection = sections.find((section) => section.id === activeSectionId)
+        || sections[0]
+        || guide;
+    const activeTabId = sections.length > 0
+        ? `${tabId}-${activeSection.id}-guide-tab`
+        : undefined;
+    const activePanelId = sections.length > 0
+        ? `${tabId}-${activeSection.id}-guide-panel`
+        : undefined;
 
     return (
         <>
@@ -35,6 +47,7 @@ const TeacherGuideButton = ({ tabId, className = '', variant = 'icon' }) => {
                 title={`${guide.title} 사용법`}
                 onClick={(event) => {
                     event.stopPropagation();
+                    setActiveSectionId(sections[0]?.id || '');
                     setIsOpen(true);
                 }}
             />
@@ -49,24 +62,55 @@ const TeacherGuideButton = ({ tabId, className = '', variant = 'icon' }) => {
                     <div className="teacher-guide">
                         <p className="teacher-guide__summary">{guide.summary}</p>
 
-                        {guide.updates?.length > 0 && (
-                            <>
-                                <h4 className="teacher-guide__heading">최근 업데이트</h4>
-                                <ul className="teacher-guide__updates">
-                                    {guide.updates.map((update) => <li key={update}>{renderEmphasis(update)}</li>)}
-                                </ul>
-                            </>
+                        {sections.length > 0 && (
+                            <div
+                                className="teacher-guide__tabs"
+                                role="tablist"
+                                aria-label={`${guide.title} 핵심 기능`}
+                            >
+                                {sections.map((section) => {
+                                    const isActive = section.id === activeSection.id;
+                                    const sectionTabId = `${tabId}-${section.id}-guide-tab`;
+                                    const sectionPanelId = `${tabId}-${section.id}-guide-panel`;
+
+                                    return (
+                                        <button
+                                            key={section.id}
+                                            type="button"
+                                            id={sectionTabId}
+                                            role="tab"
+                                            aria-selected={isActive}
+                                            aria-controls={sectionPanelId}
+                                            className={`teacher-guide__tab${isActive ? ' is-active' : ''}`}
+                                            onClick={() => setActiveSectionId(section.id)}
+                                        >
+                                            {section.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         )}
 
-                        <h4 className="teacher-guide__heading">이 순서로 하면 됩니다</h4>
-                        <ol className="teacher-guide__steps">
-                            {guide.steps.map((step) => <li key={step}>{renderEmphasis(step)}</li>)}
-                        </ol>
+                        <section
+                            className="teacher-guide__panel"
+                            role={sections.length > 0 ? 'tabpanel' : undefined}
+                            id={activePanelId}
+                            aria-labelledby={activeTabId}
+                        >
+                            {sections.length > 0 && (
+                                <p className="teacher-guide__section-summary">{activeSection.summary}</p>
+                            )}
 
-                        <h4 className="teacher-guide__heading">알아 두면 좋은 것</h4>
-                        <ul className="teacher-guide__notes">
-                            {guide.notes.map((note) => <li key={note}>{renderEmphasis(note)}</li>)}
-                        </ul>
+                            <h4 className="teacher-guide__heading">이 순서로 하면 됩니다</h4>
+                            <ol className="teacher-guide__steps">
+                                {activeSection.steps.map((step) => <li key={step}>{renderEmphasis(step)}</li>)}
+                            </ol>
+
+                            <h4 className="teacher-guide__heading">알아 두면 좋은 것</h4>
+                            <ul className="teacher-guide__notes">
+                                {activeSection.notes.map((note) => <li key={note}>{renderEmphasis(note)}</li>)}
+                            </ul>
+                        </section>
                     </div>
                 </Modal>
             </ModalPortal>
