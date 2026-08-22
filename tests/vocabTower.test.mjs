@@ -17,7 +17,7 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides, cardBox, cardBoxMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides, cardBox, cardBoxMigration, rewardPolicy, noCapMigration, commonEngineMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
@@ -39,7 +39,10 @@ const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEnt
     readFile('src/modules/game/vocab-tower/manifest.js', 'utf8'),
     readFile('src/constants/teacherGuides.js', 'utf8'),
     readFile('src/modules/game/vocab-tower/V2CardBox.jsx', 'utf8'),
-    readFile('supabase/migrations/20261114_vocab_tower_v2_card_box.sql', 'utf8')
+    readFile('supabase/migrations/20261114_vocab_tower_v2_card_box.sql', 'utf8'),
+    readFile('src/modules/game/vocab-tower/rewardPolicy.js', 'utf8'),
+    readFile('supabase/migrations/20261156_vocab_tower_reward_points_no_cap.sql', 'utf8'),
+    readFile('supabase/migrations/20261119_common_learning_engine.sql', 'utf8')
 ]);
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
@@ -123,7 +126,46 @@ test('층당 보상 총액은 교사 설정값을 그대로 쓰고 포인트 지
     assert.match(teacherManager, /vocab_tower_v2_perfect_reward_points/);
     // 지급 기준은 2026-08-17에 완벽 연습에서 익힘 진도로 옮겼다.
     assert.match(v2ProgressRewardMigration, /public\.point_engine_apply\(/);
-    assert.match(v2ProgressRewardMigration, /LEAST\(500, GREATEST\(0, COALESCE\(class\.vocab_tower_v2_perfect_reward_points, 100\)\)\)/);
+    // 2026-08-22에 위쪽 상한을 없앴다. 상한이 흩어져 있던 자리는 아래 검사 하나가 한꺼번에 본다.
+    assert.match(noCapMigration, /vocab_tower_v2_floor_reward_points_v1/);
+});
+
+test('층당 보상 총액에는 위쪽 상한이 없고 보정 원본은 서버·앱 각각 한 곳뿐이다', () => {
+    // 서버: 두 CHECK 제약은 음수만 막고, 값 보정은 전용 함수 하나로만 한다.
+    assert.match(noCapMigration, /CONSTRAINT classes_vocab_tower_v2_perfect_reward_points_check\s+CHECK \(vocab_tower_v2_perfect_reward_points >= 0\)/);
+    assert.match(noCapMigration, /CONSTRAINT vocab_tower_runs_reward_points_check\s+CHECK \(reward_points >= 0\)/);
+    assert.match(noCapMigration, /FUNCTION public\.vocab_tower_v2_floor_reward_points_v1\(p_configured INTEGER\)/);
+    assert.match(noCapMigration, /SELECT GREATEST\(0, COALESCE\(p_configured, 100\)\);/);
+
+    // 상한을 다시 심는 실수를 막는다. 지급·조회·구간 분배 세 함수를 모두 다시 만들었는지도 함께 본다.
+    assert.ok(!/LEAST\(\s*500/.test(noCapMigration), '새 마이그레이션에 500 상한이 남아 있다');
+    for (const fn of [
+        'public.finish_my_vocab_tower_v2_practice_v1',
+        'public.get_my_vocab_tower_v2_overview_v1',
+        'public.vocab_tower_v2_progress_milestones_v1'
+    ]) {
+        assert.ok(noCapMigration.includes(`CREATE OR REPLACE FUNCTION ${fn}`), `${fn}을 다시 만들지 않았다`);
+    }
+    assert.equal(noCapMigration.match(/vocab_tower_v2_floor_reward_points_v1\(class\.vocab_tower_v2_perfect_reward_points\)/g)?.length, 2);
+    assert.match(noCapMigration, /reward_points = GREATEST\(0, v_awarded_points\),/);
+
+    // 앱: 교사 화면은 숫자를 직접 쓰지 않고 보상 정책 모듈만 본다.
+    assert.match(rewardPolicy, /VOCAB_FLOOR_REWARD_MAX_POINTS = 2147483647/);
+    assert.match(rewardPolicy, /VOCAB_FLOOR_REWARD_DEFAULT_POINTS = 100/);
+    assert.match(teacherManager, /from '\.\/rewardPolicy'/);
+    assert.match(teacherManager, /normalizeFloorRewardPoints\(config\.perfectRewardPoints\)/);
+    assert.match(teacherManager, /max=\{VOCAB_FLOOR_REWARD_MAX_POINTS\}/);
+    assert.ok(!/max="500"/.test(teacherManager), '교사 화면 입력칸에 500 상한이 남아 있다');
+    assert.ok(!/clamp\(config\.perfectRewardPoints/.test(teacherManager), '교사 화면에 옛 상한 계산이 남아 있다');
+
+    // 공용 학습 엔진의 구간 분배에는 아직 500P 상한이 남아 있고 지금은 아무도 쓰지 않는다.
+    // 어휘의 탑을 공용 엔진으로 갈아끼우는 날 상한이 조용히 되살아나지 않도록 여기서 함께 본다.
+    if (/LEAST\(500, GREATEST\(0, COALESCE\(p_total_points, 0\)\)\)/.test(commonEngineMigration)) {
+        assert.ok(
+            !noCapMigration.includes('learning_engine_collection_milestones_v1'),
+            '공용 엔진의 500P 상한을 먼저 없애야 어휘의 탑이 공용 구간 분배를 쓸 수 있다'
+        );
+    }
 });
 
 test('V2는 낱말별 상태를 기록하고 약점·새 낱말·복습을 적응 출제한다', () => {

@@ -8,7 +8,8 @@
 - 진행 기록: `vocab_tower_runs`, `vocab_tower_answers`, V2 덱별 `vocab_tower_v2_deck_progress`
 - 보존 기록: `vocab_tower_rankings`, `vocab_tower_history`(현재 교사 화면에서는 사용하지 않음)
 - 출제 기준: 잠긴 `vocab_tower_v2_review_*` 현재 덱(표준), V1 `vocab_tower_words`는 비상 롤백용 보존
-- 보상 기록: `game_point_grants`의 게임 공용 하루 80P·주 250P 상한
+- 보상 기록: V1은 `game_point_grants`의 게임 공용 하루 80P·주 250P 상한을 쓰고,
+  V2 층당 진도 보상은 `point_engine_apply`로 바로 지급해 공용 상한을 받지 않는다
 - 학생 RPC: `get_my_vocab_tower_status`, `start_my_vocab_tower_run`,
   `submit_my_vocab_tower_answer`, `finish_my_vocab_tower_run`
 - V2 학생 RPC: `start_my_vocab_tower_v2_run`, `get_next_my_vocab_tower_question_v2`,
@@ -52,8 +53,9 @@ V2 문항은 현재 운영 `vocab_tower_words`와 분리해 준비한다. `vocab
 V2 학생 화면은 잠긴 덱 10개를 지도로 보여주고, 학생이 고른 한 덱에서 뜻·빈칸·쓰임 구별 선택형
 12문항을 시간·횟수 제한 없이 연습한다. 서버가 실행별 문항 스냅샷을 만들며 제출 전에는 정답을 반환하지 않고,
 같은 문항 재제출은 멱등하게 처리한다. 완료 결과와 최고 정답률은 학생·학급·학년·덱별로 저장한다.
-각 덱에서 처음 12/12를 달성하면 학급 설정 포인트를 한 번만 지급한다. 기본값은 100P이며 교사가 0~500P로
-바꿀 수 있다. 서버가 학급 설정과 정답 수를 다시 확인하고 학생·학급·학년·덱 고정 이벤트 키로 중복 지급을 막는다.
+각 덱은 낱말 익힘 진도 25·50·75·100% 네 구간에서 학급 설정 총액을 20·20·30·30%로 나눠 한 번씩만 지급한다.
+층당 총액의 기본값은 100P이며 교사가 0P 이상이면 얼마든지 정할 수 있다(2026-08-22에 위쪽 상한 500P를 없앴다.
+값 보정의 원본은 `vocab_tower_v2_floor_reward_points_v1`과 `rewardPolicy.js` 두 곳뿐이다). 서버가 학급 설정과 정답 수를 다시 확인하고 학생·학급·학년·덱 고정 이벤트 키로 중복 지급을 막는다.
 같은 덱 반복 성공은 0P다. 주관식·개인 적응 복습·카드별 숙련 상태·덱 마스터/정상 도전은 후속이다.
 
 첫 덱의 직접 편집 재생성 원본은

@@ -3,10 +3,17 @@ import Button from '../../../components/common/Button';
 import { supabase } from '../../../lib/supabaseClient';
 import './teacherManager.css';
 import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
+import {
+    VOCAB_FLOOR_REWARD_DEFAULT_POINTS,
+    VOCAB_FLOOR_REWARD_MAX_POINTS,
+    VOCAB_FLOOR_REWARD_MIN_POINTS,
+    VOCAB_FLOOR_REWARD_STEP_POINTS,
+    normalizeFloorRewardPoints
+} from './rewardPolicy';
 
 const DEFAULT_CONFIG = {
     grade: 3,
-    perfectRewardPoints: 100,
+    perfectRewardPoints: VOCAB_FLOOR_REWARD_DEFAULT_POINTS,
     masterQuestionCount: 12,
     masterInputCount: 5,
     masterPassCorrect: 10,
@@ -144,7 +151,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
             ...master,
             ...summitValues,
             grade: clamp(config.grade, 3, 6),
-            perfectRewardPoints: clamp(config.perfectRewardPoints, 0, 500)
+            perfectRewardPoints: normalizeFloorRewardPoints(config.perfectRewardPoints)
         };
         setSaving(true);
         const { error } = await supabase
@@ -277,7 +284,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                         </label>
                         <label>
                             <span>🏆 층당 진도 보상 총액</span>
-                            <input type="number" min="0" max="500" step="10" value={config.perfectRewardPoints} onChange={(event) => updateConfig('perfectRewardPoints', event.target.value)} />
+                            <input type="number" min={VOCAB_FLOOR_REWARD_MIN_POINTS} max={VOCAB_FLOOR_REWARD_MAX_POINTS} step={VOCAB_FLOOR_REWARD_STEP_POINTS} value={config.perfectRewardPoints} onChange={(event) => updateConfig('perfectRewardPoints', event.target.value)} />
                         </label>
                     </div>
                 </div>
