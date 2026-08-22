@@ -4,6 +4,7 @@ import Button from '../common/Button';
 import { dataCache } from '../../lib/cache';
 import { supabase } from '../../lib/supabaseClient';
 import { getGenreMissionType, getGenreMissionTypes, resolveGenreMissionTypeId } from '../../modules/writing/mission-types/registry';
+import { applyGenrePreset, getFreeformGenreCategories } from '../../modules/writing/mission-types/genreCatalog';
 import { useMissionManager } from '../../hooks/useMissionManager';
 import MissionForm from './MissionForm';
 import MissionTypePicker from './MissionTypePicker';
@@ -37,6 +38,7 @@ const MissionManager = ({
     const [activeGenreMode, setActiveGenreMode] = useState('create');
     const [highlightedMissionId, setHighlightedMissionId] = useState(null);
     const [labSourceMission, setLabSourceMission] = useState(null);
+    const [presetGenre, setPresetGenre] = useState(null);
     const handledNavigationRef = useRef(null);
 
     const {
@@ -74,13 +76,7 @@ const MissionManager = ({
         return () => window.clearTimeout(timerId);
     }, [highlightedMissionId]);
 
-    const genreCategories = [
-        { label: '❤️ 마음을 표현하는 글', genres: ['일기', '생활문', '편지'] },
-        { label: '🔍 사실을 전달하는 글', genres: ['설명문', '보고서(관찰 기록문)', '기사문'] },
-        { label: '💡 생각을 주장하는 글', genres: ['논설문', '독후감(서평)'] },
-        { label: '🌈 상상을 담은 글', genres: ['동시', '동화(소설)'] },
-        { label: '✨ 기타 활동', genres: ['기타'] }
-    ];
+    const genreCategories = getFreeformGenreCategories();
 
     const activeGenreMission = getGenreMissionType(activeGenreMissionId);
     const ActiveGenreMissionBuilder = GENRE_MISSION_BUILDERS.get(activeGenreMissionId) || null;
@@ -108,6 +104,7 @@ const MissionManager = ({
             return;
         }
         setIsMissionTypePickerOpen(false);
+        setPresetGenre(null);
         handleEditClick(mission);
     };
 
@@ -243,8 +240,12 @@ const MissionManager = ({
                 <MissionTypePicker
                     isMobile={isMobile}
                     onClose={() => setIsMissionTypePickerOpen(false)}
-                    onSelectFreeform={() => {
+                    onSelectFreeform={(genreId) => {
                         setIsMissionTypePickerOpen(false);
+                        if (genreId) {
+                            setFormData((current) => applyGenrePreset(current, genreId).formData);
+                            setPresetGenre(genreId);
+                        }
                         setIsFormOpen(true);
                     }}
                     onSelectGenre={(id) => {
@@ -265,6 +266,9 @@ const MissionManager = ({
                 formData={formData}
                 setFormData={setFormData}
                 genreCategories={genreCategories}
+                presetGenre={presetGenre}
+                setPresetGenre={setPresetGenre}
+                submittedCount={editingMissionId ? (Reflect.get(submissionCounts || {}, editingMissionId) || 0) : 0}
                 handleSubmit={handleSubmit}
                 handleCancelEdit={handleCancelEdit}
                 isMobile={isMobile}

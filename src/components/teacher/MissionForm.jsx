@@ -8,12 +8,18 @@ import { supabase } from '../../lib/supabaseClient';
 import { readLocalStorageJson } from '../../lib/browserStorage';
 import RubricSettings from '../../modules/writing/evaluation/RubricSettings';
 import MissionLabQuestionsModal from './MissionLabQuestionsModal';
+import {
+    applyGenrePreset,
+    describePresetResult,
+    getGenrePreset
+} from '../../modules/writing/mission-types/genreCatalog';
 
 const MissionStudentPreview = React.lazy(() => import('./MissionStudentPreview'));
 
 const MissionForm = ({
     classId, isFormOpen, isEditing, editingMissionId, formData, setFormData,
-    genreCategories, handleSubmit, handleCancelEdit, isMobile,
+    genreCategories, presetGenre, setPresetGenre, submittedCount = 0,
+    handleSubmit, handleCancelEdit, isMobile,
     handleGenerateQuestions, isGeneratingQuestions,
     handleSaveDefaultRubric, handleSaveDefaultSettings,
     frequentTags, saveFrequentTag, removeFrequentTag
@@ -24,7 +30,34 @@ const MissionForm = ({
     const [isLoadingEditMission, setIsLoadingEditMission] = React.useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
     const closePreview = React.useCallback(() => setIsPreviewOpen(false), []);
+    const [presetNotice, setPresetNotice] = React.useState('');
+    // 학생 답은 질문 번호 순서로 저장된다. 제출이 시작된 뒤 기존 질문을 고치거나 지우면
+    // 이미 쓴 답이 엉뚱한 질문 밑으로 밀리고 되돌릴 수 없다(초안은 학생 기기에만 있다).
+    // 그래서 제출이 있으면 불러온 질문만 잠그고, 뒤에 새로 더하는 것은 열어 둔다.
+    const [lockedQuestionCount, setLockedQuestionCount] = React.useState(0);
+    const hasSubmissions = Number(submittedCount) > 0;
     const useAIQuestions = (formData.guide_questions?.length > 0) || formData.use_ai_questions;
+
+    const runGenrePreset = React.useCallback((genreId, { force = false } = {}) => {
+        const result = applyGenrePreset(formData, genreId, {
+            previousGenre: presetGenre,
+            force,
+            keepQuestions: hasSubmissions
+        });
+        setFormData(result.formData);
+        setPresetGenre?.(genreId);
+        setPresetNotice(describePresetResult(genreId, result));
+    }, [formData, presetGenre, hasSubmissions, setFormData, setPresetGenre]);
+
+    const handleGenreChange = (genreId) => {
+        if (!getGenrePreset(genreId)) {
+            setFormData({ ...formData, genre: genreId });
+            setPresetGenre?.(genreId);
+            setPresetNotice('');
+            return;
+        }
+        runGenrePreset(genreId);
+    };
 
     const handleImportLabQuestions = React.useCallback((newQuestions) => {
         if (!Array.isArray(newQuestions) || newQuestions.length === 0) return;
@@ -46,6 +79,10 @@ const MissionForm = ({
 
     const toggleAIQuestions = () => {
         if (useAIQuestions) {
+            if (hasSubmissions) {
+                alert('이미 제출한 학생이 있어 질문을 모두 지울 수 없습니다.\n학생이 쓴 답이 질문 번호로 저장돼 있기 때문입니다. 질문을 더하는 것은 할 수 있어요. 🔒');
+                return;
+            }
             if (window.confirm('디자인한 질문들이 모두 사라집니다. 정말 취소할까요?')) {
                 setFormData({ ...formData, guide_questions: [], use_ai_questions: false });
             }
@@ -86,6 +123,7 @@ const MissionForm = ({
                     { score: 1, label: '노력' }
                 ]);
 
+                setLockedQuestionCount((data.guide_questions || []).length);
                 setFormData({
                     title: data.title || '',
                     guide: data.guide || '',
@@ -120,6 +158,14 @@ const MissionForm = ({
             isMounted = false;
         };
     }, [isFormOpen, isEditing, editingMissionId, setFormData]);
+
+    React.useEffect(() => {
+        if (!isFormOpen) {
+            setPresetNotice('');
+            return;
+        }
+        if (!isEditing) setLockedQuestionCount(0);
+    }, [isFormOpen, isEditing]);
 
     return (
         <>
@@ -171,12 +217,18 @@ const MissionForm = ({
                                         }}
                                     />
 
-                                    <select value={formData.genre} onChange={e => setFormData({ ...formData, genre: e.target.value })} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}>
+                                    <select value={formData.genre} onChange={e => handleGenreChange(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '48px', width: '100%', boxSizing: 'border-box' }}>
                                         {genreCategories.map(cat => (
                                             <optgroup key={cat.label} label={cat.label}>
-                                                {cat.genres.map(g => <option key={g} value={g}>{g}</option>)}
+                                                {cat.entries.map(entry => <option key={entry.id} value={entry.id}>{entry.id}</option>)}
                                             </optgroup>
                                         ))}
+                                        {/* 목록에서 빠진 지난 종류(일기·동시 등)로 저장된 미션도 값이 조용히 바뀌지 않게 남긴다. */}
+                                        {!genreCategories.some(cat => cat.entries.some(entry => entry.id === formData.genre)) && formData.genre && (
+                                            <optgroup label="🗂 지난 종류">
+                                                <option value={formData.genre}>{formData.genre}</option>
+                                            </optgroup>
+                                        )}
                                     </select>
                                 </div>
                                 <textarea
@@ -185,6 +237,30 @@ const MissionForm = ({
                                     onChange={e => setFormData({ ...formData, guide: e.target.value })}
                                     style={{ padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '80px', fontSize: '1rem', width: '100%', boxSizing: 'border-box' }}
                                 />
+
+                                {getGenrePreset(formData.genre) && (
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            onClick={() => runGenrePreset(formData.genre, { force: true })}
+                                            style={{ background: '#EEF2FF', color: '#4338CA', border: '1px solid #C7D2FE', borderRadius: '12px', fontWeight: 'bold' }}
+                                        >
+                                            ✨ {formData.genre} 프리셋 다시 넣기
+                                        </Button>
+                                        <span style={{ color: '#64748B', fontSize: '0.78rem' }}>
+                                            {hasSubmissions
+                                                ? '제출이 시작돼 안내 질문은 그대로 두고 나머지만 채웁니다.'
+                                                : '선생님이 고친 칸은 그대로 두고 빈 칸만 채웁니다.'}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {presetNotice && (
+                                    <div style={{ padding: '10px 14px', borderRadius: '12px', background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D', fontSize: '0.82rem', fontWeight: 'bold' }}>
+                                        {presetNotice}
+                                    </div>
+                                )}
 
                                 {/* 태그 입력 UI */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', background: '#F8F9FF', borderRadius: '16px', border: '1px solid #E0E7FF' }}>
@@ -512,8 +588,14 @@ const MissionForm = ({
                                                     </Button>
                                                     <Button
                                                         type="button"
-                                                        onClick={() => handleGenerateQuestions(formData.question_count || 3)}
-                                                        disabled={isGeneratingQuestions}
+                                                        onClick={() => {
+                                                            if (hasSubmissions) {
+                                                                alert('이미 제출한 학생이 있어 질문을 새로 만들 수 없습니다.\n아래 `질문 추가`로 질문을 더하는 것은 할 수 있어요. 🔒');
+                                                                return;
+                                                            }
+                                                            handleGenerateQuestions(formData.question_count || 3);
+                                                        }}
+                                                        disabled={isGeneratingQuestions || hasSubmissions}
                                                         style={{
                                                             background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
                                                             color: 'white',
@@ -595,7 +677,9 @@ const MissionForm = ({
                                                             </div>
                                                             <textarea
                                                                 value={q}
+                                                                readOnly={hasSubmissions && idx < lockedQuestionCount}
                                                                 onChange={e => {
+                                                                    if (hasSubmissions && idx < lockedQuestionCount) return;
                                                                     const newQs = [...formData.guide_questions];
                                                                     newQs.splice(idx, 1, e.target.value);
                                                                     setFormData({ ...formData, guide_questions: newQs });
@@ -628,27 +712,44 @@ const MissionForm = ({
                                                                 rows={2}
                                                                 placeholder="질문 내용을 입력해주세요..."
                                                             />
-                                                            <button
-                                                                onClick={() => {
-                                                                    const newQs = formData.guide_questions.filter((_, i) => i !== idx);
-                                                                    setFormData({ ...formData, guide_questions: newQs });
-                                                                }}
-                                                                style={{
-                                                                    border: 'none',
-                                                                    background: '#FFF1F2',
-                                                                    color: '#F43F5E',
-                                                                    cursor: 'pointer',
-                                                                    padding: '10px',
-                                                                    borderRadius: '12px',
-                                                                    fontWeight: 'bold',
-                                                                    fontSize: '0.85rem',
-                                                                    transition: 'all 0.2s'
-                                                                }}
-                                                                onMouseOver={e => e.currentTarget.style.background = '#FFE4E6'}
-                                                                onMouseOut={e => e.currentTarget.style.background = '#FFF1F2'}
-                                                            >
-                                                                삭제
-                                                            </button>
+                                                            {hasSubmissions && idx < lockedQuestionCount ? (
+                                                                <span
+                                                                    title="학생이 이 질문에 쓴 답이 질문 번호로 저장돼 있어 고치거나 지울 수 없습니다."
+                                                                    style={{
+                                                                        background: '#F1F5F9',
+                                                                        color: '#64748B',
+                                                                        padding: '10px',
+                                                                        borderRadius: '12px',
+                                                                        fontWeight: 'bold',
+                                                                        fontSize: '0.8rem',
+                                                                        whiteSpace: 'nowrap'
+                                                                    }}
+                                                                >
+                                                                    🔒 제출 시작됨
+                                                                </span>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const newQs = formData.guide_questions.filter((_, i) => i !== idx);
+                                                                        setFormData({ ...formData, guide_questions: newQs });
+                                                                    }}
+                                                                    style={{
+                                                                        border: 'none',
+                                                                        background: '#FFF1F2',
+                                                                        color: '#F43F5E',
+                                                                        cursor: 'pointer',
+                                                                        padding: '10px',
+                                                                        borderRadius: '12px',
+                                                                        fontWeight: 'bold',
+                                                                        fontSize: '0.85rem',
+                                                                        transition: 'all 0.2s'
+                                                                    }}
+                                                                    onMouseOver={e => e.currentTarget.style.background = '#FFE4E6'}
+                                                                    onMouseOut={e => e.currentTarget.style.background = '#FFF1F2'}
+                                                                >
+                                                                    삭제
+                                                                </button>
+                                                            )}
                                                         </motion.div>
                                                     ))}
                                                 </AnimatePresence>
