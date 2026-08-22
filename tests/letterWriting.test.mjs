@@ -79,6 +79,8 @@ test('편지지는 계기교육용으로 여러 벌이고 출력 화면에서 �
     assert.deepEqual(modes.map((mode) => mode.value), LETTER_PAPERS.map((paper) => paper.value));
     for (const paper of LETTER_PAPERS) {
         assert.ok(paper.label.trim(), '편지지 이름이 비어 있다');
+        assert.ok(paper.printTitle.trim(), `${paper.label}의 인쇄 문구가 비어 있다`);
+        assert.ok(!paper.printTitle.includes('편지지'), `${paper.label}의 관리용 이름이 그대로 인쇄된다`);
         assert.ok(paper.description.trim(), `${paper.label} 설명이 비어 있다`);
         assert.match(paper.tint, /^#[0-9A-Fa-f]{6}$/, `${paper.label} 바탕색이 색 값이 아니다`);
         assert.ok(paper.blankCss.trim(), `${paper.label}의 빈 편지지 전용 디자인이 비어 있다`);
@@ -160,6 +162,7 @@ test('편지 PDF는 고른 편지지로 그리고 빈 편지지는 줄만 뽑는
     };
     const html = letterPdfExport.renderEntry(entry, { renderMode: 'parents' });
     assert.match(html, /pdf-entry--letter-parents/);
+    assert.match(html, /<span class="letter-sheet__band-label">어머니께<\/span>/);
     assert.match(html, /어머니에게/);
     assert.match(html, /김하늘 올림/);
 
@@ -173,7 +176,18 @@ test('편지 PDF는 고른 편지지로 그리고 빈 편지지는 줄만 뽑는
     assert.match(blank, /letter-sheet__blank-recipient-line/);
     assert.match(blank, /letter-sheet__blank-footer/);
     assert.match(blank, /letter-sheet__blank-line/);
+    assert.match(blank, /선생님, 감사합니다/);
+    assert.ok(!blank.includes('스승의 날 편지지'), '빈 편지지에 선택용 이름이 찍혔다');
     assert.ok(!blank.includes('올림'), '빈 편지지에 이름이 찍혔다');
+
+    for (const paper of LETTER_PAPERS) {
+        const paperHtml = letterPdfExport.renderEntry(
+            { title: '', author: '', content: '', structuredContent: { template: 'letter', blank: true } },
+            { renderMode: paper.value },
+        );
+        assert.ok(paperHtml.includes(paper.printTitle), `${paper.label}의 인쇄 문구가 나오지 않는다`);
+        assert.ok(!paperHtml.includes(paper.label), `${paper.label}의 선택용 이름이 빈 편지지에 찍힌다`);
+    }
 
     // 편지지를 지정하지 않아도 기본 편지지로 나온다.
     assert.match(letterPdfExport.renderEntry(entry, {}), /pdf-entry--letter-plain/);

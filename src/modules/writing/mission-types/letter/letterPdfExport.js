@@ -50,7 +50,7 @@ const renderLetterEntry = (entry, { renderMode = DEFAULT_LETTER_PAPER } = {}) =>
                 <span class="letter-sheet__deco letter-sheet__deco--br" aria-hidden="true"></span>
                 <header class="letter-sheet__band">
                     <span class="letter-sheet__emoji" aria-hidden="true">${paper.emoji}</span>
-                    <span class="letter-sheet__band-label">${escapePdfHtml(isBlank ? paper.label : entry.title)}</span>
+                    <span class="letter-sheet__band-label">${escapePdfHtml(isBlank ? paper.printTitle : entry.title)}</span>
                 </header>
                 <main class="letter-sheet__body">
                     ${paper.watermark ? `<span class="letter-sheet__mark" aria-hidden="true">${paper.watermark}</span>` : ''}

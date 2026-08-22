@@ -19,6 +19,7 @@ export const LETTER_PAPERS = Object.freeze([
     {
         value: 'plain',
         label: '기본 편지지',
+        printTitle: '마음을 담은 편지',
         description: '무늬 없이 줄만 있는 단정한 편지지입니다.',
         shape: '가는 단선 테두리에 옅은 가로줄',
         emoji: '✉️',
@@ -81,6 +82,7 @@ export const LETTER_PAPERS = Object.freeze([
     {
         value: 'parents',
         label: '어버이날 편지지',
+        printTitle: '사랑하는 마음을 담아',
         description: '5월 8일 부모님께. 둥근 카드 모양에 꽃잎 무늬와 카네이션 워터마크가 들어갑니다.',
         shape: '큰 라운드 카드 + 점무늬 바탕 + 물결 머리 띠',
         emoji: '🌸',
@@ -150,6 +152,7 @@ export const LETTER_PAPERS = Object.freeze([
     {
         value: 'teacher',
         label: '스승의 날 편지지',
+        printTitle: '선생님, 감사합니다',
         description: '5월 15일 선생님께. 공책처럼 왼쪽 세로선과 파란 줄이 그어진 편지지입니다.',
         shape: '공책 — 왼쪽 빨간 세로선 + 파란 가로줄',
         emoji: '🍎',
@@ -227,6 +230,7 @@ export const LETTER_PAPERS = Object.freeze([
     {
         value: 'soldier',
         label: '나라사랑 편지지',
+        printTitle: '감사와 응원의 마음을 담아',
         description: '호국보훈의 달과 국군의 날 위문편지. 항공우편처럼 청·홍 사선 테두리가 둘러집니다.',
         shape: '항공우편 사선 테두리 + 가운데 정렬 머리글',
         emoji: '🇰🇷',
@@ -291,6 +295,7 @@ export const LETTER_PAPERS = Object.freeze([
     {
         value: 'thanks',
         label: '고마운 분들께',
+        printTitle: '고마운 마음을 담아',
         description: '경찰관·소방관·환경미화원 등 고마운 분들께. 감사장처럼 이중 테두리와 모서리 장식이 있습니다.',
         shape: '감사장 — 이중 테두리 + 네 모서리 마름모',
         emoji: '🙏',
@@ -378,6 +383,7 @@ export const LETTER_PAPERS = Object.freeze([
     {
         value: 'friend',
         label: '친구 사랑 편지지',
+        printTitle: '친구야, 고마워',
         description: '학교폭력 예방 주간의 칭찬 편지. 머리글이 말풍선 모양이고 바탕에 하트 무늬가 있습니다.',
         shape: '말풍선 머리글 + 하트 점무늬 바탕',
         emoji: '💛',
@@ -465,6 +471,7 @@ export const LETTER_PAPERS = Object.freeze([
     {
         value: 'farewell',
         label: '헤어지는 친구에게',
+        printTitle: '우리의 소중한 추억',
         description: '졸업·전학으로 헤어지는 친구에게. 리본 배너 머리글과 별 무늬가 들어갑니다.',
         shape: '리본 배너 머리글 + 별 무늬 바탕',
         emoji: '🎓',
