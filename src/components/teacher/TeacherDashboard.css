@@ -200,6 +200,7 @@
 }
 
 .teacher-guide__steps,
+.teacher-guide__updates,
 .teacher-guide__notes {
     margin: 0 0 22px;
     padding-left: 22px;
@@ -209,8 +210,10 @@
 }
 
 .teacher-guide__steps li,
+.teacher-guide__updates li,
 .teacher-guide__notes li { margin-bottom: 8px; }
 .teacher-guide__notes { margin-bottom: 0; }
+.teacher-guide__updates li strong,
 .teacher-guide__notes li strong { color: #4F46E5; }
 
 /* 화면에 실제로 있는 버튼·메뉴 이름 */

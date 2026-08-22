@@ -49,6 +49,15 @@ const TeacherGuideButton = ({ tabId, className = '', variant = 'icon' }) => {
                     <div className="teacher-guide">
                         <p className="teacher-guide__summary">{guide.summary}</p>
 
+                        {guide.updates?.length > 0 && (
+                            <>
+                                <h4 className="teacher-guide__heading">최근 업데이트</h4>
+                                <ul className="teacher-guide__updates">
+                                    {guide.updates.map((update) => <li key={update}>{renderEmphasis(update)}</li>)}
+                                </ul>
+                            </>
+                        )}
+
                         <h4 className="teacher-guide__heading">이 순서로 하면 됩니다</h4>
                         <ol className="teacher-guide__steps">
                             {guide.steps.map((step) => <li key={step}>{renderEmphasis(step)}</li>)}

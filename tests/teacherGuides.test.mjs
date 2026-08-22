@@ -4,7 +4,26 @@ import { readFileSync } from 'node:fs';
 
 import { TEACHER_GUIDES } from '../src/constants/teacherGuides.js';
 
-const guideText = (guide) => [guide.summary, ...guide.steps, ...guide.notes].join('\n');
+const guideText = (guide) => [guide.summary, ...(guide.updates || []), ...guide.steps, ...guide.notes].join('\n');
+
+test('선생님 과제 도움말은 현재 미션 만들기와 검토 흐름을 빠짐없이 안내한다', () => {
+    const text = guideText(TEACHER_GUIDES.dashboard);
+    const guideButton = readFileSync('src/components/teacher/TeacherGuideButton.jsx', 'utf8');
+
+    assert.match(text, /11가지 글/);
+    assert.match(text, /양식이 준비된 글.*편지·시·관찰·조사 보고서·안건 의견 모으기/);
+    assert.match(text, /기본 글쓰기.*7종/);
+    assert.match(text, /계기교육용 편지지 7종.*15줄 빈 편지지/);
+    assert.match(text, /연구소 좋은 질문 불러오기/);
+    assert.match(text, /연구소 자료 연결.*글 개요짜기·좋은 질문 고르기·한줄모아/);
+    assert.match(text, /학생에게 어떻게 보일까요/);
+    assert.match(text, /기존 핵심 질문은 수정·삭제·전체 교체할 수 없습니다/);
+    assert.match(text, /새 질문을 뒤에 추가/);
+    assert.match(text, /다시 쓰기로 돌려보낸 뒤 아직 재제출하지 않은 글을 걷어오는/);
+    assert.match(text, /되돌리기.*회수한 글을 학생에게 다시 보내/);
+    assert.match(text, /평가하기.*리포트/);
+    assert.match(guideButton, /guide\.updates\?\.length[\s\S]*최근 업데이트[\s\S]*guide\.updates\.map/);
+});
 
 test('독서록 도움말은 교사 확인 보상과 학생별 책장 내보내기를 안내한다', () => {
     const text = guideText(TEACHER_GUIDES['reading-logs']);
