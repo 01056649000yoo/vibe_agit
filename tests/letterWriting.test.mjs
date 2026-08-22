@@ -82,6 +82,31 @@ test('편지지는 계기교육용으로 여러 벌이고 출력 화면에서 �
     assert.equal(getLetterPaper('없는편지지').value, LETTER_PAPERS[0].value);
 });
 
+test('편지지는 색만 다른 것이 아니라 모양이 서로 다르다', () => {
+    // 색 값만 갈아 끼운 편지지는 인쇄했을 때 다 비슷해 보인다.
+    // 색을 지운 뒤에도 규칙이 서로 달라야 진짜 다른 편지지다.
+    const shapeOf = (paper) => paper.css
+        .replaceAll(`--letter-${paper.value}`, '--letter-X')
+        .replace(/#[0-9A-Fa-f]{3,8}/g, 'COLOR')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const shapes = new Map();
+    for (const paper of LETTER_PAPERS) {
+        const shape = shapeOf(paper);
+        const twin = shapes.get(shape);
+        assert.ok(!twin, `${paper.label}과 ${twin}은 색만 다른 같은 편지지다`);
+        shapes.set(shape, paper.label);
+    }
+
+    // 모양을 한 줄로 설명하는 말도 편지지마다 달라야 교사가 고를 수 있다.
+    const shapeLabels = LETTER_PAPERS.map((paper) => paper.shape);
+    assert.equal(new Set(shapeLabels).size, LETTER_PAPERS.length, '편지지 모양 설명이 겹친다');
+    for (const paper of LETTER_PAPERS) {
+        assert.ok(paper.shape?.trim(), `${paper.label}에 모양 설명이 없다`);
+    }
+});
+
 test('편지지는 전역 인쇄 여백을 건드리지 않는다', () => {
     // @page 여백을 바꾸면 같은 인쇄에 섞인 시·보고서 페이지까지 여백이 날아간다.
     assert.ok(!/@page\s*\{/.test(letterPdfExport.styles), '편지 스타일이 전역 인쇄 규칙을 바꾸고 있다');

@@ -1,6 +1,6 @@
 import { escapePdfHtml } from '../../export/pdfRenderContract.js';
 import { normalizeLetterParts } from './letterContent.js';
-import { DEFAULT_LETTER_PAPER, LETTER_PAPERS, getLetterPaper } from './letterPapers.js';
+import { DEFAULT_LETTER_PAPER, getLetterPaper, getLetterPaperStyles } from './letterPapers.js';
 
 const renderParagraphs = (value) => escapePdfHtml(value).replaceAll('\n', '<br>\n');
 
@@ -17,7 +17,7 @@ const renderLetterEntry = (entry, { renderMode = DEFAULT_LETTER_PAPER } = {}) =>
     const inner = isBlank
         ? `
             <div class="letter-sheet__row letter-sheet__row--to">받는 사람 ______________________</div>
-            <div class="letter-sheet__blank">${renderBlankLines(16)}</div>
+            <div class="letter-sheet__blank">${renderBlankLines(15)}</div>
             <div class="letter-sheet__row letter-sheet__row--from">______년 ____월 ____일 &nbsp; 쓴 사람 ______________________</div>`
         : `
             <div class="letter-sheet__row letter-sheet__row--to">${escapePdfHtml(parts.recipient)}에게</div>
@@ -29,39 +29,29 @@ const renderLetterEntry = (entry, { renderMode = DEFAULT_LETTER_PAPER } = {}) =>
     return `
         <article class="pdf-entry pdf-entry--letter pdf-entry--letter-${escapePdfHtml(paper.value)}">
             <div class="letter-sheet">
+                <span class="letter-sheet__deco letter-sheet__deco--tl" aria-hidden="true"></span>
+                <span class="letter-sheet__deco letter-sheet__deco--tr" aria-hidden="true"></span>
+                <span class="letter-sheet__deco letter-sheet__deco--bl" aria-hidden="true"></span>
+                <span class="letter-sheet__deco letter-sheet__deco--br" aria-hidden="true"></span>
                 <header class="letter-sheet__band">
                     <span class="letter-sheet__emoji" aria-hidden="true">${paper.emoji}</span>
                     <span class="letter-sheet__band-label">${escapePdfHtml(isBlank ? paper.label : entry.title)}</span>
                 </header>
-                <main class="letter-sheet__body">${inner}</main>
+                <main class="letter-sheet__body">
+                    ${paper.watermark ? `<span class="letter-sheet__mark" aria-hidden="true">${paper.watermark}</span>` : ''}
+                    ${inner}
+                </main>
             </div>
         </article>`;
 };
 
-// 편지지마다 달라지는 것은 색뿐이라 한 벌의 규칙에 색만 갈아 끼운다.
-const paperStyles = LETTER_PAPERS.map((paper) => `
-        .pdf-entry--letter-${paper.value} .letter-sheet {
-            border-color: ${paper.edge};
-            background: ${paper.tint};
-        }
-        .pdf-entry--letter-${paper.value} .letter-sheet__band {
-            background: ${paper.band};
-            color: ${paper.ink};
-        }
-        .pdf-entry--letter-${paper.value} .letter-sheet__row {
-            color: ${paper.ink};
-        }
-        .pdf-entry--letter-${paper.value} .letter-sheet__blank-line {
-            border-bottom-color: ${paper.edge};
-        }
-`).join('');
-
-const LETTER_PDF_STYLES = `
-        /*
-         * 편지지는 종이 가장자리까지 채워야 예쁘다. 그렇다고 @page 여백을 0으로 바꾸면
-         * 같은 인쇄에 섞인 시·보고서 페이지까지 여백이 날아간다. 그래서 전역 규칙은 두고
-         * 편지 칸만 음수 여백으로 넓힌 뒤 안쪽에서 같은 만큼 되돌린다.
-         */
+/*
+ * 공용 뼈대는 자리만 잡는다. 테두리 모양·바탕 무늬·머리 띠 모양은 편지지마다 `letterPapers.js`가 정한다.
+ *
+ * 편지지는 종이 가장자리까지 채워야 예쁘다. 그렇다고 전역 인쇄 여백을 0으로 바꾸면 같은 인쇄에 섞인
+ * 시·보고서 페이지까지 여백이 날아간다. 그래서 전역 규칙은 두고 편지 칸만 음수 여백으로 넓힌다.
+ */
+const LETTER_BASE_STYLES = `
         .pdf-entry--letter {
             min-height: 297mm;
             margin: -15mm -16mm -17mm;
@@ -69,12 +59,15 @@ const LETTER_PDF_STYLES = `
         }
         .pdf-entry--letter + .pdf-entry--letter { margin-top: 0; }
         .letter-sheet {
+            position: relative;
             display: flex;
             flex-direction: column;
             min-height: 281mm;
-            border: .7mm solid #CBD5E1;
-            border-radius: 6mm;
             overflow: hidden;
+        }
+        .letter-sheet__deco {
+            display: none;
+            position: absolute;
         }
         .letter-sheet__band {
             display: flex;
@@ -85,14 +78,17 @@ const LETTER_PDF_STYLES = `
             font-weight: 800;
         }
         .letter-sheet__emoji { font-size: 16pt; }
-        .letter-sheet__band-label {
-            overflow-wrap: anywhere;
-        }
+        .letter-sheet__band-label { overflow-wrap: anywhere; }
         .letter-sheet__body {
             flex: 1;
-            padding: 10mm 12mm 12mm;
+            padding: 8mm 12mm 12mm;
             font-size: 13pt;
             line-height: 2.0;
+        }
+        .letter-sheet__mark {
+            display: none;
+            position: absolute;
+            line-height: 1;
         }
         .letter-sheet__row {
             font-size: 13pt;
@@ -117,10 +113,10 @@ const LETTER_PDF_STYLES = `
             height: 11mm;
             border-bottom: .3mm dashed #CBD5E1;
         }
-${paperStyles}`;
+`;
 
 export const letterPdfExport = {
     id: 'letter',
     renderEntry: renderLetterEntry,
-    styles: LETTER_PDF_STYLES,
+    styles: `${LETTER_BASE_STYLES}\n${getLetterPaperStyles()}`,
 };
