@@ -226,65 +226,88 @@ export const LETTER_PAPERS = Object.freeze([
         value: 'soldier',
         label: '나라사랑 편지지',
         printTitle: '감사와 응원의 마음을 담아',
-        description: '호국보훈의 달과 국군의 날 위문편지. 항공우편처럼 청·홍 사선 테두리가 둘러집니다.',
-        shape: '항공우편 사선 테두리 + 가운데 정렬 머리글',
-        emoji: '🇰🇷',
+        description: '호국보훈의 달과 국군의 날 위문편지. 태극색 모서리와 은은한 무궁화 장식으로 꾸밉니다.',
+        shape: '차분한 이중 테두리 + 태극색 모서리 + 무궁화 머리글',
+        emoji: '✿',
         ink: '#1E3A8A',
-        edge: '#93C5FD',
-        tint: '#FFFFFF',
-        band: '#DBEAFE',
+        edge: '#9BB6D6',
+        tint: '#FFFEFC',
+        band: '#F8FAFC',
         css: `
         .pdf-entry--letter-soldier .letter-sheet {
-            border: 3mm solid #1E3A8A;
-            border-image: repeating-linear-gradient(
-                45deg,
-                #C8102E 0 5mm,
-                #FFFFFF 5mm 10mm,
-                #003478 10mm 15mm,
-                #FFFFFF 15mm 20mm
-            ) 3mm;
-            border-radius: 0;
-            background: #FFFFFF;
+            border: .6mm solid #9BB6D6;
+            border-radius: 3mm;
+            background:
+                radial-gradient(circle at 10mm 10mm, rgba(200, 16, 46, .08) 0 8mm, transparent 8.3mm),
+                radial-gradient(circle at calc(100% - 10mm) calc(100% - 10mm), rgba(0, 52, 120, .07) 0 8mm, transparent 8.3mm),
+                linear-gradient(145deg, #FFFEFC, #F8FBFF);
+            box-shadow: inset 0 0 0 .3mm #F7D6DC;
         }
         .pdf-entry--letter-soldier .letter-sheet__band {
             justify-content: center;
-            border-bottom: .5mm solid #1E3A8A;
+            margin: 6mm 24mm 0;
+            border-top: .5mm solid #C8102E;
+            border-bottom: .5mm solid #003478;
+            background: rgba(255, 255, 255, .86);
             color: #1E3A8A;
-            letter-spacing: .12em;
+            letter-spacing: .08em;
         }
-        .pdf-entry--letter-soldier .letter-sheet__body { padding-top: 12mm; }
+        .pdf-entry--letter-soldier .letter-sheet__emoji {
+            color: #C8102E;
+            font-size: 15pt;
+        }
+        .pdf-entry--letter-soldier .letter-sheet__body {
+            padding: 10mm 14mm 12mm;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0 10.7mm,
+                rgba(147, 197, 253, .34) 10.7mm 11mm
+            );
+        }
+        .pdf-entry--letter-soldier .letter-sheet__deco--tl,
+        .pdf-entry--letter-soldier .letter-sheet__deco--br {
+            display: block;
+            z-index: 4;
+            width: 8mm;
+            height: 8mm;
+            border: .7mm solid #FFFFFF;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 50% 25%, #003478 0 24%, transparent 25%),
+                radial-gradient(circle at 50% 75%, #C8102E 0 24%, transparent 25%),
+                linear-gradient(180deg, #C8102E 0 50%, #003478 50%);
+            box-shadow: 0 0 0 .35mm #CBD5E1;
+        }
+        .pdf-entry--letter-soldier .letter-sheet__deco--tl { top: 8mm; left: 10mm; transform: rotate(-12deg); }
+        .pdf-entry--letter-soldier .letter-sheet__deco--br { right: 10mm; bottom: 8mm; transform: rotate(168deg); opacity: .72; }
         .pdf-entry--letter-soldier .letter-sheet__row { color: #1E3A8A; }
         .pdf-entry--letter-soldier .letter-sheet__blank-line { border-bottom-color: #93C5FD; }`,
         blankCss: `
         .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet {
-            border: .45mm solid #93C5FD;
-            border-image: none;
-            background: radial-gradient(circle at 50% 52%, rgba(0, 52, 120, .045) 0 34mm, transparent 34.5mm), #FFFFFF;
+            border: .6mm solid #9BB6D6;
+            border-radius: 3mm;
+            background:
+                radial-gradient(circle at 10mm 10mm, rgba(200, 16, 46, .08) 0 8mm, transparent 8.3mm),
+                radial-gradient(circle at calc(100% - 10mm) calc(100% - 10mm), rgba(0, 52, 120, .07) 0 8mm, transparent 8.3mm),
+                linear-gradient(145deg, #FFFEFC, #F8FBFF);
+            box-shadow: inset 0 0 0 .3mm #F7D6DC;
         }
         .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__band {
-            left: 34mm;
-            right: 34mm;
+            left: 30mm;
+            right: 30mm;
             justify-content: center;
-            border: .45mm solid #93C5FD;
-            border-radius: 999px;
-            background: linear-gradient(90deg, #FEE2E2 0 18%, #FFFFFF 18% 82%, #DBEAFE 82%);
+            border: 0;
+            border-top: .5mm solid #C8102E;
+            border-bottom: .5mm solid #003478;
+            border-radius: 0;
+            background: rgba(255, 255, 255, .88);
             color: #1E3A8A;
-            letter-spacing: .12em;
+            letter-spacing: .08em;
         }
-        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco {
-            display: block;
-            z-index: 4;
-            width: 10mm;
-            height: 10mm;
-            border: 1mm solid #FFFFFF;
-            border-radius: 50%;
-            background: linear-gradient(145deg, #C8102E 0 49%, #003478 51%);
-            box-shadow: 0 0 0 .45mm #93C5FD;
-        }
-        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco--tl { top: 10mm; left: 10mm; transform: rotate(-18deg); }
+        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco--tl { top: 8mm; left: 10mm; transform: rotate(-12deg); }
         .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco--tr,
         .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco--bl { display: none; }
-        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco--br { right: 10mm; bottom: 10mm; transform: rotate(162deg); opacity: .48; }
+        .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__deco--br { right: 10mm; bottom: 8mm; transform: rotate(168deg); opacity: .72; }
         .pdf-entry--letter-soldier.pdf-entry--letter-blank .letter-sheet__blank-line { border-bottom-color: #93C5FD; }`,
     },
     {

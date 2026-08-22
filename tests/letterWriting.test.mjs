@@ -133,6 +133,20 @@ test('스승의 날 편지지는 거슬리는 세로줄 없이 칠판과 연필�
     assert.match(teacherPaper.blankCss, /letter-sheet__deco--br/);
 });
 
+test('나라사랑 편지지는 KR로 풀리는 국기 이모지 없이 태극색과 무궁화로 꾸민다', () => {
+    const soldierPaper = getLetterPaper('soldier');
+    const soldierStyles = `${soldierPaper.css}\n${soldierPaper.blankCss}`;
+
+    assert.equal(soldierPaper.emoji, '✿');
+    assert.match(soldierPaper.shape, /태극색/);
+    assert.match(soldierPaper.shape, /무궁화/);
+    assert.doesNotMatch(soldierPaper.description, /항공우편|사선 테두리/);
+    assert.doesNotMatch(soldierStyles, /border-image|repeating-linear-gradient\(\s*45deg/);
+    assert.match(soldierPaper.css, /radial-gradient\(circle at 50% 25%, #003478/);
+    assert.match(soldierPaper.blankCss, /border-top: \.5mm solid #C8102E/);
+    assert.match(soldierPaper.blankCss, /border-bottom: \.5mm solid #003478/);
+});
+
 test('빈 편지지는 일곱 종류 모두 같은 좌표에서 쓰기 시작한다', () => {
     assert.match(
         letterPdfExport.styles,
