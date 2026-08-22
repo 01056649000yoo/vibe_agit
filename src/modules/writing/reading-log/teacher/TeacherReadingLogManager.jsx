@@ -77,7 +77,6 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
     const [comment, setComment] = useState('');
     const [detailLoading, setDetailLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [reviewNotice, setReviewNotice] = useState('');
     const [selectedReviewIds, setSelectedReviewIds] = useState(() => new Set());
     const [bulkSaving, setBulkSaving] = useState(false);
     const [bulkNotice, setBulkNotice] = useState('');
@@ -378,7 +377,6 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
         setSelected(item);
         setDetail(null);
         setComment('');
-        setReviewNotice('');
         setDetailLoading(true);
 
         const [postResult, reviewResult] = await Promise.all([
@@ -460,20 +458,16 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
             return;
         }
 
-        const savedReview = {
-            review_status: data?.review_status || 'checked',
-            teacher_comment: data?.teacher_comment || '',
-            reviewed_at: data?.reviewed_at || new Date().toISOString()
-        };
-        setDetail((current) => current ? { ...current, review: savedReview } : current);
-        setSelected((current) => current ? { ...current, review_status: savedReview.review_status } : current);
-        setComment(savedReview.teacher_comment);
         const awardedPoints = Number(data?.points_awarded) || 0;
-        setReviewNotice(decision === 'revision_requested'
+        const successNotice = decision === 'revision_requested'
             ? '보완 요청을 학생 활동 알림으로 보냈습니다.'
             : awardedPoints > 0
                 ? `확인 완료! ${awardedPoints}P를 지급하고 학생에게 알렸습니다.`
-                : '확인 완료! 학생 활동 알림도 함께 보냈습니다.');
+                : '확인 완료! 학생 활동 알림도 함께 보냈습니다.';
+        setBulkNotice(`✅ ${successNotice}`);
+        setSelected(null);
+        setDetail(null);
+        setComment('');
         await refresh();
     };
 
@@ -852,7 +846,6 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                                             {reviewLabel(detail.review?.review_status)}
                                         </span>
                                     </div>
-                                    {reviewNotice && <div className="teacher-reading-review-success" role="status">✅ {reviewNotice}</div>}
                                     <textarea
                                         value={comment}
                                         onChange={(event) => setComment(event.target.value.slice(0, 500))}
@@ -960,7 +953,6 @@ const TeacherReadingLogManager = ({ activeClass, isMobile, navigationTarget, onN
                 .teacher-reading-review-state.checked { background:#DCFCE7; color:#15803D; }
                 .teacher-reading-review-state.commented { background:#EDE9FE; color:#6D28D9; }
                 .teacher-reading-review-state.revision_requested { background:#FEF3C7; color:#B45309; }
-                .teacher-reading-review-success { margin-top:14px; padding:14px 16px; border:1px solid #86EFAC; border-radius:13px; background:#DCFCE7; color:#15803D; font-weight:950; animation:readingReviewDone .28s ease-out; }
                 @keyframes readingReviewDone { from { opacity:0; transform:translateY(5px) scale(.985); } to { opacity:1; transform:none; } }
                 .teacher-reading-review-box textarea { width:100%; margin-top:14px; padding:14px; border:1px solid #BFDBFE; border-radius:13px; box-sizing:border-box; resize:vertical; color:#334155; font:inherit; line-height:1.6; }
                 .teacher-reading-review-box > small { display:block; margin-top:6px; color:#64748B; text-align:right; }

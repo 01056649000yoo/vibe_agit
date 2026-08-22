@@ -219,6 +219,25 @@ test('교사는 선택 사유로 확인 또는 보완 요청만 남긴다', asyn
     assert.doesNotMatch(diaryManager, /disabled=\{saving \|\| !comment\.trim\(\)\}/);
 });
 
+test('교사 독서록은 확인 저장 성공 뒤 상세 창을 닫고 목록에 결과를 남긴다', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const readingManager = await readFile(
+        'src/modules/writing/reading-log/teacher/TeacherReadingLogManager.jsx',
+        'utf8'
+    );
+    const saveReview = readingManager.match(
+        /const saveReview = async[\s\S]*?\n    const toggleReviewSelection/
+    )?.[0];
+
+    assert.ok(saveReview, '독서록 확인 저장 함수를 찾지 못했습니다.');
+    assert.match(saveReview, /if \(error\) \{[\s\S]*?return;[\s\S]*?\}/);
+    assert.match(
+        saveReview,
+        /setBulkNotice\(`✅ \$\{successNotice\}`\);[\s\S]*?setSelected\(null\);[\s\S]*?setDetail\(null\);[\s\S]*?await refresh\(\);/
+    );
+    assert.doesNotMatch(saveReview, /setReviewNotice/);
+});
+
 test('독서록과 일기는 같은 압축형 대기함과 단일 RPC 일괄 확인을 사용한다', async () => {
     const { readFile } = await import('node:fs/promises');
     const [readingManager, diaryManager, workspace, workspaceCss, migration] = await Promise.all([
