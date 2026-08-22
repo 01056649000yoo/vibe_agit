@@ -153,6 +153,11 @@ test('빈 편지지는 일곱 종류 모두 같은 좌표에서 쓰기 시작한
         /\.pdf-entry--letter-blank \.letter-sheet__body \{[\s\S]*?top: var\(--letter-blank-body-top, 36mm\);[\s\S]*?right: var\(--letter-blank-body-side, 14mm\);[\s\S]*?left: var\(--letter-blank-body-side, 14mm\);/,
     );
     assert.match(letterPdfExport.styles, /\.letter-sheet__blank-recipient \{/);
+    assert.match(
+        letterPdfExport.styles,
+        /\.letter-sheet__blank-recipient-line \{[\s\S]*?flex: 0 0 68mm;/,
+    );
+    assert.doesNotMatch(letterPdfExport.styles, /flex: 0 0 92mm;/);
     assert.match(letterPdfExport.styles, /\.letter-sheet__blank-footer \{/);
 
     // 주제별 장식이 공용 쓰기 좌표를 다시 움직이면 받는 사람 위치가 또 제각각이 된다.

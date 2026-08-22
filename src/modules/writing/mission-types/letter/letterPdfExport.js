@@ -175,7 +175,7 @@ const LETTER_BLANK_BASE_STYLES = `
             line-height: 1;
         }
         .letter-sheet__blank-recipient-line {
-            flex: 0 0 92mm;
+            flex: 0 0 68mm;
             border-bottom: .35mm solid currentColor;
             opacity: .58;
         }
