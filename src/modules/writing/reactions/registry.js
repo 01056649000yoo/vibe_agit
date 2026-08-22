@@ -19,7 +19,7 @@ const reactionProfiles = new Map([
         { type: 'report_clear', label: '정리가 잘됐어요', emoji: '📋' },
         { type: 'report_new', label: '새롭게 알았어요', emoji: '💡' },
     ])],
-    ['meeting', createProfile('meeting', '회의 안건 반응', [
+    ['meeting', createProfile('meeting', '안건 의견 반응', [
         { type: 'agree', label: '마음에 들어요', emoji: '💜' },
         { type: 'supplement', label: '더 이야기해요', emoji: '🔧' },
         { type: 'disagree', label: '다른 생각이에요', emoji: '💭' },

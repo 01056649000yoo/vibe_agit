@@ -458,7 +458,7 @@ export const useFriendsHideout = (studentSession, params) => {
             }));
             return true;
         } catch (err) {
-            console.error('회의 안건 선택 실패:', err.message);
+            console.error('안건 선택 실패:', err.message);
             return false;
         }
     }, [resolveClassId, studentSession.id]);

@@ -34,7 +34,7 @@ const MEETING_SELECT_FIELDS = 'id, title, guide, guide_questions, created_at, is
 const INITIAL_LIST_LIMIT = 100;
 
 /**
- * 🏛️ 학급 회의 안건 관리자 (교사용)
+ * 🏛️ 안건 의견 모으기 관리자 (교사용)
  * - 4열 그리드로 한 화면에 12명 아이디어 한눈에 확인 가능
  * - 클릭 시 상세보기 모달에서 가이드 질문 답변 + 상태 변경
  */
@@ -50,7 +50,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
     const [editingMeetingId, setEditingMeetingId] = useState(mode === 'edit' ? mission?.id : null); // 수정 중인 안건 ID
     const [detailModal, setDetailModal] = useState(null); // 상세보기 모달용
 
-    // 새 회의 안건 폼
+    // 새 안건 폼
     const [formData, setFormData] = useState(() => createMeetingForm(mode === 'edit' ? mission : null));
     const closePreview = useCallback(() => setIsPreviewOpen(false), []);
 
@@ -156,10 +156,10 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
         };
     }, [detailModal?.id]);
 
-    // 회의 안건 생성 또는 수정
+    // 안건 생성 또는 수정
     const handleCreateOrUpdateMeeting = async () => {
         if (!formData.title.trim()) {
-            alert('회의 안건 제목을 입력해주세요! 📋');
+            alert('안건 제목을 입력해주세요! 📋');
             return;
         }
         setSaving(true);
@@ -197,7 +197,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                     .single();
                 if (error) throw error;
                 savedMeeting = data;
-                alert('회의 안건이 수정되었습니다! ✨');
+                alert('안건이 수정되었습니다! ✨');
             } else {
                 // 생성 모드
                 const { data, error } = await supabase
@@ -207,7 +207,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                     .single();
                 if (error) throw error;
                 savedMeeting = data;
-                alert('회의 안건이 성공적으로 등록되었습니다! 🏛️');
+                alert('안건이 성공적으로 등록되었습니다! 🏛️');
             }
 
             setFormData(createMeetingForm());
@@ -221,7 +221,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
             }
         } catch (err) {
             console.error('[IdeaMarketManager] 회의 저장 실패:', err.message);
-            alert('회의 안건 저장에 실패했습니다. 다시 시도해주세요.');
+            alert('안건 저장에 실패했습니다. 다시 시도해주세요.');
         } finally {
             setSaving(false);
         }
@@ -278,9 +278,9 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
         }
     };
 
-    // 회의 안건 보관 (아카이브)
+    // 안건 보관 (아카이브)
     const handleArchiveMeeting = async (meetingId) => {
-        if (!confirm('이 회의 안건을 보관하시겠습니까?')) return;
+        if (!confirm('이 안건을 보관하시겠습니까?')) return;
         try {
             const { error } = await supabase
                 .from('writing_missions')
@@ -293,15 +293,15 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                 setSelectedMeeting(null);
                 setIdeas([]);
             }
-            alert('회의 안건이 보관되었습니다.');
+            alert('안건이 보관되었습니다.');
         } catch (err) {
             console.error('[IdeaMarketManager] 아카이브 실패:', err.message);
         }
     };
 
-    // 회의 안건 영구 삭제
+    // 안건 영구 삭제
     const handleDeleteMeeting = async (meetingId, title) => {
-        if (!confirm(`🚨 [영구 삭제] "${title}" 안건을 완전히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며, 모든 학생 제안과 댓글이 함께 삭제됩니다.`)) return;
+        if (!confirm(`🚨 [영구 삭제] "${title}" 안건을 완전히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며, 모든 학생 의견과 댓글이 함께 삭제됩니다.`)) return;
 
         setSaving(true);
         try {
@@ -353,7 +353,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                     margin: 0, fontSize: '1.5rem', fontWeight: '900',
                     color: '#4C1D95', display: 'flex', alignItems: 'center', gap: '8px'
                 }}>
-                    {mode === 'review' ? '💡 학생 제안 관리' : editingMeetingId ? '✏️ 회의 안건 미션 수정' : '🏛️ 회의 안건 미션 만들기'}
+                    {mode === 'review' ? '💡 학생 의견 관리' : editingMeetingId ? '✏️ 안건 의견 모으기 수정' : '🏛️ 새 안건 의견 모으기'}
                 </h2>
                 {mode === 'review' && selectedMeeting && (
                     <span style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: '700' }}>{selectedMeeting.title}</span>
@@ -432,7 +432,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                 }}>📋</div>
                                 <div>
                                     <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: '#4C1D95' }}>
-                                        {editingMeetingId ? '🔄 회의 안건 내용 수정' : '새 회의 안건 등록'}
+                                        {editingMeetingId ? '🔄 안건 내용 수정' : '새 안건 등록'}
                                     </h3>
                                     <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#7C3AED' }}>
                                         {editingMeetingId ? '안건의 정보를 수정하여 업데이트하세요' : '학생들에게 의견을 구할 안건을 작성해주세요'}
@@ -446,7 +446,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                     display: 'block', fontSize: '0.9rem', fontWeight: '700',
                                     color: '#1E293B', marginBottom: '8px'
                                 }}>
-                                    회의 안건 제목 *
+                                    안건 제목 *
                                 </label>
                                 <input
                                     type="text"
@@ -773,7 +773,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                     boxShadow: '0 8px 20px rgba(124, 58, 237, 0.3)'
                                 }}
                             >
-                                {saving ? '저장 중... ⏳' : (editingMeetingId ? '🔄 안건 수정 내용 저장하기' : '🏛️ 회의 안건 등록하기')}
+                                {saving ? '저장 중... ⏳' : (editingMeetingId ? '🔄 안건 수정 내용 저장하기' : '🏛️ 안건 등록하기')}
                             </motion.button>
                         </Card>
                     </motion.div>
@@ -796,13 +796,13 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                             }}>
                                 <div style={{ fontSize: '3rem', marginBottom: '12px' }}>📋</div>
                                 <p style={{ color: '#64748B', fontWeight: 'bold' }}>
-                                    아직 등록된 회의 안건이 없습니다.<br />
+                                    아직 등록된 안건이 없습니다.<br />
                                     '안건 만들기' 탭에서 새 안건을 등록해 보세요!
                                 </p>
                             </div>
                         ) : (
                             <div>
-                                {/* 레거시 전체 관리 화면에서만 회의 안건을 다시 선택한다. */}
+                                {/* 레거시 전체 관리 화면에서만 안건을 다시 선택한다. */}
                                 {mode === 'legacy' && <div style={{
                                     display: 'flex', gap: '10px', marginBottom: '20px',
                                     flexWrap: 'wrap', alignItems: 'center'
@@ -978,7 +978,7 @@ const IdeaMarketManager = ({ activeClass, onBack, onSaved, isMobile, mission = n
                                     }}>
                                         <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>👆</div>
                                         <p style={{ color: '#94A3B8', fontWeight: 'bold' }}>
-                                            위에서 회의 안건을 선택해 주세요.
+                                            위에서 안건을 선택해 주세요.
                                         </p>
                                     </div>
                                 )}

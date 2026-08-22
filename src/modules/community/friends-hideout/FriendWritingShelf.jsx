@@ -59,7 +59,7 @@ const getBookLabel = (post) => {
     const mission = normalizeRelation(post?.writing_missions);
     const selfType = getSelfWritingType(post);
     if (selfType) return selfType.label;
-    if (isMeetingPost(post)) return '회의 안건';
+    if (isMeetingPost(post)) return '안건 의견';
     return mission?.title || '선생님 과제';
 };
 

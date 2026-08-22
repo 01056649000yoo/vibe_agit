@@ -34,7 +34,7 @@ test('글 종류 목록은 카탈로그 한 곳에서 오고 화면에 값을 �
 test('전용 틀이 있는 종류는 그 틀로 보내고 폼 선택칸에는 넣지 않는다', () => {
     assert.equal(getGenreMissionTypeId('시'), 'poem');
     assert.equal(getGenreMissionTypeId('관찰·조사 보고서'), 'report');
-    assert.equal(getGenreMissionTypeId('학급 회의 안건'), 'meeting');
+    assert.equal(getGenreMissionTypeId('안건 의견 모으기'), 'meeting');
 
     // 등록되지 않은 틀을 가리키면 첫 화면에서 빈 카드가 된다.
     for (const entry of getGenreEntries()) {
@@ -43,7 +43,7 @@ test('전용 틀이 있는 종류는 그 틀로 보내고 폼 선택칸에는 �
     }
 
     const freeformIds = getFreeformGenreCategories().flatMap((category) => category.entries.map((entry) => entry.id));
-    for (const id of ['시', '관찰·조사 보고서', '학급 회의 안건']) {
+    for (const id of ['시', '관찰·조사 보고서', '안건 의견 모으기']) {
         assert.ok(!freeformIds.includes(id), `${id}은(는) 폼 선택칸에 있으면 안 된다`);
     }
     // 첫 화면에는 전용 틀까지 모두 보인다.

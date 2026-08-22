@@ -106,10 +106,10 @@ const GENRE_ENTRIES = Object.freeze([
         },
     },
     {
-        id: '학급 회의 안건',
+        id: '안건 의견 모으기',
         category: '💡 생각을 주장하는 글',
         missionTypeId: 'meeting',
-        summary: '학생들이 안건을 제안하고 함께 고르는 전용 틀로 만듭니다.',
+        summary: '선생님이 낸 안건에 학생들이 의견을 내는 전용 틀로 만듭니다.',
     },
     {
         id: '시',
