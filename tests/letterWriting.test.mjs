@@ -121,6 +121,18 @@ test('편지지는 색만 다른 것이 아니라 모양이 서로 다르다', (
     assert.equal(blankShapes.size, LETTER_PAPERS.length, '빈 편지지가 색만 다른 같은 디자인이다');
 });
 
+test('스승의 날 편지지는 거슬리는 세로줄 없이 칠판과 연필로 교실 분위기를 낸다', () => {
+    const teacherPaper = getLetterPaper('teacher');
+    const teacherStyles = `${teacherPaper.css}\n${teacherPaper.blankCss}`;
+
+    assert.match(teacherPaper.shape, /칠판/);
+    assert.match(teacherPaper.shape, /연필/);
+    assert.doesNotMatch(teacherPaper.description, /공책|세로선/);
+    assert.doesNotMatch(teacherStyles, /border-left|linear-gradient\(90deg, transparent 0 24mm/);
+    assert.match(teacherPaper.blankCss, /letter-sheet__deco--bl/);
+    assert.match(teacherPaper.blankCss, /letter-sheet__deco--br/);
+});
+
 test('빈 편지지는 일곱 종류 모두 같은 좌표에서 쓰기 시작한다', () => {
     assert.match(
         letterPdfExport.styles,

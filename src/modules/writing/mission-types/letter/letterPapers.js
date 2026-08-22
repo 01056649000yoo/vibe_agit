@@ -153,8 +153,8 @@ export const LETTER_PAPERS = Object.freeze([
         value: 'teacher',
         label: '스승의 날 편지지',
         printTitle: '선생님, 감사합니다',
-        description: '5월 15일 선생님께. 공책처럼 왼쪽 세로선과 파란 줄이 그어진 편지지입니다.',
-        shape: '공책 — 왼쪽 빨간 세로선 + 파란 가로줄',
+        description: '5월 15일 선생님께. 칠판 머리글과 은은한 초록 줄, 아래쪽 연필 장식이 들어갑니다.',
+        shape: '교실 칠판 머리글 + 은은한 초록 줄 + 아래쪽 연필 장식',
         emoji: '🍎',
         ink: '#166534',
         edge: '#86EFAC',
@@ -162,34 +162,38 @@ export const LETTER_PAPERS = Object.freeze([
         band: '#DCFCE7',
         css: `
         .pdf-entry--letter-teacher .letter-sheet {
-            border: .4mm solid #86EFAC;
-            border-radius: 1mm;
-            background: #FFFFFF;
+            border: .5mm solid #86EFAC;
+            border-radius: 2mm;
+            background:
+                linear-gradient(180deg, rgba(220, 252, 231, .5), rgba(255, 254, 249, 0) 42mm),
+                #FFFEF9;
         }
         .pdf-entry--letter-teacher .letter-sheet__band {
-            justify-content: flex-end;
-            border-bottom: .8mm double #86EFAC;
-            background: #F0FDF4;
-            color: #166534;
+            justify-content: center;
+            margin: 6mm 24mm 0;
+            border: 1.1mm solid #854D0E;
+            border-radius: 1.5mm;
+            background: linear-gradient(#166534, #14532D);
+            box-shadow: inset 0 0 0 .3mm rgba(255, 255, 255, .24), 0 1mm 0 #D6A56C;
+            color: #FFFFFF;
+            letter-spacing: .05em;
         }
         .pdf-entry--letter-teacher .letter-sheet__body {
-            margin-left: 16mm;
-            border-left: .5mm solid #FCA5A5;
-            padding-left: 8mm;
+            padding: 10mm 14mm 12mm;
             background: repeating-linear-gradient(
                 to bottom,
                 transparent 0 10.7mm,
-                #DBEAFE 10.7mm 11mm
+                rgba(187, 247, 208, .62) 10.7mm 11mm
             );
         }
         .pdf-entry--letter-teacher .letter-sheet__row { color: #166534; }
         .pdf-entry--letter-teacher .letter-sheet__blank-line { border-bottom-color: #BFDBFE; }`,
         blankCss: `
         .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet {
-            border: .5mm solid #86EFAC;
-            border-radius: 2mm;
+            border: .55mm solid #86EFAC;
+            border-radius: 2.5mm;
             background:
-                linear-gradient(90deg, transparent 0 24mm, rgba(252, 165, 165, .55) 24mm 24.5mm, transparent 24.5mm),
+                linear-gradient(180deg, rgba(220, 252, 231, .48), rgba(255, 254, 249, 0) 46mm),
                 #FFFEF9;
         }
         .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__band {
@@ -202,15 +206,6 @@ export const LETTER_PAPERS = Object.freeze([
             box-shadow: inset 0 0 0 .35mm rgba(255, 255, 255, .28), 0 1.2mm 0 #D6A56C;
             color: #FFFFFF;
             letter-spacing: .08em;
-        }
-        .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: -4mm;
-            border-left: .45mm solid #FCA5A5;
-            pointer-events: none;
         }
         .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__deco--bl,
         .pdf-entry--letter-teacher.pdf-entry--letter-blank .letter-sheet__deco--br {
