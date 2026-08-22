@@ -170,6 +170,32 @@ test('빈 편지지는 일곱 종류 모두 같은 좌표에서 쓰기 시작한
     }
 });
 
+test('작성 편지는 일곱 종류 모두 밑줄 없이 읽고 빈 편지지만 손글씨 줄을 유지한다', () => {
+    for (const paper of LETTER_PAPERS) {
+        assert.doesNotMatch(
+            paper.css,
+            /background:\s*repeating-linear-gradient\(\s*to bottom/,
+            `${paper.label} 작성 편지에 줄 배경이 남아 있다`,
+        );
+
+        const writtenHtml = letterPdfExport.renderEntry(
+            { title: '마음을 담은 편지', author: '김하늘', content: '', structuredContent: FULL_LETTER },
+            { renderMode: paper.value },
+        );
+        assert.ok(!writtenHtml.includes('letter-sheet__blank-line'), `${paper.label} 작성 편지에 빈 줄 요소가 있다`);
+
+        const blankHtml = letterPdfExport.renderEntry(
+            { title: '', author: '', content: '', structuredContent: { template: 'letter', blank: true } },
+            { renderMode: paper.value },
+        );
+        assert.equal(
+            blankHtml.match(/class="letter-sheet__blank-line"/g)?.length,
+            15,
+            `${paper.label} 빈 편지지의 손글씨 줄이 15개가 아니다`,
+        );
+    }
+});
+
 test('편지지는 전역 인쇄 여백을 건드리지 않고 위아래 빈 여백을 같게 맞춘다', () => {
     // @page 여백을 바꾸면 같은 인쇄에 섞인 시·보고서 페이지까지 여백이 날아간다.
     assert.ok(!/@page\s*\{/.test(letterPdfExport.styles), '편지 스타일이 전역 인쇄 규칙을 바꾸고 있다');

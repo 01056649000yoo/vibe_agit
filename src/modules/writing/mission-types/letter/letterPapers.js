@@ -38,13 +38,6 @@ export const LETTER_PAPERS = Object.freeze([
             border-bottom: .3mm solid #E2E8F0;
             color: #334155;
         }
-        .pdf-entry--letter-plain .letter-sheet__body {
-            background: repeating-linear-gradient(
-                to bottom,
-                transparent 0 10.8mm,
-                #EEF2F6 10.8mm 11mm
-            );
-        }
         .pdf-entry--letter-plain .letter-sheet__row { color: #334155; }
         .pdf-entry--letter-plain .letter-sheet__blank-line { border-bottom-color: #CBD5E1; }`,
         blankCss: `
@@ -180,11 +173,6 @@ export const LETTER_PAPERS = Object.freeze([
         }
         .pdf-entry--letter-teacher .letter-sheet__body {
             padding: 10mm 14mm 12mm;
-            background: repeating-linear-gradient(
-                to bottom,
-                transparent 0 10.7mm,
-                rgba(187, 247, 208, .62) 10.7mm 11mm
-            );
         }
         .pdf-entry--letter-teacher .letter-sheet__row { color: #166534; }
         .pdf-entry--letter-teacher .letter-sheet__blank-line { border-bottom-color: #BFDBFE; }`,
@@ -258,11 +246,6 @@ export const LETTER_PAPERS = Object.freeze([
         }
         .pdf-entry--letter-soldier .letter-sheet__body {
             padding: 10mm 14mm 12mm;
-            background: repeating-linear-gradient(
-                to bottom,
-                transparent 0 10.7mm,
-                rgba(147, 197, 253, .34) 10.7mm 11mm
-            );
         }
         .pdf-entry--letter-soldier .letter-sheet__deco--tl,
         .pdf-entry--letter-soldier .letter-sheet__deco--br {
