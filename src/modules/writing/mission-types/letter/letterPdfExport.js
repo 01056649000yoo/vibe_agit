@@ -63,21 +63,21 @@ const renderLetterEntry = (entry, { renderMode = DEFAULT_LETTER_PAPER } = {}) =>
 /*
  * 공용 뼈대는 자리만 잡는다. 테두리 모양·바탕 무늬·머리 띠 모양은 편지지마다 `letterPapers.js`가 정한다.
  *
- * 편지지는 종이 가장자리까지 채워야 예쁘다. 그렇다고 전역 인쇄 여백을 0으로 바꾸면 같은 인쇄에 섞인
- * 시·보고서 페이지까지 여백이 날아간다. 그래서 전역 규칙은 두고 편지 칸만 음수 여백으로 넓힌다.
+ * 전역 A4 여백은 위 15mm·아래 17mm다. 편지 안쪽에 위 5mm·아래 3mm를 더해 실제 빈 여백을
+ * 위아래 20mm로 맞춘다. 전역 규칙을 바꾸면 같은 인쇄에 섞인 시·보고서 페이지까지 영향을 받는다.
  */
 const LETTER_BASE_STYLES = `
         .pdf-entry--letter {
-            min-height: 297mm;
-            margin: -15mm -16mm -17mm;
-            padding: 8mm;
+            min-height: 265mm;
+            margin: 0;
+            padding: 5mm 0 3mm;
         }
         .pdf-entry--letter + .pdf-entry--letter { margin-top: 0; }
         .letter-sheet {
             position: relative;
             display: flex;
             flex-direction: column;
-            min-height: 281mm;
+            min-height: 257mm;
             overflow: hidden;
         }
         .letter-sheet__deco {

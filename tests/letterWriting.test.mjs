@@ -139,11 +139,15 @@ test('빈 편지지는 일곱 종류 모두 같은 좌표에서 쓰기 시작한
     }
 });
 
-test('편지지는 전역 인쇄 여백을 건드리지 않는다', () => {
+test('편지지는 전역 인쇄 여백을 건드리지 않고 위아래 빈 여백을 같게 맞춘다', () => {
     // @page 여백을 바꾸면 같은 인쇄에 섞인 시·보고서 페이지까지 여백이 날아간다.
     assert.ok(!/@page\s*\{/.test(letterPdfExport.styles), '편지 스타일이 전역 인쇄 규칙을 바꾸고 있다');
-    // 대신 편지 칸 안에서만 음수 여백으로 종이 끝까지 넓힌다.
-    assert.match(letterPdfExport.styles, /\.pdf-entry--letter \{[\s\S]*?margin: -15mm -16mm -17mm;/);
+    // 공용 A4 위 15mm·아래 17mm에 편지 안쪽 위 5mm·아래 3mm를 더하면 양쪽 모두 20mm다.
+    assert.match(
+        letterPdfExport.styles,
+        /\.pdf-entry--letter \{[\s\S]*?min-height: 265mm;[\s\S]*?margin: 0;[\s\S]*?padding: 5mm 0 3mm;/,
+    );
+    assert.match(letterPdfExport.styles, /\.letter-sheet \{[\s\S]*?min-height: 257mm;/);
     // 배경색은 편지지마다 따로 정의한다.
     for (const paper of LETTER_PAPERS) {
         assert.ok(
