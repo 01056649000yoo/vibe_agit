@@ -76,8 +76,8 @@ export const LETTER_PAPERS = Object.freeze([
         value: 'parents',
         label: '어버이날 편지지',
         printTitle: '사랑하는 마음을 담아',
-        description: '5월 8일 부모님께. 둥근 카드 모양에 꽃잎 무늬와 카네이션 워터마크가 들어갑니다.',
-        shape: '큰 라운드 카드 + 점무늬 바탕 + 물결 머리 띠',
+        description: '5월 8일 부모님께. 둥근 카드 모양에 은은한 분홍빛과 카네이션 워터마크가 들어갑니다.',
+        shape: '큰 라운드 카드 + 은은한 분홍 그라데이션 + 카네이션',
         emoji: '🌸',
         ink: '#9D174D',
         edge: '#F9A8D4',
@@ -88,9 +88,7 @@ export const LETTER_PAPERS = Object.freeze([
         .pdf-entry--letter-parents .letter-sheet {
             border: .9mm solid #F9A8D4;
             border-radius: 9mm;
-            background:
-                radial-gradient(#FBCFE8 .9mm, transparent .9mm) 0 0 / 15mm 15mm,
-                #FFF5F8;
+            background: linear-gradient(145deg, #FFF9FB, #FFF1F5);
         }
         .pdf-entry--letter-parents .letter-sheet__band {
             justify-content: center;
@@ -385,8 +383,8 @@ export const LETTER_PAPERS = Object.freeze([
         value: 'friend',
         label: '친구 사랑 편지지',
         printTitle: '친구야, 고마워',
-        description: '학교폭력 예방 주간의 칭찬 편지. 머리글이 말풍선 모양이고 바탕에 하트 무늬가 있습니다.',
-        shape: '말풍선 머리글 + 하트 점무늬 바탕',
+        description: '학교폭력 예방 주간의 칭찬 편지. 말풍선 머리글과 산뜻한 하늘빛 바탕으로 꾸밉니다.',
+        shape: '말풍선 머리글 + 산뜻한 하늘빛 + 모서리 장식',
         emoji: '💛',
         ink: '#0E7490',
         edge: '#7DD3FC',
@@ -396,10 +394,7 @@ export const LETTER_PAPERS = Object.freeze([
         .pdf-entry--letter-friend .letter-sheet {
             border: .6mm dashed #7DD3FC;
             border-radius: 5mm;
-            background:
-                radial-gradient(#BAE6FD .8mm, transparent .8mm) 0 0 / 12mm 12mm,
-                radial-gradient(#E0F2FE 1.2mm, transparent 1.2mm) 6mm 6mm / 12mm 12mm,
-                #F7FCFF;
+            background: linear-gradient(145deg, #FAFEFF, #EFF9FF);
         }
         .pdf-entry--letter-friend .letter-sheet__band {
             position: relative;
@@ -431,10 +426,7 @@ export const LETTER_PAPERS = Object.freeze([
         .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet {
             border: .7mm dashed #38BDF8;
             border-radius: 7mm;
-            background:
-                radial-gradient(circle at 9mm 9mm, #FDE68A 0 1.1mm, transparent 1.2mm) 0 0 / 20mm 20mm,
-                radial-gradient(circle at 10mm 10mm, #BAE6FD 0 .8mm, transparent .9mm) 10mm 10mm / 20mm 20mm,
-                #F7FDFF;
+            background: linear-gradient(145deg, #FAFEFF, #EEF9FF);
         }
         .pdf-entry--letter-friend.pdf-entry--letter-blank .letter-sheet__band {
             left: 39mm;
@@ -473,8 +465,8 @@ export const LETTER_PAPERS = Object.freeze([
         value: 'farewell',
         label: '헤어지는 친구에게',
         printTitle: '우리의 소중한 추억',
-        description: '졸업·전학으로 헤어지는 친구에게. 리본 배너 머리글과 별 무늬가 들어갑니다.',
-        shape: '리본 배너 머리글 + 별 무늬 바탕',
+        description: '졸업·전학으로 헤어지는 친구에게. 리본 배너 머리글과 아래쪽 별 장식이 들어갑니다.',
+        shape: '리본 배너 머리글 + 은은한 보라 그라데이션 + 별 장식',
         emoji: '🎓',
         ink: '#5B21B6',
         edge: '#C4B5FD',
@@ -485,9 +477,7 @@ export const LETTER_PAPERS = Object.freeze([
         .pdf-entry--letter-farewell .letter-sheet {
             border: .5mm solid #C4B5FD;
             border-radius: 3mm;
-            background:
-                radial-gradient(#EDE9FE 1.1mm, transparent 1.1mm) 7mm 7mm / 18mm 18mm,
-                #FBFAFF;
+            background: linear-gradient(145deg, #FCFBFF, #F6F3FF);
         }
         .pdf-entry--letter-farewell .letter-sheet__band {
             justify-content: center;
@@ -512,10 +502,7 @@ export const LETTER_PAPERS = Object.freeze([
         .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet {
             border: .6mm solid #A78BFA;
             border-radius: 4mm;
-            background:
-                radial-gradient(circle at 14mm 16mm, rgba(255,255,255,.95) 0 .7mm, transparent .8mm),
-                radial-gradient(circle at calc(100% - 18mm) 25mm, rgba(255,255,255,.9) 0 1mm, transparent 1.1mm),
-                linear-gradient(180deg, #6D5FB5 0 30mm, #F8F7FF 30.5mm 100%);
+            background: linear-gradient(180deg, #6D5FB5 0 30mm, #F8F7FF 30.5mm 100%);
         }
         .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__band {
             left: 28mm;
@@ -527,19 +514,6 @@ export const LETTER_PAPERS = Object.freeze([
             clip-path: polygon(0 0, 100% 0, 95% 50%, 100% 100%, 0 100%, 5% 50%);
             letter-spacing: .08em;
         }
-        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__deco {
-            display: block;
-            z-index: 4;
-            width: 3.2mm;
-            height: 3.2mm;
-            border-radius: 50%;
-            background: #FDE68A;
-            box-shadow: 7mm 3mm 0 -1mm #FFFFFF, 14mm -2mm 0 -.5mm #DDD6FE, 22mm 4mm 0 -1mm #FFFFFF;
-        }
-        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__deco--tl { top: 9mm; left: 13mm; }
-        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__deco--tr { top: 8mm; right: 35mm; transform: rotate(180deg); }
-        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__deco--bl { bottom: 11mm; left: 12mm; opacity: .55; transform: scale(.8); }
-        .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__deco--br { right: 34mm; bottom: 12mm; opacity: .55; transform: rotate(180deg) scale(.8); }
         .pdf-entry--letter-farewell.pdf-entry--letter-blank .letter-sheet__blank-line { border-bottom-color: #C4B5FD; }`,
     },
 ]);

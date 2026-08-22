@@ -147,6 +147,24 @@ test('나라사랑 편지지는 KR로 풀리는 국기 이모지 없이 태극�
     assert.match(soldierPaper.blankCss, /border-bottom: \.5mm solid #003478/);
 });
 
+test('편지 본문을 가리던 반복 도트는 없애고 주제 장식만 남긴다', () => {
+    const parentsPaper = getLetterPaper('parents');
+    const friendPaper = getLetterPaper('friend');
+    const farewellPaper = getLetterPaper('farewell');
+
+    for (const paper of [parentsPaper, friendPaper, farewellPaper]) {
+        assert.doesNotMatch(paper.css, /radial-gradient/, `${paper.label} 작성본에 반복 도트가 남아 있다`);
+        assert.doesNotMatch(paper.description, /점무늬|도트|하트 무늬|별 무늬/);
+        assert.doesNotMatch(paper.shape, /점무늬|도트|하트 무늬|별 무늬/);
+    }
+
+    assert.match(parentsPaper.css, /linear-gradient\(145deg, #FFF9FB, #FFF1F5\)/);
+    assert.doesNotMatch(friendPaper.blankCss, /radial-gradient/);
+    assert.match(friendPaper.blankCss, /linear-gradient\(145deg, #FAFEFF, #EEF9FF\)/);
+    assert.doesNotMatch(farewellPaper.blankCss, /radial-gradient|letter-sheet__deco\s*\{/);
+    assert.match(farewellPaper.shape, /별 장식/);
+});
+
 test('빈 편지지는 일곱 종류 모두 같은 좌표에서 쓰기 시작한다', () => {
     assert.match(
         letterPdfExport.styles,
