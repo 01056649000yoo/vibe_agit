@@ -13,11 +13,13 @@ $$;
 
 INSERT INTO public.learning_content_items (
     content_type, item_key, expression, hanja, definition, example,
-    grade_bands, content_level, review_status, source_pack, source_ref, source_fingerprint
+    curriculum_band, curriculum_role, grade_bands, content_level, review_status,
+    source_pack, source_ref, source_fingerprint
 ) VALUES (
     'idiom', 'idiom:smoke-001', '고진감래', '苦盡甘來',
     '고생 끝에 즐거움이 찾아온다는 뜻', '꾸준히 연습한 끝에 좋은 결과를 얻었다.',
-    ARRAY['g34', 'g56'], 2, 'published', 'migration-smoke', '1', repeat('a', 64)
+    'g56', 'enrichment', ARRAY['g34', 'g56'], 2, 'published',
+    'migration-smoke', '1', repeat('a', 64)
 );
 
 INSERT INTO public.learning_content_questions (
@@ -105,4 +107,3 @@ BEGIN
     END LOOP;
 END;
 $$;
-

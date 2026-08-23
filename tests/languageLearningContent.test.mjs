@@ -8,6 +8,10 @@ import {
 } from '../scripts/audit-language-learning-content.mjs';
 
 const migration = await readFile('supabase/migrations/20261160_learning_content_catalog.sql', 'utf8');
+const alignmentMigration = await readFile(
+    'supabase/migrations/20261161_learning_content_curriculum_alignment.sql',
+    'utf8'
+);
 
 test('속담 85개와 사자성어 100개를 손실 없이 하나의 검수 카탈로그로 보존한다', async () => {
     const catalog = await loadLanguageContentCatalog();
@@ -19,10 +23,16 @@ test('속담 85개와 사자성어 100개를 손실 없이 하나의 검수 카�
         proverbs: 85,
         idioms: 100,
         questionVariants: 385,
-        reconstructedProverbs: 41
+        reconstructedProverbs: 41,
+        g56Items: 185,
+        g34PreviewItems: 20,
+        pilotItems: 40,
+        alignedItems: 85,
+        enrichmentItems: 100,
+        pendingContentLevels: 145
     });
-    assert.equal(catalog.collections.length, 0);
-    assert.equal(catalog.status, 'source_imported_not_for_student_delivery');
+    assert.equal(catalog.collections.length, 2);
+    assert.equal(catalog.status, 'curriculum_classified_not_for_student_delivery');
 });
 
 test('항목 하나라도 빠지거나 검수 없이 승격되면 카탈로그 검사가 실패한다', async () => {
@@ -34,6 +44,14 @@ test('항목 하나라도 빠지거나 검수 없이 승격되면 카탈로그 �
     const prematurelyPublished = structuredClone(catalog);
     prematurelyPublished.items[0].reviewStatus = 'published';
     assert.equal(auditLanguageContentCatalog(prematurelyPublished).valid, false);
+
+    const wrongCurriculumBand = structuredClone(catalog);
+    wrongCurriculumBand.items[0].curriculumBand = 'g34';
+    assert.equal(auditLanguageContentCatalog(wrongCurriculumBand).valid, false);
+
+    const missingPilotMember = structuredClone(catalog);
+    missingPilotMember.collections[0].itemKeys.pop();
+    assert.equal(auditLanguageContentCatalog(missingPilotMember).valid, false);
 });
 
 test('사자성어의 세 원본 문제 파일을 같은 항목 아래 문제 변형으로 병합한다', async () => {
@@ -75,18 +93,37 @@ test('낱말 답만 남은 속담은 완성 표현 초안을 복원하되 사람
     assert.deepEqual(unresolved.map((item) => item.source.sourceId), [58]);
 });
 
-test('검수 전에는 학년군·난이도·선택형 정답을 임의 생성하지 않는다', async () => {
+test('교육과정 기준과 제공 학년을 분리하고 시범 40개만 내용 난이도를 정한다', async () => {
     const catalog = await loadLanguageContentCatalog();
+    const previewItems = catalog.items.filter((item) => item.gradeBands.includes('g34'));
+    const pilotItems = catalog.items.filter((item) => item.contentLevel !== null);
+
+    assert.equal(previewItems.length, 20);
+    assert.equal(pilotItems.length, 40);
+    assert.equal(previewItems.every((item) => item.contentLevel === 1), true);
+    assert.equal(pilotItems.filter((item) => item.contentLevel === 2).length, 20);
+
     catalog.items.forEach((item) => {
-        assert.deepEqual(item.gradeBands, []);
-        assert.equal(item.contentLevel, null);
-        assert.ok(item.reviewFlags.includes('grade_band_required'));
-        assert.ok(item.reviewFlags.includes('content_level_required'));
+        assert.equal(item.curriculumBand, 'g56');
+        assert.equal(item.curriculumRole, item.contentType === 'proverb' ? 'aligned' : 'enrichment');
+        assert.ok(item.gradeBands.includes('g56'));
+        assert.equal(item.reviewFlags.includes('grade_band_required'), false);
+        assert.equal(item.reviewFlags.includes('content_level_required'), item.contentLevel === null);
         assert.ok(item.reviewFlags.includes('meaning_choice_required'));
         item.questions.forEach((question) => {
             assert.deepEqual(question.choices, []);
+            assert.deepEqual(question.gradeBands, ['g56']);
+            assert.equal(question.difficulty, 3);
             assert.equal(question.reviewStatus, 'source_imported');
         });
+    });
+
+    catalog.collections.forEach((collection) => {
+        assert.equal(collection.collectionKey, 'core-v1');
+        assert.equal(collection.itemKeys.length, 20);
+        assert.equal(new Set(collection.itemKeys).size, 20);
+        assert.deepEqual(collection.gradeBands, ['g34', 'g56']);
+        assert.equal(collection.reviewStatus, 'editorial_review');
     });
 });
 
@@ -99,4 +136,8 @@ test('공통 카탈로그는 원본·문제·묶음을 분리하고 정답표 �
     assert.match(migration, /review_status <> 'published'[\s\S]*cardinality\(grade_bands\) > 0/);
     assert.match(migration, /REVOKE ALL ON TABLE public\.learning_content_questions FROM PUBLIC, anon, authenticated, service_role/);
     assert.doesNotMatch(migration, /GRANT SELECT[\s\S]*learning_content_questions/);
+    assert.match(alignmentMigration, /ADD COLUMN IF NOT EXISTS curriculum_band TEXT/);
+    assert.match(alignmentMigration, /ADD COLUMN IF NOT EXISTS curriculum_role TEXT/);
+    assert.match(alignmentMigration, /curriculum_band IS NOT NULL[\s\S]*curriculum_role IS NOT NULL/);
+    assert.match(alignmentMigration, /grade_bands[\s\S]*실제 학생 제공 가능 학년군/);
 });
