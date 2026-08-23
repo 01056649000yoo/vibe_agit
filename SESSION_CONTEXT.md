@@ -22,6 +22,13 @@
 - 학급 글 조회, 학생 홈/RPC, 포인트, DB·인증·외부 API 변경은 각각의 성능·보안 계약을 먼저 확인한다.
 - 설명 정보 아이콘은 `GuideInfoButton`, 교사 메뉴 안내는 `TeacherGuideButton`과 `teacherGuides.js`를 사용한다.
 - 기존 사용자 변경을 보존하고, 관련 검증을 통과한 뒤 `WORKLOG.md`와 `ROADMAP.md`를 갱신한다.
+- **푸시 전 검사를 건다** — `npm run hooks:install` 한 번. 배포 실패의 상당수가 *올리지 않은 새 파일*
+  탓인데 로컬에는 파일이 있어 검사가 통과하므로 로컬로는 잡을 수 없다. 셸·시스템 도구에 기대는 검사를
+  새로 넣을 때는 배포 관문과 같은 환경에서 먼저 돌린다:
+  `docker run --rm -v "$PWD":/app -w /app node:20-alpine npm run test:all`
+- **도커를 재시작하면 컨테이너 35개가 자동으로 올라오지 않는다**(2026-08-23 확인). 두 스택을 의존 순서대로
+  올린다 — `cd ~/agit-supabase && docker compose up -d`, `cd ~/Jarvis_Brain_Local/self-hosted-supabase &&
+  docker compose up -d`, 그 뒤 나머지는 `docker start`. 서버 자원 상태는 관리자 `운영 > 서버 상태`에서 본다.
 
 ## 현재 위치
 
