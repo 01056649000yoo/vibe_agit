@@ -35,7 +35,10 @@
     모두 일치하는 답안 저장 트랜잭션에서만 갱신하고, 지도 집계와 적응 출제도 인증 학생의 학급·학년·덱을 서버가
     고정한다. 정답은 제출 전 응답에 포함하지 않으며 과거 답안 백필도 서버에 보존된 문항 스냅샷만 사용한다.
 16. 백업 상태 원장은 브라우저 역할에 테이블 권한을 주지 않고 실제 `profiles.role='ADMIN'`을 확인하는 전용 RPC로만
-    읽는다. 호스트 기록기는 고정된 상태·숫자·짧은 코드만 저장하며 원문 로그, 파일 경로, 시크릿을 DB에 넣지 않는다.
+   읽는다. 호스트 기록기는 고정된 상태·숫자·짧은 코드만 저장하며 원문 로그, 파일 경로, 시크릿을 DB에 넣지 않는다.
+17. 공통 학습 콘텐츠 카탈로그는 문제 정답을 포함하므로 익명·학생·교사 브라우저와 `service_role`에 표 직접 권한을
+   주지 않는다. 학년군·내용/문제 난이도·검수 신호가 해결된 `published` 자료만 기능 전용 RPC가 사용하며, 학생에게
+   문제를 줄 때는 정답을 빼고 답안 제출 RPC가 실제 학생·학급·서버 발급 문항을 다시 확인한다.
 
 ## 실행
 
@@ -44,6 +47,7 @@ npm run test:security:static   # 코드 계약
 npm run migrate:check         # 미적용 SQL + SQL 권한 스모크, 전부 ROLLBACK
 npm run smoke:security-boundary # 적용된 핵심 역할 조합도 매번 ROLLBACK 재검사
 npm run smoke:writing-references # 과제↔연구소 연결의 교사·학생·다른 학급 경계를 ROLLBACK 재검사
+npm run smoke:learning-content # 공통 학습 원본·문제·묶음의 승격 제약과 직접 권한을 ROLLBACK 재검사
 npm run test:security:ops      # 맥미니 포트·권한·Edge 함수 허용 목록
 npm audit --omit=dev           # 운영 의존성
 ```
