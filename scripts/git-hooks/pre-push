@@ -1,0 +1,59 @@
+#!/bin/bash
+# 푸시하기 전에 두 가지를 본다. 배포 실패 메일의 거의 전부가 이 둘 중 하나였다.
+#
+#   1. 올리지 않은 새 파일이 남아 있나
+#      로컬에는 파일이 있어 검사가 통과하지만, 빌드 컨테이너에는 그 파일이 없어서 깨진다.
+#      2026-08-13(`export-spelling-detection.mjs`)·08-19(`deploy-local.sh`) 실패가 이 경우다.
+#      로컬 검사로는 절대 잡을 수 없는 종류라 여기서 막는다.
+#
+#   2. 검사가 통과하나
+#      배포는 도커 이미지 빌드 안에서 `npm run test:all` 을 돌린다. 여기서 깨지면 이미지가 안 만들어지고
+#      배포가 통째로 멈춘다. 밀기 전에 같은 것을 돌려 본다.
+#
+# 설치: npm run hooks:install
+# 건너뛰기: git push --no-verify   (급할 때만)
+
+set -uo pipefail
+
+RED=$'\033[31m'; YELLOW=$'\033[33m'; GREEN=$'\033[32m'; OFF=$'\033[0m'
+
+# --- 1. 올리지 않은 새 파일 ---
+# 코드가 사는 곳만 본다. 메모·임시 파일까지 막으면 성가시기만 하다.
+WATCHED='^\?\? (src|scripts|tests|supabase|public)/'
+UNTRACKED="$(git status --short | grep -E "$WATCHED" || true)"
+
+if [ -n "$UNTRACKED" ]; then
+    echo "${RED}✖ 올리지 않은 새 파일이 있습니다.${OFF}"
+    echo "$UNTRACKED" | sed 's/^/    /'
+    echo
+    echo "  이 파일들은 지금 내 컴퓨터에만 있습니다. 이대로 밀면 검사는 로컬에서 통과하지만"
+    echo "  빌드 컨테이너에는 파일이 없어 배포가 실패합니다."
+    echo
+    echo "  ${YELLOW}git add <파일>${OFF} 로 함께 올리거나, 안 올릴 파일이면 ${YELLOW}.gitignore${OFF} 에 넣으세요."
+    echo "  정말 이대로 밀어야 하면: ${YELLOW}git push --no-verify${OFF}"
+    exit 1
+fi
+
+# 코드 자리 밖의 새 파일은 막지 않고 알려만 준다.
+OTHER="$(git status --short | grep '^??' | grep -vE "$WATCHED" || true)"
+if [ -n "$OTHER" ]; then
+    echo "${YELLOW}· 참고: 올리지 않은 파일이 있습니다(코드 자리 밖이라 막지 않습니다).${OFF}"
+    echo "$OTHER" | sed 's/^/    /'
+    echo
+fi
+
+# --- 2. 검사 ---
+echo "검사를 돌립니다 (배포 관문과 같은 것)..."
+if ! npm run test:all --silent > /tmp/agit-pre-push-test.log 2>&1; then
+    echo "${RED}✖ 검사가 통과하지 못했습니다. 이대로 밀면 배포가 실패합니다.${OFF}"
+    echo
+    grep -E '^not ok|error:' /tmp/agit-pre-push-test.log | head -10 | sed 's/^/    /'
+    echo
+    echo "  전체 내용: ${YELLOW}cat /tmp/agit-pre-push-test.log${OFF}"
+    echo "  정말 이대로 밀어야 하면: ${YELLOW}git push --no-verify${OFF}"
+    exit 1
+fi
+
+PASSED="$(grep -E '^# pass' /tmp/agit-pre-push-test.log | awk '{print $3}')"
+echo "${GREEN}✔ 검사 ${PASSED}개 통과. 밀어도 좋습니다.${OFF}"
+exit 0

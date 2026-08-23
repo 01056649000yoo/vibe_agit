@@ -63,4 +63,43 @@ else
     report backup_failed false ""
 fi
 
-echo "상태 기록 완료 $(date '+%H:%M') — 앱 ${CODE} · 디스크 ${FREE_GB:-?}GB"
+# --- 6) 메모리와 게이트웨이 ---
+#
+# 하루 한 번 도는 지표 기록은 새벽 04:50 이라 가장 한가한 때다. 정작 알고 싶은 것은 수업 시간의
+# 가장 나쁜 순간이라, 5분마다 도는 여기서 재서 그날의 최악값만 남긴다.
+# 2026-08-23 에 도커 VM 메모리 여유가 10% 까지 떨어지고 스왑이 100% 찼는데, 그때는 이 값을
+# 아무도 보지 않아 사람이 손으로 `free` 를 돌려 보고서야 알았다.
+#
+# 새 컨테이너를 띄우지 않고 이미 도는 DB 컨테이너에서 읽는다(5분마다이므로 가볍게 간다).
+read -r MEM_TOTAL MEM_AVAIL SWAP_USED <<EOF
+$("$DOCKER" exec agit-db sh -c "free -m" 2>/dev/null | awk '
+NR==2 { total=$2; avail=$7 }
+NR==3 { swap=$3 }
+END { printf "%d %d %d", total, avail, swap }')
+EOF
+
+# 게이트웨이 CPU 는 kong 워커 수를 언제 올릴지 판단하는 근거다.
+read -r GW_CPU GW_MEM <<EOF
+$("$DOCKER" stats --no-stream --format '{{.CPUPerc}} {{.MemUsage}}' agit-kong 2>/dev/null | awk '
+{ cpu=$1; sub(/%/,"",cpu);
+  mem=$2; unit=mem; sub(/^[0-9.]+/,"",unit); n=mem; sub(/[A-Za-z]+$/,"",n);
+  mb = (unit=="GiB")? n*1024 : (unit=="KiB")? n/1024 : n;
+  printf "%.1f %d", cpu, mb }')
+EOF
+
+if [ -n "${MEM_TOTAL:-}" ] && [ "${MEM_TOTAL:-0}" -gt 0 ] 2>/dev/null; then
+    psql_exec -c "SELECT public.record_system_peak_v1(
+        CURRENT_DATE, ${MEM_TOTAL}::int, ${MEM_AVAIL:-0}::int, ${SWAP_USED:-0}::int,
+        ${GW_CPU:-0}::numeric, ${GW_MEM:-0}::int
+    );" >/dev/null 2>&1 || true
+
+    # 여유가 15% 아래로 떨어지거나 스왑을 쓰기 시작하면 알린다. 둘 다 "메모리가 모자라다" 는 신호다.
+    MEM_PCT=$(( MEM_AVAIL * 100 / MEM_TOTAL ))
+    if [ "$MEM_PCT" -lt 15 ] || [ "${SWAP_USED:-0}" -gt 100 ]; then
+        report memory_low true "여유 ${MEM_AVAIL}MB(${MEM_PCT}%) · 스왑 ${SWAP_USED:-0}MB 사용"
+    else
+        report memory_low false ""
+    fi
+fi
+
+echo "상태 기록 완료 $(date '+%H:%M') — 앱 ${CODE} · 디스크 ${FREE_GB:-?}GB · 메모리 여유 ${MEM_AVAIL:-?}MB · 게이트웨이 CPU ${GW_CPU:-?}%"

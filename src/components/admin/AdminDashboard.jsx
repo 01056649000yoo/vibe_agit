@@ -42,7 +42,6 @@ const TAB_GROUPS = [
         id: 'status',
         label: '📊 현황',
         tabs: [
-            { id: 'service', label: '서비스 현황' },
             { id: 'usage', label: '사용량' },
             { id: 'students', label: '학생 활동' }
         ]
@@ -60,6 +59,7 @@ const TAB_GROUPS = [
         id: 'ops',
         label: '🛠 운영',
         tabs: [
+            { id: 'service', label: '서버 상태' },
             { id: 'backup', label: '백업 상태' },
             { id: 'announcements', label: '공지사항' },
             { id: 'feedback', label: '의견 제보' },

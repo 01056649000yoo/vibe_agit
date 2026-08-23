@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
-import AdminTrafficTrend, { formatBytes } from './AdminTrafficTrend';
+import AdminTrafficTrend from './AdminTrafficTrend';
+import AdminResourceStatus from './AdminResourceStatus';
 
 const AI_SCOPE_LABELS = {
     teacher_ai: '교사 AI',
@@ -154,32 +155,14 @@ const AdminServicePanel = () => {
                 </div>
             </div>
 
+            {/* 값만 늘어놓으면 "그래서 괜찮은가"를 운영자가 매번 판단해야 한다. 기준을 함께 적는다. */}
             <div>
-                <h3 style={{ margin: '0 0 10px', fontSize: '1rem', color: '#2D3748' }}>서버</h3>
-                {latest ? (
-                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                        <Stat label="디스크 여유" value={`${latest.disk_free_gb ?? '-'} GB`} />
-                        <Stat label="DB 크기" value={`${latest.db_size_mb ?? '-'} MB`} />
-                        <Stat
-                            label="컨테이너"
-                            value={`${latest.container_healthy ?? '-'} / ${latest.container_total ?? '-'}`}
-                            sub="정상 / 전체"
-                        />
-                        <Stat
-                            label="어제 트래픽"
-                            value={formatBytes(Number(latest.rx_bytes || 0) + Number(latest.tx_bytes || 0))}
-                            sub="받기+보내기"
-                        />
-                    </div>
-                ) : (
-                    <div style={{
-                        padding: '20px', background: '#F7FAFC', borderRadius: '12px',
-                        border: '1px dashed #CBD5E0', color: '#718096', fontSize: '0.85rem', lineHeight: 1.7
-                    }}>
-                        아직 서버 기록이 없습니다. 맥미니에서 <strong>기록 스크립트</strong>를 걸어 두면
-                        하루 한 번 여기에 쌓입니다.
-                    </div>
-                )}
+                <h3 style={{ margin: '0 0 4px', fontSize: '1rem', color: '#2D3748' }}>서버 자원</h3>
+                <p style={{ margin: '0 0 10px', fontSize: '0.75rem', color: '#A0AEC0' }}>
+                    메모리·스왑·게이트웨이는 5분마다 재서 <strong>오늘의 가장 나쁜 순간</strong>을 남깁니다.
+                    디스크·DB·컨테이너는 하루 한 번(04:50) 기록입니다.
+                </p>
+                <AdminResourceStatus latest={latest} />
             </div>
 
             {/* 트래픽은 정확한 수치가 아니라 경향을 본다. 그리기는 전용 컴포넌트가 맡는다. */}

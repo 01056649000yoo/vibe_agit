@@ -53,7 +53,8 @@
     "preflight:disk": "bash scripts/preflight-disk.sh",
     "check:title-levels": "node scripts/sync-title-levels.mjs --check",
     "sync:title-levels": "node scripts/sync-title-levels.mjs --write",
-    "deploy:local": "bash scripts/deploy-local.sh"
+    "deploy:local": "bash scripts/deploy-local.sh",
+    "hooks:install": "bash -c 'cp scripts/git-hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push && echo \"푸시 전 검사를 걸었습니다. 건너뛰려면 git push --no-verify\"'"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
