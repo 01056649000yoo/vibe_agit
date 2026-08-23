@@ -193,6 +193,11 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(teacherGuides, /바로 붙은 위·아래·왼쪽·오른쪽 좌석/);
   assert.match(seatEntry, /필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과/);
   assert.match(seatEntry, /result\.error/);
+  assert.match(seatEntry, /<output className=\{`arrange-student-counter/);
+  assert.match(seatEntry, /현재 학생 \$\{roster\.length\}명, 활성 좌석 \$\{activeSeats\.size\}석/);
+  assert.match(seatEntry, /seatCountMatches \? '좌석 일치' : `좌석 \$\{activeSeats\.size\}석`/);
+  assert.match(arrangementCss, /\.arrange-board-heading \{ display:grid; grid-template-columns:minmax\(120px,560px\) auto;/);
+  assert.match(arrangementCss, /\.arrange-student-counter\.is-mismatch/);
 });
 
 test('설정 정규화는 좌석·역할 입력 크기와 화면 밖 좌표를 제한한다', () => {

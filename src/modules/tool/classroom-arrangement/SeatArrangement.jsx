@@ -172,7 +172,14 @@ export default function SeatArrangement({ students, settings, history, onSetting
       </section>
 
       <section className="arrange-board-card">
-        <div className="arrange-blackboard">칠판</div>
+        <div className="arrange-board-heading">
+          <div className="arrange-blackboard">칠판</div>
+          <output className={`arrange-student-counter ${seatCountMatches ? 'is-ready' : 'is-mismatch'}`} aria-live="polite" aria-label={`현재 학생 ${roster.length}명, 활성 좌석 ${activeSeats.size}석`}>
+            <span>현재 학생</span>
+            <strong>{roster.length}<small>명</small></strong>
+            <em>{seatCountMatches ? '좌석 일치' : `좌석 ${activeSeats.size}석`}</em>
+          </output>
+        </div>
         <div className="arrange-seat-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(54px, 1fr))` }}>
           {Array.from({ length: rows * cols }, (_, index) => {
             const row = Math.floor(index / cols);

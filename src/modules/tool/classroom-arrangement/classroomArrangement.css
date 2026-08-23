@@ -40,7 +40,15 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 .arrange-speed-row button.is-active { border-color:#315fc4; color:#315fc4; background:#eff6ff; }
 .arrange-primary,.arrange-secondary { width:100%; margin-top:7px; }
 .arrange-board-card,.arrange-role-board { position:relative; min-height:520px; overflow:auto; }
-.arrange-blackboard { width:min(72%,560px); margin:0 auto 18px; padding:10px; border:6px solid #8a6848; border-radius:5px; background:#294c42; color:#eefcf5; text-align:center; font-weight:900; box-shadow:0 5px 12px rgba(35,49,45,.2); }
+.arrange-board-heading { display:grid; grid-template-columns:minmax(120px,560px) auto; justify-content:center; gap:10px; align-items:stretch; margin-bottom:18px; }
+.arrange-blackboard { display:grid; place-items:center; min-width:0; padding:10px; border:6px solid #8a6848; border-radius:5px; background:#294c42; color:#eefcf5; text-align:center; font-weight:900; box-shadow:0 5px 12px rgba(35,49,45,.2); }
+.arrange-student-counter { display:grid; grid-template-columns:auto auto; gap:1px 5px; align-content:center; min-width:82px; padding:7px 10px; border:1px solid #bfdbfe; border-radius:10px; box-sizing:border-box; background:#eff6ff; color:#315fc4; text-align:center; font-style:normal; }
+.arrange-student-counter span { grid-column:1/-1; font-size:.62rem; font-weight:850; }
+.arrange-student-counter strong { justify-self:end; font-size:1.25rem; line-height:1; }
+.arrange-student-counter small { margin-left:2px; font-size:.65rem; }
+.arrange-student-counter em { grid-column:1/-1; margin-top:2px; color:#4f6b9f; font-size:.58rem; font-style:normal; font-weight:850; }
+.arrange-student-counter.is-mismatch { border-color:#fcd34d; background:#fffbeb; color:#b45309; }
+.arrange-student-counter.is-mismatch em { color:#a16207; }
 .arrange-seat-grid { display:grid; gap:7px; min-width:max-content; user-select:none; }
 .arrange-seat { width:100%; min-width:54px; min-height:64px; border:1px dashed #d8e0eb; border-radius:10px; background:#f8fafc; color:transparent; touch-action:none; }
 .arrange-seat.is-active { border:2px solid #9fb7e8; background:linear-gradient(145deg,#fff,#eef4ff); color:#8291a5; cursor:crosshair; }
