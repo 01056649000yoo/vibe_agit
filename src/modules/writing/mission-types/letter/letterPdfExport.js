@@ -133,14 +133,15 @@ const LETTER_BASE_STYLES = `
 /*
  * 빈 편지지는 머리 띠 모양과 관계없이 같은 좌표에서 쓰기 시작한다.
  * 각 편지지의 장식은 이 고정된 쓰기 영역 바깥을 꾸미며, blankCss에서만 달라진다.
+ * 좌표는 여기 한 곳에만 적는다. 편지지가 이 자리를 옮겨야 하면 자기 `blankCss`에서 직접 덮어쓴다.
  */
 const LETTER_BLANK_BASE_STYLES = `
         .pdf-entry--letter-blank .letter-sheet__band {
             position: absolute;
             z-index: 3;
-            top: var(--letter-blank-band-top, 8mm);
-            left: var(--letter-blank-band-side, 12mm);
-            right: var(--letter-blank-band-side, 12mm);
+            top: 8mm;
+            left: 12mm;
+            right: 12mm;
             display: flex;
             width: auto;
             max-width: none;
@@ -151,10 +152,10 @@ const LETTER_BLANK_BASE_STYLES = `
         .pdf-entry--letter-blank .letter-sheet__body {
             position: absolute;
             z-index: 2;
-            top: var(--letter-blank-body-top, 36mm);
-            right: var(--letter-blank-body-side, 14mm);
+            top: 36mm;
+            right: 14mm;
             bottom: 12mm;
-            left: var(--letter-blank-body-side, 14mm);
+            left: 14mm;
             display: flex;
             flex-direction: column;
             margin: 0;

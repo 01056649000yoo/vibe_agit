@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import { TEACHER_GUIDES } from '../src/constants/teacherGuides.js';
+import { getGenreEntries } from '../src/modules/writing/mission-types/genreCatalog.js';
+import { LETTER_PAPERS } from '../src/modules/writing/mission-types/letter/letterPapers.js';
 
 const guideText = (guide) => [
     guide.summary,
@@ -15,6 +17,51 @@ const guideText = (guide) => [
         ...section.notes
     ])
 ].join('\n');
+
+test('모든 도움말은 화면이 그릴 수 있는 모양을 갖춘다', () => {
+    // `TeacherGuideButton`은 `activeSection.steps.map`을 그냥 부른다.
+    // 섹션에 steps 나 notes 가 없으면 도움말 창이 열리다 멈춘다.
+    for (const [tabId, guide] of Object.entries(TEACHER_GUIDES)) {
+        assert.ok(guide.title?.trim(), `${tabId}: 제목이 없다`);
+        assert.ok(guide.summary?.trim(), `${tabId}: 한 줄 요약이 없다`);
+
+        const sections = guide.sections || [];
+        if (sections.length === 0) {
+            assert.ok(Array.isArray(guide.steps) && guide.steps.length > 0, `${tabId}: 순서 안내가 없다`);
+            assert.ok(Array.isArray(guide.notes) && guide.notes.length > 0, `${tabId}: 알아 둘 것이 없다`);
+            continue;
+        }
+
+        const seenIds = new Set();
+        for (const section of sections) {
+            const where = `${tabId}/${section.id || '이름 없는 탭'}`;
+            assert.ok(section.id?.trim(), `${tabId}: 탭 id 가 없다`);
+            assert.ok(!seenIds.has(section.id), `${where}: 탭 id 가 겹친다`);
+            seenIds.add(section.id);
+            assert.ok(section.label?.trim(), `${where}: 탭 이름이 없다`);
+            assert.ok(section.summary?.trim(), `${where}: 탭 요약이 없다`);
+            assert.ok(Array.isArray(section.steps) && section.steps.length > 0, `${where}: 순서 안내가 없다`);
+            assert.ok(Array.isArray(section.notes) && section.notes.length > 0, `${where}: 알아 둘 것이 없다`);
+        }
+    }
+});
+
+test('도움말이 말하는 글 종류·편지지 개수는 실제 목록과 같다', () => {
+    // 개수를 손으로 적어 두면 종류가 늘어도 도움말만 옛말을 한다. 두 곳을 한 검사에서 본다.
+    const text = guideText(TEACHER_GUIDES.dashboard);
+    const entries = getGenreEntries();
+    const templates = entries.filter((entry) => entry.missionTypeId);
+    const basics = entries.filter((entry) => !entry.missionTypeId);
+
+    assert.ok(text.includes(`${entries.length}가지 글`), `도움말은 글 종류를 ${entries.length}가지로 적어야 한다`);
+    assert.ok(text.includes(`${templates.length}종`), `전용 틀 개수는 ${templates.length}종이어야 한다`);
+    assert.ok(text.includes(`${basics.length}종`), `기본 글쓰기 개수는 ${basics.length}종이어야 한다`);
+    assert.ok(text.includes(`편지지 ${LETTER_PAPERS.length}종`), `편지지는 ${LETTER_PAPERS.length}종이어야 한다`);
+
+    for (const entry of entries) {
+        assert.ok(text.includes(entry.id), `도움말에 '${entry.id}'이(가) 빠졌다`);
+    }
+});
 
 test('선생님 과제 도움말은 핵심 기능을 네 탭으로 나눠 현재 운영 흐름을 안내한다', () => {
     const text = guideText(TEACHER_GUIDES.dashboard);

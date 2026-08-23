@@ -166,10 +166,13 @@ test('편지 본문을 가리던 반복 도트는 없애고 주제 장식만 남
 });
 
 test('빈 편지지는 일곱 종류 모두 같은 좌표에서 쓰기 시작한다', () => {
+    // 좌표는 공용 뼈대 한 곳에만 적는다. 예전에는 아무도 정의하지 않는 CSS 변수로 적어 두어
+    // 편지지마다 조절할 수 있는 것처럼 보였지만 실제로는 늘 기본값만 쓰였다.
     assert.match(
         letterPdfExport.styles,
-        /\.pdf-entry--letter-blank \.letter-sheet__body \{[\s\S]*?top: var\(--letter-blank-body-top, 36mm\);[\s\S]*?right: var\(--letter-blank-body-side, 14mm\);[\s\S]*?left: var\(--letter-blank-body-side, 14mm\);/,
+        /\.pdf-entry--letter-blank \.letter-sheet__body \{[\s\S]*?top: 36mm;[\s\S]*?right: 14mm;[\s\S]*?left: 14mm;/,
     );
+    assert.ok(!/var\(--letter-/.test(letterPdfExport.styles), '쓰이지 않는 CSS 변수가 다시 생겼다');
     assert.match(letterPdfExport.styles, /\.letter-sheet__blank-recipient \{/);
     assert.match(
         letterPdfExport.styles,
