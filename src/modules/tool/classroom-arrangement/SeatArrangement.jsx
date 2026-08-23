@@ -4,7 +4,13 @@ import LotteryMachine from './LotteryMachine';
 import { hasExactSeatCount, rectangularSeats, seatKey, seatsWithinGrid, solveSeats, suggestSeatLayout } from './arrangementEngine';
 
 const parseQuickNames = (text) => text.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean).slice(0, 100);
-const delayFor = (speed) => speed === 'slow' ? 720 : speed === 'fast' ? 230 : 420;
+const SPEED_OPTIONS = [
+  { id: 'slow', label: '천천히', delay: 1500, detail: '한 명 약 1.5초' },
+  { id: 'normal', label: '보통', delay: 950, detail: '한 명 약 1초' },
+  { id: 'fast', label: '빠르게', delay: 600, detail: '한 명 약 0.6초' }
+];
+const delayFor = (speed) => SPEED_OPTIONS.find((option) => option.id === speed)?.delay || 950;
+const groupLabel = (group) => group === 'A' ? '남' : group === 'B' ? '여' : '';
 
 export default function SeatArrangement({ students, settings, history, onSettingsChange, onCreateHistory }) {
   const [source, setSource] = useState('class');
@@ -129,7 +135,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
           <button type="button" role="tab" aria-selected={source === 'quick'} className={source === 'quick' ? 'is-active' : ''} onClick={() => { setSource('quick'); reset(); }}>빠른 입력</button>
         </div>
         {source === 'quick' ? <textarea className="arrange-quick-input" value={quickText} onChange={(event) => { setQuickText(event.target.value); reset(); }} placeholder={'이름을 줄바꿈이나 쉼표로 입력\n예: 민준, 서연, 지우'} /> : null}
-        <div className="arrange-roster-summary"><strong>{roster.length}명</strong><div className="arrange-chip-row">{roster.map((student) => <span className="arrange-chip" key={student.id}>{student.name}{student.group ? ` · ${student.group}` : ''}</span>)}</div></div>
+        <div className="arrange-roster-summary"><strong>{roster.length}명</strong><div className="arrange-chip-row">{roster.map((student) => <span className="arrange-chip" key={student.id}>{student.name}{groupLabel(student.group) ? ` · ${groupLabel(student.group)}` : ''}</span>)}</div></div>
         <div className="arrange-grid-controls">
           <label>행<input type="number" min="1" max="30" value={rows} disabled={phase === 'running'} onChange={(event) => resizeGrid(Math.max(1, Math.min(30, Number(event.target.value) || 1)), cols)} /></label>
           <label>열<input type="number" min="1" max="30" value={cols} disabled={phase === 'running'} onChange={(event) => resizeGrid(rows, Math.max(1, Math.min(30, Number(event.target.value) || 1)))} /></label>
@@ -137,7 +143,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
           <button type="button" onClick={autoGrid} disabled={phase === 'running' || roster.length === 0}>자동 맞춤</button>
         </div>
         <p className="arrange-hint">좌석을 클릭하거나 드래그해 교실 모양을 만들 수 있습니다. 현재 {activeSeats.size}석입니다.</p>
-        <div className="arrange-speed-row"><span>속도</span>{['slow', 'normal', 'fast'].map((value) => <button type="button" key={value} className={speed === value ? 'is-active' : ''} onClick={() => setSpeed(value)}>{value === 'slow' ? '천천히' : value === 'fast' ? '빠르게' : '보통'}</button>)}</div>
+        <div className="arrange-speed-row"><span>속도</span>{SPEED_OPTIONS.map((option) => <button type="button" key={option.id} title={option.detail} className={speed === option.id ? 'is-active' : ''} onClick={() => setSpeed(option.id)}>{option.label}</button>)}</div>
         <button type="button" className="arrange-primary" disabled={!canStart} onClick={start}>{phase === 'done' ? '다시 배치하기' : '자리 배치 시작'}</button>
         {phase !== 'idle' ? <button type="button" className="arrange-secondary" onClick={reset}>결과 지우기</button> : null}
         {!seatCountMatches && phase === 'idle' ? <p className="arrange-validation">학생 수({roster.length}명)와 활성 좌석 수({activeSeats.size}석)가 정확히 같아야 합니다.</p> : null}

@@ -69,12 +69,13 @@ test('이전 앱 학급 설정은 이름이 하나로 일치하는 아지트 학
 });
 
 test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 계약을 가진다', async () => {
-  const [manifest, api, migration, registry, teacherEntry, legacyImport, teacherGuides, seatEntry, roleEntry, lotteryMachine, arrangementCss] = await Promise.all([
+  const [manifest, api, migration, registry, teacherEntry, settingsEntry, legacyImport, teacherGuides, seatEntry, roleEntry, lotteryMachine, arrangementCss] = await Promise.all([
     readFile('src/modules/tool/classroom-arrangement/manifest.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/classroomArrangementApi.js', 'utf8'),
     readFile('supabase/migrations/20261159_classroom_arrangement_tool.sql', 'utf8'),
     readFile('src/modules/registry.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/TeacherEntry.jsx', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/ArrangementSettings.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/legacyImport.js', 'utf8'),
     readFile('src/constants/teacherGuides.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/SeatArrangement.jsx', 'utf8'),
@@ -98,6 +99,17 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(roleEntry, /<LotteryMachine/);
   assert.match(lotteryMachine, /arrange-lottery-drum/);
   assert.match(arrangementCss, /@keyframes arrange-ball-orbit/);
+  assert.match(settingsEntry, /학생 남녀 구분/);
+  assert.match(settingsEntry, /<option value="A">남<\/option><option value="B">여<\/option>/);
+  assert.doesNotMatch(`${settingsEntry}\n${teacherGuides}`, /A\/B|학생 A|학생 B/);
+  assert.match(seatEntry, /id: 'slow', label: '천천히', delay: 1500/);
+  assert.match(seatEntry, /id: 'normal', label: '보통', delay: 950/);
+  assert.match(seatEntry, /id: 'fast', label: '빠르게', delay: 600/);
+  assert.match(seatEntry, /group === 'A' \? '남' : group === 'B' \? '여'/);
+  assert.match(arrangementCss, /\.arrange-lottery \{ position:absolute;[^}]*top:50%;[^}]*transform:translate\(-50%,-50%\)/);
+  assert.doesNotMatch(arrangementCss, /\.arrange-lottery \{[^}]*position:fixed/);
+  assert.match(teacherEntry, /arrange-settings-utilities/);
+  assert.match(arrangementCss, /\.arrange-settings-utilities \{ display:grid; grid-template-columns:/);
 });
 
 test('설정 정규화는 좌석·역할 입력 크기와 화면 밖 좌표를 제한한다', () => {
