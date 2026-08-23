@@ -14,6 +14,7 @@
 | **[PERFORMANCE_HARNESS.md](PERFORMANCE_HARNESS.md)** | 성능 설계 원칙·1,000명 합격선·측정 기록표 |
 | **[SECURITY_HARNESS.md](SECURITY_HARNESS.md)** | 보안 설계 원칙·검사 명령 |
 | **[INTEGRATION_PLAN.md](INTEGRATION_PLAN.md)** | 맥미니 이관(Stage 1)의 상세 절차·검증 사실 |
+| **[CLASS_ACTIVITY_TOOLS_PLAN.md](CLASS_ACTIVITY_TOOLS_PLAN.md)** | 전체 화면 모달 기반 학급 활동 도구함 확장 순서·공통 계약 |
 | **[backup.md](backup.md)** | 백업·복구 절차, 매월 1일 자동 리허설 |
 | **[docs/OUTAGE_PLAN.md](docs/OUTAGE_PLAN.md)** | 맥미니 내부 장애 시 Caddy 점검 화면·로컬 상태 기록 운영 절차 |
 | **[MANUAL_ACCEPTANCE_CHECKLIST.md](MANUAL_ACCEPTANCE_CHECKLIST.md)** | 브라우저 없이는 확인 못 하는 실기기 인수 검사표 |
