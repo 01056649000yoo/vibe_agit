@@ -30,6 +30,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
   const [phase, setPhase] = useState('idle');
   const [speed, setSpeed] = useState('normal');
   const [violations, setViolations] = useState(0);
+  const [conditionError, setConditionError] = useState('');
   const painting = useRef(null);
   const activeSeatsRef = useRef(activeSeats);
   const timers = useRef([]);
@@ -59,6 +60,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
     setRevealed(new Set());
     setFlyingPick(null);
     setModalOpen(false);
+    setConditionError('');
     setPhase('idle');
     onSettingsChange({ ...settings, seatLayout: { rows: nextRows, cols: nextCols, activeSeats: [...visibleSeats] } });
   };
@@ -91,6 +93,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
     setFlyingPick(null);
     setModalOpen(false);
     setViolations(0);
+    setConditionError('');
     setPhase('idle');
   };
   const schedule = (callback, delay) => {
@@ -100,9 +103,13 @@ export default function SeatArrangement({ students, settings, history, onSetting
 
   const start = async () => {
     if (!canStart) return;
+    setConditionError('');
     const rosterWithGroups = roster.map((student) => ({ ...student, group: student.group || null }));
     const result = solveSeats(rosterWithGroups, activeSeats, settings, history.filter((item) => item.kind === 'seat'));
-    if (result.assignments.length === 0) return;
+    if (result.assignments.length === 0) {
+      setConditionError(result.error || '현재 조건으로 자리 배치를 만들 수 없습니다.');
+      return;
+    }
     setAssignments(result.assignments);
     setRevealed(new Set());
     setFlyingPick(null);
@@ -161,6 +168,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
         <button type="button" className="arrange-primary" disabled={!canStart} onClick={start}>{phase === 'done' ? '다시 배치하기' : '자리 배치 시작'}</button>
         {phase !== 'idle' ? <button type="button" className="arrange-secondary" onClick={reset}>결과 지우기</button> : null}
         {!seatCountMatches && phase === 'idle' ? <p className="arrange-validation">학생 수({roster.length}명)와 활성 좌석 수({activeSeats.size}석)가 정확히 같아야 합니다.</p> : null}
+        {conditionError ? <p className="arrange-validation" role="alert">{conditionError} 설정·자료 이전 탭에서 필수 조건을 확인해 주세요.</p> : null}
       </section>
 
       <section className="arrange-board-card">
@@ -178,7 +186,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
             </button>;
           })}
         </div>
-        {phase === 'done' && violations > 0 ? <div className="arrange-condition-note">조건을 모두 만족하는 조합이 없어 가장 가까운 결과로 배치했습니다. 위반 점수 {violations}</div> : null}
+        {phase === 'done' && violations > 0 ? <div className="arrange-condition-note">필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과로 배치했습니다. 권장 점수 {violations}</div> : null}
       </section>
     </div>
     {modalOpen ? <SeatLotteryModal rows={rows} cols={cols} activeSeats={activeSeats} assignments={assignments} revealed={revealed} rollingName={rollingName} flyingPick={flyingPick} phase={phase} onClose={closeLotteryModal} /> : null}

@@ -168,6 +168,13 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 .arrange-condition-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:10px; }
 .arrange-toggle-row { display:flex; gap:8px; align-items:flex-start; margin:0; padding:9px 10px; border:1px solid #e5eaf1; border-radius:10px; background:#f8fafc; color:#526176; font-size:.77rem; line-height:1.35; }
 .arrange-toggle-row input { flex-shrink:0; margin-top:2px; }
+.arrange-condition-section { margin-top:11px; padding:11px; border:1px solid #e4eaf2; border-radius:13px; background:#fbfdff; }
+.arrange-condition-section.is-required { border-color:#fed7aa; background:#fffaf5; }
+.arrange-condition-section.is-preferred { border-color:#dbeafe; background:#f8fbff; }
+.arrange-condition-title { display:flex; justify-content:space-between; gap:10px; align-items:baseline; }
+.arrange-condition-title strong { color:#24324a; font-size:.8rem; }
+.arrange-condition-title span { color:#718096; font-size:.68rem; text-align:right; }
+.arrange-condition-title + .arrange-settings-block { margin-top:8px; padding-top:0; border-top:0; }
 .arrange-settings-block { margin-top:10px; padding-top:10px; border-top:1px solid #e8edf4; }
 .arrange-settings-block-heading { display:flex; justify-content:space-between; gap:10px; align-items:baseline; }
 .arrange-settings-block-heading h4 { flex-shrink:0; font-size:.84rem; }
@@ -201,10 +208,11 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
   .arrange-header h2 { font-size:1.3rem; }
   .arrange-tabs button { padding:9px 11px; }
   .arrange-role-form,.arrange-inline-form,.arrange-fixed-form,.arrange-transfer-card,.arrange-import-box,.arrange-sound-card { grid-template-columns:1fr; }
-  .arrange-settings-heading,.arrange-settings-block-heading { align-items:stretch; flex-direction:column; }
+  .arrange-settings-heading,.arrange-settings-block-heading,.arrange-condition-title { align-items:stretch; flex-direction:column; }
   .arrange-gender-summary { justify-content:flex-start; }
   .arrange-condition-grid { grid-template-columns:1fr; }
   .arrange-settings-block-heading p { text-align:left; }
+  .arrange-condition-title span { text-align:left; }
   .arrange-inline-form>span { display:none; }
   .arrange-transfer-card .arrange-secondary,.arrange-import-box .arrange-primary { width:100%; }
   .arrange-sound-card>input { grid-column:auto; }

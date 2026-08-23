@@ -7,6 +7,7 @@ import {
   normalizeRoleSettings,
   normalizeSeatSettings,
   rectangularSeats,
+  seatAdjacencyFor,
   seatsWithinGrid,
   suggestSeatLayout,
   solveRoles,
@@ -33,6 +34,62 @@ test('자리 배치는 학생 수와 활성 좌석 수가 정확히 같을 때�
   assert.equal(hasExactSeatCount(3, 2), false);
   assert.equal(hasExactSeatCount(0, 0), false);
   assert.deepEqual(solveSeats(students, rectangularSeats(2, 2), {}), { assignments: [], violations: 0 });
+});
+
+test('자리 이웃은 빈칸을 건너뛰지 않는 상하좌우 좌석만 포함한다', () => {
+  const adjacency = seatAdjacencyFor(['0,0', '0,1', '1,0', '1,1', '2,0', '0,2']);
+  assert.deepEqual(adjacency.get('1,1').sort(), ['0,1', '1,0']);
+  assert.deepEqual(adjacency.get('0,0').sort(), ['0,1', '1,0']);
+  assert.equal(adjacency.get('1,1').includes('0,0'), false);
+});
+
+test('이웃 금지는 상하좌우에서 반드시 지키고 불가능하면 결과를 만들지 않는다', () => {
+  const students = [
+    { id: 'a', name: '가' }, { id: 'b', name: '나' },
+    { id: 'c', name: '다' }, { id: 'd', name: '라' }
+  ];
+  const possible = solveSeats(students, rectangularSeats(2, 2), { forbiddenPairs: [['a', 'b']] });
+  const byStudent = new Map(possible.assignments.map((item) => [item.studentId, item.seatKey.split(',').map(Number)]));
+  const [aRow, aCol] = byStudent.get('a');
+  const [bRow, bCol] = byStudent.get('b');
+  assert.notEqual(Math.abs(aRow - bRow) + Math.abs(aCol - bCol), 1);
+
+  const impossible = solveSeats(students.slice(0, 2), rectangularSeats(1, 2), { forbiddenPairs: [['a', 'b']] });
+  assert.deepEqual(impossible, {
+    assignments: [], violations: 0,
+    error: '고정 자리와 이웃 금지 조건을 만족하는 배치를 찾지 못했습니다.'
+  });
+});
+
+test('남녀 혼합과 최근 자리·이웃 회피 조건을 따로 저장하고 기존 설정도 이어받는다', () => {
+  const legacy = normalizeSeatSettings({ balanceMode: 'strict', avoidDuplicates: true });
+  assert.equal(legacy.balanceMode, 'strict');
+  assert.equal(legacy.avoidSameSeat, true);
+  assert.equal(legacy.avoidSameNeighbor, true);
+  assert.equal('avoidDuplicates' in legacy, false);
+
+  const separate = normalizeSeatSettings({ avoidSameSeat: true, avoidSameNeighbor: false });
+  assert.equal(separate.avoidSameSeat, true);
+  assert.equal(separate.avoidSameNeighbor, false);
+
+  const students = [
+    { id: 'a', name: '가', group: 'A' }, { id: 'b', name: '나', group: 'A' },
+    { id: 'c', name: '다', group: 'B' }, { id: 'd', name: '라', group: 'B' }
+  ];
+  const result = solveSeats(students, rectangularSeats(2, 2), { balanceMode: 'strict' });
+  assert.equal(result.violations, 0);
+});
+
+test('가까이 배치할 학생은 상하좌우 이웃이 되도록 우선 반영한다', () => {
+  const students = [
+    { id: 'a', name: '가' }, { id: 'b', name: '나' }, { id: 'c', name: '다' }
+  ];
+  const result = solveSeats(students, rectangularSeats(1, 3), { preferredPairs: [['a', 'b']] });
+  const byStudent = new Map(result.assignments.map((item) => [item.studentId, item.seatKey.split(',').map(Number)]));
+  const [aRow, aCol] = byStudent.get('a');
+  const [bRow, bCol] = byStudent.get('b');
+  assert.equal(Math.abs(aRow - bRow) + Math.abs(aCol - bCol), 1);
+  assert.equal(result.violations, 0);
 });
 
 test('자동 맞춤과 격자 축소는 화면 안에 학생 수만큼의 좌석만 남긴다', () => {
@@ -104,6 +161,14 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(settingsEntry, /학생 남녀 구분/);
   assert.match(settingsEntry, /<option value="A">남<\/option><option value="B">여<\/option>/);
   assert.doesNotMatch(`${settingsEntry}\n${teacherGuides}`, /A\/B|학생 A|학생 B/);
+  assert.match(settingsEntry, /반드시 지킬 조건/);
+  assert.match(settingsEntry, /이웃하면 안 되는 학생/);
+  assert.match(settingsEntry, /가능하면 반영할 조건/);
+  assert.match(settingsEntry, /상·하·좌·우 이웃에 남녀가 골고루 섞이도록 배치/);
+  assert.match(settingsEntry, /최근 5회 같은 자리 피하기/);
+  assert.match(settingsEntry, /최근 5회 같은 이웃 피하기/);
+  assert.match(settingsEntry, /가까이 배치할 학생/);
+  assert.doesNotMatch(settingsEntry, /좌우로 번갈아|옆자리 금지|같은 자리·옆자리/);
   assert.match(seatEntry, /id: 'slow', label: '천천히', delay: 1500/);
   assert.match(seatEntry, /id: 'normal', label: '보통', delay: 950/);
   assert.match(seatEntry, /id: 'fast', label: '빠르게', delay: 600/);
@@ -125,6 +190,9 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(arrangementCss, /\.arrange-seat-machine-wrap \.arrange-lottery \{ position:relative;/);
   assert.match(arrangementCss, /@keyframes arrange-seat-flight/);
   assert.match(teacherGuides, /이름표가 해당 자리로 이동/);
+  assert.match(teacherGuides, /바로 붙은 위·아래·왼쪽·오른쪽 좌석/);
+  assert.match(seatEntry, /필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과/);
+  assert.match(seatEntry, /result\.error/);
 });
 
 test('설정 정규화는 좌석·역할 입력 크기와 화면 밖 좌표를 제한한다', () => {
