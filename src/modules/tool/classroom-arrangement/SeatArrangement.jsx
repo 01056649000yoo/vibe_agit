@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { arrangementSfx } from './arrangementSfx';
-import { hasExactSeatCount, rectangularSeats, seatKey, solveSeats, suggestSeatGrid } from './arrangementEngine';
+import LotteryMachine from './LotteryMachine';
+import { hasExactSeatCount, rectangularSeats, seatKey, seatsWithinGrid, solveSeats, suggestSeatLayout } from './arrangementEngine';
 
 const parseQuickNames = (text) => text.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean).slice(0, 100);
 const delayFor = (speed) => speed === 'slow' ? 720 : speed === 'fast' ? 230 : 420;
@@ -8,12 +9,13 @@ const delayFor = (speed) => speed === 'slow' ? 720 : speed === 'fast' ? 230 : 42
 export default function SeatArrangement({ students, settings, history, onSettingsChange, onCreateHistory }) {
   const [source, setSource] = useState('class');
   const [quickText, setQuickText] = useState('');
-  const initial = settings.seatLayout || suggestSeatGrid(students.length);
+  const suggested = useMemo(() => suggestSeatLayout(students.length), [students.length]);
+  const initial = settings.seatLayout || suggested;
   const [rows, setRows] = useState(initial.rows || 4);
   const [cols, setCols] = useState(initial.cols || 6);
   const [activeSeats, setActiveSeats] = useState(() => settings.seatLayout?.activeSeats?.length
     ? new Set(settings.seatLayout.activeSeats)
-    : rectangularSeats(initial.rows || 4, initial.cols || 6));
+    : suggested.activeSeats);
   const [assignments, setAssignments] = useState([]);
   const [revealed, setRevealed] = useState(new Set());
   const [rollingName, setRollingName] = useState('');
@@ -21,6 +23,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
   const [speed, setSpeed] = useState('normal');
   const [violations, setViolations] = useState(0);
   const painting = useRef(null);
+  const activeSeatsRef = useRef(activeSeats);
   const timers = useRef([]);
 
   useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
@@ -38,24 +41,27 @@ export default function SeatArrangement({ students, settings, history, onSetting
   const canStart = phase === 'idle' && seatCountMatches;
 
   const storeLayout = (nextRows, nextCols, nextSeats) => {
+    const visibleSeats = seatsWithinGrid(nextSeats, nextRows, nextCols);
     setRows(nextRows);
     setCols(nextCols);
-    setActiveSeats(nextSeats);
+    activeSeatsRef.current = visibleSeats;
+    setActiveSeats(visibleSeats);
     setAssignments([]);
     setRevealed(new Set());
     setPhase('idle');
-    onSettingsChange({ ...settings, seatLayout: { rows: nextRows, cols: nextCols, activeSeats: [...nextSeats] } });
+    onSettingsChange({ ...settings, seatLayout: { rows: nextRows, cols: nextCols, activeSeats: [...visibleSeats] } });
   };
 
   const applyGrid = () => storeLayout(rows, cols, rectangularSeats(rows, cols));
   const autoGrid = () => {
-    const next = suggestSeatGrid(roster.length);
-    storeLayout(next.rows, next.cols, rectangularSeats(next.rows, next.cols));
+    const next = suggestSeatLayout(roster.length);
+    storeLayout(next.rows, next.cols, next.activeSeats);
   };
+  const resizeGrid = (nextRows, nextCols) => storeLayout(nextRows, nextCols, activeSeatsRef.current);
   const paint = (row, col, mode = painting.current) => {
     if (phase !== 'idle' || !mode) return;
     const key = seatKey(row, col);
-    const next = new Set(activeSeats);
+    const next = new Set(activeSeatsRef.current);
     if (mode === 'add') next.add(key); else next.delete(key);
     storeLayout(rows, cols, next);
   };
@@ -125,8 +131,8 @@ export default function SeatArrangement({ students, settings, history, onSetting
         {source === 'quick' ? <textarea className="arrange-quick-input" value={quickText} onChange={(event) => { setQuickText(event.target.value); reset(); }} placeholder={'이름을 줄바꿈이나 쉼표로 입력\n예: 민준, 서연, 지우'} /> : null}
         <div className="arrange-roster-summary"><strong>{roster.length}명</strong><div className="arrange-chip-row">{roster.map((student) => <span className="arrange-chip" key={student.id}>{student.name}{student.group ? ` · ${student.group}` : ''}</span>)}</div></div>
         <div className="arrange-grid-controls">
-          <label>행<input type="number" min="1" max="30" value={rows} disabled={phase === 'running'} onChange={(event) => setRows(Math.max(1, Math.min(30, Number(event.target.value) || 1)))} /></label>
-          <label>열<input type="number" min="1" max="30" value={cols} disabled={phase === 'running'} onChange={(event) => setCols(Math.max(1, Math.min(30, Number(event.target.value) || 1)))} /></label>
+          <label>행<input type="number" min="1" max="30" value={rows} disabled={phase === 'running'} onChange={(event) => resizeGrid(Math.max(1, Math.min(30, Number(event.target.value) || 1)), cols)} /></label>
+          <label>열<input type="number" min="1" max="30" value={cols} disabled={phase === 'running'} onChange={(event) => resizeGrid(rows, Math.max(1, Math.min(30, Number(event.target.value) || 1)))} /></label>
           <button type="button" onClick={applyGrid} disabled={phase === 'running'}>격자 적용</button>
           <button type="button" onClick={autoGrid} disabled={phase === 'running' || roster.length === 0}>자동 맞춤</button>
         </div>
@@ -152,7 +158,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
             </button>;
           })}
         </div>
-        {phase === 'running' ? <div className="arrange-lottery" aria-live="polite"><div className="arrange-lottery-machine">🎱</div><strong>{rollingName || '추첨 중'}</strong><span>{revealed.size} / {assignments.length}</span></div> : null}
+        {phase === 'running' ? <LotteryMachine rollingName={rollingName} current={revealed.size} total={assignments.length} /> : null}
         {phase === 'done' && violations > 0 ? <div className="arrange-condition-note">조건을 모두 만족하는 조합이 없어 가장 가까운 결과로 배치했습니다. 위반 점수 {violations}</div> : null}
       </section>
     </div>

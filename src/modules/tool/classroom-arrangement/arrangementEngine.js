@@ -43,6 +43,28 @@ export function rectangularSeats(rows, cols) {
   return seats;
 }
 
+export function seatsWithinGrid(activeSeats, rows, cols) {
+  const safeRows = Math.max(0, Math.min(30, Math.floor(Number(rows) || 0)));
+  const safeCols = Math.max(0, Math.min(30, Math.floor(Number(cols) || 0)));
+  return new Set([...activeSeats].filter((key) => {
+    const match = /^(\d{1,2}),(\d{1,2})$/.exec(String(key));
+    if (!match) return false;
+    const row = Number(match[1]);
+    const col = Number(match[2]);
+    return row < safeRows && col < safeCols;
+  }));
+}
+
+export function suggestSeatLayout(total) {
+  const count = Math.max(0, Math.min(900, Math.floor(Number(total) || 0)));
+  const { rows, cols } = suggestSeatGrid(count);
+  const activeSeats = new Set();
+  for (let index = 0; index < count; index += 1) {
+    activeSeats.add(seatKey(Math.floor(index / cols), index % cols));
+  }
+  return { rows, cols, activeSeats };
+}
+
 export function normalizeSeatSettings(value = {}) {
   const layout = value?.seatLayout;
   const rows = Math.max(0, Math.min(30, Math.floor(Number(layout?.rows) || 0)));
@@ -61,7 +83,7 @@ export function normalizeSeatSettings(value = {}) {
       })).filter((seat) => seat.studentId).slice(0, 100)
       : [],
     avoidDuplicates: value?.avoidDuplicates === true,
-    seatLayout: rows > 0 && cols > 0 ? { rows, cols, activeSeats: [...new Set(activeSeats)] } : null
+    seatLayout: rows > 0 && cols > 0 ? { rows, cols, activeSeats: [...seatsWithinGrid(activeSeats, rows, cols)] } : null
   };
 }
 

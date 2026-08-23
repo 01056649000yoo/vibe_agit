@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { arrangementSfx } from './arrangementSfx';
 import { buildRoleSlots, solveRoles } from './arrangementEngine';
+import LotteryMachine from './LotteryMachine';
 
 const newRoleId = () => typeof crypto?.randomUUID === 'function' ? crypto.randomUUID() : `role-${Date.now()}-${Math.random()}`;
 
@@ -107,7 +108,7 @@ export default function RoleArrangement({ students, settings, history, onSetting
             })}</div>
           </article>)}
         </div>
-        {phase === 'running' ? <div className="arrange-lottery" aria-live="polite"><div className="arrange-lottery-machine">🎱</div><strong>{rollingName || '추첨 중'}</strong><span>{revealedCount} / {assignments.length}</span></div> : null}
+        {phase === 'running' ? <LotteryMachine rollingName={rollingName} current={revealedCount} total={assignments.length} /> : null}
         {phase === 'done' && violations > 0 ? <div className="arrange-condition-note">조건을 모두 만족하는 조합이 없어 가장 가까운 결과로 나눴습니다. 위반 점수 {violations}</div> : null}
       </section>
     </div>

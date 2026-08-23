@@ -7,6 +7,8 @@ import {
   normalizeRoleSettings,
   normalizeSeatSettings,
   rectangularSeats,
+  seatsWithinGrid,
+  suggestSeatLayout,
   solveRoles,
   solveSeats
 } from '../src/modules/tool/classroom-arrangement/arrangementEngine.js';
@@ -31,6 +33,13 @@ test('자리 배치는 학생 수와 활성 좌석 수가 정확히 같을 때�
   assert.equal(hasExactSeatCount(3, 2), false);
   assert.equal(hasExactSeatCount(0, 0), false);
   assert.deepEqual(solveSeats(students, rectangularSeats(2, 2), {}), { assignments: [], violations: 0 });
+});
+
+test('자동 맞춤과 격자 축소는 화면 안에 학생 수만큼의 좌석만 남긴다', () => {
+  const suggested = suggestSeatLayout(13);
+  assert.deepEqual({ rows: suggested.rows, cols: suggested.cols }, { rows: 3, cols: 6 });
+  assert.equal(suggested.activeSeats.size, 13);
+  assert.deepEqual([...seatsWithinGrid(new Set(['0,0', '1,1', '2,0', '0,2']), 2, 2)], ['0,0', '1,1']);
 });
 
 test('역할 나누기는 정원 합계가 학생 수와 같을 때 모두 한 번씩 배정한다', () => {
@@ -60,14 +69,18 @@ test('이전 앱 학급 설정은 이름이 하나로 일치하는 아지트 학
 });
 
 test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 계약을 가진다', async () => {
-  const [manifest, api, migration, registry, teacherEntry, legacyImport, teacherGuides] = await Promise.all([
+  const [manifest, api, migration, registry, teacherEntry, legacyImport, teacherGuides, seatEntry, roleEntry, lotteryMachine, arrangementCss] = await Promise.all([
     readFile('src/modules/tool/classroom-arrangement/manifest.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/classroomArrangementApi.js', 'utf8'),
     readFile('supabase/migrations/20261159_classroom_arrangement_tool.sql', 'utf8'),
     readFile('src/modules/registry.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/TeacherEntry.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/legacyImport.js', 'utf8'),
-    readFile('src/constants/teacherGuides.js', 'utf8')
+    readFile('src/constants/teacherGuides.js', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/SeatArrangement.jsx', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/RoleArrangement.jsx', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/LotteryMachine.jsx', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/classroomArrangement.css', 'utf8')
   ]);
   assert.match(registry, /classroomArrangementManifest/);
   assert.match(manifest, /load: 'on-open'/);
@@ -81,10 +94,14 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(migration, /REVOKE ALL ON TABLE public\.survival_legacy_archives/);
   assert.match(migration, /source_fingerprint ~ '\^\[a-f0-9\]\{64\}\$'/);
   assert.doesNotMatch(`${teacherEntry}\n${legacyImport}\n${teacherGuides}`, /서바이벌/);
+  assert.match(seatEntry, /<LotteryMachine/);
+  assert.match(roleEntry, /<LotteryMachine/);
+  assert.match(lotteryMachine, /arrange-lottery-drum/);
+  assert.match(arrangementCss, /@keyframes arrange-ball-orbit/);
 });
 
-test('설정 정규화는 좌석·역할 입력 크기를 제한한다', () => {
-  const seats = normalizeSeatSettings({ seatLayout: { rows: 99, cols: 99, activeSeats: ['0,0', '0,0', 'bad'] } });
+test('설정 정규화는 좌석·역할 입력 크기와 화면 밖 좌표를 제한한다', () => {
+  const seats = normalizeSeatSettings({ seatLayout: { rows: 99, cols: 99, activeSeats: ['0,0', '0,0', '30,0', '0,30', 'bad'] } });
   assert.equal(seats.seatLayout.rows, 30);
   assert.equal(seats.seatLayout.cols, 30);
   assert.deepEqual(seats.seatLayout.activeSeats, ['0,0']);
