@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { arrangementSfx } from './arrangementSfx';
-import { rectangularSeats, seatKey, solveSeats, suggestSeatGrid } from './arrangementEngine';
+import { hasExactSeatCount, rectangularSeats, seatKey, solveSeats, suggestSeatGrid } from './arrangementEngine';
 
 const parseQuickNames = (text) => text.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean).slice(0, 100);
 const delayFor = (speed) => speed === 'slow' ? 720 : speed === 'fast' ? 230 : 420;
@@ -34,7 +34,8 @@ export default function SeatArrangement({ students, settings, history, onSetting
     ? students
     : parseQuickNames(quickText).map((name, index) => ({ id: `quick-${index}`, name })), [source, students, quickText]);
   const assignmentBySeat = useMemo(() => new Map(assignments.map((item) => [item.seatKey, item])), [assignments]);
-  const canStart = phase === 'idle' && roster.length > 0 && activeSeats.size >= roster.length;
+  const seatCountMatches = hasExactSeatCount(roster.length, activeSeats.size);
+  const canStart = phase === 'idle' && seatCountMatches;
 
   const storeLayout = (nextRows, nextCols, nextSeats) => {
     setRows(nextRows);
@@ -133,7 +134,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
         <div className="arrange-speed-row"><span>속도</span>{['slow', 'normal', 'fast'].map((value) => <button type="button" key={value} className={speed === value ? 'is-active' : ''} onClick={() => setSpeed(value)}>{value === 'slow' ? '천천히' : value === 'fast' ? '빠르게' : '보통'}</button>)}</div>
         <button type="button" className="arrange-primary" disabled={!canStart} onClick={start}>{phase === 'done' ? '다시 배치하기' : '자리 배치 시작'}</button>
         {phase !== 'idle' ? <button type="button" className="arrange-secondary" onClick={reset}>결과 지우기</button> : null}
-        {!canStart && phase === 'idle' ? <p className="arrange-validation">학생 수보다 활성 좌석이 같거나 많아야 합니다.</p> : null}
+        {!seatCountMatches && phase === 'idle' ? <p className="arrange-validation">학생 수({roster.length}명)와 활성 좌석 수({activeSeats.size}석)가 정확히 같아야 합니다.</p> : null}
       </section>
 
       <section className="arrange-board-card">

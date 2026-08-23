@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
   buildRoleSlots,
+  hasExactSeatCount,
   normalizeRoleSettings,
   normalizeSeatSettings,
   rectangularSeats,
@@ -13,7 +14,7 @@ import { mapLegacyClassToAgit } from '../src/modules/tool/classroom-arrangement/
 
 test('자리 배치는 고정 자리와 학생 수를 지킨다', () => {
   const students = [{ id: 'a', name: '가' }, { id: 'b', name: '나' }, { id: 'c', name: '다' }];
-  const result = solveSeats(students, rectangularSeats(2, 2), {
+  const result = solveSeats(students, new Set(['0,0', '0,1', '1,0']), {
     fixedSeats: [{ studentId: 'b', row: 2, col: 1 }]
   });
   assert.equal(result.assignments.length, 3);
@@ -21,6 +22,15 @@ test('자리 배치는 고정 자리와 학생 수를 지킨다', () => {
     seatKey: '1,0', studentId: 'b', studentName: '나', group: null
   });
   assert.equal(new Set(result.assignments.map((item) => item.studentId)).size, 3);
+});
+
+test('자리 배치는 학생 수와 활성 좌석 수가 정확히 같을 때만 실행한다', () => {
+  const students = [{ id: 'a', name: '가' }, { id: 'b', name: '나' }, { id: 'c', name: '다' }];
+  assert.equal(hasExactSeatCount(3, 3), true);
+  assert.equal(hasExactSeatCount(3, 4), false);
+  assert.equal(hasExactSeatCount(3, 2), false);
+  assert.equal(hasExactSeatCount(0, 0), false);
+  assert.deepEqual(solveSeats(students, rectangularSeats(2, 2), {}), { assignments: [], violations: 0 });
 });
 
 test('역할 나누기는 정원 합계가 학생 수와 같을 때 모두 한 번씩 배정한다', () => {

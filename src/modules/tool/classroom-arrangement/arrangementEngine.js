@@ -16,6 +16,10 @@ export const DEFAULT_ROLE_SETTINGS = Object.freeze({
 
 export const seatKey = (row, col) => `${row},${col}`;
 
+export function hasExactSeatCount(studentCount, seatCount) {
+  return studentCount > 0 && studentCount === seatCount;
+}
+
 export function shuffle(items, random = Math.random) {
   const result = [...items];
   for (let index = result.length - 1; index > 0; index -= 1) {
@@ -163,7 +167,7 @@ export function solveSeats(students, activeSeats, rawSettings, history = [], max
     const [rightRow, rightCol] = right.split(',').map(Number);
     return leftRow - rightRow || leftCol - rightCol;
   });
-  if (students.length === 0 || seatKeys.length < students.length) return { assignments: [], violations: 0 };
+  if (!hasExactSeatCount(students.length, seatKeys.length)) return { assignments: [], violations: 0 };
   const rules = seatHistoryRules(history);
   let best = placeSeatCandidate(students, seatKeys, settings);
   let bestViolations = countSeatViolations(best, settings, rules);
