@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { arrangementSfx } from './arrangementSfx';
-import LotteryMachine from './LotteryMachine';
+import SeatLotteryModal from './SeatLotteryModal';
 import { hasExactSeatCount, rectangularSeats, seatKey, seatsWithinGrid, solveSeats, suggestSeatLayout } from './arrangementEngine';
 
 const parseQuickNames = (text) => text.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean).slice(0, 100);
@@ -25,6 +25,8 @@ export default function SeatArrangement({ students, settings, history, onSetting
   const [assignments, setAssignments] = useState([]);
   const [revealed, setRevealed] = useState(new Set());
   const [rollingName, setRollingName] = useState('');
+  const [flyingPick, setFlyingPick] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const [phase, setPhase] = useState('idle');
   const [speed, setSpeed] = useState('normal');
   const [violations, setViolations] = useState(0);
@@ -45,6 +47,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
   const assignmentBySeat = useMemo(() => new Map(assignments.map((item) => [item.seatKey, item])), [assignments]);
   const seatCountMatches = hasExactSeatCount(roster.length, activeSeats.size);
   const canStart = phase === 'idle' && seatCountMatches;
+  const closeLotteryModal = useCallback(() => setModalOpen(false), []);
 
   const storeLayout = (nextRows, nextCols, nextSeats) => {
     const visibleSeats = seatsWithinGrid(nextSeats, nextRows, nextCols);
@@ -54,6 +57,8 @@ export default function SeatArrangement({ students, settings, history, onSetting
     setActiveSeats(visibleSeats);
     setAssignments([]);
     setRevealed(new Set());
+    setFlyingPick(null);
+    setModalOpen(false);
     setPhase('idle');
     onSettingsChange({ ...settings, seatLayout: { rows: nextRows, cols: nextCols, activeSeats: [...visibleSeats] } });
   };
@@ -83,6 +88,8 @@ export default function SeatArrangement({ students, settings, history, onSetting
     setAssignments([]);
     setRevealed(new Set());
     setRollingName('');
+    setFlyingPick(null);
+    setModalOpen(false);
     setViolations(0);
     setPhase('idle');
   };
@@ -98,8 +105,10 @@ export default function SeatArrangement({ students, settings, history, onSetting
     if (result.assignments.length === 0) return;
     setAssignments(result.assignments);
     setRevealed(new Set());
+    setFlyingPick(null);
     setViolations(result.violations);
     setPhase('running');
+    setModalOpen(true);
     arrangementSfx.ensure();
     const order = [...result.assignments].sort(() => Math.random() - 0.5);
     const step = delayFor(speed);
@@ -109,13 +118,18 @@ export default function SeatArrangement({ students, settings, history, onSetting
         setRollingName(roster[Math.floor(Math.random() * roster.length)]?.name || '');
         arrangementSfx.tick();
       }, base + tick * Math.max(32, step / 9));
-      schedule(() => { setRollingName(pick.studentName); arrangementSfx.pick(); }, base + step * 0.6);
+      schedule(() => {
+        setRollingName(pick.studentName);
+        setFlyingPick({ ...pick, flightDuration: Math.round(step * 0.35) });
+        arrangementSfx.pick();
+      }, base + step * 0.55);
       schedule(() => {
         setRevealed((current) => new Set(current).add(pick.seatKey));
+        setFlyingPick((current) => current?.seatKey === pick.seatKey ? null : current);
         arrangementSfx.pop();
-      }, base + step * 0.82);
+      }, base + step * 0.9);
     });
-    schedule(() => { setPhase('done'); setRollingName(''); arrangementSfx.finish(); }, order.length * step + 120);
+    schedule(() => { setPhase('done'); setRollingName(''); setFlyingPick(null); arrangementSfx.finish(); }, order.length * step + 120);
     if (source === 'class') {
       await onCreateHistory('seat', `자리 배치 ${result.assignments.length}명`, {
         format: 'classroom-arrangement/seat-v1',
@@ -127,7 +141,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
     }
   };
 
-  return (
+  return <>
     <div className="arrange-workspace">
       <section className="arrange-sidebar-card">
         <div className="arrange-segment" role="tablist" aria-label="학생 입력 방식">
@@ -164,9 +178,9 @@ export default function SeatArrangement({ students, settings, history, onSetting
             </button>;
           })}
         </div>
-        {phase === 'running' ? <LotteryMachine rollingName={rollingName} current={revealed.size} total={assignments.length} /> : null}
         {phase === 'done' && violations > 0 ? <div className="arrange-condition-note">조건을 모두 만족하는 조합이 없어 가장 가까운 결과로 배치했습니다. 위반 점수 {violations}</div> : null}
       </section>
     </div>
-  );
+    {modalOpen ? <SeatLotteryModal rows={rows} cols={cols} activeSeats={activeSeats} assignments={assignments} revealed={revealed} rollingName={rollingName} flyingPick={flyingPick} phase={phase} onClose={closeLotteryModal} /> : null}
+  </>;
 }

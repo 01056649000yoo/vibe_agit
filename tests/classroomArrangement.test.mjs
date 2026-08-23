@@ -69,7 +69,7 @@ test('이전 앱 학급 설정은 이름이 하나로 일치하는 아지트 학
 });
 
 test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 계약을 가진다', async () => {
-  const [manifest, api, migration, registry, teacherEntry, settingsEntry, legacyImport, teacherGuides, seatEntry, roleEntry, lotteryMachine, arrangementCss] = await Promise.all([
+  const [manifest, api, migration, registry, teacherEntry, settingsEntry, legacyImport, teacherGuides, seatEntry, seatLotteryModal, roleEntry, lotteryMachine, arrangementCss] = await Promise.all([
     readFile('src/modules/tool/classroom-arrangement/manifest.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/classroomArrangementApi.js', 'utf8'),
     readFile('supabase/migrations/20261159_classroom_arrangement_tool.sql', 'utf8'),
@@ -79,6 +79,7 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
     readFile('src/modules/tool/classroom-arrangement/legacyImport.js', 'utf8'),
     readFile('src/constants/teacherGuides.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/SeatArrangement.jsx', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/SeatLotteryModal.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/RoleArrangement.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/LotteryMachine.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/classroomArrangement.css', 'utf8')
@@ -95,7 +96,8 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(migration, /REVOKE ALL ON TABLE public\.survival_legacy_archives/);
   assert.match(migration, /source_fingerprint ~ '\^\[a-f0-9\]\{64\}\$'/);
   assert.doesNotMatch(`${teacherEntry}\n${legacyImport}\n${teacherGuides}`, /서바이벌/);
-  assert.match(seatEntry, /<LotteryMachine/);
+  assert.match(seatEntry, /<SeatLotteryModal/);
+  assert.doesNotMatch(seatEntry, /<LotteryMachine/);
   assert.match(roleEntry, /<LotteryMachine/);
   assert.match(lotteryMachine, /arrange-lottery-drum/);
   assert.match(arrangementCss, /@keyframes arrange-ball-orbit/);
@@ -110,6 +112,19 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.doesNotMatch(arrangementCss, /\.arrange-lottery \{[^}]*position:fixed/);
   assert.match(teacherEntry, /arrange-settings-utilities/);
   assert.match(arrangementCss, /\.arrange-settings-utilities \{ display:grid; grid-template-columns:/);
+  assert.match(seatEntry, /setModalOpen\(true\)/);
+  assert.match(seatEntry, /setFlyingPick\(\{ \.\.\.pick, flightDuration:/);
+  assert.match(seatEntry, /base \+ step \* 0\.55/);
+  assert.match(seatEntry, /base \+ step \* 0\.9/);
+  assert.match(seatLotteryModal, /<ModalPortal>/);
+  assert.match(seatLotteryModal, /role="dialog" aria-modal="true"/);
+  assert.match(seatLotteryModal, /data-modal-seat=/);
+  assert.match(seatLotteryModal, /is-target/);
+  assert.match(seatLotteryModal, /arrange-seat-flight/);
+  assert.match(seatLotteryModal, /완성된 자리표 보기/);
+  assert.match(arrangementCss, /\.arrange-seat-machine-wrap \.arrange-lottery \{ position:relative;/);
+  assert.match(arrangementCss, /@keyframes arrange-seat-flight/);
+  assert.match(teacherGuides, /이름표가 해당 자리로 이동/);
 });
 
 test('설정 정규화는 좌석·역할 입력 크기와 화면 밖 좌표를 제한한다', () => {
