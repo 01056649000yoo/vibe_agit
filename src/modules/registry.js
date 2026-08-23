@@ -16,6 +16,7 @@ import { readingLogManifest } from './writing/reading-log/manifest';
 import { diaryManifest } from './writing/diary/manifest';
 import { writingFootprintManifest } from './writing/writing-footprint/manifest';
 import { samlinkManifest } from './tool/samlink/manifest';
+import { classroomArrangementManifest } from './tool/classroom-arrangement/manifest';
 import { spellingLearningManifest } from './writing/spelling-learning/manifest';
 import { neighborAgitManifest } from './community/neighbor-agit/manifest';
 import { labActivitiesManifest } from './writing/lab-activities/manifest';
@@ -30,6 +31,7 @@ const manifests = [
   diaryManifest, // src/modules/writing/diary/
   writingFootprintManifest, // src/modules/writing/writing-footprint/
   samlinkManifest, // src/modules/tool/samlink/
+  classroomArrangementManifest, // src/modules/tool/classroom-arrangement/
   spellingLearningManifest, // src/modules/writing/spelling-learning/
   neighborAgitManifest, // src/modules/community/neighbor-agit/
   labActivitiesManifest, // src/modules/writing/lab-activities/

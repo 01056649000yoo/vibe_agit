@@ -7,7 +7,12 @@ const TOOL_MODULES = getAllModules()
     .map((module) => ({ module, Entry: lazy(module.teacherEntry) }));
 
 const TeachingToolsHub = ({ activeClass, isMobile }) => {
-    const [selectedId, setSelectedId] = useState(() => TOOL_MODULES[0]?.module.id ?? null);
+    const [selectedId, setSelectedId] = useState(() => {
+        const requested = new URL(window.location.href).searchParams.get('tool');
+        return TOOL_MODULES.some(({ module }) => module.id === requested)
+            ? requested
+            : TOOL_MODULES[0]?.module.id ?? null;
+    });
     const selected = useMemo(
         () => TOOL_MODULES.find(({ module }) => module.id === selectedId) || TOOL_MODULES[0] || null,
         [selectedId]

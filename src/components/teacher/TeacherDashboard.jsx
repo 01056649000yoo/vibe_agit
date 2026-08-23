@@ -38,6 +38,8 @@ const TEACHER_TAB_IDS = TEACHER_NAV_GROUPS.flatMap(group => group.tabs.map(tab =
 
 const loadTeacherTab = () => {
     try {
+        const requestedTab = new URL(window.location.href).searchParams.get('teacherTab');
+        if (TEACHER_TAB_IDS.includes(requestedTab)) return requestedTab;
         const savedTab = window.sessionStorage.getItem(TEACHER_TAB_STORAGE_KEY);
         return TEACHER_TAB_IDS.includes(savedTab) ? savedTab : 'dashboard';
     } catch {
