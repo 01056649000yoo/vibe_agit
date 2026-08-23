@@ -21,6 +21,7 @@
     "vocab:audit:check": "node scripts/audit-vocab-tower-v2.mjs --check",
     "vocab:review:seed:check": "node scripts/seed-vocab-tower-v2-review.mjs",
     "vocab:review:seed": "node scripts/seed-vocab-tower-v2-review.mjs --apply",
+    "language:content:draft": "node scripts/build-language-learning-remaining-review.mjs",
     "language:content:check": "node scripts/audit-language-learning-content.mjs --check",
     "test:writing-policy": "node --test tests/writingPolicy.test.mjs",
     "test:writing-export": "node --test tests/writingExportProfiles.test.mjs tests/genreWritingPdf.test.mjs tests/writingOfficeImages.test.mjs",

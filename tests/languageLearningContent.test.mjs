@@ -16,6 +16,10 @@ const g34ReviewPack = JSON.parse(await readFile(
     'docs/language-learning/data/g34-preview-review-v1.json',
     'utf8'
 ));
+const remainingReviewPack = JSON.parse(await readFile(
+    'docs/language-learning/data/g56-remaining-review-v1.json',
+    'utf8'
+));
 
 test('속담 85개와 사자성어 100개를 손실 없이 하나의 검수 카탈로그로 보존한다', async () => {
     const catalog = await loadLanguageContentCatalog();
@@ -26,20 +30,21 @@ test('속담 85개와 사자성어 100개를 손실 없이 하나의 검수 카�
         items: 185,
         proverbs: 85,
         idioms: 100,
-        questionVariants: 405,
-        reconstructedProverbs: 36,
+        questionVariants: 570,
+        reconstructedProverbs: 0,
         g56Items: 185,
         g34PreviewItems: 20,
         pilotItems: 40,
         alignedItems: 85,
         enrichmentItems: 100,
-        pendingContentLevels: 145,
+        pendingContentLevels: 0,
         editorialReviewItems: 20,
-        teacherConfirmationItems: 20,
-        meaningChoiceVariants: 20
+        editorialDraftItems: 165,
+        teacherConfirmationItems: 185,
+        meaningChoiceVariants: 185
     });
     assert.equal(catalog.collections.length, 2);
-    assert.equal(catalog.status, 'g34_preview_editorial_review_not_for_student_delivery');
+    assert.equal(catalog.status, 'full_catalog_editorial_draft_not_for_student_delivery');
 });
 
 test('항목 하나라도 빠지거나 검수 없이 승격되면 카탈로그 검사가 실패한다', async () => {
@@ -65,6 +70,16 @@ test('항목 하나라도 빠지거나 검수 없이 승격되면 카탈로그 �
     reviewedItem.definition = '검수팩과 다른 뜻';
     assert.equal(auditLanguageContentCatalog(changedReviewedMeaning).valid, false);
 
+    const changedDraftMeaning = structuredClone(catalog);
+    const draftItem = changedDraftMeaning.items.find((item) => !item.gradeBands.includes('g34'));
+    draftItem.definition = '편집 초안과 다른 뜻';
+    assert.equal(auditLanguageContentCatalog(changedDraftMeaning).valid, false);
+
+    const draftPromotedWithoutReview = structuredClone(catalog);
+    const unreviewedItem = draftPromotedWithoutReview.items.find((item) => item.editorialDraft);
+    unreviewedItem.reviewStatus = 'editorial_review';
+    assert.equal(auditLanguageContentCatalog(draftPromotedWithoutReview).valid, false);
+
     const missingCorrectChoice = structuredClone(catalog);
     const meaningChoice = missingCorrectChoice.items
         .find((item) => item.gradeBands.includes('g34'))
@@ -83,7 +98,7 @@ test('사자성어의 세 원본 문제 파일을 같은 항목 아래 문제 �
     assert.equal(idioms.length, 100);
 
     idioms.forEach((item) => {
-        const sourceQuestions = item.questions.filter((question) => question.reviewStatus === 'source_imported');
+        const sourceQuestions = item.questions.filter((question) => question.questionType !== 'meaningChoice');
         assert.deepEqual(
             sourceQuestions.map((question) => question.questionType),
             ['clozeInput', 'initialsInput', 'definitionInput']
@@ -98,7 +113,7 @@ test('사자성어의 세 원본 문제 파일을 같은 항목 아래 문제 �
     assert.match(고진감래.definition, /힘든 일이 끝난 뒤/);
 });
 
-test('낱말 답만 남은 속담은 완성 표현 초안을 복원하되 사람 검수 신호를 유지한다', async () => {
+test('낱말 답만 남은 속담은 원본 복원 정보를 보존하고 편집 초안에서 완성 표현을 바로잡는다', async () => {
     assert.deepEqual(
         reconstructProverbExpression('떡 줄 사람은 꿈도 안 꾸는데 ㄱ ㅊ ㄱ 부터 마신다', '김칫국'),
         { expression: '떡 줄 사람은 꿈도 안 꾸는데 김칫국부터 마신다', reconstructed: true }
@@ -109,40 +124,45 @@ test('낱말 답만 남은 속담은 완성 표현 초안을 복원하되 사람
     );
 
     const catalog = await loadLanguageContentCatalog();
-    const reconstructed = catalog.items.filter((item) => item.reviewFlags.includes('expression_reconstructed'));
-    assert.equal(reconstructed.length, 36);
-    assert.equal(reconstructed.every((item) => item.reviewStatus === 'source_imported'), true);
+    assert.equal(catalog.items.some((item) => /[ㄱ-ㅎ]/u.test(item.expression)), false);
+    assert.equal(catalog.items.some((item) => item.reviewFlags.includes('unresolved_initials')), false);
+    assert.equal(catalog.items.some((item) => item.reviewFlags.includes('expression_reconstructed')), false);
 
-    const reviewedReconstructionIds = [63, 90, 92, 93, 101];
-    reviewedReconstructionIds.forEach((sourceId) => {
-        const item = catalog.items.find((candidate) => (
-            candidate.contentType === 'proverb' && candidate.source.sourceId === sourceId
-        ));
-        assert.equal(item.reviewFlags.includes('expression_reconstructed'), false);
-    });
-
-    const unresolved = catalog.items.filter((item) => item.reviewFlags.includes('unresolved_initials'));
-    assert.deepEqual(unresolved.map((item) => item.source.sourceId), [58]);
+    const proverb = (sourceId) => catalog.items.find((item) => (
+        item.contentType === 'proverb' && item.source.sourceId === sourceId
+    ));
+    assert.equal(proverb(58).expression, '새끼 많이 둔 소 길마 벗을 날 없다');
+    assert.equal(proverb(60).expression, '서당 개 삼 년이면 풍월을 읊는다');
+    assert.equal(proverb(65).expression, '수염이 석 자라도 먹어야 양반이다');
+    assert.match(proverb(58).editorialDraft.notes.join(' '), /완성 표현/);
 });
 
-test('3·4학년 미리 만나기 20개는 검수된 뜻·예문·4지선다를 갖고 교사 확인을 기다린다', async () => {
+test('전체 185개가 뜻·예문·난이도·4지선다를 갖고 단계에 맞는 교사 확인을 기다린다', async () => {
     const catalog = await loadLanguageContentCatalog();
     const previewItems = catalog.items.filter((item) => item.gradeBands.includes('g34'));
     const pilotItems = catalog.items.filter((item) => item.contentLevel !== null);
 
     assert.equal(previewItems.length, 20);
-    assert.equal(pilotItems.length, 40);
+    assert.equal(pilotItems.length, 185);
     assert.equal(previewItems.every((item) => item.contentLevel === 1), true);
     assert.equal(pilotItems.filter((item) => item.contentLevel === 2).length, 20);
     assert.equal(g34ReviewPack.items.length, 20);
     assert.equal(new Set(g34ReviewPack.items.map((item) => item.itemKey)).size, 20);
+    assert.equal(remainingReviewPack.items.length, 165);
+    assert.equal(new Set(remainingReviewPack.items.map((item) => item.itemKey)).size, 165);
+    assert.equal(new Set([
+        ...g34ReviewPack.items.map((item) => item.itemKey),
+        ...remainingReviewPack.items.map((item) => item.itemKey)
+    ]).size, 185);
 
     catalog.items.forEach((item) => {
         assert.equal(item.curriculumBand, 'g56');
         assert.equal(item.curriculumRole, item.contentType === 'proverb' ? 'aligned' : 'enrichment');
         assert.ok(item.gradeBands.includes('g56'));
         assert.equal(item.reviewFlags.includes('grade_band_required'), false);
-        assert.equal(item.reviewFlags.includes('content_level_required'), item.contentLevel === null);
+        assert.equal(item.reviewFlags.includes('content_level_required'), false);
+        assert.ok(item.contentLevel >= 1 && item.contentLevel <= 4);
+        assert.ok(item.example);
         const meaningChoices = item.questions.filter((question) => question.questionType === 'meaningChoice');
         const sourceQuestions = item.questions.filter((question) => question.questionType !== 'meaningChoice');
 
@@ -166,8 +186,15 @@ test('3·4학년 미리 만나기 20개는 검수된 뜻·예문·4지선다를 
             assert.equal(meaningChoices[0].reviewStatus, 'editorial_review');
         } else {
             assert.equal(item.reviewStatus, 'source_imported');
-            assert.ok(item.reviewFlags.includes('meaning_choice_required'));
-            assert.equal(meaningChoices.length, 0);
+            assert.deepEqual(item.reviewFlags, ['editorial_review_required', 'teacher_confirmation_required']);
+            assert.equal(item.editorialDraft.pack, 'g56-remaining-review-v1');
+            assert.equal(meaningChoices.length, 1);
+            assert.equal(meaningChoices[0].choices.length, 4);
+            assert.equal(new Set(meaningChoices[0].choices).size, 4);
+            assert.equal(meaningChoices[0].choices.includes(meaningChoices[0].correctAnswer), true);
+            assert.deepEqual(meaningChoices[0].gradeBands, ['g56']);
+            assert.equal(meaningChoices[0].difficulty, 2);
+            assert.equal(meaningChoices[0].reviewStatus, 'source_imported');
         }
     });
 

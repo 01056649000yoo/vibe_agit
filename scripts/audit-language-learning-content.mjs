@@ -6,9 +6,8 @@
  * - `--source-dir <경로> --write`: 원본 4개 파일을 병합해 검수용 카탈로그를 다시 만든다.
  * - 인자 없음 또는 `--check`: 저장소에 커밋된 카탈로그의 구조와 개수를 검사한다.
  *
- * 생성 결과는 아직 학생에게 출제할 수 없는 `source_imported` 상태다. 교육과정 기준과
- * 접근 학년은 분류했지만 표현·뜻·난이도·선택형 확인 문제를 사람이 검수한 뒤에만
- * DB의 `published` 상태로 승격한다.
+ * 생성 결과는 아직 학생에게 출제할 수 없다. 20개는 편집 검수를 마쳤고, 나머지 165개는
+ * 뜻·예문·난이도·선택형 확인 문제 초안까지 갖췄지만 교사 검수 뒤에만 승격한다.
  */
 
 import { createHash } from 'node:crypto';
@@ -19,6 +18,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const CATALOG_URL = new URL('../docs/language-learning/data/source-import-v1.json', import.meta.url);
 const G34_PREVIEW_REVIEW_URL = new URL(
     '../docs/language-learning/data/g34-preview-review-v1.json',
+    import.meta.url
+);
+const G56_REMAINING_REVIEW_URL = new URL(
+    '../docs/language-learning/data/g56-remaining-review-v1.json',
     import.meta.url
 );
 const SOURCE_FILES = Object.freeze({
@@ -50,6 +53,33 @@ const G34_PREVIEW_SOURCE_ID_SETS = Object.freeze(Object.fromEntries(
     Object.entries(G34_PREVIEW_SOURCE_IDS).map(([contentType, ids]) => [contentType, new Set(ids)])
 ));
 const G34_PREVIEW_REVIEW_PACK = JSON.parse(await readFile(G34_PREVIEW_REVIEW_URL, 'utf8'));
+const G56_REMAINING_REVIEW_PACK = JSON.parse(await readFile(G56_REMAINING_REVIEW_URL, 'utf8'));
+const DEFAULT_REVIEW_PACKS = Object.freeze([
+    Object.freeze({
+        filename: 'g34-preview-review-v1.json',
+        role: 'g34PreviewEditorialReview',
+        stage: 'review',
+        pack: G34_PREVIEW_REVIEW_PACK,
+        itemReviewStatus: 'editorial_review',
+        itemReviewFlags: Object.freeze(['teacher_confirmation_required']),
+        questionReviewStatus: 'editorial_review',
+        questionGradeBands: Object.freeze(['g34', 'g56']),
+        questionDifficulty: 1,
+        variantSuffix: 'meaningChoice-g34-v1'
+    }),
+    Object.freeze({
+        filename: 'g56-remaining-review-v1.json',
+        role: 'g56RemainingEditorialDraft',
+        stage: 'draft',
+        pack: G56_REMAINING_REVIEW_PACK,
+        itemReviewStatus: 'source_imported',
+        itemReviewFlags: Object.freeze(['editorial_review_required', 'teacher_confirmation_required']),
+        questionReviewStatus: 'source_imported',
+        questionGradeBands: Object.freeze(['g56']),
+        questionDifficulty: 2,
+        variantSuffix: 'meaningChoice-g56-draft-v1'
+    })
+]);
 
 const normalizeText = (value) => String(value ?? '').trim().replaceAll(/\r\n/g, '\n');
 const normalizeSpaces = (value) => normalizeText(value).replaceAll(/[ \t]+/g, ' ');
@@ -101,6 +131,7 @@ const summarizeCatalogItems = (items) => {
         enrichmentItems: items.filter((item) => item.curriculumRole === 'enrichment').length,
         pendingContentLevels: items.filter((item) => item.contentLevel === null).length,
         editorialReviewItems: items.filter((item) => item.reviewStatus === 'editorial_review').length,
+        editorialDraftItems: items.filter((item) => Boolean(item.editorialDraft)).length,
         teacherConfirmationItems: items.filter((item) => (
             item.reviewFlags.includes('teacher_confirmation_required')
         )).length,
@@ -275,42 +306,58 @@ const buildIdiomItem = (context, initials, meaning) => {
 
 const mapById = (rows) => new Map(rows.map((row) => [Number(row.id), row]));
 
-const applyG34PreviewReview = (item, reviewPack) => {
-    const review = reviewPack.items.find((candidate) => candidate.itemKey === item.itemKey);
-    if (!review) return item;
+const findReview = (item, reviewPacks) => {
+    const matches = reviewPacks.flatMap((config) => config.pack.items
+        .filter((candidate) => candidate.itemKey === item.itemKey)
+        .map((review) => ({ config, review })));
+    if (matches.length > 1) throw new Error(`${item.itemKey}가 여러 검수팩에 중복되었습니다.`);
+    return matches[0] || null;
+};
 
+const applyEditorialPreparation = (item, reviewPacks) => {
+    const match = findReview(item, reviewPacks);
+    if (!match) return item;
+
+    const { config, review } = match;
     const meaningChoice = review.meaningChoice;
+    const preparation = {
+        pack: config.filename.replace(/\.json$/u, ''),
+        ...(config.stage === 'review'
+            ? { reviewedOn: config.pack.reviewedOn, reviewBasis: config.pack.reviewBasis }
+            : { draftedOn: config.pack.draftedOn, draftBasis: config.pack.draftBasis }),
+        notes: review.reviewNotes || []
+    };
     return {
         ...item,
         expression: normalizeSpaces(review.expression),
         hanja: normalizeText(review.hanja) || null,
         definition: normalizeText(review.definition),
         example: normalizeText(review.example),
-        reviewStatus: 'editorial_review',
-        reviewFlags: ['teacher_confirmation_required'],
-        editorialReview: {
-            pack: 'g34-preview-review-v1',
-            reviewedOn: reviewPack.reviewedOn,
-            reviewBasis: reviewPack.reviewBasis,
-            notes: review.reviewNotes || []
-        },
+        contentLevel: review.contentLevel ?? item.contentLevel,
+        reviewStatus: config.itemReviewStatus,
+        reviewFlags: [...config.itemReviewFlags],
+        ...(config.stage === 'review'
+            ? { editorialReview: preparation }
+            : { editorialDraft: preparation }),
         questions: [
             ...item.questions,
             {
-                variantKey: variantKey(item.contentType, item.source.sourceId, 'meaningChoice-g34-v1'),
+                variantKey: variantKey(item.contentType, item.source.sourceId, config.variantSuffix),
                 questionType: 'meaningChoice',
                 prompt: `‘${normalizeSpaces(review.expression)}’의 뜻으로 알맞은 것은 무엇인가요?`,
                 choices: meaningChoice.choices.map(normalizeText),
                 correctAnswer: normalizeText(meaningChoice.correctAnswer),
                 acceptedAnswers: [normalizeText(meaningChoice.correctAnswer)],
                 explanation: normalizeText(meaningChoice.explanation),
-                gradeBands: ['g34', 'g56'],
-                difficulty: 1,
-                reviewStatus: 'editorial_review',
+                gradeBands: [...config.questionGradeBands],
+                difficulty: config.questionDifficulty,
+                reviewStatus: config.questionReviewStatus,
                 source: {
-                    pack: 'g34-preview-review-v1',
+                    pack: config.filename.replace(/\.json$/u, ''),
                     sourceId: item.source.sourceId,
-                    reviewedOn: reviewPack.reviewedOn
+                    ...(config.stage === 'review'
+                        ? { reviewedOn: config.pack.reviewedOn }
+                        : { draftedOn: config.pack.draftedOn })
                 }
             }
         ]
@@ -335,7 +382,7 @@ const buildPilotCollection = (contentType, items) => ({
 
 export const buildLanguageContentCatalog = (
     { proverbs, idiomContext, idiomInitials, idiomMeaning },
-    editorialReviewPack = G34_PREVIEW_REVIEW_PACK
+    reviewPacks = DEFAULT_REVIEW_PACKS
 ) => {
     const contexts = mapById(idiomContext);
     const initials = mapById(idiomInitials);
@@ -345,18 +392,18 @@ export const buildLanguageContentCatalog = (
         ...proverbs.map(buildProverbItem),
         ...idiomIds.map((id) => buildIdiomItem(contexts.get(id), initials.get(id), meanings.get(id)))
     ];
-    const items = sourceItems.map((item) => applyG34PreviewReview(item, editorialReviewPack));
+    const items = sourceItems.map((item) => applyEditorialPreparation(item, reviewPacks));
     const sourceFingerprint = stableHash({
         proverbs,
         idiomContext,
         idiomInitials,
         idiomMeaning,
-        editorialReviewPack
+        reviewPacks: reviewPacks.map(({ filename, pack }) => ({ filename, pack }))
     });
 
     return {
-        schemaVersion: 3,
-        status: 'g34_preview_editorial_review_not_for_student_delivery',
+        schemaVersion: 4,
+        status: 'full_catalog_editorial_draft_not_for_student_delivery',
         sourceFingerprint,
         sourceFiles: Object.fromEntries(Object.entries(SOURCE_FILES).map(([key, filename]) => [
             filename,
@@ -366,14 +413,15 @@ export const buildLanguageContentCatalog = (
                 sha256: stableHash(({ proverbs, idiomContext, idiomInitials, idiomMeaning })[key])
             }
         ])),
-        reviewFiles: {
-            'g34-preview-review-v1.json': {
-                role: 'g34PreviewEditorialReview',
-                rowCount: editorialReviewPack.items.length,
-                sha256: stableHash(editorialReviewPack),
-                status: editorialReviewPack.status
+        reviewFiles: Object.fromEntries(reviewPacks.map(({ filename, role, pack }) => [
+            filename,
+            {
+                role,
+                rowCount: pack.items.length,
+                sha256: stableHash(pack),
+                status: pack.status
             }
-        },
+        ])),
         counts: summarizeCatalogItems(items),
         collections: [
             buildPilotCollection('proverb', items),
@@ -391,8 +439,8 @@ export const auditLanguageContentCatalog = (catalog) => {
     const proverbItems = items.filter((item) => item.contentType === 'proverb');
     const idiomItems = items.filter((item) => item.contentType === 'idiom');
 
-    if (catalog?.schemaVersion !== 3) errors.push('schemaVersion은 3이어야 합니다.');
-    if (catalog?.status !== 'g34_preview_editorial_review_not_for_student_delivery') {
+    if (catalog?.schemaVersion !== 4) errors.push('schemaVersion은 4여야 합니다.');
+    if (catalog?.status !== 'full_catalog_editorial_draft_not_for_student_delivery') {
         errors.push('검수 전 카탈로그가 학생 제공 상태로 바뀌었습니다.');
     }
     if (items.length !== 185 || proverbItems.length !== 85 || idiomItems.length !== 100) {
@@ -407,37 +455,28 @@ export const auditLanguageContentCatalog = (catalog) => {
         }
         const sourceId = item.source?.sourceId;
         const expectedProfile = learningProfile(item.contentType, sourceId);
-        const expectedReview = G34_PREVIEW_REVIEW_PACK.items.find((review) => review.itemKey === item.itemKey);
+        const expectedMatch = findReview(item, DEFAULT_REVIEW_PACKS);
+        const expectedReview = expectedMatch?.review;
+        const expectedConfig = expectedMatch?.config;
         if (item.curriculumBand !== expectedProfile.curriculumBand
             || item.curriculumRole !== expectedProfile.curriculumRole
             || JSON.stringify(item.gradeBands) !== JSON.stringify(expectedProfile.gradeBands)
-            || item.contentLevel !== expectedProfile.contentLevel) {
+            || item.contentLevel !== (expectedReview?.contentLevel ?? expectedProfile.contentLevel)) {
             errors.push(`${item.itemKey}의 교육과정·접근 학년·내용 난이도 분류가 기준과 다릅니다.`);
         }
         if (expectedReview) {
-            const reviewMatches = item.reviewStatus === 'editorial_review'
-                && JSON.stringify(item.reviewFlags) === JSON.stringify(['teacher_confirmation_required'])
+            const preparation = expectedConfig.stage === 'review' ? item.editorialReview : item.editorialDraft;
+            const reviewMatches = item.reviewStatus === expectedConfig.itemReviewStatus
+                && JSON.stringify(item.reviewFlags) === JSON.stringify(expectedConfig.itemReviewFlags)
                 && item.expression === expectedReview.expression
                 && item.hanja === expectedReview.hanja
                 && item.definition === expectedReview.definition
                 && item.example === expectedReview.example
                 && item.example.length > 0
-                && item.editorialReview?.pack === 'g34-preview-review-v1';
-            if (!reviewMatches) errors.push(`${item.itemKey}의 3·4학년 검수 내용 또는 상태가 검수팩과 다릅니다.`);
+                && preparation?.pack === expectedConfig.filename.replace(/\.json$/u, '');
+            if (!reviewMatches) errors.push(`${item.itemKey}의 편집 검수·초안 내용 또는 상태가 검수팩과 다릅니다.`);
         } else {
-            if (item.reviewStatus !== 'source_imported') {
-                errors.push(`${item.itemKey}가 검수 없이 승격되었습니다.`);
-            }
-            REQUIRED_REVIEW_FLAGS.forEach((flag) => {
-                if (!item.reviewFlags.includes(flag)) errors.push(`${item.itemKey}에 ${flag} 신호가 없습니다.`);
-            });
-            if (item.reviewFlags.includes('grade_band_required')) {
-                errors.push(`${item.itemKey}에 이미 해결된 grade_band_required 신호가 남았습니다.`);
-            }
-            const shouldNeedContentLevel = !isPilotItem(item.contentType, sourceId);
-            if (item.reviewFlags.includes('content_level_required') !== shouldNeedContentLevel) {
-                errors.push(`${item.itemKey}의 내용 난이도 검수 신호가 시범팩 분류와 다릅니다.`);
-            }
+            errors.push(`${item.itemKey}에 대응하는 편집 검수 또는 초안이 없습니다.`);
         }
         const expectedQuestionCount = (item.contentType === 'idiom' ? 3 : 1) + (expectedReview ? 1 : 0);
         if (item.questions.length !== expectedQuestionCount) {
@@ -450,14 +489,14 @@ export const auditLanguageContentCatalog = (catalog) => {
             if (question.questionType === 'meaningChoice') {
                 const answerCount = question.choices.filter((choice) => choice === question.correctAnswer).length;
                 const validMeaningChoice = expectedReview
-                    && question.reviewStatus === 'editorial_review'
+                    && question.reviewStatus === expectedConfig.questionReviewStatus
                     && question.choices.length === 4
                     && new Set(question.choices).size === 4
                     && answerCount === 1
                     && question.explanation.length > 0
-                    && JSON.stringify(question.gradeBands) === JSON.stringify(['g34', 'g56'])
-                    && question.difficulty === 1;
-                if (!validMeaningChoice) errors.push(`${question.variantKey}의 3·4학년 뜻 고르기 계약이 잘못되었습니다.`);
+                    && JSON.stringify(question.gradeBands) === JSON.stringify(expectedConfig.questionGradeBands)
+                    && question.difficulty === expectedConfig.questionDifficulty;
+                if (!validMeaningChoice) errors.push(`${question.variantKey}의 뜻 고르기 검수 단계 계약이 잘못되었습니다.`);
             } else {
                 if (question.reviewStatus !== 'source_imported' || question.choices.length !== 0) {
                     errors.push(`${question.variantKey}가 검수 없이 학생 문제로 바뀌었습니다.`);
@@ -477,6 +516,16 @@ export const auditLanguageContentCatalog = (catalog) => {
         || G34_PREVIEW_REVIEW_PACK.status !== 'editorial_review_teacher_confirmation_required'
         || JSON.stringify(reviewKeys) !== JSON.stringify(expectedReviewKeys)) {
         errors.push('3·4학년 검수팩이 미리 만나기 20개와 정확히 일치하지 않습니다.');
+    }
+    const remainingReviewKeys = G56_REMAINING_REVIEW_PACK.items.map((review) => review.itemKey);
+    const allReviewKeys = [...reviewKeys, ...remainingReviewKeys];
+    if (G56_REMAINING_REVIEW_PACK.schemaVersion !== 1
+        || G56_REMAINING_REVIEW_PACK.status !== 'editorial_draft_teacher_confirmation_required'
+        || remainingReviewKeys.length !== 165
+        || new Set(remainingReviewKeys).size !== 165
+        || new Set(allReviewKeys).size !== 185
+        || !itemKeys.every((key) => allReviewKeys.includes(key))) {
+        errors.push('5·6학년 나머지 검수 초안이 기존 20개를 제외한 165개와 정확히 일치하지 않습니다.');
     }
 
     const collections = Array.isArray(catalog?.collections) ? catalog.collections : [];
@@ -554,10 +603,10 @@ const runCli = async () => {
         + `첫 검수 시범팩 ${audit.counts.pilotItems}개입니다.`
     );
     console.log(
-        `미리 만나기 편집 검수 ${audit.counts.editorialReviewItems}개와 뜻 고르기 `
-        + `${audit.counts.meaningChoiceVariants}개는 교사 최종 확인이 필요합니다.`
+        `편집 검수 ${audit.counts.editorialReviewItems}개, 나머지 편집 초안 `
+        + `${audit.counts.editorialDraftItems}개와 뜻 고르기 ${audit.counts.meaningChoiceVariants}개는 교사 최종 확인이 필요합니다.`
     );
-    console.log(`완성 표현 재구성 속담 ${audit.counts.reconstructedProverbs}개는 사람 검수가 필요합니다.`);
+    console.log('학생 제공·DB 승격은 아직 차단되어 있습니다.');
 };
 
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
