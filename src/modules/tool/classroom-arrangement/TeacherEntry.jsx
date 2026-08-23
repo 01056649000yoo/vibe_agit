@@ -176,7 +176,7 @@ export default function ClassroomArrangementTeacherEntry({ activeClass, previewW
 
   return <section className="classroom-arrangement">
     <header className="arrange-header">
-      <div><span className="arrange-eyebrow">수업 도구 · {activeClass.name}</span><h2>자리·역할 배치</h2><p>서바이벌의 자리 배치와 역할 나누기를 아지트 학급 명부로 사용합니다.</p></div>
+      <div><span className="arrange-eyebrow">수업 도구 · {activeClass.name}</span><h2>자리·역할 배치</h2><p>자리 배치와 역할 나누기를 현재 아지트 학급 명부로 사용합니다.</p></div>
       <div className="arrange-save-area"><span className={dirty ? 'is-dirty' : ''}>{dirty ? '저장하지 않은 설정이 있습니다.' : '설정이 저장되어 있습니다.'}</span><button type="button" disabled={!dirty || saving} onClick={() => void saveSettings()}>{saving ? '저장 중…' : '설정 저장'}</button></div>
     </header>
     {error ? <div className="arrange-alert is-error" role="alert">{error}<button type="button" aria-label="오류 닫기" onClick={() => setError('')}>×</button></div> : null}
@@ -188,7 +188,7 @@ export default function ClassroomArrangementTeacherEntry({ activeClass, previewW
       {tab === 'history' ? <HistoryView key={activeClass.id} history={history} onDelete={deleteHistory} /> : null}
       {tab === 'settings' ? <>
         <ArrangementSettings students={students} seat={seat} role={role} studentGroups={studentGroups} onSeatChange={updateSeat} onRoleChange={updateRole} onGroupsChange={updateGroups} />
-        <section className="arrange-transfer-card"><div><h3>기존 서바이벌 자료 이전</h3><p>서바이벌 안내 페이지에서 내려받은 JSON 파일을 보관하고, 선택한 학급의 자리·역할 설정을 현재 아지트 학급과 이름으로 연결합니다.</p></div><input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={selectArchive} /><button type="button" className="arrange-secondary" onClick={() => fileRef.current?.click()}>백업 파일 선택</button>
+        <section className="arrange-transfer-card"><div><h3>이전 앱 자료 가져오기</h3><p>기존 안내 페이지에서 내려받은 JSON 파일을 보관하고, 선택한 학급의 자리·역할 설정을 현재 아지트 학급과 이름으로 연결합니다.</p></div><input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={selectArchive} /><button type="button" className="arrange-secondary" onClick={() => fileRef.current?.click()}>백업 파일 선택</button>
           {legacyArchive ? <div className="arrange-import-box"><select value={legacyClassId} onChange={(event) => setLegacyClassId(event.target.value)}><option value="">옮길 기존 학급 선택</option>{legacyArchive.classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><button type="button" className="arrange-primary" disabled={!legacyClassId || importing} onClick={importArchive}>{importing ? '이전 중…' : '현재 학급으로 이전'}</button></div> : null}
         </section>
         <section className="arrange-sound-card"><div><h3>추첨 효과음</h3><p>자리와 역할 추첨 애니메이션의 소리를 이 브라우저에 저장합니다.</p></div><label><input type="checkbox" checked={!sound.muted} onChange={(event) => changeSound({ muted: !event.target.checked })} /> 소리 켜기</label><input aria-label="효과음 크기" type="range" min="0" max="1" step="0.05" value={sound.volume} onChange={(event) => changeSound({ volume: Number(event.target.value) })} /></section>

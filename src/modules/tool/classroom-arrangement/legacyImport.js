@@ -10,13 +10,13 @@ function bytesToHex(bytes) {
 
 export async function readSurvivalArchive(file) {
   if (!file || file.size <= 0 || file.size > MAX_ARCHIVE_BYTES) {
-    throw new Error('5MB 이하의 서바이벌 JSON 백업 파일을 선택해 주세요.');
+    throw new Error('5MB 이하의 이전 앱 JSON 백업 파일을 선택해 주세요.');
   }
   const bytes = await file.arrayBuffer();
   const text = new TextDecoder().decode(bytes);
   const payload = JSON.parse(text);
   if (payload?.app !== 'classroom-tools' || !payload?.data || !Array.isArray(payload.data.classes)) {
-    throw new Error('서바이벌에서 만든 백업 파일이 아닙니다.');
+    throw new Error('지원하지 않는 백업 파일입니다.');
   }
   const digest = await crypto.subtle.digest('SHA-256', bytes);
   const classes = payload.data.classes.slice(0, 100);

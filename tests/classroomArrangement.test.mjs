@@ -45,7 +45,7 @@ test('역할 나누기는 정원 합계가 학생 수와 같을 때 모두 한 �
   assert.equal(new Set(result.assignments.map((item) => item.studentId)).size, 3);
 });
 
-test('서바이벌 학급 설정은 이름이 하나로 일치하는 아지트 학생만 UUID로 바꾼다', () => {
+test('이전 앱 학급 설정은 이름이 하나로 일치하는 아지트 학생만 UUID로 바꾼다', () => {
   const archive = {
     classes: [{ id: 1, name: '옛 반', seatSettings: {
       genderBalance: 'strict', forbiddenPairs: [[10, 11]], fixedSeats: [{ studentId: 10, row: 1, col: 1 }]
@@ -60,11 +60,14 @@ test('서바이벌 학급 설정은 이름이 하나로 일치하는 아지트 �
 });
 
 test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 계약을 가진다', async () => {
-  const [manifest, api, migration, registry] = await Promise.all([
+  const [manifest, api, migration, registry, teacherEntry, legacyImport, teacherGuides] = await Promise.all([
     readFile('src/modules/tool/classroom-arrangement/manifest.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/classroomArrangementApi.js', 'utf8'),
     readFile('supabase/migrations/20261159_classroom_arrangement_tool.sql', 'utf8'),
-    readFile('src/modules/registry.js', 'utf8')
+    readFile('src/modules/registry.js', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/TeacherEntry.jsx', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/legacyImport.js', 'utf8'),
+    readFile('src/constants/teacherGuides.js', 'utf8')
   ]);
   assert.match(registry, /classroomArrangementManifest/);
   assert.match(manifest, /load: 'on-open'/);
@@ -77,6 +80,7 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(migration, /LIMIT v_limit/);
   assert.match(migration, /REVOKE ALL ON TABLE public\.survival_legacy_archives/);
   assert.match(migration, /source_fingerprint ~ '\^\[a-f0-9\]\{64\}\$'/);
+  assert.doesNotMatch(`${teacherEntry}\n${legacyImport}\n${teacherGuides}`, /서바이벌/);
 });
 
 test('설정 정규화는 좌석·역할 입력 크기를 제한한다', () => {
