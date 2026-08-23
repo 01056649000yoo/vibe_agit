@@ -17,6 +17,10 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const CATALOG_URL = new URL('../docs/language-learning/data/source-import-v1.json', import.meta.url);
+const G34_PREVIEW_REVIEW_URL = new URL(
+    '../docs/language-learning/data/g34-preview-review-v1.json',
+    import.meta.url
+);
 const SOURCE_FILES = Object.freeze({
     proverbs: 'proverbs.json',
     idiomContext: 'idioms.json',
@@ -45,6 +49,7 @@ const PILOT_SOURCE_ID_SETS = Object.freeze(Object.fromEntries(
 const G34_PREVIEW_SOURCE_ID_SETS = Object.freeze(Object.fromEntries(
     Object.entries(G34_PREVIEW_SOURCE_IDS).map(([contentType, ids]) => [contentType, new Set(ids)])
 ));
+const G34_PREVIEW_REVIEW_PACK = JSON.parse(await readFile(G34_PREVIEW_REVIEW_URL, 'utf8'));
 
 const normalizeText = (value) => String(value ?? '').trim().replaceAll(/\r\n/g, '\n');
 const normalizeSpaces = (value) => normalizeText(value).replaceAll(/[ \t]+/g, ' ');
@@ -78,6 +83,30 @@ const reviewFlagsFor = (contentType, sourceId, extraFlags = []) => unique([
     ...(!isPilotItem(contentType, sourceId) ? ['content_level_required'] : []),
     ...extraFlags
 ]);
+
+const summarizeCatalogItems = (items) => {
+    const questions = items.flatMap((item) => item.questions || []);
+    return {
+        items: items.length,
+        proverbs: items.filter((item) => item.contentType === 'proverb').length,
+        idioms: items.filter((item) => item.contentType === 'idiom').length,
+        questionVariants: questions.length,
+        reconstructedProverbs: items.filter((item) => (
+            item.reviewFlags.includes('expression_reconstructed')
+        )).length,
+        g56Items: items.filter((item) => item.gradeBands.includes('g56')).length,
+        g34PreviewItems: items.filter((item) => item.gradeBands.includes('g34')).length,
+        pilotItems: items.filter((item) => isPilotItem(item.contentType, item.source?.sourceId)).length,
+        alignedItems: items.filter((item) => item.curriculumRole === 'aligned').length,
+        enrichmentItems: items.filter((item) => item.curriculumRole === 'enrichment').length,
+        pendingContentLevels: items.filter((item) => item.contentLevel === null).length,
+        editorialReviewItems: items.filter((item) => item.reviewStatus === 'editorial_review').length,
+        teacherConfirmationItems: items.filter((item) => (
+            item.reviewFlags.includes('teacher_confirmation_required')
+        )).length,
+        meaningChoiceVariants: questions.filter((question) => question.questionType === 'meaningChoice').length
+    };
+};
 
 const hangulInitials = (value) => [...normalizeText(value)]
     .map((character) => {
@@ -246,6 +275,48 @@ const buildIdiomItem = (context, initials, meaning) => {
 
 const mapById = (rows) => new Map(rows.map((row) => [Number(row.id), row]));
 
+const applyG34PreviewReview = (item, reviewPack) => {
+    const review = reviewPack.items.find((candidate) => candidate.itemKey === item.itemKey);
+    if (!review) return item;
+
+    const meaningChoice = review.meaningChoice;
+    return {
+        ...item,
+        expression: normalizeSpaces(review.expression),
+        hanja: normalizeText(review.hanja) || null,
+        definition: normalizeText(review.definition),
+        example: normalizeText(review.example),
+        reviewStatus: 'editorial_review',
+        reviewFlags: ['teacher_confirmation_required'],
+        editorialReview: {
+            pack: 'g34-preview-review-v1',
+            reviewedOn: reviewPack.reviewedOn,
+            reviewBasis: reviewPack.reviewBasis,
+            notes: review.reviewNotes || []
+        },
+        questions: [
+            ...item.questions,
+            {
+                variantKey: variantKey(item.contentType, item.source.sourceId, 'meaningChoice-g34-v1'),
+                questionType: 'meaningChoice',
+                prompt: `‘${normalizeSpaces(review.expression)}’의 뜻으로 알맞은 것은 무엇인가요?`,
+                choices: meaningChoice.choices.map(normalizeText),
+                correctAnswer: normalizeText(meaningChoice.correctAnswer),
+                acceptedAnswers: [normalizeText(meaningChoice.correctAnswer)],
+                explanation: normalizeText(meaningChoice.explanation),
+                gradeBands: ['g34', 'g56'],
+                difficulty: 1,
+                reviewStatus: 'editorial_review',
+                source: {
+                    pack: 'g34-preview-review-v1',
+                    sourceId: item.source.sourceId,
+                    reviewedOn: reviewPack.reviewedOn
+                }
+            }
+        ]
+    };
+};
+
 const buildPilotCollection = (contentType, items) => ({
     contentType,
     collectionKey: 'core-v1',
@@ -262,20 +333,30 @@ const buildPilotCollection = (contentType, items) => ({
     })
 });
 
-export const buildLanguageContentCatalog = ({ proverbs, idiomContext, idiomInitials, idiomMeaning }) => {
+export const buildLanguageContentCatalog = (
+    { proverbs, idiomContext, idiomInitials, idiomMeaning },
+    editorialReviewPack = G34_PREVIEW_REVIEW_PACK
+) => {
     const contexts = mapById(idiomContext);
     const initials = mapById(idiomInitials);
     const meanings = mapById(idiomMeaning);
     const idiomIds = [...contexts.keys()].sort((left, right) => left - right);
-    const items = [
+    const sourceItems = [
         ...proverbs.map(buildProverbItem),
         ...idiomIds.map((id) => buildIdiomItem(contexts.get(id), initials.get(id), meanings.get(id)))
     ];
-    const sourceFingerprint = stableHash({ proverbs, idiomContext, idiomInitials, idiomMeaning });
+    const items = sourceItems.map((item) => applyG34PreviewReview(item, editorialReviewPack));
+    const sourceFingerprint = stableHash({
+        proverbs,
+        idiomContext,
+        idiomInitials,
+        idiomMeaning,
+        editorialReviewPack
+    });
 
     return {
-        schemaVersion: 2,
-        status: 'curriculum_classified_not_for_student_delivery',
+        schemaVersion: 3,
+        status: 'g34_preview_editorial_review_not_for_student_delivery',
         sourceFingerprint,
         sourceFiles: Object.fromEntries(Object.entries(SOURCE_FILES).map(([key, filename]) => [
             filename,
@@ -285,18 +366,15 @@ export const buildLanguageContentCatalog = ({ proverbs, idiomContext, idiomIniti
                 sha256: stableHash(({ proverbs, idiomContext, idiomInitials, idiomMeaning })[key])
             }
         ])),
-        counts: {
-            items: items.length,
-            proverbs: items.filter((item) => item.contentType === 'proverb').length,
-            idioms: items.filter((item) => item.contentType === 'idiom').length,
-            questionVariants: items.reduce((sum, item) => sum + item.questions.length, 0),
-            g56Items: items.filter((item) => item.gradeBands.includes('g56')).length,
-            g34PreviewItems: items.filter((item) => item.gradeBands.includes('g34')).length,
-            pilotItems: items.filter((item) => isPilotItem(item.contentType, item.source.sourceId)).length,
-            alignedItems: items.filter((item) => item.curriculumRole === 'aligned').length,
-            enrichmentItems: items.filter((item) => item.curriculumRole === 'enrichment').length,
-            pendingContentLevels: items.filter((item) => item.contentLevel === null).length
+        reviewFiles: {
+            'g34-preview-review-v1.json': {
+                role: 'g34PreviewEditorialReview',
+                rowCount: editorialReviewPack.items.length,
+                sha256: stableHash(editorialReviewPack),
+                status: editorialReviewPack.status
+            }
         },
+        counts: summarizeCatalogItems(items),
         collections: [
             buildPilotCollection('proverb', items),
             buildPilotCollection('idiom', items)
@@ -313,8 +391,8 @@ export const auditLanguageContentCatalog = (catalog) => {
     const proverbItems = items.filter((item) => item.contentType === 'proverb');
     const idiomItems = items.filter((item) => item.contentType === 'idiom');
 
-    if (catalog?.schemaVersion !== 2) errors.push('schemaVersion은 2여야 합니다.');
-    if (catalog?.status !== 'curriculum_classified_not_for_student_delivery') {
+    if (catalog?.schemaVersion !== 3) errors.push('schemaVersion은 3이어야 합니다.');
+    if (catalog?.status !== 'g34_preview_editorial_review_not_for_student_delivery') {
         errors.push('검수 전 카탈로그가 학생 제공 상태로 바뀌었습니다.');
     }
     if (items.length !== 185 || proverbItems.length !== 85 || idiomItems.length !== 100) {
@@ -327,28 +405,41 @@ export const auditLanguageContentCatalog = (catalog) => {
         if (!item.itemKey || !item.expression || !item.definition) {
             errors.push(`${item.itemKey || '(키 없음)'}의 필수 학습 정보가 비었습니다.`);
         }
-        if (item.reviewStatus !== 'source_imported') {
-            errors.push(`${item.itemKey}가 검수 없이 승격되었습니다.`);
-        }
         const sourceId = item.source?.sourceId;
         const expectedProfile = learningProfile(item.contentType, sourceId);
+        const expectedReview = G34_PREVIEW_REVIEW_PACK.items.find((review) => review.itemKey === item.itemKey);
         if (item.curriculumBand !== expectedProfile.curriculumBand
             || item.curriculumRole !== expectedProfile.curriculumRole
             || JSON.stringify(item.gradeBands) !== JSON.stringify(expectedProfile.gradeBands)
             || item.contentLevel !== expectedProfile.contentLevel) {
             errors.push(`${item.itemKey}의 교육과정·접근 학년·내용 난이도 분류가 기준과 다릅니다.`);
         }
-        REQUIRED_REVIEW_FLAGS.forEach((flag) => {
-            if (!item.reviewFlags.includes(flag)) errors.push(`${item.itemKey}에 ${flag} 신호가 없습니다.`);
-        });
-        if (item.reviewFlags.includes('grade_band_required')) {
-            errors.push(`${item.itemKey}에 이미 해결된 grade_band_required 신호가 남았습니다.`);
+        if (expectedReview) {
+            const reviewMatches = item.reviewStatus === 'editorial_review'
+                && JSON.stringify(item.reviewFlags) === JSON.stringify(['teacher_confirmation_required'])
+                && item.expression === expectedReview.expression
+                && item.hanja === expectedReview.hanja
+                && item.definition === expectedReview.definition
+                && item.example === expectedReview.example
+                && item.example.length > 0
+                && item.editorialReview?.pack === 'g34-preview-review-v1';
+            if (!reviewMatches) errors.push(`${item.itemKey}의 3·4학년 검수 내용 또는 상태가 검수팩과 다릅니다.`);
+        } else {
+            if (item.reviewStatus !== 'source_imported') {
+                errors.push(`${item.itemKey}가 검수 없이 승격되었습니다.`);
+            }
+            REQUIRED_REVIEW_FLAGS.forEach((flag) => {
+                if (!item.reviewFlags.includes(flag)) errors.push(`${item.itemKey}에 ${flag} 신호가 없습니다.`);
+            });
+            if (item.reviewFlags.includes('grade_band_required')) {
+                errors.push(`${item.itemKey}에 이미 해결된 grade_band_required 신호가 남았습니다.`);
+            }
+            const shouldNeedContentLevel = !isPilotItem(item.contentType, sourceId);
+            if (item.reviewFlags.includes('content_level_required') !== shouldNeedContentLevel) {
+                errors.push(`${item.itemKey}의 내용 난이도 검수 신호가 시범팩 분류와 다릅니다.`);
+            }
         }
-        const shouldNeedContentLevel = !isPilotItem(item.contentType, sourceId);
-        if (item.reviewFlags.includes('content_level_required') !== shouldNeedContentLevel) {
-            errors.push(`${item.itemKey}의 내용 난이도 검수 신호가 시범팩 분류와 다릅니다.`);
-        }
-        const expectedQuestionCount = item.contentType === 'idiom' ? 3 : 1;
+        const expectedQuestionCount = (item.contentType === 'idiom' ? 3 : 1) + (expectedReview ? 1 : 0);
         if (item.questions.length !== expectedQuestionCount) {
             errors.push(`${item.itemKey}의 원본 문제 병합 수가 ${expectedQuestionCount}개가 아닙니다.`);
         }
@@ -356,14 +447,37 @@ export const auditLanguageContentCatalog = (catalog) => {
             if (!question.prompt || !question.correctAnswer || question.acceptedAnswers.length === 0) {
                 errors.push(`${question.variantKey}의 문제 필수 정보가 비었습니다.`);
             }
-            if (question.reviewStatus !== 'source_imported' || question.choices.length !== 0) {
-                errors.push(`${question.variantKey}가 검수 없이 학생 문제로 바뀌었습니다.`);
-            }
-            if (JSON.stringify(question.gradeBands) !== JSON.stringify(['g56']) || question.difficulty !== 3) {
-                errors.push(`${question.variantKey}의 원본 직접 입력 문제가 5·6학년 심화 초안으로 분류되지 않았습니다.`);
+            if (question.questionType === 'meaningChoice') {
+                const answerCount = question.choices.filter((choice) => choice === question.correctAnswer).length;
+                const validMeaningChoice = expectedReview
+                    && question.reviewStatus === 'editorial_review'
+                    && question.choices.length === 4
+                    && new Set(question.choices).size === 4
+                    && answerCount === 1
+                    && question.explanation.length > 0
+                    && JSON.stringify(question.gradeBands) === JSON.stringify(['g34', 'g56'])
+                    && question.difficulty === 1;
+                if (!validMeaningChoice) errors.push(`${question.variantKey}의 3·4학년 뜻 고르기 계약이 잘못되었습니다.`);
+            } else {
+                if (question.reviewStatus !== 'source_imported' || question.choices.length !== 0) {
+                    errors.push(`${question.variantKey}가 검수 없이 학생 문제로 바뀌었습니다.`);
+                }
+                if (JSON.stringify(question.gradeBands) !== JSON.stringify(['g56']) || question.difficulty !== 3) {
+                    errors.push(`${question.variantKey}의 원본 직접 입력 문제가 5·6학년 심화 초안으로 분류되지 않았습니다.`);
+                }
             }
         });
     });
+
+    const expectedReviewKeys = Object.entries(G34_PREVIEW_SOURCE_IDS).flatMap(([contentType, sourceIds]) => (
+        sourceIds.map((sourceId) => itemKey(contentType, sourceId))
+    ));
+    const reviewKeys = G34_PREVIEW_REVIEW_PACK.items.map((review) => review.itemKey);
+    if (G34_PREVIEW_REVIEW_PACK.schemaVersion !== 1
+        || G34_PREVIEW_REVIEW_PACK.status !== 'editorial_review_teacher_confirmation_required'
+        || JSON.stringify(reviewKeys) !== JSON.stringify(expectedReviewKeys)) {
+        errors.push('3·4학년 검수팩이 미리 만나기 20개와 정확히 일치하지 않습니다.');
+    }
 
     const collections = Array.isArray(catalog?.collections) ? catalog.collections : [];
     ['proverb', 'idiom'].forEach((contentType) => {
@@ -385,22 +499,14 @@ export const auditLanguageContentCatalog = (catalog) => {
     items.flatMap((item) => item.reviewFlags).forEach((flag) => {
         flagCounts[flag] = (flagCounts[flag] || 0) + 1;
     });
+    const counts = summarizeCatalogItems(items);
+    if (JSON.stringify(catalog?.counts) !== JSON.stringify(counts)) {
+        errors.push('카탈로그 상단 개수 요약이 실제 항목·문제 상태와 다릅니다.');
+    }
     return {
         valid: errors.length === 0,
         errors,
-        counts: {
-            items: items.length,
-            proverbs: proverbItems.length,
-            idioms: idiomItems.length,
-            questionVariants: variantKeys.length,
-            reconstructedProverbs: flagCounts.expression_reconstructed || 0,
-            g56Items: items.filter((item) => item.gradeBands.includes('g56')).length,
-            g34PreviewItems: items.filter((item) => item.gradeBands.includes('g34')).length,
-            pilotItems: items.filter((item) => isPilotItem(item.contentType, item.source?.sourceId)).length,
-            alignedItems: items.filter((item) => item.curriculumRole === 'aligned').length,
-            enrichmentItems: items.filter((item) => item.curriculumRole === 'enrichment').length,
-            pendingContentLevels: items.filter((item) => item.contentLevel === null).length
-        },
+        counts,
         flagCounts
     };
 };
@@ -441,11 +547,15 @@ const runCli = async () => {
     }
     console.log(
         `언어 학습 데이터 ${audit.counts.items}개(속담 ${audit.counts.proverbs}, 사자성어 ${audit.counts.idioms}), `
-        + `원본 문제 ${audit.counts.questionVariants}개를 확인했습니다.`
+        + `문제 변형 ${audit.counts.questionVariants}개를 확인했습니다.`
     );
     console.log(
         `5·6학년 기준 ${audit.counts.g56Items}개, 3·4학년 미리 만나기 ${audit.counts.g34PreviewItems}개, `
         + `첫 검수 시범팩 ${audit.counts.pilotItems}개입니다.`
+    );
+    console.log(
+        `미리 만나기 편집 검수 ${audit.counts.editorialReviewItems}개와 뜻 고르기 `
+        + `${audit.counts.meaningChoiceVariants}개는 교사 최종 확인이 필요합니다.`
     );
     console.log(`완성 표현 재구성 속담 ${audit.counts.reconstructedProverbs}개는 사람 검수가 필요합니다.`);
 };
