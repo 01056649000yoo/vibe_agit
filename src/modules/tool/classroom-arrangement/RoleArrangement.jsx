@@ -1,27 +1,31 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { arrangementSfx } from './arrangementSfx';
 import { buildRoleSlots, solveRoles } from './arrangementEngine';
-import LotteryMachine from './LotteryMachine';
+import RoleLotteryModal from './RoleLotteryModal';
 
 const newRoleId = () => typeof crypto?.randomUUID === 'function' ? crypto.randomUUID() : `role-${Date.now()}-${Math.random()}`;
+const ROLE_LOTTERY_STEP = 950;
 
 export default function RoleArrangement({ students, settings, history, onSettingsChange, onCreateHistory }) {
   const [roleName, setRoleName] = useState('');
   const [roleCount, setRoleCount] = useState(1);
   const [phase, setPhase] = useState('idle');
   const [assignments, setAssignments] = useState([]);
-  const [revealedCount, setRevealedCount] = useState(0);
+  const [revealed, setRevealed] = useState(new Set());
   const [rollingName, setRollingName] = useState('');
+  const [flyingPick, setFlyingPick] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const [violations, setViolations] = useState(0);
   const timers = useRef([]);
   const slots = useMemo(() => buildRoleSlots(settings.roleGroups), [settings.roleGroups]);
   const ready = students.length > 0 && slots.length === students.length && phase === 'idle';
-  const revealed = assignments.slice(0, revealedCount);
+  const visibleAssignments = useMemo(() => assignments.filter((assignment) => revealed.has(assignment.id) || phase === 'done'), [assignments, phase, revealed]);
   const byRole = useMemo(() => {
     const result = new Map(settings.roleGroups.map((role) => [role.id, []]));
-    revealed.forEach((assignment) => result.get(assignment.roleId)?.push(assignment));
+    visibleAssignments.forEach((assignment) => result.get(assignment.roleId)?.push(assignment));
     return result;
-  }, [revealed, settings.roleGroups]);
+  }, [settings.roleGroups, visibleAssignments]);
+  const closeLotteryModal = useCallback(() => setModalOpen(false), []);
 
   useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
   const schedule = (callback, delay) => {
@@ -33,8 +37,10 @@ export default function RoleArrangement({ students, settings, history, onSetting
     timers.current = [];
     setPhase('idle');
     setAssignments([]);
-    setRevealedCount(0);
+    setRevealed(new Set());
     setRollingName('');
+    setFlyingPick(null);
+    setModalOpen(false);
     setViolations(0);
   };
   const setRoles = (roleGroups) => {
@@ -53,21 +59,32 @@ export default function RoleArrangement({ students, settings, history, onSetting
     if (!ready) return;
     const result = solveRoles(students, settings, history.filter((item) => item.kind === 'role'));
     setAssignments(result.assignments);
-    setRevealedCount(0);
+    setRevealed(new Set());
+    setFlyingPick(null);
     setViolations(result.violations);
     setPhase('running');
+    setModalOpen(true);
     arrangementSfx.ensure();
-    const step = 460;
-    result.assignments.forEach((pick, index) => {
+    const order = [...result.assignments].sort(() => Math.random() - 0.5);
+    const step = ROLE_LOTTERY_STEP;
+    order.forEach((pick, index) => {
       const base = index * step;
       for (let tick = 0; tick < 5; tick += 1) schedule(() => {
         setRollingName(students[Math.floor(Math.random() * students.length)]?.name || '');
         arrangementSfx.tick();
-      }, base + tick * 45);
-      schedule(() => { setRollingName(pick.studentName); arrangementSfx.pick(); }, base + 265);
-      schedule(() => { setRevealedCount(index + 1); arrangementSfx.pop(); }, base + 390);
+      }, base + tick * Math.max(32, step / 9));
+      schedule(() => {
+        setRollingName(pick.studentName);
+        setFlyingPick({ ...pick, flightDuration: Math.round(step * 0.35) });
+        arrangementSfx.pick();
+      }, base + step * 0.55);
+      schedule(() => {
+        setRevealed((current) => new Set(current).add(pick.id));
+        setFlyingPick((current) => current?.id === pick.id ? null : current);
+        arrangementSfx.pop();
+      }, base + step * 0.9);
     });
-    schedule(() => { setPhase('done'); setRollingName(''); arrangementSfx.finish(); }, result.assignments.length * step + 100);
+    schedule(() => { setPhase('done'); setRollingName(''); setFlyingPick(null); arrangementSfx.finish(); }, order.length * step + 120);
     await onCreateHistory('role', `역할 나누기 ${result.assignments.length}명`, {
       format: 'classroom-arrangement/role-v1',
       roleGroups: settings.roleGroups,
@@ -77,7 +94,7 @@ export default function RoleArrangement({ students, settings, history, onSetting
     });
   };
 
-  return (
+  return <>
     <div className="arrange-role-layout">
       <section className="arrange-role-builder">
         <div className="arrange-panel-heading"><div><h3>역할 칸 만들기</h3><p>모든 역할의 인원 합계가 학생 수와 같아야 합니다.</p></div><button type="button" className="arrange-small-button" disabled={students.length === 0 || phase === 'running'} onClick={autoFill}>1인 역할 자동 만들기</button></div>
@@ -108,9 +125,9 @@ export default function RoleArrangement({ students, settings, history, onSetting
             })}</div>
           </article>)}
         </div>
-        {phase === 'running' ? <LotteryMachine rollingName={rollingName} current={revealedCount} total={assignments.length} /> : null}
         {phase === 'done' && violations > 0 ? <div className="arrange-condition-note">조건을 모두 만족하는 조합이 없어 가장 가까운 결과로 나눴습니다. 위반 점수 {violations}</div> : null}
       </section>
     </div>
-  );
+    {modalOpen ? <RoleLotteryModal roleGroups={settings.roleGroups} assignments={assignments} revealed={revealed} rollingName={rollingName} flyingPick={flyingPick} phase={phase} onClose={closeLotteryModal} /> : null}
+  </>;
 }

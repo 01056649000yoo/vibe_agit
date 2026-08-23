@@ -126,7 +126,7 @@ test('이전 앱 학급 설정은 이름이 하나로 일치하는 아지트 학
 });
 
 test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 계약을 가진다', async () => {
-  const [manifest, api, migration, registry, teacherEntry, settingsEntry, legacyImport, teacherGuides, seatEntry, seatLotteryModal, roleEntry, lotteryMachine, arrangementCss] = await Promise.all([
+  const [manifest, api, migration, registry, teacherEntry, settingsEntry, legacyImport, teacherGuides, seatEntry, seatLotteryModal, roleEntry, roleLotteryModal, lotteryMachine, arrangementCss] = await Promise.all([
     readFile('src/modules/tool/classroom-arrangement/manifest.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/classroomArrangementApi.js', 'utf8'),
     readFile('supabase/migrations/20261159_classroom_arrangement_tool.sql', 'utf8'),
@@ -138,6 +138,7 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
     readFile('src/modules/tool/classroom-arrangement/SeatArrangement.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/SeatLotteryModal.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/RoleArrangement.jsx', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/RoleLotteryModal.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/LotteryMachine.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/classroomArrangement.css', 'utf8')
   ]);
@@ -155,7 +156,8 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.doesNotMatch(`${teacherEntry}\n${legacyImport}\n${teacherGuides}`, /서바이벌/);
   assert.match(seatEntry, /<SeatLotteryModal/);
   assert.doesNotMatch(seatEntry, /<LotteryMachine/);
-  assert.match(roleEntry, /<LotteryMachine/);
+  assert.match(roleEntry, /<RoleLotteryModal/);
+  assert.doesNotMatch(roleEntry, /<LotteryMachine/);
   assert.match(lotteryMachine, /arrange-lottery-drum/);
   assert.match(arrangementCss, /@keyframes arrange-ball-orbit/);
   assert.match(settingsEntry, /학생 남녀 구분/);
@@ -187,9 +189,22 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(seatLotteryModal, /is-target/);
   assert.match(seatLotteryModal, /arrange-seat-flight/);
   assert.match(seatLotteryModal, /완성된 자리표 보기/);
+  assert.match(roleEntry, /setModalOpen\(true\)/);
+  assert.match(roleEntry, /setFlyingPick\(\{ \.\.\.pick, flightDuration:/);
+  assert.match(roleEntry, /base \+ step \* 0\.55/);
+  assert.match(roleEntry, /base \+ step \* 0\.9/);
+  assert.match(roleLotteryModal, /<ModalPortal>/);
+  assert.match(roleLotteryModal, /role="dialog" aria-modal="true"/);
+  assert.match(roleLotteryModal, /data-modal-role-slot=/);
+  assert.match(roleLotteryModal, /is-target/);
+  assert.match(roleLotteryModal, /arrange-role-flight/);
+  assert.match(roleLotteryModal, /완성된 역할표 보기/);
+  assert.match(arrangementCss, /\.arrange-role-lottery-cards/);
+  assert.match(arrangementCss, /\.arrange-role-lottery-slot\.is-filled/);
   assert.match(arrangementCss, /\.arrange-seat-machine-wrap \.arrange-lottery \{ position:relative;/);
   assert.match(arrangementCss, /@keyframes arrange-seat-flight/);
   assert.match(teacherGuides, /이름표가 해당 자리로 이동/);
+  assert.match(teacherGuides, /이름표가 해당 역할 칸으로 이동/);
   assert.match(teacherGuides, /바로 붙은 위·아래·왼쪽·오른쪽 좌석/);
   assert.match(seatEntry, /필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과/);
   assert.match(seatEntry, /result\.error/);

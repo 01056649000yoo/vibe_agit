@@ -1,71 +1,13 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 import ModalPortal from '../../../components/common/ModalPortal';
 import LotteryMachine from './LotteryMachine';
 import { seatKey } from './arrangementEngine';
+import { useLotteryDialog, useLotteryFlight } from './lotteryModalHooks';
 
 export default function SeatLotteryModal({ rows, cols, activeSeats, assignments, revealed, rollingName, flyingPick, phase, onClose }) {
-  const dialogRef = useRef(null);
-  const sourceRef = useRef(null);
-  const finishButtonRef = useRef(null);
-  const [flight, setFlight] = useState(null);
+  const { dialogRef, finishButtonRef } = useLotteryDialog(phase, onClose);
+  const { sourceRef, flight } = useLotteryFlight(flyingPick, 'data-modal-seat', flyingPick?.seatKey);
   const assignmentBySeat = useMemo(() => new Map(assignments.map((item) => [item.seatKey, item])), [assignments]);
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    dialogRef.current?.focus();
-    return () => { document.body.style.overflow = previousOverflow; };
-  }, []);
-
-  useEffect(() => {
-    if (phase === 'done') finishButtonRef.current?.focus();
-    const handleDialogKeys = (event) => {
-      if (event.key === 'Escape' && phase === 'done') onClose();
-      if (event.key !== 'Tab') return;
-      const focusable = [...(dialogRef.current?.querySelectorAll('button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])') || [])];
-      if (focusable.length === 0) {
-        event.preventDefault();
-        dialogRef.current?.focus();
-        return;
-      }
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    window.addEventListener('keydown', handleDialogKeys);
-    return () => window.removeEventListener('keydown', handleDialogKeys);
-  }, [onClose, phase]);
-
-  useLayoutEffect(() => {
-    if (!flyingPick) return undefined;
-    const frame = window.requestAnimationFrame(() => {
-      const source = sourceRef.current?.getBoundingClientRect();
-      const target = document.querySelector(`[data-modal-seat="${CSS.escape(flyingPick.seatKey)}"]`)?.getBoundingClientRect();
-      if (!source || !target) return;
-      const startX = source.left + source.width / 2;
-      const startY = source.top + source.height * 0.58;
-      const deltaX = target.left + target.width / 2 - startX;
-      const deltaY = target.top + target.height / 2 - startY;
-      setFlight({
-        key: `${flyingPick.studentId}-${flyingPick.seatKey}`,
-        name: flyingPick.studentName,
-        startX,
-        startY,
-        deltaX,
-        deltaY,
-        midX: deltaX * 0.52,
-        midY: deltaY * 0.52 - 42,
-        duration: flyingPick.flightDuration
-      });
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [flyingPick]);
 
   const completed = revealed.size;
   return <ModalPortal>
