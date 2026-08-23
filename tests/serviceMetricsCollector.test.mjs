@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const script = readFileSync('scripts/record-system-metrics.sh', 'utf8');
 
@@ -25,17 +27,21 @@ const extractDayDeltaProgram = (source) => {
 
 const AWK_PROGRAM = extractDayDeltaProgram(script);
 
-// 임시 파일을 만들지 않고 지난 값은 프로세스 치환으로, 오늘 값은 표준 입력으로 넣는다.
+/**
+ * 지난 값은 파일로, 오늘 값은 표준 입력으로 넣는다(스크립트가 하는 것과 같은 방식).
+ *
+ * 셸 기능은 쓰지 않는다. 검사는 배포 관문인 도커 이미지(`node:20-alpine`) 안에서도 도는데
+ * 거기에는 bash 가 없다. 처음에 bash 의 프로세스 치환을 썼다가 배포가 막혔다.
+ */
 const dayDelta = (previousLines, currentLines) => {
-    const out = execFileSync(
-        'bash',
-        ['-c', 'awk "$AWK_PROGRAM" <(printf \'%s\\n\' "$PREV_LINES") -'],
-        {
-            input: `${currentLines.join('\n')}\n`,
-            encoding: 'utf8',
-            env: { ...process.env, AWK_PROGRAM, PREV_LINES: previousLines.join('\n') },
-        },
-    );
+    const stateFile = join(mkdtempSync(join(tmpdir(), 'agit-metrics-')), 'state');
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- 검사가 방금 만든 임시 폴더에만 쓴다.
+    writeFileSync(stateFile, previousLines.length ? `${previousLines.join('\n')}\n` : '');
+
+    const out = execFileSync('awk', [AWK_PROGRAM, stateFile, '-'], {
+        input: `${currentLines.join('\n')}\n`,
+        encoding: 'utf8',
+    });
     const [rx, tx] = out.trim().split(/\s+/).map(Number);
     return { rx, tx };
 };
