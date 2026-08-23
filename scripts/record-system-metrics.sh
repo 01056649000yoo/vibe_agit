@@ -35,36 +35,66 @@ CONTAINER_HEALTHY="$("$DOCKER" ps --format '{{.Status}}' 2>/dev/null | grep -cv 
 [ -n "${CONTAINER_TOTAL:-}" ] || CONTAINER_TOTAL="NULL"
 [ -n "${CONTAINER_HEALTHY:-}" ] || CONTAINER_HEALTHY="NULL"
 
-# --- 트래픽: 누적값을 읽고, 지난번과의 차이를 하루치로 본다 ---
-# docker stats 는 컨테이너별 누적 NET I/O 를 준다. 재시작하면 0으로 돌아가므로
-# 차이가 음수면 그날은 재시작이 있었다고 보고 건너뛴다(엉뚱한 큰 값이 들어가지 않게).
-read -r RX_NOW TX_NOW <<EOF
-$("$DOCKER" stats --no-stream --format '{{.NetIO}}' 2>/dev/null | awk '
+# --- 트래픽: 컨테이너마다 누적값을 재고, 컨테이너마다 하루치를 낸다 ---
+#
+# docker stats 는 컨테이너별 누적 NET I/O 를 준다. 배포할 때마다 agit-app 은 지우고 새로 만들기
+# 때문에 그 컨테이너의 누적값은 0부터 다시 쌓인다. 예전에는 전체 합계 하나만 비교해서,
+# 배포가 있던 날은 값이 조용히 모자라거나 통째로 빠졌다(8/21~23 기록이 그렇게 망가졌다).
+# 그래서 컨테이너 이름별로 지난 값을 기억하고, 줄어든 컨테이너는 "다시 0부터 쌓인 것" 으로 보고
+# 지금 값을 그대로 그날치에 더한다. 새로 생긴 컨테이너도 같은 규칙이다.
+#
+# docker stats 가 값을 못 주면(도커가 물렸거나 응답이 없을 때) 0 을 기록하지 않는다.
+# 예전에는 0 을 상태 파일에 적어 두어, 다음 날 하루치가 통째로 잘못 들어갔다.
+CURRENT_STATS="$("$DOCKER" stats --no-stream --format '{{.Name}} {{.NetIO}}' 2>/dev/null | awk '
 function to_bytes(v) {
-    unit = v; sub(/^[0-9.]+/, "", unit); num = v; sub(/[A-Za-z]+$/, "", num) + 0;
+    unit = v; sub(/^[0-9.]+/, "", unit);
+    num = v; sub(/[A-Za-z]+$/, "", num);
     if (unit == "kB" || unit == "KB") return num * 1000;
     if (unit == "MB") return num * 1000000;
     if (unit == "GB") return num * 1000000000;
     if (unit == "TB") return num * 1000000000000;
-    return num;
+    return num + 0;
 }
-{ split($0, parts, " / "); rx += to_bytes(parts[1]); tx += to_bytes(parts[2]); }
-END { printf "%d %d", rx, tx }
-')
-EOF
-RX_NOW="${RX_NOW:-0}"
-TX_NOW="${TX_NOW:-0}"
+NF >= 4 {
+    line = $0;
+    name = $1;
+    sub(/^[^ ]+ /, "", line);
+    split(line, parts, " / ");
+    printf "%s %d %d\n", name, to_bytes(parts[1]), to_bytes(parts[2]);
+}
+')"
 
-RX_DAY="NULL"
-TX_DAY="NULL"
-if [ -f "$STATE_FILE" ]; then
-    read -r PREV_RX PREV_TX < "$STATE_FILE" 2>/dev/null || true
-    if [ -n "${PREV_RX:-}" ] && [ "$RX_NOW" -ge "${PREV_RX:-0}" ] 2>/dev/null; then
-        RX_DAY=$(( RX_NOW - PREV_RX ))
-        TX_DAY=$(( TX_NOW - PREV_TX ))
-    fi
+if [ -z "${CURRENT_STATS:-}" ]; then
+    echo "docker stats 가 값을 주지 않아 트래픽을 건너뜁니다 ($DAY)" >&2
+    RX_DAY="NULL"
+    TX_DAY="NULL"
+elif [ ! -f "$STATE_FILE" ] || [ "$(awk 'NR==1 {print NF; exit}' "$STATE_FILE" 2>/dev/null)" != "3" ]; then
+    # 첫 실행이거나, 컨테이너 이름이 없던 옛 형식이면 견줄 값이 없다.
+    # 옛 형식을 그대로 견주면 모든 컨테이너가 새것으로 보여 누적분이 통째로 하루치가 된다.
+    echo "지난 기록이 없거나 옛 형식이라 트래픽은 다음 실행부터 기록합니다 ($DAY)" >&2
+    RX_DAY="NULL"
+    TX_DAY="NULL"
+    printf '%s\n' "$CURRENT_STATS" > "$STATE_FILE"
+else
+    read -r RX_DAY TX_DAY <<EOF
+$(awk '
+NR == FNR { prev_rx[$1] = $2; prev_tx[$1] = $3; next }
+{
+    name = $1; rx = $2; tx = $3;
+    # 지난 값이 없거나(새 컨테이너) 지금 값이 더 작으면(다시 만들어짐) 지금 값이 곧 그날치다.
+    day_rx += (name in prev_rx && rx >= prev_rx[name]) ? rx - prev_rx[name] : rx;
+    day_tx += (name in prev_tx && tx >= prev_tx[name]) ? tx - prev_tx[name] : tx;
+}
+END { printf "%d %d", day_rx, day_tx }
+' "$STATE_FILE" - <<STATS
+$CURRENT_STATS
+STATS
+)
+EOF
+    RX_DAY="${RX_DAY:-NULL}"
+    TX_DAY="${TX_DAY:-NULL}"
+    printf '%s\n' "$CURRENT_STATS" > "$STATE_FILE"
 fi
-printf '%s %s\n' "$RX_NOW" "$TX_NOW" > "$STATE_FILE"
 
 # --- 기록 ---
 psql_exec -c "SELECT public.record_system_daily_metric_v1(

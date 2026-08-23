@@ -76,7 +76,15 @@ test('기록 RPC 는 화면이 아니라 호스트 스크립트만 쓴다', asyn
 test('지표 기록은 컨테이너 재시작으로 엉뚱한 값이 들어가지 않는다', async () => {
     const script = await read('scripts/record-system-metrics.sh');
 
-    // 누적값이 줄어들면(재시작) 그날 트래픽은 비워 둔다. 큰 음수/양수가 들어가면 경향이 망가진다.
+    // 예전에는 전체 합계 하나만 견주어, 줄어든 날은 통째로 비워 두었다. 그런데 배포할 때마다
+    // agit-app 을 새로 만들기 때문에 그런 날이 자주 생기고, 줄지 않은 날은 값이 조용히 모자랐다.
+    // 이제는 컨테이너마다 견주어 다시 0부터 쌓인 것은 지금 값을 그대로 그날치로 본다.
+    // 하루치 계산 자체의 동작은 `serviceMetricsCollector.test.mjs` 가 실제로 돌려 확인한다.
     assert.match(script, /RX_DAY="NULL"/);
-    assert.match(script, /\[ "\$RX_NOW" -ge "\$\{PREV_RX:-0\}" \]/);
+    assert.match(script, /prev_rx\[\$1\] = \$2/);
+    assert.match(script, /rx >= prev_rx\[name\]\) \? rx - prev_rx\[name\] : rx/);
+    assert.ok(
+        !/\[ "\$RX_NOW" -ge "\$\{PREV_RX:-0\}" \]/.test(script),
+        '전체 합계 하나로만 견주던 옛 판정이 남아 있다',
+    );
 });

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Button from '../common/Button';
+import AdminTrafficTrend, { formatBytes } from './AdminTrafficTrend';
 
 const AI_SCOPE_LABELS = {
     teacher_ai: '교사 AI',
@@ -14,14 +15,6 @@ const ALERT_LABELS = {
     backup_failed: '백업 실패',
     container_down: '컨테이너 꺼짐',
     db_down: 'DB 응답 없음'
-};
-
-const formatBytes = (value) => {
-    const bytes = Number(value);
-    if (!Number.isFinite(bytes) || bytes <= 0) return '-';
-    if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
-    if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(0)} MB`;
-    return `${(bytes / 1024).toFixed(0)} KB`;
 };
 
 const formatWhen = (value) => {
@@ -77,12 +70,6 @@ const AdminServicePanel = () => {
     }, [load]);
 
     const trend = useMemo(() => (Array.isArray(data?.trend) ? data.trend : []), [data]);
-
-    // 트래픽 경향은 막대 하나로 본다. 정확한 수치보다 "늘고 있나" 가 알고 싶은 것이다.
-    const maxTraffic = useMemo(
-        () => trend.reduce((max, row) => Math.max(max, Number(row.rx_bytes || 0) + Number(row.tx_bytes || 0)), 0),
-        [trend]
-    );
 
     if (loading && !data) {
         return <div style={{ padding: '40px', textAlign: 'center', color: '#6C757D' }}>불러오는 중...</div>;
@@ -195,36 +182,11 @@ const AdminServicePanel = () => {
                 )}
             </div>
 
-            {/* 트래픽은 정확한 수치가 아니라 경향을 본다. */}
-            {trend.length > 0 && (
-                <div>
-                    <h3 style={{ margin: '0 0 10px', fontSize: '1rem', color: '#2D3748' }}>
-                        트래픽 경향 <span style={{ fontSize: '0.75rem', color: '#A0AEC0', fontWeight: 'normal' }}>
-                            (컨테이너가 주고받은 양 · 정확한 회선 사용량은 아닙니다)
-                        </span>
-                    </h3>
-                    <div style={{
-                        display: 'flex', alignItems: 'flex-end', gap: '3px', height: '90px',
-                        padding: '12px', background: 'white', borderRadius: '12px',
-                        border: '1px solid #E9ECEF', overflowX: 'auto'
-                    }}>
-                        {trend.map((row) => {
-                            const total = Number(row.rx_bytes || 0) + Number(row.tx_bytes || 0);
-                            const height = maxTraffic > 0 ? Math.max(3, Math.round((total / maxTraffic) * 66)) : 3;
-                            return (
-                                <div
-                                    key={row.metric_day}
-                                    title={`${row.metric_day} · ${formatBytes(total)}`}
-                                    style={{
-                                        width: '12px', flex: '0 0 12px', height: `${height}px`,
-                                        background: '#3182CE', borderRadius: '3px 3px 0 0'
-                                    }}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
+            {/* 트래픽은 정확한 수치가 아니라 경향을 본다. 그리기는 전용 컴포넌트가 맡는다. */}
+            <div>
+                <h3 style={{ margin: '0 0 10px', fontSize: '1rem', color: '#2D3748' }}>트래픽 경향</h3>
+                <AdminTrafficTrend trend={trend} alerts={alerts} days={30} />
+            </div>
 
             {alerts.length > 0 && (
                 <div>
