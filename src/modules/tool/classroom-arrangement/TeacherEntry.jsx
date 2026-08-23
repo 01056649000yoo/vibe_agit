@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ArrangementSettings from './ArrangementSettings';
+import HistoryResultBoard from './HistoryResultBoard';
 import RoleArrangement from './RoleArrangement';
 import SeatArrangement from './SeatArrangement';
 import { arrangementSfx } from './arrangementSfx';
@@ -27,9 +28,7 @@ function HistoryView({ history, onDelete }) {
     {selected ? <div className="arrange-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}>
       <section className="arrange-history-modal" role="dialog" aria-modal="true" aria-labelledby="arrangement-history-title">
         <header><div><h3 id="arrangement-history-title">{selected.title}</h3><p>{formatDate(selected.createdAt)}</p></div><button type="button" aria-label="닫기" onClick={() => setSelected(null)}>×</button></header>
-        <div className="arrange-history-result">
-          {(selected.payload?.assignments || []).map((assignment, index) => <div key={`${assignment.studentId}-${index}`}><span>{selected.kind === 'seat' ? `${assignment.seatKey?.replace(',', '행 ')}열` : assignment.roleName || assignment.role}</span><strong>{assignment.studentName}</strong></div>)}
-        </div>
+        <HistoryResultBoard kind={selected.kind} payload={selected.payload} />
       </section>
     </div> : null}
   </div>;

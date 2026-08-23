@@ -14,6 +14,7 @@ import {
   solveSeats
 } from '../src/modules/tool/classroom-arrangement/arrangementEngine.js';
 import { mapLegacyClassToAgit } from '../src/modules/tool/classroom-arrangement/legacyImport.js';
+import { buildRoleHistoryResult, buildSeatHistoryResult } from '../src/modules/tool/classroom-arrangement/historyResult.js';
 
 test('자리 배치는 고정 자리와 학생 수를 지킨다', () => {
   const students = [{ id: 'a', name: '가' }, { id: 'b', name: '나' }, { id: 'c', name: '다' }];
@@ -111,6 +112,41 @@ test('역할 나누기는 정원 합계가 학생 수와 같을 때 모두 한 �
   assert.equal(new Set(result.assignments.map((item) => item.studentId)).size, 3);
 });
 
+test('지난 기록은 당시 자리 모양과 역할별 그룹을 그대로 복원한다', () => {
+  const seat = buildSeatHistoryResult({
+    layout: { rows: 2, cols: 3, activeSeats: ['0,0', '0,2', '1,0'] },
+    assignments: [
+      { seatKey: '0,0', studentId: 'a', studentName: '가' },
+      { seatKey: '0,2', studentId: 'b', studentName: '나' },
+      { seatKey: '1,0', studentId: 'c', studentName: '다' }
+    ]
+  });
+  assert.deepEqual({ rows: seat.rows, cols: seat.cols }, { rows: 2, cols: 3 });
+  assert.deepEqual([...seat.activeSeats], ['0,0', '0,2', '1,0']);
+  assert.equal(seat.assignmentBySeat.get('0,2').studentName, '나');
+  assert.equal(seat.activeSeats.has('1,2'), false);
+
+  const roles = buildRoleHistoryResult({
+    roleGroups: [{ id: 'leader', name: '모둠장', count: 2 }, { id: 'record', name: '기록자', count: 1 }],
+    assignments: [
+      { roleId: 'leader', roleName: '모둠장', slotNumber: 2, studentId: 'b', studentName: '나' },
+      { roleId: 'record', roleName: '기록자', slotNumber: 1, studentId: 'c', studentName: '다' },
+      { roleId: 'leader', roleName: '모둠장', slotNumber: 1, studentId: 'a', studentName: '가' }
+    ]
+  });
+  assert.deepEqual(roles.map((role) => ({ name: role.name, students: role.assignments.map((item) => item.studentName) })), [
+    { name: '모둠장', students: ['가', '나'] },
+    { name: '기록자', students: ['다'] }
+  ]);
+
+  const legacyRoles = buildRoleHistoryResult({ assignments: [
+    { role: '청소', studentId: 'a', studentName: '가' },
+    { role: '청소', studentId: 'b', studentName: '나' },
+    { role: '급식', studentId: 'c', studentName: '다' }
+  ] });
+  assert.deepEqual(legacyRoles.map((role) => [role.name, role.count]), [['청소', 2], ['급식', 1]]);
+});
+
 test('이전 앱 학급 설정은 이름이 하나로 일치하는 아지트 학생만 UUID로 바꾼다', () => {
   const archive = {
     classes: [{ id: 1, name: '옛 반', seatSettings: {
@@ -126,12 +162,13 @@ test('이전 앱 학급 설정은 이름이 하나로 일치하는 아지트 학
 });
 
 test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 계약을 가진다', async () => {
-  const [manifest, api, migration, registry, teacherEntry, settingsEntry, legacyImport, teacherGuides, seatEntry, seatLotteryModal, roleEntry, roleLotteryModal, lotteryMachine, arrangementCss] = await Promise.all([
+  const [manifest, api, migration, registry, teacherEntry, historyResultBoard, settingsEntry, legacyImport, teacherGuides, seatEntry, seatLotteryModal, roleEntry, roleLotteryModal, lotteryMachine, arrangementCss] = await Promise.all([
     readFile('src/modules/tool/classroom-arrangement/manifest.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/classroomArrangementApi.js', 'utf8'),
     readFile('supabase/migrations/20261159_classroom_arrangement_tool.sql', 'utf8'),
     readFile('src/modules/registry.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/TeacherEntry.jsx', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/HistoryResultBoard.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/ArrangementSettings.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/legacyImport.js', 'utf8'),
     readFile('src/constants/teacherGuides.js', 'utf8'),
@@ -178,6 +215,13 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(arrangementCss, /\.arrange-lottery \{ position:absolute;[^}]*top:50%;[^}]*transform:translate\(-50%,-50%\)/);
   assert.doesNotMatch(arrangementCss, /\.arrange-lottery \{[^}]*position:fixed/);
   assert.match(teacherEntry, /arrange-settings-utilities/);
+  assert.match(teacherEntry, /<HistoryResultBoard kind=\{selected\.kind\} payload=\{selected\.payload\}/);
+  assert.match(historyResultBoard, /arrange-history-seat-grid/);
+  assert.match(historyResultBoard, /arrange-history-role-cards/);
+  assert.match(historyResultBoard, /role\.assignments\.map/);
+  assert.doesNotMatch(teacherEntry, /selected\.payload\?\.assignments \|\| \[\]/);
+  assert.match(arrangementCss, /\.arrange-history-seat-grid/);
+  assert.match(arrangementCss, /\.arrange-history-role-cards/);
   assert.match(arrangementCss, /\.arrange-settings-utilities \{ display:grid; grid-template-columns:/);
   assert.match(seatEntry, /setModalOpen\(true\)/);
   assert.match(seatEntry, /setFlyingPick\(\{ \.\.\.pick, flightDuration:/);
