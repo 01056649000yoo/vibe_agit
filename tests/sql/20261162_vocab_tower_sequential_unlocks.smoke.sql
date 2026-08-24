@@ -69,7 +69,7 @@ BEGIN
         status, question_count, answered_count, correct_count, passed, finished_at
     ) VALUES (
         v_student.id, v_student.class_id, 'vocab',
-        public.vocab_tower_v2_collection_key(v_grade, 2), 'collection',
+        public.vocab_tower_v2_collection_key(v_grade, 2::SMALLINT), 'collection',
         'completed', 1, 1, 1, TRUE, NOW()
     );
     v_highest := public.vocab_tower_v2_highest_unlocked_deck_v1(
@@ -84,7 +84,7 @@ BEGIN
         status, question_count, answered_count, correct_count, passed, finished_at
     ) VALUES (
         v_student.id, v_student.class_id, 'vocab',
-        public.vocab_tower_v2_collection_key(v_grade, 1), 'collection',
+        public.vocab_tower_v2_collection_key(v_grade, 1::SMALLINT), 'collection',
         'completed', 1, 1, 1, TRUE, NOW()
     );
     v_highest := public.vocab_tower_v2_highest_unlocked_deck_v1(
@@ -145,7 +145,7 @@ BEGIN
         status, question_count, answered_count, correct_count, passed, finished_at
     ) VALUES (
         v_student.id, v_student.class_id, 'vocab',
-        public.vocab_tower_v2_summit_key(v_grade, 2), 'summit',
+        public.vocab_tower_v2_summit_key(v_grade, 2::SMALLINT), 'summit',
         'completed', 1, 1, 1, TRUE, NOW()
     );
 
