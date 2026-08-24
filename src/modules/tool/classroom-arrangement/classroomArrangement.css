@@ -54,7 +54,7 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 .arrange-seat.is-active { border:2px solid #9fb7e8; background:linear-gradient(145deg,#fff,#eef4ff); color:#8291a5; cursor:crosshair; }
 .arrange-seat small,.arrange-seat strong { display:block; }
 .arrange-seat small { font-size:.58rem; font-weight:800; }
-.arrange-seat strong { margin-top:3px; color:#7890ba; font-size:.78rem; }
+.arrange-seat strong { margin-top:3px; color:#7890ba; font-size:calc(.78rem * var(--arrange-name-scale, 1)); }
 .arrange-seat.is-revealed { border-color:#315fc4; background:linear-gradient(145deg,#edf5ff,#dbeafe); animation:arrange-pop .35s ease; }
 .arrange-seat.is-revealed strong { color:#173e91; }
 @keyframes arrange-pop { 0%{transform:scale(.7) rotate(-3deg)} 70%{transform:scale(1.08)} 100%{transform:scale(1)} }
@@ -97,11 +97,11 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 .arrange-seat-lottery-seat.is-active { border:2px solid #b5c7e8; background:linear-gradient(145deg,#fff,#f1f5fb); color:#94a3b8; }
 .arrange-seat-lottery-seat small,.arrange-seat-lottery-seat strong { display:block; }
 .arrange-seat-lottery-seat small { font-size:.58rem; font-weight:850; }
-.arrange-seat-lottery-seat strong { margin-top:4px; color:#9aa9bd; font-size:.76rem; }
+.arrange-seat-lottery-seat strong { margin-top:4px; color:#9aa9bd; font-size:calc(.76rem * var(--arrange-name-scale, 1)); }
 .arrange-seat-lottery-seat.is-target { border-color:#f59e0b; background:#fffbeb; box-shadow:0 0 0 4px rgba(245,158,11,.13); animation:arrange-seat-target .55s ease-in-out infinite alternate; }
 @keyframes arrange-seat-target { from{transform:scale(.98)} to{transform:scale(1.045)} }
 .arrange-seat-lottery-seat.is-filled { border-color:#315fc4; background:linear-gradient(145deg,#eff6ff,#dbeafe); box-shadow:0 7px 16px rgba(49,95,196,.13); animation:arrange-seat-arrival .38s cubic-bezier(.2,.9,.3,1.35); }
-.arrange-seat-lottery-seat.is-filled strong { color:#173e91; font-size:.86rem; }
+.arrange-seat-lottery-seat.is-filled strong { color:#173e91; font-size:calc(.86rem * var(--arrange-name-scale, 1)); }
 @keyframes arrange-seat-arrival { 0%{transform:scale(.65);filter:brightness(1.5)} 65%{transform:scale(1.12)} 100%{transform:scale(1);filter:none} }
 .arrange-role-draw-stage { background:radial-gradient(circle at 50% 45%,#f5f3ff,#faf5ff 48%,#f4f7fb 100%); }
 .arrange-role-lottery-board { min-width:0; overflow:auto; padding:20px; background:linear-gradient(180deg,#faf9ff,#fff); }
@@ -117,16 +117,19 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 .arrange-role-lottery-card>div { display:grid; gap:7px; padding:10px; }
 .arrange-role-lottery-slot { display:flex; justify-content:space-between; gap:8px; align-items:center; min-height:42px; padding:8px 10px; border:1px dashed #d8d3e8; border-radius:10px; box-sizing:border-box; background:#fcfbff; color:#9a93ae; }
 .arrange-role-lottery-slot small { flex-shrink:0; font-size:.58rem; font-weight:850; }
-.arrange-role-lottery-slot strong { overflow:hidden; font-size:.78rem; text-overflow:ellipsis; white-space:nowrap; }
+.arrange-role-lottery-slot strong { overflow:hidden; font-size:calc(.78rem * var(--arrange-name-scale, 1)); text-overflow:ellipsis; white-space:nowrap; }
 .arrange-role-lottery-slot.is-target { border-color:#f59e0b; background:#fffbeb; box-shadow:0 0 0 4px rgba(245,158,11,.13); animation:arrange-seat-target .55s ease-in-out infinite alternate; }
 .arrange-role-lottery-slot.is-filled { border-style:solid; border-color:#8b7fe0; background:linear-gradient(145deg,#f5f3ff,#ede9fe); color:#4438a0; box-shadow:0 7px 16px rgba(91,79,196,.12); animation:arrange-seat-arrival .38s cubic-bezier(.2,.9,.3,1.35); }
-.arrange-role-lottery-slot.is-filled strong { color:#4438a0; font-size:.84rem; }
+.arrange-role-lottery-slot.is-filled strong { color:#4438a0; font-size:calc(.84rem * var(--arrange-name-scale, 1)); }
 .arrange-role-flight { border-color:#a78bfa; color:#5b21b6; box-shadow:0 10px 26px rgba(91,33,182,.25); }
 .arrange-seat-lottery-modal>footer { display:flex; justify-content:center; gap:9px; align-items:center; min-height:54px; padding:10px 20px; border-top:1px solid #e2e8f0; box-sizing:border-box; background:#f8fafc; color:#536176; font-size:.75rem; }
 .arrange-seat-lottery-modal>footer.is-done { justify-content:space-between; background:#eff6ff; }
 .arrange-seat-lottery-modal>footer.is-done>div { display:grid; gap:2px; }
 .arrange-seat-lottery-modal>footer.is-done span { color:#64748b; font-size:.7rem; }
 .arrange-seat-lottery-modal>footer button { border:0; border-radius:11px; padding:10px 15px; background:#315fc4; color:#fff; font-weight:900; cursor:pointer; }
+/* 중단은 완료 버튼과 달리 눈에 덜 띄게 둔다 — 평소에는 누를 일이 없고, 누르면 결과가 사라진다. */
+.arrange-seat-lottery-modal>footer button.arrange-lottery-cancel { margin-left:10px; padding:6px 12px; border:1px solid #cbd5e1; border-radius:9px; background:#fff; color:#64748b; font-size:.72rem; font-weight:800; }
+.arrange-seat-lottery-modal>footer button.arrange-lottery-cancel:hover { border-color:#f87171; background:#fef2f2; color:#dc2626; }
 .arrange-seat-lottery-pulse { width:9px; height:9px; border-radius:50%; background:#f59e0b; box-shadow:0 0 0 0 rgba(245,158,11,.45); animation:arrange-lottery-pulse 1.15s ease-out infinite; }
 @keyframes arrange-lottery-pulse { 70%{box-shadow:0 0 0 8px rgba(245,158,11,0)} 100%{box-shadow:0 0 0 0 rgba(245,158,11,0)} }
 .arrange-seat-flight { position:fixed; z-index:240; left:var(--flight-left); top:var(--flight-top); max-width:140px; overflow:hidden; padding:9px 14px; border:2px solid #f6c453; border-radius:999px; background:#fff; color:#b45309; font-size:.9rem; font-weight:950; text-overflow:ellipsis; white-space:nowrap; box-shadow:0 10px 26px rgba(146,64,14,.3); transform:translate(-50%,-50%); animation:arrange-seat-flight var(--flight-duration) cubic-bezier(.3,.05,.25,1) forwards; }
@@ -280,11 +283,11 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
   .arrange-role-lottery-card>div { gap:5px; padding:6px; }
   .arrange-role-lottery-slot { min-height:34px; padding:5px 6px; border-radius:7px; }
   .arrange-role-lottery-slot small { display:none; }
-  .arrange-role-lottery-slot strong,.arrange-role-lottery-slot.is-filled strong { font-size:.68rem; }
+  .arrange-role-lottery-slot strong,.arrange-role-lottery-slot.is-filled strong { font-size:calc(.68rem * var(--arrange-name-scale, 1)); }
   .arrange-seat-lottery-blackboard { margin-bottom:11px; padding:6px; border-width:4px; font-size:.65rem; }
   .arrange-seat-lottery-grid { gap:5px; }
   .arrange-seat-lottery-seat { min-height:55px; border-radius:8px; }
-  .arrange-seat-lottery-seat.is-filled strong { font-size:.75rem; }
+  .arrange-seat-lottery-seat.is-filled strong { font-size:calc(.75rem * var(--arrange-name-scale, 1)); }
   .arrange-seat-lottery-modal>footer { min-height:50px; padding:8px 12px; }
   .arrange-seat-lottery-modal>footer.is-done span { display:none; }
   .arrange-seat-flight { max-width:100px; padding:7px 10px; font-size:.75rem; }
@@ -295,3 +298,12 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
   .arrange-history-role-cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
   .arrange-history-open em { display:none; }
 }
+
+
+/* 전자칠판용 이름 크기 조절 — 이름이 커지면 칸도 같이 커져야 글자가 잘리지 않는다. */
+.arrange-name-size { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+.arrange-name-size>span { color:#64748b; font-size:.68rem; font-weight:800; }
+.arrange-name-size button { min-width:30px; padding:5px 8px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; color:#475569; font-weight:900; cursor:pointer; }
+.arrange-name-size button.is-on { border-color:#315fc4; background:#eff4ff; color:#1d4ed8; }
+.arrange-seat-lottery-modal { --arrange-name-scale:1; }
+.arrange-seat-lottery-seat,.arrange-role-lottery-slot,.arrange-seat { min-height:calc(46px * var(--arrange-name-scale, 1)); }

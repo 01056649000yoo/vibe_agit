@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { arrangementSfx } from './arrangementSfx';
 import { buildRoleSlots, solveRoles } from './arrangementEngine';
 import RoleLotteryModal from './RoleLotteryModal';
+import { useNameSize } from './NameSizeControl';
 
 const newRoleId = () => typeof crypto?.randomUUID === 'function' ? crypto.randomUUID() : `role-${Date.now()}-${Math.random()}`;
 const ROLE_LOTTERY_STEP = 950;
@@ -10,6 +11,8 @@ export default function RoleArrangement({ students, settings, history, onSetting
   const [roleName, setRoleName] = useState('');
   const [roleCount, setRoleCount] = useState(1);
   const [phase, setPhase] = useState('idle');
+  // 결과판과 뽑기 창이 **같은 크기 값**을 쓴다. 창에만 두면 닫는 순간 이름이 다시 작아진다.
+  const { sizeId, setSizeId, scale } = useNameSize();
   const [assignments, setAssignments] = useState([]);
   const [revealed, setRevealed] = useState(new Set());
   const [rollingName, setRollingName] = useState('');
@@ -115,7 +118,7 @@ export default function RoleArrangement({ students, settings, history, onSetting
         {phase !== 'idle' ? <button type="button" className="arrange-secondary" onClick={reset}>결과 지우기</button> : null}
       </section>
 
-      <section className="arrange-role-board">
+      <section className="arrange-role-board" style={{ '--arrange-name-scale': scale }}>
         <div className="arrange-role-cards">
           {settings.roleGroups.length === 0 ? <div className="arrange-empty">왼쪽에서 역할과 인원을 추가해 주세요.</div> : settings.roleGroups.map((role) => <article key={role.id} className="arrange-role-card">
             <header><span>역할</span><strong>{role.name}</strong><small>{byRole.get(role.id)?.length || 0}/{role.count}명</small></header>
@@ -128,6 +131,6 @@ export default function RoleArrangement({ students, settings, history, onSetting
         {phase === 'done' && violations > 0 ? <div className="arrange-condition-note">조건을 모두 만족하는 조합이 없어 가장 가까운 결과로 나눴습니다. 위반 점수 {violations}</div> : null}
       </section>
     </div>
-    {modalOpen ? <RoleLotteryModal roleGroups={settings.roleGroups} assignments={assignments} revealed={revealed} rollingName={rollingName} flyingPick={flyingPick} phase={phase} onClose={closeLotteryModal} /> : null}
+    {modalOpen ? <RoleLotteryModal roleGroups={settings.roleGroups} assignments={assignments} revealed={revealed} rollingName={rollingName} flyingPick={flyingPick} phase={phase} onClose={closeLotteryModal} onCancel={reset} sizeId={sizeId} onSizeChange={setSizeId} scale={scale} /> : null}
   </>;
 }

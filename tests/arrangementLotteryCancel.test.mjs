@@ -1,0 +1,136 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+const read = (path) => readFile(`src/modules/tool/classroom-arrangement/${path}`, 'utf8');
+
+/*
+ * 2026-08-24: 자리·역할 뽑기를 시작하면 끝날 때까지 멈출 방법이 없었다.
+ * 창에는 "추첨이 끝날 때까지 창을 그대로 두세요" 만 있었다.
+ * 수업 중에 잘못 시작하면 다 끝나기를 기다려야 했다.
+ *
+ * ⚠️ 자리와 역할은 **같은 구조를 두 벌 갖고 있다**. 한쪽만 고치면 다른 쪽이 그대로 남으므로
+ * 이 검사는 두 벌을 **한꺼번에** 본다(검사를 쪼개면 반쪽 수정을 못 잡는다).
+ */
+
+const PAIRS = [
+    { screen: 'SeatArrangement.jsx', modal: 'SeatLotteryModal.jsx', what: '자리' },
+    { screen: 'RoleArrangement.jsx', modal: 'RoleLotteryModal.jsx', what: '역할' }
+];
+
+test('자리·역할 뽑기 모두 진행 중에 멈출 수 있다', async () => {
+    for (const { screen, modal, what } of PAIRS) {
+        const [screenSource, modalSource] = await Promise.all([read(screen), read(modal)]);
+
+        // 화면이 창에 중단 함수를 넘긴다. reset 은 타이머를 끄고 처음 상태로 되돌린다.
+        assert.match(screenSource, /onCancel=\{reset\}/, `${screen}: 중단 함수를 창에 넘기지 않는다`);
+
+        // 창이 그 함수를 받아 버튼으로 노출한다.
+        assert.ok(modalSource.includes('onClose, onCancel,'), `${modal}: onCancel 을 받지 않는다`);
+        assert.match(modalSource, /className="arrange-lottery-cancel"/, `${modal}: 중단 버튼이 없다`);
+        assert.ok(modalSource.includes('중단하기'), `${modal}: 중단 버튼 글자가 없다`);
+
+        // 되돌릴 수 없는 동작이므로 한 번 물어본다.
+        assert.ok(
+            modalSource.includes(`window.confirm('${what} 뽑기를 중단할까요?`),
+            `${modal}: 묻지 않고 바로 중단한다`
+        );
+
+        // 예전의 "그대로 두세요" 안내는 남아 있으면 안 된다 — 이제 멈출 수 있다.
+        assert.ok(
+            !modalSource.includes('추첨이 끝날 때까지 창을 그대로 두세요'),
+            `${modal}: 멈출 수 없다는 옛 안내가 남아 있다`
+        );
+    }
+});
+
+test('중단은 타이머를 끄고 처음 상태로 되돌린다', async () => {
+    for (const { screen } of PAIRS) {
+        const source = await read(screen);
+
+        // reset 이 예약된 동작을 전부 끄지 않으면, 창을 닫아도 뒤에서 계속 돈다.
+        const resetStart = source.indexOf('const reset = () => {');
+        assert.ok(resetStart >= 0, `${screen}: reset 을 찾지 못했다`);
+        const resetBody = source.slice(resetStart, source.indexOf('};', resetStart));
+
+        assert.ok(resetBody.includes('timers.current.forEach(window.clearTimeout)'), `${screen}: 예약된 뽑기를 끄지 않는다`);
+        assert.ok(resetBody.includes("setPhase('idle')"), `${screen}: 처음 상태로 되돌리지 않는다`);
+        assert.ok(resetBody.includes('setModalOpen(false)'), `${screen}: 창을 닫지 않는다`);
+    }
+});
+
+/*
+ * 2026-08-24: 교실 **전자칠판**에 띄우면 이름이 작아 아이들이 자기 이름을 못 찾았다.
+ * 칠판 크기와 반 인원이 교실마다 달라 한 값으로 못 맞추므로 교사가 고르게 한다.
+ *
+ * ⚠️ 이름이 나오는 곳이 네 군데다. 각각에 크기를 박으면 또 한 곳만 고치게 되므로
+ * **CSS 변수 하나**를 곱해 쓰고, 이 검사가 네 곳을 한꺼번에 본다.
+ */
+test('이름 크기는 한 값으로 네 곳이 함께 바뀐다', async () => {
+    const css = await readFile('src/modules/tool/classroom-arrangement/classroomArrangement.css', 'utf8');
+
+    // 이름을 그리는 네 자리가 모두 같은 변수를 곱해 쓴다.
+    const namePlaces = [
+        '.arrange-seat strong',
+        '.arrange-seat-lottery-seat.is-filled strong',
+        '.arrange-role-lottery-slot.is-filled strong'
+    ];
+    // ⚠️ 같은 선택자가 여러 규칙에 나온다(display 만 정하는 것도 있다).
+    //    정규식을 만들지 않고, 규칙을 하나씩 잘라 보며 글자 크기를 정하는 것만 고른다.
+    const rulesFor = (selector) => css
+        .split('}')
+        .map((chunk) => chunk + '}')
+        .filter((rule) => rule.includes(selector) && rule.includes('font-size'));
+
+    for (const place of namePlaces) {
+        const rules = rulesFor(place);
+        assert.ok(rules.length > 0, `${place} 의 글자 크기 규칙을 찾지 못했다`);
+        for (const rule of rules) {
+            assert.ok(rule.includes('var(--arrange-name-scale'), `${place} 가 이름 크기 값을 따르지 않는다`);
+        }
+    }
+
+    // 좁은 화면(`@media`)용 규칙도 같은 값을 따라야 한다 — 여기만 빠지면 태블릿에서 안 커진다.
+    // ⚠️ 자리 번호(`1-1`)를 그리는 `small` 은 대상이 아니다. 커질 필요가 없고, 커지면 칸만 넓어진다.
+    // 이름 칸(`.arrange-seat`·`.arrange-...-seat`·`.arrange-...-slot` 바로 아래 strong)만 본다.
+    // 머리말의 인원 표시(`.arrange-seat-lottery-header>strong`)나 자리 번호(`small`)는 대상이 아니다.
+    const nameRules = rulesFor('strong').filter((rule) => (
+        rule.includes('-seat strong')
+        || rule.includes('-seat.is-filled strong')
+        || rule.includes('-slot strong')
+        || rule.includes('-slot.is-filled strong')
+    ));
+    assert.ok(nameRules.length >= 4, `이름 규칙이 ${nameRules.length}개뿐이다 — 찾는 방법이 어긋났다`);
+    for (const rule of nameRules) {
+        assert.ok(rule.includes('var(--arrange-name-scale'), `이름 크기를 따르지 않는 규칙이 있다: ${rule.trim().slice(0, 70)}`);
+    }
+});
+
+/*
+ * ⚠️ 크기 값을 뽑기 창에만 얹으면 **창을 닫는 순간 이름이 다시 작아진다**.
+ *    결과판은 창 밖(포털 밖)이라 값이 닿지 않기 때문이다. 두 곳 모두에 얹어야 한다.
+ */
+test('창을 닫고 결과판을 봐도 고른 크기가 유지된다', async () => {
+    for (const { screen } of PAIRS) {
+        const source = await read(screen);
+        assert.ok(source.includes('const { sizeId, setSizeId, scale } = useNameSize();'), `${screen}: 크기 상태를 갖고 있지 않다`);
+        assert.ok(source.includes("'--arrange-name-scale': scale"), `${screen}: 결과판에 크기가 닿지 않는다`);
+        assert.ok(source.includes('sizeId={sizeId} onSizeChange={setSizeId} scale={scale}'), `${screen}: 창에 같은 값을 넘기지 않는다`);
+    }
+});
+
+test('이름 크기 조절은 두 창에 모두 있고 고른 값을 기억한다', async () => {
+    const control = await read('NameSizeControl.jsx');
+
+    assert.match(control, /NAME_SIZE_STEPS/);
+    assert.ok(control.includes('window.localStorage.setItem'), '고른 크기를 기억하지 않는다');
+    // 저장소가 막힌 환경에서도 화면이 죽으면 안 된다.
+    assert.match(control, /catch \{/);
+
+    for (const { modal } of PAIRS) {
+        const source = await read(modal);
+        assert.ok(source.includes('<NameSizeControl sizeId={sizeId} onChange={onSizeChange} />'), `${modal}: 조절 버튼이 없다`);
+        assert.ok(source.includes("'--arrange-name-scale': scale"), `${modal}: 고른 크기가 창에 적용되지 않는다`);
+    }
+});

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { arrangementSfx } from './arrangementSfx';
 import SeatLotteryModal from './SeatLotteryModal';
+import { useNameSize } from './NameSizeControl';
 import { hasExactSeatCount, rectangularSeats, seatKey, seatsWithinGrid, solveSeats, suggestSeatLayout } from './arrangementEngine';
 
 const parseQuickNames = (text) => text.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean).slice(0, 100);
@@ -28,6 +29,8 @@ export default function SeatArrangement({ students, settings, history, onSetting
   const [flyingPick, setFlyingPick] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [phase, setPhase] = useState('idle');
+  // 결과판과 뽑기 창이 **같은 크기 값**을 쓴다. 창에만 두면 닫는 순간 이름이 다시 작아진다.
+  const { sizeId, setSizeId, scale } = useNameSize();
   const [speed, setSpeed] = useState('normal');
   const [violations, setViolations] = useState(0);
   const [conditionError, setConditionError] = useState('');
@@ -180,7 +183,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
             <em>{seatCountMatches ? '좌석 일치' : `좌석 ${activeSeats.size}석`}</em>
           </output>
         </div>
-        <div className="arrange-seat-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(54px, 1fr))` }}>
+        <div className="arrange-seat-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(54px, 1fr))`, '--arrange-name-scale': scale }}>
           {Array.from({ length: rows * cols }, (_, index) => {
             const row = Math.floor(index / cols);
             const col = index % cols;
@@ -196,6 +199,6 @@ export default function SeatArrangement({ students, settings, history, onSetting
         {phase === 'done' && violations > 0 ? <div className="arrange-condition-note">필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과로 배치했습니다. 권장 점수 {violations}</div> : null}
       </section>
     </div>
-    {modalOpen ? <SeatLotteryModal rows={rows} cols={cols} activeSeats={activeSeats} assignments={assignments} revealed={revealed} rollingName={rollingName} flyingPick={flyingPick} phase={phase} onClose={closeLotteryModal} /> : null}
+    {modalOpen ? <SeatLotteryModal rows={rows} cols={cols} activeSeats={activeSeats} assignments={assignments} revealed={revealed} rollingName={rollingName} flyingPick={flyingPick} phase={phase} onClose={closeLotteryModal} onCancel={reset} sizeId={sizeId} onSizeChange={setSizeId} scale={scale} /> : null}
   </>;
 }

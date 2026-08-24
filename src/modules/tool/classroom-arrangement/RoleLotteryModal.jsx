@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import ModalPortal from '../../../components/common/ModalPortal';
 import LotteryMachine from './LotteryMachine';
+import NameSizeControl from './NameSizeControl';
 import { useLotteryDialog, useLotteryFlight } from './lotteryModalHooks';
 
-export default function RoleLotteryModal({ roleGroups, assignments, revealed, rollingName, flyingPick, phase, onClose }) {
+export default function RoleLotteryModal({ roleGroups, assignments, revealed, rollingName, flyingPick, phase, onClose, onCancel, sizeId, onSizeChange, scale }) {
   const { dialogRef, finishButtonRef } = useLotteryDialog(phase, onClose);
   const { sourceRef, flight } = useLotteryFlight(flyingPick, 'data-modal-role-slot', flyingPick?.id);
   const assignmentBySlot = useMemo(() => new Map(assignments.map((item) => [item.id, item])), [assignments]);
@@ -18,9 +19,10 @@ export default function RoleLotteryModal({ roleGroups, assignments, revealed, ro
 
   return <ModalPortal>
     <div className="arrange-seat-lottery-backdrop">
-      <section ref={dialogRef} className="arrange-seat-lottery-modal" role="dialog" aria-modal="true" aria-labelledby="role-lottery-title" aria-describedby="role-lottery-description" tabIndex="-1">
+      <section ref={dialogRef} className="arrange-seat-lottery-modal" style={{ '--arrange-name-scale': scale }} role="dialog" aria-modal="true" aria-labelledby="role-lottery-title" aria-describedby="role-lottery-description" tabIndex="-1">
         <header className="arrange-seat-lottery-header">
           <div><span>실시간 역할 추첨</span><h2 id="role-lottery-title">누가 어떤 역할을 맡을까요?</h2><p id="role-lottery-description">한 명씩 뽑아 이름표가 도착한 역할 칸에 바로 배정합니다.</p></div>
+          <NameSizeControl sizeId={sizeId} onChange={onSizeChange} />
           <strong>{completed} / {assignments.length}명</strong>
         </header>
 
@@ -56,7 +58,18 @@ export default function RoleLotteryModal({ roleGroups, assignments, revealed, ro
         </div>
 
         <footer className={phase === 'done' ? 'is-done' : ''}>
-          {phase === 'done' ? <><div><strong>역할 나누기 완료</strong><span>모든 학생의 이름표가 역할 칸에 도착했습니다.</span></div><button ref={finishButtonRef} type="button" onClick={onClose}>완성된 역할표 보기</button></> : <><span className="arrange-seat-lottery-pulse" aria-hidden="true" /><strong>추첨이 끝날 때까지 창을 그대로 두세요.</strong></>}
+          {phase === 'done' ? <><div><strong>역할 나누기 완료</strong><span>모든 학생의 이름표가 역할 칸에 도착했습니다.</span></div><button ref={finishButtonRef} type="button" onClick={onClose}>완성된 역할표 보기</button></> : <>
+            <span className="arrange-seat-lottery-pulse" aria-hidden="true" />
+            <strong>역할 뽑기를 하고 있어요.</strong>
+            {/* 되돌릴 수 없으므로 한 번 물어본다. 수업 중에 잘못 눌러 처음부터 다시 하는 일이 없게. */}
+            <button
+              type="button"
+              className="arrange-lottery-cancel"
+              onClick={() => { if (window.confirm('역할 뽑기를 중단할까요?\n지금까지 뽑은 결과는 사라집니다.')) onCancel?.(); }}
+            >
+              중단하기
+            </button>
+          </>}
         </footer>
       </section>
       {flight && flyingPick ? <span key={flight.key} className="arrange-seat-flight arrange-role-flight" aria-hidden="true" style={{
