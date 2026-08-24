@@ -86,9 +86,19 @@
 /* 낱말 상태 머리줄 — 네 상태가 무슨 뜻인지 눌러서 펼쳐 본다(2026-08-24). */
 .vocab-deck-card__states-head { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
 .vocab-deck-card__states-head > span { color: #5d6a7d; font-size: .68rem; font-weight: 850; }
-.vocab-deck-card__states-help ul { margin: 6px 0 0; padding-left: 17px; }
-.vocab-deck-card__states-help li { margin-bottom: 4px; line-height: 1.5; }
-.vocab-deck-card__states-help small { display: block; margin-top: 7px; color: #5d6a7d; line-height: 1.5; }
+/* 낱말 상태 설명 창 — 게임 화면 안 오버레이(`vocab-journey__overlay`)로 띄운다.
+   공용 Modal(9999)은 게임 화면(20000) 뒤에 숨어서 쓸 수 없다(2026-08-17 확인). */
+.vocab-states-help { width: min(460px, 100%); text-align: left; }
+.vocab-states-help h2 { text-align: center; }
+.vocab-states-help__list { display: grid; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.vocab-states-help__list li { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; }
+.vocab-states-help__list strong { font-size: .95rem; }
+.vocab-states-help__list span { color: #40506a; font-size: .82rem; line-height: 1.5; }
+.vocab-states-help__list .is-new { background: #eef2f7; color: #526173; }
+.vocab-states-help__list .is-learning { background: #eef0ff; color: #4d56a3; }
+.vocab-states-help__list .is-review { background: #fff0f1; color: #b23d4b; }
+.vocab-states-help__list .is-mastered { background: #e5f7ec; color: #217047; }
+.vocab-states-help__note { margin: 14px 0 0; padding: 10px 12px; border-radius: 12px; background: #fff8e6; color: #7a5b12; font-size: .82rem; line-height: 1.55; text-align: center; }
 .vocab-deck-card__states { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .vocab-deck-card__states > div { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; padding: 7px 8px; border-radius: 10px; }
 .vocab-deck-card__states span { color: #5d6a7d; font-size: .64rem; font-weight: 800; }

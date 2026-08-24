@@ -419,7 +419,11 @@ test('학생은 놀이터 카드에서 바로 어휘의 탑 도움말을 연다'
 test('게임 실행 화면 안에는 안내 창을 띄우지 않는다', () => {
     // 게임 화면은 zIndex 20000 이고 공용 Modal 은 9999 라, 그 안에서 창을 열면 뒤에 숨고
     // 몸통 스크롤만 잠겨 학생이 닫지도 못한다(2026-08-17 지도 도움말에서 실제로 발생해 제거).
-    assert.doesNotMatch(v2DeckMap, /StudentModuleGuide/);
+    //
+    // ⚠️ 이름만 보면 **왜 쓰면 안 되는지 적어 둔 주석까지** 걸린다(2026-08-24에 실제로 걸렸다).
+    //    그래서 산문이 아니라 `import` 와 JSX 로 **실제로 쓰는지**만 본다.
+    assert.doesNotMatch(v2DeckMap, /import\s+StudentModuleGuide|<StudentModuleGuide/);
+    assert.doesNotMatch(v2DeckMap, /import\s+Modal\b|<Modal[\s/>]/);
     assert.doesNotMatch(v2DeckMap, /vocab-deck-map__guide/);
     assert.doesNotMatch(vocabularyStyles, /vocab-deck-map__guide/);
     assert.match(studentDashboard, /zIndex: 20000/);
@@ -591,6 +595,11 @@ test('낱말 상태 네 가지와 나눠 받는 포인트를 교사·학생 화�
     assert.ok(teacher.includes('덱마스터 통과로는 포인트가 나오지 않습니다'), '교사 화면이 통과 보상 오해를 막지 않는다');
     assert.ok(student.includes('네 번 나눠 받아요'), '학생 화면이 포인트를 나눠 받는다고 알려주지 않는다');
 
-    // 학생 화면은 눌러서 펼치는 도움말이라 여닫는 통로가 있어야 한다.
-    assert.ok(student.includes('states-${deckNumber}'), '학생 낱말 상태 도움말을 여닫을 수 없다');
+    // 학생 화면은 `💡 도움말` 알약을 눌러 창으로 본다. ⓘ 아이콘은 다른 뜻이라 쓰지 않는다.
+    assert.ok(student.includes('variant="help"'), '학생 낱말 상태 도움말이 공용 도움말 모양이 아니다');
+    assert.ok(student.includes('setStatesHelpOpen(true)'), '학생 낱말 상태 창을 열 수 없다');
+    assert.ok(student.includes('aria-modal="true"'), '낱말 상태 설명이 창으로 읽히지 않는다');
+    // 게임 화면 안이라 공용 Modal 을 못 쓴다. 이 모듈의 오버레이를 쓰는지 확인한다.
+    assert.ok(student.includes('vocab-journey__overlay'), '게임 화면 안에서 뜨는 오버레이를 쓰지 않는다');
+    assert.ok(student.includes("event.key === 'Escape'"), '창을 Esc 로 닫을 수 없다');
 });

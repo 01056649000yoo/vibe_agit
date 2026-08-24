@@ -19,6 +19,13 @@ const V2DeckMap = ({
     // 잠긴 도전은 버튼을 감추지 않고 늘 보여 준다. 무엇을 하면 열리는지 눌러서 확인한다.
     // 값 하나로 층 번호 또는 'summit' 을 담는다(한 번에 하나만 펼친다).
     const [openedCondition, setOpenedCondition] = React.useState(null);
+    /*
+     * ⚠️ 여기서는 공용 `Modal`/`StudentModuleGuide` 를 쓸 수 없다. 게임 실행 화면이 `zIndex: 20000`
+     *    이고 공용 `Modal` 은 9999라 창이 화면 뒤에 숨고 몸통 스크롤만 잠겨 학생이 닫지도 못한다
+     *    (2026-08-17 바로 이 지도에서 겪어 제거한 적이 있다).
+     *    그래서 이 모듈이 이미 쓰는 `vocab-journey__overlay`(게임 화면 안쪽 오버레이)로 띄운다.
+     */
+    const [statesHelpOpen, setStatesHelpOpen] = React.useState(false);
     const activeDeckNumber = Number(activeRun?.deck_number || 0);
     const totalItems = decks.reduce((sum, deck) => sum + Number(deck.item_count || 0), 0);
     const totalSeen = decks.reduce((sum, deck) => sum + Number(deck.seen_count || 0), 0);
@@ -66,6 +73,14 @@ const V2DeckMap = ({
         });
         return () => window.cancelAnimationFrame(frame);
     }, [suggestedDeckNumber]);
+
+    // 창은 Esc 로도 닫는다. 게임 화면 안 오버레이라 공용 Modal 의 Esc 처리를 못 쓴다.
+    React.useEffect(() => {
+        if (!statesHelpOpen) return undefined;
+        const closeOnEscape = (event) => { if (event.key === 'Escape') setStatesHelpOpen(false); };
+        window.addEventListener('keydown', closeOnEscape);
+        return () => window.removeEventListener('keydown', closeOnEscape);
+    }, [statesHelpOpen]);
 
     return (
         <div className="vocab-journey vocab-journey--deck-map">
@@ -320,13 +335,12 @@ const V2DeckMap = ({
                                         </div>
                                         <div className="vocab-deck-card__states-head">
                                             <span>낱말 상태</span>
-                                            {/* 네 낱말이 무슨 뜻인지 물어보는 학생이 많다(2026-08-24).
-                                                정상 도움말과 같은 방식으로 눌러서 펼쳐 본다. */}
+                                            {/* 교사·학생 화면의 도움말은 `💡 도움말` 알약으로 통일한다.
+                                                ⓘ 아이콘은 다른 뜻(짧은 덧붙임)이라 여기서는 쓰지 않는다. */}
                                             <GuideInfoButton
-                                                onClick={() => setOpenedCondition((current) => (
-                                                    current === `states-${deckNumber}` ? null : `states-${deckNumber}`
-                                                ))}
-                                                label={`${deckNumber}층 낱말 상태가 무슨 뜻인지 보기`}
+                                                variant="help"
+                                                onClick={(event) => { event.stopPropagation(); setStatesHelpOpen(true); }}
+                                                label="낱말 상태가 무슨 뜻인지 보기"
                                             />
                                         </div>
                                         <div className="vocab-deck-card__states" aria-label={`${deckNumber}층 낱말 학습 상태`}>
@@ -335,18 +349,7 @@ const V2DeckMap = ({
                                             <div className="is-review"><span>다시 볼 낱말</span><strong>{needsReviewCount}</strong></div>
                                             <div className="is-mastered"><span>완전히 익힘</span><strong>{masteredCount}</strong></div>
                                         </div>
-                                        {openedCondition === `states-${deckNumber}` && (
-                                            <div className="vocab-deck-card__condition vocab-deck-card__states-help" role="note">
-                                                <strong>낱말 상태는 이런 뜻이에요</strong>
-                                                <ul>
-                                                    <li><b>처음 볼 낱말</b> — 아직 한 번도 만나지 않았어요. 연습하면 여기부터 줄어들어요.</li>
-                                                    <li><b>연습 중</b> — 만나 봤지만 아직 익히는 중이에요. 조금 더 연습하면 돼요.</li>
-                                                    <li><b>다시 볼 낱말</b> — 틀렸던 낱말이에요. 이 층을 연습하면 <b>먼저 나와요</b>.</li>
-                                                    <li><b>완전히 익힘</b> — <b>서로 다른 두 가지 문제 형태를 힌트 없이 연속으로</b> 맞힌 낱말이에요.</li>
-                                                </ul>
-                                                <small>포인트는 <b>완전히 익힘</b>이 늘어날 때 4분의 1, 반, 4분의 3, 전부에서 네 번 나눠 받아요.</small>
-                                            </div>
-                                        )}
+
                                         <p className="vocab-deck-card__record">12문항 완료 {completedRuns}회{completedRuns > 0 ? ` · 최고 정답률 ${bestAccuracy}%` : ''}</p>
                                         <div className={`vocab-deck-card__reward${rewardCompleted ? ' is-complete' : deckPoints > 0 ? ' is-pending' : ' is-off'}`}>
                                             <span aria-hidden="true">{rewardCompleted ? '✅' : deckPoints > 0 ? '🎁' : '📘'}</span>
@@ -470,6 +473,48 @@ const V2DeckMap = ({
                 {activeDeckNumber > 0 && <p className="vocab-deck-map__active-note">{activeDeckNumber}층 연습을 어서 이어서 끝내보세요.</p>}
                 {notice && <p className="vocab-journey__notice" role="alert">{notice}</p>}
             </main>
+
+            {statesHelpOpen && (
+                <div
+                    className="vocab-journey__overlay"
+                    role="presentation"
+                    onMouseDown={(event) => { if (event.target === event.currentTarget) setStatesHelpOpen(false); }}
+                >
+                    <div
+                        className="vocab-journey__dialog vocab-states-help"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="vocab-states-help-title"
+                    >
+                        <span className="vocab-journey__dialog-icon" aria-hidden="true">🧩</span>
+                        <h2 id="vocab-states-help-title">낱말 상태는 이런 뜻이에요</h2>
+                        <ul className="vocab-states-help__list">
+                            <li className="is-new">
+                                <strong>처음 볼 낱말</strong>
+                                <span>아직 한 번도 만나지 않았어요. 연습하면 여기부터 줄어들어요.</span>
+                            </li>
+                            <li className="is-learning">
+                                <strong>연습 중</strong>
+                                <span>만나 봤지만 아직 익히는 중이에요. 조금 더 연습하면 돼요.</span>
+                            </li>
+                            <li className="is-review">
+                                <strong>다시 볼 낱말</strong>
+                                <span>틀렸던 낱말이에요. 이 층을 연습하면 <b>먼저 나와요</b>.</span>
+                            </li>
+                            <li className="is-mastered">
+                                <strong>완전히 익힘</strong>
+                                <span><b>서로 다른 두 가지 문제 형태를 힌트 없이 연속으로</b> 맞힌 낱말이에요.</span>
+                            </li>
+                        </ul>
+                        <p className="vocab-states-help__note">
+                            포인트는 <b>완전히 익힘</b>이 늘어날 때 4분의 1, 반, 4분의 3, 전부에서 <b>네 번 나눠 받아요</b>.
+                        </p>
+                        <div className="vocab-journey__dialog-actions">
+                            <button type="button" onClick={() => setStatesHelpOpen(false)}>알겠어요</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
