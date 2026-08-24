@@ -479,3 +479,32 @@ test('카드함은 모달이 아니라 게임 화면 단계로 연다', () => {
     // 만난 낱말이 없으면 볼 것이 없으므로 버튼을 만들지 않는다.
     assert.match(v2DeckMap, /seenCount > 0 && \(/);
 });
+
+/*
+ * 2026-08-24: 설정 세 벌(개인 연습·덱마스터·정상 관문)이 세로로 쌓여 글이 작고 스크롤이 길었다.
+ * 갈래로 나눠 한 번에 하나만 본다.
+ *
+ * ⚠️ 갈래로 나눌 때 제일 위험한 것은 **적다 만 값이 사라지는 것**이다. 값을 갈래 안에서 들고 있으면
+ *    갈래를 옮기는 순간 그 갈래가 화면에서 빠지면서 값도 함께 사라진다. 이 검사는 값이 화면 전체가
+ *    들고 있는 `config` 한 벌이고, 저장도 `handleSave` 하나라는 것을 고정한다.
+ */
+test('어휘의 탑 설정은 갈래로 나뉘어도 적다 만 값이 사라지지 않는다', async () => {
+    const source = await readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8');
+
+    // 갈래 세 개가 모두 있고, 각 설정 영역이 갈래에 걸려 있다.
+    for (const id of ['practice', 'master', 'summit']) {
+        assert.ok(source.includes(`id: '${id}'`), `갈래 목록에 ${id}가 없다`);
+        assert.ok(source.includes(`{panel === '${id}' && (`), `${id} 설정이 갈래에 걸려 있지 않다`);
+    }
+
+    // 값은 화면 전체가 한 벌로 들고 있어야 한다 — 갈래 안에서 들면 옮길 때 사라진다.
+    assert.ok(source.includes('const [config, setConfig] = useState(DEFAULT_CONFIG);'), '설정 값이 한 벌이 아니다');
+
+    // 저장이 갈래마다 따로면 한 갈래에서 저장할 때 다른 갈래 값이 빠질 수 있다.
+    assert.equal(source.match(/const handleSave = /g)?.length, 1, '저장 통로가 하나가 아니다');
+    assert.equal(source.match(/onClick=\{handleSave\}/g)?.length, 3, '세 갈래가 같은 저장을 쓰지 않는다');
+
+    // 갈래 줄은 스크린리더에서도 갈래로 읽혀야 한다.
+    assert.ok(source.includes('role="tablist"'), '갈래 줄이 갈래로 읽히지 않는다');
+    assert.ok(source.includes('aria-selected={panel === item.id}'), '고른 갈래를 알려주지 않는다');
+});

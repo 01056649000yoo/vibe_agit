@@ -39,7 +39,11 @@ const MIGRATED = [
     'src/components/teacher/ClassAnalysis.jsx',
     'src/components/teacher/ArchiveManager.jsx',
     'src/components/teacher/EvaluationReport.jsx',
-    'src/components/teacher/StudentModals.jsx'
+    'src/components/teacher/StudentModals.jsx',
+    'src/modules/game/vocab-tower/teacherManager.css',
+    'src/modules/game/dragon/TeacherManager.css',
+    'src/modules/game/dragon/TeacherWorkshopPreview.css',
+    'src/modules/game/dragon/TeacherStagePreview.css'
 ];
 
 /*

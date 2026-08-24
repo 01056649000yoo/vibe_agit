@@ -18,14 +18,14 @@
 .dragon-stage-preview__header h3 {
     margin: 4px 0 5px;
     color: #3f342d;
-    font-size: 1.18rem;
+    font-size: var(--ui-text-xl);
 }
 
 .dragon-stage-preview__header p {
     max-width: 720px;
     margin: 0;
     color: #776a61;
-    font-size: .75rem;
+    font-size: var(--ui-text-sm);
     font-weight: 750;
     line-height: 1.6;
 }
@@ -37,7 +37,7 @@
     border-radius: 999px;
     background: #eff8f0;
     color: #397048;
-    font-size: .66rem;
+    font-size: var(--ui-text-sm);
     font-weight: 950;
     white-space: nowrap;
 }
@@ -73,7 +73,7 @@
 
 .dragon-stage-preview__scene-heading small {
     color: #9a6b45;
-    font-size: .6rem;
+    font-size: var(--ui-text-sm);
     font-weight: 950;
     letter-spacing: .08em;
 }
@@ -81,12 +81,12 @@
 .dragon-stage-preview__scene-heading strong {
     margin-top: 3px;
     color: #49382d;
-    font-size: .86rem;
+    font-size: var(--ui-text-sm);
 }
 
 .dragon-stage-preview__scene-heading > span {
     color: #795b43;
-    font-size: .65rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
     white-space: nowrap;
 }
@@ -120,20 +120,20 @@
 
 .dragon-stage-preview__summary small {
     color: #9a7660;
-    font-size: .57rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
 }
 
 .dragon-stage-preview__summary strong {
     margin-top: 3px;
     color: #4e4037;
-    font-size: .71rem;
+    font-size: var(--ui-text-sm);
 }
 
 .dragon-stage-preview__summary span {
     margin-top: 3px;
     color: #887a70;
-    font-size: .57rem;
+    font-size: var(--ui-text-sm);
     font-weight: 750;
     line-height: 1.45;
 }
@@ -149,7 +149,7 @@
 .dragon-stage-preview__actions small {
     max-width: 190px;
     color: #8b7d73;
-    font-size: .56rem;
+    font-size: var(--ui-text-sm);
     font-weight: 750;
     line-height: 1.45;
     text-align: right;
@@ -172,14 +172,14 @@
 .dragon-stage-preview__controls legend {
     padding: 0 5px;
     color: #59463a;
-    font-size: .76rem;
+    font-size: var(--ui-text-sm);
     font-weight: 950;
 }
 
 .dragon-stage-preview__controls fieldset > p {
     margin: -1px 0 10px;
     color: #8a7c72;
-    font-size: .61rem;
+    font-size: var(--ui-text-sm);
     font-weight: 750;
     line-height: 1.5;
 }
@@ -217,7 +217,7 @@
 
 .dragon-stage-preview__species strong {
     overflow: hidden;
-    font-size: .68rem;
+    font-size: var(--ui-text-sm);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -225,7 +225,7 @@
 .dragon-stage-preview__species small {
     overflow: hidden;
     color: #92857c;
-    font-size: .52rem;
+    font-size: var(--ui-text-sm);
     font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -265,13 +265,13 @@
 }
 
 .dragon-stage-preview__levels button span {
-    font-size: .79rem;
+    font-size: var(--ui-text-sm);
     line-height: 1;
 }
 
 .dragon-stage-preview__levels button strong {
     margin-top: 2px;
-    font-size: .62rem;
+    font-size: var(--ui-text-sm);
 }
 
 .dragon-stage-preview__levels button.is-selected {
@@ -305,12 +305,12 @@
 
 .dragon-stage-preview__selection-copy strong {
     color: #6b4831;
-    font-size: .66rem;
+    font-size: var(--ui-text-sm);
 }
 
 .dragon-stage-preview__selection-copy span {
     color: #8b715e;
-    font-size: .56rem;
+    font-size: var(--ui-text-sm);
     font-weight: 800;
     text-align: right;
 }
@@ -338,7 +338,7 @@
     place-items: center;
     background: rgba(24, 20, 17, .72);
     color: white;
-    font-size: .85rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
 }
 

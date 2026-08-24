@@ -8,36 +8,36 @@
 }
 
 .dragon-workshop-preview__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
-.dragon-workshop-preview__header h3 { margin: 4px 0 5px; color: #363143; font-size: 1.18rem; }
-.dragon-workshop-preview__header p { max-width: 720px; margin: 0; color: #716b7c; font-size: .75rem; font-weight: 750; line-height: 1.6; }
-.dragon-workshop-preview__safe-badge { flex: 0 0 auto; padding: 7px 10px; border: 1px solid #c7c6dc; border-radius: 999px; background: #f3f2fa; color: #55506f; font-size: .66rem; font-weight: 950; white-space: nowrap; }
+.dragon-workshop-preview__header h3 { margin: 4px 0 5px; color: #363143; font-size: var(--ui-text-xl); }
+.dragon-workshop-preview__header p { max-width: 720px; margin: 0; color: #716b7c; font-size: var(--ui-text-sm); font-weight: 750; line-height: 1.6; }
+.dragon-workshop-preview__safe-badge { flex: 0 0 auto; padding: 7px 10px; border: 1px solid #c7c6dc; border-radius: 999px; background: #f3f2fa; color: #55506f; font-size: var(--ui-text-xs); font-weight: 950; white-space: nowrap; }
 
 .dragon-workshop-preview__summary { display: grid; grid-template-columns: 110px 110px minmax(0, 1fr); gap: 8px; margin-top: 15px; }
 .dragon-workshop-preview__summary > div { padding: 9px 11px; border: 1px solid #e1dfee; border-radius: 12px; background: rgba(255, 255, 255, .82); }
 .dragon-workshop-preview__summary small,
 .dragon-workshop-preview__summary strong { display: block; }
-.dragon-workshop-preview__summary small { color: #827c90; font-size: .56rem; font-weight: 850; }
-.dragon-workshop-preview__summary strong { margin-top: 2px; color: #433d54; font-size: .8rem; }
-.dragon-workshop-preview__summary p { align-self: center; margin: 0; color: #80798b; font-size: .61rem; font-weight: 750; line-height: 1.5; }
+.dragon-workshop-preview__summary small { color: #827c90; font-size: var(--ui-text-sm); font-weight: 850; }
+.dragon-workshop-preview__summary strong { margin-top: 2px; color: #433d54; font-size: var(--ui-text-sm); }
+.dragon-workshop-preview__summary p { align-self: center; margin: 0; color: #80798b; font-size: var(--ui-text-sm); font-weight: 750; line-height: 1.5; }
 
 .dragon-workshop-preview__collections { display: grid; grid-template-columns: 145px repeat(6,minmax(116px,1fr)); gap: 7px; margin-top: 12px; padding: 9px; border: 1px solid #dfddea; border-radius: 15px; background: rgba(255,255,255,.72); overflow-x: auto; }
 .dragon-workshop-preview__collections > div { align-self: center; padding: 4px 7px; }
 .dragon-workshop-preview__collections > div span,
 .dragon-workshop-preview__collections > div strong,
 .dragon-workshop-preview__collections > div small { display: block; }
-.dragon-workshop-preview__collections > div span { color: #78689a; font-size: .48rem; font-weight: 950; letter-spacing: .1em; }
-.dragon-workshop-preview__collections > div strong { margin-top: 2px; color: #41394f; font-size: .7rem; }
-.dragon-workshop-preview__collections > div small { margin-top: 3px; color: #8a8393; font-size: .5rem; font-weight: 750; line-height: 1.35; }
+.dragon-workshop-preview__collections > div span { color: #78689a; font-size: var(--ui-text-sm); font-weight: 950; letter-spacing: .1em; }
+.dragon-workshop-preview__collections > div strong { margin-top: 2px; color: #41394f; font-size: var(--ui-text-sm); }
+.dragon-workshop-preview__collections > div small { margin-top: 3px; color: #8a8393; font-size: var(--ui-text-sm); font-weight: 750; line-height: 1.35; }
 .dragon-workshop-preview__collections > button { position: relative; min-width: 116px; overflow: hidden; padding: 9px 9px 8px 12px; border: 1px solid #e0dde6; border-radius: 11px; background: #fff; color: #4a4451; cursor: pointer; font: inherit; text-align: left; }
 .dragon-workshop-preview__collections > button::before { position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--collection-accent); content: ''; }
 .dragon-workshop-preview__collections > button span,
 .dragon-workshop-preview__collections > button strong,
 .dragon-workshop-preview__collections > button small,
 .dragon-workshop-preview__collections > button em { display: block; }
-.dragon-workshop-preview__collections > button span { color: var(--collection-accent); font-size: .45rem; font-weight: 950; letter-spacing: .08em; }
-.dragon-workshop-preview__collections > button strong { margin-top: 2px; font-size: .6rem; }
-.dragon-workshop-preview__collections > button small { height: 2.7em; margin-top: 3px; overflow: hidden; color: #89828e; font-size: .46rem; font-weight: 720; line-height: 1.35; }
-.dragon-workshop-preview__collections > button em { margin-top: 4px; color: #736a7e; font-size: .46rem; font-style: normal; font-weight: 900; }
+.dragon-workshop-preview__collections > button span { color: var(--collection-accent); font-size: var(--ui-text-sm); font-weight: 950; letter-spacing: .08em; }
+.dragon-workshop-preview__collections > button strong { margin-top: 2px; font-size: var(--ui-text-sm); }
+.dragon-workshop-preview__collections > button small { height: 2.7em; margin-top: 3px; overflow: hidden; color: #89828e; font-size: var(--ui-text-sm); font-weight: 720; line-height: 1.35; }
+.dragon-workshop-preview__collections > button em { margin-top: 4px; color: #736a7e; font-size: var(--ui-text-sm); font-style: normal; font-weight: 900; }
 .dragon-workshop-preview__collections > button.is-active { border-color: var(--collection-accent); background: color-mix(in srgb,var(--collection-accent) 8%,#fff); box-shadow: 0 0 0 2px color-mix(in srgb,var(--collection-accent) 13%,transparent); }
 
 .dragon-workshop-preview__layout { display: grid; grid-template-columns: minmax(330px, .9fr) minmax(430px, 1.1fr); gap: 18px; align-items: start; margin-top: 15px; }
@@ -46,8 +46,8 @@
 .dragon-workshop-preview__stage-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 2px 11px; }
 .dragon-workshop-preview__stage-heading small,
 .dragon-workshop-preview__stage-heading strong { display: block; }
-.dragon-workshop-preview__stage-heading small { color: #77708b; font-size: .58rem; font-weight: 900; }
-.dragon-workshop-preview__stage-heading strong { margin-top: 2px; color: #3f394f; font-size: .8rem; }
+.dragon-workshop-preview__stage-heading small { color: #77708b; font-size: var(--ui-text-sm); font-weight: 900; }
+.dragon-workshop-preview__stage-heading strong { margin-top: 2px; color: #3f394f; font-size: var(--ui-text-sm); }
 .dragon-workshop-preview__stage > .dragon-hideout-scene { width: 100%; max-width: 520px; margin: 0 auto; }
 
 .dragon-workshop-preview__equipped { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
@@ -56,21 +56,21 @@
 .dragon-workshop-preview__equipped small,
 .dragon-workshop-preview__equipped strong { display: block; }
 .dragon-workshop-preview__equipped span { color: #746b91; }
-.dragon-workshop-preview__equipped small { margin-top: 2px; color: #918b9d; font-size: .5rem; font-weight: 850; }
-.dragon-workshop-preview__equipped strong { margin-top: 2px; overflow: hidden; font-size: .56rem; text-overflow: ellipsis; white-space: nowrap; }
+.dragon-workshop-preview__equipped small { margin-top: 2px; color: #918b9d; font-size: var(--ui-text-sm); font-weight: 850; }
+.dragon-workshop-preview__equipped strong { margin-top: 2px; overflow: hidden; font-size: var(--ui-text-sm); text-overflow: ellipsis; white-space: nowrap; }
 
 .dragon-workshop-preview__tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
-.dragon-workshop-preview__tabs button { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1px 4px; align-items: center; min-width: 0; padding: 8px 6px; border: 1px solid #e2dfea; border-radius: 10px; background: #fff; color: #686174; cursor: pointer; font: inherit; font-size: .6rem; font-weight: 900; }
+.dragon-workshop-preview__tabs button { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1px 4px; align-items: center; min-width: 0; padding: 8px 6px; border: 1px solid #e2dfea; border-radius: 10px; background: #fff; color: #686174; cursor: pointer; font: inherit; font-size: var(--ui-text-sm); font-weight: 900; }
 .dragon-workshop-preview__tabs button > span { grid-row: span 2; }
-.dragon-workshop-preview__tabs button > small { color: #9a94a4; font-size: .48rem; }
+.dragon-workshop-preview__tabs button > small { color: #9a94a4; font-size: var(--ui-text-sm); }
 .dragon-workshop-preview__tabs button.is-active { border-color: #7462a8; background: #f1edfb; color: #4e3e7c; box-shadow: 0 0 0 2px rgba(116, 98, 168, .1); }
 
 .dragon-workshop-preview__catalog-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0 8px; padding: 8px 10px; border-radius: 10px; background: #f5f3f9; }
 .dragon-workshop-preview__catalog-heading strong,
 .dragon-workshop-preview__catalog-heading small { display: block; }
-.dragon-workshop-preview__catalog-heading strong { color: #484154; font-size: .7rem; }
-.dragon-workshop-preview__catalog-heading small { margin-top: 2px; color: #8d8697; font-size: .52rem; font-weight: 750; }
-.dragon-workshop-preview__catalog-heading > span { color: #6c627d; font-size: .59rem; font-weight: 900; white-space: nowrap; }
+.dragon-workshop-preview__catalog-heading strong { color: #484154; font-size: var(--ui-text-sm); }
+.dragon-workshop-preview__catalog-heading small { margin-top: 2px; color: #8d8697; font-size: var(--ui-text-sm); font-weight: 750; }
+.dragon-workshop-preview__catalog-heading > span { color: #6c627d; font-size: var(--ui-text-sm); font-weight: 900; white-space: nowrap; }
 
 .dragon-workshop-preview__items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; max-height: 530px; overflow-y: auto; padding-right: 3px; }
 .dragon-workshop-preview__items > button { display: grid; grid-template-columns: 60px minmax(0, 1fr); grid-template-rows: auto auto; gap: 2px 8px; align-items: center; min-width: 0; padding: 8px; border: 1px solid #e4e1e9; border-radius: 13px; background: #fff; color: #514b59; cursor: pointer; font: inherit; text-align: left; }
@@ -89,12 +89,12 @@
 .dragon-workshop-preview__item-art[data-slot="pedestal"][data-visual="legend"] i { border-color: #deb33b; background: radial-gradient(ellipse,#fff0a0 0 8%,#c38a1d 10% 38%,#543b14 42% 68%,#aa7117 72%); box-shadow: 0 0 10px rgba(232,178,36,.7),0 7px 0 -3px #6d4912; }
 
 .dragon-workshop-preview__item-copy { min-width: 0; }
-.dragon-workshop-preview__item-copy > span { display: inline-block; padding: 2px 5px; border-radius: 999px; background: #eeeaf5; color: #685c80; font-size: .47rem; font-weight: 950; }
+.dragon-workshop-preview__item-copy > span { display: inline-block; padding: 2px 5px; border-radius: 999px; background: #eeeaf5; color: #685c80; font-size: var(--ui-text-xs); font-weight: 950; }
 .dragon-workshop-preview__item-copy strong,
 .dragon-workshop-preview__item-copy small { display: block; }
-.dragon-workshop-preview__item-copy strong { margin-top: 3px; overflow: hidden; font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }
-.dragon-workshop-preview__item-copy small { margin-top: 2px; color: #847d8d; font-size: .51rem; font-weight: 750; line-height: 1.35; }
-.dragon-workshop-preview__items > button > em { grid-column: 2; color: #7969a0; font-size: .49rem; font-style: normal; font-weight: 900; }
+.dragon-workshop-preview__item-copy strong { margin-top: 3px; overflow: hidden; font-size: var(--ui-text-sm); text-overflow: ellipsis; white-space: nowrap; }
+.dragon-workshop-preview__item-copy small { margin-top: 2px; color: #847d8d; font-size: var(--ui-text-sm); font-weight: 750; line-height: 1.35; }
+.dragon-workshop-preview__items > button > em { grid-column: 2; color: #7969a0; font-size: var(--ui-text-sm); font-style: normal; font-weight: 900; }
 .dragon-workshop-preview__items > button.is-selected > em { color: #4f3b81; }
 
 @media (max-width: 1120px) {

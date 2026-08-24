@@ -1,4 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
+
+// 설정 갈래. 세 벌 모두 같은 `config` 를 저장하므로 순서만 정하면 된다.
+const SETTING_PANELS = Object.freeze([
+    { id: 'practice', icon: '📚', label: '개인 연습', hint: '층별 12문항과 층당 보상' },
+    { id: 'master', icon: '🏆', label: '덱마스터 도전', hint: '다음 층을 여는 시험 조건' },
+    { id: 'summit', icon: '👑', label: '어휘 마스터 관문', hint: '정상에서 치르는 마지막 시험' }
+]);
 import Button from '../../../components/common/Button';
 import { supabase } from '../../../lib/supabaseClient';
 import './teacherManager.css';
@@ -74,6 +81,12 @@ const normalizeSummitSettings = (config) => {
 const VocabularyTowerTeacherManager = ({ activeClass }) => {
     const classId = activeClass?.id;
     const [config, setConfig] = useState(DEFAULT_CONFIG);
+    /*
+     * 설정 세 벌(개인 연습·덱마스터·정상 관문)이 세로로 쌓여 글이 작고 스크롤이 길었다(2026-08-24 지적).
+     * 갈래로 나눠 한 번에 하나만 본다. 세 벌 모두 같은 `config` 를 쓰고 저장도 `handleSave` 하나라,
+     * 갈래를 옮겨도 **적다 만 값이 사라지지 않고** 어느 갈래에서 저장해도 전부 저장된다.
+     */
+    const [panel, setPanel] = useState('practice');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -253,6 +266,24 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 </div>
             </section>
 
+            <nav className="vocab-teacher__panel-tabs" role="tablist" aria-label="어휘의 탑 설정 갈래">
+                {SETTING_PANELS.map((item) => (
+                    <button
+                        key={item.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={panel === item.id}
+                        className={panel === item.id ? 'is-active' : ''}
+                        onClick={() => setPanel(item.id)}
+                    >
+                        <span aria-hidden="true">{item.icon}</span>
+                        <strong>{item.label}</strong>
+                        <small>{item.hint}</small>
+                    </button>
+                ))}
+            </nav>
+
+            {panel === 'practice' && (
             <section className="vocab-teacher__panel" aria-labelledby="vocab-settings-title">
                 <div className="vocab-teacher__section-heading">
                     <div>
@@ -297,7 +328,9 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     </Button>
                 </div>
             </section>
+            )}
 
+            {panel === 'master' && (
             <section className="vocab-teacher__panel" aria-labelledby="vocab-master-title">
                 <div className="vocab-teacher__section-heading">
                     <div>
@@ -365,7 +398,9 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     </Button>
                 </div>
             </section>
+            )}
 
+            {panel === 'summit' && (
             <section className="vocab-teacher__panel" aria-labelledby="vocab-summit-title">
                 <div className="vocab-teacher__section-heading">
                     <div>
@@ -437,6 +472,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     </Button>
                 </div>
             </section>
+            )}
         </div>
     );
 };
