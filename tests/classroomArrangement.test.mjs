@@ -201,7 +201,7 @@ test('이전 앱 학급 설정은 이름이 하나로 일치하는 아지트 학
 });
 
 test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 계약을 가진다', async () => {
-  const [manifest, api, migration, registry, teacherEntry, historyResultBoard, settingsEntry, legacyImport, teacherGuides, seatEntry, seatLotteryModal, roleEntry, roleLotteryModal, lotteryMachine, arrangementCss] = await Promise.all([
+  const [manifest, api, migration, registry, teacherEntry, historyResultBoard, settingsEntry, legacyImport, teacherGuides, seatEntry, seatLotteryModal, roleEntry, roleLotteryModal, lotteryMachine, arrangementCss, resultEditBar] = await Promise.all([
     readFile('src/modules/tool/classroom-arrangement/manifest.js', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/classroomArrangementApi.js', 'utf8'),
     readFile('supabase/migrations/20261159_classroom_arrangement_tool.sql', 'utf8'),
@@ -216,7 +216,8 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
     readFile('src/modules/tool/classroom-arrangement/RoleArrangement.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/RoleLotteryModal.jsx', 'utf8'),
     readFile('src/modules/tool/classroom-arrangement/LotteryMachine.jsx', 'utf8'),
-    readFile('src/modules/tool/classroom-arrangement/classroomArrangement.css', 'utf8')
+    readFile('src/modules/tool/classroom-arrangement/classroomArrangement.css', 'utf8'),
+    readFile('src/modules/tool/classroom-arrangement/ResultEditBar.jsx', 'utf8')
   ]);
   assert.match(registry, /classroomArrangementManifest/);
   assert.match(manifest, /load: 'on-open'/);
@@ -295,8 +296,11 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(teacherGuides, /'classroom-arrangement'/);
   assert.match(teacherGuides, /학생 두 명을 차례로 눌러 자리를 맞바꾸고/);
   assert.match(teacherGuides, /학생 두 명을 차례로 눌러 역할을 맞바꾸고/);
-  assert.match(seatEntry, /학생 두 명을 차례로 누르면 자리를 맞바꿀 수 있습니다/);
-  assert.match(roleEntry, /학생 두 명을 차례로 누르면 역할을 맞바꿀 수 있습니다/);
+  // 맞바꾸기 안내는 `ResultEditBar` **한 곳**에만 둔다. 화면은 `자리`·`역할` 낱말만 넘긴다.
+  assert.match(resultEditBar, /학생 두 명을 차례로 누르면 \{noun\}를 맞바꿀 수 있습니다/);
+  assert.match(seatEntry, /<ResultEditBar noun="자리"/);
+  assert.match(roleEntry, /<ResultEditBar noun="역할"/);
+  assert.doesNotMatch(`${seatEntry}\n${roleEntry}`, /arrange-edit-bar/);
   assert.match(arrangementCss, /\.arrange-edit-bar__icon/);
   assert.match(seatEntry, /필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과/);
   assert.match(seatEntry, /result\.error/);

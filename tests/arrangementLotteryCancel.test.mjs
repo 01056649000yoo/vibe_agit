@@ -229,17 +229,36 @@ test('자리 배치는 아지트 학급 명단만 쓰고 결과를 늘 기록한
     assert.ok(source.includes("await onCreateHistory('seat'"), '결과를 기록하지 않는다');
 });
 
+/*
+ * ⚠️ 자리와 저장 절차를 **두 벌로 갖고 있었다**(2026-08-24 점검에서 확인).
+ *    이제 `useEditableResult` 하나에 모았으므로, 이 검사는 두 가지를 함께 본다.
+ *    (1) 저장 절차가 공용 파일 **한 곳**에만 있다.
+ *    (2) 자리·역할 화면이 그것을 **실제로 쓴다** — 한쪽이 몰래 자기 것을 다시 만들면 걸린다.
+ */
 test('교사 편집은 조건 점수 없이 랜덤 원본과 연결된 수정본으로 저장한다', async () => {
-    for (const { screen } of PAIRS) {
+    const editable = await read('resultSwap.js');
+
+    // (1) 저장 절차는 공용 파일에만 있다.
+    assert.ok(editable.includes('violations: null'), '공용 저장이 조건 점수를 남긴다');
+    assert.ok(editable.includes('edited: true'), '공용 저장이 수정본 표시를 남기지 않는다');
+    assert.ok(editable.includes('onSaveEditedHistory?.(randomHistoryId, editedHistoryId, kind'), '랜덤 원본과 수정본을 연결하지 않는다');
+    assert.ok(editable.includes('setEditedHistoryId(nextId)'), '최신 수정본 기록을 기억하지 않는다');
+    assert.ok(editable.includes('setManualEdited(true)'), '저장 뒤 교사 편집 상태를 잊는다');
+    assert.ok(editable.includes('setRandomHistoryId(createdId || null)'), '랜덤 원본 기록을 기억하지 않는다');
+
+    // (2) 두 화면이 공용 절차를 그대로 쓰고, 자기 몫(무엇을 저장할지)만 넘긴다.
+    for (const { screen, what } of PAIRS) {
         const source = await read(screen);
+        const kind = screen.startsWith('Seat') ? 'seat' : 'role';
         assert.ok(!source.includes('evaluateSeatAssignments'), `${screen}: 교사 편집 뒤 자리 조건을 다시 계산한다`);
         assert.ok(!source.includes('evaluateRoleAssignments'), `${screen}: 교사 편집 뒤 역할 조건을 다시 계산한다`);
-        assert.ok(source.includes('violations: null'), `${screen}: 교사 편집 기록에 조건 점수를 남긴다`);
-        assert.ok(source.includes('setManualEdited(true)'), `${screen}: 저장 뒤 교사 편집 상태를 잊는다`);
-        assert.ok(source.includes('조건과 관계없이'), `${screen}: 교사에게 직접 보완 권한을 안내하지 않는다`);
-        assert.ok(source.includes('onSaveEditedHistory?.(randomHistoryId, editedHistoryId'), `${screen}: 랜덤 원본과 수정본을 연결하지 않는다`);
-        assert.ok(source.includes('setRandomHistoryId(createdId || null)'), `${screen}: 랜덤 원본 기록을 기억하지 않는다`);
-        assert.ok(source.includes('setEditedHistoryId(nextId)'), `${screen}: 최신 수정본 기록을 기억하지 않는다`);
+        assert.ok(source.includes(`useEditableResult({ keyOf: ${kind === 'seat' ? 'seatKeyOf' : 'roleKeyOf'}, kind: '${kind}'`), `${screen}: 공용 편집 흐름을 쓰지 않는다`);
+        assert.ok(source.includes('editable.linkRandomHistory(createdId)'), `${screen}: 랜덤 원본을 수정본과 연결하지 않는다`);
+        assert.ok(source.includes('editable.save('), `${screen}: 공용 저장을 부르지 않는다`);
+        assert.ok(source.includes(`noun="${what}"`), `${screen}: 맞바꾸기 안내에 넘기는 낱말이 틀렸다`);
+        // 저장 절차를 화면이 다시 갖기 시작하면 여기서 걸린다.
+        assert.ok(!source.includes('onSaveEditedHistory?.('), `${screen}: 저장 절차를 또 한 벌 갖고 있다`);
+        assert.ok(!source.includes('violations: null'), `${screen}: 조건 점수 처리를 또 한 벌 갖고 있다`);
         assert.ok(!source.includes('onReplaceHistory'), `${screen}: 랜덤 원본을 지우던 옛 저장 통로가 남아 있다`);
     }
 
@@ -251,4 +270,8 @@ test('교사 편집은 조건 점수 없이 랜덤 원본과 연결된 수정본
     assert.ok(entry.includes("editedByOriginalId.has(item.id) ? '랜덤 원본'"), '수정본이 있는 랜덤 원본을 표시하지 않는다');
     assert.ok(entry.includes('className="arrange-history-comparison"'), '원본과 수정본 비교 화면이 없다');
     assert.ok(entry.includes('랜덤 원본과 교사가 보완한 수정본입니다.'), '비교 화면의 의미를 안내하지 않는다');
+
+    // 교사에게 직접 보완 권한을 안내하는 문구는 공용 띠에 있다.
+    const editBar = await read('ResultEditBar.jsx');
+    assert.ok(editBar.includes('조건과 관계없이'), '교사에게 직접 보완 권한을 안내하지 않는다');
 });

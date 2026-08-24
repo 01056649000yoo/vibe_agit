@@ -4,7 +4,8 @@ import { buildRoleSlots, solveRoles } from './arrangementEngine';
 import RoleLotteryModal from './RoleLotteryModal';
 import { useNameSize } from './NameSizeControl';
 import FullscreenResultView from './FullscreenResultView';
-import { useResultSwap } from './resultSwap';
+import ResultEditBar from './ResultEditBar';
+import { useEditableResult } from './resultSwap';
 
 const newRoleId = () => typeof crypto?.randomUUID === 'function' ? crypto.randomUUID() : `role-${Date.now()}-${Math.random()}`;
 const ROLE_LOTTERY_STEP = 950;
@@ -24,17 +25,12 @@ export default function RoleArrangement({ students, settings, history, onSetting
   const [modalOpen, setModalOpen] = useState(false);
   const [violations, setViolations] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
-  // 랜덤 원본은 보존하고, 교사가 고친 최신 수정본만 따로 연결해 저장한다.
-  const [randomHistoryId, setRandomHistoryId] = useState(null);
-  const [editedHistoryId, setEditedHistoryId] = useState(null);
-  const [savingEdit, setSavingEdit] = useState(false);
-  const [manualEdited, setManualEdited] = useState(false);
-  const swap = useResultSwap(roleKeyOf, setAssignments);
+  // 맞바꾸기·수정본 저장·기록 연결은 자리 배치와 **같은 것**을 쓴다.
+  const editable = useEditableResult({ keyOf: roleKeyOf, kind: 'role', setAssignments, onSaveEditedHistory });
   const timers = useRef([]);
   const slots = useMemo(() => buildRoleSlots(settings.roleGroups), [settings.roleGroups]);
   const ready = students.length > 0 && slots.length === students.length && phase === 'idle';
   const visibleAssignments = useMemo(() => assignments.filter((assignment) => revealed.has(assignment.id) || phase === 'done'), [assignments, phase, revealed]);
-  const manualResult = manualEdited || swap.edited;
   const byRole = useMemo(() => {
     const result = new Map(settings.roleGroups.map((role) => [role.id, []]));
     visibleAssignments.forEach((assignment) => result.get(assignment.roleId)?.push(assignment));
@@ -58,10 +54,7 @@ export default function RoleArrangement({ students, settings, history, onSetting
     setModalOpen(false);
     setViolations(0);
     setFullscreen(false);
-    setRandomHistoryId(null);
-    setEditedHistoryId(null);
-    setManualEdited(false);
-    swap.reset();
+    editable.clear();
   };
   const setRoles = (roleGroups) => {
     onSettingsChange({ ...settings, roleGroups });
@@ -82,8 +75,7 @@ export default function RoleArrangement({ students, settings, history, onSetting
     setRevealed(new Set());
     setFlyingPick(null);
     setViolations(result.violations);
-    setManualEdited(false);
-    swap.reset();
+    editable.startRound();
     setPhase('running');
     setModalOpen(true);
     arrangementSfx.ensure();
@@ -114,33 +106,16 @@ export default function RoleArrangement({ students, settings, history, onSetting
       violations: result.violations,
       assignments: result.assignments
     });
-    setRandomHistoryId(createdId || null);
-    setEditedHistoryId(null);
+    editable.linkRandomHistory(createdId);
   };
 
-  // 맞바꾼 역할표는 랜덤 원본과 연결해 저장한다. 다시 고칠 때는 이전 수정본만 바꾼다.
-  const saveEdited = async () => {
-    if (!swap.edited || savingEdit) return;
-    setSavingEdit(true);
-    try {
-      const nextId = await onSaveEditedHistory?.(randomHistoryId, editedHistoryId, 'role', `역할 나누기 ${assignments.length}명`, {
-        format: 'classroom-arrangement/role-v1',
-        roleGroups: settings.roleGroups,
-        settings,
-        violations: null,
-        edited: true,
-        assignments
-      });
-      if (nextId) {
-        setEditedHistoryId(nextId);
-        setViolations(0);
-        setManualEdited(true);
-        swap.reset();
-      }
-    } finally {
-      setSavingEdit(false);
-    }
-  };
+  // 맞바꾼 역할표는 랜덤 원본과 연결해 저장한다. 저장 절차는 `useEditableResult` 가 갖고 있다.
+  const saveEdited = () => editable.save(`역할 나누기 ${assignments.length}명`, {
+    format: 'classroom-arrangement/role-v1',
+    roleGroups: settings.roleGroups,
+    settings,
+    assignments
+  });
 
   const editing = phase === 'done';
   // 역할 칸도 자리와 같은 방식으로 두 번 눌러 맞바꾼다. 결과판은 한 벌만 만들어 전체 화면과 함께 쓴다.
@@ -149,7 +124,7 @@ export default function RoleArrangement({ students, settings, history, onSetting
       <header><span>역할</span><strong>{role.name}</strong><small>{byRole.get(role.id)?.length || 0}/{role.count}명</small></header>
       <div>{Array.from({ length: role.count }, (_, index) => {
         const assignment = byRole.get(role.id)?.find((item) => item.slotNumber === index + 1);
-        const picked = Boolean(assignment) && swap.pickedKey === assignment.id;
+        const picked = Boolean(assignment) && editable.pickedKey === assignment.id;
         if (!editing || !assignment) return <span className={assignment ? 'is-filled' : ''} key={`${role.id}-${index}`}>{assignment?.studentName || `${index + 1}번째`}</span>;
         return <button
           type="button"
@@ -157,22 +132,13 @@ export default function RoleArrangement({ students, settings, history, onSetting
           className={`is-filled ${picked ? 'is-picked' : ''}`}
           aria-pressed={picked}
           aria-label={`${role.name} ${assignment.studentName}${picked ? ', 고름' : ''}. 눌러서 역할 맞바꾸기`}
-          onClick={() => swap.pick(assignment.id)}
+          onClick={() => editable.pick(assignment.id)}
         >{assignment.studentName}</button>;
       })}</div>
     </article>)}
   </div>;
 
-  const editBar = editing ? <div className="arrange-edit-bar" aria-live="polite">
-    <span className="arrange-edit-bar__icon" aria-hidden="true">↔</span>
-    <div className="arrange-edit-bar__copy">
-      <strong>학생 두 명을 차례로 누르면 역할을 맞바꿀 수 있습니다.</strong>
-      <span>{swap.pickedKey
-        ? '첫 학생을 골랐습니다. 바꿀 다른 학생을 눌러 주세요.'
-        : manualResult ? '교사가 직접 보완한 역할표에는 조건 점수를 계산하지 않습니다.' : '조건과 관계없이 바꿀 수 있으며, 바꾼 뒤 수정본을 저장해 주세요.'}</span>
-    </div>
-    {swap.edited ? <button type="button" className="arrange-small-button is-dark" disabled={savingEdit} onClick={saveEdited}>{savingEdit ? '저장 중…' : '고친 역할표 저장'}</button> : null}
-  </div> : null;
+  const editBar = editing ? <ResultEditBar noun="역할" pickedKey={editable.pickedKey} edited={editable.edited} manualResult={editable.manualResult} saving={editable.saving} onSave={saveEdited} /> : null;
   return <>
     <div className="arrange-role-layout">
       <section className="arrange-role-builder">
@@ -204,7 +170,7 @@ export default function RoleArrangement({ students, settings, history, onSetting
         </div>
         {editBar}
         {fullscreen ? <div className="arrange-fullscreen-placeholder">전체 화면으로 보고 있습니다.</div> : roleBoard}
-        {phase === 'done' && !manualResult && violations > 0 ? <div className="arrange-condition-note">조건을 모두 만족하는 조합이 없어 가장 가까운 결과로 나눴습니다. 위반 점수 {violations}</div> : null}
+        {phase === 'done' && !editable.manualResult && violations > 0 ? <div className="arrange-condition-note">조건을 모두 만족하는 조합이 없어 가장 가까운 결과로 나눴습니다. 위반 점수 {violations}</div> : null}
       </section>
     </div>
     {fullscreen ? <FullscreenResultView title="우리 반 역할표" sizeId={sizeId} onSizeChange={setSizeId} scale={scale} onClose={() => setFullscreen(false)} actions={editBar}>

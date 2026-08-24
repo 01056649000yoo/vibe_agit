@@ -3,7 +3,8 @@ import { arrangementSfx } from './arrangementSfx';
 import SeatLotteryModal from './SeatLotteryModal';
 import FullscreenResultView from './FullscreenResultView';
 import { useNameSize } from './NameSizeControl';
-import { useResultSwap } from './resultSwap';
+import ResultEditBar from './ResultEditBar';
+import { useEditableResult } from './resultSwap';
 import { hasExactSeatCount, rectangularSeats, seatKey, seatsWithinGrid, solveSeats, suggestSeatLayout } from './arrangementEngine';
 
 const SPEED_OPTIONS = [
@@ -36,12 +37,8 @@ export default function SeatArrangement({ students, settings, history, onSetting
   const [violations, setViolations] = useState(0);
   const [conditionError, setConditionError] = useState('');
   const [fullscreen, setFullscreen] = useState(false);
-  // 랜덤 원본은 보존하고, 교사가 고친 최신 수정본만 따로 연결해 저장한다.
-  const [randomHistoryId, setRandomHistoryId] = useState(null);
-  const [editedHistoryId, setEditedHistoryId] = useState(null);
-  const [savingEdit, setSavingEdit] = useState(false);
-  const [manualEdited, setManualEdited] = useState(false);
-  const swap = useResultSwap(seatKeyOf, setAssignments);
+  // 맞바꾸기·수정본 저장·기록 연결은 역할 나누기와 **같은 것**을 쓴다.
+  const editable = useEditableResult({ keyOf: seatKeyOf, kind: 'seat', setAssignments, onSaveEditedHistory });
   const painting = useRef(null);
   const activeSeatsRef = useRef(activeSeats);
   const timers = useRef([]);
@@ -58,7 +55,6 @@ export default function SeatArrangement({ students, settings, history, onSetting
   // 이름이 아지트 명단과 달라 지난 기록·역할 나누기와도 맞지 않았다.
   const roster = students;
   const assignmentBySeat = useMemo(() => new Map(assignments.map((item) => [item.seatKey, item])), [assignments]);
-  const manualResult = manualEdited || swap.edited;
   const seatCountMatches = hasExactSeatCount(roster.length, activeSeats.size);
   const canStart = phase === 'idle' && seatCountMatches;
   const closeLotteryModal = useCallback(() => setModalOpen(false), []);
@@ -75,7 +71,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
     setModalOpen(false);
     setConditionError('');
     setPhase('idle');
-    setManualEdited(false);
+    editable.startRound();
     onSettingsChange({ ...settings, seatLayout: { rows: nextRows, cols: nextCols, activeSeats: [...visibleSeats] } });
   };
 
@@ -110,10 +106,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
     setConditionError('');
     setPhase('idle');
     setFullscreen(false);
-    setRandomHistoryId(null);
-    setEditedHistoryId(null);
-    setManualEdited(false);
-    swap.reset();
+    editable.clear();
   };
   const schedule = (callback, delay) => {
     const timer = window.setTimeout(callback, delay);
@@ -133,8 +126,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
     setRevealed(new Set());
     setFlyingPick(null);
     setViolations(result.violations);
-    setManualEdited(false);
-    swap.reset();
+    editable.startRound();
     setPhase('running');
     setModalOpen(true);
     arrangementSfx.ensure();
@@ -159,39 +151,22 @@ export default function SeatArrangement({ students, settings, history, onSetting
     });
     schedule(() => { setPhase('done'); setRollingName(''); setFlyingPick(null); arrangementSfx.finish(); }, order.length * step + 120);
     const createdId = await onCreateHistory('seat', `자리 배치 ${result.assignments.length}명`, {
-        format: 'classroom-arrangement/seat-v1',
-        layout: { rows, cols, activeSeats: [...activeSeats] },
-        settings,
-        violations: result.violations,
+      format: 'classroom-arrangement/seat-v1',
+      layout: { rows, cols, activeSeats: [...activeSeats] },
+      settings,
+      violations: result.violations,
       assignments: result.assignments
     });
-    setRandomHistoryId(createdId || null);
-    setEditedHistoryId(null);
+    editable.linkRandomHistory(createdId);
   };
 
-  // 맞바꾼 자리표는 랜덤 원본과 연결해 저장한다. 다시 고칠 때는 이전 수정본만 바꾼다.
-  const saveEdited = async () => {
-    if (!swap.edited || savingEdit) return;
-    setSavingEdit(true);
-    try {
-      const nextId = await onSaveEditedHistory?.(randomHistoryId, editedHistoryId, 'seat', `자리 배치 ${assignments.length}명`, {
-        format: 'classroom-arrangement/seat-v1',
-        layout: { rows, cols, activeSeats: [...activeSeats] },
-        settings,
-        violations: null,
-        edited: true,
-        assignments
-      });
-      if (nextId) {
-        setEditedHistoryId(nextId);
-        setViolations(0);
-        setManualEdited(true);
-        swap.reset();
-      }
-    } finally {
-      setSavingEdit(false);
-    }
-  };
+  // 맞바꾼 자리표는 랜덤 원본과 연결해 저장한다. 저장 절차는 `useEditableResult` 가 갖고 있다.
+  const saveEdited = () => editable.save(`자리 배치 ${assignments.length}명`, {
+    format: 'classroom-arrangement/seat-v1',
+    layout: { rows, cols, activeSeats: [...activeSeats] },
+    settings,
+    assignments
+  });
 
   const editing = phase === 'done';
   // 결과판은 화면 안과 전체 화면에서 **같은 것**을 쓴다. 두 벌로 두면 한쪽만 고치는 실수가 난다.
@@ -203,7 +178,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
       const active = activeSeats.has(key);
       const assigned = assignmentBySeat.get(key);
       const visible = revealed.has(key) || phase === 'done';
-      const picked = swap.pickedKey === key;
+      const picked = editable.pickedKey === key;
       return <button
         type="button"
         key={key}
@@ -211,7 +186,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
         className={`arrange-seat ${active ? 'is-active' : ''} ${visible ? 'is-revealed' : ''} ${picked ? 'is-picked' : ''}`}
         onPointerDown={(event) => { if (!editing) startPaint(event, row, col); }}
         onPointerEnter={() => { if (!editing) paint(row, col); }}
-        onClick={() => { if (editing && active && assigned) swap.pick(key); }}
+        onClick={() => { if (editing && active && assigned) editable.pick(key); }}
         disabled={phase === 'running'}
         aria-pressed={editing && active ? picked : undefined}
         aria-label={editing && assigned
@@ -223,16 +198,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
     })}
   </div>;
 
-  const editBar = editing ? <div className="arrange-edit-bar" aria-live="polite">
-    <span className="arrange-edit-bar__icon" aria-hidden="true">↔</span>
-    <div className="arrange-edit-bar__copy">
-      <strong>학생 두 명을 차례로 누르면 자리를 맞바꿀 수 있습니다.</strong>
-      <span>{swap.pickedKey
-        ? '첫 학생을 골랐습니다. 바꿀 다른 학생을 눌러 주세요.'
-        : manualResult ? '교사가 직접 보완한 자리표에는 조건 점수를 계산하지 않습니다.' : '조건과 관계없이 바꿀 수 있으며, 바꾼 뒤 수정본을 저장해 주세요.'}</span>
-    </div>
-    {swap.edited ? <button type="button" className="arrange-small-button is-dark" disabled={savingEdit} onClick={saveEdited}>{savingEdit ? '저장 중…' : '고친 자리표 저장'}</button> : null}
-  </div> : null;
+  const editBar = editing ? <ResultEditBar noun="자리" pickedKey={editable.pickedKey} edited={editable.edited} manualResult={editable.manualResult} saving={editable.saving} onSave={saveEdited} /> : null;
   return <>
     <div className="arrange-workspace">
       <section className="arrange-sidebar-card">
@@ -264,7 +230,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
         </div>
         {editBar}
         {fullscreen ? <div className="arrange-fullscreen-placeholder">전체 화면으로 보고 있습니다.</div> : seatBoard}
-        {phase === 'done' && !manualResult && violations > 0 ? <div className="arrange-condition-note">필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과로 배치했습니다. 권장 점수 {violations}</div> : null}
+        {phase === 'done' && !editable.manualResult && violations > 0 ? <div className="arrange-condition-note">필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과로 배치했습니다. 권장 점수 {violations}</div> : null}
       </section>
     </div>
     {fullscreen ? <FullscreenResultView title="우리 반 자리표" sizeId={sizeId} onSizeChange={setSizeId} scale={scale} onClose={() => setFullscreen(false)} actions={editBar}>

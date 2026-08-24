@@ -21,6 +21,36 @@
 
 ---
 
+## 2026-08-24 — 자리·역할 편집 흐름을 한 벌로 모으고 오늘 작업을 점검 (Claude)
+
+- **한 일**: 오늘 두 저장소에 들어온 변경을 점검했다. 아지트를 원격과 맞추고(`74b0cf3` → `ab1a46e`,
+  같은 내용의 미추적 파일 2개는 원격본과 한 줄씩 비교해 동일 확인 후 정리), 자리 배치와 역할 나누기가
+  **두 벌로 갖고 있던 교사 편집 흐름을 하나로 합쳤다**. 맞바꾸기·수정본 저장·랜덤 원본 연결을
+  `useEditableResult` 로, 안내 띠를 `ResultEditBar` 로 모았다. 화면은 이제 `kind` 와 저장할 내용,
+  낱말(`자리`·`역할`)만 넘긴다.
+- **변경**: `resultSwap.js`에 `useEditableResult` 추가, `ResultEditBar.jsx` 신규,
+  `SeatArrangement.jsx`·`RoleArrangement.jsx`에서 중복 상태 4개·`saveEdited` 22줄·안내 띠 10줄 제거.
+  `arrangementLotteryCancel.test.mjs`의 교사 편집 검사를 **공용 파일 한 곳 + 두 화면이 실제로 쓰는지**
+  보도록 고쳤고, `classroomArrangement.test.mjs`의 안내 문구 검사도 공용 띠를 보게 했다.
+  `SeatArrangement.jsx`의 기록 저장 객체 들여쓰기도 맞췄다. 아직 커밋하지 않았다.
+- **결과/검증**: 아지트 `npm run test:all` 408/408, ESLint 0건, Vite 프로덕션 빌드 통과.
+  새 검사가 진짜로 잡는지 확인했다 — `editable.linkRandomHistory(createdId)` 를 일부러 빼자
+  `SeatArrangement.jsx: 랜덤 원본을 수정본과 연결하지 않는다` 로 실패했고, 되돌리니 다시 통과했다.
+  동작은 그대로다. 저장 성공 때 부르던 `setViolations(0)` 은 없앴는데, 조건 점수 표시가 이미
+  `!manualResult` 로 막혀 있어 화면 결과가 같기 때문이다. `TeacherEntry.jsx` 로 넘기는
+  `onSaveEditedHistory` 규약은 바뀌지 않았다.
+- **점검에서 찾은 것 — `20261164` 미적용으로 실시간 질문 모아보기가 동작하지 않는다**:
+  연구소 코드(`~/writing-helper` `2697330`)는 배포됐는데 마이그레이션이 운영 `agit-db`에 없다.
+  실제 DB를 확인한 결과 `writing_helper.activity_events` 의 권한 목록이 비어 있어
+  (`relacl` 이 NULL, 같은 스키마의 `rooms`·`student_sessions` 는 service_role 에 전 권한이 있다)
+  ① 학생 제출 신호 INSERT 가 service_role 권한 부족으로 실패하고, ② 테이블이 `supabase_realtime`
+  publication 에 없어 교사 구독이 이벤트를 못 받는다. 권한이 없어 **실패하는** 방향이라 정보 노출이나
+  제출 유실은 없고, 5초/30초 보완 폴링이 결과를 회수하므로 화면은 뜨지만 실시간이 아니다.
+  이 테이블은 이번 기능만 쓰고(코드 2곳) 현재 0행이라 다른 기능 영향은 없다.
+- **남은 것 / 다음**: 사용자 승인 후 `npm run migrate` 로 `20261164` 를 적용하고, 적용 뒤
+  권한·publication·RLS 정책 세 가지를 다시 확인한다. 그 뒤 교사 1명·학생 여러 명으로 실시간 반영과
+  모달 닫힘 시 채널 해제를 브라우저에서 본다. 이번 중복 정리는 커밋·배포가 남아 있다.
+
 ## 2026-08-24 — 실시간 전체 질문 모달을 전자칠판형으로 확대 (Codex)
 - **한 일**: 교사 `전체 질문 실시간 보기` 모달을 92vh·최대 7xl 크기로 넓히고, 진행 요약 아래이자
   전체 질문 목록 위에 짙은 녹색 질문 칠판을 추가했다. 학생별 보기와 질문만 모아보기 양쪽에서 학생 이름을
