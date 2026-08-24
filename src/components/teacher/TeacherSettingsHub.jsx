@@ -10,8 +10,8 @@ const TeacherWritingEditorManager = lazy(loadTeacherWritingEditorManager);
 
 // 등록 모듈 설정도 모두 이 슬롯 안에 들어온다. 메뉴마다 폭을 다시 정하지 않도록
 // 데스크톱 폭·항목 여백·모바일 최소 폭을 공통 호스트에서 고정한다.
-const SETTINGS_NAV_WIDTH = '270px';
-const SETTINGS_MOBILE_ITEM_WIDTH = '184px';
+const SETTINGS_NAV_WIDTH = '300px';
+const SETTINGS_MOBILE_ITEM_WIDTH = '200px';
 
 const MODULE_SETTINGS_ITEMS = getAllModules()
     .filter((module) => module.available !== false && typeof module.settingsEntry === 'function')
@@ -64,8 +64,8 @@ const TeacherSettingsHub = ({
             }}>
                 {!isMobile && (
                     <div style={{ padding: '7px 9px 13px' }}>
-                        <strong style={{ color: '#172033', fontSize: '1rem' }}>⚙️ 설정</strong>
-                        <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.72rem', lineHeight: 1.45 }}>필요한 항목만 골라 관리하세요.</p>
+                        <strong style={{ color: '#172033', fontSize: 'var(--ui-text-lg)' }}>⚙️ 설정</strong>
+                        <p style={{ margin: '5px 0 0', color: '#475569', fontSize: 'var(--ui-text-sm)', lineHeight: 1.5 }}>필요한 항목만 골라 관리하세요.</p>
                     </div>
                 )}
                 <nav aria-label="설정 메뉴" style={{
@@ -84,7 +84,7 @@ const TeacherSettingsHub = ({
                                 aria-current={active ? 'page' : undefined}
                                 style={{
                                 minWidth: isMobile ? SETTINGS_MOBILE_ITEM_WIDTH : 0, width: isMobile ? SETTINGS_MOBILE_ITEM_WIDTH : '100%',
-                                minHeight: isMobile ? '58px' : '68px', padding: isMobile ? '11px 14px' : '13px 15px',
+                                minHeight: isMobile ? '64px' : '76px', padding: isMobile ? '11px 14px' : '13px 15px',
                                 border: active ? '1px solid #C7D7FE' : '1px solid transparent', borderRadius: '12px',
                                 background: active ? 'white' : 'transparent', color: active ? '#315FC4' : '#526176',
                                 boxShadow: active ? '0 4px 14px rgba(37,99,235,.09)' : 'none', cursor: 'pointer',
@@ -94,8 +94,8 @@ const TeacherSettingsHub = ({
                             >
                                 <span aria-hidden="true" style={{ flex: '0 0 25px', width: '25px', fontSize: '1.1rem', textAlign: 'center' }}>{item.icon}</span>
                                 <span style={{ flex: 1, minWidth: 0, paddingRight: '2px', overflow: 'hidden' }}>
-                                    <strong title={item.label} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.86rem' }}>{item.label}</strong>
-                                    {!isMobile && <span title={item.description} style={{ display: 'block', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', color: '#94A3B8', fontSize: '0.68rem' }}>{item.description}</span>}
+                                    <strong title={item.label} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 'var(--ui-text-md)' }}>{item.label}</strong>
+                                    {!isMobile && <span title={item.description} style={{ display: 'block', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>{item.description}</span>}
                                 </span>
                             </button>
                         );
@@ -106,8 +106,8 @@ const TeacherSettingsHub = ({
             <main style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
                     <div>
-                        <h2 style={{ margin: 0, color: '#172033', fontSize: isMobile ? '1.25rem' : '1.4rem' }}>{selected.icon} {selected.label}</h2>
-                        <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.82rem' }}>{selected.description}</p>
+                        <h2 style={{ margin: 0, color: '#172033', fontSize: 'var(--ui-text-xl)' }}>{selected.icon} {selected.label}</h2>
+                        <p style={{ margin: '6px 0 0', color: '#475569', fontSize: 'var(--ui-text-md)', lineHeight: 1.55 }}>{selected.description}</p>
                     </div>
                     <TeacherGuideButton tabId={`settings:${selected.id}`} variant="help" />
                 </div>
@@ -147,8 +147,8 @@ const TeacherSettingsHub = ({
                                             textAlign: 'left', boxSizing: 'border-box'
                                         }}
                                     >
-                                        <strong style={{ display: 'block', fontSize: isMobile ? '0.82rem' : '0.9rem' }}>{tab.icon} {tab.label}</strong>
-                                        {!isMobile && <span style={{ display: 'block', marginTop: '3px', color: '#94A3B8', fontSize: '0.7rem' }}>{tab.description}</span>}
+                                        <strong style={{ display: 'block', fontSize: 'var(--ui-text-md)' }}>{tab.icon} {tab.label}</strong>
+                                        {!isMobile && <span style={{ display: 'block', marginTop: '3px', color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>{tab.description}</span>}
                                     </button>
                                 );
                             })}

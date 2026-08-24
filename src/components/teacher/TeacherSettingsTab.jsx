@@ -28,7 +28,7 @@ const TeacherSettingsTab = ({
                 flexDirection: isMobile ? 'column' : 'row', gap: '12px', paddingBottom: '18px',
                 marginBottom: '20px', borderBottom: '1px solid #E2E8F0'
             }}>
-                <p style={{ margin: 0, color: '#64748B', fontSize: '0.76rem' }}>아래에서 고른 기준이 실제 AI 실행에 사용됩니다.</p>
+                <p style={{ margin: 0, color: '#475569', fontSize: 'var(--ui-text-sm)' }}>아래에서 고른 기준이 실제 AI 실행에 사용됩니다.</p>
                 <Button
                     type="button" variant="ghost" size="sm" onClick={handleTestAIConnection} disabled={testingKey}
                     title="AI 기능에 문제가 있을 때 연결 상태를 점검합니다"

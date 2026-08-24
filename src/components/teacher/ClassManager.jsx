@@ -161,7 +161,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     <Card style={{ textAlign: 'center', padding: '40px', background: 'white', borderRadius: '32px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
                         <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏢</div>
                         <h2 style={{ fontSize: '1.5rem', color: '#2C3E50', fontWeight: '900', marginBottom: '8px' }}>선택된 학급이 없습니다.</h2>
-                        <p style={{ color: '#7F8C8D', marginBottom: '24px', fontSize: '1rem' }}>아래 목록에서 선택하거나 새로운 학급을 만들어보세요!</p>
+                        <p style={{ color: '#7F8C8D', marginBottom: '24px', fontSize: 'var(--ui-text-md)' }}>아래 목록에서 선택하거나 새로운 학급을 만들어보세요!</p>
                         <Button
                             variant="primary"
                             style={{ width: '100%', height: '60px', fontSize: '1.1rem', borderRadius: '16px', fontWeight: 'bold' }}
@@ -173,7 +173,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                             variant="ghost"
                             onClick={handleOpenTrash}
                             style={{
-                                width: '100%', marginTop: '12px', fontSize: '0.9rem', color: '#7F8C8D',
+                                width: '100%', marginTop: '12px', fontSize: 'var(--ui-text-md)', color: '#7F8C8D',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                             }}
                         >
@@ -189,7 +189,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                                     onClick={handleOpenTrash}
                                     style={{
                                         background: '#F8F9FA', border: '1px solid #E9ECEF', borderRadius: '10px',
-                                        padding: '6px 12px', fontSize: '0.8rem', color: '#7F8C8D', cursor: 'pointer',
+                                        padding: '6px 12px', fontSize: 'var(--ui-text-sm)', color: '#64748B', cursor: 'pointer',
                                         display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold'
                                     }}
                                 >
@@ -235,25 +235,25 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                 <section style={{ padding: isMobile ? '16px' : '20px', background: 'white', border: '1px solid #DCE6EE', borderRadius: '20px', boxShadow: '0 5px 18px rgba(15,23,42,.04)' }}>
                     <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
                         <div style={{ minWidth: 0 }}>
-                            <span style={{ color: '#2563EB', fontSize: '.72rem', fontWeight: 900 }}>현재 관리 중인 학급</span>
+                            <span style={{ color: '#2563EB', fontSize: 'var(--ui-text-xs)', fontWeight: 900 }}>현재 관리 중인 학급</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap', marginTop: '4px' }}>
                                 <h3 style={{ margin: 0, color: '#1E293B', fontSize: '1.2rem' }}>🏫 {activeClass.name}</h3>
                                 {activeClass.id === primaryClassId && <span style={badgeStyle}>⭐ 주 학급</span>}
                                 <span style={{ ...badgeStyle, background: '#DCFCE7', color: '#15803D' }}>● 운영 중</span>
                             </div>
                         </div>
-                        <span style={{ padding: '6px 9px', borderRadius: '9px', background: '#EFF6FF', color: '#1D4ED8', fontSize: '.7rem', fontWeight: 900 }}>학급 기능 6개</span>
+                        <span style={{ padding: '6px 9px', borderRadius: '9px', background: '#EFF6FF', color: '#1D4ED8', fontSize: 'var(--ui-text-xs)', fontWeight: 900 }}>학급 기능 6개</span>
                     </header>
 
                     {classes.length > 1 && <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #EEF2F7' }}>
-                        <strong style={{ display: 'block', marginBottom: '8px', color: '#64748B', fontSize: '.72rem' }}>관리할 학급 선택</strong>
+                        <strong style={{ display: 'block', marginBottom: '8px', color: '#475569', fontSize: 'var(--ui-text-sm)' }}>관리할 학급 선택</strong>
                         <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', minWidth: 0 }}>
                             {classes.map((cls) => {
                                 const selected = cls.id === activeClass.id;
                                 const primary = cls.id === primaryClassId;
                                 return (
                                     <button key={cls.id} type="button" onClick={() => setActiveClass(cls)} style={{
-                                        padding: '9px 12px', borderRadius: '12px', cursor: 'pointer', fontWeight: '900', fontSize: '0.82rem',
+                                        padding: '9px 12px', borderRadius: '12px', cursor: 'pointer', fontWeight: '900', fontSize: 'var(--ui-text-sm)',
                                         border: selected ? '1px solid #93C5FD' : '1px solid #E2E8F0',
                                         background: selected ? '#EFF6FF' : 'white', color: selected ? '#1D4ED8' : '#475569',
                                         boxShadow: selected ? '0 3px 10px rgba(37,99,235,.10)' : 'none'
@@ -286,7 +286,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                 }}>
                     <Card style={{ width: '90%', maxWidth: '420px', padding: '40px', borderRadius: '32px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
                         <h2 style={{ fontSize: '1.8rem', marginBottom: '8px', color: '#2C3E50', fontWeight: '900' }}>새로운 학급 만들기</h2>
-                        <p style={{ color: '#7F8C8D', marginBottom: '24px', fontSize: '0.95rem' }}>아이들과 함께할 멋진 학급 이름을 지어주세요!</p>
+                        <p style={{ color: '#7F8C8D', marginBottom: '24px', fontSize: 'var(--ui-text-md)' }}>아이들과 함께할 멋진 학급 이름을 지어주세요!</p>
                         <input
                             type="text"
                             placeholder="예: 3학년 1반, 무지개반"
@@ -331,7 +331,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                                 </div>
 
                                 <div style={{ background: '#FFFCEB', padding: '16px', borderRadius: '16px', border: '1px solid #FFE082', marginBottom: '24px' }}>
-                                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#B26700', lineHeight: '1.5', fontWeight: 'bold' }}>
+                                    <p style={{ margin: 0, fontSize: 'var(--ui-text-sm)', color: '#B26700', lineHeight: '1.5', fontWeight: 'bold' }}>
                                         💡 삭제된 학급은 <span style={{ textDecoration: 'underline' }}>삭제 후 3일간</span> 이곳에서 복구하실 수 있습니다.
                                         3일이 경과하면 모든 데이터가 자동으로 영구 삭제됩니다.
                                     </p>
@@ -352,7 +352,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                                             }}>
                                                 <div>
                                                     <span style={{ fontWeight: 'bold', color: '#2C3E50', display: 'block' }}>🏫 {cls.name}</span>
-                                                    <span style={{ fontSize: '0.75rem', color: '#95A5A6' }}>
+                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: '#7C8A9E' }}>
                                                         삭제일: {new Date(cls.deleted_at).toLocaleDateString()}
                                                     </span>
                                                 </div>
@@ -387,7 +387,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
 
 const badgeStyle = {
     display: 'inline-flex', alignItems: 'center', padding: '4px 7px', borderRadius: '999px',
-    background: '#FEF3C7', color: '#92400E', fontSize: '0.66rem', fontWeight: '900'
+    background: '#FEF3C7', color: '#92400E', fontSize: 'var(--ui-text-xs)', fontWeight: '900'
 };
 
 const ClassActionButton = ({ icon, label, description, onClick, disabled = false, danger = false }) => (
@@ -401,8 +401,8 @@ const ClassActionButton = ({ icon, label, description, onClick, disabled = false
     }}>
         <span aria-hidden="true" style={{ flex: '0 0 24px', fontSize: '1.15rem', textAlign: 'center' }}>{icon}</span>
         <span style={{ minWidth: 0 }}>
-            <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '.8rem' }}>{label}</strong>
-            <small style={{ display: 'block', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: disabled ? '#94A3B8' : danger ? '#DC2626' : '#7C8A9E', fontSize: '.66rem' }}>{description}</small>
+            <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 'var(--ui-text-md)' }}>{label}</strong>
+            <small style={{ display: 'block', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: disabled ? '#94A3B8' : danger ? '#DC2626' : '#64748B', fontSize: 'var(--ui-text-sm)' }}>{description}</small>
         </span>
     </button>
 );
