@@ -58,6 +58,8 @@ test('관리자 요약의 이름과 집계 대상이 실제 의미와 같다', (
     const usageStart = migration.indexOf('CREATE OR REPLACE FUNCTION public.admin_get_teacher_usage');
     const usageEnd = migration.indexOf('CREATE OR REPLACE FUNCTION public.admin_get_usage_overview');
     const usageFunction = migration.slice(usageStart, usageEnd);
+    assert.match(usageFunction, /is_approved BOOLEAN,\s*approval_revoked_at TIMESTAMPTZ,\s*api_mode TEXT/);
+    assert.match(usageFunction, /p\.approval_revoked_at/);
     assert.match(usageFunction, /WHERE p\.role = 'TEACHER'/);
     assert.doesNotMatch(usageFunction, /p\.role IN \('TEACHER', 'ADMIN'\)/);
     assert.match(usageFunction, /e\.actor_student_id/);
