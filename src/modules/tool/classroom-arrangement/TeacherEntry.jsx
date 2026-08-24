@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ArrangementSettings from './ArrangementSettings';
 import HistoryResultBoard from './HistoryResultBoard';
+import NameSizeControl, { useNameSize } from './NameSizeControl';
 import RoleArrangement from './RoleArrangement';
 import SeatArrangement from './SeatArrangement';
 import { arrangementSfx } from './arrangementSfx';
@@ -19,6 +20,8 @@ const TABS = [
 const formatDate = (value) => new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 
 function HistoryView({ history, onDelete }) {
+  // 전자칠판으로 지난 결과를 볼 때도 이름이 커야 한다. 뽑기 창과 같은 값을 쓴다.
+  const { sizeId, setSizeId, scale } = useNameSize();
   const [selected, setSelected] = useState(null);
   return <div className="arrange-history">
     {history.length === 0 ? <div className="arrange-empty">아직 저장된 자리·역할 기록이 없습니다.</div> : history.map((item) => <article key={item.id}>
@@ -26,8 +29,12 @@ function HistoryView({ history, onDelete }) {
       <button type="button" className="arrange-history-delete" aria-label={`${item.title} 삭제`} onClick={() => onDelete(item)}>삭제</button>
     </article>)}
     {selected ? <div className="arrange-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}>
-      <section className="arrange-history-modal" role="dialog" aria-modal="true" aria-labelledby="arrangement-history-title">
-        <header><div><h3 id="arrangement-history-title">{selected.title}</h3><p>{formatDate(selected.createdAt)}</p></div><button type="button" aria-label="닫기" onClick={() => setSelected(null)}>×</button></header>
+      <section className="arrange-history-modal" style={{ '--arrange-name-scale': scale }} role="dialog" aria-modal="true" aria-labelledby="arrangement-history-title">
+        <header>
+          <div><h3 id="arrangement-history-title">{selected.title}</h3><p>{formatDate(selected.createdAt)}</p></div>
+          <NameSizeControl sizeId={sizeId} onChange={setSizeId} />
+          <button type="button" aria-label="닫기" onClick={() => setSelected(null)}>×</button>
+        </header>
         <HistoryResultBoard kind={selected.kind} payload={selected.payload} />
       </section>
     </div> : null}

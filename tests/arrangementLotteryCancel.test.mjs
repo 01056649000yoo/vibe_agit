@@ -120,6 +120,19 @@ test('창을 닫고 결과판을 봐도 고른 크기가 유지된다', async ()
     }
 });
 
+/*
+ * ⚠️ **지난 기록 보기를 빠뜨렸다**(2026-08-24 사용자 지적). 이름이 나오는 화면을 셀 때
+ *    뽑기 창 둘만 세고 지난 기록을 놓쳤다. 전자칠판으로 지난 결과를 볼 때도 이름은 커야 한다.
+ *    이 검사가 **세 화면을 한꺼번에** 본다.
+ */
+test('지난 기록 보기에도 이름 크기 조절이 있다', async () => {
+    const entry = await read('TeacherEntry.jsx');
+
+    assert.ok(entry.includes('const { sizeId, setSizeId, scale } = useNameSize();'), '지난 기록이 크기 상태를 갖고 있지 않다');
+    assert.ok(entry.includes('<NameSizeControl sizeId={sizeId} onChange={setSizeId} />'), '지난 기록 창에 조절 버튼이 없다');
+    assert.ok(entry.includes("'--arrange-name-scale': scale"), '지난 기록 창에 크기가 닿지 않는다');
+});
+
 test('이름 크기 조절은 두 창에 모두 있고 고른 값을 기억한다', async () => {
     const control = await read('NameSizeControl.jsx');
 
