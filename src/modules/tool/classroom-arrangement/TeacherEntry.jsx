@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import ArrangementSettings from './ArrangementSettings';
 import HistoryResultBoard from './HistoryResultBoard';
 import NameSizeControl, { useNameSize } from './NameSizeControl';
@@ -230,7 +231,10 @@ export default function ClassroomArrangementTeacherEntry({ activeClass, previewW
   return <section className="classroom-arrangement">
     <header className="arrange-header">
       <div><span className="arrange-eyebrow">수업 도구 · {activeClass.name}</span><h2>자리·역할 배치</h2><p>자리 배치와 역할 나누기를 현재 아지트 학급 명부로 사용합니다.</p></div>
-      <div className="arrange-save-area"><span className={dirty ? 'is-dirty' : ''}>{dirty ? '저장하지 않은 설정이 있습니다.' : '설정이 저장되어 있습니다.'}</span><button type="button" disabled={!dirty || saving} onClick={() => void saveSettings()}>{saving ? '저장 중…' : '설정 저장'}</button></div>
+      <div className="arrange-header-actions">
+        <div className="arrange-save-area"><span className={dirty ? 'is-dirty' : ''}>{dirty ? '저장하지 않은 설정이 있습니다.' : '설정이 저장되어 있습니다.'}</span><button type="button" disabled={!dirty || saving} onClick={() => void saveSettings()}>{saving ? '저장 중…' : '설정 저장'}</button></div>
+        <TeacherGuideButton tabId="classroom-arrangement" variant="help" />
+      </div>
     </header>
     {error ? <div className="arrange-alert is-error" role="alert">{error}<button type="button" aria-label="오류 닫기" onClick={() => setError('')}>×</button></div> : null}
     {notice ? <div className="arrange-alert is-success" role="status">{notice}<button type="button" aria-label="안내 닫기" onClick={() => setNotice('')}>×</button></div> : null}

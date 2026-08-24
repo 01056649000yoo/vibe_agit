@@ -3,6 +3,8 @@
 .arrange-eyebrow { color:#5270a8; font-size:.74rem; font-weight:900; letter-spacing:.04em; }
 .arrange-header h2 { margin:5px 0 4px; font-size:1.55rem; }
 .arrange-header p,.arrange-panel-heading p,.arrange-transfer-card p,.arrange-sound-card p,.arrange-settings-card p { margin:0; color:#64748b; font-size:.82rem; line-height:1.55; }
+.arrange-header-actions { display:flex; align-items:flex-start; justify-content:flex-end; gap:10px; flex-shrink:0; }
+.arrange-header-actions>.guide-info-button { margin-right:0; }
 .arrange-save-area { display:flex; flex-direction:column; gap:6px; align-items:flex-end; flex-shrink:0; }
 .arrange-save-area span { color:#6b7280; font-size:.72rem; font-weight:800; }
 .arrange-save-area span.is-dirty { color:#b45309; }
@@ -236,6 +238,7 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 .arrange-empty { display:grid; place-items:center; min-height:220px; padding:30px; border:1px dashed #cbd5e1; border-radius:18px; background:#f8fafc; color:#64748b; text-align:center; }
 @media (max-width:900px) {
   .arrange-header,.arrange-panel-heading { align-items:stretch; flex-direction:column; }
+  .arrange-header-actions { justify-content:space-between; }
   .arrange-save-area { align-items:stretch; }
   .arrange-workspace,.arrange-role-layout,.arrange-settings-grid,.arrange-settings-utilities { grid-template-columns:1fr; }
   .arrange-gender-card { grid-column:auto; }
@@ -333,8 +336,11 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 .arrange-fullscreen-open:hover { background:#eef4ff; }
 
 /* ── 결과 고치기: 두 사람 맞바꾸기 ───────────────────────────────────── */
-.arrange-edit-bar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; padding:8px 12px; border-radius:10px; background:#eef4ff; color:#173e91; font-size:.86rem; }
-.arrange-edit-bar>span { flex:1; min-width:160px; }
+.arrange-edit-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; padding:10px 12px; border:1px solid #b9cff5; border-radius:12px; background:#eef4ff; color:#173e91; font-size:.86rem; }
+.arrange-edit-bar__icon { display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; border-radius:50%; background:#315fc4; color:#fff; font-size:1rem; font-weight:950; }
+.arrange-edit-bar__copy { display:grid; flex:1; gap:2px; min-width:200px; }
+.arrange-edit-bar__copy strong { font-size:.84rem; }
+.arrange-edit-bar__copy span { color:#536b9a; font-size:.72rem; line-height:1.45; }
 .arrange-seat-grid.is-editable .arrange-seat.is-active { cursor:pointer; }
 .arrange-seat.is-picked, .arrange-role-cards.is-editable button.is-picked { outline:3px solid #f59e0b; outline-offset:2px; }
 .arrange-role-cards.is-editable button.is-filled { width:100%; color:#1e3a8a; font-family:inherit; text-align:center; cursor:pointer; }

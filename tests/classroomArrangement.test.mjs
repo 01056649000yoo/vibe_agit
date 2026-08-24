@@ -290,6 +290,14 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(teacherGuides, /이름표가 해당 자리로 이동/);
   assert.match(teacherGuides, /이름표가 해당 역할 칸으로 이동/);
   assert.match(teacherGuides, /바로 붙은 위·아래·왼쪽·오른쪽 좌석/);
+  assert.match(teacherEntry, /TeacherGuideButton/);
+  assert.match(teacherEntry, /tabId="classroom-arrangement" variant="help"/);
+  assert.match(teacherGuides, /'classroom-arrangement'/);
+  assert.match(teacherGuides, /학생 두 명을 차례로 눌러 자리를 맞바꾸고/);
+  assert.match(teacherGuides, /학생 두 명을 차례로 눌러 역할을 맞바꾸고/);
+  assert.match(seatEntry, /학생 두 명을 차례로 누르면 자리를 맞바꿀 수 있습니다/);
+  assert.match(roleEntry, /학생 두 명을 차례로 누르면 역할을 맞바꿀 수 있습니다/);
+  assert.match(arrangementCss, /\.arrange-edit-bar__icon/);
   assert.match(seatEntry, /필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과/);
   assert.match(seatEntry, /result\.error/);
   assert.match(seatEntry, /<output className=\{`arrange-student-counter/);

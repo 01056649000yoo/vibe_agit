@@ -223,10 +223,14 @@ export default function SeatArrangement({ students, settings, history, onSetting
     })}
   </div>;
 
-  const editBar = editing ? <div className="arrange-edit-bar">
-    <span>{swap.pickedKey
-      ? '바꿀 다른 자리를 눌러 주세요.'
-      : manualResult ? '교사가 직접 보완한 자리표에는 조건 점수를 계산하지 않습니다.' : '조건과 관계없이 두 학생의 자리를 맞바꿀 수 있습니다.'}</span>
+  const editBar = editing ? <div className="arrange-edit-bar" aria-live="polite">
+    <span className="arrange-edit-bar__icon" aria-hidden="true">↔</span>
+    <div className="arrange-edit-bar__copy">
+      <strong>학생 두 명을 차례로 누르면 자리를 맞바꿀 수 있습니다.</strong>
+      <span>{swap.pickedKey
+        ? '첫 학생을 골랐습니다. 바꿀 다른 학생을 눌러 주세요.'
+        : manualResult ? '교사가 직접 보완한 자리표에는 조건 점수를 계산하지 않습니다.' : '조건과 관계없이 바꿀 수 있으며, 바꾼 뒤 수정본을 저장해 주세요.'}</span>
+    </div>
     {swap.edited ? <button type="button" className="arrange-small-button is-dark" disabled={savingEdit} onClick={saveEdited}>{savingEdit ? '저장 중…' : '고친 자리표 저장'}</button> : null}
   </div> : null;
   return <>
