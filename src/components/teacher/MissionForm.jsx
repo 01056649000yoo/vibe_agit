@@ -193,7 +193,7 @@ const MissionForm = ({
                                     color: '#64748B'
                                 }}>
                                     <div style={{ fontSize: '2rem' }}>불러오는 중</div>
-                                    <div style={{ fontSize: '0.95rem', fontWeight: 'bold' }}>
+                                    <div style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold' }}>
                                         저장된 미션 내용을 다시 읽고 있어요.
                                     </div>
                                 </div>
@@ -210,7 +210,7 @@ const MissionForm = ({
                                             padding: '14px',
                                             borderRadius: '12px',
                                             border: '1px solid #ddd',
-                                            fontSize: '1rem',
+                                            fontSize: 'var(--ui-text-lg)',
                                             minHeight: '48px',
                                             width: '100%',
                                             boxSizing: 'border-box'
@@ -235,7 +235,7 @@ const MissionForm = ({
                                     placeholder="안내 가이드 (학생들에게 보여줄 기본 설명)"
                                     value={formData.guide}
                                     onChange={e => setFormData({ ...formData, guide: e.target.value })}
-                                    style={{ padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '80px', fontSize: '1rem', width: '100%', boxSizing: 'border-box' }}
+                                    style={{ padding: '14px', borderRadius: '12px', border: '1px solid #ddd', minHeight: '80px', fontSize: 'var(--ui-text-lg)', width: '100%', boxSizing: 'border-box' }}
                                 />
 
                                 {getGenrePreset(formData.genre) && (
@@ -248,7 +248,7 @@ const MissionForm = ({
                                         >
                                             ✨ {formData.genre} 프리셋 다시 넣기
                                         </Button>
-                                        <span style={{ color: '#64748B', fontSize: '0.78rem' }}>
+                                        <span style={{ color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>
                                             {hasSubmissions
                                                 ? '제출이 시작돼 안내 질문은 그대로 두고 나머지만 채웁니다.'
                                                 : '선생님이 고친 칸은 그대로 두고 빈 칸만 채웁니다.'}
@@ -257,7 +257,7 @@ const MissionForm = ({
                                 )}
 
                                 {presetNotice && (
-                                    <div style={{ padding: '10px 14px', borderRadius: '12px', background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D', fontSize: '0.82rem', fontWeight: 'bold' }}>
+                                    <div style={{ padding: '10px 14px', borderRadius: '12px', background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold' }}>
                                         {presetNotice}
                                     </div>
                                 )}
@@ -265,8 +265,8 @@ const MissionForm = ({
                                 {/* 태그 입력 UI */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', background: '#F8F9FF', borderRadius: '16px', border: '1px solid #E0E7FF' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                        <label style={{ fontSize: '0.85rem', color: '#4F46E5', fontWeight: 'bold' }}>🏷️ 미션 태그</label>
-                                        <span style={{ fontSize: '0.75rem', color: '#6366F1', opacity: 0.8 }}>* 태그를 입력하면 학생들의 글을 키워드별로 분류하여 관리할 수 있습니다.</span>
+                                        <label style={{ fontSize: 'var(--ui-text-sm)', color: '#4F46E5', fontWeight: 'bold' }}>🏷️ 미션 태그</label>
+                                        <span style={{ fontSize: 'var(--ui-text-sm)', color: '#6366F1', opacity: 0.8 }}>* 태그를 입력하면 학생들의 글을 키워드별로 분류하여 관리할 수 있습니다.</span>
                                     </div>
 
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -283,7 +283,7 @@ const MissionForm = ({
                                                     color: 'white',
                                                     padding: '6px 14px',
                                                     borderRadius: '20px',
-                                                    fontSize: '0.85rem',
+                                                    fontSize: 'var(--ui-text-sm)',
                                                     fontWeight: 'bold',
                                                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                                 }}
@@ -320,7 +320,7 @@ const MissionForm = ({
                                                 padding: '12px 16px',
                                                 borderRadius: '12px',
                                                 border: '1px solid #C7D2FE',
-                                                fontSize: '0.9rem',
+                                                fontSize: 'var(--ui-text-md)',
                                                 boxSizing: 'border-box',
                                                 background: 'white'
                                             }}
@@ -336,7 +336,7 @@ const MissionForm = ({
                                                 background: '#C7D2FE',
                                                 color: '#4F46E5',
                                                 padding: '0 16px',
-                                                fontSize: '0.85rem',
+                                                fontSize: 'var(--ui-text-sm)',
                                                 fontWeight: 'bold',
                                                 minHeight: 'auto',
                                                 height: '46px'
@@ -349,7 +349,7 @@ const MissionForm = ({
                                     {/* 자주 쓰는 태그 목록 */}
                                     {frequentTags?.length > 0 && (
                                         <div style={{ marginTop: '8px' }}>
-                                            <div style={{ fontSize: '0.75rem', color: '#6366F1', marginBottom: '8px', fontWeight: 'bold' }}>⭐ 자주 쓰는 태그 (클릭해서 추가)</div>
+                                            <div style={{ fontSize: 'var(--ui-text-sm)', color: '#6366F1', marginBottom: '8px', fontWeight: 'bold' }}>⭐ 자주 쓰는 태그 (클릭해서 추가)</div>
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                                 {frequentTags.map((tag, idx) => (
                                                     <div
@@ -367,13 +367,13 @@ const MissionForm = ({
                                                         }}
                                                         onClick={() => handleAddTag(tag)}
                                                     >
-                                                        <span style={{ fontSize: '0.8rem', color: '#4F46E5', fontWeight: 'bold' }}>#{tag}</span>
+                                                        <span style={{ fontSize: 'var(--ui-text-sm)', color: '#4F46E5', fontWeight: 'bold' }}>#{tag}</span>
                                                         <span
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 removeFrequentTag(tag);
                                                             }}
-                                                            style={{ color: '#FDA4AF', fontSize: '0.9rem', marginLeft: '4px', cursor: 'pointer' }}
+                                                            style={{ color: '#FDA4AF', fontSize: 'var(--ui-text-md)', marginLeft: '4px', cursor: 'pointer' }}
                                                         >
                                                             ×
                                                         </span>
@@ -420,10 +420,10 @@ const MissionForm = ({
                                             }} />
                                         </div>
                                         <div>
-                                            <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#2C3E50' }}>
+                                            <div style={{ fontWeight: 'bold', fontSize: 'var(--ui-text-md)', color: '#2C3E50' }}>
                                                 🎯 핵심 질문 설계 {useAIQuestions ? '(사용 중)' : '(선택)'}
                                             </div>
-                                            <div style={{ fontSize: '0.8rem', color: '#7F8C8D' }}>
+                                            <div style={{ fontSize: 'var(--ui-text-sm)', color: '#7F8C8D' }}>
                                                 {useAIQuestions
                                                     ? `${formData.guide_questions?.length || 0}개의 질문이 준비되었습니다.`
                                                     : '학생들이 생각의 구조를 잡을 수 있도록 AI가 질문을 만들어줍니다.'}
@@ -506,7 +506,7 @@ const MissionForm = ({
                                             {/* 헤더 부분 */}
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '32px' }}>
                                                 <div>
-                                                    <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: '950', color: '#1E293B', letterSpacing: '-1px' }}>
+                                                    <h2 style={{ margin: 0, fontSize: 'var(--ui-text-3xl)', fontWeight: '950', color: '#1E293B', letterSpacing: '-1px' }}>
                                                         🪄 핵심 질문 <span style={{ color: '#6366F1' }}>설계 마법사</span>
                                                     </h2>
                                                     <p style={{ margin: '14px 0 0 0', color: '#64748B', fontSize: '1.2rem', fontWeight: '500', letterSpacing: '-0.3px' }}>
@@ -535,8 +535,8 @@ const MissionForm = ({
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: '180px' }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                                            <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#6366F1' }}>질문 개수 설정</span>
-                                                            <span style={{ fontSize: '1rem', fontWeight: '900', color: '#4F46E5', background: 'white', padding: '2px 12px', borderRadius: '10px', border: '1px solid #E2E8F0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                                            <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#6366F1' }}>질문 개수 설정</span>
+                                                            <span style={{ fontSize: 'var(--ui-text-lg)', fontWeight: '900', color: '#4F46E5', background: 'white', padding: '2px 12px', borderRadius: '10px', border: '1px solid #E2E8F0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                                                                 {formData.question_count || 3}개
                                                             </span>
                                                         </div>
@@ -560,7 +560,7 @@ const MissionForm = ({
                                                         />
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', padding: '0 2px' }}>
                                                             {[1, 2, 3, 4, 5].map(n => (
-                                                                <span key={n} style={{ fontSize: '0.7rem', color: (formData.question_count || 3) === n ? '#6366F1' : '#94A3B8', fontWeight: 'bold' }}>{n}</span>
+                                                                <span key={n} style={{ fontSize: 'var(--ui-text-sm)', color: (formData.question_count || 3) === n ? '#6366F1' : '#94A3B8', fontWeight: 'bold' }}>{n}</span>
                                                             ))}
                                                         </div>
                                                     </div>
@@ -576,7 +576,7 @@ const MissionForm = ({
                                                             border: 'none',
                                                             padding: '16px 24px',
                                                             borderRadius: '18px',
-                                                            fontSize: '1rem',
+                                                            fontSize: 'var(--ui-text-lg)',
                                                             boxShadow: '0 10px 20px -5px rgba(219, 39, 119, 0.4)',
                                                             flex: isMobile ? 1 : 'none',
                                                             display: 'inline-flex',
@@ -603,7 +603,7 @@ const MissionForm = ({
                                                             border: 'none',
                                                             padding: '16px 28px',
                                                             borderRadius: '18px',
-                                                            fontSize: '1rem',
+                                                            fontSize: 'var(--ui-text-lg)',
                                                             boxShadow: '0 10px 20px -5px rgba(99, 102, 241, 0.4)',
                                                             flex: isMobile ? 1 : 'none'
                                                         }}
@@ -721,7 +721,7 @@ const MissionForm = ({
                                                                         padding: '10px',
                                                                         borderRadius: '12px',
                                                                         fontWeight: 'bold',
-                                                                        fontSize: '0.8rem',
+                                                                        fontSize: 'var(--ui-text-sm)',
                                                                         whiteSpace: 'nowrap'
                                                                     }}
                                                                 >
@@ -741,7 +741,7 @@ const MissionForm = ({
                                                                         padding: '10px',
                                                                         borderRadius: '12px',
                                                                         fontWeight: 'bold',
-                                                                        fontSize: '0.85rem',
+                                                                        fontSize: 'var(--ui-text-sm)',
                                                                         transition: 'all 0.2s'
                                                                     }}
                                                                     onMouseOver={e => e.currentTarget.style.background = '#FFE4E6'}
@@ -821,7 +821,7 @@ const MissionForm = ({
                                 }}>
                                     {/* 헤더: 제목 + 저장 버튼 */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                        <h3 style={{ margin: 0, fontSize: '1.0rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <h3 style={{ margin: 0, fontSize: 'var(--ui-text-lg)', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             ⚙️ 미션 세부 설정
                                         </h3>
                                         <Button
@@ -832,7 +832,7 @@ const MissionForm = ({
                                                 border: '1px solid #DFE6E9',
                                                 color: '#636E72',
                                                 padding: '5px 12px',
-                                                fontSize: '0.75rem',
+                                                fontSize: 'var(--ui-text-sm)',
                                                 borderRadius: '8px',
                                                 minHeight: 'auto',
                                                 fontWeight: 'bold',
@@ -858,13 +858,13 @@ const MissionForm = ({
                                     }}>
                                         {/* (Left) 분량 및 설정 */}
                                         <div style={{ flex: 1, width: '100%' }}>
-                                            <label style={{ fontSize: '0.9rem', color: '#2E86C1', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                            <label style={{ fontSize: 'var(--ui-text-md)', color: '#2E86C1', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                                                 <span style={{ fontSize: '1.1rem' }}>📏</span> 분량 및 설정
                                             </label>
 
                                             <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
                                                 <div style={{ flex: 1 }}>
-                                                    <span style={{ fontSize: '0.8rem', color: '#7F8C8D', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>최소 글자수</span>
+                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: '#7F8C8D', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>최소 글자수</span>
                                                     <input
                                                         type="number"
                                                         step="50"
@@ -876,7 +876,7 @@ const MissionForm = ({
                                                             padding: '10px',
                                                             borderRadius: '12px',
                                                             border: '2px solid #AED6F1',
-                                                            fontSize: '1.0rem',
+                                                            fontSize: 'var(--ui-text-lg)',
                                                             textAlign: 'center',
                                                             fontWeight: 'bold',
                                                             color: '#2C3E50',
@@ -885,7 +885,7 @@ const MissionForm = ({
                                                     />
                                                 </div>
                                                 <div style={{ flex: 1 }}>
-                                                    <span style={{ fontSize: '0.8rem', color: '#7F8C8D', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>문단 개수</span>
+                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: '#7F8C8D', display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>문단 개수</span>
                                                     <input
                                                         type="number"
                                                         placeholder="0"
@@ -896,7 +896,7 @@ const MissionForm = ({
                                                             padding: '10px',
                                                             borderRadius: '12px',
                                                             border: '2px solid #AED6F1',
-                                                            fontSize: '1.0rem',
+                                                            fontSize: 'var(--ui-text-lg)',
                                                             textAlign: 'center',
                                                             fontWeight: 'bold',
                                                             color: '#2C3E50',
@@ -926,7 +926,7 @@ const MissionForm = ({
                                                 <span style={{ fontSize: '1.1rem' }}>
                                                     {formData.allow_comments ? '💬' : '🔒'}
                                                 </span>
-                                                <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: formData.allow_comments ? '#16A085' : '#7F8C8D' }}>
+                                                <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: formData.allow_comments ? '#16A085' : '#7F8C8D' }}>
                                                     {formData.allow_comments ? '친구 댓글 허용함' : '댓글 기능 끄기'}
                                                 </span>
                                             </div>
@@ -937,7 +937,7 @@ const MissionForm = ({
 
                                         {/* (Right) 포인트 보상 설정 */}
                                         <div style={{ flex: 1, width: '100%' }}>
-                                            <label style={{ fontSize: '0.9rem', color: '#F39C12', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                            <label style={{ fontSize: 'var(--ui-text-md)', color: '#F39C12', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                                                 <span style={{ fontSize: '1.1rem' }}>💰</span> 포인트 보상 설정
                                             </label>
 
@@ -952,7 +952,7 @@ const MissionForm = ({
                                                     borderRadius: '16px',
                                                     border: '1px solid #F9E79F'
                                                 }}>
-                                                    <span style={{ fontSize: '0.9rem', color: '#B7950B', fontWeight: 'bold' }}>기본 보상</span>
+                                                    <span style={{ fontSize: 'var(--ui-text-md)', color: '#B7950B', fontWeight: 'bold' }}>기본 보상</span>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         <input
                                                             type="number"
@@ -964,14 +964,14 @@ const MissionForm = ({
                                                                 padding: '6px',
                                                                 borderRadius: '8px',
                                                                 border: '2px solid #FDEBD0',
-                                                                fontSize: '1.0rem',
+                                                                fontSize: 'var(--ui-text-lg)',
                                                                 fontWeight: 'bold',
                                                                 textAlign: 'right',
                                                                 color: '#D35400',
                                                                 background: 'white'
                                                             }}
                                                         />
-                                                        <span style={{ fontSize: '0.9rem', fontWeight: '900', color: '#D35400' }}>P</span>
+                                                        <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: '900', color: '#D35400' }}>P</span>
                                                     </div>
                                                 </div>
 
@@ -999,16 +999,16 @@ const MissionForm = ({
                                                                 padding: '6px',
                                                                 borderRadius: '8px',
                                                                 border: '2px solid #FDEBD0',
-                                                                fontSize: '0.9rem',
+                                                                fontSize: 'var(--ui-text-md)',
                                                                 fontWeight: 'bold',
                                                                 textAlign: 'center',
                                                                 background: 'white'
                                                             }}
                                                         />
-                                                        <span style={{ fontSize: '0.8rem', color: '#7F8C8D', fontWeight: 'bold' }}>자 추가 작성 시</span>
+                                                        <span style={{ fontSize: 'var(--ui-text-sm)', color: '#7F8C8D', fontWeight: 'bold' }}>자 추가 작성 시</span>
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#B7950B' }}>+</span>
+                                                        <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#B7950B' }}>+</span>
                                                         <input
                                                             type="number"
                                                             step="10"
@@ -1019,14 +1019,14 @@ const MissionForm = ({
                                                                 padding: '6px',
                                                                 borderRadius: '8px',
                                                                 border: '2px solid #FDEBD0',
-                                                                fontSize: '0.9rem',
+                                                                fontSize: 'var(--ui-text-md)',
                                                                 fontWeight: 'bold',
                                                                 textAlign: 'center',
                                                                 color: '#D35400',
                                                                 background: 'white'
                                                             }}
                                                         />
-                                                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#D35400' }}>P</span>
+                                                        <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#D35400' }}>P</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1108,7 +1108,7 @@ const MissionForm = ({
                         >
                             🪄
                         </motion.div>
-                        <h2 style={{ fontSize: '2.5rem', fontWeight: '950', color: '#2C3E50', margin: 0, letterSpacing: '-1px' }}>
+                        <h2 style={{ fontSize: 'var(--ui-text-3xl)', fontWeight: '950', color: '#2C3E50', margin: 0, letterSpacing: '-1px' }}>
                             핵심질문을 설계하고 있어요
                         </h2>
                     </motion.div>,

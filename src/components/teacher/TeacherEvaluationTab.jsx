@@ -49,10 +49,10 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
         <div style={{ width: '100%' }}>
             <div style={{ marginBottom: '32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '9px', marginBottom: '8px' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '900', color: '#2C3E50' }}>📈 학생 평가 관리</h2>
+                    <h2 style={{ margin: 0, fontSize: 'var(--ui-text-2xl)', fontWeight: '900', color: '#2C3E50' }}>📈 학생 평가 관리</h2>
                     <TeacherGuideButton tabId="evaluation" variant="help" />
                 </div>
-                <p style={{ margin: 0, color: '#7F8C8D', fontSize: '1rem' }}>미션별 학생들의 성장도와 분석 리포트를 한눈에 확인하세요.</p>
+                <p style={{ margin: 0, color: '#7F8C8D', fontSize: 'var(--ui-text-lg)' }}>미션별 학생들의 성장도와 분석 리포트를 한눈에 확인하세요.</p>
             </div>
 
             {evaluationMissions.length === 0 ? (
@@ -81,17 +81,17 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
                             }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ padding: '4px 12px', background: '#F0F9FF', color: '#0369A1', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '900' }}>
+                                <span style={{ padding: '4px 12px', background: '#F0F9FF', color: '#0369A1', borderRadius: '10px', fontSize: 'var(--ui-text-sm)', fontWeight: '900' }}>
                                     {mission.genre || '미분류'}
                                 </span>
-                                <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
+                                <span style={{ fontSize: 'var(--ui-text-sm)', color: '#94A3B8' }}>
                                     {new Date(mission.created_at).toLocaleDateString()}
                                 </span>
                             </div>
-                            <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1E293B', fontWeight: '900', lineHeight: '1.4' }}>{mission.title}</h3>
+                            <h3 style={{ margin: 0, fontSize: 'var(--ui-text-lg)', color: '#1E293B', fontWeight: '900', lineHeight: '1.4' }}>{mission.title}</h3>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#F8FAFC', padding: '12px', borderRadius: '16px' }}>
                                 <span style={{ fontSize: '1.2rem' }}>📊</span>
-                                <div style={{ fontSize: '0.9rem' }}>
+                                <div style={{ fontSize: 'var(--ui-text-md)' }}>
                                     <span style={{ color: '#64748B', fontWeight: 'bold' }}>평가 단계:</span>{' '}
                                     <span style={{ color: '#0369A1', fontWeight: '900' }}>{mission.evaluation_rubric?.levels?.length || 0}단계</span>
                                 </div>
@@ -99,7 +99,7 @@ const TeacherEvaluationTab = ({ activeClass, isMobile }) => {
                             {standardCount > 0 && (
                                 <div style={{
                                     padding: '10px 12px', borderRadius: '14px', background: '#EEF2FF',
-                                    color: '#4338CA', fontSize: '0.8rem', fontWeight: '800'
+                                    color: '#4338CA', fontSize: 'var(--ui-text-sm)', fontWeight: '800'
                                 }}>
                                     📚 2022 국어 · {formatKoreanGradeBand(curriculum)} · 성취기준 {standardCount}개
                                 </div>

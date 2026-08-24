@@ -77,10 +77,10 @@ const StudentModals = ({
                             {loadingHistory ? <p style={{ textAlign: 'center', color: '#ADB5BD' }}>로딩 중...</p> : historyLogs.length === 0 ? <p style={{ textAlign: 'center', color: '#ADB5BD' }}>기록이 없습니다.</p> : historyLogs.map((l, idx) => (
                                 <div key={l.id || `log-${idx}`} style={{ padding: '12px 0', borderBottom: '1px solid #F8F9FA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
-                                        <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#495057' }}>{l.reason}</div>
-                                        <div style={{ fontSize: '0.7rem', color: '#ADB5BD' }}>{new Date(l.created_at).toLocaleString()}</div>
+                                        <div style={{ fontWeight: 'bold', fontSize: 'var(--ui-text-sm)', color: '#495057' }}>{l.reason}</div>
+                                        <div style={{ fontSize: 'var(--ui-text-sm)', color: '#ADB5BD' }}>{new Date(l.created_at).toLocaleString()}</div>
                                     </div>
-                                    <div style={{ fontWeight: '900', color: l.amount > 0 ? '#27AE60' : '#E74C3C', fontSize: '1rem' }}>{l.amount > 0 ? `+${l.amount}` : l.amount}</div>
+                                    <div style={{ fontWeight: '900', color: l.amount > 0 ? '#27AE60' : '#E74C3C', fontSize: 'var(--ui-text-lg)' }}>{l.amount > 0 ? `+${l.amount}` : l.amount}</div>
                                 </div>
                             ))}
                         </div>
@@ -94,7 +94,7 @@ const StudentModals = ({
                     <Card style={{ width: '340px', padding: '24px', textAlign: 'center', borderRadius: '24px' }}>
                         <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⚠️</div>
                         <h3 style={{ margin: '0 0 8px 0' }}>학생을 삭제할까요?</h3>
-                        <p style={{ color: '#6C757D', fontSize: '0.85rem', marginBottom: '20px', lineHeight: '1.5' }}>
+                        <p style={{ color: '#6C757D', fontSize: 'var(--ui-text-sm)', marginBottom: '20px', lineHeight: '1.5' }}>
                             {deleteTarget?.name} 학생 정보를 삭제합니다.
                         </p>
 
@@ -141,12 +141,12 @@ const StudentModals = ({
                     >
                         <Card style={{ padding: '32px', borderRadius: '32px', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#2C3E50', fontWeight: '900' }}>🗑️ 삭제된 학생 복구</h2>
+                                <h2 style={{ fontSize: 'var(--ui-text-2xl)', margin: 0, color: '#2C3E50', fontWeight: '900' }}>🗑️ 삭제된 학생 복구</h2>
                                 <ModalCloseButton onClick={() => setIsTrashModalOpen(false)} label="삭제된 학생 복구 닫기" />
                             </div>
 
                             <div style={{ background: '#FFFCEB', padding: '16px', borderRadius: '16px', border: '1px solid #FFE082', marginBottom: '24px' }}>
-                                <p style={{ margin: 0, fontSize: '0.85rem', color: '#B26700', lineHeight: '1.5', fontWeight: 'bold' }}>
+                                <p style={{ margin: 0, fontSize: 'var(--ui-text-sm)', color: '#B26700', lineHeight: '1.5', fontWeight: 'bold' }}>
                                     💡 삭제된 학생은 <span style={{ textDecoration: 'underline' }}>삭제 후 3일간</span> 이곳에서 복구하실 수 있습니다.
                                     3일이 경과하면 모든 데이터가 자동으로 영구 삭제됩니다.
                                 </p>
@@ -167,7 +167,7 @@ const StudentModals = ({
                                         }}>
                                             <div>
                                                 <span style={{ fontWeight: 'bold', color: '#2C3E50', display: 'block' }}>👤 {s.name}</span>
-                                                <span style={{ fontSize: '0.75rem', color: '#95A5A6' }}>
+                                                <span style={{ fontSize: 'var(--ui-text-sm)', color: '#95A5A6' }}>
                                                     삭제일: {new Date(s.deleted_at).toLocaleDateString()}
                                                 </span>
                                             </div>
@@ -235,7 +235,7 @@ const StudentModals = ({
                         <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: 'clamp(10px, 1.8vh, 20px)' }}>
                             <div style={{ minWidth: 0 }}>
                                 <h2 id="all-student-codes-title" style={{ margin: 0, fontSize: 'clamp(1.15rem, 2.4vw, 1.8rem)', color: '#2C3E50', fontWeight: '900', lineHeight: 1.25 }}>🔑 우리 반 접속 코드 전체 확인</h2>
-                                <small style={{ display: 'block', marginTop: '4px', color: '#94A3B8', fontSize: '0.75rem', fontWeight: '800' }}>{students.length}명</small>
+                                <small style={{ display: 'block', marginTop: '4px', color: '#94A3B8', fontSize: 'var(--ui-text-sm)', fontWeight: '800' }}>{students.length}명</small>
                             </div>
                             <Button variant="ghost" onClick={() => setIsAllCodesModalOpen(false)} style={{ flex: '0 0 auto' }}>닫기</Button>
                         </div>
@@ -277,7 +277,7 @@ const StudentModals = ({
                         <div style={{ padding: '40px 40px 10px 40px', background: 'linear-gradient(135deg, #F8FAFF 0%, #FFFFFF 100%)', borderBottom: '1px solid #F1F3F5', position: 'relative' }}>
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>👑</div>
-                                <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: '1000', color: '#2C3E50', letterSpacing: '-1px' }}>우리 반 활동 열정 랭킹</h2>
+                                <h2 style={{ margin: 0, fontSize: 'var(--ui-text-3xl)', fontWeight: '1000', color: '#2C3E50', letterSpacing: '-1px' }}>우리 반 활동 열정 랭킹</h2>
 
                                 {/* 탭 스위처 */}
                                 <div style={{
@@ -301,7 +301,7 @@ const StudentModals = ({
                                                 borderRadius: '12px',
                                                 border: 'none',
                                                 cursor: 'pointer',
-                                                fontSize: '0.95rem',
+                                                fontSize: 'var(--ui-text-md)',
                                                 fontWeight: 'bold',
                                                 transition: 'all 0.2s',
                                                 background: rankingTab === tab.id ? 'white' : 'transparent',
@@ -358,19 +358,19 @@ const StudentModals = ({
                                         >
                                             <div style={{
                                                 width: '32px', height: '32px', borderRadius: '50%', background: isTop3 ? 'white' : 'rgba(0,0,0,0.03)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: '900', color: isTop3 ? '#2C3E50' : '#ADB5BD',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--ui-text-lg)', fontWeight: '900', color: isTop3 ? '#2C3E50' : '#ADB5BD',
                                                 boxShadow: isTop3 ? '0 2px 5px rgba(0,0,0,0.1)' : 'none'
                                             }}>
                                                 {medal || (idx + 1)}
                                             </div>
-                                            <div style={{ fontSize: '1.05rem', fontWeight: '900', color: '#2C3E50', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
+                                            <div style={{ fontSize: 'var(--ui-text-lg)', fontWeight: '900', color: '#2C3E50', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
                                                 {s.name}
                                             </div>
                                             <div style={{ textAlign: 'center' }}>
                                                 <div style={{ fontSize: '1.3rem', fontWeight: '1000', color: isTop3 ? '#F39C12' : '#546E7A', fontFamily: 'Outfit' }}>
                                                     {score.toLocaleString()}
                                                 </div>
-                                                <div style={{ fontSize: '0.65rem', fontWeight: '900', color: '#ADB5BD', marginTop: '-2px', letterSpacing: '0.5px' }}>POINTS</div>
+                                                <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: '900', color: '#ADB5BD', marginTop: '-2px', letterSpacing: '0.5px' }}>POINTS</div>
                                             </div>
                                         </motion.div>
                                     );

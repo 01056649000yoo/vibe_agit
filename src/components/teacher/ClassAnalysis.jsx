@@ -107,14 +107,14 @@ const MetricCard = ({ icon, label, value, note, background, color }) => (
         border: '1px solid #E2E8F0',
         background: background || '#F8FAFC'
     }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: '#64748B', fontSize: '0.75rem', fontWeight: '800' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: '#64748B', fontSize: 'var(--ui-text-sm)', fontWeight: '800' }}>
             <span aria-hidden="true">{icon}</span>
             <span>{label}</span>
         </div>
         <div style={{ marginTop: '7px', color: color || '#0F172A', fontSize: '1.35rem', fontWeight: '900', lineHeight: 1.15 }}>
             {value}
         </div>
-        {note && <div style={{ marginTop: '5px', color: '#94A3B8', fontSize: '0.68rem', lineHeight: 1.35 }}>{note}</div>}
+        {note && <div style={{ marginTop: '5px', color: '#94A3B8', fontSize: 'var(--ui-text-sm)', lineHeight: 1.35 }}>{note}</div>}
     </div>
 );
 
@@ -146,15 +146,15 @@ const ActionCard = ({ icon, title, description, action, tone, renderDetail, onAc
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'flex-start' }}>
                 <div style={{ minWidth: 0 }}>
-                    <strong style={{ display: 'flex', gap: '7px', alignItems: 'center', color: tone.text, fontSize: '0.9rem' }}>
+                    <strong style={{ display: 'flex', gap: '7px', alignItems: 'center', color: tone.text, fontSize: 'var(--ui-text-md)' }}>
                         <span aria-hidden="true">{icon}</span>{title}
                     </strong>
-                    <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.7rem', lineHeight: 1.4 }}>{description}</p>
+                    <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: 'var(--ui-text-sm)', lineHeight: 1.4 }}>{description}</p>
                 </div>
                 <span style={{
                     flex: '0 0 auto', minWidth: '34px', padding: '5px 8px', borderRadius: '999px',
                     background: count > 0 ? tone.badge : '#E2E8F0', color: count > 0 ? tone.text : '#64748B',
-                    fontSize: '0.82rem', fontWeight: '900', textAlign: 'center'
+                    fontSize: 'var(--ui-text-sm)', fontWeight: '900', textAlign: 'center'
                 }}>{count}건</span>
             </div>
 
@@ -166,22 +166,22 @@ const ActionCard = ({ icon, title, description, action, tone, renderDetail, onAc
                             background: 'rgba(255,255,255,0.78)', border: '1px solid rgba(148,163,184,0.16)'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                                <strong style={{ color: '#334155', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>{item.student_name || '이름 없음'}</strong>
-                                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#64748B', fontSize: '0.7rem' }}>
+                                <strong style={{ color: '#334155', fontSize: 'var(--ui-text-sm)', whiteSpace: 'nowrap' }}>{item.student_name || '이름 없음'}</strong>
+                                <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>
                                     {renderDetail(item)}
                                 </span>
                             </div>
                         </div>
                     ))}
-                    {count > 4 && <small style={{ color: '#64748B', fontSize: '0.68rem', fontWeight: '700' }}>외 {count - 4}건이 더 있습니다.</small>}
+                    {count > 4 && <small style={{ color: '#64748B', fontSize: 'var(--ui-text-sm)', fontWeight: '700' }}>외 {count - 4}건이 더 있습니다.</small>}
                 </div>
             ) : (
-                <div style={{ marginTop: '11px', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.65)', color: '#64748B', fontSize: '0.73rem', textAlign: 'center' }}>
+                <div style={{ marginTop: '11px', padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.65)', color: '#64748B', fontSize: 'var(--ui-text-sm)', textAlign: 'center' }}>
                     지금 확인할 항목이 없습니다.
                 </div>
             )}
             {onActivate && (
-                <div style={{ marginTop: '10px', color: tone.text, fontSize: '0.7rem', fontWeight: '900', textAlign: 'right' }}>
+                <div style={{ marginTop: '10px', color: tone.text, fontSize: 'var(--ui-text-sm)', fontWeight: '900', textAlign: 'right' }}>
                     {actionLabel || '관리 화면으로 이동'} →
                 </div>
             )}
@@ -245,7 +245,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', gap: '9px' }}>
                     {[1, 2, 3, 4, 5, 6, 7].map((key) => <div key={key} style={{ height: '92px', borderRadius: '15px', background: '#F8FAFC' }} />)}
                 </div>
-                <span style={{ color: '#64748B', fontSize: '0.75rem' }}>학급 운영 현황을 집계하는 중...</span>
+                <span style={{ color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>학급 운영 현황을 집계하는 중...</span>
             </div>
         );
     }
@@ -254,8 +254,8 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
             <header style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', gap: '12px', alignItems: isMobile ? 'stretch' : 'flex-start' }}>
                 <div>
-                    <h3 style={{ margin: 0, color: '#1E293B', fontSize: '1.05rem', fontWeight: '900' }}>📊 학급 운영 현황</h3>
-                    <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.74rem', lineHeight: 1.45 }}>
+                    <h3 style={{ margin: 0, color: '#1E293B', fontSize: 'var(--ui-text-lg)', fontWeight: '900' }}>📊 학급 운영 현황</h3>
+                    <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: 'var(--ui-text-sm)', lineHeight: 1.45 }}>
                         활동량과 지금 확인해야 할 일을 한 화면에서 살펴봅니다.
                     </p>
                 </div>
@@ -272,7 +272,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                                     style={{
                                         border: 0, borderRadius: '8px', padding: '7px 9px', cursor: 'pointer',
                                         background: selected ? 'white' : 'transparent', color: selected ? '#1D4ED8' : '#64748B',
-                                        boxShadow: selected ? '0 1px 4px rgba(15,23,42,0.1)' : 'none', fontSize: '0.7rem', fontWeight: '850'
+                                        boxShadow: selected ? '0 1px 4px rgba(15,23,42,0.1)' : 'none', fontSize: 'var(--ui-text-sm)', fontWeight: '850'
                                     }}
                                 >{option.label}</button>
                             );
@@ -286,22 +286,22 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                         style={{
                             border: '1px solid #CBD5E1', borderRadius: '10px', padding: '7px 10px',
                             background: 'white', color: '#475569', cursor: refreshing ? 'wait' : 'pointer',
-                            fontSize: '0.7rem', fontWeight: '800', opacity: refreshing ? 0.65 : 1
+                            fontSize: 'var(--ui-text-sm)', fontWeight: '800', opacity: refreshing ? 0.65 : 1
                         }}
                     >{refreshing ? '갱신 중...' : '↻ 새로고침'}</button>
                 </div>
             </header>
 
             {errorMessage && (
-                <div role="alert" style={{ padding: '12px', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', fontSize: '0.75rem', fontWeight: '700' }}>
+                <div role="alert" style={{ padding: '12px', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', fontSize: 'var(--ui-text-sm)', fontWeight: '700' }}>
                     {errorMessage}
                 </div>
             )}
 
             <section aria-labelledby="class-summary-title">
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'baseline', marginBottom: '9px' }}>
-                    <h4 id="class-summary-title" style={{ margin: 0, color: '#334155', fontSize: '0.86rem', fontWeight: '900' }}>핵심 활동 요약</h4>
-                    <small style={{ color: '#94A3B8', fontSize: '0.66rem' }}>{periodLabel} 기준</small>
+                    <h4 id="class-summary-title" style={{ margin: 0, color: '#334155', fontSize: 'var(--ui-text-sm)', fontWeight: '900' }}>핵심 활동 요약</h4>
+                    <small style={{ color: '#94A3B8', fontSize: 'var(--ui-text-sm)' }}>{periodLabel} 기준</small>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))', gap: '9px' }}>
                     <DashboardCardHost
@@ -321,15 +321,15 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                         }}
                     />
                 </div>
-                <p style={{ margin: '7px 2px 0', color: '#94A3B8', fontSize: '0.64rem', lineHeight: 1.4 }}>
+                <p style={{ margin: '7px 2px 0', color: '#94A3B8', fontSize: 'var(--ui-text-sm)', lineHeight: 1.4 }}>
                     접속 학생은 선택한 기간의 로그인 기록, 나머지는 글쓰기 발자국 기록을 시작한 이후 활동부터 집계합니다.
                 </p>
             </section>
 
             <section aria-labelledby="teacher-actions-title">
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'baseline', marginBottom: '9px' }}>
-                    <h4 id="teacher-actions-title" style={{ margin: 0, color: '#334155', fontSize: '0.86rem', fontWeight: '900' }}>선생님이 확인할 일</h4>
-                    <small style={{ color: '#94A3B8', fontSize: '0.66rem' }}>현재 상태 기준</small>
+                    <h4 id="teacher-actions-title" style={{ margin: 0, color: '#334155', fontSize: 'var(--ui-text-sm)', fontWeight: '900' }}>선생님이 확인할 일</h4>
+                    <small style={{ color: '#94A3B8', fontSize: 'var(--ui-text-sm)' }}>현재 상태 기준</small>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '9px' }}>
                     <DashboardCardHost
@@ -356,12 +356,12 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
 
             <section aria-labelledby="mission-status-title">
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'baseline', marginBottom: '9px' }}>
-                    <h4 id="mission-status-title" style={{ margin: 0, color: '#334155', fontSize: '0.86rem', fontWeight: '900' }}>진행 중 미션 현황</h4>
-                    <small style={{ color: '#94A3B8', fontSize: '0.66rem' }}>최근 미션 6개</small>
+                    <h4 id="mission-status-title" style={{ margin: 0, color: '#334155', fontSize: 'var(--ui-text-sm)', fontWeight: '900' }}>진행 중 미션 현황</h4>
+                    <small style={{ color: '#94A3B8', fontSize: 'var(--ui-text-sm)' }}>최근 미션 6개</small>
                 </div>
                 {data.missions.length > 0 ? (
                     <div style={{ overflowX: 'auto', border: '1px solid #E2E8F0', borderRadius: '14px' }}>
-                        <table style={{ width: '100%', minWidth: '660px', borderCollapse: 'collapse', fontSize: '0.73rem' }}>
+                        <table style={{ width: '100%', minWidth: '660px', borderCollapse: 'collapse', fontSize: 'var(--ui-text-sm)' }}>
                             <thead>
                                 <tr style={{ background: '#F8FAFC', color: '#64748B', textAlign: 'center' }}>
                                     <th scope="col" style={{ padding: '10px 12px', textAlign: 'left' }}>미션</th>
@@ -387,8 +387,8 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                                         style={{ borderTop: '1px solid #E2E8F0', color: '#334155', textAlign: 'center', cursor: 'pointer' }}
                                     >
                                         <td style={{ padding: '11px 12px', textAlign: 'left', maxWidth: '250px' }}>
-                                            <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.77rem' }}>{mission.title || '제목 없는 미션'}</strong>
-                                            <small style={{ color: '#94A3B8', fontSize: '0.64rem' }}>{missionTypeLabel(mission.mission_type)} · {formatDate(mission.created_at)} · 열기 ›</small>
+                                            <strong style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 'var(--ui-text-sm)' }}>{mission.title || '제목 없는 미션'}</strong>
+                                            <small style={{ color: '#94A3B8', fontSize: 'var(--ui-text-sm)' }}>{missionTypeLabel(mission.mission_type)} · {formatDate(mission.created_at)} · 열기 ›</small>
                                         </td>
                                         <td style={{ padding: '11px 8px', fontWeight: '850', color: '#1D4ED8' }}>{mission.submitted_count || 0}/{totalStudents}</td>
                                         <td style={{ padding: '11px 8px' }}>{mission.confirmed_count || 0}</td>
@@ -401,7 +401,7 @@ const ClassAnalysis = ({ classId, isMobile, onNavigate }) => {
                         </table>
                     </div>
                 ) : (
-                    <div style={{ padding: '24px', borderRadius: '14px', background: '#F8FAFC', border: '1px dashed #CBD5E1', color: '#64748B', textAlign: 'center', fontSize: '0.75rem' }}>
+                    <div style={{ padding: '24px', borderRadius: '14px', background: '#F8FAFC', border: '1px dashed #CBD5E1', color: '#64748B', textAlign: 'center', fontSize: 'var(--ui-text-sm)' }}>
                         현재 진행 중인 글쓰기 미션이 없습니다.
                     </div>
                 )}

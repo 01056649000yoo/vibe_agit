@@ -54,7 +54,7 @@
 
 .mission-lab-questions-header h2 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: var(--ui-text-xl);
     font-weight: 800;
     color: #1e293b;
     letter-spacing: -0.02em;
@@ -62,7 +62,7 @@
 
 .mission-lab-questions-subtitle {
     margin: 4px 0 0;
-    font-size: 0.85rem;
+    font-size: var(--ui-text-sm);
     color: #64748b;
 }
 
@@ -73,7 +73,7 @@
     background: #fef2f2;
     border: 1px solid #fecaca;
     color: #dc2626;
-    font-size: 0.88rem;
+    font-size: var(--ui-text-sm);
     font-weight: 600;
 }
 
@@ -102,13 +102,13 @@
 
 .mission-lab-questions-empty p {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: var(--ui-text-md);
     font-weight: 700;
     color: #334155;
 }
 
 .mission-lab-questions-empty span {
-    font-size: 0.82rem;
+    font-size: var(--ui-text-sm);
     color: #94a3b8;
 }
 
@@ -145,28 +145,28 @@
     background: #fdf2f8;
     color: #db2777;
     border-radius: 6px;
-    font-size: 0.72rem;
+    font-size: var(--ui-text-sm);
     font-weight: 700;
     margin-bottom: 4px;
 }
 
 .mission-lab-questions-room-info h4 {
     margin: 0;
-    font-size: 1rem;
+    font-size: var(--ui-text-lg);
     font-weight: 700;
     color: #1e293b;
 }
 
 .mission-lab-questions-room-info p {
     margin: 4px 0 0;
-    font-size: 0.82rem;
+    font-size: var(--ui-text-sm);
     color: #64748b;
 }
 
 .mission-lab-questions-room-meta {
     display: flex;
     justify-content: space-between;
-    font-size: 0.78rem;
+    font-size: var(--ui-text-sm);
     color: #94a3b8;
     border-top: 1px solid #e2e8f0;
     padding-top: 8px;
@@ -190,7 +190,7 @@
     border: none;
     padding: 6px 10px;
     border-radius: 8px;
-    font-size: 0.85rem;
+    font-size: var(--ui-text-sm);
     font-weight: 700;
     color: #64748b;
     cursor: pointer;
@@ -249,7 +249,7 @@
     border-radius: 8px;
     background: #e2e8f0;
     color: #475569;
-    font-size: 0.8rem;
+    font-size: var(--ui-text-sm);
     font-weight: 800;
 }
 
@@ -259,7 +259,7 @@
 }
 
 .mission-lab-question-votes {
-    font-size: 0.72rem;
+    font-size: var(--ui-text-sm);
     font-weight: 700;
     color: #db2777;
 }
@@ -267,7 +267,7 @@
 .mission-lab-question-text {
     flex: 1;
     margin: 0;
-    font-size: 0.95rem;
+    font-size: var(--ui-text-md);
     font-weight: 600;
     color: #1e293b;
     line-height: 1.5;

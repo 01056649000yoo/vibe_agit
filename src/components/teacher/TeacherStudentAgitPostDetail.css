@@ -40,14 +40,14 @@
 
 .teacher-agit-post-detail__header > div span {
     color: #2e7d32;
-    font-size: .65rem;
+    font-size: var(--ui-text-sm);
     font-weight: 950;
 }
 
 .teacher-agit-post-detail__header > div strong {
     margin-top: 3px;
     color: #3e2e23;
-    font-size: 1rem;
+    font-size: var(--ui-text-lg);
 }
 
 .teacher-agit-post-detail__scroll {
@@ -82,7 +82,7 @@
     background: #fff5df;
     color: #8b5608;
     font: inherit;
-    font-size: .76rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
     cursor: pointer;
 }
@@ -105,7 +105,7 @@
 .teacher-agit-post-detail__tags > span {
     padding: 5px 9px;
     border-radius: 9px;
-    font-size: .7rem;
+    font-size: var(--ui-text-sm);
     font-weight: 900;
 }
 
@@ -140,7 +140,7 @@
 .teacher-agit-post-detail__meta {
     margin-top: 9px;
     color: #89969c;
-    font-size: .75rem;
+    font-size: var(--ui-text-sm);
     font-weight: 800;
 }
 
@@ -184,7 +184,7 @@
 
 .teacher-agit-post-detail__book small {
     color: #689f38;
-    font-size: .67rem;
+    font-size: var(--ui-text-sm);
     font-weight: 950;
 }
 
@@ -197,7 +197,7 @@
 .teacher-agit-post-detail__book p {
     margin: 4px 0 0;
     color: #78877d;
-    font-size: .76rem;
+    font-size: var(--ui-text-sm);
 }
 
 .teacher-agit-post-detail__compare {
@@ -209,7 +209,7 @@
     padding-top: 22px;
     border-top: 1px solid #ece7e1;
     color: #37474f;
-    font-size: 1rem;
+    font-size: var(--ui-text-lg);
     line-height: 1.9;
     overflow-wrap: anywhere;
     white-space: pre-wrap;

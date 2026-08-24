@@ -661,12 +661,12 @@ ${activitiesInfo}`;
             }}>
                 <div>
                     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '9px', marginBottom: '4px' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '950', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '1.8rem' }}>📘</span> 평어 도우미 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>2022 성취기준 연동</span>
+                        <h2 style={{ margin: 0, fontSize: 'var(--ui-text-2xl)', fontWeight: '950', color: '#1E293B', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '1.8rem' }}>📘</span> 평어 도우미 <span style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#6366F1', background: '#EEF2FF', padding: '4px 10px', borderRadius: '10px' }}>2022 성취기준 연동</span>
                         </h2>
                         <TeacherGuideButton tabId="activity" variant="help" />
                     </div>
-                    <p style={{ color: '#64748B', fontSize: '0.95rem', margin: 0 }}>작성 중인 국어 평어의 앞이나 뒤에 붙일 글쓰기 평가 문장을 만듭니다.</p>
+                    <p style={{ color: '#64748B', fontSize: 'var(--ui-text-md)', margin: 0 }}>작성 중인 국어 평어의 앞이나 뒤에 붙일 글쓰기 평가 문장을 만듭니다.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                     <Button variant="outline" size="sm" onClick={exportToExcel} style={{ borderRadius: '12px', borderColor: '#10B981', color: '#059669', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'bold' }}>
@@ -682,10 +682,10 @@ ${activitiesInfo}`;
                 {/* 필터 영역 (슬림화) */}
                 <aside style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 'bold', marginBottom: '12px' }}>🏷️ 태그 필터</div>
+                        <div style={{ fontSize: 'var(--ui-text-sm)', color: '#64748B', fontWeight: 'bold', marginBottom: '12px' }}>🏷️ 태그 필터</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                             {allTags.map(tag => (
-                                <button key={tag} onClick={() => toggleTag(tag)} style={{ padding: '6px 12px', borderRadius: '14px', border: 'none', background: selectedTags.includes(tag) ? '#6366F1' : '#F1F5F9', color: selectedTags.includes(tag) ? 'white' : '#64748B', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                                <button key={tag} onClick={() => toggleTag(tag)} style={{ padding: '6px 12px', borderRadius: '14px', border: 'none', background: selectedTags.includes(tag) ? '#6366F1' : '#F1F5F9', color: selectedTags.includes(tag) ? 'white' : '#64748B', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', cursor: 'pointer' }}>
                                     #{tag}
                                 </button>
                             ))}
@@ -693,17 +693,17 @@ ${activitiesInfo}`;
                     </div>
 
                     <div style={{ background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 'bold', marginBottom: '12px', display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{ fontSize: 'var(--ui-text-sm)', color: '#64748B', fontWeight: 'bold', marginBottom: '12px', display: 'flex', justifyContent: 'space-between' }}>
                             <span>🎯 대상 미션 선택 ({selectedMissionIds.length})</span>
                             <span onClick={() => setSelectedMissionIds([])} style={{ cursor: 'pointer', color: '#3B82F6', fontWeight: 'normal' }}>초기화</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
                             {filteredMissions.map(m => (
-                                <div key={m.id} onClick={() => toggleMissionSelection(m.id)} style={{ padding: '10px 14px', background: selectedMissionIds.includes(m.id) ? '#EEF2FF' : '#F8FAFC', borderRadius: '12px', border: selectedMissionIds.includes(m.id) ? '1px solid #6366F1' : '1px solid #E2E8F0', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div key={m.id} onClick={() => toggleMissionSelection(m.id)} style={{ padding: '10px 14px', background: selectedMissionIds.includes(m.id) ? '#EEF2FF' : '#F8FAFC', borderRadius: '12px', border: selectedMissionIds.includes(m.id) ? '1px solid #6366F1' : '1px solid #E2E8F0', cursor: 'pointer', fontSize: 'var(--ui-text-sm)', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     {selectedMissionIds.includes(m.id) ? <CheckCircle2 size={16} color="#6366F1" /> : <Circle size={16} color="#CBD5E1" />}
                                     <span style={{ minWidth: 0, flex: 1 }}>
                                         <span style={{ display: 'block', fontWeight: selectedMissionIds.includes(m.id) ? 'bold' : 'normal', color: selectedMissionIds.includes(m.id) ? '#312E81' : '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                            {m.title} {m.is_archived && <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 'normal' }}>(보관됨)</span>}
+                                            {m.title} {m.is_archived && <span style={{ fontSize: 'var(--ui-text-sm)', color: '#94A3B8', fontWeight: 'normal' }}>(보관됨)</span>}
                                         </span>
                                         {m.evaluation_rubric?.use_rubric
                                             && getCurriculumGradeBand(m.evaluation_rubric?.curriculum)
@@ -711,14 +711,14 @@ ${activitiesInfo}`;
                                                 m.evaluation_rubric?.curriculum?.achievement_standard_codes,
                                                 m.evaluation_rubric?.curriculum
                                             ).length > 0 ? (
-                                            <span style={{ display: 'block', marginTop: '3px', color: '#6366F1', fontSize: '0.68rem', fontWeight: '800' }}>
+                                            <span style={{ display: 'block', marginTop: '3px', color: '#6366F1', fontSize: 'var(--ui-text-sm)', fontWeight: '800' }}>
                                                 {formatKoreanGradeBand(m.evaluation_rubric.curriculum)} · 성취기준 {resolveKoreanStandards(
                                                     m.evaluation_rubric.curriculum.achievement_standard_codes,
                                                     m.evaluation_rubric.curriculum
                                                 ).length}개
                                             </span>
                                         ) : (
-                                            <span style={{ display: 'block', marginTop: '3px', color: '#DC2626', fontSize: '0.68rem', fontWeight: '900' }}>
+                                            <span style={{ display: 'block', marginTop: '3px', color: '#DC2626', fontSize: 'var(--ui-text-sm)', fontWeight: '900' }}>
                                                 성취기준 선택 필요
                                             </span>
                                         )}
@@ -729,7 +729,7 @@ ${activitiesInfo}`;
                                                     event.stopPropagation();
                                                     openRubricSettings(m);
                                                 }}
-                                                style={{ padding: '5px 7px', borderRadius: '8px', border: '1px solid #C7D2FE', background: 'white', color: '#4338CA', fontSize: '0.66rem', fontWeight: '900', cursor: 'pointer' }}
+                                                style={{ padding: '5px 7px', borderRadius: '8px', border: '1px solid #C7D2FE', background: 'white', color: '#4338CA', fontSize: 'var(--ui-text-sm)', fontWeight: '900', cursor: 'pointer' }}
                                             >
                                                 📚 성취기준
                                             </button>
@@ -739,7 +739,7 @@ ${activitiesInfo}`;
                                                     event.stopPropagation();
                                                     openEvaluationEntry(m);
                                                 }}
-                                                style={{ padding: '5px 7px', borderRadius: '8px', border: '1px solid #BBF7D0', background: 'white', color: '#15803D', fontSize: '0.66rem', fontWeight: '900', cursor: 'pointer' }}
+                                                style={{ padding: '5px 7px', borderRadius: '8px', border: '1px solid #BBF7D0', background: 'white', color: '#15803D', fontSize: 'var(--ui-text-sm)', fontWeight: '900', cursor: 'pointer' }}
                                             >
                                                 🎯 평가 입력
                                             </button>
@@ -753,7 +753,7 @@ ${activitiesInfo}`;
                     {/* 생성 이력 */}
                     {generationHistory.length > 0 && (
                         <div style={{ background: 'white', padding: '20px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ fontSize: 'var(--ui-text-sm)', color: '#64748B', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span>📚 생성 이력 ({generationHistory.length}건)</span>
                             </div>
 
@@ -810,7 +810,7 @@ ${activitiesInfo}`;
                                                 }}
                                             >
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                    <div style={{ fontSize: '0.75rem', color: '#6366F1', fontWeight: '900', marginBottom: '6px' }}>
+                                                    <div style={{ fontSize: 'var(--ui-text-sm)', color: '#6366F1', fontWeight: '900', marginBottom: '6px' }}>
                                                         {new Date(record.created_at).toLocaleString('ko-KR')}
                                                     </div>
                                                     <button
@@ -833,11 +833,11 @@ ${activitiesInfo}`;
                                                         <X size={14} />
                                                     </button>
                                                 </div>
-                                                <div style={{ fontSize: '0.85rem', color: '#1E293B', fontWeight: 'bold', marginBottom: '8px' }}>
+                                                <div style={{ fontSize: 'var(--ui-text-sm)', color: '#1E293B', fontWeight: 'bold', marginBottom: '8px' }}>
                                                     🎯 {record.activity_count}명 문장 작성 완료
                                                 </div>
                                                 <div style={{
-                                                    fontSize: '0.75rem',
+                                                    fontSize: 'var(--ui-text-sm)',
                                                     color: '#64748B',
                                                     lineHeight: '1.4',
                                                     display: '-webkit-box',
@@ -862,7 +862,7 @@ ${activitiesInfo}`;
                                     >
                                         ◀
                                     </button>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#475569' }}>
+                                    <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#475569' }}>
                                         {historyPage} / {Math.ceil(generationHistory.length / ITEMS_PER_PAGE)}
                                     </span>
                                     <button
@@ -891,7 +891,7 @@ ${activitiesInfo}`;
                                 <div style={{ padding: '16px 18px', borderRadius: '16px', background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                                     <div>
                                         <strong>관련 성취기준을 선택해주세요.</strong>
-                                        <div style={{ marginTop: '3px', fontSize: '0.8rem' }}>{missionsWithoutStandards.map((mission) => mission.title).join(', ')}</div>
+                                        <div style={{ marginTop: '3px', fontSize: 'var(--ui-text-sm)' }}>{missionsWithoutStandards.map((mission) => mission.title).join(', ')}</div>
                                     </div>
                                     <Button size="sm" onClick={() => openRubricSettings(missionsWithoutStandards[0])} style={{ background: '#B91C1C', color: 'white', fontWeight: '900' }}>
                                         성취기준 선택
@@ -903,7 +903,7 @@ ${activitiesInfo}`;
                                 <div style={{ padding: '16px 18px', borderRadius: '16px', background: '#FFF7ED', border: '1px solid #FED7AA', color: '#C2410C', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                                     <div>
                                         <strong>평가결과가 없습니다. 평가결과를 입력해주세요.</strong>
-                                        <div style={{ marginTop: '3px', fontSize: '0.8rem' }}>평가 필요 제출물 {evaluationGaps.unevaluatedSubmissions.length}건</div>
+                                        <div style={{ marginTop: '3px', fontSize: 'var(--ui-text-sm)' }}>평가 필요 제출물 {evaluationGaps.unevaluatedSubmissions.length}건</div>
                                     </div>
                                     <Button
                                         size="sm"
@@ -920,14 +920,14 @@ ${activitiesInfo}`;
                             )}
 
                             {evaluationGaps.missingSubmissions.length > 0 && (
-                                <div style={{ padding: '13px 18px', borderRadius: '16px', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', fontSize: '0.82rem', fontWeight: '800' }}>
+                                <div style={{ padding: '13px 18px', borderRadius: '16px', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', fontSize: 'var(--ui-text-sm)', fontWeight: '800' }}>
                                     제출 글이 없는 학생이 있습니다. 일괄 작성 시 결석 등으로 제외할지 확인합니다.
                                 </div>
                             )}
 
                             {/* 상황바 */}
                             <div style={{ background: '#F1F5F9', padding: '16px 24px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 'bold' }}>
+                                <div style={{ fontSize: 'var(--ui-text-md)', color: '#475569', fontWeight: 'bold' }}>
                                     평가 완료 <span style={{ color: '#1E293B' }}>{studentPosts.length}명</span> 중 <span style={{ color: '#6366F1' }}>{generatedCount}명</span> 덧붙임 문장 작성 완료
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
@@ -962,7 +962,7 @@ ${activitiesInfo}`;
                                 background: '#F8F9FA',
                                 borderRadius: '16px 16px 0 0',
                                 borderBottom: '1px solid #E2E8F0',
-                                fontSize: '0.8rem',
+                                fontSize: 'var(--ui-text-sm)',
                                 color: '#94A3B8',
                                 fontWeight: 'bold'
                             }}>
@@ -989,18 +989,18 @@ ${activitiesInfo}`;
                                                 background: expandedStudentId === data.student.id ? '#F8F9FF' : 'white'
                                             }}
                                         >
-                                            <div style={{ textAlign: 'center', color: '#94A3B8', fontSize: '0.85rem', fontWeight: '600' }}>{idx + 1}</div>
-                                            <div style={{ fontWeight: '900', color: '#1E293B', fontSize: '1rem' }}>{data.student.name}</div>
+                                            <div style={{ textAlign: 'center', color: '#94A3B8', fontSize: 'var(--ui-text-sm)', fontWeight: '600' }}>{idx + 1}</div>
+                                            <div style={{ fontWeight: '900', color: '#1E293B', fontSize: 'var(--ui-text-lg)' }}>{data.student.name}</div>
                                             <div style={{ textAlign: 'center' }}>
-                                                <span style={{ fontSize: '0.9rem', color: '#334155', fontWeight: '700', background: '#F1F5F9', padding: '2px 8px', borderRadius: '6px' }}>{data.posts.length}건</span>
+                                                <span style={{ fontSize: 'var(--ui-text-md)', color: '#334155', fontWeight: '700', background: '#F1F5F9', padding: '2px 8px', borderRadius: '6px' }}>{data.posts.length}건</span>
                                             </div>
                                             <div style={{ textAlign: 'center' }}>
                                                 {data.ai_synthesis ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', color: '#059669', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', color: '#059669', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold' }}>
                                                         <CheckCircle2 size={14} /> 완료
                                                     </div>
                                                 ) : (
-                                                    <div style={{ color: '#94A3B8', fontSize: '0.8rem' }}>미완료</div>
+                                                    <div style={{ color: '#94A3B8', fontSize: 'var(--ui-text-sm)' }}>미완료</div>
                                                 )}
                                             </div>
                                             <div style={{ textAlign: 'center' }}>
@@ -1014,7 +1014,7 @@ ${activitiesInfo}`;
                                                         padding: '6px 16px',
                                                         borderRadius: '10px',
                                                         cursor: 'pointer',
-                                                        fontSize: '0.75rem',
+                                                        fontSize: 'var(--ui-text-sm)',
                                                         fontWeight: 'bold',
                                                         transition: 'all 0.2s'
                                                     }}
@@ -1046,8 +1046,8 @@ ${activitiesInfo}`;
                                                         }}>
                                                             {/* 수합 활동 요약 (슬림화) */}
                                                             <div style={{ width: isMobile ? '100%' : '260px', flexShrink: 0 }}>
-                                                                <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#64748B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                                    <span style={{ fontSize: '1rem' }}>🔗</span> 참여 미션 ({data.posts.length})
+                                                                <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#64748B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                    <span style={{ fontSize: 'var(--ui-text-lg)' }}>🔗</span> 참여 미션 ({data.posts.length})
                                                                 </div>
                                                                 {data.posts.map(p => (
                                                                     <div key={p.id} style={{
@@ -1055,12 +1055,12 @@ ${activitiesInfo}`;
                                                                         padding: '12px 16px',
                                                                         borderRadius: '12px',
                                                                         border: '1px solid #E2E8F0',
-                                                                        fontSize: '0.85rem',
+                                                                        fontSize: 'var(--ui-text-sm)',
                                                                         marginBottom: '8px'
                                                                     }}>
                                                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                                             <span style={{ fontWeight: 'bold', color: '#4F46E5' }}>{p.writing_missions?.title}</span>
-                                                                            <span style={{ fontSize: '0.75rem', color: '#3B82F6', fontWeight: '900' }}>{p.final_eval || p.initial_eval || '-'}점</span>
+                                                                            <span style={{ fontSize: 'var(--ui-text-sm)', color: '#3B82F6', fontWeight: '900' }}>{p.final_eval || p.initial_eval || '-'}점</span>
                                                                         </div>
 
                                                                     </div>
@@ -1070,11 +1070,11 @@ ${activitiesInfo}`;
                                                             {/* AI 분석 결과 (메인 영역) */}
                                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                                                    <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#6366F1' }}>✨ 글쓰기 평가 덧붙임 문장</div>
+                                                                    <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#6366F1' }}>✨ 글쓰기 평가 덧붙임 문장</div>
                                                                     {data.ai_synthesis && (
                                                                         <button
                                                                             onClick={() => { navigator.clipboard.writeText(data.ai_synthesis); alert('복사되었습니다! 📋'); }}
-                                                                            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#3B82F6', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}
+                                                                            style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#3B82F6', fontSize: 'var(--ui-text-sm)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold' }}
                                                                         >
                                                                             <Copy size={14} /> 복사
                                                                         </button>
@@ -1114,7 +1114,7 @@ ${activitiesInfo}`;
                                             padding: '10px 24px',
                                             borderRadius: '12px',
                                             cursor: 'pointer',
-                                            fontSize: '0.9rem',
+                                            fontSize: 'var(--ui-text-md)',
                                             fontWeight: 'bold',
                                             transition: 'all 0.2s'
                                         }}
@@ -1126,7 +1126,7 @@ ${activitiesInfo}`;
                                 </div>
                             )}
 
-                            <footer style={{ textAlign: 'center', padding: '20px', color: '#94A3B8', fontSize: '0.85rem' }}>
+                            <footer style={{ textAlign: 'center', padding: '20px', color: '#94A3B8', fontSize: 'var(--ui-text-sm)' }}>
                                 * 작성된 덧붙임 문장은 국어 평어의 앞이나 뒤에 그대로 붙여 쓸 수 있으며, 선택한 미션 조합별로 이 브라우저에 저장됩니다.
                             </footer>
                         </div>
@@ -1159,8 +1159,8 @@ ${activitiesInfo}`;
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '20px' }}>
                                 <div>
-                                    <h3 style={{ margin: 0, color: '#1E293B', fontSize: '1.3rem' }}>📚 미션별 성취기준 선택</h3>
-                                    <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: '0.84rem' }}>
+                                    <h3 style={{ margin: 0, color: '#1E293B', fontSize: 'var(--ui-text-xl)' }}>📚 미션별 성취기준 선택</h3>
+                                    <p style={{ margin: '5px 0 0', color: '#64748B', fontSize: 'var(--ui-text-sm)' }}>
                                         {rubricMission.title} · 글의 종류와 수업 내용에 맞는 기준을 교사가 선택합니다.
                                     </p>
                                 </div>

@@ -160,7 +160,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <Card style={{ textAlign: 'center', padding: '40px', background: 'white', borderRadius: '32px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
                         <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏢</div>
-                        <h2 style={{ fontSize: '1.5rem', color: '#2C3E50', fontWeight: '900', marginBottom: '8px' }}>선택된 학급이 없습니다.</h2>
+                        <h2 style={{ fontSize: 'var(--ui-text-2xl)', color: '#2C3E50', fontWeight: '900', marginBottom: '8px' }}>선택된 학급이 없습니다.</h2>
                         <p style={{ color: '#7F8C8D', marginBottom: '24px', fontSize: 'var(--ui-text-md)' }}>아래 목록에서 선택하거나 새로운 학급을 만들어보세요!</p>
                         <Button
                             variant="primary"
@@ -184,7 +184,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     {classes.length > 0 && (
                         <div style={{ background: 'white', borderRadius: '24px', padding: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>나의 학급 목록</h3>
+                                <h3 style={{ margin: 0, fontSize: 'var(--ui-text-lg)', color: '#2C3E50', fontWeight: '900' }}>나의 학급 목록</h3>
                                 <button
                                     onClick={handleOpenTrash}
                                     style={{
@@ -237,7 +237,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                         <div style={{ minWidth: 0 }}>
                             <span style={{ color: '#2563EB', fontSize: 'var(--ui-text-xs)', fontWeight: 900 }}>현재 관리 중인 학급</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap', marginTop: '4px' }}>
-                                <h3 style={{ margin: 0, color: '#1E293B', fontSize: '1.2rem' }}>🏫 {activeClass.name}</h3>
+                                <h3 style={{ margin: 0, color: '#1E293B', fontSize: 'var(--ui-text-xl)' }}>🏫 {activeClass.name}</h3>
                                 {activeClass.id === primaryClassId && <span style={badgeStyle}>⭐ 주 학급</span>}
                                 <span style={{ ...badgeStyle, background: '#DCFCE7', color: '#15803D' }}>● 운영 중</span>
                             </div>
@@ -285,7 +285,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                     zIndex: 2500, backdropFilter: 'blur(5px)'
                 }}>
                     <Card style={{ width: '90%', maxWidth: '420px', padding: '40px', borderRadius: '32px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
-                        <h2 style={{ fontSize: '1.8rem', marginBottom: '8px', color: '#2C3E50', fontWeight: '900' }}>새로운 학급 만들기</h2>
+                        <h2 style={{ fontSize: 'var(--ui-text-2xl)', marginBottom: '8px', color: '#2C3E50', fontWeight: '900' }}>새로운 학급 만들기</h2>
                         <p style={{ color: '#7F8C8D', marginBottom: '24px', fontSize: 'var(--ui-text-md)' }}>아이들과 함께할 멋진 학급 이름을 지어주세요!</p>
                         <input
                             type="text"
@@ -326,7 +326,7 @@ const ClassManager = ({ userId, classes = [], activeClass, setActiveClass, setCl
                         >
                             <Card style={{ padding: '32px', borderRadius: '32px', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                    <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#2C3E50', fontWeight: '900' }}>🗑️ 삭제된 학급 복구</h2>
+                                    <h2 style={{ fontSize: 'var(--ui-text-2xl)', margin: 0, color: '#2C3E50', fontWeight: '900' }}>🗑️ 삭제된 학급 복구</h2>
                                     <ModalCloseButton onClick={() => setIsTrashModalOpen(false)} label="삭제된 학급 복구 닫기" />
                                 </div>
 

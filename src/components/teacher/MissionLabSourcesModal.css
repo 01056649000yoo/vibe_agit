@@ -62,7 +62,7 @@
 .mission-lab-sources-title h2 {
     margin: 2px 0 0;
     color: #1e293b;
-    font-size: 1.25rem;
+    font-size: var(--ui-text-xl);
 }
 
 .mission-lab-sources-guide {
@@ -70,7 +70,7 @@
     padding: 11px 20px;
     background: #f5f3ff;
     color: #5b21b6;
-    font-size: .82rem;
+    font-size: var(--ui-text-sm);
     font-weight: 750;
 }
 
@@ -117,13 +117,13 @@
 .mission-lab-source-group__heading h3 {
     margin: 0;
     color: #1e293b;
-    font-size: 1rem;
+    font-size: var(--ui-text-lg);
 }
 
 .mission-lab-source-group__heading p {
     margin: 5px 0 0;
     color: #64748b;
-    font-size: .78rem;
+    font-size: var(--ui-text-sm);
     line-height: 1.5;
 }
 
@@ -138,7 +138,7 @@
     border-radius: 11px;
     background: white;
     color: #64748b;
-    font-size: .74rem;
+    font-size: var(--ui-text-sm);
     font-weight: 850;
 }
 
@@ -148,7 +148,7 @@
     border: 1px dashed #cbd5e1;
     border-radius: 14px;
     color: #94a3b8;
-    font-size: .8rem;
+    font-size: var(--ui-text-sm);
     text-align: center;
 }
 
@@ -200,14 +200,14 @@
 
 .mission-lab-source-options strong {
     color: #1e293b;
-    font-size: .86rem;
+    font-size: var(--ui-text-sm);
 }
 
 .mission-lab-source-options small,
 .mission-lab-source-options em {
     margin-top: 3px;
     color: #64748b;
-    font-size: .71rem;
+    font-size: var(--ui-text-sm);
     font-style: normal;
 }
 
@@ -216,7 +216,7 @@
     border-radius: 999px;
     background: #f1f5f9;
     color: #64748b;
-    font-size: .68rem;
+    font-size: var(--ui-text-sm);
 }
 
 .mission-lab-source-options button.is-linked b {

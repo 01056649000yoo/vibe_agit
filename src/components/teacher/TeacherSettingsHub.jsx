@@ -107,7 +107,7 @@ const TeacherSettingsHub = ({
             <main style={{ minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
                     <div>
-                        <h2 style={{ margin: 0, color: '#172033', fontSize: 'var(--ui-text-xl)' }}>{selected.icon} {selected.label}</h2>
+                        <h2 style={{ margin: 0, color: '#172033', fontSize: 'var(--ui-text-2xl)' }}>{selected.icon} {selected.label}</h2>
                         <p style={{ margin: '6px 0 0', color: '#475569', fontSize: 'var(--ui-text-md)', lineHeight: 1.55 }}>{selected.description}</p>
                     </div>
                     <TeacherGuideButton tabId={`settings:${selected.id}`} variant="help" />

@@ -127,10 +127,10 @@ const PostDetailViewer = ({
                             flexShrink: 0
                         }}>
                             <div style={{ padding: '24px 20px', borderBottom: '1px solid #E9ECEF' }}>
-                                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: '#2C3E50', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <h4 style={{ margin: 0, fontSize: 'var(--ui-text-lg)', fontWeight: '900', color: '#2C3E50', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     🎯 평가 명단
                                 </h4>
-                                <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '4px' }}>제출 인원: {posts.length}명</div>
+                                <div style={{ fontSize: 'var(--ui-text-sm)', color: '#94A3B8', marginTop: '4px' }}>제출 인원: {posts.length}명</div>
                             </div>
                             <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
                                 {posts.map(post => (
@@ -154,17 +154,17 @@ const PostDetailViewer = ({
                                         }}
                                     >
                                         <div>
-                                            <div style={{ fontWeight: 'bold', color: selectedPost.id === post.id ? '#3498DB' : '#495057', fontSize: '0.95rem' }}>
+                                            <div style={{ fontWeight: 'bold', color: selectedPost.id === post.id ? '#3498DB' : '#495057', fontSize: 'var(--ui-text-md)' }}>
                                                 {post.students?.name}
                                             </div>
-                                            <div style={{ fontSize: '0.75rem', color: '#ADB5BD', marginTop: '2px' }}>
+                                            <div style={{ fontSize: 'var(--ui-text-sm)', color: '#ADB5BD', marginTop: '2px' }}>
                                                 {post.char_count}자
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
                                             {post.final_eval != null ? (
                                                 <span style={{
-                                                    fontSize: '0.65rem', padding: '2px 6px', borderRadius: '6px',
+                                                    fontSize: 'var(--ui-text-sm)', padding: '2px 6px', borderRadius: '6px',
                                                     background: '#E8F5E9', color: '#2E7D32', fontWeight: '900',
                                                     border: '1px solid #C8E6C9'
                                                 }}>
@@ -172,7 +172,7 @@ const PostDetailViewer = ({
                                                 </span>
                                             ) : (
                                                 <span style={{
-                                                    fontSize: '0.65rem', padding: '2px 6px', borderRadius: '6px',
+                                                    fontSize: 'var(--ui-text-sm)', padding: '2px 6px', borderRadius: '6px',
                                                     background: '#F8F9FA', color: '#94A3B8', fontWeight: '900',
                                                     border: '1px solid #E9ECEF'
                                                 }}>
@@ -181,11 +181,11 @@ const PostDetailViewer = ({
                                             )}
                                             <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                                                 {post.is_confirmed ? (
-                                                    <span style={{ fontSize: '0.8rem' }}>✅</span>
+                                                    <span style={{ fontSize: 'var(--ui-text-sm)' }}>✅</span>
                                                 ) : post.is_returned ? (
-                                                    <span style={{ fontSize: '0.8rem' }}>♻️</span>
+                                                    <span style={{ fontSize: 'var(--ui-text-sm)' }}>♻️</span>
                                                 ) : (
-                                                    <span style={{ fontSize: '0.8rem' }}>⏳</span>
+                                                    <span style={{ fontSize: 'var(--ui-text-sm)' }}>⏳</span>
                                                 )}
                                             </div>
                                         </div>
@@ -205,15 +205,15 @@ const PostDetailViewer = ({
                                 onClick={() => setSelectedPost(null)}
                                 style={{
                                     backgroundColor: '#F8F9FA', border: 'none', padding: '8px 16px',
-                                    borderRadius: '12px', fontSize: '0.9rem', fontWeight: 'bold',
+                                    borderRadius: '12px', fontSize: 'var(--ui-text-md)', fontWeight: 'bold',
                                     color: '#495057', cursor: 'pointer'
                                 }}
                             >
                                 ← 뒤로가기
                             </button>
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '0.8rem', color: '#95A5A6', fontWeight: 'bold' }}>{selectedMission?.title}</div>
-                                <div style={{ fontSize: '1rem', color: '#2C3E50', fontWeight: '900' }}>{selectedPost.students?.name} 학생의 글 {isEvaluationMode ? '평가 중' : ''}</div>
+                                <div style={{ fontSize: 'var(--ui-text-sm)', color: '#95A5A6', fontWeight: 'bold' }}>{selectedMission?.title}</div>
+                                <div style={{ fontSize: 'var(--ui-text-lg)', color: '#2C3E50', fontWeight: '900' }}>{selectedPost.students?.name} 학생의 글 {isEvaluationMode ? '평가 중' : ''}</div>
                             </div>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 {selectedPost.is_submitted && !selectedPost.is_confirmed && (
@@ -223,7 +223,7 @@ const PostDetailViewer = ({
                                             disabled={isTeacherEditMode}
                                             style={{
                                                 backgroundColor: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2',
-                                                padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold',
+                                                padding: '8px 12px', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold',
                                                 opacity: isTeacherEditMode ? 0.4 : 1,
                                                 cursor: isTeacherEditMode ? 'not-allowed' : 'pointer'
                                             }}
@@ -235,7 +235,7 @@ const PostDetailViewer = ({
                                             disabled={isTeacherEditMode}
                                             style={{
                                                 backgroundColor: '#E8F5E9', color: '#2E7D32', border: '1px solid #C8E6C9',
-                                                padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold',
+                                                padding: '8px 12px', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold',
                                                 opacity: isTeacherEditMode ? 0.4 : 1,
                                                 cursor: isTeacherEditMode ? 'not-allowed' : 'pointer'
                                             }}
@@ -249,7 +249,7 @@ const PostDetailViewer = ({
                                         onClick={() => handleRecovery(selectedPost)}
                                         style={{
                                             backgroundColor: '#FFEBEE', color: '#C62828', border: '1px solid #FFCDD2',
-                                            padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
+                                            padding: '8px 12px', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold'
                                         }}
                                     >
                                         ⚠️ 승인 취소/회수
@@ -260,7 +260,7 @@ const PostDetailViewer = ({
                                         onClick={() => setIsEvalModalOpen(true)}
                                         style={{
                                             backgroundColor: '#2C3E50', color: 'white',
-                                            padding: '8px 16px', fontSize: '0.85rem', fontWeight: 'bold',
+                                            padding: '8px 16px', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold',
                                             borderRadius: '12px'
                                         }}
                                     >
@@ -283,7 +283,7 @@ const PostDetailViewer = ({
                                             backgroundColor: isTeacherEditMode ? '#FEF3C7' : '#EEF2FF',
                                             color: isTeacherEditMode ? '#92400E' : '#4338CA',
                                             border: isTeacherEditMode ? '1px solid #FCD34D' : '1px solid #C7D2FE',
-                                            padding: '8px 12px', fontSize: '0.85rem', fontWeight: 'bold'
+                                            padding: '8px 12px', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold'
                                         }}
                                     >
                                         {isTeacherEditMode ? '수정 모드 종료' : '수정 모드'}
@@ -296,7 +296,7 @@ const PostDetailViewer = ({
                                         backgroundColor: isFeedbackVisible ? '#F8F9FA' : '#3498DB',
                                         color: isFeedbackVisible ? '#4B5563' : 'white',
                                         border: '1px solid #E5E7EB',
-                                        padding: '8px 16px', fontSize: '0.85rem', fontWeight: 'bold',
+                                        padding: '8px 16px', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold',
                                         borderRadius: '12px'
                                     }}
                                 >
@@ -328,7 +328,7 @@ const PostDetailViewer = ({
                                         <button
                                             onClick={() => setShowOriginal(!showOriginal)}
                                             style={{
-                                                fontSize: '0.85rem', padding: '8px 16px', borderRadius: '12px',
+                                                fontSize: 'var(--ui-text-sm)', padding: '8px 16px', borderRadius: '12px',
                                                 border: showOriginal ? '2px solid #3498DB' : '1px solid #DEE2E6',
                                                 background: showOriginal ? '#EBF5FB' : 'white',
                                                 color: showOriginal ? '#3498DB' : '#7F8C8D',
@@ -349,7 +349,7 @@ const PostDetailViewer = ({
                                             borderRadius: '18px',
                                             padding: '16px 18px',
                                             color: '#8A5A00',
-                                            fontSize: '0.95rem',
+                                            fontSize: 'var(--ui-text-md)',
                                             lineHeight: '1.6'
                                         }}>
                                             학생 글을 직접 다듬은 뒤 저장하면 학생 화면에서 이 수정본을 이어서 볼 수 있습니다.
@@ -402,7 +402,7 @@ const PostDetailViewer = ({
                                                     color: '#4B5563',
                                                     border: '1px solid #E5E7EB',
                                                     padding: '10px 16px',
-                                                    fontSize: '0.9rem',
+                                                    fontSize: 'var(--ui-text-md)',
                                                     fontWeight: 'bold'
                                                 }}
                                             >
@@ -416,7 +416,7 @@ const PostDetailViewer = ({
                                                     color: 'white',
                                                     border: '1px solid #1D4ED8',
                                                     padding: '10px 18px',
-                                                    fontSize: '0.9rem',
+                                                    fontSize: 'var(--ui-text-md)',
                                                     fontWeight: 'bold'
                                                 }}
                                             >
@@ -431,7 +431,7 @@ const PostDetailViewer = ({
                                             background: '#F8F9FA', borderRadius: '24px', padding: '24px',
                                             border: '1px solid #E9ECEF', display: 'flex', flexDirection: 'column'
                                         }}>
-                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#10B981', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#10B981', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 🌱 최초 제출 (초안)
                                             </div>
                                             <div style={{
@@ -448,7 +448,7 @@ const PostDetailViewer = ({
                                             border: '1px solid #E9ECEF', boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
                                             display: 'flex', flexDirection: 'column'
                                         }}>
-                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#3B82F6', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#3B82F6', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 ✨ 최종 제출 (수정본)
                                             </div>
                                             <div style={{
@@ -493,7 +493,7 @@ const PostDetailViewer = ({
                                             한 줄에 같이 두면 기준 이름이 조금만 길어도 줄바꿈이 일어나
                                             제목까지 두 줄로 밀린다(사이드바 폭이 380px 로 좁다). */}
                                         <div style={{ marginBottom: '16px' }}>
-                                            <h4 style={{ margin: '0 0 10px', color: '#1F2937', fontWeight: '900', fontSize: '1.05rem' }}>
+                                            <h4 style={{ margin: '0 0 10px', color: '#1F2937', fontWeight: '900', fontSize: 'var(--ui-text-lg)' }}>
                                                 📝 선생님 피드백
                                             </h4>
                                             {/* 두 버튼은 같은 규격(size="sm")·같은 강조색을 써서 한 벌로 보이게 한다.
@@ -548,12 +548,12 @@ const PostDetailViewer = ({
                                                         >
                                                             🤖
                                                         </motion.div>
-                                                        <div style={{ fontWeight: 'bold', color: '#4B5563', fontSize: '0.9rem' }}>AI가 글을 읽는 중...</div>
+                                                        <div style={{ fontWeight: 'bold', color: '#4B5563', fontSize: 'var(--ui-text-md)' }}>AI가 글을 읽는 중...</div>
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
                                         </div>
-                                        <p style={{ margin: '12px 0 0 0', fontSize: '0.75rem', color: '#9CA3AF', textAlign: 'center' }}>
+                                        <p style={{ margin: '12px 0 0 0', fontSize: 'var(--ui-text-sm)', color: '#9CA3AF', textAlign: 'center' }}>
                                             * 피드백은 학생의 [글 보관함]에서 확인 가능합니다.
                                         </p>
                                     </div>
@@ -564,15 +564,15 @@ const PostDetailViewer = ({
                                         border: '1px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
                                         display: 'flex', flexDirection: 'column', gap: '12px'
                                     }}>
-                                        <h4 style={{ margin: 0, color: '#1F2937', fontWeight: '900', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <h4 style={{ margin: 0, color: '#1F2937', fontWeight: '900', fontSize: 'var(--ui-text-lg)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                             💬 학생 댓글
-                                            <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: '#9CA3AF' }}>({postComments.length}개)</span>
+                                            <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'normal', color: '#9CA3AF' }}>({postComments.length}개)</span>
                                         </h4>
 
                                         {/* 댓글 목록 */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
                                             {postComments.length === 0 ? (
-                                                <div style={{ textAlign: 'center', color: '#ADB5BD', fontSize: '0.85rem', padding: '20px 0' }}>
+                                                <div style={{ textAlign: 'center', color: '#ADB5BD', fontSize: 'var(--ui-text-sm)', padding: '20px 0' }}>
                                                     아직 댓글이 없습니다
                                                 </div>
                                             ) : (
@@ -596,16 +596,16 @@ const PostDetailViewer = ({
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                                     {isTeacherComment ? (
                                                                         <span style={{
-                                                                            fontSize: '0.7rem', fontWeight: '900',
+                                                                            fontSize: 'var(--ui-text-sm)', fontWeight: '900',
                                                                             background: '#3B82F6', color: 'white',
                                                                             padding: '2px 7px', borderRadius: '6px'
                                                                         }}>🍎 선생님</span>
                                                                     ) : (
-                                                                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#374151' }}>
+                                                                        <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#374151' }}>
                                                                             {comment.students?.name || '학생'}
                                                                         </span>
                                                                     )}
-                                                                    <span style={{ fontSize: '0.7rem', color: '#ADB5BD' }}>
+                                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: '#ADB5BD' }}>
                                                                         {new Date(comment.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                                     </span>
                                                                 </div>
@@ -615,13 +615,13 @@ const PostDetailViewer = ({
                                                                         title="댓글 삭제"
                                                                         style={{
                                                                             background: 'none', border: 'none',
-                                                                            cursor: 'pointer', fontSize: '0.8rem',
+                                                                            cursor: 'pointer', fontSize: 'var(--ui-text-sm)',
                                                                             color: '#CBD5E1', padding: '0 2px'
                                                                         }}
                                                                     >🗑️</button>
                                                                 )}
                                                             </div>
-                                                            <div style={{ fontSize: '0.9rem', color: '#374151', lineHeight: '1.5' }}>
+                                                            <div style={{ fontSize: 'var(--ui-text-md)', color: '#374151', lineHeight: '1.5' }}>
                                                                 {comment.content}
                                                             </div>
                                                         </div>
@@ -641,7 +641,7 @@ const PostDetailViewer = ({
                                                     style={{
                                                         width: '100%', padding: '10px 14px',
                                                         borderRadius: '12px', border: '1px solid #D1D5DB',
-                                                        fontSize: '0.9rem', lineHeight: '1.6', outline: 'none',
+                                                        fontSize: 'var(--ui-text-md)', lineHeight: '1.6', outline: 'none',
                                                         resize: 'none', color: '#374151', boxSizing: 'border-box',
                                                         backgroundColor: 'white'
                                                     }}
@@ -672,7 +672,7 @@ const PostDetailViewer = ({
                                                         background: teacherCommentInput.trim() ? '#3B82F6' : '#E9ECEF',
                                                         color: teacherCommentInput.trim() ? 'white' : '#ADB5BD',
                                                         fontWeight: 'bold',
-                                                        fontSize: '0.85rem',
+                                                        fontSize: 'var(--ui-text-sm)',
                                                         cursor: teacherCommentInput.trim() ? 'pointer' : 'not-allowed',
                                                         transition: 'all 0.2s'
                                                     }}
@@ -689,7 +689,7 @@ const PostDetailViewer = ({
 
                         <footer style={{
                             padding: '20px', borderTop: '1px solid #F1F3F5',
-                            textAlign: 'center', color: '#95A5A6', fontSize: '0.85rem'
+                            textAlign: 'center', color: '#95A5A6', fontSize: 'var(--ui-text-sm)'
                         }}>
                             글자 수: {selectedPost.char_count}자 | 제출 시간: {new Date(selectedPost.created_at).toLocaleString()}
                         </footer>
@@ -714,7 +714,7 @@ const PostDetailViewer = ({
                                     }}
                                 >
                                     <header style={{ padding: '24px 32px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '900', color: '#2C3E50' }}>📊 성장 및 성취도 평가</h3>
+                                        <h3 style={{ margin: 0, fontSize: 'var(--ui-text-xl)', fontWeight: '900', color: '#2C3E50' }}>📊 성장 및 성취도 평가</h3>
                                         <ModalCloseButton onClick={() => setIsEvalModalOpen(false)} label="성장 및 성취도 평가 닫기" />
                                     </header>
 
@@ -722,14 +722,14 @@ const PostDetailViewer = ({
                                         {/* 처음글 섹션 */}
                                         <section>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
-                                                <div style={{ fontSize: '0.9rem', fontWeight: '900', color: '#10B981', background: '#ECFDF5', padding: '4px 12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>📜 처음글 (초안)</div>
+                                                <div style={{ fontSize: 'var(--ui-text-md)', fontWeight: '900', color: '#10B981', background: '#ECFDF5', padding: '4px 12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>📜 처음글 (초안)</div>
                                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                                     {selectedMission.evaluation_rubric.levels.map(lvl => (
                                                         <button
                                                             key={lvl.score}
                                                             onClick={() => setInitialEval(lvl.score)}
                                                             style={{
-                                                                padding: '6px 12px', fontSize: '0.8rem', borderRadius: '8px', border: '1px solid #E2E8F0', cursor: 'pointer',
+                                                                padding: '6px 12px', fontSize: 'var(--ui-text-sm)', borderRadius: '8px', border: '1px solid #E2E8F0', cursor: 'pointer',
                                                                 background: initialEval === lvl.score ? '#10B981' : 'white',
                                                                 color: initialEval === lvl.score ? 'white' : '#64748B', fontWeight: 'bold'
                                                             }}
@@ -739,15 +739,15 @@ const PostDetailViewer = ({
                                                     ))}
                                                 </div>
                                             </div>
-                                            <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', fontSize: '1rem', color: '#444', maxHeight: '350px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
+                                            <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', fontSize: 'var(--ui-text-lg)', color: '#444', maxHeight: '350px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: '1.8' }}>
                                                 {selectedPost.original_content || '처음글 기록이 없습니다.'}
                                             </div>
                                         </section>
 
                                         {/* 화살표 및 성장 상태 */}
                                         <div style={{ textAlign: 'center', margin: '-20px 0' }}>
-                                            <span style={{ fontSize: '0.9rem', marginRight: '6px', verticalAlign: 'middle' }}>👇</span>
-                                            <div style={{ background: '#FFFBEB', color: '#F59E0B', display: 'inline-block', padding: '2px 10px', borderRadius: '10px', border: '1px solid #FEF3C7', fontWeight: '900', fontSize: '0.75rem', verticalAlign: 'middle' }}>
+                                            <span style={{ fontSize: 'var(--ui-text-md)', marginRight: '6px', verticalAlign: 'middle' }}>👇</span>
+                                            <div style={{ background: '#FFFBEB', color: '#F59E0B', display: 'inline-block', padding: '2px 10px', borderRadius: '10px', border: '1px solid #FEF3C7', fontWeight: '900', fontSize: 'var(--ui-text-sm)', verticalAlign: 'middle' }}>
                                                 {initialEval && finalEval ? (finalEval > initialEval ? '실력 쑥쑥! 🌱' : finalEval < initialEval ? '아쉬움 💡' : '유지 중 ✨') : '평가 대기 중'}
                                             </div>
                                         </div>
@@ -755,14 +755,14 @@ const PostDetailViewer = ({
                                         {/* 마지막글 섹션 */}
                                         <section>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
-                                                <div style={{ fontSize: '0.9rem', fontWeight: '900', color: '#3B82F6', background: '#EFF6FF', padding: '4px 12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>✨ 마지막글 (수정본)</div>
+                                                <div style={{ fontSize: 'var(--ui-text-md)', fontWeight: '900', color: '#3B82F6', background: '#EFF6FF', padding: '4px 12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>✨ 마지막글 (수정본)</div>
                                                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                                     {selectedMission.evaluation_rubric.levels.map(lvl => (
                                                         <button
                                                             key={lvl.score}
                                                             onClick={() => setFinalEval(lvl.score)}
                                                             style={{
-                                                                padding: '6px 12px', fontSize: '0.8rem', borderRadius: '8px', border: '1px solid #E2E8F0', cursor: 'pointer',
+                                                                padding: '6px 12px', fontSize: 'var(--ui-text-sm)', borderRadius: '8px', border: '1px solid #E2E8F0', cursor: 'pointer',
                                                                 background: finalEval === lvl.score ? '#3B82F6' : 'white',
                                                                 color: finalEval === lvl.score ? 'white' : '#64748B', fontWeight: 'bold'
                                                             }}
@@ -772,7 +772,7 @@ const PostDetailViewer = ({
                                                     ))}
                                                 </div>
                                             </div>
-                                            <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', fontSize: '1rem', color: '#333', maxHeight: '350px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: '1.8', fontWeight: '500' }}>
+                                            <div style={{ padding: '24px', background: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', fontSize: 'var(--ui-text-lg)', color: '#333', maxHeight: '350px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: '1.8', fontWeight: '500' }}>
                                                 {isReportPost ? (
                                                     <ReportDocument structuredContent={selectedPost.structured_content} content={selectedPost.content} compact />
                                                 ) : selectedPost.content}
@@ -781,12 +781,12 @@ const PostDetailViewer = ({
 
                                         {/* 코멘트 섹션 */}
                                         <section>
-                                            <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#2C3E50', marginBottom: '12px' }}>📝 선생님의 격려 코멘트</div>
+                                            <div style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#2C3E50', marginBottom: '12px' }}>📝 선생님의 격려 코멘트</div>
                                             <textarea
                                                 value={evalComment}
                                                 onChange={e => setEvalComment(e.target.value)}
                                                 placeholder="학생에게 전달할 따뜻한 조언이나 성취도 평가의 근거를 남겨주세요."
-                                                style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', fontSize: '1rem', minHeight: '100px', resize: 'none', background: '#F8FAFC', outline: 'none' }}
+                                                style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', fontSize: 'var(--ui-text-lg)', minHeight: '100px', resize: 'none', background: '#F8FAFC', outline: 'none' }}
                                             />
                                         </section>
                                     </div>

@@ -159,8 +159,8 @@ const SubmissionStatusModal = ({
                     >
                         <div style={{ padding: '24px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
-                                <span style={{ fontSize: '0.8rem', color: '#1976D2', background: '#E3F2FD', padding: '2px 8px', borderRadius: '6px', fontWeight: 'bold' }}>{selectedMission.genre}</span>
-                                <h4 style={{ margin: '8px 0 0 0', fontSize: '1.2rem', color: '#2C3E50', fontWeight: '900' }}>{selectedMission.title} ({posts.length}명)</h4>
+                                <span style={{ fontSize: 'var(--ui-text-sm)', color: '#1976D2', background: '#E3F2FD', padding: '2px 8px', borderRadius: '6px', fontWeight: 'bold' }}>{selectedMission.genre}</span>
+                                <h4 style={{ margin: '8px 0 0 0', fontSize: 'var(--ui-text-lg)', color: '#2C3E50', fontWeight: '900' }}>{selectedMission.title} ({posts.length}명)</h4>
                             </div>
                             <ModalCloseButton onClick={() => setSelectedMission(null)} label="제출 현황 닫기" />
                         </div>
@@ -183,7 +183,7 @@ const SubmissionStatusModal = ({
                                                 color: '#4F46E5',
                                                 border: '2px solid #C3DAFE',
                                                 fontWeight: '900',
-                                                fontSize: '0.85rem',
+                                                fontSize: 'var(--ui-text-sm)',
                                                 padding: '12px 8px'
                                             }}
                                         >
@@ -198,7 +198,7 @@ const SubmissionStatusModal = ({
                                                 color: '#D97706',
                                                 border: '2px solid #FCD34D',
                                                 fontWeight: '900',
-                                                fontSize: '0.85rem',
+                                                fontSize: 'var(--ui-text-sm)',
                                                 padding: '12px 8px'
                                             }}
                                         >
@@ -218,7 +218,7 @@ const SubmissionStatusModal = ({
                                                     color: '#5E35B1',
                                                     border: '2px solid #D1C4E9',
                                                     fontWeight: '900',
-                                                    fontSize: '0.85rem',
+                                                    fontSize: 'var(--ui-text-sm)',
                                                     padding: '12px 8px'
                                                 }}
                                             >
@@ -238,7 +238,7 @@ const SubmissionStatusModal = ({
                                                         color: '#E65100',
                                                         border: '2px solid #FFE0B2',
                                                         fontWeight: '900',
-                                                        fontSize: '0.85rem',
+                                                        fontSize: 'var(--ui-text-sm)',
                                                         padding: '12px 8px'
                                                     }}
                                                 >
@@ -253,7 +253,7 @@ const SubmissionStatusModal = ({
                                                         color: '#2E7D32',
                                                         border: '2px solid #C8E6C9',
                                                         fontWeight: '900',
-                                                        fontSize: '0.85rem',
+                                                        fontSize: 'var(--ui-text-sm)',
                                                         padding: '12px 8px'
                                                     }}
                                                 >
@@ -273,7 +273,7 @@ const SubmissionStatusModal = ({
                                                     color: '#7B1FA2',
                                                     border: '2px solid #E1BEE7',
                                                     fontWeight: '900',
-                                                    fontSize: '0.85rem',
+                                                    fontSize: 'var(--ui-text-sm)',
                                                     padding: '12px 8px'
                                                 }}
                                             >
@@ -293,7 +293,7 @@ const SubmissionStatusModal = ({
                                                     color: '#C62828',
                                                     border: '2px solid #FFCDD2',
                                                     fontWeight: '900',
-                                                    fontSize: '0.85rem',
+                                                    fontSize: 'var(--ui-text-sm)',
                                                     padding: '12px 8px'
                                                 }}
                                             >
@@ -332,18 +332,18 @@ const SubmissionStatusModal = ({
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                                         <span style={{ fontWeight: '900', color: '#2C3E50' }}>{post.students?.name}</span>
                                                         {post.is_confirmed ? (
-                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E8F5E9', color: '#2E7D32', borderRadius: '4px', fontWeight: 'bold' }}>✅ 지급 완료</span>
+                                                            <span style={{ fontSize: 'var(--ui-text-sm)', padding: '2px 6px', background: '#E8F5E9', color: '#2E7D32', borderRadius: '4px', fontWeight: 'bold' }}>✅ 지급 완료</span>
                                                         ) : post.recalled_at ? (
-                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#EDE7F6', color: '#5E35B1', borderRadius: '4px', fontWeight: 'bold' }}>📥 회수됨 (학생 미제출)</span>
+                                                            <span style={{ fontSize: 'var(--ui-text-sm)', padding: '2px 6px', background: '#EDE7F6', color: '#5E35B1', borderRadius: '4px', fontWeight: 'bold' }}>📥 회수됨 (학생 미제출)</span>
                                                         ) : post.is_submitted ? (
-                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#E3F2FD', color: '#1565C0', borderRadius: '4px', fontWeight: 'bold' }}>⏳ 승인 대기</span>
+                                                            <span style={{ fontSize: 'var(--ui-text-sm)', padding: '2px 6px', background: '#E3F2FD', color: '#1565C0', borderRadius: '4px', fontWeight: 'bold' }}>⏳ 승인 대기</span>
                                                         ) : post.is_returned ? (
-                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#FFF3E0', color: '#E65100', borderRadius: '4px', fontWeight: 'bold' }}>♻️ 다시 쓰기 중</span>
+                                                            <span style={{ fontSize: 'var(--ui-text-sm)', padding: '2px 6px', background: '#FFF3E0', color: '#E65100', borderRadius: '4px', fontWeight: 'bold' }}>♻️ 다시 쓰기 중</span>
                                                         ) : (
-                                                            <span style={{ fontSize: '0.7rem', padding: '2px 6px', background: '#F1F3F5', color: '#6C757D', borderRadius: '4px', fontWeight: 'bold' }}>📝 작성 중</span>
+                                                            <span style={{ fontSize: 'var(--ui-text-sm)', padding: '2px 6px', background: '#F1F3F5', color: '#6C757D', borderRadius: '4px', fontWeight: 'bold' }}>📝 작성 중</span>
                                                         )}
                                                     </div>
-                                                    <div style={{ fontSize: '0.8rem', color: '#95A5A6' }}>
+                                                    <div style={{ fontSize: 'var(--ui-text-sm)', color: '#95A5A6' }}>
                                                         {post.char_count}자 · {new Date(post.created_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                     </div>
                                                 </div>
@@ -356,7 +356,7 @@ const SubmissionStatusModal = ({
                                                             }}
                                                             style={{
                                                                 border: '1px solid #7E57C2', background: 'white', color: '#5E35B1',
-                                                                borderRadius: '8px', padding: '5px 10px', fontSize: '0.78rem',
+                                                                borderRadius: '8px', padding: '5px 10px', fontSize: 'var(--ui-text-sm)',
                                                                 fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap'
                                                             }}
                                                         >
@@ -372,14 +372,14 @@ const SubmissionStatusModal = ({
                                                             }}
                                                             style={{
                                                                 border: '1px solid #FB8C00', background: 'white', color: '#E65100',
-                                                                borderRadius: '8px', padding: '5px 10px', fontSize: '0.78rem',
+                                                                borderRadius: '8px', padding: '5px 10px', fontSize: 'var(--ui-text-sm)',
                                                                 fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap'
                                                             }}
                                                         >
                                                             ↩️ 되돌리기
                                                         </button>
                                                     )}
-                                                    <div style={{ color: '#3498DB', fontWeight: 'bold', fontSize: '0.85rem' }}>읽어보기 ➔</div>
+                                                    <div style={{ color: '#3498DB', fontWeight: 'bold', fontSize: 'var(--ui-text-sm)' }}>읽어보기 ➔</div>
                                                 </div>
                                             </motion.div>
                                         ))}
@@ -426,8 +426,8 @@ const SubmissionStatusModal = ({
                                 >
                                     <header style={{ padding: '20px 40px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
-                                            <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📂 학생 글 모아보기</h3>
-                                            <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>한 화면에 {collectDisplayLimit}개씩 표시됩니다. (총 {posts.length}건)</p>
+                                            <h3 style={{ margin: 0, fontSize: 'var(--ui-text-xl)', fontWeight: '900', color: '#2C3E50' }}>📂 학생 글 모아보기</h3>
+                                            <p style={{ margin: '4px 0 0 0', fontSize: 'var(--ui-text-md)', color: '#7F8C8D' }}>한 화면에 {collectDisplayLimit}개씩 표시됩니다. (총 {posts.length}건)</p>
                                         </div>
                                         <ModalCloseButton onClick={() => setIsCollectViewOpen(false)} label="학생 글 모아보기 닫기" />
                                     </header>
@@ -449,7 +449,7 @@ const SubmissionStatusModal = ({
                                                 }}>
                                                     <div style={{ paddingBottom: '16px', borderBottom: '1px solid #F8F9FA', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <span style={{ fontWeight: '900', color: '#3498DB', fontSize: '1.1rem' }}>{idx + 1}. {post.students?.name}</span>
-                                                        <span style={{ fontSize: '0.85rem', color: '#95A5A6' }}>{post.char_count}자 작성</span>
+                                                        <span style={{ fontSize: 'var(--ui-text-sm)', color: '#95A5A6' }}>{post.char_count}자 작성</span>
                                                     </div>
 
                                                     <div style={{
@@ -459,18 +459,18 @@ const SubmissionStatusModal = ({
                                                         width: '100%'
                                                     }}>
                                                         <div style={{ minWidth: 0 }}>
-                                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#10B981', marginBottom: '10px' }}>📜 처음글 (초안)</div>
+                                                            <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#10B981', marginBottom: '10px' }}>📜 처음글 (초안)</div>
                                                             <div style={{
                                                                 padding: '20px', background: '#F0FDF4', borderRadius: '16px',
-                                                                border: '1px solid #DCFCE7', fontSize: '0.95rem', color: '#333',
+                                                                border: '1px solid #DCFCE7', fontSize: 'var(--ui-text-md)', color: '#333',
                                                                 lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
                                                             }}>{post.original_content || '기록 없음'}</div>
                                                         </div>
                                                         <div style={{ minWidth: 0 }}>
-                                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#3B82F6', marginBottom: '10px' }}>✨ 마지막글 (수정본)</div>
+                                                            <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#3B82F6', marginBottom: '10px' }}>✨ 마지막글 (수정본)</div>
                                                             <div style={{
                                                                 padding: '20px', background: '#EFF6FF', borderRadius: '16px',
-                                                                border: '1px solid #DBEAFE', fontSize: '0.95rem', color: '#333',
+                                                                border: '1px solid #DBEAFE', fontSize: 'var(--ui-text-md)', color: '#333',
                                                                 lineHeight: '1.8', whiteSpace: 'pre-wrap', wordBreak: 'break-all'
                                                             }}>{post.content || '기록 없음'}</div>
                                                         </div>
@@ -507,8 +507,8 @@ const SubmissionStatusModal = ({
                             >
                                 <header style={{ padding: '20px 40px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
-                                        <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📊 학생 반응 및 댓글 모아보기</h3>
-                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>한 화면에 {reactionDisplayLimit}개씩 표시됩니다. (총 {reactionPosts.length}건)</p>
+                                        <h3 style={{ margin: 0, fontSize: 'var(--ui-text-xl)', fontWeight: '900', color: '#2C3E50' }}>📊 학생 반응 및 댓글 모아보기</h3>
+                                        <p style={{ margin: '4px 0 0 0', fontSize: 'var(--ui-text-md)', color: '#7F8C8D' }}>한 화면에 {reactionDisplayLimit}개씩 표시됩니다. (총 {reactionPosts.length}건)</p>
                                     </div>
                                     <ModalCloseButton onClick={closeReactionView} label="학생 반응 및 댓글 모아보기 닫기" />
                                 </header>
@@ -535,9 +535,9 @@ const SubmissionStatusModal = ({
                                         {reactionPosts.slice(0, reactionDisplayLimit).map((post, idx) => (
                                             <div key={post.id} style={{ background: 'white', borderRadius: '20px', padding: '20px', border: '1px solid #E9ECEF', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column' }}>
                                                 <div style={{ paddingBottom: '12px', borderBottom: '1px solid #F8F9FA', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexDirection: 'column', gap: '4px', width: '100%', overflow: 'hidden' }}>
-                                                    <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '1rem' }}>{idx + 1}. {post.student_name}</span>
+                                                    <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: 'var(--ui-text-lg)' }}>{idx + 1}. {post.student_name}</span>
                                                     <span style={{
-                                                        fontSize: '0.8rem', color: '#7F8C8D', fontWeight: 'bold',
+                                                        fontSize: 'var(--ui-text-sm)', color: '#7F8C8D', fontWeight: 'bold',
                                                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                                                         width: '100%', display: 'block'
                                                     }} title={post.title}>「 {post.title} 」</span>
@@ -545,7 +545,7 @@ const SubmissionStatusModal = ({
 
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
                                                     <div>
-                                                        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#3498DB', marginBottom: '8px' }}>🌈 받은 반응</div>
+                                                        <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#3498DB', marginBottom: '8px' }}>🌈 받은 반응</div>
                                                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                                             {reactionIcons.map(icon => {
                                                                 const count = post.reactions?.filter(r => r.reaction_type === icon.type).length || 0;
@@ -555,19 +555,19 @@ const SubmissionStatusModal = ({
                                                                         padding: '4px 8px', background: '#F8F9FA', borderRadius: '8px',
                                                                         border: '1px solid #ECEFF1', display: 'flex', alignItems: 'center', gap: '4px'
                                                                     }}>
-                                                                        <span style={{ fontSize: '1rem' }}>{icon.emoji}</span>
-                                                                        <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: '0.8rem' }}>{count}</span>
+                                                                        <span style={{ fontSize: 'var(--ui-text-lg)' }}>{icon.emoji}</span>
+                                                                        <span style={{ fontWeight: '900', color: '#2C3E50', fontSize: 'var(--ui-text-sm)' }}>{count}</span>
                                                                     </div>
                                                                 );
                                                             })}
                                                             {(!post.reactions || post.reactions.length === 0) && (
-                                                                <div style={{ fontSize: '0.8rem', color: '#B2BEC3' }}>반응 대기 중... 🐣</div>
+                                                                <div style={{ fontSize: 'var(--ui-text-sm)', color: '#B2BEC3' }}>반응 대기 중... 🐣</div>
                                                             )}
                                                         </div>
                                                     </div>
 
                                                     <div style={{ flex: 1 }}>
-                                                        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#E67E22', marginBottom: '8px' }}>💬 작성된 댓글</div>
+                                                        <div style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'bold', color: '#E67E22', marginBottom: '8px' }}>💬 작성된 댓글</div>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                             {post.comments && post.comments.length > 0 ? (
                                                                 post.comments.map(comment => {
@@ -579,18 +579,18 @@ const SubmissionStatusModal = ({
                                                                             borderRadius: '12px',
                                                                             border: isTeacher ? '1px solid #BFDBFE' : '1px solid #FFEDD5'
                                                                         }}>
-                                                                            <div style={{ fontWeight: 'bold', color: isTeacher ? '#1E40AF' : '#C2410C', fontSize: '0.75rem', marginBottom: '2px' }}>
+                                                                            <div style={{ fontWeight: 'bold', color: isTeacher ? '#1E40AF' : '#C2410C', fontSize: 'var(--ui-text-sm)', marginBottom: '2px' }}>
                                                                                 {isTeacher ? '🍎 선생님' : (comment.student_name || '친구')}
                                                                             </div>
-                                                                            <div style={{ color: isTeacher ? '#1E3A8A' : '#431407', fontSize: '0.85rem', lineHeight: '1.4' }}>{comment.content}</div>
+                                                                            <div style={{ color: isTeacher ? '#1E3A8A' : '#431407', fontSize: 'var(--ui-text-sm)', lineHeight: '1.4' }}>{comment.content}</div>
                                                                         </div>
                                                                     );
                                                                 })
                                                             ) : (
-                                                                <div style={{ fontSize: '0.8rem', color: '#B2BEC3', fontStyle: 'italic' }}>댓글을 기다리고 있어요 🐣</div>
+                                                                <div style={{ fontSize: 'var(--ui-text-sm)', color: '#B2BEC3', fontStyle: 'italic' }}>댓글을 기다리고 있어요 🐣</div>
                                                             )}
                                                             {post.comment_count > post.comments.length && (
-                                                                <div style={{ fontSize: '0.7rem', color: '#ADB5BD', textAlign: 'center' }}>외 {post.comment_count - post.comments.length}개의 댓글 더 있음</div>
+                                                                <div style={{ fontSize: 'var(--ui-text-sm)', color: '#ADB5BD', textAlign: 'center' }}>외 {post.comment_count - post.comments.length}개의 댓글 더 있음</div>
                                                             )}
                                                         </div>
                                                     </div>

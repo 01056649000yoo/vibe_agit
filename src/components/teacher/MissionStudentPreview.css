@@ -1,18 +1,18 @@
 .mission-student-preview { display:flex; flex-direction:column; gap:18px; }
 .mission-student-preview__section { padding:18px; border:1px solid var(--ui-border); border-radius:18px; background:#fff; }
 .mission-student-preview__section > header { display:flex; align-items:flex-start; gap:10px; margin-bottom:14px; }
-.mission-student-preview__section > header > span { display:grid; width:26px; height:26px; place-items:center; flex:0 0 auto; border-radius:50%; background:#dbeafe; color:#1d4ed8; font-size:.78rem; font-weight:950; }
-.mission-student-preview__section h3 { margin:1px 0 0; color:#1e293b; font-size:1rem; }
-.mission-student-preview__section header p { margin:4px 0 0; color:#64748b; font-size:.75rem; line-height:1.45; }
+.mission-student-preview__section > header > span { display:grid; width:26px; height:26px; place-items:center; flex:0 0 auto; border-radius:50%; background:#dbeafe; color:#1d4ed8; font-size:var(--ui-text-sm); font-weight:950; }
+.mission-student-preview__section h3 { margin:1px 0 0; color:#1e293b; font-size:var(--ui-text-lg); }
+.mission-student-preview__section header p { margin:4px 0 0; color:#64748b; font-size:var(--ui-text-sm); line-height:1.45; }
 .mission-student-preview__card { position:relative; max-width:650px; margin:0 auto; padding:24px; border:2px solid #ffecb3; border-radius:24px; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,.03); }
-.mission-student-preview__new { position:absolute; top:12px; right:12px; padding:2px 8px; border-radius:8px; background:#ff5252; color:#fff; font-size:.7rem; font-weight:900; box-shadow:0 2px 4px rgba(255,82,82,.2); }
+.mission-student-preview__new { position:absolute; top:12px; right:12px; padding:2px 8px; border-radius:8px; background:#ff5252; color:#fff; font-size:var(--ui-text-sm); font-weight:900; box-shadow:0 2px 4px rgba(255,82,82,.2); }
 .mission-student-preview__card-meta { display:flex; align-items:center; gap:8px; margin-bottom:16px; }
-.mission-student-preview__card-meta > span { padding:4px 10px; border-radius:10px; font-size:.75rem; font-weight:900; }
+.mission-student-preview__card-meta > span { padding:4px 10px; border-radius:10px; font-size:var(--ui-text-sm); font-weight:900; }
 .mission-student-preview__genre { background:#e1f5fe; color:#0288d1; }
 .mission-student-preview__status { background:#f5f5f5; color:#9e9e9e; border:1px solid #e0e0e0; }
-.mission-student-preview__card-meta strong { margin-left:auto; padding:4px 10px; border:1px solid #fff59d; border-radius:10px; background:#fffde7; color:#f57f17; font-size:.8rem; }
-.mission-student-preview__card h4 { margin:0 0 10px; color:#2c3e50; font-size:1.2rem; font-weight:900; }
-.mission-student-preview__card > p { display:-webkit-box; margin:0 0 20px; overflow:hidden; color:#607d8b; font-size:.95rem; line-height:1.6; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.mission-student-preview__card-meta strong { margin-left:auto; padding:4px 10px; border:1px solid #fff59d; border-radius:10px; background:#fffde7; color:#f57f17; font-size:var(--ui-text-sm); }
+.mission-student-preview__card h4 { margin:0 0 10px; color:#2c3e50; font-size: var(--ui-text-lg); font-weight:900; }
+.mission-student-preview__card > p { display:-webkit-box; margin:0 0 20px; overflow:hidden; color:#607d8b; font-size:var(--ui-text-md); line-height:1.6; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
 .mission-student-preview__card-actions { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; }
 .mission-student-preview__card-actions button:first-child { min-width:160px; }
 .mission-student-preview__workspace-guard { max-height:680px; overflow:auto; border-radius:16px; background:#f8fafc; }

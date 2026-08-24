@@ -305,7 +305,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
         <div style={{ width: '100%', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
                 <h3 style={{ margin: 0, fontSize: isMobile ? '1.25rem' : '1.2rem', color: '#2C3E50', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    📂 보관함 <span style={{ fontSize: '0.85rem', fontWeight: 'normal', color: '#95A5A6' }}>지난 과제와 학생 글</span>
+                    📂 보관함 <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 'normal', color: '#95A5A6' }}>지난 과제와 학생 글</span>
                 </h3>
                 <TeacherGuideButton tabId="archive" variant="help" />
             </div>
@@ -313,14 +313,14 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
             {/* 태그 필터링 UI */}
             {allTags.length > 0 && (
                 <div style={{ marginBottom: '16px' }}>
-                    <div style={{ fontSize: '0.85rem', color: '#7F8C8D', marginBottom: '10px', fontWeight: 'bold' }}>🏷️ 태그로 필터링 (다중 선택 가능)</div>
+                    <div style={{ fontSize: 'var(--ui-text-sm)', color: '#7F8C8D', marginBottom: '10px', fontWeight: 'bold' }}>🏷️ 태그로 필터링 (다중 선택 가능)</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                         <button
                             onClick={() => setSelectedTags([])}
                             style={{
                                 padding: '6px 14px',
                                 borderRadius: '12px',
-                                fontSize: '0.85rem',
+                                fontSize: 'var(--ui-text-sm)',
                                 fontWeight: 'bold',
                                 border: '1px solid #E9ECEF',
                                 background: selectedTags.length === 0 ? '#3498DB' : 'white',
@@ -340,7 +340,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                     style={{
                                         padding: '6px 14px',
                                         borderRadius: '12px',
-                                        fontSize: '0.85rem',
+                                        fontSize: 'var(--ui-text-sm)',
                                         fontWeight: 'bold',
                                         border: `1px solid ${isSelected ? '#3498DB' : '#E9ECEF'}`,
                                         background: isSelected ? '#E3F2FD' : 'white',
@@ -371,7 +371,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                     boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '10px', fontSize: '1rem', fontWeight: 'bold', color: '#2C3E50' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '10px', fontSize: 'var(--ui-text-lg)', fontWeight: 'bold', color: '#2C3E50' }}>
                             <input
                                 type="checkbox"
                                 checked={selectedMissionIds.length > 0 && selectedMissionIds.length === filteredMissions.length}
@@ -404,7 +404,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                 </Button>
                             </motion.div>
                         ) : (
-                            <div style={{ fontSize: '0.9rem', color: '#95A5A6' }}>내보낼 미션을 선택해주세요.</div>
+                            <div style={{ fontSize: 'var(--ui-text-md)', color: '#95A5A6' }}>내보낼 미션을 선택해주세요.</div>
                         )}
                     </AnimatePresence>
                 </div>
@@ -473,7 +473,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    fontSize: '0.8rem',
+                                    fontSize: 'var(--ui-text-sm)',
                                     fontWeight: 'bold',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s',
@@ -489,7 +489,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                                     <h4 style={{
                                         margin: 0,
-                                        fontSize: '1rem',
+                                        fontSize: 'var(--ui-text-lg)',
                                         color: '#2C3E50',
                                         fontWeight: '800',
                                         lineHeight: '1.4',
@@ -503,7 +503,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                     }} title={mission.title}>
                                         {mission.title}
                                     </h4>
-                                    <span style={{ fontSize: '0.75rem', color: '#BDC3C7', whiteSpace: 'nowrap', paddingTop: '4px' }}>
+                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: '#BDC3C7', whiteSpace: 'nowrap', paddingTop: '4px' }}>
                                         {mission.archived_at ? new Date(mission.archived_at).toLocaleDateString() : '-'}
                                     </span>
                                 </div>
@@ -515,7 +515,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                         background: '#E3F2FD',
                                         color: '#1976D2',
                                         borderRadius: '8px',
-                                        fontSize: '0.75rem',
+                                        fontSize: 'var(--ui-text-sm)',
                                         fontWeight: 'bold'
                                     }}>
                                         {mission.genre}
@@ -525,7 +525,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                         background: mission.allow_comments ? '#E8F5E9' : '#FFEBEE',
                                         color: mission.allow_comments ? '#2E7D32' : '#C62828',
                                         borderRadius: '8px',
-                                        fontSize: '0.75rem',
+                                        fontSize: 'var(--ui-text-sm)',
                                         fontWeight: 'bold'
                                     }}>
                                         {mission.allow_comments ? '💬 댓글 ON' : '🔒 댓글 OFF'}
@@ -535,7 +535,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '8px', maxHeight: isDenseCard ? '18px' : 'none', overflow: 'hidden' }}>
                                         {mission.tags.slice(0, isDenseCard ? 2 : mission.tags.length).map((tag, idx) => (
                                             <span key={idx} style={{
-                                                fontSize: '0.7rem',
+                                                fontSize: 'var(--ui-text-sm)',
                                                 background: '#F3E5F5',
                                                 color: '#7B1FA2',
                                                 padding: '2px 8px',
@@ -562,8 +562,8 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <span style={{ fontSize: '1.2rem' }}>👥</span>
                                     <div>
-                                        <div style={{ fontSize: '0.7rem', color: '#95A5A6' }}>제출</div>
-                                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#2C3E50' }}>
+                                        <div style={{ fontSize: 'var(--ui-text-sm)', color: '#95A5A6' }}>제출</div>
+                                        <div style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#2C3E50' }}>
                                             {mission.submittedCount}<span style={{ color: '#ADB5BD', fontWeight: 'normal' }}>/{mission.totalStudents}</span>
                                         </div>
                                     </div>
@@ -572,8 +572,8 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <span style={{ fontSize: '1.2rem' }}>✍️</span>
                                     <div>
-                                        <div style={{ fontSize: '0.7rem', color: '#95A5A6' }}>분량</div>
-                                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#2C3E50' }}>{mission.min_chars}~{mission.max_chars}</div>
+                                        <div style={{ fontSize: 'var(--ui-text-sm)', color: '#95A5A6' }}>분량</div>
+                                        <div style={{ fontSize: 'var(--ui-text-md)', fontWeight: 'bold', color: '#2C3E50' }}>{mission.min_chars}~{mission.max_chars}</div>
                                     </div>
                                 </div>
                             </div>
@@ -668,7 +668,7 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                             <header style={{ padding: '24px', borderBottom: '1px solid #F1F3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
                                     <h3 style={{ margin: 0, color: '#2C3E50', fontWeight: '900' }}>📂 {selectedMission.title} - 모든 글</h3>
-                                    <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#7F8C8D' }}>제출된 모든 학생의 글을 한꺼번에 확인합니다.</p>
+                                    <p style={{ margin: '4px 0 0 0', fontSize: 'var(--ui-text-md)', color: '#7F8C8D' }}>제출된 모든 학생의 글을 한꺼번에 확인합니다.</p>
                                 </div>
                                 <ModalCloseButton onClick={() => setSelectedMission(null)} label="보관 글 모음 닫기" />
                             </header>
@@ -695,13 +695,13 @@ const ArchiveManager = ({ activeClass, isMobile, cardLayout }) => {
                                                 display: 'flex', flexDirection: 'column'
                                             }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #F8F9FA', paddingBottom: '12px' }}>
-                                                    <span style={{ fontWeight: '900', fontSize: '1rem', color: '#3498DB' }}>{idx + 1}. {post.students?.name}</span>
-                                                    <span style={{ fontSize: '0.8rem', color: '#ADB5BD' }}>{new Date(post.created_at).toLocaleDateString()}</span>
+                                                    <span style={{ fontWeight: '900', fontSize: 'var(--ui-text-lg)', color: '#3498DB' }}>{idx + 1}. {post.students?.name}</span>
+                                                    <span style={{ fontSize: 'var(--ui-text-sm)', color: '#ADB5BD' }}>{new Date(post.created_at).toLocaleDateString()}</span>
                                                 </div>
-                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '1.1rem', color: '#2C3E50', fontWeight: '900' }}>{post.title}</h4>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: 'var(--ui-text-lg)', color: '#2C3E50', fontWeight: '900' }}>{post.title}</h4>
                                                 <div style={{
                                                     lineHeight: '1.6', color: '#444', whiteSpace: 'pre-wrap',
-                                                    fontSize: '0.95rem', flex: 1, maxHeight: '300px', overflowY: 'auto'
+                                                    fontSize: 'var(--ui-text-md)', flex: 1, maxHeight: '300px', overflowY: 'auto'
                                                 }}>{post.content}</div>
                                             </div>
                                         ))}

@@ -21,7 +21,25 @@ const MIGRATED = [
     'src/components/teacher/TeachingToolsHub.jsx',
     'src/components/teacher/ClassManager.jsx',
     'src/modules/community/neighbor-agit/SettingsEntry.jsx',
-    'src/components/teacher/PromptRuleModal.jsx'
+    'src/components/teacher/PromptRuleModal.jsx',
+    'src/components/teacher/TeacherDashboard.css',
+    'src/components/teacher/TeacherEvaluationTab.jsx',
+    'src/components/teacher/ActivityReport.jsx',
+    'src/components/teacher/teacherComments.css',
+    'src/components/teacher/StudentManager.css',
+    'src/components/teacher/TeacherStudentAgitViewer.css',
+    'src/components/teacher/TeacherStudentAgitPostDetail.css',
+    'src/components/teacher/MissionLabQuestionsModal.css',
+    'src/components/teacher/MissionLabSourcesModal.css',
+    'src/components/teacher/MissionStudentPreview.css',
+    'src/modules/writing/writing-footprint/TeacherWritingFootprintDashboard.jsx',
+    'src/components/teacher/PostDetailViewer.jsx',
+    'src/components/teacher/MissionForm.jsx',
+    'src/components/teacher/SubmissionStatusModal.jsx',
+    'src/components/teacher/ClassAnalysis.jsx',
+    'src/components/teacher/ArchiveManager.jsx',
+    'src/components/teacher/EvaluationReport.jsx',
+    'src/components/teacher/StudentModals.jsx'
 ];
 
 /*
@@ -31,14 +49,28 @@ const MIGRATED = [
  *    학생에게 보일 크기를 흉내 내는 곳이라 교사 계단으로 키우면 거짓말이 된다.
  */
 const ICON_OR_LARGER = 1.1;
+const DISPLAY_FLOOR = 2;
 const PREVIEW_ONLY = /writing-editor-preview-/;
+/*
+ * ⚠️ 아이콘만 넘기려다 **제목까지 넘어갔다**(2026-08-24, 일부러 되돌려 보고 확인).
+ *    화면 제목은 1.5rem 이라 아이콘 기준(1.1rem)보다 커서 그냥 통과했다.
+ *    그래서 `h1`~`h6` 이 걸린 줄은 크기와 상관없이 계단을 쓰게 한다.
+ */
+const HEADING = /<h[1-6][\s>]|\bh[1-6]\s*[,{]|\bh[1-6]\s*$/;
 
 const findHardCoded = (source) => {
     const hits = [];
     for (const line of source.split('\n')) {
         if (PREVIEW_ONLY.test(line)) continue;
+        const isHeading = HEADING.test(line);
         for (const match of line.matchAll(/font-?[Ss]ize:\s*'?([0-9.]+)rem/g)) {
-            if (Number(match[1]) < ICON_OR_LARGER) hits.push(`${match[1]}rem — ${line.trim().slice(0, 72)}`);
+            const size = Number(match[1]);
+            // 계단의 꼭대기(3xl = 2rem)보다 큰 것은 계단 밖의 전용 표시다 —
+            // 학급 코드를 화면 가득 띄우는 8rem 같은 것. 이런 것은 계단에 끼우지 않는다.
+            if (size >= DISPLAY_FLOOR) continue;
+            if (isHeading || size < ICON_OR_LARGER) {
+                hits.push(`${match[1]}rem — ${line.trim().slice(0, 72)}`);
+            }
         }
     }
     return hits;
@@ -52,11 +84,11 @@ test('계단으로 옮긴 교사 화면에는 하드코딩한 글자 크기가 �
     }
 });
 
-test('글자 계단은 다섯 단계뿐이고 바닥이 0.8rem이다', async () => {
+test('글자 계단은 일곱 단계뿐이고 바닥이 0.8rem이다', async () => {
     const tokens = await readFile('src/styles/design-system.css', 'utf8');
     const steps = [...tokens.matchAll(/--ui-text-(\w+):\s*([0-9.]+)rem/g)].map((m) => [m[1], Number(m[2])]);
 
-    assert.deepEqual(steps.map(([name]) => name), ['xs', 'sm', 'md', 'lg', 'xl'], '계단 이름이나 개수가 달라졌다');
+    assert.deepEqual(steps.map(([name]) => name), ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'], '계단 이름이나 개수가 달라졌다');
     // 읽어야 하는 글자가 12.8px 밑으로 내려가지 않게 바닥을 고정한다.
     assert.equal(steps[0][1], 0.8, 'xs 바닥이 0.8rem이 아니다');
     // 계단은 항상 커지는 순서여야 한다 — 뒤집히면 화면이 뒤죽박죽이 된다.

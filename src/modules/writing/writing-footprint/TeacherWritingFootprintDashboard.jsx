@@ -55,7 +55,7 @@ const Panel = ({ title, hint, compact = false, children, style, onOpen }) => <se
         <h3 style={{ margin: compact ? '0 0 3px' : 0, color: '#1E293B', fontSize: compact ? 'var(--footprint-fs-md, .78rem)' : '1rem', fontWeight: 900, flexShrink: 1, minWidth: 0, whiteSpace: compact ? 'nowrap' : undefined, overflow: compact ? 'hidden' : undefined, textOverflow: compact ? 'ellipsis' : undefined }}>{title}</h3>
         {onOpen && <span aria-hidden="true" style={{ flexShrink: 0, color: '#2563EB', fontSize: compact ? 'var(--footprint-fs-xs, .58rem)' : '.68rem', fontWeight: 900 }}>⛶ 크게 보기</span>}
     </div>
-    {hint && !compact && <p style={{ margin: '4px 0 16px', color: '#64748B', fontSize: '.8rem', lineHeight: 1.5 }}>{hint}</p>}
+    {hint && !compact && <p style={{ margin: '4px 0 16px', color: '#64748B', fontSize: 'var(--ui-text-sm)', lineHeight: 1.5 }}>{hint}</p>}
     {!hint && !compact && <div style={{ height: '14px' }} />}
     {children}
 </section>;
@@ -110,20 +110,20 @@ const SummaryTiles = ({ cards, context, compact = false, isMobile = false }) => 
 };
 
 const MetricCell = ({ primary, secondary, muted = false }) => <td style={{ padding: '11px 10px', textAlign: 'right', verticalAlign: 'middle' }}>
-    <strong style={{ display: 'block', color: muted ? '#94A3B8' : '#334155', fontSize: '.83rem' }}>{primary}</strong>
-    <span style={{ display: 'block', marginTop: '3px', color: '#94A3B8', fontSize: '.7rem', whiteSpace: 'nowrap' }}>{secondary}</span>
+    <strong style={{ display: 'block', color: muted ? '#94A3B8' : '#334155', fontSize: 'var(--ui-text-sm)' }}>{primary}</strong>
+    <span style={{ display: 'block', marginTop: '3px', color: '#94A3B8', fontSize: 'var(--ui-text-sm)', whiteSpace: 'nowrap' }}>{secondary}</span>
 </td>;
 
 const DetailValue = ({ label, value }) => <div style={{ minWidth: '120px' }}>
-    <span style={{ display: 'block', color: '#64748B', fontSize: '.7rem', fontWeight: 700 }}>{label}</span>
-    <strong style={{ display: 'block', marginTop: '3px', color: '#1E293B', fontSize: '.82rem' }}>{value}</strong>
+    <span style={{ display: 'block', color: '#64748B', fontSize: 'var(--ui-text-sm)', fontWeight: 700 }}>{label}</span>
+    <strong style={{ display: 'block', marginTop: '3px', color: '#1E293B', fontSize: 'var(--ui-text-sm)' }}>{value}</strong>
 </div>;
 
 const StudentTable = ({ students }) => {
     const [expandedStudentId, setExpandedStudentId] = useState(null);
 
     return <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', minWidth: '1060px', borderCollapse: 'collapse', fontSize: '.82rem' }}>
+        <table style={{ width: '100%', minWidth: '1060px', borderCollapse: 'collapse', fontSize: 'var(--ui-text-sm)' }}>
             <thead><tr style={{ color: '#64748B', borderBottom: '1px solid #E2E8F0', textAlign: 'right' }}>
                 <th style={{ padding: '10px 12px', textAlign: 'left' }}>학생</th>
                 <th style={{ padding: '10px' }}>글 활동</th>
@@ -156,7 +156,7 @@ const StudentTable = ({ students }) => {
                                 onClick={() => setExpandedStudentId(isOpen ? null : student.student_id)}
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', border: 0, padding: 0, background: 'transparent', color: '#1E293B', fontWeight: 900, cursor: 'pointer' }}
                             >
-                                <span aria-hidden="true" style={{ color: '#2563EB', fontSize: '.68rem' }}>{isOpen ? '▼' : '▶'}</span>
+                                <span aria-hidden="true" style={{ color: '#2563EB', fontSize: 'var(--ui-text-sm)' }}>{isOpen ? '▼' : '▶'}</span>
                                 {student.name}
                             </button>
                         </td>
@@ -166,8 +166,8 @@ const StudentTable = ({ students }) => {
                         <MetricCell primary={`남김 ${num(interactionsGiven)}회`} secondary={`받음 ${num(interactionsReceived)}회`} />
                         <MetricCell primary={`+${num(student.points_earned)}P`} secondary={`사용 ${num(student.points_used)}P`} />
                         <td style={{ padding: '11px 10px', textAlign: 'right', verticalAlign: 'middle' }}>
-                            <strong style={{ display: 'block', color: student.last_post_at ? '#334155' : '#94A3B8', fontSize: '.83rem' }}>{formatDate(student.last_post_at)}</strong>
-                            <span style={{ display: 'block', marginTop: '3px', color: changeColor, fontSize: '.7rem', fontWeight: 700, whiteSpace: 'nowrap' }}>30일 {num(student.recent_30_posts)}편 · {changeLabel}</span>
+                            <strong style={{ display: 'block', color: student.last_post_at ? '#334155' : '#94A3B8', fontSize: 'var(--ui-text-sm)' }}>{formatDate(student.last_post_at)}</strong>
+                            <span style={{ display: 'block', marginTop: '3px', color: changeColor, fontSize: 'var(--ui-text-sm)', fontWeight: 700, whiteSpace: 'nowrap' }}>30일 {num(student.recent_30_posts)}편 · {changeLabel}</span>
                         </td>
                     </tr>
                     {isOpen && <tr id={detailId} style={{ borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
@@ -400,7 +400,7 @@ const TeacherWritingFootprintDashboard = ({ activeClass, isMobile }) => {
             <div style={{ minWidth: 0 }}>
                 <p style={{ margin: '0 0 3px', fontSize: isExpanded ? 'var(--footprint-fs-sm, .6rem)' : '.78rem', fontWeight: 800, opacity: .82 }}>{schoolYearLabel}</p>
                 <h2 style={{ margin: 0, fontSize: isExpanded ? 'var(--footprint-fs-lg, 1rem)' : (isMobile ? '1.35rem' : '1.6rem'), fontWeight: 900, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>👣 {activeClass?.name} 글쓰기 발자국</h2>
-                {!isExpanded && <p style={{ margin: '8px 0 0', fontSize: '.86rem', opacity: .9 }}>칭호를 제외한 글쓰기 성장과 포인트·교류 기록을 학급 단위로 모았습니다.</p>}
+                {!isExpanded && <p style={{ margin: '8px 0 0', fontSize: 'var(--ui-text-sm)', opacity: .9 }}>칭호를 제외한 글쓰기 성장과 포인트·교류 기록을 학급 단위로 모았습니다.</p>}
             </div>
             <div style={{ display: 'flex', gap: '7px', flexShrink: 0 }}>
                 <button type="button" onClick={() => load(true)} style={{ border: '1px solid rgba(255,255,255,.45)', borderRadius: '10px', padding: isExpanded ? '6px 9px' : '9px 13px', color: 'white', background: 'rgba(255,255,255,.14)', fontSize: isExpanded ? 'var(--footprint-fs-sm, .7rem)' : undefined, fontWeight: 800, cursor: 'pointer' }}>↻ 새로고침</button>

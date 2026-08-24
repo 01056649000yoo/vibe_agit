@@ -107,8 +107,8 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                 background: 'white', flexShrink: 0
             }}>
                 <div>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '900', color: '#2C3E50' }}>📊 학생 평가 리포트</h2>
-                    <div style={{ fontSize: '0.9rem', color: '#7F8C8D', fontWeight: 'bold' }}>미션: {mission.title}</div>
+                    <h2 style={{ margin: 0, fontSize: 'var(--ui-text-2xl)', fontWeight: '900', color: '#2C3E50' }}>📊 학생 평가 리포트</h2>
+                    <div style={{ fontSize: 'var(--ui-text-md)', color: '#7F8C8D', fontWeight: 'bold' }}>미션: {mission.title}</div>
                 </div>
                 <ModalCloseButton onClick={onClose} label="학생 평가 리포트 닫기" />
             </header>
@@ -125,14 +125,14 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                         <div style={{ color: '#3730A3', fontWeight: '900', marginBottom: '8px' }}>
                             📚 2022 개정 국어과 · {formatKoreanGradeBand(curriculum)} · 성취기준 {linkedStandards.length}개 연결
                         </div>
-                        <div style={{ display: 'grid', gap: '5px', color: '#4338CA', fontSize: '0.82rem', lineHeight: 1.5 }}>
+                        <div style={{ display: 'grid', gap: '5px', color: '#4338CA', fontSize: 'var(--ui-text-sm)', lineHeight: 1.5 }}>
                             {linkedStandards.map((standard) => (
                                 <div key={standard.code}>
                                     <strong>[{standard.code}]</strong> {standard.description}
                                 </div>
                             ))}
                         </div>
-                        <div style={{ marginTop: '9px', color: '#6366F1', fontSize: '0.76rem', fontWeight: 'bold' }}>
+                        <div style={{ marginTop: '9px', color: '#6366F1', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold' }}>
                             이 평가 결과와 교사 의견은 ‘국어 평어’ 작성의 근거로 활용됩니다.
                         </div>
                     </section>
@@ -140,10 +140,10 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                 {/* 상단 통계 차트 영역 */}
                 <section style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: '24px', marginBottom: '32px' }}>
                     <div style={{ background: '#F8FAFC', padding: '20px 24px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>
-                        <h4 style={{ margin: '0 0 12px 0', color: '#64748B', fontSize: '0.95rem' }}>📉 학급 평균 성장도 (최대 {maxScore}점)</h4>
+                        <h4 style={{ margin: '0 0 12px 0', color: '#64748B', fontSize: 'var(--ui-text-md)' }}>📉 학급 평균 성장도 (최대 {maxScore}점)</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: 'var(--ui-text-md)', fontWeight: 'bold' }}>
                                     <span>처음글 평균 점수</span>
                                     <span style={{ color: '#10B981' }}>{stats.avgInitial}P</span>
                                 </div>
@@ -156,7 +156,7 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                                 </div>
                             </div>
                             <div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: 'var(--ui-text-md)', fontWeight: 'bold' }}>
                                     <span>마지막글 평균 점수</span>
                                     <span style={{ color: '#3B82F6' }}>{stats.avgFinal}P</span>
                                 </div>
@@ -172,8 +172,8 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
 
                         {stats.improvedNames.length > 0 && (
                             <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed #CBD5E1' }}>
-                                <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 'bold', marginBottom: '4px' }}>🚀 글쓰기가 향상된 학생들</div>
-                                <div style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 'bold', lineHeight: '1.4' }}>
+                                <div style={{ fontSize: 'var(--ui-text-sm)', color: '#64748B', fontWeight: 'bold', marginBottom: '4px' }}>🚀 글쓰기가 향상된 학생들</div>
+                                <div style={{ fontSize: 'var(--ui-text-sm)', color: '#334155', fontWeight: 'bold', lineHeight: '1.4' }}>
                                     {stats.improvedNames.join(', ')}
                                 </div>
                             </div>
@@ -196,7 +196,7 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                         <select
                             value={filterScore}
                             onChange={e => setFilterScore(Number(e.target.value))}
-                            style={{ padding: '10px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '0.9rem', outline: 'none' }}
+                            style={{ padding: '10px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: 'var(--ui-text-md)', outline: 'none' }}
                         >
                             <option value={0}>전체 학생 보기</option>
                             <option value={1}>1점 학생만 (집중 지도)</option>
@@ -205,14 +205,14 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                         <select
                             value={sortBy}
                             onChange={e => setSortBy(e.target.value)}
-                            style={{ padding: '10px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '0.9rem', outline: 'none' }}
+                            style={{ padding: '10px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: 'var(--ui-text-md)', outline: 'none' }}
                         >
                             <option value="name">이름순</option>
                             <option value="growth">성장도순</option>
                             <option value="final">최종 점수순</option>
                         </select>
                     </div>
-                    <div style={{ fontSize: '0.9rem', color: '#64748B', fontWeight: 'bold' }}>
+                    <div style={{ fontSize: 'var(--ui-text-md)', color: '#64748B', fontWeight: 'bold' }}>
                         분석 대상: 총 {processedData.length}명
                     </div>
                 </div>
@@ -222,11 +222,11 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                         <thead>
                             <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                                <th style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#64748B' }}>학생 이름</th>
-                                <th style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#64748B' }}>처음 점수</th>
-                                <th style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#64748B' }}>최종 점수</th>
-                                <th style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#64748B' }}>성장도</th>
-                                <th style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#64748B' }}>교사 의견</th>
+                                <th style={{ padding: '16px 24px', fontSize: 'var(--ui-text-md)', color: '#64748B' }}>학생 이름</th>
+                                <th style={{ padding: '16px 24px', fontSize: 'var(--ui-text-md)', color: '#64748B' }}>처음 점수</th>
+                                <th style={{ padding: '16px 24px', fontSize: 'var(--ui-text-md)', color: '#64748B' }}>최종 점수</th>
+                                <th style={{ padding: '16px 24px', fontSize: 'var(--ui-text-md)', color: '#64748B' }}>성장도</th>
+                                <th style={{ padding: '16px 24px', fontSize: 'var(--ui-text-md)', color: '#64748B' }}>교사 의견</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -253,7 +253,7 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                                         <td style={{ padding: '16px 24px', fontWeight: '900', color: '#3B82F6' }}>{getScoreLabel(student.final_eval)}</td>
                                         <td style={{ padding: '16px 24px' }}>
                                             <span style={{
-                                                padding: '4px 10px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold',
+                                                padding: '4px 10px', borderRadius: '8px', fontSize: 'var(--ui-text-sm)', fontWeight: 'bold',
                                                 background: growth > 0 ? '#ECFDF5' : growth < 0 ? '#FEF2F2' : '#F1F5F9',
                                                 color: growth > 0 ? '#059669' : growth < 0 ? '#DC2626' : '#64748B'
                                             }}>
@@ -262,7 +262,7 @@ const EvaluationReport = ({ mission, onClose, isMobile }) => {
                                         </td>
                                         <td
                                             title={student.eval_comment}
-                                            style={{ padding: '16px 24px', fontSize: '0.9rem', color: '#444', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                            style={{ padding: '16px 24px', fontSize: 'var(--ui-text-md)', color: '#444', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                                         >
                                             {student.eval_comment || <span style={{ color: '#CBD5E1' }}>의견 없음</span>}
                                         </td>

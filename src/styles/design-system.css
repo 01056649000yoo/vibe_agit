@@ -59,6 +59,14 @@
   --ui-text-md: 1rem;
   --ui-text-lg: 1.15rem;
   --ui-text-xl: 1.35rem;
+  /*
+   * 화면 제목 전용. 탭마다 1.25·1.6·1.8rem 으로 제각각이었다(2026-08-24 점검).
+   * `.teacher-tab-heading h2` 를 쓰는 탭과 자기 h2 를 직접 그리는 탭이 섞여 있던 탓이다.
+   * 화면 하나의 맨 위 제목은 모두 이 값을 쓴다.
+   */
+  --ui-text-2xl: 1.5rem;
+  /* 전체 화면 로딩·마법사처럼 화면을 통째로 쓰는 큰 제목 전용. 일반 화면 제목에는 쓰지 않는다. */
+  --ui-text-3xl: 2rem;
 
   --ui-line-compact: 1.25;
   --ui-line-body: 1.55;
