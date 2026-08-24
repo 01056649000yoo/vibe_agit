@@ -19,7 +19,6 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 .arrange-sidebar-card,.arrange-board-card,.arrange-role-builder,.arrange-role-board,.arrange-settings-card,.arrange-transfer-card,.arrange-sound-card { border:1px solid var(--arrange-border); border-radius:19px; background:#fff; padding:16px; box-shadow:0 7px 20px rgba(30,50,80,.04); }
 .arrange-sidebar-card { position:sticky; top:14px; }
 .arrange-segment { display:grid; grid-template-columns:1fr 1fr; gap:5px; padding:4px; border-radius:13px; background:#eef2f7; }
-.arrange-quick-input { width:100%; min-height:110px; margin-top:12px; padding:11px; border:1px solid #ccd7e6; border-radius:12px; resize:vertical; box-sizing:border-box; font:inherit; }
 .arrange-roster-summary { margin-top:12px; padding:12px; border-radius:13px; background:#f8fafc; }
 .arrange-roster-summary strong { font-size:.88rem; }
 .arrange-chip-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }

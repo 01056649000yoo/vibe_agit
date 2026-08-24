@@ -4,7 +4,6 @@ import SeatLotteryModal from './SeatLotteryModal';
 import { useNameSize } from './NameSizeControl';
 import { hasExactSeatCount, rectangularSeats, seatKey, seatsWithinGrid, solveSeats, suggestSeatLayout } from './arrangementEngine';
 
-const parseQuickNames = (text) => text.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean).slice(0, 100);
 const SPEED_OPTIONS = [
   { id: 'slow', label: '천천히', delay: 1500, detail: '한 명 약 1.5초' },
   { id: 'normal', label: '보통', delay: 950, detail: '한 명 약 1초' },
@@ -14,8 +13,6 @@ const delayFor = (speed) => SPEED_OPTIONS.find((option) => option.id === speed)?
 const groupLabel = (group) => group === 'A' ? '남' : group === 'B' ? '여' : '';
 
 export default function SeatArrangement({ students, settings, history, onSettingsChange, onCreateHistory }) {
-  const [source, setSource] = useState('class');
-  const [quickText, setQuickText] = useState('');
   const suggested = useMemo(() => suggestSeatLayout(students.length), [students.length]);
   const initial = settings.seatLayout || suggested;
   const [rows, setRows] = useState(initial.rows || 4);
@@ -45,9 +42,10 @@ export default function SeatArrangement({ students, settings, history, onSetting
     return () => window.removeEventListener('pointerup', end);
   }, []);
 
-  const roster = useMemo(() => source === 'class'
-    ? students
-    : parseQuickNames(quickText).map((name, index) => ({ id: `quick-${index}`, name })), [source, students, quickText]);
+  // 자리 배치는 **아지트 학급 명단**만 쓴다. 손으로 이름을 넣는 `빠른 입력` 은 2026-08-24 에 없앴다 —
+  // 그 명단으로 뽑으면 기록이 저장되지 않아 "저장이 안 된다" 는 오해가 생겼고,
+  // 이름이 아지트 명단과 달라 지난 기록·역할 나누기와도 맞지 않았다.
+  const roster = students;
   const assignmentBySeat = useMemo(() => new Map(assignments.map((item) => [item.seatKey, item])), [assignments]);
   const seatCountMatches = hasExactSeatCount(roster.length, activeSeats.size);
   const canStart = phase === 'idle' && seatCountMatches;
@@ -140,25 +138,18 @@ export default function SeatArrangement({ students, settings, history, onSetting
       }, base + step * 0.9);
     });
     schedule(() => { setPhase('done'); setRollingName(''); setFlyingPick(null); arrangementSfx.finish(); }, order.length * step + 120);
-    if (source === 'class') {
-      await onCreateHistory('seat', `자리 배치 ${result.assignments.length}명`, {
+    await onCreateHistory('seat', `자리 배치 ${result.assignments.length}명`, {
         format: 'classroom-arrangement/seat-v1',
         layout: { rows, cols, activeSeats: [...activeSeats] },
         settings,
         violations: result.violations,
-        assignments: result.assignments
-      });
-    }
+      assignments: result.assignments
+    });
   };
 
   return <>
     <div className="arrange-workspace">
       <section className="arrange-sidebar-card">
-        <div className="arrange-segment" role="tablist" aria-label="학생 입력 방식">
-          <button type="button" role="tab" aria-selected={source === 'class'} className={source === 'class' ? 'is-active' : ''} onClick={() => { setSource('class'); reset(); }}>아지트 학급</button>
-          <button type="button" role="tab" aria-selected={source === 'quick'} className={source === 'quick' ? 'is-active' : ''} onClick={() => { setSource('quick'); reset(); }}>빠른 입력</button>
-        </div>
-        {source === 'quick' ? <textarea className="arrange-quick-input" value={quickText} onChange={(event) => { setQuickText(event.target.value); reset(); }} placeholder={'이름을 줄바꿈이나 쉼표로 입력\n예: 민준, 서연, 지우'} /> : null}
         <div className="arrange-roster-summary"><strong>{roster.length}명</strong><div className="arrange-chip-row">{roster.map((student) => <span className="arrange-chip" key={student.id}>{student.name}{groupLabel(student.group) ? ` · ${groupLabel(student.group)}` : ''}</span>)}</div></div>
         <div className="arrange-grid-controls">
           <label>행<input type="number" min="1" max="30" value={rows} disabled={phase === 'running'} onChange={(event) => resizeGrid(Math.max(1, Math.min(30, Number(event.target.value) || 1)), cols)} /></label>

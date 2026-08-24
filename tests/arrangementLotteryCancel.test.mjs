@@ -188,3 +188,30 @@ test('역할 나누기 시작 버튼은 결과판 오른쪽 위에 있다', asyn
         '머리말 안 시작 버튼이 가로로 늘어난다'
     );
 });
+
+/*
+ * 2026-08-24: "자리 배치 결과가 저장이 안 되는 경우가 있다" 는 제보의 원인이었다.
+ *
+ * `빠른 입력`(손으로 이름을 넣는 방식)으로 뽑으면 `if (source === 'class')` 조건 때문에
+ * **기록이 아예 저장되지 않았다**. 오류도 안 떠서 조용히 안 남았다.
+ * 이름이 아지트 명단과 달라 지난 기록·역할 나누기와도 맞지 않았으므로 그 방식을 없앴다.
+ */
+test('자리 배치는 아지트 학급 명단만 쓰고 결과를 늘 기록한다', async () => {
+    const [source, css] = await Promise.all([
+        read('SeatArrangement.jsx'),
+        readFile('src/modules/tool/classroom-arrangement/classroomArrangement.css', 'utf8')
+    ]);
+
+    // 손으로 이름을 넣는 길이 남아 있으면 안 된다.
+    for (const trace of ['parseQuickNames', 'quickText', 'arrange-quick-input', "setSource(", "source === 'quick'"]) {
+        assert.ok(!source.includes(trace), `빠른 입력 흔적이 남아 있다: ${trace}`);
+    }
+    assert.ok(!css.includes('.arrange-quick-input'), '빠른 입력 스타일이 남아 있다');
+
+    // 명단은 아지트 학급 하나뿐이다.
+    assert.ok(source.includes('const roster = students;'), '명단이 아지트 학급 하나가 아니다');
+
+    // 저장에 조건이 붙어 있으면 또 조용히 안 남는 경우가 생긴다.
+    assert.ok(!source.includes("if (source === 'class')"), '결과 저장에 조건이 남아 있다');
+    assert.ok(source.includes("await onCreateHistory('seat'"), '결과를 기록하지 않는다');
+});
