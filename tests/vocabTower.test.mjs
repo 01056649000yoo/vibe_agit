@@ -597,6 +597,8 @@ test('낱말 상태 네 가지와 나눠 받는 포인트를 교사·학생 화�
 
     // 학생 화면은 `💡 도움말` 알약을 눌러 창으로 본다. ⓘ 아이콘은 다른 뜻이라 쓰지 않는다.
     assert.ok(student.includes('variant="help"'), '학생 낱말 상태 도움말이 공용 도움말 모양이 아니다');
+    // 잔글씨(`낱말 상태` .68rem) 옆이라 기본 크기면 버튼만 커 보인다(2026-08-24 지적).
+    assert.ok(student.includes('size="sm"'), '작은 글자 옆인데 도움말 버튼이 기본 크기다');
     assert.ok(student.includes('setStatesHelpOpen(true)'), '학생 낱말 상태 창을 열 수 없다');
     assert.ok(student.includes('aria-modal="true"'), '낱말 상태 설명이 창으로 읽히지 않는다');
     // 게임 화면 안이라 공용 Modal 을 못 쓴다. 이 모듈의 오버레이를 쓰는지 확인한다.

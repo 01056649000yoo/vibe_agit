@@ -339,6 +339,7 @@ const V2DeckMap = ({
                                                 ⓘ 아이콘은 다른 뜻(짧은 덧붙임)이라 여기서는 쓰지 않는다. */}
                                             <GuideInfoButton
                                                 variant="help"
+                                                size="sm"
                                                 onClick={(event) => { event.stopPropagation(); setStatesHelpOpen(true); }}
                                                 label="낱말 상태가 무슨 뜻인지 보기"
                                             />

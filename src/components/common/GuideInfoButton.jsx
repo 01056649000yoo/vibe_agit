@@ -6,11 +6,14 @@ import './GuideInfoButton.css';
  * 화면에 설명을 덧붙일 때 `ⓘ`, `!`, `?` 같은 문자나 별도 아이콘 버튼을
  * 직접 만들지 말고 이 컴포넌트를 쓴다. 버튼의 클릭 범위와 SVG 중심을 한곳에서
  * 맞춰 두어, 폰트마다 아이콘 위치가 달라지는 문제를 막는다.
+ *
+ * `size='sm'` 은 작은 글자 옆에 붙일 때만 쓴다(예: 학생 지도 카드의 `낱말 상태` 줄).
+ * 기본 크기가 옆 글자보다 커 보이는 자리에서만 쓰고, 화면 제목 옆에는 기본 크기를 유지한다.
  */
-const GuideInfoButton = ({ label, title = label, className = '', onClick, variant = 'icon' }) => (
+const GuideInfoButton = ({ label, title = label, className = '', onClick, variant = 'icon', size = 'md' }) => (
     <button
         type="button"
-        className={`guide-info-button${variant === 'help' ? ' guide-info-button--help' : ''} ${className}`.trim()}
+        className={`guide-info-button${variant === 'help' ? ' guide-info-button--help' : ''}${size === 'sm' ? ' guide-info-button--sm' : ''} ${className}`.trim()}
         aria-label={label}
         title={title}
         onClick={onClick}

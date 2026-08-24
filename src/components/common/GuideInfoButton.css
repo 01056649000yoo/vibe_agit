@@ -63,7 +63,21 @@
     white-space: nowrap;
 }
 
+/* 작은 글자 옆에 붙일 때. 기본 크기(32px·.76rem)는 `낱말 상태`(.68rem) 같은 잔글씨 옆에서
+   혼자 커 보인다(2026-08-24 지적). 누를 수 있는 크기는 지키면서 글자에 맞춰 줄인다. */
+.guide-info-button--help.guide-info-button--sm {
+    height: 24px;
+    gap: 4px;
+    padding: 0 8px;
+    border-radius: 7px;
+    font-size: .68rem;
+}
+
+.guide-info-button--help.guide-info-button--sm > span:first-child { font-size: .74rem; }
+
 @media (pointer: coarse) {
     .guide-info-button { width: 34px; height: 34px; }
     .guide-info-button--help { width: auto; padding: 0 12px; }
+    /* 손가락으로 누르는 기기에서는 작은 것도 누를 만큼은 키운다. */
+    .guide-info-button--help.guide-info-button--sm { height: 30px; padding: 0 10px; }
 }
