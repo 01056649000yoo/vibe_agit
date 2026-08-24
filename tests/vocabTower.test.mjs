@@ -389,7 +389,8 @@ test('교사 도움말은 포인트 지급 기준을 오해하지 않도록 설�
     assert.match(teacherGuides, /한 번 받은 구간은 다시 사라지지 않습니다/);
     assert.match(teacherGuides, /포인트와는 관계가 없습니다/);
     assert.match(teacherGuides, /서로 다른 두 가지 문제 형태를 힌트 없이 연속으로 성공해야/);
-    assert.match(teacherManager, /TeacherGuideButton tabId="vocab-tower" variant="help"/);
+    // 도움말 버튼 자체는 공통 게임 관리 셸이 그린다(2026-08-24). 어디서 그리는지는 아래
+    // `게임 모듈은 도움말을 따로 그리지 않는다` 검사가 지키므로 여기서는 내용만 본다.
 });
 
 test('학생 도움말은 포인트·익힘 규칙을 쉬운 말로 알려준다', () => {
@@ -507,4 +508,24 @@ test('어휘의 탑 설정은 갈래로 나뉘어도 적다 만 값이 사라지
     // 갈래 줄은 스크린리더에서도 갈래로 읽혀야 한다.
     assert.ok(source.includes('role="tablist"'), '갈래 줄이 갈래로 읽히지 않는다');
     assert.ok(source.includes('aria-selected={panel === item.id}'), '고른 갈래를 알려주지 않는다');
+});
+
+/*
+ * 2026-08-24: 어휘의 탑 `개인 연습 설정`에 도움말이 **두 개** 붙어 있었다.
+ * 공통 게임 관리 셸이 화면 제목 옆에 이미 그리는데 모듈이 또 그렸다.
+ *
+ * ⚠️ 도움말을 어디서 그릴지가 두 곳으로 갈리면 또 겹친다. 셸이 그리는 것이 원본이고
+ *    게임 모듈은 자기 도움말을 따로 그리지 않는다는 것을 이 검사가 지킨다.
+ */
+test('게임 모듈은 도움말을 따로 그리지 않는다 — 공통 셸이 한 번만 그린다', async () => {
+    const shell = await readFile('src/modules/game/teacher/RegisteredGameModuleCards.jsx', 'utf8');
+    assert.ok(shell.includes('<TeacherGuideButton tabId={selected.module.id}'), '공통 셸이 도움말을 그리지 않는다');
+
+    for (const path of [
+        'src/modules/game/vocab-tower/TeacherManager.jsx',
+        'src/modules/game/dragon/TeacherManager.jsx'
+    ]) {
+        const source = await readFile(path, 'utf8');
+        assert.ok(!source.includes('TeacherGuideButton'), `${path}: 셸이 그리는 도움말을 또 그린다`);
+    }
 });

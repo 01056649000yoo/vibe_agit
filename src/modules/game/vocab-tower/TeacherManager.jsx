@@ -9,7 +9,6 @@ const SETTING_PANELS = Object.freeze([
 import Button from '../../../components/common/Button';
 import { supabase } from '../../../lib/supabaseClient';
 import './teacherManager.css';
-import TeacherGuideButton from '../../../components/teacher/TeacherGuideButton';
 import {
     VOCAB_FLOOR_REWARD_DEFAULT_POINTS,
     VOCAB_FLOOR_REWARD_MAX_POINTS,
@@ -288,9 +287,10 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 <div className="vocab-teacher__section-heading">
                     <div>
                         <span className="vocab-teacher__eyebrow">학급별 설정</span>
+                        {/* 도움말은 공통 게임 관리 셸(`RegisteredGameModuleCards`)이 화면 제목 옆에
+                            이미 그린다. 여기서 또 그리면 같은 `vocab-tower` 도움말이 두 개가 된다. */}
                         <div className="vocab-teacher__heading-row">
                             <h3 id="vocab-settings-title">개인 연습 설정</h3>
-                            <TeacherGuideButton tabId="vocab-tower" variant="help" />
                         </div>
                         <p>현재 학년의 검수·잠금이 완료된 덱 10개를 자동으로 사용하며, 별도로 출제자료를 선택할 필요가 없습니다.</p>
                     </div>
