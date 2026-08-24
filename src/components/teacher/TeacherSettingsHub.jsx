@@ -1,4 +1,5 @@
 import React, { lazy, useEffect, useState } from 'react';
+import Button from '../common/Button';
 import TeacherSettingsTab from './TeacherSettingsTab';
 import TeacherGuideButton from './TeacherGuideButton';
 import { getAllModules } from '../../modules/registry';
@@ -125,9 +126,15 @@ const TeacherSettingsHub = ({
                     <TeacherWritingEditorManager activeClass={activeClass} isMobile={isMobile} />
                 ) : section === 'ai-prompts' ? (
                     <div>
+                        {/* 종류 선택 줄 오른쪽이 넓게 비어 있었다. 카드 안에서 세로 한 줄을 먹던
+                            안내와 `AI 연결 점검` 을 이 빈 자리로 올려 한 화면에 들어오게 한다. */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            flexWrap: 'wrap', gap: '12px', marginBottom: '12px'
+                        }}>
                         <div role="tablist" aria-label="AI 작성 기준 종류" style={{
                             display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px',
-                            margin: '0 0 10px', padding: '6px', borderRadius: '14px',
+                            flex: isMobile ? '1 1 100%' : '0 1 460px', margin: 0, padding: '6px', borderRadius: '14px',
                             background: '#E9EEF6', boxSizing: 'border-box'
                         }}>
                             {[
@@ -153,8 +160,19 @@ const TeacherSettingsHub = ({
                                 );
                             })}
                         </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                            <p style={{ margin: 0, color: '#475569', fontSize: 'var(--ui-text-sm)' }}>고른 기준이 실제 AI 실행에 사용됩니다.</p>
+                            <Button
+                                type="button" variant="ghost" size="sm" onClick={handleTestAIConnection} disabled={testingKey}
+                                title="AI 기능에 문제가 있을 때 연결 상태를 점검합니다"
+                                style={{ padding: '6px 10px', color: '#64748B', background: '#F8FAFC', border: '1px solid #CBD5E1', boxShadow: 'none' }}
+                            >
+                                {testingKey ? '점검 중…' : '🔌 AI 연결 점검'}
+                            </Button>
+                        </div>
+                        </div>
                         <TeacherSettingsTab
-                            isMobile={isMobile} promptKind={promptKind} compact
+                            isMobile={isMobile} promptKind={promptKind} compact renderHeader={false}
                             handleTestAIConnection={handleTestAIConnection}
                             testingKey={testingKey}
                             setPromptTemplate={setPromptTemplate} setReportPromptTemplate={setReportPromptTemplate}

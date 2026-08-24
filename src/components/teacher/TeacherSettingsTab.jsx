@@ -7,7 +7,9 @@ const TeacherSettingsTab = ({
     isMobile, testingKey,
     setPromptTemplate, setReportPromptTemplate,
     handleTestAIConnection,
-    promptKind = PRESET_KIND.FEEDBACK, compact = false
+    promptKind = PRESET_KIND.FEEDBACK, compact = false,
+    // 설정 허브는 이 줄을 종류 선택 줄 오른쪽 빈 자리로 올려 쓴다. 여기서 또 그리면 세로만 먹는다.
+    renderHeader = true
 }) => {
     const isFeedback = promptKind === PRESET_KIND.FEEDBACK;
     const label = isFeedback ? '피드백 기준' : '평어 기준';
@@ -25,7 +27,7 @@ const TeacherSettingsTab = ({
             padding: isMobile ? '20px' : compact ? '24px' : '30px', border: '1px solid #DCE6EE',
             boxShadow: '0 4px 18px rgba(15,23,42,.04)', boxSizing: 'border-box'
         }}>
-            <div style={{
+            {renderHeader && <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center',
                 flexDirection: isMobile ? 'column' : 'row', gap: '12px', paddingBottom: '18px',
                 marginBottom: '20px', borderBottom: '1px solid #E2E8F0'
@@ -38,7 +40,7 @@ const TeacherSettingsTab = ({
                 >
                     {testingKey ? '점검 중…' : '🔌 AI 연결 점검'}
                 </Button>
-            </div>
+            </div>}
 
             <PromptRuleManager
                 key={label}

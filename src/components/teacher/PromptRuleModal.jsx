@@ -335,8 +335,9 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             </div>
                         </div>
 
-                        <label style={{ display: 'block', marginBottom: '12px' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#1E293B', fontSize: 'var(--ui-text-md)', fontWeight: 900 }}>
+                        {/* 가로가 넓어졌으므로 제목과 입력을 한 줄에 둔다. 세로 한 줄을 아낀다. */}
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 auto', color: '#1E293B', fontSize: 'var(--ui-text-md)', fontWeight: 900, whiteSpace: 'nowrap' }}>
                                 <b style={{
                                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                                     width: '22px', height: '22px', flex: '0 0 22px', borderRadius: '50%',
@@ -351,7 +352,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                 placeholder={isReport ? '예: 3학년 성장 중심 평어' : '예: 3학년 다정한 피드백'}
                                 maxLength={40}
                                 style={{
-                                    width: '100%', padding: '13px 14px', borderRadius: '12px',
+                                    flex: 1, minWidth: 0, padding: '13px 14px', borderRadius: '12px',
                                     border: '1px solid #CBD5E1', background: '#fff',
                                     fontSize: 'var(--ui-text-md)', fontFamily: 'inherit',
                                     outline: 'none', boxSizing: 'border-box'
@@ -381,7 +382,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             maxLength={draft.length > MAX_PROMPT_LENGTH ? undefined : MAX_PROMPT_LENGTH}
                             placeholder={'- 역할: AI가 맡을 역할\n- 내용: 확인하고 작성할 내용\n- 말투: 학생에게 보여줄 말투\n- 제한: 분량과 금지할 내용'}
                             style={{
-                                flex: 1, minHeight: isMobile ? '180px' : '240px', width: '100%',
+                                flex: 1, minHeight: isMobile ? '150px' : '200px', width: '100%',
                                 padding: '15px', borderRadius: '12px', border: `1px solid ${isTooLong ? '#EF4444' : '#CBD5E1'}`,
                                 background: '#F8FAFC', fontSize: 'var(--ui-text-md)', lineHeight: 1.7,
                                 color: '#2C3E50', resize: 'none', boxSizing: 'border-box',
@@ -443,19 +444,6 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             </div>
                         )}
 
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-                            <Button
-                                onClick={handleSaveAsNew}
-                                disabled={saving || !presetTitle.trim() || !draft.trim() || isTooLong}
-                                size="sm"
-                                style={{
-                                    background: 'white', color: accent, border: `1px solid ${accent}`,
-                                    boxShadow: 'none', padding: '10px 16px', fontSize: 'var(--ui-text-sm)'
-                                }}
-                            >
-                                {selectedId ? '기준 저장' : '새 기준 저장'}
-                            </Button>
-                        </div>
                     </div>
                 </div>
 
@@ -467,14 +455,28 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                     borderTop: '1px solid #E2E8F0',
                     background: embedded ? 'transparent' : '#FAFBFC', flexWrap: 'wrap'
                 }}>
-                    {!embedded && <Button
-                        onClick={onClose}
-                        variant="ghost"
-                        size="sm"
-                        style={{ boxShadow: 'none', padding: '10px 16px', fontSize: 'var(--ui-text-sm)' }}
-                    >
-                        그대로 두고 닫기
-                    </Button>}
+                    {/* 저장 버튼이 편집기 안에서 따로 한 줄을 먹고 있었다. 이 줄로 합친다. */}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {!embedded && <Button
+                            onClick={onClose}
+                            variant="ghost"
+                            size="sm"
+                            style={{ boxShadow: 'none', padding: '10px 16px', fontSize: 'var(--ui-text-sm)' }}
+                        >
+                            그대로 두고 닫기
+                        </Button>}
+                        <Button
+                            onClick={handleSaveAsNew}
+                            disabled={saving || !presetTitle.trim() || !draft.trim() || isTooLong}
+                            size="sm"
+                            style={{
+                                background: 'white', color: accent, border: `1px solid ${accent}`,
+                                boxShadow: 'none', padding: '10px 16px', fontSize: 'var(--ui-text-sm)'
+                            }}
+                        >
+                            {selectedId ? '기준 저장' : '새 기준 저장'}
+                        </Button>
+                    </div>
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {selectedId && (
