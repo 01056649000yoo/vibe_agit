@@ -127,7 +127,7 @@ const TeacherSettingsHub = ({
                     <div>
                         <div role="tablist" aria-label="AI 작성 기준 종류" style={{
                             display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px',
-                            maxWidth: '920px', margin: '0 auto 10px', padding: '6px', borderRadius: '14px',
+                            margin: '0 0 10px', padding: '6px', borderRadius: '14px',
                             background: '#E9EEF6', boxSizing: 'border-box'
                         }}>
                             {[

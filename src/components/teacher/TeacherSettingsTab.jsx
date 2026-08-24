@@ -19,7 +19,9 @@ const TeacherSettingsTab = ({
 
     return (
         <section style={{
-            maxWidth: '920px', margin: '0 auto', width: '100%', background: 'white', borderRadius: '22px',
+            // 옆 탭(글쓰기 창 관리)은 설정 칸을 꽉 채우는데 여기만 920px 로 묶여 있어 혼자 좁아 보였다
+            // (2026-08-24 지적). 설정 본문 폭을 그대로 쓴다.
+            width: '100%', background: 'white', borderRadius: '22px',
             padding: isMobile ? '20px' : compact ? '24px' : '30px', border: '1px solid #DCE6EE',
             boxShadow: '0 4px 18px rgba(15,23,42,.04)', boxSizing: 'border-box'
         }}>
