@@ -1,4 +1,5 @@
 import React from 'react';
+import GuideInfoButton from '../../../components/common/GuideInfoButton';
 
 const V2DeckMap = ({
     grade,
@@ -29,14 +30,15 @@ const V2DeckMap = ({
     const ascendingDecks = [...decks].sort((a, b) => Number(a.deck_number) - Number(b.deck_number));
     const explorationDecks = [...ascendingDecks].reverse();
     const suggestedDeckNumber = activeDeckNumber
-        || Number(ascendingDecks.find((deck) => Number(deck.best_accuracy || 0) < 100)?.deck_number)
+        || Number(ascendingDecks.find((deck) => deck.unlocked !== false && Number(deck.best_accuracy || 0) < 100)?.deck_number)
         || Number(explorationDecks[0]?.deck_number || 0);
     const hasAnyActive = activeDeckNumber > 0;
     const summitRetry = summit?.retry || null;
     const summitRetryBlocked = Boolean(summitRetry?.blocked);
     // 정상 관문의 오답은 여러 층에 흩어진다. 어느 층에 가야 하는지 서버가 세어 준다.
     const summitRetryDecks = Array.isArray(summitRetry?.by_deck) ? summitRetry.by_deck : [];
-    const summitEligible = Boolean(summit?.eligible) && !summitRetryBlocked;
+    const summitQualified = Boolean(summit?.eligible);
+    const summitEligible = summitQualified && !summitRetryBlocked;
     const summitPassed = Number(summit?.passed_count || 0);
     const summitRequired = Number(summit?.required_count || deckCount);
     const summitMissing = Number(summit?.missing_count ?? Math.max(summitRequired - summitPassed, 0));
@@ -71,7 +73,7 @@ const V2DeckMap = ({
                 <button type="button" className="vocab-journey__back" onClick={onBack}>← 놀이터</button>
                 <p className="vocab-intro-card__eyebrow">{grade}학년 개인 어휘 수련</p>
                 <h1>어휘의 탑 지도</h1>
-                <p className="vocab-intro-card__lead">탑의 길을 따라 오르며 층마다 12개 낱말에 도전해요. 어느 층이든 골라 탐험할 수 있어요.</p>
+                <p className="vocab-intro-card__lead">1층부터 시작해 층마다 12개 낱말을 익혀요. 덱마스터를 통과하면 바로 다음 층이 열려요.</p>
 
                 <div className="vocab-deck-map__summary" aria-label="개인 연습 요약">
                     <div className="is-conquest"><span>100%로 정복한 층</span><strong>{conqueredDecks}/{deckCount}</strong></div>
@@ -85,15 +87,11 @@ const V2DeckMap = ({
                         <span className="vocab-tower-route__summit-icon" aria-hidden="true">👑</span>
                         <div>
                             <strong>
-                                <button
-                                    type="button"
+                                <GuideInfoButton
                                     className="vocab-summit-help-toggle"
                                     onClick={() => setOpenedCondition((current) => (current === 'summit-help' ? null : 'summit-help'))}
-                                    aria-expanded={openedCondition === 'summit-help'}
-                                    aria-label="어휘 마스터 도전이 어떤 시험인지 보기"
-                                >
-                                    ?
-                                </button>
+                                    label="어휘 마스터 도전이 어떤 시험인지 보기"
+                                />
                                 {summitCompleted
                                     ? '어휘 마스터 완성!'
                                     : summitLevel > 0
@@ -118,6 +116,33 @@ const V2DeckMap = ({
                         <em aria-label={`어휘 마스터 ${summitLevel}단계 / ${summitLevelCount}단계`}>
                             {summitEligible || summitLevel > 0 ? summitStars : `덱마스터 ${summitPassed}/${summitRequired}`}
                         </em>
+                        {summitStages.length > 0 && (
+                            <div className="vocab-summit-stages" aria-label="어휘 마스터 단계별 상태">
+                                {summitStages.map((stage) => {
+                                    const stageNumber = Number(stage.stage);
+                                    const isPassed = Boolean(stage.passed) || stageNumber <= summitLevel;
+                                    const isNext = stageNumber === summitNextStage;
+                                    const isUnlocked = summitQualified
+                                        && Boolean(stage.unlocked ?? (isPassed || isNext));
+                                    return isPassed ? (
+                                        <button
+                                            key={stageNumber}
+                                            type="button"
+                                            className="is-passed"
+                                            onClick={() => onOpenSummit?.(stageNumber)}
+                                            disabled={submitting || hasAnyActive || !isUnlocked}
+                                            aria-label={`어휘 마스터 ${stageNumber}단계 다시 도전`}
+                                        >
+                                            <b>{stageNumber}단계</b><span>통과 · 다시 도전</span>
+                                        </button>
+                                    ) : (
+                                        <span key={stageNumber} className={isNext && isUnlocked ? 'is-next' : 'is-locked'}>
+                                            <b>{stageNumber}단계</b><small>{isNext && isUnlocked ? '도전 가능' : '잠김'}</small>
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        )}
                         {!summitCompleted && (
                             <button
                                 type="button"
@@ -214,6 +239,10 @@ const V2DeckMap = ({
                     {explorationDecks.map((deck) => {
                         const deckNumber = Number(deck.deck_number);
                         const isActive = activeDeckNumber === deckNumber;
+                        // 잠금 판정은 서버 값을 사용한다. 마이그레이션 전 응답은 기존처럼 열림으로 읽는다.
+                        const floorUnlocked = deck.unlocked !== false || isActive;
+                        const unlockRequiredDeck = Number(deck.unlock_required_deck || Math.max(1, deckNumber - 1));
+                        const floorConditionKey = `floor-${deckNumber}`;
                         const hasOtherActive = activeDeckNumber > 0 && !isActive;
                         const practiceRuns = Number(deck.practice_runs || 0);
                         const completedRuns = Number(deck.completed_runs || 0);
@@ -240,10 +269,13 @@ const V2DeckMap = ({
                         const masterRetry = deck.master_retry || null;
                         const retryBlocked = Boolean(masterRetry?.blocked);
                         const masterEligible = Boolean(deck.master_eligible) && !retryBlocked;
+                        const canOpenMaster = floorUnlocked && masterEligible;
                         const masterPassed = Boolean(deck.master_passed);
                         const masterRequired = Number(deck.master_required_mastered || 0);
                         const masterMissing = Number(deck.master_missing_mastered || 0);
-                        const cardStatus = isActive
+                        const cardStatus = !floorUnlocked
+                            ? `${unlockRequiredDeck}층 덱마스터 필요`
+                            : isActive
                             ? `연습 진행 중 ${activeRun.answer_count}/${activeRun.target_question_count}`
                             : isConquered ? '정복 완료' : hasPractice ? `학습 ${seenCount}/${itemCount}` : '미탐험';
                         // 포인트는 익힌 낱말 수가 25·50·75·100% 구간을 넘을 때마다 나눠 받는다.
@@ -261,15 +293,15 @@ const V2DeckMap = ({
                             <div
                                 key={deck.deck_id || deckNumber}
                                 ref={deckNumber === suggestedDeckNumber ? initialMapTargetRef : undefined}
-                                className={`vocab-tower-route__stop ${deckNumber % 2 === 0 ? 'is-right' : 'is-left'}${isActive ? ' is-active' : ''}${isConquered ? ' is-conquered' : hasPractice ? ' is-explored' : ''}`}
+                                className={`vocab-tower-route__stop ${deckNumber % 2 === 0 ? 'is-right' : 'is-left'}${floorUnlocked ? '' : ' is-locked'}${isActive ? ' is-active' : ''}${isConquered ? ' is-conquered' : hasPractice ? ' is-explored' : ''}`}
                             >
                                 <span className="vocab-tower-route__marker" aria-hidden="true">
-                                    {isConquered ? '★' : isActive ? '●' : deckNumber}
+                                    {!floorUnlocked ? '🔒' : isConquered ? '★' : isActive ? '●' : deckNumber}
                                 </span>
                                 <article
-                                    className={`vocab-deck-card${isActive ? ' is-active' : hasPractice ? ' is-practiced' : ''}${rewardCompleted ? ' is-reward-complete' : ''}${isConquered ? ' is-conquered' : ''}`}
+                                    className={`vocab-deck-card${floorUnlocked ? '' : ' is-floor-locked'}${isActive ? ' is-active' : hasPractice ? ' is-practiced' : ''}${rewardCompleted ? ' is-reward-complete' : ''}${isConquered ? ' is-conquered' : ''}`}
                                     aria-current={isActive ? 'step' : undefined}
-                                    aria-label={`${deckNumber}층, ${isConquered ? '정복 완료, ' : ''}전체 ${itemCount}개, 학습 ${seenCount}개, 연습 중 ${learningCount}개, 다시 볼 낱말 ${needsReviewCount}개, 완전히 익힘 ${masteredCount}개, ${rewardTitle}`}
+                                    aria-label={`${deckNumber}층, ${floorUnlocked ? '' : `잠김, ${unlockRequiredDeck}층 덱마스터 필요, `}${isConquered ? '정복 완료, ' : ''}전체 ${itemCount}개, 학습 ${seenCount}개, 연습 중 ${learningCount}개, 다시 볼 낱말 ${needsReviewCount}개, 완전히 익힘 ${masteredCount}개, ${rewardTitle}`}
                                 >
                                     <div className="vocab-deck-card__floor">
                                         {isConquered && <i aria-hidden="true">🚩</i>}
@@ -309,10 +341,16 @@ const V2DeckMap = ({
                                     <div className="vocab-deck-card__actions">
                                         <button
                                             type="button"
-                                            onClick={() => onStart(deckNumber)}
-                                            disabled={submitting || hasOtherActive}
+                                            className={floorUnlocked ? undefined : 'is-floor-locked'}
+                                            onClick={() => (floorUnlocked
+                                                ? onStart(deckNumber)
+                                                : setOpenedCondition((current) => (current === floorConditionKey ? null : floorConditionKey)))}
+                                            disabled={submitting || (floorUnlocked && hasOtherActive)}
+                                            aria-expanded={floorUnlocked ? undefined : openedCondition === floorConditionKey}
                                         >
-                                            {hasOtherActive
+                                            {!floorUnlocked
+                                                ? `🔒 ${deckNumber}층 잠김`
+                                                : hasOtherActive
                                                 ? `${activeDeckNumber}층 연습을 먼저 완료하세요`
                                                 : isActive ? '연습 이어하기' : isConquered ? '정복한 층 다시 탐험' : hasPractice ? '이 층 다시 연습' : '이 층 탐험 시작'}
                                         </button>
@@ -321,14 +359,18 @@ const V2DeckMap = ({
                                             자격 판단은 서버가 한 값(master_eligible)을 그대로 쓴다. */}
                                         <button
                                             type="button"
-                                            className={`vocab-deck-card__master${masterEligible ? '' : ' is-locked'}${masterPassed ? ' is-passed' : ''}`}
-                                            onClick={() => (masterEligible
-                                                ? onOpenDeckMaster(deckNumber)
-                                                : setOpenedCondition((current) => (current === deckNumber ? null : deckNumber)))}
-                                            disabled={submitting || (masterEligible && hasOtherActive)}
-                                            aria-expanded={masterEligible ? undefined : openedCondition === deckNumber}
+                                            className={`vocab-deck-card__master${canOpenMaster ? '' : ' is-locked'}${masterPassed ? ' is-passed' : ''}`}
+                                            onClick={() => (floorUnlocked
+                                                ? (masterEligible
+                                                    ? onOpenDeckMaster(deckNumber)
+                                                    : setOpenedCondition((current) => (current === deckNumber ? null : deckNumber)))
+                                                : setOpenedCondition((current) => (current === floorConditionKey ? null : floorConditionKey)))}
+                                            disabled={submitting || (canOpenMaster && hasOtherActive)}
+                                            aria-expanded={canOpenMaster ? undefined : openedCondition === (floorUnlocked ? deckNumber : floorConditionKey)}
                                         >
-                                            {masterEligible
+                                            {!floorUnlocked
+                                                ? '🔒 층 잠김'
+                                                : masterEligible
                                                 ? (masterPassed ? '🏆 덱마스터 다시 도전' : '🏆 덱마스터 도전')
                                                 : retryBlocked
                                                     ? `📚 낱말 ${masterRetry.remaining_count}개 더 익히기`
@@ -346,7 +388,16 @@ const V2DeckMap = ({
                                             </button>
                                         )}
                                     </div>
-                                    {openedCondition === deckNumber && retryBlocked && (
+                                    {openedCondition === floorConditionKey && !floorUnlocked && (
+                                        <div className="vocab-deck-card__condition is-floor-lock" role="note">
+                                            <strong>{deckNumber}층을 열려면</strong>
+                                            <ul>
+                                                <li><b>{unlockRequiredDeck}층 덱마스터</b>를 먼저 통과하세요.</li>
+                                            </ul>
+                                            <small>막힌 층을 통과하면 바로 다음 층이 열립니다. 아래층은 열린 뒤에도 언제든 다시 연습할 수 있어요.</small>
+                                        </div>
+                                    )}
+                                    {floorUnlocked && openedCondition === deckNumber && retryBlocked && (
                                         <div className="vocab-deck-card__condition" role="note">
                                             <strong>지난 시험에서 틀린 낱말을 다시 익혀요</strong>
                                             <ul>
@@ -361,7 +412,7 @@ const V2DeckMap = ({
                                             </small>
                                         </div>
                                     )}
-                                    {openedCondition === deckNumber && !masterEligible && !retryBlocked && (
+                                    {floorUnlocked && openedCondition === deckNumber && !masterEligible && !retryBlocked && (
                                         <div className="vocab-deck-card__condition" role="note">
                                             <strong>이렇게 하면 열려요</strong>
                                             <ul>
@@ -389,7 +440,7 @@ const V2DeckMap = ({
 
                     <div className="vocab-tower-route__entrance">
                         <span aria-hidden="true">🚪</span>
-                        <div><strong>탑 입구</strong><small>층을 골라 나만의 탐험을 시작해요.</small></div>
+                        <div><strong>탑 입구</strong><small>1층부터 시작해 덱마스터를 통과하며 한 층씩 올라가요.</small></div>
                     </div>
                 </div>
 

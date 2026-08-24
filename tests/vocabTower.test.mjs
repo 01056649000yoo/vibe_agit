@@ -17,7 +17,7 @@ const vocabulary = [
     { word: '협동', category: '마음', level: 2, definition: '힘을 합쳐 일함', example: '친구와 협동하여 문제를 풀었다.' }
 ];
 
-const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides, cardBox, cardBoxMigration, rewardPolicy, noCapMigration, commonEngineMigration] = await Promise.all([
+const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEntry, teacherManager, teacherManagerStyles, v2PracticeMigration, v2RewardMigration, v2ItemLearningMigration, v2DefaultMigration, v2DirectInputMigration, v2ProgressRewardMigration, v2RetryMigration, towerGuide, studentModuleGuide, agitPlayground, agitPlaygroundStyles, vocabManifest, teacherGuides, cardBox, cardBoxMigration, rewardPolicy, noCapMigration, commonEngineMigration, sequentialUnlockMigration] = await Promise.all([
     readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/VocabularyTowerGame.jsx', 'utf8'),
     readFile('src/modules/game/vocab-tower/vocabularyTowerGame.css', 'utf8'),
@@ -42,7 +42,8 @@ const [v2DeckMap, vocabularyGame, vocabularyStyles, studentDashboard, studentEnt
     readFile('supabase/migrations/20261114_vocab_tower_v2_card_box.sql', 'utf8'),
     readFile('src/modules/game/vocab-tower/rewardPolicy.js', 'utf8'),
     readFile('supabase/migrations/20261156_vocab_tower_reward_points_no_cap.sql', 'utf8'),
-    readFile('supabase/migrations/20261119_common_learning_engine.sql', 'utf8')
+    readFile('supabase/migrations/20261119_common_learning_engine.sql', 'utf8'),
+    readFile('supabase/migrations/20261162_vocab_tower_sequential_unlocks.sql', 'utf8')
 ]);
 
 test('층의 세 번째 방은 보통 구별의 방이고 5·10층에서는 복습 보스가 된다', () => {
@@ -97,10 +98,40 @@ test('V2 서버 문항은 정답 없이 기존 게임 카드 형태로 변환된
 test('V2 학생 화면은 10개 덱 지도에서 12문항 개인 연습을 시작한다', () => {
     assert.match(v2DeckMap, /어휘의 탑 지도/);
     assert.match(v2DeckMap, /explorationDecks\.map/);
-    assert.match(v2DeckMap, /층마다 12개 낱말에 도전해요/);
+    assert.match(v2DeckMap, /1층부터 시작해 층마다 12개 낱말을 익혀요/);
     assert.match(vocabularyGame, /get_my_vocab_tower_v2_overview_v1/);
     assert.match(vocabularyGame, /start_my_vocab_tower_v2_practice_v1/);
     assert.match(vocabularyGame, /finish_my_vocab_tower_v2_practice_v1/);
+});
+
+test('어휘의 탑은 덱마스터를 빠짐없이 통과한 다음 층까지만 연다', () => {
+    // 첫 미통과 층이 곧 현재 연습할 수 있는 가장 높은 층이다. 상위 층의 과거 기록만으로 건너뛰지 않는다.
+    assert.match(sequentialUnlockMigration, /FUNCTION public\.vocab_tower_v2_highest_unlocked_deck_v1/);
+    assert.match(sequentialUnlockMigration, /generate_series\(1, 9\)/);
+    assert.match(sequentialUnlockMigration, /attempt\.passed IS TRUE/);
+    assert.match(sequentialUnlockMigration, /'unlock_required_deck'/);
+    assert.equal(
+        sequentialUnlockMigration.match(/IF p_deck_number > v_highest THEN/g)?.length,
+        2,
+        '개인 연습과 덱마스터 시작을 서버가 함께 잠가야 한다'
+    );
+    assert.match(v2DeckMap, /deck\.unlocked !== false/);
+    assert.match(v2DeckMap, /unlock_required_deck/);
+    assert.match(v2DeckMap, /unlockRequiredDeck[\s\S]*층 덱마스터[\s\S]*먼저 통과하세요/);
+    assert.match(towerGuide, /1층 덱마스터를 통과하면 2층, 2층 덱마스터를 통과하면 3층/);
+    assert.match(teacherGuides, /처음에는 1층만 열립니다\. 1층 덱마스터를 통과하면 2층/);
+});
+
+test('정상 단계는 영구 휘장과 높은 단계 기록으로 앞 단계를 복구하고 이전 단계 재도전을 연다', () => {
+    assert.match(sequentialUnlockMigration, /GREATEST\([\s\S]*v_base_level[\s\S]*v_recorded_level[\s\S]*v_award_level/);
+    assert.match(sequentialUnlockMigration, /'recovered'/);
+    assert.match(sequentialUnlockMigration, /IF v_stage > \(v_status->>'level'\)::SMALLINT \+ 1 THEN/);
+    assert.doesNotMatch(sequentialUnlockMigration, /이미 통과한 단계예요/);
+    assert.match(sequentialUnlockMigration, /'replay', v_stage <= \(v_status->>'level'\)::SMALLINT/);
+    assert.match(v2DeckMap, /통과 · 다시 도전/);
+    assert.match(v2DeckMap, /onOpenSummit\?\.\(stageNumber\)/);
+    assert.match(towerGuide, /2단계까지 올랐다면 1단계와 2단계가 모두 열려 다시 도전/);
+    assert.match(teacherGuides, /2단계까지 통과했다면 1·2단계가 모두 다시 도전 가능/);
 });
 
 test('어휘의 탑 전체 화면은 모바일 가시 높이 안에서 세로 스크롤할 수 있다', () => {

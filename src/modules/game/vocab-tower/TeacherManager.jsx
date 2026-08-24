@@ -233,8 +233,8 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                 <div className="vocab-teacher__section-heading">
                     <div>
                         <span className="vocab-teacher__eyebrow">현재 운영 요약</span>
-                        <h3 id="vocab-journey-title">10개 층 덱을 고르는 개인 어휘 연습</h3>
-                        <p>학생은 원하는 층에서 12문항을 연습하고, 그 층 낱말을 익힌 진도가 25·50·75·100%를 넘을 때마다 층당 {config.perfectRewardPoints}P를 나눠 받습니다.</p>
+                        <h3 id="vocab-journey-title">덱마스터를 통과하며 10개 층을 오르는 개인 어휘 연습</h3>
+                        <p>학생은 1층부터 12문항씩 연습하고, 덱마스터를 통과할 때마다 다음 층을 엽니다. 각 층 낱말을 익힌 진도가 25·50·75·100%를 넘으면 층당 {config.perfectRewardPoints}P를 나눠 받습니다.</p>
                     </div>
                     <span className="vocab-teacher__version">현재 운영 중</span>
                 </div>
@@ -305,7 +305,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                         <div className="vocab-teacher__heading-row">
                             <h3 id="vocab-master-title">🏆 덱마스터 도전 조건</h3>
                         </div>
-                        <p>한 층을 충분히 익힌 학생만 치는 공식 시험입니다. 합격하면 그 층의 덱마스터가 되고, 10개 층을 모두 채우면 <strong>어휘 마스터</strong> 휘장을 받습니다.</p>
+                        <p>한 층을 충분히 익힌 학생만 치는 공식 시험입니다. 합격하면 그 층의 덱마스터가 되고 다음 층이 열립니다. 10개 층을 모두 채우면 정상의 <strong>어휘 마스터</strong> 관문에 도전합니다.</p>
                     </div>
                 </div>
 
@@ -373,7 +373,7 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                         <div className="vocab-teacher__heading-row">
                             <h3 id="vocab-summit-title">👑 어휘 마스터 관문 (탑의 정상)</h3>
                         </div>
-                        <p>10개 층의 덱마스터를 모두 통과한 학생에게 지도 꼭대기에서 열리는 마지막 시험입니다. <strong>1 → 2 → 3단계 순서로</strong> 통과할 때마다 <strong>어휘 마스터</strong> 휘장에 별이 하나씩 늘어납니다.</p>
+                        <p>10개 층의 덱마스터를 모두 통과한 학생에게 지도 꼭대기에서 열리는 마지막 시험입니다. <strong>1 → 2 → 3단계 순서로</strong> 통과할 때마다 <strong>어휘 마스터</strong> 휘장에 별이 하나씩 늘어납니다. 통과한 이전 단계는 다시 도전할 수 있고 별은 내려가지 않습니다.</p>
                     </div>
                 </div>
 

@@ -48,6 +48,7 @@
 .vocab-tower-route__stop.is-explored .vocab-tower-route__marker { background: #4f9b70; }
 .vocab-tower-route__stop.is-conquered .vocab-tower-route__marker { background: #e5a923; color: #fff8df; font-size: 1rem; }
 .vocab-tower-route__stop.is-active .vocab-tower-route__marker { background: #d17f14; box-shadow: 0 0 0 8px rgba(245,189,77,.28),0 6px 15px rgba(153,94,17,.28); animation: vocab-map-marker-pulse 1.8s ease-in-out infinite; }
+.vocab-tower-route__stop.is-locked .vocab-tower-route__marker { background: #8b95a6; font-size: .9rem; }
 .vocab-tower-route__entrance { position: relative; z-index: 2; display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; width: min(350px,64%); margin: 3px auto 0; padding: 12px 14px; border: 2px solid #89a168; border-radius: 12px 12px 21px 21px; background: rgba(249,252,239,.96); box-shadow: 0 8px 20px rgba(65,91,45,.14); text-align: left; }
 .vocab-tower-route__entrance > span { display: grid; place-items: center; width: 44px; aspect-ratio: 1; border-radius: 13px; background: #e6efd8; font-size: 1.5rem; }
 .vocab-tower-route__entrance strong, .vocab-tower-route__entrance small { display: block; }
@@ -59,6 +60,8 @@
 .vocab-deck-card.is-reward-complete { border-color: #e6b43f; background: #fffdf2; box-shadow: 0 8px 22px rgba(177,119,15,.12); }
 .vocab-deck-card.is-conquered { border-color: #e0aa2d; background: linear-gradient(145deg,#fffef5,#fff6d4); box-shadow: 0 10px 25px rgba(177,119,15,.17); }
 .vocab-deck-card.is-active { border-color: #f0b743; background: #fff8df; box-shadow: 0 7px 18px rgba(187,126,20,.14); }
+.vocab-deck-card.is-floor-locked { border-style: dashed; border-color: #cbd2de; background: #f4f6f9; box-shadow: 0 7px 16px rgba(64,76,98,.08); }
+.vocab-deck-card.is-floor-locked .vocab-deck-card__copy { opacity: .68; }
 .vocab-deck-card__floor { position: relative; display: grid; place-items: center; width: 58px; aspect-ratio: 1; border-radius: 17px; background: #e9efff; color: #3156b8; }
 .vocab-deck-card.is-practiced .vocab-deck-card__floor { background: #dff5e8; color: #237148; }
 .vocab-deck-card.is-reward-complete .vocab-deck-card__floor { background: #fff0b8; color: #7a5208; }
@@ -104,6 +107,7 @@
 .vocab-deck-card__actions { grid-column: 1/-1; display: grid; gap: 6px; }
 .vocab-deck-card__actions button { width: 100%; min-height: 42px; padding: 9px 12px; border: 0; border-radius: 12px; background: #3156b8; color: white; font: inherit; font-size: .75rem; font-weight: 900; cursor: pointer; }
 .vocab-deck-card__actions button:disabled { background: #b7bfcc; cursor: default; }
+.vocab-deck-card__actions button.is-floor-locked { border: 1px dashed #aeb8c8; background: #e8ecf2; color: #5f6b7d; }
 /* 카드함은 보조 동작이라 연습 시작 버튼보다 약하게 둔다. */
 .vocab-deck-card__actions button.is-quiet { min-height: 36px; border: 1px solid #c8d3e8; background: #f4f7fd; color: #3f5480; }
 .vocab-deck-card__actions button.is-quiet:disabled { border-color: #dde3ec; background: #f1f3f7; color: #a7b0bf; }
@@ -538,6 +542,17 @@
 .vocab-tower-route__summit-action:disabled { border-color: #dde3ec; background: #f1f3f7; color: #a7b0bf; cursor: default; }
 .vocab-tower-route__summit .vocab-deck-card__condition { grid-column: 1/-1; }
 
+/* 통과한 정상 단계는 닫지 않는다. 현재 단계와 잠긴 다음 단계도 한 줄에서 구분한다. */
+.vocab-summit-stages { grid-column: 1/-1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+.vocab-summit-stages > button,
+.vocab-summit-stages > span { display: grid; gap: 2px; min-height: 42px; place-content: center; padding: 7px 8px; border: 1px solid #d6ddea; border-radius: 11px; background: #f3f5f8; color: #727e90; font: inherit; text-align: center; }
+.vocab-summit-stages b { font-size: .69rem; }
+.vocab-summit-stages span,
+.vocab-summit-stages small { margin: 0; font-size: .58rem; font-weight: 800; }
+.vocab-summit-stages > button { border-color: #d9bd6e; background: #fff5d2; color: #75520d; cursor: pointer; }
+.vocab-summit-stages > button:disabled { border-color: #d9dee7; background: #f2f4f7; color: #9aa3b1; cursor: default; }
+.vocab-summit-stages > span.is-next { border-color: #91b6e6; background: #edf5ff; color: #315b96; }
+
 /* 결과 화면에서 "정상이 열렸다"는 휘장 획득과 다른 소식이라 색을 나눈다. */
 .vocab-deck-master__summit.is-unlocked {
     background: linear-gradient(135deg, #EEF4FF, #DDE8FF);
@@ -575,22 +590,9 @@
 /* 정상 관문 도움말 — 도전 전에 규칙을 미리 본다.
    게임 실행 화면(zIndex 20000) 안이라 모달을 쓰면 뒤에 숨는다. 조건 패널과 같이 화면 안에 편다. */
 .vocab-summit-help-toggle {
-    display: inline-grid;
-    place-items: center;
-    width: 19px;
-    height: 19px;
     margin-right: 6px;
-    padding: 0;
-    border: 1px solid #b9c8e8;
-    border-radius: 50%;
-    background: #fff;
     color: #4a63a8;
-    font: inherit;
-    font-size: .7rem;
-    font-weight: 900;
-    line-height: 1;
     vertical-align: 2px;
-    cursor: pointer;
 }
 .vocab-summit-help-toggle:hover { background: #eef2fb; }
 .vocab-summit-help__warn { display: block; margin-top: 9px; color: #9a5b16; }
