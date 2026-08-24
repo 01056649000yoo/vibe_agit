@@ -269,6 +269,26 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     한 번 힌트 없이 맞힌 낱말은 다음부터 <strong>직접 입력</strong>으로 올라가고, 틀린 낱말은 3문항 뒤에
                     <strong> 방금과 다른 형태</strong>로 한 번 더 나옵니다.
                 </p>
+
+                {/*
+                 * 학생 지도 카드에 뜨는 네 상태를 교사 화면에도 같은 이름·같은 뜻으로 적는다(2026-08-24 요청).
+                 * 덱마스터 도전 조건이 `익힘 %` 인데 정작 교사 화면에 익힘이 무엇인지 설명이 없었다.
+                 * ⚠️ 상태 이름은 학생 화면(`V2DeckMap`)과 **같은 말**을 써야 한다. 다르면 교사와 학생이
+                 *    서로 다른 화면을 보며 이야기하게 된다.
+                 */}
+                <div className="vocab-teacher__states" aria-label="낱말 학습 상태">
+                    <div className="is-new"><strong>처음 볼 낱말</strong><small>아직 만나지 않음</small></div>
+                    <div className="is-learning"><strong>연습 중</strong><small>만났지만 익히는 중</small></div>
+                    <div className="is-review"><strong>다시 볼 낱말</strong><small>틀린 낱말 · 다음 연습에 먼저 나옴</small></div>
+                    <div className="is-mastered"><strong>완전히 익힘</strong><small>다른 두 형태를 힌트 없이 연속 정답</small></div>
+                </div>
+                <p className="vocab-teacher__flow-note">
+                    아래 <strong>덱마스터 도전 자격의 “익힘 %”</strong>와 포인트는 모두 <strong>완전히 익힘</strong> 낱말 수로 셉니다.
+                    포인트는 통과할 때 한 번에 주는 것이 아니라, 완전히 익힘이 <strong>25 · 50 · 75 · 100%</strong>를 넘을 때마다
+                    층당 총액을 <strong>20 · 20 · 30 · 30%</strong>로 <strong>네 번 나눠</strong> 줍니다
+                    (층당 {config.perfectRewardPoints}P면 {Math.round(config.perfectRewardPoints * 0.2)} · {Math.round(config.perfectRewardPoints * 0.2)} · {Math.round(config.perfectRewardPoints * 0.3)} · {config.perfectRewardPoints - Math.round(config.perfectRewardPoints * 0.2) * 2 - Math.round(config.perfectRewardPoints * 0.3)}P).
+                    같은 구간은 한 번만 주고, <strong>덱마스터 통과로는 포인트가 나오지 않습니다</strong>.
+                </p>
                 <div className="vocab-teacher__summary">
                     <div><span>출제 범위</span><strong>{config.grade}학년</strong></div>
                     <div><span>기본 자료</span><strong>현재 덱 10개</strong></div>

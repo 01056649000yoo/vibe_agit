@@ -318,12 +318,35 @@ const V2DeckMap = ({
                                                 <span style={{ width: `${learningPercent}%` }} />
                                             </span>
                                         </div>
+                                        <div className="vocab-deck-card__states-head">
+                                            <span>낱말 상태</span>
+                                            {/* 네 낱말이 무슨 뜻인지 물어보는 학생이 많다(2026-08-24).
+                                                정상 도움말과 같은 방식으로 눌러서 펼쳐 본다. */}
+                                            <GuideInfoButton
+                                                onClick={() => setOpenedCondition((current) => (
+                                                    current === `states-${deckNumber}` ? null : `states-${deckNumber}`
+                                                ))}
+                                                label={`${deckNumber}층 낱말 상태가 무슨 뜻인지 보기`}
+                                            />
+                                        </div>
                                         <div className="vocab-deck-card__states" aria-label={`${deckNumber}층 낱말 학습 상태`}>
                                             <div className="is-new"><span>처음 볼 낱말</span><strong>{unseenCount}</strong></div>
                                             <div className="is-learning"><span>연습 중</span><strong>{learningCount}</strong></div>
                                             <div className="is-review"><span>다시 볼 낱말</span><strong>{needsReviewCount}</strong></div>
                                             <div className="is-mastered"><span>완전히 익힘</span><strong>{masteredCount}</strong></div>
                                         </div>
+                                        {openedCondition === `states-${deckNumber}` && (
+                                            <div className="vocab-deck-card__condition vocab-deck-card__states-help" role="note">
+                                                <strong>낱말 상태는 이런 뜻이에요</strong>
+                                                <ul>
+                                                    <li><b>처음 볼 낱말</b> — 아직 한 번도 만나지 않았어요. 연습하면 여기부터 줄어들어요.</li>
+                                                    <li><b>연습 중</b> — 만나 봤지만 아직 익히는 중이에요. 조금 더 연습하면 돼요.</li>
+                                                    <li><b>다시 볼 낱말</b> — 틀렸던 낱말이에요. 이 층을 연습하면 <b>먼저 나와요</b>.</li>
+                                                    <li><b>완전히 익힘</b> — <b>서로 다른 두 가지 문제 형태를 힌트 없이 연속으로</b> 맞힌 낱말이에요.</li>
+                                                </ul>
+                                                <small>포인트는 <b>완전히 익힘</b>이 늘어날 때 4분의 1, 반, 4분의 3, 전부에서 네 번 나눠 받아요.</small>
+                                            </div>
+                                        )}
                                         <p className="vocab-deck-card__record">12문항 완료 {completedRuns}회{completedRuns > 0 ? ` · 최고 정답률 ${bestAccuracy}%` : ''}</p>
                                         <div className={`vocab-deck-card__reward${rewardCompleted ? ' is-complete' : deckPoints > 0 ? ' is-pending' : ' is-off'}`}>
                                             <span aria-hidden="true">{rewardCompleted ? '✅' : deckPoints > 0 ? '🎁' : '📘'}</span>

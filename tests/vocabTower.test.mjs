@@ -558,3 +558,39 @@ test('어휘의 탑 교사 화면은 실제 출제 형태를 설명한다', asyn
     assert.ok(source.includes('쓰임 구별은 시험에 내지 않습니다'), '덱마스터와 연습의 출제 차이를 적지 않았다');
     assert.ok(source.includes('덱 전체를 문항 수만큼 구간으로 나눠'), '덱마스터의 낱말 뽑는 방식을 적지 않았다');
 });
+
+/*
+ * 2026-08-24: 포인트를 네 번 나눠 받는다는 것과 낱말 상태 네 가지가 어디에도 잘 안 보였다.
+ * 교사 화면에는 `익힘 %`로 도전 자격을 재면서 정작 익힘이 무엇인지 설명이 없었고,
+ * 학생 지도 카드에는 네 상태 숫자만 있고 뜻이 없었다.
+ *
+ * ⚠️ 상태 이름이 교사·학생 화면에서 갈리면 서로 다른 말로 같은 것을 가리키게 된다.
+ *    이 검사는 두 화면이 **같은 네 이름**을 쓰는지, 그리고 포인트가 통과 보상이 아니라
+ *    나눠 받는 것이라는 설명이 두 곳에 다 있는지 한꺼번에 본다.
+ */
+test('낱말 상태 네 가지와 나눠 받는 포인트를 교사·학생 화면이 같은 말로 설명한다', async () => {
+    const [teacher, student] = await Promise.all([
+        readFile('src/modules/game/vocab-tower/TeacherManager.jsx', 'utf8'),
+        readFile('src/modules/game/vocab-tower/V2DeckMap.jsx', 'utf8')
+    ]);
+
+    // 네 이름은 두 화면이 똑같아야 한다.
+    for (const state of ['처음 볼 낱말', '연습 중', '다시 볼 낱말', '완전히 익힘']) {
+        assert.ok(teacher.includes(state), `교사 화면에 '${state}' 설명이 없다`);
+        assert.ok(student.includes(state), `학생 화면에 '${state}'가 없다`);
+    }
+
+    // 완전히 익힘의 조건은 두 화면 모두 같은 기준을 적어야 한다.
+    for (const [name, source] of [['교사', teacher], ['학생', student]]) {
+        assert.ok(source.includes('두 형태를 힌트 없이 연속') || source.includes('두 가지 문제 형태를 힌트 없이 연속'),
+            `${name} 화면에 완전히 익힘 조건이 없다`);
+    }
+
+    // 포인트는 통과 보상이 아니라 나눠 받는 것이다 — 여기가 가장 헷갈리는 지점이다.
+    assert.ok(teacher.includes('네 번 나눠'), '교사 화면이 포인트를 나눠 준다고 설명하지 않는다');
+    assert.ok(teacher.includes('덱마스터 통과로는 포인트가 나오지 않습니다'), '교사 화면이 통과 보상 오해를 막지 않는다');
+    assert.ok(student.includes('네 번 나눠 받아요'), '학생 화면이 포인트를 나눠 받는다고 알려주지 않는다');
+
+    // 학생 화면은 눌러서 펼치는 도움말이라 여닫는 통로가 있어야 한다.
+    assert.ok(student.includes('states-${deckNumber}'), '학생 낱말 상태 도움말을 여닫을 수 없다');
+});

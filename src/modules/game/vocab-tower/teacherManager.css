@@ -140,3 +140,17 @@
 
 .vocab-teacher__flow-note strong { color: #166534; }
 .vocab-teacher__panel .vocab-teacher__flow-note strong { color: #6d28d9; }
+
+/* 낱말 학습 상태 — 학생 지도 카드와 같은 이름·같은 색으로 둔다(2026-08-24). */
+.vocab-teacher__states { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.vocab-teacher__states > div { display: grid; gap: 2px; min-width: 0; padding: 8px 10px; border-radius: 10px; }
+.vocab-teacher__states strong { font-size: var(--ui-text-md); }
+.vocab-teacher__states small { color: #475569; font-size: var(--ui-text-sm); line-height: 1.35; }
+.vocab-teacher__states .is-new { background: #eef2f7; color: #526173; }
+.vocab-teacher__states .is-learning { background: #eef0ff; color: #4d56a3; }
+.vocab-teacher__states .is-review { background: #fff0f1; color: #b23d4b; }
+.vocab-teacher__states .is-mastered { background: #e5f7ec; color: #217047; }
+
+@media (max-width: 760px) {
+    .vocab-teacher__states { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -83,6 +83,12 @@
 .vocab-deck-card__progress > div strong { color: #324a8d; font-size: .74rem; }
 .vocab-deck-card__progress-track { display: block; height: 7px; overflow: hidden; border-radius: 999px; background: #e5eaf2; }
 .vocab-deck-card__progress-track > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#5a7bd2,#52aa7b); }
+/* 낱말 상태 머리줄 — 네 상태가 무슨 뜻인지 눌러서 펼쳐 본다(2026-08-24). */
+.vocab-deck-card__states-head { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+.vocab-deck-card__states-head > span { color: #5d6a7d; font-size: .68rem; font-weight: 850; }
+.vocab-deck-card__states-help ul { margin: 6px 0 0; padding-left: 17px; }
+.vocab-deck-card__states-help li { margin-bottom: 4px; line-height: 1.5; }
+.vocab-deck-card__states-help small { display: block; margin-top: 7px; color: #5d6a7d; line-height: 1.5; }
 .vocab-deck-card__states { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .vocab-deck-card__states > div { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; padding: 7px 8px; border-radius: 10px; }
 .vocab-deck-card__states span { color: #5d6a7d; font-size: .64rem; font-weight: 800; }
