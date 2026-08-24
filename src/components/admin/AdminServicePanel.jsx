@@ -13,6 +13,7 @@ const AI_SCOPE_LABELS = {
 const ALERT_LABELS = {
     app_down: '앱이 응답하지 않음',
     disk_low: '디스크 여유 부족',
+    memory_low: '메모리 여유 부족',
     backup_failed: '백업 실패',
     container_down: '컨테이너 꺼짐',
     db_down: 'DB 응답 없음'
@@ -126,7 +127,7 @@ const AdminServicePanel = () => {
                     <Stat label="접속 선생님" value={`${today.teachers ?? 0}명`} />
                     <Stat label="접속 학생" value={`${today.students ?? 0}명`} />
                     <Stat label="AI 호출" value={`${today.ai_calls ?? 0}회`} />
-                    <Stat label="올라온 글" value={`${today.posts ?? 0}편`} />
+                    <Stat label="제출된 글" value={`${today.posts ?? 0}편`} />
                 </div>
             </div>
 
@@ -136,7 +137,7 @@ const AdminServicePanel = () => {
                     <Stat label="접속 선생님" value={`${week.teachers ?? 0}명`} />
                     <Stat label="접속 학생" value={`${week.students ?? 0}명`} />
                     <Stat label="AI 호출" value={`${week.ai_calls ?? 0}회`} />
-                    <Stat label="올라온 글" value={`${week.posts ?? 0}편`} />
+                    <Stat label="제출된 글" value={`${week.posts ?? 0}편`} />
                 </div>
             </div>
 

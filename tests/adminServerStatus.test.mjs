@@ -2,12 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [resourceStatus, servicePanel, dashboard, healthScript, migration] = await Promise.all([
+const [resourceStatus, servicePanel, dashboard, healthScript, migration, accuracyMigration] = await Promise.all([
     readFile('src/components/admin/AdminResourceStatus.jsx', 'utf8'),
     readFile('src/components/admin/AdminServicePanel.jsx', 'utf8'),
     readFile('src/components/admin/AdminDashboard.jsx', 'utf8'),
     readFile('scripts/check-service-health.sh', 'utf8'),
     readFile('supabase/migrations/20261158_system_memory_and_gateway_peaks.sql', 'utf8'),
+    readFile('supabase/migrations/20261163_dashboard_metrics_accuracy.sql', 'utf8'),
 ]);
 
 test('서버 운영 정보는 운영 탭의 `서버 상태` 한 곳에 모인다', () => {
@@ -50,6 +51,7 @@ test('메모리와 게이트웨이는 5분마다 재서 그날 최악값을 남�
     // 로그인한 교사·학생은 기록 RPC 를 부를 수 없다.
     assert.match(migration, /IF public\.auth_user_role\(\) IN \('TEACHER', 'STUDENT'\) THEN/);
     assert.match(migration, /REVOKE ALL ON FUNCTION public\.record_system_peak_v1[\s\S]*?FROM PUBLIC, anon, authenticated;/);
+    assert.match(accuracyMigration, /recorded_at = NOW\(\)/, '5분 최고치가 바뀌면 마지막 기록 시각도 바뀌어야 한다');
 });
 
 test('메모리가 모자라면 알림을 띄운다', () => {
@@ -63,4 +65,6 @@ test('조회 RPC 가 새 값을 함께 내려 준다', () => {
     // 화면이 읽는 두 자리(추세·최근 기록) 모두에 새 칸이 있어야 한다. 한쪽만 넣으면 카드가 빈다.
     const selects = migration.match(/vm_mem_total_mb, vm_mem_available_min_mb, vm_swap_used_max_mb,\s*\n\s*gateway_cpu_max_pct, gateway_mem_max_mb/g);
     assert.equal(selects?.length, 2, '추세와 최근 기록 두 곳 모두에 새 칸이 있어야 한다');
+    const currentSelects = accuracyMigration.match(/vm_mem_total_mb, vm_mem_available_min_mb, vm_swap_used_max_mb,\s*\n\s*gateway_cpu_max_pct, gateway_mem_max_mb/g);
+    assert.equal(currentSelects?.length, 2, '최신 조회 RPC도 추세와 최근 기록에 서버 자원 칸을 모두 내려야 한다');
 });

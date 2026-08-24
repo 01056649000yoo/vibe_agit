@@ -5,8 +5,13 @@ const PURPLE = { background: '#FAF5FF', border: '#E9D5FF', badge: '#F3E8FF', tex
 /** 학급 운영 코어 카드. 선택 기능의 카드는 각 모듈 manifest.dashboardCards에서 보탠다. */
 export const CLASS_OPERATIONS_CORE_CARDS = [
     {
-        id: 'active-students', section: 'summary', renderer: 'metric', order: 10,
-        icon: '👥', label: '활동 학생', background: '#EFF6FF', color: '#1D4ED8',
+        id: 'accessed-students', section: 'summary', renderer: 'metric', order: 10,
+        icon: '🔑', label: '접속 학생', background: '#EFF6FF', color: '#1D4ED8',
+        metric: { type: 'ratio', numeratorPath: 'summary.accessed_students', denominatorPath: 'summary.students', unit: '명', noteLabel: '접속률' }
+    },
+    {
+        id: 'active-students', section: 'summary', renderer: 'metric', order: 15,
+        icon: '👥', label: '글쓰기 활동 학생', background: '#F5F3FF', color: '#6D28D9',
         metric: { type: 'ratio', numeratorPath: 'summary.active_students', denominatorPath: 'summary.students', unit: '명', noteLabel: '참여율' }
     },
     {

@@ -54,7 +54,7 @@ const OverviewStrip = ({ overview, activityDays }) => {
         { label: '정리 후보', value: `${overview.teacher_never_started + overview.teacher_no_student}명`, color: '#E53E3E' },
         { label: '학급', value: `${overview.class_total}개`, color: '#2C5282' },
         { label: '학생', value: `${overview.student_total}명`, color: '#2C5282' },
-        { label: `최근 ${activityDays}일 활동 학생`, value: `${overview.student_active}명`, color: '#38A169' },
+        { label: `최근 ${activityDays}일 글쓰기 학생`, value: `${overview.student_active}명`, color: '#38A169' },
         { label: `최근 ${activityDays}일 작성 글`, value: `${overview.post_recent}개`, color: '#38A169' }
     ];
 
@@ -219,7 +219,7 @@ const AdminUsagePanel = ({
                                     <th style={thStyle}>미션</th>
                                     <th style={thStyle}>학생 글(제출)</th>
                                     <th style={thStyle}>최근 {activityDays}일 글</th>
-                                    <th style={thStyle}>활동 학생</th>
+                                    <th style={thStyle}>글쓰기 학생</th>
                                     <th style={thStyle}>마지막 학생 활동</th>
                                     <th style={thStyle}>가입일</th>
                                     <th style={thStyle}>상세</th>

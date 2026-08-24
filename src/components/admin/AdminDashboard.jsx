@@ -441,7 +441,7 @@ const AdminDashboard = ({ session: _session, onLogout, onSwitchToTeacherMode }) 
                     onOpen={() => setCurrentTab('pending')}
                 />
                 <StatCard
-                    label="활동 중인 선생님" value={`${approvedTeacherCount}명`}
+                    label="승인된 선생님" value={`${approvedTeacherCount}명`}
                     color="#48BB78" icon="✅"
                     onOpen={() => setCurrentTab('active')}
                 />

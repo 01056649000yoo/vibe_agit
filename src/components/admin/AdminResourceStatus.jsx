@@ -38,6 +38,12 @@ const Card = ({ title, value, unit, tone, note }) => {
     );
 };
 
+const toFiniteNumber = (value) => {
+    if (value === null || value === undefined || value === '') return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+};
+
 const AdminResourceStatus = ({ latest }) => {
     if (!latest) {
         return (
@@ -47,22 +53,25 @@ const AdminResourceStatus = ({ latest }) => {
         );
     }
 
-    const memTotal = Number(latest.vm_mem_total_mb) || 0;
-    const memFree = Number(latest.vm_mem_available_min_mb);
+    const memTotal = toFiniteNumber(latest.vm_mem_total_mb);
+    const memFree = toFiniteNumber(latest.vm_mem_available_min_mb);
     const memPercent = memTotal > 0 && Number.isFinite(memFree) ? Math.round((memFree / memTotal) * 100) : null;
-    const swapUsed = Number(latest.vm_swap_used_max_mb);
-    const gatewayCpu = Number(latest.gateway_cpu_max_pct);
-    const gatewayMem = Number(latest.gateway_mem_max_mb);
-    const diskFree = Number(latest.disk_free_gb);
-    const dbSize = Number(latest.db_size_mb);
-    const containers = Number(latest.container_total);
-    const healthy = Number(latest.container_healthy);
+    const swapUsed = toFiniteNumber(latest.vm_swap_used_max_mb);
+    const gatewayCpu = toFiniteNumber(latest.gateway_cpu_max_pct);
+    const gatewayMem = toFiniteNumber(latest.gateway_mem_max_mb);
+    const diskFree = toFiniteNumber(latest.disk_free_gb);
+    const dbSize = toFiniteNumber(latest.db_size_mb);
+    const containers = toFiniteNumber(latest.container_total);
+    const healthy = toFiniteNumber(latest.container_healthy);
 
     const memTone = memPercent === null ? 'none' : memPercent < 15 ? 'bad' : memPercent < 30 ? 'watch' : 'good';
     const swapTone = !Number.isFinite(swapUsed) ? 'none' : swapUsed > 100 ? 'bad' : swapUsed > 0 ? 'watch' : 'good';
     const cpuTone = !Number.isFinite(gatewayCpu) ? 'none' : gatewayCpu > 70 ? 'bad' : gatewayCpu > 40 ? 'watch' : 'good';
     const diskTone = !Number.isFinite(diskFree) ? 'none' : diskFree < 10 ? 'bad' : diskFree < 30 ? 'watch' : 'good';
-    const containerTone = !Number.isFinite(containers) ? 'none' : healthy < containers ? 'bad' : 'good';
+    const dbTone = Number.isFinite(dbSize) ? 'good' : 'none';
+    const containerTone = !Number.isFinite(containers) || !Number.isFinite(healthy)
+        ? 'none'
+        : healthy < containers ? 'bad' : 'good';
 
     return (
         <div style={{
@@ -84,7 +93,8 @@ const AdminResourceStatus = ({ latest }) => {
                 value={Number.isFinite(swapUsed) ? swapUsed.toLocaleString() : '—'}
                 unit={Number.isFinite(swapUsed) ? 'MB' : ''}
                 tone={swapTone}
-                note={swapTone === 'bad' ? '메모리가 모자라 디스크로 밀어냈습니다. 할당을 올릴 때입니다.'
+                note={swapTone === 'none' ? '아직 재지 않았습니다.'
+                    : swapTone === 'bad' ? '메모리가 모자라 디스크로 밀어냈습니다. 할당을 올릴 때입니다.'
                     : swapTone === 'watch' ? '조금씩 쓰기 시작했습니다.'
                         : '0이면 메모리가 넉넉하다는 뜻입니다.'}
             />
@@ -93,7 +103,8 @@ const AdminResourceStatus = ({ latest }) => {
                 value={Number.isFinite(gatewayCpu) ? gatewayCpu : '—'}
                 unit={Number.isFinite(gatewayCpu) ? `% · ${Number.isFinite(gatewayMem) ? gatewayMem + 'MB' : ''}` : ''}
                 tone={cpuTone}
-                note={cpuTone === 'bad' ? '수업 시간에 계속 70%를 넘으면 kong 워커를 2에서 늘리세요.'
+                note={cpuTone === 'none' ? '아직 재지 않았습니다.'
+                    : cpuTone === 'bad' ? '수업 시간에 계속 70%를 넘으면 kong 워커를 2에서 늘리세요.'
                     : cpuTone === 'watch' ? '아직 여유는 있습니다.'
                         : '워커 2개로 충분합니다.'}
             />
@@ -102,7 +113,8 @@ const AdminResourceStatus = ({ latest }) => {
                 value={Number.isFinite(diskFree) ? diskFree : '—'}
                 unit={Number.isFinite(diskFree) ? 'GB' : ''}
                 tone={diskTone}
-                note={diskTone === 'bad' ? '10GB 아래입니다. 도커 캐시부터 정리하세요.'
+                note={diskTone === 'none' ? '아직 재지 않았습니다.'
+                    : diskTone === 'bad' ? '10GB 아래입니다. 도커 캐시부터 정리하세요.'
                     : diskTone === 'watch' ? '30GB 아래로 내려왔습니다.'
                         : '넉넉합니다.'}
             />
@@ -110,15 +122,17 @@ const AdminResourceStatus = ({ latest }) => {
                 title="DB 크기"
                 value={Number.isFinite(dbSize) ? Math.round(dbSize).toLocaleString() : '—'}
                 unit={Number.isFinite(dbSize) ? 'MB' : ''}
-                tone="good"
-                note="학기마다 얼마나 늘어나는지를 보는 값입니다."
+                tone={dbTone}
+                note={dbTone === 'none' ? '아직 재지 않았습니다.' : '학기마다 얼마나 늘어나는지를 보는 값입니다.'}
             />
             <Card
                 title="컨테이너"
-                value={Number.isFinite(containers) ? `${healthy}/${containers}` : '—'}
-                unit={Number.isFinite(containers) ? '개 정상' : ''}
+                value={Number.isFinite(containers) && Number.isFinite(healthy) ? `${healthy}/${containers}` : '—'}
+                unit={Number.isFinite(containers) && Number.isFinite(healthy) ? '개 정상' : ''}
                 tone={containerTone}
-                note={containerTone === 'bad' ? '꺼졌거나 아픈 컨테이너가 있습니다. 장애 이력을 확인하세요.' : '모두 정상입니다.'}
+                note={containerTone === 'none' ? '아직 재지 않았습니다.'
+                    : containerTone === 'bad' ? '꺼졌거나 아픈 컨테이너가 있습니다. 장애 이력을 확인하세요.'
+                        : '모두 정상입니다.'}
             />
         </div>
     );
