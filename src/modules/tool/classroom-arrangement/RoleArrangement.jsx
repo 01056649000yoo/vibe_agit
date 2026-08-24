@@ -114,11 +114,16 @@ export default function RoleArrangement({ students, settings, history, onSetting
           </div>)}
         </div>
         <div className={`arrange-count-check ${slots.length === students.length ? 'is-ready' : ''}`}>학생 {students.length}명 · 역할 자리 {slots.length}개</div>
-        <button type="button" className="arrange-primary" disabled={!ready} onClick={start}>역할 나누기 시작</button>
         {phase !== 'idle' ? <button type="button" className="arrange-secondary" onClick={reset}>결과 지우기</button> : null}
       </section>
 
       <section className="arrange-role-board" style={{ '--arrange-name-scale': scale }}>
+        {/* 시작 버튼이 왼쪽 설정 칸 맨 아래에 있어 눈에 띄지 않았다(2026-08-24 지적).
+            결과가 나오는 자리 바로 위, 오른쪽에 둔다. */}
+        <div className="arrange-panel-heading">
+          <div><h3>역할 나누기</h3><p>모든 역할 인원을 채우면 시작할 수 있습니다.</p></div>
+          <button type="button" className="arrange-primary" disabled={!ready} onClick={start}>역할 나누기 시작</button>
+        </div>
         <div className="arrange-role-cards">
           {settings.roleGroups.length === 0 ? <div className="arrange-empty">왼쪽에서 역할과 인원을 추가해 주세요.</div> : settings.roleGroups.map((role) => <article key={role.id} className="arrange-role-card">
             <header><span>역할</span><strong>{role.name}</strong><small>{byRole.get(role.id)?.length || 0}/{role.count}명</small></header>

@@ -148,6 +148,8 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 .arrange-condition-note,.arrange-count-check { margin-top:13px; padding:10px 12px; border-radius:11px; background:#fffbeb; color:#92400e; font-size:.75rem; font-weight:800; }
 .arrange-role-builder,.arrange-role-board { min-height:500px; }
 .arrange-panel-heading { display:flex; justify-content:space-between; gap:10px; }
+/* 머리말 안의 시작 버튼은 왼쪽 칸에서처럼 꽉 채우지 않는다 — 제 크기로 오른쪽 끝에 붙는다. */
+.arrange-panel-heading .arrange-primary { width:auto; margin-top:0; flex-shrink:0; align-self:flex-start; }
 .arrange-panel-heading h3,.arrange-transfer-card h3,.arrange-sound-card h3,.arrange-settings-card h3,.arrange-settings-card h4 { margin:0 0 5px; }
 .arrange-role-form { display:grid; grid-template-columns:1fr 78px auto; gap:7px; margin-top:15px; }
 .arrange-role-list { display:grid; gap:7px; margin-top:12px; }
@@ -165,7 +167,9 @@ button:disabled { cursor:not-allowed!important; opacity:.45; }
 .arrange-role-card>div span.is-filled { border-style:solid; border-color:#93c5fd; color:#1e3a8a; font-weight:900; animation:arrange-pop .35s ease; }
 .arrange-history { display:grid; gap:9px; }
 .arrange-history>article { display:grid; grid-template-columns:minmax(0,1fr) auto; border:1px solid var(--arrange-border); border-radius:15px; background:#fff; overflow:hidden; }
-.arrange-history-open { display:flex; align-items:center; gap:12px; border:0; padding:14px; background:#fff; text-align:left; cursor:pointer; }
+/* ⚠️ 전역 `button` 규칙이 글자를 흰색으로 정한다. 배경만 흰색으로 덮으면
+   흰 바탕에 흰 글씨가 되어 기록명이 사라진다(2026-08-24 지적). 색도 함께 덮는다. */
+.arrange-history-open { display:flex; align-items:center; gap:12px; border:0; padding:14px; background:#fff; color:#1f2937; text-align:left; cursor:pointer; }
 .arrange-history-open>span { font-size:1.4rem; }
 .arrange-history-open div { display:grid; gap:3px; }
 .arrange-history-open small { color:#7b8798; }

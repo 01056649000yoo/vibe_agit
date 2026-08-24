@@ -134,3 +134,57 @@ test('이름 크기 조절은 두 창에 모두 있고 고른 값을 기억한�
         assert.ok(source.includes("'--arrange-name-scale': scale"), `${modal}: 고른 크기가 창에 적용되지 않는다`);
     }
 });
+
+/*
+ * 2026-08-24 두 가지 지적.
+ *
+ * ⚠️ 전역 `button` 규칙이 글자를 흰색으로 정한다(`src/index.css`). 이 도구의 버튼이 배경만
+ *    흰색으로 덮으면 **흰 바탕에 흰 글씨**가 되어 글자가 사라진다. 지난 기록의 기록명이 그랬다.
+ */
+test('흰 배경 버튼은 글자색도 함께 정한다', async () => {
+    const css = await readFile('src/modules/tool/classroom-arrangement/classroomArrangement.css', 'utf8');
+
+    // `<button>` 에 붙는 클래스만 본다. div·section 은 전역 button 규칙과 무관하다.
+    const buttonClasses = ['arrange-history-open', 'arrange-history-delete', 'arrange-lottery-cancel'];
+    for (const cls of buttonClasses) {
+        const rules = css
+            .split('}')
+            .map((chunk) => chunk + '}')
+            .filter((rule) => rule.includes(`.${cls} {`) || rule.includes(`.${cls} {`.replace(' {', '{')));
+        assert.ok(rules.length > 0, `.${cls} 규칙을 찾지 못했다`);
+        for (const rule of rules) {
+            if (!rule.includes('background')) continue;
+            assert.ok(rule.includes('color:'), `.${cls} 가 배경만 덮고 글자색을 안 정한다 — 흰 글씨가 된다`);
+        }
+    }
+});
+
+/*
+ * 시작 버튼이 왼쪽 설정 칸 맨 아래에 있어 눈에 띄지 않았다.
+ * 결과가 나오는 자리 바로 위, 오른쪽에 둔다.
+ */
+test('역할 나누기 시작 버튼은 결과판 오른쪽 위에 있다', async () => {
+    const [source, css] = await Promise.all([
+        read('RoleArrangement.jsx'),
+        readFile('src/modules/tool/classroom-arrangement/classroomArrangement.css', 'utf8')
+    ]);
+
+    // 결과판(arrange-role-board) 안의 머리말에 시작 버튼이 있어야 한다.
+    const boardStart = source.indexOf('className="arrange-role-board"');
+    assert.ok(boardStart >= 0, '결과판을 찾지 못했다');
+    const heading = source.slice(boardStart, boardStart + 700);
+    assert.ok(heading.includes('arrange-panel-heading'), '결과판에 머리말이 없다');
+    assert.ok(heading.includes('역할 나누기 시작'), '시작 버튼이 결과판 위에 없다');
+
+    // 왼쪽 설정 칸에 남아 있으면 안 된다 — 두 곳에 생기면 어느 것을 눌러야 할지 헷갈린다.
+    assert.equal(
+        source.split('역할 나누기 시작').length - 1, 1,
+        '시작 버튼이 두 곳에 있다'
+    );
+
+    // 머리말 안에서는 꽉 채우지 않는다(왼쪽 칸용 width:100% 를 그대로 쓰면 가로로 늘어난다).
+    assert.ok(
+        css.includes('.arrange-panel-heading .arrange-primary { width:auto;'),
+        '머리말 안 시작 버튼이 가로로 늘어난다'
+    );
+});
