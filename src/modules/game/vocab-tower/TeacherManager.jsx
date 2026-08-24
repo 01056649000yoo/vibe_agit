@@ -250,12 +250,25 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                     </div>
                     <span className="vocab-teacher__version">현재 운영 중</span>
                 </div>
+
+                {/*
+                 * ⚠️ 여기에 `뜻의 방 → 문장의 방 → 구별의 방` 이 적혀 있었다(2026-08-24 지적으로 확인).
+                 *    그 방 표시는 V1 화면에서만 나오고(`{!isV2 && ...}`), 지금 전체 학급이 V2라
+                 *    **학생은 방을 아예 보지 않는다**. 교사 화면만 옛 구조를 설명하고 있었다.
+                 *    실제 출제 형태 5가지로 바꾼다 — 출제 규칙은
+                 *    `get_next_my_vocab_tower_v2_practice_question_v1` 이 원본이다.
+                 */}
                 <div className="vocab-teacher__journey-flow">
-                    <div><span>📖</span><strong>뜻의 방</strong><small>뜻에 맞는 낱말</small></div>
-                    <div><span>✍️</span><strong>문장의 방</strong><small>빈칸에 맞는 낱말</small></div>
-                    <div><span>🔎</span><strong>구별의 방</strong><small>문맥에 맞는 낱말</small></div>
-                    <div><span>📊</span><strong>12문항 결과</strong><small>층별 최고 정답률 기록</small></div>
+                    <div><span>📖</span><strong>뜻 선택</strong><small>뜻에 맞는 낱말 고르기</small></div>
+                    <div><span>✍️</span><strong>문맥 선택</strong><small>빈칸에 맞는 낱말 고르기</small></div>
+                    <div><span>🔎</span><strong>쓰임 구별</strong><small>문맥에 어울리는 말 고르기</small></div>
+                    <div><span>⌨️</span><strong>직접 입력</strong><small>익힌 낱말은 뜻·빈칸을 직접</small></div>
                 </div>
+                <p className="vocab-teacher__flow-note">
+                    12문항은 <strong>덜 익힌 낱말 5 · 복습할 낱말 4 · 처음 보는 낱말 3</strong> 순으로 골라 냅니다.
+                    한 번 힌트 없이 맞힌 낱말은 다음부터 <strong>직접 입력</strong>으로 올라가고, 틀린 낱말은 3문항 뒤에
+                    <strong> 방금과 다른 형태</strong>로 한 번 더 나옵니다.
+                </p>
                 <div className="vocab-teacher__summary">
                     <div><span>출제 범위</span><strong>{config.grade}학년</strong></div>
                     <div><span>기본 자료</span><strong>현재 덱 10개</strong></div>
@@ -339,6 +352,13 @@ const VocabularyTowerTeacherManager = ({ activeClass }) => {
                             <h3 id="vocab-master-title">🏆 덱마스터 도전 조건</h3>
                         </div>
                         <p>한 층을 충분히 익힌 학생만 치는 공식 시험입니다. 합격하면 그 층의 덱마스터가 되고 다음 층이 열립니다. 10개 층을 모두 채우면 정상의 <strong>어휘 마스터</strong> 관문에 도전합니다.</p>
+                        {/* 연습과 시험은 출제 방식이 다르다. 교사가 가장 헷갈리는 지점이라 적어 둔다.
+                            원본은 `start_my_vocab_tower_master_base_v1` 이다. */}
+                        <p className="vocab-teacher__flow-note">
+                            연습과 달리 <strong>덱 전체를 문항 수만큼 구간으로 나눠 한 문항씩</strong> 뽑으므로 앞뒤 낱말이 고르게 나옵니다.
+                            형태는 <strong>뜻 선택 · 문맥 선택 · 뜻 직접 입력 · 빈칸 직접 입력</strong> 네 가지이며,
+                            연습에 나오는 <strong>쓰임 구별은 시험에 내지 않습니다</strong>. 틀린 문항을 그 자리에서 다시 묻지도 않습니다.
+                        </p>
                     </div>
                 </div>
 

@@ -129,3 +129,14 @@
     .vocab-teacher__panel-tabs { grid-template-columns: 1fr; }
     .vocab-teacher__panel-tabs small { white-space: normal; }
 }
+
+/* 출제 방식 안내 — 요약 카드 아래에 붙는 한 문단. 카드보다 조용하게 둔다. */
+.vocab-teacher__flow-note {
+    margin: 8px 0 0;
+    color: #475569;
+    font-size: var(--ui-text-sm);
+    line-height: 1.65;
+}
+
+.vocab-teacher__flow-note strong { color: #166534; }
+.vocab-teacher__panel .vocab-teacher__flow-note strong { color: #6d28d9; }
