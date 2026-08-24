@@ -93,8 +93,16 @@ test('글자 계단은 일곱 단계뿐이고 바닥이 0.8rem이다', async () 
     const steps = [...tokens.matchAll(/--ui-text-(\w+):\s*([0-9.]+)rem/g)].map((m) => [m[1], Number(m[2])]);
 
     assert.deepEqual(steps.map(([name]) => name), ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'], '계단 이름이나 개수가 달라졌다');
-    // 읽어야 하는 글자가 12.8px 밑으로 내려가지 않게 바닥을 고정한다.
-    assert.equal(steps[0][1], 0.8, 'xs 바닥이 0.8rem이 아니다');
+
+    /*
+     * ⚠️ 글쓰기 연구소(`~/writing-helper`)가 **같은 값을 자기 파일에 적어 두고** 쓴다
+     *    (`src/app/globals.css` 의 `@theme`, 저쪽 검사는 `tests/ui-consistency.test.mjs`).
+     *    저장소가 달라 서로의 파일을 읽을 수 없으므로 값을 여기서도 못 박는다.
+     *    이 숫자를 바꾸면 연구소 쪽도 같은 작업에서 함께 바꾼다.
+     */
+    assert.deepEqual(steps, [
+        ['xs', 0.8], ['sm', 0.9], ['md', 1], ['lg', 1.15], ['xl', 1.35], ['2xl', 1.5], ['3xl', 2]
+    ], '계단 값이 달라졌다 — 연구소(writing-helper)의 @theme 도 함께 고쳐야 한다');
     // 계단은 항상 커지는 순서여야 한다 — 뒤집히면 화면이 뒤죽박죽이 된다.
     for (let i = 1; i < steps.length; i += 1) {
         assert.ok(steps[i][1] > steps[i - 1][1], `${steps[i][0]}가 ${steps[i - 1][0]}보다 크지 않다`);
