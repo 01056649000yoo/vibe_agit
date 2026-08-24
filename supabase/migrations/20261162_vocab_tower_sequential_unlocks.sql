@@ -117,12 +117,18 @@ BEGIN
         entry.value || jsonb_build_object(
             'unlocked',
                 (entry.value->>'deck_number')::SMALLINT <= v_highest
-                OR (entry.value->>'deck_number')::SMALLINT = v_active_deck
+                OR (
+                    v_active_deck IS NOT NULL
+                    AND (entry.value->>'deck_number')::SMALLINT = v_active_deck
+                )
                 OR v_open_master_keys ? public.vocab_tower_v2_collection_key(
                     v_grade, (entry.value->>'deck_number')::SMALLINT),
             'unlock_required_deck', CASE
                 WHEN (entry.value->>'deck_number')::SMALLINT <= v_highest
-                  OR (entry.value->>'deck_number')::SMALLINT = v_active_deck
+                  OR (
+                      v_active_deck IS NOT NULL
+                      AND (entry.value->>'deck_number')::SMALLINT = v_active_deck
+                  )
                   OR v_open_master_keys ? public.vocab_tower_v2_collection_key(
                       v_grade, (entry.value->>'deck_number')::SMALLINT)
                     THEN NULL
@@ -131,7 +137,10 @@ BEGIN
             'unlock_grandfathered',
                 (entry.value->>'deck_number')::SMALLINT > v_highest
                 AND (
-                    (entry.value->>'deck_number')::SMALLINT = v_active_deck
+                    (
+                        v_active_deck IS NOT NULL
+                        AND (entry.value->>'deck_number')::SMALLINT = v_active_deck
+                    )
                     OR v_open_master_keys ? public.vocab_tower_v2_collection_key(
                         v_grade, (entry.value->>'deck_number')::SMALLINT)
                 )

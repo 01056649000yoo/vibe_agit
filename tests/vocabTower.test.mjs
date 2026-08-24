@@ -111,6 +111,11 @@ test('어휘의 탑은 덱마스터를 빠짐없이 통과한 다음 층까지�
     assert.match(sequentialUnlockMigration, /attempt\.passed IS TRUE/);
     assert.match(sequentialUnlockMigration, /'unlock_required_deck'/);
     assert.equal(
+        sequentialUnlockMigration.match(/v_active_deck IS NOT NULL/g)?.length,
+        3,
+        '진행 중인 층이 없을 때 잠금 응답이 null이 되면 안 된다'
+    );
+    assert.equal(
         sequentialUnlockMigration.match(/IF p_deck_number > v_highest THEN/g)?.length,
         2,
         '개인 연습과 덱마스터 시작을 서버가 함께 잠가야 한다'
