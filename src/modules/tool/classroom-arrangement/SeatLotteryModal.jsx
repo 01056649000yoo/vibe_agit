@@ -32,7 +32,7 @@ export default function SeatLotteryModal({ rows, cols, activeSeats, assignments,
 
           <div className="arrange-seat-lottery-board">
             <div className="arrange-seat-lottery-blackboard">교탁 · 칠판</div>
-            <div className="arrange-seat-lottery-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(48px, 1fr))` }}>
+            <div className="arrange-seat-lottery-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(calc(48px * ${scale}), 1fr))` }}>
               {Array.from({ length: rows * cols }, (_, index) => {
                 const row = Math.floor(index / cols);
                 const col = index % cols;

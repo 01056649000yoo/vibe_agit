@@ -6,7 +6,7 @@ function SeatHistoryBoard({ payload }) {
   const { rows, cols, activeSeats, assignmentBySeat } = buildSeatHistoryResult(payload);
   return <div className="arrange-history-board is-seat" aria-label="저장된 자리 배치 결과">
     <div className="arrange-seat-lottery-blackboard">칠판</div>
-    <div className="arrange-history-seat-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(54px, 1fr))` }}>
+    <div className="arrange-history-seat-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(calc(54px * var(--arrange-name-scale, 1)), 1fr))` }}>
       {Array.from({ length: rows * cols }, (_, index) => {
         const row = Math.floor(index / cols);
         const col = index % cols;

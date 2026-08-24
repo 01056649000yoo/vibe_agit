@@ -1,4 +1,8 @@
 /* eslint-disable security/detect-object-injection -- 셔플 배열과 자리·역할 인덱스는 이 파일에서 만든 숫자/검증 키만 사용한다. */
+// 최근 몇 번까지 거슬러 보고 같은 자리·이웃·역할을 피할지. **엔진과 안내문이 이 값을 함께 쓴다.**
+// 2026-08-24: 자리 5회·역할 8회는 범위가 너무 넓다는 의견에 따라 자리 3회·역할 4회로 좁혔다.
+export const RECENT_SEAT_ROUNDS = 3;
+export const RECENT_ROLE_ROUNDS = 4;
 export const DEFAULT_SEAT_SETTINGS = Object.freeze({
   forbiddenPairs: [],
   preferredPairs: [],
@@ -153,7 +157,7 @@ function placeSeatCandidate(students, seatKeys, settings) {
 }
 
 function seatHistoryRules(history) {
-  return (history || []).slice(0, 5).map((entry) => {
+  return distinctArrangementRounds(history).slice(0, RECENT_SEAT_ROUNDS).map((entry) => {
     const assignments = Array.isArray(entry?.payload?.assignments) ? entry.payload.assignments : [];
     const seatStudents = new Set(assignments.map((item) => `${item.seatKey}:${item.studentId}`));
     const bySeat = new Map(assignments.map((item) => [item.seatKey, String(item.studentId)]));
@@ -200,6 +204,13 @@ function inspectSeatCandidate(assignment, settings, historyRules) {
     });
   });
   return { requiredViolations, preferenceViolations };
+}
+
+function distinctArrangementRounds(history) {
+  const originalIdsWithEdits = new Set((history || [])
+    .filter((entry) => entry?.payload?.edited && entry.payload.originalHistoryId)
+    .map((entry) => String(entry.payload.originalHistoryId)));
+  return (history || []).filter((entry) => !originalIdsWithEdits.has(String(entry?.id)));
 }
 
 function validateFixedSeats(students, seatKeys, settings) {
@@ -356,7 +367,7 @@ function countRoleViolations(assignments, settings, history) {
   });
   if (settings.avoidDuplicates) {
     const currentKeys = new Set(assignments.map((item) => `${item.studentId}:${item.roleName}`));
-    (history || []).slice(0, 8).forEach((entry) => {
+    distinctArrangementRounds(history).slice(0, RECENT_ROLE_ROUNDS).forEach((entry) => {
       const previous = Array.isArray(entry?.payload?.assignments) ? entry.payload.assignments : [];
       previous.forEach((item) => { if (currentKeys.has(`${item.studentId}:${item.roleName || item.role}`)) violations += 5; });
     });

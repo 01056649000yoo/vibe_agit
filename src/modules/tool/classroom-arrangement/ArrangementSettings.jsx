@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { RECENT_ROLE_ROUNDS, RECENT_SEAT_ROUNDS } from './arrangementEngine';
 
 function PairEditor({ title, description, pairs, students, onChange, chipClass = 'is-warning', deleteLabel = '조합 삭제' }) {
   const [left, setLeft] = useState('');
@@ -85,8 +86,8 @@ export default function ArrangementSettings({ students, seat, role, studentGroup
         <div className="arrange-condition-title"><strong>가능하면 반영할 조건</strong><span>서로 충돌하면 전체적으로 가장 가까운 결과를 찾습니다.</span></div>
         <div className="arrange-condition-grid">
           <label className="arrange-toggle-row"><input type="checkbox" checked={seat.balanceMode === 'strict'} onChange={(event) => onSeatChange({ ...seat, balanceMode: event.target.checked ? 'strict' : 'none' })} /><span>상·하·좌·우 이웃에 남녀가 골고루 섞이도록 배치</span></label>
-          <label className="arrange-toggle-row"><input type="checkbox" checked={seat.avoidSameSeat} onChange={(event) => onSeatChange({ ...seat, avoidSameSeat: event.target.checked })} /><span>최근 5회 같은 자리 피하기</span></label>
-          <label className="arrange-toggle-row"><input type="checkbox" checked={seat.avoidSameNeighbor} onChange={(event) => onSeatChange({ ...seat, avoidSameNeighbor: event.target.checked })} /><span>최근 5회 같은 이웃 피하기</span></label>
+          <label className="arrange-toggle-row"><input type="checkbox" checked={seat.avoidSameSeat} onChange={(event) => onSeatChange({ ...seat, avoidSameSeat: event.target.checked })} /><span>최근 {RECENT_SEAT_ROUNDS}회 같은 자리 피하기</span></label>
+          <label className="arrange-toggle-row"><input type="checkbox" checked={seat.avoidSameNeighbor} onChange={(event) => onSeatChange({ ...seat, avoidSameNeighbor: event.target.checked })} /><span>최근 {RECENT_SEAT_ROUNDS}회 같은 이웃 피하기</span></label>
         </div>
         <PairEditor title="가까이 배치할 학생" description="두 학생이 상·하·좌·우 이웃이 되도록 우선합니다." pairs={seat.preferredPairs} students={students} onChange={(pairs) => onSeatChange({ ...seat, preferredPairs: pairs })} chipClass="is-info" deleteLabel="가까이 배치 조합 삭제" />
       </div>
@@ -96,7 +97,7 @@ export default function ArrangementSettings({ students, seat, role, studentGroup
       <header className="arrange-settings-heading"><div><span className="arrange-settings-kicker is-role">역할</span><h3>역할 나누기 설정</h3></div></header>
       <div className="arrange-condition-grid">
         <label className="arrange-toggle-row"><input type="checkbox" checked={role.balanceMode === 'strict'} onChange={(event) => onRoleChange({ ...role, balanceMode: event.target.checked ? 'strict' : 'none' })} /><span>한 역할 안에서 남녀 섞기</span></label>
-        <label className="arrange-toggle-row"><input type="checkbox" checked={role.avoidDuplicates} onChange={(event) => onRoleChange({ ...role, avoidDuplicates: event.target.checked })} /><span>최근 8회 같은 역할 피하기</span></label>
+        <label className="arrange-toggle-row"><input type="checkbox" checked={role.avoidDuplicates} onChange={(event) => onRoleChange({ ...role, avoidDuplicates: event.target.checked })} /><span>최근 {RECENT_ROLE_ROUNDS}회 같은 역할 피하기</span></label>
       </div>
       <PairEditor title="같은 역할 금지" description="한 역할에 함께 배정되면 안 되는 학생" pairs={role.forbiddenPairs} students={students} onChange={(pairs) => onRoleChange({ ...role, forbiddenPairs: pairs })} />
       <div className="arrange-settings-tip"><strong>설정 저장 안내</strong><span>남녀 구분과 조건을 바꾼 뒤 화면 위의 설정 저장을 눌러 다른 기기에서도 이어서 사용하세요.</span></div>

@@ -23,19 +23,44 @@ function HistoryView({ history, onDelete }) {
   // 전자칠판으로 지난 결과를 볼 때도 이름이 커야 한다. 뽑기 창과 같은 값을 쓴다.
   const { sizeId, setSizeId, scale } = useNameSize();
   const [selected, setSelected] = useState(null);
+  const historyById = useMemo(() => new Map(history.map((item) => [item.id, item])), [history]);
+  const editedByOriginalId = useMemo(() => {
+    const result = new Map();
+    history.forEach((item) => {
+      const originalHistoryId = item.payload?.edited ? item.payload?.originalHistoryId : null;
+      if (originalHistoryId && !result.has(originalHistoryId)) result.set(originalHistoryId, item);
+    });
+    return result;
+  }, [history]);
+  const comparison = useMemo(() => {
+    if (!selected) return null;
+    const edited = selected.payload?.edited ? selected : editedByOriginalId.get(selected.id);
+    const original = edited?.payload?.originalHistoryId ? historyById.get(edited.payload.originalHistoryId) : null;
+    return original && edited?.kind === original.kind ? { original, edited } : null;
+  }, [editedByOriginalId, historyById, selected]);
+
   return <div className="arrange-history">
     {history.length === 0 ? <div className="arrange-empty">아직 저장된 자리·역할 기록이 없습니다.</div> : history.map((item) => <article key={item.id}>
-      <button type="button" className="arrange-history-open" onClick={() => setSelected(item)}><span>{item.kind === 'seat' ? '🪑' : '🎯'}</span><div><strong>{item.title}</strong><small>{formatDate(item.createdAt)}</small></div><em>{item.payload?.violations ? `조건 점수 ${item.payload.violations}` : '조건 충족'}</em></button>
+      <button type="button" className="arrange-history-open" onClick={() => setSelected(item)}><span>{item.kind === 'seat' ? '🪑' : '🎯'}</span><div><strong>{item.title}</strong><small>{formatDate(item.createdAt)}</small></div><em>{item.payload?.edited ? '교사 수정본' : editedByOriginalId.has(item.id) ? '랜덤 원본' : item.payload?.violations ? `조건 점수 ${item.payload.violations}` : '조건 충족'}</em></button>
       <button type="button" className="arrange-history-delete" aria-label={`${item.title} 삭제`} onClick={() => onDelete(item)}>삭제</button>
     </article>)}
     {selected ? <div className="arrange-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}>
-      <section className="arrange-history-modal" style={{ '--arrange-name-scale': scale }} role="dialog" aria-modal="true" aria-labelledby="arrangement-history-title">
+      <section className={`arrange-history-modal ${comparison ? 'is-comparison' : ''}`} style={{ '--arrange-name-scale': scale }} role="dialog" aria-modal="true" aria-labelledby="arrangement-history-title">
         <header>
-          <div><h3 id="arrangement-history-title">{selected.title}</h3><p>{formatDate(selected.createdAt)}</p></div>
+          <div><h3 id="arrangement-history-title">{comparison ? `${selected.kind === 'seat' ? '자리 배치' : '역할 나누기'} 결과 비교` : selected.title}</h3><p>{comparison ? '랜덤 원본과 교사가 보완한 수정본입니다.' : formatDate(selected.createdAt)}</p></div>
           <NameSizeControl sizeId={sizeId} onChange={setSizeId} />
           <button type="button" aria-label="닫기" onClick={() => setSelected(null)}>×</button>
         </header>
-        <HistoryResultBoard kind={selected.kind} payload={selected.payload} />
+        {comparison ? <div className="arrange-history-comparison">
+          <section className="arrange-history-compare-panel" aria-labelledby="arrangement-random-result-title">
+            <div className="arrange-history-compare-heading"><strong id="arrangement-random-result-title">랜덤 원본</strong><span>{formatDate(comparison.original.createdAt)}</span></div>
+            <HistoryResultBoard kind={comparison.original.kind} payload={comparison.original.payload} />
+          </section>
+          <section className="arrange-history-compare-panel" aria-labelledby="arrangement-edited-result-title">
+            <div className="arrange-history-compare-heading"><strong id="arrangement-edited-result-title">교사 수정본</strong><span>조건 점수 계산 안 함</span></div>
+            <HistoryResultBoard kind={comparison.edited.kind} payload={comparison.edited.payload} />
+          </section>
+        </div> : <HistoryResultBoard kind={selected.kind} payload={selected.payload} />}
       </section>
     </div> : null}
   </div>;
@@ -109,16 +134,38 @@ export default function ClassroomArrangementTeacherEntry({ activeClass, previewW
         ? { id: `preview-${Date.now()}`, createdAt: new Date().toISOString() }
         : await classroomArrangementApi.createHistory(activeClass.id, kind, title, payload);
       setHistory((current) => [{ id: created.id, kind, title, payload, createdAt: created.createdAt }, ...current].slice(0, 50));
+      return created.id;
     } catch (historyError) {
       setError(historyError.message || '배치 결과를 기록하지 못했습니다.');
+      return null;
     }
   }, [activeClass?.id, dirty, previewWorkspace, saveSettings]);
+
+  const removeHistory = useCallback(async (historyId) => {
+    if (!previewWorkspace) await classroomArrangementApi.deleteHistory(historyId);
+    setHistory((current) => current.filter((historyItem) => historyItem.id !== historyId));
+  }, [previewWorkspace]);
+
+  // 랜덤 원본은 그대로 두고 교사 수정본을 연결해 남긴다. 다시 고치면 이전 수정본만 교체한다.
+  const saveEditedHistory = useCallback(async (originalHistoryId, previousEditedHistoryId, kind, title, payload) => {
+    const createdId = await createHistory(kind, title, { ...payload, originalHistoryId });
+    if (!createdId) return null;
+    if (previousEditedHistoryId && previousEditedHistoryId !== createdId) {
+      try {
+        await removeHistory(previousEditedHistoryId);
+      } catch {
+        setNotice('랜덤 원본과 새 수정본을 저장했습니다. 이전 수정본은 지난 기록에서 지워 주세요.');
+        return createdId;
+      }
+    }
+    setNotice('랜덤 원본을 남기고 교사 수정본을 저장했습니다. 지난 기록에서 비교할 수 있습니다.');
+    return createdId;
+  }, [createHistory, removeHistory]);
 
   const deleteHistory = async (item) => {
     if (!window.confirm(`${item.title} 기록을 삭제할까요?`)) return;
     try {
-      if (!previewWorkspace) await classroomArrangementApi.deleteHistory(item.id);
-      setHistory((current) => current.filter((historyItem) => historyItem.id !== item.id));
+      await removeHistory(item.id);
     } catch (deleteError) {
       setError(deleteError.message || '기록을 삭제하지 못했습니다.');
     }
@@ -189,8 +236,8 @@ export default function ClassroomArrangementTeacherEntry({ activeClass, previewW
     {notice ? <div className="arrange-alert is-success" role="status">{notice}<button type="button" aria-label="안내 닫기" onClick={() => setNotice('')}>×</button></div> : null}
     <nav className="arrange-tabs" role="tablist" aria-label="자리·역할 배치 메뉴">{TABS.map((item) => <button type="button" role="tab" aria-selected={tab === item.id} className={tab === item.id ? 'is-active' : ''} key={item.id} onClick={() => setTab(item.id)}>{item.label}</button>)}</nav>
     <div>
-      {tab === 'seat' ? <SeatArrangement key={activeClass.id} students={groupedStudents} settings={seat} history={history} onSettingsChange={updateSeat} onCreateHistory={createHistory} /> : null}
-      {tab === 'role' ? <RoleArrangement key={activeClass.id} students={groupedStudents} settings={role} history={history} onSettingsChange={updateRole} onCreateHistory={createHistory} /> : null}
+      {tab === 'seat' ? <SeatArrangement key={activeClass.id} students={groupedStudents} settings={seat} history={history} onSettingsChange={updateSeat} onCreateHistory={createHistory} onSaveEditedHistory={saveEditedHistory} /> : null}
+      {tab === 'role' ? <RoleArrangement key={activeClass.id} students={groupedStudents} settings={role} history={history} onSettingsChange={updateRole} onCreateHistory={createHistory} onSaveEditedHistory={saveEditedHistory} /> : null}
       {tab === 'history' ? <HistoryView key={activeClass.id} history={history} onDelete={deleteHistory} /> : null}
       {tab === 'settings' ? <>
         <ArrangementSettings students={students} seat={seat} role={role} studentGroups={studentGroups} onSeatChange={updateSeat} onRoleChange={updateRole} onGroupsChange={updateGroups} />

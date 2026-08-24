@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { arrangementSfx } from './arrangementSfx';
 import SeatLotteryModal from './SeatLotteryModal';
+import FullscreenResultView from './FullscreenResultView';
 import { useNameSize } from './NameSizeControl';
+import { useResultSwap } from './resultSwap';
 import { hasExactSeatCount, rectangularSeats, seatKey, seatsWithinGrid, solveSeats, suggestSeatLayout } from './arrangementEngine';
 
 const SPEED_OPTIONS = [
@@ -12,7 +14,9 @@ const SPEED_OPTIONS = [
 const delayFor = (speed) => SPEED_OPTIONS.find((option) => option.id === speed)?.delay || 950;
 const groupLabel = (group) => group === 'A' ? '남' : group === 'B' ? '여' : '';
 
-export default function SeatArrangement({ students, settings, history, onSettingsChange, onCreateHistory }) {
+const seatKeyOf = (item) => item.seatKey;
+
+export default function SeatArrangement({ students, settings, history, onSettingsChange, onCreateHistory, onSaveEditedHistory }) {
   const suggested = useMemo(() => suggestSeatLayout(students.length), [students.length]);
   const initial = settings.seatLayout || suggested;
   const [rows, setRows] = useState(initial.rows || 4);
@@ -31,6 +35,13 @@ export default function SeatArrangement({ students, settings, history, onSetting
   const [speed, setSpeed] = useState('normal');
   const [violations, setViolations] = useState(0);
   const [conditionError, setConditionError] = useState('');
+  const [fullscreen, setFullscreen] = useState(false);
+  // 랜덤 원본은 보존하고, 교사가 고친 최신 수정본만 따로 연결해 저장한다.
+  const [randomHistoryId, setRandomHistoryId] = useState(null);
+  const [editedHistoryId, setEditedHistoryId] = useState(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [manualEdited, setManualEdited] = useState(false);
+  const swap = useResultSwap(seatKeyOf, setAssignments);
   const painting = useRef(null);
   const activeSeatsRef = useRef(activeSeats);
   const timers = useRef([]);
@@ -47,6 +58,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
   // 이름이 아지트 명단과 달라 지난 기록·역할 나누기와도 맞지 않았다.
   const roster = students;
   const assignmentBySeat = useMemo(() => new Map(assignments.map((item) => [item.seatKey, item])), [assignments]);
+  const manualResult = manualEdited || swap.edited;
   const seatCountMatches = hasExactSeatCount(roster.length, activeSeats.size);
   const canStart = phase === 'idle' && seatCountMatches;
   const closeLotteryModal = useCallback(() => setModalOpen(false), []);
@@ -63,6 +75,7 @@ export default function SeatArrangement({ students, settings, history, onSetting
     setModalOpen(false);
     setConditionError('');
     setPhase('idle');
+    setManualEdited(false);
     onSettingsChange({ ...settings, seatLayout: { rows: nextRows, cols: nextCols, activeSeats: [...visibleSeats] } });
   };
 
@@ -96,6 +109,11 @@ export default function SeatArrangement({ students, settings, history, onSetting
     setViolations(0);
     setConditionError('');
     setPhase('idle');
+    setFullscreen(false);
+    setRandomHistoryId(null);
+    setEditedHistoryId(null);
+    setManualEdited(false);
+    swap.reset();
   };
   const schedule = (callback, delay) => {
     const timer = window.setTimeout(callback, delay);
@@ -115,6 +133,8 @@ export default function SeatArrangement({ students, settings, history, onSetting
     setRevealed(new Set());
     setFlyingPick(null);
     setViolations(result.violations);
+    setManualEdited(false);
+    swap.reset();
     setPhase('running');
     setModalOpen(true);
     arrangementSfx.ensure();
@@ -138,15 +158,77 @@ export default function SeatArrangement({ students, settings, history, onSetting
       }, base + step * 0.9);
     });
     schedule(() => { setPhase('done'); setRollingName(''); setFlyingPick(null); arrangementSfx.finish(); }, order.length * step + 120);
-    await onCreateHistory('seat', `자리 배치 ${result.assignments.length}명`, {
+    const createdId = await onCreateHistory('seat', `자리 배치 ${result.assignments.length}명`, {
         format: 'classroom-arrangement/seat-v1',
         layout: { rows, cols, activeSeats: [...activeSeats] },
         settings,
         violations: result.violations,
       assignments: result.assignments
     });
+    setRandomHistoryId(createdId || null);
+    setEditedHistoryId(null);
   };
 
+  // 맞바꾼 자리표는 랜덤 원본과 연결해 저장한다. 다시 고칠 때는 이전 수정본만 바꾼다.
+  const saveEdited = async () => {
+    if (!swap.edited || savingEdit) return;
+    setSavingEdit(true);
+    try {
+      const nextId = await onSaveEditedHistory?.(randomHistoryId, editedHistoryId, 'seat', `자리 배치 ${assignments.length}명`, {
+        format: 'classroom-arrangement/seat-v1',
+        layout: { rows, cols, activeSeats: [...activeSeats] },
+        settings,
+        violations: null,
+        edited: true,
+        assignments
+      });
+      if (nextId) {
+        setEditedHistoryId(nextId);
+        setViolations(0);
+        setManualEdited(true);
+        swap.reset();
+      }
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const editing = phase === 'done';
+  // 결과판은 화면 안과 전체 화면에서 **같은 것**을 쓴다. 두 벌로 두면 한쪽만 고치는 실수가 난다.
+  const seatBoard = <div className={`arrange-seat-grid ${editing ? 'is-editable' : ''}`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(calc(54px * ${scale}), 1fr))`, '--arrange-name-scale': scale }}>
+    {Array.from({ length: rows * cols }, (_, index) => {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      const key = seatKey(row, col);
+      const active = activeSeats.has(key);
+      const assigned = assignmentBySeat.get(key);
+      const visible = revealed.has(key) || phase === 'done';
+      const picked = swap.pickedKey === key;
+      return <button
+        type="button"
+        key={key}
+        data-seat={key}
+        className={`arrange-seat ${active ? 'is-active' : ''} ${visible ? 'is-revealed' : ''} ${picked ? 'is-picked' : ''}`}
+        onPointerDown={(event) => { if (!editing) startPaint(event, row, col); }}
+        onPointerEnter={() => { if (!editing) paint(row, col); }}
+        onClick={() => { if (editing && active && assigned) swap.pick(key); }}
+        disabled={phase === 'running'}
+        aria-pressed={editing && active ? picked : undefined}
+        aria-label={editing && assigned
+          ? `${row + 1}행 ${col + 1}열 ${assigned.studentName}${picked ? ', 고름' : ''}. 눌러서 자리 맞바꾸기`
+          : `${row + 1}행 ${col + 1}열 ${active ? '좌석' : '빈칸'}`}
+      >
+        {active ? <><small>{row + 1}-{col + 1}</small><strong>{visible && assigned ? assigned.studentName : '자리'}</strong></> : null}
+      </button>;
+    })}
+  </div>;
+
+  const editBar = editing ? <div className="arrange-edit-bar">
+    <span>{swap.pickedKey
+      ? '바꿀 다른 자리를 눌러 주세요.'
+      : manualResult ? '교사가 직접 보완한 자리표에는 조건 점수를 계산하지 않습니다.' : '조건과 관계없이 두 학생의 자리를 맞바꿀 수 있습니다.'}</span>
+    {swap.edited ? <button type="button" className="arrange-small-button is-dark" disabled={savingEdit} onClick={saveEdited}>{savingEdit ? '저장 중…' : '고친 자리표 저장'}</button> : null}
+  </div> : null;
   return <>
     <div className="arrange-workspace">
       <section className="arrange-sidebar-card">
@@ -173,23 +255,17 @@ export default function SeatArrangement({ students, settings, history, onSetting
             <strong>{roster.length}<small>명</small></strong>
             <em>{seatCountMatches ? '좌석 일치' : `좌석 ${activeSeats.size}석`}</em>
           </output>
+          {/* 전자칠판으로 볼 때 창 안에 갇혀 있으면 이름을 키워도 좁다. 결과가 나오면 화면 전체로 볼 수 있게 한다. */}
+          {phase === 'done' ? <button type="button" className="arrange-fullscreen-open" onClick={() => setFullscreen(true)}>전체 화면으로 보기</button> : null}
         </div>
-        <div className="arrange-seat-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(54px, 1fr))`, '--arrange-name-scale': scale }}>
-          {Array.from({ length: rows * cols }, (_, index) => {
-            const row = Math.floor(index / cols);
-            const col = index % cols;
-            const key = seatKey(row, col);
-            const active = activeSeats.has(key);
-            const assigned = assignmentBySeat.get(key);
-            const visible = revealed.has(key) || phase === 'done';
-            return <button type="button" key={key} data-seat={key} className={`arrange-seat ${active ? 'is-active' : ''} ${visible ? 'is-revealed' : ''}`} onPointerDown={(event) => startPaint(event, row, col)} onPointerEnter={() => paint(row, col)} disabled={phase === 'running'} aria-label={`${row + 1}행 ${col + 1}열 ${active ? '좌석' : '빈칸'}`}>
-              {active ? <><small>{row + 1}-{col + 1}</small><strong>{visible && assigned ? assigned.studentName : '자리'}</strong></> : null}
-            </button>;
-          })}
-        </div>
-        {phase === 'done' && violations > 0 ? <div className="arrange-condition-note">필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과로 배치했습니다. 권장 점수 {violations}</div> : null}
+        {editBar}
+        {fullscreen ? <div className="arrange-fullscreen-placeholder">전체 화면으로 보고 있습니다.</div> : seatBoard}
+        {phase === 'done' && !manualResult && violations > 0 ? <div className="arrange-condition-note">필수 조건은 모두 지켰으며, 권장 조건은 가장 가까운 결과로 배치했습니다. 권장 점수 {violations}</div> : null}
       </section>
     </div>
+    {fullscreen ? <FullscreenResultView title="우리 반 자리표" sizeId={sizeId} onSizeChange={setSizeId} scale={scale} onClose={() => setFullscreen(false)} actions={editBar}>
+      {seatBoard}
+    </FullscreenResultView> : null}
     {modalOpen ? <SeatLotteryModal rows={rows} cols={cols} activeSeats={activeSeats} assignments={assignments} revealed={revealed} rollingName={rollingName} flyingPick={flyingPick} phase={phase} onClose={closeLotteryModal} onCancel={reset} sizeId={sizeId} onSizeChange={setSizeId} scale={scale} /> : null}
   </>;
 }

@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
+  RECENT_ROLE_ROUNDS,
+  RECENT_SEAT_ROUNDS,
   buildRoleSlots,
   hasExactSeatCount,
   normalizeRoleSettings,
@@ -15,6 +17,7 @@ import {
 } from '../src/modules/tool/classroom-arrangement/arrangementEngine.js';
 import { mapLegacyClassToAgit } from '../src/modules/tool/classroom-arrangement/legacyImport.js';
 import { buildRoleHistoryResult, buildSeatHistoryResult } from '../src/modules/tool/classroom-arrangement/historyResult.js';
+import { swapStudents } from '../src/modules/tool/classroom-arrangement/resultSwap.js';
 
 test('자리 배치는 고정 자리와 학생 수를 지킨다', () => {
   const students = [{ id: 'a', name: '가' }, { id: 'b', name: '나' }, { id: 'c', name: '다' }];
@@ -79,6 +82,42 @@ test('남녀 혼합과 최근 자리·이웃 회피 조건을 따로 저장하�
   ];
   const result = solveSeats(students, rectangularSeats(2, 2), { balanceMode: 'strict' });
   assert.equal(result.violations, 0);
+});
+
+test('최근 기록 회피는 자리 3회와 역할 4회까지만 반영한다', () => {
+  assert.equal(RECENT_SEAT_ROUNDS, 3);
+  assert.equal(RECENT_ROLE_ROUNDS, 4);
+
+  const students = [{ id: 'a', name: '가' }];
+  const blank = { payload: { assignments: [] } };
+  const sameSeat = { payload: { assignments: [{ seatKey: '0,0', studentId: 'a', studentName: '가' }] } };
+  const seatSettings = { avoidSameSeat: true };
+  assert.equal(solveSeats(students, new Set(['0,0']), seatSettings, [blank, blank, sameSeat], 1).violations, 2);
+  assert.equal(solveSeats(students, new Set(['0,0']), seatSettings, [blank, blank, blank, sameSeat], 1).violations, 0);
+  const randomSeat = { id: 'seat-random', ...sameSeat };
+  const editedSeat = { id: 'seat-edited', payload: { ...sameSeat.payload, edited: true, originalHistoryId: randomSeat.id } };
+  assert.equal(solveSeats(students, new Set(['0,0']), seatSettings, [editedSeat, randomSeat], 1).violations, 2);
+
+  const sameRole = { payload: { assignments: [{ roleId: 'r', roleName: '정리', studentId: 'a', studentName: '가' }] } };
+  const roleSettings = { avoidDuplicates: true, roleGroups: [{ id: 'r', name: '정리', count: 1 }] };
+  assert.equal(solveRoles(students, roleSettings, [blank, blank, blank, sameRole], 1).violations, 5);
+  assert.equal(solveRoles(students, roleSettings, [blank, blank, blank, blank, sameRole], 1).violations, 0);
+  const randomRole = { id: 'role-random', ...sameRole };
+  const editedRole = { id: 'role-edited', payload: { ...sameRole.payload, edited: true, originalHistoryId: randomRole.id } };
+  assert.equal(solveRoles(students, roleSettings, [editedRole, randomRole], 1).violations, 5);
+});
+
+test('맞바꾸기는 학생 ID·이름·남녀 그룹을 함께 옮긴다', () => {
+  const assignments = [
+    { seatKey: '0,0', studentId: 'a', studentName: '가', group: 'A' },
+    { seatKey: '0,1', studentId: 'c', studentName: '다', group: 'A' },
+    { seatKey: '0,2', studentId: 'b', studentName: '나', group: 'B' }
+  ];
+  const forbiddenSwap = swapStudents(assignments, (item) => item.seatKey, '0,1', '0,2');
+  assert.deepEqual(
+    { id: forbiddenSwap[1].studentId, name: forbiddenSwap[1].studentName, group: forbiddenSwap[1].group },
+    { id: 'b', name: '나', group: 'B' }
+  );
 });
 
 test('가까이 배치할 학생은 상하좌우 이웃이 되도록 우선 반영한다', () => {
@@ -204,8 +243,9 @@ test('자리·역할 도구는 지연 로딩, 단일 RPC 읽기, 권한·상한 
   assert.match(settingsEntry, /이웃하면 안 되는 학생/);
   assert.match(settingsEntry, /가능하면 반영할 조건/);
   assert.match(settingsEntry, /상·하·좌·우 이웃에 남녀가 골고루 섞이도록 배치/);
-  assert.match(settingsEntry, /최근 5회 같은 자리 피하기/);
-  assert.match(settingsEntry, /최근 5회 같은 이웃 피하기/);
+  assert.match(settingsEntry, /최근 \{RECENT_SEAT_ROUNDS\}회 같은 자리 피하기/);
+  assert.match(settingsEntry, /최근 \{RECENT_SEAT_ROUNDS\}회 같은 이웃 피하기/);
+  assert.match(settingsEntry, /최근 \{RECENT_ROLE_ROUNDS\}회 같은 역할 피하기/);
   assert.match(settingsEntry, /가까이 배치할 학생/);
   assert.doesNotMatch(settingsEntry, /좌우로 번갈아|옆자리 금지|같은 자리·옆자리/);
   assert.match(seatEntry, /id: 'slow', label: '천천히', delay: 1500/);

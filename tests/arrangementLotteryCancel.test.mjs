@@ -228,3 +228,27 @@ test('자리 배치는 아지트 학급 명단만 쓰고 결과를 늘 기록한
     assert.ok(!source.includes("if (source === 'class')"), '결과 저장에 조건이 남아 있다');
     assert.ok(source.includes("await onCreateHistory('seat'"), '결과를 기록하지 않는다');
 });
+
+test('교사 편집은 조건 점수 없이 랜덤 원본과 연결된 수정본으로 저장한다', async () => {
+    for (const { screen } of PAIRS) {
+        const source = await read(screen);
+        assert.ok(!source.includes('evaluateSeatAssignments'), `${screen}: 교사 편집 뒤 자리 조건을 다시 계산한다`);
+        assert.ok(!source.includes('evaluateRoleAssignments'), `${screen}: 교사 편집 뒤 역할 조건을 다시 계산한다`);
+        assert.ok(source.includes('violations: null'), `${screen}: 교사 편집 기록에 조건 점수를 남긴다`);
+        assert.ok(source.includes('setManualEdited(true)'), `${screen}: 저장 뒤 교사 편집 상태를 잊는다`);
+        assert.ok(source.includes('조건과 관계없이'), `${screen}: 교사에게 직접 보완 권한을 안내하지 않는다`);
+        assert.ok(source.includes('onSaveEditedHistory?.(randomHistoryId, editedHistoryId'), `${screen}: 랜덤 원본과 수정본을 연결하지 않는다`);
+        assert.ok(source.includes('setRandomHistoryId(createdId || null)'), `${screen}: 랜덤 원본 기록을 기억하지 않는다`);
+        assert.ok(source.includes('setEditedHistoryId(nextId)'), `${screen}: 최신 수정본 기록을 기억하지 않는다`);
+        assert.ok(!source.includes('onReplaceHistory'), `${screen}: 랜덤 원본을 지우던 옛 저장 통로가 남아 있다`);
+    }
+
+    const entry = await read('TeacherEntry.jsx');
+    assert.ok(entry.includes('{ ...payload, originalHistoryId }'), '수정본에 랜덤 원본 ID를 저장하지 않는다');
+    assert.ok(entry.includes('removeHistory(previousEditedHistoryId)'), '다시 고칠 때 이전 수정본만 정리하지 않는다');
+    assert.ok(!entry.includes('removeHistory(originalHistoryId)'), '랜덤 원본을 삭제한다');
+    assert.ok(entry.includes("item.payload?.edited ? '교사 수정본'"), '지난 기록이 교사 수정본을 구분하지 않는다');
+    assert.ok(entry.includes("editedByOriginalId.has(item.id) ? '랜덤 원본'"), '수정본이 있는 랜덤 원본을 표시하지 않는다');
+    assert.ok(entry.includes('className="arrange-history-comparison"'), '원본과 수정본 비교 화면이 없다');
+    assert.ok(entry.includes('랜덤 원본과 교사가 보완한 수정본입니다.'), '비교 화면의 의미를 안내하지 않는다');
+});

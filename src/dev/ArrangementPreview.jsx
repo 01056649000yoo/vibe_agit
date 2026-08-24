@@ -3,16 +3,23 @@ import '../styles/design-system.css';
 import '../index.css';
 
 const students = [
-  ['01', '도윤', 'A'], ['02', '서윤', 'B'], ['03', '하준', 'A'], ['04', '지아', 'B'],
-  ['05', '현우', 'A'], ['06', '수아', 'B'], ['07', '지호', 'A'], ['08', '예린', 'B']
+  ['01', '김도윤', 'A'], ['02', '이서윤', 'B'], ['03', '박하준', 'A'], ['04', '최지아', 'B'],
+  ['05', '정현우', 'A'], ['06', '강수아', 'B'], ['07', '조지호', 'A'], ['08', '윤예린', 'B'],
+  ['09', '장민준', 'A'], ['10', '임서연', 'B'], ['11', '한주원', 'A'], ['12', '오지우', 'B'],
+  ['13', '서건우', 'A'], ['14', '신하윤', 'B'], ['15', '권우진', 'A'], ['16', '황채원', 'B'],
+  ['17', '안시우', 'A'], ['18', '송다은', 'B'], ['19', '전유나', 'A'], ['20', '홍정우', 'B'],
+  ['21', '문태윤', 'A'], ['22', '양나윤', 'B'], ['23', '배성민', 'A'], ['24', '백예준', 'B'],
+  ['25', '허가온', 'A'], ['26', '남재이', 'B'], ['27', '심소율', 'A'], ['28', '노준서', 'B']
 ].map(([id, name, group]) => ({ id, name, group }));
+
+const previewSeats = Array.from({ length: 28 }, (_, index) => `${Math.floor(index / 7)},${index % 7}`);
 
 const previewWorkspace = {
   students,
   settings: {
     seat: {
-      forbiddenPairs: [['01', '03']], balanceMode: 'strict', fixedSeats: [{ studentId: '02', row: 1, col: 1 }],
-      avoidDuplicates: true, seatLayout: { rows: 2, cols: 4, activeSeats: ['0,0', '0,1', '0,2', '0,3', '1,0', '1,1', '1,2', '1,3'] }
+      forbiddenPairs: [], balanceMode: 'none', fixedSeats: [],
+      avoidDuplicates: true, seatLayout: { rows: 4, cols: 7, activeSeats: previewSeats }
     },
     role: {
       forbiddenPairs: [['01', '03']], balanceMode: 'strict', avoidDuplicates: true,
