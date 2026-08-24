@@ -147,10 +147,12 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                 onClick={(e) => e.stopPropagation()}
                 style={{
                     width: '100%', maxWidth: embedded ? 'none' : '980px', maxHeight: embedded ? 'none' : '88vh',
-                    background: 'white', borderRadius: '20px', overflow: 'hidden',
+                    // 설정 허브 안에서는 바깥 설정 카드가 이미 흰 카드다. 여기서 또 그리면 테두리가 두 겹이 된다.
+                    background: embedded ? 'transparent' : 'white',
+                    borderRadius: embedded ? 0 : '20px', overflow: embedded ? 'visible' : 'hidden',
                     display: 'flex', flexDirection: 'column',
-                    border: embedded ? '1px solid #DCE6EE' : 'none',
-                    boxShadow: embedded ? '0 4px 18px rgba(15,23,42,.04)' : '0 24px 60px rgba(15,23,42,0.25)'
+                    border: 'none',
+                    boxShadow: embedded ? 'none' : '0 24px 60px rgba(15,23,42,0.25)'
                 }}
             >
                 {/* 독립 모달일 때만 제목을 표시한다. 설정 허브 안에서는 바깥 탭 제목을 사용한다. */}
@@ -159,10 +161,10 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                     padding: '20px 24px', borderBottom: '1px solid #F1F3F5', background: '#FAFBFC'
                 }}>
                     <div>
-                        <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900, color: '#1F2937' }}>
+                        <h3 style={{ margin: 0, fontSize: 'var(--ui-text-xl)', fontWeight: 900, color: '#1F2937' }}>
                             {isReport ? '📋' : '🤖'} {label} 정하기
                         </h3>
-                        <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', color: '#6B7280' }}>
+                        <p style={{ margin: '6px 0 0 0', fontSize: 'var(--ui-text-sm)', color: '#6B7280' }}>
                             AI가 {isReport ? '평어를' : '피드백을'} 쓸 때 지킬 내용을 적어 두고, 필요할 때 골라 씁니다.
                             <strong style={{ color: accent }}> {embedded ? '고른 기준이 실제 AI 실행에 사용됩니다.' : '그냥 닫으면 지금 기준이 그대로 쓰입니다.'}</strong>
                         </p>
@@ -171,12 +173,20 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                 </div>}
 
                 {notice && (
-                    <div style={{ padding: '10px 24px', background: '#F0FDF4', color: '#166534', fontSize: '0.86rem', fontWeight: 600 }}>
+                    <div style={{
+                        padding: embedded ? '11px 14px' : '10px 24px', marginBottom: embedded ? '14px' : 0,
+                        borderRadius: embedded ? '12px' : 0, border: embedded ? '1px solid #BBF7D0' : 'none',
+                        background: '#F0FDF4', color: '#166534', fontSize: 'var(--ui-text-sm)', fontWeight: 600
+                    }}>
                         ✅ {notice}
                     </div>
                 )}
                 {error && (
-                    <div style={{ padding: '10px 24px', background: '#FEF2F2', color: '#B91C1C', fontSize: '0.86rem' }}>
+                    <div style={{
+                        padding: embedded ? '11px 14px' : '10px 24px', marginBottom: embedded ? '14px' : 0,
+                        borderRadius: embedded ? '12px' : 0, border: embedded ? '1px solid #FECACA' : 'none',
+                        background: '#FEF2F2', color: '#B91C1C', fontSize: 'var(--ui-text-sm)'
+                    }}>
                         ⚠️ {error}
                     </div>
                 )}
@@ -188,33 +198,41 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                     `minHeight:0` 이 없으면 그리드 칸이 내용 높이만큼 부풀어 스크롤이 안 걸린다. */}
                 <div style={{
                     flex: 1, minHeight: 0, display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : '260px 1fr',
+                    gridTemplateColumns: isMobile ? '1fr' : '272px 1fr',
+                    gap: embedded ? (isMobile ? '14px' : '18px') : 0,
                     overflowY: embedded ? 'visible' : (isMobile ? 'auto' : 'hidden')
                 }}>
                     {/* 저장된 규칙 목록 */}
                     <div style={{
-                        borderRight: isMobile ? 'none' : '1px solid #F1F3F5',
-                        borderBottom: isMobile ? '1px solid #F1F3F5' : 'none',
+                        /* 허브 안에서는 선으로 자르지 않고 연한 카드로 띄운다(글쓰기 창 관리와 같은 결).
+                           독립 모달일 때만 예전처럼 칸을 선으로 나눈다. */
+                        ...(embedded
+                            ? { border: '1px solid #DBEAFE', borderRadius: '16px', background: '#F8FBFF' }
+                            : {
+                                borderRight: isMobile ? 'none' : '1px solid #F1F3F5',
+                                borderBottom: isMobile ? '1px solid #F1F3F5' : 'none',
+                                background: '#FCFCFD'
+                            }),
                         padding: '16px', minHeight: 0, overflowY: 'auto',
-                        maxHeight: isMobile ? '180px' : 'none', background: '#FCFCFD'
+                        maxHeight: isMobile ? '180px' : 'none'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#9CA3AF' }}>
+                            <span style={{ fontSize: 'var(--ui-text-sm)', fontWeight: 900, color: '#475569' }}>
                                 저장해 둔 기준 {presets.length}개
                             </span>
                             <button
                                 type="button"
                                 onClick={handleCreateNew}
-                                style={{ border: `1px solid ${accent}`, background: 'white', color: accent, borderRadius: '8px', padding: '5px 9px', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer' }}
+                                style={{ border: `1px solid ${accent}`, background: 'white', color: accent, borderRadius: '8px', padding: '5px 9px', fontSize: 'var(--ui-text-sm)', fontWeight: 800, cursor: 'pointer' }}
                             >
                                 + 새 기준
                             </button>
                         </div>
 
                         {loading ? (
-                            <div style={{ color: '#ADB5BD', fontSize: '0.85rem' }}>불러오는 중…</div>
+                            <div style={{ color: '#ADB5BD', fontSize: 'var(--ui-text-sm)' }}>불러오는 중…</div>
                         ) : presets.length === 0 ? (
-                            <div style={{ color: '#ADB5BD', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                            <div style={{ color: '#ADB5BD', fontSize: 'var(--ui-text-sm)', lineHeight: 1.6 }}>
                                 아직 저장해 둔 기준이 없습니다.<br />
                                 이름을 붙이고 내용을 적어 저장해보세요.
                             </div>
@@ -225,19 +243,19 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                     key={preset.id}
                                     onClick={() => handleSelectPreset(preset)}
                                     style={{
-                                        padding: '10px 12px', borderRadius: '10px', marginBottom: '8px',
+                                        padding: '12px 13px', borderRadius: '12px', marginBottom: '8px',
                                         cursor: 'pointer',
-                                        border: `1px solid ${isSelected ? accent : '#E9ECEF'}`,
+                                        border: `1px solid ${isSelected ? accent : '#E2E8F0'}`,
                                         background: isSelected ? `${accent}0D` : 'white'
                                     }}
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                        <span style={{ fontWeight: 800, color: '#374151', fontSize: '0.88rem' }}>
+                                        <span style={{ fontWeight: 800, color: '#374151', fontSize: 'var(--ui-text-md)' }}>
                                             {preset.name}
                                         </span>
                                         {preset.is_active && (
                                             <span style={{
-                                                fontSize: '0.68rem', fontWeight: 800, color: accent,
+                                                fontSize: 'var(--ui-text-xs)', fontWeight: 800, color: accent,
                                                 background: `${accent}1A`, padding: '2px 6px', borderRadius: '6px'
                                             }}>
                                                 적용 중
@@ -247,13 +265,13 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                     <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleRename(preset); }}
-                                            style={{ border: 'none', background: 'none', color: '#6B7280', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}
+                                            style={{ border: 'none', background: 'none', color: '#6B7280', fontSize: 'var(--ui-text-sm)', cursor: 'pointer', padding: 0 }}
                                         >
                                             이름 변경
                                         </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); handleDelete(preset); }}
-                                            style={{ border: 'none', background: 'none', color: '#DC2626', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}
+                                            style={{ border: 'none', background: 'none', color: '#DC2626', fontSize: 'var(--ui-text-sm)', cursor: 'pointer', padding: 0 }}
                                         >
                                             삭제
                                         </button>
@@ -265,14 +283,14 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
 
                     {/* 편집기 — AI 다듬기 결과·오류 안내가 붙으면 여기가 제일 먼저 넘친다 */}
                     <div style={{
-                        padding: '16px 20px', display: 'flex', flexDirection: 'column', minHeight: 0,
+                        padding: embedded ? 0 : '16px 20px', display: 'flex', flexDirection: 'column', minHeight: 0,
                         overflowY: embedded || isMobile ? 'visible' : 'auto'
                     }}>
                         <div style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             marginBottom: '8px', flexWrap: 'wrap', gap: '8px'
                         }}>
-                            <span style={{ fontSize: '0.82rem', color: '#6B7280' }}>
+                            <span style={{ fontSize: 'var(--ui-text-sm)', color: '#6B7280' }}>
                                 지금 쓰는 기준:{' '}
                                 <strong style={{ color: accent }}>
                                     {activePreset ? activePreset.name : '이름 없는 기준'}
@@ -299,7 +317,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                     disabled={refining || !draft.trim()}
                                     style={{
                                         border: `1px solid ${accent}`, background: 'white', borderRadius: '8px',
-                                        padding: '5px 10px', fontSize: '0.78rem', color: accent,
+                                        padding: '5px 10px', fontSize: 'var(--ui-text-sm)', color: accent,
                                         cursor: refining ? 'wait' : 'pointer', fontWeight: 700
                                     }}
                                 >
@@ -309,7 +327,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                     onClick={() => setDraftOverride(defaultPrompt)}
                                     style={{
                                         border: '1px solid #E9ECEF', background: 'white', borderRadius: '8px',
-                                        padding: '5px 10px', fontSize: '0.78rem', color: '#6B7280', cursor: 'pointer'
+                                        padding: '5px 10px', fontSize: 'var(--ui-text-sm)', color: '#6B7280', cursor: 'pointer'
                                     }}
                                 >
                                     기본값 불러오기
@@ -318,8 +336,13 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                         </div>
 
                         <label style={{ display: 'block', marginBottom: '12px' }}>
-                            <span style={{ display: 'block', marginBottom: '6px', color: '#374151', fontSize: '0.8rem', fontWeight: 800 }}>
-                                1. 기준 이름
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#1E293B', fontSize: 'var(--ui-text-md)', fontWeight: 900 }}>
+                                <b style={{
+                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                    width: '22px', height: '22px', flex: '0 0 22px', borderRadius: '50%',
+                                    background: accent, color: 'white', fontSize: 'var(--ui-text-xs)'
+                                }}>1</b>
+                                기준 이름
                             </span>
                             <input
                                 type="text"
@@ -327,14 +350,26 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                 onChange={(e) => setNewName(e.target.value)}
                                 placeholder={isReport ? '예: 3학년 성장 중심 평어' : '예: 3학년 다정한 피드백'}
                                 maxLength={40}
-                                style={{ width: '100%', padding: '11px 12px', borderRadius: '10px', border: '1px solid #D1D5DB', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }}
+                                style={{
+                                    width: '100%', padding: '13px 14px', borderRadius: '12px',
+                                    border: '1px solid #CBD5E1', background: '#fff',
+                                    fontSize: 'var(--ui-text-md)', fontFamily: 'inherit',
+                                    outline: 'none', boxSizing: 'border-box'
+                                }}
                             />
                         </label>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                            <span style={{ color: '#374151', fontSize: '0.8rem', fontWeight: 800 }}>2. AI에게 줄 지시</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1E293B', fontSize: 'var(--ui-text-md)', fontWeight: 900 }}>
+                                <b style={{
+                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                    width: '22px', height: '22px', flex: '0 0 22px', borderRadius: '50%',
+                                    background: accent, color: 'white', fontSize: 'var(--ui-text-xs)'
+                                }}>2</b>
+                                AI에게 줄 지시
+                            </span>
                             {/* 한도의 90%부터 주황색으로 미리 알린다 */}
-                            <span style={{ color: isTooLong ? '#DC2626' : draft.length >= MAX_PROMPT_LENGTH * 0.9 ? '#D97706' : '#6B7280', fontSize: '0.76rem', fontWeight: 800 }}>
+                            <span style={{ color: isTooLong ? '#DC2626' : draft.length >= MAX_PROMPT_LENGTH * 0.9 ? '#D97706' : '#6B7280', fontSize: 'var(--ui-text-sm)', fontWeight: 800 }}>
                                 {draft.length.toLocaleString()}/{MAX_PROMPT_LENGTH.toLocaleString()}자
                             </span>
                         </div>
@@ -346,14 +381,14 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             maxLength={draft.length > MAX_PROMPT_LENGTH ? undefined : MAX_PROMPT_LENGTH}
                             placeholder={'- 역할: AI가 맡을 역할\n- 내용: 확인하고 작성할 내용\n- 말투: 학생에게 보여줄 말투\n- 제한: 분량과 금지할 내용'}
                             style={{
-                                flex: 1, minHeight: isMobile ? '180px' : '220px', width: '100%',
-                                padding: '14px', borderRadius: '12px', border: `1px solid ${isTooLong ? '#EF4444' : '#D1D5DB'}`,
-                                background: '#F8F9FA', fontSize: '0.88rem', lineHeight: 1.6,
+                                flex: 1, minHeight: isMobile ? '180px' : '240px', width: '100%',
+                                padding: '15px', borderRadius: '12px', border: `1px solid ${isTooLong ? '#EF4444' : '#CBD5E1'}`,
+                                background: '#F8FAFC', fontSize: 'var(--ui-text-md)', lineHeight: 1.7,
                                 color: '#2C3E50', resize: 'none', boxSizing: 'border-box',
                                 fontFamily: 'inherit', outline: 'none'
                             }}
                         />
-                        <div style={{ marginTop: '6px', color: isTooLong ? '#DC2626' : '#6B7280', fontSize: '0.75rem', lineHeight: 1.5 }}>
+                        <div style={{ marginTop: '6px', color: isTooLong ? '#DC2626' : '#6B7280', fontSize: 'var(--ui-text-sm)', lineHeight: 1.5 }}>
                             {isTooLong
                                 ? `${MAX_PROMPT_LENGTH.toLocaleString()}자를 넘습니다. 줄여야 저장하거나 쓸 수 있습니다. ✨ AI로 다듬기로 정리할 수 있습니다.`
                                 : '역할·내용·말투·제한을 한 줄씩 나눠 적으면 고치기 쉽습니다.'}
@@ -363,7 +398,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                         {refineError && (
                             <div style={{
                                 marginTop: '10px', padding: '10px 12px', borderRadius: '10px',
-                                background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', fontSize: '0.82rem'
+                                background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', fontSize: 'var(--ui-text-sm)'
                             }}>
                                 {refineError}
                             </div>
@@ -373,12 +408,12 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                 marginTop: '10px', padding: '12px', borderRadius: '12px',
                                 background: '#F0FDF4', border: `1px solid #BBF7D0`
                             }}>
-                                <div style={{ fontSize: '0.8rem', color: '#15803D', fontWeight: 700, marginBottom: '6px' }}>
+                                <div style={{ fontSize: 'var(--ui-text-md)', color: '#15803D', fontWeight: 700, marginBottom: '6px' }}>
                                     ✨ AI가 다듬은 기준 (아직 반영 전)
                                 </div>
                                 <div style={{
                                     maxHeight: '240px', overflowY: 'auto', whiteSpace: 'pre-wrap',
-                                    fontSize: '0.83rem', lineHeight: 1.6, color: '#2C3E50',
+                                    fontSize: 'var(--ui-text-sm)', lineHeight: 1.6, color: '#2C3E50',
                                     background: 'white', padding: '10px', borderRadius: '8px', border: '1px solid #DCFCE7'
                                 }}>
                                     {refined}
@@ -389,7 +424,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                         disabled={refined.length > MAX_PROMPT_LENGTH}
                                         style={{
                                             border: 'none', background: '#16A34A', color: 'white', borderRadius: '8px',
-                                            padding: '7px 14px', fontSize: '0.82rem', fontWeight: 700,
+                                            padding: '7px 14px', fontSize: 'var(--ui-text-sm)', fontWeight: 700,
                                             cursor: refined.length > MAX_PROMPT_LENGTH ? 'not-allowed' : 'pointer', opacity: refined.length > MAX_PROMPT_LENGTH ? 0.5 : 1
                                         }}
                                     >
@@ -399,7 +434,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                         onClick={() => setRefined(null)}
                                         style={{
                                             border: '1px solid #E9ECEF', background: 'white', color: '#6B7280',
-                                            borderRadius: '8px', padding: '7px 14px', fontSize: '0.82rem', cursor: 'pointer'
+                                            borderRadius: '8px', padding: '7px 14px', fontSize: 'var(--ui-text-sm)', cursor: 'pointer'
                                         }}
                                     >
                                         취소
@@ -415,7 +450,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                 size="sm"
                                 style={{
                                     background: 'white', color: accent, border: `1px solid ${accent}`,
-                                    boxShadow: 'none', padding: '10px 16px', fontSize: '0.85rem'
+                                    boxShadow: 'none', padding: '10px 16px', fontSize: 'var(--ui-text-sm)'
                                 }}
                             >
                                 {selectedId ? '기준 저장' : '새 기준 저장'}
@@ -427,13 +462,16 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                 {/* 하단 액션 */}
                 <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px',
-                    padding: '16px 24px', borderTop: '1px solid #F1F3F5', background: '#FAFBFC', flexWrap: 'wrap'
+                    padding: embedded ? '16px 0 0' : '16px 24px',
+                    marginTop: embedded ? '18px' : 0,
+                    borderTop: '1px solid #E2E8F0',
+                    background: embedded ? 'transparent' : '#FAFBFC', flexWrap: 'wrap'
                 }}>
                     {!embedded && <Button
                         onClick={onClose}
                         variant="ghost"
                         size="sm"
-                        style={{ boxShadow: 'none', padding: '10px 16px', fontSize: '0.85rem' }}
+                        style={{ boxShadow: 'none', padding: '10px 16px', fontSize: 'var(--ui-text-sm)' }}
                     >
                         그대로 두고 닫기
                     </Button>}
@@ -446,7 +484,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                                 size="sm"
                                 style={{
                                     background: 'white', color: '#374151', border: '1px solid #D1D5DB',
-                                    boxShadow: 'none', padding: '10px 16px', fontSize: '0.85rem'
+                                    boxShadow: 'none', padding: '10px 16px', fontSize: 'var(--ui-text-sm)'
                                 }}
                             >
                                 고른 기준으로 바꾸기
@@ -458,7 +496,7 @@ const PromptRuleModalBody = ({ onClose, kind, isMobile, onApplied, embedded = fa
                             size="sm"
                             style={{
                                 background: accent, color: 'white', border: 'none',
-                                boxShadow: 'none', padding: '10px 18px', fontSize: '0.85rem'
+                                boxShadow: 'none', padding: '10px 18px', fontSize: 'var(--ui-text-sm)'
                             }}
                         >
                             {saving ? '저장 중…' : '이 내용으로 쓰기'}
