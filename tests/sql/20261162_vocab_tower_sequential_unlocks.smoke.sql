@@ -103,13 +103,13 @@ BEGIN
         RAISE EXCEPTION '② 지도 4층 잠금 응답이 잘못되었습니다: %', v_stage;
     END IF;
 
-    v_result := public.start_my_vocab_tower_v2_practice_v1(4);
+    v_result := public.start_my_vocab_tower_v2_practice_v1(4::SMALLINT);
     IF COALESCE((v_result->>'success')::BOOLEAN, TRUE)
        OR NOT COALESCE((v_result->>'locked')::BOOLEAN, FALSE) THEN
         RAISE EXCEPTION '② 잠긴 4층 개인 연습이 시작되었습니다: %', v_result;
     END IF;
 
-    v_result := public.start_my_vocab_tower_master_v1(4);
+    v_result := public.start_my_vocab_tower_master_v1(4::SMALLINT);
     IF COALESCE((v_result->>'success')::BOOLEAN, TRUE)
        OR NOT COALESCE((v_result->>'locked')::BOOLEAN, FALSE) THEN
         RAISE EXCEPTION '② 잠긴 4층 덱마스터가 시작되었습니다: %', v_result;
@@ -128,7 +128,7 @@ BEGIN
     -- ③ 아무 단계도 통과하지 않은 상태에서는 2단계 건너뛰기를 막는다.
     DELETE FROM public.learning_summit_awards
      WHERE student_id = v_student.id AND content_type = 'vocab';
-    v_result := public.start_my_vocab_master_summit_v1(2);
+    v_result := public.start_my_vocab_master_summit_v1(2::SMALLINT);
     IF COALESCE((v_result->>'success')::BOOLEAN, TRUE)
        OR v_result->>'error' <> '앞 단계를 먼저 통과해야 해요.' THEN
         RAISE EXCEPTION '③ 정상 2단계 건너뛰기가 차단되지 않았습니다: %', v_result;
@@ -164,7 +164,7 @@ BEGIN
     END IF;
 
     -- ⑤ 통과한 1단계를 다시 열 수 있고, 별은 2단계로 유지된다.
-    v_result := public.start_my_vocab_master_summit_v1(1);
+    v_result := public.start_my_vocab_master_summit_v1(1::SMALLINT);
     IF NOT COALESCE((v_result->>'success')::BOOLEAN, FALSE)
        OR NOT COALESCE((v_result->>'replay')::BOOLEAN, FALSE)
        OR (v_result->>'stage')::SMALLINT <> 1 THEN
