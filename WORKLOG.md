@@ -21,6 +21,33 @@
 
 ---
 
+## 2026-08-24 — AI 맞춤법 검사 사용 조건 강조와 교사 글자 계단 v1 (Claude)
+
+- **한 일**: 교사 `글쓰기 창 관리`에서 ① `AI 맞춤법 검사` 의 사용 조건을 설명 문장에서 꺼내 꼬리표로
+  띄우고, ② 이 화면 글자를 새 계단 5개로 맞췄다. 사용자가 "설명과 제목 글자가 너무 작다"고 지적한 곳이다.
+- **찾은 것**:
+  - `teacherDescription` 은 `<small>{tool.description}</small>` 로 **그냥 글자로** 그려진다. 그래서
+    `**한 번만**` 의 별표와 연구소 설명의 백틱이 화면에 그대로 보이고 있었다. 마크다운 처리가 없다.
+  - 설명에 `교사 피드백을 받은 글에서만` 이라는 조건 자체가 빠져 있었다. 실제 조건은
+    `StudentWriting.jsx` 의 `canRun={isReturned && !isConfirmed}` 이고 1회 제한은 서버 선점이다.
+  - 「학급별 글쓰기 지원 기능」 제목이 `<span>` 이라 `h3` 규칙이 닿지 않고 눈썹 취급을 받아 .72rem
+    (11.5px) 로 나오고 있었다.
+  - 프로젝트 CSS 에 서로 다른 글자 크기가 **114종**, `font-size` 지정 1,015곳 중 토큰 사용은 37곳(3.6%),
+    0.8rem 미만이 565곳이다. `design-system.css` 에 토큰이 v1부터 있는데 거의 안 쓰였다.
+  - `TeacherDashboard.css` 의 `.teacher-dashboard { font-size: clamp(16px,.7vw,18px) }` 는 **연결이
+    끊겨 있다**. 자식이 모두 `rem`(문서 최상단 기준)이라 이 컨테이너 값이 닿지 않는다.
+- **변경**: `design-system.css` 에 `--ui-text-xs~xl` 5단계 추가(바닥 0.8rem, xs 는 뱃지 전용).
+  `ai-spell-check/manifest.js` 에 `teacherLimit` 신설, 설명 문장 재작성. `lab-results/manifest.js`
+  백틱 제거. `TeacherWritingEditorManager.jsx` 에서 조건 꼬리표 렌더링·제목을 `h3` 로 교정·두 섹션
+  머리말 구조 통일. `teacherWritingEditorManager.css` 를 계단으로 이전(제목 .72→1.35rem,
+  기능 설명 .74→0.9rem, 기능 이름 .9→1.15rem 등).
+- **결과/검증**: `npm run test:all` 408/408, Vite 프로덕션 빌드 통과. 미리보기 **안**의 학생 화면
+  (`.writing-editor-preview-*`)은 일부러 그대로 뒀다 — 학생에게 보일 크기를 흉내 내는 곳이라 키우면
+  교사가 잘못된 크기를 보게 된다.
+- **남은 것 / 다음**: 사용자가 고른 범위대로 교사 설정 허브·각 설정 탭·수업도구·대시보드 메뉴를 같은
+  계단으로 옮긴다. 교사 CSS 에 새 하드코딩 rem 이 늘면 실패하는 검사도 함께 만든다.
+  JSX 인라인 `fontSize`(34개 파일)는 이번 범위가 아니다.
+
 ## 2026-08-24 — 자리·역할 편집 흐름을 한 벌로 모으고 오늘 작업을 점검 (Claude)
 
 - **한 일**: 오늘 두 저장소에 들어온 변경을 점검했다. 아지트를 원격과 맞추고(`74b0cf3` → `ab1a46e`,

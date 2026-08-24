@@ -26,6 +26,8 @@ const WRITING_TOOL_OPTIONS = Object.freeze(getWritingToolManifests().map((tool) 
     id: tool.id,
     label: tool.label,
     description: tool.teacherDescription || tool.description,
+    // 켜기 전에 반드시 알아야 하는 사용 조건. 있는 도구만 눈에 띄게 따로 띄운다.
+    limit: tool.teacherLimit || '',
     icon: tool.triggerEmoji || '🧰',
     // 'toolbar'는 글쓰기 창의 도구 줄, 'reference'는 글쓰기 참고함 안에서 열린다.
     surface: tool.surface ?? 'toolbar'
@@ -172,7 +174,8 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
             <section className="writing-editor-manager__settings">
                 <div className="writing-editor-manager__heading">
                     <div>
-                        <span>학급별 글쓰기 지원 기능</span>
+                        <span>학급마다 따로 설정</span>
+                        <h3>학급별 글쓰기 지원 기능</h3>
                         <p>기능을 켜고 끈 뒤 아래 미리보기에서 학생에게 보일 모습을 바로 확인하세요.</p>
                     </div>
                     <span className="writing-editor-manager__class-name">{activeClass.name}</span>
@@ -187,6 +190,7 @@ const TeacherWritingEditorManager = ({ activeClass, isMobile }) => {
                                     <span aria-hidden="true">{tool.icon}</span>
                                     <div>
                                         <strong>{tool.label}</strong>
+                                        {tool.limit ? <em className="writing-editor-manager__feature-limit">{tool.limit}</em> : null}
                                         <small>{tool.description}</small>
                                     </div>
                                 </div>
